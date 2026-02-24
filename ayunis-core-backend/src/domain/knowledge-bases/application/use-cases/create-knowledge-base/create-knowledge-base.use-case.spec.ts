@@ -20,6 +20,9 @@ describe('CreateKnowledgeBaseUseCase', () => {
       findAllByUserId: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
+      assignSourceToKnowledgeBase: jest.fn(),
+      findSourcesByKnowledgeBaseId: jest.fn(),
+      findSourceByIdAndKnowledgeBaseId: jest.fn(),
     } as jest.Mocked<KnowledgeBaseRepository>;
 
     const module: TestingModule = await Test.createTestingModule({

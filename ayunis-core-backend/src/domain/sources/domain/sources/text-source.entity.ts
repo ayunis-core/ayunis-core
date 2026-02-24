@@ -16,6 +16,7 @@ export abstract class TextSource extends Source {
     type: TextType;
     text: string;
     contentChunks: TextSourceContentChunk[];
+    knowledgeBaseId?: UUID | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;
@@ -37,6 +38,7 @@ export class FileSource extends TextSource {
     type: TextType;
     text: string;
     contentChunks: TextSourceContentChunk[];
+    knowledgeBaseId?: UUID | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;
@@ -56,6 +58,7 @@ export class UrlSource extends TextSource {
     text: string;
     name: string;
     type: TextType;
+    knowledgeBaseId?: UUID | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;

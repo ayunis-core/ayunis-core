@@ -2927,6 +2927,51 @@ export interface UpdateKnowledgeBaseDto {
   description?: string;
 }
 
+/**
+ * The type of the source
+ */
+export type KnowledgeBaseDocumentResponseDtoType = typeof KnowledgeBaseDocumentResponseDtoType[keyof typeof KnowledgeBaseDocumentResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const KnowledgeBaseDocumentResponseDtoType = {
+  text: 'text',
+  data: 'data',
+} as const;
+
+/**
+ * Who created the source
+ */
+export type KnowledgeBaseDocumentResponseDtoCreatedBy = typeof KnowledgeBaseDocumentResponseDtoCreatedBy[keyof typeof KnowledgeBaseDocumentResponseDtoCreatedBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const KnowledgeBaseDocumentResponseDtoCreatedBy = {
+  user: 'user',
+  llm: 'llm',
+  system: 'system',
+} as const;
+
+export interface KnowledgeBaseDocumentResponseDto {
+  /** The unique identifier of the document */
+  id: string;
+  /** The name of the document */
+  name: string;
+  /** The type of the source */
+  type: KnowledgeBaseDocumentResponseDtoType;
+  /** Who created the source */
+  createdBy: KnowledgeBaseDocumentResponseDtoCreatedBy;
+  /** The date and time when the document was added */
+  createdAt: string;
+  /** The date and time when the document was last updated */
+  updatedAt: string;
+}
+
+export interface KnowledgeBaseDocumentListResponseDto {
+  /** The list of documents in the knowledge base */
+  data: KnowledgeBaseDocumentResponseDto[];
+}
+
 export interface LoginDto {
   /** Email address for authentication */
   email: string;
@@ -3357,5 +3402,10 @@ export type TranscriptionsControllerTranscribeBody = {
   file: Blob;
   /** Optional language hint (e.g., "en", "de") */
   language?: string;
+};
+
+export type KnowledgeBasesControllerAddDocumentBody = {
+  /** The file to upload (PDF, DOCX, PPTX) */
+  file: Blob;
 };
 

@@ -6834,6 +6834,135 @@
         ]
       }
     },
+    "/knowledge-bases/{id}/documents": {
+      "get": {
+        "operationId": "KnowledgeBasesController_listDocuments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the documents in the knowledge base",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseDocumentListResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Knowledge base not found"
+          }
+        },
+        "summary": "List all documents in a knowledge base",
+        "tags": [
+          "knowledge-bases"
+        ]
+      },
+      "post": {
+        "operationId": "KnowledgeBasesController_addDocument",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "The file to upload (PDF, DOCX, PPTX)"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The document has been added to the knowledge base",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseDocumentResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Knowledge base not found"
+          }
+        },
+        "summary": "Add a document to a knowledge base",
+        "tags": [
+          "knowledge-bases"
+        ]
+      }
+    },
+    "/knowledge-bases/{id}/documents/{documentId}": {
+      "delete": {
+        "operationId": "KnowledgeBasesController_removeDocument",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the document to remove",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The document has been removed from the knowledge base"
+          },
+          "404": {
+            "description": "Knowledge base or document not found"
+          }
+        },
+        "summary": "Remove a document from a knowledge base",
+        "tags": [
+          "knowledge-bases"
+        ]
+      }
+    },
     "/auth/login": {
       "post": {
         "description": "Authenticate user with email and password. Sets authentication cookies on successful login.",
@@ -12164,6 +12293,76 @@
             "maxLength": 2000
           }
         }
+      },
+      "KnowledgeBaseDocumentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the document",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the document",
+            "example": "Protokoll_Stadtrat_2025-03.pdf"
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the source",
+            "enum": [
+              "text",
+              "data"
+            ],
+            "example": "text"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Who created the source",
+            "enum": [
+              "user",
+              "llm",
+              "system"
+            ],
+            "example": "user"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "The date and time when the document was added",
+            "example": "2025-01-15T10:00:00.000Z",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "The date and time when the document was last updated",
+            "example": "2025-01-15T10:00:00.000Z",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "createdBy",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "KnowledgeBaseDocumentListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "The list of documents in the knowledge base",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeBaseDocumentResponseDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
       },
       "LoginDto": {
         "type": "object",

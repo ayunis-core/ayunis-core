@@ -1,0 +1,103 @@
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import type { UUID } from 'crypto';
+import { ListKnowledgeBaseDocumentsUseCase } from './list-knowledge-base-documents.use-case';
+import { ListKnowledgeBaseDocumentsQuery } from './list-knowledge-base-documents.query';
+import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBase } from '../../../domain/knowledge-base.entity';
+import { KnowledgeBaseNotFoundError } from '../../knowledge-bases.errors';
+import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import { TextType } from 'src/domain/sources/domain/source-type.enum';
+
+describe('ListKnowledgeBaseDocumentsUseCase', () => {
+  let useCase: ListKnowledgeBaseDocumentsUseCase;
+  let mockRepository: jest.Mocked<KnowledgeBaseRepository>;
+
+  const userId = '11111111-1111-1111-1111-111111111111' as UUID;
+  const orgId = '22222222-2222-2222-2222-222222222222' as UUID;
+  const knowledgeBaseId = '33333333-3333-3333-3333-333333333333' as UUID;
+
+  beforeEach(async () => {
+    mockRepository = {
+      findById: jest.fn(),
+      findAllByUserId: jest.fn(),
+      save: jest.fn(),
+      delete: jest.fn(),
+      assignSourceToKnowledgeBase: jest.fn(),
+      findSourcesByKnowledgeBaseId: jest.fn(),
+      findSourceByIdAndKnowledgeBaseId: jest.fn(),
+    } as jest.Mocked<KnowledgeBaseRepository>;
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ListKnowledgeBaseDocumentsUseCase,
+        { provide: KnowledgeBaseRepository, useValue: mockRepository },
+      ],
+    }).compile();
+
+    useCase = module.get(ListKnowledgeBaseDocumentsUseCase);
+  });
+
+  it('should return all documents for a knowledge base', async () => {
+    const knowledgeBase = new KnowledgeBase({
+      id: knowledgeBaseId,
+      name: 'Stadtratsprotokolle 2025',
+      orgId,
+      userId,
+    });
+    mockRepository.findById.mockResolvedValue(knowledgeBase);
+
+    const source = new UrlSource({
+      url: 'https://stadt.de/protokoll',
+      name: 'Protokoll März 2025',
+      type: TextType.WEB,
+      text: 'Inhalt',
+      contentChunks: [],
+    });
+    mockRepository.findSourcesByKnowledgeBaseId.mockResolvedValue([source]);
+
+    const query = new ListKnowledgeBaseDocumentsQuery(knowledgeBaseId, userId);
+
+    const result = await useCase.execute(query);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('Protokoll März 2025');
+    expect(mockRepository.findSourcesByKnowledgeBaseId).toHaveBeenCalledWith(
+      knowledgeBaseId,
+    );
+  });
+
+  it('should return an empty array when knowledge base has no documents', async () => {
+    const knowledgeBase = new KnowledgeBase({
+      id: knowledgeBaseId,
+      name: 'Leere Wissensbasis',
+      orgId,
+      userId,
+    });
+    mockRepository.findById.mockResolvedValue(knowledgeBase);
+    mockRepository.findSourcesByKnowledgeBaseId.mockResolvedValue([]);
+
+    const query = new ListKnowledgeBaseDocumentsQuery(knowledgeBaseId, userId);
+
+    const result = await useCase.execute(query);
+
+    expect(result).toHaveLength(0);
+  });
+
+  it('should throw KnowledgeBaseNotFoundError when KB does not belong to user', async () => {
+    const otherUserId = '99999999-9999-9999-9999-999999999999' as UUID;
+    const knowledgeBase = new KnowledgeBase({
+      id: knowledgeBaseId,
+      name: 'Anderer Benutzer KB',
+      orgId,
+      userId: otherUserId,
+    });
+    mockRepository.findById.mockResolvedValue(knowledgeBase);
+
+    const query = new ListKnowledgeBaseDocumentsQuery(knowledgeBaseId, userId);
+
+    await expect(useCase.execute(query)).rejects.toThrow(
+      KnowledgeBaseNotFoundError,
+    );
+  });
+});
