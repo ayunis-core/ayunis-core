@@ -14,6 +14,7 @@ export class GetThreadDtoMapper {
 
   toDto(result: FindThreadResult): GetThreadResponseDto {
     const { thread, isLongChat } = result;
+
     return {
       id: thread.id,
       userId: thread.userId,
@@ -29,6 +30,10 @@ export class GetThreadDtoMapper {
       updatedAt: thread.updatedAt.toISOString(),
       isAnonymous: thread.isAnonymous,
       isLongChat,
+      knowledgeBases: (thread.knowledgeBases ?? []).map((kb) => ({
+        id: kb.id,
+        name: kb.name,
+      })),
     };
   }
 

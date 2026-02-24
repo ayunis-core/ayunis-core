@@ -1574,6 +1574,13 @@ export interface CSVDataSourceResponseDto {
   data: CSVDataSourceResponseDtoData;
 }
 
+export interface KnowledgeBaseSummaryResponseDto {
+  /** Unique identifier for the knowledge base */
+  id: string;
+  /** Name of the knowledge base */
+  name: string;
+}
+
 export type GetThreadResponseDtoMessagesItem = UserMessageResponseDto | SystemMessageResponseDto | AssistantMessageResponseDto | ToolResultMessageResponseDto;
 
 export interface GetThreadResponseDto {
@@ -1599,6 +1606,8 @@ export interface GetThreadResponseDto {
   isAnonymous: boolean;
   /** Whether the thread has exceeded the token threshold for optimal performance */
   isLongChat: boolean;
+  /** Knowledge bases attached to this thread */
+  knowledgeBases: KnowledgeBaseSummaryResponseDto[];
 }
 
 export interface GetThreadsResponseDtoItem {
@@ -2349,6 +2358,97 @@ export interface MarketplaceIntegrationResponseDto {
   updatedAt: string;
 }
 
+export interface CreateKnowledgeBaseDto {
+  /**
+   * The name of the knowledge base
+   * @minLength 1
+   * @maxLength 255
+   */
+  name: string;
+  /**
+   * An optional description of the knowledge base
+   * @maxLength 2000
+   */
+  description?: string;
+}
+
+export interface KnowledgeBaseResponseDto {
+  /** The unique identifier of the knowledge base */
+  id: string;
+  /** The name of the knowledge base */
+  name: string;
+  /** The description of the knowledge base */
+  description: string;
+  /** The date and time when the knowledge base was created */
+  createdAt: string;
+  /** The date and time when the knowledge base was last updated */
+  updatedAt: string;
+}
+
+export interface KnowledgeBaseListResponseDto {
+  /** The list of knowledge bases */
+  data: KnowledgeBaseResponseDto[];
+}
+
+export interface UpdateKnowledgeBaseDto {
+  /**
+   * The name of the knowledge base
+   * @minLength 1
+   * @maxLength 255
+   */
+  name?: string;
+  /**
+   * The description of the knowledge base
+   * @maxLength 2000
+   */
+  description?: string;
+}
+
+/**
+ * The type of the source
+ */
+export type KnowledgeBaseDocumentResponseDtoType = typeof KnowledgeBaseDocumentResponseDtoType[keyof typeof KnowledgeBaseDocumentResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const KnowledgeBaseDocumentResponseDtoType = {
+  text: 'text',
+  data: 'data',
+} as const;
+
+/**
+ * Who created the source
+ */
+export type KnowledgeBaseDocumentResponseDtoCreatedBy = typeof KnowledgeBaseDocumentResponseDtoCreatedBy[keyof typeof KnowledgeBaseDocumentResponseDtoCreatedBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const KnowledgeBaseDocumentResponseDtoCreatedBy = {
+  user: 'user',
+  llm: 'llm',
+  system: 'system',
+} as const;
+
+export interface KnowledgeBaseDocumentResponseDto {
+  /** The unique identifier of the document */
+  id: string;
+  /** The name of the document */
+  name: string;
+  /** The type of the source */
+  type: KnowledgeBaseDocumentResponseDtoType;
+  /** Who created the source */
+  createdBy: KnowledgeBaseDocumentResponseDtoCreatedBy;
+  /** The date and time when the document was added */
+  createdAt: string;
+  /** The date and time when the document was last updated */
+  updatedAt: string;
+}
+
+export interface KnowledgeBaseDocumentListResponseDto {
+  /** The list of documents in the knowledge base */
+  data: KnowledgeBaseDocumentResponseDto[];
+}
+
 export interface InstallSkillFromMarketplaceDto {
   /** The unique identifier (slug) of the marketplace skill */
   identifier: string;
@@ -2881,97 +2981,6 @@ export interface TranscriptionResponseDto {
   text: string;
 }
 
-export interface CreateKnowledgeBaseDto {
-  /**
-   * The name of the knowledge base
-   * @minLength 1
-   * @maxLength 255
-   */
-  name: string;
-  /**
-   * An optional description of the knowledge base
-   * @maxLength 2000
-   */
-  description?: string;
-}
-
-export interface KnowledgeBaseResponseDto {
-  /** The unique identifier of the knowledge base */
-  id: string;
-  /** The name of the knowledge base */
-  name: string;
-  /** The description of the knowledge base */
-  description: string;
-  /** The date and time when the knowledge base was created */
-  createdAt: string;
-  /** The date and time when the knowledge base was last updated */
-  updatedAt: string;
-}
-
-export interface KnowledgeBaseListResponseDto {
-  /** The list of knowledge bases */
-  data: KnowledgeBaseResponseDto[];
-}
-
-export interface UpdateKnowledgeBaseDto {
-  /**
-   * The name of the knowledge base
-   * @minLength 1
-   * @maxLength 255
-   */
-  name?: string;
-  /**
-   * The description of the knowledge base
-   * @maxLength 2000
-   */
-  description?: string;
-}
-
-/**
- * The type of the source
- */
-export type KnowledgeBaseDocumentResponseDtoType = typeof KnowledgeBaseDocumentResponseDtoType[keyof typeof KnowledgeBaseDocumentResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const KnowledgeBaseDocumentResponseDtoType = {
-  text: 'text',
-  data: 'data',
-} as const;
-
-/**
- * Who created the source
- */
-export type KnowledgeBaseDocumentResponseDtoCreatedBy = typeof KnowledgeBaseDocumentResponseDtoCreatedBy[keyof typeof KnowledgeBaseDocumentResponseDtoCreatedBy];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const KnowledgeBaseDocumentResponseDtoCreatedBy = {
-  user: 'user',
-  llm: 'llm',
-  system: 'system',
-} as const;
-
-export interface KnowledgeBaseDocumentResponseDto {
-  /** The unique identifier of the document */
-  id: string;
-  /** The name of the document */
-  name: string;
-  /** The type of the source */
-  type: KnowledgeBaseDocumentResponseDtoType;
-  /** Who created the source */
-  createdBy: KnowledgeBaseDocumentResponseDtoCreatedBy;
-  /** The date and time when the document was added */
-  createdAt: string;
-  /** The date and time when the document was last updated */
-  updatedAt: string;
-}
-
-export interface KnowledgeBaseDocumentListResponseDto {
-  /** The list of documents in the knowledge base */
-  data: KnowledgeBaseDocumentResponseDto[];
-}
-
 export interface LoginDto {
   /** Email address for authentication */
   email: string;
@@ -3188,6 +3197,11 @@ limit?: number;
 offset?: number;
 };
 
+export type KnowledgeBasesControllerAddDocumentBody = {
+  /** The file to upload (PDF, DOCX, PPTX) */
+  file: Blob;
+};
+
 export type SkillSourcesControllerAddFileSourceBody = {
   /** The file to upload */
   file: Blob;
@@ -3402,10 +3416,5 @@ export type TranscriptionsControllerTranscribeBody = {
   file: Blob;
   /** Optional language hint (e.g., "en", "de") */
   language?: string;
-};
-
-export type KnowledgeBasesControllerAddDocumentBody = {
-  /** The file to upload (PDF, DOCX, PPTX) */
-  file: Blob;
 };
 
