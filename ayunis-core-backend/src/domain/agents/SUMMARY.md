@@ -10,4 +10,6 @@ Key use cases cover:
 - Assigning and unassigning tools, sources, and MCP integrations (`AddSourceToAgentUseCase`, `RemoveSourceFromAgentUseCase`, `AssignMcpIntegrationToAgentUseCase`, `UnassignMcpIntegrationFromAgentUseCase`, `ListAgentMcpIntegrationsUseCase`)
 - Replacing models with user defaults (`ReplaceModelWithUserDefaultUseCase`)
 
+The HTTP layer exposes two controllers: `AgentsController` handles core agent CRUD operations, while `AgentMcpIntegrationsController` manages MCP integration assignments (assign, unassign, list) on individual agents.
+
 The module integrates with **models** for language model selection, **tools** for capability assignment, **sources** for RAG data binding, **mcp** for external protocol integrations, and **shares** for organization-wide agent sharing via an authorization strategy.
