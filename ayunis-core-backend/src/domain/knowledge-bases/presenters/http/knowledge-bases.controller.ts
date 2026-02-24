@@ -13,6 +13,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  OnModuleInit,
 } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import {
@@ -30,7 +31,6 @@ import { randomUUID } from 'crypto';
 import * as fs from 'fs';
 
 const UPLOADS_DIR = './uploads';
-fs.mkdirSync(resolve(UPLOADS_DIR), { recursive: true });
 import {
   CurrentUser,
   UserProperty,
@@ -72,8 +72,12 @@ import { KnowledgeBaseDtoMapper } from './mappers/knowledge-base-dto.mapper';
 
 @ApiTags('knowledge-bases')
 @Controller('knowledge-bases')
-export class KnowledgeBasesController {
+export class KnowledgeBasesController implements OnModuleInit {
   private readonly logger = new Logger(KnowledgeBasesController.name);
+
+  async onModuleInit(): Promise<void> {
+    await fs.promises.mkdir(resolve(UPLOADS_DIR), { recursive: true });
+  }
 
   constructor(
     private readonly createKnowledgeBaseUseCase: CreateKnowledgeBaseUseCase,
