@@ -4,6 +4,7 @@ import { useDeleteKnowledgeBase } from '../api/useDeleteKnowledgeBase';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
 import type { KnowledgeBase } from '../model/openapi';
+import { useRouter } from '@tanstack/react-router';
 import {
   Item,
   ItemActions,
@@ -22,6 +23,7 @@ export default function KnowledgeBaseCard({
   const { t } = useTranslation('knowledge-bases');
   const deleteKnowledgeBase = useDeleteKnowledgeBase();
   const { confirm } = useConfirmation();
+  const router = useRouter();
 
   function handleDelete() {
     confirm({
@@ -39,7 +41,16 @@ export default function KnowledgeBaseCard({
   }
 
   return (
-    <Item variant="outline">
+    <Item
+      variant="outline"
+      className="cursor-pointer"
+      onClick={() =>
+        void router.navigate({
+          to: '/knowledge-bases/$id',
+          params: { id: knowledgeBase.id },
+        })
+      }
+    >
       <ItemContent>
         <ItemTitle>
           <span>{knowledgeBase.name}</span>
