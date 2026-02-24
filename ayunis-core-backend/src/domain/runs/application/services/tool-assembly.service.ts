@@ -122,13 +122,36 @@ export class ToolAssemblyService {
         });
       }
 
-      const mcpCapabilities = await Promise.all(
+      const mcpResults = await Promise.allSettled(
         integrationIdList.map((integrationId) =>
           this.discoverMcpCapabilitiesUseCase.execute(
             new DiscoverMcpCapabilitiesQuery(integrationId),
           ),
         ),
       );
+
+      // Filter successful results, log and skip failures
+      const mcpCapabilities = mcpResults
+        .map((result, index) => {
+          if (result.status === 'fulfilled') {
+            return result.value;
+          }
+          const failedId = integrationIdList[index];
+          const meta = integrationMetaMap.get(failedId);
+          this.logger.warn(
+            `MCP integration '${meta?.name ?? failedId}' unavailable, skipping`,
+            {
+              integrationId: failedId,
+              error:
+                result.reason instanceof Error
+                  ? result.reason.message
+                  : 'Unknown error',
+            },
+          );
+          return null;
+        })
+        .filter((cap): cap is NonNullable<typeof cap> => cap !== null);
+
       // Add MCP tools and resources
       tools.push(
         ...mcpCapabilities.flatMap((capability) =>

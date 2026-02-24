@@ -205,15 +205,17 @@ function InstallIntegrationCardView({
   return (
     <Card className="w-full max-w-lg">
       <CardHeader className="text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center">
           {integration.logoUrl ? (
             <img
               src={integration.logoUrl}
               alt={integration.name}
-              className="h-10 w-10 rounded-full object-cover"
+              className="h-16 w-16 object-contain"
             />
           ) : (
-            <Plug className="h-8 w-8 text-primary" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+              <Plug className="h-8 w-8 text-primary" />
+            </div>
           )}
         </div>
         <CardTitle className="text-xl">{integration.name}</CardTitle>
@@ -270,7 +272,9 @@ function InstallIntegrationCardView({
                       target="_blank"
                       rel="noopener noreferrer"
                       className="underline text-primary hover:text-primary/80"
-                    />
+                    >
+                      placeholder
+                    </a>
                   ),
                 }}
               />

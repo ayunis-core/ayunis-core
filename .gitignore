@@ -3,3 +3,6 @@
 .env
 node_modules
 .dev/
+
+# Auto-generated type-checking tsconfig files (tool-generated with hash names)
+tsconfig.?????????*.json

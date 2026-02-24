@@ -1,8 +1,20 @@
 import { useState } from 'react';
-import { Loader2, Plug } from 'lucide-react';
+import { ChevronsUpDown, Loader2, Plug } from 'lucide-react';
 import type { ToolUseMessageContent } from '../../model/openapi';
 import { formatToolName } from '../../lib/format-tool-name';
-import AgentActivityHint from '@/widgets/agent-activity-hint/ui/AgentActivityHint';
+import {
+  ItemMedia,
+  ItemContent,
+  ItemTitle,
+  ItemDescription,
+  ItemActions,
+} from '@/shared/ui/shadcn/item';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/shared/ui/shadcn/collapsible';
+import { useAutoScroll } from '@/features/useAutoScroll';
 
 export default function IntegrationToolWidget({
   content,
@@ -19,49 +31,67 @@ export default function IntegrationToolWidget({
 
   const integration = content.integration;
   const toolHint = formatToolName(content.name);
-
-  const icon =
-    isStreaming || isLoadingParams ? (
-      <Loader2 className="h-4 w-4 animate-spin" />
-    ) : (
-      <IntegrationIcon
-        logoUrl={integration?.logoUrl ?? null}
-        name={integration?.name ?? ''}
-      />
-    );
-
-  const hint = (
-    <span className="flex items-center gap-1.5">
-      {integration?.name && (
-        <span className="font-medium">{integration.name}</span>
-      )}
-      <span className="text-muted-foreground">{toolHint}</span>
-    </span>
-  );
+  const input = isLoadingParams ? '' : JSON.stringify(content.params, null, 2);
 
   return (
-    <AgentActivityHint
-      open={open}
-      onOpenChange={setOpen}
-      icon={icon}
-      hint={hint}
-      input={isLoadingParams ? '' : JSON.stringify(content.params, null, 2)}
-    />
+    <Collapsible open={open} onOpenChange={setOpen} className="mt-2">
+      <div className="rounded-md border">
+        <div className="flex items-center gap-2.5 px-4 py-3">
+          <ItemMedia variant="image">
+            <IntegrationIcon
+              logoUrl={integration?.logoUrl ?? null}
+              name={integration?.name ?? ''}
+              isLoading={isStreaming || isLoadingParams}
+            />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>{integration?.name ?? 'Integration'}</ItemTitle>
+            <ItemDescription>{toolHint}</ItemDescription>
+          </ItemContent>
+          <ItemActions>
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ChevronsUpDown className="h-4 w-4" />
+              </button>
+            </CollapsibleTrigger>
+          </ItemActions>
+        </div>
+        <CollapsibleContent>
+          <ToolDetails input={input} />
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
+  );
+}
+
+function ToolDetails({ input }: Readonly<{ input: string }>) {
+  const { scrollRef, handleScroll } = useAutoScroll(input);
+  return (
+    <div
+      className="max-h-32 overflow-y-auto border-t px-4 py-2 text-muted-foreground whitespace-pre-wrap text-xs"
+      ref={scrollRef}
+      onScroll={handleScroll}
+    >
+      {input}
+    </div>
   );
 }
 
 function IntegrationIcon({
   logoUrl,
   name,
-}: Readonly<{ logoUrl: string | null; name: string }>) {
+  isLoading,
+}: Readonly<{ logoUrl: string | null; name: string; isLoading: boolean }>) {
+  if (isLoading) {
+    return <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />;
+  }
   if (logoUrl) {
     return (
-      <img
-        src={logoUrl}
-        alt={name}
-        className="h-4 w-4 rounded-sm object-cover"
-      />
+      <img src={logoUrl} alt={name} className="h-full w-full object-cover" />
     );
   }
-  return <Plug className="h-4 w-4" />;
+  return <Plug className="h-5 w-5 text-muted-foreground" />;
 }
