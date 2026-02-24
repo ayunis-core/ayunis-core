@@ -47,6 +47,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
         'sourceAssignments',
         'sourceAssignments.source',
         'knowledgeBases',
+        'mcpIntegrations',
       ],
       order: {
         messages: {
@@ -74,6 +75,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
           source: true,
         },
         knowledgeBases: true,
+        mcpIntegrations: true,
       },
       order: {
         messages: {
@@ -214,6 +216,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
         : false,
       model: options?.withModel ? true : false,
       knowledgeBases: options?.withKnowledgeBases ? true : false,
+      mcpIntegrations: true,
     };
     return relations;
   }
