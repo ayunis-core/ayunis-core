@@ -142,7 +142,11 @@ export default function NewChatPage({
           onRemoveSource={handleRemoveSource}
           onDownloadSource={() => null}
           onAddKnowledgeBase={(kb) => {
-            setSelectedKnowledgeBases((prev) => [...prev, kb]);
+            setSelectedKnowledgeBases((prev) =>
+              prev.some((existing) => existing.id === kb.id)
+                ? prev
+                : [...prev, kb],
+            );
           }}
           onRemoveKnowledgeBase={(kbId) => {
             setSelectedKnowledgeBases((prev) =>
