@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ChatContext } from './chatContext';
+import { ChatContext, type KnowledgeBaseSummary } from './chatContext';
 import type { SourceResponseDtoType } from '@/shared/api';
 
 type PendingImageFile = {
@@ -22,7 +22,9 @@ export const ChatContextProvider = ({
     }>
   >([]);
   const [pendingImages, setPendingImages] = useState<PendingImageFile[]>([]);
-  const [pendingSkillId, setPendingSkillId] = useState('');
+  const [pendingKnowledgeBases, setPendingKnowledgeBases] = useState<
+    KnowledgeBaseSummary[]
+  >([]);
 
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo(
@@ -33,10 +35,10 @@ export const ChatContextProvider = ({
       setSources,
       pendingImages,
       setPendingImages,
-      pendingSkillId,
-      setPendingSkillId,
+      pendingKnowledgeBases,
+      setPendingKnowledgeBases,
     }),
-    [pendingMessage, sources, pendingImages, pendingSkillId],
+    [pendingMessage, sources, pendingImages, pendingKnowledgeBases],
   );
 
   return (

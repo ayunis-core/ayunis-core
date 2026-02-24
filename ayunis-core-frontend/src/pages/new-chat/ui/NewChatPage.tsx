@@ -1,10 +1,8 @@
 import NewChatPageLayout from './NewChatPageLayout';
-import ChatInput, { type ChatInputRef } from '@/widgets/chat-input';
+import ChatInput from '@/widgets/chat-input';
 import { useInitiateChat } from '../api/useInitiateChat';
-import { useState, useRef, useMemo } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PinnedSkills } from './PinnedSkills';
-import { useSkillsControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
@@ -13,7 +11,7 @@ import { SourceResponseDtoType } from '@/shared/api/generated/ayunisCoreAPI.sche
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
-import { keepPreviousData } from '@tanstack/react-query';
+import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
 
 interface NewChatPageProps {
   prefilledPrompt?: string;
@@ -31,26 +29,13 @@ export default function NewChatPage({
   agents,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
-  const [selectedSkillId, setSelectedSkillId] = useState<string | undefined>(
-    undefined,
-  );
-  const { initiateChat } = useInitiateChat({
-    onSuccess: () => setSelectedSkillId(undefined),
-  });
+  const { initiateChat } = useInitiateChat();
   const { models } = usePermittedModels();
-  const chatInputRef = useRef<ChatInputRef>(null);
   const greeting = useTimeBasedGreeting();
-  const { setPendingImages, setPendingSkillId } = useChatContext();
+  const { setPendingImages, setPendingKnowledgeBases } = useChatContext();
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
   const [isAnonymous, setIsAnonymous] = useState(false);
-  const { data: skills } = useSkillsControllerFindAll({
-    query: { placeholderData: keepPreviousData },
-  });
-  const selectedSkillName = useMemo(
-    () => skills?.find((s) => s.id === selectedSkillId)?.name,
-    [skills, selectedSkillId],
-  );
   const [sources, setSources] = useState<
     Array<{
       id: string;
@@ -58,6 +43,9 @@ export default function NewChatPage({
       type: SourceResponseDtoType;
       file: File;
     }>
+  >([]);
+  const [selectedKnowledgeBases, setSelectedKnowledgeBases] = useState<
+    KnowledgeBaseSummary[]
   >([]);
   const selectedAgent = agents.find((agent) => agent.id === agentId);
   const selectedModel = models.find((m) => m.id === modelId);
@@ -109,7 +97,6 @@ export default function NewChatPage({
   function handleSend(
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
-    skillId?: string,
   ) {
     if (!modelId && !agentId) {
       showError(t('newChat.noModelOrAgentError'));
@@ -121,12 +108,9 @@ export default function NewChatPage({
       setPendingImages(imageFiles);
     }
 
-    // Store skill ID in context for ChatPage to include in the first message
-    if (skillId) {
-      setPendingSkillId(skillId);
-    } else {
-      setPendingSkillId('');
-    }
+    // Store selected KBs in context for ChatPage to attach after thread creation
+    // Always set — even when empty — to clear stale KBs from a previous failed attempt
+    setPendingKnowledgeBases(selectedKnowledgeBases);
 
     initiateChat(message, modelId, agentId, sources, isAnonymous);
   }
@@ -140,7 +124,6 @@ export default function NewChatPage({
       </div>
       <div className="w-full flex flex-col gap-4 mt-2">
         <ChatInput
-          ref={chatInputRef}
           // If an agent is selected, use the agent's model,
           // but disable the model selection
           // to only show the model that the agent uses
@@ -148,6 +131,7 @@ export default function NewChatPage({
           isModelChangeDisabled={!!agentId}
           agentId={agentId}
           sources={sources}
+          knowledgeBases={selectedKnowledgeBases}
           onModelChange={handleModelChange}
           onAgentChange={handleAgentChange}
           onAgentRemove={handleAgentRemove}
@@ -157,26 +141,19 @@ export default function NewChatPage({
           onFileUpload={handleFileUpload}
           onRemoveSource={handleRemoveSource}
           onDownloadSource={() => null}
+          onAddKnowledgeBase={(kb) => {
+            setSelectedKnowledgeBases((prev) => [...prev, kb]);
+          }}
+          onRemoveKnowledgeBase={(kbId) => {
+            setSelectedKnowledgeBases((prev) =>
+              prev.filter((kb) => kb.id !== kbId),
+            );
+          }}
           isEmbeddingModelEnabled={isEmbeddingModelEnabled}
           isAnonymous={isAnonymous}
           onAnonymousChange={setIsAnonymous}
           isAnonymousEnforced={isAnonymousEnforced}
           isVisionEnabled={isVisionEnabled}
-          selectedSkillId={selectedSkillId}
-          selectedSkillName={selectedSkillName}
-          onSkillRemove={() => {
-            setSelectedSkillId(undefined);
-          }}
-        />
-        <PinnedSkills
-          onSkillSelect={(skillId) => {
-            if (selectedSkillId === skillId) {
-              setSelectedSkillId(undefined);
-            } else {
-              setSelectedSkillId(skillId);
-            }
-          }}
-          selectedSkillId={selectedSkillId}
         />
       </div>
     </NewChatPageLayout>
