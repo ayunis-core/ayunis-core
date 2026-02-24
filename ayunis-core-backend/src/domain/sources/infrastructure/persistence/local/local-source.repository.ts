@@ -82,6 +82,14 @@ export class LocalSourceRepository extends SourceRepository {
     return records.map((record) => this.mapper.toDomain(record));
   }
 
+  async findByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<Source[]> {
+    this.logger.log('findByKnowledgeBaseId', { knowledgeBaseId });
+    const records = await this.sourceRepository.find({
+      where: { knowledgeBaseId },
+    });
+    return records.map((record) => this.mapper.toDomain(record));
+  }
+
   async save(source: TextSource): Promise<TextSource>;
   async save(source: DataSource): Promise<DataSource>;
   async save(source: Source): Promise<Source>;
