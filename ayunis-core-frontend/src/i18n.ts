@@ -44,6 +44,8 @@ import enSkills from './shared/locales/en/skills.json';
 import deSkills from './shared/locales/de/skills.json';
 import enSkill from './shared/locales/en/skill.json';
 import deSkill from './shared/locales/de/skill.json';
+import enKnowledgeBases from './shared/locales/en/knowledge-bases.json';
+import deKnowledgeBases from './shared/locales/de/knowledge-bases.json';
 
 const resources = {
   en: {
@@ -68,6 +70,7 @@ const resources = {
     'install-integration': enInstallIntegration,
     skills: enSkills,
     skill: enSkill,
+    'knowledge-bases': enKnowledgeBases,
   },
   de: {
     auth: deAuth,
@@ -91,6 +94,7 @@ const resources = {
     'install-integration': deInstallIntegration,
     skills: deSkills,
     skill: deSkill,
+    'knowledge-bases': deKnowledgeBases,
   },
 };
 
