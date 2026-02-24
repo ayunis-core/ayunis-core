@@ -43,6 +43,9 @@ export class MessageMapper {
           ...(content.providerMetadata && {
             providerMetadata: content.providerMetadata,
           }),
+          ...(content.integration && {
+            integration: content.integration,
+          }),
         };
       }
       if (content instanceof ToolResultMessageContent) {
@@ -117,6 +120,7 @@ export class MessageMapper {
                 content.name,
                 content.params,
                 content.providerMetadata ?? null,
+                content.integration ?? undefined,
               );
             }
             if (content.type === MessageContentType.THINKING) {

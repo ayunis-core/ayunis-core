@@ -17,6 +17,7 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
+import { resolveIntegration } from '../helpers/resolve-integration.helper';
 import { safeJsonParse } from 'src/common/util/unicode-sanitizer';
 
 type AssistantContentBlock =
@@ -101,6 +102,7 @@ export class StreamingInferenceService {
         asyncIterable,
         assistantMessage,
         state,
+        tools,
       )) {
         yield message;
       }
@@ -123,6 +125,7 @@ export class StreamingInferenceService {
         state,
         assistantMessage,
         streamCompletedSuccessfully,
+        tools,
       );
     }
   }
@@ -186,12 +189,13 @@ export class StreamingInferenceService {
     asyncIterable: AsyncIterable<StreamInferenceResponseChunk>,
     assistantMessage: AssistantMessage,
     state: AccumulatedState,
+    tools: Tool[],
   ): AsyncGenerator<AssistantMessage, void, void> {
     for await (const chunk of asyncIterable) {
       const shouldUpdate = this.accumulateChunk(chunk, state);
 
       if (shouldUpdate) {
-        assistantMessage.content = this.buildMessageContent(state);
+        assistantMessage.content = this.buildMessageContent(state, tools);
         yield assistantMessage;
       }
     }
@@ -276,6 +280,7 @@ export class StreamingInferenceService {
 
   private buildMessageContent(
     state: AccumulatedState,
+    tools: Tool[],
   ): AssistantContentBlock[] {
     const content = this.buildBaseContent(state);
 
@@ -291,6 +296,7 @@ export class StreamingInferenceService {
             toolCall.name,
             parsedArgs,
             toolCall.providerMetadata,
+            resolveIntegration(toolCall.name, tools),
           ),
         );
       }
@@ -323,6 +329,7 @@ export class StreamingInferenceService {
     state: AccumulatedState,
     assistantMessage: AssistantMessage,
     streamCompletedSuccessfully: boolean,
+    tools: Tool[],
   ): Promise<void> {
     this.logger.log(
       'Finalizing streaming inference, saving accumulated message',
@@ -337,6 +344,7 @@ export class StreamingInferenceService {
     const finalContent = this.buildFinalContent(
       state,
       streamCompletedSuccessfully,
+      tools,
     );
     assistantMessage.content = finalContent;
 
@@ -358,11 +366,12 @@ export class StreamingInferenceService {
   private buildFinalContent(
     state: AccumulatedState,
     includeToolCalls: boolean,
+    tools: Tool[],
   ): AssistantContentBlock[] {
     const content = this.buildBaseContent(state);
 
     if (includeToolCalls) {
-      this.addFinalToolCalls(content, state.toolCalls);
+      this.addFinalToolCalls(content, state.toolCalls, tools);
     } else {
       this.logger.log(
         'Streaming was interrupted, excluding tool calls from saved message',
@@ -376,6 +385,7 @@ export class StreamingInferenceService {
   private addFinalToolCalls(
     content: AssistantContentBlock[],
     toolCalls: Map<number, AccumulatedToolCall>,
+    tools: Tool[],
   ): void {
     toolCalls.forEach((toolCall) => {
       if (toolCall.id && toolCall.name) {
@@ -390,6 +400,7 @@ export class StreamingInferenceService {
               toolCall.name,
               parsedArgs,
               toolCall.providerMetadata,
+              resolveIntegration(toolCall.name, tools),
             ),
           );
         } catch (error) {

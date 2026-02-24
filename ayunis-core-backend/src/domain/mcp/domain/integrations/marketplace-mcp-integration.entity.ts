@@ -12,6 +12,7 @@ import type { IntegrationConfigSchema } from '../value-objects/integration-confi
 export class MarketplaceMcpIntegration extends McpIntegration {
   public readonly marketplaceIdentifier: string;
   public readonly configSchema: IntegrationConfigSchema;
+  public readonly logoUrl: string | null;
   private _orgConfigValues: Record<string, string>;
   private readonly _serverUrl: string;
 
@@ -24,6 +25,7 @@ export class MarketplaceMcpIntegration extends McpIntegration {
     configSchema: IntegrationConfigSchema;
     orgConfigValues: Record<string, string>;
     auth: McpIntegrationAuth;
+    logoUrl?: string | null;
     enabled?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
@@ -48,6 +50,7 @@ export class MarketplaceMcpIntegration extends McpIntegration {
 
     this.marketplaceIdentifier = params.marketplaceIdentifier;
     this.configSchema = params.configSchema;
+    this.logoUrl = params.logoUrl ?? null;
     this._orgConfigValues = { ...params.orgConfigValues };
     this._serverUrl = params.serverUrl;
   }

@@ -59,6 +59,7 @@ export class McpIntegrationDtoMapper {
         integration.configSchema.orgFields,
         integration.orgConfigValues,
       );
+      baseDto.logoUrl = integration.logoUrl;
       baseDto.serverUrl = undefined; // Not exposed for marketplace
       baseDto.slug = undefined;
     } else if (integration instanceof PredefinedMcpIntegration) {

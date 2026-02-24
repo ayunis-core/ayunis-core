@@ -81,11 +81,25 @@ export class MarketplaceIntegrationResponseDto {
   description: string;
 
   @ApiPropertyOptional({
-    description: 'Icon URL',
+    description: 'Lucide icon name',
     type: 'string',
     nullable: true,
   })
-  iconUrl: string | null;
+  iconName: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Absolute URL to the integration logo image',
+    type: 'string',
+    nullable: true,
+  })
+  logoUrl: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Category UUID from the marketplace',
+    type: 'string',
+    nullable: true,
+  })
+  integrationCategoryId: string | null;
 
   @ApiProperty({ description: 'MCP server URL' })
   serverUrl: string;
@@ -105,6 +119,20 @@ export class MarketplaceIntegrationResponseDto {
 
   @ApiProperty({ description: 'Whether the integration is pre-installed' })
   preInstalled: boolean;
+
+  @ApiPropertyOptional({
+    description: 'URL to the legal text page the installer must confirm',
+    type: 'string',
+    nullable: true,
+  })
+  legalTextUrl: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Version of the legal text',
+    type: 'string',
+    nullable: true,
+  })
+  legalTextVersion: string | null;
 
   @ApiProperty({ description: 'Creation timestamp' })
   createdAt: string;

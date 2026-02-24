@@ -1218,6 +1218,18 @@ export interface TextMessageContentResponseDto {
   isSkillInstruction?: boolean;
 }
 
+export interface ToolUseIntegrationDto {
+  /** Integration ID */
+  id: string;
+  /** Integration name */
+  name: string;
+  /**
+   * Integration logo URL
+   * @nullable
+   */
+  logoUrl?: string | null;
+}
+
 /**
  * Type of the message content
  */
@@ -1247,6 +1259,8 @@ export interface ToolUseMessageContentResponseDto {
   name: string;
   /** Parameters passed to the tool */
   params: ToolUseMessageContentResponseDtoParams;
+  /** Integration metadata if this tool belongs to a marketplace integration */
+  integration?: ToolUseIntegrationDto;
 }
 
 /**
@@ -1864,6 +1878,11 @@ export interface McpIntegrationResponseDto {
   hasUserFields?: boolean;
   /** Current org-level config values for marketplace integrations. Non-secret fields contain plaintext values. Secret fields are masked with "••••••". */
   orgConfigValues?: McpIntegrationResponseDtoOrgConfigValues;
+  /**
+   * Logo URL for marketplace integrations
+   * @nullable
+   */
+  logoUrl?: string | null;
 }
 
 /**
@@ -2329,10 +2348,20 @@ export interface MarketplaceIntegrationResponseDto {
   /** Full description */
   description: string;
   /**
-   * Icon URL
+   * Lucide icon name
    * @nullable
    */
-  iconUrl?: string | null;
+  iconName?: string | null;
+  /**
+   * Absolute URL to the integration logo image
+   * @nullable
+   */
+  logoUrl?: string | null;
+  /**
+   * Category UUID from the marketplace
+   * @nullable
+   */
+  integrationCategoryId?: string | null;
   /** MCP server URL */
   serverUrl: string;
   /** Configuration schema (authType, orgFields, userFields, oauth) */
@@ -2343,6 +2372,16 @@ export interface MarketplaceIntegrationResponseDto {
   published: boolean;
   /** Whether the integration is pre-installed */
   preInstalled: boolean;
+  /**
+   * URL to the legal text page the installer must confirm
+   * @nullable
+   */
+  legalTextUrl?: string | null;
+  /**
+   * Version of the legal text
+   * @nullable
+   */
+  legalTextVersion?: string | null;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */

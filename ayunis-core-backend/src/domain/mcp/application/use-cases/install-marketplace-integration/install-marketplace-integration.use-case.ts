@@ -129,6 +129,7 @@ export class InstallMarketplaceIntegrationUseCase {
         configSchema,
         orgConfigValues: encryptedValues,
         returnsPii: command.returnsPii,
+        logoUrl: marketplaceIntegration.logoUrl ?? null,
       });
 
       const saved = await this.repository.save(integration);

@@ -67,6 +67,25 @@ export class MarketplaceController {
       new GetMarketplaceIntegrationQuery(identifier),
     );
 
-    return integration as unknown as MarketplaceIntegrationResponseDto;
+    return {
+      id: integration.id,
+      identifier: integration.identifier,
+      name: integration.name,
+      shortDescription: integration.shortDescription,
+      description: integration.description,
+      iconName: integration.iconName ?? null,
+      logoUrl: integration.logoUrl ?? null,
+      integrationCategoryId: integration.integrationCategoryId ?? null,
+      serverUrl: integration.serverUrl,
+      configSchema:
+        integration.configSchema as unknown as MarketplaceIntegrationResponseDto['configSchema'],
+      featured: integration.featured,
+      published: integration.published,
+      preInstalled: integration.preInstalled,
+      legalTextUrl: integration.legalTextUrl ?? null,
+      legalTextVersion: integration.legalTextVersion ?? null,
+      createdAt: integration.createdAt,
+      updatedAt: integration.updatedAt,
+    };
   }
 }

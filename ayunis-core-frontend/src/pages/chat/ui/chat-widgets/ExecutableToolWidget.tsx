@@ -1,32 +1,9 @@
 import { Loader2, Wrench } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ToolUseMessageContent } from '../../model/openapi';
+import { formatToolName } from '../../lib/format-tool-name';
 import AgentActivityHint from '@/widgets/agent-activity-hint/ui/AgentActivityHint';
 import { useState } from 'react';
-
-/**
- * Formats a tool name for display when no translation exists.
- * Converts snake_case or kebab-case to human-readable format.
- * Examples:
- *   - "mcp_obsidian-mcp-tools_fetch" -> "Fetch"
- *   - "internet_search" -> "Internet Search"
- *   - "mcp_context7_get-library-docs" -> "Get Library Docs"
- */
-function formatToolName(toolName: string): string {
-  // Remove mcp_ prefix if present (e.g., "mcp_obsidian-mcp-tools_fetch")
-  let formatted = toolName.replace(/^mcp_[^_]+_/, '');
-
-  // Replace underscores and hyphens with spaces
-  formatted = formatted.replace(/[_-]/g, ' ');
-
-  // Capitalize each word
-  formatted = formatted
-    .split(' ')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-
-  return formatted;
-}
 
 export default function ExecutableToolWidget({
   content,

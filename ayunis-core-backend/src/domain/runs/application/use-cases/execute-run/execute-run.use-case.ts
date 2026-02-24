@@ -48,6 +48,7 @@ import { ToolAssemblyService } from '../../services/tool-assembly.service';
 import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
 import { MessageCleanupService } from '../../services/message-cleanup.service';
 import { StreamingInferenceService } from '../../services/streaming-inference.service';
+import { enrichContentWithIntegration } from '../../helpers/resolve-integration.helper';
 import type { RunParams } from './run-params.interface';
 
 const MAX_CONTEXT_TOKENS = 80000;
@@ -421,11 +422,13 @@ Skill "${skillName}" has already been activated on this thread. Do not call acti
       }),
     );
 
+    const enrichedContent = enrichContentWithIntegration(
+      inferenceResponse.content,
+      params.tools,
+    );
+
     const assistantMessage = await this.createAssistantMessageUseCase.execute(
-      new CreateAssistantMessageCommand(
-        params.thread.id,
-        inferenceResponse.content,
-      ),
+      new CreateAssistantMessageCommand(params.thread.id, enrichedContent),
     );
 
     if (

@@ -77,6 +77,7 @@ describe('MarketplaceMcpIntegration', () => {
       oparlEndpointUrl: 'https://rim.ekom21.de/oparl/v1',
     });
     expect(integration.serverUrl).toBe('https://oparl-mcp.ayunis.de/mcp');
+    expect(integration.logoUrl).toBeNull();
   });
 
   it('should be identified as marketplace via isMarketplace()', () => {
@@ -113,6 +114,23 @@ describe('MarketplaceMcpIntegration', () => {
     expect(integration.orgConfigValues).toEqual({ authToken: 'new-token' });
     expect(integration.updatedAt.getTime()).toBeGreaterThanOrEqual(
       previousUpdatedAt.getTime(),
+    );
+  });
+
+  it('should store logoUrl when provided', () => {
+    const integration = new MarketplaceMcpIntegration({
+      orgId,
+      name: 'OParl Integration',
+      serverUrl: 'https://oparl-mcp.ayunis.de/mcp',
+      marketplaceIdentifier: 'oparl',
+      configSchema,
+      orgConfigValues: {},
+      auth: new NoAuthMcpIntegrationAuth(),
+      logoUrl: 'https://marketplace.ayunis.de/logos/oparl.png',
+    });
+
+    expect(integration.logoUrl).toBe(
+      'https://marketplace.ayunis.de/logos/oparl.png',
     );
   });
 

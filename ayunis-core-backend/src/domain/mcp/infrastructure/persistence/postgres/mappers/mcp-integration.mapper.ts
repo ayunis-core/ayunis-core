@@ -123,6 +123,7 @@ export class McpIntegrationMapper {
       marketplaceIdentifier: record.marketplaceIdentifier,
       configSchema: record.configSchema,
       orgConfigValues: record.orgConfigValues,
+      logoUrl: record.logoUrl,
     });
   }
 
@@ -174,6 +175,7 @@ export class McpIntegrationMapper {
     record.marketplaceIdentifier = entity.marketplaceIdentifier;
     record.configSchema = entity.configSchema;
     record.orgConfigValues = entity.orgConfigValues;
+    record.logoUrl = entity.logoUrl;
     return record;
   }
 

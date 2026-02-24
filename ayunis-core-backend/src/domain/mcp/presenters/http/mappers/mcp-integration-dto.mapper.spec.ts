@@ -119,6 +119,45 @@ describe('McpIntegrationDtoMapper', () => {
     expect(dto.orgConfigValues).toEqual({ apiToken: SECRET_MASK });
   });
 
+  it('maps marketplace integration logoUrl to DTO', () => {
+    const configSchema: IntegrationConfigSchema = {
+      authType: 'NO_AUTH',
+      orgFields: [],
+      userFields: [],
+    };
+    const integration = new MarketplaceMcpIntegration({
+      ...baseParams,
+      marketplaceIdentifier: 'logo-integration',
+      configSchema,
+      orgConfigValues: {},
+      auth: new NoAuthMcpIntegrationAuth(),
+      logoUrl: 'https://marketplace.ayunis.de/logos/oparl.png',
+    });
+
+    const dto = mapper.toDto(integration);
+
+    expect(dto.logoUrl).toBe('https://marketplace.ayunis.de/logos/oparl.png');
+  });
+
+  it('maps marketplace integration with null logoUrl to DTO', () => {
+    const configSchema: IntegrationConfigSchema = {
+      authType: 'NO_AUTH',
+      orgFields: [],
+      userFields: [],
+    };
+    const integration = new MarketplaceMcpIntegration({
+      ...baseParams,
+      marketplaceIdentifier: 'no-logo-integration',
+      configSchema,
+      orgConfigValues: {},
+      auth: new NoAuthMcpIntegrationAuth(),
+    });
+
+    const dto = mapper.toDto(integration);
+
+    expect(dto.logoUrl).toBeNull();
+  });
+
   it('maps marketplace integration without user fields', () => {
     const configSchema: IntegrationConfigSchema = {
       authType: 'NO_AUTH',

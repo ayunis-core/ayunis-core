@@ -337,4 +337,27 @@ describe('McpIntegrationMapper', () => {
       oparlEndpointUrl: 'https://rim.ekom21.de/oparl/v1',
     });
   });
+
+  it('round-trips marketplace integration logoUrl through record mapping', () => {
+    const auth = new NoAuthMcpIntegrationAuth();
+    const original = new MarketplaceMcpIntegration({
+      ...baseParams,
+      auth,
+      marketplaceIdentifier: 'logo-mcp',
+      configSchema: oparlConfigSchema,
+      orgConfigValues: {},
+      logoUrl: 'https://marketplace.ayunis.de/logos/oparl.png',
+    });
+
+    const record = mapper.toRecord(original);
+    expect((record as MarketplaceMcpIntegrationRecord).logoUrl).toBe(
+      'https://marketplace.ayunis.de/logos/oparl.png',
+    );
+
+    const reconstructed = mapper.toDomain(record);
+    const marketplace = reconstructed as MarketplaceMcpIntegration;
+    expect(marketplace.logoUrl).toBe(
+      'https://marketplace.ayunis.de/logos/oparl.png',
+    );
+  });
 });

@@ -19,6 +19,11 @@ interface ToolUseMessageContentData {
   name: string;
   params: Record<string, unknown>;
   providerMetadata?: ProviderMetadata;
+  integration?: {
+    id: string;
+    name: string;
+    logoUrl: string | null;
+  };
 }
 
 interface ToolResultMessageContentData {
