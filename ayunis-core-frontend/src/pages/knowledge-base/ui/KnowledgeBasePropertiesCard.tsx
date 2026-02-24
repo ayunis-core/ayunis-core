@@ -8,6 +8,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -65,6 +66,9 @@ export default function KnowledgeBasePropertiesCard({
                       {...field}
                     />
                   </FormControl>
+                  <FormDescription>
+                    {t('detail.properties.form.descriptionHint')}
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
