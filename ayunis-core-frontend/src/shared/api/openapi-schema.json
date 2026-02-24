@@ -10033,7 +10033,9 @@
               "mcp_prompt",
               "product_knowledge",
               "activate_skill",
-              "create_skill"
+              "create_skill",
+              "knowledge_query",
+              "knowledge_get_text"
             ]
           },
           "toolConfigId": {
@@ -10107,7 +10109,9 @@
               "mcp_prompt",
               "product_knowledge",
               "activate_skill",
-              "create_skill"
+              "create_skill",
+              "knowledge_query",
+              "knowledge_get_text"
             ]
           }
         },

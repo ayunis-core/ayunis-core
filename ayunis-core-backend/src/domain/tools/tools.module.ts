@@ -24,7 +24,10 @@ import { ProductKnowledgeToolHandler } from './application/handlers/product-know
 import { ProductKnowledgePort } from './application/ports/product-knowledge.port';
 import { ProductKnowledgeAdapter } from './infrastructure/product-knowledge/product-knowledge.adapter';
 import { ActivateSkillToolHandler } from './application/handlers/activate-skill-tool.handler';
+import { KnowledgeQueryToolHandler } from './application/handlers/knowledge-query-tool.handler';
+import { KnowledgeGetTextToolHandler } from './application/handlers/knowledge-get-text-tool.handler';
 import { SkillsModule } from '../skills/skills.module';
+import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
 
 @Module({
   imports: [
@@ -34,6 +37,7 @@ import { SkillsModule } from '../skills/skills.module';
     RetrieverModule,
     McpModule,
     SkillsModule,
+    KnowledgeBasesModule,
   ],
   providers: [
     // Use cases
@@ -52,6 +56,8 @@ import { SkillsModule } from '../skills/skills.module';
     McpIntegrationResourceHandler,
     ProductKnowledgeToolHandler,
     ActivateSkillToolHandler,
+    KnowledgeQueryToolHandler,
+    KnowledgeGetTextToolHandler,
     {
       provide: ProductKnowledgePort,
       useClass: ProductKnowledgeAdapter,

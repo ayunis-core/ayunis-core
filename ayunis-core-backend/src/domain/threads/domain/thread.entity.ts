@@ -3,11 +3,9 @@ import { randomUUID } from 'crypto';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import type { SourceAssignment } from './thread-source-assignment.entity';
+import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 
-export interface KnowledgeBaseSummary {
-  id: UUID;
-  name: string;
-}
+export type { KnowledgeBaseSummary };
 
 export class Thread {
   id: UUID;
