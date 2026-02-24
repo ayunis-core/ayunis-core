@@ -37,6 +37,9 @@
       "source_get_text": "Query file",
       "code_execution": "Calculate",
       "activate_skill": "Activate skill",
+      "knowledge_query": "Search knowledge base",
+      "knowledge_get_text": "Read knowledge base document",
+      "product_knowledge": "Search product knowledge",
       "send_email": {
         "subject": "Subject",
         "body": "Body",

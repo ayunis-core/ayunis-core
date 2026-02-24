@@ -89,7 +89,7 @@ export class QueryKnowledgeBaseUseCase {
         query: query.query,
         documentIds,
         type: IndexType.PARENT_CHILD,
-        limit: 50,
+        limit: 5,
       }),
     );
 

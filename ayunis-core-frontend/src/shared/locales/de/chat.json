@@ -37,6 +37,9 @@
       "source_get_text": "Datei durchsuchen",
       "code_execution": "Berechnung ausführen",
       "activate_skill": "Fähigkeit aktivieren",
+      "knowledge_query": "Wissen abrufen",
+      "knowledge_get_text": "Wissen abrufen",
+      "product_knowledge": "Produktwissen durchsuchen",
       "send_email": {
         "subject": "Betreff",
         "body": "Nachricht",

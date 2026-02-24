@@ -72,7 +72,7 @@ export class ToolAssemblyService {
       // Only include skills in prompt when tools are enabled and not cloud-hosted,
       // otherwise the prompt would instruct the model to use activate_skill which isn't available
       skills: canUseTools && !isCloudHosted ? activeSkills : [],
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- threads created before knowledge bases feature may have undefined
+
       knowledgeBases: canUseTools ? (thread.knowledgeBases ?? []) : [],
       userSystemPrompt,
     });
@@ -272,7 +272,7 @@ export class ToolAssemblyService {
     }
 
     // Knowledge base tools are available if the thread has knowledge bases
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- threads created before knowledge bases feature may have undefined
+
     if ((thread.knowledgeBases?.length ?? 0) > 0) {
       tools.push(
         await this.assembleToolsUseCase.execute(
