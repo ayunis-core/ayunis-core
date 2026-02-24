@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import type { TFunction } from 'i18next';
 import { Plug } from 'lucide-react';
@@ -20,6 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/ui/shadcn/card';
+import { Checkbox } from '@/shared/ui/shadcn/checkbox';
 import { ConfigFieldInput } from '@/shared/ui/config-field-input';
 
 interface InstallIntegrationPageProps {
@@ -70,6 +71,7 @@ function InstallIntegrationContent({
   } = useMarketplaceControllerGetIntegration(integrationIdentifier);
   const installMutation = useInstallIntegrationFromMarketplace();
   const [formValues, setFormValues] = useState<Record<string, string>>({});
+  const [legalAccepted, setLegalAccepted] = useState(false);
 
   if (isLoading) {
     return <InstallLoadingSkeleton />;
@@ -102,6 +104,8 @@ function InstallIntegrationContent({
       onFormValuesChange={setFormValues}
       onInstall={handleInstall}
       isInstalling={installMutation.isPending}
+      legalAccepted={legalAccepted}
+      onLegalAcceptedChange={setLegalAccepted}
     />
   );
 }
@@ -112,6 +116,8 @@ interface InstallIntegrationCardProps {
   onFormValuesChange: (values: Record<string, string>) => void;
   onInstall: () => void;
   isInstalling: boolean;
+  legalAccepted: boolean;
+  onLegalAcceptedChange: (accepted: boolean) => void;
 }
 
 function InstallIntegrationCard({
@@ -120,6 +126,8 @@ function InstallIntegrationCard({
   onFormValuesChange,
   onInstall,
   isInstalling,
+  legalAccepted,
+  onLegalAcceptedChange,
 }: InstallIntegrationCardProps) {
   const { t } = useTranslation('install-integration');
 
@@ -140,6 +148,8 @@ function InstallIntegrationCard({
       onFormValuesChange={onFormValuesChange}
       onInstall={onInstall}
       isInstalling={isInstalling}
+      legalAccepted={legalAccepted}
+      onLegalAcceptedChange={onLegalAcceptedChange}
       t={t}
     />
   );
@@ -171,6 +181,8 @@ interface InstallIntegrationCardViewProps {
   onFormValuesChange: (values: Record<string, string>) => void;
   onInstall: () => void;
   isInstalling: boolean;
+  legalAccepted: boolean;
+  onLegalAcceptedChange: (accepted: boolean) => void;
   t: TFunction;
 }
 
@@ -183,15 +195,19 @@ function InstallIntegrationCardView({
   onFormValuesChange,
   onInstall,
   isInstalling,
+  legalAccepted,
+  onLegalAcceptedChange,
   t,
 }: InstallIntegrationCardViewProps) {
+  const hasLegalText = Boolean(integration.legalTextUrl);
+
   return (
     <Card className="w-full max-w-lg">
       <CardHeader className="text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-          {integration.iconUrl ? (
+          {integration.logoUrl ? (
             <img
-              src={integration.iconUrl}
+              src={integration.logoUrl}
               alt={integration.name}
               className="h-10 w-10 rounded-full object-cover"
             />
@@ -223,6 +239,38 @@ function InstallIntegrationCardView({
             disabled={isInstalling}
           />
         ))}
+
+        {hasLegalText && (
+          <div className="flex items-start gap-3 rounded-md border p-4">
+            <Checkbox
+              id="legal-accept"
+              checked={legalAccepted}
+              onCheckedChange={(checked) =>
+                onLegalAcceptedChange(checked === true)
+              }
+              disabled={isInstalling}
+            />
+            <label
+              htmlFor="legal-accept"
+              className="text-sm leading-relaxed cursor-pointer"
+            >
+              <Trans
+                ns="install-integration"
+                i18nKey="detail.legalText"
+                components={{
+                  link: (
+                    <a
+                      href={integration.legalTextUrl ?? ''}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline text-primary hover:text-primary/80"
+                    />
+                  ),
+                }}
+              />
+            </label>
+          </div>
+        )}
       </CardContent>
 
       <CardFooter className="flex gap-3">
@@ -232,7 +280,11 @@ function InstallIntegrationCardView({
         <Button
           className="flex-1"
           onClick={onInstall}
-          disabled={isInstalling || !allRequiredFilled}
+          disabled={
+            isInstalling ||
+            !allRequiredFilled ||
+            (hasLegalText && !legalAccepted)
+          }
         >
           {isInstalling ? t('action.installing') : t('action.install')}
         </Button>

@@ -41,10 +41,14 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
     name: 'OParl Council Data',
     shortDescription: 'Access municipal council data',
     description: 'Access municipal council data via OParl',
-    iconUrl: 'https://marketplace.ayunis.de/icons/oparl.png',
+    iconName: 'database',
+    logoUrl: 'https://marketplace.ayunis.de/logos/oparl.png',
+    integrationCategoryId: null,
     serverUrl: 'https://mcp.ayunis.de/oparl',
     featured: false,
     preInstalled: false,
+    legalTextUrl: null,
+    legalTextVersion: null,
     configSchema: {
       authType: 'NO_AUTH',
       orgFields: [
@@ -385,6 +389,37 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
     );
 
     expect(result.auth).toBeInstanceOf(NoAuthMcpIntegrationAuth);
+  });
+
+  it('should pass logoUrl from marketplace response to the created integration', async () => {
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
+      oparlMarketplaceResponse,
+    );
+
+    const result = await useCase.execute(
+      new InstallMarketplaceIntegrationCommand('oparl-council-data', {
+        oparlEndpointUrl: 'https://rim.ekom21.de/oparl/v1',
+      }),
+    );
+
+    expect(result.logoUrl).toBe(
+      'https://marketplace.ayunis.de/logos/oparl.png',
+    );
+  });
+
+  it('should set logoUrl to null when marketplace response has no logoUrl', async () => {
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue({
+      ...oparlMarketplaceResponse,
+      logoUrl: null,
+    });
+
+    const result = await useCase.execute(
+      new InstallMarketplaceIntegrationCommand('oparl-council-data', {
+        oparlEndpointUrl: 'https://rim.ekom21.de/oparl/v1',
+      }),
+    );
+
+    expect(result.logoUrl).toBeNull();
   });
 
   it('should fixed values take precedence over user-provided values', async () => {

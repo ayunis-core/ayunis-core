@@ -110,10 +110,20 @@ export interface IntegrationListResponseDto {
   /** Short description for marketplace display */
   shortDescription: string;
   /**
-   * Icon URL
+   * Lucide icon name
    * @nullable
    */
-  iconUrl: string | null;
+  iconName: string | null;
+  /**
+   * Absolute URL to the integration logo image
+   * @nullable
+   */
+  logoUrl: string | null;
+  /**
+   * Integration category ID
+   * @nullable
+   */
+  integrationCategoryId: string | null;
   /** Whether the integration is featured */
   featured: boolean;
   /** Whether the integration is published */
@@ -152,20 +162,40 @@ export interface IntegrationResponseDto {
   /** Full description */
   description: string;
   /**
-   * Icon URL
+   * Lucide icon name
    * @nullable
    */
-  iconUrl: string | null;
+  iconName: string | null;
+  /**
+   * Absolute URL to the integration logo image
+   * @nullable
+   */
+  logoUrl: string | null;
   /** MCP server URL */
   serverUrl: string;
   /** Configuration schema (authType, orgFields, userFields, oauth) */
   configSchema: IntegrationResponseDtoConfigSchema;
+  /**
+   * Integration category ID
+   * @nullable
+   */
+  integrationCategoryId: string | null;
   /** Whether the integration is featured */
   featured: boolean;
   /** Whether the integration is published */
   published: boolean;
   /** Whether the integration is pre-installed */
   preInstalled: boolean;
+  /**
+   * URL to the legal text page the installer must confirm
+   * @nullable
+   */
+  legalTextUrl: string | null;
+  /**
+   * Version of the legal text
+   * @nullable
+   */
+  legalTextVersion: string | null;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */

@@ -26,6 +26,7 @@ import { Markdown } from '@/widgets/markdown';
 import { cn } from '@/shared/lib/shadcn/utils';
 import SendEmailWidget from './chat-widgets/SendEmailWidget';
 import ExecutableToolWidget from './chat-widgets/ExecutableToolWidget';
+import IntegrationToolWidget from './chat-widgets/IntegrationToolWidget';
 import ThinkingBlockWidget from './chat-widgets/ThinkingBlockWidget';
 import CreateCalendarEventWidget from './chat-widgets/CreateCalendarEventWidget';
 import CreateSkillWidget from './chat-widgets/CreateSkillWidget';
@@ -335,6 +336,16 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
               return (
                 <PieChartWidget
                   key={`pie-chart-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
+                  content={toolUseMessageContent}
+                  isStreaming={isStreaming}
+                />
+              );
+            }
+
+            if (toolUseMessageContent.integration) {
+              return (
+                <IntegrationToolWidget
+                  key={`integration-tool-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
                   content={toolUseMessageContent}
                   isStreaming={isStreaming}
                 />

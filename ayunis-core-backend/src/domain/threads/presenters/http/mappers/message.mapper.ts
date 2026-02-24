@@ -201,6 +201,7 @@ export class MessageDtoMapper {
       id: content.id,
       name: content.name,
       params: content.params,
+      ...(content.integration && { integration: content.integration }),
     };
   }
 

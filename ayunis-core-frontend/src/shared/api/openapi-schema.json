@@ -9368,6 +9368,31 @@
           "text"
         ]
       },
+      "ToolUseIntegrationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Integration ID",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "name": {
+            "type": "string",
+            "description": "Integration name",
+            "example": "Weather Service"
+          },
+          "logoUrl": {
+            "type": "string",
+            "description": "Integration logo URL",
+            "example": "https://marketplace.ayunis.de/logos/weather.png",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
       "ToolUseMessageContentResponseDto": {
         "type": "object",
         "properties": {
@@ -9400,6 +9425,14 @@
               "location": "New York",
               "unit": "celsius"
             }
+          },
+          "integration": {
+            "description": "Integration metadata if this tool belongs to a marketplace integration",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ToolUseIntegrationDto"
+              }
+            ]
           }
         },
         "required": [
@@ -10398,6 +10431,12 @@
               "endpointUrl": "https://example.com/api",
               "apiToken": "••••••"
             }
+          },
+          "logoUrl": {
+            "type": "string",
+            "description": "Logo URL for marketplace integrations",
+            "nullable": true,
+            "example": "https://marketplace.ayunis.de/logos/oparl.png"
           }
         },
         "required": [
@@ -11203,9 +11242,19 @@
             "type": "string",
             "description": "Full description"
           },
-          "iconUrl": {
+          "iconName": {
             "type": "string",
-            "description": "Icon URL",
+            "description": "Lucide icon name",
+            "nullable": true
+          },
+          "logoUrl": {
+            "type": "string",
+            "description": "Absolute URL to the integration logo image",
+            "nullable": true
+          },
+          "integrationCategoryId": {
+            "type": "string",
+            "description": "Category UUID from the marketplace",
             "nullable": true
           },
           "serverUrl": {
@@ -11231,6 +11280,16 @@
           "preInstalled": {
             "type": "boolean",
             "description": "Whether the integration is pre-installed"
+          },
+          "legalTextUrl": {
+            "type": "string",
+            "description": "URL to the legal text page the installer must confirm",
+            "nullable": true
+          },
+          "legalTextVersion": {
+            "type": "string",
+            "description": "Version of the legal text",
+            "nullable": true
           },
           "createdAt": {
             "type": "string",

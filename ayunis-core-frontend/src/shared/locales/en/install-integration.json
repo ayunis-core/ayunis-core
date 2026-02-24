@@ -3,6 +3,7 @@
   "detail": {
     "installNote": "This integration will be added to your organization. Configure the required fields below.",
     "zeroConfigNote": "This integration requires no additional configuration and will be installed immediately.",
+    "legalText": "I have read and accept the <link>terms of use</link>.",
     "adminOnly": "Only organization admins can install integrations."
   },
   "field": {

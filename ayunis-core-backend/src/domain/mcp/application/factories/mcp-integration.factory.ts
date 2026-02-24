@@ -51,6 +51,7 @@ export class McpIntegrationFactory {
     marketplaceIdentifier: string;
     configSchema: IntegrationConfigSchema;
     orgConfigValues: Record<string, string>;
+    logoUrl?: string | null;
     id?: UUID;
     enabled?: boolean;
     createdAt?: Date;
@@ -119,6 +120,7 @@ export class McpIntegrationFactory {
       marketplaceIdentifier: params.marketplaceIdentifier,
       configSchema: params.configSchema,
       orgConfigValues: params.orgConfigValues ?? {},
+      logoUrl: params.logoUrl,
     });
   }
 }
@@ -133,6 +135,7 @@ type CreateIntegrationParams = {
   marketplaceIdentifier?: string;
   configSchema?: IntegrationConfigSchema;
   orgConfigValues?: Record<string, string>;
+  logoUrl?: string | null;
   id?: UUID;
   enabled?: boolean;
   createdAt?: Date;

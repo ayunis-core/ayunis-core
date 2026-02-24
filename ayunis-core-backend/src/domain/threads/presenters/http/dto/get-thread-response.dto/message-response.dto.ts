@@ -1,4 +1,8 @@
-import { ApiProperty, getSchemaPath } from '@nestjs/swagger';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  getSchemaPath,
+} from '@nestjs/swagger';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 
@@ -26,6 +30,25 @@ export class TextMessageContentResponseDto extends MessageContentResponseDto {
   isSkillInstruction?: boolean;
 }
 
+export class ToolUseIntegrationDto {
+  @ApiProperty({
+    description: 'Integration ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  id: string;
+
+  @ApiProperty({ description: 'Integration name', example: 'Weather Service' })
+  name: string;
+
+  @ApiPropertyOptional({
+    description: 'Integration logo URL',
+    example: 'https://marketplace.ayunis.de/logos/weather.png',
+    type: 'string',
+    nullable: true,
+  })
+  logoUrl: string | null;
+}
+
 export class ToolUseMessageContentResponseDto extends MessageContentResponseDto {
   @ApiProperty({
     description: 'Unique identifier for the tool call',
@@ -44,6 +67,13 @@ export class ToolUseMessageContentResponseDto extends MessageContentResponseDto 
     example: { location: 'New York', unit: 'celsius' },
   })
   params: Record<string, unknown>;
+
+  @ApiPropertyOptional({
+    description:
+      'Integration metadata if this tool belongs to a marketplace integration',
+    type: ToolUseIntegrationDto,
+  })
+  integration?: ToolUseIntegrationDto;
 }
 
 export class ToolResultMessageContentResponseDto extends MessageContentResponseDto {

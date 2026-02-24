@@ -12,9 +12,16 @@ import type { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
  */
 export class McpIntegrationTool extends Tool {
   public readonly integrationId: UUID;
+  public readonly integrationName: string;
+  public readonly integrationLogoUrl: string | null;
   private readonly _returnsPii: boolean;
 
-  constructor(mcpTool: McpTool, returnsPii: boolean) {
+  constructor(
+    mcpTool: McpTool,
+    returnsPii: boolean,
+    integrationName: string,
+    integrationLogoUrl: string | null,
+  ) {
     super({
       name: mcpTool.name,
       description: mcpTool.description ?? '',
@@ -22,6 +29,8 @@ export class McpIntegrationTool extends Tool {
       type: ToolType.MCP_TOOL,
     });
     this.integrationId = mcpTool.integrationId;
+    this.integrationName = integrationName;
+    this.integrationLogoUrl = integrationLogoUrl;
     this._returnsPii = returnsPii;
   }
 

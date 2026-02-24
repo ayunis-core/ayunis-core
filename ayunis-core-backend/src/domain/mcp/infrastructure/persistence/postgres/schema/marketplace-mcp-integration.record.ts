@@ -14,4 +14,7 @@ export class MarketplaceMcpIntegrationRecord extends McpIntegrationRecord {
 
   @Column({ name: 'org_config_values', type: 'jsonb', default: '{}' })
   orgConfigValues: Record<string, string>;
+
+  @Column({ name: 'logo_url', type: 'varchar', nullable: true })
+  logoUrl: string | null;
 }

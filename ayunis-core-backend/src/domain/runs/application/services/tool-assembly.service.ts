@@ -18,6 +18,9 @@ import { FindActiveSkillsUseCase } from 'src/domain/skills/application/use-cases
 import { FindActiveSkillsQuery } from 'src/domain/skills/application/use-cases/find-active-skills/find-active-skills.query';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { GetUserSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-user-system-prompt/get-user-system-prompt.use-case';
+import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
+import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -30,6 +33,7 @@ export class ToolAssemblyService {
     private readonly systemPromptBuilderService: SystemPromptBuilderService,
     private readonly findActiveSkillsUseCase: FindActiveSkillsUseCase,
     private readonly getUserSystemPromptUseCase: GetUserSystemPromptUseCase,
+    private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
   ) {}
 
   async findActiveSkills(): Promise<Skill[]> {
@@ -98,8 +102,28 @@ export class ToolAssemblyService {
 
     // Discover MCP capabilities from all integration IDs
     if (mcpIntegrationIds.size > 0) {
+      const integrationIdList = [...mcpIntegrationIds];
+
+      // Fetch integration entities for metadata (name, logoUrl)
+      const integrations = await this.getMcpIntegrationsByIdsUseCase.execute(
+        new GetMcpIntegrationsByIdsQuery(integrationIdList),
+      );
+      const integrationMetaMap = new Map<
+        UUID,
+        { name: string; logoUrl: string | null }
+      >();
+      for (const integration of integrations) {
+        integrationMetaMap.set(integration.id, {
+          name: integration.name,
+          logoUrl:
+            integration instanceof MarketplaceMcpIntegration
+              ? integration.logoUrl
+              : null,
+        });
+      }
+
       const mcpCapabilities = await Promise.all(
-        [...mcpIntegrationIds].map((integrationId) =>
+        integrationIdList.map((integrationId) =>
           this.discoverMcpCapabilitiesUseCase.execute(
             new DiscoverMcpCapabilitiesQuery(integrationId),
           ),
@@ -108,9 +132,15 @@ export class ToolAssemblyService {
       // Add MCP tools and resources
       tools.push(
         ...mcpCapabilities.flatMap((capability) =>
-          capability.tools.map(
-            (tool) => new McpIntegrationTool(tool, capability.returnsPii),
-          ),
+          capability.tools.map((tool) => {
+            const meta = integrationMetaMap.get(tool.integrationId);
+            return new McpIntegrationTool(
+              tool,
+              capability.returnsPii,
+              meta?.name ?? 'Unknown',
+              meta?.logoUrl ?? null,
+            );
+          }),
         ),
         ...mcpCapabilities.flatMap((capability) =>
           capability.resources.map(

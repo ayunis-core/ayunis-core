@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
 
 /**
@@ -151,4 +151,12 @@ export class McpIntegrationResponseDto {
     example: { endpointUrl: 'https://example.com/api', apiToken: '••••••' },
   })
   orgConfigValues?: Record<string, string>;
+
+  @ApiPropertyOptional({
+    description: 'Logo URL for marketplace integrations',
+    type: 'string',
+    nullable: true,
+    example: 'https://marketplace.ayunis.de/logos/oparl.png',
+  })
+  logoUrl?: string | null;
 }
