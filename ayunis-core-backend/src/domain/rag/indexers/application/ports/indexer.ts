@@ -10,6 +10,15 @@ export interface SearchInput {
   };
 }
 
+export interface SearchMultiInput {
+  orgId: UUID;
+  documentIds: UUID[];
+  query: string;
+  filter?: {
+    limit?: number;
+  };
+}
+
 export interface IngestInput {
   orgId: UUID;
   indexEntry: IndexEntry;
@@ -19,6 +28,7 @@ export interface IngestInput {
 export abstract class IndexerPort {
   abstract ingest(input: IngestInput): Promise<void>;
   abstract search(input: SearchInput): Promise<IndexEntry[]>;
+  abstract searchMulti(input: SearchMultiInput): Promise<IndexEntry[]>;
   abstract delete(documentId: UUID): Promise<void>;
   abstract deleteMany(documentIds: UUID[]): Promise<void>;
 }

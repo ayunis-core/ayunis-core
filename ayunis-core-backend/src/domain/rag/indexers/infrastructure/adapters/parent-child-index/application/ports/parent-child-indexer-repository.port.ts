@@ -10,5 +10,11 @@ export abstract class ParentChildIndexerRepositoryPort {
   abstract find(
     queryVector: number[],
     relatedDocumentId: UUID,
+    limit?: number,
+  ): Promise<ParentChunk[]>;
+  abstract findByDocumentIds(
+    queryVector: number[],
+    relatedDocumentIds: UUID[],
+    limit?: number,
   ): Promise<ParentChunk[]>;
 }
