@@ -36,15 +36,6 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
       const source = await this.getSourceByIdUseCase.execute(
         new GetTextSourceByIdQuery(validatedInput.sourceId as UUID),
       );
-      if (!source) {
-        this.logger.error('Source not found', input);
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message: 'Source not found',
-          exposeToLLM: true,
-        });
-      }
-
       const matchedChunks = await this.matchSourceContentChunksUseCase.execute(
         new QueryTextSourceCommand({
           orgId,

@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { ThreadsController } from './presenters/http/threads.controller';
+import { ThreadKnowledgeBasesController } from './presenters/http/thread-knowledge-bases.controller';
 import { ThreadsRepository } from './application/ports/threads.repository';
 import { LocalThreadsRepositoryModule } from './infrastructure/persistence/local/local-threads-repository.module';
 import { SourcesModule } from '../sources/sources.module';
@@ -49,7 +50,7 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
     UsersModule,
     TeamsModule,
   ],
-  controllers: [ThreadsController],
+  controllers: [ThreadsController, ThreadKnowledgeBasesController],
   providers: [
     {
       provide: ThreadsRepository,

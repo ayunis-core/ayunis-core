@@ -53,14 +53,6 @@ export class SourceGetTextToolHandler extends ToolExecutionHandler {
         new GetTextSourceByIdQuery(sourceId as UUID),
       );
 
-      if (!source) {
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message: `Source with ID "${sourceId}" not found`,
-          exposeToLLM: true,
-        });
-      }
-
       if (!(source instanceof TextSource)) {
         throw new ToolExecutionFailedError({
           toolName: tool.name,

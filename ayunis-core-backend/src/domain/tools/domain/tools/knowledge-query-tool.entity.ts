@@ -9,25 +9,28 @@ interface KnowledgeQueryToolParameters {
   query: string;
 }
 
+// eslint-disable-next-line sonarjs/function-return-type -- false positive: function always returns JSONSchema
 function knowledgeQueryToolParameters(
   knowledgeBases: KnowledgeBaseSummary[],
 ): JSONSchema {
-  return {
-    type: 'object' as const,
+  const knowledgeBaseIds: string[] = knowledgeBases.map((kb) => kb.id);
+  const schema: JSONSchema = {
+    type: 'object',
     properties: {
       knowledgeBaseId: {
-        type: 'string' as const,
+        type: 'string',
         description: 'The ID of the knowledge base to search',
-        enum: knowledgeBases.map((kb) => kb.id),
+        enum: knowledgeBaseIds,
       },
       query: {
-        type: 'string' as const,
+        type: 'string',
         description: 'The semantic search query to find relevant content',
       },
-    } as const,
+    },
     required: ['knowledgeBaseId', 'query'],
     additionalProperties: false,
-  } as const satisfies JSONSchema;
+  };
+  return schema;
 }
 
 export class KnowledgeQueryTool extends Tool {

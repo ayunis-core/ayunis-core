@@ -58,15 +58,8 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
     relatedDocumentId: UUID,
     limit?: number,
   ): Promise<ParentChunk[]> {
-    if (!queryVector || queryVector.length === 0) {
+    if (queryVector.length === 0) {
       this.logger.warn('Empty query vector provided for vector search');
-      return [];
-    }
-
-    if (!relatedDocumentId) {
-      this.logger.warn(
-        'No relatedDocumentId provided in filter for vector search',
-      );
       return [];
     }
 
@@ -90,12 +83,12 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
     relatedDocumentIds: UUID[],
     limit?: number,
   ): Promise<ParentChunk[]> {
-    if (!queryVector || queryVector.length === 0) {
+    if (queryVector.length === 0) {
       this.logger.warn('Empty query vector provided for multi-document search');
       return [];
     }
 
-    if (!relatedDocumentIds || relatedDocumentIds.length === 0) {
+    if (relatedDocumentIds.length === 0) {
       this.logger.warn('No document IDs provided for multi-document search');
       return [];
     }

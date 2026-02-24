@@ -23,14 +23,14 @@ const meQueryOptions = () =>
 
 export const Route = createFileRoute('/_authenticated')({
   component: Outlet,
-  beforeLoad: async ({ context, context: { queryClient } }) => {
+  beforeLoad: async ({ context: { queryClient } }) => {
     try {
-      const response = await queryClient.fetchQuery(meQueryOptions());
-      context.user = response;
+      const user = await queryClient.fetchQuery(meQueryOptions());
       await queryClient.fetchQuery({
         queryKey: getAppControllerIsCloudQueryKey(),
         queryFn: () => appControllerIsCloud(),
       });
+      return { user };
     } catch (error) {
       try {
         const { code } = extractErrorData(error);

@@ -314,69 +314,69 @@ export default function ChatPage({
 
   // Send pending message from NewChatPage if it exists
   useEffect(() => {
+    async function uploadPendingSources() {
+      if (sources.length === 0) return;
+      setIsProcessingPendingSources(true);
+      const promises = sources.map((source) =>
+        createFileSourceAsync({
+          file: source.file,
+          name: source.name,
+          description: `File source: ${source.name}`,
+        }),
+      );
+      await Promise.all(promises as Promise<unknown>[]);
+      resetCreateFileSourceMutation();
+    }
+
+    async function attachPendingKnowledgeBases() {
+      if (pendingKnowledgeBases.length === 0) return;
+      const results = await Promise.allSettled(
+        pendingKnowledgeBases.map((kb) => addKnowledgeBaseAsync(kb.id)),
+      );
+      const failed = results.filter((r) => r.status === 'rejected');
+      if (failed.length > 0) {
+        console.error(
+          `Failed to attach ${String(failed.length)} knowledge base(s)`,
+        );
+      }
+    }
+
+    function buildPendingImages(): PendingImage[] | undefined {
+      if (pendingImages.length === 0) return undefined;
+      return pendingImages.map((img) => ({
+        file: img.file,
+        altText: img.altText ?? (img.file.name || 'Pasted image'),
+      }));
+    }
+
     async function sendPendingMessage() {
       if (
-        pendingMessage &&
-        // avoid sending the same message twice
-        processedPendingMessageRef.current !== pendingMessage
+        !pendingMessage ||
+        processedPendingMessageRef.current === pendingMessage
       ) {
-        processedPendingMessageRef.current = pendingMessage;
-        try {
-          if (sources.length > 0) {
-            setIsProcessingPendingSources(true);
-            const promises = sources.map((source) =>
-              createFileSourceAsync({
-                file: source.file,
-                name: source.name,
-                description: `File source: ${source.name}`,
-              }),
-            );
-            await Promise.all(promises as Promise<unknown>[]);
-            // Reset the mutation state to ensure isPending goes to false
-            resetCreateFileSourceMutation();
-          }
-          setSources([]);
-
-          // Attach pending knowledge bases — errors handled by mutation onError
-          if (pendingKnowledgeBases.length > 0) {
-            const results = await Promise.allSettled(
-              pendingKnowledgeBases.map((kb) => addKnowledgeBaseAsync(kb.id)),
-            );
-            // Toasts already shown by useKnowledgeBaseAttachment onError
-            const failed = results.filter((r) => r.status === 'rejected');
-            if (failed.length > 0) {
-              console.error(
-                `Failed to attach ${String(failed.length)} knowledge base(s)`,
-              );
-            }
-          }
-
-          // Pass pending images directly - they'll be uploaded as part of the multipart request
-          const images: PendingImage[] | undefined =
-            pendingImages.length > 0
-              ? pendingImages.map((img) => ({
-                  file: img.file,
-                  altText: img.altText ?? (img.file.name || 'Pasted image'),
-                }))
-              : undefined;
-
-          await sendTextMessage({
-            text: pendingMessage,
-            images,
-          });
-        } catch (error) {
-          if (error instanceof AxiosError && error.response?.status === 403) {
-            showError(t('chat.upgradeToProError'));
-          } else {
-            showError(t('chat.errorSendMessage'));
-          }
-          chatInputRef.current?.setMessage(pendingMessage);
-        } finally {
-          setIsProcessingPendingSources(false);
-          setPendingMessage('');
-          setPendingImages([]);
-          setPendingKnowledgeBases([]);
+        return;
+      }
+      processedPendingMessageRef.current = pendingMessage;
+      try {
+        await uploadPendingSources();
+        setSources([]);
+        await attachPendingKnowledgeBases();
+        await sendTextMessage({
+          text: pendingMessage,
+          images: buildPendingImages(),
+        });
+      } catch (error) {
+        if (error instanceof AxiosError && error.response?.status === 403) {
+          showError(t('chat.upgradeToProError'));
+        } else {
+          showError(t('chat.errorSendMessage'));
         }
+        chatInputRef.current?.setMessage(pendingMessage);
+      } finally {
+        setIsProcessingPendingSources(false);
+        setPendingMessage('');
+        setPendingImages([]);
+        setPendingKnowledgeBases([]);
       }
     }
     void sendPendingMessage();

@@ -37,7 +37,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { randomUUID } from 'crypto';
-// Import use cases
 import { CreateThreadUseCase } from '../../application/use-cases/create-thread/create-thread.use-case';
 import { FindThreadUseCase } from '../../application/use-cases/find-thread/find-thread.use-case';
 import { FindAllThreadsUseCase } from '../../application/use-cases/find-all-threads/find-all-threads.use-case';
@@ -70,10 +69,6 @@ import { GetThreadsResponseDto } from './dto/get-threads-response.dto';
 import { FindAllThreadsQueryParamsDto } from './dto/find-all-threads-query-params.dto';
 import { GetThreadDtoMapper } from './mappers/get-thread.mapper';
 import { GetThreadsDtoMapper } from './mappers/get-threads.mapper';
-import { AddKnowledgeBaseToThreadUseCase } from '../../application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.use-case';
-import { AddKnowledgeBaseToThreadCommand } from '../../application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.command';
-import { RemoveKnowledgeBaseFromThreadUseCase } from '../../application/use-cases/remove-knowledge-base-from-thread/remove-knowledge-base-from-thread.use-case';
-import { RemoveKnowledgeBaseFromThreadCommand } from '../../application/use-cases/remove-knowledge-base-from-thread/remove-knowledge-base-from-thread.command';
 import * as fs from 'fs';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
 import { convertCSVToString } from 'src/common/util/csv';
@@ -106,8 +101,6 @@ export class ThreadsController {
     private readonly sourceDtoMapper: SourceDtoMapper,
     private readonly getThreadDtoMapper: GetThreadDtoMapper,
     private readonly getThreadsDtoMapper: GetThreadsDtoMapper,
-    private readonly addKnowledgeBaseToThreadUseCase: AddKnowledgeBaseToThreadUseCase,
-    private readonly removeKnowledgeBaseFromThreadUseCase: RemoveKnowledgeBaseFromThreadUseCase,
   ) {}
 
   @Post()
@@ -267,8 +260,6 @@ export class ThreadsController {
     );
   }
 
-  // Source Management Endpoints
-
   @Get(':id/sources')
   @ApiOperation({ summary: 'Get all sources for a thread' })
   @ApiParam({
@@ -395,7 +386,6 @@ export class ThreadsController {
         },
       });
 
-      // Add all sources to the thread
       const { thread } = await this.findThreadUseCase.execute(
         new FindThreadQuery(threadId),
       );
@@ -406,12 +396,10 @@ export class ThreadsController {
         );
       }
 
-      // Clean up the uploaded file
       fs.unlinkSync(file.path);
       return;
     } catch (error: unknown) {
       this.logger.error('addFileSource', { error });
-      // Clean up the uploaded file
       fs.unlinkSync(file.path);
       throw error;
     }
@@ -443,12 +431,9 @@ export class ThreadsController {
   ): Promise<void> {
     this.logger.log('removeSource', { threadId, sourceId });
 
-    // First get the thread
     const { thread } = await this.findThreadUseCase.execute(
       new FindThreadQuery(threadId),
     );
-
-    // Remove the source from the thread
     await this.removeSourceFromThreadUseCase.execute(
       new RemoveSourceCommand(thread, sourceId),
     );
@@ -492,95 +477,21 @@ export class ThreadsController {
   ): Promise<StreamableFile> {
     this.logger.log('downloadSource', { threadId, sourceId });
 
-    // First verify the thread exists
     await this.findThreadUseCase.execute(new FindThreadQuery(threadId));
-
-    // Get the source
     const source = await this.getSourceByIdUseCase.execute(
       new GetSourceByIdQuery(sourceId),
     );
 
-    // Check if it's a CSV data source
     if (!(source instanceof CSVDataSource)) {
       throw new Error('Source is not a CSV data source');
     }
 
-    // Convert to CSV string
     const csvString = convertCSVToString(source.data);
-
-    // Set response headers
     res.set({
       'Content-Type': 'text/csv',
       'Content-Disposition': `attachment; filename="${source.name}.csv"`,
     });
 
-    // Return as StreamableFile
     return new StreamableFile(Buffer.from(csvString, 'utf-8'));
-  }
-
-  // Knowledge Base Management Endpoints
-
-  @Post(':id/knowledge-bases/:knowledgeBaseId')
-  @ApiOperation({ summary: 'Add a knowledge base to a thread' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the thread',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiParam({
-    name: 'knowledgeBaseId',
-    description: 'The UUID of the knowledge base to add',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: 204,
-    description: 'The knowledge base has been successfully added to the thread',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Thread or knowledge base not found',
-  })
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async addKnowledgeBase(
-    @Param('id', ParseUUIDPipe) threadId: UUID,
-    @Param('knowledgeBaseId', ParseUUIDPipe) knowledgeBaseId: UUID,
-  ): Promise<void> {
-    this.logger.log('addKnowledgeBase', { threadId, knowledgeBaseId });
-    await this.addKnowledgeBaseToThreadUseCase.execute(
-      new AddKnowledgeBaseToThreadCommand(threadId, knowledgeBaseId),
-    );
-  }
-
-  @Delete(':id/knowledge-bases/:knowledgeBaseId')
-  @ApiOperation({ summary: 'Remove a knowledge base from a thread' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the thread',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiParam({
-    name: 'knowledgeBaseId',
-    description: 'The UUID of the knowledge base to remove',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: 204,
-    description:
-      'The knowledge base has been successfully removed from the thread',
-  })
-  @ApiResponse({ status: 404, description: 'Thread not found' })
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async removeKnowledgeBase(
-    @Param('id', ParseUUIDPipe) threadId: UUID,
-    @Param('knowledgeBaseId', ParseUUIDPipe) knowledgeBaseId: UUID,
-  ): Promise<void> {
-    this.logger.log('removeKnowledgeBase', { threadId, knowledgeBaseId });
-    await this.removeKnowledgeBaseFromThreadUseCase.execute(
-      new RemoveKnowledgeBaseFromThreadCommand(threadId, knowledgeBaseId),
-    );
   }
 }
