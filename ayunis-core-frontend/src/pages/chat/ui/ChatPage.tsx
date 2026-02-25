@@ -36,9 +36,9 @@ import {
   getThreadsControllerFindAllQueryKey,
   getThreadsControllerFindOneQueryKey,
   threadsControllerFindOne,
-  threadsControllerDownloadSource,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useKnowledgeBaseAttachment } from '../api/useKnowledgeBaseAttachment';
+import { useDownloadSource } from '../api/useDownloadSource';
 import type { PendingImage } from '../api/useMessageSend';
 
 interface ChatPageProps {
@@ -99,6 +99,8 @@ export default function ChatPage({
     setPendingImages,
     pendingKnowledgeBases,
     setPendingKnowledgeBases,
+    pendingSkillId,
+    setPendingSkillId,
   } = useChatContext();
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
     thread.title,
@@ -137,6 +139,7 @@ export default function ChatPage({
 
   const { addKnowledgeBase, addKnowledgeBaseAsync, removeKnowledgeBase } =
     useKnowledgeBaseAttachment({ threadId: thread.id });
+  const { downloadSource } = useDownloadSource(thread);
 
   const isTotallyCreatingFileSource =
     isCreatingFileSource || isProcessingPendingSources;
@@ -284,33 +287,6 @@ export default function ChatPage({
     }
   }
 
-  async function handleDownloadSource(sourceId: string) {
-    try {
-      // Call the download endpoint
-      const blob = await threadsControllerDownloadSource(thread.id, sourceId);
-
-      // Create a download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-
-      // Find the source to get its name
-      const source = thread.sources.find((s) => s.id === sourceId);
-      link.download = source?.name ?? 'download.csv';
-
-      // Trigger download
-      document.body.appendChild(link);
-      link.click();
-
-      // Clean up
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Failed to download source', error);
-      showError(t('chat.errorDownloadSource'));
-    }
-  }
-
   useEffect(() => {
     setMessages(thread.messages);
     setThreadTitle(thread.title);
@@ -368,6 +344,7 @@ export default function ChatPage({
         await sendTextMessage({
           text: pendingMessage,
           images: buildPendingImages(),
+          skillId: pendingSkillId,
         });
       } catch (error) {
         if (error instanceof AxiosError && error.response?.status === 403) {
@@ -381,6 +358,7 @@ export default function ChatPage({
         setPendingMessage('');
         setPendingImages([]);
         setPendingKnowledgeBases([]);
+        setPendingSkillId(undefined);
       }
     }
     void sendPendingMessage();
@@ -395,6 +373,8 @@ export default function ChatPage({
     setPendingImages,
     pendingKnowledgeBases,
     setPendingKnowledgeBases,
+    pendingSkillId,
+    setPendingSkillId,
     addKnowledgeBaseAsync,
     chatInputRef,
     t,
@@ -470,7 +450,7 @@ export default function ChatPage({
         onAgentRemove={() => {}}
         onFileUpload={handleFileUpload}
         onRemoveSource={deleteFileSource}
-        onDownloadSource={(sourceId) => void handleDownloadSource(sourceId)}
+        onDownloadSource={(sourceId) => void downloadSource(sourceId)}
         onAddKnowledgeBase={(kb) => addKnowledgeBase(kb.id)}
         onRemoveKnowledgeBase={removeKnowledgeBase}
         onSend={(m, imageFiles) => void handleSend(m, imageFiles)}

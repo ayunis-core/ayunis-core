@@ -12,6 +12,7 @@ import { usePermittedModels } from '@/features/usePermittedModels';
 import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
+import { PinnedSkills } from './PinnedSkills';
 
 interface NewChatPageProps {
   prefilledPrompt?: string;
@@ -32,7 +33,8 @@ export default function NewChatPage({
   const { initiateChat } = useInitiateChat();
   const { models } = usePermittedModels();
   const greeting = useTimeBasedGreeting();
-  const { setPendingImages, setPendingKnowledgeBases } = useChatContext();
+  const { setPendingImages, setPendingKnowledgeBases, setPendingSkillId } =
+    useChatContext();
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -47,6 +49,8 @@ export default function NewChatPage({
   const [selectedKnowledgeBases, setSelectedKnowledgeBases] = useState<
     KnowledgeBaseSummary[]
   >([]);
+  const [selectedSkillId, setSelectedSkillId] = useState<string>();
+  const [selectedSkillName, setSelectedSkillName] = useState<string>();
   const selectedAgent = agents.find((agent) => agent.id === agentId);
   const selectedModel = models.find((m) => m.id === modelId);
 
@@ -89,6 +93,21 @@ export default function NewChatPage({
     setModelId(undefined);
   }
 
+  function handleSkillSelect(skillId: string, skillName: string) {
+    if (selectedSkillId === skillId) {
+      setSelectedSkillId(undefined);
+      setSelectedSkillName(undefined);
+    } else {
+      setSelectedSkillId(skillId);
+      setSelectedSkillName(skillName);
+    }
+  }
+
+  function handleSkillRemove() {
+    setSelectedSkillId(undefined);
+    setSelectedSkillName(undefined);
+  }
+
   function handleAgentRemove() {
     setAgentId(undefined);
     setModelId(selectedModelId);
@@ -97,6 +116,7 @@ export default function NewChatPage({
   function handleSend(
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
+    skillId?: string,
   ) {
     if (!modelId && !agentId) {
       showError(t('newChat.noModelOrAgentError'));
@@ -111,6 +131,8 @@ export default function NewChatPage({
     // Store selected KBs in context for ChatPage to attach after thread creation
     // Always set — even when empty — to clear stale KBs from a previous failed attempt
     setPendingKnowledgeBases(selectedKnowledgeBases);
+
+    setPendingSkillId(skillId);
 
     initiateChat(message, modelId, agentId, sources, isAnonymous);
   }
@@ -154,6 +176,13 @@ export default function NewChatPage({
           onAnonymousChange={setIsAnonymous}
           isAnonymousEnforced={isAnonymousEnforced}
           isVisionEnabled={isVisionEnabled}
+          selectedSkillId={selectedSkillId}
+          selectedSkillName={selectedSkillName}
+          onSkillRemove={handleSkillRemove}
+        />
+        <PinnedSkills
+          onSkillSelect={handleSkillSelect}
+          selectedSkillId={selectedSkillId}
         />
       </div>
     </NewChatPageLayout>

@@ -4,7 +4,7 @@ import { useSkillsControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI
 import { useIsSkillsEnabled } from '@/features/feature-toggles';
 
 interface PinnedSkillsProps {
-  onSkillSelect: (skillId: string) => void;
+  onSkillSelect: (skillId: string, skillName: string) => void;
   selectedSkillId?: string;
 }
 
@@ -30,7 +30,7 @@ export function PinnedSkills({
           key={skill.id}
           variant={selectedSkillId === skill.id ? 'default' : 'outline'}
           size="sm"
-          onClick={() => onSkillSelect(skill.id)}
+          onClick={() => onSkillSelect(skill.id, skill.name)}
         >
           <Sparkles className="h-4 w-4" />
           {skill.name}
