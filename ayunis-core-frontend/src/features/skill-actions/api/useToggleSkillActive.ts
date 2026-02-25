@@ -4,6 +4,7 @@ import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   skillsControllerToggleActive,
   getSkillsControllerFindAllQueryKey,
+  getSkillsControllerFindOneQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useRouter } from '@tanstack/react-router';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -21,9 +22,12 @@ export function useToggleSkillActive() {
     mutationFn: async ({ id }: ToggleSkillActiveParams) => {
       return await skillsControllerToggleActive(id);
     },
-    onSuccess: () => {
+    onSuccess: (_data, { id }) => {
       void queryClient.invalidateQueries({
         queryKey: getSkillsControllerFindAllQueryKey(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: getSkillsControllerFindOneQueryKey(id),
       });
       void router.invalidate();
       showSuccess(t('toggleActive.success'));
