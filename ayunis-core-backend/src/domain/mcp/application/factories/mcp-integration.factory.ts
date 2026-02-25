@@ -25,6 +25,7 @@ export class McpIntegrationFactory {
     lastConnectionError?: string;
     lastConnectionCheck?: Date;
     returnsPii?: boolean;
+    description?: string;
   }): CustomMcpIntegration;
   createIntegration(params: {
     kind: McpIntegrationKind.PREDEFINED;
@@ -41,6 +42,7 @@ export class McpIntegrationFactory {
     lastConnectionError?: string;
     lastConnectionCheck?: Date;
     returnsPii?: boolean;
+    description?: string;
   }): PredefinedMcpIntegration;
   createIntegration(params: {
     kind: McpIntegrationKind.MARKETPLACE;
@@ -60,6 +62,7 @@ export class McpIntegrationFactory {
     lastConnectionError?: string;
     lastConnectionCheck?: Date;
     returnsPii?: boolean;
+    description?: string;
   }): MarketplaceMcpIntegration;
   createIntegration(params: CreateIntegrationParams): McpIntegration {
     const base = this.extractBaseParams(params);
@@ -92,6 +95,7 @@ export class McpIntegrationFactory {
       lastConnectionError: params.lastConnectionError,
       lastConnectionCheck: params.lastConnectionCheck,
       returnsPii: params.returnsPii,
+      description: params.description,
     } as const;
   }
 
@@ -144,4 +148,5 @@ type CreateIntegrationParams = {
   lastConnectionError?: string;
   lastConnectionCheck?: Date;
   returnsPii?: boolean;
+  description?: string;
 };
