@@ -20,6 +20,7 @@ export abstract class McpIntegration {
   public lastConnectionError?: string;
   public lastConnectionCheck?: Date;
   public returnsPii: boolean;
+  public description?: string;
 
   private _auth: McpIntegrationAuth;
 
@@ -34,6 +35,7 @@ export abstract class McpIntegration {
     lastConnectionError?: string;
     lastConnectionCheck?: Date;
     returnsPii?: boolean;
+    description?: string;
     auth: McpIntegrationAuth;
   }) {
     this.id = params.id ?? randomUUID();
@@ -46,6 +48,7 @@ export abstract class McpIntegration {
     this.lastConnectionError = params.lastConnectionError;
     this.lastConnectionCheck = params.lastConnectionCheck;
     this.returnsPii = params.returnsPii ?? true; // Default to true for safety
+    this.description = params.description;
     this._auth = params.auth;
   }
 

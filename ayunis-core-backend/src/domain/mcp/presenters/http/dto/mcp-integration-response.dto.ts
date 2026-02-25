@@ -159,4 +159,12 @@ export class McpIntegrationResponseDto {
     example: 'https://marketplace.ayunis.de/logos/oparl.png',
   })
   logoUrl?: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Human-readable description of the integration (populated from marketplace shortDescription or predefined config description)',
+    type: 'string',
+    example: 'Access municipal council data via OParl',
+  })
+  description?: string;
 }

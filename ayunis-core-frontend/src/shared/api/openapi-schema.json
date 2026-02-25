@@ -10490,6 +10490,11 @@
             "description": "Logo URL for marketplace integrations",
             "nullable": true,
             "example": "https://marketplace.ayunis.de/logos/oparl.png"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of the integration (populated from marketplace shortDescription or predefined config description)",
+            "example": "Access municipal council data via OParl"
           }
         },
         "required": [

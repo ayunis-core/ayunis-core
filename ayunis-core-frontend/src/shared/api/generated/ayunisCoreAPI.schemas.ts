@@ -1907,6 +1907,8 @@ export interface McpIntegrationResponseDto {
    * @nullable
    */
   logoUrl?: string | null;
+  /** Human-readable description of the integration (populated from marketplace shortDescription or predefined config description) */
+  description?: string;
 }
 
 /**

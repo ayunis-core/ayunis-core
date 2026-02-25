@@ -33,6 +33,7 @@ export class MarketplaceMcpIntegration extends McpIntegration {
     lastConnectionError?: string;
     lastConnectionCheck?: Date;
     returnsPii?: boolean;
+    description?: string;
   }) {
     super({
       id: params.id,
@@ -45,6 +46,7 @@ export class MarketplaceMcpIntegration extends McpIntegration {
       lastConnectionError: params.lastConnectionError,
       lastConnectionCheck: params.lastConnectionCheck,
       returnsPii: params.returnsPii,
+      description: params.description,
       auth: params.auth,
     });
 

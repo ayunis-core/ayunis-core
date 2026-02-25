@@ -90,6 +90,7 @@ export class McpIntegrationMapper {
       lastConnectionError: record.lastConnectionError,
       lastConnectionCheck: record.lastConnectionCheck,
       returnsPii: record.returnsPii,
+      description: record.description,
     } as const;
   }
 
@@ -143,6 +144,7 @@ export class McpIntegrationMapper {
     record.lastConnectionError = entity.lastConnectionError;
     record.lastConnectionCheck = entity.lastConnectionCheck;
     record.returnsPii = entity.returnsPii;
+    record.description = entity.description;
     record.auth = authRecord;
     authRecord.integration = record;
   }

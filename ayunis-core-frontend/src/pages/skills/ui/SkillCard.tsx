@@ -8,8 +8,10 @@ import {
 } from '@/shared/ui/shadcn/tooltip';
 import { Trash2, Pin } from 'lucide-react';
 import { useDeleteSkill } from '../api/useDeleteSkill';
-import { useToggleSkillActive } from '../api/useToggleSkillActive';
-import { useToggleSkillPinned } from '../api/useToggleSkillPinned';
+import {
+  useToggleSkillActive,
+  useToggleSkillPinned,
+} from '@/features/skill-actions';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
 import type { Skill } from '../model/openapi';

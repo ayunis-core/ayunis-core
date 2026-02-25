@@ -30,6 +30,9 @@ export abstract class McpIntegrationRecord extends BaseRecord {
   @Column({ default: true })
   returnsPii: boolean;
 
+  @Column({ type: 'text', nullable: true })
+  description?: string;
+
   @OneToOne(() => McpIntegrationAuthRecord, (auth) => auth.integration, {
     cascade: ['insert', 'update'],
     eager: true,
