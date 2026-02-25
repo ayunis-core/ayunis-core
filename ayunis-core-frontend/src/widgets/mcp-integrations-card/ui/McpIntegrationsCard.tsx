@@ -12,6 +12,7 @@ import {
   Item,
   ItemActions,
   ItemContent,
+  ItemDescription,
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
 import { cn } from '@/shared/lib/shadcn/utils';
@@ -129,6 +130,11 @@ export default function McpIntegrationsCard({
                 >
                   <ItemContent>
                     <ItemTitle>{integration.name}</ItemTitle>
+                    {integration.description && (
+                      <ItemDescription>
+                        {integration.description}
+                      </ItemDescription>
+                    )}
                   </ItemContent>
                   <ItemActions>
                     <Switch
