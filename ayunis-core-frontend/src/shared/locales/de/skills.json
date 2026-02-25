@@ -18,6 +18,7 @@
     "inactiveLabel": "Inaktiv",
     "pinLabel": "An neuen Chat anheften",
     "unpinLabel": "Von neuem Chat lösen",
+    "deleteLabel": "Löschen",
     "confirmDelete": {
       "title": "Fähigkeit löschen",
       "description": "Sind Sie sicher, dass Sie \"{{title}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",

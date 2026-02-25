@@ -2547,7 +2547,7 @@ export interface CreateSkillDto {
   shortDescription: string;
   /** Detailed instructions for the skill (injected when the skill is activated) */
   instructions: string;
-  /** Whether the skill is active (defaults to false) */
+  /** Whether the skill is active (defaults to true) */
   isActive?: boolean;
 }
 

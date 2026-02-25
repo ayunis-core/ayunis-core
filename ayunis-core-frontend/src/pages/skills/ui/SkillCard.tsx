@@ -1,6 +1,11 @@
 import { Button } from '@/shared/ui/shadcn/button';
 import { Badge } from '@/shared/ui/shadcn/badge';
 import { Switch } from '@/shared/ui/shadcn/switch';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/shared/ui/shadcn/tooltip';
 import { Trash2, Pin } from 'lucide-react';
 import { useDeleteSkill } from '../api/useDeleteSkill';
 import { useToggleSkillActive } from '../api/useToggleSkillActive';
@@ -90,33 +95,48 @@ export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
           />
         </div>
         {skill.isActive && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleTogglePinned();
-            }}
-            disabled={togglePinned.isPending}
-            title={skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')}
-          >
-            <Pin
-              className={`h-4 w-4 ${skill.isPinned ? 'fill-current' : ''}`}
-            />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleTogglePinned();
+                }}
+                disabled={togglePinned.isPending}
+                aria-label={
+                  skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')
+                }
+              >
+                <Pin
+                  className={`h-4 w-4 ${skill.isPinned ? 'fill-current' : ''}`}
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')}
+            </TooltipContent>
+          </Tooltip>
         )}
         {!skill.isShared && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete();
-            }}
-            disabled={deleteSkill.isPending}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete();
+                }}
+                disabled={deleteSkill.isPending}
+                aria-label={t('card.deleteLabel')}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('card.deleteLabel')}</TooltipContent>
+          </Tooltip>
         )}
       </ItemActions>
     </Item>
