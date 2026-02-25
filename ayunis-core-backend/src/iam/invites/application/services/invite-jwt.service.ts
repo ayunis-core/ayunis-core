@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UUID } from 'crypto';
+import type { StringValue } from 'ms';
 import { InvalidInviteTokenError } from '../invites.errors';
 
 export interface InviteJwtPayload {
@@ -26,7 +27,7 @@ export class InviteJwtService {
       inviteId: params.inviteId,
     };
 
-    const expiresIn = this.configService.get<string>(
+    const expiresIn = this.configService.get<StringValue>(
       'auth.jwt.inviteExpiresIn',
       '2d',
     );

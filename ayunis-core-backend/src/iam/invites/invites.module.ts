@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
+import type { StringValue } from 'ms';
 
 // Entities and Infrastructure
 import { InviteRecord } from './infrastructure/persistence/local/schema/invite.record';
@@ -50,7 +51,7 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
           'dev-secret-change-in-production',
         ),
         signOptions: {
-          expiresIn: configService.get<string>(
+          expiresIn: configService.get<StringValue>(
             'auth.jwt.inviteExpiresIn',
             '7d',
           ),
