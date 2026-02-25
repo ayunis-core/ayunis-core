@@ -126,6 +126,8 @@ export class SkillsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: CreateSkillDto,
   ): Promise<SkillResponseDto> {
+    const isActive = dto.isActive ?? true;
+
     this.logger.log('create', { userId, name: dto.name });
 
     const skill = await this.createSkillUseCase.execute(
@@ -133,12 +135,12 @@ export class SkillsController {
         name: dto.name,
         shortDescription: dto.shortDescription,
         instructions: dto.instructions,
-        isActive: dto.isActive,
+        isActive,
       }),
     );
 
     return this.skillDtoMapper.toDto(skill, {
-      isActive: dto.isActive ?? false,
+      isActive,
       isShared: false,
       isPinned: false,
     });

@@ -25,7 +25,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/dropdown-menu';
 import { ChatsSidebarGroup } from './ChatsSidebarGroup';
@@ -62,7 +61,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t('sidebar.newChat'),
       url: '/chat',
       icon: Plus,
-      shortcut: '⌘J',
     },
     ...(featureToggles.promptsEnabled
       ? [
@@ -132,11 +130,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <Link to={item.url}>
                     <item.icon />
                     <span>{item.title}</span>
-                    {item.shortcut && (
-                      <DropdownMenuShortcut>
-                        {item.shortcut}
-                      </DropdownMenuShortcut>
-                    )}
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

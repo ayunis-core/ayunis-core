@@ -18,6 +18,7 @@
     "inactiveLabel": "Inactive",
     "pinLabel": "Pin to new chat",
     "unpinLabel": "Unpin from new chat",
+    "deleteLabel": "Delete",
     "confirmDelete": {
       "title": "Delete Skill",
       "description": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",

@@ -60,6 +60,7 @@ skills/
 │   ├── skill-sources.controller.ts         # Source management endpoints
 │   ├── skill-mcp-integrations.controller.ts # MCP integration endpoints
 │   ├── dto/
+│   │   ├── base-skill.dto.ts
 │   │   ├── create-skill.dto.ts
 │   │   ├── update-skill.dto.ts
 │   │   └── skill-response.dto.ts

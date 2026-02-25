@@ -11645,7 +11645,7 @@
           },
           "isActive": {
             "type": "boolean",
-            "description": "Whether the skill is active (defaults to false)",
+            "description": "Whether the skill is active (defaults to true)",
             "example": true
           }
         },
