@@ -160,7 +160,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
   it('should return empty results when knowledge base has no documents', async () => {
     const kb = new KnowledgeBase({
       id: kbId,
-      name: 'Leere Wissensbasis',
+      name: 'Leere Wissenssammlung',
       orgId,
       userId,
     });
@@ -198,7 +198,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
     const otherUserId = '66666666-6666-6666-6666-666666666666' as UUID;
     const kb = new KnowledgeBase({
       id: kbId,
-      name: 'Fremde Wissensbasis',
+      name: 'Fremde Wissenssammlung',
       orgId,
       userId: otherUserId,
     });
@@ -220,7 +220,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
     const otherOrgId = '77777777-7777-7777-7777-777777777777' as UUID;
     const kb = new KnowledgeBase({
       id: kbId,
-      name: 'Fremde Organisation Wissensbasis',
+      name: 'Fremde Organisation Wissenssammlung',
       orgId: otherOrgId,
       userId,
     });

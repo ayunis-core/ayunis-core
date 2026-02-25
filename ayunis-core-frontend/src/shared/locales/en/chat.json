@@ -54,8 +54,8 @@
       "create_skill": {
         "name": "Name",
         "namePlaceholder": "Enter skill name",
-        "shortDescription": "Short Description",
-        "shortDescriptionPlaceholder": "Brief description of what the skill does",
+        "shortDescription": "Trigger",
+        "shortDescriptionPlaceholder": "Describe when the AI should activate this skill...",
         "instructions": "Instructions",
         "instructionsPlaceholder": "Detailed instructions for the skill",
         "active": "Active",

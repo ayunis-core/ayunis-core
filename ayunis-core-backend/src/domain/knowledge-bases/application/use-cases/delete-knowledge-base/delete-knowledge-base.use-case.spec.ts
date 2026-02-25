@@ -155,7 +155,7 @@ describe('DeleteKnowledgeBaseUseCase', () => {
     const otherUserId = '66666666-6666-6666-6666-666666666666' as UUID;
     const existing = new KnowledgeBase({
       id: knowledgeBaseId,
-      name: 'Fremde Wissensbasis',
+      name: 'Fremde Wissenssammlung',
       orgId,
       userId: otherUserId,
     });

@@ -70,7 +70,7 @@ describe('ListKnowledgeBaseDocumentsUseCase', () => {
   it('should return an empty array when knowledge base has no documents', async () => {
     const knowledgeBase = new KnowledgeBase({
       id: knowledgeBaseId,
-      name: 'Leere Wissensbasis',
+      name: 'Leere Wissenssammlung',
       orgId,
       userId,
     });
