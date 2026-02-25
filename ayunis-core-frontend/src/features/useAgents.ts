@@ -3,7 +3,12 @@ import {
   useAgentsControllerFindAll,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
-export function useAgents() {
+interface UseAgentsOptions {
+  enabled?: boolean;
+}
+
+export function useAgents(options: UseAgentsOptions = {}) {
+  const { enabled = true } = options;
   const {
     data: agents = [],
     isLoading,
@@ -12,6 +17,7 @@ export function useAgents() {
   } = useAgentsControllerFindAll({
     query: {
       queryKey: getAgentsControllerFindAllQueryKey(),
+      enabled,
     },
   });
 

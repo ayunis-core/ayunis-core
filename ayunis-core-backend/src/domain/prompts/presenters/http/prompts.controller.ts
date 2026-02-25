@@ -43,8 +43,11 @@ import { CreatePromptDto } from './dto/create-prompt.dto';
 import { UpdatePromptDto } from './dto/update-prompt.dto';
 import { PromptResponseDto } from './dto/prompt-response.dto';
 import { PromptDtoMapper } from './mappers/prompt.mapper';
+import { RequireFeature } from 'src/common/guards/feature.guard';
+import { FeatureFlag } from 'src/config/features.config';
 
 @ApiTags('prompts')
+@RequireFeature(FeatureFlag.Prompts)
 @Controller('prompts')
 export class PromptsController {
   private readonly logger = new Logger(PromptsController.name);

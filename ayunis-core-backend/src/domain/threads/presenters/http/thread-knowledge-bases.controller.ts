@@ -11,12 +11,15 @@ import {
 import { UUID } from 'crypto';
 import { ApiOperation, ApiResponse, ApiParam, ApiTags } from '@nestjs/swagger';
 
+import { RequireFeature } from 'src/common/guards/feature.guard';
+import { FeatureFlag } from 'src/config/features.config';
 import { AddKnowledgeBaseToThreadUseCase } from '../../application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.use-case';
 import { AddKnowledgeBaseToThreadCommand } from '../../application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.command';
 import { RemoveKnowledgeBaseFromThreadUseCase } from '../../application/use-cases/remove-knowledge-base-from-thread/remove-knowledge-base-from-thread.use-case';
 import { RemoveKnowledgeBaseFromThreadCommand } from '../../application/use-cases/remove-knowledge-base-from-thread/remove-knowledge-base-from-thread.command';
 
 @ApiTags('threads')
+@RequireFeature(FeatureFlag.KnowledgeBases)
 @Controller('threads')
 export class ThreadKnowledgeBasesController {
   private readonly logger = new Logger(ThreadKnowledgeBasesController.name);

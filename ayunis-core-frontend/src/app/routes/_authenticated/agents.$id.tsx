@@ -8,9 +8,11 @@ import {
   getSharesControllerGetSharesQueryKey,
   teamsControllerListMyTeams,
   getTeamsControllerListMyTeamsQueryKey,
+  appControllerFeatureToggles,
+  getAppControllerFeatureTogglesQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { CreateAgentShareDtoEntityType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 import { AgentPage } from '@/pages/agent';
 import { z } from 'zod';
 
@@ -52,6 +54,13 @@ export const Route = createFileRoute('/_authenticated/agents/$id')({
   component: RouteComponent,
   validateSearch: searchSchema,
   loader: async ({ context: { queryClient }, params: { id } }) => {
+    const featureToggles = await queryClient.fetchQuery({
+      queryKey: getAppControllerFeatureTogglesQueryKey(),
+      queryFn: () => appControllerFeatureToggles(),
+    });
+    if (!featureToggles.agentsEnabled) {
+      throw redirect({ to: '/chat' });
+    }
     const agent = await queryClient.fetchQuery(agentQueryOptions(id));
     const isEmbeddingModelEnabled = await queryClient.fetchQuery(
       queryIsEmbeddingModelEnabledOptions(),

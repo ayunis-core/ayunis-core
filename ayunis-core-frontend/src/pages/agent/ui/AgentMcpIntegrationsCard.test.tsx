@@ -90,7 +90,7 @@ describe('AgentMcpIntegrationsCard', () => {
 
     vi.spyOn(
       apiHooks,
-      'useAgentsControllerListAgentMcpIntegrations',
+      'useAgentMcpIntegrationsControllerListAgentMcpIntegrations',
     ).mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -121,7 +121,7 @@ describe('AgentMcpIntegrationsCard', () => {
 
     vi.spyOn(
       apiHooks,
-      'useAgentsControllerListAgentMcpIntegrations',
+      'useAgentMcpIntegrationsControllerListAgentMcpIntegrations',
     ).mockReturnValue({
       data: [],
       isLoading: false,
@@ -153,7 +153,7 @@ describe('AgentMcpIntegrationsCard', () => {
 
     vi.spyOn(
       apiHooks,
-      'useAgentsControllerListAgentMcpIntegrations',
+      'useAgentMcpIntegrationsControllerListAgentMcpIntegrations',
     ).mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -188,7 +188,7 @@ describe('AgentMcpIntegrationsCard', () => {
 
     vi.spyOn(
       apiHooks,
-      'useAgentsControllerListAgentMcpIntegrations',
+      'useAgentMcpIntegrationsControllerListAgentMcpIntegrations',
     ).mockReturnValue({
       data: [],
       isLoading: false,
@@ -225,7 +225,7 @@ describe('AgentMcpIntegrationsCard', () => {
 
     vi.spyOn(
       apiHooks,
-      'useAgentsControllerListAgentMcpIntegrations',
+      'useAgentMcpIntegrationsControllerListAgentMcpIntegrations',
     ).mockReturnValue({
       data: [mockIntegration1], // Only integration 1 is assigned
       isLoading: false,
@@ -267,7 +267,7 @@ describe('AgentMcpIntegrationsCard', () => {
 
     vi.spyOn(
       apiHooks,
-      'useAgentsControllerListAgentMcpIntegrations',
+      'useAgentMcpIntegrationsControllerListAgentMcpIntegrations',
     ).mockReturnValue({
       data: [],
       isLoading: false,
@@ -303,7 +303,7 @@ describe('AgentMcpIntegrationsCard', () => {
 
     vi.spyOn(
       apiHooks,
-      'useAgentsControllerListAgentMcpIntegrations',
+      'useAgentMcpIntegrationsControllerListAgentMcpIntegrations',
     ).mockReturnValue({
       data: [], // Not assigned
       isLoading: false,
@@ -313,7 +313,7 @@ describe('AgentMcpIntegrationsCard', () => {
 
     vi.spyOn(
       apiHooks,
-      'useAgentsControllerAssignMcpIntegration',
+      'useAgentMcpIntegrationsControllerAssignMcpIntegration',
     ).mockReturnValue({
       mutateAsync: mockMutateAsync,
       isPending: false,
@@ -321,7 +321,7 @@ describe('AgentMcpIntegrationsCard', () => {
 
     vi.spyOn(
       apiHooks,
-      'useAgentsControllerUnassignMcpIntegration',
+      'useAgentMcpIntegrationsControllerUnassignMcpIntegration',
     ).mockReturnValue({
       mutateAsync: vi.fn(),
       isPending: false,
@@ -355,7 +355,7 @@ describe('AgentMcpIntegrationsCard', () => {
 
     vi.spyOn(
       apiHooks,
-      'useAgentsControllerListAgentMcpIntegrations',
+      'useAgentMcpIntegrationsControllerListAgentMcpIntegrations',
     ).mockReturnValue({
       data: [mockIntegration1], // Already assigned
       isLoading: false,
@@ -365,7 +365,7 @@ describe('AgentMcpIntegrationsCard', () => {
 
     vi.spyOn(
       apiHooks,
-      'useAgentsControllerAssignMcpIntegration',
+      'useAgentMcpIntegrationsControllerAssignMcpIntegration',
     ).mockReturnValue({
       mutateAsync: vi.fn(),
       isPending: false,
@@ -373,7 +373,7 @@ describe('AgentMcpIntegrationsCard', () => {
 
     vi.spyOn(
       apiHooks,
-      'useAgentsControllerUnassignMcpIntegration',
+      'useAgentMcpIntegrationsControllerUnassignMcpIntegration',
     ).mockReturnValue({
       mutateAsync: mockMutateAsync,
       isPending: false,
@@ -405,7 +405,7 @@ describe('AgentMcpIntegrationsCard', () => {
 
     vi.spyOn(
       apiHooks,
-      'useAgentsControllerListAgentMcpIntegrations',
+      'useAgentMcpIntegrationsControllerListAgentMcpIntegrations',
     ).mockReturnValue({
       data: [],
       isLoading: false,
@@ -415,7 +415,7 @@ describe('AgentMcpIntegrationsCard', () => {
 
     vi.spyOn(
       apiHooks,
-      'useAgentsControllerAssignMcpIntegration',
+      'useAgentMcpIntegrationsControllerAssignMcpIntegration',
     ).mockReturnValue({
       mutateAsync: vi.fn(),
       isPending: true, // Mutation in progress
@@ -423,7 +423,7 @@ describe('AgentMcpIntegrationsCard', () => {
 
     vi.spyOn(
       apiHooks,
-      'useAgentsControllerUnassignMcpIntegration',
+      'useAgentMcpIntegrationsControllerUnassignMcpIntegration',
     ).mockReturnValue({
       mutateAsync: vi.fn(),
       isPending: false,
@@ -448,7 +448,7 @@ describe('AgentMcpIntegrationsCard', () => {
 
     vi.spyOn(
       apiHooks,
-      'useAgentsControllerListAgentMcpIntegrations',
+      'useAgentMcpIntegrationsControllerListAgentMcpIntegrations',
     ).mockReturnValue({
       data: [],
       isLoading: false,

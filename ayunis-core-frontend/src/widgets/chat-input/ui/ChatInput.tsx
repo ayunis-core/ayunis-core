@@ -16,6 +16,7 @@ import { SendButton } from './SendButton';
 import { AnonymousButton } from './AnonymousButton';
 import { AgentBadge } from './AgentBadge';
 import { SkillBadge } from './SkillBadge';
+import { useIsAgentsEnabled } from '@/features/feature-toggles';
 import {
   usePendingImages,
   type PendingImage,
@@ -116,7 +117,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const [isFocused, setIsFocused] = useState<boolean>(false);
     const [message, setMessage] = useState(prefilledPrompt ?? '');
     const { t } = useTranslation('common');
-    const { agents } = useAgents();
+    const isAgentsEnabled = useIsAgentsEnabled();
+    const { agents } = useAgents({ enabled: isAgentsEnabled });
     const containerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -316,18 +318,20 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                       (kb) => kb.id,
                     )}
                   />
-                  <AgentButton
-                    selectedAgentId={agentId}
-                    onAgentChange={onAgentChange}
-                    isDisabled={isAgentChangeDisabled}
-                  />
+                  {isAgentsEnabled && (
+                    <AgentButton
+                      selectedAgentId={agentId}
+                      onAgentChange={onAgentChange}
+                      isDisabled={isAgentChangeDisabled}
+                    />
+                  )}
                   <AnonymousButton
                     isAnonymous={isAnonymous}
                     onAnonymousChange={onAnonymousChange}
                     isDisabled={isAnonymousChangeDisabled}
                     isEnforced={isAnonymousEnforced}
                   />
-                  {agentId && (
+                  {isAgentsEnabled && agentId && (
                     <AgentBadge
                       agentId={agentId}
                       agent={agents.find((a) => a.id === agentId)}

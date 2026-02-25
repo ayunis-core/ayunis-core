@@ -70,8 +70,11 @@ import {
 } from './dto/knowledge-base-document-response.dto';
 import { MissingFileError } from '../../application/knowledge-bases.errors';
 import { KnowledgeBaseDtoMapper } from './mappers/knowledge-base-dto.mapper';
+import { RequireFeature } from 'src/common/guards/feature.guard';
+import { FeatureFlag } from 'src/config/features.config';
 
 @ApiTags('knowledge-bases')
+@RequireFeature(FeatureFlag.KnowledgeBases)
 @Controller('knowledge-bases')
 export class KnowledgeBasesController {
   private readonly logger = new Logger(KnowledgeBasesController.name);

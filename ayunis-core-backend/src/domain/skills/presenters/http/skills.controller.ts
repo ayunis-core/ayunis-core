@@ -54,8 +54,11 @@ import { UpdateSkillDto } from './dto/update-skill.dto';
 import { InstallSkillFromMarketplaceDto } from './dto/install-skill-from-marketplace.dto';
 import { SkillResponseDto } from './dto/skill-response.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
+import { RequireFeature } from 'src/common/guards/feature.guard';
+import { FeatureFlag } from 'src/config/features.config';
 
 @ApiTags('skills')
+@RequireFeature(FeatureFlag.Skills)
 @Controller('skills')
 export class SkillsController {
   private readonly logger = new Logger(SkillsController.name);

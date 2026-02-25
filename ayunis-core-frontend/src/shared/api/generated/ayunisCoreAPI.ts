@@ -58,6 +58,7 @@ import type {
   EmbeddingModelEnabledResponseDto,
   EmbeddingModelResponseDto,
   ErrorResponseDto,
+  FeatureTogglesResponseDto,
   ForgotPasswordDto,
   GetThreadResponseDto,
   GetThreadsResponseDto,
@@ -347,6 +348,99 @@ export function useAppControllerHealth<TData = Awaited<ReturnType<typeof appCont
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAppControllerHealthQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Get the current feature toggle states
+ */
+export const appControllerFeatureToggles = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<FeatureTogglesResponseDto>(
+      {url: `/feature-toggles`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getAppControllerFeatureTogglesQueryKey = () => {
+    return [
+    `/feature-toggles`
+    ] as const;
+    }
+
+    
+export const getAppControllerFeatureTogglesQueryOptions = <TData = Awaited<ReturnType<typeof appControllerFeatureToggles>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerFeatureToggles>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAppControllerFeatureTogglesQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof appControllerFeatureToggles>>> = ({ signal }) => appControllerFeatureToggles(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof appControllerFeatureToggles>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AppControllerFeatureTogglesQueryResult = NonNullable<Awaited<ReturnType<typeof appControllerFeatureToggles>>>
+export type AppControllerFeatureTogglesQueryError = unknown
+
+
+export function useAppControllerFeatureToggles<TData = Awaited<ReturnType<typeof appControllerFeatureToggles>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerFeatureToggles>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof appControllerFeatureToggles>>,
+          TError,
+          Awaited<ReturnType<typeof appControllerFeatureToggles>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAppControllerFeatureToggles<TData = Awaited<ReturnType<typeof appControllerFeatureToggles>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerFeatureToggles>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof appControllerFeatureToggles>>,
+          TError,
+          Awaited<ReturnType<typeof appControllerFeatureToggles>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAppControllerFeatureToggles<TData = Awaited<ReturnType<typeof appControllerFeatureToggles>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerFeatureToggles>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the current feature toggle states
+ */
+
+export function useAppControllerFeatureToggles<TData = Awaited<ReturnType<typeof appControllerFeatureToggles>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerFeatureToggles>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAppControllerFeatureTogglesQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -6045,7 +6139,7 @@ export function useThreadsControllerDownloadSource<TData = Awaited<ReturnType<ty
 /**
  * @summary Add a knowledge base to a thread
  */
-export const threadsControllerAddKnowledgeBase = (
+export const threadKnowledgeBasesControllerAddKnowledgeBase = (
     id: string,
     knowledgeBaseId: string,
  signal?: AbortSignal
@@ -6060,11 +6154,11 @@ export const threadsControllerAddKnowledgeBase = (
   
 
 
-export const getThreadsControllerAddKnowledgeBaseMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerAddKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerAddKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext> => {
+export const getThreadKnowledgeBasesControllerAddKnowledgeBaseMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadKnowledgeBasesControllerAddKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadKnowledgeBasesControllerAddKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext> => {
 
-const mutationKey = ['threadsControllerAddKnowledgeBase'];
+const mutationKey = ['threadKnowledgeBasesControllerAddKnowledgeBase'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -6074,10 +6168,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerAddKnowledgeBase>>, {id: string;knowledgeBaseId: string}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadKnowledgeBasesControllerAddKnowledgeBase>>, {id: string;knowledgeBaseId: string}> = (props) => {
           const {id,knowledgeBaseId} = props ?? {};
 
-          return  threadsControllerAddKnowledgeBase(id,knowledgeBaseId,)
+          return  threadKnowledgeBasesControllerAddKnowledgeBase(id,knowledgeBaseId,)
         }
 
         
@@ -6085,23 +6179,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ThreadsControllerAddKnowledgeBaseMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerAddKnowledgeBase>>>
+    export type ThreadKnowledgeBasesControllerAddKnowledgeBaseMutationResult = NonNullable<Awaited<ReturnType<typeof threadKnowledgeBasesControllerAddKnowledgeBase>>>
     
-    export type ThreadsControllerAddKnowledgeBaseMutationError = void
+    export type ThreadKnowledgeBasesControllerAddKnowledgeBaseMutationError = void
 
     /**
  * @summary Add a knowledge base to a thread
  */
-export const useThreadsControllerAddKnowledgeBase = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerAddKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext>, }
+export const useThreadKnowledgeBasesControllerAddKnowledgeBase = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadKnowledgeBasesControllerAddKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof threadsControllerAddKnowledgeBase>>,
+        Awaited<ReturnType<typeof threadKnowledgeBasesControllerAddKnowledgeBase>>,
         TError,
         {id: string;knowledgeBaseId: string},
         TContext
       > => {
 
-      const mutationOptions = getThreadsControllerAddKnowledgeBaseMutationOptions(options);
+      const mutationOptions = getThreadKnowledgeBasesControllerAddKnowledgeBaseMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -6109,7 +6203,7 @@ export const useThreadsControllerAddKnowledgeBase = <TError = void,
 /**
  * @summary Remove a knowledge base from a thread
  */
-export const threadsControllerRemoveKnowledgeBase = (
+export const threadKnowledgeBasesControllerRemoveKnowledgeBase = (
     id: string,
     knowledgeBaseId: string,
  ) => {
@@ -6123,11 +6217,11 @@ export const threadsControllerRemoveKnowledgeBase = (
   
 
 
-export const getThreadsControllerRemoveKnowledgeBaseMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext> => {
+export const getThreadKnowledgeBasesControllerRemoveKnowledgeBaseMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadKnowledgeBasesControllerRemoveKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadKnowledgeBasesControllerRemoveKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext> => {
 
-const mutationKey = ['threadsControllerRemoveKnowledgeBase'];
+const mutationKey = ['threadKnowledgeBasesControllerRemoveKnowledgeBase'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -6137,10 +6231,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerRemoveKnowledgeBase>>, {id: string;knowledgeBaseId: string}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadKnowledgeBasesControllerRemoveKnowledgeBase>>, {id: string;knowledgeBaseId: string}> = (props) => {
           const {id,knowledgeBaseId} = props ?? {};
 
-          return  threadsControllerRemoveKnowledgeBase(id,knowledgeBaseId,)
+          return  threadKnowledgeBasesControllerRemoveKnowledgeBase(id,knowledgeBaseId,)
         }
 
         
@@ -6148,23 +6242,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ThreadsControllerRemoveKnowledgeBaseMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerRemoveKnowledgeBase>>>
+    export type ThreadKnowledgeBasesControllerRemoveKnowledgeBaseMutationResult = NonNullable<Awaited<ReturnType<typeof threadKnowledgeBasesControllerRemoveKnowledgeBase>>>
     
-    export type ThreadsControllerRemoveKnowledgeBaseMutationError = void
+    export type ThreadKnowledgeBasesControllerRemoveKnowledgeBaseMutationError = void
 
     /**
  * @summary Remove a knowledge base from a thread
  */
-export const useThreadsControllerRemoveKnowledgeBase = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext>, }
+export const useThreadKnowledgeBasesControllerRemoveKnowledgeBase = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadKnowledgeBasesControllerRemoveKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof threadsControllerRemoveKnowledgeBase>>,
+        Awaited<ReturnType<typeof threadKnowledgeBasesControllerRemoveKnowledgeBase>>,
         TError,
         {id: string;knowledgeBaseId: string},
         TContext
       > => {
 
-      const mutationOptions = getThreadsControllerRemoveKnowledgeBaseMutationOptions(options);
+      const mutationOptions = getThreadKnowledgeBasesControllerRemoveKnowledgeBaseMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -6774,7 +6868,7 @@ export const useAgentsControllerRemoveSource = <TError = void,
 /**
  * @summary Assign MCP integration to agent
  */
-export const agentsControllerAssignMcpIntegration = (
+export const agentMcpIntegrationsControllerAssignMcpIntegration = (
     agentId: string,
     integrationId: string,
  signal?: AbortSignal
@@ -6789,11 +6883,11 @@ export const agentsControllerAssignMcpIntegration = (
   
 
 
-export const getAgentsControllerAssignMcpIntegrationMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerAssignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof agentsControllerAssignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext> => {
+export const getAgentMcpIntegrationsControllerAssignMcpIntegrationMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentMcpIntegrationsControllerAssignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof agentMcpIntegrationsControllerAssignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext> => {
 
-const mutationKey = ['agentsControllerAssignMcpIntegration'];
+const mutationKey = ['agentMcpIntegrationsControllerAssignMcpIntegration'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -6803,10 +6897,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof agentsControllerAssignMcpIntegration>>, {agentId: string;integrationId: string}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof agentMcpIntegrationsControllerAssignMcpIntegration>>, {agentId: string;integrationId: string}> = (props) => {
           const {agentId,integrationId} = props ?? {};
 
-          return  agentsControllerAssignMcpIntegration(agentId,integrationId,)
+          return  agentMcpIntegrationsControllerAssignMcpIntegration(agentId,integrationId,)
         }
 
         
@@ -6814,23 +6908,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type AgentsControllerAssignMcpIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof agentsControllerAssignMcpIntegration>>>
+    export type AgentMcpIntegrationsControllerAssignMcpIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof agentMcpIntegrationsControllerAssignMcpIntegration>>>
     
-    export type AgentsControllerAssignMcpIntegrationMutationError = void
+    export type AgentMcpIntegrationsControllerAssignMcpIntegrationMutationError = void
 
     /**
  * @summary Assign MCP integration to agent
  */
-export const useAgentsControllerAssignMcpIntegration = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerAssignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext>, }
+export const useAgentMcpIntegrationsControllerAssignMcpIntegration = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentMcpIntegrationsControllerAssignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof agentsControllerAssignMcpIntegration>>,
+        Awaited<ReturnType<typeof agentMcpIntegrationsControllerAssignMcpIntegration>>,
         TError,
         {agentId: string;integrationId: string},
         TContext
       > => {
 
-      const mutationOptions = getAgentsControllerAssignMcpIntegrationMutationOptions(options);
+      const mutationOptions = getAgentMcpIntegrationsControllerAssignMcpIntegrationMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -6838,7 +6932,7 @@ export const useAgentsControllerAssignMcpIntegration = <TError = void,
 /**
  * @summary Unassign MCP integration from agent
  */
-export const agentsControllerUnassignMcpIntegration = (
+export const agentMcpIntegrationsControllerUnassignMcpIntegration = (
     agentId: string,
     integrationId: string,
  ) => {
@@ -6852,11 +6946,11 @@ export const agentsControllerUnassignMcpIntegration = (
   
 
 
-export const getAgentsControllerUnassignMcpIntegrationMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerUnassignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof agentsControllerUnassignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext> => {
+export const getAgentMcpIntegrationsControllerUnassignMcpIntegrationMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentMcpIntegrationsControllerUnassignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof agentMcpIntegrationsControllerUnassignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext> => {
 
-const mutationKey = ['agentsControllerUnassignMcpIntegration'];
+const mutationKey = ['agentMcpIntegrationsControllerUnassignMcpIntegration'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -6866,10 +6960,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof agentsControllerUnassignMcpIntegration>>, {agentId: string;integrationId: string}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof agentMcpIntegrationsControllerUnassignMcpIntegration>>, {agentId: string;integrationId: string}> = (props) => {
           const {agentId,integrationId} = props ?? {};
 
-          return  agentsControllerUnassignMcpIntegration(agentId,integrationId,)
+          return  agentMcpIntegrationsControllerUnassignMcpIntegration(agentId,integrationId,)
         }
 
         
@@ -6877,23 +6971,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type AgentsControllerUnassignMcpIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof agentsControllerUnassignMcpIntegration>>>
+    export type AgentMcpIntegrationsControllerUnassignMcpIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof agentMcpIntegrationsControllerUnassignMcpIntegration>>>
     
-    export type AgentsControllerUnassignMcpIntegrationMutationError = void
+    export type AgentMcpIntegrationsControllerUnassignMcpIntegrationMutationError = void
 
     /**
  * @summary Unassign MCP integration from agent
  */
-export const useAgentsControllerUnassignMcpIntegration = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerUnassignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext>, }
+export const useAgentMcpIntegrationsControllerUnassignMcpIntegration = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentMcpIntegrationsControllerUnassignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof agentsControllerUnassignMcpIntegration>>,
+        Awaited<ReturnType<typeof agentMcpIntegrationsControllerUnassignMcpIntegration>>,
         TError,
         {agentId: string;integrationId: string},
         TContext
       > => {
 
-      const mutationOptions = getAgentsControllerUnassignMcpIntegrationMutationOptions(options);
+      const mutationOptions = getAgentMcpIntegrationsControllerUnassignMcpIntegrationMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -6901,7 +6995,7 @@ export const useAgentsControllerUnassignMcpIntegration = <TError = void,
 /**
  * @summary List MCP integrations assigned to agent
  */
-export const agentsControllerListAgentMcpIntegrations = (
+export const agentMcpIntegrationsControllerListAgentMcpIntegrations = (
     agentId: string,
  signal?: AbortSignal
 ) => {
@@ -6916,69 +7010,69 @@ export const agentsControllerListAgentMcpIntegrations = (
 
 
 
-export const getAgentsControllerListAgentMcpIntegrationsQueryKey = (agentId?: string,) => {
+export const getAgentMcpIntegrationsControllerListAgentMcpIntegrationsQueryKey = (agentId?: string,) => {
     return [
     `/agents/${agentId}/mcp-integrations`
     ] as const;
     }
 
     
-export const getAgentsControllerListAgentMcpIntegrationsQueryOptions = <TData = Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError = void>(agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError, TData>>, }
+export const getAgentMcpIntegrationsControllerListAgentMcpIntegrationsQueryOptions = <TData = Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>, TError = void>(agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getAgentsControllerListAgentMcpIntegrationsQueryKey(agentId);
+  const queryKey =  queryOptions?.queryKey ?? getAgentMcpIntegrationsControllerListAgentMcpIntegrationsQueryKey(agentId);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>> = ({ signal }) => agentsControllerListAgentMcpIntegrations(agentId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>> = ({ signal }) => agentMcpIntegrationsControllerListAgentMcpIntegrations(agentId, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, enabled: !!(agentId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(agentId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type AgentsControllerListAgentMcpIntegrationsQueryResult = NonNullable<Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>>
-export type AgentsControllerListAgentMcpIntegrationsQueryError = void
+export type AgentMcpIntegrationsControllerListAgentMcpIntegrationsQueryResult = NonNullable<Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>>
+export type AgentMcpIntegrationsControllerListAgentMcpIntegrationsQueryError = void
 
 
-export function useAgentsControllerListAgentMcpIntegrations<TData = Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError = void>(
- agentId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError, TData>> & Pick<
+export function useAgentMcpIntegrationsControllerListAgentMcpIntegrations<TData = Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>, TError = void>(
+ agentId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>,
+          Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>,
           TError,
-          Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>
+          Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAgentsControllerListAgentMcpIntegrations<TData = Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError = void>(
- agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError, TData>> & Pick<
+export function useAgentMcpIntegrationsControllerListAgentMcpIntegrations<TData = Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>, TError = void>(
+ agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>,
+          Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>,
           TError,
-          Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>
+          Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAgentsControllerListAgentMcpIntegrations<TData = Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError = void>(
- agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError, TData>>, }
+export function useAgentMcpIntegrationsControllerListAgentMcpIntegrations<TData = Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>, TError = void>(
+ agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary List MCP integrations assigned to agent
  */
 
-export function useAgentsControllerListAgentMcpIntegrations<TData = Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError = void>(
- agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError, TData>>, }
+export function useAgentMcpIntegrationsControllerListAgentMcpIntegrations<TData = Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>, TError = void>(
+ agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentMcpIntegrationsControllerListAgentMcpIntegrations>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getAgentsControllerListAgentMcpIntegrationsQueryOptions(agentId,options)
+  const queryOptions = getAgentMcpIntegrationsControllerListAgentMcpIntegrationsQueryOptions(agentId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -1,6 +1,6 @@
 import {
-  useThreadsControllerAddKnowledgeBase,
-  useThreadsControllerRemoveKnowledgeBase,
+  useThreadKnowledgeBasesControllerAddKnowledgeBase,
+  useThreadKnowledgeBasesControllerRemoveKnowledgeBase,
   getThreadsControllerFindOneQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,7 +17,7 @@ export function useKnowledgeBaseAttachment({
   const queryClient = useQueryClient();
   const { t } = useTranslation('chat');
 
-  const addMutation = useThreadsControllerAddKnowledgeBase({
+  const addMutation = useThreadKnowledgeBasesControllerAddKnowledgeBase({
     mutation: {
       onSuccess: () => {
         void queryClient.invalidateQueries({
@@ -30,7 +30,7 @@ export function useKnowledgeBaseAttachment({
     },
   });
 
-  const removeMutation = useThreadsControllerRemoveKnowledgeBase({
+  const removeMutation = useThreadKnowledgeBasesControllerRemoveKnowledgeBase({
     mutation: {
       onSuccess: () => {
         void queryClient.invalidateQueries({
