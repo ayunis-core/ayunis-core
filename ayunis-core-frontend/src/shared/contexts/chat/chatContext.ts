@@ -32,6 +32,8 @@ type ChatContextType = {
   setPendingImages: (images: PendingImageFile[]) => void;
   pendingKnowledgeBases: KnowledgeBaseSummary[];
   setPendingKnowledgeBases: (kbs: KnowledgeBaseSummary[]) => void;
+  pendingSkillId: string | undefined;
+  setPendingSkillId: (skillId: string | undefined) => void;
 };
 
 export const ChatContext = createContext<ChatContextType>({
@@ -50,5 +52,9 @@ export const ChatContext = createContext<ChatContextType>({
   pendingKnowledgeBases: [],
   setPendingKnowledgeBases: () => {
     throw new Error('setPendingKnowledgeBases is not implemented');
+  },
+  pendingSkillId: undefined,
+  setPendingSkillId: () => {
+    throw new Error('setPendingSkillId is not implemented');
   },
 });

@@ -25,6 +25,7 @@ export const ChatContextProvider = ({
   const [pendingKnowledgeBases, setPendingKnowledgeBases] = useState<
     KnowledgeBaseSummary[]
   >([]);
+  const [pendingSkillId, setPendingSkillId] = useState<string | undefined>();
 
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo(
@@ -37,8 +38,16 @@ export const ChatContextProvider = ({
       setPendingImages,
       pendingKnowledgeBases,
       setPendingKnowledgeBases,
+      pendingSkillId,
+      setPendingSkillId,
     }),
-    [pendingMessage, sources, pendingImages, pendingKnowledgeBases],
+    [
+      pendingMessage,
+      sources,
+      pendingImages,
+      pendingKnowledgeBases,
+      pendingSkillId,
+    ],
   );
 
   return (
