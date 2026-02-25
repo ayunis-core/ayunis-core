@@ -33,9 +33,9 @@
     "form": {
       "nameLabel": "Name",
       "namePlaceholder": "Enter skill name...",
-      "shortDescriptionLabel": "Short Description",
-      "shortDescriptionPlaceholder": "Brief description of what this skill does...",
-      "shortDescriptionHint": "A good description helps the AI understand when to use this skill.",
+      "shortDescriptionLabel": "Trigger",
+      "shortDescriptionPlaceholder": "Describe when the AI should activate this skill...",
+      "shortDescriptionHint": "A good trigger helps the AI understand when to use this skill.",
       "instructionsLabel": "Detailed Instructions",
       "instructionsPlaceholder": "Enter detailed instructions for this skill..."
     },
@@ -46,7 +46,7 @@
     },
     "validation": {
       "nameRequired": "Name is required",
-      "shortDescriptionRequired": "Short description is required",
+      "shortDescriptionRequired": "Trigger is required",
       "instructionsRequired": "Instructions are required"
     }
   },

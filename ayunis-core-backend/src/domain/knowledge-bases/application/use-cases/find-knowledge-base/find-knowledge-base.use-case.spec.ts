@@ -71,7 +71,7 @@ describe('FindKnowledgeBaseUseCase', () => {
     const otherUserId = '44444444-4444-4444-4444-444444444444' as UUID;
     const existing = new KnowledgeBase({
       id: knowledgeBaseId,
-      name: 'Fremde Wissensbasis',
+      name: 'Fremde Wissenssammlung',
       orgId,
       userId: otherUserId,
     });

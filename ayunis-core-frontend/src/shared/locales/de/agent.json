@@ -24,7 +24,7 @@
     }
   },
   "knowledgeBase": {
-    "title": "Wissensbasis",
+    "title": "Wissenssammlung",
     "description": "Konfigurieren Sie, welches Wissen der Agent zur Verfügung hat",
     "adding": "Hinzufügen...",
     "addSource": "Quelle hinzufügen",
