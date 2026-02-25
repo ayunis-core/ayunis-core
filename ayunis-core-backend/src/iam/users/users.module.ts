@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { HashingModule } from '../hashing/hashing.module';
 import { JwtModule } from '@nestjs/jwt';
+import type { StringValue } from 'ms';
 import { EmailsModule } from 'src/common/emails/emails.module';
 import { EmailTemplatesModule } from 'src/common/email-templates/email-templates.module';
 
@@ -60,7 +61,7 @@ import { SuperAdminUsersController } from './presenters/http/super-admin-users.c
           'dev-secret-change-in-production',
         ),
         signOptions: {
-          expiresIn: configService.get<string>(
+          expiresIn: configService.get<StringValue>(
             'auth.jwt.emailConfirmationExpiresIn',
             '24h',
           ),
@@ -73,7 +74,7 @@ import { SuperAdminUsersController } from './presenters/http/super-admin-users.c
     {
       provide: UsersRepository,
       useFactory: (userRepository: Repository<UserRecord>) => {
-        // TODO: Implement cloud users repository when auth.provider === AuthProvider.CLOUD
+        // FUTURE: Implement cloud users repository when auth.provider === AuthProvider.CLOUD
         return new LocalUsersRepository(userRepository);
       },
       inject: [getRepositoryToken(UserRecord)],

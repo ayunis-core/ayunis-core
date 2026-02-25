@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UUID } from 'crypto';
+import type { StringValue } from 'ms';
 import { InvalidTokenError } from '../../../authentication/application/authentication.errors';
 
 export interface PasswordResetJwtPayload {
@@ -29,7 +30,7 @@ export class PasswordResetJwtService {
       email: params.email,
     };
 
-    const expiresIn = this.configService.get<string>(
+    const expiresIn = this.configService.get<StringValue>(
       'auth.jwt.passwordResetExpiresIn',
       '2h',
     );
