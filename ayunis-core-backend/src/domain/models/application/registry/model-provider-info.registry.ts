@@ -78,6 +78,12 @@ const MODEL_PROVIDER_CONFIGS: ModelProviderConfig[] = [
     hostedIn: ModelProviderLocation.DE,
     configKey: 'models.stackit.apiKey',
   },
+  {
+    provider: ModelProvider.SCALEWAY,
+    displayName: 'Scaleway',
+    hostedIn: ModelProviderLocation.EU,
+    configKey: 'models.scaleway.apiKey',
+  },
 ];
 
 @Injectable()

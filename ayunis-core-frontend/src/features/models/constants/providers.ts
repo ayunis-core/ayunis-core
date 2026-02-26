@@ -19,6 +19,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   azure: 'MS Azure',
   gemini: 'Gemini',
   stackit: 'Stackit',
+  scaleway: 'Scaleway',
 };
 
 /**

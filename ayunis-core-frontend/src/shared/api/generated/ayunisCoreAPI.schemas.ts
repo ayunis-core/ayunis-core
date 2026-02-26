@@ -42,6 +42,7 @@ export const ModelWithConfigResponseDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
+  scaleway: 'scaleway',
 } as const;
 
 export interface ModelWithConfigResponseDto {
@@ -98,6 +99,7 @@ export const ModelProviderInfoResponseDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
+  scaleway: 'scaleway',
 } as const;
 
 /**
@@ -155,6 +157,7 @@ export const PermittedLanguageModelResponseDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
+  scaleway: 'scaleway',
 } as const;
 
 /**
@@ -241,6 +244,7 @@ export const PermittedEmbeddingModelResponseDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
+  scaleway: 'scaleway',
 } as const;
 
 /**
@@ -295,6 +299,7 @@ export const CreateLanguageModelRequestDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
+  scaleway: 'scaleway',
 } as const;
 
 export interface CreateLanguageModelRequestDto {
@@ -335,6 +340,7 @@ export const UpdateLanguageModelRequestDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
+  scaleway: 'scaleway',
 } as const;
 
 export interface UpdateLanguageModelRequestDto {
@@ -375,6 +381,7 @@ export const CreateEmbeddingModelRequestDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
+  scaleway: 'scaleway',
 } as const;
 
 /**
@@ -422,6 +429,7 @@ export const UpdateEmbeddingModelRequestDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
+  scaleway: 'scaleway',
 } as const;
 
 /**
@@ -469,6 +477,7 @@ export const LanguageModelResponseDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
+  scaleway: 'scaleway',
 } as const;
 
 /**
@@ -528,6 +537,7 @@ export const EmbeddingModelResponseDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
+  scaleway: 'scaleway',
 } as const;
 
 /**
@@ -2862,6 +2872,7 @@ export const ProviderUsageDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
+  scaleway: 'scaleway',
 } as const;
 
 export interface ProviderUsageDto {
@@ -2928,6 +2939,7 @@ export const ModelDistributionDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
+  scaleway: 'scaleway',
 } as const;
 
 export interface ModelDistributionDto {

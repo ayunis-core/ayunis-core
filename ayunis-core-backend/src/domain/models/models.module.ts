@@ -74,6 +74,8 @@ import { GeminiInferenceHandler } from './infrastructure/inference/gemini.infere
 import { GeminiStreamInferenceHandler } from './infrastructure/stream-inference/gemini.stream-inference';
 import { StackitInferenceHandler } from './infrastructure/inference/stackit.inference';
 import { StackitStreamInferenceHandler } from './infrastructure/stream-inference/stackit.stream-inference';
+import { ScalewayInferenceHandler } from './infrastructure/inference/scaleway.inference';
+import { ScalewayStreamInferenceHandler } from './infrastructure/stream-inference/scaleway.stream-inference';
 import { ConfigService } from '@nestjs/config';
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
@@ -129,6 +131,8 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     GeminiStreamInferenceHandler,
     StackitInferenceHandler,
     StackitStreamInferenceHandler,
+    ScalewayInferenceHandler,
+    ScalewayStreamInferenceHandler,
     MockStreamInferenceHandler,
     MockInferenceHandler,
     {
@@ -145,6 +149,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
         azureHandler: AzureStreamInferenceHandler,
         geminiHandler: GeminiStreamInferenceHandler,
         stackitHandler: StackitStreamInferenceHandler,
+        scalewayHandler: ScalewayStreamInferenceHandler,
         mockHandler: MockStreamInferenceHandler,
         configService: ConfigService,
       ) => {
@@ -160,6 +165,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
         registry.register(ModelProvider.AZURE, azureHandler);
         registry.register(ModelProvider.GEMINI, geminiHandler);
         registry.register(ModelProvider.STACKIT, stackitHandler);
+        registry.register(ModelProvider.SCALEWAY, scalewayHandler);
         registry.registerMockHandler(mockHandler);
         return registry;
       },
@@ -175,6 +181,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
         AzureStreamInferenceHandler,
         GeminiStreamInferenceHandler,
         StackitStreamInferenceHandler,
+        ScalewayStreamInferenceHandler,
         MockStreamInferenceHandler,
         ConfigService,
       ],
@@ -193,6 +200,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
         azureHandler: AzureInferenceHandler,
         geminiHandler: GeminiInferenceHandler,
         stackitHandler: StackitInferenceHandler,
+        scalewayHandler: ScalewayInferenceHandler,
         mockHandler: MockInferenceHandler,
         configService: ConfigService,
       ) => {
@@ -208,6 +216,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
         registry.register(ModelProvider.AZURE, azureHandler);
         registry.register(ModelProvider.GEMINI, geminiHandler);
         registry.register(ModelProvider.STACKIT, stackitHandler);
+        registry.register(ModelProvider.SCALEWAY, scalewayHandler);
         registry.registerMockHandler(mockHandler);
         return registry;
       },
@@ -223,6 +232,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
         AzureInferenceHandler,
         GeminiInferenceHandler,
         StackitInferenceHandler,
+        ScalewayInferenceHandler,
         MockInferenceHandler,
         ConfigService,
       ],
