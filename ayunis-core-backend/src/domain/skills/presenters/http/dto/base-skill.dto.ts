@@ -4,7 +4,7 @@ import { IsString, IsNotEmpty, Length, Matches } from 'class-validator';
 export class BaseSkillDto {
   @ApiProperty({
     description:
-      'The name of the skill (must be unique per user). Only letters, numbers, hyphens, and spaces allowed. Must start and end with a letter or number.',
+      'The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.',
     example: 'Legal Research',
     minLength: 1,
     maxLength: 255,
@@ -12,10 +12,13 @@ export class BaseSkillDto {
   @IsString()
   @IsNotEmpty()
   @Length(1, 255)
-  @Matches(/^[a-zA-Z0-9]([a-zA-Z0-9 -]*[a-zA-Z0-9])?$/, {
-    message:
-      'Name must contain only letters, numbers, hyphens, and spaces, and must start and end with a letter or number',
-  })
+  @Matches(
+    /^[\p{L}\p{N}\p{Emoji_Presentation}]([\p{L}\p{N}\p{Emoji_Presentation} -]*[\p{L}\p{N}\p{Emoji_Presentation}])?$/u,
+    {
+      message:
+        'Name must contain only letters, numbers, emojis, hyphens, and spaces, and must start and end with a letter, number, or emoji',
+    },
+  )
   @Matches(/^(?!.* {2})/, {
     message: 'Name must not contain consecutive spaces',
   })
