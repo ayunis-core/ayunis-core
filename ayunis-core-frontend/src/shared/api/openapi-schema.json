@@ -11633,7 +11633,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the skill (must be unique per user). Only letters, numbers, hyphens, and spaces allowed. Must start and end with a letter or number.",
+            "description": "The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.",
             "example": "Legal Research",
             "minLength": 1,
             "maxLength": 255
@@ -11665,7 +11665,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the skill (must be unique per user). Only letters, numbers, hyphens, and spaces allowed. Must start and end with a letter or number.",
+            "description": "The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.",
             "example": "Legal Research",
             "minLength": 1,
             "maxLength": 255

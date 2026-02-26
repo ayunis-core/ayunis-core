@@ -133,10 +133,38 @@ describe('Skill Entity', () => {
       );
     });
 
-    it('should reject names with unicode characters', () => {
-      expect(() => new Skill({ ...validParams, name: 'Recht Résumé' })).toThrow(
-        InvalidSkillNameError,
-      );
+    it('should accept names with unicode letters', () => {
+      const skill = new Skill({ ...validParams, name: 'Recht Résumé' });
+      expect(skill.name).toBe('Recht Résumé');
+    });
+
+    it('should accept names with German umlauts', () => {
+      const skill = new Skill({ ...validParams, name: 'Bürgerhilfe' });
+      expect(skill.name).toBe('Bürgerhilfe');
+    });
+
+    it('should accept names with emojis', () => {
+      const skill = new Skill({ ...validParams, name: '🔍 Research' });
+      expect(skill.name).toBe('🔍 Research');
+    });
+
+    it('should accept a single emoji as name', () => {
+      const skill = new Skill({ ...validParams, name: '📚' });
+      expect(skill.name).toBe('📚');
+    });
+
+    it('should reject names with invisible emoji components', () => {
+      // ZWJ (U+200D) should not be allowed
+      expect(
+        () => new Skill({ ...validParams, name: 'Test\u200DSkill' }),
+      ).toThrow(InvalidSkillNameError);
+    });
+
+    it('should reject names ending with variation selector', () => {
+      // Variation selector (U+FE0F) should not be allowed
+      expect(
+        () => new Skill({ ...validParams, name: 'Test\uFE0F' }),
+      ).toThrow(InvalidSkillNameError);
     });
   });
 });
