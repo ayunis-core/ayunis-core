@@ -11,6 +11,7 @@ import { DeleteKnowledgeBaseUseCase } from './application/use-cases/delete-knowl
 import { FindKnowledgeBaseUseCase } from './application/use-cases/find-knowledge-base/find-knowledge-base.use-case';
 import { ListKnowledgeBasesUseCase } from './application/use-cases/list-knowledge-bases/list-knowledge-bases.use-case';
 import { AddDocumentToKnowledgeBaseUseCase } from './application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.use-case';
+import { AddUrlToKnowledgeBaseUseCase } from './application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.use-case';
 import { RemoveDocumentFromKnowledgeBaseUseCase } from './application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.use-case';
 import { ListKnowledgeBaseDocumentsUseCase } from './application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
 import { QueryKnowledgeBaseUseCase } from './application/use-cases/query-knowledge-base/query-knowledge-base.use-case';
@@ -35,6 +36,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     FindKnowledgeBaseUseCase,
     ListKnowledgeBasesUseCase,
     AddDocumentToKnowledgeBaseUseCase,
+    AddUrlToKnowledgeBaseUseCase,
     RemoveDocumentFromKnowledgeBaseUseCase,
     ListKnowledgeBaseDocumentsUseCase,
     QueryKnowledgeBaseUseCase,
@@ -51,6 +53,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     FindKnowledgeBaseUseCase,
     ListKnowledgeBasesUseCase,
     AddDocumentToKnowledgeBaseUseCase,
+    AddUrlToKnowledgeBaseUseCase,
     RemoveDocumentFromKnowledgeBaseUseCase,
     ListKnowledgeBaseDocumentsUseCase,
     QueryKnowledgeBaseUseCase,

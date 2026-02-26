@@ -47,6 +47,7 @@ import { DeleteKnowledgeBaseUseCase } from '../../application/use-cases/delete-k
 import { FindKnowledgeBaseUseCase } from '../../application/use-cases/find-knowledge-base/find-knowledge-base.use-case';
 import { ListKnowledgeBasesUseCase } from '../../application/use-cases/list-knowledge-bases/list-knowledge-bases.use-case';
 import { AddDocumentToKnowledgeBaseUseCase } from '../../application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.use-case';
+import { AddUrlToKnowledgeBaseUseCase } from '../../application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.use-case';
 import { RemoveDocumentFromKnowledgeBaseUseCase } from '../../application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.use-case';
 import { ListKnowledgeBaseDocumentsUseCase } from '../../application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
 
@@ -56,10 +57,12 @@ import { DeleteKnowledgeBaseCommand } from '../../application/use-cases/delete-k
 import { FindKnowledgeBaseQuery } from '../../application/use-cases/find-knowledge-base/find-knowledge-base.query';
 import { ListKnowledgeBasesQuery } from '../../application/use-cases/list-knowledge-bases/list-knowledge-bases.query';
 import { AddDocumentToKnowledgeBaseCommand } from '../../application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.command';
+import { AddUrlToKnowledgeBaseCommand } from '../../application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.command';
 import { RemoveDocumentFromKnowledgeBaseCommand } from '../../application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.command';
 import { ListKnowledgeBaseDocumentsQuery } from '../../application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.query';
 import { CreateKnowledgeBaseDto } from './dto/create-knowledge-base.dto';
 import { UpdateKnowledgeBaseDto } from './dto/update-knowledge-base.dto';
+import { AddUrlToKnowledgeBaseDto } from './dto/add-url-to-knowledge-base.dto';
 import {
   KnowledgeBaseResponseDto,
   KnowledgeBaseListResponseDto,
@@ -86,6 +89,7 @@ export class KnowledgeBasesController {
     private readonly findKnowledgeBaseUseCase: FindKnowledgeBaseUseCase,
     private readonly listKnowledgeBasesUseCase: ListKnowledgeBasesUseCase,
     private readonly addDocumentUseCase: AddDocumentToKnowledgeBaseUseCase,
+    private readonly addUrlUseCase: AddUrlToKnowledgeBaseUseCase,
     private readonly removeDocumentUseCase: RemoveDocumentFromKnowledgeBaseUseCase,
     private readonly listDocumentsUseCase: ListKnowledgeBaseDocumentsUseCase,
     private readonly knowledgeBaseDtoMapper: KnowledgeBaseDtoMapper,
@@ -360,6 +364,42 @@ export class KnowledgeBasesController {
     } finally {
       await this.cleanupTempFile(file.path);
     }
+  }
+
+  @Post(':id/urls')
+  @ApiOperation({ summary: 'Add a URL source to a knowledge base' })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the knowledge base',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiBody({ type: AddUrlToKnowledgeBaseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'The URL source has been added to the knowledge base',
+    type: KnowledgeBaseDocumentResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Knowledge base not found' })
+  async addUrl(
+    @CurrentUser(UserProperty.ID) userId: UUID,
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Body() dto: AddUrlToKnowledgeBaseDto,
+  ): Promise<KnowledgeBaseDocumentResponseDto> {
+    this.logger.log('addUrl', {
+      knowledgeBaseId: id,
+      url: dto.url,
+    });
+
+    const source = await this.addUrlUseCase.execute(
+      new AddUrlToKnowledgeBaseCommand({
+        knowledgeBaseId: id,
+        userId,
+        url: dto.url,
+      }),
+    );
+
+    return this.knowledgeBaseDtoMapper.toDocumentDto(source);
   }
 
   @Delete(':id/documents/:documentId')

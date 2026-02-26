@@ -1,5 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { SourceType } from 'src/domain/sources/domain/source-type.enum';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  SourceType,
+  TextType,
+} from 'src/domain/sources/domain/source-type.enum';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 
 export class KnowledgeBaseDocumentResponseDto {
@@ -46,6 +49,19 @@ export class KnowledgeBaseDocumentResponseDto {
     format: 'date-time',
   })
   updatedAt: string;
+
+  @ApiPropertyOptional({
+    description: 'The text source subtype (e.g. file, web)',
+    enum: TextType,
+    example: TextType.WEB,
+  })
+  textType?: TextType;
+
+  @ApiPropertyOptional({
+    description: 'The URL of the source (only for web sources)',
+    example: 'https://example.com/page',
+  })
+  url?: string;
 }
 
 export class KnowledgeBaseDocumentListResponseDto {
