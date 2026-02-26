@@ -9,6 +9,8 @@ import { SkillRepository } from './application/ports/skill.repository';
 import { SkillRecord } from './infrastructure/persistence/local/schema/skill.record';
 import { SkillActivationRecord } from './infrastructure/persistence/local/schema/skill-activation.record';
 import { McpIntegrationRecord } from '../mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
+import { KnowledgeBaseRecord } from '../knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
+import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
 
 // Use Cases
 import { CreateSkillUseCase } from './application/use-cases/create-skill/create-skill.use-case';
@@ -63,10 +65,12 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
       SkillRecord,
       SkillActivationRecord,
       McpIntegrationRecord,
+      KnowledgeBaseRecord,
     ]),
     LocalSkillRepositoryModule,
     SourcesModule,
     McpModule,
+    KnowledgeBasesModule,
     MarketplaceModule,
     forwardRef(() => SharesModule),
     UsersModule,
