@@ -2,14 +2,14 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-skill.command';
 import { SkillRepository } from '../../ports/skill.repository';
-import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { GetKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
+import { GetKnowledgeBasesByIdsQuery } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.query';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Skill } from '../../../domain/skill.entity';
 import {
   SkillNotFoundError,
   SkillKnowledgeBaseNotFoundError,
   SkillKnowledgeBaseAlreadyAssignedError,
-  SkillKnowledgeBaseWrongOrganizationError,
   UnexpectedSkillError,
 } from '../../skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -22,8 +22,7 @@ export class AssignKnowledgeBaseToSkillUseCase {
   constructor(
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
-    @Inject(KnowledgeBaseRepository)
-    private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
+    private readonly getKnowledgeBasesByIdsUseCase: GetKnowledgeBasesByIdsUseCase,
     private readonly contextService: ContextService,
   ) {}
 
@@ -46,17 +45,11 @@ export class AssignKnowledgeBaseToSkillUseCase {
         throw new SkillNotFoundError(command.skillId);
       }
 
-      const knowledgeBase = await this.knowledgeBaseRepository.findById(
-        command.knowledgeBaseId,
+      const knowledgeBases = await this.getKnowledgeBasesByIdsUseCase.execute(
+        new GetKnowledgeBasesByIdsQuery([command.knowledgeBaseId]),
       );
-      if (!knowledgeBase) {
+      if (knowledgeBases.length === 0) {
         throw new SkillKnowledgeBaseNotFoundError(command.knowledgeBaseId);
-      }
-
-      if (knowledgeBase.orgId !== orgId) {
-        throw new SkillKnowledgeBaseWrongOrganizationError(
-          command.knowledgeBaseId,
-        );
       }
 
       if (skill.knowledgeBaseIds.includes(command.knowledgeBaseId)) {

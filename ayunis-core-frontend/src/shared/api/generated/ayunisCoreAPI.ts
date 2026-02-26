@@ -10982,6 +10982,226 @@ export function useSkillMcpIntegrationsControllerListSkillMcpIntegrations<TData 
 
 
 /**
+ * @summary Assign knowledge base to skill
+ */
+export const skillKnowledgeBasesControllerAssignKnowledgeBase = (
+    skillId: string,
+    knowledgeBaseId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SkillResponseDto>(
+      {url: `/skills/${skillId}/knowledge-bases/${knowledgeBaseId}`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getSkillKnowledgeBasesControllerAssignKnowledgeBaseMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillKnowledgeBasesControllerAssignKnowledgeBase>>, TError,{skillId: string;knowledgeBaseId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillKnowledgeBasesControllerAssignKnowledgeBase>>, TError,{skillId: string;knowledgeBaseId: string}, TContext> => {
+
+const mutationKey = ['skillKnowledgeBasesControllerAssignKnowledgeBase'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillKnowledgeBasesControllerAssignKnowledgeBase>>, {skillId: string;knowledgeBaseId: string}> = (props) => {
+          const {skillId,knowledgeBaseId} = props ?? {};
+
+          return  skillKnowledgeBasesControllerAssignKnowledgeBase(skillId,knowledgeBaseId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SkillKnowledgeBasesControllerAssignKnowledgeBaseMutationResult = NonNullable<Awaited<ReturnType<typeof skillKnowledgeBasesControllerAssignKnowledgeBase>>>
+    
+    export type SkillKnowledgeBasesControllerAssignKnowledgeBaseMutationError = void
+
+    /**
+ * @summary Assign knowledge base to skill
+ */
+export const useSkillKnowledgeBasesControllerAssignKnowledgeBase = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillKnowledgeBasesControllerAssignKnowledgeBase>>, TError,{skillId: string;knowledgeBaseId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof skillKnowledgeBasesControllerAssignKnowledgeBase>>,
+        TError,
+        {skillId: string;knowledgeBaseId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSkillKnowledgeBasesControllerAssignKnowledgeBaseMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Unassign knowledge base from skill
+ */
+export const skillKnowledgeBasesControllerUnassignKnowledgeBase = (
+    skillId: string,
+    knowledgeBaseId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<SkillResponseDto>(
+      {url: `/skills/${skillId}/knowledge-bases/${knowledgeBaseId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getSkillKnowledgeBasesControllerUnassignKnowledgeBaseMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillKnowledgeBasesControllerUnassignKnowledgeBase>>, TError,{skillId: string;knowledgeBaseId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillKnowledgeBasesControllerUnassignKnowledgeBase>>, TError,{skillId: string;knowledgeBaseId: string}, TContext> => {
+
+const mutationKey = ['skillKnowledgeBasesControllerUnassignKnowledgeBase'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillKnowledgeBasesControllerUnassignKnowledgeBase>>, {skillId: string;knowledgeBaseId: string}> = (props) => {
+          const {skillId,knowledgeBaseId} = props ?? {};
+
+          return  skillKnowledgeBasesControllerUnassignKnowledgeBase(skillId,knowledgeBaseId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SkillKnowledgeBasesControllerUnassignKnowledgeBaseMutationResult = NonNullable<Awaited<ReturnType<typeof skillKnowledgeBasesControllerUnassignKnowledgeBase>>>
+    
+    export type SkillKnowledgeBasesControllerUnassignKnowledgeBaseMutationError = void
+
+    /**
+ * @summary Unassign knowledge base from skill
+ */
+export const useSkillKnowledgeBasesControllerUnassignKnowledgeBase = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillKnowledgeBasesControllerUnassignKnowledgeBase>>, TError,{skillId: string;knowledgeBaseId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof skillKnowledgeBasesControllerUnassignKnowledgeBase>>,
+        TError,
+        {skillId: string;knowledgeBaseId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSkillKnowledgeBasesControllerUnassignKnowledgeBaseMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary List knowledge bases assigned to skill
+ */
+export const skillKnowledgeBasesControllerListSkillKnowledgeBases = (
+    skillId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<KnowledgeBaseResponseDto[]>(
+      {url: `/skills/${skillId}/knowledge-bases`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSkillKnowledgeBasesControllerListSkillKnowledgeBasesQueryKey = (skillId?: string,) => {
+    return [
+    `/skills/${skillId}/knowledge-bases`
+    ] as const;
+    }
+
+    
+export const getSkillKnowledgeBasesControllerListSkillKnowledgeBasesQueryOptions = <TData = Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>, TError = void>(skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSkillKnowledgeBasesControllerListSkillKnowledgeBasesQueryKey(skillId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>> = ({ signal }) => skillKnowledgeBasesControllerListSkillKnowledgeBases(skillId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(skillId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SkillKnowledgeBasesControllerListSkillKnowledgeBasesQueryResult = NonNullable<Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>>
+export type SkillKnowledgeBasesControllerListSkillKnowledgeBasesQueryError = void
+
+
+export function useSkillKnowledgeBasesControllerListSkillKnowledgeBases<TData = Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>, TError = void>(
+ skillId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>,
+          TError,
+          Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillKnowledgeBasesControllerListSkillKnowledgeBases<TData = Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>, TError = void>(
+ skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>,
+          TError,
+          Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillKnowledgeBasesControllerListSkillKnowledgeBases<TData = Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>, TError = void>(
+ skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List knowledge bases assigned to skill
+ */
+
+export function useSkillKnowledgeBasesControllerListSkillKnowledgeBases<TData = Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>, TError = void>(
+ skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillKnowledgeBasesControllerListSkillKnowledgeBases>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSkillKnowledgeBasesControllerListSkillKnowledgeBasesQueryOptions(skillId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
  * Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.
  * @summary Send a message with optional images and receive streaming response
  */

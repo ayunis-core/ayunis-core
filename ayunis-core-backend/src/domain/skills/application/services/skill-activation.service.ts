@@ -4,9 +4,12 @@ import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cas
 import { AddSourceCommand } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source.command';
 import { AddMcpIntegrationToThreadUseCase } from 'src/domain/threads/application/use-cases/add-mcp-integration-to-thread/add-mcp-integration-to-thread.use-case';
 import { AddMcpIntegrationToThreadCommand } from 'src/domain/threads/application/use-cases/add-mcp-integration-to-thread/add-mcp-integration-to-thread.command';
+import { AddKnowledgeBaseToThreadUseCase } from 'src/domain/threads/application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.use-case';
+import { AddKnowledgeBaseToThreadCommand } from 'src/domain/threads/application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.command';
 import { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.use-case';
 import { GetSourcesByIdsQuery } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.query';
 import { SourceAlreadyAssignedError } from 'src/domain/threads/application/threads.errors';
+import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { UUID } from 'crypto';
 
@@ -23,12 +26,14 @@ export class SkillActivationService {
     private readonly skillAccessService: SkillAccessService,
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
     private readonly addMcpIntegrationToThreadUseCase: AddMcpIntegrationToThreadUseCase,
+    private readonly addKnowledgeBaseToThreadUseCase: AddKnowledgeBaseToThreadUseCase,
     private readonly getSourcesByIdsUseCase: GetSourcesByIdsUseCase,
   ) {}
 
   /**
-   * Activates a skill on a thread by copying its sources and MCP integrations,
-   * and returns the skill's instructions for inclusion in the user message.
+   * Activates a skill on a thread by copying its sources, MCP integrations,
+   * and knowledge bases, then returns the skill's instructions for inclusion
+   * in the user message.
    */
   async activateOnThread(
     skillId: UUID,
@@ -67,6 +72,27 @@ export class SkillActivationService {
       await this.addMcpIntegrationToThreadUseCase.execute(
         new AddMcpIntegrationToThreadCommand(thread.id, mcpIntegrationId),
       );
+    }
+
+    // Copy skill's knowledge bases to the thread
+    for (const knowledgeBaseId of skill.knowledgeBaseIds) {
+      try {
+        await this.addKnowledgeBaseToThreadUseCase.execute(
+          new AddKnowledgeBaseToThreadCommand(thread.id, knowledgeBaseId),
+        );
+      } catch (error) {
+        if (error instanceof KnowledgeBaseNotFoundError) {
+          this.logger.warn(
+            'Knowledge base not found, skipping (stale reference)',
+            {
+              knowledgeBaseId,
+              threadId: thread.id,
+            },
+          );
+          continue;
+        }
+        throw error;
+      }
     }
 
     return { instructions: skill.instructions, skillName: skill.name };
