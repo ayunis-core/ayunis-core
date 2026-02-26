@@ -11,6 +11,7 @@ import { UUID } from 'crypto';
 import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
 import { SourceRecord } from '../../../../../sources/infrastructure/persistence/local/schema/source.record';
 import { McpIntegrationRecord } from '../../../../../mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
+import { KnowledgeBaseRecord } from '../../../../../knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 
 @Entity({ name: 'skills' })
 @Unique('UQ_skill_name_userId', ['name', 'userId'])
@@ -40,4 +41,8 @@ export class SkillRecord extends BaseRecord {
   @ManyToMany(() => McpIntegrationRecord)
   @JoinTable({ name: 'skill_mcp_integrations' })
   mcpIntegrations?: McpIntegrationRecord[];
+
+  @ManyToMany(() => KnowledgeBaseRecord)
+  @JoinTable({ name: 'skill_knowledge_bases' })
+  knowledgeBases?: KnowledgeBaseRecord[];
 }

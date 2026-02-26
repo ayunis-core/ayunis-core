@@ -13,6 +13,7 @@ export class SkillMapper {
       sourceIds: record.sources?.map((source) => source.id) ?? [],
       mcpIntegrationIds:
         record.mcpIntegrations?.map((integration) => integration.id) ?? [],
+      knowledgeBaseIds: record.knowledgeBases?.map((kb) => kb.id) ?? [],
       marketplaceIdentifier: record.marketplaceIdentifier ?? null,
       userId: record.userId,
       createdAt: record.createdAt,

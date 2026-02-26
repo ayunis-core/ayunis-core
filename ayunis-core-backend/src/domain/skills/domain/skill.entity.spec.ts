@@ -21,6 +21,7 @@ describe('Skill Entity', () => {
     expect(skill.userId).toBe(mockUserId);
     expect(skill.sourceIds).toEqual([]);
     expect(skill.mcpIntegrationIds).toEqual([]);
+    expect(skill.knowledgeBaseIds).toEqual([]);
     expect(skill.createdAt).toBeInstanceOf(Date);
     expect(skill.updatedAt).toBeInstanceOf(Date);
   });
@@ -58,6 +59,24 @@ describe('Skill Entity', () => {
     expect(skill.sourceIds).toEqual(sourceIds);
     expect(skill.mcpIntegrationIds).toEqual(mcpIds);
     expect(skill.mcpIntegrationIds).toHaveLength(2);
+  });
+
+  it('should preserve knowledge base IDs when provided', () => {
+    const knowledgeBaseIds = [
+      '333e4567-e89b-12d3-a456-426614174000' as UUID,
+      '444e4567-e89b-12d3-a456-426614174000' as UUID,
+    ];
+
+    const skill = new Skill({
+      name: 'KB Skill',
+      shortDescription: 'Skill with knowledge bases.',
+      instructions: 'Use these knowledge bases...',
+      userId: mockUserId,
+      knowledgeBaseIds,
+    });
+
+    expect(skill.knowledgeBaseIds).toEqual(knowledgeBaseIds);
+    expect(skill.knowledgeBaseIds).toHaveLength(2);
   });
 
   describe('name validation', () => {
