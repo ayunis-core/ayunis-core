@@ -1,5 +1,10 @@
 # React Frontend Bugbot Policy
 
+- All data exchange to the backend must go through auto generated endpoints from orval. If a PR introduces manual API calls using fetch or axios directly instead of the generated client, flag this as an issue
+- If something is used more than once and
+  - it is a UI component: Move it to widgets
+  - it is stateful functionality without UI: Move it to features as hook
+  - it is stateless functionality without UI: Move it to lib
 - All UI primitives (button, dialog, form, input, card, tabs, badge, etc.) must come from the Ayunis UI component library at `src/shared/ui/shadcn/`. If a PR introduces a new UI element that duplicates or reimplements functionality already provided by an existing component in that directory, flag this as an issue
 - Never install third-party UI component libraries (e.g. Material UI, Ant Design, Chakra UI, Mantine) when equivalent components exist in `src/shared/ui/shadcn/`. If a new dependency provides UI primitives that overlap with the existing library, flag this as an issue
 - Custom components in features, widgets, or pages must compose from the Ayunis UI primitives in `src/shared/ui/shadcn/` rather than building raw HTML with inline Tailwind for common patterns (buttons, inputs, dialogs, cards, etc.). If raw `<button>`, `<input>`, or `<dialog>` elements are used where an Ayunis UI component exists, flag this as an issue
