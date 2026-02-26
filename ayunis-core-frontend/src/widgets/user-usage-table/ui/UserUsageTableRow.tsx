@@ -1,10 +1,9 @@
 import type { UserUsageDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { formatDistanceToNow } from 'date-fns';
-import { de, enUS } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 import { TableCell, TableRow } from '@/shared/ui/shadcn/table';
 import { Badge } from '@/shared/ui/shadcn/badge';
 import { formatCompactNumber } from '@/shared/lib/formatCompactNumber';
+import { formatRelativeDate } from '@/shared/lib/format-relative-date';
 
 interface UserUsageTableRowProps {
   user: UserUsageDto;
@@ -41,12 +40,9 @@ export function UserUsageTableRow({ user }: Readonly<UserUsageTableRowProps>) {
           <span className="text-sm">
             {/* eslint-disable-next-line sonarjs/todo-tag -- DTO typing issue: lastActivity has incorrect type in the generated DTO */}
             {/* TODO: Fix typing issue on the dto level */}
-            {formatDistanceToNow(
-              new Date(user.lastActivity as unknown as string),
-              {
-                addSuffix: true,
-                locale: i18n.language === 'de' ? de : enUS,
-              },
+            {formatRelativeDate(
+              user.lastActivity as unknown as string,
+              i18n.language,
             )}
           </span>
         ) : (

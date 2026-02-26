@@ -37,6 +37,9 @@ import { countUsagesInRange } from './queries/count-usages-in-range.db-query';
 import { UsageQueryMapper } from './mappers/usage-query.mapper';
 import { GetGlobalProviderUsageQuery } from '../../../application/use-cases/get-global-provider-usage/get-global-provider-usage.query';
 import { GetGlobalModelDistributionQuery } from '../../../application/use-cases/get-global-model-distribution/get-global-model-distribution.query';
+import { GetGlobalUserUsageQuery } from '../../../application/use-cases/get-global-user-usage/get-global-user-usage.query';
+import { GlobalUserUsageItem } from '../../../domain/global-user-usage-item.entity';
+import { getGlobalUserUsageRows } from './queries/get-global-user-usage-rows.db-query';
 
 @Injectable()
 export class LocalUsageRepository extends UsageRepository {
@@ -119,7 +122,7 @@ export class LocalUsageRepository extends UsageRepository {
     );
 
     const totalTokens = providerStats.reduce(
-      (sum, stat) => sum + parseInt(stat.tokens),
+      (sum, stat) => sum + parseInt(stat.tokens, 10),
       0,
     );
 
@@ -190,28 +193,19 @@ export class LocalUsageRepository extends UsageRepository {
       }),
     ]);
 
-    const users: UserUsageItem[] = [];
+    const users = userStats.map((stat) => {
+      const { tokens, requests, lastActivity } = this.mapUsageRow(stat);
 
-    for (const stat of userStats) {
-      const tokens = stat.tokens ? parseInt(stat.tokens) : 0;
-      const requests = parseInt(stat.requests || '0');
-      // For users with no usage, lastActivity should be null
-      const lastActivity = stat.lastActivity
-        ? new Date(stat.lastActivity)
-        : null;
-
-      users.push(
-        new UserUsageItem({
-          userId: stat.userId as unknown as UUID,
-          userName: stat.userName || '',
-          userEmail: stat.userEmail || '',
-          tokens,
-          requests,
-          lastActivity,
-          isActive: this.isUserActive(lastActivity),
-        }),
-      );
-    }
+      return new UserUsageItem({
+        userId: stat.userId as unknown as UUID,
+        userName: stat.userName || '',
+        userEmail: stat.userEmail || '',
+        tokens,
+        requests,
+        lastActivity,
+        isActive: UserUsageItem.computeIsActive(lastActivity),
+      });
+    });
 
     return new Paginated<UserUsageItem>({
       data: users,
@@ -234,7 +228,7 @@ export class LocalUsageRepository extends UsageRepository {
     };
 
     // Get active users (users with activity within the configured threshold)
-    const activeThresholdDate = this.getActiveThresholdDate();
+    const activeThresholdDate = UserUsageItem.getActiveThresholdDate();
     const activeUsers = await countActiveUsersSince(
       this.usageRepository,
       query.organizationId,
@@ -253,10 +247,11 @@ export class LocalUsageRepository extends UsageRepository {
     const topModels = this.usageQueryMapper.mapTopModelRows(topModelsResult);
 
     return new UsageStats({
-      totalTokens: (stats.totalTokens ? parseInt(stats.totalTokens) : 0) || 0,
-      totalRequests: parseInt(stats.totalRequests) || 0,
+      totalTokens:
+        (stats.totalTokens ? parseInt(stats.totalTokens, 10) : 0) || 0,
+      totalRequests: parseInt(stats.totalRequests, 10) || 0,
       activeUsers,
-      totalUsers: parseInt(stats.totalUsers) || 0,
+      totalUsers: parseInt(stats.totalUsers, 10) || 0,
       topModels,
     });
   }
@@ -286,7 +281,7 @@ export class LocalUsageRepository extends UsageRepository {
     );
 
     const totalTokens = providerStats.reduce(
-      (sum, stat) => sum + parseInt(stat.tokens),
+      (sum, stat) => sum + parseInt(stat.tokens, 10),
       0,
     );
 
@@ -323,11 +318,43 @@ export class LocalUsageRepository extends UsageRepository {
     return this.usageQueryMapper.mapModelStatsToDistribution(modelStats).items;
   }
 
-  private getActiveThresholdDate(): Date {
-    return new Date(
-      Date.now() -
-        UsageConstants.ACTIVE_USER_DAYS_THRESHOLD * 24 * 60 * 60 * 1000,
-    );
+  async getGlobalUserUsage(
+    query: GetGlobalUserUsageQuery,
+  ): Promise<GlobalUserUsageItem[]> {
+    const rows = await getGlobalUserUsageRows({
+      usageRepository: this.usageRepository,
+      userRepository: this.userRepository,
+      startDate: query.startDate,
+      endDate: query.endDate,
+      limit: UsageConstants.GLOBAL_USER_USAGE_LIMIT,
+    });
+
+    return rows.map((row) => {
+      const { tokens, requests, lastActivity } = this.mapUsageRow(row);
+
+      return new GlobalUserUsageItem({
+        userId: row.userId as unknown as UUID,
+        userName: row.userName || '',
+        userEmail: row.userEmail || '',
+        tokens,
+        requests,
+        lastActivity,
+        isActive: UserUsageItem.computeIsActive(lastActivity),
+        organizationName: row.organizationName || '',
+      });
+    });
+  }
+
+  private mapUsageRow(row: {
+    tokens?: string | null;
+    requests?: string | null;
+    lastActivity?: Date | string | null;
+  }): { tokens: number; requests: number; lastActivity: Date | null } {
+    return {
+      tokens: row.tokens ? parseInt(row.tokens, 10) : 0,
+      requests: row.requests ? parseInt(row.requests, 10) : 0,
+      lastActivity: row.lastActivity ? new Date(row.lastActivity) : null,
+    };
   }
 
   private mapSortFieldForUsers(sortBy: string): string {
@@ -343,13 +370,5 @@ export class LocalUsageRepository extends UsageRepository {
       default:
         return 'COALESCE(SUM(usage.totalTokens), 0)';
     }
-  }
-
-  private isUserActive(lastActivity: Date | null): boolean {
-    if (!lastActivity) {
-      return false; // Users with no activity are considered inactive
-    }
-    const activeThresholdDate = this.getActiveThresholdDate();
-    return lastActivity >= activeThresholdDate;
   }
 }

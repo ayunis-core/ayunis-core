@@ -191,6 +191,28 @@ describe('GetUsageStatsUseCase', () => {
       await expect(useCase.execute(query)).resolves.toBeDefined();
     });
 
+    it('should throw InvalidDateRangeError when only startDate is provided', async () => {
+      const query = new GetUsageStatsQuery({
+        organizationId: orgId,
+        startDate: new Date('2024-01-01'),
+      });
+
+      await expect(useCase.execute(query)).rejects.toThrow(
+        InvalidDateRangeError,
+      );
+    });
+
+    it('should throw InvalidDateRangeError when only endDate is provided', async () => {
+      const query = new GetUsageStatsQuery({
+        organizationId: orgId,
+        endDate: new Date('2024-01-31'),
+      });
+
+      await expect(useCase.execute(query)).rejects.toThrow(
+        InvalidDateRangeError,
+      );
+    });
+
     it('should accept query without date range', async () => {
       const query = new GetUsageStatsQuery({ organizationId: orgId });
 

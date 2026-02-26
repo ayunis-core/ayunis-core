@@ -36,6 +36,22 @@
       "description": "Anzeigen der Gesamtzahl der Besucher im ausgewählten Zeitraum"
     }
   },
+  "globalTopUsers": {
+    "title": "Top Nutzer nach Token-Verbrauch",
+    "description": "Die 20 Nutzer mit dem höchsten Token-Verbrauch über alle Organisationen",
+    "rank": "Rang",
+    "name": "Name",
+    "email": "E-Mail",
+    "organization": "Organisation",
+    "tokens": "Tokens",
+    "requests": "Anfragen",
+    "lastActivity": "Letzte Aktivität",
+    "lastActivityHint": "Zeigt die letzte Aktivität insgesamt, nicht nach Zeitraum gefiltert",
+    "empty": "Keine Nutzungsdaten vorhanden",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "allProvidersNote": "Über alle Anbieter und Modelle"
+  },
   "userUsage": {
     "title": "Nutzerverbrauch",
     "subtitle": "Individual Nutzerverbrauch",

@@ -162,9 +162,9 @@ describe('Skill Entity', () => {
 
     it('should reject names ending with variation selector', () => {
       // Variation selector (U+FE0F) should not be allowed
-      expect(
-        () => new Skill({ ...validParams, name: 'Test\uFE0F' }),
-      ).toThrow(InvalidSkillNameError);
+      expect(() => new Skill({ ...validParams, name: 'Test\uFE0F' })).toThrow(
+        InvalidSkillNameError,
+      );
     });
   });
 });

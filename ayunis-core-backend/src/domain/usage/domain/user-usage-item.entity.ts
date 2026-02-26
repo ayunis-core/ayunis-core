@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import { UsageConstants } from './value-objects/usage.constants';
 
 export class UserUsageItem {
   public readonly userId: UUID;
@@ -25,5 +26,26 @@ export class UserUsageItem {
     this.requests = params.requests;
     this.lastActivity = params.lastActivity;
     this.isActive = params.isActive;
+  }
+
+  /**
+   * Returns the threshold date for determining active users.
+   * Users with activity on or after this date are considered active.
+   */
+  static getActiveThresholdDate(): Date {
+    const thresholdMs =
+      UsageConstants.ACTIVE_USER_DAYS_THRESHOLD * 24 * 60 * 60 * 1000;
+    return new Date(Date.now() - thresholdMs);
+  }
+
+  /**
+   * Determines whether a user is active based on their last activity date.
+   * A user is active if their last activity is within the configured threshold.
+   */
+  static computeIsActive(lastActivity: Date | null): boolean {
+    if (!lastActivity) {
+      return false;
+    }
+    return lastActivity >= UserUsageItem.getActiveThresholdDate();
   }
 }

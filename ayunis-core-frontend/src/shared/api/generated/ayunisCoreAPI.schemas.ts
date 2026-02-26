@@ -2991,6 +2991,33 @@ export interface UserUsageResponseDto {
   pagination: PaginationDto;
 }
 
+export interface GlobalUserUsageDto {
+  /** User ID */
+  userId: string;
+  /** User name */
+  userName: string;
+  /** User email */
+  userEmail: string;
+  /** Total tokens for this user */
+  tokens: number;
+  /** Total requests for this user */
+  requests: number;
+  /**
+   * Last activity date (null if no activity)
+   * @nullable
+   */
+  lastActivity: string | null;
+  /** Whether the user is considered active */
+  isActive: boolean;
+  /** Name of the organization the user belongs to */
+  organizationName: string;
+}
+
+export interface GlobalUserUsageResponseDto {
+  /** Top users by token usage across all organizations */
+  data: GlobalUserUsageDto[];
+}
+
 export interface UserSystemPromptResponseDto {
   /**
    * The custom system prompt for the user, or null if not set
@@ -3477,6 +3504,11 @@ export type SuperAdminGlobalUsageControllerGetGlobalModelDistributionParams = {
 startDate?: string;
 endDate?: string;
 modelId?: string;
+};
+
+export type SuperAdminGlobalUsageControllerGetGlobalUserUsageParams = {
+startDate?: string;
+endDate?: string;
 };
 
 export type TranscriptionsControllerTranscribeBody = {

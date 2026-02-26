@@ -62,6 +62,7 @@ import type {
   ForgotPasswordDto,
   GetThreadResponseDto,
   GetThreadsResponseDto,
+  GlobalUserUsageResponseDto,
   InstallMarketplaceIntegrationDto,
   InstallSkillFromMarketplaceDto,
   InviteDetailResponseDto,
@@ -111,6 +112,7 @@ import type {
   SuccessResponseDto,
   SuperAdminGlobalUsageControllerGetGlobalModelDistributionParams,
   SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartParams,
+  SuperAdminGlobalUsageControllerGetGlobalUserUsageParams,
   SuperAdminModelsControllerGetAllCatalogModels200Item,
   SuperAdminModelsControllerGetCatalogModelById200,
   SuperAdminModelsControllerGetPermittedModels200Item,
@@ -12567,6 +12569,100 @@ export function useSuperAdminGlobalUsageControllerGetGlobalModelDistribution<TDa
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSuperAdminGlobalUsageControllerGetGlobalModelDistributionQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Get top 20 users by token usage across all organizations
+ */
+export const superAdminGlobalUsageControllerGetGlobalUserUsage = (
+    params?: SuperAdminGlobalUsageControllerGetGlobalUserUsageParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<GlobalUserUsageResponseDto>(
+      {url: `/super-admin/global-usage/users`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminGlobalUsageControllerGetGlobalUserUsageQueryKey = (params?: SuperAdminGlobalUsageControllerGetGlobalUserUsageParams,) => {
+    return [
+    `/super-admin/global-usage/users`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getSuperAdminGlobalUsageControllerGetGlobalUserUsageQueryOptions = <TData = Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>, TError = unknown>(params?: SuperAdminGlobalUsageControllerGetGlobalUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminGlobalUsageControllerGetGlobalUserUsageQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>> = ({ signal }) => superAdminGlobalUsageControllerGetGlobalUserUsage(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminGlobalUsageControllerGetGlobalUserUsageQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>>
+export type SuperAdminGlobalUsageControllerGetGlobalUserUsageQueryError = unknown
+
+
+export function useSuperAdminGlobalUsageControllerGetGlobalUserUsage<TData = Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>, TError = unknown>(
+ params: undefined |  SuperAdminGlobalUsageControllerGetGlobalUserUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminGlobalUsageControllerGetGlobalUserUsage<TData = Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>, TError = unknown>(
+ params?: SuperAdminGlobalUsageControllerGetGlobalUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminGlobalUsageControllerGetGlobalUserUsage<TData = Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>, TError = unknown>(
+ params?: SuperAdminGlobalUsageControllerGetGlobalUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get top 20 users by token usage across all organizations
+ */
+
+export function useSuperAdminGlobalUsageControllerGetGlobalUserUsage<TData = Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>, TError = unknown>(
+ params?: SuperAdminGlobalUsageControllerGetGlobalUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalUserUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminGlobalUsageControllerGetGlobalUserUsageQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

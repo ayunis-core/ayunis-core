@@ -12,6 +12,7 @@ import { ModelDistributionResponseDto } from './dto/model-distribution-response.
 import { UsageStatsResponseDtoMapper } from './mappers/usage-stats-response-dto.mapper';
 import { ModelDistributionResponseDtoMapper } from './mappers/model-distribution-response-dto.mapper';
 import { ConfigService } from '@nestjs/config';
+import { parseDate } from './utils/parse-date.util';
 import { UUID } from 'crypto';
 import { GetModelDistributionUseCase } from '../../application/use-cases/get-model-distribution/get-model-distribution.use-case';
 import { GetUsageStatsUseCase } from '../../application/use-cases/get-usage-stats/get-usage-stats.use-case';
@@ -60,8 +61,8 @@ export class SuperAdminUsageController {
   ) {
     const query = new GetUsageStatsQuery({
       organizationId: orgId,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
+      startDate: startDate ? parseDate(startDate, 'startDate') : undefined,
+      endDate: endDate ? parseDate(endDate, 'endDate') : undefined,
     });
     const stats = await this.getUsageStatsUseCase.execute(query);
     return this.usageStatsMapper.toDto(stats);
@@ -86,8 +87,8 @@ export class SuperAdminUsageController {
   ) {
     const query = new GetModelDistributionQuery({
       organizationId: orgId,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
+      startDate: startDate ? parseDate(startDate, 'startDate') : undefined,
+      endDate: endDate ? parseDate(endDate, 'endDate') : undefined,
       maxModels,
       modelId: modelId as UUID | undefined,
     });

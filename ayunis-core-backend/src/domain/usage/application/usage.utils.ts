@@ -4,6 +4,27 @@ import { ModelDistribution } from '../domain/model-distribution.entity';
 import { ProviderUsage } from '../domain/provider-usage.entity';
 
 /**
+ * Validates that both startDate and endDate are provided together (or neither),
+ * and if both are present, validates the range.
+ * @throws InvalidDateRangeError if only one is provided or the range is invalid
+ */
+export function validateOptionalDateRange(
+  startDate?: Date,
+  endDate?: Date,
+): void {
+  const hasStart = startDate !== undefined;
+  const hasEnd = endDate !== undefined;
+  if (hasStart !== hasEnd) {
+    throw new InvalidDateRangeError(
+      'Both startDate and endDate must be provided, or neither',
+    );
+  }
+  if (startDate && endDate) {
+    validateDateRange(startDate, endDate);
+  }
+}
+
+/**
  * Validates that a date range is valid for usage queries.
  * @throws InvalidDateRangeError if the date range is invalid
  */

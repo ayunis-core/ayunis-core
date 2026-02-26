@@ -36,6 +36,22 @@
       "description": "Showing total tokens consumed"
     }
   },
+  "globalTopUsers": {
+    "title": "Top Users by Token Usage",
+    "description": "Top 20 users by token consumption across all organizations",
+    "rank": "Rank",
+    "name": "Name",
+    "email": "Email",
+    "organization": "Organization",
+    "tokens": "Tokens",
+    "requests": "Requests",
+    "lastActivity": "Last Activity",
+    "lastActivityHint": "Shows overall last activity, not filtered by date range",
+    "empty": "No usage data available",
+    "active": "Active",
+    "inactive": "Inactive",
+    "allProvidersNote": "Across all providers and models"
+  },
   "userUsage": {
     "title": "User Usage",
     "subtitle": "Individual user consumption breakdown",

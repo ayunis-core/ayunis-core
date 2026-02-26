@@ -6,22 +6,16 @@ import { ProviderUsageChartResponseDto } from './dto/provider-usage-chart-respon
 import { ModelDistributionResponseDto } from './dto/model-distribution-response.dto';
 import { UserUsageResponseDto } from './dto/user-usage-response.dto';
 import { UsageConfigResponseDto } from './dto/usage-config-response.dto';
-import { UsageStatsResponseDtoMapper } from './mappers/usage-stats-response-dto.mapper';
-import { ProviderUsageResponseDtoMapper } from './mappers/provider-usage-response-dto.mapper';
-import { ProviderUsageChartResponseDtoMapper } from './mappers/provider-usage-chart-response-dto.mapper';
-import { ModelDistributionResponseDtoMapper } from './mappers/model-distribution-response-dto.mapper';
-import { UserUsageResponseDtoMapper } from './mappers/user-usage-response-dto.mapper';
+import { UsageResponseMapper } from './mappers/usage-response.mapper';
+import { UsageUseCasesFacade } from './usage-use-cases.facade';
 import { ConfigService } from '@nestjs/config';
+import { parseDate } from './utils/parse-date.util';
 import { UUID } from 'crypto';
 import { ModelProvider } from '../../../models/domain/value-objects/model-provider.enum';
 import {
   CurrentUser,
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
-import { GetProviderUsageUseCase } from '../../application/use-cases/get-provider-usage/get-provider-usage.use-case';
-import { GetModelDistributionUseCase } from '../../application/use-cases/get-model-distribution/get-model-distribution.use-case';
-import { GetUserUsageUseCase } from '../../application/use-cases/get-user-usage/get-user-usage.use-case';
-import { GetUsageStatsUseCase } from '../../application/use-cases/get-usage-stats/get-usage-stats.use-case';
 import { GetProviderUsageQuery } from '../../application/use-cases/get-provider-usage/get-provider-usage.query';
 import { GetModelDistributionQuery } from '../../application/use-cases/get-model-distribution/get-model-distribution.query';
 import {
@@ -39,16 +33,9 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 @Roles(UserRole.ADMIN)
 export class UsageController {
   constructor(
-    private readonly getProviderUsageUseCase: GetProviderUsageUseCase,
-    private readonly getModelDistributionUseCase: GetModelDistributionUseCase,
-    private readonly getUserUsageUseCase: GetUserUsageUseCase,
-    private readonly getUsageStatsUseCase: GetUsageStatsUseCase,
+    private readonly useCases: UsageUseCasesFacade,
     private readonly configService: ConfigService,
-    private readonly usageStatsMapper: UsageStatsResponseDtoMapper,
-    private readonly providerUsageMapper: ProviderUsageResponseDtoMapper,
-    private readonly modelDistributionMapper: ModelDistributionResponseDtoMapper,
-    private readonly userUsageMapper: UserUsageResponseDtoMapper,
-    private readonly providerUsageChartMapper: ProviderUsageChartResponseDtoMapper,
+    private readonly mapper: UsageResponseMapper,
   ) {}
 
   @Get('config')
@@ -108,11 +95,11 @@ export class UsageController {
   ) {
     const query = new GetUsageStatsQuery({
       organizationId: orgId,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
+      startDate: startDate ? parseDate(startDate, 'startDate') : undefined,
+      endDate: endDate ? parseDate(endDate, 'endDate') : undefined,
     });
-    const stats = await this.getUsageStatsUseCase.execute(query);
-    const dto = this.usageStatsMapper.toDto(stats);
+    const stats = await this.useCases.getUsageStats(query);
+    const dto = this.mapper.toUsageStatsDto(stats);
 
     return dto;
   }
@@ -175,14 +162,14 @@ export class UsageController {
   ) {
     const query = new GetProviderUsageQuery({
       organizationId: orgId,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
+      startDate: startDate ? parseDate(startDate, 'startDate') : undefined,
+      endDate: endDate ? parseDate(endDate, 'endDate') : undefined,
       includeTimeSeriesData: includeTimeSeries,
       provider: provider as ModelProvider | undefined,
       modelId: modelId as UUID | undefined,
     });
-    const providerUsage = await this.getProviderUsageUseCase.execute(query);
-    const dto = this.providerUsageMapper.toDto(providerUsage);
+    const providerUsage = await this.useCases.getProviderUsage(query);
+    const dto = this.mapper.toProviderUsageDto(providerUsage);
 
     return dto;
   }
@@ -223,14 +210,14 @@ export class UsageController {
   ) {
     const query = new GetProviderUsageQuery({
       organizationId: orgId,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
+      startDate: startDate ? parseDate(startDate, 'startDate') : undefined,
+      endDate: endDate ? parseDate(endDate, 'endDate') : undefined,
       includeTimeSeriesData: true,
       provider: provider as ModelProvider | undefined,
       modelId: modelId as UUID | undefined,
     });
-    const providerUsage = await this.getProviderUsageUseCase.execute(query);
-    const dto = this.providerUsageChartMapper.toDto(providerUsage);
+    const providerUsage = await this.useCases.getProviderUsage(query);
+    const dto = this.mapper.toProviderUsageChartDto(providerUsage);
     return dto;
   }
 
@@ -284,14 +271,13 @@ export class UsageController {
   ) {
     const query = new GetModelDistributionQuery({
       organizationId: orgId,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
+      startDate: startDate ? parseDate(startDate, 'startDate') : undefined,
+      endDate: endDate ? parseDate(endDate, 'endDate') : undefined,
       maxModels,
       modelId: modelId as UUID | undefined,
     });
-    const modelDistribution =
-      await this.getModelDistributionUseCase.execute(query);
-    const dto = this.modelDistributionMapper.toDto(modelDistribution);
+    const modelDistribution = await this.useCases.getModelDistribution(query);
+    const dto = this.mapper.toModelDistributionDto(modelDistribution);
 
     return dto;
   }
@@ -369,16 +355,16 @@ export class UsageController {
   ) {
     const query = new GetUserUsageQuery({
       organizationId: orgId,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
+      startDate: startDate ? parseDate(startDate, 'startDate') : undefined,
+      endDate: endDate ? parseDate(endDate, 'endDate') : undefined,
       limit,
       offset,
       searchTerm: search,
       sortBy,
       sortOrder,
     });
-    const userUsage = await this.getUserUsageUseCase.execute(query);
+    const userUsage = await this.useCases.getUserUsage(query);
 
-    return this.userUsageMapper.toDto(userUsage);
+    return this.mapper.toUserUsageDto(userUsage);
   }
 }

@@ -4,6 +4,7 @@ import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
 import { GlobalUsageFilters } from './GlobalUsageFilters';
 import { GlobalProviderConsumption } from './GlobalProviderConsumption';
 import { GlobalModelDistribution } from './GlobalModelDistribution';
+import { GlobalTopUsersTable } from './GlobalTopUsersTable';
 
 export default function GlobalUsagePage() {
   const { t } = useTranslation('super-admin-settings-layout');
@@ -38,6 +39,10 @@ export default function GlobalUsagePage() {
             startDate={dateRange.startDate}
             endDate={dateRange.endDate}
             selectedModel={selectedModel}
+          />
+          <GlobalTopUsersTable
+            startDate={dateRange.startDate}
+            endDate={dateRange.endDate}
           />
         </div>
       </div>

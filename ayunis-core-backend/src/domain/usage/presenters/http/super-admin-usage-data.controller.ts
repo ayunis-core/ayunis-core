@@ -12,6 +12,7 @@ import { UserUsageResponseDto } from './dto/user-usage-response.dto';
 import { ProviderUsageResponseDtoMapper } from './mappers/provider-usage-response-dto.mapper';
 import { ProviderUsageChartResponseDtoMapper } from './mappers/provider-usage-chart-response-dto.mapper';
 import { UserUsageResponseDtoMapper } from './mappers/user-usage-response-dto.mapper';
+import { parseDate } from './utils/parse-date.util';
 import { UUID } from 'crypto';
 import { ModelProvider } from '../../../models/domain/value-objects/model-provider.enum';
 import { GetProviderUsageUseCase } from '../../application/use-cases/get-provider-usage/get-provider-usage.use-case';
@@ -59,8 +60,8 @@ export class SuperAdminUsageDataController {
   ) {
     const query = new GetProviderUsageQuery({
       organizationId: orgId,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
+      startDate: startDate ? parseDate(startDate, 'startDate') : undefined,
+      endDate: endDate ? parseDate(endDate, 'endDate') : undefined,
       includeTimeSeriesData: includeTimeSeries,
       provider: provider as ModelProvider | undefined,
       modelId: modelId as UUID | undefined,
@@ -88,8 +89,8 @@ export class SuperAdminUsageDataController {
   ) {
     const query = new GetProviderUsageQuery({
       organizationId: orgId,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
+      startDate: startDate ? parseDate(startDate, 'startDate') : undefined,
+      endDate: endDate ? parseDate(endDate, 'endDate') : undefined,
       includeTimeSeriesData: true,
       provider: provider as ModelProvider | undefined,
       modelId: modelId as UUID | undefined,
@@ -125,8 +126,8 @@ export class SuperAdminUsageDataController {
   ) {
     const query = new GetUserUsageQuery({
       organizationId: orgId,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
+      startDate: startDate ? parseDate(startDate, 'startDate') : undefined,
+      endDate: endDate ? parseDate(endDate, 'endDate') : undefined,
       limit,
       offset,
       searchTerm: search,
