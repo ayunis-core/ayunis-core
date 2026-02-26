@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import type { KnowledgeBase } from '../../../domain/knowledge-base.entity';
 import type { Source } from 'src/domain/sources/domain/source.entity';
+import {
+  TextSource,
+  UrlSource,
+} from 'src/domain/sources/domain/sources/text-source.entity';
 import type { KnowledgeBaseResponseDto } from '../dto/knowledge-base-response.dto';
 import type { KnowledgeBaseDocumentResponseDto } from '../dto/knowledge-base-document-response.dto';
 
@@ -21,7 +25,7 @@ export class KnowledgeBaseDtoMapper {
   }
 
   toDocumentDto(source: Source): KnowledgeBaseDocumentResponseDto {
-    return {
+    const dto: KnowledgeBaseDocumentResponseDto = {
       id: source.id,
       name: source.name,
       type: source.type,
@@ -29,5 +33,15 @@ export class KnowledgeBaseDtoMapper {
       createdAt: source.createdAt.toISOString(),
       updatedAt: source.updatedAt.toISOString(),
     };
+
+    if (source instanceof TextSource) {
+      dto.textType = source.textType;
+    }
+
+    if (source instanceof UrlSource) {
+      dto.url = source.url;
+    }
+
+    return dto;
   }
 }
