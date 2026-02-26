@@ -1,0 +1,15 @@
+# React Frontend Bugbot Policy
+
+- All data exchange to the backend must go through auto generated endpoints from orval. If a PR introduces manual API calls using fetch or axios directly instead of the generated client, flag this as an issue
+- If something is used more than once and
+  - it is a UI component: Move it to widgets
+  - it is stateful functionality without UI: Move it to features as hook
+  - it is stateless functionality without UI: Move it to lib
+- Avoid unnecessary prop drilling. Components should be self contained where possible. If a PR passes data through multiple intermediate components that don't use it themselves, flag this as an issue
+- All UI primitives (button, dialog, form, input, card, tabs, badge, etc.) must come from the Ayunis UI component library at `src/shared/ui/shadcn/`. If a PR introduces a new UI element that duplicates or reimplements functionality already provided by an existing component in that directory, flag this as an issue
+- Never install third-party UI component libraries (e.g. Material UI, Ant Design, Chakra UI, Mantine) when equivalent components exist in `src/shared/ui/shadcn/`. If a new dependency provides UI primitives that overlap with the existing library, flag this as an issue
+- Custom components in features, widgets, or pages must compose from the Ayunis UI primitives in `src/shared/ui/shadcn/` rather than building raw HTML with inline Tailwind for common patterns (buttons, inputs, dialogs, cards, etc.). If raw `<button>`, `<input>`, or `<dialog>` elements are used where an Ayunis UI component exists, flag this as an issue
+- **CRITICAL**: Files inside `src/shared/ui/shadcn/` must NEVER be modified to accommodate a specific use case or to speed up development. These components are the project's own Ayunis UI library (managed via the `@ayunis` registry in `components.json`) and must remain generic. If a PR changes any file in `src/shared/ui/shadcn/` — whether adding custom logic, altering default styles, changing props, or tweaking behavior for a particular feature — flag this as an issue and request that the change be made through an existing variant or by composing a wrapper component outside the library instead
+- Developers must not pass custom Tailwind classes to Ayunis UI components to override their built-in styling. Components should be used as-is with the variants and props they expose. If a PR adds custom classes (via `className`) that override or conflict with the component's own styles, flag this as an issue — the correct approach is to use an existing variant or request a new variant be added to the library
+- When styling custom (non-library) components, always use the `cn()` utility from `@/shared/lib/shadcn/utils` to merge class names. If conditional class names are concatenated manually with template literals or string concatenation instead of `cn()`, flag this as an issue
+- Ayunis UI components use `data-slot` attributes for identification. If a PR removes or changes existing `data-slot` values, flag this as an issue — it may break styling or testing selectors
