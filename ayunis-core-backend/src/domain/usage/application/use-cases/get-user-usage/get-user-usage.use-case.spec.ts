@@ -74,70 +74,31 @@ describe('GetUserUsageUseCase', () => {
       expect(result.data[0].userId).toBe(userId);
       expect(result.data[0].isActive).toBe(true);
     });
-
-    it('should mark users as inactive if lastActivity is null', async () => {
-      const userId = 'user-id' as UUID;
-      const mockUserUsage = new Paginated<UserUsageItem>({
-        data: [
-          new UserUsageItem({
-            userId,
-            userName: 'Test User',
-            userEmail: 'test@example.com',
-            tokens: 0,
-            requests: 0,
-            lastActivity: null, // No activity
-            isActive: false,
-          }),
-        ],
-        limit: 50,
-        offset: 0,
-        total: 1,
-      });
-
-      jest
-        .spyOn(mockUsageRepository, 'getUserUsage')
-        .mockResolvedValue(mockUserUsage);
-
-      const query = new GetUserUsageQuery({ organizationId: orgId });
-      const result = await useCase.execute(query);
-
-      expect(result.data[0].isActive).toBe(false);
-    });
-
-    it('should mark users as inactive if lastActivity is too old', async () => {
-      const userId = 'user-id' as UUID;
-      const oldDate = new Date();
-      oldDate.setDate(oldDate.getDate() - 40); // More than 30 days ago
-
-      const mockUserUsage = new Paginated<UserUsageItem>({
-        data: [
-          new UserUsageItem({
-            userId,
-            userName: 'Test User',
-            userEmail: 'test@example.com',
-            tokens: 100,
-            requests: 5,
-            lastActivity: oldDate,
-            isActive: false,
-          }),
-        ],
-        limit: 50,
-        offset: 0,
-        total: 1,
-      });
-
-      jest
-        .spyOn(mockUsageRepository, 'getUserUsage')
-        .mockResolvedValue(mockUserUsage);
-
-      const query = new GetUserUsageQuery({ organizationId: orgId });
-      const result = await useCase.execute(query);
-
-      expect(result.data[0].isActive).toBe(false);
-    });
   });
 
   describe('date range validation', () => {
+    it('should throw InvalidDateRangeError when only startDate is provided', async () => {
+      const query = new GetUserUsageQuery({
+        organizationId: orgId,
+        startDate: new Date('2024-01-01'),
+      });
+
+      await expect(useCase.execute(query)).rejects.toThrow(
+        InvalidDateRangeError,
+      );
+    });
+
+    it('should throw InvalidDateRangeError when only endDate is provided', async () => {
+      const query = new GetUserUsageQuery({
+        organizationId: orgId,
+        endDate: new Date('2024-01-31'),
+      });
+
+      await expect(useCase.execute(query)).rejects.toThrow(
+        InvalidDateRangeError,
+      );
+    });
+
     it('should throw InvalidDateRangeError when start date is after end date', async () => {
       const startDate = new Date('2024-01-31');
       const endDate = new Date('2024-01-01');

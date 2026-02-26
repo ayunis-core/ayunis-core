@@ -14,5 +14,5 @@ export async function countActiveUsersSince(
     .andWhere('usage.createdAt >= :activeDate', { activeDate })
     .getRawOne<{ activeUsers: string }>()) ?? { activeUsers: '0' };
 
-  return parseInt(result.activeUsers) || 0;
+  return parseInt(result.activeUsers, 10) || 0;
 }

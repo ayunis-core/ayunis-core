@@ -263,6 +263,28 @@ describe('GetModelDistributionUseCase', () => {
       );
     });
 
+    it('should throw InvalidDateRangeError when only startDate is provided', async () => {
+      const query = new GetModelDistributionQuery({
+        organizationId: orgId,
+        startDate: new Date('2024-01-01'),
+      });
+
+      await expect(useCase.execute(query)).rejects.toThrow(
+        InvalidDateRangeError,
+      );
+    });
+
+    it('should throw InvalidDateRangeError when only endDate is provided', async () => {
+      const query = new GetModelDistributionQuery({
+        organizationId: orgId,
+        endDate: new Date('2024-01-31'),
+      });
+
+      await expect(useCase.execute(query)).rejects.toThrow(
+        InvalidDateRangeError,
+      );
+    });
+
     it('should accept valid date range', async () => {
       const startDate = new Date('2024-01-01');
       const endDate = new Date('2024-01-31');

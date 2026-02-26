@@ -7,9 +7,9 @@ The usage module provides comprehensive analytics for AI resource consumption. T
 
 **Organization-scoped use cases**: collecting usage after each run (`CollectUsageUseCase`), querying provider-level usage (`GetProviderUsageUseCase`), model distribution analytics (`GetModelDistributionUseCase`), aggregate stats (`GetUsageStatsUseCase`), and per-user usage reports (`GetUserUsageUseCase`).
 
-**Global (cross-organization) use cases**: `GetGlobalProviderUsageUseCase` and `GetGlobalModelDistributionUseCase` aggregate usage data across all organizations for super admin analytics dashboards.
+**Global (cross-organization) use cases**: `GetGlobalProviderUsageUseCase`, `GetGlobalModelDistributionUseCase`, and `GetGlobalUserUsageUseCase` aggregate usage data across all organizations for super admin analytics dashboards.
 
-**Ports**: `UsageRepository` defines abstract methods for both organization-scoped queries and global analytics (`getGlobalProviderUsage`, `getGlobalModelDistribution`).
+**Ports**: `UsageRepository` defines abstract methods for both organization-scoped queries and global analytics (`getGlobalProviderUsage`, `getGlobalModelDistribution`, `getGlobalUserUsage`).
 
 **Presentation layer**: `UsageController` serves organization member requests. Super admin controllers include `SuperAdminUsageController` (org-scoped stats/models), `SuperAdminUsageDataController` (org-scoped providers/users), and `SuperAdminGlobalUsageController` (cross-organization global analytics).
 

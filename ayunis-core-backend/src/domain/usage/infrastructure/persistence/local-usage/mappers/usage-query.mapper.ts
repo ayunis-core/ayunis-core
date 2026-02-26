@@ -18,8 +18,8 @@ export class UsageQueryMapper {
       (point) =>
         new TimeSeriesPoint({
           date: new Date(point.date),
-          tokens: parseInt(point.tokens),
-          requests: parseInt(point.requests),
+          tokens: parseInt(point.tokens, 10),
+          requests: parseInt(point.requests, 10),
         }),
     );
   }
@@ -29,8 +29,8 @@ export class UsageQueryMapper {
     totalTokens: number,
     timeSeries?: TimeSeriesPoint[],
   ): ProviderUsage {
-    const tokens = parseInt(row.tokens);
-    const requests = parseInt(row.requests);
+    const tokens = parseInt(row.tokens, 10);
+    const requests = parseInt(row.requests, 10);
     const percentage = totalTokens > 0 ? (tokens / totalTokens) * 100 : 0;
     return new ProviderUsage({
       provider: row.provider as ModelProvider,
@@ -45,10 +45,13 @@ export class UsageQueryMapper {
     totalTokens: number;
     items: ModelDistribution[];
   } {
-    const totalTokens = rows.reduce((sum, r) => sum + parseInt(r.tokens), 0);
+    const totalTokens = rows.reduce(
+      (sum, r) => sum + parseInt(r.tokens, 10),
+      0,
+    );
     const items: ModelDistribution[] = rows.map((r) => {
-      const tokens = parseInt(r.tokens);
-      const requests = parseInt(r.requests);
+      const tokens = parseInt(r.tokens, 10);
+      const requests = parseInt(r.requests, 10);
       const percentage = totalTokens > 0 ? (tokens / totalTokens) * 100 : 0;
       return new ModelDistribution({
         modelId: r.modelId as unknown as UUID,

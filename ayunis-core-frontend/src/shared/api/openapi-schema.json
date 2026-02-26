@@ -6745,6 +6745,45 @@
         ]
       }
     },
+    "/super-admin/global-usage/users": {
+      "get": {
+        "operationId": "SuperAdminGlobalUsageController_getGlobalUserUsage",
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalUserUsageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get top 20 users by token usage across all organizations",
+        "tags": [
+          "Super Admin Global Usage"
+        ]
+      }
+    },
     "/chat-settings/system-prompt": {
       "get": {
         "description": "Returns the custom system prompt for the authenticated user, or null if not set.",
@@ -12456,6 +12495,70 @@
         "required": [
           "data",
           "pagination"
+        ]
+      },
+      "GlobalUserUsageDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "userName": {
+            "type": "string",
+            "description": "User name"
+          },
+          "userEmail": {
+            "type": "string",
+            "description": "User email"
+          },
+          "tokens": {
+            "type": "number",
+            "description": "Total tokens for this user"
+          },
+          "requests": {
+            "type": "number",
+            "description": "Total requests for this user"
+          },
+          "lastActivity": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last activity date (null if no activity)",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the user is considered active"
+          },
+          "organizationName": {
+            "type": "string",
+            "description": "Name of the organization the user belongs to"
+          }
+        },
+        "required": [
+          "userId",
+          "userName",
+          "userEmail",
+          "tokens",
+          "requests",
+          "lastActivity",
+          "isActive",
+          "organizationName"
+        ]
+      },
+      "GlobalUserUsageResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Top users by token usage across all organizations",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GlobalUserUsageDto"
+            }
+          }
+        },
+        "required": [
+          "data"
         ]
       },
       "UserSystemPromptResponseDto": {

@@ -4,4 +4,5 @@ export const UsageConstants = {
   DEFAULT_USER_USAGE_LIMIT: 50,
   MAX_USER_USAGE_LIMIT: 1000,
   MAX_DATE_RANGE_DAYS: 730, // 2 years, guard against heavy queries
+  GLOBAL_USER_USAGE_LIMIT: 20,
 } as const;
