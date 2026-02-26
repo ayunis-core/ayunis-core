@@ -2540,7 +2540,7 @@ export interface SkillResponseDto {
 
 export interface CreateSkillDto {
   /**
-   * The name of the skill (must be unique per user). Only letters, numbers, hyphens, and spaces allowed. Must start and end with a letter or number.
+   * The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.
    * @minLength 1
    * @maxLength 255
    */
@@ -2555,7 +2555,7 @@ export interface CreateSkillDto {
 
 export interface UpdateSkillDto {
   /**
-   * The name of the skill (must be unique per user). Only letters, numbers, hyphens, and spaces allowed. Must start and end with a letter or number.
+   * The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.
    * @minLength 1
    * @maxLength 255
    */
