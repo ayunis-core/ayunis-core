@@ -18,6 +18,7 @@ describe('CreateKnowledgeBaseUseCase', () => {
     mockRepository = {
       findById: jest.fn(),
       findAllByUserId: jest.fn(),
+      findByIds: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
       assignSourceToKnowledgeBase: jest.fn(),
