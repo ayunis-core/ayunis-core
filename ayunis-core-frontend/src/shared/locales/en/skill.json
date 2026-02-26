@@ -77,12 +77,27 @@
       "instructionsRequired": "Instructions are required"
     }
   },
-  "knowledgeBase": {
-    "title": "Knowledge Base",
-    "description": "Configure which knowledge the skill has access to",
+  "additionalDocuments": {
+    "title": "Additional Documents",
+    "description": "Upload documents directly to this skill",
     "adding": "Adding...",
     "addSource": "Add Source",
     "disabledTooltip": "To upload documents, an embedding model must be enabled."
+  },
+  "knowledgeBases": {
+    "title": "Knowledge Bases",
+    "description": "Connect shared knowledge bases to this skill",
+    "toggleAriaLabel": "Toggle {{name}} knowledge base",
+    "retryButton": "Retry",
+    "success": {
+      "assigned": "Knowledge base connected",
+      "unassigned": "Knowledge base disconnected"
+    },
+    "errors": {
+      "failedToLoad": "Failed to load knowledge bases. Please try again.",
+      "failedToAssign": "Failed to connect knowledge base. Please try again.",
+      "failedToUnassign": "Failed to disconnect knowledge base. Please try again."
+    }
   },
   "sources": {
     "addedSuccessfully": "Source added successfully",

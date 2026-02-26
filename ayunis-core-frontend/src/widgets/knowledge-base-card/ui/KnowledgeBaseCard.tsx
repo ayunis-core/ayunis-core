@@ -62,7 +62,7 @@ export default function KnowledgeBaseCard({
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!isEnabled) {
-      showError(t('knowledgeBase.disabledTooltip'));
+      showError(t('additionalDocuments.disabledTooltip'));
       return;
     }
     if (file) {
@@ -76,8 +76,10 @@ export default function KnowledgeBaseCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('knowledgeBase.title')}</CardTitle>
-        <CardDescription>{t('knowledgeBase.description')}</CardDescription>
+        <CardTitle>{t('additionalDocuments.title')}</CardTitle>
+        <CardDescription>
+          {t('additionalDocuments.description')}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -120,7 +122,7 @@ export default function KnowledgeBaseCard({
               />
               <TooltipIf
                 condition={!isEnabled}
-                tooltip={t('knowledgeBase.disabledTooltip')}
+                tooltip={t('additionalDocuments.disabledTooltip')}
               >
                 <Button
                   variant="outline"
@@ -128,8 +130,8 @@ export default function KnowledgeBaseCard({
                   disabled={addFileSourcePending || removeSourcePending}
                 >
                   {addFileSourcePending
-                    ? t('knowledgeBase.adding')
-                    : t('knowledgeBase.addSource')}
+                    ? t('additionalDocuments.adding')
+                    : t('additionalDocuments.addSource')}
                 </Button>
               </TooltipIf>
             </>
