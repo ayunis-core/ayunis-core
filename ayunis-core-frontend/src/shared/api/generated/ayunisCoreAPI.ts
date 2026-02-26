@@ -29,6 +29,7 @@ import type {
   AcceptInviteResponseDto,
   ActiveSubscriptionResponseDto,
   AddTeamMemberDto,
+  AddUrlToKnowledgeBaseDto,
   AgentResponseDto,
   AgentSourceResponseDto,
   AgentsControllerAddFileSourceBody,
@@ -9836,6 +9837,72 @@ export const useKnowledgeBasesControllerAddDocument = <TError = void,
       > => {
 
       const mutationOptions = getKnowledgeBasesControllerAddDocumentMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Add a URL source to a knowledge base
+ */
+export const knowledgeBasesControllerAddUrl = (
+    id: string,
+    addUrlToKnowledgeBaseDto: AddUrlToKnowledgeBaseDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<KnowledgeBaseDocumentResponseDto>(
+      {url: `/knowledge-bases/${id}/urls`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addUrlToKnowledgeBaseDto, signal
+    },
+      );
+    }
+  
+
+
+export const getKnowledgeBasesControllerAddUrlMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>, TError,{id: string;data: AddUrlToKnowledgeBaseDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>, TError,{id: string;data: AddUrlToKnowledgeBaseDto}, TContext> => {
+
+const mutationKey = ['knowledgeBasesControllerAddUrl'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>, {id: string;data: AddUrlToKnowledgeBaseDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  knowledgeBasesControllerAddUrl(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeBasesControllerAddUrlMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>>
+    export type KnowledgeBasesControllerAddUrlMutationBody = AddUrlToKnowledgeBaseDto
+    export type KnowledgeBasesControllerAddUrlMutationError = void
+
+    /**
+ * @summary Add a URL source to a knowledge base
+ */
+export const useKnowledgeBasesControllerAddUrl = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>, TError,{id: string;data: AddUrlToKnowledgeBaseDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>,
+        TError,
+        {id: string;data: AddUrlToKnowledgeBaseDto},
+        TContext
+      > => {
+
+      const mutationOptions = getKnowledgeBasesControllerAddUrlMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

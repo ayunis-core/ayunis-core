@@ -2495,6 +2495,18 @@ export const KnowledgeBaseDocumentResponseDtoCreatedBy = {
   system: 'system',
 } as const;
 
+/**
+ * The text source subtype (e.g. file, web)
+ */
+export type KnowledgeBaseDocumentResponseDtoTextType = typeof KnowledgeBaseDocumentResponseDtoTextType[keyof typeof KnowledgeBaseDocumentResponseDtoTextType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const KnowledgeBaseDocumentResponseDtoTextType = {
+  file: 'file',
+  web: 'web',
+} as const;
+
 export interface KnowledgeBaseDocumentResponseDto {
   /** The unique identifier of the document */
   id: string;
@@ -2508,11 +2520,20 @@ export interface KnowledgeBaseDocumentResponseDto {
   createdAt: string;
   /** The date and time when the document was last updated */
   updatedAt: string;
+  /** The text source subtype (e.g. file, web) */
+  textType?: KnowledgeBaseDocumentResponseDtoTextType;
+  /** The URL of the source (only for web sources) */
+  url?: string;
 }
 
 export interface KnowledgeBaseDocumentListResponseDto {
   /** The list of documents in the knowledge base */
   data: KnowledgeBaseDocumentResponseDto[];
+}
+
+export interface AddUrlToKnowledgeBaseDto {
+  /** The URL to crawl and add to the knowledge base */
+  url: string;
 }
 
 export interface InstallSkillFromMarketplaceDto {

@@ -80,8 +80,16 @@
       "empty": "Noch keine Dokumente hochgeladen. Laden Sie eine PDF- oder DOCX-Datei hoch, um zu beginnen.",
       "uploadSuccess": "Dokument erfolgreich hochgeladen!",
       "uploadError": "Dokument konnte nicht hochgeladen werden. Bitte versuchen Sie es erneut.",
+      "addUrl": "URL hinzufügen",
+      "urlPlaceholder": "https://beispiel.de",
+      "urlDialogTitle": "Website-URL hinzufügen",
+      "urlDialogDescription": "Geben Sie die URL einer Website ein, um deren Inhalt in die Wissenssammlung zu importieren.",
+      "urlLabel": "Website-URL",
+      "addUrlSuccess": "URL erfolgreich hinzugefügt! Der Website-Inhalt wird verarbeitet.",
+      "addUrlError": "URL konnte nicht hinzugefügt werden. Bitte überprüfen Sie die URL und versuchen Sie es erneut.",
       "removeSuccess": "Dokument erfolgreich entfernt!",
-      "removeError": "Dokument konnte nicht entfernt werden. Bitte versuchen Sie es erneut."
+      "removeError": "Dokument konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
+      "urlDialogCancel": "Abbrechen"
     }
   }
 }

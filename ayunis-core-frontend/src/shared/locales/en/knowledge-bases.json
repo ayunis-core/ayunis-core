@@ -80,8 +80,16 @@
       "empty": "No documents uploaded yet. Upload a PDF or DOCX file to get started.",
       "uploadSuccess": "Document uploaded successfully!",
       "uploadError": "Failed to upload document. Please try again.",
+      "addUrl": "Add URL",
+      "urlPlaceholder": "https://example.com",
+      "urlDialogTitle": "Add Website URL",
+      "urlDialogDescription": "Enter the URL of a website to import its content into the knowledge base.",
+      "urlLabel": "Website URL",
+      "addUrlSuccess": "URL added successfully! The website content is being processed.",
+      "addUrlError": "Failed to add URL. Please check the URL and try again.",
       "removeSuccess": "Document removed successfully!",
-      "removeError": "Failed to remove document. Please try again."
+      "removeError": "Failed to remove document. Please try again.",
+      "urlDialogCancel": "Cancel"
     }
   }
 }

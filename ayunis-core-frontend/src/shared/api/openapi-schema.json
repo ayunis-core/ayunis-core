@@ -5049,6 +5049,52 @@
         ]
       }
     },
+    "/knowledge-bases/{id}/urls": {
+      "post": {
+        "operationId": "KnowledgeBasesController_addUrl",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUrlToKnowledgeBaseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The URL source has been added to the knowledge base",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseDocumentResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Knowledge base not found"
+          }
+        },
+        "summary": "Add a URL source to a knowledge base",
+        "tags": [
+          "knowledge-bases"
+        ]
+      }
+    },
     "/knowledge-bases/{id}/documents/{documentId}": {
       "delete": {
         "operationId": "KnowledgeBasesController_removeDocument",
@@ -11560,6 +11606,20 @@
             "description": "The date and time when the document was last updated",
             "example": "2025-01-15T10:00:00.000Z",
             "format": "date-time"
+          },
+          "textType": {
+            "type": "string",
+            "description": "The text source subtype (e.g. file, web)",
+            "enum": [
+              "file",
+              "web"
+            ],
+            "example": "web"
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL of the source (only for web sources)",
+            "example": "https://example.com/page"
           }
         },
         "required": [
@@ -11584,6 +11644,19 @@
         },
         "required": [
           "data"
+        ]
+      },
+      "AddUrlToKnowledgeBaseDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL to crawl and add to the knowledge base",
+            "example": "https://example.com/page"
+          }
+        },
+        "required": [
+          "url"
         ]
       },
       "InstallSkillFromMarketplaceDto": {
