@@ -7378,7 +7378,8 @@
               "otc",
               "azure",
               "gemini",
-              "stackit"
+              "stackit",
+              "scaleway"
             ],
             "description": "The provider of the model"
           },
@@ -7452,7 +7453,8 @@
               "otc",
               "azure",
               "gemini",
-              "stackit"
+              "stackit",
+              "scaleway"
             ],
             "description": "The model provider identifier",
             "example": "openai"
@@ -7537,7 +7539,8 @@
               "otc",
               "azure",
               "gemini",
-              "stackit"
+              "stackit",
+              "scaleway"
             ],
             "description": "The provider of the model"
           },
@@ -7671,7 +7674,8 @@
               "otc",
               "azure",
               "gemini",
-              "stackit"
+              "stackit",
+              "scaleway"
             ],
             "description": "The provider of the model"
           },
@@ -7733,7 +7737,8 @@
               "otc",
               "azure",
               "gemini",
-              "stackit"
+              "stackit",
+              "scaleway"
             ],
             "example": "openai"
           },
@@ -7801,7 +7806,8 @@
               "otc",
               "azure",
               "gemini",
-              "stackit"
+              "stackit",
+              "scaleway"
             ],
             "example": "openai"
           },
@@ -7869,7 +7875,8 @@
               "otc",
               "azure",
               "gemini",
-              "stackit"
+              "stackit",
+              "scaleway"
             ],
             "example": "openai"
           },
@@ -7924,7 +7931,8 @@
               "otc",
               "azure",
               "gemini",
-              "stackit"
+              "stackit",
+              "scaleway"
             ],
             "example": "openai"
           },
@@ -7984,7 +7992,8 @@
               "otc",
               "azure",
               "gemini",
-              "stackit"
+              "stackit",
+              "scaleway"
             ],
             "description": "The provider of the model",
             "example": "openai"
@@ -8079,7 +8088,8 @@
               "otc",
               "azure",
               "gemini",
-              "stackit"
+              "stackit",
+              "scaleway"
             ],
             "description": "The provider of the model",
             "example": "openai"
@@ -12207,7 +12217,8 @@
               "otc",
               "azure",
               "gemini",
-              "stackit"
+              "stackit",
+              "scaleway"
             ],
             "description": "Model provider"
           },
@@ -12348,7 +12359,8 @@
               "otc",
               "azure",
               "gemini",
-              "stackit"
+              "stackit",
+              "scaleway"
             ],
             "description": "Model provider"
           },

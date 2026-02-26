@@ -49,6 +49,7 @@ function getHostingPriority(
     case 'mistral':
     case 'bedrock':
     case 'azure':
+    case 'scaleway':
       return 1; // EU
     case 'openai':
     case 'anthropic':

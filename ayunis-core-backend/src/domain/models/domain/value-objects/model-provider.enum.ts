@@ -10,4 +10,5 @@ export enum ModelProvider {
   AZURE = 'azure',
   GEMINI = 'gemini',
   STACKIT = 'stackit',
+  SCALEWAY = 'scaleway',
 }

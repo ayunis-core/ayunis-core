@@ -44,4 +44,8 @@ export const modelsConfig = registerAs('models', () => ({
     apiKey: process.env.STACKIT_TOKEN,
     baseURL: 'https://api.openai-compat.model-serving.eu01.onstackit.cloud/v1',
   },
+  scaleway: {
+    apiKey: process.env.SCALEWAY_API_KEY,
+    baseURL: 'https://api.scaleway.ai/v1',
+  },
 }));

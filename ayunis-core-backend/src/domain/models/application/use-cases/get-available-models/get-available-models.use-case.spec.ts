@@ -52,6 +52,7 @@ describe('GetAvailableModelsUseCase', () => {
           [ModelProvider.AZURE]: 'models.azure.apiKey',
           [ModelProvider.GEMINI]: 'models.gemini.apiKey',
           [ModelProvider.STACKIT]: 'models.stackit.apiKey',
+          [ModelProvider.SCALEWAY]: 'models.scaleway.apiKey',
         };
         return configMap[provider];
       }),
