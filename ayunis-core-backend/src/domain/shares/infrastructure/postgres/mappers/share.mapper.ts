@@ -3,11 +3,13 @@ import {
   Share,
   AgentShare,
   SkillShare,
+  KnowledgeBaseShare,
 } from 'src/domain/shares/domain/share.entity';
 import {
   ShareRecord,
   AgentShareRecord,
   SkillShareRecord,
+  KnowledgeBaseShareRecord,
 } from '../schema/share.record';
 import { ShareScopeMapper } from './share-scope.mapper';
 
@@ -30,6 +32,15 @@ export class ShareMapper {
         id: record.id,
         scope: this.shareScopeMapper.toDomain(record.scope),
         skillId: record.skillId,
+        ownerId: record.ownerId,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+      });
+    } else if (record instanceof KnowledgeBaseShareRecord) {
+      return new KnowledgeBaseShare({
+        id: record.id,
+        scope: this.shareScopeMapper.toDomain(record.scope),
+        knowledgeBaseId: record.knowledgeBaseId,
         ownerId: record.ownerId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
@@ -58,6 +69,15 @@ export class ShareMapper {
       skillShareRecord.updatedAt = entity.updatedAt;
       skillShareRecord.skillId = entity.skillId;
       return skillShareRecord;
+    } else if (entity instanceof KnowledgeBaseShare) {
+      const kbShareRecord = new KnowledgeBaseShareRecord();
+      kbShareRecord.id = entity.id;
+      kbShareRecord.scope = this.shareScopeMapper.toRecord(entity.scope);
+      kbShareRecord.ownerId = entity.ownerId;
+      kbShareRecord.createdAt = entity.createdAt;
+      kbShareRecord.updatedAt = entity.updatedAt;
+      kbShareRecord.knowledgeBaseId = entity.knowledgeBaseId;
+      return kbShareRecord;
     } else {
       throw new Error(`Unknown share entity type: ${entity.entityType}`);
     }
