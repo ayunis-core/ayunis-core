@@ -118,7 +118,11 @@ export default function InvitesSection({
               {invites.map((invite) => (
                 <TableRow key={invite.id}>
                   <TableCell className="font-medium">{invite.email}</TableCell>
-                  <TableCell className="capitalize">{invite.role}</TableCell>
+                  <TableCell>
+                    {invite.role === 'admin'
+                      ? t('users.admin')
+                      : t('users.user')}
+                  </TableCell>
                   <TableCell>
                     {(() => {
                       const statusColorMap: Record<string, string> = {

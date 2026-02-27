@@ -145,7 +145,9 @@ export default function UsersSection({
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell className="capitalize">{user.role}</TableCell>
+                <TableCell>
+                  {user.role === 'admin' ? t('users.admin') : t('users.user')}
+                </TableCell>
                 <TableCell>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     {t('users.active')}
