@@ -57,36 +57,16 @@ export class KnowledgeBaseAccessService {
 
   /**
    * Finds a single knowledge base accessible to the current user and resolves
-   * its shared status in one pass (single findById call).
+   * its shared status in one pass.
    * Throws KnowledgeBaseNotFoundError if the KB doesn't exist or isn't accessible.
    */
-  async findOneAccessible(
-    id: UUID,
-    userId: UUID,
-  ): Promise<KnowledgeBaseWithShareStatus> {
-    const contextUserId = this.contextService.get('userId');
-    if (!contextUserId) {
-      throw new UnauthorizedAccessError();
-    }
-
-    const kb = await this.knowledgeBaseRepository.findById(id);
-    if (!kb) {
-      throw new KnowledgeBaseNotFoundError(id);
-    }
-
-    if (kb.userId === userId) {
-      return { knowledgeBase: kb, isShared: false };
-    }
-
-    const share = await this.findShareByEntityUseCase.execute(
-      new FindShareByEntityQuery(SharedEntityType.KNOWLEDGE_BASE, id),
-    );
-
-    if (share) {
-      return { knowledgeBase: kb, isShared: true };
-    }
-
-    throw new KnowledgeBaseNotFoundError(id);
+  async findOneAccessible(id: UUID): Promise<KnowledgeBaseWithShareStatus> {
+    const userId = this.contextService.get('userId');
+    const knowledgeBase = await this.findAccessibleKnowledgeBase(id);
+    return {
+      knowledgeBase,
+      isShared: knowledgeBase.userId !== userId,
+    };
   }
 
   /**

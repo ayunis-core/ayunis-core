@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { KnowledgeBase } from '../../../domain/knowledge-base.entity';
+import type { KnowledgeBaseWithShareStatus } from '../../../application/services/knowledge-base-access.service';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import {
   TextSource,
@@ -24,8 +25,12 @@ export class KnowledgeBaseDtoMapper {
     };
   }
 
-  toDtoArray(entities: KnowledgeBase[]): KnowledgeBaseResponseDto[] {
-    return entities.map((entity) => this.toDto(entity));
+  toDtoArray(
+    entitiesWithStatus: KnowledgeBaseWithShareStatus[],
+  ): KnowledgeBaseResponseDto[] {
+    return entitiesWithStatus.map(({ knowledgeBase, isShared }) =>
+      this.toDto(knowledgeBase, isShared),
+    );
   }
 
   toDocumentDto(source: Source): KnowledgeBaseDocumentResponseDto {

@@ -163,7 +163,7 @@ export class KnowledgeBasesController {
     this.logger.log('findOne', { id, userId });
 
     const { knowledgeBase, isShared } =
-      await this.knowledgeBaseAccessService.findOneAccessible(id, userId);
+      await this.knowledgeBaseAccessService.findOneAccessible(id);
 
     return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, isShared);
   }

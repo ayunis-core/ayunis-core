@@ -27,6 +27,7 @@ import { KnowledgeBaseResponseDto } from 'src/domain/knowledge-bases/presenters/
 import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/http/mappers/knowledge-base-dto.mapper';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
+import { ContextService } from 'src/common/context/services/context.service';
 
 @ApiTags('skills')
 @RequireFeature(FeatureFlag.Skills)
@@ -42,6 +43,7 @@ export class SkillKnowledgeBasesController {
     private readonly skillDtoMapper: SkillDtoMapper,
     private readonly knowledgeBaseDtoMapper: KnowledgeBaseDtoMapper,
     private readonly skillAccessService: SkillAccessService,
+    private readonly contextService: ContextService,
   ) {}
 
   @Post(':skillId/knowledge-bases/:knowledgeBaseId')
@@ -145,6 +147,12 @@ export class SkillKnowledgeBasesController {
       new ListSkillKnowledgeBasesQuery(skillId),
     );
 
-    return this.knowledgeBaseDtoMapper.toDtoArray(knowledgeBases);
+    const userId = this.contextService.get('userId');
+    const entitiesWithStatus = knowledgeBases.map((knowledgeBase) => ({
+      knowledgeBase,
+      isShared: knowledgeBase.userId !== userId,
+    }));
+
+    return this.knowledgeBaseDtoMapper.toDtoArray(entitiesWithStatus);
   }
 }
