@@ -43,6 +43,7 @@ import type {
   CreateInviteDto,
   CreateInviteResponseDto,
   CreateKnowledgeBaseDto,
+  CreateKnowledgeBaseShareDto,
   CreateLanguageModelRequestDto,
   CreateOrgRequestDto,
   CreatePermittedModelDto,
@@ -7308,6 +7309,71 @@ export const useSharesControllerCreateSkillShare = <TError = void,
       > => {
 
       const mutationOptions = getSharesControllerCreateSkillShareMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Create a share for a knowledge base
+ */
+export const sharesControllerCreateKnowledgeBaseShare = (
+    createKnowledgeBaseShareDto: CreateKnowledgeBaseShareDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ShareResponseDto>(
+      {url: `/shares/knowledge-bases`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createKnowledgeBaseShareDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSharesControllerCreateKnowledgeBaseShareMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sharesControllerCreateKnowledgeBaseShare>>, TError,{data: CreateKnowledgeBaseShareDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof sharesControllerCreateKnowledgeBaseShare>>, TError,{data: CreateKnowledgeBaseShareDto}, TContext> => {
+
+const mutationKey = ['sharesControllerCreateKnowledgeBaseShare'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sharesControllerCreateKnowledgeBaseShare>>, {data: CreateKnowledgeBaseShareDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  sharesControllerCreateKnowledgeBaseShare(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SharesControllerCreateKnowledgeBaseShareMutationResult = NonNullable<Awaited<ReturnType<typeof sharesControllerCreateKnowledgeBaseShare>>>
+    export type SharesControllerCreateKnowledgeBaseShareMutationBody = CreateKnowledgeBaseShareDto
+    export type SharesControllerCreateKnowledgeBaseShareMutationError = void
+
+    /**
+ * @summary Create a share for a knowledge base
+ */
+export const useSharesControllerCreateKnowledgeBaseShare = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sharesControllerCreateKnowledgeBaseShare>>, TError,{data: CreateKnowledgeBaseShareDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sharesControllerCreateKnowledgeBaseShare>>,
+        TError,
+        {data: CreateKnowledgeBaseShareDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSharesControllerCreateKnowledgeBaseShareMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

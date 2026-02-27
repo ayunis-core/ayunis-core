@@ -51,24 +51,14 @@ export class PostgresSharesRepository extends SharesRepository {
     entityId: UUID,
     entityType: SharedEntityType,
   ): Promise<Share[]> {
-    let records: ShareRecord[] = [];
+    const entityColumn = this.getEntityColumn(entityType);
 
-    // Query directly by the entity-specific field without using entityType
-    if (entityType === SharedEntityType.AGENT) {
-      records = await this.shareRepository
-        .createQueryBuilder('share')
-        .leftJoinAndSelect('share.scope', 'scope')
-        .where('share.agent_id = :entityId', { entityId })
-        .orderBy('share.createdAt', 'DESC')
-        .getMany();
-    } else if (entityType === SharedEntityType.SKILL) {
-      records = await this.shareRepository
-        .createQueryBuilder('share')
-        .leftJoinAndSelect('share.scope', 'scope')
-        .where('share.skill_id = :entityId', { entityId })
-        .orderBy('share.createdAt', 'DESC')
-        .getMany();
-    }
+    const records = await this.shareRepository
+      .createQueryBuilder('share')
+      .leftJoinAndSelect('share.scope', 'scope')
+      .where(`${entityColumn} = :entityId`, { entityId })
+      .orderBy('share.createdAt', 'DESC')
+      .getMany();
 
     return records.map((record) => this.mapper.toDomain(record));
   }
@@ -111,10 +101,7 @@ export class PostgresSharesRepository extends SharesRepository {
   ): Promise<Share | null> {
     let record: ShareRecord | null = null;
 
-    const entityColumn =
-      entityType === SharedEntityType.AGENT
-        ? 'share.agent_id'
-        : 'share.skill_id';
+    const entityColumn = this.getEntityColumn(entityType);
 
     if (scopeType === ShareScopeType.ORG) {
       record = await this.shareRepository
@@ -175,5 +162,18 @@ export class PostgresSharesRepository extends SharesRepository {
       .getMany();
 
     return records.map((record) => this.mapper.toDomain(record));
+  }
+
+  private getEntityColumn(entityType: SharedEntityType): string {
+    const entityColumnMap: Partial<Record<SharedEntityType, string>> = {
+      [SharedEntityType.AGENT]: 'share.agent_id',
+      [SharedEntityType.SKILL]: 'share.skill_id',
+      [SharedEntityType.KNOWLEDGE_BASE]: 'share.knowledge_base_id',
+    };
+    const column = entityColumnMap[entityType];
+    if (!column) {
+      throw new Error(`Unsupported entity type: ${entityType}`);
+    }
+    return column;
   }
 }

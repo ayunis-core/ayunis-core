@@ -3725,7 +3725,8 @@
               "enum": [
                 "agent",
                 "prompt",
-                "skill"
+                "skill",
+                "knowledge_base"
               ],
               "type": "string"
             }
@@ -3798,6 +3799,48 @@
           }
         },
         "summary": "Create a share for a skill",
+        "tags": [
+          "shares"
+        ]
+      }
+    },
+    "/shares/knowledge-bases": {
+      "post": {
+        "operationId": "SharesController_createKnowledgeBaseShare",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Knowledge base share creation data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateKnowledgeBaseShareDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Share created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data"
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "403": {
+            "description": "User cannot create share for this knowledge base"
+          }
+        },
+        "summary": "Create a share for a knowledge base",
         "tags": [
           "shares"
         ]
@@ -10745,7 +10788,8 @@
             "enum": [
               "agent",
               "prompt",
-              "skill"
+              "skill",
+              "knowledge_base"
             ]
           },
           "agentId": {
@@ -10778,7 +10822,8 @@
             "enum": [
               "agent",
               "prompt",
-              "skill"
+              "skill",
+              "knowledge_base"
             ]
           },
           "entityId": {
@@ -10838,7 +10883,8 @@
             "enum": [
               "agent",
               "prompt",
-              "skill"
+              "skill",
+              "knowledge_base"
             ]
           },
           "skillId": {
@@ -10855,6 +10901,35 @@
         "required": [
           "entityType",
           "skillId"
+        ]
+      },
+      "CreateKnowledgeBaseShareDto": {
+        "type": "object",
+        "properties": {
+          "entityType": {
+            "type": "string",
+            "description": "Type of entity being shared",
+            "enum": [
+              "agent",
+              "prompt",
+              "skill",
+              "knowledge_base"
+            ]
+          },
+          "knowledgeBaseId": {
+            "type": "string",
+            "description": "ID of the knowledge base to share",
+            "format": "uuid"
+          },
+          "teamId": {
+            "type": "string",
+            "description": "ID of the team to share with (if not provided, shares with entire organization)",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "entityType",
+          "knowledgeBaseId"
         ]
       },
       "CreateTeamDto": {
