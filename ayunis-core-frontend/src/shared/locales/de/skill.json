@@ -77,12 +77,27 @@
       "instructionsRequired": "Anweisungen sind erforderlich"
     }
   },
-  "knowledgeBase": {
-    "title": "Wissenssammlung",
-    "description": "Konfigurieren Sie, auf welches Wissen die Fähigkeit Zugriff hat",
+  "additionalDocuments": {
+    "title": "Zusätzliche Dokumente",
+    "description": "Dokumente direkt zu dieser Fähigkeit hochladen",
     "adding": "Wird hinzugefügt...",
     "addSource": "Quelle hinzufügen",
     "disabledTooltip": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein."
+  },
+  "knowledgeBases": {
+    "title": "Wissenssammlungen",
+    "description": "Gemeinsame Wissenssammlungen mit dieser Fähigkeit verbinden",
+    "toggleAriaLabel": "{{name}} Wissenssammlung umschalten",
+    "retryButton": "Erneut versuchen",
+    "success": {
+      "assigned": "Wissenssammlung verbunden",
+      "unassigned": "Wissenssammlung getrennt"
+    },
+    "errors": {
+      "failedToLoad": "Wissenssammlungen konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
+      "failedToAssign": "Wissenssammlung konnte nicht verbunden werden. Bitte versuchen Sie es erneut.",
+      "failedToUnassign": "Wissenssammlung konnte nicht getrennt werden. Bitte versuchen Sie es erneut."
+    }
   },
   "sources": {
     "addedSuccessfully": "Quelle erfolgreich hinzugefügt",

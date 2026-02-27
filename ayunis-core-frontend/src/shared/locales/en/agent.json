@@ -23,9 +23,9 @@
       "saving": "Saving..."
     }
   },
-  "knowledgeBase": {
-    "title": "Knowledge Base",
-    "description": "Configure which knowledge the agent has access to",
+  "additionalDocuments": {
+    "title": "Additional Documents",
+    "description": "Upload documents directly to this agent",
     "adding": "Adding...",
     "addSource": "Add Source",
     "disabledTooltip": "To upload documents, an embedding model must be enabled."

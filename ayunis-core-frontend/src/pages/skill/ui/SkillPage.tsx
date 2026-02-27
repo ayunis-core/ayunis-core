@@ -7,6 +7,7 @@ import type {
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import SkillPropertiesCard from './SkillPropertiesCard';
+import SkillKnowledgeBasesCard from './SkillKnowledgeBasesCard';
 import { KnowledgeBaseCard } from '@/widgets/knowledge-base-card';
 import SkillMcpIntegrationsCard from './SkillMcpIntegrationsCard';
 import { SharesTab } from '@/widgets/shares-tab';
@@ -168,6 +169,8 @@ export function SkillPage({
           isReadOnly ? (
             <div className="grid gap-4">
               <SkillPropertiesCard skill={skill} disabled />
+              {isEmbeddingModelEnabled && <SkillKnowledgeBasesCard disabled />}
+              <SkillMcpIntegrationsCard disabled />
               <KnowledgeBaseCard
                 entity={skill}
                 isEnabled={isEmbeddingModelEnabled}
@@ -175,7 +178,6 @@ export function SkillPage({
                 translationNamespace="skill"
                 sourcesHook={sourcesHook}
               />
-              <SkillMcpIntegrationsCard disabled />
             </div>
           ) : (
             <Tabs
@@ -192,13 +194,14 @@ export function SkillPage({
               <TabsContent value="config" className="mt-4">
                 <div className="grid gap-4">
                   <SkillPropertiesCard skill={skill} />
+                  {isEmbeddingModelEnabled && <SkillKnowledgeBasesCard />}
+                  <SkillMcpIntegrationsCard />
                   <KnowledgeBaseCard
                     entity={skill}
                     isEnabled={isEmbeddingModelEnabled}
                     translationNamespace="skill"
                     sourcesHook={sourcesHook}
                   />
-                  <SkillMcpIntegrationsCard />
                 </div>
               </TabsContent>
               <TabsContent value="share" className="mt-4">

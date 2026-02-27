@@ -23,9 +23,9 @@
       "saving": "Wird gespeichert..."
     }
   },
-  "knowledgeBase": {
-    "title": "Wissenssammlung",
-    "description": "Konfigurieren Sie, welches Wissen der Agent zur Verfügung hat",
+  "additionalDocuments": {
+    "title": "Zusätzliche Dokumente",
+    "description": "Dokumente direkt zu diesem Agent hochladen",
     "adding": "Hinzufügen...",
     "addSource": "Quelle hinzufügen",
     "disabledTooltip": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein."
