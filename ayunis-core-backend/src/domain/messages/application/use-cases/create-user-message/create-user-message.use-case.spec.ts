@@ -12,6 +12,8 @@ import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/up
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedException } from '@nestjs/common';
+import { getToken } from '@willsoto/nestjs-prometheus';
+import { AYUNIS_MESSAGES_TOTAL } from 'src/metrics/metrics.constants';
 
 describe('CreateUserMessageUseCase', () => {
   let useCase: CreateUserMessageUseCase;
@@ -46,6 +48,10 @@ describe('CreateUserMessageUseCase', () => {
         { provide: UploadObjectUseCase, useValue: mockUploadObjectUseCase },
         { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
         { provide: ContextService, useValue: mockContextService },
+        {
+          provide: getToken(AYUNIS_MESSAGES_TOTAL),
+          useValue: { inc: jest.fn() },
+        },
       ],
     }).compile();
 

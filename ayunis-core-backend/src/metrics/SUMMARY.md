@@ -6,6 +6,9 @@ This module provides application-level Prometheus metrics for monitoring LLM usa
 **Key files:**
 - `metrics.module.ts` — NestJS module wiring. Registers `PrometheusModule` at the `/metrics` path and applies `MetricsAuthMiddleware` to protect it.
 - `metrics.constants.ts` — Single source of truth for metric names, label names, and the metrics endpoint path.
+- `metrics.utils.ts` — Shared helpers: `getUserContextLabels()` extracts user/org context for metric labels; `safeMetric()` wraps metric operations in try/catch to prevent metric failures from crashing business flows.
+- `classify-inference-error.helper.ts` — Pure classification function that maps inference errors to Prometheus-friendly `error_type` label values (timeout, rate_limit, server_error, etc.).
+- `record-inference-metrics.helper.ts` — Records inference duration histogram and error counter in a single call. Used by both streaming and non-streaming inference paths.
 - `metrics-auth.middleware.ts` — NestMiddleware implementing HTTP Basic Auth for the metrics endpoint. Credentials come from `ConfigService` (`metrics.user` / `metrics.password`). Uses timing-safe comparison to prevent side-channel attacks.
 
 **Configuration:**

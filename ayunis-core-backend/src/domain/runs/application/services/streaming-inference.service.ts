@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
+import { Counter, Histogram } from 'prom-client';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
@@ -14,11 +16,16 @@ import {
 } from 'src/domain/models/application/ports/stream-inference.handler';
 import { CollectUsageAsyncService } from './collect-usage-async.service';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import {
+  AYUNIS_INFERENCE_DURATION_SECONDS,
+  AYUNIS_INFERENCE_ERRORS_TOTAL,
+} from 'src/metrics/metrics.constants';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { resolveIntegration } from '../helpers/resolve-integration.helper';
 import { safeJsonParse } from 'src/common/util/unicode-sanitizer';
+import { recordInferenceMetrics } from 'src/metrics/record-inference-metrics.helper';
 
 type AssistantContentBlock =
   | TextMessageContent
@@ -53,6 +60,10 @@ export class StreamingInferenceService {
     private readonly streamInferenceUseCase: StreamInferenceUseCase,
     private readonly saveAssistantMessageUseCase: SaveAssistantMessageUseCase,
     private readonly collectUsageAsyncService: CollectUsageAsyncService,
+    @InjectMetric(AYUNIS_INFERENCE_DURATION_SECONDS)
+    private readonly inferenceHistogram: Histogram<string>,
+    @InjectMetric(AYUNIS_INFERENCE_ERRORS_TOTAL)
+    private readonly inferenceErrorsCounter: Counter<string>,
   ) {}
 
   async *executeStreamingInference(params: {
@@ -92,11 +103,13 @@ export class StreamingInferenceService {
 
     let streamCompletedSuccessfully = false;
     const allChunks: StreamInferenceResponseChunk[] = [];
+    const startTime = Date.now();
 
     const asyncIterable = this.buildAsyncIterable(stream$, allChunks, () => {
       streamCompletedSuccessfully = true;
     });
 
+    let inferenceError: unknown;
     try {
       for await (const message of this.processStreamingChunks(
         asyncIterable,
@@ -106,7 +119,22 @@ export class StreamingInferenceService {
       )) {
         yield message;
       }
+    } catch (error) {
+      inferenceError = error;
+      throw error;
     } finally {
+      recordInferenceMetrics(
+        {
+          histogram: this.inferenceHistogram,
+          errorCounter: this.inferenceErrorsCounter,
+          logger: this.logger,
+          model: model.name,
+          provider: model.provider,
+          streaming: 'true',
+        },
+        Date.now() - startTime,
+        inferenceError,
+      );
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- mutated in callback, TS can't track
       if (streamCompletedSuccessfully && allChunks.length > 0) {
         const usage = this.extractUsageFromChunks(allChunks);
