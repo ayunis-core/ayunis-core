@@ -10,7 +10,7 @@ import { PermittedModelMapper } from 'src/domain/models/infrastructure/persisten
 import { ThreadSourceAssignmentMapper } from './thread-source-assignment.mapper';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
-import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
+import { ThreadKnowledgeBaseAssignmentRecord } from '../schema/thread-knowledge-base-assignment.record';
 
 @Injectable()
 export class ThreadMapper {
@@ -41,8 +41,12 @@ export class ThreadMapper {
       (id) => ({ id }) as McpIntegrationRecord,
     );
     if (thread.knowledgeBases !== undefined) {
-      record.knowledgeBases = thread.knowledgeBases.map(
-        (kb) => ({ id: kb.id }) as KnowledgeBaseRecord,
+      record.knowledgeBaseAssignments = thread.knowledgeBases.map(
+        (kb) =>
+          ({
+            knowledgeBaseId: kb.id,
+            knowledgeBase: { id: kb.id, name: kb.name },
+          }) as ThreadKnowledgeBaseAssignmentRecord,
       );
     }
     record.createdAt = thread.createdAt;
@@ -90,12 +94,12 @@ export class ThreadMapper {
   private mapKnowledgeBases(
     record: ThreadRecord,
   ): KnowledgeBaseSummary[] | undefined {
-    if (!record.knowledgeBases) {
+    if (!record.knowledgeBaseAssignments) {
       return undefined;
     }
-    return record.knowledgeBases.map((kb) => ({
-      id: kb.id,
-      name: kb.name,
+    return record.knowledgeBaseAssignments.map((assignment) => ({
+      id: assignment.knowledgeBase.id,
+      name: assignment.knowledgeBase.name,
     }));
   }
 

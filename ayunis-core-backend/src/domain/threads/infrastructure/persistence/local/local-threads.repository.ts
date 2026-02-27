@@ -17,7 +17,7 @@ import { ThreadSourceAssignmentMapper } from './mappers/thread-source-assignment
 import { ThreadSourceAssignmentRecord } from './schema/thread-source-assignment.record';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
-import type { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
+import { ThreadKnowledgeBaseAssignmentRecord } from './schema/thread-knowledge-base-assignment.record';
 import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
 
 @Injectable()
@@ -46,7 +46,8 @@ export class LocalThreadsRepository extends ThreadsRepository {
         'model',
         'sourceAssignments',
         'sourceAssignments.source',
-        'knowledgeBases',
+        'knowledgeBaseAssignments',
+        'knowledgeBaseAssignments.knowledgeBase',
         'mcpIntegrations',
       ],
       order: {
@@ -74,7 +75,9 @@ export class LocalThreadsRepository extends ThreadsRepository {
         sourceAssignments: {
           source: true,
         },
-        knowledgeBases: true,
+        knowledgeBaseAssignments: {
+          knowledgeBase: true,
+        },
         mcpIntegrations: true,
       },
       order: {
@@ -215,7 +218,9 @@ export class LocalThreadsRepository extends ThreadsRepository {
           }
         : false,
       model: options?.withModel ? true : false,
-      knowledgeBases: options?.withKnowledgeBases ? true : false,
+      knowledgeBaseAssignments: options?.withKnowledgeBases
+        ? { knowledgeBase: true }
+        : false,
       mcpIntegrations: true,
     };
     return relations;
@@ -350,15 +355,19 @@ export class LocalThreadsRepository extends ThreadsRepository {
 
     const threadEntity = await this.threadRepository.findOne({
       where: { id: params.threadId, userId: params.userId },
-      relations: ['knowledgeBases'],
+      relations: ['knowledgeBaseAssignments'],
     });
 
     if (!threadEntity) {
       throw new ThreadNotFoundError(params.threadId, params.userId);
     }
 
-    threadEntity.knowledgeBases = params.knowledgeBaseIds.map(
-      (id) => ({ id }) as KnowledgeBaseRecord,
+    threadEntity.knowledgeBaseAssignments = params.knowledgeBaseIds.map(
+      (id) =>
+        ({
+          knowledgeBaseId: id,
+          threadId: params.threadId,
+        }) as ThreadKnowledgeBaseAssignmentRecord,
     );
 
     await this.threadRepository.save(threadEntity);
