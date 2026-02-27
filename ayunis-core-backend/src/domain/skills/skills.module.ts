@@ -50,9 +50,6 @@ import { SharedEntityType } from '../shares/domain/value-objects/shared-entity-t
 // Shares
 import { SharesModule } from '../shares/shares.module';
 
-// IAM
-import { UsersModule } from 'src/iam/users/users.module';
-import { TeamsModule } from 'src/iam/teams/teams.module';
 import { ThreadsModule } from '../threads/threads.module';
 
 // Presenters
@@ -78,8 +75,6 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
     KnowledgeBasesModule,
     MarketplaceModule,
     forwardRef(() => SharesModule),
-    UsersModule,
-    TeamsModule,
     forwardRef(() => ThreadsModule),
   ],
   providers: [
