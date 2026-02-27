@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
 import { Avatar, AvatarFallback } from '@/shared/ui/shadcn/avatar';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/shadcn/dialog';
@@ -47,36 +47,51 @@ interface ChatMessageProps {
   readonly isStreaming?: boolean;
 }
 
-function CopyMessageButton({ message }: { readonly message: Message }) {
+function CopyMessageButton({
+  contentRef,
+}: {
+  readonly contentRef: React.RefObject<HTMLDivElement | null>;
+}) {
   const [copied, setCopied] = useState(false);
   const { t } = useTranslation('chat');
 
-  const extractTextContent = (message: Message): string => {
-    if (message.role !== 'assistant') return '';
-    // eslint-disable-next-line eqeqeq, @typescript-eslint/no-unnecessary-condition -- content may be undefined during streaming even if typed as required
-    if (message.content == null || message.content.length === 0) return '';
-
-    return message.content
-      .filter((content) => content.type === 'text')
-      .map((content) => (content as TextMessageContent).text)
-      .join('\n\n');
-  };
-
   const handleCopy = async () => {
-    const textContent = extractTextContent(message);
-    if (!textContent) return;
+    const el = contentRef.current;
+    if (!el) return;
+
+    const copyableElements = el.querySelectorAll('[data-copyable="true"]');
+    if (copyableElements.length === 0) return;
+
+    const htmlParts: string[] = [];
+    const textParts: string[] = [];
+    copyableElements.forEach((element) => {
+      htmlParts.push(element.innerHTML);
+      textParts.push(element.textContent ?? '');
+    });
+
+    const html = htmlParts.join('<br><br>');
+    const plainText = textParts.join('\n\n');
+    if (!plainText.trim()) return;
 
     try {
-      await navigator.clipboard.writeText(textContent);
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/html': new Blob([html], { type: 'text/html' }),
+          'text/plain': new Blob([plainText], { type: 'text/plain' }),
+        }),
+      ]);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error('Failed to copy message:', error);
+    } catch {
+      try {
+        await navigator.clipboard.writeText(plainText);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (error) {
+        console.error('Failed to copy message:', error);
+      }
     }
   };
-
-  const textContent = extractTextContent(message);
-  if (!textContent) return null;
 
   return (
     <Tooltip>
@@ -106,6 +121,7 @@ export default function ChatMessage({
   isStreaming = false,
 }: ChatMessageProps) {
   const { theme } = useTheme();
+  const messageContentRef = useRef<HTMLDivElement>(null);
 
   const isUserMessage = message.role === 'user';
   const isAssistantMessage = message.role === 'assistant';
@@ -144,12 +160,16 @@ export default function ChatMessage({
         )}
         <div className="max-w-2xl min-w-0 space-y-1 w-full">
           <div
+            ref={messageContentRef}
             className="space-y-2 overflow-hidden w-full"
             data-testid="assistant-message"
           >
             {renderMessageContent(message, isStreaming)}
           </div>
-          <CopyMessageButton message={message} />
+          {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content may be undefined during streaming */}
+          {message.content?.some((c) => c.type === 'text') && (
+            <CopyMessageButton contentRef={messageContentRef} />
+          )}
         </div>
       </div>
     );
@@ -265,11 +285,12 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
         if (content.type === 'text') {
           const textMessageContent = content as TextMessageContent;
           return (
-            <Markdown
+            <div
               key={`text-${index}-${textMessageContent.text.slice(0, 50)}`}
+              data-copyable="true"
             >
-              {textMessageContent.text}
-            </Markdown>
+              <Markdown>{textMessageContent.text}</Markdown>
+            </div>
           );
         } else if (content.type === 'tool_use') {
           try {
