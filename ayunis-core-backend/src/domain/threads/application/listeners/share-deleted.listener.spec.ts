@@ -2,6 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ShareDeletedListener } from './share-deleted.listener';
 import { RemoveSkillSourcesFromThreadsUseCase } from '../use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.use-case';
+import { RemoveKbAssignmentsByOriginSkillUseCase } from '../use-cases/remove-kb-assignments-by-origin-skill/remove-kb-assignments-by-origin-skill.use-case';
 import { FindAllUserIdsByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
 import { FindAllUserIdsByTeamIdUseCase } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.use-case';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
@@ -12,11 +13,16 @@ import { randomUUID } from 'crypto';
 describe('ShareDeletedListener (threads)', () => {
   let listener: ShareDeletedListener;
   let removeSkillSources: { execute: jest.Mock };
+  let removeKbAssignmentsByOriginSkill: { execute: jest.Mock };
   let findAllUserIdsByOrgId: { execute: jest.Mock };
   let findAllUserIdsByTeamId: { execute: jest.Mock };
 
   beforeAll(async () => {
     removeSkillSources = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    };
+
+    removeKbAssignmentsByOriginSkill = {
       execute: jest.fn().mockResolvedValue(undefined),
     };
 
@@ -34,6 +40,10 @@ describe('ShareDeletedListener (threads)', () => {
         {
           provide: RemoveSkillSourcesFromThreadsUseCase,
           useValue: removeSkillSources,
+        },
+        {
+          provide: RemoveKbAssignmentsByOriginSkillUseCase,
+          useValue: removeKbAssignmentsByOriginSkill,
         },
         {
           provide: FindAllUserIdsByOrgIdUseCase,
@@ -82,6 +92,12 @@ describe('ShareDeletedListener (threads)', () => {
     expect(call.userIds).toContain(orgUserId1);
     expect(call.userIds).toContain(orgUserId2);
     expect(call.userIds).not.toContain(ownerId);
+
+    const kbCall = removeKbAssignmentsByOriginSkill.execute.mock.calls[0][0];
+    expect(kbCall.skillId).toBe(skillId);
+    expect(kbCall.userIds).toContain(orgUserId1);
+    expect(kbCall.userIds).toContain(orgUserId2);
+    expect(kbCall.userIds).not.toContain(ownerId);
   });
 
   it('should remove skill sources only from users who lost access when remaining scopes exist', async () => {
@@ -117,6 +133,13 @@ describe('ShareDeletedListener (threads)', () => {
     expect(call.userIds).toContain(orgUserId2);
     expect(call.userIds).not.toContain(ownerId);
     expect(call.userIds).not.toContain(retainedUserId);
+
+    const kbCall = removeKbAssignmentsByOriginSkill.execute.mock.calls[0][0];
+    expect(kbCall.skillId).toBe(skillId);
+    expect(kbCall.userIds).toContain(orgUserId1);
+    expect(kbCall.userIds).toContain(orgUserId2);
+    expect(kbCall.userIds).not.toContain(ownerId);
+    expect(kbCall.userIds).not.toContain(retainedUserId);
   });
 
   it('should not remove anything when a non-skill share is deleted', async () => {
@@ -131,6 +154,7 @@ describe('ShareDeletedListener (threads)', () => {
     await listener.handleShareDeleted(event);
 
     expect(removeSkillSources.execute).not.toHaveBeenCalled();
+    expect(removeKbAssignmentsByOriginSkill.execute).not.toHaveBeenCalled();
   });
 
   it('should not remove anything when a prompt share is deleted', async () => {
@@ -145,5 +169,6 @@ describe('ShareDeletedListener (threads)', () => {
     await listener.handleShareDeleted(event);
 
     expect(removeSkillSources.execute).not.toHaveBeenCalled();
+    expect(removeKbAssignmentsByOriginSkill.execute).not.toHaveBeenCalled();
   });
 });

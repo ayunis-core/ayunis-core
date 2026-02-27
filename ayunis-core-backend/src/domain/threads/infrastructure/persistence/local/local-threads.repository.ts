@@ -10,7 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsRelations, Repository } from 'typeorm';
 import { ThreadRecord } from './schema/thread.record';
 import { ThreadMapper } from './mappers/thread.mapper';
-import { UUID } from 'crypto';
+import { randomUUID, UUID } from 'crypto';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import { ThreadSourceAssignmentMapper } from './mappers/thread-source-assignment.mapper';
@@ -366,6 +366,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
     }
 
     const record = new ThreadKnowledgeBaseAssignmentRecord();
+    record.id = randomUUID();
     record.threadId = params.threadId;
     record.knowledgeBaseId = params.knowledgeBaseId;
     record.originSkillId = params.originSkillId ?? null;
