@@ -10,18 +10,18 @@ import type { KnowledgeBaseDocumentResponseDto } from '../dto/knowledge-base-doc
 
 @Injectable()
 export class KnowledgeBaseDtoMapper {
-  toDto(
-    entity: KnowledgeBase,
-    isShared: boolean = false,
-  ): KnowledgeBaseResponseDto {
-    return {
+  toDto(entity: KnowledgeBase, isShared?: boolean): KnowledgeBaseResponseDto {
+    const dto: KnowledgeBaseResponseDto = {
       id: entity.id,
       name: entity.name,
       description: entity.description,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
-      isShared,
     };
+    if (isShared !== undefined) {
+      dto.isShared = isShared;
+    }
+    return dto;
   }
 
   toDtoArray(entities: KnowledgeBase[]): KnowledgeBaseResponseDto[] {
