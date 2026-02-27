@@ -49,6 +49,7 @@ import { mcpConfig } from '../config/mcp.config';
 import { marketplaceConfig } from '../config/marketplace.config';
 import toolsConfig from '../config/tools.config';
 import { featuresConfig } from '../config/features.config';
+import { metricsConfig } from '../config/metrics.config';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 import { IsRegistrationDisabledUseCase } from './application/use-cases/is-registration-disabled/is-registration-disabled.use-case';
 import { ClsModule } from 'nestjs-cls';
@@ -56,6 +57,7 @@ import { ContextModule } from 'src/common/context/context.module';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { SentryModule } from '@sentry/nestjs/setup';
+import { MetricsModule } from '../metrics/metrics.module';
 
 @Module({
   imports: [
@@ -77,6 +79,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
         marketplaceConfig,
         toolsConfig,
         featuresConfig,
+        metricsConfig,
       ],
     }),
     ClsModule.forRoot({
@@ -113,6 +116,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
     }),
     EventEmitterModule.forRoot(),
     SentryModule.forRoot(),
+    MetricsModule,
     ContextModule, // Global
     ModelsModule,
     AgentsModule,

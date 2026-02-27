@@ -246,7 +246,7 @@
     },
     "/models/default": {
       "get": {
-        "description": "Returns the applicable default model with fallback hierarchy: User default \u2192 Org default \u2192 First available model",
+        "description": "Returns the applicable default model with fallback hierarchy: User default → Org default → First available model",
         "operationId": "ModelsController_getEffectiveDefaultModel",
         "parameters": [],
         "responses": {
@@ -9107,7 +9107,7 @@
           "street": {
             "type": "string",
             "description": "Street",
-            "example": "Musterstra\u00dfe"
+            "example": "Musterstraße"
           },
           "houseNumber": {
             "type": "string",
@@ -9750,7 +9750,7 @@
           "result": {
             "type": "string",
             "description": "The result returned by the tool",
-            "example": "The current temperature in New York is 22\u00b0C with partly cloudy skies."
+            "example": "The current temperature in New York is 22°C with partly cloudy skies."
           }
         },
         "required": [
@@ -10706,10 +10706,10 @@
           },
           "orgConfigValues": {
             "type": "object",
-            "description": "Current org-level config values for marketplace integrations. Non-secret fields contain plaintext values. Secret fields are masked with \"\u2022\u2022\u2022\u2022\u2022\u2022\".",
+            "description": "Current org-level config values for marketplace integrations. Non-secret fields contain plaintext values. Secret fields are masked with \"••••••\".",
             "example": {
               "endpointUrl": "https://example.com/api",
-              "apiToken": "\u2022\u2022\u2022\u2022\u2022\u2022"
+              "apiToken": "••••••"
             }
           },
           "logoUrl": {
@@ -11292,9 +11292,9 @@
           },
           "configValues": {
             "type": "object",
-            "description": "Configuration values with secret values masked (keys present, values replaced with \"\u2022\u2022\u2022\u2022\u2022\u2022\")",
+            "description": "Configuration values with secret values masked (keys present, values replaced with \"••••••\")",
             "example": {
-              "personalToken": "\u2022\u2022\u2022\u2022\u2022\u2022"
+              "personalToken": "••••••"
             },
             "additionalProperties": {
               "type": "string"
@@ -12206,7 +12206,7 @@
           "result": {
             "type": "string",
             "description": "The result data from the tool execution",
-            "example": "{\"location\":\"New York\",\"forecast\":\"Partly cloudy with a high of 75\u00b0F and a low of 60\u00b0F\",\"precipitation\":\"20%\"}"
+            "example": "{\"location\":\"New York\",\"forecast\":\"Partly cloudy with a high of 75°F and a low of 60°F\",\"precipitation\":\"20%\"}"
           }
         },
         "required": [
@@ -12251,7 +12251,7 @@
           },
           "skillId": {
             "type": "string",
-            "description": "Skill ID to activate for this message \u2014 injects skill instructions and resources into the thread",
+            "description": "Skill ID to activate for this message — injects skill instructions and resources into the thread",
             "example": "550e8400-e29b-41d4-a716-446655440000"
           },
           "streaming": {
