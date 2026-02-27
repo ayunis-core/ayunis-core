@@ -45,8 +45,10 @@ function isValidUrl(value: string): boolean {
 
 export default function KnowledgeBaseDocumentsCard({
   knowledgeBaseId,
+  disabled = false,
 }: Readonly<{
   knowledgeBaseId: string;
+  disabled?: boolean;
 }>) {
   const { t } = useTranslation('knowledge-bases');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -90,43 +92,45 @@ export default function KnowledgeBaseDocumentsCard({
       <CardHeader>
         <CardTitle>{t('detail.documents.title')}</CardTitle>
         <CardDescription>{t('detail.documents.description')}</CardDescription>
-        <CardAction>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={ACCEPTED_FILE_TYPES}
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setUrlDialogOpen(true)}
-              disabled={isAddingUrl}
-            >
-              {isAddingUrl ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Globe className="mr-2 h-4 w-4" />
-              )}
-              {t('detail.documents.addUrl')}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-            >
-              {isUploading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="mr-2 h-4 w-4" />
-              )}
-              {t('detail.documents.upload')}
-            </Button>
-          </div>
-        </CardAction>
+        {!disabled && (
+          <CardAction>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPTED_FILE_TYPES}
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setUrlDialogOpen(true)}
+                disabled={isAddingUrl}
+              >
+                {isAddingUrl ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Globe className="mr-2 h-4 w-4" />
+                )}
+                {t('detail.documents.addUrl')}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
+                {t('detail.documents.upload')}
+              </Button>
+            </div>
+          </CardAction>
+        )}
       </CardHeader>
       <CardContent>
         <DocumentsContent
@@ -135,6 +139,7 @@ export default function KnowledgeBaseDocumentsCard({
           removeDocument={removeDocument}
           isRemoving={isRemoving}
           emptyText={t('detail.documents.empty')}
+          disabled={disabled}
         />
       </CardContent>
       <AddUrlDialog
@@ -156,12 +161,14 @@ function DocumentsContent({
   removeDocument,
   isRemoving,
   emptyText,
+  disabled = false,
 }: Readonly<{
   isLoading: boolean;
   documents: KnowledgeBaseDocumentResponseDto[];
   removeDocument: (id: string) => void;
   isRemoving: boolean;
   emptyText: string;
+  disabled?: boolean;
 }>) {
   if (isLoading) {
     return (
@@ -185,6 +192,7 @@ function DocumentsContent({
           doc={doc}
           removeDocument={removeDocument}
           isRemoving={isRemoving}
+          disabled={disabled}
         />
       ))}
     </div>
@@ -195,10 +203,12 @@ function DocumentBadge({
   doc,
   removeDocument,
   isRemoving,
+  disabled = false,
 }: Readonly<{
   doc: KnowledgeBaseDocumentResponseDto;
   removeDocument: (id: string) => void;
   isRemoving: boolean;
+  disabled?: boolean;
 }>) {
   const isWeb = doc.textType === KnowledgeBaseDocumentResponseDtoTextType.web;
   const Icon = isWeb ? Globe : FileText;
@@ -211,16 +221,18 @@ function DocumentBadge({
     >
       <Icon className="h-3.5 w-3.5 shrink-0" />
       <span className="max-w-[200px] truncate">{doc.name}</span>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={() => removeDocument(doc.id)}
-        disabled={isRemoving}
-        className="ml-1 h-5 w-5 rounded-full"
-      >
-        <X className="h-3 w-3" />
-      </Button>
+      {!disabled && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => removeDocument(doc.id)}
+          disabled={isRemoving}
+          className="ml-1 h-5 w-5 rounded-full"
+        >
+          <X className="h-3 w-3" />
+        </Button>
+      )}
     </Badge>
   );
 }
