@@ -3,7 +3,8 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ShareScopeResolverService } from 'src/domain/shares/application/services/share-scope-resolver.service';
-import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
+import { ListSharesByEntityUseCase } from 'src/domain/shares/application/use-cases/list-shares-by-entity/list-shares-by-entity.use-case';
+import { ListSharesByEntityQuery } from 'src/domain/shares/application/use-cases/list-shares-by-entity/list-shares-by-entity.query';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase } from 'src/domain/threads/application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.use-case';
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillCommand } from 'src/domain/threads/application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.command';
@@ -23,8 +24,7 @@ export class KnowledgeBaseShareDeletedListener {
   constructor(
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
-    @Inject(SharesRepository)
-    private readonly sharesRepository: SharesRepository,
+    private readonly listSharesByEntityUseCase: ListSharesByEntityUseCase,
     private readonly removeKbAssignmentsByOriginSkill: RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase,
     private readonly shareScopeResolver: ShareScopeResolverService,
   ) {}
@@ -81,9 +81,8 @@ export class KnowledgeBaseShareDeletedListener {
     affectedSkills: Skill[],
   ): Promise<void> {
     for (const skill of affectedSkills) {
-      const skillShares = await this.sharesRepository.findByEntityIdAndType(
-        skill.id,
-        SharedEntityType.SKILL,
+      const skillShares = await this.listSharesByEntityUseCase.execute(
+        new ListSharesByEntityQuery(SharedEntityType.SKILL, skill.id),
       );
 
       if (skillShares.length === 0) {
