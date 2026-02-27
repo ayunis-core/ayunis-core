@@ -237,6 +237,11 @@ export default function PlusButton({
                           }
                         >
                           {kb.name}
+                          {kb.isShared && (
+                            <span className="ml-1 text-xs text-muted-foreground">
+                              ({t('chatInput.shared')})
+                            </span>
+                          )}
                         </DropdownMenuItem>
                       ))
                     : null}
