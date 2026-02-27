@@ -10,15 +10,7 @@ import {
 import { Button } from '@/shared/ui/shadcn/button';
 import { Input } from '@/shared/ui/shadcn/input';
 import { Label } from '@/shared/ui/shadcn/label';
-import {
-  Item,
-  ItemMedia,
-  ItemContent,
-  ItemTitle,
-  ItemActions,
-  ItemGroup,
-  ItemSeparator,
-} from '@/shared/ui/shadcn/item';
+import { Badge } from '@/shared/ui/shadcn/badge';
 import {
   Dialog,
   DialogContent,
@@ -54,8 +46,10 @@ function isValidUrl(value: string): boolean {
 
 export default function KnowledgeBaseDocumentsCard({
   knowledgeBaseId,
+  disabled = false,
 }: Readonly<{
   knowledgeBaseId: string;
+  disabled?: boolean;
 }>) {
   const { t } = useTranslation('knowledge-bases');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -99,47 +93,49 @@ export default function KnowledgeBaseDocumentsCard({
       <CardHeader>
         <CardTitle>{t('detail.documents.title')}</CardTitle>
         <CardDescription>{t('detail.documents.description')}</CardDescription>
-        <CardAction>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={ACCEPTED_FILE_TYPES}
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          <div className="flex gap-2">
-            <HelpLink
-              path="knowledge-collections/create-and-upload/"
-              variant="icon"
+        {!disabled && (
+          <CardAction>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPTED_FILE_TYPES}
+              onChange={handleFileChange}
+              className="hidden"
             />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setUrlDialogOpen(true)}
-              disabled={isAddingUrl}
-            >
-              {isAddingUrl ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Globe className="mr-2 h-4 w-4" />
-              )}
-              {t('detail.documents.addUrl')}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-            >
-              {isUploading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="mr-2 h-4 w-4" />
-              )}
-              {t('detail.documents.upload')}
-            </Button>
-          </div>
-        </CardAction>
+            <div className="flex gap-2">
+              <HelpLink
+                path="knowledge-collections/create-and-upload/"
+                variant="icon"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setUrlDialogOpen(true)}
+                disabled={isAddingUrl}
+              >
+                {isAddingUrl ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Globe className="mr-2 h-4 w-4" />
+                )}
+                {t('detail.documents.addUrl')}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
+                {t('detail.documents.upload')}
+              </Button>
+            </div>
+          </CardAction>
+        )}
       </CardHeader>
       <CardContent>
         <DocumentsContent
@@ -148,6 +144,7 @@ export default function KnowledgeBaseDocumentsCard({
           removeDocument={removeDocument}
           isRemoving={isRemoving}
           emptyText={t('detail.documents.empty')}
+          disabled={disabled}
         />
       </CardContent>
       <AddUrlDialog
@@ -169,12 +166,14 @@ function DocumentsContent({
   removeDocument,
   isRemoving,
   emptyText,
+  disabled = false,
 }: Readonly<{
   isLoading: boolean;
   documents: KnowledgeBaseDocumentResponseDto[];
   removeDocument: (id: string) => void;
   isRemoving: boolean;
   emptyText: string;
+  disabled?: boolean;
 }>) {
   if (isLoading) {
     return (
@@ -191,17 +190,17 @@ function DocumentsContent({
     );
   }
   return (
-    <ItemGroup>
-      {documents.map((doc, index) => (
+    <div className="flex flex-wrap gap-2">
+      {documents.map((doc) => (
         <DocumentItem
           key={doc.id}
           doc={doc}
           removeDocument={removeDocument}
           isRemoving={isRemoving}
-          showSeparator={index < documents.length - 1}
+          disabled={disabled}
         />
       ))}
-    </ItemGroup>
+    </div>
   );
 }
 
@@ -209,42 +208,37 @@ function DocumentItem({
   doc,
   removeDocument,
   isRemoving,
-  showSeparator,
+  disabled = false,
 }: Readonly<{
   doc: KnowledgeBaseDocumentResponseDto;
   removeDocument: (id: string) => void;
   isRemoving: boolean;
-  showSeparator: boolean;
+  disabled?: boolean;
 }>) {
   const isWeb = doc.textType === KnowledgeBaseDocumentResponseDtoTextType.web;
   const Icon = isWeb ? Globe : FileText;
 
   return (
-    <>
-      <Item size="sm">
-        <ItemMedia>
-          <Icon className="h-4 w-4 text-muted-foreground" />
-        </ItemMedia>
-        <ItemContent>
-          <ItemTitle title={isWeb ? (doc.url ?? undefined) : undefined}>
-            {doc.name}
-          </ItemTitle>
-        </ItemContent>
-        <ItemActions>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => removeDocument(doc.id)}
-            disabled={isRemoving}
-            className="h-7 w-7"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </ItemActions>
-      </Item>
-      {showSeparator && <ItemSeparator />}
-    </>
+    <Badge
+      variant="secondary"
+      className="flex items-center gap-1.5 py-1.5 px-3"
+      title={isWeb ? (doc.url ?? undefined) : undefined}
+    >
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <span className="max-w-[200px] truncate">{doc.name}</span>
+      {!disabled && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => removeDocument(doc.id)}
+          disabled={isRemoving}
+          className="ml-1 h-5 w-5 rounded-full"
+        >
+          <X className="h-3 w-3" />
+        </Button>
+      )}
+    </Badge>
   );
 }
 

@@ -157,13 +157,12 @@ export class KnowledgeBasesController {
   })
   @ApiResponse({ status: 404, description: 'Knowledge base not found' })
   async findOne(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<KnowledgeBaseResponseDto> {
-    this.logger.log('findOne', { id, userId });
+    this.logger.log('findOne', { id });
 
     const { knowledgeBase, isShared } =
-      await this.knowledgeBaseAccessService.findOneAccessible(id, userId);
+      await this.knowledgeBaseAccessService.findOneAccessible(id);
 
     return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, isShared);
   }

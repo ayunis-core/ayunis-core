@@ -160,7 +160,7 @@ describe('KnowledgeBaseAccessService', () => {
       const kb = makeKb();
       knowledgeBaseRepository.findById.mockResolvedValue(kb);
 
-      const result = await service.findOneAccessible(kbId, userId);
+      const result = await service.findOneAccessible(kbId);
 
       expect(result.knowledgeBase).toBe(kb);
       expect(result.isShared).toBe(false);
@@ -172,7 +172,7 @@ describe('KnowledgeBaseAccessService', () => {
       knowledgeBaseRepository.findById.mockResolvedValue(sharedKb);
       findShareByEntityUseCase.execute.mockResolvedValue({} as never);
 
-      const result = await service.findOneAccessible(kbId, userId);
+      const result = await service.findOneAccessible(kbId);
 
       expect(result.knowledgeBase).toBe(sharedKb);
       expect(result.isShared).toBe(true);
@@ -181,7 +181,7 @@ describe('KnowledgeBaseAccessService', () => {
     it('should throw KnowledgeBaseNotFoundError when KB does not exist', async () => {
       knowledgeBaseRepository.findById.mockResolvedValue(null);
 
-      await expect(service.findOneAccessible(kbId, userId)).rejects.toThrow(
+      await expect(service.findOneAccessible(kbId)).rejects.toThrow(
         KnowledgeBaseNotFoundError,
       );
     });
@@ -191,7 +191,7 @@ describe('KnowledgeBaseAccessService', () => {
       knowledgeBaseRepository.findById.mockResolvedValue(otherKb);
       findShareByEntityUseCase.execute.mockResolvedValue(null);
 
-      await expect(service.findOneAccessible(kbId, userId)).rejects.toThrow(
+      await expect(service.findOneAccessible(kbId)).rejects.toThrow(
         KnowledgeBaseNotFoundError,
       );
     });
@@ -199,7 +199,7 @@ describe('KnowledgeBaseAccessService', () => {
     it('should throw UnauthorizedAccessError when no user in context', async () => {
       contextService.get.mockReturnValue(undefined);
 
-      await expect(service.findOneAccessible(kbId, userId)).rejects.toThrow(
+      await expect(service.findOneAccessible(kbId)).rejects.toThrow(
         UnauthorizedAccessError,
       );
     });
@@ -208,7 +208,7 @@ describe('KnowledgeBaseAccessService', () => {
       const kb = makeKb();
       knowledgeBaseRepository.findById.mockResolvedValue(kb);
 
-      await service.findOneAccessible(kbId, userId);
+      await service.findOneAccessible(kbId);
 
       expect(knowledgeBaseRepository.findById).toHaveBeenCalledTimes(1);
     });

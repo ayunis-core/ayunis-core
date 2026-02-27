@@ -23,8 +23,10 @@ import { NameField } from '@/widgets/entity-form-fields';
 
 export default function KnowledgeBasePropertiesCard({
   knowledgeBase,
+  disabled = false,
 }: Readonly<{
   knowledgeBase: KnowledgeBaseResponseDto;
+  disabled?: boolean;
 }>) {
   const { t } = useTranslation('knowledge-bases');
   const { form, onSubmit, isLoading } = useUpdateKnowledgeBase({
@@ -48,6 +50,7 @@ export default function KnowledgeBasePropertiesCard({
               name="name"
               translationNamespace="knowledge-bases"
               translationPrefix="detail.properties"
+              disabled={disabled}
             />
             <FormField
               control={form.control}
@@ -63,6 +66,7 @@ export default function KnowledgeBasePropertiesCard({
                         'detail.properties.form.descriptionPlaceholder',
                       )}
                       className="min-h-[80px] max-h-[200px]"
+                      disabled={disabled}
                       {...field}
                     />
                   </FormControl>
@@ -73,11 +77,13 @@ export default function KnowledgeBasePropertiesCard({
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={isLoading}>
-              {isLoading
-                ? t('detail.properties.buttons.saving')
-                : t('detail.properties.buttons.save')}
-            </Button>
+            {!disabled && (
+              <Button type="submit" disabled={isLoading}>
+                {isLoading
+                  ? t('detail.properties.buttons.saving')
+                  : t('detail.properties.buttons.save')}
+              </Button>
+            )}
           </form>
         </Form>
       </CardContent>
