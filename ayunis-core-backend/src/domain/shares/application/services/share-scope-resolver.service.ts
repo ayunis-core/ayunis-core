@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
-import { RemainingShareScope } from '../events/share-deleted.event';
+import {
+  RemainingShareScope,
+  ShareDeletedEvent,
+} from '../events/share-deleted.event';
 import { FindAllUserIdsByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
 import { FindAllUserIdsByOrgIdQuery } from 'src/iam/users/application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.query';
 import { FindAllUserIdsByTeamIdUseCase } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.use-case';
@@ -16,6 +19,12 @@ export class ShareScopeResolverService {
     private readonly findAllUserIdsByTeamId: FindAllUserIdsByTeamIdUseCase,
   ) {}
 
+  async resolveAllOrgUserIds(orgId: UUID): Promise<UUID[]> {
+    return this.findAllUserIdsByOrgId.execute(
+      new FindAllUserIdsByOrgIdQuery(orgId),
+    );
+  }
+
   async resolveUserIds(scopes: RemainingShareScope[]): Promise<Set<UUID>> {
     const userIds = new Set<UUID>();
 
@@ -27,6 +36,16 @@ export class ShareScopeResolverService {
     }
 
     return userIds;
+  }
+
+  async resolveLostAccessUserIds(event: ShareDeletedEvent): Promise<UUID[]> {
+    const allOrgUserIds = await this.resolveAllOrgUserIds(event.orgId);
+
+    const retainUserIds = await this.resolveUserIds(event.remainingScopes);
+
+    return allOrgUserIds.filter(
+      (id) => id !== event.ownerId && !retainUserIds.has(id),
+    );
   }
 
   private async resolveScopeUserIds(

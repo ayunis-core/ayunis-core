@@ -1,17 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ThreadsRepository } from '../../ports/threads.repository';
-import { RemoveKbAssignmentsByOriginSkillCommand } from './remove-kb-assignments-by-origin-skill.command';
+import { RemoveKnowledgeBaseAssignmentsByOriginSkillCommand } from './remove-knowledge-base-assignments-by-origin-skill.command';
 
 @Injectable()
-export class RemoveKbAssignmentsByOriginSkillUseCase {
+export class RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase {
   private readonly logger = new Logger(
-    RemoveKbAssignmentsByOriginSkillUseCase.name,
+    RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase.name,
   );
 
   constructor(private readonly threadsRepository: ThreadsRepository) {}
 
   async execute(
-    command: RemoveKbAssignmentsByOriginSkillCommand,
+    command: RemoveKnowledgeBaseAssignmentsByOriginSkillCommand,
   ): Promise<void> {
     this.logger.log('execute', {
       skillId: command.skillId,
