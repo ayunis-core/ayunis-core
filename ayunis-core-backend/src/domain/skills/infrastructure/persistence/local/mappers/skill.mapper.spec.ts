@@ -10,6 +10,7 @@ describe('SkillMapper', () => {
   const mockSkillId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
   const mockSourceId = '770e8400-e29b-41d4-a716-446655440000' as UUID;
   const mockMcpId = '660e8400-e29b-41d4-a716-446655440000' as UUID;
+  const mockKbId = '880e8400-e29b-41d4-a716-446655440000' as UUID;
 
   beforeEach(() => {
     mapper = new SkillMapper();
@@ -25,6 +26,7 @@ describe('SkillMapper', () => {
       record.userId = mockUserId;
       record.sources = [{ id: mockSourceId } as any];
       record.mcpIntegrations = [{ id: mockMcpId } as any];
+      record.knowledgeBases = [{ id: mockKbId } as any];
       record.createdAt = new Date('2026-01-01');
       record.updatedAt = new Date('2026-01-02');
 
@@ -37,6 +39,7 @@ describe('SkillMapper', () => {
       expect(domain.userId).toBe(mockUserId);
       expect(domain.sourceIds).toEqual([mockSourceId]);
       expect(domain.mcpIntegrationIds).toEqual([mockMcpId]);
+      expect(domain.knowledgeBaseIds).toEqual([mockKbId]);
       expect(domain.createdAt).toEqual(new Date('2026-01-01'));
       expect(domain.updatedAt).toEqual(new Date('2026-01-02'));
     });
@@ -55,6 +58,7 @@ describe('SkillMapper', () => {
 
       expect(domain.sourceIds).toEqual([]);
       expect(domain.mcpIntegrationIds).toEqual([]);
+      expect(domain.knowledgeBaseIds).toEqual([]);
     });
   });
 
