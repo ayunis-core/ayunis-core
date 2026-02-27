@@ -468,14 +468,13 @@ export class LocalThreadsRepository extends ThreadsRepository {
       .delete()
       .from(ThreadKnowledgeBaseAssignmentRecord)
       .where(
-        'id IN ' +
-          this.threadKbAssignmentRepository
-            .createQueryBuilder('tkba')
-            .select('tkba.id')
-            .innerJoin('tkba.thread', 'thread')
-            .where('tkba.originSkillId = :originSkillId')
-            .andWhere('thread.userId IN (:...userIds)')
-            .getQuery(),
+        `id IN (${this.threadKbAssignmentRepository
+          .createQueryBuilder('tkba')
+          .select('tkba.id')
+          .innerJoin('tkba.thread', 'thread')
+          .where('tkba.originSkillId = :originSkillId')
+          .andWhere('thread.userId IN (:...userIds)')
+          .getQuery()})`,
       )
       .setParameters({
         originSkillId: params.originSkillId,
@@ -502,15 +501,14 @@ export class LocalThreadsRepository extends ThreadsRepository {
       .delete()
       .from(ThreadKnowledgeBaseAssignmentRecord)
       .where(
-        'id IN ' +
-          this.threadKbAssignmentRepository
-            .createQueryBuilder('tkba')
-            .select('tkba.id')
-            .innerJoin('tkba.thread', 'thread')
-            .where('tkba.knowledgeBaseId = :knowledgeBaseId')
-            .andWhere('tkba.originSkillId IS NULL')
-            .andWhere('thread.userId IN (:...userIds)')
-            .getQuery(),
+        `id IN (${this.threadKbAssignmentRepository
+          .createQueryBuilder('tkba')
+          .select('tkba.id')
+          .innerJoin('tkba.thread', 'thread')
+          .where('tkba.knowledgeBaseId = :knowledgeBaseId')
+          .andWhere('tkba.originSkillId IS NULL')
+          .andWhere('thread.userId IN (:...userIds)')
+          .getQuery()})`,
       )
       .setParameters({
         knowledgeBaseId: params.knowledgeBaseId,

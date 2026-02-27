@@ -8,6 +8,9 @@ import { getShareAuthStrategyToken } from '../shares/application/factories/share
 import { SharedEntityType } from '../shares/domain/value-objects/shared-entity-type.enum';
 import { KnowledgeBaseShareAuthorizationStrategy } from './application/strategies/knowledge-base-share-authorization.strategy';
 import { KnowledgeBaseAccessService } from './application/services/knowledge-base-access.service';
+import { KnowledgeBaseShareDeletedListener } from './application/listeners/share-deleted.listener';
+import { SkillsModule } from '../skills/skills.module';
+import { ThreadsModule } from '../threads/threads.module';
 
 // Use Cases
 import { CreateKnowledgeBaseUseCase } from './application/use-cases/create-knowledge-base/create-knowledge-base.use-case';
@@ -34,6 +37,8 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     IndexersModule,
     ContextModule,
     forwardRef(() => SharesModule),
+    forwardRef(() => SkillsModule),
+    forwardRef(() => ThreadsModule),
   ],
   providers: [
     // Use Cases
@@ -53,6 +58,8 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     KnowledgeBaseDtoMapper,
     // Services
     KnowledgeBaseAccessService,
+    // Listeners
+    KnowledgeBaseShareDeletedListener,
     // Strategies
     KnowledgeBaseShareAuthorizationStrategy,
     {
