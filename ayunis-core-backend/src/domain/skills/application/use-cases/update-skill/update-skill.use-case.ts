@@ -56,6 +56,7 @@ export class UpdateSkillUseCase {
         instructions: command.instructions,
         sourceIds: existingSkill.sourceIds,
         mcpIntegrationIds: existingSkill.mcpIntegrationIds,
+        knowledgeBaseIds: existingSkill.knowledgeBaseIds,
         userId,
         createdAt: existingSkill.createdAt,
         updatedAt: new Date(),

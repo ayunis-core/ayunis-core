@@ -15,6 +15,12 @@ import {
   SkillNotFoundError,
 } from '../../../application/skills.errors';
 
+const SKILL_RELATIONS = [
+  'sources',
+  'mcpIntegrations',
+  'knowledgeBases',
+] as const;
+
 @Injectable()
 export class LocalSkillRepository implements SkillRepository {
   private readonly logger = new Logger(LocalSkillRepository.name);
@@ -56,9 +62,18 @@ export class LocalSkillRepository implements SkillRepository {
         .add(skill.mcpIntegrationIds);
     }
 
+    // Set knowledge base relations using relation IDs
+    if (skill.knowledgeBaseIds.length > 0) {
+      await this.skillRepository
+        .createQueryBuilder()
+        .relation(SkillRecord, 'knowledgeBases')
+        .of(saved.id)
+        .add(skill.knowledgeBaseIds);
+    }
+
     const withRelations = await this.skillRepository.findOne({
       where: { id: saved.id },
-      relations: ['sources', 'mcpIntegrations'],
+      relations: [...SKILL_RELATIONS],
     });
 
     if (!withRelations) {
@@ -75,7 +90,7 @@ export class LocalSkillRepository implements SkillRepository {
 
     const existing = await manager.findOne(SkillRecord, {
       where: { id: skill.id, userId: skill.userId },
-      relations: { sources: true, mcpIntegrations: true },
+      relations: [...SKILL_RELATIONS],
     });
 
     if (!existing) {
@@ -136,10 +151,35 @@ export class LocalSkillRepository implements SkillRepository {
         .remove(mcpToRemove);
     }
 
+    // Handle knowledge bases many-to-many
+    const existingKbIds = existing.knowledgeBases?.map((kb) => kb.id) ?? [];
+    const kbToAdd = skill.knowledgeBaseIds.filter(
+      (id) => !existingKbIds.includes(id),
+    );
+    const kbToRemove = existingKbIds.filter(
+      (id) => !skill.knowledgeBaseIds.includes(id),
+    );
+
+    if (kbToAdd.length > 0) {
+      await manager
+        .createQueryBuilder()
+        .relation(SkillRecord, 'knowledgeBases')
+        .of(skill.id)
+        .add(kbToAdd);
+    }
+
+    if (kbToRemove.length > 0) {
+      await manager
+        .createQueryBuilder()
+        .relation(SkillRecord, 'knowledgeBases')
+        .of(skill.id)
+        .remove(kbToRemove);
+    }
+
     // Reload with all relations
     const reloaded = await manager.findOne(SkillRecord, {
       where: { id: skill.id },
-      relations: { sources: true, mcpIntegrations: true },
+      relations: [...SKILL_RELATIONS],
     });
 
     if (!reloaded) {
@@ -163,7 +203,7 @@ export class LocalSkillRepository implements SkillRepository {
 
     const record = await this.skillRepository.findOne({
       where: { id, userId },
-      relations: { sources: true, mcpIntegrations: true },
+      relations: [...SKILL_RELATIONS],
     });
 
     if (!record) return null;
@@ -175,7 +215,7 @@ export class LocalSkillRepository implements SkillRepository {
 
     const records = await this.skillRepository.find({
       where: { userId },
-      relations: ['sources', 'mcpIntegrations'],
+      relations: [...SKILL_RELATIONS],
     });
 
     return records.map((r) => this.skillMapper.toDomain(r));
@@ -194,7 +234,7 @@ export class LocalSkillRepository implements SkillRepository {
     const activeSkillIds = activations.map((a) => a.skillId);
     const records = await this.skillRepository.find({
       where: { id: In(activeSkillIds), userId },
-      relations: ['sources', 'mcpIntegrations'],
+      relations: [...SKILL_RELATIONS],
     });
 
     return records.map((r) => this.skillMapper.toDomain(r));
@@ -205,7 +245,7 @@ export class LocalSkillRepository implements SkillRepository {
 
     const record = await this.skillRepository.findOne({
       where: { name, userId },
-      relations: ['sources', 'mcpIntegrations'],
+      relations: [...SKILL_RELATIONS],
     });
 
     if (!record) return null;
@@ -293,7 +333,7 @@ export class LocalSkillRepository implements SkillRepository {
 
     const records = await this.skillRepository.find({
       where: { id: In(ids) },
-      relations: ['sources', 'mcpIntegrations'],
+      relations: [...SKILL_RELATIONS],
     });
 
     return records.map((r) => this.skillMapper.toDomain(r));
