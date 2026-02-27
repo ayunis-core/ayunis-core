@@ -57,7 +57,7 @@ describe('ListKnowledgeBaseDocumentsUseCase', () => {
     });
     mockRepository.findSourcesByKnowledgeBaseId.mockResolvedValue([source]);
 
-    const query = new ListKnowledgeBaseDocumentsQuery(knowledgeBaseId, userId);
+    const query = new ListKnowledgeBaseDocumentsQuery(knowledgeBaseId);
 
     const result = await useCase.execute(query);
 
@@ -78,24 +78,17 @@ describe('ListKnowledgeBaseDocumentsUseCase', () => {
     mockRepository.findById.mockResolvedValue(knowledgeBase);
     mockRepository.findSourcesByKnowledgeBaseId.mockResolvedValue([]);
 
-    const query = new ListKnowledgeBaseDocumentsQuery(knowledgeBaseId, userId);
+    const query = new ListKnowledgeBaseDocumentsQuery(knowledgeBaseId);
 
     const result = await useCase.execute(query);
 
     expect(result).toHaveLength(0);
   });
 
-  it('should throw KnowledgeBaseNotFoundError when KB does not belong to user', async () => {
-    const otherUserId = '99999999-9999-9999-9999-999999999999' as UUID;
-    const knowledgeBase = new KnowledgeBase({
-      id: knowledgeBaseId,
-      name: 'Anderer Benutzer KB',
-      orgId,
-      userId: otherUserId,
-    });
-    mockRepository.findById.mockResolvedValue(knowledgeBase);
+  it('should throw KnowledgeBaseNotFoundError when KB does not exist', async () => {
+    mockRepository.findById.mockResolvedValue(null);
 
-    const query = new ListKnowledgeBaseDocumentsQuery(knowledgeBaseId, userId);
+    const query = new ListKnowledgeBaseDocumentsQuery(knowledgeBaseId);
 
     await expect(useCase.execute(query)).rejects.toThrow(
       KnowledgeBaseNotFoundError,

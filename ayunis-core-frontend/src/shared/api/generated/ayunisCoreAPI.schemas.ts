@@ -2475,6 +2475,8 @@ export interface KnowledgeBaseResponseDto {
   createdAt: string;
   /** The date and time when the knowledge base was last updated */
   updatedAt: string;
+  /** Whether the knowledge base is shared with the current user (not owned) */
+  isShared: boolean;
 }
 
 export interface KnowledgeBaseListResponseDto {
