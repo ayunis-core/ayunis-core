@@ -11,6 +11,8 @@ export abstract class Share {
   createdAt: Date;
   updatedAt: Date;
 
+  abstract get entityId(): UUID;
+
   constructor(params: {
     id?: UUID;
     entityType: SharedEntityType;
@@ -31,6 +33,10 @@ export abstract class Share {
 export class AgentShare extends Share {
   agentId: UUID;
 
+  get entityId(): UUID {
+    return this.agentId;
+  }
+
   constructor(params: {
     id?: UUID;
     scope: ShareScope;
@@ -47,6 +53,10 @@ export class AgentShare extends Share {
 export class SkillShare extends Share {
   skillId: UUID;
 
+  get entityId(): UUID {
+    return this.skillId;
+  }
+
   constructor(params: {
     id?: UUID;
     scope: ShareScope;
@@ -57,5 +67,25 @@ export class SkillShare extends Share {
   }) {
     super({ ...params, entityType: SharedEntityType.SKILL });
     this.skillId = params.skillId;
+  }
+}
+
+export class KnowledgeBaseShare extends Share {
+  knowledgeBaseId: UUID;
+
+  get entityId(): UUID {
+    return this.knowledgeBaseId;
+  }
+
+  constructor(params: {
+    id?: UUID;
+    scope: ShareScope;
+    knowledgeBaseId: UUID;
+    ownerId: UUID;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }) {
+    super({ ...params, entityType: SharedEntityType.KNOWLEDGE_BASE });
+    this.knowledgeBaseId = params.knowledgeBaseId;
   }
 }
