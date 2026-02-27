@@ -59,6 +59,12 @@ export class CreateThreadKnowledgeBaseAssignments1772197660397
     await queryRunner.query(
       `CREATE INDEX "IDX_thread_knowledge_bases_knowledgeBasesId" ON "thread_knowledge_bases" ("knowledgeBasesId")`,
     );
+    await queryRunner.query(
+      `ALTER TABLE "thread_knowledge_bases" ADD CONSTRAINT "FK_13a1a6d203e60947a65a707c052" FOREIGN KEY ("threadsId") REFERENCES "threads"("id") ON DELETE CASCADE ON UPDATE CASCADE`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "thread_knowledge_bases" ADD CONSTRAINT "FK_8dc817a66dcc440419fdee6ca22" FOREIGN KEY ("knowledgeBasesId") REFERENCES "knowledge_bases"("id") ON DELETE CASCADE ON UPDATE CASCADE`,
+    );
 
     // Migrate data back (lose originSkillId)
     await queryRunner.query(
