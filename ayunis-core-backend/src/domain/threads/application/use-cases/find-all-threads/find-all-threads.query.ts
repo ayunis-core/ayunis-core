@@ -10,6 +10,7 @@ export class FindAllThreadsQuery extends PaginatedQuery {
       withMessages?: boolean;
       withAgent?: boolean;
       withModel?: boolean;
+      withKnowledgeBases?: boolean;
     },
     public readonly filters?: {
       search?: string;

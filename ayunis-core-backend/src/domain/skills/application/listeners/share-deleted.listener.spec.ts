@@ -2,8 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ShareDeletedListener } from './share-deleted.listener';
 import { SkillRepository } from '../ports/skill.repository';
-import { FindAllUserIdsByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
-import { FindAllUserIdsByTeamIdUseCase } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.use-case';
+import { ShareScopeResolverService } from 'src/domain/shares/application/services/share-scope-resolver.service';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
@@ -15,8 +14,7 @@ describe('ShareDeletedListener', () => {
     deactivateAllExceptOwner: jest.Mock;
     deactivateUsersNotInSet: jest.Mock;
   };
-  let findAllUserIdsByOrgId: { execute: jest.Mock };
-  let findAllUserIdsByTeamId: { execute: jest.Mock };
+  let shareScopeResolver: { resolveUserIds: jest.Mock };
 
   beforeAll(async () => {
     skillRepository = {
@@ -24,12 +22,8 @@ describe('ShareDeletedListener', () => {
       deactivateUsersNotInSet: jest.fn().mockResolvedValue(undefined),
     };
 
-    findAllUserIdsByOrgId = {
-      execute: jest.fn().mockResolvedValue([]),
-    };
-
-    findAllUserIdsByTeamId = {
-      execute: jest.fn().mockResolvedValue([]),
+    shareScopeResolver = {
+      resolveUserIds: jest.fn().mockResolvedValue(new Set()),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -37,12 +31,8 @@ describe('ShareDeletedListener', () => {
         ShareDeletedListener,
         { provide: SkillRepository, useValue: skillRepository },
         {
-          provide: FindAllUserIdsByOrgIdUseCase,
-          useValue: findAllUserIdsByOrgId,
-        },
-        {
-          provide: FindAllUserIdsByTeamIdUseCase,
-          useValue: findAllUserIdsByTeamId,
+          provide: ShareScopeResolverService,
+          useValue: shareScopeResolver,
         },
       ],
     }).compile();
@@ -92,11 +82,15 @@ describe('ShareDeletedListener', () => {
       remainingScopes,
     );
 
-    findAllUserIdsByTeamId.execute.mockResolvedValue([coveredUserId]);
+    shareScopeResolver.resolveUserIds.mockResolvedValue(
+      new Set([coveredUserId]),
+    );
 
     await listener.handleShareDeleted(event);
 
-    expect(findAllUserIdsByTeamId.execute).toHaveBeenCalledWith({ teamId });
+    expect(shareScopeResolver.resolveUserIds).toHaveBeenCalledWith(
+      remainingScopes,
+    );
     expect(skillRepository.deactivateUsersNotInSet).toHaveBeenCalledWith(
       skillId,
       ownerId,
@@ -120,11 +114,15 @@ describe('ShareDeletedListener', () => {
       remainingScopes,
     );
 
-    findAllUserIdsByOrgId.execute.mockResolvedValue([coveredUserId]);
+    shareScopeResolver.resolveUserIds.mockResolvedValue(
+      new Set([coveredUserId]),
+    );
 
     await listener.handleShareDeleted(event);
 
-    expect(findAllUserIdsByOrgId.execute).toHaveBeenCalledWith({ orgId });
+    expect(shareScopeResolver.resolveUserIds).toHaveBeenCalledWith(
+      remainingScopes,
+    );
     expect(skillRepository.deactivateUsersNotInSet).toHaveBeenCalledWith(
       skillId,
       ownerId,
@@ -133,7 +131,7 @@ describe('ShareDeletedListener', () => {
     expect(skillRepository.deactivateAllExceptOwner).not.toHaveBeenCalled();
   });
 
-  it('should merge user IDs from multiple remaining scopes without duplicates', async () => {
+  it('should pass multiple remaining scopes to the resolver', async () => {
     const skillId = randomUUID();
     const ownerId = randomUUID();
     const orgId = randomUUID();
@@ -142,28 +140,27 @@ describe('ShareDeletedListener', () => {
     const orgOnlyUserId = randomUUID();
     const teamOnlyUserId = randomUUID();
 
+    const remainingScopes = [
+      { scopeType: ShareScopeType.ORG, scopeId: orgId },
+      { scopeType: ShareScopeType.TEAM, scopeId: teamId },
+    ];
     const event = new ShareDeletedEvent(
       SharedEntityType.SKILL,
       skillId,
       ownerId,
       orgId,
-      [
-        { scopeType: ShareScopeType.ORG, scopeId: orgId },
-        { scopeType: ShareScopeType.TEAM, scopeId: teamId },
-      ],
+      remainingScopes,
     );
 
-    findAllUserIdsByOrgId.execute.mockResolvedValue([
-      sharedUserId,
-      orgOnlyUserId,
-    ]);
-    findAllUserIdsByTeamId.execute.mockResolvedValue([
-      sharedUserId,
-      teamOnlyUserId,
-    ]);
+    shareScopeResolver.resolveUserIds.mockResolvedValue(
+      new Set([sharedUserId, orgOnlyUserId, teamOnlyUserId]),
+    );
 
     await listener.handleShareDeleted(event);
 
+    expect(shareScopeResolver.resolveUserIds).toHaveBeenCalledWith(
+      remainingScopes,
+    );
     expect(skillRepository.deactivateUsersNotInSet).toHaveBeenCalledWith(
       skillId,
       ownerId,
