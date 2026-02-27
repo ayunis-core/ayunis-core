@@ -2,32 +2,47 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   useSharesControllerCreateShare,
   useSharesControllerCreateSkillShare,
+  useSharesControllerCreateKnowledgeBaseShare,
   getSharesControllerGetSharesQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type {
   CreateAgentShareDto,
   CreateSkillShareDto,
+  CreateKnowledgeBaseShareDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import {
   CreateAgentShareDtoEntityType,
   CreateSkillShareDtoEntityType,
+  CreateKnowledgeBaseShareDtoEntityType,
+  SharesControllerGetSharesEntityType,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
-type EntityType = 'agent' | 'skill';
+type EntityType = 'agent' | 'skill' | 'knowledge_base';
+
+const translationNsMap: Record<EntityType, string> = {
+  agent: 'agent',
+  skill: 'skill',
+  knowledge_base: 'knowledge-bases',
+};
+
+const sharesEntityTypeMap: Record<
+  EntityType,
+  SharesControllerGetSharesEntityType
+> = {
+  agent: SharesControllerGetSharesEntityType.agent,
+  skill: SharesControllerGetSharesEntityType.skill,
+  knowledge_base: SharesControllerGetSharesEntityType.knowledge_base,
+};
 
 export function useCreateShare(entityType: EntityType, entityId: string) {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const translationNs = entityType === 'agent' ? 'agent' : 'skill';
-  const { t } = useTranslation(translationNs);
+  const { t } = useTranslation(translationNsMap[entityType]);
 
-  const sharesEntityType =
-    entityType === 'agent'
-      ? CreateAgentShareDtoEntityType.agent
-      : CreateSkillShareDtoEntityType.skill;
+  const sharesEntityType = sharesEntityTypeMap[entityType];
 
   const settledHandler = () => {
     void queryClient.invalidateQueries({
@@ -39,21 +54,18 @@ export function useCreateShare(entityType: EntityType, entityId: string) {
     void router.invalidate();
   };
 
-  const agentMutation = useSharesControllerCreateShare({
+  const mutationOptions = {
     mutation: {
       onSuccess: () => showSuccess(t('shares.success.created')),
       onError: () => showError(t('shares.error.create')),
       onSettled: settledHandler,
     },
-  });
+  };
 
-  const skillMutation = useSharesControllerCreateSkillShare({
-    mutation: {
-      onSuccess: () => showSuccess(t('shares.success.created')),
-      onError: () => showError(t('shares.error.create')),
-      onSettled: settledHandler,
-    },
-  });
+  const agentMutation = useSharesControllerCreateShare(mutationOptions);
+  const skillMutation = useSharesControllerCreateSkillShare(mutationOptions);
+  const kbMutation =
+    useSharesControllerCreateKnowledgeBaseShare(mutationOptions);
 
   function createShare(teamId?: string) {
     if (entityType === 'agent') {
@@ -63,18 +75,28 @@ export function useCreateShare(entityType: EntityType, entityId: string) {
         ...(teamId && { teamId }),
       };
       agentMutation.mutate({ data });
-    } else {
+    } else if (entityType === 'skill') {
       const data: CreateSkillShareDto = {
         entityType: CreateSkillShareDtoEntityType.skill,
         skillId: entityId,
         ...(teamId && { teamId }),
       };
       skillMutation.mutate({ data });
+    } else {
+      const data: CreateKnowledgeBaseShareDto = {
+        entityType: CreateKnowledgeBaseShareDtoEntityType.knowledge_base,
+        knowledgeBaseId: entityId,
+        ...(teamId && { teamId }),
+      };
+      kbMutation.mutate({ data });
     }
   }
 
   return {
     createShare,
-    isCreating: agentMutation.isPending || skillMutation.isPending,
+    isCreating:
+      agentMutation.isPending ||
+      skillMutation.isPending ||
+      kbMutation.isPending,
   };
 }
