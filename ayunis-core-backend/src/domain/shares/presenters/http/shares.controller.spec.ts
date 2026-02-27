@@ -5,13 +5,19 @@ import { CreateShareUseCase } from '../../application/use-cases/create-share/cre
 import { DeleteShareUseCase } from '../../application/use-cases/delete-share/delete-share.use-case';
 import { GetSharesUseCase } from '../../application/use-cases/get-shares/get-shares.use-case';
 import { ShareDtoMapper } from './mappers/share-dto.mapper';
-import { CreateAgentShareDto } from './dto/create-share.dto';
+import {
+  CreateAgentShareDto,
+  CreateKnowledgeBaseShareDto,
+} from './dto/create-share.dto';
 import type { ShareResponseDto } from './dto/share-response.dto';
 import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
 import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
-import { AgentShare } from '../../domain/share.entity';
+import { AgentShare, KnowledgeBaseShare } from '../../domain/share.entity';
 import { OrgShareScope } from '../../domain/share-scope.entity';
-import { CreateOrgAgentShareCommand } from '../../application/use-cases/create-share/create-share.command';
+import {
+  CreateOrgAgentShareCommand,
+  CreateOrgKnowledgeBaseShareCommand,
+} from '../../application/use-cases/create-share/create-share.command';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
@@ -190,6 +196,48 @@ describe('SharesController', () => {
         entityType: SharedEntityType.AGENT,
         agentId: mockAgentId,
       });
+    });
+  });
+
+  describe('createKnowledgeBaseShare', () => {
+    it('should create a knowledge base share successfully', async () => {
+      // Arrange
+      const mockKnowledgeBaseId = randomUUID();
+      const dto = new CreateKnowledgeBaseShareDto();
+      dto.knowledgeBaseId = mockKnowledgeBaseId;
+      dto.entityType = SharedEntityType.KNOWLEDGE_BASE;
+
+      const mockShare = new KnowledgeBaseShare({
+        knowledgeBaseId: mockKnowledgeBaseId,
+        scope: new OrgShareScope({ orgId: mockOrgId }),
+        ownerId: mockUserId,
+      });
+
+      const expectedResponseDto: ShareResponseDto = {
+        id: mockShareId,
+        entityType: SharedEntityType.KNOWLEDGE_BASE,
+        entityId: mockKnowledgeBaseId,
+        scopeType: ShareScopeType.ORG,
+        ownerId: mockUserId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      (createShareUseCase.execute as jest.Mock).mockResolvedValue(mockShare);
+      (shareDtoMapper.toDto as jest.Mock).mockReturnValue(expectedResponseDto);
+
+      // Act
+      const result = await controller.createKnowledgeBaseShare(dto);
+
+      // Assert
+      expect(createShareUseCase.execute).toHaveBeenCalledWith(
+        expect.any(CreateOrgKnowledgeBaseShareCommand),
+      );
+      const command = (createShareUseCase.execute as jest.Mock).mock
+        .calls[0][0];
+      expect(command.knowledgeBaseId).toBe(mockKnowledgeBaseId);
+      expect(shareDtoMapper.toDto).toHaveBeenCalledWith(mockShare);
+      expect(result).toEqual(expectedResponseDto);
     });
   });
 
