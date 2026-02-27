@@ -45,6 +45,7 @@ import {
   CreateKnowledgeBaseShareDto,
 } from './dto/create-share.dto';
 import { ShareDtoMapper } from './mappers/share-dto.mapper';
+import { Share } from '../../domain/share.entity';
 import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
 import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
 import { TeamShareScope } from '../../domain/share-scope.entity';
@@ -61,6 +62,17 @@ export class SharesController {
     private readonly shareDtoMapper: ShareDtoMapper,
     private readonly getTeamUseCase: GetTeamUseCase,
   ) {}
+
+  private async mapShareToDto(share: Share): Promise<ShareResponseDto> {
+    if (share.scope.scopeType === ShareScopeType.TEAM) {
+      const teamScope = share.scope as TeamShareScope;
+      const team = await this.getTeamUseCase.execute(
+        new GetTeamQuery(teamScope.teamId),
+      );
+      return this.shareDtoMapper.toDto(share, team.name);
+    }
+    return this.shareDtoMapper.toDto(share);
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create a share for an agent' })
@@ -100,16 +112,7 @@ export class SharesController {
     // Execute use case
     const share = await this.createShareUseCase.execute(command);
 
-    // Map to response DTO with team name if applicable
-    if (share.scope.scopeType === ShareScopeType.TEAM) {
-      const teamScope = share.scope as TeamShareScope;
-      const team = await this.getTeamUseCase.execute(
-        new GetTeamQuery(teamScope.teamId),
-      );
-      return this.shareDtoMapper.toDto(share, team.name);
-    }
-
-    return this.shareDtoMapper.toDto(share);
+    return this.mapShareToDto(share);
   }
 
   @Post('skills')
@@ -143,15 +146,7 @@ export class SharesController {
 
     const share = await this.createShareUseCase.execute(command);
 
-    if (share.scope.scopeType === ShareScopeType.TEAM) {
-      const teamScope = share.scope as TeamShareScope;
-      const team = await this.getTeamUseCase.execute(
-        new GetTeamQuery(teamScope.teamId),
-      );
-      return this.shareDtoMapper.toDto(share, team.name);
-    }
-
-    return this.shareDtoMapper.toDto(share);
+    return this.mapShareToDto(share);
   }
 
   @Post('knowledge-bases')
@@ -188,15 +183,7 @@ export class SharesController {
 
     const share = await this.createShareUseCase.execute(command);
 
-    if (share.scope.scopeType === ShareScopeType.TEAM) {
-      const teamScope = share.scope as TeamShareScope;
-      const team = await this.getTeamUseCase.execute(
-        new GetTeamQuery(teamScope.teamId),
-      );
-      return this.shareDtoMapper.toDto(share, team.name);
-    }
-
-    return this.shareDtoMapper.toDto(share);
+    return this.mapShareToDto(share);
   }
 
   @Get()
