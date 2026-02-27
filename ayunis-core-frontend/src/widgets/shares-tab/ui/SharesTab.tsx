@@ -15,8 +15,7 @@ import {
   ItemTitle,
   ItemActions,
 } from '@/shared/ui/shadcn/item';
-
-type EntityType = 'agent' | 'skill' | 'knowledge_base';
+import { type EntityType, translationNsMap } from '../lib/constants';
 
 interface SharesTabProps {
   entityType: EntityType;
@@ -31,11 +30,6 @@ export default function SharesTab({
   shares,
   userTeams,
 }: Readonly<SharesTabProps>) {
-  const translationNsMap: Record<EntityType, string> = {
-    agent: 'agent',
-    skill: 'skill',
-    knowledge_base: 'knowledge-bases',
-  };
   const translationNs = translationNsMap[entityType];
   const { t } = useTranslation(translationNs);
   const { confirm } = useConfirmation();

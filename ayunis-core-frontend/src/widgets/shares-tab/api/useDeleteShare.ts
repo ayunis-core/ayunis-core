@@ -4,26 +4,13 @@ import {
   useSharesControllerDeleteShare,
   getSharesControllerGetSharesQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { SharesControllerGetSharesEntityType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-
-type EntityType = 'agent' | 'skill' | 'knowledge_base';
-
-const translationNsMap: Record<EntityType, string> = {
-  agent: 'agent',
-  skill: 'skill',
-  knowledge_base: 'knowledge-bases',
-};
-
-const sharesEntityTypeMap: Record<
-  EntityType,
-  SharesControllerGetSharesEntityType
-> = {
-  agent: SharesControllerGetSharesEntityType.agent,
-  skill: SharesControllerGetSharesEntityType.skill,
-  knowledge_base: SharesControllerGetSharesEntityType.knowledge_base,
-};
+import {
+  type EntityType,
+  translationNsMap,
+  sharesEntityTypeMap,
+} from '../lib/constants';
 
 export function useDeleteShare(entityType: EntityType, entityId: string) {
   const queryClient = useQueryClient();
