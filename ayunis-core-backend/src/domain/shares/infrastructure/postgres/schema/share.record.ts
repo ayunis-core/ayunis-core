@@ -11,6 +11,7 @@ import { SharedEntityType } from '../../../../../domain/shares/domain/value-obje
 import { ShareScopeRecord } from './share-scope.record';
 import { AgentRecord } from '../../../../../domain/agents/infrastructure/persistence/local/schema/agent.record';
 import { SkillRecord } from '../../../../../domain/skills/infrastructure/persistence/local/schema/skill.record';
+import { KnowledgeBaseRecord } from '../../../../../domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { UUID } from 'crypto';
 
 @Entity('shares')
@@ -46,4 +47,17 @@ export class SkillShareRecord extends ShareRecord {
   @ManyToOne(() => SkillRecord, { onDelete: 'CASCADE', nullable: false })
   @JoinColumn({ name: 'skill_id' })
   skill: SkillRecord;
+}
+
+@ChildEntity(SharedEntityType.KNOWLEDGE_BASE)
+export class KnowledgeBaseShareRecord extends ShareRecord {
+  @Column({ name: 'knowledge_base_id' })
+  knowledgeBaseId: UUID;
+
+  @ManyToOne(() => KnowledgeBaseRecord, {
+    onDelete: 'CASCADE',
+    nullable: false,
+  })
+  @JoinColumn({ name: 'knowledge_base_id' })
+  knowledgeBase: KnowledgeBaseRecord;
 }

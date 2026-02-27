@@ -10,12 +10,15 @@ import {
   CreateTeamAgentShareCommand,
   CreateOrgSkillShareCommand,
   CreateTeamSkillShareCommand,
+  CreateOrgKnowledgeBaseShareCommand,
+  CreateTeamKnowledgeBaseShareCommand,
   CreateShareCommand,
 } from './create-share.command';
 import { SharesRepository } from '../../ports/shares-repository.port';
 import {
   AgentShare,
   SkillShare,
+  KnowledgeBaseShare,
   Share,
 } from 'src/domain/shares/domain/share.entity';
 import {
@@ -29,6 +32,13 @@ import { CheckUserTeamMembershipUseCase } from 'src/iam/teams/application/use-ca
 import { CheckUserTeamMembershipQuery } from 'src/iam/teams/application/use-cases/check-user-team-membership/check-user-team-membership.query';
 import { ShareAlreadyExistsError } from '../../shares.errors';
 
+interface ShareCommandConfig {
+  entityType: SharedEntityType;
+  entityId: UUID;
+  teamId?: UUID;
+  factory: (ownerId: UUID, scope: OrgShareScope | TeamShareScope) => Share;
+}
+
 @Injectable()
 export class CreateShareUseCase {
   constructor(
@@ -40,46 +50,72 @@ export class CreateShareUseCase {
 
   async execute(command: CreateShareCommand): Promise<Share> {
     const { userId, orgId } = this.getAuthenticatedContext();
+    const config = this.resolveCommandConfig(command);
 
-    if (command instanceof CreateOrgAgentShareCommand) {
-      return this.createOrgShare(
-        SharedEntityType.AGENT,
-        command.agentId,
-        userId,
-        orgId,
-        (ownerId, scope) =>
-          new AgentShare({ agentId: command.agentId, scope, ownerId }),
-      );
-    } else if (command instanceof CreateTeamAgentShareCommand) {
+    if (config.teamId) {
       return this.createTeamShare(
-        SharedEntityType.AGENT,
-        command.agentId,
-        command.teamId,
+        config.entityType,
+        config.entityId,
+        config.teamId,
         userId,
-        (ownerId, scope) =>
-          new AgentShare({ agentId: command.agentId, scope, ownerId }),
+        config.factory,
       );
-    } else if (command instanceof CreateOrgSkillShareCommand) {
-      return this.createOrgShare(
-        SharedEntityType.SKILL,
-        command.skillId,
-        userId,
-        orgId,
-        (ownerId, scope) =>
-          new SkillShare({ skillId: command.skillId, scope, ownerId }),
-      );
-    } else if (command instanceof CreateTeamSkillShareCommand) {
-      return this.createTeamShare(
-        SharedEntityType.SKILL,
-        command.skillId,
-        command.teamId,
-        userId,
-        (ownerId, scope) =>
-          new SkillShare({ skillId: command.skillId, scope, ownerId }),
-      );
-    } else {
-      throw new Error('Unsupported share command type');
     }
+
+    return this.createOrgShare(
+      config.entityType,
+      config.entityId,
+      userId,
+      orgId,
+      config.factory,
+    );
+  }
+
+  private resolveCommandConfig(
+    command: CreateShareCommand,
+  ): ShareCommandConfig {
+    if (command instanceof CreateOrgAgentShareCommand) {
+      return this.agentConfig(command.agentId);
+    } else if (command instanceof CreateTeamAgentShareCommand) {
+      return { ...this.agentConfig(command.agentId), teamId: command.teamId };
+    } else if (command instanceof CreateOrgSkillShareCommand) {
+      return this.skillConfig(command.skillId);
+    } else if (command instanceof CreateTeamSkillShareCommand) {
+      return { ...this.skillConfig(command.skillId), teamId: command.teamId };
+    } else if (command instanceof CreateOrgKnowledgeBaseShareCommand) {
+      return this.knowledgeBaseConfig(command.knowledgeBaseId);
+    } else if (command instanceof CreateTeamKnowledgeBaseShareCommand) {
+      return {
+        ...this.knowledgeBaseConfig(command.knowledgeBaseId),
+        teamId: command.teamId,
+      };
+    }
+    throw new Error('Unsupported share command type');
+  }
+
+  private agentConfig(agentId: UUID): ShareCommandConfig {
+    return {
+      entityType: SharedEntityType.AGENT,
+      entityId: agentId,
+      factory: (ownerId, scope) => new AgentShare({ agentId, scope, ownerId }),
+    };
+  }
+
+  private skillConfig(skillId: UUID): ShareCommandConfig {
+    return {
+      entityType: SharedEntityType.SKILL,
+      entityId: skillId,
+      factory: (ownerId, scope) => new SkillShare({ skillId, scope, ownerId }),
+    };
+  }
+
+  private knowledgeBaseConfig(knowledgeBaseId: UUID): ShareCommandConfig {
+    return {
+      entityType: SharedEntityType.KNOWLEDGE_BASE,
+      entityId: knowledgeBaseId,
+      factory: (ownerId, scope) =>
+        new KnowledgeBaseShare({ knowledgeBaseId, scope, ownerId }),
+    };
   }
 
   private getAuthenticatedContext(): { userId: UUID; orgId: UUID } {
