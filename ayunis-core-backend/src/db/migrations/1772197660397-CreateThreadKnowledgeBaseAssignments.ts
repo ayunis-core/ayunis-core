@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreateThreadKnowledgeBaseAssignments1772197660397
   implements MigrationInterface
@@ -83,8 +83,6 @@ export class CreateThreadKnowledgeBaseAssignments1772197660397
     await queryRunner.query(
       `DROP INDEX "public"."IDX_d835f5fd7b2f9e332cddcf8909"`,
     );
-    await queryRunner.query(
-      `DROP TABLE "thread_knowledge_base_assignments"`,
-    );
+    await queryRunner.query(`DROP TABLE "thread_knowledge_base_assignments"`);
   }
 }

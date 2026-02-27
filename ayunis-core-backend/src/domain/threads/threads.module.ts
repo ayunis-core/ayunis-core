@@ -29,6 +29,8 @@ import { AddMcpIntegrationToThreadUseCase } from './application/use-cases/add-mc
 import { AddKnowledgeBaseToThreadUseCase } from './application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.use-case';
 import { RemoveKnowledgeBaseFromThreadUseCase } from './application/use-cases/remove-knowledge-base-from-thread/remove-knowledge-base-from-thread.use-case';
 import { RemoveSkillSourcesFromThreadsUseCase } from './application/use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.use-case';
+import { RemoveKbAssignmentsByOriginSkillUseCase } from './application/use-cases/remove-kb-assignments-by-origin-skill/remove-kb-assignments-by-origin-skill.use-case';
+import { RemoveDirectKbFromThreadsUseCase } from './application/use-cases/remove-direct-kb-from-threads/remove-direct-kb-from-threads.use-case';
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { AgentsModule } from '../agents/agents.module';
 import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
@@ -73,6 +75,8 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
     AddKnowledgeBaseToThreadUseCase,
     RemoveKnowledgeBaseFromThreadUseCase,
     RemoveSkillSourcesFromThreadsUseCase,
+    RemoveKbAssignmentsByOriginSkillUseCase,
+    RemoveDirectKbFromThreadsUseCase,
     // Listeners
     ShareDeletedListener,
     // Mappers
@@ -97,6 +101,8 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
     AddKnowledgeBaseToThreadUseCase,
     RemoveKnowledgeBaseFromThreadUseCase,
     RemoveSkillSourcesFromThreadsUseCase,
+    RemoveKbAssignmentsByOriginSkillUseCase,
+    RemoveDirectKbFromThreadsUseCase,
     // Export mappers
     GetThreadDtoMapper,
     GetThreadsDtoMapper,

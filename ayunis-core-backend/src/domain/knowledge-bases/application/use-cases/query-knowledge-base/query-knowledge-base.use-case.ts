@@ -14,6 +14,7 @@ import type { UUID } from 'crypto';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { KnowledgeBaseAccessService } from '../../services/knowledge-base-access.service';
 
 export interface KnowledgeBaseQueryResult {
   chunk: TextSourceContentChunk;
@@ -29,6 +30,7 @@ export class QueryKnowledgeBaseUseCase {
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly searchContentUseCase: SearchContentUseCase,
     private readonly contextService: ContextService,
+    private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
   ) {}
 
   async execute(
@@ -58,12 +60,10 @@ export class QueryKnowledgeBaseUseCase {
       knowledgeBaseId: query.knowledgeBaseId,
     });
 
-    const knowledgeBase = await this.knowledgeBaseRepository.findById(
-      query.knowledgeBaseId,
-    );
-    if (knowledgeBase?.userId !== query.userId) {
-      throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);
-    }
+    const knowledgeBase =
+      await this.knowledgeBaseAccessService.findAccessibleKnowledgeBase(
+        query.knowledgeBaseId,
+      );
 
     if (knowledgeBase.orgId !== orgId) {
       throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);

@@ -1,6 +1,14 @@
 import { UUID } from 'crypto';
 import { MessageRecord } from '../../../../../messages/infrastructure/persistence/local/schema/message.record';
-import { Column, Entity, OneToMany, Index, ManyToOne, ManyToMany, JoinTable } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  Index,
+  ManyToOne,
+  ManyToMany,
+  JoinTable,
+} from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { PermittedModelRecord } from '../../../../../models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
 import { AgentRecord } from '../../../../../agents/infrastructure/persistence/local/schema/agent.record';
