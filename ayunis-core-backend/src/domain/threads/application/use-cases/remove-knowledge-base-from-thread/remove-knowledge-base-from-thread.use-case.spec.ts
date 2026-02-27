@@ -6,6 +6,7 @@ import { RemoveKnowledgeBaseFromThreadCommand } from './remove-knowledge-base-fr
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Thread } from '../../../domain/thread.entity';
+import { KnowledgeBaseAssignment } from '../../../domain/thread-knowledge-base-assignment.entity';
 import { ThreadNotFoundError } from '../../threads.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
@@ -23,7 +24,7 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
   beforeAll(async () => {
     const mockThreadsRepository = {
       findOne: jest.fn(),
-      updateKnowledgeBases: jest.fn(),
+      removeKnowledgeBaseAssignment: jest.fn(),
     };
 
     mockContextService = {
@@ -52,19 +53,28 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('should remove a knowledge base from a thread', async () => {
+  it('should remove a direct knowledge base assignment from a thread', async () => {
     const thread = new Thread({
       id: mockThreadId,
       userId: mockUserId,
       messages: [],
-      knowledgeBases: [
-        { id: mockKbId, name: 'Municipal Zoning Guidelines' },
-        { id: mockKbId2, name: 'Building Permits Documentation' },
+      knowledgeBaseAssignments: [
+        new KnowledgeBaseAssignment({
+          knowledgeBase: { id: mockKbId, name: 'Municipal Zoning Guidelines' },
+        }),
+        new KnowledgeBaseAssignment({
+          knowledgeBase: {
+            id: mockKbId2,
+            name: 'Building Permits Documentation',
+          },
+        }),
       ],
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    threadsRepository.updateKnowledgeBases.mockResolvedValue(undefined);
+    threadsRepository.removeKnowledgeBaseAssignment.mockResolvedValue(
+      undefined,
+    );
 
     const command = new RemoveKnowledgeBaseFromThreadCommand(
       mockThreadId,
@@ -73,23 +83,72 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
 
     await useCase.execute(command);
 
-    expect(threadsRepository.updateKnowledgeBases).toHaveBeenCalledWith({
+    expect(
+      threadsRepository.removeKnowledgeBaseAssignment,
+    ).toHaveBeenCalledWith({
       threadId: mockThreadId,
       userId: mockUserId,
-      knowledgeBaseIds: [mockKbId2],
+      knowledgeBaseId: mockKbId,
+      originSkillId: undefined,
     });
   });
 
-  it('should result in empty array when removing the last knowledge base', async () => {
+  it('should remove only the matching originSkillId assignment', async () => {
+    const mockSkillId = '123e4567-e89b-12d3-a456-426614174050' as UUID;
     const thread = new Thread({
       id: mockThreadId,
       userId: mockUserId,
       messages: [],
-      knowledgeBases: [{ id: mockKbId, name: 'Municipal Zoning Guidelines' }],
+      knowledgeBaseAssignments: [
+        new KnowledgeBaseAssignment({
+          knowledgeBase: { id: mockKbId, name: 'Municipal Zoning Guidelines' },
+        }),
+        new KnowledgeBaseAssignment({
+          knowledgeBase: { id: mockKbId, name: 'Municipal Zoning Guidelines' },
+          originSkillId: mockSkillId,
+        }),
+      ],
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    threadsRepository.updateKnowledgeBases.mockResolvedValue(undefined);
+    threadsRepository.removeKnowledgeBaseAssignment.mockResolvedValue(
+      undefined,
+    );
+
+    const command = new RemoveKnowledgeBaseFromThreadCommand(
+      mockThreadId,
+      mockKbId,
+      mockSkillId,
+    );
+
+    await useCase.execute(command);
+
+    expect(
+      threadsRepository.removeKnowledgeBaseAssignment,
+    ).toHaveBeenCalledWith({
+      threadId: mockThreadId,
+      userId: mockUserId,
+      knowledgeBaseId: mockKbId,
+      originSkillId: mockSkillId,
+    });
+  });
+
+  it('should remove the last knowledge base from a thread', async () => {
+    const thread = new Thread({
+      id: mockThreadId,
+      userId: mockUserId,
+      messages: [],
+      knowledgeBaseAssignments: [
+        new KnowledgeBaseAssignment({
+          knowledgeBase: { id: mockKbId, name: 'Municipal Zoning Guidelines' },
+        }),
+      ],
+    });
+
+    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.removeKnowledgeBaseAssignment.mockResolvedValue(
+      undefined,
+    );
 
     const command = new RemoveKnowledgeBaseFromThreadCommand(
       mockThreadId,
@@ -98,10 +157,13 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
 
     await useCase.execute(command);
 
-    expect(threadsRepository.updateKnowledgeBases).toHaveBeenCalledWith({
+    expect(
+      threadsRepository.removeKnowledgeBaseAssignment,
+    ).toHaveBeenCalledWith({
       threadId: mockThreadId,
       userId: mockUserId,
-      knowledgeBaseIds: [],
+      knowledgeBaseId: mockKbId,
+      originSkillId: undefined,
     });
   });
 
@@ -110,7 +172,11 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
       id: mockThreadId,
       userId: mockUserId,
       messages: [],
-      knowledgeBases: [{ id: mockKbId, name: 'Municipal Zoning Guidelines' }],
+      knowledgeBaseAssignments: [
+        new KnowledgeBaseAssignment({
+          knowledgeBase: { id: mockKbId, name: 'Municipal Zoning Guidelines' },
+        }),
+      ],
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
@@ -122,7 +188,37 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
 
     await useCase.execute(command);
 
-    expect(threadsRepository.updateKnowledgeBases).not.toHaveBeenCalled();
+    expect(
+      threadsRepository.removeKnowledgeBaseAssignment,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('should not remove direct assignment when requesting skill-originated removal', async () => {
+    const mockSkillId = '123e4567-e89b-12d3-a456-426614174050' as UUID;
+    const thread = new Thread({
+      id: mockThreadId,
+      userId: mockUserId,
+      messages: [],
+      knowledgeBaseAssignments: [
+        new KnowledgeBaseAssignment({
+          knowledgeBase: { id: mockKbId, name: 'Municipal Zoning Guidelines' },
+        }),
+      ],
+    });
+
+    threadsRepository.findOne.mockResolvedValue(thread);
+
+    const command = new RemoveKnowledgeBaseFromThreadCommand(
+      mockThreadId,
+      mockKbId,
+      mockSkillId,
+    );
+
+    await useCase.execute(command);
+
+    expect(
+      threadsRepository.removeKnowledgeBaseAssignment,
+    ).not.toHaveBeenCalled();
   });
 
   it('should throw ThreadNotFoundError when thread does not exist', async () => {
