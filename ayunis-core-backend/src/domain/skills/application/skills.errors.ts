@@ -13,7 +13,6 @@ export enum SkillErrorCode {
   MCP_INTEGRATION_NOT_ASSIGNED = 'MCP_INTEGRATION_NOT_ASSIGNED',
   KNOWLEDGE_BASE_NOT_FOUND = 'KNOWLEDGE_BASE_NOT_FOUND',
   KNOWLEDGE_BASE_ALREADY_ASSIGNED = 'KNOWLEDGE_BASE_ALREADY_ASSIGNED',
-  KNOWLEDGE_BASE_WRONG_ORGANIZATION = 'KNOWLEDGE_BASE_WRONG_ORGANIZATION',
   KNOWLEDGE_BASE_NOT_ASSIGNED = 'KNOWLEDGE_BASE_NOT_ASSIGNED',
   MISSING_FILE = 'MISSING_FILE',
   UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
@@ -150,17 +149,6 @@ export class SkillKnowledgeBaseAlreadyAssignedError extends SkillError {
       `Knowledge base with ID ${knowledgeBaseId} is already assigned to this skill`,
       SkillErrorCode.KNOWLEDGE_BASE_ALREADY_ASSIGNED,
       409,
-      metadata,
-    );
-  }
-}
-
-export class SkillKnowledgeBaseWrongOrganizationError extends SkillError {
-  constructor(knowledgeBaseId: string, metadata?: ErrorMetadata) {
-    super(
-      `Knowledge base with ID ${knowledgeBaseId} does not belong to your organization`,
-      SkillErrorCode.KNOWLEDGE_BASE_WRONG_ORGANIZATION,
-      403,
       metadata,
     );
   }

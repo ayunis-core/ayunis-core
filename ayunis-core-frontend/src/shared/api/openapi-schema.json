@@ -246,7 +246,7 @@
     },
     "/models/default": {
       "get": {
-        "description": "Returns the applicable default model with fallback hierarchy: User default → Org default → First available model",
+        "description": "Returns the applicable default model with fallback hierarchy: User default \u2192 Org default \u2192 First available model",
         "operationId": "ModelsController_getEffectiveDefaultModel",
         "parameters": [],
         "responses": {
@@ -5687,6 +5687,138 @@
         ]
       }
     },
+    "/skills/{skillId}/knowledge-bases/{knowledgeBaseId}": {
+      "post": {
+        "operationId": "SkillKnowledgeBasesController_assignKnowledgeBase",
+        "parameters": [
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the skill",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "knowledgeBaseId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base to assign",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "The knowledge base has been successfully assigned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill or knowledge base not found"
+          },
+          "409": {
+            "description": "Knowledge base already assigned"
+          }
+        },
+        "summary": "Assign knowledge base to skill",
+        "tags": [
+          "skills"
+        ]
+      },
+      "delete": {
+        "operationId": "SkillKnowledgeBasesController_unassignKnowledgeBase",
+        "parameters": [
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the skill",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "knowledgeBaseId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base to unassign",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The knowledge base has been successfully unassigned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill not found or knowledge base not assigned"
+          }
+        },
+        "summary": "Unassign knowledge base from skill",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
+    "/skills/{skillId}/knowledge-bases": {
+      "get": {
+        "operationId": "SkillKnowledgeBasesController_listSkillKnowledgeBases",
+        "parameters": [
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the skill",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns all knowledge bases assigned to the skill",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KnowledgeBaseResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill not found"
+          }
+        },
+        "summary": "List knowledge bases assigned to skill",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
     "/runs/send-message": {
       "post": {
         "description": "Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.",
@@ -8975,7 +9107,7 @@
           "street": {
             "type": "string",
             "description": "Street",
-            "example": "Musterstraße"
+            "example": "Musterstra\u00dfe"
           },
           "houseNumber": {
             "type": "string",
@@ -9618,7 +9750,7 @@
           "result": {
             "type": "string",
             "description": "The result returned by the tool",
-            "example": "The current temperature in New York is 22°C with partly cloudy skies."
+            "example": "The current temperature in New York is 22\u00b0C with partly cloudy skies."
           }
         },
         "required": [
@@ -10574,10 +10706,10 @@
           },
           "orgConfigValues": {
             "type": "object",
-            "description": "Current org-level config values for marketplace integrations. Non-secret fields contain plaintext values. Secret fields are masked with \"••••••\".",
+            "description": "Current org-level config values for marketplace integrations. Non-secret fields contain plaintext values. Secret fields are masked with \"\u2022\u2022\u2022\u2022\u2022\u2022\".",
             "example": {
               "endpointUrl": "https://example.com/api",
-              "apiToken": "••••••"
+              "apiToken": "\u2022\u2022\u2022\u2022\u2022\u2022"
             }
           },
           "logoUrl": {
@@ -11160,9 +11292,9 @@
           },
           "configValues": {
             "type": "object",
-            "description": "Configuration values with secret values masked (keys present, values replaced with \"••••••\")",
+            "description": "Configuration values with secret values masked (keys present, values replaced with \"\u2022\u2022\u2022\u2022\u2022\u2022\")",
             "example": {
-              "personalToken": "••••••"
+              "personalToken": "\u2022\u2022\u2022\u2022\u2022\u2022"
             },
             "additionalProperties": {
               "type": "string"
@@ -12074,7 +12206,7 @@
           "result": {
             "type": "string",
             "description": "The result data from the tool execution",
-            "example": "{\"location\":\"New York\",\"forecast\":\"Partly cloudy with a high of 75°F and a low of 60°F\",\"precipitation\":\"20%\"}"
+            "example": "{\"location\":\"New York\",\"forecast\":\"Partly cloudy with a high of 75\u00b0F and a low of 60\u00b0F\",\"precipitation\":\"20%\"}"
           }
         },
         "required": [
@@ -12119,7 +12251,7 @@
           },
           "skillId": {
             "type": "string",
-            "description": "Skill ID to activate for this message — injects skill instructions and resources into the thread",
+            "description": "Skill ID to activate for this message \u2014 injects skill instructions and resources into the thread",
             "example": "550e8400-e29b-41d4-a716-446655440000"
           },
           "streaming": {

@@ -11,7 +11,7 @@ import { Logger } from '@nestjs/common';
 import { AssignKnowledgeBaseToSkillUseCase } from './assign-knowledge-base-to-skill.use-case';
 import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-skill.command';
 import { SkillRepository } from '../../ports/skill.repository';
-import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { GetKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Skill } from '../../../domain/skill.entity';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
@@ -19,7 +19,6 @@ import {
   SkillNotFoundError,
   SkillKnowledgeBaseNotFoundError,
   SkillKnowledgeBaseAlreadyAssignedError,
-  SkillKnowledgeBaseWrongOrganizationError,
   UnexpectedSkillError,
 } from '../../skills.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -28,7 +27,7 @@ import type { UUID } from 'crypto';
 describe('AssignKnowledgeBaseToSkillUseCase', () => {
   let useCase: AssignKnowledgeBaseToSkillUseCase;
   let skillRepository: jest.Mocked<SkillRepository>;
-  let knowledgeBaseRepository: jest.Mocked<KnowledgeBaseRepository>;
+  let getKnowledgeBasesByIdsUseCase: jest.Mocked<GetKnowledgeBasesByIdsUseCase>;
   let contextService: jest.Mocked<ContextService>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -42,8 +41,8 @@ describe('AssignKnowledgeBaseToSkillUseCase', () => {
       update: jest.fn(),
     };
 
-    const mockKnowledgeBaseRepository = {
-      findById: jest.fn(),
+    const mockGetKnowledgeBasesByIdsUseCase = {
+      execute: jest.fn(),
     };
 
     const mockContextService = {
@@ -59,8 +58,8 @@ describe('AssignKnowledgeBaseToSkillUseCase', () => {
         AssignKnowledgeBaseToSkillUseCase,
         { provide: SkillRepository, useValue: mockSkillRepository },
         {
-          provide: KnowledgeBaseRepository,
-          useValue: mockKnowledgeBaseRepository,
+          provide: GetKnowledgeBasesByIdsUseCase,
+          useValue: mockGetKnowledgeBasesByIdsUseCase,
         },
         { provide: ContextService, useValue: mockContextService },
       ],
@@ -68,7 +67,7 @@ describe('AssignKnowledgeBaseToSkillUseCase', () => {
 
     useCase = module.get(AssignKnowledgeBaseToSkillUseCase);
     skillRepository = module.get(SkillRepository);
-    knowledgeBaseRepository = module.get(KnowledgeBaseRepository);
+    getKnowledgeBasesByIdsUseCase = module.get(GetKnowledgeBasesByIdsUseCase);
     contextService = module.get(ContextService);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
@@ -110,7 +109,7 @@ describe('AssignKnowledgeBaseToSkillUseCase', () => {
     const kb = createMockKnowledgeBase();
 
     skillRepository.findOne.mockResolvedValue(skill);
-    knowledgeBaseRepository.findById.mockResolvedValue(kb);
+    getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([kb]);
     skillRepository.update.mockImplementation(async (s: Skill) => s);
 
     const result = await useCase.execute(command);
@@ -159,7 +158,7 @@ describe('AssignKnowledgeBaseToSkillUseCase', () => {
   it('should throw SkillKnowledgeBaseNotFoundError when KB does not exist', async () => {
     const skill = createMockSkill();
     skillRepository.findOne.mockResolvedValue(skill);
-    knowledgeBaseRepository.findById.mockResolvedValue(null);
+    getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([]);
 
     const command = new AssignKnowledgeBaseToSkillCommand(
       mockSkillId,
@@ -171,13 +170,11 @@ describe('AssignKnowledgeBaseToSkillUseCase', () => {
     );
   });
 
-  it('should throw SkillKnowledgeBaseWrongOrganizationError when KB belongs to different org', async () => {
+  it('should throw SkillKnowledgeBaseNotFoundError when KB belongs to different org', async () => {
     const skill = createMockSkill();
-    const otherOrgId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
-    const kb = createMockKnowledgeBase(mockKbId, otherOrgId);
-
     skillRepository.findOne.mockResolvedValue(skill);
-    knowledgeBaseRepository.findById.mockResolvedValue(kb);
+    // GetKnowledgeBasesByIdsUseCase filters by org — returns empty for wrong org
+    getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([]);
 
     const command = new AssignKnowledgeBaseToSkillCommand(
       mockSkillId,
@@ -185,7 +182,7 @@ describe('AssignKnowledgeBaseToSkillUseCase', () => {
     );
 
     await expect(useCase.execute(command)).rejects.toThrow(
-      SkillKnowledgeBaseWrongOrganizationError,
+      SkillKnowledgeBaseNotFoundError,
     );
   });
 
@@ -194,7 +191,7 @@ describe('AssignKnowledgeBaseToSkillUseCase', () => {
     const kb = createMockKnowledgeBase();
 
     skillRepository.findOne.mockResolvedValue(skill);
-    knowledgeBaseRepository.findById.mockResolvedValue(kb);
+    getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([kb]);
 
     const command = new AssignKnowledgeBaseToSkillCommand(
       mockSkillId,
