@@ -3,9 +3,7 @@ import { randomUUID } from 'crypto';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import type { SourceAssignment } from './thread-source-assignment.entity';
-import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
-
-export type { KnowledgeBaseSummary };
+import type { KnowledgeBaseAssignment } from './thread-knowledge-base-assignment.entity';
 
 export class Thread {
   id: UUID;
@@ -14,7 +12,7 @@ export class Thread {
   agentId?: UUID;
   sourceAssignments?: SourceAssignment[];
   mcpIntegrationIds: UUID[];
-  knowledgeBases?: KnowledgeBaseSummary[];
+  knowledgeBaseAssignments?: KnowledgeBaseAssignment[];
   title?: string;
   messages: Message[];
   isAnonymous: boolean;
@@ -28,7 +26,7 @@ export class Thread {
     agentId?: UUID;
     sourceAssignments?: SourceAssignment[];
     mcpIntegrationIds?: UUID[];
-    knowledgeBases?: KnowledgeBaseSummary[];
+    knowledgeBaseAssignments?: KnowledgeBaseAssignment[];
     title?: string;
     messages: Message[];
     isAnonymous?: boolean;
@@ -41,7 +39,7 @@ export class Thread {
     this.agentId = params.agentId;
     this.sourceAssignments = params.sourceAssignments;
     this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
-    this.knowledgeBases = params.knowledgeBases;
+    this.knowledgeBaseAssignments = params.knowledgeBaseAssignments;
     this.title = params.title;
     this.messages = params.messages;
     this.isAnonymous = params.isAnonymous ?? false;

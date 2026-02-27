@@ -33,6 +33,7 @@ import {
   type SkillPrefix,
 } from 'src/common/util/skill-slug';
 import type { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
+import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -107,7 +108,7 @@ export class ToolAssemblyService {
       // Only include skills in prompt when tools are enabled and skills feature is on,
       // otherwise the prompt would instruct the model to use activate_skill which isn't available
       skills: canUseTools && this.features.skillsEnabled ? skillEntries : [],
-      knowledgeBases: canUseTools ? (thread.knowledgeBases ?? []) : [],
+      knowledgeBases: canUseTools ? this.deduplicateKnowledgeBases(thread) : [],
       userSystemPrompt,
     });
 
@@ -402,13 +403,14 @@ export class ToolAssemblyService {
     }
 
     // Knowledge base tools are available if the thread has knowledge bases
+    const knowledgeBases = this.deduplicateKnowledgeBases(thread);
 
-    if ((thread.knowledgeBases?.length ?? 0) > 0) {
+    if (knowledgeBases.length > 0) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
             type: ToolType.KNOWLEDGE_QUERY,
-            context: thread.knowledgeBases,
+            context: knowledgeBases,
           }),
         ),
       );
@@ -417,7 +419,7 @@ export class ToolAssemblyService {
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
             type: ToolType.KNOWLEDGE_GET_TEXT,
-            context: thread.knowledgeBases,
+            context: knowledgeBases,
           }),
         ),
       );
@@ -436,5 +438,22 @@ export class ToolAssemblyService {
     }
 
     return tools;
+  }
+
+  /**
+   * Deduplicate knowledge bases by knowledgeBaseId.
+   * The same KB can appear multiple times in thread.knowledgeBaseAssignments
+   * when it was assigned by different origin skills.
+   */
+  private deduplicateKnowledgeBases(thread: Thread): KnowledgeBaseSummary[] {
+    const seen = new Set<UUID>();
+    const result: KnowledgeBaseSummary[] = [];
+    for (const assignment of thread.knowledgeBaseAssignments ?? []) {
+      if (!seen.has(assignment.knowledgeBase.id)) {
+        seen.add(assignment.knowledgeBase.id);
+        result.push(assignment.knowledgeBase);
+      }
+    }
+    return result;
   }
 }
