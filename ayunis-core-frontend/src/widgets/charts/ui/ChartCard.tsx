@@ -9,6 +9,7 @@ import {
   Card,
   CardHeader,
   CardTitle,
+  CardAction,
   CardContent,
   CardFooter,
 } from '@/shared/ui/shadcn/card';
@@ -48,17 +49,23 @@ export function ChartCard({
 
   return (
     <Card className={cn('my-2', className)} ref={chartRef}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+      <CardHeader>
         {title && <CardTitle>{title}</CardTitle>}
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => void download()}
-          disabled={isDownloading}
-          aria-label="Download chart as image"
-        >
-          {isDownloading ? <Loader2 className="animate-spin" /> : <Download />}
-        </Button>
+        <CardAction data-exclude-from-export>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => void download()}
+            disabled={isDownloading}
+            aria-label="Download chart as image"
+          >
+            {isDownloading ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <Download />
+            )}
+          </Button>
+        </CardAction>
       </CardHeader>
 
       <CardContent className="overflow-auto">

@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
+import { slugifyForCssVar } from './ChartUtils';
 
 export function useDownloadChartImage(title?: string) {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -14,10 +15,16 @@ export function useDownloadChartImage(title?: string) {
       const dataUrl = await toPng(node, {
         backgroundColor: '#ffffff',
         pixelRatio: 2,
+        filter: (domNode) => {
+          if (domNode instanceof Element) {
+            return !domNode.hasAttribute('data-exclude-from-export');
+          }
+          return true;
+        },
       });
 
       const link = document.createElement('a');
-      link.download = `${slugify(title ?? 'chart')}.png`;
+      link.download = `${slugifyForCssVar(title ?? 'chart')}.png`;
       link.href = dataUrl;
       link.click();
     } finally {
@@ -26,11 +33,4 @@ export function useDownloadChartImage(title?: string) {
   }, [title]);
 
   return { chartRef, download, isDownloading };
-}
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
 }
