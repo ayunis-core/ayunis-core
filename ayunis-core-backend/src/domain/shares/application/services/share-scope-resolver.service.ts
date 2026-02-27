@@ -16,6 +16,12 @@ export class ShareScopeResolverService {
     private readonly findAllUserIdsByTeamId: FindAllUserIdsByTeamIdUseCase,
   ) {}
 
+  async resolveAllOrgUserIds(orgId: UUID): Promise<UUID[]> {
+    return this.findAllUserIdsByOrgId.execute(
+      new FindAllUserIdsByOrgIdQuery(orgId),
+    );
+  }
+
   async resolveUserIds(scopes: RemainingShareScope[]): Promise<Set<UUID>> {
     const userIds = new Set<UUID>();
 

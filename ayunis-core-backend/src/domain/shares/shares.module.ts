@@ -74,6 +74,7 @@ import { UsersModule } from 'src/iam/users/users.module';
   ],
   controllers: [SharesController],
   exports: [
+    SharesRepository,
     CreateShareUseCase,
     DeleteShareUseCase,
     FindSharesByScopeUseCase,
