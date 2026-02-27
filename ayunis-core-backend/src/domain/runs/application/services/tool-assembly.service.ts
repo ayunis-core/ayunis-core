@@ -22,7 +22,6 @@ import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-c
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import { featuresConfig } from 'src/config/features.config';
-import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -79,7 +78,7 @@ export class ToolAssemblyService {
       // otherwise the prompt would instruct the model to use activate_skill which isn't available
       skills: canUseTools && this.features.skillsEnabled ? activeSkills : [],
 
-      knowledgeBases: canUseTools ? this.deduplicateKnowledgeBases(thread) : [],
+      knowledgeBases: canUseTools ? thread.getUniqueKnowledgeBases() : [],
       userSystemPrompt,
     });
 
@@ -322,7 +321,7 @@ export class ToolAssemblyService {
     }
 
     // Knowledge base tools are available if the thread has knowledge bases
-    const knowledgeBases = this.deduplicateKnowledgeBases(thread);
+    const knowledgeBases = thread.getUniqueKnowledgeBases();
 
     if (knowledgeBases.length > 0) {
       tools.push(
@@ -357,22 +356,5 @@ export class ToolAssemblyService {
     }
 
     return tools;
-  }
-
-  /**
-   * Deduplicate knowledge bases by knowledgeBaseId.
-   * The same KB can appear multiple times in thread.knowledgeBaseAssignments
-   * when it was assigned by different origin skills.
-   */
-  private deduplicateKnowledgeBases(thread: Thread): KnowledgeBaseSummary[] {
-    const seen = new Set<UUID>();
-    const result: KnowledgeBaseSummary[] = [];
-    for (const assignment of thread.knowledgeBaseAssignments ?? []) {
-      if (!seen.has(assignment.knowledgeBase.id)) {
-        seen.add(assignment.knowledgeBase.id);
-        result.push(assignment.knowledgeBase);
-      }
-    }
-    return result;
   }
 }

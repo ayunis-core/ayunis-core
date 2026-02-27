@@ -4,6 +4,7 @@ import type { Message } from 'src/domain/messages/domain/message.entity';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import type { SourceAssignment } from './thread-source-assignment.entity';
 import type { KnowledgeBaseAssignment } from './thread-knowledge-base-assignment.entity';
+import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 
 export class Thread {
   id: UUID;
@@ -49,5 +50,22 @@ export class Thread {
 
   getLastMessage(): Message | undefined {
     return this.messages.at(-1);
+  }
+
+  /**
+   * Get unique knowledge bases, deduplicated by knowledgeBase.id.
+   * The same KB can appear multiple times in knowledgeBaseAssignments
+   * when it was assigned by different origin skills.
+   */
+  getUniqueKnowledgeBases(): KnowledgeBaseSummary[] {
+    const seen = new Set<UUID>();
+    const result: KnowledgeBaseSummary[] = [];
+    for (const assignment of this.knowledgeBaseAssignments ?? []) {
+      if (!seen.has(assignment.knowledgeBase.id)) {
+        seen.add(assignment.knowledgeBase.id);
+        result.push(assignment.knowledgeBase);
+      }
+    }
+    return result;
   }
 }
