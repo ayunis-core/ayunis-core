@@ -391,4 +391,54 @@ export class LocalSkillRepository implements SkillRepository {
 
     return new Set(activations.map((a) => a.skillId));
   }
+
+  async findSkillsByKnowledgeBaseAndOwners(
+    knowledgeBaseId: UUID,
+    ownerIds: UUID[],
+  ): Promise<Skill[]> {
+    this.logger.log('findSkillsByKnowledgeBaseAndOwners', {
+      knowledgeBaseId,
+      ownerCount: ownerIds.length,
+    });
+
+    if (ownerIds.length === 0) return [];
+
+    const manager = this.getManager();
+    const records = await manager
+      .createQueryBuilder(SkillRecord, 'skill')
+      .innerJoin(
+        'skill_knowledge_bases',
+        'skb',
+        'skb."skillsId" = skill.id AND skb."knowledgeBasesId" = :kbId',
+        { kbId: knowledgeBaseId },
+      )
+      .leftJoinAndSelect('skill.sources', 'sources')
+      .leftJoinAndSelect('skill.mcpIntegrations', 'mcpIntegrations')
+      .leftJoinAndSelect('skill.knowledgeBases', 'knowledgeBases')
+      .where('skill.userId IN (:...ownerIds)', { ownerIds })
+      .getMany();
+
+    return records.map((r) => this.skillMapper.toDomain(r));
+  }
+
+  async removeKnowledgeBaseFromSkills(
+    knowledgeBaseId: UUID,
+    skillIds: UUID[],
+  ): Promise<void> {
+    this.logger.log('removeKnowledgeBaseFromSkills', {
+      knowledgeBaseId,
+      skillCount: skillIds.length,
+    });
+
+    if (skillIds.length === 0) return;
+
+    const manager = this.getManager();
+    await manager
+      .createQueryBuilder()
+      .delete()
+      .from('skill_knowledge_bases')
+      .where('"knowledgeBasesId" = :kbId', { kbId: knowledgeBaseId })
+      .andWhere('"skillsId" IN (:...skillIds)', { skillIds })
+      .execute();
+  }
 }

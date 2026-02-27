@@ -29,4 +29,12 @@ export abstract class SkillRepository {
   abstract toggleSkillPinned(skillId: UUID, userId: UUID): Promise<boolean>;
   abstract isSkillPinned(skillId: UUID, userId: UUID): Promise<boolean>;
   abstract getPinnedSkillIds(userId: UUID): Promise<Set<UUID>>;
+  abstract findSkillsByKnowledgeBaseAndOwners(
+    knowledgeBaseId: UUID,
+    ownerIds: UUID[],
+  ): Promise<Skill[]>;
+  abstract removeKnowledgeBaseFromSkills(
+    knowledgeBaseId: UUID,
+    skillIds: UUID[],
+  ): Promise<void>;
 }
