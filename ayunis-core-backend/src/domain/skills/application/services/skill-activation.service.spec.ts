@@ -220,7 +220,7 @@ describe('SkillActivationService', () => {
       );
     });
 
-    it('should copy knowledge bases to the thread', async () => {
+    it('should copy knowledge bases to the thread with originSkillId', async () => {
       const thread = makeThread();
       const skill = makeSkill({
         sourceIds: [],
@@ -238,12 +238,14 @@ describe('SkillActivationService', () => {
         expect.objectContaining({
           threadId: thread.id,
           knowledgeBaseId: knowledgeBaseId1,
+          originSkillId: skillId,
         }),
       );
       expect(addKnowledgeBaseToThreadUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           threadId: thread.id,
           knowledgeBaseId: knowledgeBaseId2,
+          originSkillId: skillId,
         }),
       );
     });
