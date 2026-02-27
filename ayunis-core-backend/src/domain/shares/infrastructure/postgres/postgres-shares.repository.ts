@@ -68,6 +68,13 @@ export class PostgresSharesRepository extends SharesRepository {
         .where('share.skill_id = :entityId', { entityId })
         .orderBy('share.createdAt', 'DESC')
         .getMany();
+    } else if (entityType === SharedEntityType.KNOWLEDGE_BASE) {
+      records = await this.shareRepository
+        .createQueryBuilder('share')
+        .leftJoinAndSelect('share.scope', 'scope')
+        .where('share.knowledge_base_id = :entityId', { entityId })
+        .orderBy('share.createdAt', 'DESC')
+        .getMany();
     }
 
     return records.map((record) => this.mapper.toDomain(record));
@@ -111,10 +118,13 @@ export class PostgresSharesRepository extends SharesRepository {
   ): Promise<Share | null> {
     let record: ShareRecord | null = null;
 
-    const entityColumn =
-      entityType === SharedEntityType.AGENT
-        ? 'share.agent_id'
-        : 'share.skill_id';
+    const entityColumnMap: Record<SharedEntityType, string> = {
+      [SharedEntityType.AGENT]: 'share.agent_id',
+      [SharedEntityType.SKILL]: 'share.skill_id',
+      [SharedEntityType.KNOWLEDGE_BASE]: 'share.knowledge_base_id',
+      [SharedEntityType.PROMPT]: 'share.agent_id', // unused, prompt shares not implemented
+    };
+    const entityColumn = entityColumnMap[entityType];
 
     if (scopeType === ShareScopeType.ORG) {
       record = await this.shareRepository
