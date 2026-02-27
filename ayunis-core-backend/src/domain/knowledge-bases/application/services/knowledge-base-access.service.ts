@@ -62,10 +62,9 @@ export class KnowledgeBaseAccessService {
    */
   async findOneAccessible(
     id: UUID,
-    userId: UUID,
   ): Promise<KnowledgeBaseWithShareStatus> {
-    const contextUserId = this.contextService.get('userId');
-    if (!contextUserId) {
+    const userId = this.contextService.get('userId');
+    if (!userId) {
       throw new UnauthorizedAccessError();
     }
 
