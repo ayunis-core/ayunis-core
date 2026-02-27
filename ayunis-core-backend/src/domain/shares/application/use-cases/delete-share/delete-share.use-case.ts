@@ -10,7 +10,7 @@ import {
   RemainingShareScope,
   ShareDeletedEvent,
 } from '../../events/share-deleted.event';
-import { Share, AgentShare, SkillShare } from '../../../domain/share.entity';
+import { Share } from '../../../domain/share.entity';
 import {
   OrgShareScope,
   TeamShareScope,
@@ -44,7 +44,7 @@ export class DeleteShareUseCase {
 
       await this.repository.delete(share);
 
-      const entityId = this.getEntityId(share);
+      const entityId = share.entityId;
       const remainingShares = await this.repository.findByEntityIdAndType(
         entityId,
         share.entityType,
@@ -73,12 +73,6 @@ export class DeleteShareUseCase {
       this.logger.error(error);
       throw new Error('Unexpected error occurred');
     }
-  }
-
-  private getEntityId(share: Share): UUID {
-    if (share instanceof AgentShare) return share.agentId;
-    if (share instanceof SkillShare) return share.skillId;
-    throw new Error(`Unknown share type: ${share.entityType}`);
   }
 
   private toRemainingScope(share: Share): RemainingShareScope {
