@@ -13,6 +13,7 @@ import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import type { Agent } from '../model/types';
+import { useIsAgentsEnabled } from '@/features/feature-toggles/useIsFeatureEnabled';
 
 interface ChatsFiltersProps {
   agents: Agent[];
@@ -30,6 +31,7 @@ export default function ChatsFilters({
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState(search ?? '');
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const isAgentsEnabled = useIsAgentsEnabled();
 
   // Separate agents into personal (owned) and shared, sorted alphabetically
   const { personalAgents, sharedAgents } = useMemo(() => {
@@ -101,44 +103,46 @@ export default function ChatsFilters({
           className="pl-10"
         />
       </div>
-      <Select value={agentId ?? 'all'} onValueChange={handleAgentChange}>
-        <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder={t('filters.agentFilterLabel')} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">{t('filters.agentFilterAll')}</SelectItem>
-          {agents.length > 0 && (
-            <>
-              {/* Personal Agents Group */}
-              {personalAgents.length > 0 && (
-                <SelectGroup>
-                  {sharedAgents.length > 0 && (
-                    <SelectLabel>{tAgents('tabs.personal')}</SelectLabel>
-                  )}
-                  {personalAgents.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>
-                      {agent.name}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              )}
-              {/* Shared Agents Group */}
-              {sharedAgents.length > 0 && (
-                <SelectGroup>
-                  {personalAgents.length > 0 && (
-                    <SelectLabel>{tAgents('tabs.shared')}</SelectLabel>
-                  )}
-                  {sharedAgents.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>
-                      {agent.name}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              )}
-            </>
-          )}
-        </SelectContent>
-      </Select>
+      {isAgentsEnabled && (
+        <Select value={agentId ?? 'all'} onValueChange={handleAgentChange}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder={t('filters.agentFilterLabel')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('filters.agentFilterAll')}</SelectItem>
+            {agents.length > 0 && (
+              <>
+                {/* Personal Agents Group */}
+                {personalAgents.length > 0 && (
+                  <SelectGroup>
+                    {sharedAgents.length > 0 && (
+                      <SelectLabel>{tAgents('tabs.personal')}</SelectLabel>
+                    )}
+                    {personalAgents.map((agent) => (
+                      <SelectItem key={agent.id} value={agent.id}>
+                        {agent.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                )}
+                {/* Shared Agents Group */}
+                {sharedAgents.length > 0 && (
+                  <SelectGroup>
+                    {personalAgents.length > 0 && (
+                      <SelectLabel>{tAgents('tabs.shared')}</SelectLabel>
+                    )}
+                    {sharedAgents.map((agent) => (
+                      <SelectItem key={agent.id} value={agent.id}>
+                        {agent.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                )}
+              </>
+            )}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 }
