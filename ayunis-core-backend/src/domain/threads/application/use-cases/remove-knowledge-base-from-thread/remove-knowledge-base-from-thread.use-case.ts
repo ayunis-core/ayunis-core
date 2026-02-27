@@ -36,23 +36,19 @@ export class RemoveKnowledgeBaseFromThreadUseCase {
       throw new ThreadNotFoundError(command.threadId, userId);
     }
 
-    const currentKbs = thread.knowledgeBases ?? [];
-    const isAssigned = currentKbs.some(
-      (kb) => kb.id === command.knowledgeBaseId,
+    const currentAssignments = thread.knowledgeBaseAssignments ?? [];
+    const isAssigned = currentAssignments.some(
+      (a) => a.knowledgeBase.id === command.knowledgeBaseId,
     );
 
     if (!isAssigned) {
       return;
     }
 
-    const updatedIds = currentKbs
-      .filter((kb) => kb.id !== command.knowledgeBaseId)
-      .map((kb) => kb.id);
-
-    await this.threadsRepository.updateKnowledgeBases({
+    await this.threadsRepository.removeKnowledgeBaseAssignment({
       threadId: command.threadId,
       userId,
-      knowledgeBaseIds: updatedIds,
+      knowledgeBaseId: command.knowledgeBaseId,
     });
   }
 }

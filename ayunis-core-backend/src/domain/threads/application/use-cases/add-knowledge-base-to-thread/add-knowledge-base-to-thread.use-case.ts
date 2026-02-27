@@ -21,6 +21,7 @@ export class AddKnowledgeBaseToThreadUseCase {
     this.logger.log('execute', {
       threadId: command.threadId,
       knowledgeBaseId: command.knowledgeBaseId,
+      originSkillId: command.originSkillId,
     });
 
     const userId = this.contextService.get('userId');
@@ -54,24 +55,20 @@ export class AddKnowledgeBaseToThreadUseCase {
       throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
     }
 
-    const currentKbs = thread.knowledgeBases ?? [];
-    const alreadyAssigned = currentKbs.some(
-      (kb) => kb.id === command.knowledgeBaseId,
+    const currentAssignments = thread.knowledgeBaseAssignments ?? [];
+    const alreadyAssigned = currentAssignments.some(
+      (a) => a.knowledgeBase.id === command.knowledgeBaseId,
     );
 
     if (alreadyAssigned) {
       return;
     }
 
-    const updatedIds = [
-      ...currentKbs.map((kb) => kb.id),
-      command.knowledgeBaseId,
-    ];
-
-    await this.threadsRepository.updateKnowledgeBases({
+    await this.threadsRepository.addKnowledgeBaseAssignment({
       threadId: command.threadId,
       userId,
-      knowledgeBaseIds: updatedIds,
+      knowledgeBaseId: command.knowledgeBaseId,
+      originSkillId: command.originSkillId,
     });
   }
 }

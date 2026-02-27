@@ -58,15 +58,29 @@ export abstract class ThreadsRepository {
     userId: UUID;
     mcpIntegrationIds: UUID[];
   }): Promise<void>;
-  abstract updateKnowledgeBases(params: {
+  abstract addKnowledgeBaseAssignment(params: {
     threadId: UUID;
     userId: UUID;
-    knowledgeBaseIds: UUID[];
+    knowledgeBaseId: UUID;
+    originSkillId?: UUID;
+  }): Promise<void>;
+  abstract removeKnowledgeBaseAssignment(params: {
+    threadId: UUID;
+    userId: UUID;
+    knowledgeBaseId: UUID;
   }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
   abstract findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]>;
   abstract removeSourceAssignmentsByOriginSkill(params: {
     originSkillId: UUID;
+    userIds: UUID[];
+  }): Promise<void>;
+  abstract removeKnowledgeBaseAssignmentsByOriginSkill(params: {
+    originSkillId: UUID;
+    userIds: UUID[];
+  }): Promise<void>;
+  abstract removeDirectKnowledgeBaseAssignments(params: {
+    knowledgeBaseId: UUID;
     userIds: UUID[];
   }): Promise<void>;
 }
