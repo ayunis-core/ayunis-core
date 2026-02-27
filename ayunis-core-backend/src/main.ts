@@ -14,6 +14,7 @@ import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-option
 
 import { AppModule } from './app/app.module';
 import { ApplicationErrorFilter } from './common/filters/application-error.filter';
+import { METRICS_PATH } from './metrics/metrics.constants';
 
 class Bootstrap {
   private static readonly PORT = process.env.PORT ?? 3000;
@@ -34,7 +35,10 @@ class Bootstrap {
   ) {
     this.configureCors(app);
     this.setupSwagger(app);
-    app.setGlobalPrefix('api');
+    app.setGlobalPrefix('api', {
+      // strip leading '/' — setGlobalPrefix exclude expects bare paths
+      exclude: [METRICS_PATH.slice(1)],
+    });
     app.useGlobalFilters(new ApplicationErrorFilter());
     app.useGlobalPipes(
       new ValidationPipe({
@@ -118,6 +122,16 @@ class Bootstrap {
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
+
+    // Remove infrastructure endpoints that are not part of the public API
+    if (METRICS_PATH in document.paths) {
+      delete document.paths[METRICS_PATH];
+    } else {
+      Logger.warn(
+        `Expected to remove ${METRICS_PATH} from OpenAPI spec but it was not found`,
+      );
+    }
+
     SwaggerModule.setup('api/docs', app, document);
   }
 }
