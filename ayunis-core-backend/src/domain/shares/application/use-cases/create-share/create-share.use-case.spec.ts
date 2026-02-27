@@ -8,10 +8,11 @@ import { SharesRepository } from '../../ports/shares-repository.port';
 import { ShareAuthorizationFactory } from '../../factories/share-authorization.factory';
 import type { ShareAuthorizationStrategy } from '../../ports/share-authorization-strategy.port';
 import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
-import { AgentShare } from '../../../domain/share.entity';
+import { AgentShare, KnowledgeBaseShare } from '../../../domain/share.entity';
 import { OrgShareScope } from '../../../domain/share-scope.entity';
 import { randomUUID } from 'crypto';
 import { CheckUserTeamMembershipUseCase } from 'src/iam/teams/application/use-cases/check-user-team-membership/check-user-team-membership.use-case';
+import { CreateOrgKnowledgeBaseShareCommand } from './create-share.command';
 
 describe('CreateShareUseCase', () => {
   let useCase: CreateShareUseCase;
@@ -248,6 +249,55 @@ describe('CreateShareUseCase', () => {
         'A share already exists for this entity with org scope',
       );
       expect(repository.create).not.toHaveBeenCalled();
+    });
+
+    it('should create an org-scoped knowledge base share when user owns the knowledge base', async () => {
+      // Arrange
+      const mockKnowledgeBaseId = randomUUID();
+      const command = new CreateOrgKnowledgeBaseShareCommand(
+        mockKnowledgeBaseId,
+      );
+
+      (contextService.get as jest.Mock).mockImplementation((key: string) => {
+        if (key === 'userId') return mockUserId;
+        if (key === 'orgId') return mockOrgId;
+        return null;
+      });
+
+      (authorizationFactory.getStrategy as jest.Mock).mockReturnValue(
+        authorizationStrategy,
+      );
+      (authorizationStrategy.canCreateShare as jest.Mock).mockResolvedValue(
+        true,
+      );
+      (repository.findByEntityAndScope as jest.Mock).mockResolvedValue(null);
+      (repository.create as jest.Mock).mockResolvedValue(undefined);
+
+      // Act
+      const result = await useCase.execute(command);
+
+      // Assert
+      expect(authorizationFactory.getStrategy).toHaveBeenCalledWith(
+        SharedEntityType.KNOWLEDGE_BASE,
+      );
+      expect(authorizationStrategy.canCreateShare).toHaveBeenCalledWith(
+        mockKnowledgeBaseId,
+        mockUserId,
+      );
+      expect(repository.create).toHaveBeenCalledWith(
+        expect.any(KnowledgeBaseShare),
+      );
+
+      const createdShare = (repository.create as jest.Mock).mock.calls[0][0];
+      expect(createdShare).toBeInstanceOf(KnowledgeBaseShare);
+      expect(createdShare.knowledgeBaseId).toBe(mockKnowledgeBaseId);
+      expect(createdShare.ownerId).toBe(mockUserId);
+      expect(createdShare.scope).toBeInstanceOf(OrgShareScope);
+
+      expect(result).toBeInstanceOf(KnowledgeBaseShare);
+      expect((result as KnowledgeBaseShare).knowledgeBaseId).toBe(
+        mockKnowledgeBaseId,
+      );
     });
   });
 });

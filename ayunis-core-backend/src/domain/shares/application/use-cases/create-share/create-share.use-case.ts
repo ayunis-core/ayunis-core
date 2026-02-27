@@ -10,12 +10,15 @@ import {
   CreateTeamAgentShareCommand,
   CreateOrgSkillShareCommand,
   CreateTeamSkillShareCommand,
+  CreateOrgKnowledgeBaseShareCommand,
+  CreateTeamKnowledgeBaseShareCommand,
   CreateShareCommand,
 } from './create-share.command';
 import { SharesRepository } from '../../ports/shares-repository.port';
 import {
   AgentShare,
   SkillShare,
+  KnowledgeBaseShare,
   Share,
 } from 'src/domain/shares/domain/share.entity';
 import {
@@ -76,6 +79,32 @@ export class CreateShareUseCase {
         userId,
         (ownerId, scope) =>
           new SkillShare({ skillId: command.skillId, scope, ownerId }),
+      );
+    } else if (command instanceof CreateOrgKnowledgeBaseShareCommand) {
+      return this.createOrgShare(
+        SharedEntityType.KNOWLEDGE_BASE,
+        command.knowledgeBaseId,
+        userId,
+        orgId,
+        (ownerId, scope) =>
+          new KnowledgeBaseShare({
+            knowledgeBaseId: command.knowledgeBaseId,
+            scope,
+            ownerId,
+          }),
+      );
+    } else if (command instanceof CreateTeamKnowledgeBaseShareCommand) {
+      return this.createTeamShare(
+        SharedEntityType.KNOWLEDGE_BASE,
+        command.knowledgeBaseId,
+        command.teamId,
+        userId,
+        (ownerId, scope) =>
+          new KnowledgeBaseShare({
+            knowledgeBaseId: command.knowledgeBaseId,
+            scope,
+            ownerId,
+          }),
       );
     } else {
       throw new Error('Unsupported share command type');

@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Share, AgentShare, SkillShare } from '../../../domain/share.entity';
+import {
+  Share,
+  AgentShare,
+  SkillShare,
+  KnowledgeBaseShare,
+} from '../../../domain/share.entity';
 import { ShareResponseDto } from '../dto/share-response.dto';
 import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
 import { ShareScopeType } from '../../../domain/value-objects/share-scope-type.enum';
@@ -39,6 +44,8 @@ export class ShareDtoMapper {
       dto.entityId = (share as AgentShare).agentId;
     } else if (share.entityType === SharedEntityType.SKILL) {
       dto.entityId = (share as SkillShare).skillId;
+    } else if (share.entityType === SharedEntityType.KNOWLEDGE_BASE) {
+      dto.entityId = (share as KnowledgeBaseShare).knowledgeBaseId;
     } else {
       throw new Error(
         `Unknown entity type for share mapping: ${share.entityType}`,

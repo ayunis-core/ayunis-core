@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   ShareRecord,
   SkillShareRecord,
+  KnowledgeBaseShareRecord,
 } from './infrastructure/postgres/schema/share.record';
 import { ShareScopeRecord } from './infrastructure/postgres/schema/share-scope.record';
 import { PostgresSharesRepository } from './infrastructure/postgres/postgres-shares.repository';
@@ -31,7 +32,12 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ShareRecord, ShareScopeRecord, SkillShareRecord]),
+    TypeOrmModule.forFeature([
+      ShareRecord,
+      ShareScopeRecord,
+      SkillShareRecord,
+      KnowledgeBaseShareRecord,
+    ]),
     forwardRef(() => TeamsModule), // For CheckUserTeamMembershipUseCase, ListMyTeamsUseCase, GetTeamUseCase
   ],
   providers: [

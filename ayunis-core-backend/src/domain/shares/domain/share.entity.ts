@@ -59,3 +59,19 @@ export class SkillShare extends Share {
     this.skillId = params.skillId;
   }
 }
+
+export class KnowledgeBaseShare extends Share {
+  knowledgeBaseId: UUID;
+
+  constructor(params: {
+    id?: UUID;
+    scope: ShareScope;
+    knowledgeBaseId: UUID;
+    ownerId: UUID;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }) {
+    super({ ...params, entityType: SharedEntityType.KNOWLEDGE_BASE });
+    this.knowledgeBaseId = params.knowledgeBaseId;
+  }
+}
