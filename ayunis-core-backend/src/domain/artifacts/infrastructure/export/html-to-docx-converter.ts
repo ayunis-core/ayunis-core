@@ -98,6 +98,54 @@ function buildDocument(children: BlockChild[]): Document {
               text: '%1.',
               alignment: AlignmentType.START,
             },
+            {
+              level: 1,
+              format: LevelFormat.LOWER_LETTER,
+              text: '%2.',
+              alignment: AlignmentType.START,
+            },
+            {
+              level: 2,
+              format: LevelFormat.LOWER_ROMAN,
+              text: '%3.',
+              alignment: AlignmentType.START,
+            },
+            {
+              level: 3,
+              format: LevelFormat.DECIMAL,
+              text: '%4.',
+              alignment: AlignmentType.START,
+            },
+            {
+              level: 4,
+              format: LevelFormat.LOWER_LETTER,
+              text: '%5.',
+              alignment: AlignmentType.START,
+            },
+            {
+              level: 5,
+              format: LevelFormat.LOWER_ROMAN,
+              text: '%6.',
+              alignment: AlignmentType.START,
+            },
+            {
+              level: 6,
+              format: LevelFormat.DECIMAL,
+              text: '%7.',
+              alignment: AlignmentType.START,
+            },
+            {
+              level: 7,
+              format: LevelFormat.LOWER_LETTER,
+              text: '%8.',
+              alignment: AlignmentType.START,
+            },
+            {
+              level: 8,
+              format: LevelFormat.LOWER_ROMAN,
+              text: '%9.',
+              alignment: AlignmentType.START,
+            },
           ],
         },
       ],
@@ -179,10 +227,7 @@ function convertBlockNodes(nodes: HTMLElement[]): BlockChild[] {
   return result;
 }
 
-function convertElement(
-  node: HTMLElement,
-  tag: string,
-): BlockChild[] {
+function convertElement(node: HTMLElement, tag: string): BlockChild[] {
   if (tag in HEADING_MAP) {
     return [convertHeading(node, tag)];
   }
@@ -226,30 +271,90 @@ function convertParagraph(node: HTMLElement): Paragraph {
 }
 
 function convertBlockquote(node: HTMLElement): BlockChild[] {
-  return convertBlockNodes(node.childNodes as HTMLElement[]).map((block) => {
-    if (block instanceof Paragraph) {
-      return new Paragraph({
-        indent: { left: convertMillimetersToTwip(10) },
-        border: {
-          left: {
-            style: BorderStyle.SINGLE,
-            size: 6,
-            color: 'CCCCCC',
-            space: 8,
-          },
-        },
-        children: collectInlineRuns(node, {}),
-      });
+  const results: BlockChild[] = [];
+
+  for (const child of node.childNodes as HTMLElement[]) {
+    if (child.nodeType === NodeType.ELEMENT_NODE) {
+      const tag = child.tagName.toLowerCase();
+      if (tag === 'p') {
+        results.push(
+          new Paragraph({
+            indent: { left: convertMillimetersToTwip(10) },
+            border: {
+              left: {
+                style: BorderStyle.SINGLE,
+                size: 6,
+                color: 'CCCCCC',
+                space: 8,
+              },
+            },
+            children: collectInlineRuns(child, {}),
+          }),
+        );
+      } else {
+        const blocks = convertElement(child, tag);
+        for (const block of blocks) {
+          if (block instanceof Paragraph) {
+            results.push(
+              new Paragraph({
+                indent: { left: convertMillimetersToTwip(10) },
+                border: {
+                  left: {
+                    style: BorderStyle.SINGLE,
+                    size: 6,
+                    color: 'CCCCCC',
+                    space: 8,
+                  },
+                },
+                children: collectInlineRuns(child, {}),
+              }),
+            );
+          } else {
+            results.push(block);
+          }
+        }
+      }
+    } else if (child.nodeType === NodeType.TEXT_NODE) {
+      const text = (child as unknown as TextNode).text.trim();
+      if (text) {
+        results.push(
+          new Paragraph({
+            indent: { left: convertMillimetersToTwip(10) },
+            border: {
+              left: {
+                style: BorderStyle.SINGLE,
+                size: 6,
+                color: 'CCCCCC',
+                space: 8,
+              },
+            },
+            children: [new TextRun(text)],
+          }),
+        );
+      }
     }
-    return block;
-  });
+  }
+
+  return results;
 }
 
 function convertCodeBlock(node: HTMLElement): Paragraph {
+  const lines = node.text.split('\n');
+  const children: TextRun[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    if (i > 0) {
+      children.push(new TextRun({ break: 1 }));
+    }
+    children.push(
+      new TextRun({ text: lines[i], font: 'Courier New', size: 20 }),
+    );
+  }
+
   return new Paragraph({
     shading: { fill: 'F5F5F5' },
     spacing: { before: 80, after: 80 },
-    children: [new TextRun({ text: node.text, font: 'Courier New', size: 20 })],
+    children,
   });
 }
 
@@ -284,9 +389,7 @@ function convertListItem(
   out: Paragraph[],
 ): void {
   for (const child of li.childNodes as HTMLElement[]) {
-    const childTag = child.tagName
-      ? child.tagName.toLowerCase()
-      : undefined;
+    const childTag = child.tagName ? child.tagName.toLowerCase() : undefined;
 
     if (childTag === 'ul' || childTag === 'ol') {
       out.push(...convertList(child, childTag === 'ol', level + 1));
