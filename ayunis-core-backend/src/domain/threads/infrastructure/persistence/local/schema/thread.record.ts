@@ -1,20 +1,12 @@
 import { UUID } from 'crypto';
 import { MessageRecord } from '../../../../../messages/infrastructure/persistence/local/schema/message.record';
-import {
-  Column,
-  Entity,
-  OneToMany,
-  Index,
-  ManyToOne,
-  ManyToMany,
-  JoinTable,
-} from 'typeorm';
+import { Column, Entity, OneToMany, Index, ManyToOne, ManyToMany, JoinTable } from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { PermittedModelRecord } from '../../../../../models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
 import { AgentRecord } from '../../../../../agents/infrastructure/persistence/local/schema/agent.record';
 import { ThreadSourceAssignmentRecord } from './thread-source-assignment.record';
+import { ThreadKnowledgeBaseAssignmentRecord } from './thread-knowledge-base-assignment.record';
 import { McpIntegrationRecord } from '../../../../../mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
-import { KnowledgeBaseRecord } from '../../../../../knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 
 @Entity({ name: 'threads' })
 export class ThreadRecord extends BaseRecord {
@@ -58,7 +50,12 @@ export class ThreadRecord extends BaseRecord {
   @JoinTable({ name: 'thread_mcp_integrations' })
   mcpIntegrations?: McpIntegrationRecord[];
 
-  @ManyToMany(() => KnowledgeBaseRecord)
-  @JoinTable({ name: 'thread_knowledge_bases' })
-  knowledgeBases?: KnowledgeBaseRecord[];
+  @OneToMany(
+    () => ThreadKnowledgeBaseAssignmentRecord,
+    (assignment) => assignment.thread,
+    {
+      cascade: true,
+    },
+  )
+  knowledgeBaseAssignments?: ThreadKnowledgeBaseAssignmentRecord[];
 }
