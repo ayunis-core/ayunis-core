@@ -60,12 +60,9 @@ export class KnowledgeBaseAccessService {
    * its shared status in one pass (single findById call).
    * Throws KnowledgeBaseNotFoundError if the KB doesn't exist or isn't accessible.
    */
-  async findOneAccessible(
-    id: UUID,
-    userId: UUID,
-  ): Promise<KnowledgeBaseWithShareStatus> {
-    const contextUserId = this.contextService.get('userId');
-    if (!contextUserId) {
+  async findOneAccessible(id: UUID): Promise<KnowledgeBaseWithShareStatus> {
+    const userId = this.contextService.get('userId');
+    if (!userId) {
       throw new UnauthorizedAccessError();
     }
 
