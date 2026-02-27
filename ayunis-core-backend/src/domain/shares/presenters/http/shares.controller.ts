@@ -28,6 +28,8 @@ import {
   CreateTeamAgentShareCommand,
   CreateOrgSkillShareCommand,
   CreateTeamSkillShareCommand,
+  CreateOrgKnowledgeBaseShareCommand,
+  CreateTeamKnowledgeBaseShareCommand,
 } from '../../application/use-cases/create-share/create-share.command';
 import { DeleteShareUseCase } from '../../application/use-cases/delete-share/delete-share.use-case';
 import { GetSharesUseCase } from '../../application/use-cases/get-shares/get-shares.use-case';
@@ -40,6 +42,7 @@ import { ShareResponseDto } from './dto/share-response.dto';
 import {
   CreateAgentShareDto,
   CreateSkillShareDto,
+  CreateKnowledgeBaseShareDto,
 } from './dto/create-share.dto';
 import { ShareDtoMapper } from './mappers/share-dto.mapper';
 import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
@@ -137,6 +140,51 @@ export class SharesController {
     const command = dto.teamId
       ? new CreateTeamSkillShareCommand(dto.skillId as UUID, dto.teamId as UUID)
       : new CreateOrgSkillShareCommand(dto.skillId as UUID);
+
+    const share = await this.createShareUseCase.execute(command);
+
+    if (share.scope.scopeType === ShareScopeType.TEAM) {
+      const teamScope = share.scope as TeamShareScope;
+      const team = await this.getTeamUseCase.execute(
+        new GetTeamQuery(teamScope.teamId),
+      );
+      return this.shareDtoMapper.toDto(share, team.name);
+    }
+
+    return this.shareDtoMapper.toDto(share);
+  }
+
+  @Post('knowledge-bases')
+  @ApiOperation({ summary: 'Create a share for a knowledge base' })
+  @ApiBody({
+    description: 'Knowledge base share creation data',
+    type: CreateKnowledgeBaseShareDto,
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Share created successfully',
+    type: ShareResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'User not authenticated' })
+  @ApiResponse({
+    status: 403,
+    description: 'User cannot create share for this knowledge base',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid request data' })
+  async createKnowledgeBaseShare(
+    @Body() dto: CreateKnowledgeBaseShareDto,
+  ): Promise<ShareResponseDto> {
+    this.logger.log('createKnowledgeBaseShare', {
+      knowledgeBaseId: dto.knowledgeBaseId,
+      teamId: dto.teamId,
+    });
+
+    const command = dto.teamId
+      ? new CreateTeamKnowledgeBaseShareCommand(
+          dto.knowledgeBaseId as UUID,
+          dto.teamId as UUID,
+        )
+      : new CreateOrgKnowledgeBaseShareCommand(dto.knowledgeBaseId as UUID);
 
     const share = await this.createShareUseCase.execute(command);
 
