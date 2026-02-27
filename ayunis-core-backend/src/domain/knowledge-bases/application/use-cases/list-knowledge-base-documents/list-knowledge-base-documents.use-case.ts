@@ -19,14 +19,13 @@ export class ListKnowledgeBaseDocumentsUseCase {
   async execute(query: ListKnowledgeBaseDocumentsQuery): Promise<Source[]> {
     this.logger.log('Listing knowledge base documents', {
       knowledgeBaseId: query.knowledgeBaseId,
-      userId: query.userId,
     });
 
     try {
       const knowledgeBase = await this.knowledgeBaseRepository.findById(
         query.knowledgeBaseId,
       );
-      if (knowledgeBase?.userId !== query.userId) {
+      if (!knowledgeBase) {
         throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);
       }
 

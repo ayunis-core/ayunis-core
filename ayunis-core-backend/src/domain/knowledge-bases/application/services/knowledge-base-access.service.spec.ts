@@ -155,6 +155,65 @@ describe('KnowledgeBaseAccessService', () => {
     });
   });
 
+  describe('findOneAccessible', () => {
+    it('should return owned KB with isShared=false', async () => {
+      const kb = makeKb();
+      knowledgeBaseRepository.findById.mockResolvedValue(kb);
+
+      const result = await service.findOneAccessible(kbId, userId);
+
+      expect(result.knowledgeBase).toBe(kb);
+      expect(result.isShared).toBe(false);
+      expect(findShareByEntityUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it('should return shared KB with isShared=true', async () => {
+      const sharedKb = makeKb(kbId, otherUserId);
+      knowledgeBaseRepository.findById.mockResolvedValue(sharedKb);
+      findShareByEntityUseCase.execute.mockResolvedValue({} as never);
+
+      const result = await service.findOneAccessible(kbId, userId);
+
+      expect(result.knowledgeBase).toBe(sharedKb);
+      expect(result.isShared).toBe(true);
+    });
+
+    it('should throw KnowledgeBaseNotFoundError when KB does not exist', async () => {
+      knowledgeBaseRepository.findById.mockResolvedValue(null);
+
+      await expect(service.findOneAccessible(kbId, userId)).rejects.toThrow(
+        KnowledgeBaseNotFoundError,
+      );
+    });
+
+    it('should throw KnowledgeBaseNotFoundError when KB is not owned and not shared', async () => {
+      const otherKb = makeKb(kbId, otherUserId);
+      knowledgeBaseRepository.findById.mockResolvedValue(otherKb);
+      findShareByEntityUseCase.execute.mockResolvedValue(null);
+
+      await expect(service.findOneAccessible(kbId, userId)).rejects.toThrow(
+        KnowledgeBaseNotFoundError,
+      );
+    });
+
+    it('should throw UnauthorizedAccessError when no user in context', async () => {
+      contextService.get.mockReturnValue(undefined);
+
+      await expect(service.findOneAccessible(kbId, userId)).rejects.toThrow(
+        UnauthorizedAccessError,
+      );
+    });
+
+    it('should only call findById once', async () => {
+      const kb = makeKb();
+      knowledgeBaseRepository.findById.mockResolvedValue(kb);
+
+      await service.findOneAccessible(kbId, userId);
+
+      expect(knowledgeBaseRepository.findById).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('findAllAccessible', () => {
     it('should return owned KBs with isShared=false', async () => {
       const kb = makeKb();
