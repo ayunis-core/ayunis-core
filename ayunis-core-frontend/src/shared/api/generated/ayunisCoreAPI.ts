@@ -33,9 +33,13 @@ import type {
   AgentResponseDto,
   AgentSourceResponseDto,
   AgentsControllerAddFileSourceBody,
+  ArtifactResponseDto,
+  ArtifactVersionResponseDto,
+  ArtifactsControllerExportParams,
   ConfirmEmailDto,
   CreateAgentDto,
   CreateAgentShareDto,
+  CreateArtifactDto,
   CreateBulkInvitesDto,
   CreateBulkInvitesResponseDto,
   CreateCustomIntegrationDto,
@@ -97,6 +101,7 @@ import type {
   ResendEmailConfirmationDto,
   ResetPasswordDto,
   RetrieveUrlDto,
+  RevertArtifactDto,
   RunsControllerSendMessage200,
   RunsControllerSendMessageBody,
   SetOrgDefaultModelDto,
@@ -138,6 +143,7 @@ import type {
   TranscriptionResponseDto,
   TranscriptionsControllerTranscribeBody,
   UpdateAgentDto,
+  UpdateArtifactDto,
   UpdateBillingInfoDto,
   UpdateEmbeddingModelRequestDto,
   UpdateKnowledgeBaseDto,
@@ -11189,6 +11195,490 @@ export function useSkillKnowledgeBasesControllerListSkillKnowledgeBases<TData = 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSkillKnowledgeBasesControllerListSkillKnowledgeBasesQueryOptions(skillId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Create a new artifact (document)
+ */
+export const artifactsControllerCreate = (
+    createArtifactDto: CreateArtifactDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ArtifactResponseDto>(
+      {url: `/artifacts`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createArtifactDto, signal
+    },
+      );
+    }
+  
+
+
+export const getArtifactsControllerCreateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerCreate>>, TError,{data: CreateArtifactDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerCreate>>, TError,{data: CreateArtifactDto}, TContext> => {
+
+const mutationKey = ['artifactsControllerCreate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof artifactsControllerCreate>>, {data: CreateArtifactDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  artifactsControllerCreate(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArtifactsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerCreate>>>
+    export type ArtifactsControllerCreateMutationBody = CreateArtifactDto
+    export type ArtifactsControllerCreateMutationError = void
+
+    /**
+ * @summary Create a new artifact (document)
+ */
+export const useArtifactsControllerCreate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerCreate>>, TError,{data: CreateArtifactDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof artifactsControllerCreate>>,
+        TError,
+        {data: CreateArtifactDto},
+        TContext
+      > => {
+
+      const mutationOptions = getArtifactsControllerCreateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Update an artifact (add a new version)
+ */
+export const artifactsControllerUpdate = (
+    id: string,
+    updateArtifactDto: UpdateArtifactDto,
+ ) => {
+      
+      
+      return customAxiosInstance<ArtifactVersionResponseDto>(
+      {url: `/artifacts/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateArtifactDto
+    },
+      );
+    }
+  
+
+
+export const getArtifactsControllerUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerUpdate>>, TError,{id: string;data: UpdateArtifactDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerUpdate>>, TError,{id: string;data: UpdateArtifactDto}, TContext> => {
+
+const mutationKey = ['artifactsControllerUpdate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof artifactsControllerUpdate>>, {id: string;data: UpdateArtifactDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  artifactsControllerUpdate(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArtifactsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerUpdate>>>
+    export type ArtifactsControllerUpdateMutationBody = UpdateArtifactDto
+    export type ArtifactsControllerUpdateMutationError = void
+
+    /**
+ * @summary Update an artifact (add a new version)
+ */
+export const useArtifactsControllerUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerUpdate>>, TError,{id: string;data: UpdateArtifactDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof artifactsControllerUpdate>>,
+        TError,
+        {id: string;data: UpdateArtifactDto},
+        TContext
+      > => {
+
+      const mutationOptions = getArtifactsControllerUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Get an artifact by ID with all versions
+ */
+export const artifactsControllerFindOne = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ArtifactResponseDto>(
+      {url: `/artifacts/${id}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getArtifactsControllerFindOneQueryKey = (id?: string,) => {
+    return [
+    `/artifacts/${id}`
+    ] as const;
+    }
+
+    
+export const getArtifactsControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getArtifactsControllerFindOneQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof artifactsControllerFindOne>>> = ({ signal }) => artifactsControllerFindOne(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ArtifactsControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerFindOne>>>
+export type ArtifactsControllerFindOneQueryError = void
+
+
+export function useArtifactsControllerFindOne<TData = Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerFindOne<TData = Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerFindOne<TData = Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get an artifact by ID with all versions
+ */
+
+export function useArtifactsControllerFindOne<TData = Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getArtifactsControllerFindOneQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Get all artifacts for a thread
+ */
+export const artifactsControllerFindByThread = (
+    threadId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ArtifactResponseDto[]>(
+      {url: `/artifacts/thread/${threadId}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getArtifactsControllerFindByThreadQueryKey = (threadId?: string,) => {
+    return [
+    `/artifacts/thread/${threadId}`
+    ] as const;
+    }
+
+    
+export const getArtifactsControllerFindByThreadQueryOptions = <TData = Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError = unknown>(threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getArtifactsControllerFindByThreadQueryKey(threadId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof artifactsControllerFindByThread>>> = ({ signal }) => artifactsControllerFindByThread(threadId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(threadId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ArtifactsControllerFindByThreadQueryResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerFindByThread>>>
+export type ArtifactsControllerFindByThreadQueryError = unknown
+
+
+export function useArtifactsControllerFindByThread<TData = Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError = unknown>(
+ threadId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerFindByThread>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerFindByThread>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerFindByThread<TData = Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError = unknown>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerFindByThread>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerFindByThread>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerFindByThread<TData = Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError = unknown>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all artifacts for a thread
+ */
+
+export function useArtifactsControllerFindByThread<TData = Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError = unknown>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getArtifactsControllerFindByThreadQueryOptions(threadId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Revert an artifact to a specific version
+ */
+export const artifactsControllerRevert = (
+    id: string,
+    revertArtifactDto: RevertArtifactDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ArtifactVersionResponseDto>(
+      {url: `/artifacts/${id}/revert`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: revertArtifactDto, signal
+    },
+      );
+    }
+  
+
+
+export const getArtifactsControllerRevertMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerRevert>>, TError,{id: string;data: RevertArtifactDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerRevert>>, TError,{id: string;data: RevertArtifactDto}, TContext> => {
+
+const mutationKey = ['artifactsControllerRevert'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof artifactsControllerRevert>>, {id: string;data: RevertArtifactDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  artifactsControllerRevert(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArtifactsControllerRevertMutationResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerRevert>>>
+    export type ArtifactsControllerRevertMutationBody = RevertArtifactDto
+    export type ArtifactsControllerRevertMutationError = void
+
+    /**
+ * @summary Revert an artifact to a specific version
+ */
+export const useArtifactsControllerRevert = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerRevert>>, TError,{id: string;data: RevertArtifactDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof artifactsControllerRevert>>,
+        TError,
+        {id: string;data: RevertArtifactDto},
+        TContext
+      > => {
+
+      const mutationOptions = getArtifactsControllerRevertMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Export an artifact as DOCX or PDF
+ */
+export const artifactsControllerExport = (
+    id: string,
+    params: ArtifactsControllerExportParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<Blob>(
+      {url: `/artifacts/${id}/export`, method: 'GET',
+        params,
+        responseType: 'blob', signal
+    },
+      );
+    }
+  
+
+
+
+export const getArtifactsControllerExportQueryKey = (id?: string,
+    params?: ArtifactsControllerExportParams,) => {
+    return [
+    `/artifacts/${id}/export`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getArtifactsControllerExportQueryOptions = <TData = Awaited<ReturnType<typeof artifactsControllerExport>>, TError = void>(id: string,
+    params: ArtifactsControllerExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getArtifactsControllerExportQueryKey(id,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof artifactsControllerExport>>> = ({ signal }) => artifactsControllerExport(id,params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ArtifactsControllerExportQueryResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerExport>>>
+export type ArtifactsControllerExportQueryError = void
+
+
+export function useArtifactsControllerExport<TData = Awaited<ReturnType<typeof artifactsControllerExport>>, TError = void>(
+ id: string,
+    params: ArtifactsControllerExportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerExport>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerExport>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerExport<TData = Awaited<ReturnType<typeof artifactsControllerExport>>, TError = void>(
+ id: string,
+    params: ArtifactsControllerExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerExport>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerExport>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerExport<TData = Awaited<ReturnType<typeof artifactsControllerExport>>, TError = void>(
+ id: string,
+    params: ArtifactsControllerExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Export an artifact as DOCX or PDF
+ */
+
+export function useArtifactsControllerExport<TData = Awaited<ReturnType<typeof artifactsControllerExport>>, TError = void>(
+ id: string,
+    params: ArtifactsControllerExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getArtifactsControllerExportQueryOptions(id,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

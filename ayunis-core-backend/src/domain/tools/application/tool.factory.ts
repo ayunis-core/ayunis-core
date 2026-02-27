@@ -26,10 +26,9 @@ import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity
 import { ProductKnowledgeTool } from '../domain/tools/product-knowledge-tool.entity';
 import { ActivateSkillTool } from '../domain/tools/activate-skill-tool.entity';
 import { CreateSkillTool } from '../domain/tools/create-skill-tool.entity';
-import { KnowledgeQueryTool } from '../domain/tools/knowledge-query-tool.entity';
-import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.entity';
+import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
+import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
-import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
@@ -43,6 +42,8 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.PIE_CHART]: () => new PieChartTool(),
   [ToolType.PRODUCT_KNOWLEDGE]: () => new ProductKnowledgeTool(),
   [ToolType.CREATE_SKILL]: () => new CreateSkillTool(),
+  [ToolType.CREATE_DOCUMENT]: () => new CreateDocumentTool(),
+  [ToolType.UPDATE_DOCUMENT]: () => new UpdateDocumentTool(),
 };
 
 @Injectable()
@@ -68,14 +69,6 @@ export class ToolFactory {
       [ToolType.ACTIVATE_SKILL]: (p) =>
         new ActivateSkillTool(
           requireArrayContext(p.context, Skill, ToolType.ACTIVATE_SKILL),
-        ),
-      [ToolType.KNOWLEDGE_QUERY]: (p) =>
-        new KnowledgeQueryTool(
-          requireKnowledgeBaseContext(p.context, ToolType.KNOWLEDGE_QUERY),
-        ),
-      [ToolType.KNOWLEDGE_GET_TEXT]: (p) =>
-        new KnowledgeGetTextTool(
-          requireKnowledgeBaseContext(p.context, ToolType.KNOWLEDGE_GET_TEXT),
         ),
     };
   }
@@ -121,38 +114,6 @@ function requireArrayContext<T>(
     context.every((item: unknown) => item instanceof itemType)
   ) {
     return context as T[];
-  }
-  throw new ToolInvalidContextError({
-    toolType,
-    metadata: {
-      contextType:
-        (context as { constructor?: { name?: string } }).constructor?.name ??
-        'null',
-    },
-  });
-}
-
-function isKnowledgeBaseSummary(item: unknown): item is KnowledgeBaseSummary {
-  return (
-    typeof item === 'object' &&
-    item !== null &&
-    'id' in item &&
-    typeof (item as Record<string, unknown>).id === 'string' &&
-    'name' in item &&
-    typeof (item as Record<string, unknown>).name === 'string'
-  );
-}
-
-function requireKnowledgeBaseContext(
-  context: unknown,
-  toolType: ToolType,
-): KnowledgeBaseSummary[] {
-  if (
-    context &&
-    context instanceof Array &&
-    context.every(isKnowledgeBaseSummary)
-  ) {
-    return context;
   }
   throw new ToolInvalidContextError({
     toolType,
