@@ -6,6 +6,7 @@ import {
   DocumentNotInKnowledgeBaseError,
 } from '../../knowledge-bases.errors';
 import type { Source } from 'src/domain/sources/domain/source.entity';
+import { KnowledgeBaseAccessService } from '../../services/knowledge-base-access.service';
 
 @Injectable()
 export class GetKnowledgeBaseDocumentTextUseCase {
@@ -15,6 +16,7 @@ export class GetKnowledgeBaseDocumentTextUseCase {
 
   constructor(
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
+    private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
   ) {}
 
   async execute(query: GetKnowledgeBaseDocumentTextQuery): Promise<Source> {
@@ -23,12 +25,10 @@ export class GetKnowledgeBaseDocumentTextUseCase {
       documentId: query.documentId,
     });
 
-    const knowledgeBase = await this.knowledgeBaseRepository.findById(
-      query.knowledgeBaseId,
-    );
-    if (knowledgeBase?.userId !== query.userId) {
-      throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);
-    }
+    const knowledgeBase =
+      await this.knowledgeBaseAccessService.findAccessibleKnowledgeBase(
+        query.knowledgeBaseId,
+      );
 
     if (knowledgeBase.orgId !== query.orgId) {
       throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);
