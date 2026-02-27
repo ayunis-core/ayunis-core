@@ -9,7 +9,6 @@ import { RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase } from '../use-cases
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillCommand } from '../use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.command';
 import { RemoveDirectKnowledgeBaseFromThreadsUseCase } from '../use-cases/remove-direct-knowledge-base-from-threads/remove-direct-knowledge-base-from-threads.use-case';
 import { RemoveDirectKnowledgeBaseFromThreadsCommand } from '../use-cases/remove-direct-knowledge-base-from-threads/remove-direct-knowledge-base-from-threads.command';
-import type { UUID } from 'crypto';
 
 @Injectable()
 export class ShareDeletedListener {
@@ -45,7 +44,12 @@ export class ShareDeletedListener {
       },
     );
 
-    const lostAccessUserIds = await this.resolveLostAccessUserIds(event);
+    const lostAccessUserIds =
+      await this.shareScopeResolver.resolveLostAccessUserIds(
+        event.orgId,
+        event.ownerId,
+        event.remainingScopes,
+      );
 
     await this.removeSkillSourcesFromThreads.execute(
       new RemoveSkillSourcesFromThreadsCommand(
@@ -74,29 +78,18 @@ export class ShareDeletedListener {
       },
     );
 
-    const lostAccessUserIds = await this.resolveLostAccessUserIds(event);
+    const lostAccessUserIds =
+      await this.shareScopeResolver.resolveLostAccessUserIds(
+        event.orgId,
+        event.ownerId,
+        event.remainingScopes,
+      );
 
     await this.removeDirectKbFromThreads.execute(
       new RemoveDirectKnowledgeBaseFromThreadsCommand(
         event.entityId,
         lostAccessUserIds,
       ),
-    );
-  }
-
-  private async resolveLostAccessUserIds(
-    event: ShareDeletedEvent,
-  ): Promise<UUID[]> {
-    const allOrgUserIds = await this.shareScopeResolver.resolveAllOrgUserIds(
-      event.orgId,
-    );
-
-    const retainUserIds = await this.shareScopeResolver.resolveUserIds(
-      event.remainingScopes,
-    );
-
-    return allOrgUserIds.filter(
-      (id) => id !== event.ownerId && !retainUserIds.has(id),
     );
   }
 }

@@ -19,6 +19,7 @@ import { DeleteShareUseCase } from './application/use-cases/delete-share/delete-
 import { GetSharesUseCase } from './application/use-cases/get-shares/get-shares.use-case';
 import { FindSharesByScopeUseCase } from './application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { FindShareByEntityUseCase } from './application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
+import { FindAllSharesByEntityUseCase } from './application/use-cases/find-all-shares-by-entity/find-all-shares-by-entity.use-case';
 
 // Services
 import { ShareScopeResolverService } from './application/services/share-scope-resolver.service';
@@ -62,6 +63,7 @@ import { UsersModule } from 'src/iam/users/users.module';
     GetSharesUseCase,
     FindSharesByScopeUseCase,
     FindShareByEntityUseCase,
+    FindAllSharesByEntityUseCase,
 
     // Services
     ShareScopeResolverService,
@@ -74,11 +76,11 @@ import { UsersModule } from 'src/iam/users/users.module';
   ],
   controllers: [SharesController],
   exports: [
-    SharesRepository,
     CreateShareUseCase,
     DeleteShareUseCase,
     FindSharesByScopeUseCase,
     FindShareByEntityUseCase,
+    FindAllSharesByEntityUseCase,
     ShareScopeResolverService,
   ],
 })

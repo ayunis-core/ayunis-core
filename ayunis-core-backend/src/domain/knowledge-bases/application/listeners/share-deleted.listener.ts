@@ -1,10 +1,14 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ShareScopeResolverService } from 'src/domain/shares/application/services/share-scope-resolver.service';
-import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
-import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
+import { FindSkillsByKnowledgeBaseAndOwnersUseCase } from 'src/domain/skills/application/use-cases/find-skills-by-knowledge-base-and-owners/find-skills-by-knowledge-base-and-owners.use-case';
+import { FindSkillsByKnowledgeBaseAndOwnersQuery } from 'src/domain/skills/application/use-cases/find-skills-by-knowledge-base-and-owners/find-skills-by-knowledge-base-and-owners.query';
+import { RemoveKnowledgeBaseFromSkillsUseCase } from 'src/domain/skills/application/use-cases/remove-knowledge-base-from-skills/remove-knowledge-base-from-skills.use-case';
+import { RemoveKnowledgeBaseFromSkillsCommand } from 'src/domain/skills/application/use-cases/remove-knowledge-base-from-skills/remove-knowledge-base-from-skills.command';
+import { FindAllSharesByEntityUseCase } from 'src/domain/shares/application/use-cases/find-all-shares-by-entity/find-all-shares-by-entity.use-case';
+import { FindAllSharesByEntityQuery } from 'src/domain/shares/application/use-cases/find-all-shares-by-entity/find-all-shares-by-entity.query';
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase } from 'src/domain/threads/application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.use-case';
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillCommand } from 'src/domain/threads/application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.command';
 import type { UUID } from 'crypto';
@@ -21,10 +25,9 @@ export class KnowledgeBaseShareDeletedListener {
   private readonly logger = new Logger(KnowledgeBaseShareDeletedListener.name);
 
   constructor(
-    @Inject(SkillRepository)
-    private readonly skillRepository: SkillRepository,
-    @Inject(SharesRepository)
-    private readonly sharesRepository: SharesRepository,
+    private readonly findSkillsByKbAndOwners: FindSkillsByKnowledgeBaseAndOwnersUseCase,
+    private readonly removeKbFromSkills: RemoveKnowledgeBaseFromSkillsUseCase,
+    private readonly findAllSharesByEntity: FindAllSharesByEntityUseCase,
     private readonly removeKbAssignmentsByOriginSkill: RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase,
     private readonly shareScopeResolver: ShareScopeResolverService,
   ) {}
@@ -41,28 +44,34 @@ export class KnowledgeBaseShareDeletedListener {
       remainingScopeCount: event.remainingScopes.length,
     });
 
-    const lostAccessUserIds = await this.resolveLostAccessUserIds(event);
+    const lostAccessUserIds =
+      await this.shareScopeResolver.resolveLostAccessUserIds(
+        event.orgId,
+        event.ownerId,
+        event.remainingScopes,
+      );
 
     if (lostAccessUserIds.length === 0) {
       return;
     }
 
-    // Find skills owned by lost-access users that reference this KB
-    const affectedSkills =
-      await this.skillRepository.findSkillsByKnowledgeBaseAndOwners(
+    const affectedSkills = await this.findSkillsByKbAndOwners.execute(
+      new FindSkillsByKnowledgeBaseAndOwnersQuery(
         event.entityId,
         lostAccessUserIds,
-      );
+      ),
+    );
 
     if (affectedSkills.length === 0) {
       return;
     }
 
-    // Remove KB from those skills
     const affectedSkillIds = affectedSkills.map((s) => s.id);
-    await this.skillRepository.removeKnowledgeBaseFromSkills(
-      event.entityId,
-      affectedSkillIds,
+    await this.removeKbFromSkills.execute(
+      new RemoveKnowledgeBaseFromSkillsCommand(
+        event.entityId,
+        affectedSkillIds,
+      ),
     );
 
     this.logger.log('Removed KB from affected skills', {
@@ -70,38 +79,34 @@ export class KnowledgeBaseShareDeletedListener {
       affectedSkillCount: affectedSkillIds.length,
     });
 
-    // For each affected skill that is itself shared, clean up thread KB
-    // assignments that originated from that skill (for ALL users, since the
-    // KB is no longer accessible through the skill)
-    await this.cascadeToSharedSkillThreads(affectedSkills);
+    await this.cascadeToSharedSkillThreads(affectedSkills, event.entityId);
   }
 
   private async cascadeToSharedSkillThreads(
     affectedSkills: Skill[],
+    knowledgeBaseId: UUID,
   ): Promise<void> {
     for (const skill of affectedSkills) {
-      const skillShares = await this.sharesRepository.findByEntityIdAndType(
-        skill.id,
-        SharedEntityType.SKILL,
+      const skillShares = await this.findAllSharesByEntity.execute(
+        new FindAllSharesByEntityQuery(skill.id, SharedEntityType.SKILL),
       );
 
       if (skillShares.length === 0) {
         continue;
       }
 
-      // Resolve ALL users who have access to this skill via shares
       const allSkillShareUserIds = await this.resolveAllSkillShareUserIds(
         skillShares,
         skill.userId,
       );
 
-      // Include the skill owner — their threads also have this KB via skill
       const allUserIds = [skill.userId, ...allSkillShareUserIds];
 
       await this.removeKbAssignmentsByOriginSkill.execute(
         new RemoveKnowledgeBaseAssignmentsByOriginSkillCommand(
           skill.id,
           allUserIds,
+          knowledgeBaseId,
         ),
       );
 
@@ -109,6 +114,7 @@ export class KnowledgeBaseShareDeletedListener {
         'Removed KB thread assignments originating from shared skill',
         {
           skillId: skill.id,
+          knowledgeBaseId,
           userCount: allUserIds.length,
         },
       );
@@ -137,21 +143,5 @@ export class KnowledgeBaseShareDeletedListener {
       return { scopeType: scope.scopeType, scopeId: scope.teamId };
     }
     return null;
-  }
-
-  private async resolveLostAccessUserIds(
-    event: ShareDeletedEvent,
-  ): Promise<UUID[]> {
-    const allOrgUserIds = await this.shareScopeResolver.resolveAllOrgUserIds(
-      event.orgId,
-    );
-
-    const retainUserIds = await this.shareScopeResolver.resolveUserIds(
-      event.remainingScopes,
-    );
-
-    return allOrgUserIds.filter(
-      (id) => id !== event.ownerId && !retainUserIds.has(id),
-    );
   }
 }

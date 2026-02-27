@@ -54,4 +54,17 @@ export class ShareScopeResolverService {
         return [];
     }
   }
+
+  async resolveLostAccessUserIds(
+    orgId: UUID,
+    ownerId: UUID,
+    remainingScopes: RemainingShareScope[],
+  ): Promise<UUID[]> {
+    const allOrgUserIds = await this.resolveAllOrgUserIds(orgId);
+    const retainUserIds = await this.resolveUserIds(remainingScopes);
+
+    return allOrgUserIds.filter(
+      (id) => id !== ownerId && !retainUserIds.has(id),
+    );
+  }
 }

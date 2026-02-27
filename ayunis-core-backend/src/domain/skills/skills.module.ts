@@ -32,6 +32,8 @@ import { UnassignKnowledgeBaseFromSkillUseCase } from './application/use-cases/u
 import { ListSkillKnowledgeBasesUseCase } from './application/use-cases/list-skill-knowledge-bases/list-skill-knowledge-bases.use-case';
 import { FindSkillByNameUseCase } from './application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
 import { InstallSkillFromMarketplaceUseCase } from './application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.use-case';
+import { FindSkillsByKnowledgeBaseAndOwnersUseCase } from './application/use-cases/find-skills-by-knowledge-base-and-owners/find-skills-by-knowledge-base-and-owners.use-case';
+import { RemoveKnowledgeBaseFromSkillsUseCase } from './application/use-cases/remove-knowledge-base-from-skills/remove-knowledge-base-from-skills.use-case';
 
 // Services
 import { MarketplaceSkillInstallationService } from './application/services/marketplace-skill-installation.service';
@@ -106,6 +108,8 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
     ListSkillKnowledgeBasesUseCase,
     FindSkillByNameUseCase,
     InstallSkillFromMarketplaceUseCase,
+    FindSkillsByKnowledgeBaseAndOwnersUseCase,
+    RemoveKnowledgeBaseFromSkillsUseCase,
 
     // Services
     MarketplaceSkillInstallationService,
@@ -133,11 +137,12 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
     SkillKnowledgeBasesController,
   ],
   exports: [
-    SkillRepository,
     FindActiveSkillsUseCase,
     FindOneSkillUseCase,
     AddSourceToSkillUseCase,
     FindSkillByNameUseCase,
+    FindSkillsByKnowledgeBaseAndOwnersUseCase,
+    RemoveKnowledgeBaseFromSkillsUseCase,
     SkillAccessService,
     SkillActivationService,
     SkillShareAuthorizationStrategy,

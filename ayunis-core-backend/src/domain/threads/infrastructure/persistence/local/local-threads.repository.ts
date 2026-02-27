@@ -453,34 +453,44 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async removeKnowledgeBaseAssignmentsByOriginSkill(params: {
     originSkillId: UUID;
     userIds: UUID[];
+    knowledgeBaseId?: UUID;
   }): Promise<void> {
     this.logger.log('removeKnowledgeBaseAssignmentsByOriginSkill', {
       originSkillId: params.originSkillId,
       userCount: params.userIds.length,
+      knowledgeBaseId: params.knowledgeBaseId,
     });
 
     if (params.userIds.length === 0) {
       return;
     }
 
+    const subQuery = this.threadKbAssignmentRepository
+      .createQueryBuilder('tkba')
+      .select('tkba.id')
+      .innerJoin('tkba.thread', 'thread')
+      .where('tkba.originSkillId = :originSkillId')
+      .andWhere('thread.userId IN (:...userIds)');
+
+    if (params.knowledgeBaseId) {
+      subQuery.andWhere('tkba.knowledgeBaseId = :knowledgeBaseId');
+    }
+
+    const queryParams: Record<string, unknown> = {
+      originSkillId: params.originSkillId,
+      userIds: params.userIds,
+    };
+
+    if (params.knowledgeBaseId) {
+      queryParams.knowledgeBaseId = params.knowledgeBaseId;
+    }
+
     await this.threadKbAssignmentRepository
       .createQueryBuilder('tkba')
       .delete()
       .from(ThreadKnowledgeBaseAssignmentRecord)
-      .where(
-        'id IN ' +
-          this.threadKbAssignmentRepository
-            .createQueryBuilder('tkba')
-            .select('tkba.id')
-            .innerJoin('tkba.thread', 'thread')
-            .where('tkba.originSkillId = :originSkillId')
-            .andWhere('thread.userId IN (:...userIds)')
-            .getQuery(),
-      )
-      .setParameters({
-        originSkillId: params.originSkillId,
-        userIds: params.userIds,
-      })
+      .where('id IN ' + subQuery.getQuery())
+      .setParameters(queryParams)
       .execute();
   }
 

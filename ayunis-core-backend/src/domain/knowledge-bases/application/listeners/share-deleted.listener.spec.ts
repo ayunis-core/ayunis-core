@@ -1,8 +1,9 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { KnowledgeBaseShareDeletedListener } from './share-deleted.listener';
-import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
-import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
+import { FindSkillsByKnowledgeBaseAndOwnersUseCase } from 'src/domain/skills/application/use-cases/find-skills-by-knowledge-base-and-owners/find-skills-by-knowledge-base-and-owners.use-case';
+import { RemoveKnowledgeBaseFromSkillsUseCase } from 'src/domain/skills/application/use-cases/remove-knowledge-base-from-skills/remove-knowledge-base-from-skills.use-case';
+import { FindAllSharesByEntityUseCase } from 'src/domain/shares/application/use-cases/find-all-shares-by-entity/find-all-shares-by-entity.use-case';
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase } from 'src/domain/threads/application/use-cases/remove-knowledge-base-assignments-by-origin-skill/remove-knowledge-base-assignments-by-origin-skill.use-case';
 import { ShareScopeResolverService } from 'src/domain/shares/application/services/share-scope-resolver.service';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
@@ -33,11 +34,7 @@ function createSkillShare(skillId: UUID, ownerId: UUID, orgId: UUID) {
   });
 }
 
-function createTeamSkillShare(
-  skillId: UUID,
-  ownerId: UUID,
-  teamId: UUID,
-) {
+function createTeamSkillShare(skillId: UUID, ownerId: UUID, teamId: UUID) {
   return new SkillShare({
     skillId,
     ownerId,
@@ -47,27 +44,26 @@ function createTeamSkillShare(
 
 describe('KnowledgeBaseShareDeletedListener', () => {
   let listener: KnowledgeBaseShareDeletedListener;
-  let skillRepository: {
-    findSkillsByKnowledgeBaseAndOwners: jest.Mock;
-    removeKnowledgeBaseFromSkills: jest.Mock;
-  };
-  let sharesRepository: {
-    findByEntityIdAndType: jest.Mock;
-  };
+  let findSkillsByKbAndOwners: { execute: jest.Mock };
+  let removeKbFromSkills: { execute: jest.Mock };
+  let findAllSharesByEntity: { execute: jest.Mock };
   let removeKbAssignments: { execute: jest.Mock };
   let shareScopeResolver: {
     resolveUserIds: jest.Mock;
-    resolveAllOrgUserIds: jest.Mock;
+    resolveLostAccessUserIds: jest.Mock;
   };
 
   beforeAll(async () => {
-    skillRepository = {
-      findSkillsByKnowledgeBaseAndOwners: jest.fn().mockResolvedValue([]),
-      removeKnowledgeBaseFromSkills: jest.fn().mockResolvedValue(undefined),
+    findSkillsByKbAndOwners = {
+      execute: jest.fn().mockResolvedValue([]),
     };
 
-    sharesRepository = {
-      findByEntityIdAndType: jest.fn().mockResolvedValue([]),
+    removeKbFromSkills = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    };
+
+    findAllSharesByEntity = {
+      execute: jest.fn().mockResolvedValue([]),
     };
 
     removeKbAssignments = {
@@ -76,14 +72,24 @@ describe('KnowledgeBaseShareDeletedListener', () => {
 
     shareScopeResolver = {
       resolveUserIds: jest.fn().mockResolvedValue(new Set()),
-      resolveAllOrgUserIds: jest.fn().mockResolvedValue([]),
+      resolveLostAccessUserIds: jest.fn().mockResolvedValue([]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         KnowledgeBaseShareDeletedListener,
-        { provide: SkillRepository, useValue: skillRepository },
-        { provide: SharesRepository, useValue: sharesRepository },
+        {
+          provide: FindSkillsByKnowledgeBaseAndOwnersUseCase,
+          useValue: findSkillsByKbAndOwners,
+        },
+        {
+          provide: RemoveKnowledgeBaseFromSkillsUseCase,
+          useValue: removeKbFromSkills,
+        },
+        {
+          provide: FindAllSharesByEntityUseCase,
+          useValue: findAllSharesByEntity,
+        },
         {
           provide: RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase,
           useValue: removeKbAssignments,
@@ -113,16 +119,14 @@ describe('KnowledgeBaseShareDeletedListener', () => {
 
     await listener.handleShareDeleted(event);
 
-    expect(
-      skillRepository.findSkillsByKnowledgeBaseAndOwners,
-    ).not.toHaveBeenCalled();
+    expect(findSkillsByKbAndOwners.execute).not.toHaveBeenCalled();
   });
 
   it('should do nothing when no users lost access', async () => {
     const ownerId = randomUUID();
     const orgId = randomUUID();
 
-    shareScopeResolver.resolveAllOrgUserIds.mockResolvedValue([ownerId]);
+    shareScopeResolver.resolveLostAccessUserIds.mockResolvedValue([]);
 
     const event = new ShareDeletedEvent(
       SharedEntityType.KNOWLEDGE_BASE,
@@ -134,9 +138,7 @@ describe('KnowledgeBaseShareDeletedListener', () => {
 
     await listener.handleShareDeleted(event);
 
-    expect(
-      skillRepository.findSkillsByKnowledgeBaseAndOwners,
-    ).not.toHaveBeenCalled();
+    expect(findSkillsByKbAndOwners.execute).not.toHaveBeenCalled();
   });
 
   it('should remove KB from affected skills when users lose access', async () => {
@@ -146,15 +148,10 @@ describe('KnowledgeBaseShareDeletedListener', () => {
     const lostUserId = randomUUID();
     const skillId = randomUUID();
 
-    shareScopeResolver.resolveAllOrgUserIds.mockResolvedValue([
-      ownerId,
-      lostUserId,
-    ]);
+    shareScopeResolver.resolveLostAccessUserIds.mockResolvedValue([lostUserId]);
 
     const skill = createSkill(skillId, lostUserId);
-    skillRepository.findSkillsByKnowledgeBaseAndOwners.mockResolvedValue([
-      skill,
-    ]);
+    findSkillsByKbAndOwners.execute.mockResolvedValue([skill]);
 
     const event = new ShareDeletedEvent(
       SharedEntityType.KNOWLEDGE_BASE,
@@ -166,13 +163,18 @@ describe('KnowledgeBaseShareDeletedListener', () => {
 
     await listener.handleShareDeleted(event);
 
-    expect(
-      skillRepository.findSkillsByKnowledgeBaseAndOwners,
-    ).toHaveBeenCalledWith(kbId, [lostUserId]);
+    expect(findSkillsByKbAndOwners.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        knowledgeBaseId: kbId,
+        ownerIds: [lostUserId],
+      }),
+    );
 
-    expect(skillRepository.removeKnowledgeBaseFromSkills).toHaveBeenCalledWith(
-      kbId,
-      [skillId],
+    expect(removeKbFromSkills.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        knowledgeBaseId: kbId,
+        skillIds: [skillId],
+      }),
     );
   });
 
@@ -184,20 +186,14 @@ describe('KnowledgeBaseShareDeletedListener', () => {
     const skillShareRecipient = randomUUID();
     const skillId = randomUUID();
 
-    shareScopeResolver.resolveAllOrgUserIds.mockResolvedValue([
-      ownerId,
-      lostUserId,
-    ]);
+    shareScopeResolver.resolveLostAccessUserIds.mockResolvedValue([lostUserId]);
 
     const skill = createSkill(skillId, lostUserId);
-    skillRepository.findSkillsByKnowledgeBaseAndOwners.mockResolvedValue([
-      skill,
-    ]);
+    findSkillsByKbAndOwners.execute.mockResolvedValue([skill]);
 
     const skillShare = createSkillShare(skillId, lostUserId, orgId);
-    sharesRepository.findByEntityIdAndType.mockResolvedValue([skillShare]);
+    findAllSharesByEntity.execute.mockResolvedValue([skillShare]);
 
-    // Resolve users who have access to the skill via its share
     shareScopeResolver.resolveUserIds.mockImplementation(async (scopes) => {
       if (scopes.length > 0 && scopes[0].scopeType === ShareScopeType.ORG) {
         return new Set([skillShareRecipient, lostUserId]);
@@ -215,15 +211,17 @@ describe('KnowledgeBaseShareDeletedListener', () => {
 
     await listener.handleShareDeleted(event);
 
-    expect(sharesRepository.findByEntityIdAndType).toHaveBeenCalledWith(
-      skillId,
-      SharedEntityType.SKILL,
+    expect(findAllSharesByEntity.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entityId: skillId,
+        entityType: SharedEntityType.SKILL,
+      }),
     );
 
     const kbCall = removeKbAssignments.execute.mock.calls[0][0];
     expect(kbCall.skillId).toBe(skillId);
-    // Should include skill owner + share recipients (minus owner)
-    expect(kbCall.userIds).toContain(lostUserId); // skill owner
+    expect(kbCall.knowledgeBaseId).toBe(kbId);
+    expect(kbCall.userIds).toContain(lostUserId);
     expect(kbCall.userIds).toContain(skillShareRecipient);
   });
 
@@ -234,17 +232,12 @@ describe('KnowledgeBaseShareDeletedListener', () => {
     const lostUserId = randomUUID();
     const skillId = randomUUID();
 
-    shareScopeResolver.resolveAllOrgUserIds.mockResolvedValue([
-      ownerId,
-      lostUserId,
-    ]);
+    shareScopeResolver.resolveLostAccessUserIds.mockResolvedValue([lostUserId]);
 
     const skill = createSkill(skillId, lostUserId);
-    skillRepository.findSkillsByKnowledgeBaseAndOwners.mockResolvedValue([
-      skill,
-    ]);
+    findSkillsByKbAndOwners.execute.mockResolvedValue([skill]);
 
-    sharesRepository.findByEntityIdAndType.mockResolvedValue([]);
+    findAllSharesByEntity.execute.mockResolvedValue([]);
 
     const event = new ShareDeletedEvent(
       SharedEntityType.KNOWLEDGE_BASE,
@@ -264,26 +257,14 @@ describe('KnowledgeBaseShareDeletedListener', () => {
     const ownerId = randomUUID();
     const orgId = randomUUID();
     const teamId = randomUUID();
-    const retainedUserId = randomUUID();
     const lostUserId = randomUUID();
     const skillId = randomUUID();
 
-    shareScopeResolver.resolveAllOrgUserIds.mockResolvedValue([
-      ownerId,
-      retainedUserId,
-      lostUserId,
-    ]);
-    // First call: remaining scopes resolution (retained user)
-    // Second call would be for skill share scopes
-    shareScopeResolver.resolveUserIds.mockResolvedValueOnce(
-      new Set([retainedUserId]),
-    );
+    shareScopeResolver.resolveLostAccessUserIds.mockResolvedValue([lostUserId]);
 
     const skill = createSkill(skillId, lostUserId);
-    skillRepository.findSkillsByKnowledgeBaseAndOwners.mockResolvedValue([
-      skill,
-    ]);
-    sharesRepository.findByEntityIdAndType.mockResolvedValue([]);
+    findSkillsByKbAndOwners.execute.mockResolvedValue([skill]);
+    findAllSharesByEntity.execute.mockResolvedValue([]);
 
     const remainingScopes = [
       { scopeType: ShareScopeType.TEAM, scopeId: teamId },
@@ -298,13 +279,18 @@ describe('KnowledgeBaseShareDeletedListener', () => {
 
     await listener.handleShareDeleted(event);
 
-    expect(
-      skillRepository.findSkillsByKnowledgeBaseAndOwners,
-    ).toHaveBeenCalledWith(kbId, [lostUserId]);
+    expect(findSkillsByKbAndOwners.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        knowledgeBaseId: kbId,
+        ownerIds: [lostUserId],
+      }),
+    );
 
-    expect(skillRepository.removeKnowledgeBaseFromSkills).toHaveBeenCalledWith(
-      kbId,
-      [skillId],
+    expect(removeKbFromSkills.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        knowledgeBaseId: kbId,
+        skillIds: [skillId],
+      }),
     );
   });
 
@@ -317,18 +303,13 @@ describe('KnowledgeBaseShareDeletedListener', () => {
     const teamMember = randomUUID();
     const skillId = randomUUID();
 
-    shareScopeResolver.resolveAllOrgUserIds.mockResolvedValue([
-      ownerId,
-      lostUserId,
-    ]);
+    shareScopeResolver.resolveLostAccessUserIds.mockResolvedValue([lostUserId]);
 
     const skill = createSkill(skillId, lostUserId);
-    skillRepository.findSkillsByKnowledgeBaseAndOwners.mockResolvedValue([
-      skill,
-    ]);
+    findSkillsByKbAndOwners.execute.mockResolvedValue([skill]);
 
     const skillShare = createTeamSkillShare(skillId, lostUserId, teamId);
-    sharesRepository.findByEntityIdAndType.mockResolvedValue([skillShare]);
+    findAllSharesByEntity.execute.mockResolvedValue([skillShare]);
 
     shareScopeResolver.resolveUserIds.mockImplementation(async (scopes) => {
       if (scopes.length > 0 && scopes[0].scopeType === ShareScopeType.TEAM) {
@@ -349,6 +330,7 @@ describe('KnowledgeBaseShareDeletedListener', () => {
 
     const kbCall = removeKbAssignments.execute.mock.calls[0][0];
     expect(kbCall.skillId).toBe(skillId);
+    expect(kbCall.knowledgeBaseId).toBe(kbId);
     expect(kbCall.userIds).toContain(lostUserId);
     expect(kbCall.userIds).toContain(teamMember);
   });
