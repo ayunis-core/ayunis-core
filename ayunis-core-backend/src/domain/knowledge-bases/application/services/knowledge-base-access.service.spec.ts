@@ -124,34 +124,79 @@ describe('KnowledgeBaseAccessService', () => {
     });
   });
 
-  describe('resolveIsShared', () => {
-    it('should return false when user owns the KB', async () => {
+  describe('findAccessibleKnowledgeBaseWithStatus', () => {
+    it('should return owned KB with isShared=false', async () => {
       const kb = makeKb();
       knowledgeBaseRepository.findById.mockResolvedValue(kb);
 
-      const result = await service.resolveIsShared(kbId, userId);
+      const result = await service.findAccessibleKnowledgeBaseWithStatus(kbId);
 
-      expect(result).toBe(false);
+      expect(result.knowledgeBase).toBe(kb);
+      expect(result.isShared).toBe(false);
       expect(findShareByEntityUseCase.execute).not.toHaveBeenCalled();
     });
 
-    it('should return true when KB is shared with user', async () => {
-      const kb = makeKb(kbId, otherUserId);
-      knowledgeBaseRepository.findById.mockResolvedValue(kb);
+    it('should return shared KB with isShared=true when not owned', async () => {
+      const sharedKb = makeKb(kbId, otherUserId);
+      knowledgeBaseRepository.findById.mockResolvedValue(sharedKb);
       findShareByEntityUseCase.execute.mockResolvedValue({} as never);
 
-      const result = await service.resolveIsShared(kbId, userId);
+      const result = await service.findAccessibleKnowledgeBaseWithStatus(kbId);
 
-      expect(result).toBe(true);
+      expect(result.knowledgeBase).toBe(sharedKb);
+      expect(result.isShared).toBe(true);
     });
 
-    it('should return false when KB is neither owned nor shared', async () => {
+    it('should throw KnowledgeBaseNotFoundError when KB does not exist', async () => {
       knowledgeBaseRepository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.findAccessibleKnowledgeBaseWithStatus(kbId),
+      ).rejects.toThrow(KnowledgeBaseNotFoundError);
+    });
+
+    it('should throw KnowledgeBaseNotFoundError when KB is neither owned nor shared', async () => {
+      const kb = makeKb(kbId, otherUserId);
+      knowledgeBaseRepository.findById.mockResolvedValue(kb);
       findShareByEntityUseCase.execute.mockResolvedValue(null);
 
-      const result = await service.resolveIsShared(kbId, userId);
+      await expect(
+        service.findAccessibleKnowledgeBaseWithStatus(kbId),
+      ).rejects.toThrow(KnowledgeBaseNotFoundError);
+    });
 
-      expect(result).toBe(false);
+    it('should throw UnauthorizedAccessError when no user in context', async () => {
+      contextService.get.mockReturnValue(undefined);
+
+      await expect(
+        service.findAccessibleKnowledgeBaseWithStatus(kbId),
+      ).rejects.toThrow(UnauthorizedAccessError);
+    });
+  });
+
+  describe('listAccessibleDocuments', () => {
+    it('should return documents for an accessible KB', async () => {
+      const kb = makeKb();
+      const sources = [{ id: 'source-1' }, { id: 'source-2' }];
+      knowledgeBaseRepository.findById.mockResolvedValue(kb);
+      knowledgeBaseRepository.findSourcesByKnowledgeBaseId.mockResolvedValue(
+        sources as never,
+      );
+
+      const result = await service.listAccessibleDocuments(kbId);
+
+      expect(result).toBe(sources);
+      expect(
+        knowledgeBaseRepository.findSourcesByKnowledgeBaseId,
+      ).toHaveBeenCalledWith(kbId);
+    });
+
+    it('should throw KnowledgeBaseNotFoundError when KB is not accessible', async () => {
+      knowledgeBaseRepository.findById.mockResolvedValue(null);
+
+      await expect(service.listAccessibleDocuments(kbId)).rejects.toThrow(
+        KnowledgeBaseNotFoundError,
+      );
     });
   });
 

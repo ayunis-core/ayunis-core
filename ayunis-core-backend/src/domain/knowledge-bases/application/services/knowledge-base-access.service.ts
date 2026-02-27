@@ -10,6 +10,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { KnowledgeBaseNotFoundError } from '../knowledge-bases.errors';
 import type { KnowledgeBase } from '../../domain/knowledge-base.entity';
+import type { Source } from 'src/domain/sources/domain/source.entity';
 
 export interface KnowledgeBaseWithShareStatus {
   knowledgeBase: KnowledgeBase;
@@ -32,43 +33,41 @@ export class KnowledgeBaseAccessService {
    * Throws KnowledgeBaseNotFoundError if the KB doesn't exist or isn't accessible.
    */
   async findAccessibleKnowledgeBase(id: UUID): Promise<KnowledgeBase> {
+    const result = await this.findAccessibleKnowledgeBaseWithStatus(id);
+    return result.knowledgeBase;
+  }
+
+  /**
+   * Finds a knowledge base accessible to the current user (owned or shared)
+   * and returns it with share status in a single pass.
+   * Throws KnowledgeBaseNotFoundError if the KB doesn't exist or isn't accessible.
+   */
+  async findAccessibleKnowledgeBaseWithStatus(
+    id: UUID,
+  ): Promise<KnowledgeBaseWithShareStatus> {
     const userId = this.contextService.get('userId');
     if (!userId) {
       throw new UnauthorizedAccessError();
     }
 
-    // Try owned KB first
-    const ownedKb = await this.knowledgeBaseRepository.findById(id);
-    if (ownedKb?.userId === userId) {
-      return ownedKb;
+    const kb = await this.knowledgeBaseRepository.findById(id);
+    if (!kb) {
+      throw new KnowledgeBaseNotFoundError(id);
     }
 
-    // If not owned, check if shared with user
+    if (kb.userId === userId) {
+      return { knowledgeBase: kb, isShared: false };
+    }
+
     const share = await this.findShareByEntityUseCase.execute(
       new FindShareByEntityQuery(SharedEntityType.KNOWLEDGE_BASE, id),
     );
 
-    if (share && ownedKb) {
-      return ownedKb;
+    if (share) {
+      return { knowledgeBase: kb, isShared: true };
     }
 
     throw new KnowledgeBaseNotFoundError(id);
-  }
-
-  /**
-   * Resolves whether a knowledge base is shared with the given user.
-   * Returns false for KB owners, even if the KB has been shared.
-   */
-  async resolveIsShared(kbId: UUID, userId: UUID): Promise<boolean> {
-    const kb = await this.knowledgeBaseRepository.findById(kbId);
-    if (kb?.userId === userId) {
-      return false;
-    }
-
-    const share = await this.findShareByEntityUseCase.execute(
-      new FindShareByEntityQuery(SharedEntityType.KNOWLEDGE_BASE, kbId),
-    );
-    return share !== null;
   }
 
   /**
@@ -126,5 +125,16 @@ export class KnowledgeBaseAccessService {
     );
 
     return [...ownedResults, ...sharedResults];
+  }
+
+  /**
+   * Lists all documents in a knowledge base accessible to the current user.
+   * Validates access (owned or shared) before returning documents.
+   */
+  async listAccessibleDocuments(knowledgeBaseId: UUID): Promise<Source[]> {
+    await this.findAccessibleKnowledgeBase(knowledgeBaseId);
+    return this.knowledgeBaseRepository.findSourcesByKnowledgeBaseId(
+      knowledgeBaseId,
+    );
   }
 }

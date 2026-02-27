@@ -48,7 +48,6 @@ import { AddDocumentToKnowledgeBaseUseCase } from '../../application/use-cases/a
 import { AddUrlToKnowledgeBaseUseCase } from '../../application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.use-case';
 import { RemoveDocumentFromKnowledgeBaseUseCase } from '../../application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.use-case';
 import { KnowledgeBaseAccessService } from '../../application/services/knowledge-base-access.service';
-import { KnowledgeBaseRepository } from '../../application/ports/knowledge-base.repository';
 
 import { CreateKnowledgeBaseCommand } from '../../application/use-cases/create-knowledge-base/create-knowledge-base.command';
 import { UpdateKnowledgeBaseCommand } from '../../application/use-cases/update-knowledge-base/update-knowledge-base.command';
@@ -86,7 +85,6 @@ export class KnowledgeBasesController {
     private readonly addUrlUseCase: AddUrlToKnowledgeBaseUseCase,
     private readonly removeDocumentUseCase: RemoveDocumentFromKnowledgeBaseUseCase,
     private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
-    private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly knowledgeBaseDtoMapper: KnowledgeBaseDtoMapper,
   ) {}
 
@@ -161,12 +159,10 @@ export class KnowledgeBasesController {
   ): Promise<KnowledgeBaseResponseDto> {
     this.logger.log('findOne', { id, userId });
 
-    const knowledgeBase =
-      await this.knowledgeBaseAccessService.findAccessibleKnowledgeBase(id);
-    const isShared = await this.knowledgeBaseAccessService.resolveIsShared(
-      id,
-      userId,
-    );
+    const { knowledgeBase, isShared } =
+      await this.knowledgeBaseAccessService.findAccessibleKnowledgeBaseWithStatus(
+        id,
+      );
 
     return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, isShared);
   }
@@ -253,11 +249,8 @@ export class KnowledgeBasesController {
   ): Promise<KnowledgeBaseDocumentListResponseDto> {
     this.logger.log('listDocuments', { knowledgeBaseId: id, userId });
 
-    // Validate access (owned or shared) before listing documents
-    await this.knowledgeBaseAccessService.findAccessibleKnowledgeBase(id);
-
     const sources =
-      await this.knowledgeBaseRepository.findSourcesByKnowledgeBaseId(id);
+      await this.knowledgeBaseAccessService.listAccessibleDocuments(id);
 
     return {
       data: sources.map((source) =>
