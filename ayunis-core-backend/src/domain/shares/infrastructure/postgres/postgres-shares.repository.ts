@@ -118,13 +118,15 @@ export class PostgresSharesRepository extends SharesRepository {
   ): Promise<Share | null> {
     let record: ShareRecord | null = null;
 
-    const entityColumnMap: Record<SharedEntityType, string> = {
+    const entityColumnMap: Partial<Record<SharedEntityType, string>> = {
       [SharedEntityType.AGENT]: 'share.agent_id',
       [SharedEntityType.SKILL]: 'share.skill_id',
       [SharedEntityType.KNOWLEDGE_BASE]: 'share.knowledge_base_id',
-      [SharedEntityType.PROMPT]: 'share.agent_id', // unused, prompt shares not implemented
     };
     const entityColumn = entityColumnMap[entityType];
+    if (!entityColumn) {
+      throw new Error(`Unsupported entity type: ${entityType}`);
+    }
 
     if (scopeType === ShareScopeType.ORG) {
       record = await this.shareRepository
