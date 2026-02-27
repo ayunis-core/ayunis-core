@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigService, ConfigType } from '@nestjs/config';
 import { UUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { Agent } from 'src/domain/agents/domain/agent.entity';
@@ -21,6 +21,7 @@ import { GetUserSystemPromptUseCase } from 'src/domain/chat-settings/application
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { featuresConfig } from 'src/config/features.config';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -34,6 +35,8 @@ export class ToolAssemblyService {
     private readonly findActiveSkillsUseCase: FindActiveSkillsUseCase,
     private readonly getUserSystemPromptUseCase: GetUserSystemPromptUseCase,
     private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
+    @Inject(featuresConfig.KEY)
+    private readonly features: ConfigType<typeof featuresConfig>,
   ) {}
 
   async findActiveSkills(): Promise<Skill[]> {
@@ -61,8 +64,6 @@ export class ToolAssemblyService {
       (s): s is TextSource => s instanceof TextSource,
     );
 
-    const isCloudHosted = this.configService.get<boolean>('app.isCloudHosted');
-
     // Fetch user's custom system prompt (returns null if not configured)
     const userSystemPromptEntity =
       await this.getUserSystemPromptUseCase.execute();
@@ -73,9 +74,9 @@ export class ToolAssemblyService {
       tools,
       currentTime: new Date(),
       sources: textSources,
-      // Only include skills in prompt when tools are enabled and not cloud-hosted,
+      // Only include skills in prompt when tools are enabled and skills feature is on,
       // otherwise the prompt would instruct the model to use activate_skill which isn't available
-      skills: canUseTools && !isCloudHosted ? activeSkills : [],
+      skills: canUseTools && this.features.skillsEnabled ? activeSkills : [],
 
       knowledgeBases: canUseTools ? (thread.knowledgeBases ?? []) : [],
       userSystemPrompt,
@@ -89,8 +90,7 @@ export class ToolAssemblyService {
     agent?: Agent,
     activeSkills: Skill[] = [],
   ): Promise<Tool[]> {
-    const isSelfhosted = this.configService.get<boolean>('app.isSelfHosted');
-    const isCloudHosted = this.configService.get<boolean>('app.isCloudHosted');
+    const skillsEnabled = this.features.skillsEnabled;
     const tools: Tool[] = [];
 
     // Collect MCP integration IDs from agent and thread (skill-injected)
@@ -266,8 +266,8 @@ export class ToolAssemblyService {
       ),
     );
 
-    // Create skill tool is available for non-cloud deployments
-    if (!isCloudHosted) {
+    // Create skill tool is available when skills feature is enabled
+    if (skillsEnabled) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
@@ -277,12 +277,8 @@ export class ToolAssemblyService {
       );
     }
 
-    // Internet search tool is always available
-    if (
-      isCloudHosted ||
-      (isSelfhosted &&
-        this.configService.get<boolean>('internetSearch.isAvailable'))
-    ) {
+    // Internet search tool is available when Brave Search credentials are configured
+    if (this.configService.get<boolean>('internetSearch.isAvailable')) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
@@ -346,8 +342,8 @@ export class ToolAssemblyService {
       );
     }
 
-    // Activate skill tool is available if there are active skills (non-cloud only)
-    if (!isCloudHosted && activeSkills.length > 0) {
+    // Activate skill tool is available if there are active skills and skills feature is enabled
+    if (skillsEnabled && activeSkills.length > 0) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
