@@ -18,6 +18,11 @@ import { QueryKnowledgeBaseUseCase } from './application/use-cases/query-knowled
 import { GetKnowledgeBaseDocumentTextUseCase } from './application/use-cases/get-knowledge-base-document-text/get-knowledge-base-document-text.use-case';
 import { GetKnowledgeBasesByIdsUseCase } from './application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
 
+// Strategies
+import { KnowledgeBaseShareAuthorizationStrategy } from './application/strategies/knowledge-base-share-authorization.strategy';
+import { getShareAuthStrategyToken } from '../shares/application/factories/share-authorization.factory';
+import { SharedEntityType } from '../shares/domain/value-objects/shared-entity-type.enum';
+
 // Presenters
 import { KnowledgeBasesController } from './presenters/http/knowledge-bases.controller';
 import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base-dto.mapper';
@@ -43,6 +48,12 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     QueryKnowledgeBaseUseCase,
     GetKnowledgeBaseDocumentTextUseCase,
     GetKnowledgeBasesByIdsUseCase,
+    // Strategies
+    KnowledgeBaseShareAuthorizationStrategy,
+    {
+      provide: getShareAuthStrategyToken(SharedEntityType.KNOWLEDGE_BASE),
+      useExisting: KnowledgeBaseShareAuthorizationStrategy,
+    },
     // Presenters
     KnowledgeBaseDtoMapper,
   ],
@@ -61,6 +72,8 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     QueryKnowledgeBaseUseCase,
     GetKnowledgeBaseDocumentTextUseCase,
     GetKnowledgeBasesByIdsUseCase,
+    KnowledgeBaseShareAuthorizationStrategy,
+    getShareAuthStrategyToken(SharedEntityType.KNOWLEDGE_BASE),
   ],
 })
 export class KnowledgeBasesModule {}
