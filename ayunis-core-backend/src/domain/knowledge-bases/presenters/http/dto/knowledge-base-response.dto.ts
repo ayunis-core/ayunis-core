@@ -37,6 +37,13 @@ export class KnowledgeBaseResponseDto {
     format: 'date-time',
   })
   updatedAt: Date;
+
+  @ApiProperty({
+    description:
+      'Whether the knowledge base is shared with the current user (not owned)',
+    example: false,
+  })
+  isShared: boolean;
 }
 
 export class KnowledgeBaseListResponseDto {

@@ -44,18 +44,15 @@ import {
 import { CreateKnowledgeBaseUseCase } from '../../application/use-cases/create-knowledge-base/create-knowledge-base.use-case';
 import { UpdateKnowledgeBaseUseCase } from '../../application/use-cases/update-knowledge-base/update-knowledge-base.use-case';
 import { DeleteKnowledgeBaseUseCase } from '../../application/use-cases/delete-knowledge-base/delete-knowledge-base.use-case';
-import { FindKnowledgeBaseUseCase } from '../../application/use-cases/find-knowledge-base/find-knowledge-base.use-case';
-import { ListKnowledgeBasesUseCase } from '../../application/use-cases/list-knowledge-bases/list-knowledge-bases.use-case';
 import { AddDocumentToKnowledgeBaseUseCase } from '../../application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.use-case';
 import { AddUrlToKnowledgeBaseUseCase } from '../../application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.use-case';
 import { RemoveDocumentFromKnowledgeBaseUseCase } from '../../application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.use-case';
 import { ListKnowledgeBaseDocumentsUseCase } from '../../application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
+import { KnowledgeBaseAccessService } from '../../application/services/knowledge-base-access.service';
 
 import { CreateKnowledgeBaseCommand } from '../../application/use-cases/create-knowledge-base/create-knowledge-base.command';
 import { UpdateKnowledgeBaseCommand } from '../../application/use-cases/update-knowledge-base/update-knowledge-base.command';
 import { DeleteKnowledgeBaseCommand } from '../../application/use-cases/delete-knowledge-base/delete-knowledge-base.command';
-import { FindKnowledgeBaseQuery } from '../../application/use-cases/find-knowledge-base/find-knowledge-base.query';
-import { ListKnowledgeBasesQuery } from '../../application/use-cases/list-knowledge-bases/list-knowledge-bases.query';
 import { AddDocumentToKnowledgeBaseCommand } from '../../application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.command';
 import { AddUrlToKnowledgeBaseCommand } from '../../application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.command';
 import { RemoveDocumentFromKnowledgeBaseCommand } from '../../application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.command';
@@ -86,12 +83,11 @@ export class KnowledgeBasesController {
     private readonly createKnowledgeBaseUseCase: CreateKnowledgeBaseUseCase,
     private readonly updateKnowledgeBaseUseCase: UpdateKnowledgeBaseUseCase,
     private readonly deleteKnowledgeBaseUseCase: DeleteKnowledgeBaseUseCase,
-    private readonly findKnowledgeBaseUseCase: FindKnowledgeBaseUseCase,
-    private readonly listKnowledgeBasesUseCase: ListKnowledgeBasesUseCase,
     private readonly addDocumentUseCase: AddDocumentToKnowledgeBaseUseCase,
     private readonly addUrlUseCase: AddUrlToKnowledgeBaseUseCase,
     private readonly removeDocumentUseCase: RemoveDocumentFromKnowledgeBaseUseCase,
     private readonly listDocumentsUseCase: ListKnowledgeBaseDocumentsUseCase,
+    private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
     private readonly knowledgeBaseDtoMapper: KnowledgeBaseDtoMapper,
   ) {}
 
@@ -137,12 +133,12 @@ export class KnowledgeBasesController {
   ): Promise<KnowledgeBaseListResponseDto> {
     this.logger.log('findAll', { userId });
 
-    const knowledgeBases = await this.listKnowledgeBasesUseCase.execute(
-      new ListKnowledgeBasesQuery(userId),
-    );
+    const results = await this.knowledgeBaseAccessService.findAllAccessible();
 
     return {
-      data: this.knowledgeBaseDtoMapper.toDtoArray(knowledgeBases),
+      data: results.map((r) =>
+        this.knowledgeBaseDtoMapper.toDto(r.knowledgeBase, r.isShared),
+      ),
     };
   }
 
@@ -166,11 +162,10 @@ export class KnowledgeBasesController {
   ): Promise<KnowledgeBaseResponseDto> {
     this.logger.log('findOne', { id, userId });
 
-    const knowledgeBase = await this.findKnowledgeBaseUseCase.execute(
-      new FindKnowledgeBaseQuery(id, userId),
-    );
+    const { knowledgeBase, isShared } =
+      await this.knowledgeBaseAccessService.findOneAccessible(id, userId);
 
-    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase);
+    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, isShared);
   }
 
   @Patch(':id')
@@ -255,8 +250,10 @@ export class KnowledgeBasesController {
   ): Promise<KnowledgeBaseDocumentListResponseDto> {
     this.logger.log('listDocuments', { knowledgeBaseId: id, userId });
 
+    await this.knowledgeBaseAccessService.findAccessibleKnowledgeBase(id);
+
     const sources = await this.listDocumentsUseCase.execute(
-      new ListKnowledgeBaseDocumentsQuery(id, userId),
+      new ListKnowledgeBaseDocumentsQuery(id),
     );
 
     return {
