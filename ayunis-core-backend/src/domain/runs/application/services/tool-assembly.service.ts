@@ -79,7 +79,14 @@ export class ToolAssemblyService {
       skills: canUseTools && this.features.skillsEnabled ? activeSkills : [],
 
       knowledgeBases: canUseTools
-        ? (thread.knowledgeBaseAssignments ?? []).map((a) => a.knowledgeBase)
+        ? [
+            ...new Map(
+              (thread.knowledgeBaseAssignments ?? []).map((a) => [
+                a.knowledgeBase.id,
+                a.knowledgeBase,
+              ]),
+            ).values(),
+          ]
         : [],
       userSystemPrompt,
     });
@@ -323,10 +330,15 @@ export class ToolAssemblyService {
     }
 
     // Knowledge base tools are available if the thread has knowledge bases
-
-    const knowledgeBases = (thread.knowledgeBaseAssignments ?? []).map(
-      (a) => a.knowledgeBase,
-    );
+    // Deduplicate by KB id since the same KB can be assigned with different originSkillIds
+    const knowledgeBases = [
+      ...new Map(
+        (thread.knowledgeBaseAssignments ?? []).map((a) => [
+          a.knowledgeBase.id,
+          a.knowledgeBase,
+        ]),
+      ).values(),
+    ];
 
     if (knowledgeBases.length > 0) {
       tools.push(
