@@ -20,6 +20,9 @@ import { GetSharesUseCase } from './application/use-cases/get-shares/get-shares.
 import { FindSharesByScopeUseCase } from './application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { FindShareByEntityUseCase } from './application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 
+// Services
+import { ShareScopeResolverService } from './application/services/share-scope-resolver.service';
+
 // Factories
 import { ShareAuthorizationFactory } from './application/factories/share-authorization.factory';
 
@@ -29,6 +32,7 @@ import { ShareDtoMapper } from './presenters/http/mappers/share-dto.mapper';
 // Presenters
 import { SharesController } from './presenters/http/shares.controller';
 import { TeamsModule } from 'src/iam/teams/teams.module';
+import { UsersModule } from 'src/iam/users/users.module';
 
 @Module({
   imports: [
@@ -39,6 +43,7 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
       KnowledgeBaseShareRecord,
     ]),
     forwardRef(() => TeamsModule), // For CheckUserTeamMembershipUseCase, ListMyTeamsUseCase, GetTeamUseCase
+    UsersModule, // For ShareScopeResolverService
   ],
   providers: [
     // Repository
@@ -58,6 +63,9 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
     FindSharesByScopeUseCase,
     FindShareByEntityUseCase,
 
+    // Services
+    ShareScopeResolverService,
+
     // Factories
     ShareAuthorizationFactory,
 
@@ -70,6 +78,7 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
     DeleteShareUseCase,
     FindSharesByScopeUseCase,
     FindShareByEntityUseCase,
+    ShareScopeResolverService,
   ],
 })
 export class SharesModule {}

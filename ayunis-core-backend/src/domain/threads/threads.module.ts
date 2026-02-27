@@ -36,8 +36,8 @@ import { AgentsModule } from '../agents/agents.module';
 import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
+import { SharesModule } from '../shares/shares.module';
 import { UsersModule } from 'src/iam/users/users.module';
-import { TeamsModule } from 'src/iam/teams/teams.module';
 
 @Module({
   imports: [
@@ -50,7 +50,7 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
     OrgsModule,
     StorageModule,
     UsersModule,
-    TeamsModule,
+    SharesModule,
   ],
   controllers: [ThreadsController, ThreadKnowledgeBasesController],
   providers: [
