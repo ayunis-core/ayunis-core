@@ -59,8 +59,18 @@ function CopyMessageButton({
     const el = contentRef.current;
     if (!el) return;
 
-    const html = el.innerHTML;
-    const plainText = el.innerText;
+    const copyableElements = el.querySelectorAll('[data-copyable="true"]');
+    if (copyableElements.length === 0) return;
+
+    const htmlParts: string[] = [];
+    const textParts: string[] = [];
+    copyableElements.forEach((element) => {
+      htmlParts.push(element.innerHTML);
+      textParts.push(element.textContent ?? '');
+    });
+
+    const html = htmlParts.join('<br><br>');
+    const plainText = textParts.join('\n\n');
     if (!plainText.trim()) return;
 
     try {
@@ -73,10 +83,13 @@ function CopyMessageButton({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for browsers that don't support ClipboardItem
-      await navigator.clipboard.writeText(plainText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      try {
+        await navigator.clipboard.writeText(plainText);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (error) {
+        console.error('Failed to copy message:', error);
+      }
     }
   };
 
@@ -269,11 +282,12 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
         if (content.type === 'text') {
           const textMessageContent = content as TextMessageContent;
           return (
-            <Markdown
+            <div
               key={`text-${index}-${textMessageContent.text.slice(0, 50)}`}
+              data-copyable="true"
             >
-              {textMessageContent.text}
-            </Markdown>
+              <Markdown>{textMessageContent.text}</Markdown>
+            </div>
           );
         } else if (content.type === 'tool_use') {
           try {
