@@ -137,6 +137,16 @@ export class LocalThreadsRepository extends ThreadsRepository {
         'dataSourceDetails',
       );
     }
+    if (options?.withKnowledgeBases) {
+      queryBuilder.leftJoinAndSelect(
+        'thread.knowledgeBaseAssignments',
+        'knowledgeBaseAssignments',
+      );
+      queryBuilder.leftJoinAndSelect(
+        'knowledgeBaseAssignments.knowledgeBase',
+        'knowledgeBase',
+      );
+    }
     if (options?.withModel) {
       queryBuilder.leftJoinAndSelect('thread.model', 'model');
     }
