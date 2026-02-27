@@ -1,8 +1,13 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { LocalKnowledgeBaseRepositoryModule } from './infrastructure/persistence/local/local-knowledge-base-repository.module';
 import { SourcesModule } from '../sources/sources.module';
 import { IndexersModule } from '../rag/indexers/indexers.module';
 import { ContextModule } from 'src/common/context/context.module';
+import { SharesModule } from '../shares/shares.module';
+import { getShareAuthStrategyToken } from '../shares/application/factories/share-authorization.factory';
+import { SharedEntityType } from '../shares/domain/value-objects/shared-entity-type.enum';
+import { KnowledgeBaseShareAuthorizationStrategy } from './application/strategies/knowledge-base-share-authorization.strategy';
+import { KnowledgeBaseAccessService } from './application/services/knowledge-base-access.service';
 
 // Use Cases
 import { CreateKnowledgeBaseUseCase } from './application/use-cases/create-knowledge-base/create-knowledge-base.use-case';
@@ -28,6 +33,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     SourcesModule,
     IndexersModule,
     ContextModule,
+    forwardRef(() => SharesModule),
   ],
   providers: [
     // Use Cases
@@ -45,10 +51,21 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     GetKnowledgeBasesByIdsUseCase,
     // Presenters
     KnowledgeBaseDtoMapper,
+    // Services
+    KnowledgeBaseAccessService,
+    // Strategies
+    KnowledgeBaseShareAuthorizationStrategy,
+    {
+      provide: getShareAuthStrategyToken(SharedEntityType.KNOWLEDGE_BASE),
+      useExisting: KnowledgeBaseShareAuthorizationStrategy,
+    },
   ],
   controllers: [KnowledgeBasesController],
   exports: [
     LocalKnowledgeBaseRepositoryModule,
+    KnowledgeBaseAccessService,
+    KnowledgeBaseShareAuthorizationStrategy,
+    getShareAuthStrategyToken(SharedEntityType.KNOWLEDGE_BASE),
     CreateKnowledgeBaseUseCase,
     UpdateKnowledgeBaseUseCase,
     DeleteKnowledgeBaseUseCase,
