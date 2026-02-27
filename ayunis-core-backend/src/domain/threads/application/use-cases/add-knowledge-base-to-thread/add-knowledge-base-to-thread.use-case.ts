@@ -4,7 +4,8 @@ import { AddKnowledgeBaseToThreadCommand } from './add-knowledge-base-to-thread.
 import { ContextService } from 'src/common/context/services/context.service';
 import { ThreadNotFoundError } from '../../threads.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { GetKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
+import { GetKnowledgeBasesByIdsQuery } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.query';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 
 @Injectable()
@@ -13,7 +14,7 @@ export class AddKnowledgeBaseToThreadUseCase {
 
   constructor(
     private readonly threadsRepository: ThreadsRepository,
-    private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
+    private readonly getKnowledgeBasesByIdsUseCase: GetKnowledgeBasesByIdsUseCase,
     private readonly contextService: ContextService,
   ) {}
 
@@ -42,15 +43,12 @@ export class AddKnowledgeBaseToThreadUseCase {
       throw new ThreadNotFoundError(command.threadId, userId);
     }
 
-    const knowledgeBase = await this.knowledgeBaseRepository.findById(
-      command.knowledgeBaseId,
+    const knowledgeBases = await this.getKnowledgeBasesByIdsUseCase.execute(
+      new GetKnowledgeBasesByIdsQuery([command.knowledgeBaseId]),
     );
 
+    const knowledgeBase = knowledgeBases[0];
     if (!knowledgeBase) {
-      throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
-    }
-
-    if (knowledgeBase.orgId !== orgId) {
       throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
     }
 

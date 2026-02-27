@@ -4,7 +4,7 @@ import { Logger } from '@nestjs/common';
 import { AddKnowledgeBaseToThreadUseCase } from './add-knowledge-base-to-thread.use-case';
 import { AddKnowledgeBaseToThreadCommand } from './add-knowledge-base-to-thread.command';
 import { ThreadsRepository } from '../../ports/threads.repository';
-import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { GetKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Thread } from '../../../domain/thread.entity';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
@@ -16,12 +16,11 @@ import type { UUID } from 'crypto';
 describe('AddKnowledgeBaseToThreadUseCase', () => {
   let useCase: AddKnowledgeBaseToThreadUseCase;
   let threadsRepository: jest.Mocked<ThreadsRepository>;
-  let knowledgeBaseRepository: jest.Mocked<KnowledgeBaseRepository>;
+  let getKnowledgeBasesByIdsUseCase: jest.Mocked<GetKnowledgeBasesByIdsUseCase>;
   let mockContextService: { get: jest.Mock };
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174010' as UUID;
-  const mockOtherOrgId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
   const mockThreadId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const mockKbId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
   const mockKbId2 = '123e4567-e89b-12d3-a456-426614174003' as UUID;
@@ -32,8 +31,8 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       updateKnowledgeBases: jest.fn(),
     };
 
-    const mockKnowledgeBaseRepository = {
-      findById: jest.fn(),
+    const mockGetKnowledgeBasesByIdsUseCase = {
+      execute: jest.fn(),
     };
 
     mockContextService = {
@@ -49,8 +48,8 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
         AddKnowledgeBaseToThreadUseCase,
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
         {
-          provide: KnowledgeBaseRepository,
-          useValue: mockKnowledgeBaseRepository,
+          provide: GetKnowledgeBasesByIdsUseCase,
+          useValue: mockGetKnowledgeBasesByIdsUseCase,
         },
         { provide: ContextService, useValue: mockContextService },
       ],
@@ -58,7 +57,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
 
     useCase = module.get(AddKnowledgeBaseToThreadUseCase);
     threadsRepository = module.get(ThreadsRepository);
-    knowledgeBaseRepository = module.get(KnowledgeBaseRepository);
+    getKnowledgeBasesByIdsUseCase = module.get(GetKnowledgeBasesByIdsUseCase);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'error').mockImplementation();
@@ -84,7 +83,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseRepository.findById.mockResolvedValue(knowledgeBase);
+    getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([knowledgeBase]);
     threadsRepository.updateKnowledgeBases.mockResolvedValue(undefined);
 
     const command = new AddKnowledgeBaseToThreadCommand(mockThreadId, mockKbId);
@@ -114,7 +113,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseRepository.findById.mockResolvedValue(knowledgeBase);
+    getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([knowledgeBase]);
     threadsRepository.updateKnowledgeBases.mockResolvedValue(undefined);
 
     const command = new AddKnowledgeBaseToThreadCommand(
@@ -147,7 +146,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseRepository.findById.mockResolvedValue(knowledgeBase);
+    getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([knowledgeBase]);
 
     const command = new AddKnowledgeBaseToThreadCommand(mockThreadId, mockKbId);
 
@@ -173,7 +172,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     });
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseRepository.findById.mockResolvedValue(null);
+    getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([]);
 
     const command = new AddKnowledgeBaseToThreadCommand(mockThreadId, mockKbId);
 
@@ -190,15 +189,8 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       knowledgeBases: [],
     });
 
-    const foreignKnowledgeBase = new KnowledgeBase({
-      id: mockKbId,
-      name: 'Foreign Org Knowledge Base',
-      orgId: mockOtherOrgId,
-      userId: mockUserId,
-    });
-
     threadsRepository.findOne.mockResolvedValue(thread);
-    knowledgeBaseRepository.findById.mockResolvedValue(foreignKnowledgeBase);
+    getKnowledgeBasesByIdsUseCase.execute.mockResolvedValue([]);
 
     const command = new AddKnowledgeBaseToThreadCommand(mockThreadId, mockKbId);
 

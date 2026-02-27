@@ -62,7 +62,6 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
   ],
   controllers: [KnowledgeBasesController],
   exports: [
-    LocalKnowledgeBaseRepositoryModule,
     KnowledgeBaseAccessService,
     KnowledgeBaseShareAuthorizationStrategy,
     getShareAuthStrategyToken(SharedEntityType.KNOWLEDGE_BASE),
