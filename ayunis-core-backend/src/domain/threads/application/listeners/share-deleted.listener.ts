@@ -11,6 +11,8 @@ import { FindAllUserIdsByTeamIdUseCase } from 'src/iam/teams/application/use-cas
 import { FindAllUserIdsByTeamIdQuery } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.query';
 import { RemoveSkillSourcesFromThreadsUseCase } from '../use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.use-case';
 import { RemoveSkillSourcesFromThreadsCommand } from '../use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.command';
+import { RemoveKbAssignmentsByOriginSkillUseCase } from '../use-cases/remove-kb-assignments-by-origin-skill/remove-kb-assignments-by-origin-skill.use-case';
+import { RemoveKbAssignmentsByOriginSkillCommand } from '../use-cases/remove-kb-assignments-by-origin-skill/remove-kb-assignments-by-origin-skill.command';
 
 @Injectable()
 export class ShareDeletedListener {
@@ -18,6 +20,7 @@ export class ShareDeletedListener {
 
   constructor(
     private readonly removeSkillSourcesFromThreads: RemoveSkillSourcesFromThreadsUseCase,
+    private readonly removeKbAssignmentsByOriginSkill: RemoveKbAssignmentsByOriginSkillUseCase,
     private readonly findAllUserIdsByOrgId: FindAllUserIdsByOrgIdUseCase,
     private readonly findAllUserIdsByTeamId: FindAllUserIdsByTeamIdUseCase,
   ) {}
@@ -51,6 +54,13 @@ export class ShareDeletedListener {
 
     await this.removeSkillSourcesFromThreads.execute(
       new RemoveSkillSourcesFromThreadsCommand(
+        event.entityId,
+        lostAccessUserIds,
+      ),
+    );
+
+    await this.removeKbAssignmentsByOriginSkill.execute(
+      new RemoveKbAssignmentsByOriginSkillCommand(
         event.entityId,
         lostAccessUserIds,
       ),
