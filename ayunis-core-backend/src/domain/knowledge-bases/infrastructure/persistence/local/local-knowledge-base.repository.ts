@@ -34,6 +34,17 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
     return this.mapper.toDomain(record);
   }
 
+  async findByIds(ids: UUID[]): Promise<KnowledgeBase[]> {
+    this.logger.debug(`findByIds: ${ids.length} ids`);
+    if (ids.length === 0) {
+      return [];
+    }
+    const records = await this.repository.find({
+      where: ids.map((id) => ({ id })),
+    });
+    return records.map((record) => this.mapper.toDomain(record));
+  }
+
   async findAllByUserId(userId: UUID): Promise<KnowledgeBase[]> {
     this.logger.debug(`findAllByUserId: ${userId}`);
     const records = await this.repository.find({

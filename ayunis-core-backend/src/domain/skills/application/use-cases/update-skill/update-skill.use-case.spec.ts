@@ -158,6 +158,32 @@ describe('UpdateSkillUseCase', () => {
     expect(skillRepository.findByNameAndOwner).not.toHaveBeenCalled();
   });
 
+  it('should preserve knowledgeBaseIds on update', async () => {
+    const kbIds = ['bbb00000-0000-0000-0000-000000000000' as UUID];
+    const existingSkill = new Skill({
+      id: mockSkillId,
+      name: 'Legal Research',
+      shortDescription: 'Research legal topics.',
+      instructions: 'Original instructions.',
+      userId: mockUserId,
+      knowledgeBaseIds: kbIds,
+    });
+
+    const command = new UpdateSkillCommand({
+      skillId: mockSkillId,
+      name: 'Legal Research',
+      shortDescription: 'Updated.',
+      instructions: 'Updated.',
+    });
+
+    skillRepository.findOne.mockResolvedValue(existingSkill);
+    skillRepository.update.mockImplementation(async (skill: Skill) => skill);
+
+    const result = await useCase.execute(command);
+
+    expect(result.knowledgeBaseIds).toEqual(kbIds);
+  });
+
   it('should preserve mcpIntegrationIds on update', async () => {
     const mcpIds = ['aaa00000-0000-0000-0000-000000000000' as UUID];
     const existingSkill = new Skill({

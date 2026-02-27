@@ -27,6 +27,9 @@ import { ListSkillSourcesUseCase } from './application/use-cases/list-skill-sour
 import { AssignMcpIntegrationToSkillUseCase } from './application/use-cases/assign-mcp-integration-to-skill/assign-mcp-integration-to-skill.use-case';
 import { UnassignMcpIntegrationFromSkillUseCase } from './application/use-cases/unassign-mcp-integration-from-skill/unassign-mcp-integration-from-skill.use-case';
 import { ListSkillMcpIntegrationsUseCase } from './application/use-cases/list-skill-mcp-integrations/list-skill-mcp-integrations.use-case';
+import { AssignKnowledgeBaseToSkillUseCase } from './application/use-cases/assign-knowledge-base-to-skill/assign-knowledge-base-to-skill.use-case';
+import { UnassignKnowledgeBaseFromSkillUseCase } from './application/use-cases/unassign-knowledge-base-from-skill/unassign-knowledge-base-from-skill.use-case';
+import { ListSkillKnowledgeBasesUseCase } from './application/use-cases/list-skill-knowledge-bases/list-skill-knowledge-bases.use-case';
 import { FindSkillByNameUseCase } from './application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
 import { InstallSkillFromMarketplaceUseCase } from './application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.use-case';
 
@@ -56,8 +59,10 @@ import { ThreadsModule } from '../threads/threads.module';
 import { SkillsController } from './presenters/http/skills.controller';
 import { SkillSourcesController } from './presenters/http/skill-sources.controller';
 import { SkillMcpIntegrationsController } from './presenters/http/skill-mcp-integrations.controller';
+import { SkillKnowledgeBasesController } from './presenters/http/skill-knowledge-bases.controller';
 import { SkillDtoMapper } from './presenters/http/mappers/skill.mapper';
 import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-integration-dto.mapper';
+import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappers/knowledge-base-dto.mapper';
 
 @Module({
   imports: [
@@ -101,6 +106,9 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     AssignMcpIntegrationToSkillUseCase,
     UnassignMcpIntegrationFromSkillUseCase,
     ListSkillMcpIntegrationsUseCase,
+    AssignKnowledgeBaseToSkillUseCase,
+    UnassignKnowledgeBaseFromSkillUseCase,
+    ListSkillKnowledgeBasesUseCase,
     FindSkillByNameUseCase,
     InstallSkillFromMarketplaceUseCase,
 
@@ -121,11 +129,13 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     // Presenters
     SkillDtoMapper,
     McpIntegrationDtoMapper,
+    KnowledgeBaseDtoMapper,
   ],
   controllers: [
     SkillsController,
     SkillSourcesController,
     SkillMcpIntegrationsController,
+    SkillKnowledgeBasesController,
   ],
   exports: [
     FindActiveSkillsUseCase,

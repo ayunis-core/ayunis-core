@@ -4,6 +4,7 @@ import type { Source } from 'src/domain/sources/domain/source.entity';
 
 export abstract class KnowledgeBaseRepository {
   abstract findById(id: UUID): Promise<KnowledgeBase | null>;
+  abstract findByIds(ids: UUID[]): Promise<KnowledgeBase[]>;
   abstract findAllByUserId(userId: UUID): Promise<KnowledgeBase[]>;
   abstract save(knowledgeBase: KnowledgeBase): Promise<KnowledgeBase>;
   abstract delete(knowledgeBase: KnowledgeBase): Promise<void>;
