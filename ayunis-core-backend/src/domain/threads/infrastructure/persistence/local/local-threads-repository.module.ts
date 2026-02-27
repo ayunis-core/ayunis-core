@@ -7,6 +7,7 @@ import { LocalThreadsRepository } from './local-threads.repository';
 import { LocalMessagesRepositoryModule } from 'src/domain/messages/infrastructure/persistence/local/local-messages-repository.module';
 import { ThreadMapper } from './mappers/thread.mapper';
 import { ThreadSourceAssignmentMapper } from './mappers/thread-source-assignment.mapper';
+import { ThreadKnowledgeBaseAssignmentMapper } from './mappers/thread-knowledge-base-assignment.mapper';
 import { LocalPermittedModelsRepositoryModule } from 'src/domain/models/infrastructure/persistence/local-permitted-models/local-permitted-models-repository.module';
 import { LocalAgentsRepositoryModule } from 'src/domain/agents/infrastructure/persistence/local/local-agent-repository.module';
 import { LocalSourceRepositoryModule } from 'src/domain/sources/infrastructure/persistence/local/local-source-repository.module';
@@ -27,7 +28,13 @@ import { LocalSourceRepositoryModule } from 'src/domain/sources/infrastructure/p
     LocalThreadsRepository,
     ThreadMapper,
     ThreadSourceAssignmentMapper,
+    ThreadKnowledgeBaseAssignmentMapper,
   ],
-  exports: [LocalThreadsRepository, ThreadMapper, ThreadSourceAssignmentMapper],
+  exports: [
+    LocalThreadsRepository,
+    ThreadMapper,
+    ThreadSourceAssignmentMapper,
+    ThreadKnowledgeBaseAssignmentMapper,
+  ],
 })
 export class LocalThreadsRepositoryModule {}

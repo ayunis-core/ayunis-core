@@ -30,9 +30,9 @@ export class GetThreadDtoMapper {
       updatedAt: thread.updatedAt.toISOString(),
       isAnonymous: thread.isAnonymous,
       isLongChat,
-      knowledgeBases: (thread.knowledgeBases ?? []).map((kb) => ({
-        id: kb.id,
-        name: kb.name,
+      knowledgeBases: (thread.knowledgeBaseAssignments ?? []).map((a) => ({
+        id: a.knowledgeBase.id,
+        name: a.knowledgeBase.name,
       })),
     };
   }

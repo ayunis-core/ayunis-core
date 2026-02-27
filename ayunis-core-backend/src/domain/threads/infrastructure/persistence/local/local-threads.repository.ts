@@ -7,7 +7,7 @@ import {
 } from 'src/domain/threads/application/ports/threads.repository';
 import { Logger, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsRelations, Repository } from 'typeorm';
+import { FindOptionsRelations, IsNull, Repository } from 'typeorm';
 import { ThreadRecord } from './schema/thread.record';
 import { ThreadMapper } from './mappers/thread.mapper';
 import { UUID } from 'crypto';
@@ -15,9 +15,9 @@ import { ThreadNotFoundError } from 'src/domain/threads/application/threads.erro
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import { ThreadSourceAssignmentMapper } from './mappers/thread-source-assignment.mapper';
 import { ThreadSourceAssignmentRecord } from './schema/thread-source-assignment.record';
+import { ThreadKnowledgeBaseAssignmentRecord } from './schema/thread-knowledge-base-assignment.record';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
-import type { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
 
 @Injectable()
@@ -29,6 +29,8 @@ export class LocalThreadsRepository extends ThreadsRepository {
     private readonly threadRepository: Repository<ThreadRecord>,
     @InjectRepository(ThreadSourceAssignmentRecord)
     private readonly threadSourceAssignmentRepository: Repository<ThreadSourceAssignmentRecord>,
+    @InjectRepository(ThreadKnowledgeBaseAssignmentRecord)
+    private readonly threadKbAssignmentRepository: Repository<ThreadKnowledgeBaseAssignmentRecord>,
     private readonly threadMapper: ThreadMapper,
     private readonly sourceAssignmentMapper: ThreadSourceAssignmentMapper,
   ) {
@@ -46,7 +48,8 @@ export class LocalThreadsRepository extends ThreadsRepository {
         'model',
         'sourceAssignments',
         'sourceAssignments.source',
-        'knowledgeBases',
+        'knowledgeBaseAssignments',
+        'knowledgeBaseAssignments.knowledgeBase',
         'mcpIntegrations',
       ],
       order: {
@@ -74,7 +77,9 @@ export class LocalThreadsRepository extends ThreadsRepository {
         sourceAssignments: {
           source: true,
         },
-        knowledgeBases: true,
+        knowledgeBaseAssignments: {
+          knowledgeBase: true,
+        },
         mcpIntegrations: true,
       },
       order: {
@@ -215,7 +220,9 @@ export class LocalThreadsRepository extends ThreadsRepository {
           }
         : false,
       model: options?.withModel ? true : false,
-      knowledgeBases: options?.withKnowledgeBases ? true : false,
+      knowledgeBaseAssignments: options?.withKnowledgeBases
+        ? { knowledgeBase: true }
+        : false,
       mcpIntegrations: true,
     };
     return relations;
@@ -338,30 +345,59 @@ export class LocalThreadsRepository extends ThreadsRepository {
     await this.threadRepository.save(threadEntity);
   }
 
-  async updateKnowledgeBases(params: {
+  async addKnowledgeBaseAssignment(params: {
     threadId: UUID;
     userId: UUID;
-    knowledgeBaseIds: UUID[];
+    knowledgeBaseId: UUID;
+    originSkillId?: UUID;
   }): Promise<void> {
-    this.logger.log('updateKnowledgeBases', {
+    this.logger.log('addKnowledgeBaseAssignment', {
       threadId: params.threadId,
-      knowledgeBaseIds: params.knowledgeBaseIds,
+      knowledgeBaseId: params.knowledgeBaseId,
+      originSkillId: params.originSkillId,
     });
 
     const threadEntity = await this.threadRepository.findOne({
       where: { id: params.threadId, userId: params.userId },
-      relations: ['knowledgeBases'],
     });
 
     if (!threadEntity) {
       throw new ThreadNotFoundError(params.threadId, params.userId);
     }
 
-    threadEntity.knowledgeBases = params.knowledgeBaseIds.map(
-      (id) => ({ id }) as KnowledgeBaseRecord,
-    );
+    const record = new ThreadKnowledgeBaseAssignmentRecord();
+    record.threadId = params.threadId;
+    record.knowledgeBaseId = params.knowledgeBaseId;
+    record.originSkillId = params.originSkillId ?? null;
 
-    await this.threadRepository.save(threadEntity);
+    await this.threadKbAssignmentRepository.save(record);
+  }
+
+  async removeKnowledgeBaseAssignment(params: {
+    threadId: UUID;
+    userId: UUID;
+    knowledgeBaseId: UUID;
+    originSkillId?: UUID;
+  }): Promise<void> {
+    this.logger.log('removeKnowledgeBaseAssignment', {
+      threadId: params.threadId,
+      knowledgeBaseId: params.knowledgeBaseId,
+      originSkillId: params.originSkillId,
+    });
+
+    const threadEntity = await this.threadRepository.findOne({
+      where: { id: params.threadId, userId: params.userId },
+    });
+
+    if (!threadEntity) {
+      throw new ThreadNotFoundError(params.threadId, params.userId);
+    }
+
+    await this.threadKbAssignmentRepository.delete({
+      threadId: params.threadId,
+      knowledgeBaseId: params.knowledgeBaseId,
+      originSkillId: params.originSkillId ?? IsNull(),
+    });
   }
 
   async delete(id: UUID, userId: UUID): Promise<void> {
@@ -398,6 +434,75 @@ export class LocalThreadsRepository extends ThreadsRepository {
       )
       .setParameters({
         originSkillId: params.originSkillId,
+        userIds: params.userIds,
+      })
+      .execute();
+  }
+
+  async removeKnowledgeBaseAssignmentsByOriginSkill(params: {
+    originSkillId: UUID;
+    userIds: UUID[];
+  }): Promise<void> {
+    this.logger.log('removeKnowledgeBaseAssignmentsByOriginSkill', {
+      originSkillId: params.originSkillId,
+      userCount: params.userIds.length,
+    });
+
+    if (params.userIds.length === 0) {
+      return;
+    }
+
+    await this.threadKbAssignmentRepository
+      .createQueryBuilder('tkba')
+      .delete()
+      .from(ThreadKnowledgeBaseAssignmentRecord)
+      .where(
+        'id IN ' +
+          this.threadKbAssignmentRepository
+            .createQueryBuilder('tkba')
+            .select('tkba.id')
+            .innerJoin('tkba.thread', 'thread')
+            .where('tkba.originSkillId = :originSkillId')
+            .andWhere('thread.userId IN (:...userIds)')
+            .getQuery(),
+      )
+      .setParameters({
+        originSkillId: params.originSkillId,
+        userIds: params.userIds,
+      })
+      .execute();
+  }
+
+  async removeDirectKnowledgeBaseAssignments(params: {
+    knowledgeBaseId: UUID;
+    userIds: UUID[];
+  }): Promise<void> {
+    this.logger.log('removeDirectKnowledgeBaseAssignments', {
+      knowledgeBaseId: params.knowledgeBaseId,
+      userCount: params.userIds.length,
+    });
+
+    if (params.userIds.length === 0) {
+      return;
+    }
+
+    await this.threadKbAssignmentRepository
+      .createQueryBuilder('tkba')
+      .delete()
+      .from(ThreadKnowledgeBaseAssignmentRecord)
+      .where(
+        'id IN ' +
+          this.threadKbAssignmentRepository
+            .createQueryBuilder('tkba')
+            .select('tkba.id')
+            .innerJoin('tkba.thread', 'thread')
+            .where('tkba.knowledgeBaseId = :knowledgeBaseId')
+            .andWhere('tkba.originSkillId IS NULL')
+            .andWhere('thread.userId IN (:...userIds)')
+            .getQuery(),
+      )
+      .setParameters({
+        knowledgeBaseId: params.knowledgeBaseId,
         userIds: params.userIds,
       })
       .execute();
