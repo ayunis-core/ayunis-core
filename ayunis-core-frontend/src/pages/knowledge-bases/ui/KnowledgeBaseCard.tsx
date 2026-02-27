@@ -1,4 +1,5 @@
 import { Button } from '@/shared/ui/shadcn/button';
+import { Badge } from '@/shared/ui/shadcn/badge';
 import { Trash2 } from 'lucide-react';
 import { useDeleteKnowledgeBase } from '../api/useDeleteKnowledgeBase';
 import { useConfirmation } from '@/widgets/confirmation-modal';
@@ -40,6 +41,8 @@ export default function KnowledgeBaseCard({
     });
   }
 
+  const isShared = knowledgeBase.isShared;
+
   return (
     <Item
       variant="outline"
@@ -54,24 +57,31 @@ export default function KnowledgeBaseCard({
       <ItemContent>
         <ItemTitle>
           <span>{knowledgeBase.name}</span>
+          {isShared && (
+            <Badge variant="secondary" className="ml-2 text-xs">
+              {t('shared.badge')}
+            </Badge>
+          )}
         </ItemTitle>
         {knowledgeBase.description && (
           <ItemDescription>{knowledgeBase.description}</ItemDescription>
         )}
       </ItemContent>
-      <ItemActions>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDelete();
-          }}
-          disabled={deleteKnowledgeBase.isPending}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </ItemActions>
+      {!isShared && (
+        <ItemActions>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete();
+            }}
+            disabled={deleteKnowledgeBase.isPending}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </ItemActions>
+      )}
     </Item>
   );
 }
