@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
 
-export class RemoveDirectKbFromThreadsCommand {
+export class RemoveDirectKnowledgeBaseFromThreadsCommand {
   constructor(
     public readonly knowledgeBaseId: UUID,
     public readonly userIds: UUID[],

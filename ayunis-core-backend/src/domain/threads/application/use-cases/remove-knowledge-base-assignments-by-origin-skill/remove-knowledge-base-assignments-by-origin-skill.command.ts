@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
 
-export class RemoveKbAssignmentsByOriginSkillCommand {
+export class RemoveKnowledgeBaseAssignmentsByOriginSkillCommand {
   constructor(
     public readonly skillId: UUID,
     public readonly userIds: UUID[],

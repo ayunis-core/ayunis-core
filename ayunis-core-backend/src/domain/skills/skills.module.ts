@@ -133,6 +133,7 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
     SkillKnowledgeBasesController,
   ],
   exports: [
+    SkillRepository,
     FindActiveSkillsUseCase,
     FindOneSkillUseCase,
     AddSourceToSkillUseCase,
