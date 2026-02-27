@@ -201,7 +201,7 @@ describe('ToolResultCollectorService', () => {
   });
 
   describe('exitLoopAfterAgentResponse', () => {
-    it('should return true when response contains a hybrid displayable+executable tool', () => {
+    it('should return false when response contains a hybrid displayable+executable tool', () => {
       const tool = new MockTool('create_document', ToolType.CREATE_DOCUMENT);
       const toolUseContent = makeToolUseContent('tu-4', 'create_document');
 
@@ -212,6 +212,25 @@ describe('ToolResultCollectorService', () => {
       checkToolCapabilitiesUseCase.execute.mockReturnValue({
         isDisplayable: true,
         isExecutable: true,
+      });
+
+      const result = service.exitLoopAfterAgentResponse(message, [tool]);
+
+      // Hybrid tools need backend execution, so the loop must continue
+      expect(result).toBe(false);
+    });
+
+    it('should return true when response contains a display-only tool', () => {
+      const tool = new MockTool('chart_tool', ToolType.ACTIVATE_SKILL);
+      const toolUseContent = makeToolUseContent('tu-5', 'chart_tool');
+
+      const message = {
+        content: [toolUseContent],
+      } as unknown as AssistantMessage;
+
+      checkToolCapabilitiesUseCase.execute.mockReturnValue({
+        isDisplayable: true,
+        isExecutable: false,
       });
 
       const result = service.exitLoopAfterAgentResponse(message, [tool]);

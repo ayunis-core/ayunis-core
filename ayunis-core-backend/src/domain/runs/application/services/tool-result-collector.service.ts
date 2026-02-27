@@ -52,65 +52,103 @@ export class ToolResultCollectorService {
     const toolResultMessageContent: ToolResultMessageContent[] = [];
 
     for (const content of toolUseMessageContent) {
-      const tool = tools.find((tool) => tool.name === content.name);
-      if (!tool) {
-        toolResultMessageContent.push(
-          new ToolResultMessageContent(
-            content.id,
-            content.name,
-            `A tool with the name ${content.name} was not found. Only use tools that are available in your given list of tools.`,
-          ),
-        );
-        continue;
-      }
-
-      try {
-        const capabilities = this.checkToolCapabilitiesUseCase.execute(
-          new CheckToolCapabilitiesQuery(tool),
-        );
-
-        if (capabilities.isDisplayable && capabilities.isExecutable) {
-          // Hybrid tool: execute for side effects, then return displayable result
-          const executionResult = await this.executeBackendTool(
-            tool,
-            content,
-            orgId,
-            thread.id,
-            isAnonymous,
-          );
-          if (executionResult.succeeded) {
-            toolResultMessageContent.push(
-              this.handleDisplayableTool(content, input),
-            );
-          } else {
-            toolResultMessageContent.push(executionResult.content);
-          }
-        } else if (capabilities.isDisplayable) {
-          toolResultMessageContent.push(
-            this.handleDisplayableTool(content, input),
-          );
-        } else if (capabilities.isExecutable) {
-          const executionResult = await this.executeBackendTool(
-            tool,
-            content,
-            orgId,
-            thread.id,
-            isAnonymous,
-          );
-          toolResultMessageContent.push(executionResult.content);
-        }
-      } catch (error) {
-        if (error instanceof ApplicationError) {
-          throw error;
-        }
-        this.logger.error(`Error processing tool ${content.name}`, error);
-        throw new RunToolExecutionFailedError(content.name, {
-          error: error as Error,
-        });
-      }
+      const result = await this.processToolUse(
+        content,
+        tools,
+        input,
+        orgId,
+        thread.id,
+        isAnonymous,
+      );
+      toolResultMessageContent.push(result);
     }
 
     return toolResultMessageContent;
+  }
+
+  private async processToolUse(
+    content: ToolUseMessageContent,
+    tools: Tool[],
+    input: RunToolResultInput | null,
+    orgId: UUID,
+    threadId: UUID,
+    isAnonymous: boolean,
+  ): Promise<ToolResultMessageContent> {
+    const tool = tools.find((t) => t.name === content.name);
+    if (!tool) {
+      return new ToolResultMessageContent(
+        content.id,
+        content.name,
+        `A tool with the name ${content.name} was not found. Only use tools that are available in your given list of tools.`,
+      );
+    }
+
+    try {
+      const capabilities = this.checkToolCapabilitiesUseCase.execute(
+        new CheckToolCapabilitiesQuery(tool),
+      );
+
+      if (capabilities.isDisplayable && capabilities.isExecutable) {
+        return await this.processHybridTool(
+          tool,
+          content,
+          input,
+          orgId,
+          threadId,
+          isAnonymous,
+        );
+      }
+
+      if (capabilities.isDisplayable) {
+        return this.handleDisplayableTool(content, input);
+      }
+
+      if (capabilities.isExecutable) {
+        const executionResult = await this.executeBackendTool(
+          tool,
+          content,
+          orgId,
+          threadId,
+          isAnonymous,
+        );
+        return executionResult.content;
+      }
+
+      return new ToolResultMessageContent(
+        content.id,
+        content.name,
+        `Tool ${content.name} has no executable or displayable capability.`,
+      );
+    } catch (error) {
+      if (error instanceof ApplicationError) {
+        throw error;
+      }
+      this.logger.error(`Error processing tool ${content.name}`, error);
+      throw new RunToolExecutionFailedError(content.name, {
+        error: error as Error,
+      });
+    }
+  }
+
+  private async processHybridTool(
+    tool: Tool,
+    content: ToolUseMessageContent,
+    input: RunToolResultInput | null,
+    orgId: UUID,
+    threadId: UUID,
+    isAnonymous: boolean,
+  ): Promise<ToolResultMessageContent> {
+    const executionResult = await this.executeBackendTool(
+      tool,
+      content,
+      orgId,
+      threadId,
+      isAnonymous,
+    );
+    if (executionResult.succeeded) {
+      return this.handleDisplayableTool(content, input);
+    }
+    return executionResult.content;
   }
 
   exitLoopAfterAgentResponse(
@@ -123,7 +161,7 @@ export class ToolResultCollectorService {
     if (responseDoesNotContainToolCalls) return true;
 
     try {
-      const responseContainsDisplayTool = agentResponseMessage.content
+      const responseContainsDisplayOnlyTool = agentResponseMessage.content
         .filter((content) => content instanceof ToolUseMessageContent)
         .some((content) => {
           const tool = tools.find((tool) => tool.name === content.name);
@@ -134,11 +172,13 @@ export class ToolResultCollectorService {
             return false;
           }
 
-          return this.checkToolCapabilitiesUseCase.execute(
+          const capabilities = this.checkToolCapabilitiesUseCase.execute(
             new CheckToolCapabilitiesQuery(tool),
-          ).isDisplayable;
+          );
+          // Only exit the loop for display-only tools (not hybrid tools that also need execution)
+          return capabilities.isDisplayable && !capabilities.isExecutable;
         });
-      if (responseContainsDisplayTool) return true;
+      if (responseContainsDisplayOnlyTool) return true;
     } catch (error) {
       this.logger.error('Error checking for display tools', error);
     }
