@@ -4,25 +4,33 @@ import {
   useSharesControllerDeleteShare,
   getSharesControllerGetSharesQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import {
-  CreateAgentShareDtoEntityType,
-  CreateSkillShareDtoEntityType,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { SharesControllerGetSharesEntityType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 
-type EntityType = 'agent' | 'skill';
+type EntityType = 'agent' | 'skill' | 'knowledge_base';
+
+const translationNsMap: Record<EntityType, string> = {
+  agent: 'agent',
+  skill: 'skill',
+  knowledge_base: 'knowledge-bases',
+};
+
+const sharesEntityTypeMap: Record<
+  EntityType,
+  SharesControllerGetSharesEntityType
+> = {
+  agent: SharesControllerGetSharesEntityType.agent,
+  skill: SharesControllerGetSharesEntityType.skill,
+  knowledge_base: SharesControllerGetSharesEntityType.knowledge_base,
+};
 
 export function useDeleteShare(entityType: EntityType, entityId: string) {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const translationNs = entityType === 'agent' ? 'agent' : 'skill';
-  const { t } = useTranslation(translationNs);
+  const { t } = useTranslation(translationNsMap[entityType]);
 
-  const sharesEntityType =
-    entityType === 'agent'
-      ? CreateAgentShareDtoEntityType.agent
-      : CreateSkillShareDtoEntityType.skill;
+  const sharesEntityType = sharesEntityTypeMap[entityType];
 
   const mutation = useSharesControllerDeleteShare({
     mutation: {

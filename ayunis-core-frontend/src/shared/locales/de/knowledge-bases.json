@@ -2,6 +2,58 @@
   "page": {
     "title": "Meine Wissenssammlungen"
   },
+  "shared": {
+    "badge": "Freigegeben"
+  },
+  "tabs": {
+    "configuration": "Konfiguration",
+    "shares": "Freigaben"
+  },
+  "shares": {
+    "org": {
+      "title": "Freigabe für Organisation",
+      "descriptionOn": "Diese Wissenssammlung ist für alle Nutzer Ihrer Organisation freigegeben",
+      "descriptionOff": "Diese Wissenssammlung ist aktuell nicht für Nutzer Ihrer Organisation freigegeben"
+    },
+    "teams": {
+      "title": "Teams",
+      "description": "Mit Teammitgliedern teilen",
+      "create": {
+        "title": "Wissenssammlung mit Team teilen",
+        "description": "Dadurch wird die Wissenssammlung für alle Mitglieder von {{teamName}} verfügbar",
+        "confirm": "Teilen",
+        "cancel": "Abbrechen"
+      },
+      "delete": {
+        "title": "Team-Freigabe entfernen",
+        "description": "Der Zugriff für alle Mitglieder von {{teamName}} wird entfernt",
+        "confirm": "Entfernen",
+        "cancel": "Abbrechen"
+      }
+    },
+    "create": {
+      "button": "Wissenssammlung teilen",
+      "title": "Wissenssammlung mit Organisation teilen",
+      "description": "Dadurch wird die Wissenssammlung für alle Mitglieder Ihrer Organisation verfügbar",
+      "confirm": "Teilen",
+      "cancel": "Abbrechen"
+    },
+    "delete": {
+      "tooltip": "Freigabe entfernen",
+      "title": "Freigabe entfernen",
+      "description": "Der Zugriff für alle Mitglieder Ihrer Organisation wird entfernt",
+      "confirm": "Entfernen",
+      "cancel": "Abbrechen"
+    },
+    "success": {
+      "created": "Wissenssammlung erfolgreich geteilt",
+      "deleted": "Freigabe erfolgreich entfernt"
+    },
+    "error": {
+      "create": "Fehler beim Teilen der Wissenssammlung",
+      "delete": "Fehler beim Entfernen der Freigabe"
+    }
+  },
   "emptyState": {
     "title": "Noch keine Wissenssammlungen",
     "description": "Erstellen Sie Ihre erste Wissenssammlung. Laden Sie Dokumente hoch und nutzen Sie sie in Ihren Chats als Kontext für die KI."
@@ -63,6 +115,7 @@
     "validation": {
       "nameRequired": "Name ist erforderlich"
     },
+    "deleteLabel": "Löschen",
     "confirmDelete": {
       "title": "Wissenssammlung löschen",
       "description": "Sind Sie sicher, dass Sie \"{{title}}\" löschen möchten? Alle zugehörigen Dokumente werden ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
