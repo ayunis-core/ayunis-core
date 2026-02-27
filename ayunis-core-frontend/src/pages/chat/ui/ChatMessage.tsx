@@ -166,7 +166,10 @@ export default function ChatMessage({
           >
             {renderMessageContent(message, isStreaming)}
           </div>
-          <CopyMessageButton contentRef={messageContentRef} />
+          {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content may be undefined during streaming */}
+          {message.content?.some((c) => c.type === 'text') && (
+            <CopyMessageButton contentRef={messageContentRef} />
+          )}
         </div>
       </div>
     );
