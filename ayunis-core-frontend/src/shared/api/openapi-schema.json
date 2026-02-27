@@ -11726,6 +11726,11 @@
             "description": "The date and time when the knowledge base was last updated",
             "example": "2025-01-15T10:00:00.000Z",
             "format": "date-time"
+          },
+          "isShared": {
+            "type": "boolean",
+            "description": "Whether the knowledge base is shared with the current user (not owned)",
+            "example": false
           }
         },
         "required": [
@@ -11733,7 +11738,8 @@
           "name",
           "description",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "isShared"
         ]
       },
       "KnowledgeBaseListResponseDto": {
