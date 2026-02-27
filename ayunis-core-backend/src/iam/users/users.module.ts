@@ -11,7 +11,6 @@ import { JwtModule } from '@nestjs/jwt';
 import type { StringValue } from 'ms';
 import { EmailsModule } from 'src/common/emails/emails.module';
 import { EmailTemplatesModule } from 'src/common/email-templates/email-templates.module';
-import type { StringValue } from 'ms';
 
 // Import use cases
 import { FindUserByIdUseCase } from './application/use-cases/find-user-by-id/find-user-by-id.use-case';
@@ -65,7 +64,7 @@ import { SuperAdminUsersController } from './presenters/http/super-admin-users.c
           expiresIn: configService.get<StringValue>(
             'auth.jwt.emailConfirmationExpiresIn',
             '24h',
-          ) as StringValue,
+          ),
         },
       }),
     }),

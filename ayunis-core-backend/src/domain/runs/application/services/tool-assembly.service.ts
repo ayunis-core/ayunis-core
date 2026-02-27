@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigService, ConfigType } from '@nestjs/config';
 import { UUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { Agent } from 'src/domain/agents/domain/agent.entity';
@@ -18,6 +18,10 @@ import { FindActiveSkillsUseCase } from 'src/domain/skills/application/use-cases
 import { FindActiveSkillsQuery } from 'src/domain/skills/application/use-cases/find-active-skills/find-active-skills.query';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { GetUserSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-user-system-prompt/get-user-system-prompt.use-case';
+import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
+import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { featuresConfig } from 'src/config/features.config';
 import { FindArtifactsByThreadUseCase } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.use-case';
 import { FindArtifactsByThreadQuery } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.query';
 
@@ -32,6 +36,9 @@ export class ToolAssemblyService {
     private readonly systemPromptBuilderService: SystemPromptBuilderService,
     private readonly findActiveSkillsUseCase: FindActiveSkillsUseCase,
     private readonly getUserSystemPromptUseCase: GetUserSystemPromptUseCase,
+    private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
+    @Inject(featuresConfig.KEY)
+    private readonly features: ConfigType<typeof featuresConfig>,
     private readonly findArtifactsByThreadUseCase: FindArtifactsByThreadUseCase,
   ) {}
 
@@ -99,19 +106,68 @@ export class ToolAssemblyService {
 
     // Discover MCP capabilities from all integration IDs
     if (mcpIntegrationIds.size > 0) {
-      const mcpCapabilities = await Promise.all(
-        [...mcpIntegrationIds].map((integrationId) =>
+      const integrationIdList = [...mcpIntegrationIds];
+
+      // Fetch integration entities for metadata (name, logoUrl)
+      const integrations = await this.getMcpIntegrationsByIdsUseCase.execute(
+        new GetMcpIntegrationsByIdsQuery(integrationIdList),
+      );
+      const integrationMetaMap = new Map<
+        UUID,
+        { name: string; logoUrl: string | null }
+      >();
+      for (const integration of integrations) {
+        integrationMetaMap.set(integration.id, {
+          name: integration.name,
+          logoUrl:
+            integration instanceof MarketplaceMcpIntegration
+              ? integration.logoUrl
+              : null,
+        });
+      }
+
+      const mcpResults = await Promise.allSettled(
+        integrationIdList.map((integrationId) =>
           this.discoverMcpCapabilitiesUseCase.execute(
             new DiscoverMcpCapabilitiesQuery(integrationId),
           ),
         ),
       );
+
+      // Filter successful results, log and skip failures
+      const mcpCapabilities = mcpResults
+        .map((result, index) => {
+          if (result.status === 'fulfilled') {
+            return result.value;
+          }
+          const failedId = integrationIdList[index];
+          const meta = integrationMetaMap.get(failedId);
+          this.logger.warn(
+            `MCP integration '${meta?.name ?? failedId}' unavailable, skipping`,
+            {
+              integrationId: failedId,
+              error:
+                result.reason instanceof Error
+                  ? result.reason.message
+                  : 'Unknown error',
+            },
+          );
+          return null;
+        })
+        .filter((cap): cap is NonNullable<typeof cap> => cap !== null);
+
       // Add MCP tools and resources
       tools.push(
         ...mcpCapabilities.flatMap((capability) =>
-          capability.tools.map(
-            (tool) => new McpIntegrationTool(tool, capability.returnsPii),
-          ),
+          capability.tools.map((tool) => {
+            const meta = integrationMetaMap.get(tool.integrationId);
+            return new McpIntegrationTool(
+              tool,
+              capability.returnsPii,
+              meta?.name ?? 'Unknown',
+              meta?.logoUrl ?? null,
+            );
+          }),
         ),
         ...mcpCapabilities.flatMap((capability) =>
           capability.resources.map(
