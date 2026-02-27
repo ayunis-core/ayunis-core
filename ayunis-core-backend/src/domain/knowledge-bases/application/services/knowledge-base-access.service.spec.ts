@@ -96,14 +96,13 @@ describe('KnowledgeBaseAccessService', () => {
 
     it('should return shared KB when not owned', async () => {
       const sharedKb = makeKb(kbId, otherUserId);
-      knowledgeBaseRepository.findById
-        .mockResolvedValueOnce(sharedKb) // first call: ownership check
-        .mockResolvedValueOnce(sharedKb); // second call: fetch after share check
+      knowledgeBaseRepository.findById.mockResolvedValue(sharedKb);
       findShareByEntityUseCase.execute.mockResolvedValue({} as never);
 
       const result = await service.findAccessibleKnowledgeBase(kbId);
 
       expect(result).toBe(sharedKb);
+      expect(knowledgeBaseRepository.findById).toHaveBeenCalledTimes(1);
     });
 
     it('should throw KnowledgeBaseNotFoundError when KB is not owned or shared', async () => {
@@ -129,7 +128,7 @@ describe('KnowledgeBaseAccessService', () => {
       const kb = makeKb();
       knowledgeBaseRepository.findById.mockResolvedValue(kb);
 
-      const result = await service.resolveIsShared(kbId, userId);
+      const result = await service.resolveIsShared(kbId);
 
       expect(result).toBe(false);
       expect(findShareByEntityUseCase.execute).not.toHaveBeenCalled();
@@ -140,7 +139,7 @@ describe('KnowledgeBaseAccessService', () => {
       knowledgeBaseRepository.findById.mockResolvedValue(kb);
       findShareByEntityUseCase.execute.mockResolvedValue({} as never);
 
-      const result = await service.resolveIsShared(kbId, userId);
+      const result = await service.resolveIsShared(kbId);
 
       expect(result).toBe(true);
     });
@@ -149,7 +148,15 @@ describe('KnowledgeBaseAccessService', () => {
       knowledgeBaseRepository.findById.mockResolvedValue(null);
       findShareByEntityUseCase.execute.mockResolvedValue(null);
 
-      const result = await service.resolveIsShared(kbId, userId);
+      const result = await service.resolveIsShared(kbId);
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false when no user in context', async () => {
+      contextService.get.mockReturnValue(undefined);
+
+      const result = await service.resolveIsShared(kbId);
 
       expect(result).toBe(false);
     });

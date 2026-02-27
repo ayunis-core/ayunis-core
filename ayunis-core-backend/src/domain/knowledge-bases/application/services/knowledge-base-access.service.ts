@@ -49,21 +49,23 @@ export class KnowledgeBaseAccessService {
       new FindShareByEntityQuery(SharedEntityType.KNOWLEDGE_BASE, id),
     );
 
-    if (share) {
-      const kb = await this.knowledgeBaseRepository.findById(id);
-      if (kb) {
-        return kb;
-      }
+    if (share && ownedKb) {
+      return ownedKb;
     }
 
     throw new KnowledgeBaseNotFoundError(id);
   }
 
   /**
-   * Resolves whether a knowledge base is shared with the given user.
+   * Resolves whether a knowledge base is shared with the current context user.
    * Returns false for KB owners, even if the KB has been shared.
    */
-  async resolveIsShared(kbId: UUID, userId: UUID): Promise<boolean> {
+  async resolveIsShared(kbId: UUID): Promise<boolean> {
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      return false;
+    }
+
     const kb = await this.knowledgeBaseRepository.findById(kbId);
     if (kb?.userId === userId) {
       return false;
