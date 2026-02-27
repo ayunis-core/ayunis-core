@@ -19,6 +19,7 @@ import {
   LABEL_DIRECTION,
   LABEL_ROLE,
   LABEL_ERROR_TYPE,
+  LABEL_STREAMING,
 } from './metrics.constants';
 import { MetricsAuthMiddleware } from './metrics-auth.middleware';
 
@@ -37,14 +38,14 @@ const tokensCounter = makeCounterProvider({
 const inferenceDurationHistogram = makeHistogramProvider({
   name: AYUNIS_INFERENCE_DURATION_SECONDS,
   help: 'Duration of LLM inference calls in seconds',
-  labelNames: [LABEL_MODEL, LABEL_PROVIDER],
+  labelNames: [LABEL_MODEL, LABEL_PROVIDER, LABEL_STREAMING],
   buckets: [0.1, 0.5, 1, 2, 5, 10, 30, 60, 120],
 });
 
 const inferenceErrorsCounter = makeCounterProvider({
   name: AYUNIS_INFERENCE_ERRORS_TOTAL,
   help: 'Total number of LLM inference errors',
-  labelNames: [LABEL_MODEL, LABEL_PROVIDER, LABEL_ERROR_TYPE],
+  labelNames: [LABEL_MODEL, LABEL_PROVIDER, LABEL_ERROR_TYPE, LABEL_STREAMING],
 });
 
 const messagesCounter = makeCounterProvider({

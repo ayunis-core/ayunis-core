@@ -26,3 +26,4 @@ export const LABEL_PROVIDER = 'provider';
 export const LABEL_DIRECTION = 'direction';
 export const LABEL_ROLE = 'role';
 export const LABEL_ERROR_TYPE = 'error_type';
+export const LABEL_STREAMING = 'streaming';

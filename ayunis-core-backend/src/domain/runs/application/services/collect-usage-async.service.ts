@@ -1,8 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
+import { Counter } from 'prom-client';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { CollectUsageUseCase } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.use-case';
 import { CollectUsageCommand } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.command';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { ContextService } from 'src/common/context/services/context.service';
+import { AYUNIS_TOKENS_TOTAL } from 'src/metrics/metrics.constants';
+import { getUserContextLabels, safeMetric } from 'src/metrics/metrics.utils';
 
 /**
  * Collects usage data asynchronously (fire-and-forget).
@@ -12,7 +17,12 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 export class CollectUsageAsyncService {
   private readonly logger = new Logger(CollectUsageAsyncService.name);
 
-  constructor(private readonly collectUsageUseCase: CollectUsageUseCase) {}
+  constructor(
+    private readonly collectUsageUseCase: CollectUsageUseCase,
+    private readonly contextService: ContextService,
+    @InjectMetric(AYUNIS_TOKENS_TOTAL)
+    private readonly tokensCounter: Counter<string>,
+  ) {}
 
   collect(
     model: LanguageModel,
@@ -27,6 +37,36 @@ export class CollectUsageAsyncService {
       outputTokens,
       messageId,
     });
+
+    const labels = getUserContextLabels(this.contextService);
+
+    if (inputTokens > 0) {
+      safeMetric(this.logger, () => {
+        this.tokensCounter.inc(
+          {
+            ...labels,
+            model: model.name,
+            provider: model.provider,
+            direction: 'input',
+          },
+          inputTokens,
+        );
+      });
+    }
+
+    if (outputTokens > 0) {
+      safeMetric(this.logger, () => {
+        this.tokensCounter.inc(
+          {
+            ...labels,
+            model: model.name,
+            provider: model.provider,
+            direction: 'output',
+          },
+          outputTokens,
+        );
+      });
+    }
 
     this.collectUsageUseCase
       .execute(

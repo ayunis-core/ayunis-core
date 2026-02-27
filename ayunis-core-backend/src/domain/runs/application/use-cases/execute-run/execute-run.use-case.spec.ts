@@ -7,7 +7,7 @@ import type { CreateAssistantMessageUseCase } from 'src/domain/messages/applicat
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
 import type { TrimMessagesForContextUseCase } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.use-case';
-import type { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
+
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import type { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
@@ -21,8 +21,10 @@ import type { ToolAssemblyService } from '../../services/tool-assembly.service';
 import type { ToolResultCollectorService } from '../../services/tool-result-collector.service';
 import type { MessageCleanupService } from '../../services/message-cleanup.service';
 import type { StreamingInferenceService } from '../../services/streaming-inference.service';
+import type { NonStreamingInferenceService } from '../../services/non-streaming-inference.service';
 import type { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
+import type { Counter } from 'prom-client';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { randomUUID } from 'crypto';
@@ -98,7 +100,6 @@ describe('ExecuteRunUseCase', () => {
       { execute: jest.fn() } as unknown as CreateUserMessageUseCase,
       { execute: jest.fn() } as unknown as CreateAssistantMessageUseCase,
       { execute: jest.fn() } as unknown as CreateToolResultMessageUseCase,
-      { execute: jest.fn() } as unknown as GetInferenceUseCase,
       findThreadUseCase,
       { execute: jest.fn() } as unknown as FindOneAgentUseCase,
       { execute: jest.fn() } as unknown as AddMessageToThreadUseCase,
@@ -115,9 +116,11 @@ describe('ExecuteRunUseCase', () => {
       {
         executeStreamingInference: jest.fn(),
       } as unknown as StreamingInferenceService,
+      { execute: jest.fn() } as unknown as NonStreamingInferenceService,
       {
         activateOnThread: jest.fn(),
       } as unknown as jest.Mocked<SkillActivationService>,
+      { inc: jest.fn() } as unknown as Counter<string>,
     );
   });
 

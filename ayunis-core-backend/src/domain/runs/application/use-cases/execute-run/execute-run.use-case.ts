@@ -1,4 +1,6 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Counter } from 'prom-client';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { Message } from '../../../../messages/domain/message.entity';
 import { AddMessageCommand } from '../../../../threads/application/use-cases/add-message-to-thread/add-message.command';
 import { Thread } from '../../../../threads/domain/thread.entity';
@@ -7,8 +9,6 @@ import { CreateUserMessageCommand } from '../../../../messages/application/use-c
 import { CreateToolResultMessageUseCase } from '../../../../messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import { CreateToolResultMessageCommand } from '../../../../messages/application/use-cases/create-tool-result-message/create-tool-result-message.command';
 import { AssistantMessage } from '../../../../messages/domain/messages/assistant-message.entity';
-import { GetInferenceUseCase } from '../../../../models/application/use-cases/get-inference/get-inference.use-case';
-import { GetInferenceCommand } from '../../../../models/application/use-cases/get-inference/get-inference.command';
 import { CreateAssistantMessageUseCase } from '../../../../messages/application/use-cases/create-assistant-message/create-assistant-message.use-case';
 import { CreateAssistantMessageCommand } from '../../../../messages/application/use-cases/create-assistant-message/create-assistant-message.command';
 import {
@@ -28,9 +28,7 @@ import { FindThreadQuery } from '../../../../threads/application/use-cases/find-
 import { ExecuteRunCommand } from './execute-run.command';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
-import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import { UUID } from 'crypto';
-import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
@@ -48,8 +46,11 @@ import { ToolAssemblyService } from '../../services/tool-assembly.service';
 import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
 import { MessageCleanupService } from '../../services/message-cleanup.service';
 import { StreamingInferenceService } from '../../services/streaming-inference.service';
+import { NonStreamingInferenceService } from '../../services/non-streaming-inference.service';
 import { enrichContentWithIntegration } from '../../helpers/resolve-integration.helper';
 import type { RunParams } from './run-params.interface';
+import { AYUNIS_USER_ACTIVITY_TOTAL } from 'src/metrics/metrics.constants';
+import { safeMetric } from 'src/metrics/metrics.utils';
 
 const MAX_CONTEXT_TOKENS = 80000;
 
@@ -61,7 +62,6 @@ export class ExecuteRunUseCase {
     private readonly createUserMessageUseCase: CreateUserMessageUseCase,
     private readonly createAssistantMessageUseCase: CreateAssistantMessageUseCase,
     private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
-    private readonly triggerInferenceUseCase: GetInferenceUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly findOneAgentUseCase: FindOneAgentUseCase,
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
@@ -73,7 +73,10 @@ export class ExecuteRunUseCase {
     private readonly toolResultCollectorService: ToolResultCollectorService,
     private readonly messageCleanupService: MessageCleanupService,
     private readonly streamingInferenceService: StreamingInferenceService,
+    private readonly nonStreamingInferenceService: NonStreamingInferenceService,
     private readonly skillActivationService: SkillActivationService,
+    @InjectMetric(AYUNIS_USER_ACTIVITY_TOTAL)
+    private readonly userActivityCounter: Counter<string>,
   ) {}
 
   async execute(
@@ -90,6 +93,13 @@ export class ExecuteRunUseCase {
       if (!userId || !orgId) {
         throw new UnauthorizedException('User not authenticated');
       }
+
+      // Counts "attempted runs" — fires before run validity is established.
+      // This is intentional: it serves as the DAU (daily active users) metric.
+      safeMetric(this.logger, () =>
+        this.userActivityCounter.inc({ user_id: userId, org_id: orgId }),
+      );
+
       const { thread } = await this.findThreadUseCase.execute(
         new FindThreadQuery(command.threadId),
       );
@@ -357,8 +367,11 @@ Skill "${skillName}" has already been activated on this thread. Do not call acti
   private async *runInference(
     params: RunParams,
   ): AsyncGenerator<Message, AssistantMessage, void> {
-    const trimmedMessages = this.trimMessagesForInference(
-      params.thread.messages,
+    const trimmedMessages = this.trimMessagesForContextUseCase.execute(
+      new TrimMessagesForContextCommand(
+        params.thread.messages,
+        MAX_CONTEXT_TOKENS,
+      ),
     );
 
     try {
@@ -412,15 +425,12 @@ Skill "${skillName}" has already been activated on this thread. Do not call acti
     params: RunParams,
     trimmedMessages: Message[],
   ): AsyncGenerator<Message, AssistantMessage, void> {
-    const inferenceResponse = await this.triggerInferenceUseCase.execute(
-      new GetInferenceCommand({
-        model: params.model,
-        messages: trimmedMessages,
-        tools: params.tools,
-        toolChoice: ModelToolChoice.AUTO,
-        instructions: params.instructions,
-      }),
-    );
+    const inferenceResponse = await this.nonStreamingInferenceService.execute({
+      model: params.model,
+      messages: trimmedMessages,
+      tools: params.tools,
+      instructions: params.instructions,
+    });
 
     const enrichedContent = enrichContentWithIntegration(
       inferenceResponse.content,
@@ -435,7 +445,7 @@ Skill "${skillName}" has already been activated on this thread. Do not call acti
       inferenceResponse.meta.inputTokens !== undefined &&
       inferenceResponse.meta.outputTokens !== undefined
     ) {
-      this.collectUsage(
+      this.collectUsageAsyncService.collect(
         params.model,
         inferenceResponse.meta.inputTokens,
         inferenceResponse.meta.outputTokens,
@@ -475,25 +485,5 @@ Skill "${skillName}" has already been activated on this thread. Do not call acti
         originalError: error instanceof Error ? error.message : 'Unknown error',
       });
     }
-  }
-
-  private collectUsage(
-    model: LanguageModel,
-    inputTokens: number,
-    outputTokens: number,
-    messageId?: UUID,
-  ): void {
-    this.collectUsageAsyncService.collect(
-      model,
-      inputTokens,
-      outputTokens,
-      messageId,
-    );
-  }
-
-  private trimMessagesForInference(messages: Message[]): Message[] {
-    return this.trimMessagesForContextUseCase.execute(
-      new TrimMessagesForContextCommand(messages, MAX_CONTEXT_TOKENS),
-    );
   }
 }

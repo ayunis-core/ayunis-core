@@ -4,6 +4,8 @@ import {
   Inject,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Counter } from 'prom-client';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { CreateUserMessageCommand } from './create-user-message.command';
 import { UserMessage } from '../../../domain/messages/user-message.entity';
 import {
@@ -20,6 +22,8 @@ import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/de
 import { TextMessageContent } from '../../../domain/message-contents/text-message-content.entity';
 import { ImageMessageContent } from '../../../domain/message-contents/image-message-content.entity';
 import { getImageStoragePath } from '../../../domain/image-storage-path.util';
+import { AYUNIS_MESSAGES_TOTAL } from 'src/metrics/metrics.constants';
+import { getUserContextLabels, safeMetric } from 'src/metrics/metrics.utils';
 
 @Injectable()
 export class CreateUserMessageUseCase {
@@ -31,6 +35,8 @@ export class CreateUserMessageUseCase {
     private readonly uploadObjectUseCase: UploadObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly contextService: ContextService,
+    @InjectMetric(AYUNIS_MESSAGES_TOTAL)
+    private readonly messagesCounter: Counter<string>,
   ) {}
 
   async execute(command: CreateUserMessageCommand): Promise<UserMessage> {
@@ -106,6 +112,11 @@ export class CreateUserMessageUseCase {
       const savedMessage = (await this.messagesRepository.create(
         userMessage,
       )) as UserMessage;
+
+      safeMetric(this.logger, () => {
+        const labels = getUserContextLabels(this.contextService);
+        this.messagesCounter.inc({ ...labels, role: 'user' });
+      });
 
       this.logger.log('User message created successfully', {
         messageId: savedMessage.id,
