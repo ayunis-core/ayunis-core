@@ -78,16 +78,14 @@ Pinning state is co-located on `SkillActivationRecord` (the `isPinned` column, d
 
 When a new user is created, the `UserCreatedListener` listens for `UserCreatedEvent` and installs pre-installed marketplace skills via `MarketplaceSkillInstallationService`. The service encapsulates the shared install logic (fetch marketplace skill → resolve unique name → create `Skill` → activate) used by both the listener and `InstallSkillFromMarketplaceUseCase`. If the marketplace is unavailable during user creation, the listener logs a warning and continues — pre-installed skills are best-effort.
 
-When a skill share is deleted, the `ShareDeletedListener` handles cleanup of activations. If no other shares remain for the skill, all non-owner activations are removed. If other shares still exist, the listener resolves the remaining scopes to user IDs (via `FindAllUserIdsByOrgIdUseCase` and `FindAllUserIdsByTeamIdUseCase`) and only deactivates users who are no longer covered by any remaining share scope.
+When a skill share is deleted, the `ShareDeletedListener` handles cleanup of activations. If no other shares remain for the skill, all non-owner activations are removed. If other shares still exist, the listener resolves the remaining scopes to user IDs (via `ShareScopeResolverService` from the shares module) and only deactivates users who are no longer covered by any remaining share scope.
 
 ## Dependencies
 
 - **SourcesModule** — for source management (create/delete sources, batch fetch by IDs)
 - **McpModule** — for MCP integration validation and batch fetch
 - **ThreadsModule** — for adding sources and MCP integrations to threads during skill activation
-- **SharesModule** — for share authorization strategy registration
-- **UsersModule** — for resolving org-scoped share members (`FindAllUserIdsByOrgIdUseCase`)
-- **TeamsModule** — for resolving team-scoped share members (`FindAllUserIdsByTeamIdUseCase`)
+- **SharesModule** — for share authorization strategy registration and `ShareScopeResolverService` (resolving remaining share scopes to user IDs on revocation)
 - **MarketplaceModule** — for fetching marketplace skill definitions (`GetMarketplaceSkillUseCase`)
 - **ContextService** — for user context (userId, orgId)
 
