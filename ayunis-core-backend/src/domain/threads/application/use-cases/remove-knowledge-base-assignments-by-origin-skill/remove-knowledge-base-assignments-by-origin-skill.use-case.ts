@@ -16,6 +16,7 @@ export class RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase {
     this.logger.log('execute', {
       skillId: command.skillId,
       userCount: command.userIds.length,
+      knowledgeBaseId: command.knowledgeBaseId,
     });
 
     if (command.userIds.length === 0) {
@@ -25,6 +26,7 @@ export class RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase {
     await this.threadsRepository.removeKnowledgeBaseAssignmentsByOriginSkill({
       originSkillId: command.skillId,
       userIds: command.userIds,
+      knowledgeBaseId: command.knowledgeBaseId,
     });
   }
 }
