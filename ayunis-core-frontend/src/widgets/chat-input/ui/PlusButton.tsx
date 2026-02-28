@@ -15,6 +15,7 @@ import {
   TooltipContent,
 } from '@/shared/ui/shadcn/tooltip';
 import { BookOpen, Brain, FileText, Image, Loader2, Plus } from 'lucide-react';
+import { Badge } from '@/shared/ui/shadcn/badge';
 import { Input } from '@/shared/ui/shadcn/input';
 import { useRef } from 'react';
 import { usePrompts } from '../api/usePrompts';
@@ -238,9 +239,9 @@ export default function PlusButton({
                         >
                           {kb.name}
                           {kb.isShared && (
-                            <span className="ml-1 text-xs text-muted-foreground">
-                              ({t('chatInput.shared')})
-                            </span>
+                            <Badge variant="secondary" className="ml-1 text-xs">
+                              {t('chatInput.shared')}
+                            </Badge>
                           )}
                         </DropdownMenuItem>
                       ))
