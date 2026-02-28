@@ -1,0 +1,117 @@
+name: Cleanup Cursor Branches
+
+on:
+  schedule:
+    # Run every Sunday at 3:00 AM UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (list branches without deleting)'
+        type: boolean
+        default: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cleanup orphaned cursor branches
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+        run: |
+          set -euo pipefail
+
+          echo "🔍 Fetching all remote branches..."
+          git fetch --all --prune
+
+          echo ""
+          echo "📋 Finding cursor/* branches..."
+          cursor_branches=$(git branch -r --list 'origin/cursor/*' | sed 's/origin\///' | xargs)
+
+          if [ -z "$cursor_branches" ]; then
+            echo "✅ No cursor branches found. Nothing to clean up."
+            exit 0
+          fi
+
+          echo "Found $(echo $cursor_branches | wc -w) cursor branches"
+          echo ""
+
+          # Get all non-cursor, non-main remote branches (potential base branches)
+          feature_branches=$(git branch -r | grep -v 'origin/cursor/' | grep -v '^[[:space:]]*origin/main$' | grep -v 'origin/HEAD' | sed 's/origin\///' | xargs || true)
+
+          deleted_count=0
+          skipped_count=0
+
+          for branch in $cursor_branches; do
+            echo "----------------------------------------"
+            echo "Checking: $branch"
+            
+            # Find the merge-base between this cursor branch and main
+            merge_base=$(git merge-base origin/main "origin/$branch" 2>/dev/null || echo "")
+            
+            if [ -z "$merge_base" ]; then
+              echo "  ⚠️  Could not determine merge base, skipping"
+              skipped_count=$((skipped_count + 1))
+              continue
+            fi
+
+            # Check which branches contain this merge-base commit
+            # If only main contains it, the original base branch was merged and deleted
+            branches_with_base=$(git branch -r --contains "$merge_base" 2>/dev/null | grep -v 'origin/cursor/' | grep -v 'origin/HEAD' | sed 's/origin\///' | xargs)
+            
+            echo "  📍 Merge-base: ${merge_base:0:8}"
+            echo "  📂 Non-cursor branches containing merge-base: $branches_with_base"
+
+            # Check if any feature branch (non-main, non-cursor) still contains this merge-base
+            # AND is an ancestor of the cursor branch (i.e., cursor branched from it)
+            base_branch_exists=false
+            
+            for fb in $feature_branches; do
+              # Check if this feature branch contains the merge-base
+              if git merge-base --is-ancestor "$merge_base" "origin/$fb" 2>/dev/null; then
+                # Check if the cursor branch is based on this feature branch
+                # (cursor branch tip should have this feature branch in its history)
+                cursor_base=$(git merge-base "origin/$fb" "origin/$branch" 2>/dev/null || echo "")
+                
+                # If the cursor branch and feature branch share more history than just main
+                if [ -n "$cursor_base" ] && [ "$cursor_base" != "$merge_base" ]; then
+                  echo "  🌿 Found active base branch: $fb"
+                  base_branch_exists=true
+                  break
+                fi
+              fi
+            done
+
+            if [ "$base_branch_exists" = true ]; then
+              echo "  ⏭️  Keeping (base branch still exists)"
+              skipped_count=$((skipped_count + 1))
+            else
+              echo "  🕸️  Orphaned (base branch was merged to main)"
+              if [ "$DRY_RUN" = "true" ]; then
+                echo "  🔸 [DRY RUN] Would delete: $branch"
+              else
+                echo "  🗑️  Deleting: $branch"
+                git push origin --delete "$branch" || echo "  ⚠️  Failed to delete"
+              fi
+              deleted_count=$((deleted_count + 1))
+            fi
+          done
+
+          echo ""
+          echo "========================================"
+          echo "📊 Summary"
+          echo "========================================"
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "🔸 Branches that would be deleted: $deleted_count"
+          else
+            echo "🗑️  Branches deleted: $deleted_count"
+          fi
+          echo "⏭️  Branches kept: $skipped_count"
