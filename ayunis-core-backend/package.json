@@ -94,7 +94,7 @@
     "rxjs": "^7.8.1",
     "tiktoken": "^1.0.22",
     "typeorm": "^0.3.25",
-    "winston": "^3.17.0",
+    "winston": "^3.19.0",
     "winston-transport": "^4.9.0",
     "xlsx": "^0.18.5"
   },
