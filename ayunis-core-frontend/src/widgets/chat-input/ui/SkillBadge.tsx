@@ -8,12 +8,14 @@ interface SkillBadgeProps {
 
 export function SkillBadge({ skillName, onRemove }: Readonly<SkillBadgeProps>) {
   return (
-    <Badge variant="secondary">
+    <Badge
+      variant="outline"
+      className="flex items-center gap-1 rounded-full border-none"
+      onClick={() => onRemove()}
+    >
       <Sparkles className="h-3 w-3" />
       {skillName}
-      <div className="cursor-pointer" onClick={() => onRemove()}>
-        <XIcon className="h-3 w-3" />
-      </div>
+      <XIcon className="h-3 w-3 cursor-pointer" />
     </Badge>
   );
 }
