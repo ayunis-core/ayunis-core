@@ -42,7 +42,7 @@ jobs:
 
       - name: Upload violation report
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: backend-dependency-violations
           path: ayunis-core-backend/dependency-violations.html
@@ -79,7 +79,7 @@ jobs:
 
       - name: Upload violation report
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-dependency-violations
           path: ayunis-core-frontend/dependency-violations.html
