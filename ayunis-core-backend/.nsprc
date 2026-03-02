@@ -6,5 +6,9 @@
   "1113407": {
     "active": true,
     "notes": "fast-xml-parser entity encoding bypass via regex injection — only affects minio which parses XML from our own MinIO server, not untrusted input. Waiting for minio to upgrade to fast-xml-parser v5."
+  },
+  "1113518": {
+    "active": true,
+    "notes": "basic-ftp path traversal in downloadToDir() — transitive dep of puppeteer-core via proxy-agent. We never call downloadToDir() and only use puppeteer for local PDF rendering. No untrusted FTP connections."
   }
 }
