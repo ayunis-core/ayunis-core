@@ -64,10 +64,7 @@ export function SourcesList({
   return (
     <div className="flex flex-wrap gap-2 items-center">
       {knowledgeBases.map((kb) => (
-        <Badge
-          key={`kb-${kb.id}`}
-          variant="secondary"
-        >
+        <Badge key={`kb-${kb.id}`} variant="secondary">
           <Brain className="h-3 w-3" />
           {kb.name}
           {onRemoveKnowledgeBase && (

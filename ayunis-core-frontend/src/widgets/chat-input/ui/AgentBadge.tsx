@@ -24,10 +24,7 @@ export function AgentBadge({
       <Bot className="h-3 w-3" />
       {agent?.name}
       {!isDisabled && (
-        <div
-          className="cursor-pointer"
-          onClick={() => onRemove(agentId)}
-        >
+        <div className="cursor-pointer" onClick={() => onRemove(agentId)}>
           <XIcon className="h-3 w-3" />
         </div>
       )}
