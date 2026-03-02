@@ -305,7 +305,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
 
               <div className="flex items-center justify-between">
                 {/* Left side */}
-                <div className="flex-shrink-0 flex space-x-2">
+                <div className="flex-shrink-0 flex items-center space-x-2">
                   <PlusButton
                     onFileUpload={onFileUpload}
                     onImageSelect={handleImageSelect}

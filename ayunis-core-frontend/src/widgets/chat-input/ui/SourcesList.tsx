@@ -67,7 +67,6 @@ export function SourcesList({
         <Badge
           key={`kb-${kb.id}`}
           variant="secondary"
-          className="flex items-center gap-1 bg-blue-600/10 text-blue-600"
         >
           <Brain className="h-3 w-3" />
           {kb.name}

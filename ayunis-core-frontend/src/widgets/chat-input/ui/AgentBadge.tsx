@@ -18,16 +18,19 @@ export function AgentBadge({
 }: Readonly<AgentBadgeProps>) {
   return (
     <Badge
-      variant="outline"
-      className={cn(
-        'flex items-center gap-1 rounded-full border-none',
-        isDisabled && 'opacity-50 cursor-not-allowed',
-      )}
-      onClick={() => !isDisabled && onRemove(agentId)}
+      variant="secondary"
+      className={cn(isDisabled && 'opacity-50 cursor-not-allowed')}
     >
       <Bot className="h-3 w-3" />
       {agent?.name}
-      {!isDisabled && <XIcon className="h-3 w-3 cursor-pointer" />}
+      {!isDisabled && (
+        <div
+          className="cursor-pointer"
+          onClick={() => onRemove(agentId)}
+        >
+          <XIcon className="h-3 w-3" />
+        </div>
+      )}
     </Badge>
   );
 }

@@ -8,9 +8,17 @@ import {
   CardAction,
 } from '@/shared/ui/shadcn/card';
 import { Button } from '@/shared/ui/shadcn/button';
-import { Badge } from '@/shared/ui/shadcn/badge';
 import { Input } from '@/shared/ui/shadcn/input';
 import { Label } from '@/shared/ui/shadcn/label';
+import {
+  Item,
+  ItemMedia,
+  ItemContent,
+  ItemTitle,
+  ItemActions,
+  ItemGroup,
+  ItemSeparator,
+} from '@/shared/ui/shadcn/item';
 import {
   Dialog,
   DialogContent,
@@ -178,50 +186,60 @@ function DocumentsContent({
     );
   }
   return (
-    <div className="flex flex-wrap gap-2">
-      {documents.map((doc) => (
-        <DocumentBadge
+    <ItemGroup>
+      {documents.map((doc, index) => (
+        <DocumentItem
           key={doc.id}
           doc={doc}
           removeDocument={removeDocument}
           isRemoving={isRemoving}
+          showSeparator={index < documents.length - 1}
         />
       ))}
-    </div>
+    </ItemGroup>
   );
 }
 
-function DocumentBadge({
+function DocumentItem({
   doc,
   removeDocument,
   isRemoving,
+  showSeparator,
 }: Readonly<{
   doc: KnowledgeBaseDocumentResponseDto;
   removeDocument: (id: string) => void;
   isRemoving: boolean;
+  showSeparator: boolean;
 }>) {
   const isWeb = doc.textType === KnowledgeBaseDocumentResponseDtoTextType.web;
   const Icon = isWeb ? Globe : FileText;
 
   return (
-    <Badge
-      variant="secondary"
-      className="flex items-center gap-1.5 py-1.5 px-3"
-      title={isWeb ? (doc.url ?? undefined) : undefined}
-    >
-      <Icon className="h-3.5 w-3.5 shrink-0" />
-      <span className="max-w-[200px] truncate">{doc.name}</span>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={() => removeDocument(doc.id)}
-        disabled={isRemoving}
-        className="ml-1 h-5 w-5 rounded-full"
-      >
-        <X className="h-3 w-3" />
-      </Button>
-    </Badge>
+    <>
+      <Item size="sm">
+        <ItemMedia>
+          <Icon className="h-4 w-4 text-muted-foreground" />
+        </ItemMedia>
+        <ItemContent>
+          <ItemTitle title={isWeb ? (doc.url ?? undefined) : undefined}>
+            {doc.name}
+          </ItemTitle>
+        </ItemContent>
+        <ItemActions>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => removeDocument(doc.id)}
+            disabled={isRemoving}
+            className="h-7 w-7"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </ItemActions>
+      </Item>
+      {showSeparator && <ItemSeparator />}
+    </>
   );
 }
 
