@@ -142,7 +142,8 @@ function ChartTooltipContent({
     const itemConfig = getPayloadConfigFromPayload(config, item, key);
     const value =
       !labelKey && typeof label === 'string'
-        ? (config[label].label ?? label)
+        ? // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- label may not exist as a key in config at runtime
+          (config[label]?.label ?? label)
         : itemConfig?.label;
 
     if (labelFormatter) {
