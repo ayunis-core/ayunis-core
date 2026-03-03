@@ -15,12 +15,6 @@ export function useDownloadChartImage(title?: string) {
       const dataUrl = await toPng(node, {
         backgroundColor: '#ffffff',
         pixelRatio: 2,
-        filter: (domNode) => {
-          if (domNode instanceof Element) {
-            return !domNode.hasAttribute('data-exclude-from-export');
-          }
-          return true;
-        },
       });
 
       const link = document.createElement('a');

@@ -48,10 +48,10 @@ export function ChartCard({
   }, [xCount, threshold, perPointPx]);
 
   return (
-    <Card className={cn('my-2', className)} ref={chartRef}>
+    <Card className={cn('my-2', className)}>
       <CardHeader>
         {title && <CardTitle>{title}</CardTitle>}
-        <CardAction data-exclude-from-export>
+        <CardAction>
           <Button
             variant="ghost"
             size="icon-sm"
@@ -69,13 +69,15 @@ export function ChartCard({
       </CardHeader>
 
       <CardContent className="overflow-auto">
-        <ChartContainer
-          className="min-h-[300px] max-h-[400px]"
-          style={dynamicWidth ? { width: dynamicWidth } : undefined}
-          config={config}
-        >
-          {children}
-        </ChartContainer>
+        <div ref={chartRef}>
+          <ChartContainer
+            className="min-h-[300px] max-h-[400px]"
+            style={dynamicWidth ? { width: dynamicWidth } : undefined}
+            config={config}
+          >
+            {children}
+          </ChartContainer>
+        </div>
       </CardContent>
 
       {insight?.trim() && (
