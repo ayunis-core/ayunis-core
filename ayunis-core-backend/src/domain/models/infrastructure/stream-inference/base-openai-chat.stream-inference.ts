@@ -12,9 +12,7 @@ import { ThinkingContentParser } from 'src/common/util/thinking-content-parser';
 import { OpenAIChatMessageConverter } from '../converters/openai-chat-message.converter';
 
 @Injectable()
-export class BaseOpenAIChatStreamInferenceHandler
-  implements StreamInferenceHandler
-{
+export class BaseOpenAIChatStreamInferenceHandler implements StreamInferenceHandler {
   private readonly logger = new Logger(
     BaseOpenAIChatStreamInferenceHandler.name,
   );
@@ -102,22 +100,27 @@ export class BaseOpenAIChatStreamInferenceHandler
   private convertChunk = (
     chunk: OpenAI.ChatCompletionChunk,
   ): StreamInferenceResponseChunk => {
-    const delta = chunk.choices[0]?.delta;
-    const textContent = delta.content ?? null;
+    // Azure may send chunks with empty choices (e.g. content filter results).
+    // Guard against undefined delta to avoid runtime TypeError.
+    const choice = chunk.choices[0] as
+      | OpenAI.ChatCompletionChunk.Choice
+      | undefined;
+    const delta = choice?.delta;
+    const textContent = delta?.content ?? null;
 
     // Parse thinking content from text
     const { thinkingDelta, textContentDelta } = textContent
       ? this.thinkingParser.parse(textContent)
       : { thinkingDelta: null, textContentDelta: null };
 
-    const finishReason = chunk.choices[0]?.finish_reason ?? null;
+    const finishReason = choice?.finish_reason ?? null;
     const usage = chunk.usage;
 
     return new StreamInferenceResponseChunk({
       thinkingDelta,
       textContentDelta,
       toolCallsDelta:
-        delta.tool_calls?.map(
+        delta?.tool_calls?.map(
           (toolCall) =>
             new StreamInferenceResponseChunkToolCall({
               index: toolCall.index,
