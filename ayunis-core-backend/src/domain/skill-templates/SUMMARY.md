@@ -23,22 +23,39 @@ skill-templates/
 │   └── distribution-mode.enum.ts          # ALWAYS_ON, PRE_CREATED_COPY
 ├── application/
 │   ├── ports/skill-template.repository.ts # Abstract repository interface
-│   └── skill-templates.errors.ts          # Domain errors
+│   ├── skill-templates.errors.ts          # Domain errors
+│   └── use-cases/
+│       ├── create-skill-template/         # CreateSkillTemplateUseCase + command
+│       ├── update-skill-template/         # UpdateSkillTemplateUseCase + command
+│       ├── delete-skill-template/         # DeleteSkillTemplateUseCase + command
+│       ├── find-all-skill-templates/      # FindAllSkillTemplatesUseCase + query
+│       └── find-one-skill-template/       # FindOneSkillTemplateUseCase + query
 ├── infrastructure/
 │   └── persistence/local/
 │       ├── schema/skill-template.record.ts        # TypeORM entity
 │       ├── mappers/skill-template.mapper.ts       # Domain ↔ Record conversion
 │       ├── local-skill-template.repository.ts     # PostgreSQL repository
 │       └── local-skill-template-repository.module.ts
+├── presenters/http/
+│   ├── super-admin-skill-templates.controller.ts  # CRUD controller (super-admin only)
+│   ├── dto/
+│   │   ├── create-skill-template.dto.ts           # Create request DTO
+│   │   ├── update-skill-template.dto.ts           # Update request DTO
+│   │   └── skill-template-response.dto.ts         # Response DTO
+│   └── mappers/
+│       └── skill-template-response.mapper.ts      # Domain → Response DTO mapper
 └── skill-templates.module.ts              # NestJS wiring
 ```
 
-## Design Decisions
+## Exports
 
-The module currently exports nothing — there are no use cases or controllers yet. The `SkillTemplateRepository` port is registered internally but not exported. Use cases will be added and exported in subsequent steps, allowing consumers (e.g., the marketplace skill installation flow) to interact with templates.
+- `FindAllSkillTemplatesUseCase` — exported for consumers that need to list all templates (e.g., marketplace skill installation flow).
+
+## Design Decisions
 
 Name validation reuses the same pattern as the Skills module (Unicode letters, numbers, emojis, hyphens, spaces; no consecutive spaces).
 
 ## Dependencies
 
-None — this is a leaf module with no cross-module imports.
+- `iam/authorization` — decorators for route protection (`SystemRoles`)
+- `iam/users` — `SystemRole` enum used in controller authorization

@@ -3122,6 +3122,95 @@ export interface TranscriptionResponseDto {
   text: string;
 }
 
+/**
+ * The distribution mode of the skill template
+ */
+export type CreateSkillTemplateDtoDistributionMode = typeof CreateSkillTemplateDtoDistributionMode[keyof typeof CreateSkillTemplateDtoDistributionMode];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateSkillTemplateDtoDistributionMode = {
+  always_on: 'always_on',
+  pre_created_copy: 'pre_created_copy',
+} as const;
+
+export interface CreateSkillTemplateDto {
+  /**
+   * The name of the skill template. Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.
+   * @minLength 1
+   * @maxLength 255
+   */
+  name: string;
+  /** A short description of the skill template */
+  shortDescription: string;
+  /** The instructions for the skill template */
+  instructions: string;
+  /** The distribution mode of the skill template */
+  distributionMode: CreateSkillTemplateDtoDistributionMode;
+  /** Whether the skill template is active (defaults to false) */
+  isActive?: boolean;
+}
+
+/**
+ * The distribution mode of the skill template
+ */
+export type SkillTemplateResponseDtoDistributionMode = typeof SkillTemplateResponseDtoDistributionMode[keyof typeof SkillTemplateResponseDtoDistributionMode];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SkillTemplateResponseDtoDistributionMode = {
+  always_on: 'always_on',
+  pre_created_copy: 'pre_created_copy',
+} as const;
+
+export interface SkillTemplateResponseDto {
+  /** The unique identifier of the skill template */
+  id: string;
+  /** The name of the skill template */
+  name: string;
+  /** A short description of the skill template */
+  shortDescription: string;
+  /** The instructions for the skill template */
+  instructions: string;
+  /** The distribution mode of the skill template */
+  distributionMode: SkillTemplateResponseDtoDistributionMode;
+  /** Whether the skill template is active */
+  isActive: boolean;
+  /** The date the skill template was created */
+  createdAt: string;
+  /** The date the skill template was last updated */
+  updatedAt: string;
+}
+
+/**
+ * The distribution mode of the skill template
+ */
+export type UpdateSkillTemplateDtoDistributionMode = typeof UpdateSkillTemplateDtoDistributionMode[keyof typeof UpdateSkillTemplateDtoDistributionMode];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateSkillTemplateDtoDistributionMode = {
+  always_on: 'always_on',
+  pre_created_copy: 'pre_created_copy',
+} as const;
+
+export interface UpdateSkillTemplateDto {
+  /**
+   * The name of the skill template. Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.
+   * @minLength 1
+   * @maxLength 255
+   */
+  name?: string;
+  /** A short description of the skill template */
+  shortDescription?: string;
+  /** The instructions for the skill template */
+  instructions?: string;
+  /** The distribution mode of the skill template */
+  distributionMode?: UpdateSkillTemplateDtoDistributionMode;
+  /** Whether the skill template is active */
+  isActive?: boolean;
+}
+
 export interface LoginDto {
   /** Email address for authentication */
   email: string;
