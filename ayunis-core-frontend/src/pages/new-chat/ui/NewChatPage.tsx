@@ -1,7 +1,7 @@
 import NewChatPageLayout from './NewChatPageLayout';
 import ChatInput from '@/widgets/chat-input';
 import { useInitiateChat } from '../api/useInitiateChat';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { showError } from '@/shared/lib/toast';
@@ -13,6 +13,12 @@ import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
 import { PinnedSkills } from './PinnedSkills';
+import { PersonalizationCard } from './PersonalizationCard';
+import { useUserSystemPromptStatus } from '../api/useUserSystemPromptStatus';
+import { useSkipPersonalization } from '../api/useSkipPersonalization';
+import { useQueryClient } from '@tanstack/react-query';
+import { getChatSettingsControllerGetSystemPromptQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
+import { useRouter } from '@tanstack/react-router';
 
 interface NewChatPageProps {
   prefilledPrompt?: string;
@@ -35,6 +41,20 @@ export default function NewChatPage({
   const greeting = useTimeBasedGreeting();
   const { setPendingImages, setPendingKnowledgeBases, setPendingSkillId } =
     useChatContext();
+  const {
+    hasSystemPrompt,
+    isLoading: isSystemPromptLoading,
+    isError: isSystemPromptError,
+  } = useUserSystemPromptStatus();
+  const { skip, isSkipping } = useSkipPersonalization();
+
+  useEffect(() => {
+    if (isSystemPromptError) {
+      showError(t('newChat.systemPromptLoadError'));
+    }
+  }, [isSystemPromptError, t]);
+  const queryClient = useQueryClient();
+  const router = useRouter();
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -135,6 +155,27 @@ export default function NewChatPage({
     setPendingSkillId(skillId);
 
     initiateChat(message, modelId, agentId, sources, isAnonymous);
+  }
+
+  if (!isSystemPromptLoading && !isSystemPromptError && !hasSystemPrompt) {
+    return (
+      <NewChatPageLayout
+        header={<ContentAreaHeader title={t('newChat.newChat')} />}
+      >
+        <div className="text-center">
+          <h1 className="text-2xl font-bold">{greeting}</h1>
+        </div>
+        <PersonalizationCard
+          onSkip={skip}
+          isSkipping={isSkipping}
+          onComplete={async () => {
+            const queryKey = getChatSettingsControllerGetSystemPromptQueryKey();
+            await queryClient.invalidateQueries({ queryKey });
+            await router.invalidate();
+          }}
+        />
+      </NewChatPageLayout>
+    );
   }
 
   return (

@@ -98,6 +98,37 @@
     "upgradeToProError": "You need to upgrade to a paid plan to use this feature.",
     "personalizedPromptSuccess": "Personalized system prompt generated",
     "personalizedPromptError": "Failed to generate personalized system prompt",
-    "noDefaultModelError": "No default model configured. Please contact your administrator."
+    "systemPromptLoadError": "Could not load personalization status. Personalization may have been skipped.",
+    "noDefaultModelError": "No default model configured. Please contact your administrator.",
+    "personalization": {
+      "stepperName": "Name",
+      "stepperStyle": "Style",
+      "stepperContext": "Context",
+      "nameTitle": "What should I call you?",
+      "nameDescription": "So I can address you personally.",
+      "nameLabel": "Your name",
+      "namePlaceholder": "e.g. Anna, Mr. Smith ...",
+      "styleTitle": "How should I communicate?",
+      "styleDescription": "Pick the style that suits you best.",
+      "styleCasual": "Casual & brief",
+      "styleProfessional": "Professional & detailed",
+      "styleFactual": "Factual & precise",
+      "styleCustomLabel": "Custom addition (optional)",
+      "styleCustomPlaceholder": "e.g. always reply in bullet points ...",
+      "contextTitle": "What area do you work in?",
+      "contextDescription": "This helps me give more relevant answers.",
+      "contextLabel": "Work context",
+      "contextPlaceholder": "e.g. social welfare notices, city council minutes ...",
+      "next": "Next",
+      "back": "Back",
+      "skip": "Set up later",
+      "submit": "Start personalization",
+      "generating": "Setting up your personal assistant ...",
+      "errorMessage": "Something went wrong. Please try again.",
+      "errorTitle": "Error",
+      "skipError": "Could not skip personalization. Please try again.",
+      "retry": "Try again",
+      "getStarted": "Get started"
+    }
   }
 }
