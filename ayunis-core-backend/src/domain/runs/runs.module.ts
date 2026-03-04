@@ -22,6 +22,7 @@ import { AnonymizationModule } from 'src/common/anonymization/anonymization.modu
 import { UsageModule } from 'src/domain/usage/usage.module';
 import { QuotasModule } from 'src/iam/quotas/quotas.module';
 import { SkillsModule } from 'src/domain/skills/skills.module';
+import { SkillTemplatesModule } from 'src/domain/skill-templates/skill-templates.module';
 import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.module';
 
 @Module({
@@ -39,6 +40,7 @@ import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.modul
     UsageModule,
     QuotasModule,
     SkillsModule,
+    SkillTemplatesModule,
     ChatSettingsModule,
   ],
   controllers: [RunsController],

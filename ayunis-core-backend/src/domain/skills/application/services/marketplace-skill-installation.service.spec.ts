@@ -1,7 +1,7 @@
 import { MarketplaceSkillInstallationService } from './marketplace-skill-installation.service';
 import type { GetMarketplaceSkillUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-skill/get-marketplace-skill.use-case';
 import type { MarketplaceClient } from 'src/domain/marketplace/application/ports/marketplace-client.port';
-import type { SkillRepository } from '../ports/skill.repository';
+import type { CreateSkillWithUniqueNameUseCase } from '../use-cases/create-skill-with-unique-name/create-skill-with-unique-name.use-case';
 import type {
   SkillListResponseDto,
   SkillResponseDto,
@@ -9,6 +9,7 @@ import type {
 import { Skill } from '../../domain/skill.entity';
 import type { UUID } from 'crypto';
 import { MarketplaceSkillNotFoundError } from 'src/domain/marketplace/application/marketplace.errors';
+import { CreateSkillWithUniqueNameCommand } from '../use-cases/create-skill-with-unique-name/create-skill-with-unique-name.command';
 
 const USER_ID = '550e8400-e29b-41d4-a716-446655440000' as UUID;
 
@@ -27,7 +28,7 @@ const marketplaceSkill: SkillResponseDto = {
 describe('MarketplaceSkillInstallationService', () => {
   let service: MarketplaceSkillInstallationService;
   let getMarketplaceSkillUseCase: jest.Mocked<GetMarketplaceSkillUseCase>;
-  let skillRepository: jest.Mocked<SkillRepository>;
+  let createSkillWithUniqueNameUseCase: jest.Mocked<CreateSkillWithUniqueNameUseCase>;
   let marketplaceClient: jest.Mocked<MarketplaceClient>;
 
   beforeEach(() => {
@@ -35,11 +36,9 @@ describe('MarketplaceSkillInstallationService', () => {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetMarketplaceSkillUseCase>;
 
-    skillRepository = {
-      create: jest.fn(),
-      findByNameAndOwner: jest.fn(),
-      activateSkill: jest.fn(),
-    } as unknown as jest.Mocked<SkillRepository>;
+    createSkillWithUniqueNameUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<CreateSkillWithUniqueNameUseCase>;
 
     marketplaceClient = {
       getPreInstalledSkills: jest.fn(),
@@ -49,15 +48,23 @@ describe('MarketplaceSkillInstallationService', () => {
 
     service = new MarketplaceSkillInstallationService(
       getMarketplaceSkillUseCase,
-      skillRepository,
+      createSkillWithUniqueNameUseCase,
       marketplaceClient,
     );
   });
 
-  it('should install a marketplace skill, create it, and activate it', async () => {
+  it('should fetch marketplace skill and delegate creation to CreateSkillWithUniqueNameUseCase', async () => {
+    const createdSkill = new Skill({
+      name: 'Meeting Summarizer',
+      shortDescription: 'Summarize meetings and extract action items',
+      instructions:
+        'You are a meeting summarization assistant. Analyze meeting notes.',
+      marketplaceIdentifier: 'meeting-summarizer',
+      userId: USER_ID,
+    });
+
     getMarketplaceSkillUseCase.execute.mockResolvedValue(marketplaceSkill);
-    skillRepository.findByNameAndOwner.mockResolvedValue(null);
-    skillRepository.create.mockImplementation(async (skill: Skill) => skill);
+    createSkillWithUniqueNameUseCase.execute.mockResolvedValue(createdSkill);
 
     const result = await service.installFromMarketplace(
       'meeting-summarizer',
@@ -73,45 +80,15 @@ describe('MarketplaceSkillInstallationService', () => {
     );
     expect(result.marketplaceIdentifier).toBe('meeting-summarizer');
     expect(result.userId).toBe(USER_ID);
-    expect(skillRepository.create).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'Meeting Summarizer' }),
-    );
-    expect(skillRepository.activateSkill).toHaveBeenCalledWith(
-      result.id,
-      USER_ID,
-    );
-  });
-
-  it('should append a numeric suffix when the name already exists', async () => {
-    getMarketplaceSkillUseCase.execute.mockResolvedValue(marketplaceSkill);
-
-    const existingSkill = new Skill({
-      name: 'Meeting Summarizer',
-      shortDescription: 'Existing',
-      instructions: 'Existing instructions',
-      userId: USER_ID,
-    });
-
-    skillRepository.findByNameAndOwner
-      .mockResolvedValueOnce(existingSkill) // "Meeting Summarizer" taken
-      .mockResolvedValueOnce(null); // "Meeting Summarizer 2" available
-
-    skillRepository.create.mockImplementation(async (skill: Skill) => skill);
-
-    const result = await service.installFromMarketplace(
-      'meeting-summarizer',
-      USER_ID,
-    );
-
-    expect(result.name).toBe('Meeting Summarizer 2');
-    expect(skillRepository.findByNameAndOwner).toHaveBeenCalledTimes(2);
-    expect(skillRepository.findByNameAndOwner).toHaveBeenCalledWith(
-      'Meeting Summarizer',
-      USER_ID,
-    );
-    expect(skillRepository.findByNameAndOwner).toHaveBeenCalledWith(
-      'Meeting Summarizer 2',
-      USER_ID,
+    expect(createSkillWithUniqueNameUseCase.execute).toHaveBeenCalledWith(
+      new CreateSkillWithUniqueNameCommand({
+        name: 'Meeting Summarizer',
+        shortDescription: 'Summarize meetings and extract action items',
+        instructions:
+          'You are a meeting summarization assistant. Analyze meeting notes.',
+        marketplaceIdentifier: 'meeting-summarizer',
+        userId: USER_ID,
+      }),
     );
   });
 
@@ -124,41 +101,18 @@ describe('MarketplaceSkillInstallationService', () => {
       service.installFromMarketplace('nonexistent-skill', USER_ID),
     ).rejects.toThrow(MarketplaceSkillNotFoundError);
 
-    expect(skillRepository.create).not.toHaveBeenCalled();
+    expect(createSkillWithUniqueNameUseCase.execute).not.toHaveBeenCalled();
   });
 
-  it('should propagate repository create failure', async () => {
+  it('should propagate creation failure from CreateSkillWithUniqueNameUseCase', async () => {
     getMarketplaceSkillUseCase.execute.mockResolvedValue(marketplaceSkill);
-    skillRepository.findByNameAndOwner.mockResolvedValue(null);
-    skillRepository.create.mockRejectedValue(
+    createSkillWithUniqueNameUseCase.execute.mockRejectedValue(
       new Error('Unique constraint violation'),
     );
 
     await expect(
       service.installFromMarketplace('meeting-summarizer', USER_ID),
     ).rejects.toThrow('Unique constraint violation');
-
-    expect(skillRepository.activateSkill).not.toHaveBeenCalled();
-  });
-
-  it('should throw after exceeding maximum name resolution attempts', async () => {
-    getMarketplaceSkillUseCase.execute.mockResolvedValue(marketplaceSkill);
-
-    const existingSkill = new Skill({
-      name: 'Meeting Summarizer',
-      shortDescription: 'Existing',
-      instructions: 'Existing instructions',
-      userId: USER_ID,
-    });
-
-    // All names taken — returns existing skill every time
-    skillRepository.findByNameAndOwner.mockResolvedValue(existingSkill);
-
-    await expect(
-      service.installFromMarketplace('meeting-summarizer', USER_ID),
-    ).rejects.toThrow(/Could not resolve unique name/);
-
-    expect(skillRepository.create).not.toHaveBeenCalled();
   });
 
   describe('installAllPreInstalled', () => {
@@ -180,8 +134,16 @@ describe('MarketplaceSkillInstallationService', () => {
         identifier: query.identifier,
         name: query.identifier,
       }));
-      skillRepository.findByNameAndOwner.mockResolvedValue(null);
-      skillRepository.create.mockImplementation(async (skill: Skill) => skill);
+      createSkillWithUniqueNameUseCase.execute.mockImplementation(
+        async (command) =>
+          new Skill({
+            name: command.name,
+            shortDescription: command.shortDescription,
+            instructions: command.instructions,
+            marketplaceIdentifier: command.marketplaceIdentifier,
+            userId: command.userId,
+          }),
+      );
     };
 
     it('should install all pre-installed skills and return success count', async () => {
@@ -221,8 +183,16 @@ describe('MarketplaceSkillInstallationService', () => {
           identifier: 'working-skill',
           name: 'Working Skill',
         });
-      skillRepository.findByNameAndOwner.mockResolvedValue(null);
-      skillRepository.create.mockImplementation(async (skill: Skill) => skill);
+      createSkillWithUniqueNameUseCase.execute.mockImplementation(
+        async (command) =>
+          new Skill({
+            name: command.name,
+            shortDescription: command.shortDescription,
+            instructions: command.instructions,
+            marketplaceIdentifier: command.marketplaceIdentifier,
+            userId: command.userId,
+          }),
+      );
 
       const count = await service.installAllPreInstalled(USER_ID);
 

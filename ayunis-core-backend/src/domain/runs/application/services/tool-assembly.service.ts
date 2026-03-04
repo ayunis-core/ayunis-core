@@ -21,6 +21,8 @@ import { GetUserSystemPromptUseCase } from 'src/domain/chat-settings/application
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { FindActiveAlwaysOnTemplatesUseCase } from 'src/domain/skill-templates/application/use-cases/find-active-always-on-templates/find-active-always-on-templates.use-case';
+import { FindActiveAlwaysOnTemplatesQuery } from 'src/domain/skill-templates/application/use-cases/find-active-always-on-templates/find-active-always-on-templates.query';
 import { featuresConfig } from 'src/config/features.config';
 
 @Injectable()
@@ -35,6 +37,7 @@ export class ToolAssemblyService {
     private readonly findActiveSkillsUseCase: FindActiveSkillsUseCase,
     private readonly getUserSystemPromptUseCase: GetUserSystemPromptUseCase,
     private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
+    private readonly findActiveAlwaysOnTemplatesUseCase: FindActiveAlwaysOnTemplatesUseCase,
     @Inject(featuresConfig.KEY)
     private readonly features: ConfigType<typeof featuresConfig>,
   ) {}
@@ -69,6 +72,20 @@ export class ToolAssemblyService {
       await this.getUserSystemPromptUseCase.execute();
     const userSystemPrompt = userSystemPromptEntity?.systemPrompt ?? undefined;
 
+    // Fetch active always-on skill templates (cached, 60s TTL)
+    let alwaysOnInstructions: string[] = [];
+    try {
+      const templates = await this.findActiveAlwaysOnTemplatesUseCase.execute(
+        new FindActiveAlwaysOnTemplatesQuery(),
+      );
+      alwaysOnInstructions = templates.map((t) => t.instructions);
+    } catch (error) {
+      this.logger.error(
+        'Failed to fetch always-on templates, continuing without them',
+        { error: error instanceof Error ? error.message : 'Unknown error' },
+      );
+    }
+
     const instructions = this.systemPromptBuilderService.build({
       agent,
       tools,
@@ -79,6 +96,7 @@ export class ToolAssemblyService {
       skills: canUseTools && this.features.skillsEnabled ? activeSkills : [],
 
       knowledgeBases: canUseTools ? (thread.knowledgeBases ?? []) : [],
+      alwaysOnInstructions,
       userSystemPrompt,
     });
 

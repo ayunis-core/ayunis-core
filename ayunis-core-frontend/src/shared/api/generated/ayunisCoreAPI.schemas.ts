@@ -3211,6 +3211,64 @@ export interface UpdateSkillTemplateDto {
   isActive?: boolean;
 }
 
+export interface UserSystemPromptResponseDto {
+  /**
+   * The custom system prompt for the user, or null if not set
+   * @nullable
+   */
+  systemPrompt: string | null;
+}
+
+export interface UpsertUserSystemPromptDto {
+  /**
+   * The custom system prompt for the user
+   * @maxLength 10000
+   */
+  systemPrompt: string;
+}
+
+export interface CreatePromptDto {
+  /**
+   * The title of the prompt
+   * @minLength 1
+   * @maxLength 255
+   */
+  title: string;
+  /** The content of the prompt */
+  content: string;
+}
+
+export interface PromptResponseDto {
+  /** The unique identifier of the prompt */
+  id: string;
+  /** The title of the prompt */
+  title: string;
+  /** The content of the prompt */
+  content: string;
+  /** The unique identifier of the user who owns this prompt */
+  userId: string;
+  /** The date and time when the prompt was created */
+  createdAt: string;
+  /** The date and time when the prompt was last updated */
+  updatedAt: string;
+}
+
+export interface UpdatePromptDto {
+  /**
+   * The title of the prompt
+   * @minLength 1
+   * @maxLength 255
+   */
+  title: string;
+  /** The content of the prompt */
+  content: string;
+}
+
+export interface TranscriptionResponseDto {
+  /** The transcribed text from the audio file */
+  text: string;
+}
+
 export interface LoginDto {
   /** Email address for authentication */
   email: string;
