@@ -104,6 +104,12 @@ export class CreateInviteUseCase {
     email: string,
     orgId: UUID,
   ): Promise<void> {
+    const existingInvite =
+      await this.invitesRepository.findOneByEmail(email);
+    if (existingInvite) {
+      throw new EmailNotAvailableError();
+    }
+
     const existingUser = await this.findUserByEmailUseCase.execute(
       new FindUserByEmailQuery(email),
     );
