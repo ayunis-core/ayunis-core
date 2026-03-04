@@ -22,6 +22,7 @@ import {
   LABEL_STREAMING,
 } from './metrics.constants';
 import { MetricsAuthMiddleware } from './metrics-auth.middleware';
+import { MetricsController } from './metrics.controller';
 
 const tokensCounter = makeCounterProvider({
   name: AYUNIS_TOKENS_TOTAL,
@@ -82,6 +83,7 @@ const metricProviders = [
     PrometheusModule.register({
       path: METRICS_PATH,
       defaultMetrics: { enabled: true },
+      controller: MetricsController,
     }),
   ],
   providers: metricProviders,
