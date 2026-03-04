@@ -2,6 +2,7 @@ import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
+import { METRICS_PATH } from 'src/metrics/metrics.constants';
 import { Request, Response } from 'express';
 import { RefreshTokenUseCase } from '../use-cases/refresh-token/refresh-token.use-case';
 import { RefreshTokenCommand } from '../use-cases/refresh-token/refresh-token.command';
@@ -21,6 +22,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Skip JWT auth for the metrics endpoint (protected by its own basic-auth middleware)
+    const request = context.switchToHttp().getRequest<Request>();
+    if (request.path === METRICS_PATH) {
+      return true;
+    }
+
     // Check if route is public
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -41,7 +48,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     // Access token validation failed, try refresh token
-    const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
 
     const refreshTokenName = this.configService.get<string>(
