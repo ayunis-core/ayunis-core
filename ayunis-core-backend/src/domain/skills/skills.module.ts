@@ -32,6 +32,7 @@ import { UnassignKnowledgeBaseFromSkillUseCase } from './application/use-cases/u
 import { ListSkillKnowledgeBasesUseCase } from './application/use-cases/list-skill-knowledge-bases/list-skill-knowledge-bases.use-case';
 import { FindSkillByNameUseCase } from './application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
 import { InstallSkillFromMarketplaceUseCase } from './application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.use-case';
+import { CreateSkillWithUniqueNameUseCase } from './application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.use-case';
 
 // Services
 import { MarketplaceSkillInstallationService } from './application/services/marketplace-skill-installation.service';
@@ -111,6 +112,7 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
     ListSkillKnowledgeBasesUseCase,
     FindSkillByNameUseCase,
     InstallSkillFromMarketplaceUseCase,
+    CreateSkillWithUniqueNameUseCase,
 
     // Services
     MarketplaceSkillInstallationService,
@@ -146,6 +148,7 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
     SkillActivationService,
     SkillShareAuthorizationStrategy,
     getShareAuthStrategyToken(SharedEntityType.SKILL),
+    CreateSkillWithUniqueNameUseCase,
   ],
 })
 export class SkillsModule {}

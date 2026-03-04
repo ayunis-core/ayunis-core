@@ -1,12 +1,11 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { GetMarketplaceSkillUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-skill/get-marketplace-skill.use-case';
 import { GetMarketplaceSkillQuery } from 'src/domain/marketplace/application/use-cases/get-marketplace-skill/get-marketplace-skill.query';
 import { MarketplaceClient } from 'src/domain/marketplace/application/ports/marketplace-client.port';
-import { SkillRepository } from '../ports/skill.repository';
+import { CreateSkillWithUniqueNameUseCase } from '../use-cases/create-skill-with-unique-name/create-skill-with-unique-name.use-case';
+import { CreateSkillWithUniqueNameCommand } from '../use-cases/create-skill-with-unique-name/create-skill-with-unique-name.command';
 import { Skill } from '../../domain/skill.entity';
-
-const MAX_NAME_RESOLUTION_ATTEMPTS = 100;
 
 @Injectable()
 export class MarketplaceSkillInstallationService {
@@ -16,8 +15,7 @@ export class MarketplaceSkillInstallationService {
 
   constructor(
     private readonly getMarketplaceSkillUseCase: GetMarketplaceSkillUseCase,
-    @Inject(SkillRepository)
-    private readonly skillRepository: SkillRepository,
+    private readonly createSkillWithUniqueNameUseCase: CreateSkillWithUniqueNameUseCase,
     private readonly marketplaceClient: MarketplaceClient,
   ) {}
 
@@ -74,37 +72,14 @@ export class MarketplaceSkillInstallationService {
       new GetMarketplaceSkillQuery(identifier),
     );
 
-    const name = await this.resolveUniqueName(marketplaceSkill.name, userId);
-
-    const skill = new Skill({
-      name,
-      shortDescription: marketplaceSkill.shortDescription,
-      instructions: marketplaceSkill.instructions,
-      marketplaceIdentifier: marketplaceSkill.identifier,
-      userId,
-    });
-
-    const created = await this.skillRepository.create(skill);
-    await this.skillRepository.activateSkill(created.id, userId);
-
-    return created;
-  }
-
-  private async resolveUniqueName(
-    baseName: string,
-    userId: UUID,
-  ): Promise<string> {
-    let name = baseName;
-    let suffix = 2;
-    while (await this.skillRepository.findByNameAndOwner(name, userId)) {
-      if (suffix > MAX_NAME_RESOLUTION_ATTEMPTS) {
-        throw new Error(
-          `Could not resolve unique name for "${baseName}" after ${MAX_NAME_RESOLUTION_ATTEMPTS} attempts`,
-        );
-      }
-      name = `${baseName} ${suffix}`;
-      suffix++;
-    }
-    return name;
+    return this.createSkillWithUniqueNameUseCase.execute(
+      new CreateSkillWithUniqueNameCommand({
+        name: marketplaceSkill.name,
+        shortDescription: marketplaceSkill.shortDescription,
+        instructions: marketplaceSkill.instructions,
+        marketplaceIdentifier: marketplaceSkill.identifier,
+        userId,
+      }),
+    );
   }
 }

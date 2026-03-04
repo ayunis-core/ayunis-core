@@ -24,12 +24,18 @@ skill-templates/
 ├── application/
 │   ├── ports/skill-template.repository.ts # Abstract repository interface
 │   ├── skill-templates.errors.ts          # Domain errors
+│   ├── listeners/
+│   │   └── user-created.listener.ts       # Listens for UserCreatedEvent, installs pre-created templates
+│   ├── services/
+│   │   └── skill-template-installation.service.ts  # Installs pre-created template copies for a user
 │   └── use-cases/
 │       ├── create-skill-template/         # CreateSkillTemplateUseCase + command
 │       ├── update-skill-template/         # UpdateSkillTemplateUseCase + command
 │       ├── delete-skill-template/         # DeleteSkillTemplateUseCase + command
 │       ├── find-all-skill-templates/      # FindAllSkillTemplatesUseCase + query
-│       └── find-one-skill-template/       # FindOneSkillTemplateUseCase + query
+│       ├── find-one-skill-template/       # FindOneSkillTemplateUseCase + query
+│       ├── find-active-always-on-templates/   # FindActiveAlwaysOnTemplatesUseCase + query
+│       └── find-active-pre-created-templates/ # FindActivePreCreatedTemplatesUseCase + query
 ├── infrastructure/
 │   └── persistence/local/
 │       ├── schema/skill-template.record.ts        # TypeORM entity
@@ -50,6 +56,7 @@ skill-templates/
 ## Exports
 
 - `FindAllSkillTemplatesUseCase` — exported for consumers that need to list all templates (e.g., marketplace skill installation flow).
+- `FindActiveAlwaysOnTemplatesUseCase` — exported for consumers that need always-on templates (e.g., chat module injecting always-on skills).
 
 ## Design Decisions
 
@@ -58,4 +65,5 @@ Name validation reuses the same pattern as the Skills module (Unicode letters, n
 ## Dependencies
 
 - `iam/authorization` — decorators for route protection (`SystemRoles`)
-- `iam/users` — `SystemRole` enum used in controller authorization
+- `iam/users` — `SystemRole` enum used in controller authorization; `UserCreatedEvent` consumed by listener
+- `skills` — `CreateSkillWithUniqueNameUseCase` used by `SkillTemplateInstallationService` to create skill copies with automatic name deduplication

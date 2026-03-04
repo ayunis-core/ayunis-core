@@ -14,7 +14,6 @@ import {
 } from 'src/domain/sources/domain/sources/data-source.entity';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
-
 export interface SystemPromptBuildParams {
   agent?: Agent;
   tools: Tool[];
@@ -22,6 +21,7 @@ export interface SystemPromptBuildParams {
   sources?: Source[];
   skills?: Skill[];
   knowledgeBases?: KnowledgeBaseSummary[];
+  alwaysOnInstructions?: string[];
   userSystemPrompt?: string;
 }
 
@@ -32,28 +32,26 @@ export class SystemPromptBuilderService {
       agent,
       tools,
       currentTime,
-      sources,
-      skills,
-      knowledgeBases,
+      sources = [],
+      skills = [],
+      knowledgeBases = [],
+      alwaysOnInstructions = [],
       userSystemPrompt,
     } = params;
 
     const sections = [
       this.buildPreamble(currentTime),
       this.buildBehaviorInstructions(),
+      this.buildAlwaysOnInstructionsSection(alwaysOnInstructions),
       this.buildToolUsageSection(tools),
-      this.buildSkillsSection(skills ?? []),
-      this.buildFilesSection(sources ?? []),
-      this.buildKnowledgeBasesSection(knowledgeBases ?? []),
+      this.buildSkillsSection(skills),
+      this.buildFilesSection(sources),
+      this.buildKnowledgeBasesSection(knowledgeBases),
       this.buildDataHandlingSection(),
       this.buildResponseGuidelines(),
       this.buildPlatformSection(),
-      agent?.instructions
-        ? this.buildAgentInstructionsSection(agent.instructions)
-        : '',
-      userSystemPrompt
-        ? this.buildUserInstructionsSection(userSystemPrompt)
-        : '',
+      this.buildOptionalAgentInstructions(agent),
+      this.buildOptionalUserInstructions(userSystemPrompt),
       'You are now ready to assist the user.',
     ];
 
@@ -218,6 +216,30 @@ For technical questions about the platform, configuration, or deployment, users 
       .join('\n\n');
 
     return toolSections;
+  }
+
+  private buildAlwaysOnInstructionsSection(instructions: string[]): string {
+    if (instructions.length === 0) {
+      return '';
+    }
+
+    const entries = instructions.join('\n\n');
+
+    return `<always_on_instructions>\n${entries}\n</always_on_instructions>`;
+  }
+
+  private buildOptionalAgentInstructions(agent?: Agent): string {
+    return agent?.instructions
+      ? this.buildAgentInstructionsSection(agent.instructions)
+      : '';
+  }
+
+  private buildOptionalUserInstructions(
+    userSystemPrompt?: string,
+  ): string {
+    return userSystemPrompt
+      ? this.buildUserInstructionsSection(userSystemPrompt)
+      : '';
   }
 
   private buildAgentInstructionsSection(instructions: string): string {

@@ -161,4 +161,62 @@ describe('SystemPromptBuilderService', () => {
       );
     });
   });
+
+  describe('always-on instructions section', () => {
+    it('should include always_on_instructions section when instructions are provided', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        alwaysOnInstructions: [
+          'Always be polite and professional.',
+          'Never share personal data across conversations.',
+        ],
+      });
+
+      expect(result).toContain('<always_on_instructions>');
+      expect(result).toContain('Always be polite and professional.');
+      expect(result).toContain(
+        'Never share personal data across conversations.',
+      );
+      expect(result).toContain('</always_on_instructions>');
+    });
+
+    it('should not include always_on_instructions section when no instructions are provided', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+      });
+
+      expect(result).not.toContain('<always_on_instructions>');
+    });
+
+    it('should not include always_on_instructions section when instructions array is empty', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        alwaysOnInstructions: [],
+      });
+
+      expect(result).not.toContain('<always_on_instructions>');
+    });
+
+    it('should place always_on_instructions before agent_instructions', () => {
+      const agent = {
+        instructions: 'Agent-level instructions here',
+      } as any;
+
+      const result = service.build({
+        agent,
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        alwaysOnInstructions: ['Platform-level instructions here'],
+      });
+
+      const alwaysOnPos = result.indexOf('<always_on_instructions>');
+      const agentPos = result.indexOf('<agent_instructions>');
+      expect(alwaysOnPos).toBeGreaterThan(-1);
+      expect(agentPos).toBeGreaterThan(-1);
+      expect(alwaysOnPos).toBeLessThan(agentPos);
+    });
+  });
 });
