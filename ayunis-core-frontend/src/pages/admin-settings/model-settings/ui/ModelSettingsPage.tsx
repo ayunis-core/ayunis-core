@@ -2,6 +2,7 @@ import { Card, CardContent } from '@/shared/ui/shadcn/card';
 import ModelTypeCard from './ModelTypeCard';
 import { OrgDefaultModelCard } from './OrgDefaultModelCard';
 import SettingsLayout from '../../admin-settings-layout';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { useTranslation } from 'react-i18next';
 import { useModelsWithConfig } from '../api';
 
@@ -17,7 +18,10 @@ export default function ModelSettingsPage() {
   const hasModels = models.length > 0;
 
   return (
-    <SettingsLayout title={tLayout('layout.models')}>
+    <SettingsLayout
+      action={<HelpLink path="settings/admin/models/" />}
+      title={tLayout('layout.models')}
+    >
       <div className="space-y-4">
         <OrgDefaultModelCard
           models={languageModels}

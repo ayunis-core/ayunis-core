@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
 import { Plus, AlertCircle, ExternalLink } from 'lucide-react';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { IntegrationsList } from './integrations-list';
 import { CreatePredefinedDialog } from './create-predefined-dialog';
 import { CreateCustomDialog } from './create-custom-dialog';
@@ -173,14 +174,15 @@ function HeaderActions({
   onCreatePredefined,
   onCreateCustom,
   t,
-}: {
+}: Readonly<{
   isCloud: boolean;
   onCreatePredefined: () => void;
   onCreateCustom: () => void;
   t: (key: string) => string;
-}) {
+}>) {
   return (
     <div className="flex gap-2">
+      <HelpLink path="settings/admin/integrations/" />
       <Button variant="outline" size="sm" asChild>
         <a
           href="https://marketplace.ayunis.de/integrations"
@@ -208,11 +210,9 @@ function HeaderActions({
             <DropdownMenuItem onClick={onCreatePredefined}>
               {t('integrations.page.addPredefined')}
             </DropdownMenuItem>
-            {!isCloud && (
-              <DropdownMenuItem onClick={onCreateCustom}>
-                {t('integrations.page.addCustom')}
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem onClick={onCreateCustom}>
+              {t('integrations.page.addCustom')}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )}

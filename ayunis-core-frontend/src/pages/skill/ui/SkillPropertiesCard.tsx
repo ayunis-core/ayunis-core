@@ -4,6 +4,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardAction,
 } from '@/shared/ui/shadcn/card';
 import {
   Form,
@@ -17,6 +18,7 @@ import {
 import { Textarea } from '@/shared/ui/shadcn/textarea';
 import { Button } from '@/shared/ui/shadcn/button';
 import { useTranslation } from 'react-i18next';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { useUpdateSkill } from '../api';
 import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { NameField, InstructionsField } from '@/widgets/entity-form-fields';
@@ -36,6 +38,9 @@ export default function SkillPropertiesCard({
       <CardHeader>
         <CardTitle>{t('properties.title')}</CardTitle>
         <CardDescription>{t('properties.description')}</CardDescription>
+        <CardAction>
+          <HelpLink path="skills/name-and-description/" variant="icon" />
+        </CardAction>
       </CardHeader>
       <CardContent>
         <Form {...form}>

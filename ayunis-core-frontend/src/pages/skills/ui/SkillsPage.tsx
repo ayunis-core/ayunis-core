@@ -7,6 +7,7 @@ import type { Skill } from '../model/openapi';
 import SkillsEmptyState from './SkillsEmptyState';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { useTranslation } from 'react-i18next';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 
 interface SkillsPageProps {
   skills: Skill[];
@@ -18,16 +19,20 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
   // Sort skills by name
   const sortedSkills = [...skills].sort((a, b) => a.name.localeCompare(b.name));
 
+  const headerAction = (
+    <div className="flex gap-2">
+      <HelpLink path="skills/" />
+      <CreateSkillDialog />
+    </div>
+  );
+
   // If no skills at all, show full-screen empty state
   if (skills.length === 0) {
     return (
       <AppLayout>
         <FullScreenMessageLayout
           header={
-            <ContentAreaHeader
-              title={t('page.title')}
-              action={<CreateSkillDialog />}
-            />
+            <ContentAreaHeader title={t('page.title')} action={headerAction} />
           }
         >
           <SkillsEmptyState />
@@ -40,10 +45,7 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
     <AppLayout>
       <ContentAreaLayout
         contentHeader={
-          <ContentAreaHeader
-            title={t('page.title')}
-            action={<CreateSkillDialog />}
-          />
+          <ContentAreaHeader title={t('page.title')} action={headerAction} />
         }
         contentArea={
           <div className="space-y-3">
