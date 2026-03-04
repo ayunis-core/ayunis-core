@@ -37,6 +37,8 @@ describe('CreateInviteUseCase', () => {
       create: jest.fn(),
       findById: jest.fn(),
       findByToken: jest.fn(),
+      findOneByEmail: jest.fn(),
+      findOneByEmailAndOrg: jest.fn(),
       delete: jest.fn(),
     };
 
@@ -95,6 +97,9 @@ describe('CreateInviteUseCase', () => {
     updateSeatsUseCase = module.get(UpdateSeatsUseCase);
     sendInvitationEmailUseCase = module.get(SendInvitationEmailUseCase);
     findUserByEmailUseCase = module.get(FindUserByEmailUseCase);
+
+    // Default: no existing invite
+    invitesRepository.findOneByEmailAndOrg.mockResolvedValue(null);
 
     // Mock logger
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
@@ -300,6 +305,29 @@ describe('CreateInviteUseCase', () => {
         .mockReturnValueOnce(false) // app.isCloudHosted
         .mockReturnValueOnce('7d') // auth.jwt.inviteExpiresIn
         .mockReturnValueOnce(true); // emails.hasConfig
+
+      // Act & Assert
+      await expect(useCase.execute(command)).rejects.toThrow(
+        EmailNotAvailableError,
+      );
+      expect(invitesRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('should throw EmailNotAvailableError when invite already exists for email', async () => {
+      // Arrange
+      const command = new CreateInviteCommand({
+        email: mockEmail,
+        orgId: mockOrgId,
+        role: UserRole.USER,
+        userId: mockUserId,
+      });
+
+      invitesRepository.findOneByEmailAndOrg.mockResolvedValue({
+        id: 'existing-invite-id',
+        email: mockEmail,
+      } as any);
+
+      configService.get.mockReturnValueOnce([]); // auth.emailProviderBlacklist
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
