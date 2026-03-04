@@ -12,7 +12,9 @@ import { ThinkingContentParser } from 'src/common/util/thinking-content-parser';
 import { OpenAIChatMessageConverter } from '../converters/openai-chat-message.converter';
 
 @Injectable()
-export class BaseOpenAIChatStreamInferenceHandler implements StreamInferenceHandler {
+export class BaseOpenAIChatStreamInferenceHandler
+  implements StreamInferenceHandler
+{
   private readonly logger = new Logger(
     BaseOpenAIChatStreamInferenceHandler.name,
   );

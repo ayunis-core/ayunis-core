@@ -120,6 +120,21 @@ export class LocalInvitesRepository implements InvitesRepository {
     return this.inviteMapper.toDomain(entity);
   }
 
+  async findOneByEmailAndOrg(
+    email: string,
+    orgId: UUID,
+  ): Promise<Invite | null> {
+    this.logger.log('findOneByEmailAndOrg', { email, orgId });
+    const entity = await this.inviteRepository.findOne({
+      where: { email: ILike(email), orgId, acceptedAt: IsNull() },
+    });
+    if (!entity) {
+      this.logger.debug('Invite not found by email and org', { email, orgId });
+      return null;
+    }
+    return this.inviteMapper.toDomain(entity);
+  }
+
   async findByEmailsAndOrg(emails: string[], orgId: string): Promise<Invite[]> {
     this.logger.log('findByEmailsAndOrg', { emailCount: emails.length, orgId });
 

@@ -24,6 +24,10 @@ export abstract class InvitesRepository {
     filters?: InvitesFilters,
   ): Promise<Paginated<Invite>>;
   abstract findOneByEmail(email: string): Promise<Invite | null>;
+  abstract findOneByEmailAndOrg(
+    email: string,
+    orgId: UUID,
+  ): Promise<Invite | null>;
   abstract findByEmailsAndOrg(
     emails: string[],
     orgId: string,
