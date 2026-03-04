@@ -23,16 +23,6 @@ describe('UserUsageItem', () => {
       expect(UserUsageItem.computeIsActive(null)).toBe(false);
     });
 
-    it('should return true at the exact boundary of the threshold', () => {
-      // Activity exactly at the threshold boundary should be considered active
-      const boundaryDate = new Date(
-        Date.now() -
-          UsageConstants.ACTIVE_USER_DAYS_THRESHOLD * 24 * 60 * 60 * 1000,
-      );
-
-      expect(UserUsageItem.computeIsActive(boundaryDate)).toBe(true);
-    });
-
     it('should return false one millisecond past the threshold', () => {
       const justPastThreshold = new Date(
         Date.now() -

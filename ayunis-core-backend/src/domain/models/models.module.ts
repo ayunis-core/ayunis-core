@@ -3,7 +3,6 @@ import { ModelsController } from './presenters/http/models.controller';
 import { SuperAdminModelsController } from './presenters/http/super-admin-models.controller';
 import { MistralInferenceHandler } from './infrastructure/inference/mistral.inference';
 import { InferenceHandlerRegistry } from './application/registry/inference-handler.registry';
-import { ModelRegistry } from './application/registry/model.registry';
 import { ModelProvider } from './domain/value-objects/model-provider.enum';
 import { OpenAIInferenceHandler } from './infrastructure/inference/openai.inference';
 import { AnthropicInferenceHandler } from './infrastructure/inference/anthropic.inference';
@@ -98,7 +97,6 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
   ],
   controllers: [ModelsController, SuperAdminModelsController],
   providers: [
-    ModelRegistry,
     ModelProviderInfoRegistry,
     OpenAIResponsesMessageConverter,
     GeminiMessageConverter,
@@ -275,7 +273,6 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
   ],
   exports: [
     InferenceHandlerRegistry,
-    ModelRegistry,
     CreatePermittedModelUseCase,
     DeletePermittedModelUseCase,
     UpdatePermittedModelUseCase,

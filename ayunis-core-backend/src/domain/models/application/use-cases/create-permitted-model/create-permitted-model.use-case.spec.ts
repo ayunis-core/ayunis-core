@@ -4,7 +4,7 @@ import { Logger } from '@nestjs/common';
 import { CreatePermittedModelUseCase } from './create-permitted-model.use-case';
 import { CreatePermittedModelCommand } from './create-permitted-model.command';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { ModelRegistry } from '../../registry/model.registry';
+import { ModelsRepository } from '../../ports/models.repository';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
@@ -16,7 +16,7 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 describe('CreatePermittedModelUseCase', () => {
   let useCase: CreatePermittedModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
-  let modelRegistry: jest.Mocked<ModelRegistry>;
+  let modelsRepository: jest.Mocked<ModelsRepository>;
   let mockContextService: any;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -30,11 +30,11 @@ describe('CreatePermittedModelUseCase', () => {
       findByOrgAndModel: jest.fn(),
     };
 
-    const mockModelRegistry = {
-      getAvailableModel: jest.fn(),
-      getAllAvailableModels: jest.fn(),
-      register: jest.fn(),
-      unregister: jest.fn(),
+    const mockModelsRepository = {
+      findOne: jest.fn(),
+      findAll: jest.fn(),
+      save: jest.fn(),
+      delete: jest.fn(),
     };
 
     mockContextService = {
@@ -48,7 +48,7 @@ describe('CreatePermittedModelUseCase', () => {
           provide: PermittedModelsRepository,
           useValue: mockPermittedModelsRepository,
         },
-        { provide: ModelRegistry, useValue: mockModelRegistry },
+        { provide: ModelsRepository, useValue: mockModelsRepository },
         { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
@@ -57,7 +57,7 @@ describe('CreatePermittedModelUseCase', () => {
       CreatePermittedModelUseCase,
     );
     permittedModelsRepository = module.get(PermittedModelsRepository);
-    modelRegistry = module.get(ModelRegistry);
+    modelsRepository = module.get(ModelsRepository);
 
     // Configure ContextService mock
     mockContextService.get.mockImplementation((key: string) => {
@@ -98,7 +98,7 @@ describe('CreatePermittedModelUseCase', () => {
         orgId: mockOrgId,
       });
 
-      modelRegistry.getAvailableModel.mockReturnValue(mockModel);
+      modelsRepository.findOne.mockResolvedValue(mockModel);
       permittedModelsRepository.create.mockResolvedValue(mockPermittedModel);
 
       const logSpy = jest.spyOn(Logger.prototype, 'log');
@@ -107,7 +107,9 @@ describe('CreatePermittedModelUseCase', () => {
       const result = await useCase.execute(command);
 
       // Assert
-      expect(modelRegistry.getAvailableModel).toHaveBeenCalledWith(mockModelId);
+      expect(modelsRepository.findOne).toHaveBeenCalledWith({
+        id: mockModelId,
+      });
       expect(permittedModelsRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           model: mockModel,
@@ -122,21 +124,20 @@ describe('CreatePermittedModelUseCase', () => {
       });
     });
 
-    it('should throw ModelNotFoundError when model is not available', async () => {
+    it('should throw ModelNotFoundError when model is not found', async () => {
       // Arrange
       const command = new CreatePermittedModelCommand(mockModelId, mockOrgId);
 
-      const modelNotFoundError = new ModelNotFoundError(mockModelId);
-      modelRegistry.getAvailableModel.mockImplementation(() => {
-        throw modelNotFoundError;
-      });
+      modelsRepository.findOne.mockResolvedValue(undefined);
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
         ModelNotFoundError,
       );
 
-      expect(modelRegistry.getAvailableModel).toHaveBeenCalledWith(mockModelId);
+      expect(modelsRepository.findOne).toHaveBeenCalledWith({
+        id: mockModelId,
+      });
       expect(permittedModelsRepository.create).not.toHaveBeenCalled();
     });
 
@@ -156,7 +157,7 @@ describe('CreatePermittedModelUseCase', () => {
         canVision: false,
       });
 
-      modelRegistry.getAvailableModel.mockReturnValue(mockModel);
+      modelsRepository.findOne.mockResolvedValue(mockModel);
 
       const repositoryError = new Error('Database constraint violation');
       permittedModelsRepository.create.mockRejectedValue(repositoryError);
@@ -179,10 +180,7 @@ describe('CreatePermittedModelUseCase', () => {
       // Arrange
       const command = new CreatePermittedModelCommand(mockModelId, mockOrgId);
 
-      const modelNotFoundError = new ModelNotFoundError(mockModelId);
-      modelRegistry.getAvailableModel.mockImplementation(() => {
-        throw modelNotFoundError;
-      });
+      modelsRepository.findOne.mockResolvedValue(undefined);
 
       const errorSpy = jest.spyOn(Logger.prototype, 'error');
 

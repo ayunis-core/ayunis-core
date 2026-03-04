@@ -1,6 +1,6 @@
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { ModelRegistry } from '../../registry/model.registry';
+import { ModelsRepository } from '../../ports/models.repository';
 import { CreatePermittedModelCommand } from './create-permitted-model.command';
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -8,13 +8,14 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { ModelNotFoundError } from '../../models.errors';
 
 @Injectable()
 export class CreatePermittedModelUseCase {
   private readonly logger = new Logger(CreatePermittedModelUseCase.name);
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
-    private readonly modelRegistry: ModelRegistry,
+    private readonly modelsRepository: ModelsRepository,
     private readonly contextService: ContextService,
   ) {}
 
@@ -32,7 +33,12 @@ export class CreatePermittedModelUseCase {
       if (!isOrgAdmin && !isSuperAdmin) {
         throw new UnauthorizedAccessError();
       }
-      const model = this.modelRegistry.getAvailableModel(command.modelId);
+      const model = await this.modelsRepository.findOne({
+        id: command.modelId,
+      });
+      if (!model) {
+        throw new ModelNotFoundError(command.modelId);
+      }
       const permittedModel = new PermittedModel({
         model: model,
         orgId: command.orgId,
@@ -46,6 +52,7 @@ export class CreatePermittedModelUseCase {
         throw error;
       }
       this.logger.error('Error creating permitted model', error);
+      // eslint-disable-next-line sonarjs/todo-tag -- pre-existing, out of scope
       throw error; // TODO: Handle this error
     }
   }
