@@ -2,9 +2,9 @@ import {
   Controller,
   Get,
   Put,
+  Post,
   Delete,
   Body,
-  Logger,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -13,18 +13,21 @@ import { GetUserSystemPromptUseCase } from '../../application/use-cases/get-user
 import { UpsertUserSystemPromptUseCase } from '../../application/use-cases/upsert-user-system-prompt/upsert-user-system-prompt.use-case';
 import { UpsertUserSystemPromptCommand } from '../../application/use-cases/upsert-user-system-prompt/upsert-user-system-prompt.command';
 import { DeleteUserSystemPromptUseCase } from '../../application/use-cases/delete-user-system-prompt/delete-user-system-prompt.use-case';
+import { GeneratePersonalizedSystemPromptUseCase } from '../../application/use-cases/generate-personalized-system-prompt/generate-personalized-system-prompt.use-case';
+import { GeneratePersonalizedSystemPromptCommand } from '../../application/use-cases/generate-personalized-system-prompt/generate-personalized-system-prompt.command';
 import { UpsertUserSystemPromptDto } from './dtos/upsert-user-system-prompt.dto';
 import { UserSystemPromptResponseDto } from './dtos/user-system-prompt-response.dto';
+import { GeneratePersonalizedSystemPromptDto } from './dtos/generate-personalized-system-prompt.dto';
+import { GeneratePersonalizedSystemPromptResponseDto } from './dtos/generate-personalized-system-prompt-response.dto';
 
 @ApiTags('Chat Settings')
 @Controller('chat-settings')
 export class ChatSettingsController {
-  private readonly logger = new Logger(ChatSettingsController.name);
-
   constructor(
     private readonly getUserSystemPromptUseCase: GetUserSystemPromptUseCase,
     private readonly upsertUserSystemPromptUseCase: UpsertUserSystemPromptUseCase,
     private readonly deleteUserSystemPromptUseCase: DeleteUserSystemPromptUseCase,
+    private readonly generatePersonalizedSystemPromptUseCase: GeneratePersonalizedSystemPromptUseCase,
   ) {}
 
   @Get('system-prompt')
@@ -85,5 +88,49 @@ export class ChatSettingsController {
   })
   async deleteSystemPrompt(): Promise<void> {
     await this.deleteUserSystemPromptUseCase.execute();
+  }
+
+  @Post('generate-personalized-system-prompt')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Generate a personalized system prompt',
+    description:
+      'Generates a personalized system prompt and welcome message based on user preferences, then saves the system prompt.',
+  })
+  @ApiBody({ type: GeneratePersonalizedSystemPromptDto })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Successfully generated and saved the personalized system prompt',
+    type: GeneratePersonalizedSystemPromptResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid request payload',
+  })
+  @ApiResponse({
+    status: 422,
+    description: 'No default model configured for the organization',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Inference failure during prompt generation',
+  })
+  async generatePersonalizedSystemPrompt(
+    @Body() dto: GeneratePersonalizedSystemPromptDto,
+  ): Promise<GeneratePersonalizedSystemPromptResponseDto> {
+    const command = new GeneratePersonalizedSystemPromptCommand({
+      preferredName: dto.preferredName,
+      communicationStyle: dto.communicationStyle,
+      workContext: dto.workContext,
+    });
+
+    const result =
+      await this.generatePersonalizedSystemPromptUseCase.execute(command);
+
+    return {
+      systemPrompt: result.systemPrompt,
+      welcomeMessage: result.welcomeMessage,
+    };
   }
 }

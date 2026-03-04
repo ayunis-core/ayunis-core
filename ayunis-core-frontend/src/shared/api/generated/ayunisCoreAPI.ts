@@ -61,6 +61,8 @@ import type {
   ErrorResponseDto,
   FeatureTogglesResponseDto,
   ForgotPasswordDto,
+  GeneratePersonalizedSystemPromptDto,
+  GeneratePersonalizedSystemPromptResponseDto,
   GetThreadResponseDto,
   GetThreadsResponseDto,
   GlobalUserUsageResponseDto,
@@ -13180,6 +13182,72 @@ export const useChatSettingsControllerDeleteSystemPrompt = <TError = unknown,
       > => {
 
       const mutationOptions = getChatSettingsControllerDeleteSystemPromptMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Generates a personalized system prompt and welcome message based on user preferences, then saves the system prompt.
+ * @summary Generate a personalized system prompt
+ */
+export const chatSettingsControllerGeneratePersonalizedSystemPrompt = (
+    generatePersonalizedSystemPromptDto: GeneratePersonalizedSystemPromptDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<GeneratePersonalizedSystemPromptResponseDto>(
+      {url: `/chat-settings/generate-personalized-system-prompt`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: generatePersonalizedSystemPromptDto, signal
+    },
+      );
+    }
+  
+
+
+export const getChatSettingsControllerGeneratePersonalizedSystemPromptMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chatSettingsControllerGeneratePersonalizedSystemPrompt>>, TError,{data: GeneratePersonalizedSystemPromptDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof chatSettingsControllerGeneratePersonalizedSystemPrompt>>, TError,{data: GeneratePersonalizedSystemPromptDto}, TContext> => {
+
+const mutationKey = ['chatSettingsControllerGeneratePersonalizedSystemPrompt'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof chatSettingsControllerGeneratePersonalizedSystemPrompt>>, {data: GeneratePersonalizedSystemPromptDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  chatSettingsControllerGeneratePersonalizedSystemPrompt(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChatSettingsControllerGeneratePersonalizedSystemPromptMutationResult = NonNullable<Awaited<ReturnType<typeof chatSettingsControllerGeneratePersonalizedSystemPrompt>>>
+    export type ChatSettingsControllerGeneratePersonalizedSystemPromptMutationBody = GeneratePersonalizedSystemPromptDto
+    export type ChatSettingsControllerGeneratePersonalizedSystemPromptMutationError = void
+
+    /**
+ * @summary Generate a personalized system prompt
+ */
+export const useChatSettingsControllerGeneratePersonalizedSystemPrompt = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chatSettingsControllerGeneratePersonalizedSystemPrompt>>, TError,{data: GeneratePersonalizedSystemPromptDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof chatSettingsControllerGeneratePersonalizedSystemPrompt>>,
+        TError,
+        {data: GeneratePersonalizedSystemPromptDto},
+        TContext
+      > => {
+
+      const mutationOptions = getChatSettingsControllerGeneratePersonalizedSystemPromptMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

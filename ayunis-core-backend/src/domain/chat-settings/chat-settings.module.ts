@@ -4,14 +4,17 @@ import { LocalUserSystemPromptsRepositoryModule } from './infrastructure/persist
 import { GetUserSystemPromptUseCase } from './application/use-cases/get-user-system-prompt/get-user-system-prompt.use-case';
 import { UpsertUserSystemPromptUseCase } from './application/use-cases/upsert-user-system-prompt/upsert-user-system-prompt.use-case';
 import { DeleteUserSystemPromptUseCase } from './application/use-cases/delete-user-system-prompt/delete-user-system-prompt.use-case';
+import { GeneratePersonalizedSystemPromptUseCase } from './application/use-cases/generate-personalized-system-prompt/generate-personalized-system-prompt.use-case';
+import { ModelsModule } from '../models/models.module';
 
 @Module({
-  imports: [LocalUserSystemPromptsRepositoryModule],
+  imports: [LocalUserSystemPromptsRepositoryModule, ModelsModule],
   controllers: [ChatSettingsController],
   providers: [
     GetUserSystemPromptUseCase,
     UpsertUserSystemPromptUseCase,
     DeleteUserSystemPromptUseCase,
+    GeneratePersonalizedSystemPromptUseCase,
   ],
   exports: [GetUserSystemPromptUseCase],
 })

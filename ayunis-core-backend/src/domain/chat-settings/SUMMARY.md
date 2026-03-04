@@ -15,6 +15,7 @@ Per-user chat configuration. Currently contains the **user system prompt** featu
 - **`GetUserSystemPromptUseCase`** — Retrieves the user's system prompt (returns `null` if not set)
 - **`UpsertUserSystemPromptUseCase`** — Creates or replaces the user's system prompt
 - **`DeleteUserSystemPromptUseCase`** — Deletes the user's system prompt (idempotent)
+- **`GeneratePersonalizedSystemPromptUseCase`** — Generates a personalized system prompt and welcome message via LLM inference based on user preferences, then upserts the generated system prompt
 
 ## Infrastructure
 
@@ -26,11 +27,12 @@ Per-user chat configuration. Currently contains the **user system prompt** featu
 
 Controller: `ChatSettingsController` — base path `/chat-settings`, tag `Chat Settings`
 
-| Method | Path                          | Description                    |
-| ------ | ----------------------------- | ------------------------------ |
-| GET    | `/chat-settings/system-prompt` | Get user's system prompt       |
-| PUT    | `/chat-settings/system-prompt` | Set/update user's system prompt |
-| DELETE | `/chat-settings/system-prompt` | Delete user's system prompt    |
+| Method | Path                                                  | Description                                      |
+| ------ | ----------------------------------------------------- | ------------------------------------------------ |
+| GET    | `/chat-settings/system-prompt`                        | Get user's system prompt                         |
+| PUT    | `/chat-settings/system-prompt`                        | Set/update user's system prompt                  |
+| DELETE | `/chat-settings/system-prompt`                        | Delete user's system prompt                      |
+| POST   | `/chat-settings/generate-personalized-system-prompt`  | Generate and save a personalized system prompt   |
 
 ## Exports
 
