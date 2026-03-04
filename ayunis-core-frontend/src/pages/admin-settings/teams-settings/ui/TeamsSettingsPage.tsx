@@ -5,6 +5,7 @@ import { TeamsList } from './TeamsList';
 import { CreateTeamDialog } from './CreateTeamDialog';
 import { EditTeamDialog } from './EditTeamDialog';
 import SettingsLayout from '../../admin-settings-layout';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import type { Team } from '../model/types';
 
 interface TeamsSettingsPageProps {
@@ -18,9 +19,12 @@ export function TeamsSettingsPage({ teams }: Readonly<TeamsSettingsPageProps>) {
   const [editTeam, setEditTeam] = useState<Team | null>(null);
 
   const headerActions = (
-    <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
-      {t('teams.page.add')}
-    </Button>
+    <div className="flex gap-2">
+      <HelpLink path="settings/admin/teams/" />
+      <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+        {t('teams.page.add')}
+      </Button>
+    </div>
   );
 
   return (

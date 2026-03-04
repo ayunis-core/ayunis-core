@@ -98,6 +98,7 @@
   },
   "common": {
     "loading": "Laden...",
+    "helpLink": "Hilfe",
     "pagination": {
       "previous": "Zurück",
       "next": "Weiter"

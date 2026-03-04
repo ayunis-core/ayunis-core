@@ -26,6 +26,7 @@ import {
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
 import { Trash2, Pin } from 'lucide-react';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useCallback } from 'react';
@@ -103,6 +104,7 @@ export function SkillPage({
             }
             action={
               <>
+                <HelpLink path="skills/" />
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">
                     {skill.isActive

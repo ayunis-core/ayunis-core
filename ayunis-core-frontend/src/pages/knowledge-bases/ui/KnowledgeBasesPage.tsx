@@ -7,6 +7,7 @@ import KnowledgeBasesEmptyState from './KnowledgeBasesEmptyState';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import type { KnowledgeBase } from '../model/openapi';
 import { useTranslation } from 'react-i18next';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 
 interface KnowledgeBasesPageProps {
   knowledgeBases: KnowledgeBase[];
@@ -17,15 +18,19 @@ export default function KnowledgeBasesPage({
 }: Readonly<KnowledgeBasesPageProps>) {
   const { t } = useTranslation('knowledge-bases');
 
+  const headerAction = (
+    <div className="flex gap-2">
+      <HelpLink path="knowledge-collections/" />
+      <CreateKnowledgeBaseDialog />
+    </div>
+  );
+
   if (knowledgeBases.length === 0) {
     return (
       <AppLayout>
         <FullScreenMessageLayout
           header={
-            <ContentAreaHeader
-              title={t('page.title')}
-              action={<CreateKnowledgeBaseDialog />}
-            />
+            <ContentAreaHeader title={t('page.title')} action={headerAction} />
           }
         >
           <KnowledgeBasesEmptyState />
@@ -42,10 +47,7 @@ export default function KnowledgeBasesPage({
     <AppLayout>
       <ContentAreaLayout
         contentHeader={
-          <ContentAreaHeader
-            title={t('page.title')}
-            action={<CreateKnowledgeBaseDialog />}
-          />
+          <ContentAreaHeader title={t('page.title')} action={headerAction} />
         }
         contentArea={
           <div className="space-y-3">

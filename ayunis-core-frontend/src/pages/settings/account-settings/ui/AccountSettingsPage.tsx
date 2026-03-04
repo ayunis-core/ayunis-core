@@ -8,6 +8,7 @@ import {
 } from '@/shared/ui/shadcn/card';
 import { Button } from '@/shared/ui/shadcn/button';
 import { useTranslation } from 'react-i18next';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import PasswordSettingsPage from './PasswordSettingsPage';
 
 export default function AccountSettingsPage({
@@ -18,7 +19,10 @@ export default function AccountSettingsPage({
   const { t } = useTranslation('settings');
 
   return (
-    <SettingsLayout title={t('account.title')}>
+    <SettingsLayout
+      title={t('account.title')}
+      action={<HelpLink path="settings/account/account/" />}
+    >
       <div className="space-y-4">
         <ProfileInformationCard user={user} />
         <PasswordSettingsPage />

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import SettingsLayout from '../../admin-settings-layout';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import InviteMenuButton from './InviteMenuButton';
 import InvitesSection from './InvitesSection';
 import InvitesSearch from './InvitesSearch';
@@ -44,7 +45,15 @@ export default function UsersSettingsPage({
   const invitesTotalPages = Math.ceil(invitesTotal / invitesLimit);
 
   return (
-    <SettingsLayout action={<InviteMenuButton />} title={t('layout.users')}>
+    <SettingsLayout
+      action={
+        <div className="flex gap-2">
+          <HelpLink path="settings/admin/users/" />
+          <InviteMenuButton />
+        </div>
+      }
+      title={t('layout.users')}
+    >
       <div className="space-y-4">
         {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- boolean OR */}
         {(invites.length > 0 || invitesSearch || invitesTotal > 0) && (

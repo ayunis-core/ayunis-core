@@ -1,11 +1,13 @@
 import { useParams } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
+  CardAction,
 } from '@/shared/ui/shadcn/card';
 import { Switch } from '@/shared/ui/shadcn/switch';
 import { Separator } from '@/shared/ui/shadcn/separator';
@@ -63,6 +65,9 @@ export default function SkillKnowledgeBasesCard({
         <CardHeader>
           <CardTitle>{t('knowledgeBases.title')}</CardTitle>
           <CardDescription>{t('knowledgeBases.description')}</CardDescription>
+          <CardAction>
+            <HelpLink path="skills/knowledge-collections/" variant="icon" />
+          </CardAction>
         </CardHeader>
         <CardContent className="space-y-4">
           <Skeleton className="h-16 w-full" />
@@ -79,6 +84,9 @@ export default function SkillKnowledgeBasesCard({
         <CardHeader>
           <CardTitle>{t('knowledgeBases.title')}</CardTitle>
           <CardDescription>{t('knowledgeBases.description')}</CardDescription>
+          <CardAction>
+            <HelpLink path="skills/knowledge-collections/" variant="icon" />
+          </CardAction>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center p-8 text-center">
@@ -110,6 +118,9 @@ export default function SkillKnowledgeBasesCard({
       <CardHeader>
         <CardTitle>{t('knowledgeBases.title')}</CardTitle>
         <CardDescription>{t('knowledgeBases.description')}</CardDescription>
+        <CardAction>
+          <HelpLink path="skills/knowledge-collections/" variant="icon" />
+        </CardAction>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

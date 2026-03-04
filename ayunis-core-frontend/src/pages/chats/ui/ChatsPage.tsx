@@ -7,6 +7,7 @@ import ChatsEmptyState from './ChatsEmptyState';
 import ChatsPagination from './ChatsPagination';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { useTranslation } from 'react-i18next';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import type { ChatListItem, Agent } from '../model/types';
 
 interface ChatsPageProps {
@@ -38,7 +39,12 @@ export default function ChatsPage({
     return (
       <AppLayout>
         <FullScreenMessageLayout
-          header={<ContentAreaHeader title={t('page.title')} />}
+          header={
+            <ContentAreaHeader
+              title={t('page.title')}
+              action={<HelpLink path="chat/" />}
+            />
+          }
         >
           <ChatsEmptyState hasFilters={false} />
         </FullScreenMessageLayout>
@@ -49,7 +55,12 @@ export default function ChatsPage({
   return (
     <AppLayout>
       <ContentAreaLayout
-        contentHeader={<ContentAreaHeader title={t('page.title')} />}
+        contentHeader={
+          <ContentAreaHeader
+            title={t('page.title')}
+            action={<HelpLink path="chat/" />}
+          />
+        }
         contentArea={
           <>
             <ChatsFilters agents={agents} search={search} agentId={agentId} />

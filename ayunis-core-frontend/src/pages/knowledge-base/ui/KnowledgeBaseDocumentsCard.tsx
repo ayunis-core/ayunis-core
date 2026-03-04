@@ -33,6 +33,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { Upload, X, FileText, Globe, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import {
   useKnowledgeBaseDocuments,
   useUploadDocument,
@@ -107,6 +108,10 @@ export default function KnowledgeBaseDocumentsCard({
             className="hidden"
           />
           <div className="flex gap-2">
+            <HelpLink
+              path="knowledge-collections/create-and-upload/"
+              variant="icon"
+            />
             <Button
               variant="outline"
               size="sm"
