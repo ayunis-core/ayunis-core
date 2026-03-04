@@ -111,7 +111,7 @@ export class LocalInvitesRepository implements InvitesRepository {
   async findOneByEmail(email: string): Promise<Invite | null> {
     this.logger.log('findOneByEmail', { email });
     const entity = await this.inviteRepository.findOne({
-      where: { email: ILike(email) },
+      where: { email: ILike(email), acceptedAt: IsNull() },
     });
     if (!entity) {
       this.logger.debug('Invite not found by email', { email });
