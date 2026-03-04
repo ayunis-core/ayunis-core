@@ -38,7 +38,7 @@
     "showMore": "Mehr anzeigen..."
   },
   "chatInput": {
-    "placeholder": "Stellen Sie eine Frage in Ayunis Core...",
+    "placeholder": "Wie kann ich heute helfen?",
     "selectPrompt": "Fügen Sie einen Prompt aus Ihrer Bibliothek hinzu",
     "promptsLoadError": "Fehler beim Laden der Prompts",
     "promptsEmptyState": "Noch kein Prompt erstellt",
