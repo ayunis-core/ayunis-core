@@ -38,6 +38,7 @@ describe('CreateInviteUseCase', () => {
       findById: jest.fn(),
       findByToken: jest.fn(),
       findOneByEmail: jest.fn(),
+      findOneByEmailAndOrg: jest.fn(),
       delete: jest.fn(),
     };
 
@@ -98,7 +99,7 @@ describe('CreateInviteUseCase', () => {
     findUserByEmailUseCase = module.get(FindUserByEmailUseCase);
 
     // Default: no existing invite
-    invitesRepository.findOneByEmail.mockResolvedValue(null);
+    invitesRepository.findOneByEmailAndOrg.mockResolvedValue(null);
 
     // Mock logger
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
@@ -321,7 +322,7 @@ describe('CreateInviteUseCase', () => {
         userId: mockUserId,
       });
 
-      invitesRepository.findOneByEmail.mockResolvedValue({
+      invitesRepository.findOneByEmailAndOrg.mockResolvedValue({
         id: 'existing-invite-id',
         email: mockEmail,
       } as any);

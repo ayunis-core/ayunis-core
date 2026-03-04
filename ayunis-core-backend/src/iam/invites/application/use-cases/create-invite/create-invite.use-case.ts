@@ -104,8 +104,10 @@ export class CreateInviteUseCase {
     email: string,
     orgId: UUID,
   ): Promise<void> {
-    const existingInvite =
-      await this.invitesRepository.findOneByEmail(email);
+    const existingInvite = await this.invitesRepository.findOneByEmailAndOrg(
+      email,
+      orgId,
+    );
     if (existingInvite) {
       throw new EmailNotAvailableError();
     }
