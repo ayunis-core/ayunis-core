@@ -11207,6 +11207,389 @@ export function useSkillKnowledgeBasesControllerListSkillKnowledgeBases<TData = 
 
 
 /**
+ * Create a new skill template. Only accessible to super admins.
+ * @summary Create a new skill template
+ */
+export const superAdminSkillTemplatesControllerCreate = (
+    createSkillTemplateDto: CreateSkillTemplateDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SkillTemplateResponseDto>(
+      {url: `/super-admin/skill-templates`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createSkillTemplateDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSkillTemplatesControllerCreateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>, TError,{data: CreateSkillTemplateDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>, TError,{data: CreateSkillTemplateDto}, TContext> => {
+
+const mutationKey = ['superAdminSkillTemplatesControllerCreate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>, {data: CreateSkillTemplateDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminSkillTemplatesControllerCreate(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSkillTemplatesControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>>
+    export type SuperAdminSkillTemplatesControllerCreateMutationBody = CreateSkillTemplateDto
+    export type SuperAdminSkillTemplatesControllerCreateMutationError = void
+
+    /**
+ * @summary Create a new skill template
+ */
+export const useSuperAdminSkillTemplatesControllerCreate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>, TError,{data: CreateSkillTemplateDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>,
+        TError,
+        {data: CreateSkillTemplateDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSkillTemplatesControllerCreateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Retrieve all skill templates. Only accessible to super admins.
+ * @summary Get all skill templates
+ */
+export const superAdminSkillTemplatesControllerFindAll = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SkillTemplateResponseDto[]>(
+      {url: `/super-admin/skill-templates`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminSkillTemplatesControllerFindAllQueryKey = () => {
+    return [
+    `/super-admin/skill-templates`
+    ] as const;
+    }
+
+    
+export const getSuperAdminSkillTemplatesControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminSkillTemplatesControllerFindAllQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>> = ({ signal }) => superAdminSkillTemplatesControllerFindAll(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminSkillTemplatesControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>>
+export type SuperAdminSkillTemplatesControllerFindAllQueryError = void
+
+
+export function useSuperAdminSkillTemplatesControllerFindAll<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminSkillTemplatesControllerFindAll<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminSkillTemplatesControllerFindAll<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all skill templates
+ */
+
+export function useSuperAdminSkillTemplatesControllerFindAll<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminSkillTemplatesControllerFindAllQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Retrieve a specific skill template by its ID. Only accessible to super admins.
+ * @summary Get a skill template by ID
+ */
+export const superAdminSkillTemplatesControllerFindOne = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SkillTemplateResponseDto>(
+      {url: `/super-admin/skill-templates/${id}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminSkillTemplatesControllerFindOneQueryKey = (id?: string,) => {
+    return [
+    `/super-admin/skill-templates/${id}`
+    ] as const;
+    }
+
+    
+export const getSuperAdminSkillTemplatesControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminSkillTemplatesControllerFindOneQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>> = ({ signal }) => superAdminSkillTemplatesControllerFindOne(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminSkillTemplatesControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>>
+export type SuperAdminSkillTemplatesControllerFindOneQueryError = void
+
+
+export function useSuperAdminSkillTemplatesControllerFindOne<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminSkillTemplatesControllerFindOne<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminSkillTemplatesControllerFindOne<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a skill template by ID
+ */
+
+export function useSuperAdminSkillTemplatesControllerFindOne<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminSkillTemplatesControllerFindOneQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Partially update an existing skill template. Only accessible to super admins.
+ * @summary Update a skill template
+ */
+export const superAdminSkillTemplatesControllerUpdate = (
+    id: string,
+    updateSkillTemplateDto: UpdateSkillTemplateDto,
+ ) => {
+      
+      
+      return customAxiosInstance<SkillTemplateResponseDto>(
+      {url: `/super-admin/skill-templates/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateSkillTemplateDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSkillTemplatesControllerUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>, TError,{id: string;data: UpdateSkillTemplateDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>, TError,{id: string;data: UpdateSkillTemplateDto}, TContext> => {
+
+const mutationKey = ['superAdminSkillTemplatesControllerUpdate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>, {id: string;data: UpdateSkillTemplateDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  superAdminSkillTemplatesControllerUpdate(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSkillTemplatesControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>>
+    export type SuperAdminSkillTemplatesControllerUpdateMutationBody = UpdateSkillTemplateDto
+    export type SuperAdminSkillTemplatesControllerUpdateMutationError = void
+
+    /**
+ * @summary Update a skill template
+ */
+export const useSuperAdminSkillTemplatesControllerUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>, TError,{id: string;data: UpdateSkillTemplateDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>,
+        TError,
+        {id: string;data: UpdateSkillTemplateDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSkillTemplatesControllerUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Delete a skill template. Only accessible to super admins.
+ * @summary Delete a skill template
+ */
+export const superAdminSkillTemplatesControllerDelete = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/skill-templates/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSkillTemplatesControllerDeleteMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['superAdminSkillTemplatesControllerDelete'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  superAdminSkillTemplatesControllerDelete(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSkillTemplatesControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>>
+    
+    export type SuperAdminSkillTemplatesControllerDeleteMutationError = void
+
+    /**
+ * @summary Delete a skill template
+ */
+export const useSuperAdminSkillTemplatesControllerDelete = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSkillTemplatesControllerDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.
  * @summary Send a message with optional images and receive streaming response
  */
@@ -12967,389 +13350,6 @@ export function useSuperAdminGlobalUsageControllerGetGlobalUserUsage<TData = Awa
 
 
 
-/**
- * Create a new skill template. Only accessible to super admins.
- * @summary Create a new skill template
- */
-export const superAdminSkillTemplatesControllerCreate = (
-    createSkillTemplateDto: CreateSkillTemplateDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<SkillTemplateResponseDto>(
-      {url: `/super-admin/skill-templates`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createSkillTemplateDto, signal
-    },
-      );
-    }
-  
-
-
-export const getSuperAdminSkillTemplatesControllerCreateMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>, TError,{data: CreateSkillTemplateDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>, TError,{data: CreateSkillTemplateDto}, TContext> => {
-
-const mutationKey = ['superAdminSkillTemplatesControllerCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>, {data: CreateSkillTemplateDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  superAdminSkillTemplatesControllerCreate(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminSkillTemplatesControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>>
-    export type SuperAdminSkillTemplatesControllerCreateMutationBody = CreateSkillTemplateDto
-    export type SuperAdminSkillTemplatesControllerCreateMutationError = void
-
-    /**
- * @summary Create a new skill template
- */
-export const useSuperAdminSkillTemplatesControllerCreate = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>, TError,{data: CreateSkillTemplateDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>,
-        TError,
-        {data: CreateSkillTemplateDto},
-        TContext
-      > => {
-
-      const mutationOptions = getSuperAdminSkillTemplatesControllerCreateMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * Retrieve all skill templates. Only accessible to super admins.
- * @summary Get all skill templates
- */
-export const superAdminSkillTemplatesControllerFindAll = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<SkillTemplateResponseDto[]>(
-      {url: `/super-admin/skill-templates`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-
-
-export const getSuperAdminSkillTemplatesControllerFindAllQueryKey = () => {
-    return [
-    `/super-admin/skill-templates`
-    ] as const;
-    }
-
-    
-export const getSuperAdminSkillTemplatesControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminSkillTemplatesControllerFindAllQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>> = ({ signal }) => superAdminSkillTemplatesControllerFindAll(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminSkillTemplatesControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>>
-export type SuperAdminSkillTemplatesControllerFindAllQueryError = void
-
-
-export function useSuperAdminSkillTemplatesControllerFindAll<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminSkillTemplatesControllerFindAll<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminSkillTemplatesControllerFindAll<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get all skill templates
- */
-
-export function useSuperAdminSkillTemplatesControllerFindAll<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminSkillTemplatesControllerFindAllQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-
-/**
- * Retrieve a specific skill template by its ID. Only accessible to super admins.
- * @summary Get a skill template by ID
- */
-export const superAdminSkillTemplatesControllerFindOne = (
-    id: string,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<SkillTemplateResponseDto>(
-      {url: `/super-admin/skill-templates/${id}`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-
-
-export const getSuperAdminSkillTemplatesControllerFindOneQueryKey = (id?: string,) => {
-    return [
-    `/super-admin/skill-templates/${id}`
-    ] as const;
-    }
-
-    
-export const getSuperAdminSkillTemplatesControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminSkillTemplatesControllerFindOneQueryKey(id);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>> = ({ signal }) => superAdminSkillTemplatesControllerFindOne(id, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminSkillTemplatesControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>>
-export type SuperAdminSkillTemplatesControllerFindOneQueryError = void
-
-
-export function useSuperAdminSkillTemplatesControllerFindOne<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError = void>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminSkillTemplatesControllerFindOne<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminSkillTemplatesControllerFindOne<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get a skill template by ID
- */
-
-export function useSuperAdminSkillTemplatesControllerFindOne<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminSkillTemplatesControllerFindOneQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-
-/**
- * Partially update an existing skill template. Only accessible to super admins.
- * @summary Update a skill template
- */
-export const superAdminSkillTemplatesControllerUpdate = (
-    id: string,
-    updateSkillTemplateDto: UpdateSkillTemplateDto,
- ) => {
-      
-      
-      return customAxiosInstance<SkillTemplateResponseDto>(
-      {url: `/super-admin/skill-templates/${id}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateSkillTemplateDto
-    },
-      );
-    }
-  
-
-
-export const getSuperAdminSkillTemplatesControllerUpdateMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>, TError,{id: string;data: UpdateSkillTemplateDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>, TError,{id: string;data: UpdateSkillTemplateDto}, TContext> => {
-
-const mutationKey = ['superAdminSkillTemplatesControllerUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>, {id: string;data: UpdateSkillTemplateDto}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  superAdminSkillTemplatesControllerUpdate(id,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminSkillTemplatesControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>>
-    export type SuperAdminSkillTemplatesControllerUpdateMutationBody = UpdateSkillTemplateDto
-    export type SuperAdminSkillTemplatesControllerUpdateMutationError = void
-
-    /**
- * @summary Update a skill template
- */
-export const useSuperAdminSkillTemplatesControllerUpdate = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>, TError,{id: string;data: UpdateSkillTemplateDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>,
-        TError,
-        {id: string;data: UpdateSkillTemplateDto},
-        TContext
-      > => {
-
-      const mutationOptions = getSuperAdminSkillTemplatesControllerUpdateMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * Delete a skill template. Only accessible to super admins.
- * @summary Delete a skill template
- */
-export const superAdminSkillTemplatesControllerDelete = (
-    id: string,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/super-admin/skill-templates/${id}`, method: 'DELETE'
-    },
-      );
-    }
-  
-
-
-export const getSuperAdminSkillTemplatesControllerDeleteMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>, TError,{id: string}, TContext> => {
-
-const mutationKey = ['superAdminSkillTemplatesControllerDelete'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  superAdminSkillTemplatesControllerDelete(id,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminSkillTemplatesControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>>
-    
-    export type SuperAdminSkillTemplatesControllerDeleteMutationError = void
-
-    /**
- * @summary Delete a skill template
- */
-export const useSuperAdminSkillTemplatesControllerDelete = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>, TError,{id: string}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-
-      const mutationOptions = getSuperAdminSkillTemplatesControllerDeleteMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
 /**
  * Returns the custom system prompt for the authenticated user, or null if not set.
  * @summary Get the user system prompt
