@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.0](https://github.com/ayunis-core/ayunis-core/compare/v1.14.2...v1.15.0) (2026-03-05)
+
+
+### Features
+
+* **AYC-000:** add tool usage prometheus metric ([#331](https://github.com/ayunis-core/ayunis-core/issues/331)) ([cca5de3](https://github.com/ayunis-core/ayunis-core/commit/cca5de3714e640f35b89176f4ff366b14ee515cd))
+
 ## [1.14.2](https://github.com/ayunis-core/ayunis-core/compare/v1.14.1...v1.14.2) (2026-03-05)
 
 
