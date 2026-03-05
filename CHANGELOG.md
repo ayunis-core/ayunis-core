@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.13.0](https://github.com/ayunis-core/ayunis-core/compare/v1.12.0...v1.13.0) (2026-03-05)
+
+
+### Features
+
+* **AYC-000:** add help button to new chat page ([#312](https://github.com/ayunis-core/ayunis-core/issues/312)) ([587335a](https://github.com/ayunis-core/ayunis-core/commit/587335af71a22dfdf44c81f12ae1f95fb1a789f1))
+* **AYC-000:** add help center links to pages and cards ([#299](https://github.com/ayunis-core/ayunis-core/issues/299)) ([9fa44cf](https://github.com/ayunis-core/ayunis-core/commit/9fa44cf889cdab0dcc8e0b1367bd773b1d5bd1f0))
+* **AYC-000:** migrate agents and prompts to skills ([#302](https://github.com/ayunis-core/ayunis-core/issues/302)) ([c647b40](https://github.com/ayunis-core/ayunis-core/commit/c647b40a86e7267aeff60ca89b598037940d9287))
+* **AYC-102:** add personalization card and wire into new chat page ([#307](https://github.com/ayunis-core/ayunis-core/issues/307)) ([0c66eec](https://github.com/ayunis-core/ayunis-core/commit/0c66eecaf097fc274d9efe40e600bc1022368016))
+* **AYC-103:** add super admin skill templates frontend page ([#311](https://github.com/ayunis-core/ayunis-core/issues/311)) ([c8972fe](https://github.com/ayunis-core/ayunis-core/commit/c8972fedc83e7925c79e67096a41bc1fc7ea26d7))
+
+
+### Bug Fixes
+
+* **AYC-000:** check for existing invite before insert and fix smtp host in dev script ([#301](https://github.com/ayunis-core/ayunis-core/issues/301)) ([b4919d4](https://github.com/ayunis-core/ayunis-core/commit/b4919d474d8b572bb5a79d21abeebdf7f2728293))
+* **AYC-000:** remove stale model registry cache so new catalog models are immediately available ([#303](https://github.com/ayunis-core/ayunis-core/issues/303)) ([255aeb6](https://github.com/ayunis-core/ayunis-core/commit/255aeb6b795dbf0caee98a133dfe18d4dfc10e50))
+* **AYC-000:** skip jwt auth for metrics endpoint ([#304](https://github.com/ayunis-core/ayunis-core/issues/304)) ([1fa410e](https://github.com/ayunis-core/ayunis-core/commit/1fa410e06fabf1d8020f6e17f764491d4cd626cf))
+* **AYC-103:** address QA findings for skill templates ([#308](https://github.com/ayunis-core/ayunis-core/issues/308)) ([412cd18](https://github.com/ayunis-core/ayunis-core/commit/412cd186c0290a02cdd9501af6dcc0d689cc23e6))
+
+
+### Miscellaneous
+
+* **AYC-000:** update chat input placeholder to friendly greeting ([#306](https://github.com/ayunis-core/ayunis-core/issues/306)) ([4052e89](https://github.com/ayunis-core/ayunis-core/commit/4052e892322429c2026582c18b7f6b24dc7807e0))
+
+
+### CI/CD
+
+* **AYC-000:** speed up deploys with docker cache, build-before-down, and health polling ([#319](https://github.com/ayunis-core/ayunis-core/issues/319)) ([ae8752d](https://github.com/ayunis-core/ayunis-core/commit/ae8752d39efb6dc6e86ffb87d4d662fefbdfc106))
+
 ## [1.12.0](https://github.com/ayunis-core/ayunis-core/compare/v1.11.0...v1.12.0) (2026-03-03)
 
 
