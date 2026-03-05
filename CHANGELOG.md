@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.14.0](https://github.com/ayunis-core/ayunis-core/compare/v1.13.1...v1.14.0) (2026-03-05)
+
+
+### Features
+
+* **AYC-000:** add own/shared tabs to skills page and remove active badge ([#324](https://github.com/ayunis-core/ayunis-core/issues/324)) ([d432a31](https://github.com/ayunis-core/ayunis-core/commit/d432a31e992fb1dc855c9afb2830b098e0827891))
+
+
+### Bug Fixes
+
+* **AYC-000:** hide greeting when personalization card is active ([#325](https://github.com/ayunis-core/ayunis-core/issues/325)) ([e451d3d](https://github.com/ayunis-core/ayunis-core/commit/e451d3d6787878bb134924b338541e26e5c035ac))
+
 ## [1.13.1](https://github.com/ayunis-core/ayunis-core/compare/v1.13.0...v1.13.1) (2026-03-05)
 
 
