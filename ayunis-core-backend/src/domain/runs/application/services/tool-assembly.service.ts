@@ -24,6 +24,15 @@ import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/ma
 import { FindActiveAlwaysOnTemplatesUseCase } from 'src/domain/skill-templates/application/use-cases/find-active-always-on-templates/find-active-always-on-templates.use-case';
 import { FindActiveAlwaysOnTemplatesQuery } from 'src/domain/skill-templates/application/use-cases/find-active-always-on-templates/find-active-always-on-templates.query';
 import { featuresConfig } from 'src/config/features.config';
+import {
+  buildSkillSlug,
+  SlugCollisionError,
+  SYSTEM_PREFIX,
+  USER_PREFIX,
+  type SkillEntry,
+  type SkillPrefix,
+} from 'src/common/util/skill-slug';
+import type { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -52,8 +61,26 @@ export class ToolAssemblyService {
     activeSkills: Skill[],
     canUseTools: boolean,
   ): Promise<{ tools: Tool[]; instructions: string }> {
+    // Fetch always-on skill templates (cached, 60s TTL)
+    let alwaysOnTemplates: SkillTemplate[] = [];
+    try {
+      alwaysOnTemplates = await this.findActiveAlwaysOnTemplatesUseCase.execute(
+        new FindActiveAlwaysOnTemplatesQuery(),
+      );
+    } catch (error) {
+      this.logger.error(
+        'Failed to fetch always-on templates, continuing without them',
+        { error: error instanceof Error ? error.message : 'Unknown error' },
+      );
+    }
+
+    const { slugMap, skillEntries } = this.buildSkillSlugs(
+      activeSkills,
+      alwaysOnTemplates,
+    );
+
     const tools = canUseTools
-      ? await this.assembleTools(thread, agent, activeSkills)
+      ? await this.assembleTools(thread, agent, activeSkills, slugMap)
       : [];
 
     // Collect all sources from thread and agent for the system prompt
@@ -72,20 +99,6 @@ export class ToolAssemblyService {
       await this.getUserSystemPromptUseCase.execute();
     const userSystemPrompt = userSystemPromptEntity?.systemPrompt ?? undefined;
 
-    // Fetch active always-on skill templates (cached, 60s TTL)
-    let alwaysOnInstructions: string[] = [];
-    try {
-      const templates = await this.findActiveAlwaysOnTemplatesUseCase.execute(
-        new FindActiveAlwaysOnTemplatesQuery(),
-      );
-      alwaysOnInstructions = templates.map((t) => t.instructions);
-    } catch (error) {
-      this.logger.error(
-        'Failed to fetch always-on templates, continuing without them',
-        { error: error instanceof Error ? error.message : 'Unknown error' },
-      );
-    }
-
     const instructions = this.systemPromptBuilderService.build({
       agent,
       tools,
@@ -93,20 +106,70 @@ export class ToolAssemblyService {
       sources: textSources,
       // Only include skills in prompt when tools are enabled and skills feature is on,
       // otherwise the prompt would instruct the model to use activate_skill which isn't available
-      skills: canUseTools && this.features.skillsEnabled ? activeSkills : [],
-
+      skills: canUseTools && this.features.skillsEnabled ? skillEntries : [],
       knowledgeBases: canUseTools ? (thread.knowledgeBases ?? []) : [],
-      alwaysOnInstructions,
       userSystemPrompt,
     });
 
     return { tools, instructions };
   }
 
+  /**
+   * Build slug→name map and skill entries in a single pass.
+   * Errors are handled per-entry so a single problematic skill
+   * (collision or un-slugifiable name) only removes that entry.
+   */
+  private buildSkillSlugs(
+    activeSkills: Skill[],
+    alwaysOnTemplates: SkillTemplate[],
+  ): { slugMap: Map<string, string>; skillEntries: SkillEntry[] } {
+    const slugMap = new Map<string, string>();
+    const skillEntries: SkillEntry[] = [];
+
+    const allInputs: {
+      name: string;
+      prefix: SkillPrefix;
+      description: string;
+    }[] = [
+      ...activeSkills.map((s) => ({
+        name: s.name,
+        prefix: USER_PREFIX as SkillPrefix,
+        description: s.shortDescription,
+      })),
+      ...alwaysOnTemplates.map((t) => ({
+        name: t.name,
+        prefix: SYSTEM_PREFIX as SkillPrefix,
+        description: t.shortDescription,
+      })),
+    ];
+
+    for (const input of allInputs) {
+      try {
+        const slug = buildSkillSlug(input.prefix, input.name);
+        const existing = slugMap.get(slug);
+        if (existing !== undefined && existing !== input.name) {
+          throw new SlugCollisionError(slug, existing, input.name);
+        }
+        slugMap.set(slug, input.name);
+        skillEntries.push({ slug, description: input.description });
+      } catch (error) {
+        const message =
+          error instanceof SlugCollisionError
+            ? `Slug collision, skipping skill "${input.name}"`
+            : `Failed to build slug for skill "${input.name}", skipping`;
+        const detail = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn(message, { error: detail });
+      }
+    }
+
+    return { slugMap, skillEntries };
+  }
+
   async assembleTools(
     thread: Thread,
-    agent?: Agent,
-    activeSkills: Skill[] = [],
+    agent: Agent | undefined,
+    activeSkills: Skill[],
+    slugMap: Map<string, string>,
   ): Promise<Tool[]> {
     const skillsEnabled = this.features.skillsEnabled;
     const tools: Tool[] = [];
@@ -360,13 +423,13 @@ export class ToolAssemblyService {
       );
     }
 
-    // Activate skill tool is available if there are active skills and skills feature is enabled
-    if (skillsEnabled && activeSkills.length > 0) {
+    // Activate skill tool is available if there are activatable skills (user or system) and skills feature is enabled
+    if (skillsEnabled && slugMap.size > 0) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
             type: ToolType.ACTIVATE_SKILL,
-            context: activeSkills,
+            context: slugMap,
           }),
         ),
       );
