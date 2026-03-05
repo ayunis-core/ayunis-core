@@ -71,4 +71,22 @@ export class UpdateSkillTemplateDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'Default active state for pre-created copies (only applicable when distributionMode is PRE_CREATED_COPY)',
+    example: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  defaultActive?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'Default pinned state for pre-created copies (only applicable when distributionMode is PRE_CREATED_COPY)',
+    example: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  defaultPinned?: boolean;
 }

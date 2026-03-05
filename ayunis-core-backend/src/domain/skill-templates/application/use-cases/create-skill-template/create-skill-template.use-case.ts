@@ -2,6 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
 import { CreateSkillTemplateCommand } from './create-skill-template.command';
 import { SkillTemplate } from '../../../domain/skill-template.entity';
+import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
+import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
+import { DistributionMode } from '../../../domain/distribution-mode.enum';
 import {
   DuplicateSkillTemplateNameError,
   UnexpectedSkillTemplateError,
@@ -27,13 +30,7 @@ export class CreateSkillTemplateUseCase {
         throw new DuplicateSkillTemplateNameError(command.name);
       }
 
-      const skillTemplate = new SkillTemplate({
-        name: command.name,
-        shortDescription: command.shortDescription,
-        instructions: command.instructions,
-        distributionMode: command.distributionMode,
-        isActive: command.isActive,
-      });
+      const skillTemplate = this.createSkillTemplate(command);
 
       return await this.skillTemplateRepository.create(skillTemplate);
     } catch (error) {
@@ -46,6 +43,28 @@ export class CreateSkillTemplateUseCase {
         error: error as Error,
       });
       throw new UnexpectedSkillTemplateError(error);
+    }
+  }
+
+  private createSkillTemplate(
+    command: CreateSkillTemplateCommand,
+  ): SkillTemplate {
+    const baseParams = {
+      name: command.name,
+      shortDescription: command.shortDescription,
+      instructions: command.instructions,
+      isActive: command.isActive,
+    };
+
+    switch (command.distributionMode) {
+      case DistributionMode.ALWAYS_ON:
+        return new AlwaysOnSkillTemplate(baseParams);
+      case DistributionMode.PRE_CREATED_COPY:
+        return new PreCreatedCopySkillTemplate({
+          ...baseParams,
+          defaultActive: command.defaultActive,
+          defaultPinned: command.defaultPinned,
+        });
     }
   }
 }
