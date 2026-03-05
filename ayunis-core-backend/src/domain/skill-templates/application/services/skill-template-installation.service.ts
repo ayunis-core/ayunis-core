@@ -4,6 +4,7 @@ import { CreateSkillWithUniqueNameUseCase } from 'src/domain/skills/application/
 import { CreateSkillWithUniqueNameCommand } from 'src/domain/skills/application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.command';
 import { FindActivePreCreatedTemplatesUseCase } from '../use-cases/find-active-pre-created-templates/find-active-pre-created-templates.use-case';
 import { FindActivePreCreatedTemplatesQuery } from '../use-cases/find-active-pre-created-templates/find-active-pre-created-templates.query';
+import { PreCreatedCopySkillTemplate } from '../../domain/pre-created-copy-skill-template.entity';
 
 @Injectable()
 export class SkillTemplateInstallationService {
@@ -27,12 +28,17 @@ export class SkillTemplateInstallationService {
     let successCount = 0;
     for (const template of templates) {
       try {
+        const isPreCreatedCopy =
+          template instanceof PreCreatedCopySkillTemplate;
+
         const created = await this.createSkillWithUniqueNameUseCase.execute(
           new CreateSkillWithUniqueNameCommand({
             name: template.name,
             shortDescription: template.shortDescription,
             instructions: template.instructions,
             userId,
+            isActive: isPreCreatedCopy ? template.defaultActive : true,
+            isPinned: isPreCreatedCopy ? template.defaultPinned : false,
           }),
         );
 

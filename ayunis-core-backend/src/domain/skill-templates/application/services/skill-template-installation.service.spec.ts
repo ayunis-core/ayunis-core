@@ -21,6 +21,8 @@ describe('SkillTemplateInstallationService', () => {
       shortDescription: 'Description A',
       instructions: 'Instructions A',
       isActive: true,
+      defaultActive: true,
+      defaultPinned: true,
     }),
     new PreCreatedCopySkillTemplate({
       id: randomUUID(),
@@ -28,6 +30,8 @@ describe('SkillTemplateInstallationService', () => {
       shortDescription: 'Description B',
       instructions: 'Instructions B',
       isActive: true,
+      defaultActive: false,
+      defaultPinned: false,
     }),
   ];
 
@@ -68,6 +72,8 @@ describe('SkillTemplateInstallationService', () => {
         shortDescription: 'Description A',
         instructions: 'Instructions A',
         userId,
+        isActive: true,
+        isPinned: true,
       }),
     );
     expect(createSkillWithUniqueNameUseCase.execute).toHaveBeenCalledWith(
@@ -76,6 +82,56 @@ describe('SkillTemplateInstallationService', () => {
         shortDescription: 'Description B',
         instructions: 'Instructions B',
         userId,
+        isActive: false,
+        isPinned: false,
+      }),
+    );
+  });
+
+  it('should forward defaultActive and defaultPinned from template', async () => {
+    const templateWithDefaults = new PreCreatedCopySkillTemplate({
+      id: randomUUID(),
+      name: 'Active and Pinned',
+      shortDescription: 'Both true',
+      instructions: 'Instructions',
+      isActive: true,
+      defaultActive: true,
+      defaultPinned: true,
+    });
+
+    findActivePreCreatedTemplatesUseCase.execute.mockResolvedValue([
+      templateWithDefaults,
+    ]);
+
+    await service.installAllPreCreatedForUser(userId);
+
+    expect(createSkillWithUniqueNameUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isActive: true,
+        isPinned: true,
+      }),
+    );
+  });
+
+  it('should treat undefined defaults as false', async () => {
+    const templateNoDefaults = new PreCreatedCopySkillTemplate({
+      id: randomUUID(),
+      name: 'No Defaults',
+      shortDescription: 'No defaults set',
+      instructions: 'Instructions',
+      isActive: true,
+    });
+
+    findActivePreCreatedTemplatesUseCase.execute.mockResolvedValue([
+      templateNoDefaults,
+    ]);
+
+    await service.installAllPreCreatedForUser(userId);
+
+    expect(createSkillWithUniqueNameUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isActive: false,
+        isPinned: false,
       }),
     );
   });
