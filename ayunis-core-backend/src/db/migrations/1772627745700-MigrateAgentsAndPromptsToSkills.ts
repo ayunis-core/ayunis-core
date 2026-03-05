@@ -32,7 +32,9 @@ export class MigrateAgentsAndPromptsToSkills1772627745700 implements MigrationIn
         new_id TEXT;
         suffix INT;
       BEGIN
-        FOR r IN SELECT "id", "name", "instructions", "userId", "createdAt", "updatedAt" FROM "agents"
+        FOR r IN SELECT a."id", a."name", a."instructions", a."userId", a."createdAt", a."updatedAt"
+                 FROM "agents" a
+                 JOIN "users" u ON u."id" = a."userId"
         LOOP
           -- Sanitize: replace characters that are not alphanumeric, spaces, or hyphens
           sanitized := regexp_replace(r."name", '[^[:alnum:] -]', '-', 'g');
@@ -128,7 +130,9 @@ export class MigrateAgentsAndPromptsToSkills1772627745700 implements MigrationIn
         new_id TEXT;
         suffix INT;
       BEGIN
-        FOR r IN SELECT "id", "title", "content", "userId", "createdAt", "updatedAt" FROM "prompts"
+        FOR r IN SELECT p."id", p."title", p."content", p."userId", p."createdAt", p."updatedAt"
+                 FROM "prompts" p
+                 JOIN "users" u ON u."id" = p."userId"
         LOOP
           -- Sanitize: replace characters that are not alphanumeric, spaces, or hyphens
           sanitized := regexp_replace(r."title", '[^[:alnum:] -]', '-', 'g');
