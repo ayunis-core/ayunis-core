@@ -26,10 +26,13 @@ jobs:
             cd /home/ayunis/apps/ayunis-core
             git fetch origin main
             git reset --hard origin/main
+            # Build with cache while old containers still serve traffic
+            docker compose build
+            # Quick swap — downtime is only the restart
             docker compose down
-            # Clean up old images and build cache before building new ones
-            docker image prune -af
-            docker builder prune -af
-            docker compose up -d --build
-            sleep 60
+            docker compose up -d
+            # Wait for app to be healthy (up to 120s)
+            timeout 120 bash -c 'until docker compose ps app --format json | grep -q "(healthy)"; do sleep 5; done'
             docker compose ps
+            # Clean up dangling images to reclaim disk space
+            docker image prune -f

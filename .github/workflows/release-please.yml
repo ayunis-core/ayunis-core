@@ -48,10 +48,16 @@ jobs:
             cd /home/ayunis/apps/ayunis-core
             git fetch --all --tags
             git checkout -f "$RELEASE_TAG"
+            # Build with cache while old containers still serve traffic
+            docker compose build
+            # Quick swap — downtime is only the restart
             docker compose down
-            docker compose up -d --build
-            sleep 60
+            docker compose up -d
+            # Wait for app to be healthy (up to 120s)
+            timeout 120 bash -c 'until docker compose ps app --format json | grep -q "(healthy)"; do sleep 5; done'
             docker compose ps
+            # Clean up dangling images to reclaim disk space
+            docker image prune -f
 
   deploy-production:
     needs: [release-please, deploy-internal]
@@ -76,10 +82,16 @@ jobs:
             cd /home/ayunis/apps/ayunis-core
             git fetch --all --tags
             git checkout -f "$RELEASE_TAG"
+            # Build with cache while old containers still serve traffic
+            docker compose build
+            # Quick swap — downtime is only the restart
             docker compose down
-            docker compose up -d --build
-            sleep 60
+            docker compose up -d
+            # Wait for app to be healthy (up to 120s)
+            timeout 120 bash -c 'until docker compose ps app --format json | grep -q "(healthy)"; do sleep 5; done'
             docker compose ps
+            # Clean up dangling images to reclaim disk space
+            docker image prune -f
 
   notify-slack:
     name: Notify Slack
