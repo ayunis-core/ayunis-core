@@ -17,7 +17,6 @@ The runs module is the central orchestrator for AI conversation execution. The `
 ### Helpers
 
 - **resolve-integration.helper.ts** — Pure functions for resolving MCP integration metadata. `resolveIntegration` matches tool names to `McpIntegrationTool` instances and extracts integration metadata. `enrichContentWithIntegration` attaches integration metadata to `ToolUseMessageContent` blocks in assistant responses.
-- **skill-slug.ts** — Located in `src/common/util/`. Pure functions for slugifying skill names (`slugify` with German transliteration), building prefixed slugs (`buildSkillSlug`), parsing slugs back to prefix + slug (`parseSkillSlug`), and building collision-safe slug→name maps (`buildSlugMap`). Defines `SYSTEM_PREFIX` (`system`) and `USER_PREFIX` (`user`) constants.
 
 Note: **SkillActivationService** (which handles copying skill sources, MCP integrations, and returning instructions to the thread) lives in the **skills module** (`src/domain/skills/application/services/skill-activation.service.ts`) and is consumed by both the runs module (`ExecuteRunUseCase`) and the tools module (`ActivateSkillToolHandler`).
 
