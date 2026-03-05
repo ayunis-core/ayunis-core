@@ -46,6 +46,7 @@ describe('ListSkillMcpIntegrationsUseCase', () => {
       findByIds: jest.fn(),
       toggleSkillPinned: jest.fn(),
       isSkillPinned: jest.fn(),
+      pinSkill: jest.fn(),
       getPinnedSkillIds: jest.fn(),
       findSkillsByKnowledgeBaseAndOwners: jest.fn(),
       removeKnowledgeBaseFromSkills: jest.fn(),
