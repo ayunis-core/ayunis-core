@@ -6,6 +6,8 @@ export class CreateSkillTemplateCommand {
   public readonly instructions: string;
   public readonly distributionMode: DistributionMode;
   public readonly isActive?: boolean;
+  public readonly defaultActive?: boolean;
+  public readonly defaultPinned?: boolean;
 
   constructor(params: {
     name: string;
@@ -13,11 +15,15 @@ export class CreateSkillTemplateCommand {
     instructions: string;
     distributionMode: DistributionMode;
     isActive?: boolean;
+    defaultActive?: boolean;
+    defaultPinned?: boolean;
   }) {
     this.name = params.name;
     this.shortDescription = params.shortDescription;
     this.instructions = params.instructions;
     this.distributionMode = params.distributionMode;
     this.isActive = params.isActive;
+    this.defaultActive = params.defaultActive;
+    this.defaultPinned = params.defaultPinned;
   }
 }

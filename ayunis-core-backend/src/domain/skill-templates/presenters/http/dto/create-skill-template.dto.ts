@@ -67,4 +67,22 @@ export class CreateSkillTemplateDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'Whether copied skills should be active by default (only for pre_created_copy mode, defaults to false)',
+    example: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  defaultActive?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'Whether copied skills should be pinned by default (only for pre_created_copy mode, defaults to false)',
+    example: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  defaultPinned?: boolean;
 }

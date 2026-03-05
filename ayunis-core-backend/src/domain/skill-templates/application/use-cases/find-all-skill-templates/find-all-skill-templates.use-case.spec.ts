@@ -4,8 +4,8 @@ import { Logger } from '@nestjs/common';
 import { FindAllSkillTemplatesUseCase } from './find-all-skill-templates.use-case';
 import { FindAllSkillTemplatesQuery } from './find-all-skill-templates.query';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
-import { SkillTemplate } from '../../../domain/skill-template.entity';
-import { DistributionMode } from '../../../domain/distribution-mode.enum';
+import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
+import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
 
 describe('FindAllSkillTemplatesUseCase', () => {
   let useCase: FindAllSkillTemplatesUseCase;
@@ -38,17 +38,15 @@ describe('FindAllSkillTemplatesUseCase', () => {
 
   it('should return all skill templates', async () => {
     const templates = [
-      new SkillTemplate({
+      new AlwaysOnSkillTemplate({
         name: 'Template 1',
         shortDescription: 'First',
         instructions: 'Instructions 1.',
-        distributionMode: DistributionMode.ALWAYS_ON,
       }),
-      new SkillTemplate({
+      new PreCreatedCopySkillTemplate({
         name: 'Template 2',
         shortDescription: 'Second',
         instructions: 'Instructions 2.',
-        distributionMode: DistributionMode.PRE_CREATED_COPY,
         isActive: true,
       }),
     ];

@@ -4,28 +4,26 @@ import type { UUID } from 'crypto';
 import { FindAlwaysOnTemplateByNameUseCase } from './find-always-on-template-by-name.use-case';
 import { FindAlwaysOnTemplateByNameQuery } from './find-always-on-template-by-name.query';
 import { FindActiveAlwaysOnTemplatesUseCase } from '../find-active-always-on-templates/find-active-always-on-templates.use-case';
-import { SkillTemplate } from '../../../domain/skill-template.entity';
-import { DistributionMode } from '../../../domain/distribution-mode.enum';
+import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
+import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
 
 describe('FindAlwaysOnTemplateByNameUseCase', () => {
   let useCase: FindAlwaysOnTemplateByNameUseCase;
   let findActiveAlwaysOnTemplates: jest.Mocked<FindActiveAlwaysOnTemplatesUseCase>;
 
-  const alwaysOnTemplate = new SkillTemplate({
+  const alwaysOnTemplate = new AlwaysOnSkillTemplate({
     id: '123e4567-e89b-12d3-a456-426614174001' as UUID,
     name: 'German Administrative Law',
     shortDescription: 'German admin law guidelines',
     instructions: 'Follow German administrative law...',
-    distributionMode: DistributionMode.ALWAYS_ON,
     isActive: true,
   });
 
-  const preCreatedTemplate = new SkillTemplate({
+  const preCreatedTemplate = new PreCreatedCopySkillTemplate({
     id: '123e4567-e89b-12d3-a456-426614174002' as UUID,
     name: 'Data Analysis',
     shortDescription: 'Data analysis helper',
     instructions: 'Analyze data...',
-    distributionMode: DistributionMode.PRE_CREATED_COPY,
     isActive: true,
   });
 

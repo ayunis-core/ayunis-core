@@ -5,7 +5,8 @@ import type { UUID } from 'crypto';
 import { UpdateSkillTemplateUseCase } from './update-skill-template.use-case';
 import { UpdateSkillTemplateCommand } from './update-skill-template.command';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
-import { SkillTemplate } from '../../../domain/skill-template.entity';
+import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
+import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
 import { DistributionMode } from '../../../domain/distribution-mode.enum';
 import { InvalidSkillTemplateNameError } from '../../../domain/skill-template.entity';
 import {
@@ -46,13 +47,12 @@ describe('UpdateSkillTemplateUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('should update a skill template with all fields provided', async () => {
-    const existing = new SkillTemplate({
+  it('should update an AlwaysOnSkillTemplate with all fields provided', async () => {
+    const existing = new AlwaysOnSkillTemplate({
       id: mockId,
       name: 'Legal Guidelines',
       shortDescription: 'Original description',
       instructions: 'Original instructions.',
-      distributionMode: DistributionMode.ALWAYS_ON,
     });
 
     const command = new UpdateSkillTemplateCommand({
@@ -71,17 +71,17 @@ describe('UpdateSkillTemplateUseCase', () => {
 
     expect(repository.findOne).toHaveBeenCalledWith(mockId);
     expect(repository.findByName).not.toHaveBeenCalled();
+    expect(result).toBeInstanceOf(AlwaysOnSkillTemplate);
     expect(result.shortDescription).toBe('Updated description');
     expect(result.isActive).toBe(true);
   });
 
   it('should merge with existing values when only partial fields provided', async () => {
-    const existing = new SkillTemplate({
+    const existing = new AlwaysOnSkillTemplate({
       id: mockId,
       name: 'Legal Guidelines',
       shortDescription: 'Original description',
       instructions: 'Original instructions.',
-      distributionMode: DistributionMode.ALWAYS_ON,
       isActive: false,
     });
 
@@ -103,12 +103,11 @@ describe('UpdateSkillTemplateUseCase', () => {
   });
 
   it('should check name uniqueness when name changes', async () => {
-    const existing = new SkillTemplate({
+    const existing = new AlwaysOnSkillTemplate({
       id: mockId,
       name: 'Old Name',
       shortDescription: 'Description',
       instructions: 'Instructions.',
-      distributionMode: DistributionMode.ALWAYS_ON,
     });
 
     const command = new UpdateSkillTemplateCommand({
@@ -127,19 +126,17 @@ describe('UpdateSkillTemplateUseCase', () => {
   });
 
   it('should reject update when new name already exists', async () => {
-    const existing = new SkillTemplate({
+    const existing = new AlwaysOnSkillTemplate({
       id: mockId,
       name: 'Old Name',
       shortDescription: 'Description',
       instructions: 'Instructions.',
-      distributionMode: DistributionMode.ALWAYS_ON,
     });
 
-    const duplicate = new SkillTemplate({
+    const duplicate = new PreCreatedCopySkillTemplate({
       name: 'Taken Name',
       shortDescription: 'Other',
       instructions: 'Other.',
-      distributionMode: DistributionMode.PRE_CREATED_COPY,
     });
 
     const command = new UpdateSkillTemplateCommand({
@@ -170,12 +167,11 @@ describe('UpdateSkillTemplateUseCase', () => {
   });
 
   it('should rethrow InvalidSkillTemplateNameError for invalid names', async () => {
-    const existing = new SkillTemplate({
+    const existing = new AlwaysOnSkillTemplate({
       id: mockId,
       name: 'Legal Guidelines',
       shortDescription: 'Description',
       instructions: 'Instructions.',
-      distributionMode: DistributionMode.ALWAYS_ON,
     });
 
     const command = new UpdateSkillTemplateCommand({
@@ -190,5 +186,82 @@ describe('UpdateSkillTemplateUseCase', () => {
       InvalidSkillTemplateNameError,
     );
     expect(repository.update).not.toHaveBeenCalled();
+  });
+
+  it('should switch from ALWAYS_ON to PRE_CREATED_COPY with defaults', async () => {
+    const existing = new AlwaysOnSkillTemplate({
+      id: mockId,
+      name: 'Template',
+      shortDescription: 'Description',
+      instructions: 'Instructions.',
+      isActive: true,
+    });
+
+    const command = new UpdateSkillTemplateCommand({
+      skillTemplateId: mockId,
+      distributionMode: DistributionMode.PRE_CREATED_COPY,
+    });
+
+    repository.findOne.mockResolvedValue(existing);
+    repository.update.mockImplementation(async (t) => t);
+
+    const result = await useCase.execute(command);
+
+    expect(result).toBeInstanceOf(PreCreatedCopySkillTemplate);
+    expect(result.distributionMode).toBe(DistributionMode.PRE_CREATED_COPY);
+    expect((result as PreCreatedCopySkillTemplate).defaultActive).toBe(false);
+    expect((result as PreCreatedCopySkillTemplate).defaultPinned).toBe(false);
+    expect(result.isActive).toBe(true);
+  });
+
+  it('should switch from PRE_CREATED_COPY to ALWAYS_ON dropping defaults', async () => {
+    const existing = new PreCreatedCopySkillTemplate({
+      id: mockId,
+      name: 'Template',
+      shortDescription: 'Description',
+      instructions: 'Instructions.',
+      isActive: true,
+      defaultActive: true,
+      defaultPinned: true,
+    });
+
+    const command = new UpdateSkillTemplateCommand({
+      skillTemplateId: mockId,
+      distributionMode: DistributionMode.ALWAYS_ON,
+    });
+
+    repository.findOne.mockResolvedValue(existing);
+    repository.update.mockImplementation(async (t) => t);
+
+    const result = await useCase.execute(command);
+
+    expect(result).toBeInstanceOf(AlwaysOnSkillTemplate);
+    expect(result.distributionMode).toBe(DistributionMode.ALWAYS_ON);
+  });
+
+  it('should preserve defaultActive/defaultPinned when mode stays PRE_CREATED_COPY', async () => {
+    const existing = new PreCreatedCopySkillTemplate({
+      id: mockId,
+      name: 'Template',
+      shortDescription: 'Description',
+      instructions: 'Instructions.',
+      defaultActive: true,
+      defaultPinned: true,
+    });
+
+    const command = new UpdateSkillTemplateCommand({
+      skillTemplateId: mockId,
+      shortDescription: 'Updated description',
+    });
+
+    repository.findOne.mockResolvedValue(existing);
+    repository.update.mockImplementation(async (t) => t);
+
+    const result = await useCase.execute(command);
+
+    expect(result).toBeInstanceOf(PreCreatedCopySkillTemplate);
+    expect((result as PreCreatedCopySkillTemplate).defaultActive).toBe(true);
+    expect((result as PreCreatedCopySkillTemplate).defaultPinned).toBe(true);
+    expect(result.shortDescription).toBe('Updated description');
   });
 });
