@@ -46,6 +46,7 @@ ayunis-core/
 | [shares](ayunis-core-backend/src/domain/shares/SUMMARY.md) | Sharing | Organization-wide resource sharing |
 | [transcriptions](ayunis-core-backend/src/domain/transcriptions/SUMMARY.md) | Voice | Audio transcription service |
 | [usage](ayunis-core-backend/src/domain/usage/SUMMARY.md) | Metering | Token and credit usage tracking |
+| [skill-templates](ayunis-core-backend/src/domain/skill-templates/SUMMARY.md) | Blueprints | Admin-managed skill templates with distribution modes |
 
 ### IAM Modules — Identity & Access Management
 
