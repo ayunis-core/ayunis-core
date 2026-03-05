@@ -28,7 +28,6 @@ import { ActivateSkillTool } from '../domain/tools/activate-skill-tool.entity';
 import { CreateSkillTool } from '../domain/tools/create-skill-tool.entity';
 import { KnowledgeQueryTool } from '../domain/tools/knowledge-query-tool.entity';
 import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.entity';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
@@ -67,7 +66,7 @@ export class ToolFactory {
         ),
       [ToolType.ACTIVATE_SKILL]: (p) =>
         new ActivateSkillTool(
-          requireArrayContext(p.context, Skill, ToolType.ACTIVATE_SKILL),
+          requireMapContext(p.context, ToolType.ACTIVATE_SKILL),
         ),
       [ToolType.KNOWLEDGE_QUERY]: (p) =>
         new KnowledgeQueryTool(
@@ -110,6 +109,13 @@ export class ToolFactory {
   }
 }
 
+function contextTypeName(context: unknown): string {
+  if (context === null || context === undefined) return 'null';
+  return (
+    (context as { constructor?: { name?: string } }).constructor?.name ?? 'null'
+  );
+}
+
 function requireArrayContext<T>(
   context: unknown,
   itemType: abstract new (...args: never[]) => T,
@@ -124,11 +130,7 @@ function requireArrayContext<T>(
   }
   throw new ToolInvalidContextError({
     toolType,
-    metadata: {
-      contextType:
-        (context as { constructor?: { name?: string } }).constructor?.name ??
-        'null',
-    },
+    metadata: { contextType: contextTypeName(context) },
   });
 }
 
@@ -156,10 +158,19 @@ function requireKnowledgeBaseContext(
   }
   throw new ToolInvalidContextError({
     toolType,
-    metadata: {
-      contextType:
-        (context as { constructor?: { name?: string } }).constructor?.name ??
-        'null',
-    },
+    metadata: { contextType: contextTypeName(context) },
+  });
+}
+
+function requireMapContext(
+  context: unknown,
+  toolType: ToolType,
+): Map<string, string> {
+  if (context instanceof Map) {
+    return context as Map<string, string>;
+  }
+  throw new ToolInvalidContextError({
+    toolType,
+    metadata: { contextType: contextTypeName(context) },
   });
 }
