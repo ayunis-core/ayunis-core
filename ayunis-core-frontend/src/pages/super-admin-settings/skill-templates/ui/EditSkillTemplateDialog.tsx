@@ -48,7 +48,9 @@ export function EditSkillTemplateDialog({
 
   function handleSubmit(data: SkillTemplateFormData) {
     if (template) {
-      void updateSkillTemplate(template.id, data);
+      void updateSkillTemplate(template.id, data).catch(() => {
+        /* error already handled by mutation onError */
+      });
     }
   }
 
