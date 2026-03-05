@@ -3055,6 +3055,31 @@ export interface UpsertUserSystemPromptDto {
   systemPrompt: string;
 }
 
+export interface GeneratePersonalizedSystemPromptDto {
+  /**
+   * The preferred name of the user
+   * @maxLength 200
+   */
+  preferredName: string;
+  /**
+   * The preferred communication style
+   * @maxLength 500
+   */
+  communicationStyle?: string;
+  /**
+   * The work context of the user
+   * @maxLength 1000
+   */
+  workContext?: string;
+}
+
+export interface GeneratePersonalizedSystemPromptResponseDto {
+  /** The generated personalized system prompt */
+  systemPrompt: string;
+  /** A personalized welcome message for the user */
+  welcomeMessage: string;
+}
+
 export interface CreatePromptDto {
   /**
    * The title of the prompt

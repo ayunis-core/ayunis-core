@@ -95,6 +95,9 @@
     "noModelTitle": "Welcome",
     "noModelDescription": "Before we can start, we need at least one enabled model. Please contact your administrator and ask them to enable at least one model. If you are an administrator, you can configure a model in the settings.",
     "configureModel": "Configure Model",
-    "upgradeToProError": "You need to upgrade to a paid plan to use this feature."
+    "upgradeToProError": "You need to upgrade to a paid plan to use this feature.",
+    "personalizedPromptSuccess": "Personalized system prompt generated",
+    "personalizedPromptError": "Failed to generate personalized system prompt",
+    "noDefaultModelError": "No default model configured. Please contact your administrator."
   }
 }

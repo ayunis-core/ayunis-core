@@ -7033,6 +7033,48 @@
         ]
       }
     },
+    "/chat-settings/generate-personalized-system-prompt": {
+      "post": {
+        "description": "Generates a personalized system prompt and welcome message based on user preferences, then saves the system prompt.",
+        "operationId": "ChatSettingsController_generatePersonalizedSystemPrompt",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeneratePersonalizedSystemPromptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully generated and saved the personalized system prompt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratePersonalizedSystemPromptResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "422": {
+            "description": "No default model configured for the organization"
+          },
+          "500": {
+            "description": "Inference failure during prompt generation"
+          }
+        },
+        "summary": "Generate a personalized system prompt",
+        "tags": [
+          "Chat Settings"
+        ]
+      }
+    },
     "/prompts": {
       "post": {
         "operationId": "PromptsController_create",
@@ -12804,6 +12846,51 @@
         },
         "required": [
           "systemPrompt"
+        ]
+      },
+      "GeneratePersonalizedSystemPromptDto": {
+        "type": "object",
+        "properties": {
+          "preferredName": {
+            "type": "string",
+            "description": "The preferred name of the user",
+            "example": "Maria",
+            "maxLength": 200
+          },
+          "communicationStyle": {
+            "type": "string",
+            "description": "The preferred communication style",
+            "example": "Locker & kurz",
+            "maxLength": 500
+          },
+          "workContext": {
+            "type": "string",
+            "description": "The work context of the user",
+            "example": "Bescheide im Sozialamt, Protokolle für den Gemeinderat",
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "preferredName"
+        ]
+      },
+      "GeneratePersonalizedSystemPromptResponseDto": {
+        "type": "object",
+        "properties": {
+          "systemPrompt": {
+            "type": "string",
+            "description": "The generated personalized system prompt",
+            "example": "Hallo Maria! Ich kommuniziere locker und kurz mit dir. Ich helfe dir bei allen Fragen rund um deine Arbeit im Sozialamt."
+          },
+          "welcomeMessage": {
+            "type": "string",
+            "description": "A personalized welcome message for the user",
+            "example": "Willkommen, Maria! Schön, dass du da bist. Wie kann ich dir heute helfen?"
+          }
+        },
+        "required": [
+          "systemPrompt",
+          "welcomeMessage"
         ]
       },
       "CreatePromptDto": {
