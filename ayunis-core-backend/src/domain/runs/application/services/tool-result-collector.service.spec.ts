@@ -1,3 +1,4 @@
+import type { Counter } from 'prom-client';
 import { AnonymizationFailedError } from 'src/common/anonymization/application/anonymization.errors';
 import type { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { RunAnonymizationUnavailableError } from '../runs.errors';
@@ -7,6 +8,7 @@ import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import type { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.use-case';
 import type { CheckToolCapabilitiesUseCase } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
+import type { ContextService } from 'src/common/context/services/context.service';
 import { ToolResultCollectorService } from './tool-result-collector.service';
 import { randomUUID } from 'crypto';
 
@@ -15,6 +17,7 @@ describe('ToolResultCollectorService', () => {
   let executeToolUseCase: jest.Mocked<ExecuteToolUseCase>;
   let checkToolCapabilitiesUseCase: jest.Mocked<CheckToolCapabilitiesUseCase>;
   let anonymizeTextUseCase: jest.Mocked<AnonymizeTextUseCase>;
+  let contextService: jest.Mocked<ContextService>;
 
   const orgId = randomUUID();
   const threadId = randomUUID();
@@ -33,10 +36,20 @@ describe('ToolResultCollectorService', () => {
       execute: jest.fn(),
     } as unknown as jest.Mocked<AnonymizeTextUseCase>;
 
+    contextService = {
+      get: jest.fn().mockReturnValue(randomUUID()),
+    } as unknown as jest.Mocked<ContextService>;
+
+    const toolUsesCounter = {
+      inc: jest.fn(),
+    } as unknown as Counter<string>;
+
     service = new ToolResultCollectorService(
       executeToolUseCase,
       checkToolCapabilitiesUseCase,
       anonymizeTextUseCase,
+      contextService,
+      toolUsesCounter,
     );
   });
 

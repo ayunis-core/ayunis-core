@@ -12,6 +12,7 @@ import {
   AYUNIS_MESSAGES_TOTAL,
   AYUNIS_USER_ACTIVITY_TOTAL,
   AYUNIS_THREAD_MESSAGE_COUNT,
+  AYUNIS_TOOL_USES_TOTAL,
   LABEL_USER_ID,
   LABEL_ORG_ID,
   LABEL_MODEL,
@@ -20,6 +21,7 @@ import {
   LABEL_ROLE,
   LABEL_ERROR_TYPE,
   LABEL_STREAMING,
+  LABEL_TOOL_NAME,
 } from './metrics.constants';
 import { MetricsAuthMiddleware } from './metrics-auth.middleware';
 import { MetricsController } from './metrics.controller';
@@ -68,6 +70,12 @@ const threadMessageCountHistogram = makeHistogramProvider({
   buckets: [1, 2, 5, 10, 20, 50, 100, 200],
 });
 
+const toolUsesCounter = makeCounterProvider({
+  name: AYUNIS_TOOL_USES_TOTAL,
+  help: 'Total number of tool invocations',
+  labelNames: [LABEL_USER_ID, LABEL_ORG_ID, LABEL_TOOL_NAME],
+});
+
 const metricProviders = [
   tokensCounter,
   inferenceDurationHistogram,
@@ -75,6 +83,7 @@ const metricProviders = [
   messagesCounter,
   userActivityCounter,
   threadMessageCountHistogram,
+  toolUsesCounter,
 ];
 
 @Global()
