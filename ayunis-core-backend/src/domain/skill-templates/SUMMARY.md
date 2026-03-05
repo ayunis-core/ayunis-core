@@ -19,8 +19,10 @@ Skill templates are admin-managed blueprints for skills that can be distributed 
 skill-templates/
 ├── SUMMARY.md
 ├── domain/
-│   ├── skill-template.entity.ts           # Domain entity with name validation
-│   └── distribution-mode.enum.ts          # ALWAYS_ON, PRE_CREATED_COPY
+│   ├── skill-template.entity.ts                    # Abstract base domain entity with name validation
+│   ├── always-on-skill-template.entity.ts           # AlwaysOnSkillTemplate (ALWAYS_ON mode)
+│   ├── pre-created-copy-skill-template.entity.ts    # PreCreatedCopySkillTemplate (PRE_CREATED_COPY mode)
+│   └── distribution-mode.enum.ts                    # ALWAYS_ON, PRE_CREATED_COPY
 ├── application/
 │   ├── ports/skill-template.repository.ts # Abstract repository interface
 │   ├── skill-templates.errors.ts          # Domain errors
@@ -39,7 +41,10 @@ skill-templates/
 │       └── find-active-pre-created-templates/ # FindActivePreCreatedTemplatesUseCase + query
 ├── infrastructure/
 │   └── persistence/local/
-│       ├── schema/skill-template.record.ts        # TypeORM entity
+│       ├── schema/
+│       │   ├── skill-template.record.ts                    # Abstract base TypeORM entity (STI parent)
+│       │   ├── always-on-skill-template.record.ts           # AlwaysOnSkillTemplateRecord (child entity)
+│       │   └── pre-created-copy-skill-template.record.ts    # PreCreatedCopySkillTemplateRecord (child entity)
 │       ├── mappers/skill-template.mapper.ts       # Domain ↔ Record conversion
 │       ├── local-skill-template.repository.ts     # PostgreSQL repository
 │       └── local-skill-template-repository.module.ts
@@ -63,6 +68,8 @@ skill-templates/
 ## Design Decisions
 
 Name validation reuses the same pattern as the Skills module (Unicode letters, numbers, emojis, hyphens, spaces; no consecutive spaces).
+
+The persistence layer uses TypeORM Single Table Inheritance (STI) with `distributionMode` as the discriminator column. Child entity repositories (`AlwaysOnSkillTemplateRecord`, `PreCreatedCopySkillTemplateRecord`) are used for mode-specific queries.
 
 ## Dependencies
 
