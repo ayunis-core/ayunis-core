@@ -8,6 +8,8 @@ export class UpdateSkillTemplateCommand {
   public readonly instructions?: string;
   public readonly distributionMode?: DistributionMode;
   public readonly isActive?: boolean;
+  public readonly defaultActive?: boolean;
+  public readonly defaultPinned?: boolean;
 
   constructor(params: {
     skillTemplateId: UUID;
@@ -16,6 +18,8 @@ export class UpdateSkillTemplateCommand {
     instructions?: string;
     distributionMode?: DistributionMode;
     isActive?: boolean;
+    defaultActive?: boolean;
+    defaultPinned?: boolean;
   }) {
     this.skillTemplateId = params.skillTemplateId;
     this.name = params.name;
@@ -23,5 +27,7 @@ export class UpdateSkillTemplateCommand {
     this.instructions = params.instructions;
     this.distributionMode = params.distributionMode;
     this.isActive = params.isActive;
+    this.defaultActive = params.defaultActive;
+    this.defaultPinned = params.defaultPinned;
   }
 }
