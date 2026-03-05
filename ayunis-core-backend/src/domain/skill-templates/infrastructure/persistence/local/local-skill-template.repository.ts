@@ -6,6 +6,8 @@ import type { UUID } from 'crypto';
 import { SkillTemplateRepository } from '../../../application/ports/skill-template.repository';
 import { SkillTemplate } from '../../../domain/skill-template.entity';
 import { SkillTemplateRecord } from './schema/skill-template.record';
+import { AlwaysOnSkillTemplateRecord } from './schema/always-on-skill-template.record';
+import { PreCreatedCopySkillTemplateRecord } from './schema/pre-created-copy-skill-template.record';
 import { SkillTemplateMapper } from './mappers/skill-template.mapper';
 import { DistributionMode } from '../../../domain/distribution-mode.enum';
 import {
@@ -18,12 +20,25 @@ const PG_UNIQUE_VIOLATION = '23505';
 @Injectable()
 export class LocalSkillTemplateRepository implements SkillTemplateRepository {
   private readonly logger = new Logger(LocalSkillTemplateRepository.name);
+  private readonly childRepos: Record<
+    DistributionMode,
+    Repository<SkillTemplateRecord>
+  >;
 
   constructor(
     @InjectRepository(SkillTemplateRecord)
     private readonly repository: Repository<SkillTemplateRecord>,
+    @InjectRepository(AlwaysOnSkillTemplateRecord)
+    alwaysOnRepository: Repository<AlwaysOnSkillTemplateRecord>,
+    @InjectRepository(PreCreatedCopySkillTemplateRecord)
+    preCreatedCopyRepository: Repository<PreCreatedCopySkillTemplateRecord>,
     private readonly mapper: SkillTemplateMapper,
-  ) {}
+  ) {
+    this.childRepos = {
+      [DistributionMode.ALWAYS_ON]: alwaysOnRepository,
+      [DistributionMode.PRE_CREATED_COPY]: preCreatedCopyRepository,
+    };
+  }
 
   async create(skillTemplate: SkillTemplate): Promise<SkillTemplate> {
     this.logger.log('create', { name: skillTemplate.name });
@@ -80,8 +95,9 @@ export class LocalSkillTemplateRepository implements SkillTemplateRepository {
 
   async findActiveByMode(mode: DistributionMode): Promise<SkillTemplate[]> {
     this.logger.log('findActiveByMode', { mode });
-    const records = await this.repository.find({
-      where: { isActive: true, distributionMode: mode },
+    const childRepo = this.childRepos[mode];
+    const records = await childRepo.find({
+      where: { isActive: true },
       order: { createdAt: 'ASC' },
     });
     return records.map((r) => this.mapper.toDomain(r));
