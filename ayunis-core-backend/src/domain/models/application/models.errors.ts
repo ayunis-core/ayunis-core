@@ -83,7 +83,7 @@ export class DefaultModelNotFoundError extends ModelError {
     super(
       `Default model not found for org '${orgId}'`,
       ModelErrorCode.NO_DEFAULT_MODEL_FOUND,
-      404,
+      422,
       metadata,
     );
   }
