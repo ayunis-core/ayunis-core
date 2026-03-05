@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
-import { SkillTemplate } from '../../../domain/skill-template.entity';
+import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
 import { DistributionMode } from '../../../domain/distribution-mode.enum';
 import { FindActivePreCreatedTemplatesQuery } from './find-active-pre-created-templates.query';
 import { UnexpectedSkillTemplateError } from '../../skill-templates.errors';
@@ -19,12 +19,15 @@ export class FindActivePreCreatedTemplatesUseCase {
   async execute(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _query: FindActivePreCreatedTemplatesQuery,
-  ): Promise<SkillTemplate[]> {
+  ): Promise<PreCreatedCopySkillTemplate[]> {
     this.logger.log('Finding active pre-created copy templates');
     try {
-      return await this.skillTemplateRepository.findActiveByMode(
+      // Safe cast: the repository uses TypeORM STI which hydrates the correct
+      // subclass based on the discriminator column, so findActiveByMode(PRE_CREATED_COPY)
+      // always returns PreCreatedCopySkillTemplate instances.
+      return (await this.skillTemplateRepository.findActiveByMode(
         DistributionMode.PRE_CREATED_COPY,
-      );
+      )) as PreCreatedCopySkillTemplate[];
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Error finding active pre-created templates', {
