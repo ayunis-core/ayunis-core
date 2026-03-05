@@ -80,7 +80,8 @@ export class UpdateSkillTemplateDto {
   })
   @ValidateIf(
     (o: UpdateSkillTemplateDto) =>
-      o.distributionMode === DistributionMode.PRE_CREATED_COPY,
+      o.distributionMode === DistributionMode.PRE_CREATED_COPY ||
+      o.defaultActive !== undefined,
   )
   @IsBoolean()
   @IsOptional()
@@ -93,7 +94,8 @@ export class UpdateSkillTemplateDto {
   })
   @ValidateIf(
     (o: UpdateSkillTemplateDto) =>
-      o.distributionMode === DistributionMode.PRE_CREATED_COPY,
+      o.distributionMode === DistributionMode.PRE_CREATED_COPY ||
+      o.defaultPinned !== undefined,
   )
   @IsBoolean()
   @IsOptional()
