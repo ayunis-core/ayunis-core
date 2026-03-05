@@ -5,7 +5,8 @@ import type { UUID } from 'crypto';
 import { UpdateSkillTemplateUseCase } from './update-skill-template.use-case';
 import { UpdateSkillTemplateCommand } from './update-skill-template.command';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
-import { SkillTemplate } from '../../../domain/skill-template.entity';
+import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
+import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
 import { DistributionMode } from '../../../domain/distribution-mode.enum';
 import { InvalidSkillTemplateNameError } from '../../../domain/skill-template.entity';
 import {
@@ -47,12 +48,11 @@ describe('UpdateSkillTemplateUseCase', () => {
   });
 
   it('should update a skill template with all fields provided', async () => {
-    const existing = new SkillTemplate({
+    const existing = new AlwaysOnSkillTemplate({
       id: mockId,
       name: 'Legal Guidelines',
       shortDescription: 'Original description',
       instructions: 'Original instructions.',
-      distributionMode: DistributionMode.ALWAYS_ON,
     });
 
     const command = new UpdateSkillTemplateCommand({
@@ -76,12 +76,11 @@ describe('UpdateSkillTemplateUseCase', () => {
   });
 
   it('should merge with existing values when only partial fields provided', async () => {
-    const existing = new SkillTemplate({
+    const existing = new AlwaysOnSkillTemplate({
       id: mockId,
       name: 'Legal Guidelines',
       shortDescription: 'Original description',
       instructions: 'Original instructions.',
-      distributionMode: DistributionMode.ALWAYS_ON,
       isActive: false,
     });
 
@@ -103,12 +102,11 @@ describe('UpdateSkillTemplateUseCase', () => {
   });
 
   it('should check name uniqueness when name changes', async () => {
-    const existing = new SkillTemplate({
+    const existing = new AlwaysOnSkillTemplate({
       id: mockId,
       name: 'Old Name',
       shortDescription: 'Description',
       instructions: 'Instructions.',
-      distributionMode: DistributionMode.ALWAYS_ON,
     });
 
     const command = new UpdateSkillTemplateCommand({
@@ -127,19 +125,17 @@ describe('UpdateSkillTemplateUseCase', () => {
   });
 
   it('should reject update when new name already exists', async () => {
-    const existing = new SkillTemplate({
+    const existing = new AlwaysOnSkillTemplate({
       id: mockId,
       name: 'Old Name',
       shortDescription: 'Description',
       instructions: 'Instructions.',
-      distributionMode: DistributionMode.ALWAYS_ON,
     });
 
-    const duplicate = new SkillTemplate({
+    const duplicate = new PreCreatedCopySkillTemplate({
       name: 'Taken Name',
       shortDescription: 'Other',
       instructions: 'Other.',
-      distributionMode: DistributionMode.PRE_CREATED_COPY,
     });
 
     const command = new UpdateSkillTemplateCommand({
@@ -170,12 +166,11 @@ describe('UpdateSkillTemplateUseCase', () => {
   });
 
   it('should rethrow InvalidSkillTemplateNameError for invalid names', async () => {
-    const existing = new SkillTemplate({
+    const existing = new AlwaysOnSkillTemplate({
       id: mockId,
       name: 'Legal Guidelines',
       shortDescription: 'Description',
       instructions: 'Instructions.',
-      distributionMode: DistributionMode.ALWAYS_ON,
     });
 
     const command = new UpdateSkillTemplateCommand({

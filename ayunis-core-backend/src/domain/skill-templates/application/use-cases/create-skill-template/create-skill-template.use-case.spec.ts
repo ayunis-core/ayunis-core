@@ -5,6 +5,8 @@ import { CreateSkillTemplateUseCase } from './create-skill-template.use-case';
 import { CreateSkillTemplateCommand } from './create-skill-template.command';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
 import { SkillTemplate } from '../../../domain/skill-template.entity';
+import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
+import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
 import { DistributionMode } from '../../../domain/distribution-mode.enum';
 import { InvalidSkillTemplateNameError } from '../../../domain/skill-template.entity';
 import { DuplicateSkillTemplateNameError } from '../../skill-templates.errors';
@@ -47,11 +49,10 @@ describe('CreateSkillTemplateUseCase', () => {
       distributionMode: DistributionMode.ALWAYS_ON,
     });
 
-    const expectedTemplate = new SkillTemplate({
+    const expectedTemplate = new AlwaysOnSkillTemplate({
       name: command.name,
       shortDescription: command.shortDescription,
       instructions: command.instructions,
-      distributionMode: command.distributionMode,
     });
 
     repository.findByName.mockResolvedValue(null);
@@ -74,11 +75,10 @@ describe('CreateSkillTemplateUseCase', () => {
       isActive: true,
     });
 
-    const expectedTemplate = new SkillTemplate({
+    const expectedTemplate = new PreCreatedCopySkillTemplate({
       name: command.name,
       shortDescription: command.shortDescription,
       instructions: command.instructions,
-      distributionMode: command.distributionMode,
       isActive: true,
     });
 
@@ -99,11 +99,10 @@ describe('CreateSkillTemplateUseCase', () => {
       distributionMode: DistributionMode.ALWAYS_ON,
     });
 
-    const existingTemplate = new SkillTemplate({
+    const existingTemplate = new AlwaysOnSkillTemplate({
       name: 'Legal Guidelines',
       shortDescription: 'Existing template',
       instructions: 'Existing instructions.',
-      distributionMode: DistributionMode.ALWAYS_ON,
     });
 
     repository.findByName.mockResolvedValue(existingTemplate);

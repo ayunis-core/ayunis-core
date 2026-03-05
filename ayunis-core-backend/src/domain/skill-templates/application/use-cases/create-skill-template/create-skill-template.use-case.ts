@@ -2,6 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
 import { CreateSkillTemplateCommand } from './create-skill-template.command';
 import { SkillTemplate } from '../../../domain/skill-template.entity';
+import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
+import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
+import { DistributionMode } from '../../../domain/distribution-mode.enum';
 import {
   DuplicateSkillTemplateNameError,
   UnexpectedSkillTemplateError,
@@ -27,13 +30,17 @@ export class CreateSkillTemplateUseCase {
         throw new DuplicateSkillTemplateNameError(command.name);
       }
 
-      const skillTemplate = new SkillTemplate({
+      const baseParams = {
         name: command.name,
         shortDescription: command.shortDescription,
         instructions: command.instructions,
-        distributionMode: command.distributionMode,
         isActive: command.isActive,
-      });
+      };
+
+      const skillTemplate: SkillTemplate =
+        command.distributionMode === DistributionMode.ALWAYS_ON
+          ? new AlwaysOnSkillTemplate(baseParams)
+          : new PreCreatedCopySkillTemplate(baseParams);
 
       return await this.skillTemplateRepository.create(skillTemplate);
     } catch (error) {

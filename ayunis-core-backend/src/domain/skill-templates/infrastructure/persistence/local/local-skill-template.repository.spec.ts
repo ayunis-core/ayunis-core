@@ -1,37 +1,77 @@
-import type { Repository } from 'typeorm';
+import type { ObjectLiteral, Repository } from 'typeorm';
 import { QueryFailedError } from 'typeorm';
 import { randomUUID } from 'crypto';
 
 import { LocalSkillTemplateRepository } from './local-skill-template.repository';
-import { SkillTemplateRecord } from './schema/skill-template.record';
+import type { SkillTemplateRecord } from './schema/skill-template.record';
+import { AlwaysOnSkillTemplateRecord } from './schema/always-on-skill-template.record';
+import { PreCreatedCopySkillTemplateRecord } from './schema/pre-created-copy-skill-template.record';
 import { SkillTemplateMapper } from './mappers/skill-template.mapper';
-import { SkillTemplate } from '../../../domain/skill-template.entity';
+import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
+import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
 import { DistributionMode } from '../../../domain/distribution-mode.enum';
 import {
   DuplicateSkillTemplateNameError,
   SkillTemplateNotFoundError,
 } from '../../../application/skill-templates.errors';
 
-function buildSkillTemplate(overrides?: Partial<SkillTemplate>): SkillTemplate {
-  return new SkillTemplate({
+function buildAlwaysOnTemplate(
+  overrides?: Partial<{
+    name: string;
+    isActive: boolean;
+  }>,
+): AlwaysOnSkillTemplate {
+  return new AlwaysOnSkillTemplate({
     id: randomUUID(),
-    name: 'Bürgerservice Vorlage',
+    name: overrides?.name ?? 'Bürgerservice Vorlage',
     shortDescription: 'Vorlage für Bürgerservice-Skills',
     instructions: 'Beantworte Fragen zum Bürgerservice.',
-    distributionMode: DistributionMode.PRE_CREATED_COPY,
-    isActive: true,
-    ...overrides,
+    isActive: overrides?.isActive ?? true,
   });
 }
 
-function buildRecord(template: SkillTemplate): SkillTemplateRecord {
-  const record = new SkillTemplateRecord();
+function buildPreCreatedTemplate(
+  overrides?: Partial<{
+    name: string;
+    isActive: boolean;
+  }>,
+): PreCreatedCopySkillTemplate {
+  return new PreCreatedCopySkillTemplate({
+    id: randomUUID(),
+    name: overrides?.name ?? 'Willkommens-Vorlage',
+    shortDescription: 'Begrüßt neue Nutzer',
+    instructions: 'Begrüße den Nutzer freundlich.',
+    isActive: overrides?.isActive ?? true,
+    defaultActive: true,
+    defaultPinned: false,
+  });
+}
+
+function buildAlwaysOnRecord(
+  template: AlwaysOnSkillTemplate,
+): AlwaysOnSkillTemplateRecord {
+  const record = new AlwaysOnSkillTemplateRecord();
   record.id = template.id;
   record.name = template.name;
   record.shortDescription = template.shortDescription;
   record.instructions = template.instructions;
-  record.distributionMode = template.distributionMode;
   record.isActive = template.isActive;
+  record.createdAt = template.createdAt;
+  record.updatedAt = template.updatedAt;
+  return record;
+}
+
+function buildPreCreatedRecord(
+  template: PreCreatedCopySkillTemplate,
+): PreCreatedCopySkillTemplateRecord {
+  const record = new PreCreatedCopySkillTemplateRecord();
+  record.id = template.id;
+  record.name = template.name;
+  record.shortDescription = template.shortDescription;
+  record.instructions = template.instructions;
+  record.isActive = template.isActive;
+  record.defaultActive = template.defaultActive;
+  record.defaultPinned = template.defaultPinned;
   record.createdAt = template.createdAt;
   record.updatedAt = template.updatedAt;
   return record;
@@ -43,29 +83,44 @@ function createPgUniqueViolation(): QueryFailedError {
   return error;
 }
 
+function createMockRepo<T extends ObjectLiteral>(): jest.Mocked<Repository<T>> {
+  return {
+    save: jest.fn(),
+    findOne: jest.fn(),
+    find: jest.fn(),
+    delete: jest.fn(),
+    update: jest.fn(),
+  } as unknown as jest.Mocked<Repository<T>>;
+}
+
 describe('LocalSkillTemplateRepository', () => {
   let repo: LocalSkillTemplateRepository;
   let mockTypeOrmRepo: jest.Mocked<Repository<SkillTemplateRecord>>;
+  let mockAlwaysOnRepo: jest.Mocked<Repository<AlwaysOnSkillTemplateRecord>>;
+  let mockPreCreatedRepo: jest.Mocked<
+    Repository<PreCreatedCopySkillTemplateRecord>
+  >;
   let mapper: SkillTemplateMapper;
 
   beforeEach(() => {
     mapper = new SkillTemplateMapper();
 
-    mockTypeOrmRepo = {
-      save: jest.fn(),
-      findOne: jest.fn(),
-      find: jest.fn(),
-      delete: jest.fn(),
-      update: jest.fn(),
-    } as unknown as jest.Mocked<Repository<SkillTemplateRecord>>;
+    mockTypeOrmRepo = createMockRepo<SkillTemplateRecord>();
+    mockAlwaysOnRepo = createMockRepo<AlwaysOnSkillTemplateRecord>();
+    mockPreCreatedRepo = createMockRepo<PreCreatedCopySkillTemplateRecord>();
 
-    repo = new LocalSkillTemplateRepository(mockTypeOrmRepo, mapper);
+    repo = new LocalSkillTemplateRepository(
+      mockTypeOrmRepo,
+      mockAlwaysOnRepo,
+      mockPreCreatedRepo,
+      mapper,
+    );
   });
 
   describe('create', () => {
     it('should save and return the created skill template', async () => {
-      const template = buildSkillTemplate();
-      const record = buildRecord(template);
+      const template = buildPreCreatedTemplate();
+      const record = buildPreCreatedRecord(template);
       mockTypeOrmRepo.save.mockResolvedValue(record);
 
       const result = await repo.create(template);
@@ -76,7 +131,7 @@ describe('LocalSkillTemplateRepository', () => {
     });
 
     it('should throw DuplicateSkillTemplateNameError on unique violation', async () => {
-      const template = buildSkillTemplate();
+      const template = buildPreCreatedTemplate();
       mockTypeOrmRepo.save.mockRejectedValue(createPgUniqueViolation());
 
       await expect(repo.create(template)).rejects.toThrow(
@@ -85,7 +140,7 @@ describe('LocalSkillTemplateRepository', () => {
     });
 
     it('should rethrow non-unique-violation errors', async () => {
-      const template = buildSkillTemplate();
+      const template = buildPreCreatedTemplate();
       const dbError = new Error('connection lost');
       mockTypeOrmRepo.save.mockRejectedValue(dbError);
 
@@ -95,7 +150,7 @@ describe('LocalSkillTemplateRepository', () => {
 
   describe('update', () => {
     it('should throw SkillTemplateNotFoundError when template does not exist', async () => {
-      const template = buildSkillTemplate();
+      const template = buildAlwaysOnTemplate();
       mockTypeOrmRepo.findOne.mockResolvedValue(null);
 
       await expect(repo.update(template)).rejects.toThrow(
@@ -105,8 +160,8 @@ describe('LocalSkillTemplateRepository', () => {
     });
 
     it('should save and return the updated skill template', async () => {
-      const template = buildSkillTemplate();
-      const record = buildRecord(template);
+      const template = buildAlwaysOnTemplate();
+      const record = buildAlwaysOnRecord(template);
       mockTypeOrmRepo.findOne.mockResolvedValue(record);
       mockTypeOrmRepo.save.mockResolvedValue(record);
 
@@ -117,8 +172,8 @@ describe('LocalSkillTemplateRepository', () => {
     });
 
     it('should throw DuplicateSkillTemplateNameError when renaming to existing name', async () => {
-      const template = buildSkillTemplate({ name: 'Duplicate Name' });
-      const existingRecord = buildRecord(template);
+      const template = buildAlwaysOnTemplate({ name: 'Duplicate Name' });
+      const existingRecord = buildAlwaysOnRecord(template);
       mockTypeOrmRepo.findOne.mockResolvedValue(existingRecord);
       mockTypeOrmRepo.save.mockRejectedValue(createPgUniqueViolation());
 
@@ -154,8 +209,8 @@ describe('LocalSkillTemplateRepository', () => {
     });
 
     it('should return the domain entity when found', async () => {
-      const template = buildSkillTemplate();
-      const record = buildRecord(template);
+      const template = buildAlwaysOnTemplate();
+      const record = buildAlwaysOnRecord(template);
       mockTypeOrmRepo.findOne.mockResolvedValue(record);
 
       const result = await repo.findOne(template.id);
@@ -167,11 +222,11 @@ describe('LocalSkillTemplateRepository', () => {
 
   describe('findAll', () => {
     it('should return all templates ordered by createdAt descending', async () => {
-      const older = buildSkillTemplate({ name: 'Ältere Vorlage' });
-      const newer = buildSkillTemplate({ name: 'Neuere Vorlage' });
+      const older = buildAlwaysOnTemplate({ name: 'Ältere Vorlage' });
+      const newer = buildPreCreatedTemplate({ name: 'Neuere Vorlage' });
       mockTypeOrmRepo.find.mockResolvedValue([
-        buildRecord(newer),
-        buildRecord(older),
+        buildPreCreatedRecord(newer),
+        buildAlwaysOnRecord(older),
       ]);
 
       const result = await repo.findAll();
@@ -195,8 +250,8 @@ describe('LocalSkillTemplateRepository', () => {
 
   describe('findByName', () => {
     it('should return the template when found by name', async () => {
-      const template = buildSkillTemplate({ name: 'Meldewesen Vorlage' });
-      const record = buildRecord(template);
+      const template = buildAlwaysOnTemplate({ name: 'Meldewesen Vorlage' });
+      const record = buildAlwaysOnRecord(template);
       mockTypeOrmRepo.findOne.mockResolvedValue(record);
 
       const result = await repo.findByName('Meldewesen Vorlage');
@@ -218,13 +273,14 @@ describe('LocalSkillTemplateRepository', () => {
   });
 
   describe('findActiveByMode', () => {
-    it('should return only active templates with the specified distribution mode', async () => {
-      const activeAlwaysOn = buildSkillTemplate({
+    it('should query the always-on child repository for ALWAYS_ON mode', async () => {
+      const activeAlwaysOn = buildAlwaysOnTemplate({
         name: 'Immer Aktiv',
-        distributionMode: DistributionMode.ALWAYS_ON,
         isActive: true,
       });
-      mockTypeOrmRepo.find.mockResolvedValue([buildRecord(activeAlwaysOn)]);
+      mockAlwaysOnRepo.find.mockResolvedValue([
+        buildAlwaysOnRecord(activeAlwaysOn),
+      ]);
 
       const result = await repo.findActiveByMode(DistributionMode.ALWAYS_ON);
 
@@ -232,35 +288,39 @@ describe('LocalSkillTemplateRepository', () => {
       expect(result[0].name).toBe('Immer Aktiv');
       expect(result[0].isActive).toBe(true);
       expect(result[0].distributionMode).toBe(DistributionMode.ALWAYS_ON);
-      expect(mockTypeOrmRepo.find).toHaveBeenCalledWith({
-        where: { isActive: true, distributionMode: DistributionMode.ALWAYS_ON },
+      expect(mockAlwaysOnRepo.find).toHaveBeenCalledWith({
+        where: { isActive: true },
         order: { createdAt: 'ASC' },
       });
     });
 
-    it('should return empty array when no active templates match the mode', async () => {
-      mockTypeOrmRepo.find.mockResolvedValue([]);
+    it('should query the pre-created child repository for PRE_CREATED_COPY mode', async () => {
+      const preCreated = buildPreCreatedTemplate({
+        name: 'Vorkonfiguriert',
+        isActive: true,
+      });
+      mockPreCreatedRepo.find.mockResolvedValue([
+        buildPreCreatedRecord(preCreated),
+      ]);
 
       const result = await repo.findActiveByMode(
         DistributionMode.PRE_CREATED_COPY,
       );
 
-      expect(result).toEqual([]);
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe('Vorkonfiguriert');
+      expect(mockPreCreatedRepo.find).toHaveBeenCalledWith({
+        where: { isActive: true },
+        order: { createdAt: 'ASC' },
+      });
     });
 
-    it('should not return inactive templates', async () => {
-      // The repository queries with isActive: true, so inactive records
-      // are filtered at the database level. Mock returns empty to verify
-      // the correct query is issued.
-      mockTypeOrmRepo.find.mockResolvedValue([]);
+    it('should return empty array when no active templates match the mode', async () => {
+      mockAlwaysOnRepo.find.mockResolvedValue([]);
 
-      await repo.findActiveByMode(DistributionMode.ALWAYS_ON);
+      const result = await repo.findActiveByMode(DistributionMode.ALWAYS_ON);
 
-      expect(mockTypeOrmRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ isActive: true }),
-        }),
-      );
+      expect(result).toEqual([]);
     });
   });
 });
