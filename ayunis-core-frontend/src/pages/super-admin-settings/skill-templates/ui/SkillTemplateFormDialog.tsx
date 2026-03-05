@@ -34,7 +34,8 @@ export interface SkillTemplateFormData {
   shortDescription: string;
   instructions: string;
   distributionMode: CreateSkillTemplateDtoDistributionMode;
-  isActive: boolean;
+  defaultActive: boolean;
+  defaultPinned: boolean;
 }
 
 interface SkillTemplateFormDialogProps {
@@ -172,27 +173,53 @@ export function SkillTemplateFormDialog({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="isActive"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                    <div className="space-y-0.5">
-                      <FormLabel>{t('form.isActive')}</FormLabel>
-                      <FormDescription>
-                        {t('form.isActiveDescription')}
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        disabled={isSubmitting}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+              {form.watch('distributionMode') === 'pre_created_copy' && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="defaultActive"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                        <div className="space-y-0.5">
+                          <FormLabel>{t('form.defaultActive')}</FormLabel>
+                          <FormDescription>
+                            {t('form.defaultActiveDescription')}
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            disabled={isSubmitting}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="defaultPinned"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                        <div className="space-y-0.5">
+                          <FormLabel>{t('form.defaultPinned')}</FormLabel>
+                          <FormDescription>
+                            {t('form.defaultPinnedDescription')}
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            disabled={isSubmitting}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
 
               <DialogFooter>
                 <Button

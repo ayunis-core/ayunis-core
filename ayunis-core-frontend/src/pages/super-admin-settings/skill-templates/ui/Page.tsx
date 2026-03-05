@@ -6,6 +6,7 @@ import { SkillTemplateItem } from './SkillTemplateItem';
 import { CreateSkillTemplateDialog } from './CreateSkillTemplateDialog';
 import { EditSkillTemplateDialog } from './EditSkillTemplateDialog';
 import { useDeleteSkillTemplate } from '../api/useDeleteSkillTemplate';
+import { useUpdateSkillTemplate } from '../api/useUpdateSkillTemplate';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
@@ -30,6 +31,7 @@ export default function SkillTemplatesPage({
   const [editTemplate, setEditTemplate] =
     useState<SkillTemplateResponseDto | null>(null);
   const { deleteSkillTemplate, isDeleting } = useDeleteSkillTemplate();
+  const { updateSkillTemplate } = useUpdateSkillTemplate();
   const { confirm } = useConfirmation();
 
   function handleDelete(template: SkillTemplateResponseDto) {
@@ -75,6 +77,11 @@ export default function SkillTemplatesPage({
                     template={template}
                     onEdit={() => setEditTemplate(template)}
                     onDelete={() => handleDelete(template)}
+                    onToggleActive={() =>
+                      updateSkillTemplate(template.id, {
+                        isActive: !template.isActive,
+                      })
+                    }
                     isDeleting={isDeleting}
                   />
                   {index < skillTemplates.length - 1 && <ItemSeparator />}

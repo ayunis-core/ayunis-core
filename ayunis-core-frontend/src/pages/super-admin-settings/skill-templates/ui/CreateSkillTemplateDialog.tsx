@@ -20,7 +20,8 @@ export function CreateSkillTemplateDialog({
       shortDescription: '',
       instructions: '',
       distributionMode: 'always_on',
-      isActive: false,
+      defaultActive: false,
+      defaultPinned: false,
     },
   });
 
