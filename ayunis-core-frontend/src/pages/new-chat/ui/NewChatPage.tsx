@@ -4,6 +4,7 @@ import { useInitiateChat } from '../api/useInitiateChat';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
 import type { AgentResponseDto } from '@/shared/api';
@@ -139,7 +140,12 @@ export default function NewChatPage({
 
   return (
     <NewChatPageLayout
-      header={<ContentAreaHeader title={t('newChat.newChat')} />}
+      header={
+        <ContentAreaHeader
+          title={t('newChat.newChat')}
+          action={<HelpLink path="" />}
+        />
+      }
     >
       <div className="text-center">
         <h1 className="text-2xl font-bold">{greeting}</h1>
