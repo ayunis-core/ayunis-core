@@ -6962,6 +6962,209 @@
         ]
       }
     },
+    "/super-admin/skill-templates": {
+      "post": {
+        "description": "Create a new skill template. Only accessible to super admins.",
+        "operationId": "SuperAdminSkillTemplatesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSkillTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created skill template",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "409": {
+            "description": "Skill template with this name already exists"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a new skill template",
+        "tags": [
+          "Super Admin Skill Templates"
+        ]
+      },
+      "get": {
+        "description": "Retrieve all skill templates. Only accessible to super admins.",
+        "operationId": "SuperAdminSkillTemplatesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved skill templates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SkillTemplateResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all skill templates",
+        "tags": [
+          "Super Admin Skill Templates"
+        ]
+      }
+    },
+    "/super-admin/skill-templates/{id}": {
+      "get": {
+        "description": "Retrieve a specific skill template by its ID. Only accessible to super admins.",
+        "operationId": "SuperAdminSkillTemplatesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Skill template ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved skill template",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Skill template not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get a skill template by ID",
+        "tags": [
+          "Super Admin Skill Templates"
+        ]
+      },
+      "patch": {
+        "description": "Partially update an existing skill template. Only accessible to super admins.",
+        "operationId": "SuperAdminSkillTemplatesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Skill template ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSkillTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated skill template",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Skill template not found"
+          },
+          "409": {
+            "description": "Skill template with this name already exists"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update a skill template",
+        "tags": [
+          "Super Admin Skill Templates"
+        ]
+      },
+      "delete": {
+        "description": "Delete a skill template. Only accessible to super admins.",
+        "operationId": "SuperAdminSkillTemplatesController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Skill template ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted skill template"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Skill template not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete a skill template",
+        "tags": [
+          "Super Admin Skill Templates"
+        ]
+      }
+    },
     "/chat-settings/system-prompt": {
       "get": {
         "description": "Returns the custom system prompt for the authenticated user, or null if not set.",
@@ -7317,209 +7520,6 @@
         "summary": "Transcribe audio file to text",
         "tags": [
           "transcriptions"
-        ]
-      }
-    },
-    "/super-admin/skill-templates": {
-      "post": {
-        "description": "Create a new skill template. Only accessible to super admins.",
-        "operationId": "SuperAdminSkillTemplatesController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSkillTemplateDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created skill template",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "409": {
-            "description": "Skill template with this name already exists"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Create a new skill template",
-        "tags": [
-          "Super Admin Skill Templates"
-        ]
-      },
-      "get": {
-        "description": "Retrieve all skill templates. Only accessible to super admins.",
-        "operationId": "SuperAdminSkillTemplatesController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved skill templates",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SkillTemplateResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get all skill templates",
-        "tags": [
-          "Super Admin Skill Templates"
-        ]
-      }
-    },
-    "/super-admin/skill-templates/{id}": {
-      "get": {
-        "description": "Retrieve a specific skill template by its ID. Only accessible to super admins.",
-        "operationId": "SuperAdminSkillTemplatesController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Skill template ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved skill template",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Skill template not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get a skill template by ID",
-        "tags": [
-          "Super Admin Skill Templates"
-        ]
-      },
-      "patch": {
-        "description": "Partially update an existing skill template. Only accessible to super admins.",
-        "operationId": "SuperAdminSkillTemplatesController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Skill template ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateSkillTemplateDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully updated skill template",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Skill template not found"
-          },
-          "409": {
-            "description": "Skill template with this name already exists"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Update a skill template",
-        "tags": [
-          "Super Admin Skill Templates"
-        ]
-      },
-      "delete": {
-        "description": "Delete a skill template. Only accessible to super admins.",
-        "operationId": "SuperAdminSkillTemplatesController_delete",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Skill template ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successfully deleted skill template"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Skill template not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Delete a skill template",
-        "tags": [
-          "Super Admin Skill Templates"
         ]
       }
     },
@@ -13335,6 +13335,136 @@
             "example": true
           }
         }
+      },
+      "UserSystemPromptResponseDto": {
+        "type": "object",
+        "properties": {
+          "systemPrompt": {
+            "type": "string",
+            "description": "The custom system prompt for the user, or null if not set",
+            "example": "Always respond in bullet points. I work in the finance department.",
+            "nullable": true
+          }
+        },
+        "required": [
+          "systemPrompt"
+        ]
+      },
+      "UpsertUserSystemPromptDto": {
+        "type": "object",
+        "properties": {
+          "systemPrompt": {
+            "type": "string",
+            "description": "The custom system prompt for the user",
+            "example": "Always respond in bullet points. I work in the finance department.",
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "systemPrompt"
+        ]
+      },
+      "CreatePromptDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title of the prompt",
+            "example": "Project Planning Assistant",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "content": {
+            "type": "string",
+            "description": "The content of the prompt",
+            "example": "You are a helpful assistant that helps with project planning. Please provide detailed step-by-step guidance for managing projects effectively."
+          }
+        },
+        "required": [
+          "title",
+          "content"
+        ]
+      },
+      "PromptResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the prompt",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the prompt",
+            "example": "Project Planning Assistant"
+          },
+          "content": {
+            "type": "string",
+            "description": "The content of the prompt",
+            "example": "You are a helpful assistant that helps with project planning. Please provide detailed step-by-step guidance for managing projects effectively."
+          },
+          "userId": {
+            "type": "string",
+            "description": "The unique identifier of the user who owns this prompt",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "The date and time when the prompt was created",
+            "example": "2023-12-01T10:00:00.000Z",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "The date and time when the prompt was last updated",
+            "example": "2023-12-01T10:00:00.000Z",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "content",
+          "userId",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdatePromptDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title of the prompt",
+            "example": "Updated Project Planning Assistant",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "content": {
+            "type": "string",
+            "description": "The content of the prompt",
+            "example": "You are an expert project planning assistant. Provide comprehensive guidance for project management, including risk assessment and timeline optimization."
+          }
+        },
+        "required": [
+          "title",
+          "content"
+        ]
+      },
+      "TranscriptionResponseDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The transcribed text from the audio file",
+            "example": "Hello, this is a test transcription."
+          }
+        },
+        "required": [
+          "text"
+        ]
       },
       "LoginDto": {
         "type": "object",

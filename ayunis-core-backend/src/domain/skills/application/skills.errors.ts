@@ -19,6 +19,7 @@ export enum SkillErrorCode {
   EMPTY_FILE_DATA = 'EMPTY_FILE_DATA',
   MARKETPLACE_INSTALL_FAILED = 'MARKETPLACE_INSTALL_FAILED',
   SKILL_NOT_ACTIVE = 'SKILL_NOT_ACTIVE',
+  SKILL_NAME_RESOLUTION_FAILED = 'SKILL_NAME_RESOLUTION_FAILED',
   UNEXPECTED_SKILL_ERROR = 'UNEXPECTED_SKILL_ERROR',
 }
 
@@ -220,6 +221,17 @@ export class SkillNotActiveError extends SkillError {
       SkillErrorCode.SKILL_NOT_ACTIVE,
       400,
       metadata,
+    );
+  }
+}
+
+export class SkillNameResolutionError extends SkillError {
+  constructor(baseName: string, maxAttempts: number, metadata?: ErrorMetadata) {
+    super(
+      `Could not resolve unique name for "${baseName}" after ${maxAttempts} attempts`,
+      SkillErrorCode.SKILL_NAME_RESOLUTION_FAILED,
+      409,
+      { baseName, maxAttempts, ...metadata },
     );
   }
 }
