@@ -8,7 +8,7 @@ Skill templates are admin-managed blueprints for skills that can be distributed 
 
 - **Skill Template**: A blueprint with a name, short description, instructions, distribution mode, and active flag.
 - **Distribution Mode**: Controls how templates are distributed to users. Defined in `DistributionMode` enum:
-  - `ALWAYS_ON` — the skill is always active for every user and cannot be removed.
+  - `ALWAYS_ON` — the template appears as an activatable skill in the system prompt with a `system__` prefix. The AI activates it on demand via the `activate_skill` tool, and the handler returns the template's instructions directly (no sources or MCP integrations).
   - `PRE_CREATED_COPY` — a personal copy of the skill is pre-created for each user, who can then modify or delete it.
 - **Active flag**: Only active templates are eligible for distribution. Inactive templates are drafts or retired.
 - **Name uniqueness**: Template names must be globally unique (enforced by DB unique constraint). Duplicate names raise `DuplicateSkillTemplateNameError`.
@@ -35,6 +35,7 @@ skill-templates/
 │       ├── find-all-skill-templates/      # FindAllSkillTemplatesUseCase + query
 │       ├── find-one-skill-template/       # FindOneSkillTemplateUseCase + query
 │       ├── find-active-always-on-templates/   # FindActiveAlwaysOnTemplatesUseCase + query
+│       ├── find-always-on-template-by-name/   # FindAlwaysOnTemplateByNameUseCase + query (uses cached always-on list)
 │       └── find-active-pre-created-templates/ # FindActivePreCreatedTemplatesUseCase + query
 ├── infrastructure/
 │   └── persistence/local/
@@ -56,7 +57,8 @@ skill-templates/
 ## Exports
 
 - `FindAllSkillTemplatesUseCase` — exported for consumers that need to list all templates (e.g., marketplace skill installation flow).
-- `FindActiveAlwaysOnTemplatesUseCase` — exported for consumers that need always-on templates (e.g., chat module injecting always-on skills).
+- `FindActiveAlwaysOnTemplatesUseCase` — exported for consumers that need always-on templates (e.g., runs module building the unified skill slug map).
+- `FindAlwaysOnTemplateByNameUseCase` — exported for consumers that need to look up a single always-on template by name (e.g., tools module routing `system__` prefixed skill activations).
 
 ## Design Decisions
 
