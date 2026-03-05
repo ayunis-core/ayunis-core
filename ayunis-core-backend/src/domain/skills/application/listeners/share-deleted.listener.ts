@@ -2,7 +2,8 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { ShareScopeResolverService } from 'src/domain/shares/application/services/share-scope-resolver.service';
+import { ResolveShareScopeUserIdsUseCase } from 'src/domain/shares/application/use-cases/resolve-share-scope-user-ids/resolve-share-scope-user-ids.use-case';
+import { ResolveShareScopeUserIdsQuery } from 'src/domain/shares/application/use-cases/resolve-share-scope-user-ids/resolve-share-scope-user-ids.query';
 import { SkillRepository } from '../ports/skill.repository';
 
 @Injectable()
@@ -12,7 +13,7 @@ export class ShareDeletedListener {
   constructor(
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
-    private readonly shareScopeResolver: ShareScopeResolverService,
+    private readonly resolveShareScopeUserIds: ResolveShareScopeUserIdsUseCase,
   ) {}
 
   @OnEvent(ShareDeletedEvent.EVENT_NAME)
@@ -35,8 +36,8 @@ export class ShareDeletedListener {
       return;
     }
 
-    const retainUserIds = await this.shareScopeResolver.resolveUserIds(
-      event.remainingScopes,
+    const retainUserIds = await this.resolveShareScopeUserIds.execute(
+      new ResolveShareScopeUserIdsQuery(event.remainingScopes),
     );
 
     await this.skillRepository.deactivateUsersNotInSet(

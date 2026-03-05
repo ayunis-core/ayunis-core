@@ -2,7 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { ShareScopeResolverService } from 'src/domain/shares/application/services/share-scope-resolver.service';
+import { ResolveShareScopeUserIdsUseCase } from 'src/domain/shares/application/use-cases/resolve-share-scope-user-ids/resolve-share-scope-user-ids.use-case';
+import { ResolveShareScopeUserIdsQuery } from 'src/domain/shares/application/use-cases/resolve-share-scope-user-ids/resolve-share-scope-user-ids.query';
 import { FindAllUserIdsByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
 import { FindAllUserIdsByOrgIdQuery } from 'src/iam/users/application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.query';
 import { RemoveSkillSourcesFromThreadsUseCase } from '../use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.use-case';
@@ -18,7 +19,7 @@ export class ShareDeletedListener {
     private readonly removeSkillSourcesFromThreads: RemoveSkillSourcesFromThreadsUseCase,
     private readonly removeKbAssignmentsByOriginSkill: RemoveKbAssignmentsByOriginSkillUseCase,
     private readonly findAllUserIdsByOrgId: FindAllUserIdsByOrgIdUseCase,
-    private readonly shareScopeResolver: ShareScopeResolverService,
+    private readonly resolveShareScopeUserIds: ResolveShareScopeUserIdsUseCase,
   ) {}
 
   @OnEvent(ShareDeletedEvent.EVENT_NAME)
@@ -40,8 +41,8 @@ export class ShareDeletedListener {
       new FindAllUserIdsByOrgIdQuery(event.orgId),
     );
 
-    const retainUserIds = await this.shareScopeResolver.resolveUserIds(
-      event.remainingScopes,
+    const retainUserIds = await this.resolveShareScopeUserIds.execute(
+      new ResolveShareScopeUserIdsQuery(event.remainingScopes),
     );
 
     const lostAccessUserIds = allOrgUserIds.filter(
