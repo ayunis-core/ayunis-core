@@ -115,6 +115,21 @@ describe('SkillTemplateMapper', () => {
       expect(record.isActive).toBe(true);
     });
 
+    it('should null out defaultActive and defaultPinned for AlwaysOnSkillTemplate records', () => {
+      const domain = new AlwaysOnSkillTemplate({
+        id: mockId,
+        name: 'Sicherheits-Richtlinie',
+        shortDescription: 'Sicherheitsanweisungen',
+        instructions: 'Befolge die Sicherheitsrichtlinien.',
+        isActive: true,
+      });
+
+      const record = mapper.toRecord(domain);
+
+      expect(record.defaultActive).toBeNull();
+      expect(record.defaultPinned).toBeNull();
+    });
+
     it('should map a PreCreatedCopySkillTemplate to PreCreatedCopySkillTemplateRecord', () => {
       const domain = new PreCreatedCopySkillTemplate({
         id: mockId,

@@ -2,8 +2,8 @@ import { SkillTemplateInstallationService } from './skill-template-installation.
 import type { FindActivePreCreatedTemplatesUseCase } from '../use-cases/find-active-pre-created-templates/find-active-pre-created-templates.use-case';
 import type { CreateSkillWithUniqueNameUseCase } from 'src/domain/skills/application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.use-case';
 import type { CreateSkillWithUniqueNameCommand } from 'src/domain/skills/application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.command';
-import { SkillTemplate } from '../../domain/skill-template.entity';
-import { DistributionMode } from '../../domain/distribution-mode.enum';
+import type { SkillTemplate } from '../../domain/skill-template.entity';
+import { PreCreatedCopySkillTemplate } from '../../domain/pre-created-copy-skill-template.entity';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { randomUUID } from 'crypto';
 
@@ -15,20 +15,18 @@ describe('SkillTemplateInstallationService', () => {
   const userId = randomUUID();
 
   const mockTemplates: SkillTemplate[] = [
-    new SkillTemplate({
+    new PreCreatedCopySkillTemplate({
       id: randomUUID(),
       name: 'Template A',
       shortDescription: 'Description A',
       instructions: 'Instructions A',
-      distributionMode: DistributionMode.PRE_CREATED_COPY,
       isActive: true,
     }),
-    new SkillTemplate({
+    new PreCreatedCopySkillTemplate({
       id: randomUUID(),
       name: 'Template B',
       shortDescription: 'Description B',
       instructions: 'Instructions B',
-      distributionMode: DistributionMode.PRE_CREATED_COPY,
       isActive: true,
     }),
   ];

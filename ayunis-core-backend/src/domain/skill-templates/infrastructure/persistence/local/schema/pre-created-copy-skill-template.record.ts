@@ -1,12 +1,6 @@
-import { ChildEntity, Column } from 'typeorm';
+import { ChildEntity } from 'typeorm';
 import { SkillTemplateRecord } from './skill-template.record';
 import { DistributionMode } from '../../../../domain/distribution-mode.enum';
 
 @ChildEntity(DistributionMode.PRE_CREATED_COPY)
-export class PreCreatedCopySkillTemplateRecord extends SkillTemplateRecord {
-  @Column({ nullable: true })
-  defaultActive: boolean | null;
-
-  @Column({ nullable: true })
-  defaultPinned: boolean | null;
-}
+export class PreCreatedCopySkillTemplateRecord extends SkillTemplateRecord {}
