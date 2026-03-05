@@ -43,8 +43,8 @@ export function useUpdateSkillTemplate(onSuccess?: () => void) {
     },
   });
 
-  function updateSkillTemplate(id: string, data: UpdateSkillTemplateDto) {
-    mutation.mutate({ id, data });
+  async function updateSkillTemplate(id: string, data: UpdateSkillTemplateDto) {
+    await mutation.mutateAsync({ id, data });
   }
 
   return {

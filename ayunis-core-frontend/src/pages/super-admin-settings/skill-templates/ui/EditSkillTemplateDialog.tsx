@@ -24,7 +24,8 @@ export function EditSkillTemplateDialog({
       shortDescription: '',
       instructions: '',
       distributionMode: 'always_on',
-      isActive: false,
+      defaultActive: false,
+      defaultPinned: false,
     },
   });
 
@@ -35,7 +36,8 @@ export function EditSkillTemplateDialog({
         shortDescription: template.shortDescription,
         instructions: template.instructions,
         distributionMode: template.distributionMode,
-        isActive: template.isActive,
+        defaultActive: template.defaultActive ?? false,
+        defaultPinned: template.defaultPinned ?? false,
       });
     }
   }, [template, form]);
@@ -46,7 +48,7 @@ export function EditSkillTemplateDialog({
 
   function handleSubmit(data: SkillTemplateFormData) {
     if (template) {
-      updateSkillTemplate(template.id, data);
+      void updateSkillTemplate(template.id, data);
     }
   }
 

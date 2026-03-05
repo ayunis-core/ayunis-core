@@ -6,6 +6,7 @@ import { SkillTemplateItem } from './SkillTemplateItem';
 import { CreateSkillTemplateDialog } from './CreateSkillTemplateDialog';
 import { EditSkillTemplateDialog } from './EditSkillTemplateDialog';
 import { useDeleteSkillTemplate } from '../api/useDeleteSkillTemplate';
+import { useUpdateSkillTemplate } from '../api/useUpdateSkillTemplate';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
@@ -30,7 +31,26 @@ export default function SkillTemplatesPage({
   const [editTemplate, setEditTemplate] =
     useState<SkillTemplateResponseDto | null>(null);
   const { deleteSkillTemplate, isDeleting } = useDeleteSkillTemplate();
+  const { updateSkillTemplate } = useUpdateSkillTemplate();
+  const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
   const { confirm } = useConfirmation();
+
+  function handleToggle(template: SkillTemplateResponseDto) {
+    setTogglingIds((prev) => new Set(prev).add(template.id));
+    void updateSkillTemplate(template.id, {
+      isActive: !template.isActive,
+    })
+      .catch(() => {
+        /* error already handled by mutation onError */
+      })
+      .finally(() => {
+        setTogglingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(template.id);
+          return next;
+        });
+      });
+  }
 
   function handleDelete(template: SkillTemplateResponseDto) {
     confirm({
@@ -75,7 +95,9 @@ export default function SkillTemplatesPage({
                     template={template}
                     onEdit={() => setEditTemplate(template)}
                     onDelete={() => handleDelete(template)}
+                    onToggleEnabled={() => handleToggle(template)}
                     isDeleting={isDeleting}
+                    isToggling={togglingIds.has(template.id)}
                   />
                   {index < skillTemplates.length - 1 && <ItemSeparator />}
                 </Fragment>
