@@ -147,7 +147,13 @@ export function SkillTemplateFormDialog({
                   <FormItem>
                     <FormLabel>{t('form.distributionMode')}</FormLabel>
                     <Select
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        if (value !== 'pre_created_copy') {
+                          form.setValue('defaultActive', false);
+                          form.setValue('defaultPinned', false);
+                        }
+                      }}
                       value={field.value}
                       disabled={isSubmitting}
                     >
