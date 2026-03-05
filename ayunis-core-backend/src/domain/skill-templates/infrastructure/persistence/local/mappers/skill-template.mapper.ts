@@ -38,6 +38,8 @@ export class SkillTemplateMapper {
     if (domain instanceof AlwaysOnSkillTemplate) {
       const record = new AlwaysOnSkillTemplateRecord();
       this.assignSharedRecordFields(record, domain);
+      record.defaultActive = null;
+      record.defaultPinned = null;
       return record;
     }
 

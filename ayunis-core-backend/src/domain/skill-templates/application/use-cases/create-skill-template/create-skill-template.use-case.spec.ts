@@ -4,7 +4,8 @@ import { Logger } from '@nestjs/common';
 import { CreateSkillTemplateUseCase } from './create-skill-template.use-case';
 import { CreateSkillTemplateCommand } from './create-skill-template.command';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
-import { SkillTemplate } from '../../../domain/skill-template.entity';
+import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
+import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
 import { DistributionMode } from '../../../domain/distribution-mode.enum';
 import { InvalidSkillTemplateNameError } from '../../../domain/skill-template.entity';
 import { DuplicateSkillTemplateNameError } from '../../skill-templates.errors';
@@ -39,7 +40,7 @@ describe('CreateSkillTemplateUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('should create a skill template successfully', async () => {
+  it('should create an AlwaysOnSkillTemplate for ALWAYS_ON mode', async () => {
     const command = new CreateSkillTemplateCommand({
       name: 'Legal Guidelines',
       shortDescription: 'Legal compliance instructions',
@@ -47,48 +48,58 @@ describe('CreateSkillTemplateUseCase', () => {
       distributionMode: DistributionMode.ALWAYS_ON,
     });
 
-    const expectedTemplate = new SkillTemplate({
-      name: command.name,
-      shortDescription: command.shortDescription,
-      instructions: command.instructions,
-      distributionMode: command.distributionMode,
-    });
-
     repository.findByName.mockResolvedValue(null);
-    repository.create.mockResolvedValue(expectedTemplate);
+    repository.create.mockImplementation(async (t) => t);
 
     const result = await useCase.execute(command);
 
-    expect(repository.findByName).toHaveBeenCalledWith('Legal Guidelines');
-    expect(repository.create).toHaveBeenCalledWith(expect.any(SkillTemplate));
+    expect(result).toBeInstanceOf(AlwaysOnSkillTemplate);
+    expect(repository.create).toHaveBeenCalledWith(
+      expect.any(AlwaysOnSkillTemplate),
+    );
     expect(result.name).toBe('Legal Guidelines');
     expect(result.distributionMode).toBe(DistributionMode.ALWAYS_ON);
   });
 
-  it('should create a skill template with isActive flag', async () => {
+  it('should create a PreCreatedCopySkillTemplate for PRE_CREATED_COPY mode', async () => {
     const command = new CreateSkillTemplateCommand({
-      name: 'Active Template',
-      shortDescription: 'An active template',
+      name: 'Starter Skill',
+      shortDescription: 'A starter skill',
       instructions: 'Instructions here.',
       distributionMode: DistributionMode.PRE_CREATED_COPY,
       isActive: true,
-    });
-
-    const expectedTemplate = new SkillTemplate({
-      name: command.name,
-      shortDescription: command.shortDescription,
-      instructions: command.instructions,
-      distributionMode: command.distributionMode,
-      isActive: true,
+      defaultActive: true,
+      defaultPinned: true,
     });
 
     repository.findByName.mockResolvedValue(null);
-    repository.create.mockResolvedValue(expectedTemplate);
+    repository.create.mockImplementation(async (t) => t);
 
     const result = await useCase.execute(command);
 
+    expect(result).toBeInstanceOf(PreCreatedCopySkillTemplate);
     expect(result.isActive).toBe(true);
     expect(result.distributionMode).toBe(DistributionMode.PRE_CREATED_COPY);
+    expect((result as PreCreatedCopySkillTemplate).defaultActive).toBe(true);
+    expect((result as PreCreatedCopySkillTemplate).defaultPinned).toBe(true);
+  });
+
+  it('should default defaultActive and defaultPinned to false for PRE_CREATED_COPY', async () => {
+    const command = new CreateSkillTemplateCommand({
+      name: 'Minimal Copy',
+      shortDescription: 'Minimal',
+      instructions: 'Instructions.',
+      distributionMode: DistributionMode.PRE_CREATED_COPY,
+    });
+
+    repository.findByName.mockResolvedValue(null);
+    repository.create.mockImplementation(async (t) => t);
+
+    const result = await useCase.execute(command);
+
+    expect(result).toBeInstanceOf(PreCreatedCopySkillTemplate);
+    expect((result as PreCreatedCopySkillTemplate).defaultActive).toBe(false);
+    expect((result as PreCreatedCopySkillTemplate).defaultPinned).toBe(false);
   });
 
   it('should reject creation when name already exists', async () => {
@@ -99,11 +110,10 @@ describe('CreateSkillTemplateUseCase', () => {
       distributionMode: DistributionMode.ALWAYS_ON,
     });
 
-    const existingTemplate = new SkillTemplate({
+    const existingTemplate = new AlwaysOnSkillTemplate({
       name: 'Legal Guidelines',
       shortDescription: 'Existing template',
       instructions: 'Existing instructions.',
-      distributionMode: DistributionMode.ALWAYS_ON,
     });
 
     repository.findByName.mockResolvedValue(existingTemplate);
