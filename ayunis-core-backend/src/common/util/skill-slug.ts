@@ -79,19 +79,45 @@ export class SlugCollisionError extends Error {
   }
 }
 
+export interface SlugMapEntry {
+  name: string;
+  prefix: SkillPrefix;
+  description?: string;
+}
+
+export interface SlugMapResult {
+  slugMap: Map<string, string>;
+  entries: SkillEntry[];
+}
+
 export function buildSlugMap(
-  entries: { name: string; prefix: SkillPrefix }[],
-): Map<string, string> {
-  const slugToName = new Map<string, string>();
+  entries: SlugMapEntry[],
+  options?: {
+    onError?: (entry: SlugMapEntry, error: Error) => void;
+  },
+): SlugMapResult {
+  const slugMap = new Map<string, string>();
+  const processedEntries: SkillEntry[] = [];
 
   for (const entry of entries) {
-    const slug = buildSkillSlug(entry.prefix, entry.name);
-    const existing = slugToName.get(slug);
-    if (existing !== undefined && existing !== entry.name) {
-      throw new SlugCollisionError(slug, existing, entry.name);
+    try {
+      const slug = buildSkillSlug(entry.prefix, entry.name);
+      const existing = slugMap.get(slug);
+      if (existing !== undefined && existing !== entry.name) {
+        throw new SlugCollisionError(slug, existing, entry.name);
+      }
+      slugMap.set(slug, entry.name);
+      if (entry.description !== undefined) {
+        processedEntries.push({ slug, description: entry.description });
+      }
+    } catch (error) {
+      if (options?.onError && error instanceof Error) {
+        options.onError(entry, error);
+      } else {
+        throw error;
+      }
     }
-    slugToName.set(slug, entry.name);
   }
 
-  return slugToName;
+  return { slugMap, entries: processedEntries };
 }

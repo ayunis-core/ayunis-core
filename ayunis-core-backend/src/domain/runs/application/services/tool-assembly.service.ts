@@ -25,12 +25,13 @@ import { FindActiveAlwaysOnTemplatesUseCase } from 'src/domain/skill-templates/a
 import { FindActiveAlwaysOnTemplatesQuery } from 'src/domain/skill-templates/application/use-cases/find-active-always-on-templates/find-active-always-on-templates.query';
 import { featuresConfig } from 'src/config/features.config';
 import {
-  buildSkillSlug,
+  buildSlugMap,
   SlugCollisionError,
   SYSTEM_PREFIX,
   USER_PREFIX,
   type SkillEntry,
   type SkillPrefix,
+  type SlugMapEntry,
 } from 'src/common/util/skill-slug';
 import type { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
 
@@ -123,14 +124,7 @@ export class ToolAssemblyService {
     activeSkills: Skill[],
     alwaysOnTemplates: SkillTemplate[],
   ): { slugMap: Map<string, string>; skillEntries: SkillEntry[] } {
-    const slugMap = new Map<string, string>();
-    const skillEntries: SkillEntry[] = [];
-
-    const allInputs: {
-      name: string;
-      prefix: SkillPrefix;
-      description: string;
-    }[] = [
+    const allInputs: SlugMapEntry[] = [
       ...activeSkills.map((s) => ({
         name: s.name,
         prefix: USER_PREFIX as SkillPrefix,
@@ -143,24 +137,15 @@ export class ToolAssemblyService {
       })),
     ];
 
-    for (const input of allInputs) {
-      try {
-        const slug = buildSkillSlug(input.prefix, input.name);
-        const existing = slugMap.get(slug);
-        if (existing !== undefined && existing !== input.name) {
-          throw new SlugCollisionError(slug, existing, input.name);
-        }
-        slugMap.set(slug, input.name);
-        skillEntries.push({ slug, description: input.description });
-      } catch (error) {
+    const { slugMap, entries: skillEntries } = buildSlugMap(allInputs, {
+      onError: (entry, error) => {
         const message =
           error instanceof SlugCollisionError
-            ? `Slug collision, skipping skill "${input.name}"`
-            : `Failed to build slug for skill "${input.name}", skipping`;
-        const detail = error instanceof Error ? error.message : 'Unknown error';
-        this.logger.warn(message, { error: detail });
-      }
-    }
+            ? `Slug collision, skipping skill "${entry.name}"`
+            : `Failed to build slug for skill "${entry.name}", skipping`;
+        this.logger.warn(message, { error: error.message });
+      },
+    });
 
     return { slugMap, skillEntries };
   }

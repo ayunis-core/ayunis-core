@@ -105,13 +105,13 @@ describe('skill-slug', () => {
 
   describe('buildSlugMap', () => {
     it('should build a map from slug to original name', () => {
-      const map = buildSlugMap([
+      const { slugMap } = buildSlugMap([
         { name: 'Data Privacy', prefix: SYSTEM_PREFIX },
         { name: 'Budget Analysis', prefix: USER_PREFIX },
       ]);
 
-      expect(map.get('system__data-privacy')).toBe('Data Privacy');
-      expect(map.get('user__budget-analysis')).toBe('Budget Analysis');
+      expect(slugMap.get('system__data-privacy')).toBe('Data Privacy');
+      expect(slugMap.get('user__budget-analysis')).toBe('Budget Analysis');
     });
 
     it('should throw SlugCollisionError when two different names produce the same slug', () => {
@@ -124,12 +124,45 @@ describe('skill-slug', () => {
     });
 
     it('should allow duplicate entries with the same name', () => {
-      const map = buildSlugMap([
+      const { slugMap } = buildSlugMap([
         { name: 'Data Privacy', prefix: SYSTEM_PREFIX },
         { name: 'Data Privacy', prefix: SYSTEM_PREFIX },
       ]);
 
-      expect(map.size).toBe(1);
+      expect(slugMap.size).toBe(1);
+    });
+
+    it('should return entries with slug and description when description is provided', () => {
+      const { slugMap, entries } = buildSlugMap([
+        { name: 'Data Privacy', prefix: SYSTEM_PREFIX, description: 'Privacy skill' },
+        { name: 'Budget Analysis', prefix: USER_PREFIX, description: 'Budget skill' },
+      ]);
+
+      expect(slugMap.size).toBe(2);
+      expect(entries).toHaveLength(2);
+      expect(entries[0]).toEqual({ slug: 'system__data-privacy', description: 'Privacy skill' });
+      expect(entries[1]).toEqual({ slug: 'user__budget-analysis', description: 'Budget skill' });
+    });
+
+    it('should skip entries and call onError callback when error occurs', () => {
+      const errors: { entry: { name: string }; error: Error }[] = [];
+      const { slugMap, entries } = buildSlugMap(
+        [
+          { name: 'Foo Bar', prefix: SYSTEM_PREFIX, description: 'First' },
+          { name: 'foo-bar', prefix: SYSTEM_PREFIX, description: 'Second (collision)' },
+          { name: 'Valid Skill', prefix: USER_PREFIX, description: 'Valid' },
+        ],
+        {
+          onError: (entry, error) => {
+            errors.push({ entry, error });
+          },
+        },
+      );
+
+      expect(slugMap.size).toBe(2);
+      expect(entries).toHaveLength(2);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].error).toBeInstanceOf(SlugCollisionError);
     });
   });
 });
