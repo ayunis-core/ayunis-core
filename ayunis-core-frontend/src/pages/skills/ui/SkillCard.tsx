@@ -75,12 +75,6 @@ export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
               {t('shared.badge')}
             </Badge>
           )}
-          <Badge
-            variant={skill.isActive ? 'default' : 'secondary'}
-            className="ml-2 text-xs"
-          >
-            {skill.isActive ? t('badge.active') : t('badge.inactive')}
-          </Badge>
         </ItemTitle>
         <ItemDescription>{skill.shortDescription}</ItemDescription>
       </ItemContent>
