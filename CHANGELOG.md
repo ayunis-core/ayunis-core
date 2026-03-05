@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.13.1](https://github.com/ayunis-core/ayunis-core/compare/v1.13.0...v1.13.1) (2026-03-05)
+
+
+### Bug Fixes
+
+* **AYC-000:** allow parentheses in skill names ([#323](https://github.com/ayunis-core/ayunis-core/issues/323)) ([7df56a5](https://github.com/ayunis-core/ayunis-core/commit/7df56a53744070b65d2626a744e52f268731513c))
+* **AYC-000:** skip orphaned agents and prompts in skills migration ([#321](https://github.com/ayunis-core/ayunis-core/issues/321)) ([3a2718b](https://github.com/ayunis-core/ayunis-core/commit/3a2718bb67f36d4db76169b399b9114eddf5780b))
+
 ## [1.13.0](https://github.com/ayunis-core/ayunis-core/compare/v1.12.0...v1.13.0) (2026-03-05)
 
 
