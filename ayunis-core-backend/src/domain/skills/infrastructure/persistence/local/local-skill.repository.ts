@@ -354,7 +354,7 @@ export class LocalSkillRepository implements SkillRepository {
     this.logger.log('pinSkill', { skillId, userId });
 
     const manager = this.getManager();
-    await manager
+    const result = await manager
       .createQueryBuilder()
       .update(SkillActivationRecord)
       .set({ isPinned: true })
@@ -363,6 +363,10 @@ export class LocalSkillRepository implements SkillRepository {
         userId,
       })
       .execute();
+
+    if (result.affected === 0) {
+      throw new SkillNotActiveError(skillId);
+    }
   }
 
   async toggleSkillPinned(skillId: UUID, userId: UUID): Promise<boolean> {
