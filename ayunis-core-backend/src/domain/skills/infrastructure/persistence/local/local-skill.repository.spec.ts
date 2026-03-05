@@ -63,6 +63,36 @@ describe('LocalSkillRepository', () => {
     );
   });
 
+  describe('pinSkill', () => {
+    it('should set isPinned to true on the activation record', async () => {
+      const mockExecute = jest.fn().mockResolvedValue({ affected: 1 });
+      mockManager.createQueryBuilder.mockReturnValue({
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        execute: mockExecute,
+      });
+
+      await repository.pinSkill(skillId, userId);
+
+      expect(mockManager.createQueryBuilder).toHaveBeenCalled();
+    });
+
+    it('should throw SkillNotActiveError when no activation record exists', async () => {
+      const mockExecute = jest.fn().mockResolvedValue({ affected: 0 });
+      mockManager.createQueryBuilder.mockReturnValue({
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        execute: mockExecute,
+      });
+
+      await expect(repository.pinSkill(skillId, userId)).rejects.toThrow(
+        SkillNotActiveError,
+      );
+    });
+  });
+
   describe('toggleSkillPinned', () => {
     it('should toggle isPinned and return new value using RETURNING clause', async () => {
       mockManager.query.mockResolvedValue([{ isPinned: true }]);

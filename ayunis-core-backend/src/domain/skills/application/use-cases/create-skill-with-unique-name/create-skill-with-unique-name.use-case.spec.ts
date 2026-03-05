@@ -18,6 +18,7 @@ describe('CreateSkillWithUniqueNameUseCase', () => {
         .fn()
         .mockImplementation((skill: Skill) => Promise.resolve(skill)),
       activateSkill: jest.fn().mockResolvedValue(undefined),
+      pinSkill: jest.fn().mockResolvedValue(undefined),
       findByNameAndOwner: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<SkillRepository>;
 
@@ -101,6 +102,72 @@ describe('CreateSkillWithUniqueNameUseCase', () => {
     const result = await useCase.execute(command);
 
     expect(result.name).toBe('Translator 4');
+  });
+
+  it('should not activate the skill when isActive is false', async () => {
+    const command = new CreateSkillWithUniqueNameCommand({
+      name: 'Inactive Skill',
+      shortDescription: 'Not active',
+      instructions: 'Instructions',
+      userId,
+      isActive: false,
+    });
+
+    await useCase.execute(command);
+
+    expect(skillRepository.create).toHaveBeenCalledTimes(1);
+    expect(skillRepository.activateSkill).not.toHaveBeenCalled();
+  });
+
+  it('should call pinSkill when isPinned is true', async () => {
+    const command = new CreateSkillWithUniqueNameCommand({
+      name: 'Pinned Skill',
+      shortDescription: 'Pinned',
+      instructions: 'Instructions',
+      userId,
+      isPinned: true,
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(skillRepository.activateSkill).toHaveBeenCalledWith(
+      result.id,
+      userId,
+    );
+    expect(skillRepository.pinSkill).toHaveBeenCalledWith(result.id, userId);
+  });
+
+  it('should force activation when isPinned is true and isActive is false', async () => {
+    const command = new CreateSkillWithUniqueNameCommand({
+      name: 'Pinned But Not Active',
+      shortDescription: 'Pinned without explicit activation',
+      instructions: 'Instructions',
+      userId,
+      isActive: false,
+      isPinned: true,
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(skillRepository.activateSkill).toHaveBeenCalledWith(
+      result.id,
+      userId,
+    );
+    expect(skillRepository.pinSkill).toHaveBeenCalledWith(result.id, userId);
+  });
+
+  it('should not call pinSkill by default', async () => {
+    const command = new CreateSkillWithUniqueNameCommand({
+      name: 'Default Skill',
+      shortDescription: 'Default',
+      instructions: 'Instructions',
+      userId,
+    });
+
+    await useCase.execute(command);
+
+    expect(skillRepository.activateSkill).toHaveBeenCalled();
+    expect(skillRepository.pinSkill).not.toHaveBeenCalled();
   });
 
   it('should throw when unique name cannot be resolved after max attempts', async () => {

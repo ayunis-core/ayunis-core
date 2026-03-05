@@ -6,6 +6,8 @@ export class CreateSkillWithUniqueNameCommand {
   public readonly instructions: string;
   public readonly marketplaceIdentifier: string | null;
   public readonly userId: UUID;
+  public readonly isActive: boolean;
+  public readonly isPinned: boolean;
 
   constructor(params: {
     name: string;
@@ -13,11 +15,15 @@ export class CreateSkillWithUniqueNameCommand {
     instructions: string;
     marketplaceIdentifier?: string | null;
     userId: UUID;
+    isActive?: boolean;
+    isPinned?: boolean;
   }) {
     this.name = params.name;
     this.shortDescription = params.shortDescription;
     this.instructions = params.instructions;
     this.marketplaceIdentifier = params.marketplaceIdentifier ?? null;
     this.userId = params.userId;
+    this.isActive = params.isActive ?? true;
+    this.isPinned = params.isPinned ?? false;
   }
 }
