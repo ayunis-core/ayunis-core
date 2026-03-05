@@ -33,12 +33,23 @@ export class CreateSkillWithUniqueNameUseCase {
     });
 
     const created = await this.skillRepository.create(skill);
-    await this.skillRepository.activateSkill(created.id, command.userId);
 
-    this.logger.debug('Skill created and activated', {
+    const shouldActivate = command.isActive || command.isPinned;
+
+    if (shouldActivate) {
+      await this.skillRepository.activateSkill(created.id, command.userId);
+    }
+
+    if (command.isPinned) {
+      await this.skillRepository.pinSkill(created.id, command.userId);
+    }
+
+    this.logger.debug('Skill created', {
       skillId: created.id,
       name: created.name,
       userId: command.userId,
+      isActive: command.isActive,
+      isPinned: command.isPinned,
     });
 
     return created;
