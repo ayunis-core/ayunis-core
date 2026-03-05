@@ -221,7 +221,6 @@ function DocumentItem({
   return (
     <Badge
       variant="secondary"
-      className="flex items-center gap-1.5 py-1.5 px-3"
       title={isWeb ? (doc.url ?? undefined) : undefined}
     >
       <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -230,10 +229,9 @@ function DocumentItem({
         <Button
           type="button"
           variant="ghost"
-          size="icon"
+          size="icon-xs"
           onClick={() => removeDocument(doc.id)}
           disabled={isRemoving}
-          className="ml-1 h-5 w-5 rounded-full"
         >
           <X className="h-3 w-3" />
         </Button>
