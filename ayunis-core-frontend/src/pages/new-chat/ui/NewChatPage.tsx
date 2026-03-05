@@ -163,9 +163,6 @@ export default function NewChatPage({
       <NewChatPageLayout
         header={<ContentAreaHeader title={t('newChat.newChat')} />}
       >
-        <div className="text-center">
-          <h1 className="text-2xl font-bold">{greeting}</h1>
-        </div>
         <PersonalizationCard
           onSkip={skip}
           isSkipping={isSkipping}
