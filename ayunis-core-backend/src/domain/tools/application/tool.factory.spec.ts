@@ -88,6 +88,15 @@ describe('ToolFactory', () => {
       ).toThrow('Invalid tool type: UNSUPPORTED');
     });
 
+    it('should throw ToolInvalidContextError when activate_skill context is null', () => {
+      expect(() =>
+        factory.createTool({
+          type: ToolType.ACTIVATE_SKILL,
+          context: null,
+        }),
+      ).toThrow('Invalid context for tool');
+    });
+
     it('should throw error for invalid config type', () => {
       const invalidConfig = {
         displayName: 'Test Tool',

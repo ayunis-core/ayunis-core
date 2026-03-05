@@ -2,43 +2,49 @@ import type { JSONSchema } from 'json-schema-to-ts';
 import { ToolType } from '../value-objects/tool-type.enum';
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { Tool } from '../tool.entity';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
 
-function buildParameters(skills: Skill[]): JSONSchema {
+function buildParameters(slugs: string[]): JSONSchema {
   const skillNameProperty: Record<string, unknown> = {
     type: 'string' as const,
-    description: 'The name of the skill to activate',
+    description: 'The slug identifier of the skill to activate',
   };
 
-  if (skills.length > 0) {
-    skillNameProperty.enum = skills.map((s) => s.name);
+  if (slugs.length > 0) {
+    skillNameProperty.enum = slugs;
   }
 
   return {
     type: 'object' as const,
     properties: {
-      skill_name: skillNameProperty,
+      skill_slug: skillNameProperty,
     },
-    required: ['skill_name'],
+    required: ['skill_slug'],
     additionalProperties: false,
   } as const satisfies JSONSchema;
 }
 
 interface ActivateSkillToolParameters {
-  skill_name: string;
+  skill_slug: string;
 }
 
 export class ActivateSkillTool extends Tool {
-  constructor(skills: Skill[] = []) {
+  private readonly slugToName: Map<string, string>;
+
+  constructor(slugToName: Map<string, string> = new Map()) {
     super({
       name: ToolType.ACTIVATE_SKILL,
       description:
         'Activate a skill to inject its knowledge and capabilities into the conversation.',
       descriptionLong:
         "Activate skills when you need specialized knowledge or capabilities that are available as skills. This will inject the skill's instructions and make its knowledge bases and integrations available for use.",
-      parameters: buildParameters(skills),
+      parameters: buildParameters([...slugToName.keys()]),
       type: ToolType.ACTIVATE_SKILL,
     });
+    this.slugToName = slugToName;
+  }
+
+  resolveOriginalName(slug: string): string | undefined {
+    return this.slugToName.get(slug);
   }
 
   validateParams(params: Record<string, unknown>): ActivateSkillToolParameters {
