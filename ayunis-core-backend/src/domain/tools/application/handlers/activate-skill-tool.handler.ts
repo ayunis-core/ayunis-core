@@ -35,19 +35,15 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
     try {
       const validatedInput = tool.validateParams(input);
 
-      // Find the skill by name
-      const skill = await this.findSkillByNameUseCase.execute(
-        new FindSkillByNameQuery(validatedInput.skill_slug),
-      );
+      // Resolve slug back to original skill name
+      const skillName =
+        tool.resolveOriginalName(validatedInput.skill_slug) ??
+        validatedInput.skill_slug;
 
-      if (!skill) {
-        this.logger.error('Skill not found', validatedInput.skill_slug);
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message: `Skill "${validatedInput.skill_slug}" not found`,
-          exposeToLLM: true,
-        });
-      }
+      // Find the skill by name (throws SkillNotFoundError if missing)
+      const skill = await this.findSkillByNameUseCase.execute(
+        new FindSkillByNameQuery(skillName),
+      );
 
       // Get the thread
       const threadResult = await this.findThreadUseCase.execute(

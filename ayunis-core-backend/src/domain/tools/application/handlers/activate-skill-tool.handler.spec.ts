@@ -68,10 +68,11 @@ describe('ActivateSkillToolHandler', () => {
     });
   }
 
-  function createMockTool(skillName: string) {
+  function createMockTool(slug: string, resolvedName?: string) {
     return {
       name: 'activate_skill',
-      validateParams: jest.fn().mockReturnValue({ skill_slug: skillName }),
+      validateParams: jest.fn().mockReturnValue({ skill_slug: slug }),
+      resolveOriginalName: jest.fn().mockReturnValue(resolvedName),
     } as unknown as ActivateSkillTool;
   }
 
@@ -108,7 +109,9 @@ describe('ActivateSkillToolHandler', () => {
   });
 
   it('should throw ToolExecutionFailedError when skill is not found', async () => {
-    mockFindSkillByName.execute.mockResolvedValue(null as any);
+    mockFindSkillByName.execute.mockRejectedValue(
+      new Error('Skill with ID Nonexistent Skill not found'),
+    );
     const tool = createMockTool('Nonexistent Skill');
 
     await expect(
@@ -147,6 +150,42 @@ describe('ActivateSkillToolHandler', () => {
     });
 
     expect(result).toBe(instructions);
+  });
+
+  it('should resolve slug to original name before looking up the skill', async () => {
+    const skill = createMockSkill({ name: 'Buchungsanfragen bearbeiten' });
+    const thread = new Thread({
+      userId: randomUUID(),
+      messages: [],
+    });
+
+    mockFindSkillByName.execute.mockResolvedValue(skill);
+    mockFindThread.execute.mockResolvedValue({
+      thread,
+      isLongChat: false,
+    });
+    mockSkillActivationService.activateOnThread.mockResolvedValue({
+      instructions: 'Handle booking requests.',
+      skillName: 'Buchungsanfragen bearbeiten',
+    });
+
+    const tool = createMockTool(
+      'user__buchungsanfragen-bearbeiten',
+      'Buchungsanfragen bearbeiten',
+    );
+
+    await handler.execute({
+      tool,
+      input: { skill_slug: 'user__buchungsanfragen-bearbeiten' },
+      context: { threadId: mockThreadId, orgId: randomUUID() },
+    });
+
+    expect(tool.resolveOriginalName).toHaveBeenCalledWith(
+      'user__buchungsanfragen-bearbeiten',
+    );
+    expect(mockFindSkillByName.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Buchungsanfragen bearbeiten' }),
+    );
   });
 
   it('should wrap unexpected errors from SkillActivationService as ToolExecutionFailedError', async () => {
