@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import {
@@ -13,6 +14,7 @@ export function useUpdateSkillTemplate(onSuccess?: () => void) {
   const { t } = useTranslation('super-admin-settings-skills');
   const queryClient = useQueryClient();
   const router = useRouter();
+  const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
   const mutation = useSuperAdminSkillTemplatesControllerUpdate({
     mutation: {
       onSuccess: async () => {
@@ -22,7 +24,7 @@ export function useUpdateSkillTemplate(onSuccess?: () => void) {
         showSuccess(t('toast.updateSuccess'));
         onSuccess?.();
       },
-      onError: (error: unknown) => {
+      onError: (error: unknown, variables) => {
         console.error('Update skill template failed:', error);
         try {
           const { code } = extractErrorData(error);
@@ -36,19 +38,30 @@ export function useUpdateSkillTemplate(onSuccess?: () => void) {
         } catch {
           showError(t('toast.updateError'));
         }
+        setUpdatingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(variables.id);
+          return next;
+        });
       },
-      onSettled: async () => {
+      onSettled: async (_, __, variables) => {
+        setUpdatingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(variables.id);
+          return next;
+        });
         await router.invalidate();
       },
     },
   });
 
   function updateSkillTemplate(id: string, data: UpdateSkillTemplateDto) {
+    setUpdatingIds((prev) => new Set(prev).add(id));
     mutation.mutate({ id, data });
   }
 
   return {
     updateSkillTemplate,
-    isUpdating: mutation.isPending,
+    updatingIds,
   };
 }

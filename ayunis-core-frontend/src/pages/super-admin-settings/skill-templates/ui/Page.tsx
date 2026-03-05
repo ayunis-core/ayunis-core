@@ -31,7 +31,7 @@ export default function SkillTemplatesPage({
   const [editTemplate, setEditTemplate] =
     useState<SkillTemplateResponseDto | null>(null);
   const { deleteSkillTemplate, isDeleting } = useDeleteSkillTemplate();
-  const { updateSkillTemplate, isUpdating } = useUpdateSkillTemplate();
+  const { updateSkillTemplate, updatingIds } = useUpdateSkillTemplate();
   const { confirm } = useConfirmation();
 
   function handleDelete(template: SkillTemplateResponseDto) {
@@ -83,7 +83,7 @@ export default function SkillTemplatesPage({
                       })
                     }
                     isDeleting={isDeleting}
-                    isToggling={isUpdating}
+                    isToggling={updatingIds.has(template.id)}
                   />
                   {index < skillTemplates.length - 1 && <ItemSeparator />}
                 </Fragment>
