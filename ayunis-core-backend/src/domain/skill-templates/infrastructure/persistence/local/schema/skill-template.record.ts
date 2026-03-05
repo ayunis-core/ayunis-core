@@ -15,4 +15,10 @@ export abstract class SkillTemplateRecord extends BaseRecord {
 
   @Column({ nullable: false, default: false })
   isActive: boolean;
+
+  @Column({ type: 'boolean', nullable: true })
+  defaultActive: boolean | null;
+
+  @Column({ type: 'boolean', nullable: true })
+  defaultPinned: boolean | null;
 }

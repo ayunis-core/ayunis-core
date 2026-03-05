@@ -5,8 +5,7 @@ import type { UUID } from 'crypto';
 import { FindOneSkillTemplateUseCase } from './find-one-skill-template.use-case';
 import { FindOneSkillTemplateQuery } from './find-one-skill-template.query';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
-import { SkillTemplate } from '../../../domain/skill-template.entity';
-import { DistributionMode } from '../../../domain/distribution-mode.enum';
+import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
 import { SkillTemplateNotFoundError } from '../../skill-templates.errors';
 
 describe('FindOneSkillTemplateUseCase', () => {
@@ -41,12 +40,11 @@ describe('FindOneSkillTemplateUseCase', () => {
   });
 
   it('should return a skill template by ID', async () => {
-    const template = new SkillTemplate({
+    const template = new AlwaysOnSkillTemplate({
       id: mockId,
       name: 'Legal Guidelines',
       shortDescription: 'Description',
       instructions: 'Instructions.',
-      distributionMode: DistributionMode.ALWAYS_ON,
     });
 
     repository.findOne.mockResolvedValue(template);
