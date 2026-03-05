@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Counter } from 'prom-client';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { UUID } from 'crypto';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
@@ -14,6 +16,9 @@ import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.err
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { ContextService } from 'src/common/context/services/context.service';
+import { AYUNIS_TOOL_USES_TOTAL } from 'src/metrics/metrics.constants';
+import { getUserContextLabels, safeMetric } from 'src/metrics/metrics.utils';
 import {
   RunAnonymizationUnavailableError,
   RunToolExecutionFailedError,
@@ -30,6 +35,9 @@ export class ToolResultCollectorService {
     private readonly executeToolUseCase: ExecuteToolUseCase,
     private readonly checkToolCapabilitiesUseCase: CheckToolCapabilitiesUseCase,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
+    private readonly contextService: ContextService,
+    @InjectMetric(AYUNIS_TOOL_USES_TOTAL)
+    private readonly toolUsesCounter: Counter<string>,
   ) {}
 
   async collectToolResults(params: {
@@ -63,6 +71,14 @@ export class ToolResultCollectorService {
         );
         continue;
       }
+
+      safeMetric(this.logger, () => {
+        const labels = getUserContextLabels(this.contextService);
+        this.toolUsesCounter.inc({
+          ...labels,
+          tool_name: content.name,
+        });
+      });
 
       try {
         const capabilities = this.checkToolCapabilitiesUseCase.execute(
