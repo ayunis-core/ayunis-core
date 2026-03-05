@@ -26,6 +26,7 @@ export abstract class SkillRepository {
     retainUserIds: Set<UUID>,
   ): Promise<void>;
   abstract findByIds(ids: UUID[]): Promise<Skill[]>;
+  abstract pinSkill(skillId: UUID, userId: UUID): Promise<void>;
   abstract toggleSkillPinned(skillId: UUID, userId: UUID): Promise<boolean>;
   abstract isSkillPinned(skillId: UUID, userId: UUID): Promise<boolean>;
   abstract getPinnedSkillIds(userId: UUID): Promise<Set<UUID>>;

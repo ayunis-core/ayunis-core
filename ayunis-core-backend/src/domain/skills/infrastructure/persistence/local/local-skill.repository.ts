@@ -350,6 +350,25 @@ export class LocalSkillRepository implements SkillRepository {
     return new Set(activations.map((a) => a.skillId));
   }
 
+  async pinSkill(skillId: UUID, userId: UUID): Promise<void> {
+    this.logger.log('pinSkill', { skillId, userId });
+
+    const manager = this.getManager();
+    const result = await manager
+      .createQueryBuilder()
+      .update(SkillActivationRecord)
+      .set({ isPinned: true })
+      .where('"skillId" = :skillId AND "userId" = :userId', {
+        skillId,
+        userId,
+      })
+      .execute();
+
+    if (result.affected === 0) {
+      throw new SkillNotActiveError(skillId);
+    }
+  }
+
   async toggleSkillPinned(skillId: UUID, userId: UUID): Promise<boolean> {
     this.logger.log('toggleSkillPinned', { skillId, userId });
 

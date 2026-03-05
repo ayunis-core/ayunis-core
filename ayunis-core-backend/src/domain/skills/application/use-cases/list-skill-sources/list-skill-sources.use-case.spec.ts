@@ -44,6 +44,7 @@ describe('ListSkillSourcesUseCase', () => {
       findByIds: jest.fn(),
       toggleSkillPinned: jest.fn(),
       isSkillPinned: jest.fn(),
+      pinSkill: jest.fn(),
       getPinnedSkillIds: jest.fn(),
     } as jest.Mocked<SkillRepository>;
 
