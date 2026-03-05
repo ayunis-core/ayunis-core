@@ -1,6 +1,5 @@
+import type { SkillEntry } from 'src/common/util/skill-slug';
 import { SystemPromptBuilderService } from './system-prompt-builder.service';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
-import { randomUUID } from 'crypto';
 
 describe('SystemPromptBuilderService', () => {
   let service: SystemPromptBuilderService;
@@ -11,23 +10,15 @@ describe('SystemPromptBuilderService', () => {
 
   describe('skills section', () => {
     it('should include available_skills section when active skills are provided', () => {
-      const skills: Skill[] = [
-        new Skill({
-          id: randomUUID(),
-          name: 'German Administrative Law',
-          shortDescription:
-            'Knowledge about German administrative law procedures',
-          instructions: 'Full instructions here...',
-          userId: randomUUID(),
-        }),
-        new Skill({
-          id: randomUUID(),
-          name: 'Data Analysis',
-          shortDescription:
-            'Analyze datasets and produce statistical summaries',
-          instructions: 'Full data analysis instructions...',
-          userId: randomUUID(),
-        }),
+      const skills: SkillEntry[] = [
+        {
+          slug: 'user__german-administrative-law',
+          description: 'Knowledge about German administrative law procedures',
+        },
+        {
+          slug: 'system__data-analysis',
+          description: 'Analyze datasets and produce statistical summaries',
+        },
       ];
 
       const result = service.build({
@@ -39,11 +30,11 @@ describe('SystemPromptBuilderService', () => {
       expect(result).toContain('<available_skills>');
       expect(result).toContain('</available_skills>');
       expect(result).toContain('<skill>');
-      expect(result).toContain('<name>German Administrative Law</name>');
+      expect(result).toContain('<name>user__german-administrative-law</name>');
       expect(result).toContain(
         '<description>Knowledge about German administrative law procedures</description>',
       );
-      expect(result).toContain('<name>Data Analysis</name>');
+      expect(result).toContain('<name>system__data-analysis</name>');
       expect(result).toContain(
         '<description>Analyze datasets and produce statistical summaries</description>',
       );
@@ -66,6 +57,26 @@ describe('SystemPromptBuilderService', () => {
       });
 
       expect(result).not.toContain('<available_skills>');
+    });
+
+    it('should escape XML characters in skill descriptions', () => {
+      const skills: SkillEntry[] = [
+        {
+          slug: 'user__qa-helper',
+          description: 'Handles <special> "quoted" queries & more',
+        },
+      ];
+
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        skills,
+      });
+
+      expect(result).toContain('<name>user__qa-helper</name>');
+      expect(result).toContain(
+        '<description>Handles &lt;special&gt; &quot;quoted&quot; queries &amp; more</description>',
+      );
     });
   });
 
@@ -134,89 +145,6 @@ describe('SystemPromptBuilderService', () => {
       const readyPos = result.indexOf('You are now ready to assist the user.');
       expect(userPos).toBeGreaterThan(-1);
       expect(readyPos).toBeGreaterThan(userPos);
-    });
-  });
-
-  describe('skills section (continued)', () => {
-    it('should escape XML characters in skill names and descriptions', () => {
-      const skills: Skill[] = [
-        new Skill({
-          id: randomUUID(),
-          name: 'QA Helper',
-          shortDescription: 'Handles <special> "quoted" queries & more',
-          instructions: 'Instructions...',
-          userId: randomUUID(),
-        }),
-      ];
-
-      const result = service.build({
-        tools: [],
-        currentTime: new Date('2026-01-15T10:00:00Z'),
-        skills,
-      });
-
-      expect(result).toContain('<name>QA Helper</name>');
-      expect(result).toContain(
-        '<description>Handles &lt;special&gt; &quot;quoted&quot; queries &amp; more</description>',
-      );
-    });
-  });
-
-  describe('always-on instructions section', () => {
-    it('should include always_on_instructions section when instructions are provided', () => {
-      const result = service.build({
-        tools: [],
-        currentTime: new Date('2026-01-15T10:00:00Z'),
-        alwaysOnInstructions: [
-          'Always be polite and professional.',
-          'Never share personal data across conversations.',
-        ],
-      });
-
-      expect(result).toContain('<always_on_instructions>');
-      expect(result).toContain('Always be polite and professional.');
-      expect(result).toContain(
-        'Never share personal data across conversations.',
-      );
-      expect(result).toContain('</always_on_instructions>');
-    });
-
-    it('should not include always_on_instructions section when no instructions are provided', () => {
-      const result = service.build({
-        tools: [],
-        currentTime: new Date('2026-01-15T10:00:00Z'),
-      });
-
-      expect(result).not.toContain('<always_on_instructions>');
-    });
-
-    it('should not include always_on_instructions section when instructions array is empty', () => {
-      const result = service.build({
-        tools: [],
-        currentTime: new Date('2026-01-15T10:00:00Z'),
-        alwaysOnInstructions: [],
-      });
-
-      expect(result).not.toContain('<always_on_instructions>');
-    });
-
-    it('should place always_on_instructions before agent_instructions', () => {
-      const agent = {
-        instructions: 'Agent-level instructions here',
-      } as any;
-
-      const result = service.build({
-        agent,
-        tools: [],
-        currentTime: new Date('2026-01-15T10:00:00Z'),
-        alwaysOnInstructions: ['Platform-level instructions here'],
-      });
-
-      const alwaysOnPos = result.indexOf('<always_on_instructions>');
-      const agentPos = result.indexOf('<agent_instructions>');
-      expect(alwaysOnPos).toBeGreaterThan(-1);
-      expect(agentPos).toBeGreaterThan(-1);
-      expect(alwaysOnPos).toBeLessThan(agentPos);
     });
   });
 });

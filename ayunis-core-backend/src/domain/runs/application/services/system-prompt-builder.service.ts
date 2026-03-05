@@ -12,16 +12,16 @@ import {
   DataSource,
   CSVDataSource,
 } from 'src/domain/sources/domain/sources/data-source.entity';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
+import type { SkillEntry } from 'src/common/util/skill-slug';
+
 export interface SystemPromptBuildParams {
   agent?: Agent;
   tools: Tool[];
   currentTime: Date;
   sources?: Source[];
-  skills?: Skill[];
+  skills?: SkillEntry[];
   knowledgeBases?: KnowledgeBaseSummary[];
-  alwaysOnInstructions?: string[];
   userSystemPrompt?: string;
 }
 
@@ -35,14 +35,12 @@ export class SystemPromptBuilderService {
       sources = [],
       skills = [],
       knowledgeBases = [],
-      alwaysOnInstructions = [],
       userSystemPrompt,
     } = params;
 
     const sections = [
       this.buildPreamble(currentTime),
       this.buildBehaviorInstructions(),
-      this.buildAlwaysOnInstructionsSection(alwaysOnInstructions),
       this.buildToolUsageSection(tools),
       this.buildSkillsSection(skills),
       this.buildFilesSection(sources),
@@ -50,8 +48,12 @@ export class SystemPromptBuilderService {
       this.buildDataHandlingSection(),
       this.buildResponseGuidelines(),
       this.buildPlatformSection(),
-      this.buildOptionalAgentInstructions(agent),
-      this.buildOptionalUserInstructions(userSystemPrompt),
+      agent?.instructions
+        ? this.buildAgentInstructionsSection(agent.instructions)
+        : '',
+      userSystemPrompt
+        ? this.buildUserInstructionsSection(userSystemPrompt)
+        : '',
       'You are now ready to assist the user.',
     ];
 
@@ -218,30 +220,6 @@ For technical questions about the platform, configuration, or deployment, users 
     return toolSections;
   }
 
-  private buildAlwaysOnInstructionsSection(instructions: string[]): string {
-    if (instructions.length === 0) {
-      return '';
-    }
-
-    const entries = instructions.join('\n\n');
-
-    return `<always_on_instructions>\n${entries}\n</always_on_instructions>`;
-  }
-
-  private buildOptionalAgentInstructions(agent?: Agent): string {
-    return agent?.instructions
-      ? this.buildAgentInstructionsSection(agent.instructions)
-      : '';
-  }
-
-  private buildOptionalUserInstructions(
-    userSystemPrompt?: string,
-  ): string {
-    return userSystemPrompt
-      ? this.buildUserInstructionsSection(userSystemPrompt)
-      : '';
-  }
-
   private buildAgentInstructionsSection(instructions: string): string {
     return `
 <agent_instructions>
@@ -258,7 +236,7 @@ ${userSystemPrompt}
 `;
   }
 
-  private buildSkillsSection(skills: Skill[]): string {
+  private buildSkillsSection(skills: SkillEntry[]): string {
     if (skills.length === 0) {
       return '';
     }
@@ -266,7 +244,7 @@ ${userSystemPrompt}
     const skillEntries = skills
       .map(
         (skill) =>
-          `  <skill>\n    <name>${this.escapeXml(skill.name)}</name>\n    <description>${this.escapeXml(skill.shortDescription)}</description>\n  </skill>`,
+          `  <skill>\n    <name>${this.escapeXml(skill.slug)}</name>\n    <description>${this.escapeXml(skill.description)}</description>\n  </skill>`,
       )
       .join('\n');
 

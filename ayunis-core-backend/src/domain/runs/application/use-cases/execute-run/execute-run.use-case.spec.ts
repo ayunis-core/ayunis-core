@@ -226,7 +226,7 @@ describe('ExecuteRunUseCase', () => {
             type: 'tool_use',
             toolId: 'tool-1',
             toolName: ToolType.ACTIVATE_SKILL,
-            input: { skill_name: 'Another Skill' },
+            input: { skill_slug: 'Another Skill' },
           },
         ],
       } as unknown as AssistantMessage;

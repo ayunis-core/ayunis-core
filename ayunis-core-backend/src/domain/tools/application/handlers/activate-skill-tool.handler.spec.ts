@@ -71,7 +71,7 @@ describe('ActivateSkillToolHandler', () => {
   function createMockTool(skillName: string) {
     return {
       name: 'activate_skill',
-      validateParams: jest.fn().mockReturnValue({ skill_name: skillName }),
+      validateParams: jest.fn().mockReturnValue({ skill_slug: skillName }),
     } as unknown as ActivateSkillTool;
   }
 
@@ -97,7 +97,7 @@ describe('ActivateSkillToolHandler', () => {
 
     await handler.execute({
       tool,
-      input: { skill_name: 'Budget Analysis' },
+      input: { skill_slug: 'Budget Analysis' },
       context: { threadId: mockThreadId, orgId: randomUUID() },
     });
 
@@ -114,7 +114,7 @@ describe('ActivateSkillToolHandler', () => {
     await expect(
       handler.execute({
         tool,
-        input: { skill_name: 'Nonexistent Skill' },
+        input: { skill_slug: 'Nonexistent Skill' },
         context: { threadId: mockThreadId, orgId: randomUUID() },
       }),
     ).rejects.toThrow(ToolExecutionFailedError);
@@ -142,7 +142,7 @@ describe('ActivateSkillToolHandler', () => {
 
     const result = await handler.execute({
       tool,
-      input: { skill_name: 'Budget Analysis' },
+      input: { skill_slug: 'Budget Analysis' },
       context: { threadId: mockThreadId, orgId: randomUUID() },
     });
 
@@ -170,7 +170,7 @@ describe('ActivateSkillToolHandler', () => {
     await expect(
       handler.execute({
         tool,
-        input: { skill_name: 'Budget Analysis' },
+        input: { skill_slug: 'Budget Analysis' },
         context: { threadId: mockThreadId, orgId: randomUUID() },
       }),
     ).rejects.toThrow(ToolExecutionFailedError);
