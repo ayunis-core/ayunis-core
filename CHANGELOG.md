@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.2](https://github.com/ayunis-core/ayunis-core/compare/v1.14.1...v1.14.2) (2026-03-05)
+
+
+### Bug Fixes
+
+* **AYC-000:** reword personalization prompts to avoid azure content filter ([#329](https://github.com/ayunis-core/ayunis-core/issues/329)) ([1381341](https://github.com/ayunis-core/ayunis-core/commit/1381341aecc83b1fe5a61b7c1f38f1819ab89028))
+
 ## [1.14.1](https://github.com/ayunis-core/ayunis-core/compare/v1.14.0...v1.14.1) (2026-03-05)
 
 
