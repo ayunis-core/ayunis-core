@@ -6,7 +6,7 @@ import { DeleteSkillTemplateUseCase } from './delete-skill-template.use-case';
 import { DeleteSkillTemplateCommand } from './delete-skill-template.command';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
 import { SkillTemplate } from '../../../domain/skill-template.entity';
-import { DistributionMode } from '../../../domain/distribution-mode.enum';
+import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
 import { SkillTemplateNotFoundError } from '../../skill-templates.errors';
 
 describe('DeleteSkillTemplateUseCase', () => {
@@ -42,12 +42,11 @@ describe('DeleteSkillTemplateUseCase', () => {
   });
 
   it('should delete a skill template successfully', async () => {
-    const existing = new SkillTemplate({
+    const existing = new AlwaysOnSkillTemplate({
       id: mockId,
       name: 'Legal Guidelines',
       shortDescription: 'Description',
       instructions: 'Instructions.',
-      distributionMode: DistributionMode.ALWAYS_ON,
     });
 
     repository.findOne.mockResolvedValue(existing);
