@@ -46,6 +46,8 @@ import enSkill from './shared/locales/en/skill.json';
 import deSkill from './shared/locales/de/skill.json';
 import enKnowledgeBases from './shared/locales/en/knowledge-bases.json';
 import deKnowledgeBases from './shared/locales/de/knowledge-bases.json';
+import enSuperAdminSettingsSkills from './shared/locales/en/super-admin-settings-skills.json';
+import deSuperAdminSettingsSkills from './shared/locales/de/super-admin-settings-skills.json';
 
 const resources = {
   en: {
@@ -71,6 +73,7 @@ const resources = {
     skills: enSkills,
     skill: enSkill,
     'knowledge-bases': enKnowledgeBases,
+    'super-admin-settings-skills': enSuperAdminSettingsSkills,
   },
   de: {
     auth: deAuth,
@@ -95,6 +98,7 @@ const resources = {
     skills: deSkills,
     skill: deSkill,
     'knowledge-bases': deKnowledgeBases,
+    'super-admin-settings-skills': deSuperAdminSettingsSkills,
   },
 };
 

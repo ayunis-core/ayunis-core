@@ -1,0 +1,53 @@
+{
+  "page": {
+    "title": "Skill-Vorlagen",
+    "description": "Verwalten Sie Skill-Vorlagen, die an alle Benutzer in allen Organisationen verteilt werden.",
+    "empty": "Keine Skill-Vorlagen",
+    "emptyDescription": "Erstellen Sie Ihre erste Skill-Vorlage, um zu beginnen.",
+    "createButton": "Vorlage erstellen"
+  },
+  "form": {
+    "createTitle": "Skill-Vorlage erstellen",
+    "editTitle": "Skill-Vorlage bearbeiten",
+    "name": "Name",
+    "namePlaceholder": "z.B. Kundenservice-Richtlinien",
+    "shortDescription": "Kurzbeschreibung",
+    "shortDescriptionPlaceholder": "Eine kurze Beschreibung dieser Vorlage",
+    "instructions": "Anweisungen",
+    "instructionsPlaceholder": "Geben Sie die Prompt-Anweisungen für diese Skill-Vorlage ein...",
+    "distributionMode": "Verteilungsmodus",
+    "isActive": "Aktiv",
+    "isActiveDescription": "Aktive Vorlagen werden an Benutzer verteilt. Inaktive Vorlagen sind Entwürfe.",
+    "submit": "Speichern",
+    "submitting": "Wird gespeichert...",
+    "create": "Erstellen",
+    "creating": "Wird erstellt...",
+    "cancel": "Abbrechen"
+  },
+  "distributionMode": {
+    "always_on": "Immer aktiv",
+    "pre_created_copy": "Vorkonfigurierte Kopie",
+    "always_on_description": "Anweisungen werden in den System-Prompt jeder Ausführung eingefügt",
+    "pre_created_copy_description": "Wird bei der Kontoerstellung in die Skills jedes neuen Benutzers kopiert"
+  },
+  "status": {
+    "active": "Aktiv",
+    "inactive": "Inaktiv"
+  },
+  "toast": {
+    "createSuccess": "Skill-Vorlage erfolgreich erstellt",
+    "createError": "Skill-Vorlage konnte nicht erstellt werden",
+    "updateSuccess": "Skill-Vorlage erfolgreich aktualisiert",
+    "updateError": "Skill-Vorlage konnte nicht aktualisiert werden",
+    "deleteSuccess": "Skill-Vorlage erfolgreich gelöscht",
+    "deleteError": "Skill-Vorlage konnte nicht gelöscht werden",
+    "duplicateName": "Eine Skill-Vorlage mit diesem Namen existiert bereits",
+    "notFound": "Skill-Vorlage nicht gefunden"
+  },
+  "delete": {
+    "title": "Skill-Vorlage löschen",
+    "description": "Möchten Sie \"{{name}}\" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirm": "Löschen",
+    "cancel": "Abbrechen"
+  }
+}
