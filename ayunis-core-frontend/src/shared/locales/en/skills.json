@@ -5,9 +5,21 @@
   "page": {
     "title": "My Skills"
   },
+  "tabs": {
+    "personal": "Own Skills",
+    "shared": "Shared Skills"
+  },
   "emptyState": {
     "title": "No skills yet",
-    "description": "Get started by creating your first skill. Skills are reusable knowledge and integration bundles that can be activated on-demand during conversations."
+    "description": "Get started by creating your first skill. Skills are reusable knowledge and integration bundles that can be activated on-demand during conversations.",
+    "personal": {
+      "title": "No own skills yet",
+      "description": "Create your first skill. Skills are reusable knowledge and integration bundles that can be activated on-demand during conversations."
+    },
+    "shared": {
+      "title": "No shared skills yet",
+      "description": "Skills shared with you by other members of your organization will appear here."
+    }
   },
   "badge": {
     "active": "Active",

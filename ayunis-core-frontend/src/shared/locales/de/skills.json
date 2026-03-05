@@ -5,9 +5,21 @@
   "page": {
     "title": "Fähigkeiten"
   },
+  "tabs": {
+    "personal": "Eigene Fähigkeiten",
+    "shared": "Geteilte Fähigkeiten"
+  },
   "emptyState": {
     "title": "Noch keine Fähigkeiten",
-    "description": "Erstellen Sie Ihre erste Fähigkeit. Fähigkeiten sind wiederverwendbare Wissens- und Integrationsbündel, die bei Bedarf während Gesprächen aktiviert werden können."
+    "description": "Erstellen Sie Ihre erste Fähigkeit. Fähigkeiten sind wiederverwendbare Wissens- und Integrationsbündel, die bei Bedarf während Gesprächen aktiviert werden können.",
+    "personal": {
+      "title": "Noch keine eigenen Fähigkeiten",
+      "description": "Erstellen Sie Ihre erste Fähigkeit. Fähigkeiten sind wiederverwendbare Wissens- und Integrationsbündel, die bei Bedarf während Gesprächen aktiviert werden können."
+    },
+    "shared": {
+      "title": "Noch keine geteilten Fähigkeiten",
+      "description": "Fähigkeiten, die von anderen Mitgliedern Ihrer Organisation mit Ihnen geteilt werden, erscheinen hier."
+    }
   },
   "badge": {
     "active": "Aktiv",
