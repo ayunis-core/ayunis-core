@@ -98,6 +98,37 @@
     "upgradeToProError": "Sie müssen ein Pro-Abonnement haben, um diese Funktion zu verwenden.",
     "personalizedPromptSuccess": "Personalisierter System-Prompt erstellt",
     "personalizedPromptError": "Personalisierter System-Prompt konnte nicht erstellt werden",
-    "noDefaultModelError": "Kein Standardmodell konfiguriert. Bitte wenden Sie sich an Ihren Administrator."
+    "systemPromptLoadError": "Personalisierungsstatus konnte nicht geladen werden. Die Personalisierung wurde möglicherweise übersprungen.",
+    "noDefaultModelError": "Kein Standardmodell konfiguriert. Bitte wenden Sie sich an Ihren Administrator.",
+    "personalization": {
+      "stepperName": "Name",
+      "stepperStyle": "Stil",
+      "stepperContext": "Kontext",
+      "nameTitle": "Wie möchtest du genannt werden?",
+      "nameDescription": "Damit ich dich persönlich ansprechen kann.",
+      "nameLabel": "Dein Name",
+      "namePlaceholder": "z.B. Anna, Herr Müller ...",
+      "styleTitle": "Wie soll ich kommunizieren?",
+      "styleDescription": "Wähle den Stil, der am besten zu dir passt.",
+      "styleCasual": "Locker & kurz",
+      "styleProfessional": "Professionell & ausführlich",
+      "styleFactual": "Sachlich & präzise",
+      "styleCustomLabel": "Eigene Ergänzung (optional)",
+      "styleCustomPlaceholder": "z.B. bitte immer in Stichpunkten antworten ...",
+      "contextTitle": "In welchem Bereich arbeitest du?",
+      "contextDescription": "Das hilft mir, passendere Antworten zu geben.",
+      "contextLabel": "Arbeitskontext",
+      "contextPlaceholder": "z.B. Bescheide im Sozialamt, Protokolle für den Gemeinderat ...",
+      "next": "Weiter",
+      "back": "Zurück",
+      "skip": "Später einrichten",
+      "submit": "Personalisierung starten",
+      "generating": "Dein persönlicher Assistent wird eingerichtet ...",
+      "errorMessage": "Leider ist ein Fehler aufgetreten. Bitte versuche es erneut.",
+      "errorTitle": "Fehler",
+      "skipError": "Personalisierung konnte nicht übersprungen werden. Bitte versuche es erneut.",
+      "retry": "Erneut versuchen",
+      "getStarted": "Los geht's"
+    }
   }
 }

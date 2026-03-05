@@ -13,6 +13,8 @@ import {
   agentsControllerFindAll,
   appControllerFeatureToggles,
   getAppControllerFeatureTogglesQueryKey,
+  chatSettingsControllerGetSystemPrompt,
+  getChatSettingsControllerGetSystemPromptQueryKey,
 } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { z } from 'zod';
@@ -85,6 +87,11 @@ export const Route = createFileRoute('/_authenticated/chat/')({
     const agents = featureToggles.agentsEnabled
       ? await queryClient.fetchQuery(queryAgentsOptions())
       : [];
+    // Await system prompt status so PersonalizationCard doesn't flash
+    await queryClient.prefetchQuery({
+      queryKey: getChatSettingsControllerGetSystemPromptQueryKey(),
+      queryFn: () => chatSettingsControllerGetSystemPrompt(),
+    });
     return {
       selectedModelId,
       selectedAgentId,
