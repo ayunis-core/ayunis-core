@@ -100,12 +100,12 @@ export class GeneratePersonalizedSystemPromptUseCase {
   ): Promise<string> {
     const userInput = this.buildUserInputSummary(command);
 
-    const prompt = `You are a system prompt generator. Based on the user's preferences below, generate a personalized system prompt (2-4 sentences). The system prompt should personalize the AI assistant's tone and communication style without restricting what topics the user can ask about. Write the system prompt in the SAME LANGUAGE as the user's input.
+    const prompt = `Based on the user's preferences below, write personalized instructions for an AI assistant (2-4 sentences). The instructions should define the assistant's tone and communication style without restricting what topics the user can ask about. Write the instructions in the SAME LANGUAGE as the user's input.
 
 User preferences:
 ${userInput}
 
-Generate ONLY the system prompt text, nothing else.`;
+Generate ONLY the instruction text, nothing else.`;
 
     const response = await this.callInference(prompt, model);
     return this.extractTextFromResponse(response);
@@ -116,9 +116,9 @@ Generate ONLY the system prompt text, nothing else.`;
     preferredName: string,
     model: LanguageModel,
   ): Promise<string> {
-    const prompt = `Based on the following system prompt and the user's name, generate a short, warm welcome message (1-2 sentences). Write the welcome message in the SAME LANGUAGE as the system prompt. Address the user by their name.
+    const prompt = `Based on the following assistant instructions and the user's name, generate a short, warm welcome message (1-2 sentences). Write the welcome message in the SAME LANGUAGE as the instructions. Address the user by their name.
 
-System prompt: "${systemPrompt}"
+Assistant instructions: "${systemPrompt}"
 User's name: "${preferredName}"
 
 Generate ONLY the welcome message text, nothing else.`;
