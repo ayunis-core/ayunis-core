@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.1](https://github.com/ayunis-core/ayunis-core/compare/v1.14.0...v1.14.1) (2026-03-05)
+
+
+### Bug Fixes
+
+* **AYC-000:** resolve skill slug to original name before activation lookup ([#327](https://github.com/ayunis-core/ayunis-core/issues/327)) ([dea14a4](https://github.com/ayunis-core/ayunis-core/commit/dea14a4ae19aef8f24bb41d01b61bf1a40b32776))
+
 ## [1.14.0](https://github.com/ayunis-core/ayunis-core/compare/v1.13.1...v1.14.0) (2026-03-05)
 
 
