@@ -3,21 +3,21 @@ import { randomUUID } from 'crypto';
 import type { DistributionMode } from './distribution-mode.enum';
 
 /**
- * Valid skill template names: Unicode letters, numbers, emojis, hyphens, and spaces.
- * Must start and end with a letter, number, or emoji.
- * No consecutive spaces. Min length 1.
+ * Valid skill template names: Unicode letters, numbers, emojis, hyphens,
+ * parentheses, and spaces. Must start and end with a letter, number, emoji,
+ * or closing parenthesis. No consecutive spaces. Min length 1.
  *
  * Reuses the same pattern as Skill entity.
  */
 const SKILL_TEMPLATE_NAME_PATTERN =
-  /^[\p{L}\p{N}\p{Emoji_Presentation}]([\p{L}\p{N}\p{Emoji_Presentation} -]*[\p{L}\p{N}\p{Emoji_Presentation}])?$/u;
+  /^[\p{L}\p{N}\p{Emoji_Presentation}]([\p{L}\p{N}\p{Emoji_Presentation} ()-]*[\p{L}\p{N}\p{Emoji_Presentation})])?$/u;
 const CONSECUTIVE_SPACES = / {2}/;
 
 export class InvalidSkillTemplateNameError extends Error {
   constructor(name: string) {
     super(
-      `Invalid skill template name "${name}". Names must contain only letters, numbers, emojis, hyphens, and spaces, ` +
-        `must start and end with a letter, number, or emoji, and must not contain consecutive spaces.`,
+      `Invalid skill template name "${name}". Names must contain only letters, numbers, emojis, hyphens, parentheses, and spaces, ` +
+        `must start and end with a letter, number, emoji, or closing parenthesis, and must not contain consecutive spaces.`,
     );
     this.name = 'InvalidSkillTemplateNameError';
   }

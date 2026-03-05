@@ -2,22 +2,22 @@ import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 
 /**
- * Valid skill names: Unicode letters, numbers, emojis, hyphens, and spaces.
- * Must start and end with a letter, number, or emoji.
- * No consecutive spaces. Min length 1.
+ * Valid skill names: Unicode letters, numbers, emojis, hyphens, parentheses,
+ * and spaces. Must start and end with a letter, number, emoji, or closing
+ * parenthesis. No consecutive spaces. Min length 1.
  *
  * Uses \p{Emoji_Presentation} for visible emojis only — excludes invisible
  * components like ZWJ (U+200D) and variation selectors (U+FE0E/FE0F).
  */
 const SKILL_NAME_PATTERN =
-  /^[\p{L}\p{N}\p{Emoji_Presentation}]([\p{L}\p{N}\p{Emoji_Presentation} -]*[\p{L}\p{N}\p{Emoji_Presentation}])?$/u;
+  /^[\p{L}\p{N}\p{Emoji_Presentation}]([\p{L}\p{N}\p{Emoji_Presentation} ()-]*[\p{L}\p{N}\p{Emoji_Presentation})])?$/u;
 const CONSECUTIVE_SPACES = / {2}/;
 
 export class InvalidSkillNameError extends Error {
   constructor(name: string) {
     super(
-      `Invalid skill name "${name}". Names must contain only letters, numbers, emojis, hyphens, and spaces, ` +
-        `must start and end with a letter, number, or emoji, and must not contain consecutive spaces.`,
+      `Invalid skill name "${name}". Names must contain only letters, numbers, emojis, hyphens, parentheses, and spaces, ` +
+        `must start and end with a letter, number, emoji, or closing parenthesis, and must not contain consecutive spaces.`,
     );
     this.name = 'InvalidSkillNameError';
   }

@@ -12132,7 +12132,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.",
+            "description": "The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.",
             "example": "Legal Research",
             "minLength": 1,
             "maxLength": 255
@@ -12164,7 +12164,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.",
+            "description": "The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.",
             "example": "Legal Research",
             "minLength": 1,
             "maxLength": 255
@@ -13023,187 +13023,12 @@
           "data"
         ]
       },
-      "UserSystemPromptResponseDto": {
-        "type": "object",
-        "properties": {
-          "systemPrompt": {
-            "type": "string",
-            "description": "The custom system prompt for the user, or null if not set",
-            "example": "Always respond in bullet points. I work in the finance department.",
-            "nullable": true
-          }
-        },
-        "required": [
-          "systemPrompt"
-        ]
-      },
-      "UpsertUserSystemPromptDto": {
-        "type": "object",
-        "properties": {
-          "systemPrompt": {
-            "type": "string",
-            "description": "The custom system prompt for the user",
-            "example": "Always respond in bullet points. I work in the finance department.",
-            "maxLength": 10000
-          }
-        },
-        "required": [
-          "systemPrompt"
-        ]
-      },
-      "GeneratePersonalizedSystemPromptDto": {
-        "type": "object",
-        "properties": {
-          "preferredName": {
-            "type": "string",
-            "description": "The preferred name of the user",
-            "example": "Maria",
-            "maxLength": 200
-          },
-          "communicationStyle": {
-            "type": "string",
-            "description": "The preferred communication style",
-            "example": "Locker & kurz",
-            "maxLength": 500
-          },
-          "workContext": {
-            "type": "string",
-            "description": "The work context of the user",
-            "example": "Bescheide im Sozialamt, Protokolle für den Gemeinderat",
-            "maxLength": 1000
-          }
-        },
-        "required": [
-          "preferredName"
-        ]
-      },
-      "GeneratePersonalizedSystemPromptResponseDto": {
-        "type": "object",
-        "properties": {
-          "systemPrompt": {
-            "type": "string",
-            "description": "The generated personalized system prompt",
-            "example": "Hallo Maria! Ich kommuniziere locker und kurz mit dir. Ich helfe dir bei allen Fragen rund um deine Arbeit im Sozialamt."
-          },
-          "welcomeMessage": {
-            "type": "string",
-            "description": "A personalized welcome message for the user",
-            "example": "Willkommen, Maria! Schön, dass du da bist. Wie kann ich dir heute helfen?"
-          }
-        },
-        "required": [
-          "systemPrompt",
-          "welcomeMessage"
-        ]
-      },
-      "CreatePromptDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": "The title of the prompt",
-            "example": "Project Planning Assistant",
-            "minLength": 1,
-            "maxLength": 255
-          },
-          "content": {
-            "type": "string",
-            "description": "The content of the prompt",
-            "example": "You are a helpful assistant that helps with project planning. Please provide detailed step-by-step guidance for managing projects effectively."
-          }
-        },
-        "required": [
-          "title",
-          "content"
-        ]
-      },
-      "PromptResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The unique identifier of the prompt",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "title": {
-            "type": "string",
-            "description": "The title of the prompt",
-            "example": "Project Planning Assistant"
-          },
-          "content": {
-            "type": "string",
-            "description": "The content of the prompt",
-            "example": "You are a helpful assistant that helps with project planning. Please provide detailed step-by-step guidance for managing projects effectively."
-          },
-          "userId": {
-            "type": "string",
-            "description": "The unique identifier of the user who owns this prompt",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "The date and time when the prompt was created",
-            "example": "2023-12-01T10:00:00.000Z",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "The date and time when the prompt was last updated",
-            "example": "2023-12-01T10:00:00.000Z",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "title",
-          "content",
-          "userId",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "UpdatePromptDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": "The title of the prompt",
-            "example": "Updated Project Planning Assistant",
-            "minLength": 1,
-            "maxLength": 255
-          },
-          "content": {
-            "type": "string",
-            "description": "The content of the prompt",
-            "example": "You are an expert project planning assistant. Provide comprehensive guidance for project management, including risk assessment and timeline optimization."
-          }
-        },
-        "required": [
-          "title",
-          "content"
-        ]
-      },
-      "TranscriptionResponseDto": {
-        "type": "object",
-        "properties": {
-          "text": {
-            "type": "string",
-            "description": "The transcribed text from the audio file",
-            "example": "Hello, this is a test transcription."
-          }
-        },
-        "required": [
-          "text"
-        ]
-      },
       "CreateSkillTemplateDto": {
         "type": "object",
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the skill template. Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.",
+            "description": "The name of the skill template. Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.",
             "example": "Legal Guidelines",
             "minLength": 1,
             "maxLength": 255
@@ -13305,7 +13130,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the skill template. Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.",
+            "description": "The name of the skill template. Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.",
             "example": "Legal Guidelines",
             "minLength": 1,
             "maxLength": 255
@@ -13362,6 +13187,51 @@
         },
         "required": [
           "systemPrompt"
+        ]
+      },
+      "GeneratePersonalizedSystemPromptDto": {
+        "type": "object",
+        "properties": {
+          "preferredName": {
+            "type": "string",
+            "description": "The preferred name of the user",
+            "example": "Maria",
+            "maxLength": 200
+          },
+          "communicationStyle": {
+            "type": "string",
+            "description": "The preferred communication style",
+            "example": "Locker & kurz",
+            "maxLength": 500
+          },
+          "workContext": {
+            "type": "string",
+            "description": "The work context of the user",
+            "example": "Bescheide im Sozialamt, Protokolle für den Gemeinderat",
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "preferredName"
+        ]
+      },
+      "GeneratePersonalizedSystemPromptResponseDto": {
+        "type": "object",
+        "properties": {
+          "systemPrompt": {
+            "type": "string",
+            "description": "The generated personalized system prompt",
+            "example": "Hallo Maria! Ich kommuniziere locker und kurz mit dir. Ich helfe dir bei allen Fragen rund um deine Arbeit im Sozialamt."
+          },
+          "welcomeMessage": {
+            "type": "string",
+            "description": "A personalized welcome message for the user",
+            "example": "Willkommen, Maria! Schön, dass du da bist. Wie kann ich dir heute helfen?"
+          }
+        },
+        "required": [
+          "systemPrompt",
+          "welcomeMessage"
         ]
       },
       "CreatePromptDto": {

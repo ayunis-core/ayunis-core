@@ -2571,7 +2571,7 @@ export interface SkillResponseDto {
 
 export interface CreateSkillDto {
   /**
-   * The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.
+   * The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.
    * @minLength 1
    * @maxLength 255
    */
@@ -2586,7 +2586,7 @@ export interface CreateSkillDto {
 
 export interface UpdateSkillDto {
   /**
-   * The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.
+   * The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.
    * @minLength 1
    * @maxLength 255
    */
@@ -3039,89 +3039,6 @@ export interface GlobalUserUsageResponseDto {
   data: GlobalUserUsageDto[];
 }
 
-export interface UserSystemPromptResponseDto {
-  /**
-   * The custom system prompt for the user, or null if not set
-   * @nullable
-   */
-  systemPrompt: string | null;
-}
-
-export interface UpsertUserSystemPromptDto {
-  /**
-   * The custom system prompt for the user
-   * @maxLength 10000
-   */
-  systemPrompt: string;
-}
-
-export interface GeneratePersonalizedSystemPromptDto {
-  /**
-   * The preferred name of the user
-   * @maxLength 200
-   */
-  preferredName: string;
-  /**
-   * The preferred communication style
-   * @maxLength 500
-   */
-  communicationStyle?: string;
-  /**
-   * The work context of the user
-   * @maxLength 1000
-   */
-  workContext?: string;
-}
-
-export interface GeneratePersonalizedSystemPromptResponseDto {
-  /** The generated personalized system prompt */
-  systemPrompt: string;
-  /** A personalized welcome message for the user */
-  welcomeMessage: string;
-}
-
-export interface CreatePromptDto {
-  /**
-   * The title of the prompt
-   * @minLength 1
-   * @maxLength 255
-   */
-  title: string;
-  /** The content of the prompt */
-  content: string;
-}
-
-export interface PromptResponseDto {
-  /** The unique identifier of the prompt */
-  id: string;
-  /** The title of the prompt */
-  title: string;
-  /** The content of the prompt */
-  content: string;
-  /** The unique identifier of the user who owns this prompt */
-  userId: string;
-  /** The date and time when the prompt was created */
-  createdAt: string;
-  /** The date and time when the prompt was last updated */
-  updatedAt: string;
-}
-
-export interface UpdatePromptDto {
-  /**
-   * The title of the prompt
-   * @minLength 1
-   * @maxLength 255
-   */
-  title: string;
-  /** The content of the prompt */
-  content: string;
-}
-
-export interface TranscriptionResponseDto {
-  /** The transcribed text from the audio file */
-  text: string;
-}
-
 /**
  * The distribution mode of the skill template
  */
@@ -3136,7 +3053,7 @@ export const CreateSkillTemplateDtoDistributionMode = {
 
 export interface CreateSkillTemplateDto {
   /**
-   * The name of the skill template. Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.
+   * The name of the skill template. Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.
    * @minLength 1
    * @maxLength 255
    */
@@ -3196,7 +3113,7 @@ export const UpdateSkillTemplateDtoDistributionMode = {
 
 export interface UpdateSkillTemplateDto {
   /**
-   * The name of the skill template. Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.
+   * The name of the skill template. Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.
    * @minLength 1
    * @maxLength 255
    */
@@ -3225,6 +3142,31 @@ export interface UpsertUserSystemPromptDto {
    * @maxLength 10000
    */
   systemPrompt: string;
+}
+
+export interface GeneratePersonalizedSystemPromptDto {
+  /**
+   * The preferred name of the user
+   * @maxLength 200
+   */
+  preferredName: string;
+  /**
+   * The preferred communication style
+   * @maxLength 500
+   */
+  communicationStyle?: string;
+  /**
+   * The work context of the user
+   * @maxLength 1000
+   */
+  workContext?: string;
+}
+
+export interface GeneratePersonalizedSystemPromptResponseDto {
+  /** The generated personalized system prompt */
+  systemPrompt: string;
+  /** A personalized welcome message for the user */
+  welcomeMessage: string;
 }
 
 export interface CreatePromptDto {
