@@ -8,7 +8,6 @@ import {
   Length,
   Matches,
   MaxLength,
-  ValidateIf,
 } from 'class-validator';
 import { DistributionMode } from '../../../domain/distribution-mode.enum';
 
@@ -74,10 +73,6 @@ export class CreateSkillTemplateDto {
       'Whether copied skills should be active by default (only for pre_created_copy mode, defaults to false)',
     example: false,
   })
-  @ValidateIf(
-    (o: CreateSkillTemplateDto) =>
-      o.distributionMode === DistributionMode.PRE_CREATED_COPY,
-  )
   @IsBoolean()
   @IsOptional()
   defaultActive?: boolean;
@@ -87,10 +82,6 @@ export class CreateSkillTemplateDto {
       'Whether copied skills should be pinned by default (only for pre_created_copy mode, defaults to false)',
     example: false,
   })
-  @ValidateIf(
-    (o: CreateSkillTemplateDto) =>
-      o.distributionMode === DistributionMode.PRE_CREATED_COPY,
-  )
   @IsBoolean()
   @IsOptional()
   defaultPinned?: boolean;
