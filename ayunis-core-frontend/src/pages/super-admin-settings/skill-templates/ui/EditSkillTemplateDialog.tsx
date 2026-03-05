@@ -24,7 +24,8 @@ export function EditSkillTemplateDialog({
       shortDescription: '',
       instructions: '',
       distributionMode: 'always_on',
-      isActive: false,
+      defaultActive: false,
+      defaultPinned: false,
     },
   });
 
@@ -35,18 +36,21 @@ export function EditSkillTemplateDialog({
         shortDescription: template.shortDescription,
         instructions: template.instructions,
         distributionMode: template.distributionMode,
-        isActive: template.isActive,
+        defaultActive: template.defaultActive ?? false,
+        defaultPinned: template.defaultPinned ?? false,
       });
     }
   }, [template, form]);
 
-  const { updateSkillTemplate, isUpdating } = useUpdateSkillTemplate(() => {
+  const { updateSkillTemplate } = useUpdateSkillTemplate(() => {
     onOpenChange(false);
   });
 
-  function handleSubmit(data: SkillTemplateFormData) {
+  async function handleSubmit(data: SkillTemplateFormData) {
     if (template) {
-      updateSkillTemplate(template.id, data);
+      await updateSkillTemplate(template.id, data).catch(() => {
+        /* error already handled by mutation onError */
+      });
     }
   }
 
@@ -57,7 +61,7 @@ export function EditSkillTemplateDialog({
       onOpenChange={onOpenChange}
       form={form}
       onSubmit={handleSubmit}
-      isSubmitting={isUpdating}
+      isSubmitting={form.formState.isSubmitting}
       submitLabel={t('form.submit')}
       submittingLabel={t('form.submitting')}
       hasContent={!!template}

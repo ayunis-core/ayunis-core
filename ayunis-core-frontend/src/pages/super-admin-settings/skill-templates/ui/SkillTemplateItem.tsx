@@ -9,35 +9,32 @@ import {
 } from '@/shared/ui/shadcn/item';
 import { Badge } from '@/shared/ui/shadcn/badge';
 import { Button } from '@/shared/ui/shadcn/button';
+import { Switch } from '@/shared/ui/shadcn/switch';
 import { Pencil, Trash2 } from 'lucide-react';
 
 interface SkillTemplateItemProps {
   template: SkillTemplateResponseDto;
   onEdit: () => void;
   onDelete: () => void;
+  onToggleEnabled: () => void;
   isDeleting: boolean;
+  isToggling: boolean;
 }
 
 export function SkillTemplateItem({
   template,
   onEdit,
   onDelete,
+  onToggleEnabled,
   isDeleting,
+  isToggling,
 }: Readonly<SkillTemplateItemProps>) {
   const { t } = useTranslation('super-admin-settings-skills');
 
   return (
     <Item>
       <ItemContent>
-        <ItemTitle>
-          {template.name}
-          <Badge
-            variant={template.isActive ? 'default' : 'secondary'}
-            className="ml-2"
-          >
-            {template.isActive ? t('status.active') : t('status.inactive')}
-          </Badge>
-        </ItemTitle>
+        <ItemTitle>{template.name}</ItemTitle>
         <ItemDescription>{template.shortDescription}</ItemDescription>
       </ItemContent>
       <ItemContent>
@@ -48,6 +45,19 @@ export function SkillTemplateItem({
         </div>
       </ItemContent>
       <ItemActions>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            {template.isActive ? t('status.active') : t('status.inactive')}
+          </span>
+          <Switch
+            checked={template.isActive}
+            onCheckedChange={onToggleEnabled}
+            disabled={isToggling}
+            aria-label={
+              template.isActive ? t('status.active') : t('status.inactive')
+            }
+          />
+        </div>
         <Button variant="ghost" size="icon" onClick={onEdit}>
           <Pencil className="h-4 w-4" />
         </Button>

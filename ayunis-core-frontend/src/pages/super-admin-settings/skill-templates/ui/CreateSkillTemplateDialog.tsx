@@ -20,7 +20,8 @@ export function CreateSkillTemplateDialog({
       shortDescription: '',
       instructions: '',
       distributionMode: 'always_on',
-      isActive: false,
+      defaultActive: false,
+      defaultPinned: false,
     },
   });
 
@@ -35,7 +36,7 @@ export function CreateSkillTemplateDialog({
       open={open}
       onOpenChange={onOpenChange}
       form={form}
-      onSubmit={createSkillTemplate}
+      onSubmit={(data) => createSkillTemplate({ ...data, isActive: true })}
       isSubmitting={isCreating}
       submitLabel={t('form.create')}
       submittingLabel={t('form.creating')}

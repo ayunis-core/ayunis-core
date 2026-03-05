@@ -2662,6 +2662,10 @@ export interface CreateSkillTemplateDto {
   distributionMode: CreateSkillTemplateDtoDistributionMode;
   /** Whether the skill template is active (defaults to false) */
   isActive?: boolean;
+  /** Whether copied skills should be active by default (only for pre_created_copy mode, defaults to false) */
+  defaultActive?: boolean;
+  /** Whether copied skills should be pinned by default (only for pre_created_copy mode, defaults to false) */
+  defaultPinned?: boolean;
 }
 
 /**
@@ -2689,6 +2693,16 @@ export interface SkillTemplateResponseDto {
   distributionMode: SkillTemplateResponseDtoDistributionMode;
   /** Whether the skill template is active */
   isActive: boolean;
+  /**
+   * Whether copied skills are active by default (null for always_on templates)
+   * @nullable
+   */
+  defaultActive: boolean | null;
+  /**
+   * Whether copied skills are pinned by default (null for always_on templates)
+   * @nullable
+   */
+  defaultPinned: boolean | null;
   /** The date the skill template was created */
   createdAt: string;
   /** The date the skill template was last updated */
@@ -2722,6 +2736,10 @@ export interface UpdateSkillTemplateDto {
   distributionMode?: UpdateSkillTemplateDtoDistributionMode;
   /** Whether the skill template is active */
   isActive?: boolean;
+  /** Whether copied skills should be active by default (only for pre_created_copy mode) */
+  defaultActive?: boolean;
+  /** Whether copied skills should be pinned by default (only for pre_created_copy mode) */
+  defaultPinned?: boolean;
 }
 
 /**
