@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
@@ -10,6 +11,13 @@ import { FindSkillByNameQuery } from 'src/domain/skills/application/use-cases/fi
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
+import { FindAlwaysOnTemplateByNameUseCase } from 'src/domain/skill-templates/application/use-cases/find-always-on-template-by-name/find-always-on-template-by-name.use-case';
+import { FindAlwaysOnTemplateByNameQuery } from 'src/domain/skill-templates/application/use-cases/find-always-on-template-by-name/find-always-on-template-by-name.query';
+import {
+  parseSkillSlug,
+  SYSTEM_PREFIX,
+  USER_PREFIX,
+} from 'src/common/util/skill-slug';
 
 @Injectable()
 export class ActivateSkillToolHandler extends ToolExecutionHandler {
@@ -19,6 +27,7 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
     private readonly findSkillByNameUseCase: FindSkillByNameUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly skillActivationService: SkillActivationService,
+    private readonly findAlwaysOnTemplateByNameUseCase: FindAlwaysOnTemplateByNameUseCase,
   ) {
     super();
   }
@@ -34,34 +43,37 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
 
     try {
       const validatedInput = tool.validateParams(input);
+      const fullSlug = validatedInput.skill_slug;
 
-      // Find the skill by name
-      const skill = await this.findSkillByNameUseCase.execute(
-        new FindSkillByNameQuery(validatedInput.skill_slug),
-      );
-
-      if (!skill) {
-        this.logger.error('Skill not found', validatedInput.skill_slug);
+      const originalName = tool.resolveOriginalName(fullSlug);
+      if (!originalName) {
         throw new ToolExecutionFailedError({
           toolName: tool.name,
-          message: `Skill "${validatedInput.skill_slug}" not found`,
+          message: `Could not resolve slug "${fullSlug}" to a skill name`,
           exposeToLLM: true,
         });
       }
 
-      // Get the thread
-      const threadResult = await this.findThreadUseCase.execute(
-        new FindThreadQuery(threadId),
-      );
+      const { prefix } = parseSkillSlug(fullSlug);
 
-      // Delegate core activation logic to SkillActivationService
-      const { instructions } =
-        await this.skillActivationService.activateOnThread(
-          skill.id,
-          threadResult.thread,
-        );
-
-      return instructions;
+      switch (prefix) {
+        case SYSTEM_PREFIX:
+          return await this.activateSystemTemplate(tool.name, originalName);
+        case USER_PREFIX:
+          return await this.activateUserSkill(
+            tool.name,
+            originalName,
+            threadId,
+          );
+        default: {
+          const _exhaustive: never = prefix;
+          throw new ToolExecutionFailedError({
+            toolName: tool.name,
+            message: `Unknown skill prefix: "${String(_exhaustive)}"`,
+            exposeToLLM: true,
+          });
+        }
+      }
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
@@ -73,5 +85,53 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
         exposeToLLM: true,
       });
     }
+  }
+
+  private async activateSystemTemplate(
+    toolName: string,
+    templateName: string,
+  ): Promise<string> {
+    const template = await this.findAlwaysOnTemplateByNameUseCase.execute(
+      new FindAlwaysOnTemplateByNameQuery(templateName),
+    );
+
+    if (!template) {
+      throw new ToolExecutionFailedError({
+        toolName,
+        message: `System template "${templateName}" not found`,
+        exposeToLLM: true,
+      });
+    }
+
+    return template.instructions;
+  }
+
+  private async activateUserSkill(
+    toolName: string,
+    skillName: string,
+    threadId: UUID,
+  ): Promise<string> {
+    const skill = await this.findSkillByNameUseCase.execute(
+      new FindSkillByNameQuery(skillName),
+    );
+
+    if (!skill) {
+      throw new ToolExecutionFailedError({
+        toolName,
+        message: `Skill "${skillName}" not found`,
+        exposeToLLM: true,
+      });
+    }
+
+    const threadResult = await this.findThreadUseCase.execute(
+      new FindThreadQuery(threadId),
+    );
+
+    const { instructions } = await this.skillActivationService.activateOnThread(
+      skill.id,
+      threadResult.thread,
+    );
+
+    return instructions;
   }
 }

@@ -6,8 +6,11 @@ import { ActivateSkillToolHandler } from './activate-skill-tool.handler';
 import { FindSkillByNameUseCase } from 'src/domain/skills/application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
-import type { ActivateSkillTool } from '../../domain/tools/activate-skill-tool.entity';
+import { FindAlwaysOnTemplateByNameUseCase } from 'src/domain/skill-templates/application/use-cases/find-always-on-template-by-name/find-always-on-template-by-name.use-case';
+import { ActivateSkillTool } from '../../domain/tools/activate-skill-tool.entity';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
+import { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
+import { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ToolExecutionFailedError } from '../tools.errors';
 
@@ -16,6 +19,7 @@ describe('ActivateSkillToolHandler', () => {
   let mockFindSkillByName: jest.Mocked<FindSkillByNameUseCase>;
   let mockFindThread: jest.Mocked<FindThreadUseCase>;
   let mockSkillActivationService: jest.Mocked<SkillActivationService>;
+  let mockFindAlwaysOnTemplateByName: jest.Mocked<FindAlwaysOnTemplateByNameUseCase>;
 
   const mockThreadId = randomUUID();
   const mockSkillId = randomUUID();
@@ -23,13 +27,16 @@ describe('ActivateSkillToolHandler', () => {
   beforeAll(async () => {
     mockFindSkillByName = {
       execute: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<FindSkillByNameUseCase>;
     mockFindThread = {
       execute: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<FindThreadUseCase>;
     mockSkillActivationService = {
       activateOnThread: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<SkillActivationService>;
+    mockFindAlwaysOnTemplateByName = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<FindAlwaysOnTemplateByNameUseCase>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -39,6 +46,10 @@ describe('ActivateSkillToolHandler', () => {
         {
           provide: SkillActivationService,
           useValue: mockSkillActivationService,
+        },
+        {
+          provide: FindAlwaysOnTemplateByNameUseCase,
+          useValue: mockFindAlwaysOnTemplateByName,
         },
       ],
     }).compile();
@@ -68,111 +79,196 @@ describe('ActivateSkillToolHandler', () => {
     });
   }
 
-  function createMockTool(skillName: string) {
-    return {
-      name: 'activate_skill',
-      validateParams: jest.fn().mockReturnValue({ skill_slug: skillName }),
-    } as unknown as ActivateSkillTool;
+  function createMockTemplate(
+    overrides?: Partial<ConstructorParameters<typeof SkillTemplate>[0]>,
+  ) {
+    return new SkillTemplate({
+      name: 'German Administrative Law',
+      shortDescription: 'Administrative law guidance',
+      instructions: 'You are a German administrative law expert.',
+      distributionMode: DistributionMode.ALWAYS_ON,
+      isActive: true,
+      ...overrides,
+    });
   }
 
-  it('should delegate activation to SkillActivationService with the skill ID and thread', async () => {
-    const skill = createMockSkill();
-    const thread = new Thread({
-      userId: randomUUID(),
-      messages: [],
-      sourceAssignments: [],
-    });
+  function createToolWithSlugMap(slugMap: Map<string, string>) {
+    return new ActivateSkillTool(slugMap);
+  }
 
-    mockFindSkillByName.execute.mockResolvedValue(skill);
-    mockFindThread.execute.mockResolvedValue({
-      thread,
-      isLongChat: false,
-    });
-    mockSkillActivationService.activateOnThread.mockResolvedValue({
-      instructions: 'You are a budget analysis assistant.',
-      skillName: 'Budget Analysis',
-    });
+  describe('user-prefixed slugs', () => {
+    it('should route to existing skill flow and return instructions', async () => {
+      const skill = createMockSkill();
+      const thread = new Thread({
+        userId: randomUUID(),
+        messages: [],
+        sourceAssignments: [],
+      });
+      const instructions = 'You are a budget analysis assistant.';
 
-    const tool = createMockTool('Budget Analysis');
+      const slugMap = new Map([['user__budget-analysis', 'Budget Analysis']]);
+      const tool = createToolWithSlugMap(slugMap);
 
-    await handler.execute({
-      tool,
-      input: { skill_slug: 'Budget Analysis' },
-      context: { threadId: mockThreadId, orgId: randomUUID() },
-    });
+      mockFindSkillByName.execute.mockResolvedValue(skill);
+      mockFindThread.execute.mockResolvedValue({
+        thread,
+        isLongChat: false,
+      });
+      mockSkillActivationService.activateOnThread.mockResolvedValue({
+        instructions,
+        skillName: 'Budget Analysis',
+      });
 
-    expect(mockSkillActivationService.activateOnThread).toHaveBeenCalledWith(
-      skill.id,
-      thread,
-    );
-  });
-
-  it('should throw ToolExecutionFailedError when skill is not found', async () => {
-    mockFindSkillByName.execute.mockResolvedValue(null as any);
-    const tool = createMockTool('Nonexistent Skill');
-
-    await expect(
-      handler.execute({
+      const result = await handler.execute({
         tool,
-        input: { skill_slug: 'Nonexistent Skill' },
+        input: { skill_slug: 'user__budget-analysis' },
         context: { threadId: mockThreadId, orgId: randomUUID() },
-      }),
-    ).rejects.toThrow(ToolExecutionFailedError);
+      });
+
+      expect(result).toBe(instructions);
+      expect(mockFindSkillByName.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Budget Analysis' }),
+      );
+      expect(mockSkillActivationService.activateOnThread).toHaveBeenCalledWith(
+        skill.id,
+        thread,
+      );
+      expect(mockFindAlwaysOnTemplateByName.execute).not.toHaveBeenCalled();
+    });
+
+    it('should throw ToolExecutionFailedError when user skill is not found', async () => {
+      const slugMap = new Map([
+        ['user__nonexistent-skill', 'Nonexistent Skill'],
+      ]);
+      const tool = createToolWithSlugMap(slugMap);
+
+      mockFindSkillByName.execute.mockResolvedValue(null as unknown as Skill);
+
+      await expect(
+        handler.execute({
+          tool,
+          input: { skill_slug: 'user__nonexistent-skill' },
+          context: { threadId: mockThreadId, orgId: randomUUID() },
+        }),
+      ).rejects.toThrow(ToolExecutionFailedError);
+    });
   });
 
-  it('should return the skill instructions from SkillActivationService', async () => {
-    const instructions = 'You are a zoning compliance assistant.';
-    const skill = createMockSkill({ instructions });
-    const thread = new Thread({
-      userId: randomUUID(),
-      messages: [],
-    });
+  describe('system-prefixed slugs', () => {
+    it('should route to template lookup and return instructions', async () => {
+      const template = createMockTemplate();
+      const slugMap = new Map([
+        ['system__german-administrative-law', 'German Administrative Law'],
+      ]);
+      const tool = createToolWithSlugMap(slugMap);
 
-    mockFindSkillByName.execute.mockResolvedValue(skill);
-    mockFindThread.execute.mockResolvedValue({
-      thread,
-      isLongChat: false,
-    });
-    mockSkillActivationService.activateOnThread.mockResolvedValue({
-      instructions,
-      skillName: 'Budget Analysis',
-    });
+      mockFindAlwaysOnTemplateByName.execute.mockResolvedValue(template);
 
-    const tool = createMockTool('Budget Analysis');
-
-    const result = await handler.execute({
-      tool,
-      input: { skill_slug: 'Budget Analysis' },
-      context: { threadId: mockThreadId, orgId: randomUUID() },
-    });
-
-    expect(result).toBe(instructions);
-  });
-
-  it('should wrap unexpected errors from SkillActivationService as ToolExecutionFailedError', async () => {
-    const skill = createMockSkill();
-    const thread = new Thread({
-      userId: randomUUID(),
-      messages: [],
-    });
-
-    mockFindSkillByName.execute.mockResolvedValue(skill);
-    mockFindThread.execute.mockResolvedValue({
-      thread,
-      isLongChat: false,
-    });
-    mockSkillActivationService.activateOnThread.mockRejectedValue(
-      new Error('Database connection lost'),
-    );
-
-    const tool = createMockTool('Budget Analysis');
-
-    await expect(
-      handler.execute({
+      const result = await handler.execute({
         tool,
-        input: { skill_slug: 'Budget Analysis' },
+        input: { skill_slug: 'system__german-administrative-law' },
         context: { threadId: mockThreadId, orgId: randomUUID() },
-      }),
-    ).rejects.toThrow(ToolExecutionFailedError);
+      });
+
+      expect(result).toBe('You are a German administrative law expert.');
+      expect(mockFindAlwaysOnTemplateByName.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'German Administrative Law' }),
+      );
+      expect(mockFindSkillByName.execute).not.toHaveBeenCalled();
+      expect(
+        mockSkillActivationService.activateOnThread,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should throw ToolExecutionFailedError when system template is not found', async () => {
+      const slugMap = new Map([
+        ['system__nonexistent-template', 'Nonexistent Template'],
+      ]);
+      const tool = createToolWithSlugMap(slugMap);
+
+      mockFindAlwaysOnTemplateByName.execute.mockResolvedValue(null);
+
+      await expect(
+        handler.execute({
+          tool,
+          input: { skill_slug: 'system__nonexistent-template' },
+          context: { threadId: mockThreadId, orgId: randomUUID() },
+        }),
+      ).rejects.toThrow(ToolExecutionFailedError);
+    });
+  });
+
+  describe('unresolvable slugs', () => {
+    it('should throw ToolExecutionFailedError when slug is not in the map', async () => {
+      const slugMap = new Map([['user__budget-analysis', 'Budget Analysis']]);
+      const tool = createToolWithSlugMap(slugMap);
+
+      // Pass a slug that's not in the enum — bypass validateParams by mocking
+      const mockTool = {
+        ...tool,
+        name: 'activate_skill',
+        validateParams: jest
+          .fn()
+          .mockReturnValue({ skill_slug: 'user__unknown-slug' }),
+        resolveOriginalName: tool.resolveOriginalName.bind(tool),
+      } as unknown as ActivateSkillTool;
+
+      await expect(
+        handler.execute({
+          tool: mockTool,
+          input: { skill_slug: 'user__unknown-slug' },
+          context: { threadId: mockThreadId, orgId: randomUUID() },
+        }),
+      ).rejects.toThrow(ToolExecutionFailedError);
+    });
+  });
+
+  describe('error wrapping', () => {
+    it('should wrap unexpected errors from FindAlwaysOnTemplateByNameUseCase as ToolExecutionFailedError', async () => {
+      const slugMap = new Map([
+        ['system__german-administrative-law', 'German Administrative Law'],
+      ]);
+      const tool = createToolWithSlugMap(slugMap);
+
+      mockFindAlwaysOnTemplateByName.execute.mockRejectedValue(
+        new Error('Database connection lost'),
+      );
+
+      await expect(
+        handler.execute({
+          tool,
+          input: { skill_slug: 'system__german-administrative-law' },
+          context: { threadId: mockThreadId, orgId: randomUUID() },
+        }),
+      ).rejects.toThrow(ToolExecutionFailedError);
+    });
+
+    it('should wrap unexpected errors from SkillActivationService as ToolExecutionFailedError', async () => {
+      const skill = createMockSkill();
+      const thread = new Thread({
+        userId: randomUUID(),
+        messages: [],
+      });
+
+      const slugMap = new Map([['user__budget-analysis', 'Budget Analysis']]);
+      const tool = createToolWithSlugMap(slugMap);
+
+      mockFindSkillByName.execute.mockResolvedValue(skill);
+      mockFindThread.execute.mockResolvedValue({
+        thread,
+        isLongChat: false,
+      });
+      mockSkillActivationService.activateOnThread.mockRejectedValue(
+        new Error('Database connection lost'),
+      );
+
+      await expect(
+        handler.execute({
+          tool,
+          input: { skill_slug: 'user__budget-analysis' },
+          context: { threadId: mockThreadId, orgId: randomUUID() },
+        }),
+      ).rejects.toThrow(ToolExecutionFailedError);
+    });
   });
 });
