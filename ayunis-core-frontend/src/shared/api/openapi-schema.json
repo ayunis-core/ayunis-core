@@ -12245,6 +12245,16 @@
             "type": "boolean",
             "description": "Whether the skill template is active (defaults to false)",
             "example": false
+          },
+          "defaultActive": {
+            "type": "boolean",
+            "description": "Whether copied skills should be active by default (only for pre_created_copy mode, defaults to false)",
+            "example": false
+          },
+          "defaultPinned": {
+            "type": "boolean",
+            "description": "Whether copied skills should be pinned by default (only for pre_created_copy mode, defaults to false)",
+            "example": false
           }
         },
         "required": [
@@ -12292,6 +12302,18 @@
             "description": "Whether the skill template is active",
             "example": false
           },
+          "defaultActive": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether copied skills are active by default (null for always_on templates)",
+            "example": null
+          },
+          "defaultPinned": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether copied skills are pinned by default (null for always_on templates)",
+            "example": null
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",
@@ -12310,6 +12332,8 @@
           "instructions",
           "distributionMode",
           "isActive",
+          "defaultActive",
+          "defaultPinned",
           "createdAt",
           "updatedAt"
         ]
@@ -12347,6 +12371,16 @@
             "type": "boolean",
             "description": "Whether the skill template is active",
             "example": true
+          },
+          "defaultActive": {
+            "type": "boolean",
+            "description": "Whether copied skills should be active by default (only for pre_created_copy mode)",
+            "example": false
+          },
+          "defaultPinned": {
+            "type": "boolean",
+            "description": "Whether copied skills should be pinned by default (only for pre_created_copy mode)",
+            "example": false
           }
         }
       },

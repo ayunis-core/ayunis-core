@@ -48,6 +48,24 @@ export class SkillTemplateResponseDto {
   isActive: boolean;
 
   @ApiProperty({
+    type: 'boolean',
+    nullable: true,
+    description:
+      'Whether copied skills are active by default (null for always_on templates)',
+    example: null,
+  })
+  defaultActive: boolean | null;
+
+  @ApiProperty({
+    type: 'boolean',
+    nullable: true,
+    description:
+      'Whether copied skills are pinned by default (null for always_on templates)',
+    example: null,
+  })
+  defaultPinned: boolean | null;
+
+  @ApiProperty({
     type: 'string',
     format: 'date-time',
     description: 'The date the skill template was created',

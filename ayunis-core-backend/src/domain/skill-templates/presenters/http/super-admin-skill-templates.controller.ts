@@ -91,6 +91,8 @@ export class SuperAdminSkillTemplatesController {
         instructions: dto.instructions,
         distributionMode: dto.distributionMode,
         isActive: dto.isActive,
+        defaultActive: dto.defaultActive,
+        defaultPinned: dto.defaultPinned,
       });
 
       const template = await this.createSkillTemplateUseCase.execute(command);
@@ -219,6 +221,8 @@ export class SuperAdminSkillTemplatesController {
         instructions: dto.instructions,
         distributionMode: dto.distributionMode,
         isActive: dto.isActive,
+        defaultActive: dto.defaultActive,
+        defaultPinned: dto.defaultPinned,
       });
 
       const template = await this.updateSkillTemplateUseCase.execute(command);
