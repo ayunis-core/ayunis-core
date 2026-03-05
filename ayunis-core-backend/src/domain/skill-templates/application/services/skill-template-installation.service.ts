@@ -33,13 +33,18 @@ export class SkillTemplateInstallationService {
             shortDescription: template.shortDescription,
             instructions: template.instructions,
             userId,
+            isActive: template.defaultActive,
+            isPinned: template.defaultPinned,
           }),
         );
 
-        this.logger.debug(
-          'Pre-created skill template installed and activated',
-          { templateId: template.id, skillId: created.id, userId },
-        );
+        this.logger.debug('Pre-created skill template installed', {
+          templateId: template.id,
+          skillId: created.id,
+          userId,
+          isActive: template.defaultActive,
+          isPinned: template.defaultPinned,
+        });
         successCount++;
       } catch (error) {
         this.logger.error(
