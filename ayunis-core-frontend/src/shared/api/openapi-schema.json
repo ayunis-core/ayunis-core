@@ -7320,6 +7320,209 @@
         ]
       }
     },
+    "/super-admin/skill-templates": {
+      "post": {
+        "description": "Create a new skill template. Only accessible to super admins.",
+        "operationId": "SuperAdminSkillTemplatesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSkillTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created skill template",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "409": {
+            "description": "Skill template with this name already exists"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a new skill template",
+        "tags": [
+          "Super Admin Skill Templates"
+        ]
+      },
+      "get": {
+        "description": "Retrieve all skill templates. Only accessible to super admins.",
+        "operationId": "SuperAdminSkillTemplatesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved skill templates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SkillTemplateResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all skill templates",
+        "tags": [
+          "Super Admin Skill Templates"
+        ]
+      }
+    },
+    "/super-admin/skill-templates/{id}": {
+      "get": {
+        "description": "Retrieve a specific skill template by its ID. Only accessible to super admins.",
+        "operationId": "SuperAdminSkillTemplatesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Skill template ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved skill template",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Skill template not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get a skill template by ID",
+        "tags": [
+          "Super Admin Skill Templates"
+        ]
+      },
+      "patch": {
+        "description": "Partially update an existing skill template. Only accessible to super admins.",
+        "operationId": "SuperAdminSkillTemplatesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Skill template ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSkillTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated skill template",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Skill template not found"
+          },
+          "409": {
+            "description": "Skill template with this name already exists"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update a skill template",
+        "tags": [
+          "Super Admin Skill Templates"
+        ]
+      },
+      "delete": {
+        "description": "Delete a skill template. Only accessible to super admins.",
+        "operationId": "SuperAdminSkillTemplatesController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Skill template ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted skill template"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Skill template not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete a skill template",
+        "tags": [
+          "Super Admin Skill Templates"
+        ]
+      }
+    },
     "/auth/login": {
       "post": {
         "description": "Authenticate user with email and password. Sets authentication cookies on successful login.",
@@ -12994,6 +13197,144 @@
         "required": [
           "text"
         ]
+      },
+      "CreateSkillTemplateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the skill template. Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.",
+            "example": "Legal Guidelines",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "A short description of the skill template",
+            "example": "Legal compliance instructions for all responses"
+          },
+          "instructions": {
+            "type": "string",
+            "description": "The instructions for the skill template",
+            "example": "Always follow legal guidelines when responding to user queries."
+          },
+          "distributionMode": {
+            "type": "string",
+            "description": "The distribution mode of the skill template",
+            "enum": [
+              "always_on",
+              "pre_created_copy"
+            ],
+            "example": "always_on"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the skill template is active (defaults to false)",
+            "example": false
+          }
+        },
+        "required": [
+          "name",
+          "shortDescription",
+          "instructions",
+          "distributionMode"
+        ]
+      },
+      "SkillTemplateResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The unique identifier of the skill template",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the skill template",
+            "example": "Legal Guidelines"
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "A short description of the skill template",
+            "example": "Legal compliance instructions for all responses"
+          },
+          "instructions": {
+            "type": "string",
+            "description": "The instructions for the skill template",
+            "example": "Always follow legal guidelines when responding to user queries."
+          },
+          "distributionMode": {
+            "type": "string",
+            "enum": [
+              "always_on",
+              "pre_created_copy"
+            ],
+            "description": "The distribution mode of the skill template",
+            "example": "always_on"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the skill template is active",
+            "example": false
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the skill template was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the skill template was last updated"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "shortDescription",
+          "instructions",
+          "distributionMode",
+          "isActive",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateSkillTemplateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the skill template. Only letters, numbers, emojis, hyphens, and spaces allowed. Must start and end with a letter, number, or emoji.",
+            "example": "Legal Guidelines",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "A short description of the skill template",
+            "example": "Legal compliance instructions for all responses"
+          },
+          "instructions": {
+            "type": "string",
+            "description": "The instructions for the skill template",
+            "example": "Always follow legal guidelines when responding to user queries."
+          },
+          "distributionMode": {
+            "type": "string",
+            "description": "The distribution mode of the skill template",
+            "enum": [
+              "always_on",
+              "pre_created_copy"
+            ],
+            "example": "always_on"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the skill template is active",
+            "example": true
+          }
+        }
       },
       "LoginDto": {
         "type": "object",
