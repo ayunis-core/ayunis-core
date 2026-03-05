@@ -9,6 +9,7 @@ import { DeleteSkillTemplateUseCase } from './application/use-cases/delete-skill
 import { FindAllSkillTemplatesUseCase } from './application/use-cases/find-all-skill-templates/find-all-skill-templates.use-case';
 import { FindOneSkillTemplateUseCase } from './application/use-cases/find-one-skill-template/find-one-skill-template.use-case';
 import { FindActiveAlwaysOnTemplatesUseCase } from './application/use-cases/find-active-always-on-templates/find-active-always-on-templates.use-case';
+import { FindAlwaysOnTemplateByNameUseCase } from './application/use-cases/find-always-on-template-by-name/find-always-on-template-by-name.use-case';
 import { FindActivePreCreatedTemplatesUseCase } from './application/use-cases/find-active-pre-created-templates/find-active-pre-created-templates.use-case';
 import { SkillTemplateInstallationService } from './application/services/skill-template-installation.service';
 import { SkillTemplateUserCreatedListener } from './application/listeners/user-created.listener';
@@ -29,11 +30,16 @@ import { SkillTemplateResponseMapper } from './presenters/http/mappers/skill-tem
     FindAllSkillTemplatesUseCase,
     FindOneSkillTemplateUseCase,
     FindActiveAlwaysOnTemplatesUseCase,
+    FindAlwaysOnTemplateByNameUseCase,
     FindActivePreCreatedTemplatesUseCase,
     SkillTemplateInstallationService,
     SkillTemplateUserCreatedListener,
     SkillTemplateResponseMapper,
   ],
-  exports: [FindAllSkillTemplatesUseCase, FindActiveAlwaysOnTemplatesUseCase],
+  exports: [
+    FindAllSkillTemplatesUseCase,
+    FindActiveAlwaysOnTemplatesUseCase,
+    FindAlwaysOnTemplateByNameUseCase,
+  ],
 })
 export class SkillTemplatesModule {}
