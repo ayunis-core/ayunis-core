@@ -1,0 +1,53 @@
+{
+  "page": {
+    "title": "Skill Templates",
+    "description": "Manage skill templates that are distributed to all users across all organizations.",
+    "empty": "No skill templates",
+    "emptyDescription": "Create your first skill template to get started.",
+    "createButton": "Create Template"
+  },
+  "form": {
+    "createTitle": "Create Skill Template",
+    "editTitle": "Edit Skill Template",
+    "name": "Name",
+    "namePlaceholder": "e.g., Customer Service Guidelines",
+    "shortDescription": "Short Description",
+    "shortDescriptionPlaceholder": "A brief description of what this template does",
+    "instructions": "Instructions",
+    "instructionsPlaceholder": "Enter the prompt instructions for this skill template...",
+    "distributionMode": "Distribution Mode",
+    "isActive": "Active",
+    "isActiveDescription": "Active templates are distributed to users. Inactive templates are drafts.",
+    "submit": "Save",
+    "submitting": "Saving...",
+    "create": "Create",
+    "creating": "Creating...",
+    "cancel": "Cancel"
+  },
+  "distributionMode": {
+    "always_on": "Always On",
+    "pre_created_copy": "Pre-created Copy",
+    "always_on_description": "Instructions injected into every run's system prompt",
+    "pre_created_copy_description": "Cloned into each new user's skills on account creation"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "toast": {
+    "createSuccess": "Skill template created successfully",
+    "createError": "Failed to create skill template",
+    "updateSuccess": "Skill template updated successfully",
+    "updateError": "Failed to update skill template",
+    "deleteSuccess": "Skill template deleted successfully",
+    "deleteError": "Failed to delete skill template",
+    "duplicateName": "A skill template with this name already exists",
+    "notFound": "Skill template not found"
+  },
+  "delete": {
+    "title": "Delete Skill Template",
+    "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+    "confirm": "Delete",
+    "cancel": "Cancel"
+  }
+}
