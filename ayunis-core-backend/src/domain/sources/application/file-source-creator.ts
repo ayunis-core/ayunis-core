@@ -7,6 +7,7 @@ import {
   detectFileType,
   getCanonicalMimeType,
   isDocumentFile,
+  isPlainTextFile,
   isSpreadsheetFile,
   isCSVFile,
 } from 'src/common/util/file-type';
@@ -26,7 +27,7 @@ export async function createSourcesFromFile(
 ): Promise<Source[]> {
   const detectedType = detectFileType(file.mimetype, file.originalname);
 
-  if (isDocumentFile(detectedType)) {
+  if (isDocumentFile(detectedType) || isPlainTextFile(detectedType)) {
     return [await createDocumentSource(file, detectedType, deps)];
   }
 

@@ -314,7 +314,7 @@ export class AgentsController {
   @ApiResponse({
     status: 400,
     description:
-      'Invalid or unsupported file type. Supported types: PDF, DOCX, PPTX, CSV, XLSX, XLS',
+      'Invalid or unsupported file type. Supported types: PDF, DOCX, PPTX, TXT, CSV, XLSX, XLS',
   })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @UseInterceptors(
@@ -370,6 +370,7 @@ export class AgentsController {
             'PDF',
             'DOCX',
             'PPTX',
+            'TXT',
             'CSV',
             'XLSX',
             'XLS',

@@ -38,6 +38,7 @@ import {
 import {
   detectFileType,
   isDocumentFile,
+  isPlainTextFile,
   getCanonicalMimeType,
 } from 'src/common/util/file-type';
 
@@ -282,7 +283,7 @@ export class KnowledgeBasesController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'The file to upload (PDF, DOCX, PPTX)',
+          description: 'The file to upload (PDF, DOCX, PPTX, TXT)',
         },
       },
       required: ['file'],
@@ -332,10 +333,10 @@ export class KnowledgeBasesController {
     });
 
     const detectedType = detectFileType(file.mimetype, file.originalname);
-    if (!isDocumentFile(detectedType)) {
+    if (!isDocumentFile(detectedType) && !isPlainTextFile(detectedType)) {
       await this.cleanupTempFile(file.path);
       throw new BadRequestException(
-        `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, and PPTX files.`,
+        `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, and TXT files.`,
       );
     }
 

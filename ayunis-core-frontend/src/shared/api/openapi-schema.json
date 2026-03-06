@@ -3467,7 +3467,7 @@
             "description": "The file source has been successfully added to the agent"
           },
           "400": {
-            "description": "Invalid or unsupported file type. Supported types: PDF, DOCX, PPTX, CSV, XLSX, XLS"
+            "description": "Invalid or unsupported file type. Supported types: PDF, DOCX, PPTX, TXT, CSV, XLSX, XLS"
           },
           "404": {
             "description": "Agent not found"
@@ -5018,7 +5018,7 @@
                   "file": {
                     "type": "string",
                     "format": "binary",
-                    "description": "The file to upload (PDF, DOCX, PPTX)"
+                    "description": "The file to upload (PDF, DOCX, PPTX, TXT)"
                   }
                 },
                 "required": [
@@ -10211,7 +10211,8 @@
             "enum": [
               "pdf",
               "docx",
-              "pptx"
+              "pptx",
+              "txt"
             ]
           }
         },

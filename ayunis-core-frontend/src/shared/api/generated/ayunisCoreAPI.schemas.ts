@@ -1461,6 +1461,7 @@ export const FileSourceResponseDtoFileType = {
   pdf: 'pdf',
   docx: 'docx',
   pptx: 'pptx',
+  txt: 'txt',
 } as const;
 
 export interface FileSourceResponseDto {
@@ -3428,7 +3429,7 @@ offset?: number;
 };
 
 export type KnowledgeBasesControllerAddDocumentBody = {
-  /** The file to upload (PDF, DOCX, PPTX) */
+  /** The file to upload (PDF, DOCX, PPTX, TXT) */
   file: Blob;
 };
 

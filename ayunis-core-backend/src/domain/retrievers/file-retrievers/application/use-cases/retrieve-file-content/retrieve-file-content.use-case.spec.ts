@@ -57,6 +57,45 @@ describe('ProcessFileUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
+  it('should return UTF-8 text content directly for TXT files', async () => {
+    const textContent = 'Hello, this is plain text content.\nLine two.';
+    const command = new RetrieveFileContentCommand({
+      fileData: Buffer.from(textContent, 'utf8'),
+      fileName: 'notes.txt',
+      fileType: 'text/plain',
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(result).toBeInstanceOf(FileRetrieverResult);
+    expect(result.pages).toHaveLength(1);
+    expect(result.pages[0]).toBeInstanceOf(FileRetrieverPage);
+    expect(result.pages[0].text).toBe(textContent);
+    expect(result.pages[0].number).toBe(1);
+    expect(mockHandler.processFile).not.toHaveBeenCalled();
+  });
+
+  it('should strip UTF-8 BOM from TXT files', async () => {
+    const textContent = 'Hello, BOM test content.';
+    const bomBuffer = Buffer.concat([
+      Buffer.from([0xef, 0xbb, 0xbf]),
+      Buffer.from(textContent, 'utf8'),
+    ]);
+    const command = new RetrieveFileContentCommand({
+      fileData: bomBuffer,
+      fileName: 'bom-file.txt',
+      fileType: 'text/plain',
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(result).toBeInstanceOf(FileRetrieverResult);
+    expect(result.pages).toHaveLength(1);
+    expect(result.pages[0].text).toBe(textContent);
+    expect(result.pages[0].text).not.toMatch(/^\uFEFF/);
+    expect(mockHandler.processFile).not.toHaveBeenCalled();
+  });
+
   it('should process file successfully', async () => {
     const command = new RetrieveFileContentCommand({
       fileData: Buffer.from('test file content'),

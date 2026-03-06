@@ -5,7 +5,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
-import { FileRetrieverResult } from '../../../domain/file-retriever-result.entity';
+import {
+  FileRetrieverPage,
+  FileRetrieverResult,
+} from '../../../domain/file-retriever-result.entity';
 import { RetrieveFileContentCommand } from './retrieve-file-content.command';
 import { FileRetrieverRegistry } from '../../file-retriever-handler.registry';
 import { File } from '../../../domain/file.entity';
@@ -58,6 +61,10 @@ export class RetrieveFileContentUseCase {
             FileRetrieverType.NPM_PDF_PARSE,
           );
         }
+      } else if (fileType === 'txt') {
+        // TXT: Read directly as UTF-8, no external service needed
+        const text = command.fileData.toString('utf8').replace(/^\uFEFF/, '');
+        return new FileRetrieverResult([new FileRetrieverPage(text, 1)]);
       } else if (fileType === 'docx' || fileType === 'pptx') {
         // DOCX/PPTX: Require Docling
         if (this.config.docling.serviceUrl) {

@@ -12,6 +12,7 @@ export enum FileType {
   PDF = 'pdf',
   DOCX = 'docx',
   PPTX = 'pptx',
+  TXT = 'txt',
 }
 
 export enum DataType {
