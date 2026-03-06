@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Post,
   Get,
@@ -54,6 +55,7 @@ import { UpdateSkillDto } from './dto/update-skill.dto';
 import { InstallSkillFromMarketplaceDto } from './dto/install-skill-from-marketplace.dto';
 import { SkillResponseDto } from './dto/skill-response.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
+import { InvalidSkillNameError } from '../../domain/skill.entity';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
 
@@ -130,20 +132,27 @@ export class SkillsController {
 
     this.logger.log('create', { userId, name: dto.name });
 
-    const skill = await this.createSkillUseCase.execute(
-      new CreateSkillCommand({
-        name: dto.name,
-        shortDescription: dto.shortDescription,
-        instructions: dto.instructions,
-        isActive,
-      }),
-    );
+    try {
+      const skill = await this.createSkillUseCase.execute(
+        new CreateSkillCommand({
+          name: dto.name,
+          shortDescription: dto.shortDescription,
+          instructions: dto.instructions,
+          isActive,
+        }),
+      );
 
-    return this.skillDtoMapper.toDto(skill, {
-      isActive,
-      isShared: false,
-      isPinned: false,
-    });
+      return this.skillDtoMapper.toDto(skill, {
+        isActive,
+        isShared: false,
+        isPinned: false,
+      });
+    } catch (error) {
+      if (error instanceof InvalidSkillNameError) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
   }
 
   @Get()
@@ -230,18 +239,25 @@ export class SkillsController {
   ): Promise<SkillResponseDto> {
     this.logger.log('update', { id, userId, name: dto.name });
 
-    const skill = await this.updateSkillUseCase.execute(
-      new UpdateSkillCommand({
-        skillId: id,
-        name: dto.name,
-        shortDescription: dto.shortDescription,
-        instructions: dto.instructions,
-      }),
-    );
+    try {
+      const skill = await this.updateSkillUseCase.execute(
+        new UpdateSkillCommand({
+          skillId: id,
+          name: dto.name,
+          shortDescription: dto.shortDescription,
+          instructions: dto.instructions,
+        }),
+      );
 
-    const context = await this.skillAccessService.resolveUserContext(id);
+      const context = await this.skillAccessService.resolveUserContext(id);
 
-    return this.skillDtoMapper.toDto(skill, context);
+      return this.skillDtoMapper.toDto(skill, context);
+    } catch (error) {
+      if (error instanceof InvalidSkillNameError) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
   }
 
   @Delete(':id')

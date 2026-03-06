@@ -5,6 +5,7 @@ import { Skill } from '../../../domain/skill.entity';
 import { SkillNameResolutionError } from '../../skills.errors';
 import type { UUID } from 'crypto';
 
+const MAX_NAME_LENGTH = 100;
 const MAX_NAME_RESOLUTION_ATTEMPTS = 100;
 
 @Injectable()
@@ -48,7 +49,15 @@ export class CreateSkillWithUniqueNameUseCase {
     baseName: string,
     userId: UUID,
   ): Promise<string> {
-    let name = baseName;
+    const baseCodePoints = [...baseName];
+    let truncatedBase = '';
+    for (const cp of baseCodePoints) {
+      if (truncatedBase.length + cp.length > MAX_NAME_LENGTH) break;
+      truncatedBase += cp;
+    }
+    truncatedBase = truncatedBase.trimEnd();
+
+    let name = truncatedBase;
     let suffix = 2;
     while (await this.skillRepository.findByNameAndOwner(name, userId)) {
       if (suffix > MAX_NAME_RESOLUTION_ATTEMPTS) {
@@ -57,7 +66,16 @@ export class CreateSkillWithUniqueNameUseCase {
           MAX_NAME_RESOLUTION_ATTEMPTS,
         );
       }
-      name = `${baseName} ${suffix}`;
+      const suffixStr = ` ${suffix}`;
+      const codePoints = [...truncatedBase];
+      let truncated = '';
+      for (const cp of codePoints) {
+        if (truncated.length + cp.length + suffixStr.length > MAX_NAME_LENGTH)
+          break;
+        truncated += cp;
+      }
+      truncated = truncated.trimEnd();
+      name = `${truncated}${suffixStr}`;
       suffix++;
     }
     return name;

@@ -104,6 +104,29 @@ describe('Skill Entity', () => {
       expect(skill.name).toBe('My-Custom-Skill');
     });
 
+    it('should accept names with special characters like &, ?, /', () => {
+      expect(new Skill({ ...validParams, name: 'Q&A Helper' }).name).toBe(
+        'Q&A Helper',
+      );
+      expect(new Skill({ ...validParams, name: "What's New?" }).name).toBe(
+        "What's New?",
+      );
+      expect(new Skill({ ...validParams, name: 'Legal/Tax' }).name).toBe(
+        'Legal/Tax',
+      );
+    });
+
+    it('should accept names with underscores', () => {
+      const skill = new Skill({ ...validParams, name: 'my_skill' });
+      expect(skill.name).toBe('my_skill');
+    });
+
+    it('should accept names longer than 100 characters (max enforced at DTO layer)', () => {
+      const name = 'A'.repeat(150);
+      const skill = new Skill({ ...validParams, name });
+      expect(skill.name).toBe(name);
+    });
+
     it('should reject names with leading spaces', () => {
       expect(
         () => new Skill({ ...validParams, name: ' Legal Research' }),
@@ -116,30 +139,6 @@ describe('Skill Entity', () => {
       ).toThrow(InvalidSkillNameError);
     });
 
-    it('should reject names with leading hyphens', () => {
-      expect(() => new Skill({ ...validParams, name: '-Research' })).toThrow(
-        InvalidSkillNameError,
-      );
-    });
-
-    it('should reject names with trailing hyphens', () => {
-      expect(() => new Skill({ ...validParams, name: 'Research-' })).toThrow(
-        InvalidSkillNameError,
-      );
-    });
-
-    it('should reject names with special characters', () => {
-      expect(
-        () => new Skill({ ...validParams, name: 'Legal/Research' }),
-      ).toThrow(InvalidSkillNameError);
-    });
-
-    it('should reject names with underscores', () => {
-      expect(
-        () => new Skill({ ...validParams, name: 'Legal_Research' }),
-      ).toThrow(InvalidSkillNameError);
-    });
-
     it('should reject names with consecutive spaces', () => {
       expect(
         () => new Skill({ ...validParams, name: 'Legal  Research' }),
@@ -148,6 +147,12 @@ describe('Skill Entity', () => {
 
     it('should reject empty names', () => {
       expect(() => new Skill({ ...validParams, name: '' })).toThrow(
+        InvalidSkillNameError,
+      );
+    });
+
+    it('should reject whitespace-only names', () => {
+      expect(() => new Skill({ ...validParams, name: '   ' })).toThrow(
         InvalidSkillNameError,
       );
     });
@@ -172,18 +177,15 @@ describe('Skill Entity', () => {
       expect(skill.name).toBe('📚');
     });
 
-    it('should reject names with invisible emoji components', () => {
-      // ZWJ (U+200D) should not be allowed
+    it('should reject names with control characters', () => {
       expect(
-        () => new Skill({ ...validParams, name: 'Test\u200DSkill' }),
+        () => new Skill({ ...validParams, name: 'Test\u0000Skill' }),
       ).toThrow(InvalidSkillNameError);
     });
 
-    it('should reject names ending with variation selector', () => {
-      // Variation selector (U+FE0F) should not be allowed
-      expect(() => new Skill({ ...validParams, name: 'Test\uFE0F' })).toThrow(
-        InvalidSkillNameError,
-      );
+    it('should accept names with ZWJ emoji sequences', () => {
+      const skill = new Skill({ ...validParams, name: '👩‍💻 Coding' });
+      expect(skill.name).toBe('👩‍💻 Coding');
     });
   });
 });
