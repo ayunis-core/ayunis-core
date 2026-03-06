@@ -30,11 +30,6 @@ import { LocalSourceRepositoryModule } from 'src/domain/sources/infrastructure/p
     ThreadSourceAssignmentMapper,
     ThreadKnowledgeBaseAssignmentMapper,
   ],
-  exports: [
-    LocalThreadsRepository,
-    ThreadMapper,
-    ThreadSourceAssignmentMapper,
-    ThreadKnowledgeBaseAssignmentMapper,
-  ],
+  exports: [LocalThreadsRepository],
 })
 export class LocalThreadsRepositoryModule {}
