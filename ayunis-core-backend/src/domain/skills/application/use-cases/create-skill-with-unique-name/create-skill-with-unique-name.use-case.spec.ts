@@ -103,6 +103,34 @@ describe('CreateSkillWithUniqueNameUseCase', () => {
     expect(result.name).toBe('Translator 4');
   });
 
+  it('should truncate base name when suffix would exceed 100-char limit', async () => {
+    const longName = 'A'.repeat(100);
+    skillRepository.findByNameAndOwner.mockImplementation((name: string) =>
+      Promise.resolve(
+        name === longName
+          ? new Skill({
+              name,
+              shortDescription: 'existing',
+              instructions: 'existing',
+              userId,
+            })
+          : null,
+      ),
+    );
+
+    const command = new CreateSkillWithUniqueNameCommand({
+      name: longName,
+      shortDescription: 'Test',
+      instructions: 'Test',
+      userId,
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(result.name.length).toBeLessThanOrEqual(100);
+    expect(result.name).toMatch(/ 2$/);
+  });
+
   it('should throw when unique name cannot be resolved after max attempts', async () => {
     skillRepository.findByNameAndOwner.mockResolvedValue(
       new Skill({

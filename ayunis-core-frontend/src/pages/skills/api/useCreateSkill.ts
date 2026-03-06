@@ -23,7 +23,7 @@ export function useCreateSkill() {
   const router = useRouter();
 
   const createSkillSchema = z.object({
-    name: z.string().min(1, t('createDialog.validation.nameRequired')),
+    name: z.string().min(1, t('createDialog.validation.nameRequired')).max(100),
     shortDescription: z
       .string()
       .min(1, t('createDialog.validation.shortDescriptionRequired')),
