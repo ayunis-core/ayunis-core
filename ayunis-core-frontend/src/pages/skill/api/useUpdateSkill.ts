@@ -28,7 +28,7 @@ export function useUpdateSkill({ skill }: UseUpdateSkillProps) {
   const router = useRouter();
 
   const updateSkillSchema = z.object({
-    name: z.string().min(1, t('properties.validation.nameRequired')).max(255),
+    name: z.string().min(1, t('properties.validation.nameRequired')).max(100),
     shortDescription: z
       .string()
       .min(1, t('properties.validation.shortDescriptionRequired')),

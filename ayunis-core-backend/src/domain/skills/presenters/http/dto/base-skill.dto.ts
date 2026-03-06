@@ -4,23 +4,22 @@ import { IsString, IsNotEmpty, Length, Matches } from 'class-validator';
 export class BaseSkillDto {
   @ApiProperty({
     description:
-      'The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.',
+      'The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.',
     example: 'Legal Research',
     minLength: 1,
-    maxLength: 255,
+    maxLength: 100,
   })
   @IsString()
   @IsNotEmpty()
-  @Length(1, 255)
-  @Matches(
-    /^[\p{L}\p{N}\p{Emoji_Presentation}]([\p{L}\p{N}\p{Emoji_Presentation} ()-]*[\p{L}\p{N}\p{Emoji_Presentation})])?$/u,
-    {
-      message:
-        'Name must contain only letters, numbers, emojis, hyphens, parentheses, and spaces, and must start and end with a letter, number, emoji, or closing parenthesis',
-    },
-  )
+  @Length(1, 100)
+  @Matches(/^\S.*\S$|^\S$/, {
+    message: 'Name must not start or end with whitespace',
+  })
   @Matches(/^(?!.* {2})/, {
     message: 'Name must not contain consecutive spaces',
+  })
+  @Matches(/^[^\p{Cc}]*$/u, {
+    message: 'Name must not contain control characters',
   })
   name: string;
 
