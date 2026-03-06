@@ -58,6 +58,7 @@ import {
   detectFileType,
   getCanonicalMimeType,
   isDocumentFile,
+  isPlainTextFile,
   isSpreadsheetFile,
   isCSVFile,
 } from 'src/common/util/file-type';
@@ -239,7 +240,7 @@ export class SkillSourcesController {
     const sources: Source[] = [];
     const detectedType = detectFileType(file.mimetype, file.originalname);
 
-    if (isDocumentFile(detectedType)) {
+    if (isDocumentFile(detectedType) || isPlainTextFile(detectedType)) {
       const source = await this.createDocumentSource(file, detectedType);
       sources.push(source);
     } else if (isCSVFile(detectedType)) {
@@ -251,7 +252,7 @@ export class SkillSourcesController {
     } else {
       throw new UnsupportedFileTypeError(
         detectedType === 'unknown' ? file.originalname : detectedType,
-        ['PDF', 'DOCX', 'PPTX', 'CSV', 'XLSX', 'XLS'],
+        ['PDF', 'DOCX', 'PPTX', 'TXT', 'CSV', 'XLSX', 'XLS'],
       );
     }
 
@@ -270,7 +271,12 @@ export class SkillSourcesController {
     detectedType: DetectedFileType,
   ): Promise<Source> {
     const fileData = fs.readFileSync(file.path);
-    const canonicalMimeType = getCanonicalMimeType(detectedType)!;
+    const canonicalMimeType = getCanonicalMimeType(detectedType);
+    if (!canonicalMimeType) {
+      throw new Error(
+        `Unable to determine MIME type for detected file type: ${detectedType}`,
+      );
+    }
 
     return this.createTextSourceUseCase.execute(
       new CreateFileSourceCommand({

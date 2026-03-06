@@ -19,6 +19,9 @@ export const MIME_TYPES = {
 
   // CSV
   CSV: 'text/csv',
+
+  // Plain text
+  TXT: 'text/plain',
 } as const;
 
 /**
@@ -31,6 +34,7 @@ export const FILE_EXTENSIONS = {
   XLSX: '.xlsx',
   XLS: '.xls',
   CSV: '.csv',
+  TXT: '.txt',
 } as const;
 
 export type DetectedFileType =
@@ -40,6 +44,7 @@ export type DetectedFileType =
   | 'xlsx'
   | 'xls'
   | 'csv'
+  | 'txt'
   | 'unknown';
 
 /** Lookup: MIME type → detected file type */
@@ -50,6 +55,7 @@ const MIME_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [MIME_TYPES.XLSX]: 'xlsx',
   [MIME_TYPES.CSV]: 'csv',
   // Note: MIME_TYPES.XLS is intentionally excluded — XLS MIME can also indicate CSV files
+  // Note: MIME_TYPES.TXT is intentionally excluded — text/plain is too broad (matches .md, .log, .json, etc.)
 };
 
 /** Lookup: file extension → detected file type */
@@ -60,6 +66,7 @@ const EXT_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [FILE_EXTENSIONS.XLSX]: 'xlsx',
   [FILE_EXTENSIONS.XLS]: 'xls',
   [FILE_EXTENSIONS.CSV]: 'csv',
+  [FILE_EXTENSIONS.TXT]: 'txt',
 };
 
 /**
@@ -82,6 +89,13 @@ export function detectFileType(
 
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- lookup returns undefined for unknown keys at runtime
   return MIME_TO_FILE_TYPE[mimetype] ?? EXT_TO_FILE_TYPE[ext] ?? 'unknown';
+}
+
+/**
+ * Check if the file type is a plain text file (TXT)
+ */
+export function isPlainTextFile(fileType: DetectedFileType): boolean {
+  return fileType === 'txt';
 }
 
 /**
@@ -126,6 +140,8 @@ export function getCanonicalMimeType(
       return MIME_TYPES.XLS;
     case 'csv':
       return MIME_TYPES.CSV;
+    case 'txt':
+      return MIME_TYPES.TXT;
     case 'unknown':
       return null;
   }

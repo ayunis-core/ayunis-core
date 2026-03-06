@@ -379,6 +379,7 @@ export class ThreadsController {
             'PDF',
             'DOCX',
             'PPTX',
+            'TXT',
             'CSV',
             'XLSX',
             'XLS',

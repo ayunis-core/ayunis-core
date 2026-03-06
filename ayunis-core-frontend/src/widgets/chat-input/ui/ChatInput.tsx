@@ -157,6 +157,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         '.xls',
         '.docx',
         '.pptx',
+        '.txt',
       ],
     });
 

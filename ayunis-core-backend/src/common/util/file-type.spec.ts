@@ -123,9 +123,33 @@ describe('detectFileType', () => {
     });
   });
 
+  describe('TXT detection', () => {
+    it('returns "txt" when MIME type is text/plain and extension is .txt', () => {
+      expect(detectFileType(MIME_TYPES.TXT, 'notes.txt')).toBe('txt');
+    });
+
+    it('returns "txt" when extension is .txt but MIME type is application/octet-stream', () => {
+      expect(detectFileType('application/octet-stream', 'notes.txt')).toBe(
+        'txt',
+      );
+    });
+
+    it('returns "unknown" when MIME type is text/plain but extension is not .txt', () => {
+      expect(detectFileType(MIME_TYPES.TXT, 'notes.log')).toBe('unknown');
+    });
+
+    it('returns "txt" when extension is .TXT (case insensitive)', () => {
+      expect(detectFileType('application/octet-stream', 'NOTES.TXT')).toBe(
+        'txt',
+      );
+    });
+  });
+
   describe('Unknown handling', () => {
     it('returns "unknown" for unsupported MIME types and extensions', () => {
-      expect(detectFileType('text/plain', 'file.txt')).toBe('unknown');
+      expect(detectFileType('application/x-something', 'file.bin')).toBe(
+        'unknown',
+      );
     });
 
     it('returns "unknown" for image files', () => {
