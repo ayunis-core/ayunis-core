@@ -1933,6 +1933,7 @@ export const CreateAgentShareDtoEntityType = {
   agent: 'agent',
   prompt: 'prompt',
   skill: 'skill',
+  knowledge_base: 'knowledge_base',
 } as const;
 
 export interface CreateAgentShareDto {
@@ -1955,6 +1956,7 @@ export const ShareResponseDtoEntityType = {
   agent: 'agent',
   prompt: 'prompt',
   skill: 'skill',
+  knowledge_base: 'knowledge_base',
 } as const;
 
 /**
@@ -2001,6 +2003,7 @@ export const CreateSkillShareDtoEntityType = {
   agent: 'agent',
   prompt: 'prompt',
   skill: 'skill',
+  knowledge_base: 'knowledge_base',
 } as const;
 
 export interface CreateSkillShareDto {
@@ -2008,6 +2011,29 @@ export interface CreateSkillShareDto {
   entityType: CreateSkillShareDtoEntityType;
   /** ID of the skill to share */
   skillId: string;
+  /** ID of the team to share with (if not provided, shares with entire organization) */
+  teamId?: string;
+}
+
+/**
+ * Type of entity being shared
+ */
+export type CreateKnowledgeBaseShareDtoEntityType = typeof CreateKnowledgeBaseShareDtoEntityType[keyof typeof CreateKnowledgeBaseShareDtoEntityType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateKnowledgeBaseShareDtoEntityType = {
+  agent: 'agent',
+  prompt: 'prompt',
+  skill: 'skill',
+  knowledge_base: 'knowledge_base',
+} as const;
+
+export interface CreateKnowledgeBaseShareDto {
+  /** Type of entity being shared */
+  entityType: CreateKnowledgeBaseShareDtoEntityType;
+  /** ID of the knowledge base to share */
+  knowledgeBaseId: string;
   /** ID of the team to share with (if not provided, shares with entire organization) */
   teamId?: string;
 }
@@ -3415,6 +3441,7 @@ export const SharesControllerGetSharesEntityType = {
   agent: 'agent',
   prompt: 'prompt',
   skill: 'skill',
+  knowledge_base: 'knowledge_base',
 } as const;
 
 export type TeamsControllerListTeamMembersParams = {
