@@ -1,16 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { UUID } from 'crypto';
-import {
-  Thread,
-  KnowledgeBaseSummary,
-} from 'src/domain/threads/domain/thread.entity';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ThreadRecord } from '../schema/thread.record';
 import { MessageMapper } from 'src/domain/messages/infrastructure/persistence/local/mappers/message.mapper';
 import { PermittedModelMapper } from 'src/domain/models/infrastructure/persistence/local-permitted-models/mappers/permitted-model.mapper';
 import { ThreadSourceAssignmentMapper } from './thread-source-assignment.mapper';
+import { ThreadKnowledgeBaseAssignmentMapper } from './thread-knowledge-base-assignment.mapper';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
-import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
+import { KnowledgeBaseAssignment } from 'src/domain/threads/domain/thread-knowledge-base-assignment.entity';
 
 @Injectable()
 export class ThreadMapper {
@@ -18,6 +16,7 @@ export class ThreadMapper {
     private readonly messageMapper: MessageMapper,
     private readonly permittedModelMapper: PermittedModelMapper,
     private readonly sourceAssignmentMapper: ThreadSourceAssignmentMapper,
+    private readonly kbAssignmentMapper: ThreadKnowledgeBaseAssignmentMapper,
   ) {}
 
   toRecord(thread: Thread): ThreadRecord {
@@ -40,9 +39,9 @@ export class ThreadMapper {
     record.mcpIntegrations = thread.mcpIntegrationIds.map(
       (id) => ({ id }) as McpIntegrationRecord,
     );
-    if (thread.knowledgeBases !== undefined) {
-      record.knowledgeBases = thread.knowledgeBases.map(
-        (kb) => ({ id: kb.id }) as KnowledgeBaseRecord,
+    if (thread.knowledgeBaseAssignments !== undefined) {
+      record.knowledgeBaseAssignments = thread.knowledgeBaseAssignments.map(
+        (assignment) => this.kbAssignmentMapper.toRecord(assignment, thread.id),
       );
     }
     record.createdAt = thread.createdAt;
@@ -58,7 +57,7 @@ export class ThreadMapper {
       agentId: threadEntity.agentId,
       sourceAssignments: this.mapSourceAssignments(threadEntity),
       mcpIntegrationIds: this.mapMcpIntegrationIds(threadEntity),
-      knowledgeBases: this.mapKnowledgeBases(threadEntity),
+      knowledgeBaseAssignments: this.mapKnowledgeBaseAssignments(threadEntity),
       title: threadEntity.title,
       isAnonymous: threadEntity.isAnonymous,
       messages: this.mapMessages(threadEntity),
@@ -87,16 +86,15 @@ export class ThreadMapper {
     return record.mcpIntegrations?.map((i) => i.id) ?? [];
   }
 
-  private mapKnowledgeBases(
+  private mapKnowledgeBaseAssignments(
     record: ThreadRecord,
-  ): KnowledgeBaseSummary[] | undefined {
-    if (!record.knowledgeBases) {
+  ): KnowledgeBaseAssignment[] | undefined {
+    if (!record.knowledgeBaseAssignments) {
       return undefined;
     }
-    return record.knowledgeBases.map((kb) => ({
-      id: kb.id,
-      name: kb.name,
-    }));
+    return record.knowledgeBaseAssignments.map((a) =>
+      this.kbAssignmentMapper.toDomain(a),
+    );
   }
 
   private mapMessages(record: ThreadRecord) {

@@ -3,9 +3,8 @@ import { randomUUID } from 'crypto';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import type { SourceAssignment } from './thread-source-assignment.entity';
+import type { KnowledgeBaseAssignment } from './thread-knowledge-base-assignment.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
-
-export type { KnowledgeBaseSummary };
 
 export class Thread {
   id: UUID;
@@ -14,7 +13,7 @@ export class Thread {
   agentId?: UUID;
   sourceAssignments?: SourceAssignment[];
   mcpIntegrationIds: UUID[];
-  knowledgeBases?: KnowledgeBaseSummary[];
+  knowledgeBaseAssignments?: KnowledgeBaseAssignment[];
   title?: string;
   messages: Message[];
   isAnonymous: boolean;
@@ -28,7 +27,7 @@ export class Thread {
     agentId?: UUID;
     sourceAssignments?: SourceAssignment[];
     mcpIntegrationIds?: UUID[];
-    knowledgeBases?: KnowledgeBaseSummary[];
+    knowledgeBaseAssignments?: KnowledgeBaseAssignment[];
     title?: string;
     messages: Message[];
     isAnonymous?: boolean;
@@ -41,7 +40,7 @@ export class Thread {
     this.agentId = params.agentId;
     this.sourceAssignments = params.sourceAssignments;
     this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
-    this.knowledgeBases = params.knowledgeBases;
+    this.knowledgeBaseAssignments = params.knowledgeBaseAssignments;
     this.title = params.title;
     this.messages = params.messages;
     this.isAnonymous = params.isAnonymous ?? false;
@@ -51,5 +50,22 @@ export class Thread {
 
   getLastMessage(): Message | undefined {
     return this.messages.at(-1);
+  }
+
+  /**
+   * Returns deduplicated knowledge bases by knowledgeBaseId.
+   * The same KB can appear multiple times in knowledgeBaseAssignments
+   * when it was assigned by different origin skills.
+   */
+  getUniqueKnowledgeBases(): KnowledgeBaseSummary[] {
+    const seen = new Set<UUID>();
+    const result: KnowledgeBaseSummary[] = [];
+    for (const assignment of this.knowledgeBaseAssignments ?? []) {
+      if (!seen.has(assignment.knowledgeBase.id)) {
+        seen.add(assignment.knowledgeBase.id);
+        result.push(assignment.knowledgeBase);
+      }
+    }
+    return result;
   }
 }
