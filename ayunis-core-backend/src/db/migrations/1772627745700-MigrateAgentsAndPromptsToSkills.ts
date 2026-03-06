@@ -1,6 +1,8 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class MigrateAgentsAndPromptsToSkills1772627745700 implements MigrationInterface {
+export class MigrateAgentsAndPromptsToSkills1772627745700
+  implements MigrationInterface
+{
   name = 'MigrateAgentsAndPromptsToSkills1772627745700';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

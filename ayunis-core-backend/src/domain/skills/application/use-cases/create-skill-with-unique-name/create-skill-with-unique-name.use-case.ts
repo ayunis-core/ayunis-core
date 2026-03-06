@@ -1,8 +1,12 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { SkillRepository } from '../../ports/skill.repository';
 import { CreateSkillWithUniqueNameCommand } from './create-skill-with-unique-name.command';
-import { Skill } from '../../../domain/skill.entity';
-import { SkillNameResolutionError } from '../../skills.errors';
+import { Skill, InvalidSkillNameError } from '../../../domain/skill.entity';
+import {
+  SkillNameResolutionError,
+  UnexpectedSkillError,
+} from '../../skills.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
 import type { UUID } from 'crypto';
 
 const MAX_NAME_LENGTH = 100;
@@ -23,26 +27,38 @@ export class CreateSkillWithUniqueNameUseCase {
       userId: command.userId,
     });
 
-    const name = await this.resolveUniqueName(command.name, command.userId);
+    try {
+      const name = await this.resolveUniqueName(command.name, command.userId);
 
-    const skill = new Skill({
-      name,
-      shortDescription: command.shortDescription,
-      instructions: command.instructions,
-      marketplaceIdentifier: command.marketplaceIdentifier,
-      userId: command.userId,
-    });
+      const skill = new Skill({
+        name,
+        shortDescription: command.shortDescription,
+        instructions: command.instructions,
+        marketplaceIdentifier: command.marketplaceIdentifier,
+        userId: command.userId,
+      });
 
-    const created = await this.skillRepository.create(skill);
-    await this.skillRepository.activateSkill(created.id, command.userId);
+      const created = await this.skillRepository.create(skill);
+      await this.skillRepository.activateSkill(created.id, command.userId);
 
-    this.logger.debug('Skill created and activated', {
-      skillId: created.id,
-      name: created.name,
-      userId: command.userId,
-    });
+      this.logger.debug('Skill created and activated', {
+        skillId: created.id,
+        name: created.name,
+        userId: command.userId,
+      });
 
-    return created;
+      return created;
+    } catch (error) {
+      if (
+        error instanceof ApplicationError ||
+        error instanceof InvalidSkillNameError
+      )
+        throw error;
+      this.logger.error('Error creating skill with unique name', {
+        error: error as Error,
+      });
+      throw new UnexpectedSkillError(error);
+    }
   }
 
   private async resolveUniqueName(
