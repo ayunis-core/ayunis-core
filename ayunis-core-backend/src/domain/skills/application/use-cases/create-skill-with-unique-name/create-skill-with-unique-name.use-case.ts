@@ -59,10 +59,13 @@ export class CreateSkillWithUniqueNameUseCase {
       }
       const suffixStr = ` ${suffix}`;
       const maxBaseLength = MAX_SKILL_NAME_LENGTH - suffixStr.length;
-      const truncatedBase = [...baseName]
-        .slice(0, maxBaseLength)
-        .join('')
-        .trimEnd();
+      let truncatedBase = baseName.slice(0, maxBaseLength);
+      // Avoid splitting a surrogate pair (high surrogate: 0xD800-0xDBFF)
+      const lastCharCode = truncatedBase.charCodeAt(truncatedBase.length - 1);
+      if (lastCharCode >= 0xd800 && lastCharCode <= 0xdbff) {
+        truncatedBase = truncatedBase.slice(0, -1);
+      }
+      truncatedBase = truncatedBase.trimEnd();
       name = `${truncatedBase}${suffixStr}`;
       suffix++;
     }

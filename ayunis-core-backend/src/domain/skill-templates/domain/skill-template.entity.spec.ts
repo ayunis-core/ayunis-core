@@ -63,9 +63,7 @@ describe('SkillTemplate', () => {
         distributionMode: DistributionMode.PRE_CREATED_COPY,
       });
 
-      expect(template.distributionMode).toBe(
-        DistributionMode.PRE_CREATED_COPY,
-      );
+      expect(template.distributionMode).toBe(DistributionMode.PRE_CREATED_COPY);
     });
   });
 
