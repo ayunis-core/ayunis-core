@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.0](https://github.com/ayunis-core/ayunis-core/compare/v1.15.0...v1.16.0) (2026-03-06)
+
+
+### Features
+
+* **AYC-104:** enable txt file upload as text source ([#333](https://github.com/ayunis-core/ayunis-core/issues/333)) ([fb64484](https://github.com/ayunis-core/ayunis-core/commit/fb64484ff4586091096b119e6bf5f8343c3cdc60))
+
 ## [1.15.0](https://github.com/ayunis-core/ayunis-core/compare/v1.14.2...v1.15.0) (2026-03-05)
 
 
