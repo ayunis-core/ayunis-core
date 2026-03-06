@@ -9,6 +9,7 @@ import {
   UnexpectedSkillError,
 } from '../../skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { InvalidSkillNameError } from '../../../domain/skill.entity';
 
 @Injectable()
 export class CreateSkillUseCase {
@@ -51,7 +52,11 @@ export class CreateSkillUseCase {
 
       return created;
     } catch (error) {
-      if (error instanceof ApplicationError) throw error;
+      if (
+        error instanceof ApplicationError ||
+        error instanceof InvalidSkillNameError
+      )
+        throw error;
       this.logger.error('Error creating skill', { error: error as Error });
       throw new UnexpectedSkillError(error);
     }
