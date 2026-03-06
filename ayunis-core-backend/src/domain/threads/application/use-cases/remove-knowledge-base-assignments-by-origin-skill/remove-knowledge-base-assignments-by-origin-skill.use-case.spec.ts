@@ -47,6 +47,28 @@ describe('RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase', () => {
     ).toHaveBeenCalledWith({
       originSkillId: skillId,
       userIds,
+      knowledgeBaseId: undefined,
+    });
+  });
+
+  it('should pass knowledgeBaseId to repository when provided', async () => {
+    const skillId = randomUUID();
+    const userIds = [randomUUID()];
+    const knowledgeBaseId = randomUUID();
+    const command = new RemoveKnowledgeBaseAssignmentsByOriginSkillCommand(
+      skillId,
+      userIds,
+      knowledgeBaseId,
+    );
+
+    await useCase.execute(command);
+
+    expect(
+      threadsRepository.removeKnowledgeBaseAssignmentsByOriginSkill,
+    ).toHaveBeenCalledWith({
+      originSkillId: skillId,
+      userIds,
+      knowledgeBaseId,
     });
   });
 

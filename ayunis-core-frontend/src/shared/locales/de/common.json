@@ -65,6 +65,7 @@
     "knowledgeBasesLoadError": "Fehler beim Laden der Wissenssammlungen",
     "knowledgeBasesEmptyState": "Noch keine Wissenssammlung erstellt",
     "knowledgeBasesAllAttached": "Alle Wissenssammlungen bereits angehängt",
+    "shared": "Freigegeben",
     "createKnowledgeBase": "Wissenssammlung erstellen",
     "noEmbeddingModelEnabled": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein.",
     "modelChangeDisabledTooltip": "Das Modell kann nicht geändert werden, wenn ein Agent ausgewählt ist.",
