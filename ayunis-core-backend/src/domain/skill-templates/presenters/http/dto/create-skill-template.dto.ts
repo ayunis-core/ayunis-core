@@ -14,23 +14,19 @@ import { DistributionMode } from '../../../domain/distribution-mode.enum';
 export class CreateSkillTemplateDto {
   @ApiProperty({
     description:
-      'The name of the skill template. Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.',
+      'The name of the skill template. No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.',
     example: 'Legal Guidelines',
     minLength: 1,
-    maxLength: 255,
+    maxLength: 100,
   })
   @IsString()
   @IsNotEmpty()
-  @Length(1, 255)
-  @Matches(
-    /^[\p{L}\p{N}\p{Emoji_Presentation}]([\p{L}\p{N}\p{Emoji_Presentation} ()-]*[\p{L}\p{N}\p{Emoji_Presentation})])?$/u,
-    {
-      message:
-        'Name must contain only letters, numbers, emojis, hyphens, parentheses, and spaces, and must start and end with a letter, number, emoji, or closing parenthesis',
-    },
-  )
+  @Length(1, 100)
   @Matches(/^(?!.* {2})/, {
     message: 'Name must not contain consecutive spaces',
+  })
+  @Matches(/^[^\p{Cc}\p{Cf}]*$/u, {
+    message: 'Name must not contain control characters',
   })
   name: string;
 

@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { SkillRepository } from '../../ports/skill.repository';
 import { CreateSkillWithUniqueNameCommand } from './create-skill-with-unique-name.command';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill, MAX_SKILL_NAME_LENGTH } from '../../../domain/skill.entity';
 import { SkillNameResolutionError } from '../../skills.errors';
 import type { UUID } from 'crypto';
 
@@ -57,7 +57,13 @@ export class CreateSkillWithUniqueNameUseCase {
           MAX_NAME_RESOLUTION_ATTEMPTS,
         );
       }
-      name = `${baseName} ${suffix}`;
+      const suffixStr = ` ${suffix}`;
+      const maxBaseLength = MAX_SKILL_NAME_LENGTH - suffixStr.length;
+      const truncatedBase = [...baseName]
+        .slice(0, maxBaseLength)
+        .join('')
+        .trimEnd();
+      name = `${truncatedBase}${suffixStr}`;
       suffix++;
     }
     return name;
