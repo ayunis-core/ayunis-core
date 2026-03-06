@@ -60,7 +60,7 @@ skill-templates/
 
 ## Design Decisions
 
-Name validation reuses the same pattern as the Skills module (Unicode letters, numbers, emojis, hyphens, spaces; no consecutive spaces).
+Name validation allows any printable characters (no control characters), 1–100 characters, must not start or end with whitespace, and must not contain consecutive spaces.
 
 ## Dependencies
 
