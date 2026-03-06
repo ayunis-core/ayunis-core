@@ -7,7 +7,9 @@
   },
   "tabs": {
     "configuration": "Configuration",
-    "shares": "Share"
+    "shares": "Share",
+    "personal": "Own Knowledge Bases",
+    "shared": "Shared Knowledge Bases"
   },
   "shares": {
     "org": {
@@ -56,7 +58,15 @@
   },
   "emptyState": {
     "title": "No knowledge bases yet",
-    "description": "Create your first knowledge base. Upload documents and use them in your chats as context for the AI."
+    "description": "Create your first knowledge base. Upload documents and use them in your chats as context for the AI.",
+    "personal": {
+      "title": "No own knowledge bases yet",
+      "description": "Create your first knowledge base. Upload documents and use them in your chats as context for the AI."
+    },
+    "shared": {
+      "title": "No shared knowledge bases yet",
+      "description": "Knowledge bases shared with you by other members of your organization will appear here."
+    }
   },
   "card": {
     "confirmDelete": {

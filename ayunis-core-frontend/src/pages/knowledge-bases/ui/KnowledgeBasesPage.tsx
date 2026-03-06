@@ -8,6 +8,13 @@ import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/Ful
 import type { KnowledgeBase } from '../model/openapi';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@/shared/ui/shadcn/tabs';
+import { EmptyState } from '@/widgets/empty-state';
 
 interface KnowledgeBasesPageProps {
   knowledgeBases: KnowledgeBase[];
@@ -17,6 +24,14 @@ export default function KnowledgeBasesPage({
   knowledgeBases,
 }: Readonly<KnowledgeBasesPageProps>) {
   const { t } = useTranslation('knowledge-bases');
+
+  const personalKnowledgeBases = knowledgeBases
+    .filter((kb) => !kb.isShared)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const sharedKnowledgeBases = knowledgeBases
+    .filter((kb) => kb.isShared)
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const headerAction = (
     <div className="flex gap-2">
@@ -39,10 +54,6 @@ export default function KnowledgeBasesPage({
     );
   }
 
-  const sortedKnowledgeBases = [...knowledgeBases].sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
-
   return (
     <AppLayout>
       <ContentAreaLayout
@@ -50,11 +61,46 @@ export default function KnowledgeBasesPage({
           <ContentAreaHeader title={t('page.title')} action={headerAction} />
         }
         contentArea={
-          <div className="space-y-3">
-            {sortedKnowledgeBases.map((kb) => (
-              <KnowledgeBaseCard key={kb.id} knowledgeBase={kb} />
-            ))}
-          </div>
+          <Tabs defaultValue="personal" className="w-full">
+            <TabsList>
+              <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
+              <TabsTrigger value="shared">{t('tabs.shared')}</TabsTrigger>
+            </TabsList>
+            <TabsContent value="personal" className="mt-4">
+              {personalKnowledgeBases.length === 0 ? (
+                <EmptyState
+                  title={t('emptyState.personal.title')}
+                  description={t('emptyState.personal.description')}
+                  action={
+                    <CreateKnowledgeBaseDialog
+                      buttonText={t('createDialog.buttonTextFirst')}
+                      showIcon={true}
+                    />
+                  }
+                />
+              ) : (
+                <div className="space-y-3">
+                  {personalKnowledgeBases.map((kb) => (
+                    <KnowledgeBaseCard key={kb.id} knowledgeBase={kb} />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="shared" className="mt-4">
+              {sharedKnowledgeBases.length === 0 ? (
+                <EmptyState
+                  title={t('emptyState.shared.title')}
+                  description={t('emptyState.shared.description')}
+                />
+              ) : (
+                <div className="space-y-3">
+                  {sharedKnowledgeBases.map((kb) => (
+                    <KnowledgeBaseCard key={kb.id} knowledgeBase={kb} />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         }
       />
     </AppLayout>

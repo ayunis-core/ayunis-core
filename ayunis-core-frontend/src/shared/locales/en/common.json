@@ -65,6 +65,7 @@
     "knowledgeBasesLoadError": "Error loading knowledge bases",
     "knowledgeBasesEmptyState": "No knowledge bases created yet",
     "knowledgeBasesAllAttached": "All knowledge bases already attached",
+    "shared": "Shared",
     "createKnowledgeBase": "Create knowledge base",
     "noEmbeddingModelEnabled": "To upload documents, an embedding model must be enabled.",
     "modelChangeDisabledTooltip": "The model cannot be changed when an agent is selected.",

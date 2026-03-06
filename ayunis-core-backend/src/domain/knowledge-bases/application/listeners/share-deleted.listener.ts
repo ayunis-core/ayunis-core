@@ -74,11 +74,12 @@ export class KnowledgeBaseShareDeletedListener {
     // For each affected skill that is itself shared, clean up thread KB
     // assignments that originated from that skill (for ALL users, since the
     // KB is no longer accessible through the skill)
-    await this.cascadeToSharedSkillThreads(affectedSkills);
+    await this.cascadeToSharedSkillThreads(affectedSkills, event.entityId);
   }
 
   private async cascadeToSharedSkillThreads(
     affectedSkills: Skill[],
+    knowledgeBaseId: UUID,
   ): Promise<void> {
     for (const skill of affectedSkills) {
       const skillShares = await this.sharesRepository.findByEntityIdAndType(
@@ -103,6 +104,7 @@ export class KnowledgeBaseShareDeletedListener {
         new RemoveKnowledgeBaseAssignmentsByOriginSkillCommand(
           skill.id,
           allUserIds,
+          knowledgeBaseId,
         ),
       );
 

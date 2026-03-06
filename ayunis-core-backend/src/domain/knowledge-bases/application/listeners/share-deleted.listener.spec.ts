@@ -33,11 +33,7 @@ function createSkillShare(skillId: UUID, ownerId: UUID, orgId: UUID) {
   });
 }
 
-function createTeamSkillShare(
-  skillId: UUID,
-  ownerId: UUID,
-  teamId: UUID,
-) {
+function createTeamSkillShare(skillId: UUID, ownerId: UUID, teamId: UUID) {
   return new SkillShare({
     skillId,
     ownerId,
@@ -235,6 +231,7 @@ describe('KnowledgeBaseShareDeletedListener', () => {
 
     const kbCall = removeKbAssignments.execute.mock.calls[0][0];
     expect(kbCall.skillId).toBe(skillId);
+    expect(kbCall.knowledgeBaseId).toBe(kbId);
     // Should include skill owner + share recipients (minus owner)
     expect(kbCall.userIds).toContain(lostUserId); // skill owner
     expect(kbCall.userIds).toContain(skillShareRecipient);
@@ -362,6 +359,7 @@ describe('KnowledgeBaseShareDeletedListener', () => {
 
     const kbCall = removeKbAssignments.execute.mock.calls[0][0];
     expect(kbCall.skillId).toBe(skillId);
+    expect(kbCall.knowledgeBaseId).toBe(kbId);
     expect(kbCall.userIds).toContain(lostUserId);
     expect(kbCall.userIds).toContain(teamMember);
   });
