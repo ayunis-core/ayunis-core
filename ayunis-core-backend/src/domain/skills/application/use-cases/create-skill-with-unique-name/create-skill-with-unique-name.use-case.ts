@@ -59,9 +59,12 @@ export class CreateSkillWithUniqueNameUseCase {
       }
       const suffixStr = ` ${suffix}`;
       const maxBaseLength = MAX_SKILL_NAME_LENGTH - suffixStr.length;
-      let truncatedBase = [...baseName].slice(0, maxBaseLength).join('');
-      if (truncatedBase.length > maxBaseLength) {
-        truncatedBase = truncatedBase.slice(0, maxBaseLength);
+      let truncatedBase = '';
+      for (const char of baseName) {
+        if (truncatedBase.length + char.length > maxBaseLength) {
+          break;
+        }
+        truncatedBase += char;
       }
       truncatedBase = truncatedBase.trimEnd();
       name = `${truncatedBase}${suffixStr}`;
