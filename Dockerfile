@@ -1,6 +1,6 @@
 # Multi-stage build for production deployment
 # Stage 1: Build Frontend
-FROM node:20-alpine AS frontend-builder
+FROM node:25-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
@@ -15,7 +15,7 @@ COPY ayunis-core-frontend/ ./
 RUN npm run build
 
 # Stage 2: Build Backend
-FROM node:20-alpine AS backend-builder
+FROM node:25-alpine AS backend-builder
 
 # Install build dependencies for bcrypt
 RUN apk add --no-cache python3 make g++ gcc
@@ -36,7 +36,7 @@ COPY --from=frontend-builder /app/frontend/dist ./frontend
 RUN npm run build
 
 # Stage 3: Production
-FROM node:20-alpine AS production
+FROM node:25-alpine AS production
 
 # Install runtime dependencies for bcrypt
 RUN apk add --no-cache python3 make g++ gcc
