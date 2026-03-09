@@ -107,7 +107,7 @@ export class ToolAssemblyService {
       // Only include skills in prompt when tools are enabled and skills feature is on,
       // otherwise the prompt would instruct the model to use activate_skill which isn't available
       skills: canUseTools && this.features.skillsEnabled ? skillEntries : [],
-      knowledgeBases: canUseTools ? (thread.knowledgeBases ?? []) : [],
+      knowledgeBases: canUseTools ? thread.getUniqueKnowledgeBases() : [],
       userSystemPrompt,
     });
 
@@ -402,13 +402,14 @@ export class ToolAssemblyService {
     }
 
     // Knowledge base tools are available if the thread has knowledge bases
+    const knowledgeBases = thread.getUniqueKnowledgeBases();
 
-    if ((thread.knowledgeBases?.length ?? 0) > 0) {
+    if (knowledgeBases.length > 0) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
             type: ToolType.KNOWLEDGE_QUERY,
-            context: thread.knowledgeBases,
+            context: knowledgeBases,
           }),
         ),
       );
@@ -417,7 +418,7 @@ export class ToolAssemblyService {
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
             type: ToolType.KNOWLEDGE_GET_TEXT,
-            context: thread.knowledgeBases,
+            context: knowledgeBases,
           }),
         ),
       );
