@@ -11975,7 +11975,7 @@
           },
           "isShared": {
             "type": "boolean",
-            "description": "Whether the knowledge base is shared with the current user (not owned)",
+            "description": "Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases).",
             "example": false
           }
         },
@@ -11984,8 +11984,7 @@
           "name",
           "description",
           "createdAt",
-          "updatedAt",
-          "isShared"
+          "updatedAt"
         ]
       },
       "KnowledgeBaseListResponseDto": {

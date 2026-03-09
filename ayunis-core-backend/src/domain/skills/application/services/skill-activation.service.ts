@@ -78,7 +78,11 @@ export class SkillActivationService {
     for (const knowledgeBaseId of skill.knowledgeBaseIds) {
       try {
         await this.addKnowledgeBaseToThreadUseCase.execute(
-          new AddKnowledgeBaseToThreadCommand(thread.id, knowledgeBaseId),
+          new AddKnowledgeBaseToThreadCommand(
+            thread.id,
+            knowledgeBaseId,
+            skill.id,
+          ),
         );
       } catch (error) {
         if (error instanceof KnowledgeBaseNotFoundError) {
