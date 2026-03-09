@@ -1,16 +1,16 @@
-import { WebhookEvent } from '../webhook-event.entity';
+import type { SubscriptionWebhookPayload } from '../subscription-webhook-payload.types';
 import { WebhookEventType } from '../value-objects/webhook-event-type.enum';
-import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
+import { WebhookEvent } from '../webhook-event.entity';
 
-export class SubscriptionCreatedWebhookEvent extends WebhookEvent {
+export class SubscriptionCreatedWebhookEvent extends WebhookEvent<SubscriptionWebhookPayload> {
   readonly eventType: WebhookEventType;
-  readonly data: Subscription;
+  readonly data: SubscriptionWebhookPayload;
   readonly timestamp: Date;
 
-  constructor(subscription: Subscription) {
+  constructor(payload: SubscriptionWebhookPayload) {
     super();
     this.eventType = WebhookEventType.SUBSCRIPTION_CREATED;
-    this.data = subscription;
-    this.timestamp = new Date(); // Is only created
+    this.data = payload;
+    this.timestamp = new Date();
   }
 }

@@ -4,6 +4,7 @@ import type { SubscriptionBillingInfo } from '../../domain/subscription-billing-
 
 export abstract class SubscriptionRepository {
   abstract findByOrgId(orgId: UUID): Promise<Subscription[]>;
+  abstract findLatestByOrgId(orgId: UUID): Promise<Subscription | null>;
   abstract findAll(): Promise<Subscription[]>;
   abstract create(subscription: Subscription): Promise<Subscription>;
   abstract update(subscription: Subscription): Promise<Subscription>;

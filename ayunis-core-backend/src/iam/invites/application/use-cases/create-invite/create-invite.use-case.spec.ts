@@ -12,6 +12,10 @@ import { SendInvitationEmailUseCase } from '../send-invitation-email/send-invita
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
+import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
+import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
+import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
+import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import {
   EmailNotAvailableError,
   InvalidSeatsError,
@@ -158,24 +162,68 @@ describe('CreateInviteUseCase', () => {
       const mockSubscription = {
         availableSeats: 5,
         nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        subscription: {
+        subscription: new SeatBasedSubscription({
           id: 'sub-id' as any,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          cancelledAt: null,
           orgId: mockOrgId,
           noOfSeats: 10,
           pricePerSeat: 0,
-          renewalCycle: 'monthly' as any,
+          renewalCycle: RenewalCycle.MONTHLY,
           renewalCycleAnchor: new Date(),
-          billingInfo: {
-            id: 'bill',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            currency: 'USD',
-            status: 'active',
-          } as any,
-        },
+          billingInfo: new SubscriptionBillingInfo({
+            companyName: 'Test',
+            street: 'Test St',
+            houseNumber: '1',
+            postalCode: '12345',
+            city: 'Test',
+            country: 'DE',
+          }),
+        }),
+      };
+
+      findUserByEmailUseCase.execute.mockResolvedValue(null);
+      configService.get
+        .mockReturnValueOnce([]) // auth.emailProviderBlacklist
+        .mockReturnValueOnce(true) // app.isCloudHosted
+        .mockReturnValueOnce('7d') // auth.jwt.inviteExpiresIn
+        .mockReturnValueOnce(true); // emails.hasConfig
+
+      getActiveSubscriptionUseCase.execute.mockResolvedValue(mockSubscription);
+      inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
+
+      // Act
+      await useCase.execute(command);
+
+      // Assert
+      expect(getActiveSubscriptionUseCase.execute).toHaveBeenCalled();
+      expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
+      expect(invitesRepository.create).toHaveBeenCalled();
+    });
+
+    it('should skip seat management for usage-based subscription in cloud instance', async () => {
+      // Arrange
+      const command = new CreateInviteCommand({
+        email: mockEmail,
+        orgId: mockOrgId,
+        role: UserRole.USER,
+        userId: mockUserId,
+      });
+
+      const mockSubscription = {
+        availableSeats: null,
+        nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        subscription: new UsageBasedSubscription({
+          id: 'sub-id' as any,
+          orgId: mockOrgId,
+          monthlyCredits: 500,
+          billingInfo: new SubscriptionBillingInfo({
+            companyName: 'Gemeinde Musterstadt',
+            street: 'Hauptstraße',
+            houseNumber: '1',
+            postalCode: '12345',
+            city: 'Musterstadt',
+            country: 'DE',
+          }),
+        }),
       };
 
       findUserByEmailUseCase.execute.mockResolvedValue(null);
@@ -244,24 +292,22 @@ describe('CreateInviteUseCase', () => {
       const mockSubscription = {
         availableSeats: 0,
         nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        subscription: {
+        subscription: new SeatBasedSubscription({
           id: 'sub-id' as any,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          cancelledAt: null,
           orgId: mockOrgId,
           noOfSeats: 10,
           pricePerSeat: 0,
-          renewalCycle: 'monthly' as any,
+          renewalCycle: RenewalCycle.MONTHLY,
           renewalCycleAnchor: new Date(),
-          billingInfo: {
-            id: 'bill',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            currency: 'USD',
-            status: 'active',
-          } as any,
-        },
+          billingInfo: new SubscriptionBillingInfo({
+            companyName: 'Test',
+            street: 'Test St',
+            houseNumber: '1',
+            postalCode: '12345',
+            city: 'Test',
+            country: 'DE',
+          }),
+        }),
       };
 
       findUserByEmailUseCase.execute.mockResolvedValue(null);
@@ -348,24 +394,22 @@ describe('CreateInviteUseCase', () => {
       const mockSubscription = {
         availableSeats: -1,
         nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        subscription: {
+        subscription: new SeatBasedSubscription({
           id: 'sub-id' as any,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          cancelledAt: null,
           orgId: mockOrgId,
           noOfSeats: 10,
           pricePerSeat: 0,
-          renewalCycle: 'monthly' as any,
+          renewalCycle: RenewalCycle.MONTHLY,
           renewalCycleAnchor: new Date(),
-          billingInfo: {
-            id: 'bill',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            currency: 'USD',
-            status: 'active',
-          } as any,
-        },
+          billingInfo: new SubscriptionBillingInfo({
+            companyName: 'Test',
+            street: 'Test St',
+            houseNumber: '1',
+            postalCode: '12345',
+            city: 'Test',
+            country: 'DE',
+          }),
+        }),
       };
 
       findUserByEmailUseCase.execute.mockResolvedValue(null);

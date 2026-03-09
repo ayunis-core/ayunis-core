@@ -1048,7 +1048,19 @@ export interface SubscriptionBillingInfoResponseDto {
 export type SubscriptionResponseDtoCancelledAt = { [key: string]: unknown };
 
 /**
- * Renewal cycle of the subscription
+ * Subscription type
+ */
+export type SubscriptionResponseDtoType = typeof SubscriptionResponseDtoType[keyof typeof SubscriptionResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SubscriptionResponseDtoType = {
+  SEAT_BASED: 'SEAT_BASED',
+  USAGE_BASED: 'USAGE_BASED',
+} as const;
+
+/**
+ * Renewal cycle of the subscription (seat-based only)
  */
 export type SubscriptionResponseDtoRenewalCycle = typeof SubscriptionResponseDtoRenewalCycle[keyof typeof SubscriptionResponseDtoRenewalCycle];
 
@@ -1070,16 +1082,23 @@ export interface SubscriptionResponseDto {
   cancelledAt?: SubscriptionResponseDtoCancelledAt;
   /** Organization ID associated with the subscription */
   orgId: string;
-  /** Number of seats in the subscription */
-  noOfSeats: number;
-  /** Price per seat in the subscription */
-  pricePerSeat: number;
-  /** Renewal cycle of the subscription */
-  renewalCycle: SubscriptionResponseDtoRenewalCycle;
-  /** Date that serves as the anchor for renewal cycles */
-  renewalCycleAnchor: string;
-  /** Number of available seats (total seats minus invites) */
-  availableSeats: number;
+  /** Subscription type */
+  type: SubscriptionResponseDtoType;
+  /** Number of seats in the subscription (seat-based only) */
+  noOfSeats?: number;
+  /** Price per seat in the subscription (seat-based only) */
+  pricePerSeat?: number;
+  /** Renewal cycle of the subscription (seat-based only) */
+  renewalCycle?: SubscriptionResponseDtoRenewalCycle;
+  /** Date that serves as the anchor for renewal cycles (seat-based only) */
+  renewalCycleAnchor?: string;
+  /** Monthly credit budget (usage-based only) */
+  monthlyCredits?: number;
+  /**
+   * Number of available seats (total seats minus invites, seat-based only)
+   * @nullable
+   */
+  availableSeats?: number | null;
   /** Date of the next renewal */
   nextRenewalDate: string;
   /** Billing information */
@@ -1092,15 +1111,8 @@ export interface SubscriptionResponseDtoNullable {
 }
 
 export interface CreateSubscriptionRequestDto {
-  /**
-   * Number of seats for the subscription
-   * @minimum 1
-   */
-  noOfSeats?: number;
   /** Company name for the subscription */
   companyName: string;
-  /** Sub text for the subscription */
-  subText?: string;
   /** Street for the subscription */
   street: string;
   /** House number for the subscription */
@@ -1113,6 +1125,13 @@ export interface CreateSubscriptionRequestDto {
   country: string;
   /** VAT number for the subscription */
   vatNumber?: string;
+  /**
+   * Number of seats for the subscription (seat-based only)
+   * @minimum 1
+   */
+  noOfSeats?: number;
+  /** Sub text for the subscription */
+  subText?: string;
 }
 
 export interface UpdateBillingInfoDto {

@@ -2,12 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { UpdateSeatsCommand } from './update-seats.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import {
-  UnauthorizedSubscriptionAccessError,
   SubscriptionNotFoundError,
   InvalidSubscriptionDataError,
   TooManyUsedSeatsError,
   UnexpectedSubscriptionError,
+  InvalidSubscriptionTypeError,
 } from '../../subscription.errors';
+import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
@@ -18,9 +19,9 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
 import { SubscriptionSeatsUpdatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/subscription-seats-updated.webhook-event';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { toSubscriptionWebhookPayload } from '../../mappers/subscription-webhook-payload.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
+import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
 
 @Injectable()
 export class UpdateSeatsUseCase {
@@ -43,17 +44,11 @@ export class UpdateSeatsUseCase {
     });
 
     try {
-      const systemRole = this.contextService.get('systemRole');
-      const orgRole = this.contextService.get('role');
-      const orgId = this.contextService.get('orgId');
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === command.orgId;
-      if (!isSuperAdmin && !isOrgAdmin) {
-        throw new UnauthorizedSubscriptionAccessError(
-          command.requestingUserId,
-          command.orgId,
-        );
-      }
+      validateSubscriptionAccess(
+        this.contextService,
+        command.requestingUserId,
+        command.orgId,
+      );
       this.logger.debug('Validating seat count');
       if (command.noOfSeats <= 0) {
         this.logger.warn('Invalid number of seats provided', {
@@ -78,6 +73,12 @@ export class UpdateSeatsUseCase {
         throw new SubscriptionNotFoundError(command.orgId);
       }
       const subscription = result.subscription;
+
+      if (!isSeatBased(subscription)) {
+        throw new InvalidSubscriptionTypeError(
+          'Seat updates are only allowed for seat-based subscriptions',
+        );
+      }
 
       const usersResult = await this.findUsersByOrgIdUseCase.execute(
         new FindUsersByOrgIdQuery({
@@ -127,7 +128,9 @@ export class UpdateSeatsUseCase {
       // Send webhook asynchronously (don't block the main operation)
       void this.sendWebhookUseCase.execute(
         new SendWebhookCommand(
-          new SubscriptionSeatsUpdatedWebhookEvent(subscription),
+          new SubscriptionSeatsUpdatedWebhookEvent(
+            toSubscriptionWebhookPayload(subscription),
+          ),
         ),
       );
     } catch (error) {

@@ -1,6 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { RenewalCycle } from '../../../domain/value-objects/renewal-cycle.enum';
+import { SubscriptionType } from '../../../domain/value-objects/subscription-type.enum';
 
 class SubscriptionBillingInfoResponseDto {
   @ApiProperty({
@@ -82,35 +83,52 @@ export class SubscriptionResponseDto {
   orgId: UUID;
 
   @ApiProperty({
-    description: 'Number of seats in the subscription',
+    description: 'Subscription type',
+    enum: SubscriptionType,
+    example: SubscriptionType.SEAT_BASED,
+  })
+  type: SubscriptionType;
+
+  @ApiPropertyOptional({
+    description: 'Number of seats in the subscription (seat-based only)',
     example: 10,
   })
-  noOfSeats: number;
+  noOfSeats?: number;
 
-  @ApiProperty({
-    description: 'Price per seat in the subscription',
+  @ApiPropertyOptional({
+    description: 'Price per seat in the subscription (seat-based only)',
     example: 29.99,
   })
-  pricePerSeat: number;
+  pricePerSeat?: number;
 
-  @ApiProperty({
-    description: 'Renewal cycle of the subscription',
+  @ApiPropertyOptional({
+    description: 'Renewal cycle of the subscription (seat-based only)',
     enum: RenewalCycle,
     example: RenewalCycle.MONTHLY,
   })
-  renewalCycle: RenewalCycle;
+  renewalCycle?: RenewalCycle;
 
-  @ApiProperty({
-    description: 'Date that serves as the anchor for renewal cycles',
+  @ApiPropertyOptional({
+    description:
+      'Date that serves as the anchor for renewal cycles (seat-based only)',
     example: '2023-12-01T10:00:00Z',
   })
-  renewalCycleAnchor: Date;
+  renewalCycleAnchor?: Date;
 
-  @ApiProperty({
-    description: 'Number of available seats (total seats minus invites)',
-    example: 3,
+  @ApiPropertyOptional({
+    description: 'Monthly credit budget (usage-based only)',
+    example: 1000,
   })
-  availableSeats: number;
+  monthlyCredits?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Number of available seats (total seats minus invites, seat-based only)',
+    example: 3,
+    type: Number,
+    nullable: true,
+  })
+  availableSeats?: number | null;
 
   @ApiProperty({
     description: 'Date of the next renewal',

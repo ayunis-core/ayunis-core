@@ -2,11 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { GetActiveSubscriptionQuery } from './get-active-subscription.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
+import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.query';
 import { getNextDate } from '../../util/get-date-for-anchor-and-cycle';
 import {
-  UnauthorizedSubscriptionAccessError,
   SubscriptionNotFoundError,
   MultipleActiveSubscriptionsError,
 } from '../../subscription.errors';
@@ -15,8 +15,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
 
 @Injectable()
 export class GetActiveSubscriptionUseCase {
@@ -31,7 +30,7 @@ export class GetActiveSubscriptionUseCase {
 
   async execute(query: GetActiveSubscriptionQuery): Promise<{
     subscription: Subscription;
-    availableSeats: number;
+    availableSeats: number | null;
     nextRenewalDate: Date;
   }> {
     this.logger.log('Getting subscription', {
@@ -41,17 +40,11 @@ export class GetActiveSubscriptionUseCase {
 
     try {
       this.logger.debug('Checking if user is from organization');
-      const systemRole = this.contextService.get('systemRole');
-      const orgRole = this.contextService.get('role');
-      const orgId = this.contextService.get('orgId');
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === query.orgId;
-      if (!isSuperAdmin && !isOrgAdmin) {
-        throw new UnauthorizedSubscriptionAccessError(
-          query.requestingUserId,
-          query.orgId,
-        );
-      }
+      validateSubscriptionAccess(
+        this.contextService,
+        query.requestingUserId,
+        query.orgId,
+      );
 
       const subscriptions = (
         await this.subscriptionRepository.findByOrgId(query.orgId)
@@ -71,26 +64,9 @@ export class GetActiveSubscriptionUseCase {
 
       const subscription = subscriptions[0];
 
-      const [invitesResult, usersResult] = await Promise.all([
-        this.getInvitesByOrgUseCase.execute(
-          new GetInvitesByOrgQuery({
-            orgId: query.orgId,
-            requestingUserId: query.requestingUserId,
-            onlyOpen: true,
-          }),
-        ),
-        this.findUsersByOrgIdUseCase.execute(
-          new FindUsersByOrgIdQuery({
-            orgId: query.orgId,
-            pagination: { limit: 1000, offset: 0 },
-          }),
-        ),
-      ]);
-
-      const availableSeats = this.getAvailableSeats(
+      const availableSeats = await this.computeAvailableSeats(
         subscription,
-        invitesResult.total ?? invitesResult.data.length,
-        usersResult.total ?? usersResult.data.length,
+        query,
       );
       const nextRenewalDate = this.getNextRenewalDate(subscription);
       return { subscription, availableSeats, nextRenewalDate };
@@ -108,26 +84,51 @@ export class GetActiveSubscriptionUseCase {
     }
   }
 
-  private getAvailableSeats(
+  private async computeAvailableSeats(
     subscription: Subscription,
-    openInvitesCount: number,
-    userCount: number,
-  ): number {
+    query: GetActiveSubscriptionQuery,
+  ): Promise<number | null> {
+    if (!isSeatBased(subscription)) {
+      return null;
+    }
+    const [invitesResult, usersResult] = await Promise.all([
+      this.getInvitesByOrgUseCase.execute(
+        new GetInvitesByOrgQuery({
+          orgId: query.orgId,
+          requestingUserId: query.requestingUserId,
+          onlyOpen: true,
+        }),
+      ),
+      this.findUsersByOrgIdUseCase.execute(
+        new FindUsersByOrgIdQuery({
+          orgId: query.orgId,
+          pagination: { limit: 1000, offset: 0 },
+        }),
+      ),
+    ]);
+
+    const openInvitesCount = invitesResult.total ?? invitesResult.data.length;
+    const userCount = usersResult.total ?? usersResult.data.length;
     return subscription.noOfSeats - openInvitesCount - userCount;
   }
 
   private getNextRenewalDate(subscription: Subscription): Date {
-    if (subscription.cancelledAt) {
+    if (isSeatBased(subscription)) {
+      if (subscription.cancelledAt) {
+        return getNextDate({
+          anchorDate: subscription.renewalCycleAnchor,
+          targetDate: subscription.cancelledAt,
+          cycle: subscription.renewalCycle,
+        });
+      }
       return getNextDate({
         anchorDate: subscription.renewalCycleAnchor,
-        targetDate: subscription.cancelledAt,
+        targetDate: new Date(),
         cycle: subscription.renewalCycle,
       });
     }
-    return getNextDate({
-      anchorDate: subscription.renewalCycleAnchor,
-      targetDate: new Date(),
-      cycle: subscription.renewalCycle,
-    });
+    // Usage-based: next renewal is start of next calendar month
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
   }
 }

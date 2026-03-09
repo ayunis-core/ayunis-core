@@ -2,10 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { CreateSubscriptionCommand } from './create-subscription.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
+import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { ConfigService } from '@nestjs/config';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import {
-  UnauthorizedSubscriptionAccessError,
   SubscriptionAlreadyExistsError,
   InvalidSubscriptionDataError,
   UnexpectedSubscriptionError,
@@ -22,9 +22,9 @@ import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/fin
 import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
 import { SubscriptionCreatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/subscription-created.webhook-events';
+import { toSubscriptionWebhookPayload } from '../../mappers/subscription-webhook-payload.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
 
 @Injectable()
 export class CreateSubscriptionUseCase {
@@ -42,17 +42,11 @@ export class CreateSubscriptionUseCase {
 
   async execute(command: CreateSubscriptionCommand): Promise<Subscription> {
     try {
-      const systemRole = this.contextService.get('systemRole');
-      const orgRole = this.contextService.get('role');
-      const orgId = this.contextService.get('orgId');
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === command.orgId;
-      if (!isSuperAdmin && !isOrgAdmin) {
-        throw new UnauthorizedSubscriptionAccessError(
-          command.requestingUserId,
-          command.orgId,
-        );
-      }
+      validateSubscriptionAccess(
+        this.contextService,
+        command.requestingUserId,
+        command.orgId,
+      );
       this.logger.log('Creating subscription', {
         orgId: command.orgId,
         requestingUserId: command.requestingUserId,
@@ -119,7 +113,7 @@ export class CreateSubscriptionUseCase {
       }
 
       this.logger.debug('Creating subscription entity');
-      const subscription = new Subscription({
+      const subscription = new SeatBasedSubscription({
         orgId: command.orgId,
         noOfSeats: command.noOfSeats,
         renewalCycle: RenewalCycle.YEARLY,
@@ -148,7 +142,9 @@ export class CreateSubscriptionUseCase {
       // Send webhook asynchronously (don't block the main operation)
       void this.sendWebhookUseCase.execute(
         new SendWebhookCommand(
-          new SubscriptionCreatedWebhookEvent(createdSubscription),
+          new SubscriptionCreatedWebhookEvent(
+            toSubscriptionWebhookPayload(createdSubscription),
+          ),
         ),
       );
 

@@ -1,24 +1,16 @@
-import type { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
+import type { BillingInfoPayload } from '../subscription-webhook-payload.types';
 import { WebhookEventType } from '../value-objects/webhook-event-type.enum';
 import { WebhookEvent } from '../webhook-event.entity';
-import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 
-export class SubscriptionBillingInfoUpdatedWebhookEvent extends WebhookEvent {
+export class SubscriptionBillingInfoUpdatedWebhookEvent extends WebhookEvent<BillingInfoPayload> {
   readonly eventType: WebhookEventType;
-  readonly data: SubscriptionBillingInfo & {
-    orgId: string;
-    subscriptionId: string;
-  };
+  readonly data: BillingInfoPayload;
   readonly timestamp: Date;
 
-  constructor(subscription: Subscription) {
+  constructor(payload: BillingInfoPayload) {
     super();
     this.eventType = WebhookEventType.SUBSCRIPTION_BILLING_INFO_UPDATED;
-    this.data = {
-      ...subscription.billingInfo,
-      orgId: subscription.orgId,
-      subscriptionId: subscription.id,
-    };
+    this.data = payload;
     this.timestamp = new Date();
   }
 }

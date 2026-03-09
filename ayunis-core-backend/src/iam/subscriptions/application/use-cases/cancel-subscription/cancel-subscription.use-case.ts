@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { CancelSubscriptionCommand } from './cancel-subscription.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import {
-  UnauthorizedSubscriptionAccessError,
   SubscriptionNotFoundError,
   SubscriptionAlreadyCancelledError,
   UnexpectedSubscriptionError,
@@ -13,9 +12,9 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
 import { SubscriptionCancelledWebhookEvent } from 'src/common/webhooks/domain/webhook-events/subscription-cancelled.webhook-event';
+import { toSubscriptionWebhookPayload } from '../../mappers/subscription-webhook-payload.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
 
 @Injectable()
 export class CancelSubscriptionUseCase {
@@ -35,17 +34,11 @@ export class CancelSubscriptionUseCase {
     });
 
     try {
-      const systemRole = this.contextService.get('systemRole');
-      const orgRole = this.contextService.get('role');
-      const orgId = this.contextService.get('orgId');
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === command.orgId;
-      if (!isSuperAdmin && !isOrgAdmin) {
-        throw new UnauthorizedSubscriptionAccessError(
-          command.requestingUserId,
-          command.orgId,
-        );
-      }
+      validateSubscriptionAccess(
+        this.contextService,
+        command.requestingUserId,
+        command.orgId,
+      );
 
       this.logger.debug('Finding subscription');
       const result = await this.getActiveSubscriptionUseCase.execute(
@@ -84,12 +77,13 @@ export class CancelSubscriptionUseCase {
       // Send webhook asynchronously (don't block the main operation)
       void this.sendWebhookUseCase.execute(
         new SendWebhookCommand(
-          new SubscriptionCancelledWebhookEvent(subscription),
+          new SubscriptionCancelledWebhookEvent(
+            toSubscriptionWebhookPayload(subscription),
+          ),
         ),
       );
     } catch (error) {
       if (error instanceof ApplicationError) {
-        // Already logged and properly typed error, just rethrow
         throw error;
       }
       this.logger.error('Subscription cancellation failed', {
