@@ -93,14 +93,16 @@ export class LocalSkillTemplateRepository implements SkillTemplateRepository {
     return this.mapper.toDomain(record);
   }
 
-  async findActiveByMode(mode: DistributionMode): Promise<SkillTemplate[]> {
+  async findActiveByMode<T extends SkillTemplate = SkillTemplate>(
+    mode: DistributionMode,
+  ): Promise<T[]> {
     this.logger.log('findActiveByMode', { mode });
     const childRepo = this.childRepos[mode];
     const records = await childRepo.find({
       where: { isActive: true },
       order: { createdAt: 'ASC' },
     });
-    return records.map((r) => this.mapper.toDomain(r));
+    return records.map((r) => this.mapper.toDomain(r) as T);
   }
 
   private async saveOrThrow(

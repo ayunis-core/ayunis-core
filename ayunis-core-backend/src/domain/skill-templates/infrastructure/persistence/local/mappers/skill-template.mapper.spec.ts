@@ -115,7 +115,7 @@ describe('SkillTemplateMapper', () => {
       expect(record.isActive).toBe(true);
     });
 
-    it('should null out defaultActive and defaultPinned for AlwaysOnSkillTemplate records', () => {
+    it('should not set defaultActive or defaultPinned for AlwaysOnSkillTemplate records', () => {
       const domain = new AlwaysOnSkillTemplate({
         id: mockId,
         name: 'Sicherheits-Richtlinie',
@@ -126,8 +126,8 @@ describe('SkillTemplateMapper', () => {
 
       const record = mapper.toRecord(domain);
 
-      expect(record.defaultActive).toBeNull();
-      expect(record.defaultPinned).toBeNull();
+      expect(record).not.toHaveProperty('defaultActive');
+      expect(record).not.toHaveProperty('defaultPinned');
     });
 
     it('should map a PreCreatedCopySkillTemplate to PreCreatedCopySkillTemplateRecord', () => {
