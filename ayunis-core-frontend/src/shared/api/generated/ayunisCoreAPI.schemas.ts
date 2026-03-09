@@ -750,6 +750,52 @@ export interface CreateUserDto {
 }
 
 /**
+ * User role
+ */
+export type SuperAdminUserResponseDtoRole = typeof SuperAdminUserResponseDtoRole[keyof typeof SuperAdminUserResponseDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SuperAdminUserResponseDtoRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+/**
+ * System-level role of the user
+ */
+export type SuperAdminUserResponseDtoSystemRole = typeof SuperAdminUserResponseDtoSystemRole[keyof typeof SuperAdminUserResponseDtoSystemRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SuperAdminUserResponseDtoSystemRole = {
+  customer: 'customer',
+  super_admin: 'super_admin',
+} as const;
+
+export interface SuperAdminUserResponseDto {
+  /** User unique identifier */
+  id: string;
+  /** User name */
+  name: string;
+  /** User email address */
+  email: string;
+  /** User role */
+  role: SuperAdminUserResponseDtoRole;
+  /** Organization ID the user belongs to */
+  orgId: string;
+  /** Date when the user was created */
+  createdAt: string;
+  /** System-level role of the user */
+  systemRole: SuperAdminUserResponseDtoSystemRole;
+}
+
+export interface PromoteToSuperAdminDto {
+  /** Email address of the user to promote to super admin */
+  email: string;
+}
+
+/**
  * Role to assign to the invited user
  */
 export type CreateInviteDtoRole = typeof CreateInviteDtoRole[keyof typeof CreateInviteDtoRole];

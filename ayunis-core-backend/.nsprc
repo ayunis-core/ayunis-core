@@ -1,10 +1,6 @@
 {
-  "1113331": {
+  "1113567": {
     "active": true,
-    "notes": "fast-xml-parser DoS via DOCTYPE entity expansion — only affects minio which parses XML from our own MinIO server, not untrusted input. Waiting for minio to upgrade to fast-xml-parser v5."
-  },
-  "1113407": {
-    "active": true,
-    "notes": "fast-xml-parser entity encoding bypass via regex injection — only affects minio which parses XML from our own MinIO server, not untrusted input. Waiting for minio to upgrade to fast-xml-parser v5."
+    "notes": "fast-xml-parser entity encoding bypass via regex injection in DOCTYPE entity names — only affects minio which parses XML from our own MinIO server, not untrusted input. Waiting for minio to upgrade to fast-xml-parser v5."
   }
 }

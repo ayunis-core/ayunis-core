@@ -1925,6 +1925,116 @@
         ]
       }
     },
+    "/super-admin/super-admins": {
+      "get": {
+        "description": "Retrieve all users with super admin status. Only accessible to super admins.",
+        "operationId": "SuperAdminManagementController_listSuperAdmins",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of super admins",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SuperAdminUserResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          }
+        },
+        "summary": "List all super admins",
+        "tags": [
+          "Super Admin Management"
+        ]
+      },
+      "post": {
+        "description": "Promote an existing user to super admin by email address. Idempotent if user is already a super admin.",
+        "operationId": "SuperAdminManagementController_promoteToSuperAdmin",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Email of the user to promote",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromoteToSuperAdminDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User promoted to super admin (or already a super admin)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminUserResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "User with the given email not found"
+          }
+        },
+        "summary": "Promote a user to super admin",
+        "tags": [
+          "Super Admin Management"
+        ]
+      }
+    },
+    "/super-admin/super-admins/{userId}": {
+      "delete": {
+        "description": "Demote a user from super admin to customer. Cannot demote yourself.",
+        "operationId": "SuperAdminManagementController_demoteFromSuperAdmin",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "User ID to demote",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Super admin status removed"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "403": {
+            "description": "Cannot remove your own super admin status"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "409": {
+            "description": "Cannot demote the last super admin"
+          },
+          "422": {
+            "description": "User is not a super admin"
+          }
+        },
+        "summary": "Remove super admin status from a user",
+        "tags": [
+          "Super Admin Management"
+        ]
+      }
+    },
     "/invites": {
       "post": {
         "description": "Send an invitation to a user to join an organization with a specific role",
@@ -8974,6 +9084,79 @@
           "name",
           "role",
           "sendPasswordResetEmail"
+        ]
+      },
+      "SuperAdminUserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "User unique identifier",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "User name",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "description": "User email address",
+            "example": "john.doe@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "User role",
+            "enum": [
+              "admin",
+              "user"
+            ],
+            "example": "user"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID the user belongs to",
+            "example": "123e4567-e89b-12d3-a456-426614174001",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the user was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "systemRole": {
+            "type": "string",
+            "description": "System-level role of the user",
+            "enum": [
+              "customer",
+              "super_admin"
+            ],
+            "example": "super_admin"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role",
+          "orgId",
+          "createdAt",
+          "systemRole"
+        ]
+      },
+      "PromoteToSuperAdminDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address of the user to promote to super admin",
+            "example": "user@example.com"
+          }
+        },
+        "required": [
+          "email"
         ]
       },
       "CreateInviteDto": {

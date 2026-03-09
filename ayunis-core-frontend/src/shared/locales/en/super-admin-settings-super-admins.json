@@ -1,0 +1,48 @@
+{
+  "header": {
+    "title": "Super Admins",
+    "description": "Manage users with super admin access across the platform."
+  },
+  "actions": {
+    "addSuperAdmin": "Add super admin",
+    "remove": "Remove"
+  },
+  "dialog": {
+    "title": "Add super admin",
+    "description": "Enter the email address of an existing user to grant super admin access.",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "user@example.com",
+    "emailRequired": "Email address is required",
+    "emailInvalid": "Please enter a valid email address",
+    "cancel": "Cancel",
+    "add": "Add super admin",
+    "adding": "Adding..."
+  },
+  "table": {
+    "name": "Name",
+    "email": "Email"
+  },
+  "empty": {
+    "title": "No super admins",
+    "description": "Super admins you add will show up here."
+  },
+  "addSuperAdmin": {
+    "success": "User promoted to super admin",
+    "error": "Failed to add super admin. Make sure the email belongs to an existing user.",
+    "errorNotFound": "No user found with this email address."
+  },
+  "confirmRemove": {
+    "title": "Remove super admin",
+    "description": "Are you sure you want to remove super admin access from {{name}}?",
+    "confirmText": "Remove",
+    "cancelText": "Cancel"
+  },
+  "removeSuperAdmin": {
+    "success": "Super admin status removed",
+    "error": "Failed to remove super admin status.",
+    "errorSelfDemotion": "You cannot remove your own super admin status.",
+    "errorLastAdmin": "Cannot remove the last super admin.",
+    "errorNotSuperAdmin": "This user is not a super admin.",
+    "errorNotFound": "User not found."
+  }
+}
