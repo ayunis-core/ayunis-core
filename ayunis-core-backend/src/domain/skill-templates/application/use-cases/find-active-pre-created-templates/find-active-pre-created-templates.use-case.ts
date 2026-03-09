@@ -22,12 +22,9 @@ export class FindActivePreCreatedTemplatesUseCase {
   ): Promise<PreCreatedCopySkillTemplate[]> {
     this.logger.log('Finding active pre-created copy templates');
     try {
-      // Safe cast: the repository uses TypeORM STI which hydrates the correct
-      // subclass based on the discriminator column, so findActiveByMode(PRE_CREATED_COPY)
-      // always returns PreCreatedCopySkillTemplate instances.
-      return (await this.skillTemplateRepository.findActiveByMode(
+      return await this.skillTemplateRepository.findActiveByMode<PreCreatedCopySkillTemplate>(
         DistributionMode.PRE_CREATED_COPY,
-      )) as PreCreatedCopySkillTemplate[];
+      );
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Error finding active pre-created templates', {

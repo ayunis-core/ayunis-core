@@ -9,5 +9,7 @@ export abstract class SkillTemplateRepository {
   abstract findOne(id: UUID): Promise<SkillTemplate | null>;
   abstract findAll(): Promise<SkillTemplate[]>;
   abstract findByName(name: string): Promise<SkillTemplate | null>;
-  abstract findActiveByMode(mode: DistributionMode): Promise<SkillTemplate[]>;
+  abstract findActiveByMode<T extends SkillTemplate = SkillTemplate>(
+    mode: DistributionMode,
+  ): Promise<T[]>;
 }

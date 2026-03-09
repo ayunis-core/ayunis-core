@@ -15,12 +15,4 @@ export abstract class SkillTemplateRecord extends BaseRecord {
 
   @Column({ nullable: false, default: false })
   isActive: boolean;
-
-  // STI: owned by PreCreatedCopy, null for other subtypes — on base record so TypeORM includes them in UPDATE for all child entities
-  @Column({ type: 'boolean', nullable: true })
-  defaultActive: boolean | null;
-
-  // STI: owned by PreCreatedCopy, null for other subtypes — on base record so TypeORM includes them in UPDATE for all child entities
-  @Column({ type: 'boolean', nullable: true })
-  defaultPinned: boolean | null;
 }
