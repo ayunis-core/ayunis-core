@@ -47,6 +47,8 @@ describe('ListSkillMcpIntegrationsUseCase', () => {
       toggleSkillPinned: jest.fn(),
       isSkillPinned: jest.fn(),
       getPinnedSkillIds: jest.fn(),
+      findSkillsByKnowledgeBaseAndOwners: jest.fn(),
+      removeKnowledgeBaseFromSkills: jest.fn(),
     } as jest.Mocked<SkillRepository>;
 
     const mockGetMcpIntegrationsByIdsUseCase = {
