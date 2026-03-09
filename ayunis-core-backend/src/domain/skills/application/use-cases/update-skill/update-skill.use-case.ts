@@ -11,6 +11,7 @@ import {
   UnexpectedSkillError,
 } from '../../skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { InvalidSkillNameError } from '../../../domain/skill.entity';
 
 @Injectable()
 export class UpdateSkillUseCase {
@@ -64,7 +65,11 @@ export class UpdateSkillUseCase {
 
       return this.skillRepository.update(updatedSkill);
     } catch (error) {
-      if (error instanceof ApplicationError) throw error;
+      if (
+        error instanceof ApplicationError ||
+        error instanceof InvalidSkillNameError
+      )
+        throw error;
       this.logger.error('Error updating skill', { error: error as Error });
       throw new UnexpectedSkillError(error);
     }

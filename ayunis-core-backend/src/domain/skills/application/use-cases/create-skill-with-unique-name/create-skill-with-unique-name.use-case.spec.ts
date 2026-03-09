@@ -103,6 +103,69 @@ describe('CreateSkillWithUniqueNameUseCase', () => {
     expect(result.name).toBe('Translator 4');
   });
 
+  it('should truncate base name when suffix would exceed 100-char limit', async () => {
+    const longName = 'A'.repeat(100);
+    skillRepository.findByNameAndOwner.mockImplementation((name: string) =>
+      Promise.resolve(
+        name === longName
+          ? new Skill({
+              name,
+              shortDescription: 'existing',
+              instructions: 'existing',
+              userId,
+            })
+          : null,
+      ),
+    );
+
+    const command = new CreateSkillWithUniqueNameCommand({
+      name: longName,
+      shortDescription: 'Test',
+      instructions: 'Test',
+      userId,
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(result.name.length).toBeLessThanOrEqual(100);
+    expect(result.name).toMatch(/ 2$/);
+  });
+
+  it('should truncate base name to 100 characters even when no collision exists', async () => {
+    const longName = 'B'.repeat(120);
+
+    const command = new CreateSkillWithUniqueNameCommand({
+      name: longName,
+      shortDescription: 'Test',
+      instructions: 'Test',
+      userId,
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(result.name.length).toBe(100);
+    expect(result.name).toBe('B'.repeat(100));
+  });
+
+  it('should truncate codepoint-safely when no collision exists', async () => {
+    // Each emoji is multiple UTF-16 code units but one codepoint
+    const emoji = '😀';
+    const longName = emoji.repeat(60); // 60 emoji × 2 UTF-16 chars = 120 chars
+
+    const command = new CreateSkillWithUniqueNameCommand({
+      name: longName,
+      shortDescription: 'Test',
+      instructions: 'Test',
+      userId,
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(result.name.length).toBeLessThanOrEqual(100);
+    // Should not split an emoji in half
+    expect([...result.name].every((cp) => cp === emoji)).toBe(true);
+  });
+
   it('should throw when unique name cannot be resolved after max attempts', async () => {
     skillRepository.findByNameAndOwner.mockResolvedValue(
       new Skill({

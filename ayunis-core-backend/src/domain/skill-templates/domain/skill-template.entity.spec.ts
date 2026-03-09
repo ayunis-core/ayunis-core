@@ -63,7 +63,9 @@ describe('SkillTemplate', () => {
         distributionMode: DistributionMode.PRE_CREATED_COPY,
       });
 
-      expect(template.distributionMode).toBe(DistributionMode.PRE_CREATED_COPY);
+      expect(template.distributionMode).toBe(
+        DistributionMode.PRE_CREATED_COPY,
+      );
     });
   });
 
@@ -89,6 +91,32 @@ describe('SkillTemplate', () => {
       expect(template.name).toBe('A');
     });
 
+    it('should accept names with special characters like &, ?, /', () => {
+      expect(
+        new SkillTemplate({ ...validParams, name: 'Q&A Helper' }).name,
+      ).toBe('Q&A Helper');
+      expect(
+        new SkillTemplate({ ...validParams, name: "What's New?" }).name,
+      ).toBe("What's New?");
+      expect(
+        new SkillTemplate({ ...validParams, name: 'Legal/Tax' }).name,
+      ).toBe('Legal/Tax');
+    });
+
+    it('should accept names with underscores', () => {
+      const template = new SkillTemplate({
+        ...validParams,
+        name: 'my_template',
+      });
+      expect(template.name).toBe('my_template');
+    });
+
+    it('should accept names longer than 100 characters (max enforced at DTO layer)', () => {
+      const name = 'A'.repeat(150);
+      const template = new SkillTemplate({ ...validParams, name });
+      expect(template.name).toBe(name);
+    });
+
     it('should reject names with consecutive spaces', () => {
       expect(
         () => new SkillTemplate({ ...validParams, name: 'Bad  Name' }),
@@ -97,6 +125,12 @@ describe('SkillTemplate', () => {
 
     it('should reject empty names', () => {
       expect(() => new SkillTemplate({ ...validParams, name: '' })).toThrow(
+        InvalidSkillTemplateNameError,
+      );
+    });
+
+    it('should reject whitespace-only names', () => {
+      expect(() => new SkillTemplate({ ...validParams, name: '   ' })).toThrow(
         InvalidSkillTemplateNameError,
       );
     });
@@ -111,6 +145,20 @@ describe('SkillTemplate', () => {
       expect(
         () => new SkillTemplate({ ...validParams, name: 'Trailing ' }),
       ).toThrow(InvalidSkillTemplateNameError);
+    });
+
+    it('should reject names with control characters', () => {
+      expect(
+        () => new SkillTemplate({ ...validParams, name: 'Test\u0000Name' }),
+      ).toThrow(InvalidSkillTemplateNameError);
+    });
+
+    it('should accept names with ZWJ emoji sequences', () => {
+      const template = new SkillTemplate({
+        ...validParams,
+        name: '👩‍💻 Coding',
+      });
+      expect(template.name).toBe('👩‍💻 Coding');
     });
   });
 });

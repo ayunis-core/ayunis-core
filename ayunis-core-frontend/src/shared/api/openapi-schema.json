@@ -12214,10 +12214,10 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.",
+            "description": "The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.",
             "example": "Legal Research",
             "minLength": 1,
-            "maxLength": 255
+            "maxLength": 100
           },
           "shortDescription": {
             "type": "string",
@@ -12246,10 +12246,10 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.",
+            "description": "The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.",
             "example": "Legal Research",
             "minLength": 1,
-            "maxLength": 255
+            "maxLength": 100
           },
           "shortDescription": {
             "type": "string",
@@ -13110,10 +13110,10 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the skill template. Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.",
+            "description": "The name of the skill template. No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.",
             "example": "Legal Guidelines",
             "minLength": 1,
-            "maxLength": 255
+            "maxLength": 100
           },
           "shortDescription": {
             "type": "string",
@@ -13212,10 +13212,10 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the skill template. Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.",
+            "description": "The name of the skill template. No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.",
             "example": "Legal Guidelines",
             "minLength": 1,
-            "maxLength": 255
+            "maxLength": 100
           },
           "shortDescription": {
             "type": "string",

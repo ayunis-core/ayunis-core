@@ -2600,9 +2600,9 @@ export interface SkillResponseDto {
 
 export interface CreateSkillDto {
   /**
-   * The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.
+   * The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
    * @minLength 1
-   * @maxLength 255
+   * @maxLength 100
    */
   name: string;
   /** A short description of the skill (shown in system prompt for LLM to decide activation) */
@@ -2615,9 +2615,9 @@ export interface CreateSkillDto {
 
 export interface UpdateSkillDto {
   /**
-   * The name of the skill (must be unique per user). Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.
+   * The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
    * @minLength 1
-   * @maxLength 255
+   * @maxLength 100
    */
   name: string;
   /** A short description of the skill (shown in system prompt for LLM to decide activation) */
@@ -3082,9 +3082,9 @@ export const CreateSkillTemplateDtoDistributionMode = {
 
 export interface CreateSkillTemplateDto {
   /**
-   * The name of the skill template. Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.
+   * The name of the skill template. No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
    * @minLength 1
-   * @maxLength 255
+   * @maxLength 100
    */
   name: string;
   /** A short description of the skill template */
@@ -3142,9 +3142,9 @@ export const UpdateSkillTemplateDtoDistributionMode = {
 
 export interface UpdateSkillTemplateDto {
   /**
-   * The name of the skill template. Only letters, numbers, emojis, hyphens, parentheses, and spaces allowed. Must start and end with a letter, number, emoji, or closing parenthesis.
+   * The name of the skill template. No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
    * @minLength 1
-   * @maxLength 255
+   * @maxLength 100
    */
   name?: string;
   /** A short description of the skill template */
