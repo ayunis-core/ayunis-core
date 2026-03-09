@@ -1,4 +1,10 @@
-import { Building2, Brain, BarChart3, Sparkles } from 'lucide-react';
+import {
+  Building2,
+  Brain,
+  BarChart3,
+  Sparkles,
+  ShieldCheck,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   SettingsSidebarWidget,
@@ -28,6 +34,11 @@ export function SuperAdminSettingsSidebar() {
       to: '/super-admin-settings/skills',
       icon: <Sparkles />,
       label: t('layout.skills'),
+    },
+    {
+      to: '/super-admin-settings/super-admins',
+      icon: <ShieldCheck />,
+      label: t('layout.superAdmins'),
     },
   ];
 
