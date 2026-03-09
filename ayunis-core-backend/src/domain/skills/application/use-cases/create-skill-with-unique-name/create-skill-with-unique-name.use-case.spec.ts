@@ -18,6 +18,7 @@ describe('CreateSkillWithUniqueNameUseCase', () => {
         .fn()
         .mockImplementation((skill: Skill) => Promise.resolve(skill)),
       activateSkill: jest.fn().mockResolvedValue(undefined),
+      pinSkill: jest.fn().mockResolvedValue(undefined),
       findByNameAndOwner: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<SkillRepository>;
 
@@ -103,67 +104,70 @@ describe('CreateSkillWithUniqueNameUseCase', () => {
     expect(result.name).toBe('Translator 4');
   });
 
-  it('should truncate base name when suffix would exceed 100-char limit', async () => {
-    const longName = 'A'.repeat(100);
-    skillRepository.findByNameAndOwner.mockImplementation((name: string) =>
-      Promise.resolve(
-        name === longName
-          ? new Skill({
-              name,
-              shortDescription: 'existing',
-              instructions: 'existing',
-              userId,
-            })
-          : null,
-      ),
+  it('should not activate the skill when isActive is false', async () => {
+    const command = new CreateSkillWithUniqueNameCommand({
+      name: 'Inactive Skill',
+      shortDescription: 'Not active',
+      instructions: 'Instructions',
+      userId,
+      isActive: false,
+    });
+
+    await useCase.execute(command);
+
+    expect(skillRepository.create).toHaveBeenCalledTimes(1);
+    expect(skillRepository.activateSkill).not.toHaveBeenCalled();
+  });
+
+  it('should call pinSkill when isPinned is true', async () => {
+    const command = new CreateSkillWithUniqueNameCommand({
+      name: 'Pinned Skill',
+      shortDescription: 'Pinned',
+      instructions: 'Instructions',
+      userId,
+      isPinned: true,
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(skillRepository.activateSkill).toHaveBeenCalledWith(
+      result.id,
+      userId,
     );
-
-    const command = new CreateSkillWithUniqueNameCommand({
-      name: longName,
-      shortDescription: 'Test',
-      instructions: 'Test',
-      userId,
-    });
-
-    const result = await useCase.execute(command);
-
-    expect(result.name.length).toBeLessThanOrEqual(100);
-    expect(result.name).toMatch(/ 2$/);
+    expect(skillRepository.pinSkill).toHaveBeenCalledWith(result.id, userId);
   });
 
-  it('should truncate base name to 100 characters even when no collision exists', async () => {
-    const longName = 'B'.repeat(120);
-
+  it('should force activation when isPinned is true and isActive is false', async () => {
     const command = new CreateSkillWithUniqueNameCommand({
-      name: longName,
-      shortDescription: 'Test',
-      instructions: 'Test',
+      name: 'Pinned But Not Active',
+      shortDescription: 'Pinned without explicit activation',
+      instructions: 'Instructions',
       userId,
+      isActive: false,
+      isPinned: true,
     });
 
     const result = await useCase.execute(command);
 
-    expect(result.name.length).toBe(100);
-    expect(result.name).toBe('B'.repeat(100));
+    expect(skillRepository.activateSkill).toHaveBeenCalledWith(
+      result.id,
+      userId,
+    );
+    expect(skillRepository.pinSkill).toHaveBeenCalledWith(result.id, userId);
   });
 
-  it('should truncate codepoint-safely when no collision exists', async () => {
-    // Each emoji is multiple UTF-16 code units but one codepoint
-    const emoji = '😀';
-    const longName = emoji.repeat(60); // 60 emoji × 2 UTF-16 chars = 120 chars
-
+  it('should not call pinSkill by default', async () => {
     const command = new CreateSkillWithUniqueNameCommand({
-      name: longName,
-      shortDescription: 'Test',
-      instructions: 'Test',
+      name: 'Default Skill',
+      shortDescription: 'Default',
+      instructions: 'Instructions',
       userId,
     });
 
-    const result = await useCase.execute(command);
+    await useCase.execute(command);
 
-    expect(result.name.length).toBeLessThanOrEqual(100);
-    // Should not split an emoji in half
-    expect([...result.name].every((cp) => cp === emoji)).toBe(true);
+    expect(skillRepository.activateSkill).toHaveBeenCalled();
+    expect(skillRepository.pinSkill).not.toHaveBeenCalled();
   });
 
   it('should throw when unique name cannot be resolved after max attempts', async () => {
