@@ -3517,6 +3517,16 @@ export interface MeResponseDto {
   name: string;
 }
 
+export interface CreditsPerEuroResponseDto {
+  /** Number of credits per euro of token cost */
+  creditsPerEuro: number;
+}
+
+export interface SetCreditsPerEuroRequestDto {
+  /** Number of credits per euro of token cost. Must be positive. */
+  creditsPerEuro: number;
+}
+
 export type SuperAdminModelsControllerGetCatalogModelById200 = LanguageModelResponseDto | EmbeddingModelResponseDto;
 
 export type SuperAdminModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
