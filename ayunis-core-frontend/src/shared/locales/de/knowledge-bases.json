@@ -7,7 +7,9 @@
   },
   "tabs": {
     "configuration": "Konfiguration",
-    "shares": "Freigaben"
+    "shares": "Freigaben",
+    "personal": "Eigene Wissenssammlungen",
+    "shared": "Geteilte Wissenssammlungen"
   },
   "shares": {
     "org": {
@@ -56,7 +58,15 @@
   },
   "emptyState": {
     "title": "Noch keine Wissenssammlungen",
-    "description": "Erstellen Sie Ihre erste Wissenssammlung. Laden Sie Dokumente hoch und nutzen Sie sie in Ihren Chats als Kontext für die KI."
+    "description": "Erstellen Sie Ihre erste Wissenssammlung. Laden Sie Dokumente hoch und nutzen Sie sie in Ihren Chats als Kontext für die KI.",
+    "personal": {
+      "title": "Noch keine eigenen Wissenssammlungen",
+      "description": "Erstellen Sie Ihre erste Wissenssammlung. Laden Sie Dokumente hoch und verwenden Sie sie als Kontext für die KI in Ihren Chats."
+    },
+    "shared": {
+      "title": "Noch keine geteilten Wissenssammlungen",
+      "description": "Wissenssammlungen, die von anderen Mitgliedern Ihrer Organisation mit Ihnen geteilt werden, erscheinen hier."
+    }
   },
   "card": {
     "confirmDelete": {

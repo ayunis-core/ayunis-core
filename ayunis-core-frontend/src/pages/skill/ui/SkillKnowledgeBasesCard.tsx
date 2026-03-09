@@ -20,6 +20,7 @@ import {
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
 import { Button } from '@/shared/ui/shadcn/button';
+import { Badge } from '@/shared/ui/shadcn/badge';
 import { cn } from '@/shared/lib/shadcn/utils';
 import {
   useSkillKnowledgeBasesQueries,
@@ -138,7 +139,14 @@ export default function SkillKnowledgeBasesCard({
                   )}
                 >
                   <ItemContent>
-                    <ItemTitle>{knowledgeBase.name}</ItemTitle>
+                    <ItemTitle>
+                      {knowledgeBase.name}
+                      {knowledgeBase.isShared && (
+                        <Badge variant="secondary" className="ml-2 text-xs">
+                          {t('knowledgeBases.sharedBadge')}
+                        </Badge>
+                      )}
+                    </ItemTitle>
                     {knowledgeBase.description && (
                       <ItemDescription>
                         {knowledgeBase.description}

@@ -88,6 +88,7 @@
     "title": "Wissenssammlungen",
     "description": "Gemeinsame Wissenssammlungen mit dieser Fähigkeit verbinden",
     "toggleAriaLabel": "{{name}} Wissenssammlung umschalten",
+    "sharedBadge": "Freigegeben",
     "retryButton": "Erneut versuchen",
     "success": {
       "assigned": "Wissenssammlung verbunden",
