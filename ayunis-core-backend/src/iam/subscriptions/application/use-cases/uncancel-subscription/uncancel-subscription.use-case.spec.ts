@@ -2,7 +2,6 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import type { UUID } from 'crypto';
 import { UncancelSubscriptionUseCase } from './uncancel-subscription.use-case';
 import { UncancelSubscriptionCommand } from './uncancel-subscription.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
@@ -20,8 +19,8 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
-const mockOrgId = randomUUID() as UUID;
-const mockUserId = randomUUID() as UUID;
+const mockOrgId = randomUUID();
+const mockUserId = randomUUID();
 
 function createBillingInfo(): SubscriptionBillingInfo {
   return new SubscriptionBillingInfo({
