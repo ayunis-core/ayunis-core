@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.16.0](https://github.com/ayunis-core/ayunis-core/compare/v1.15.0...v1.16.0) (2026-03-09)
+
+
+### Features
+
+* **AYC-000:** show skill icon and name in activate skill chat widget ([#338](https://github.com/ayunis-core/ayunis-core/issues/338)) ([91f98a8](https://github.com/ayunis-core/ayunis-core/commit/91f98a84de4b4e51db6195aceb457faa30cd871f))
+* **AYC-103:** add conditional form controls and inline active toggle for skill templates ([#320](https://github.com/ayunis-core/ayunis-core/issues/320)) ([808a5c2](https://github.com/ayunis-core/ayunis-core/commit/808a5c263ae55ee19ef8077a78335bcd330620a2))
+* **AYC-103:** route activate_skill by prefix and update docs ([#315](https://github.com/ayunis-core/ayunis-core/issues/315)) ([c17fbe5](https://github.com/ayunis-core/ayunis-core/commit/c17fbe5c638efb2e33b48fad0cd6ac9c3bdcfaf8))
+* **AYC-104:** enable txt file upload as text source ([#333](https://github.com/ayunis-core/ayunis-core/issues/333)) ([fb64484](https://github.com/ayunis-core/ayunis-core/commit/fb64484ff4586091096b119e6bf5f8343c3cdc60))
+* **AYC-105:** add super admins management page with list, promote, and demote ([#342](https://github.com/ayunis-core/ayunis-core/issues/342)) ([273cebe](https://github.com/ayunis-core/ayunis-core/commit/273cebeb6ac802ace89be9ec9405064edd568cb2))
+* **AYC-99:** make knowledge bases shareable ([#335](https://github.com/ayunis-core/ayunis-core/issues/335)) ([61933d9](https://github.com/ayunis-core/ayunis-core/commit/61933d9e0115aef66198277b618f868ac0136595))
+
+
+### Bug Fixes
+
+* **AYC-000:** pass defaultActive and defaultPinned when creating pre-created skill templates ([#340](https://github.com/ayunis-core/ayunis-core/issues/340)) ([98d4446](https://github.com/ayunis-core/ayunis-core/commit/98d44468d3d068d14b50d003de36e234f22f1986))
+* **AYC-000:** relax skill name validation and surface errors as 400 ([#336](https://github.com/ayunis-core/ayunis-core/issues/336)) ([79f7a1a](https://github.com/ayunis-core/ayunis-core/commit/79f7a1a6bd34038f4efb2b13e49ccf56e09e82bf))
+
+
+### Code Refactoring
+
+* **AYC-103:** move STI columns to child record and add generic to findActiveByMode ([#339](https://github.com/ayunis-core/ayunis-core/issues/339)) ([817ce8c](https://github.com/ayunis-core/ayunis-core/commit/817ce8c3fa2a91924d711c24e2f01c1e42a9d836))
+
 ## [1.15.0](https://github.com/ayunis-core/ayunis-core/compare/v1.14.2...v1.15.0) (2026-03-05)
 
 
