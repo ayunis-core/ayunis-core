@@ -1110,6 +1110,18 @@ export interface SubscriptionResponseDtoNullable {
   subscription?: SubscriptionResponseDto;
 }
 
+/**
+ * Subscription type. Defaults to SEAT_BASED if not specified.
+ */
+export type CreateSubscriptionRequestDtoType = typeof CreateSubscriptionRequestDtoType[keyof typeof CreateSubscriptionRequestDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateSubscriptionRequestDtoType = {
+  SEAT_BASED: 'SEAT_BASED',
+  USAGE_BASED: 'USAGE_BASED',
+} as const;
+
 export interface CreateSubscriptionRequestDto {
   /** Company name for the subscription */
   companyName: string;
@@ -1125,11 +1137,18 @@ export interface CreateSubscriptionRequestDto {
   country: string;
   /** VAT number for the subscription */
   vatNumber?: string;
+  /** Subscription type. Defaults to SEAT_BASED if not specified. */
+  type?: CreateSubscriptionRequestDtoType;
   /**
    * Number of seats for the subscription (seat-based only)
    * @minimum 1
    */
   noOfSeats?: number;
+  /**
+   * Monthly credit budget (usage-based only)
+   * @minimum 1
+   */
+  monthlyCredits?: number;
   /** Sub text for the subscription */
   subText?: string;
 }

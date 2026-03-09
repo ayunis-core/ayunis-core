@@ -1,9 +1,12 @@
 import type { UUID } from 'crypto';
+import { SubscriptionType } from '../../../domain/value-objects/subscription-type.enum';
 
 export class CreateSubscriptionCommand {
   public readonly orgId: UUID;
   public readonly requestingUserId: UUID;
-  public readonly noOfSeats: number;
+  public readonly type: SubscriptionType;
+  public readonly noOfSeats?: number;
+  public readonly monthlyCredits?: number;
   public readonly companyName: string;
   public readonly subText?: string;
   public readonly street: string;
@@ -16,7 +19,9 @@ export class CreateSubscriptionCommand {
   constructor(params: {
     orgId: UUID;
     requestingUserId: UUID;
+    type?: SubscriptionType;
     noOfSeats?: number;
+    monthlyCredits?: number;
     companyName: string;
     subText?: string;
     street: string;
@@ -28,7 +33,9 @@ export class CreateSubscriptionCommand {
   }) {
     this.orgId = params.orgId;
     this.requestingUserId = params.requestingUserId;
-    this.noOfSeats = params.noOfSeats ?? 1;
+    this.type = params.type ?? SubscriptionType.SEAT_BASED;
+    this.noOfSeats = params.noOfSeats;
+    this.monthlyCredits = params.monthlyCredits;
     this.companyName = params.companyName;
     this.subText = params.subText;
     this.street = params.street;
