@@ -7,10 +7,9 @@ import {
 import { SharesRepository } from '../../ports/shares-repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindSharesByScopeQuery } from './find-shares-by-scope.query';
-import { AgentShare, SkillShare, Share } from '../../../domain/share.entity';
+import { Share } from '../../../domain/share.entity';
 import { ShareScopeType } from '../../../domain/value-objects/share-scope-type.enum';
 import { ListMyTeamsUseCase } from 'src/iam/teams/application/use-cases/list-my-teams/list-my-teams.use-case';
-import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
 
 /**
  * Use case for finding shares by scope
@@ -64,32 +63,16 @@ export class FindSharesByScopeUseCase {
     const allShares = [...orgShares, ...teamShares];
 
     // Deduplicate by entityId (org shares have priority since they're first)
-    return this.deduplicateByEntityId(allShares, query.entityType);
+    return this.deduplicateByEntityId(allShares);
   }
 
-  private deduplicateByEntityId(
-    shares: Share[],
-    entityType: SharedEntityType,
-  ): Share[] {
+  private deduplicateByEntityId(shares: Share[]): Share[] {
     const seenEntityIds = new Set<string>();
     const uniqueShares: Share[] = [];
 
     for (const share of shares) {
-      let entityId: string | undefined;
-
-      if (
-        entityType === SharedEntityType.AGENT &&
-        share instanceof AgentShare
-      ) {
-        entityId = share.agentId;
-      } else if (
-        entityType === SharedEntityType.SKILL &&
-        share instanceof SkillShare
-      ) {
-        entityId = share.skillId;
-      }
-
-      if (entityId && !seenEntityIds.has(entityId)) {
+      const entityId = share.entityId;
+      if (!seenEntityIds.has(entityId)) {
         seenEntityIds.add(entityId);
         uniqueShares.push(share);
       }
