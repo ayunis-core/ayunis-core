@@ -20,6 +20,7 @@ export class Usage {
   public readonly totalTokens: number;
   public readonly cost?: number;
   public readonly currency?: Currency;
+  public readonly creditsConsumed?: number;
   public readonly requestId: UUID;
   public readonly createdAt: Date;
 
@@ -34,6 +35,7 @@ export class Usage {
     totalTokens: number;
     cost?: number;
     currency?: Currency;
+    creditsConsumed?: number;
     requestId: UUID;
     createdAt?: Date;
   }) {
@@ -47,6 +49,7 @@ export class Usage {
     this.totalTokens = params.totalTokens;
     this.cost = params.cost;
     this.currency = params.currency;
+    this.creditsConsumed = params.creditsConsumed;
     this.requestId = params.requestId;
     this.createdAt = params.createdAt ?? new Date();
   }

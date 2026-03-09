@@ -7,6 +7,12 @@ import { ModelRecord } from '../../../../../models/infrastructure/persistence/lo
 import { ModelProvider } from '../../../../../models/domain/value-objects/model-provider.enum';
 import { Currency } from '../../../../../models/domain/value-objects/currency.enum';
 
+const decimalTransformer = {
+  to: (value?: number | null) => value,
+  from: (value?: string | null) =>
+    value === null || value === undefined ? null : Number(value),
+};
+
 @Entity('usage')
 @Index(['organizationId', 'createdAt'])
 @Index(['userId', 'createdAt'])
@@ -47,7 +53,12 @@ export class UsageRecord extends BaseRecord {
   @Column('integer')
   totalTokens: number;
 
-  @Column('decimal', { precision: 10, scale: 6, nullable: true })
+  @Column('decimal', {
+    precision: 10,
+    scale: 6,
+    nullable: true,
+    transformer: decimalTransformer,
+  })
   cost: number | null;
 
   @Column({
@@ -56,6 +67,14 @@ export class UsageRecord extends BaseRecord {
     nullable: true,
   })
   currency: Currency | null;
+
+  @Column('decimal', {
+    precision: 16,
+    scale: 6,
+    nullable: true,
+    transformer: decimalTransformer,
+  })
+  creditsConsumed: number | null;
 
   @Column('uuid')
   requestId: UUID;

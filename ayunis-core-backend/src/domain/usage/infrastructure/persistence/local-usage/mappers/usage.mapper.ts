@@ -16,6 +16,7 @@ export class UsageMapper {
     record.totalTokens = usage.totalTokens;
     record.cost = usage.cost ?? null;
     record.currency = usage.currency ?? null;
+    record.creditsConsumed = usage.creditsConsumed ?? null;
     record.requestId = usage.requestId;
     record.createdAt = usage.createdAt;
     return record;
@@ -33,6 +34,7 @@ export class UsageMapper {
       totalTokens: record.totalTokens,
       cost: record.cost ?? undefined,
       currency: record.currency ?? undefined,
+      creditsConsumed: record.creditsConsumed ?? undefined,
       requestId: record.requestId,
       createdAt: record.createdAt,
     });
