@@ -30,6 +30,7 @@ import IntegrationToolWidget from './chat-widgets/IntegrationToolWidget';
 import ThinkingBlockWidget from './chat-widgets/ThinkingBlockWidget';
 import CreateCalendarEventWidget from './chat-widgets/CreateCalendarEventWidget';
 import CreateSkillWidget from './chat-widgets/CreateSkillWidget';
+import ActivateSkillWidget from './chat-widgets/ActivateSkillWidget';
 import SkillInstructionWidget from './chat-widgets/SkillInstructionWidget';
 import {
   BarChartWidget,
@@ -66,7 +67,7 @@ function CopyMessageButton({
     const textParts: string[] = [];
     copyableElements.forEach((element) => {
       htmlParts.push(element.innerHTML);
-      textParts.push(element.textContent ?? '');
+      textParts.push(element.textContent || '');
     });
 
     const html = htmlParts.join('<br><br>');
@@ -324,6 +325,18 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
               return (
                 <CreateSkillWidget
                   key={`create-skill-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
+                  content={toolUseMessageContent}
+                  isStreaming={isStreaming}
+                />
+              );
+            }
+            if (
+              toolUseMessageContent.name ===
+              ToolAssignmentDtoType.activate_skill
+            ) {
+              return (
+                <ActivateSkillWidget
+                  key={`activate-skill-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
                   content={toolUseMessageContent}
                   isStreaming={isStreaming}
                 />
