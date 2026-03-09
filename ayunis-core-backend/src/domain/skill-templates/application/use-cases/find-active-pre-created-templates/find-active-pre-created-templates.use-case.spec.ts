@@ -1,7 +1,7 @@
 import { FindActivePreCreatedTemplatesUseCase } from './find-active-pre-created-templates.use-case';
 import { FindActivePreCreatedTemplatesQuery } from './find-active-pre-created-templates.query';
 import type { SkillTemplateRepository } from '../../ports/skill-template.repository';
-import { SkillTemplate } from '../../../domain/skill-template.entity';
+import type { SkillTemplate } from '../../../domain/skill-template.entity';
 import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
 import { DistributionMode } from '../../../domain/distribution-mode.enum';
 import { randomUUID } from 'crypto';

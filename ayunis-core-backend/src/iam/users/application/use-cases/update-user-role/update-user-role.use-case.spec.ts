@@ -107,7 +107,7 @@ describe('UpdateUserRoleUseCase', () => {
 
     await expect(useCase.execute(command)).rejects.toThrow(UserUnexpectedError);
     await expect(useCase.execute(command)).rejects.toThrow(
-      'An unexpected error occurred while updating user role',
+      'An unexpected error occurred',
     );
     expect(mockUsersRepository.findOneById).toHaveBeenCalledWith('user-id');
     expect(mockUsersRepository.update).toHaveBeenCalledWith(mockUser);

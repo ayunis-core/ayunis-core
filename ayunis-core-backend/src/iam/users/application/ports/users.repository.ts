@@ -1,6 +1,7 @@
 import type { User } from '../../domain/user.entity';
 import type { UUID } from 'crypto';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
+import type { SystemRole } from '../../domain/value-objects/system-role.enum';
 
 export interface UsersPagination {
   limit: number;
@@ -15,6 +16,7 @@ export abstract class UsersRepository {
   abstract findOneById(id: UUID): Promise<User | null>;
   abstract findOneByEmail(email: string): Promise<User | null>;
   abstract findManyByEmails(emails: string[]): Promise<User[]>;
+  abstract findManyBySystemRole(role: SystemRole): Promise<User[]>;
   abstract findManyByOrgId(
     orgId: UUID,
     pagination: UsersPagination,

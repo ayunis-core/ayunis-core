@@ -1,7 +1,7 @@
 import { FindActiveAlwaysOnTemplatesUseCase } from './find-active-always-on-templates.use-case';
 import { FindActiveAlwaysOnTemplatesQuery } from './find-active-always-on-templates.query';
 import type { SkillTemplateRepository } from '../../ports/skill-template.repository';
-import { SkillTemplate } from '../../../domain/skill-template.entity';
+import type { SkillTemplate } from '../../../domain/skill-template.entity';
 import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
 import { DistributionMode } from '../../../domain/distribution-mode.enum';
 import { randomUUID } from 'crypto';

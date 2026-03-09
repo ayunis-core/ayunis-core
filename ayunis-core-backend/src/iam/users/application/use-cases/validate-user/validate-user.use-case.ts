@@ -29,7 +29,7 @@ export class ValidateUserUseCase {
         this.logger.warn('User not found during validation', {
           email: query.email,
         });
-        throw new UserNotFoundError('User not found');
+        throw new UserNotFoundError('unknown');
       }
 
       this.logger.debug('Validating password', { userId: user.id });
