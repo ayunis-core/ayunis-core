@@ -61,6 +61,7 @@ import type {
   CreateThreadDto,
   CreateTrialRequestDto,
   CreateUserDto,
+  CreditsPerEuroResponseDto,
   DeleteAllPendingInvitesResponseDto,
   EmbeddingModelEnabledResponseDto,
   EmbeddingModelResponseDto,
@@ -109,6 +110,7 @@ import type {
   RevertArtifactDto,
   RunsControllerSendMessage200,
   RunsControllerSendMessageBody,
+  SetCreditsPerEuroRequestDto,
   SetOrgDefaultModelDto,
   SetUserConfigDto,
   SetUserDefaultModelDto,
@@ -15218,6 +15220,165 @@ export const useAuthenticationControllerLogout = <TError = unknown,
       > => {
 
       const mutationOptions = getAuthenticationControllerLogoutMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Retrieve the global credits-per-euro value used for credit calculations. Super admin only.
+ * @summary Get the current credits-per-euro configuration
+ */
+export const superAdminPlatformConfigControllerGetCreditsPerEuro = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<CreditsPerEuroResponseDto>(
+      {url: `/super-admin/platform-config/credits-per-euro`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminPlatformConfigControllerGetCreditsPerEuroQueryKey = () => {
+    return [
+    `/super-admin/platform-config/credits-per-euro`
+    ] as const;
+    }
+
+    
+export const getSuperAdminPlatformConfigControllerGetCreditsPerEuroQueryOptions = <TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminPlatformConfigControllerGetCreditsPerEuroQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>> = ({ signal }) => superAdminPlatformConfigControllerGetCreditsPerEuro(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminPlatformConfigControllerGetCreditsPerEuroQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>>
+export type SuperAdminPlatformConfigControllerGetCreditsPerEuroQueryError = void
+
+
+export function useSuperAdminPlatformConfigControllerGetCreditsPerEuro<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminPlatformConfigControllerGetCreditsPerEuro<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminPlatformConfigControllerGetCreditsPerEuro<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the current credits-per-euro configuration
+ */
+
+export function useSuperAdminPlatformConfigControllerGetCreditsPerEuro<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetCreditsPerEuro>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminPlatformConfigControllerGetCreditsPerEuroQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Update the global credits-per-euro value used for credit calculations. Super admin only.
+ * @summary Set the credits-per-euro configuration
+ */
+export const superAdminPlatformConfigControllerSetCreditsPerEuro = (
+    setCreditsPerEuroRequestDto: SetCreditsPerEuroRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/platform-config/credits-per-euro`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setCreditsPerEuroRequestDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminPlatformConfigControllerSetCreditsPerEuroMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>, TError,{data: SetCreditsPerEuroRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>, TError,{data: SetCreditsPerEuroRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminPlatformConfigControllerSetCreditsPerEuro'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>, {data: SetCreditsPerEuroRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminPlatformConfigControllerSetCreditsPerEuro(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>>
+    export type SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationBody = SetCreditsPerEuroRequestDto
+    export type SuperAdminPlatformConfigControllerSetCreditsPerEuroMutationError = void
+
+    /**
+ * @summary Set the credits-per-euro configuration
+ */
+export const useSuperAdminPlatformConfigControllerSetCreditsPerEuro = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>, TError,{data: SetCreditsPerEuroRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetCreditsPerEuro>>,
+        TError,
+        {data: SetCreditsPerEuroRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminPlatformConfigControllerSetCreditsPerEuroMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

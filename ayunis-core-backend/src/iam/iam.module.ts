@@ -15,6 +15,7 @@ import { TrialsModule } from './trials/trials.module';
 import { LegalAcceptancesModule } from './legal-acceptances/legal-acceptances.module';
 import { QuotasModule } from './quotas/quotas.module';
 import { TeamsModule } from './teams/teams.module';
+import { PlatformConfigModule } from './platform-config/platform-config.module';
 
 @Module({})
 export class IamModule {
@@ -36,6 +37,7 @@ export class IamModule {
         LegalAcceptancesModule,
         QuotasModule,
         TeamsModule,
+        PlatformConfigModule,
       ],
       exports: [
         AuthenticationModule,
@@ -49,6 +51,7 @@ export class IamModule {
         LegalAcceptancesModule,
         QuotasModule,
         TeamsModule,
+        PlatformConfigModule,
       ],
     };
   }
