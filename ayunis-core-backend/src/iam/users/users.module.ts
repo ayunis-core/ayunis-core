@@ -31,6 +31,7 @@ import { EmailConfirmationJwtService } from './application/services/email-confir
 // Import controllers and mappers
 import { UserController } from './presenters/http/user.controller';
 import { UserResponseDtoMapper } from './presenters/http/mappers/user-response-dto.mapper';
+import { SuperAdminUserResponseDtoMapper } from './presenters/http/mappers/super-admin-user-response-dto.mapper';
 import { SendConfirmationEmailUseCase } from './application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
 import { TriggerPasswordResetUseCase } from './application/use-cases/trigger-password-reset/trigger-password-reset.use-case';
 import { ResetPasswordUseCase } from './application/use-cases/reset-password/reset-password.use-case';
@@ -43,6 +44,10 @@ import { AdminTriggerPasswordResetUseCase } from './application/use-cases/admin-
 import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
 import { InvitesModule } from '../invites/invites.module';
 import { SuperAdminUsersController } from './presenters/http/super-admin-users.controller';
+import { SuperAdminManagementController } from './presenters/http/super-admin-management.controller';
+import { FindSuperAdminsUseCase } from './application/use-cases/find-super-admins/find-super-admins.use-case';
+import { PromoteToSuperAdminUseCase } from './application/use-cases/promote-to-super-admin/promote-to-super-admin.use-case';
+import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from-super-admin/demote-from-super-admin.use-case';
 
 @Module({
   imports: [
@@ -69,7 +74,11 @@ import { SuperAdminUsersController } from './presenters/http/super-admin-users.c
       }),
     }),
   ],
-  controllers: [UserController, SuperAdminUsersController],
+  controllers: [
+    UserController,
+    SuperAdminUsersController,
+    SuperAdminManagementController,
+  ],
   providers: [
     {
       provide: UsersRepository,
@@ -102,10 +111,14 @@ import { SuperAdminUsersController } from './presenters/http/super-admin-users.c
     FindUserByEmailUseCase,
     FindAllUserIdsByOrgIdUseCase,
     AdminTriggerPasswordResetUseCase,
+    FindSuperAdminsUseCase,
+    PromoteToSuperAdminUseCase,
+    DemoteFromSuperAdminUseCase,
     // Services
     EmailConfirmationJwtService,
     // Mappers
     UserResponseDtoMapper,
+    SuperAdminUserResponseDtoMapper,
   ],
   exports: [
     CreateAdminUserUseCase,
