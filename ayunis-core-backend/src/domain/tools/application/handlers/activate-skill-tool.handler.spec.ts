@@ -9,8 +9,7 @@ import { SkillActivationService } from 'src/domain/skills/application/services/s
 import { FindAlwaysOnTemplateByNameUseCase } from 'src/domain/skill-templates/application/use-cases/find-always-on-template-by-name/find-always-on-template-by-name.use-case';
 import { ActivateSkillTool } from '../../domain/tools/activate-skill-tool.entity';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
-import { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
-import { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';
+import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ToolExecutionFailedError } from '../tools.errors';
 
@@ -80,13 +79,12 @@ describe('ActivateSkillToolHandler', () => {
   }
 
   function createMockTemplate(
-    overrides?: Partial<ConstructorParameters<typeof SkillTemplate>[0]>,
+    overrides?: Partial<ConstructorParameters<typeof AlwaysOnSkillTemplate>[0]>,
   ) {
-    return new SkillTemplate({
+    return new AlwaysOnSkillTemplate({
       name: 'German Administrative Law',
       shortDescription: 'Administrative law guidance',
       instructions: 'You are a German administrative law expert.',
-      distributionMode: DistributionMode.ALWAYS_ON,
       isActive: true,
       ...overrides,
     });

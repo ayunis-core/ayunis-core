@@ -32,22 +32,21 @@ function validateSkillTemplateName(name: string): void {
   }
 }
 
-export class SkillTemplate {
+export abstract class SkillTemplate {
   public readonly id: UUID;
   public readonly name: string;
   public readonly shortDescription: string;
   public readonly instructions: string;
-  public readonly distributionMode: DistributionMode;
+  public abstract readonly distributionMode: DistributionMode;
   public readonly isActive: boolean;
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
 
-  constructor(params: {
+  protected constructor(params: {
     id?: UUID;
     name: string;
     shortDescription: string;
     instructions: string;
-    distributionMode: DistributionMode;
     isActive?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
@@ -57,7 +56,6 @@ export class SkillTemplate {
     this.name = params.name;
     this.shortDescription = params.shortDescription;
     this.instructions = params.instructions;
-    this.distributionMode = params.distributionMode;
     this.isActive = params.isActive ?? false;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
