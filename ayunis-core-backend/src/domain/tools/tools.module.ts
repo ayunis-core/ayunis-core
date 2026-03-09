@@ -28,6 +28,7 @@ import { KnowledgeQueryToolHandler } from './application/handlers/knowledge-quer
 import { KnowledgeGetTextToolHandler } from './application/handlers/knowledge-get-text-tool.handler';
 import { SkillsModule } from '../skills/skills.module';
 import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
+import { SkillTemplatesModule } from '../skill-templates/skill-templates.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module'
     McpModule,
     SkillsModule,
     KnowledgeBasesModule,
+    SkillTemplatesModule,
   ],
   providers: [
     // Use cases
