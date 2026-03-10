@@ -8,6 +8,7 @@
     "modelsCatalog": "Model-Katalog",
     "usage": "Nutzung",
     "skills": "Skill-Vorlagen",
-    "superAdmins": "Super-Admins"
+    "superAdmins": "Super-Admins",
+    "platformConfig": "Plattform-Konfiguration"
   }
 }

@@ -15,6 +15,8 @@ import {
 import { SeatBasedSubscriptionRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription.record';
 import { SubscriptionBillingInfoRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription-billing-info.record';
 import { PermittedModelRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
+import { PlatformConfigRecord } from 'src/iam/platform-config/infrastructure/persistence/postgres/schema/platform-config.record';
+import { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-config-keys.enum';
 
 const fixture = minimalFixture;
 
@@ -206,6 +208,24 @@ async function seedPermittedModels(
   }
 }
 
+async function seedPlatformConfig(): Promise<void> {
+  const repo = dataSource.getRepository(PlatformConfigRecord);
+  const key = PlatformConfigKey.CREDITS_PER_EURO;
+  const existing = await repo.findOne({ where: { key } });
+
+  if (existing) {
+    log('Platform config', key, false);
+    return;
+  }
+
+  const record = repo.create({
+    key,
+    value: String(fixture.platformConfig.creditsPerEuro),
+  });
+  await repo.save(record);
+  log('Platform config', key, true);
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -236,6 +256,9 @@ async function seedMinimal(): Promise<void> {
     await seedUser(org.id, runner);
     await seedSubscription(org.id);
     await seedPermittedModels(org.id, { languageModel, embeddingModel });
+
+    // Seed platform config
+    await seedPlatformConfig();
 
     console.log('\n🎉 Minimal seed completed successfully!'); // eslint-disable-line no-console
   } catch (error) {
