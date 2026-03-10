@@ -68,4 +68,9 @@ export abstract class UsageRepository {
   abstract getGlobalUserUsage(
     query: GetGlobalUserUsageQuery,
   ): Promise<GlobalUserUsageItem[]>;
+
+  abstract getMonthlyCreditUsage(
+    organizationId: UUID,
+    monthStart: Date,
+  ): Promise<number>;
 }

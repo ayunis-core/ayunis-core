@@ -29,6 +29,8 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
 import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
+import { CheckCreditBudgetUseCase } from 'src/iam/subscriptions/application/use-cases/check-credit-budget/check-credit-budget.use-case';
+import { CheckCreditBudgetQuery } from 'src/iam/subscriptions/application/use-cases/check-credit-budget/check-credit-budget.query';
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
@@ -42,6 +44,7 @@ export class ExecuteRunAndSetTitleUseCase {
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
     private readonly contextService: ContextService,
     private readonly checkQuotaUseCase: CheckQuotaUseCase,
+    private readonly checkCreditBudgetUseCase: CheckCreditBudgetUseCase,
   ) {}
 
   async *execute(
@@ -56,6 +59,16 @@ export class ExecuteRunAndSetTitleUseCase {
       await this.checkQuotaUseCase.execute(
         new CheckQuotaQuery(userId, QuotaType.FAIR_USE_MESSAGES),
       );
+
+      // Credit budget check - throws CreditBudgetExceededError if limit exceeded
+      const orgId = this.contextService.get('orgId');
+      if (orgId) {
+        await this.checkCreditBudgetUseCase.execute(
+          new CheckCreditBudgetQuery(orgId),
+        );
+      } else {
+        this.logger.warn('Skipping credit budget check — orgId not in context');
+      }
 
       const streamingStartEvent: RunSessionEvent = {
         type: 'session',

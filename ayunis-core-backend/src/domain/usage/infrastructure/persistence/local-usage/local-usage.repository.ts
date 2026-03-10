@@ -318,6 +318,20 @@ export class LocalUsageRepository extends UsageRepository {
     return this.usageQueryMapper.mapModelStatsToDistribution(modelStats).items;
   }
 
+  async getMonthlyCreditUsage(
+    organizationId: UUID,
+    monthStart: Date,
+  ): Promise<number> {
+    const result = await this.usageRepository
+      .createQueryBuilder('usage')
+      .select('COALESCE(SUM(usage.creditsConsumed), 0)', 'total')
+      .where('usage.organizationId = :organizationId', { organizationId })
+      .andWhere('usage.createdAt >= :monthStart', { monthStart })
+      .getRawOne<{ total: string }>();
+
+    return parseFloat(result?.total ?? '0') || 0;
+  }
+
   async getGlobalUserUsage(
     query: GetGlobalUserUsageQuery,
   ): Promise<GlobalUserUsageItem[]> {

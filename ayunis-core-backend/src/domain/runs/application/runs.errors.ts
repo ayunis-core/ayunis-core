@@ -137,3 +137,6 @@ export class ThreadAgentNoLongerAccessibleError extends RunError {
     );
   }
 }
+
+// CreditBudgetExceededError moved to iam/subscriptions — re-export for backward compatibility
+export { CreditBudgetExceededError } from '../../../iam/subscriptions/application/subscription.errors';
