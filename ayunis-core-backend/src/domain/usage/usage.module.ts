@@ -8,6 +8,7 @@ import { GetGlobalUserUsageUseCase } from './application/use-cases/get-global-us
 import { GetUserUsageUseCase } from './application/use-cases/get-user-usage/get-user-usage.use-case';
 import { GetUsageStatsUseCase } from './application/use-cases/get-usage-stats/get-usage-stats.use-case';
 import { GetMonthlyCreditUsageUseCase } from './application/use-cases/get-monthly-credit-usage/get-monthly-credit-usage.use-case';
+import { GetCreditUsageUseCase } from './application/use-cases/get-credit-usage/get-credit-usage.use-case';
 import { UsageController } from './presenters/http/usage.controller';
 import { SuperAdminUsageController } from './presenters/http/super-admin-usage.controller';
 import { SuperAdminUsageDataController } from './presenters/http/super-admin-usage-data.controller';
@@ -23,9 +24,14 @@ import { SuperAdminGlobalUsageResponseMapper } from './presenters/http/mappers/s
 import { UsageResponseMapper } from './presenters/http/mappers/usage-response.mapper';
 import { UsageUseCasesFacade } from './presenters/http/usage-use-cases.facade';
 import { PlatformConfigModule } from '../../iam/platform-config/platform-config.module';
+import { SubscriptionsModule } from '../../iam/subscriptions/subscriptions.module';
 
 @Module({
-  imports: [LocalUsageRepositoryModule, PlatformConfigModule],
+  imports: [
+    LocalUsageRepositoryModule,
+    PlatformConfigModule,
+    SubscriptionsModule,
+  ],
   controllers: [
     UsageController,
     SuperAdminUsageController,
@@ -43,6 +49,7 @@ import { PlatformConfigModule } from '../../iam/platform-config/platform-config.
     GetUserUsageUseCase,
     GetUsageStatsUseCase,
     GetMonthlyCreditUsageUseCase,
+    GetCreditUsageUseCase,
 
     // Mappers
     UsageStatsResponseDtoMapper,
@@ -65,6 +72,7 @@ import { PlatformConfigModule } from '../../iam/platform-config/platform-config.
     GetUserUsageUseCase,
     GetUsageStatsUseCase,
     GetMonthlyCreditUsageUseCase,
+    GetCreditUsageUseCase,
   ],
 })
 export class UsageModule {}

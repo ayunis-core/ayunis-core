@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ExecuteRunAndSetTitleCommand } from './execute-run-and-set-title.command';
 import { ExecuteRunUseCase } from '../execute-run/execute-run.use-case';
 import { ExecuteRunCommand } from '../execute-run/execute-run.command';
@@ -25,12 +25,12 @@ import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
 import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
-import { CheckCreditBudgetUseCase } from 'src/iam/subscriptions/application/use-cases/check-credit-budget/check-credit-budget.use-case';
-import { CheckCreditBudgetQuery } from 'src/iam/subscriptions/application/use-cases/check-credit-budget/check-credit-budget.query';
+import { CreditBudgetGuardService } from '../../services/credit-budget-guard.service';
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
@@ -44,31 +44,14 @@ export class ExecuteRunAndSetTitleUseCase {
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
     private readonly contextService: ContextService,
     private readonly checkQuotaUseCase: CheckQuotaUseCase,
-    private readonly checkCreditBudgetUseCase: CheckCreditBudgetUseCase,
+    private readonly creditBudgetGuardService: CreditBudgetGuardService,
   ) {}
 
   async *execute(
     command: ExecuteRunAndSetTitleCommand,
   ): AsyncGenerator<RunEvent> {
     try {
-      // Fair use quota check - throws QuotaExceededError if limit exceeded
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
-      await this.checkQuotaUseCase.execute(
-        new CheckQuotaQuery(userId, QuotaType.FAIR_USE_MESSAGES),
-      );
-
-      // Credit budget check - throws CreditBudgetExceededError if limit exceeded
-      const orgId = this.contextService.get('orgId');
-      if (orgId) {
-        await this.checkCreditBudgetUseCase.execute(
-          new CheckCreditBudgetQuery(orgId),
-        );
-      } else {
-        this.logger.warn('Skipping credit budget check — orgId not in context');
-      }
+      await this.enforceUsageLimits();
 
       const streamingStartEvent: RunSessionEvent = {
         type: 'session',
@@ -145,6 +128,26 @@ export class ExecuteRunAndSetTitleUseCase {
       };
       yield streamingEndEvent;
     }
+  }
+
+  private async enforceUsageLimits(): Promise<void> {
+    // Fair use quota check - throws QuotaExceededError if limit exceeded
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new UnauthorizedAccessError({ reason: 'User not in context' });
+    }
+    await this.checkQuotaUseCase.execute(
+      new CheckQuotaQuery(userId, QuotaType.FAIR_USE_MESSAGES),
+    );
+
+    // Credit budget check - throws CreditBudgetExceededError if limit exceeded
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedAccessError({
+        reason: 'Organization not in context',
+      });
+    }
+    await this.creditBudgetGuardService.ensureBudgetAvailable(orgId);
   }
 
   private async generateTitle(

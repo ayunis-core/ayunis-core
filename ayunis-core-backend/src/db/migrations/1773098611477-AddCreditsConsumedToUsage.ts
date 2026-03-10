@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddCreditsConsumedToUsage1773098611477
-  implements MigrationInterface
-{
+export class AddCreditsConsumedToUsage1773098611477 implements MigrationInterface {
   name = 'AddCreditsConsumedToUsage1773098611477';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

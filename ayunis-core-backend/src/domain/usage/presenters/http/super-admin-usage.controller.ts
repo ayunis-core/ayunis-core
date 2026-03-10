@@ -8,14 +8,14 @@ import {
 } from '@nestjs/swagger';
 import { UsageStatsResponseDto } from './dto/usage-stats-response.dto';
 import { UsageConfigResponseDto } from './dto/usage-config-response.dto';
+import { CreditUsageResponseDto } from './dto/credit-usage-response.dto';
 import { ModelDistributionResponseDto } from './dto/model-distribution-response.dto';
 import { UsageStatsResponseDtoMapper } from './mappers/usage-stats-response-dto.mapper';
 import { ModelDistributionResponseDtoMapper } from './mappers/model-distribution-response-dto.mapper';
 import { ConfigService } from '@nestjs/config';
 import { parseDate } from './utils/parse-date.util';
 import { UUID } from 'crypto';
-import { GetModelDistributionUseCase } from '../../application/use-cases/get-model-distribution/get-model-distribution.use-case';
-import { GetUsageStatsUseCase } from '../../application/use-cases/get-usage-stats/get-usage-stats.use-case';
+import { UsageUseCasesFacade } from './usage-use-cases.facade';
 import { GetModelDistributionQuery } from '../../application/use-cases/get-model-distribution/get-model-distribution.query';
 import { GetUsageStatsQuery } from '../../application/use-cases/get-usage-stats/get-usage-stats.query';
 import { UsageConstants } from '../../domain/value-objects/usage.constants';
@@ -27,8 +27,7 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminUsageController {
   constructor(
-    private readonly getUsageStatsUseCase: GetUsageStatsUseCase,
-    private readonly getModelDistributionUseCase: GetModelDistributionUseCase,
+    private readonly usageFacade: UsageUseCasesFacade,
     private readonly configService: ConfigService,
     private readonly usageStatsMapper: UsageStatsResponseDtoMapper,
     private readonly modelDistributionMapper: ModelDistributionResponseDtoMapper,
@@ -48,6 +47,25 @@ export class SuperAdminUsageController {
     return { isSelfHosted };
   }
 
+  @Get(':orgId/credits')
+  @ApiOperation({
+    summary: 'Get credit usage for an organization',
+    description:
+      'Returns the monthly credit budget, credits consumed this month, and credits remaining. Fields are null if the organization does not have a usage-based subscription.',
+  })
+  @ApiParam({ name: 'orgId', description: 'Organization ID', format: 'uuid' })
+  @ApiResponse({ status: 200, type: CreditUsageResponseDto })
+  async getCreditUsage(
+    @Param('orgId') orgId: UUID,
+  ): Promise<CreditUsageResponseDto> {
+    const creditUsage = await this.usageFacade.getCreditUsage(orgId);
+    return {
+      monthlyCredits: creditUsage.monthlyCredits,
+      creditsUsed: creditUsage.creditsUsed,
+      creditsRemaining: creditUsage.creditsRemaining,
+    };
+  }
+
   @Get(':orgId/stats')
   @ApiOperation({ summary: 'Get overall usage statistics for an organization' })
   @ApiParam({ name: 'orgId', description: 'Organization ID', format: 'uuid' })
@@ -64,7 +82,7 @@ export class SuperAdminUsageController {
       startDate: startDate ? parseDate(startDate, 'startDate') : undefined,
       endDate: endDate ? parseDate(endDate, 'endDate') : undefined,
     });
-    const stats = await this.getUsageStatsUseCase.execute(query);
+    const stats = await this.usageFacade.getUsageStats(query);
     return this.usageStatsMapper.toDto(stats);
   }
 
@@ -93,7 +111,7 @@ export class SuperAdminUsageController {
       modelId: modelId as UUID | undefined,
     });
     const modelDistribution =
-      await this.getModelDistributionUseCase.execute(query);
+      await this.usageFacade.getModelDistribution(query);
     return this.modelDistributionMapper.toDto(modelDistribution);
   }
 }
