@@ -6,6 +6,13 @@ import {
 } from '@/shared/ui/shadcn/card';
 import { Badge } from '@/shared/ui/shadcn/badge';
 import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemGroup,
+  ItemTitle,
+} from '@/shared/ui/shadcn/item';
 import { Progress } from '@/shared/ui/shadcn/progress';
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
 import { AlertCircle } from 'lucide-react';
@@ -59,30 +66,38 @@ export default function CreditBudgetSection({
         )}
         {!isError && !isLoading && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                <span className="text-sm font-medium">
-                  {t('creditBudget.budget')}
-                </span>
-                <Badge variant="outline">
-                  {monthlyCredits.toLocaleString()}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                <span className="text-sm font-medium">
-                  {t('creditBudget.used')}
-                </span>
-                <Badge variant="outline">{creditsUsed.toLocaleString()}</Badge>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                <span className="text-sm font-medium">
-                  {t('creditBudget.remaining')}
-                </span>
-                <Badge variant="outline">
-                  {creditsRemaining.toLocaleString()}
-                </Badge>
-              </div>
-            </div>
+            <ItemGroup className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Item variant="muted" size="sm">
+                <ItemContent>
+                  <ItemTitle>{t('creditBudget.budget')}</ItemTitle>
+                </ItemContent>
+                <ItemActions>
+                  <Badge variant="outline">
+                    {monthlyCredits.toLocaleString()}
+                  </Badge>
+                </ItemActions>
+              </Item>
+              <Item variant="muted" size="sm">
+                <ItemContent>
+                  <ItemTitle>{t('creditBudget.used')}</ItemTitle>
+                </ItemContent>
+                <ItemActions>
+                  <Badge variant="outline">
+                    {creditsUsed.toLocaleString()}
+                  </Badge>
+                </ItemActions>
+              </Item>
+              <Item variant="muted" size="sm">
+                <ItemContent>
+                  <ItemTitle>{t('creditBudget.remaining')}</ItemTitle>
+                </ItemContent>
+                <ItemActions>
+                  <Badge variant="outline">
+                    {creditsRemaining.toLocaleString()}
+                  </Badge>
+                </ItemActions>
+              </Item>
+            </ItemGroup>
             <div className="space-y-1">
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>{t('creditBudget.usageProgress')}</span>
