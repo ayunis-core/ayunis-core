@@ -50,6 +50,7 @@
     "createErrorCityRequired": "City is required",
     "createErrorCountryRequired": "Country is required",
     "createErrorNoOfSeatsRequired": "Number of seats is required",
+    "createErrorMonthlyCreditsRequired": "Monthly credits budget is required",
     "cancelErrorSubscriptionNotFound": "Subscription not found",
     "cancelError": "An unexpected error occurred",
     "uncancelErrorSubscriptionNotFound": "Subscription not found",
@@ -113,7 +114,14 @@
     "description": "Please provide the company details to set up the subscription for this organization.",
     "createSubscription": "Create Subscription",
     "creating": "Creating...",
-    "noOfSeatsDescription": "You can change the number of seats at any time."
+    "typeLabel": "Subscription Type",
+    "typePlaceholder": "Select type",
+    "typeSeatBased": "Seat-Based",
+    "typeUsageBased": "Usage-Based",
+    "noOfSeatsDescription": "You can change the number of seats at any time.",
+    "monthlyCreditsLabel": "Monthly Credits",
+    "monthlyCreditsPlaceholder": "1000",
+    "monthlyCreditsDescription": "The monthly credit budget for this organization. Resets on the 1st of each month."
   },
   "trialDialog": {
     "title": "Create Trial",
@@ -180,6 +188,15 @@
     "error": "Failed to create user. Please try again.",
     "emailProviderBlacklisted": "This email provider is not allowed.",
     "userAlreadyExists": "A user with this email already exists."
+  },
+  "creditBudget": {
+    "title": "Credit Budget",
+    "loading": "Loading credit usage…",
+    "budget": "Monthly Budget",
+    "used": "Credits Used",
+    "remaining": "Credits Remaining",
+    "usageProgress": "Usage",
+    "error": "Failed to load credit usage data."
   },
   "noSubscription": {
     "title": "No subscription yet",

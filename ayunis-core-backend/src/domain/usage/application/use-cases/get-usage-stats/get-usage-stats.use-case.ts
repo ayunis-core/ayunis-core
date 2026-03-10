@@ -15,6 +15,12 @@ export class GetUsageStatsUseCase {
   async execute(query: GetUsageStatsQuery): Promise<UsageStats> {
     validateOptionalDateRange(query.startDate, query.endDate);
 
+    this.logger.log('Getting usage stats', {
+      organizationId: query.organizationId,
+      startDate: query.startDate?.toISOString(),
+      endDate: query.endDate?.toISOString(),
+    });
+
     try {
       const stats = await this.usageRepository.getUsageStats({
         organizationId: query.organizationId,

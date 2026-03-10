@@ -27,6 +27,14 @@ export class GetModelDistributionUseCase {
       throw new InvalidDateRangeError('Max models must be greater than 0');
     }
 
+    this.logger.log('Getting model distribution', {
+      organizationId: query.organizationId,
+      maxModels: query.maxModels,
+      modelId: query.modelId,
+      startDate: query.startDate?.toISOString(),
+      endDate: query.endDate?.toISOString(),
+    });
+
     try {
       const modelDistribution = await this.usageRepository.getModelDistribution(
         {
@@ -44,6 +52,7 @@ export class GetModelDistributionUseCase {
       this.logger.error('Failed to get model distribution', error);
       throw new UnexpectedUsageError(error as Error, {
         organizationId: query.organizationId,
+        maxModels: query.maxModels,
       });
     }
   }
