@@ -18,6 +18,11 @@ export class GetGlobalProviderUsageUseCase {
   async execute(query: GetGlobalProviderUsageQuery): Promise<ProviderUsage[]> {
     validateOptionalDateRange(query.startDate, query.endDate);
 
+    this.logger.log('Getting global provider usage', {
+      startDate: query.startDate?.toISOString(),
+      endDate: query.endDate?.toISOString(),
+    });
+
     try {
       const providerUsage =
         await this.usageRepository.getGlobalProviderUsage(query);

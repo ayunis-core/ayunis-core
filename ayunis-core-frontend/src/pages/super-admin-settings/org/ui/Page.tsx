@@ -6,9 +6,11 @@ import type {
   SuperAdminTrialResponseDto,
   PaginationDto,
 } from '@/shared/api';
+import { SubscriptionResponseDtoType } from '@/shared/api';
 import UsersTable from './UsersTable';
 import OrgDetails from './OrgDetails';
 import LicenseSeatsSection from './LicenseSeatsSection';
+import CreditBudgetSection from './CreditBudgetSection';
 import BillingInfoSection from './BillingInfoSection';
 import SubscriptionCancellationSection from './SubscriptionCancellationSection';
 import NoSubscriptionSection from './NoSubscriptionSection';
@@ -109,7 +111,19 @@ export default function SuperAdminSettingsOrgPage({
         <TabsContent value="subscriptions" className="mt-4">
           {subscription ? (
             <div className="space-y-4">
-              <LicenseSeatsSection subscription={subscription} orgId={org.id} />
+              {subscription.type === SubscriptionResponseDtoType.SEAT_BASED && (
+                <LicenseSeatsSection
+                  subscription={subscription}
+                  orgId={org.id}
+                />
+              )}
+              {subscription.type === SubscriptionResponseDtoType.USAGE_BASED &&
+                subscription.monthlyCredits !== undefined && (
+                  <CreditBudgetSection
+                    orgId={org.id}
+                    monthlyCredits={subscription.monthlyCredits ?? 0}
+                  />
+                )}
               <BillingInfoSection subscription={subscription} orgId={org.id} />
               <SubscriptionCancellationSection
                 subscription={subscription}

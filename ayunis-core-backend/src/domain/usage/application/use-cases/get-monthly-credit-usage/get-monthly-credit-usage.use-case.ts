@@ -35,6 +35,7 @@ export class GetMonthlyCreditUsageUseCase {
       this.logger.error('Failed to get monthly credit usage', error);
       throw new UnexpectedUsageError(error as Error, {
         orgId: query.orgId,
+        monthStart: monthStart.toISOString(),
       });
     }
   }
