@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreatePlatformConfigTable1773099444636
-  implements MigrationInterface
-{
+export class CreatePlatformConfigTable1773099444636 implements MigrationInterface {
   name = 'CreatePlatformConfigTable1773099444636';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

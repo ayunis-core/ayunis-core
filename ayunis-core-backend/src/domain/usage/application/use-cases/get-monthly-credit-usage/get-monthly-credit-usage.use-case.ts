@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetMonthlyCreditUsageQuery } from './get-monthly-credit-usage.query';
 import { UsageRepository } from '../../ports/usage.repository';
+import { UnexpectedUsageError } from '../../usage.errors';
+import { ApplicationError } from '../../../../../common/errors/base.error';
 
 @Injectable()
 export class GetMonthlyCreditUsageUseCase {
@@ -21,11 +23,19 @@ export class GetMonthlyCreditUsageUseCase {
       monthStart: monthStart.toISOString(),
     });
 
-    const creditsUsed = await this.usageRepository.getMonthlyCreditUsage(
-      query.orgId,
-      monthStart,
-    );
+    try {
+      const creditsUsed = await this.usageRepository.getMonthlyCreditUsage(
+        query.orgId,
+        monthStart,
+      );
 
-    return { creditsUsed };
+      return { creditsUsed };
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      this.logger.error('Failed to get monthly credit usage', error);
+      throw new UnexpectedUsageError(error as Error, {
+        orgId: query.orgId,
+      });
+    }
   }
 }

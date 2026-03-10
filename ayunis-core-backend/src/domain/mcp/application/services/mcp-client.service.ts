@@ -140,7 +140,7 @@ export class McpClientService {
     integration: McpIntegration,
   ): Promise<McpConnectionConfig> {
     try {
-      const headers = await this.buildAuthHeaders(integration);
+      const headers = await this.buildLegacyAuthHeaders(integration);
       return { serverUrl: integration.serverUrl, headers };
     } catch (error) {
       if (error instanceof McpAuthenticationError) {
@@ -155,54 +155,57 @@ export class McpClientService {
     }
   }
 
-  private async buildAuthHeaders(
+  private async buildLegacyAuthHeaders(
     integration: McpIntegration,
   ): Promise<Record<string, string>> {
+    const headers: Record<string, string> = {};
     const auth = integration.auth;
 
     if (auth instanceof BearerMcpIntegrationAuth) {
       if (!auth.authToken) {
         throw new McpAuthenticationError('Bearer token not configured');
       }
+
       const decryptedToken = await this.credentialEncryption.decrypt(
         auth.authToken,
       );
       const headerName = auth.getAuthHeaderName();
+
+      headers[headerName] =
+        headerName === 'Authorization'
+          ? `Bearer ${decryptedToken}`
+          : decryptedToken;
+
       this.logger.log('Built connection config for bearer authentication', {
         integrationId: integration.id,
       });
-      return {
-        [headerName]:
-          headerName === 'Authorization'
-            ? `Bearer ${decryptedToken}`
-            : decryptedToken,
-      };
-    }
-
-    if (auth instanceof CustomHeaderMcpIntegrationAuth) {
+    } else if (auth instanceof CustomHeaderMcpIntegrationAuth) {
       if (!auth.secret) {
         throw new McpAuthenticationError('Header secret not configured');
       }
-      const decryptedKey = await this.credentialEncryption.decrypt(auth.secret);
-      return { [auth.getAuthHeaderName()]: decryptedKey };
-    }
 
-    if (auth instanceof OAuthMcpIntegrationAuth) {
+      const decryptedKey = await this.credentialEncryption.decrypt(auth.secret);
+
+      headers[auth.getAuthHeaderName()] = decryptedKey;
+    } else if (auth instanceof OAuthMcpIntegrationAuth) {
       if (!auth.accessToken) {
         throw new McpAuthenticationError('OAuth access token not available');
       }
+
       if (auth.isTokenExpired()) {
         throw new McpAuthenticationError(
           'OAuth token expired - refresh needed',
         );
       }
+
       const decryptedToken = await this.credentialEncryption.decrypt(
         auth.accessToken,
       );
-      return { Authorization: `Bearer ${decryptedToken}` };
+
+      headers['Authorization'] = `Bearer ${decryptedToken}`;
     }
 
-    return {};
+    return headers;
   }
 
   /**

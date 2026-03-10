@@ -1172,208 +1172,6 @@ export interface UpdateBillingInfoDto {
 
 export interface UpdateSeatsDto { [key: string]: unknown }
 
-export interface UsageConfigResponseDto {
-  /** Whether the deployment is self-hosted. Determines feature availability. */
-  isSelfHosted: boolean;
-}
-
-export interface UsageStatsResponseDto {
-  /** Total tokens consumed across all users and models in the specified period */
-  totalTokens: number;
-  /** Total number of API requests made in the specified period */
-  totalRequests: number;
-  /** Number of users who made requests within the active user threshold (last 30 days) */
-  activeUsers: number;
-  /** Total number of unique users who made requests in the specified period */
-  totalUsers: number;
-  /** List of the most frequently used model names, ordered by usage */
-  topModels: string[];
-}
-
-export interface TimeSeriesPointDto {
-  /** Date of the data point */
-  date: string;
-  /** Number of tokens at this point */
-  tokens: number;
-  /** Number of requests at this point */
-  requests: number;
-}
-
-/**
- * Model provider
- */
-export type ProviderUsageDtoProvider = typeof ProviderUsageDtoProvider[keyof typeof ProviderUsageDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ProviderUsageDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-export interface ProviderUsageDto {
-  /** Model provider */
-  provider: ProviderUsageDtoProvider;
-  /** Total tokens for this provider */
-  tokens: number;
-  /** Total requests for this provider */
-  requests: number;
-  /** Percentage of total usage */
-  percentage: number;
-  /** Time series data for this provider */
-  timeSeriesData: TimeSeriesPointDto[];
-}
-
-export interface ProviderUsageResponseDto {
-  /** Provider usage statistics */
-  providers: ProviderUsageDto[];
-}
-
-export interface ProviderValuesDto {
-  /** Tokens for OpenAI */
-  openai?: number;
-  /** Tokens for Anthropic */
-  anthropic?: number;
-  /** Tokens for Mistral */
-  mistral?: number;
-  /** Tokens for Ollama */
-  ollama?: number;
-  /** Tokens for Synaforce */
-  synaforce?: number;
-  /** Tokens for Ayunis (internal) */
-  ayunis?: number;
-}
-
-export interface ProviderTimeSeriesRowDto {
-  /** Date of the data point */
-  date: string;
-  /** Tokens per provider for this date */
-  values: ProviderValuesDto;
-}
-
-export interface ProviderUsageChartResponseDto {
-  /** Aligned time series rows by date with provider token values */
-  timeSeries: ProviderTimeSeriesRowDto[];
-}
-
-/**
- * Model provider
- */
-export type ModelDistributionDtoProvider = typeof ModelDistributionDtoProvider[keyof typeof ModelDistributionDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelDistributionDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-export interface ModelDistributionDto {
-  /** Model ID */
-  modelId: string;
-  /** Model name */
-  modelName: string;
-  /** Model display name */
-  displayName: string;
-  /** Model provider */
-  provider: ModelDistributionDtoProvider;
-  /** Total tokens for this model */
-  tokens: number;
-  /** Total requests for this model */
-  requests: number;
-  /** Percentage of total usage */
-  percentage: number;
-}
-
-export interface ModelDistributionResponseDto {
-  /** Model distribution statistics */
-  models: ModelDistributionDto[];
-}
-
-export interface UserUsageDto {
-  /** User ID */
-  userId: string;
-  /** User name */
-  userName: string;
-  /** User email */
-  userEmail: string;
-  /** Total tokens for this user */
-  tokens: number;
-  /** Total requests for this user */
-  requests: number;
-  /**
-   * Last activity date (null if no activity)
-   * @nullable
-   */
-  lastActivity: string | null;
-  /** Whether the user is considered active */
-  isActive: boolean;
-}
-
-export interface UserUsageResponseDto {
-  /** User usage statistics */
-  data: UserUsageDto[];
-  /** Pagination metadata */
-  pagination: PaginationDto;
-}
-
-export interface GlobalUserUsageDto {
-  /** User ID */
-  userId: string;
-  /** User name */
-  userName: string;
-  /** User email */
-  userEmail: string;
-  /** Total tokens for this user */
-  tokens: number;
-  /** Total requests for this user */
-  requests: number;
-  /**
-   * Last activity date (null if no activity)
-   * @nullable
-   */
-  lastActivity: string | null;
-  /** Whether the user is considered active */
-  isActive: boolean;
-  /** Name of the organization the user belongs to */
-  organizationName: string;
-}
-
-export interface GlobalUserUsageResponseDto {
-  /** Top users by token usage across all organizations */
-  data: GlobalUserUsageDto[];
-}
-
-export interface CreditsPerEuroResponseDto {
-  /** Number of credits per euro of token cost */
-  creditsPerEuro: number;
-}
-
-export interface SetCreditsPerEuroRequestDto {
-  /** Number of credits per euro of token cost. Must be positive. */
-  creditsPerEuro: number;
-}
-
 export interface UploadFileResponseDto {
   /** Name of the uploaded object */
   objectName: string;
@@ -3379,6 +3177,223 @@ export interface UpdateTrialRequestDto {
   messagesSent?: number;
 }
 
+export interface UsageConfigResponseDto {
+  /** Whether the deployment is self-hosted. Determines feature availability. */
+  isSelfHosted: boolean;
+}
+
+export interface CreditUsageResponseDto {
+  /**
+   * Monthly credit budget from the usage-based subscription. Null if the org does not have a usage-based subscription.
+   * @nullable
+   */
+  monthlyCredits: number | null;
+  /** Total credits consumed in the current calendar month. */
+  creditsUsed: number;
+  /**
+   * Credits remaining this month (monthlyCredits - creditsUsed). Null if the org does not have a usage-based subscription.
+   * @nullable
+   */
+  creditsRemaining: number | null;
+}
+
+export interface UsageStatsResponseDto {
+  /** Total tokens consumed across all users and models in the specified period */
+  totalTokens: number;
+  /** Total number of API requests made in the specified period */
+  totalRequests: number;
+  /** Number of users who made requests within the active user threshold (last 30 days) */
+  activeUsers: number;
+  /** Total number of unique users who made requests in the specified period */
+  totalUsers: number;
+  /** List of the most frequently used model names, ordered by usage */
+  topModels: string[];
+}
+
+export interface TimeSeriesPointDto {
+  /** Date of the data point */
+  date: string;
+  /** Number of tokens at this point */
+  tokens: number;
+  /** Number of requests at this point */
+  requests: number;
+}
+
+/**
+ * Model provider
+ */
+export type ProviderUsageDtoProvider = typeof ProviderUsageDtoProvider[keyof typeof ProviderUsageDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ProviderUsageDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+export interface ProviderUsageDto {
+  /** Model provider */
+  provider: ProviderUsageDtoProvider;
+  /** Total tokens for this provider */
+  tokens: number;
+  /** Total requests for this provider */
+  requests: number;
+  /** Percentage of total usage */
+  percentage: number;
+  /** Time series data for this provider */
+  timeSeriesData: TimeSeriesPointDto[];
+}
+
+export interface ProviderUsageResponseDto {
+  /** Provider usage statistics */
+  providers: ProviderUsageDto[];
+}
+
+export interface ProviderValuesDto {
+  /** Tokens for OpenAI */
+  openai?: number;
+  /** Tokens for Anthropic */
+  anthropic?: number;
+  /** Tokens for Mistral */
+  mistral?: number;
+  /** Tokens for Ollama */
+  ollama?: number;
+  /** Tokens for Synaforce */
+  synaforce?: number;
+  /** Tokens for Ayunis (internal) */
+  ayunis?: number;
+}
+
+export interface ProviderTimeSeriesRowDto {
+  /** Date of the data point */
+  date: string;
+  /** Tokens per provider for this date */
+  values: ProviderValuesDto;
+}
+
+export interface ProviderUsageChartResponseDto {
+  /** Aligned time series rows by date with provider token values */
+  timeSeries: ProviderTimeSeriesRowDto[];
+}
+
+/**
+ * Model provider
+ */
+export type ModelDistributionDtoProvider = typeof ModelDistributionDtoProvider[keyof typeof ModelDistributionDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelDistributionDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+export interface ModelDistributionDto {
+  /** Model ID */
+  modelId: string;
+  /** Model name */
+  modelName: string;
+  /** Model display name */
+  displayName: string;
+  /** Model provider */
+  provider: ModelDistributionDtoProvider;
+  /** Total tokens for this model */
+  tokens: number;
+  /** Total requests for this model */
+  requests: number;
+  /** Percentage of total usage */
+  percentage: number;
+}
+
+export interface ModelDistributionResponseDto {
+  /** Model distribution statistics */
+  models: ModelDistributionDto[];
+}
+
+export interface UserUsageDto {
+  /** User ID */
+  userId: string;
+  /** User name */
+  userName: string;
+  /** User email */
+  userEmail: string;
+  /** Total tokens for this user */
+  tokens: number;
+  /** Total requests for this user */
+  requests: number;
+  /**
+   * Last activity date (null if no activity)
+   * @nullable
+   */
+  lastActivity: string | null;
+  /** Whether the user is considered active */
+  isActive: boolean;
+}
+
+export interface UserUsageResponseDto {
+  /** User usage statistics */
+  data: UserUsageDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+}
+
+export interface GlobalUserUsageDto {
+  /** User ID */
+  userId: string;
+  /** User name */
+  userName: string;
+  /** User email */
+  userEmail: string;
+  /** Total tokens for this user */
+  tokens: number;
+  /** Total requests for this user */
+  requests: number;
+  /**
+   * Last activity date (null if no activity)
+   * @nullable
+   */
+  lastActivity: string | null;
+  /** Whether the user is considered active */
+  isActive: boolean;
+  /** Name of the organization the user belongs to */
+  organizationName: string;
+}
+
+export interface GlobalUserUsageResponseDto {
+  /** Top users by token usage across all organizations */
+  data: GlobalUserUsageDto[];
+}
+
+export interface CreditsPerEuroResponseDto {
+  /** Number of credits per euro of token cost */
+  creditsPerEuro: number;
+}
+
+export interface SetCreditsPerEuroRequestDto {
+  /** Number of credits per euro of token cost. Must be positive. */
+  creditsPerEuro: number;
+}
+
 export interface UserSystemPromptResponseDto {
   /**
    * The custom system prompt for the user, or null if not set
@@ -3606,6 +3621,122 @@ limit?: number;
 offset?: number;
 };
 
+export type StorageControllerUploadFileBody = {
+  /** The file to upload */
+  file: Blob;
+};
+
+export type ThreadsControllerFindAllParams = {
+/**
+ * Search threads by title
+ */
+search?: string;
+/**
+ * Filter threads by agent ID
+ */
+agentId?: string;
+/**
+ * Maximum number of threads to return (default: 50)
+ */
+limit?: number;
+/**
+ * Number of threads to skip (default: 0)
+ */
+offset?: number;
+};
+
+export type ThreadsControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
+
+export type ThreadsControllerAddFileSourceBody = {
+  /** The file to upload */
+  file: Blob;
+  /** The display name for the file source */
+  name?: string;
+  /** A description of the file source */
+  description?: string;
+};
+
+export type AgentsControllerAddFileSourceBody = {
+  /** The file to upload */
+  file: Blob;
+};
+
+export type SharesControllerGetSharesParams = {
+/**
+ * ID of the entity to get shares for
+ */
+entityId: string;
+/**
+ * Type of the entity
+ */
+entityType: SharesControllerGetSharesEntityType;
+};
+
+export type SharesControllerGetSharesEntityType = typeof SharesControllerGetSharesEntityType[keyof typeof SharesControllerGetSharesEntityType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SharesControllerGetSharesEntityType = {
+  agent: 'agent',
+  prompt: 'prompt',
+  skill: 'skill',
+  knowledge_base: 'knowledge_base',
+} as const;
+
+export type TeamsControllerListTeamMembersParams = {
+/**
+ * Maximum number of items per page
+ */
+limit?: number;
+/**
+ * Number of items to skip
+ */
+offset?: number;
+};
+
+export type KnowledgeBasesControllerAddDocumentBody = {
+  /** The file to upload (PDF, DOCX, PPTX, TXT) */
+  file: Blob;
+};
+
+export type SkillSourcesControllerAddFileSourceBody = {
+  /** The file to upload */
+  file: Blob;
+};
+
+export type ArtifactsControllerExportParams = {
+/**
+ * Export format
+ */
+format: ArtifactsControllerExportFormat;
+};
+
+export type ArtifactsControllerExportFormat = typeof ArtifactsControllerExportFormat[keyof typeof ArtifactsControllerExportFormat];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ArtifactsControllerExportFormat = {
+  docx: 'docx',
+  pdf: 'pdf',
+} as const;
+
+export type RunsControllerSendMessageBody = {
+  threadId: string;
+  /** Message text (optional if images provided) */
+  text?: string;
+  /** Image files to attach (max 10, max 10MB each, 50MB total) */
+  images?: Blob[];
+  /** JSON array of alt texts matching image order */
+  imageAltTexts?: string;
+  /** JSON object for tool result input */
+  toolResult?: string;
+  /** Skill ID to activate for this message */
+  skillId?: string;
+  streaming?: boolean;
+};
+
+export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;
+
 export type UsageControllerGetUsageStatsParams = {
 /**
  * Start date in ISO format. If provided, must be used with endDate.
@@ -3797,122 +3928,6 @@ export type SuperAdminGlobalUsageControllerGetGlobalUserUsageParams = {
 startDate?: string;
 endDate?: string;
 };
-
-export type StorageControllerUploadFileBody = {
-  /** The file to upload */
-  file: Blob;
-};
-
-export type ThreadsControllerFindAllParams = {
-/**
- * Search threads by title
- */
-search?: string;
-/**
- * Filter threads by agent ID
- */
-agentId?: string;
-/**
- * Maximum number of threads to return (default: 50)
- */
-limit?: number;
-/**
- * Number of threads to skip (default: 0)
- */
-offset?: number;
-};
-
-export type ThreadsControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
-
-export type ThreadsControllerAddFileSourceBody = {
-  /** The file to upload */
-  file: Blob;
-  /** The display name for the file source */
-  name?: string;
-  /** A description of the file source */
-  description?: string;
-};
-
-export type AgentsControllerAddFileSourceBody = {
-  /** The file to upload */
-  file: Blob;
-};
-
-export type SharesControllerGetSharesParams = {
-/**
- * ID of the entity to get shares for
- */
-entityId: string;
-/**
- * Type of the entity
- */
-entityType: SharesControllerGetSharesEntityType;
-};
-
-export type SharesControllerGetSharesEntityType = typeof SharesControllerGetSharesEntityType[keyof typeof SharesControllerGetSharesEntityType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SharesControllerGetSharesEntityType = {
-  agent: 'agent',
-  prompt: 'prompt',
-  skill: 'skill',
-  knowledge_base: 'knowledge_base',
-} as const;
-
-export type TeamsControllerListTeamMembersParams = {
-/**
- * Maximum number of items per page
- */
-limit?: number;
-/**
- * Number of items to skip
- */
-offset?: number;
-};
-
-export type KnowledgeBasesControllerAddDocumentBody = {
-  /** The file to upload (PDF, DOCX, PPTX, TXT) */
-  file: Blob;
-};
-
-export type SkillSourcesControllerAddFileSourceBody = {
-  /** The file to upload */
-  file: Blob;
-};
-
-export type ArtifactsControllerExportParams = {
-/**
- * Export format
- */
-format: ArtifactsControllerExportFormat;
-};
-
-export type ArtifactsControllerExportFormat = typeof ArtifactsControllerExportFormat[keyof typeof ArtifactsControllerExportFormat];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ArtifactsControllerExportFormat = {
-  docx: 'docx',
-  pdf: 'pdf',
-} as const;
-
-export type RunsControllerSendMessageBody = {
-  threadId: string;
-  /** Message text (optional if images provided) */
-  text?: string;
-  /** Image files to attach (max 10, max 10MB each, 50MB total) */
-  images?: Blob[];
-  /** JSON array of alt texts matching image order */
-  imageAltTexts?: string;
-  /** JSON object for tool result input */
-  toolResult?: string;
-  /** Skill ID to activate for this message */
-  skillId?: string;
-  streaming?: boolean;
-};
-
-export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;
 
 export type TranscriptionsControllerTranscribeBody = {
   /** The audio file to transcribe */

@@ -14,6 +14,7 @@ import { MessageCleanupService } from './application/services/message-cleanup.se
 import { StreamingInferenceService } from './application/services/streaming-inference.service';
 import { NonStreamingInferenceService } from './application/services/non-streaming-inference.service';
 import { CollectUsageAsyncService } from './application/services/collect-usage-async.service';
+import { CreditBudgetGuardService } from './application/services/credit-budget-guard.service';
 
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 import { TrialsModule } from 'src/iam/trials/trials.module';
@@ -57,6 +58,7 @@ import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
     StreamingInferenceService,
     NonStreamingInferenceService,
     CollectUsageAsyncService,
+    CreditBudgetGuardService,
   ],
   exports: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],
 })
