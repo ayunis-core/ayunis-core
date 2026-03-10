@@ -17,6 +17,7 @@ export enum SubscriptionErrorCode {
   SUBSCRIPTION_EXPIRED = 'SUBSCRIPTION_EXPIRED',
   UNEXPECTED_ERROR = 'UNEXPECTED_ERROR',
   PRICE_NOT_FOUND = 'PRICE_NOT_FOUND',
+  CREDIT_BUDGET_EXCEEDED = 'CREDIT_BUDGET_EXCEEDED',
 }
 
 /**
@@ -261,6 +262,21 @@ export class PriceNotFoundError extends SubscriptionError {
       `Price not found`,
       SubscriptionErrorCode.PRICE_NOT_FOUND,
       500,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when the organization's credit budget for the current month
+ * has been exhausted (usage-based subscriptions only).
+ */
+export class CreditBudgetExceededError extends SubscriptionError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Credit limit for this month reached',
+      SubscriptionErrorCode.CREDIT_BUDGET_EXCEEDED,
+      429,
       metadata,
     );
   }

@@ -11,6 +11,8 @@ import {
 import { ApplicationError } from '../../../../../common/errors/base.error';
 import { ContextService } from '../../../../../common/context/services/context.service';
 import { Currency } from '../../../../models/domain/value-objects/currency.enum';
+import { GetCreditsPerEuroUseCase } from '../../../../../iam/platform-config/application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
+import { PlatformConfigNotFoundError } from '../../../../../iam/platform-config/application/platform-config.errors';
 
 @Injectable()
 export class CollectUsageUseCase {
@@ -19,6 +21,7 @@ export class CollectUsageUseCase {
   constructor(
     private readonly usageRepository: UsageRepository,
     private readonly contextService: ContextService,
+    private readonly getCreditsPerEuroUseCase: GetCreditsPerEuroUseCase,
   ) {}
 
   async execute(command: CollectUsageCommand): Promise<void> {
@@ -48,6 +51,7 @@ export class CollectUsageUseCase {
       this.validateCommand(command);
 
       const { cost, currency } = this.calculateCost(command);
+      const creditsConsumed = await this.calculateCredits(cost);
 
       const usage = new Usage({
         userId,
@@ -59,6 +63,7 @@ export class CollectUsageUseCase {
         totalTokens: command.totalTokens,
         cost,
         currency,
+        creditsConsumed,
         requestId: command.requestId || randomUUID(),
       });
 
@@ -107,6 +112,27 @@ export class CollectUsageUseCase {
       throw new InvalidUsageDataError('Total tokens cannot be negative', {
         totalTokens: command.totalTokens,
       });
+    }
+  }
+
+  private async calculateCredits(
+    cost: number | undefined,
+  ): Promise<number | undefined> {
+    if (cost === undefined) {
+      return undefined;
+    }
+
+    try {
+      const creditsPerEuro = await this.getCreditsPerEuroUseCase.execute();
+      return cost * creditsPerEuro;
+    } catch (error) {
+      if (error instanceof PlatformConfigNotFoundError) {
+        this.logger.warn('Could not calculate credits consumed', {
+          error: error.message,
+        });
+        return undefined;
+      }
+      throw error;
     }
   }
 

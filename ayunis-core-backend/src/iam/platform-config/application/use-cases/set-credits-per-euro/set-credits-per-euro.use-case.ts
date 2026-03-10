@@ -11,7 +11,10 @@ export class SetCreditsPerEuroUseCase {
   ) {}
 
   async execute(command: SetCreditsPerEuroCommand): Promise<void> {
-    if (!Number.isFinite(command.creditsPerEuro) || command.creditsPerEuro <= 0) {
+    if (
+      !Number.isFinite(command.creditsPerEuro) ||
+      command.creditsPerEuro <= 0
+    ) {
       throw new PlatformConfigInvalidValueError(
         PlatformConfigKey.CREDITS_PER_EURO,
         'must be greater than 0',
