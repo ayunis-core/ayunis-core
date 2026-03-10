@@ -191,7 +191,6 @@
   },
   "creditBudget": {
     "title": "Credit Budget",
-    "loading": "Loading credit usage…",
     "budget": "Monthly Budget",
     "used": "Credits Used",
     "remaining": "Credits Remaining",

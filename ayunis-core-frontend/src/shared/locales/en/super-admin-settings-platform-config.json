@@ -1,0 +1,16 @@
+{
+  "title": "Platform Configuration",
+  "creditsPerEuro": {
+    "title": "Credits Per Euro",
+    "description": "Global exchange rate that defines how many credits one euro of token cost equals. Applies to all usage-based subscriptions.",
+    "label": "Credits per Euro",
+    "loading": "Loading…",
+    "loadError": "Failed to load credits per euro configuration.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "updateSuccess": "Credits per euro updated successfully.",
+    "updateError": "Failed to update credits per euro.",
+    "validationError": "Please enter a positive number.",
+    "hint": "Changing this value only affects future usage records. Historical records retain their original credit values."
+  }
+}

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import SettingsLayout from '../../admin-settings-layout';
 import { UsageStatsCards } from './UsageStatsCards';
+import { CreditUsageCard } from './CreditUsageCard';
 import { ProviderConsumption } from '@/pages/admin-settings/usage-settings/ui/provider-consumption-chart';
 import { ModelDistribution } from '@/pages/admin-settings/usage-settings/ui/model-distribution-chart';
 import { UserUsageTable } from '@/pages/admin-settings/usage-settings/ui/user-usage-table';
@@ -21,6 +22,8 @@ export default function UsageSettingsPage() {
   return (
     <SettingsLayout title={t('layout.usage')}>
       <div className="space-y-8">
+        <CreditUsageCard />
+
         <UsageFilters
           dateRange={dateRange}
           onDateRangeChange={setDateRange}

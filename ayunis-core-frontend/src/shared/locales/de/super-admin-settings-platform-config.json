@@ -1,0 +1,16 @@
+{
+  "title": "Plattform-Konfiguration",
+  "creditsPerEuro": {
+    "title": "Guthaben pro Euro",
+    "description": "Globaler Umrechnungskurs, der definiert, wie viele Guthaben ein Euro an Token-Kosten entspricht. Gilt für alle nutzungsbasierten Abonnements.",
+    "label": "Guthaben pro Euro",
+    "loading": "Wird geladen…",
+    "loadError": "Guthaben-pro-Euro-Konfiguration konnte nicht geladen werden.",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "updateSuccess": "Guthaben pro Euro erfolgreich aktualisiert.",
+    "updateError": "Guthaben pro Euro konnte nicht aktualisiert werden.",
+    "validationError": "Bitte geben Sie eine positive Zahl ein.",
+    "hint": "Änderungen an diesem Wert betreffen nur zukünftige Nutzungseinträge. Historische Einträge behalten ihre ursprünglichen Guthaben-Werte."
+  }
+}

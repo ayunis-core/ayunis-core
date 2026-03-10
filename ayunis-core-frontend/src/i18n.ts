@@ -52,6 +52,8 @@ import enSuperAdminSettingsSuperAdmins from './shared/locales/en/super-admin-set
 import deSuperAdminSettingsSuperAdmins from './shared/locales/de/super-admin-settings-super-admins.json';
 import enArtifacts from './shared/locales/en/artifacts.json';
 import deArtifacts from './shared/locales/de/artifacts.json';
+import enSuperAdminSettingsPlatformConfig from './shared/locales/en/super-admin-settings-platform-config.json';
+import deSuperAdminSettingsPlatformConfig from './shared/locales/de/super-admin-settings-platform-config.json';
 
 const resources = {
   en: {
@@ -80,6 +82,7 @@ const resources = {
     'super-admin-settings-skills': enSuperAdminSettingsSkills,
     'super-admin-settings-super-admins': enSuperAdminSettingsSuperAdmins,
     artifacts: enArtifacts,
+    'super-admin-settings-platform-config': enSuperAdminSettingsPlatformConfig,
   },
   de: {
     auth: deAuth,
@@ -107,6 +110,7 @@ const resources = {
     'super-admin-settings-skills': deSuperAdminSettingsSkills,
     'super-admin-settings-super-admins': deSuperAdminSettingsSuperAdmins,
     artifacts: deArtifacts,
+    'super-admin-settings-platform-config': deSuperAdminSettingsPlatformConfig,
   },
 };
 

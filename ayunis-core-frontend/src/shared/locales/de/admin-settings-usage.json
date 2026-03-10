@@ -52,6 +52,14 @@
     "inactive": "Inaktiv",
     "allProvidersNote": "Über alle Anbieter und Modelle"
   },
+  "creditUsage": {
+    "title": "Guthaben-Budget",
+    "error": "Guthaben-Nutzungsdaten konnten nicht geladen werden.",
+    "budget": "Monatliches Budget",
+    "used": "Verbrauchtes Guthaben",
+    "remaining": "Verbleibendes Guthaben",
+    "usageProgress": "Nutzung"
+  },
   "userUsage": {
     "title": "Nutzerverbrauch",
     "subtitle": "Individual Nutzerverbrauch",

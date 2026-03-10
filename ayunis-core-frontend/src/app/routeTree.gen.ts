@@ -44,6 +44,7 @@ import { Route as onboardingPasswordForgotImport } from './routes/(onboarding)/p
 import { Route as AuthenticatedSuperAdminSettingsUsageIndexImport } from './routes/_authenticated/super-admin-settings.usage.index'
 import { Route as AuthenticatedSuperAdminSettingsSuperAdminsIndexImport } from './routes/_authenticated/super-admin-settings.super-admins.index'
 import { Route as AuthenticatedSuperAdminSettingsSkillsIndexImport } from './routes/_authenticated/super-admin-settings.skills.index'
+import { Route as AuthenticatedSuperAdminSettingsPlatformConfigIndexImport } from './routes/_authenticated/super-admin-settings.platform-config.index'
 import { Route as AuthenticatedSuperAdminSettingsOrgsIndexImport } from './routes/_authenticated/super-admin-settings.orgs.index'
 import { Route as AuthenticatedSuperAdminSettingsModelsCatalogIndexImport } from './routes/_authenticated/super-admin-settings.models-catalog.index'
 import { Route as AuthenticatedAdminSettingsTeamsIndexImport } from './routes/_authenticated/admin-settings.teams.index'
@@ -263,6 +264,13 @@ const AuthenticatedSuperAdminSettingsSkillsIndexRoute =
   AuthenticatedSuperAdminSettingsSkillsIndexImport.update({
     id: '/super-admin-settings/skills/',
     path: '/super-admin-settings/skills/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+
+const AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute =
+  AuthenticatedSuperAdminSettingsPlatformConfigIndexImport.update({
+    id: '/super-admin-settings/platform-config/',
+    path: '/super-admin-settings/platform-config/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
@@ -550,6 +558,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSuperAdminSettingsOrgsIndexImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/super-admin-settings/platform-config/': {
+      id: '/_authenticated/super-admin-settings/platform-config/'
+      path: '/super-admin-settings/platform-config'
+      fullPath: '/super-admin-settings/platform-config'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexImport
+      parentRoute: typeof AuthenticatedImport
+    }
     '/_authenticated/super-admin-settings/skills/': {
       id: '/_authenticated/super-admin-settings/skills/'
       path: '/super-admin-settings/skills'
@@ -603,6 +618,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminSettingsTeamsIndexRoute: typeof AuthenticatedAdminSettingsTeamsIndexRoute
   AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   AuthenticatedSuperAdminSettingsOrgsIndexRoute: typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
+  AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute: typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   AuthenticatedSuperAdminSettingsSkillsIndexRoute: typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute: typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
   AuthenticatedSuperAdminSettingsUsageIndexRoute: typeof AuthenticatedSuperAdminSettingsUsageIndexRoute
@@ -642,6 +658,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute,
   AuthenticatedSuperAdminSettingsOrgsIndexRoute:
     AuthenticatedSuperAdminSettingsOrgsIndexRoute,
+  AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute:
+    AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute,
   AuthenticatedSuperAdminSettingsSkillsIndexRoute:
     AuthenticatedSuperAdminSettingsSkillsIndexRoute,
   AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute:
@@ -690,6 +708,7 @@ export interface FileRoutesByFullPath {
   '/admin-settings/teams': typeof AuthenticatedAdminSettingsTeamsIndexRoute
   '/super-admin-settings/models-catalog': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   '/super-admin-settings/orgs': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
+  '/super-admin-settings/platform-config': typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   '/super-admin-settings/skills': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/super-admin-settings/super-admins': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
   '/super-admin-settings/usage': typeof AuthenticatedSuperAdminSettingsUsageIndexRoute
@@ -731,6 +750,7 @@ export interface FileRoutesByTo {
   '/admin-settings/teams': typeof AuthenticatedAdminSettingsTeamsIndexRoute
   '/super-admin-settings/models-catalog': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   '/super-admin-settings/orgs': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
+  '/super-admin-settings/platform-config': typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   '/super-admin-settings/skills': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/super-admin-settings/super-admins': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
   '/super-admin-settings/usage': typeof AuthenticatedSuperAdminSettingsUsageIndexRoute
@@ -773,6 +793,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
   '/_authenticated/super-admin-settings/models-catalog/': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   '/_authenticated/super-admin-settings/orgs/': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
+  '/_authenticated/super-admin-settings/platform-config/': typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   '/_authenticated/super-admin-settings/skills/': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/_authenticated/super-admin-settings/super-admins/': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
   '/_authenticated/super-admin-settings/usage/': typeof AuthenticatedSuperAdminSettingsUsageIndexRoute
@@ -816,6 +837,7 @@ export interface FileRouteTypes {
     | '/admin-settings/teams'
     | '/super-admin-settings/models-catalog'
     | '/super-admin-settings/orgs'
+    | '/super-admin-settings/platform-config'
     | '/super-admin-settings/skills'
     | '/super-admin-settings/super-admins'
     | '/super-admin-settings/usage'
@@ -856,6 +878,7 @@ export interface FileRouteTypes {
     | '/admin-settings/teams'
     | '/super-admin-settings/models-catalog'
     | '/super-admin-settings/orgs'
+    | '/super-admin-settings/platform-config'
     | '/super-admin-settings/skills'
     | '/super-admin-settings/super-admins'
     | '/super-admin-settings/usage'
@@ -896,6 +919,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-settings/teams/'
     | '/_authenticated/super-admin-settings/models-catalog/'
     | '/_authenticated/super-admin-settings/orgs/'
+    | '/_authenticated/super-admin-settings/platform-config/'
     | '/_authenticated/super-admin-settings/skills/'
     | '/_authenticated/super-admin-settings/super-admins/'
     | '/_authenticated/super-admin-settings/usage/'
@@ -979,6 +1003,7 @@ export const routeTree = rootRoute
         "/_authenticated/admin-settings/teams/",
         "/_authenticated/super-admin-settings/models-catalog/",
         "/_authenticated/super-admin-settings/orgs/",
+        "/_authenticated/super-admin-settings/platform-config/",
         "/_authenticated/super-admin-settings/skills/",
         "/_authenticated/super-admin-settings/super-admins/",
         "/_authenticated/super-admin-settings/usage/"
@@ -1107,6 +1132,10 @@ export const routeTree = rootRoute
     },
     "/_authenticated/super-admin-settings/orgs/": {
       "filePath": "_authenticated/super-admin-settings.orgs.index.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/super-admin-settings/platform-config/": {
+      "filePath": "_authenticated/super-admin-settings.platform-config.index.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/super-admin-settings/skills/": {
