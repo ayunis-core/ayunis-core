@@ -241,6 +241,19 @@ export function useMessageSend(params: UseMessageSendParams) {
               queryKey,
             });
           });
+
+          // Invalidate individual artifact queries so the editor panel
+          // refreshes after AI updates/edits an artifact during the run.
+          void queryClient.invalidateQueries({
+            predicate: (query) => {
+              const key = query.queryKey[0];
+              return (
+                typeof key === 'string' &&
+                key.startsWith('/artifacts/') &&
+                !key.startsWith('/artifacts/thread/')
+              );
+            },
+          });
         }
 
         // Reset the abort flag for next request
