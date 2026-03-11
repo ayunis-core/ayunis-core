@@ -89,7 +89,10 @@ export async function convertHtmlToDocx(html: string): Promise<Buffer> {
 // Block-level conversion
 // ---------------------------------------------------------------------------
 
-function convertBlockNodes(nodes: HTMLElement[]): BlockChild[] {
+function convertBlockNodes(
+  nodes: HTMLElement[],
+  parentStyle?: Partial<IParagraphOptions>,
+): BlockChild[] {
   const result: BlockChild[] = [];
 
   for (const node of nodes) {
@@ -97,7 +100,11 @@ function convertBlockNodes(nodes: HTMLElement[]): BlockChild[] {
       const text = (node as unknown as TextNode).text.trim();
       if (text) {
         result.push(
-          new Paragraph({ style: 'Normal', children: [new TextRun(text)] }),
+          new Paragraph({
+            style: 'Normal',
+            children: [new TextRun(text)],
+            ...parentStyle,
+          }),
         );
       }
       continue;
@@ -106,57 +113,74 @@ function convertBlockNodes(nodes: HTMLElement[]): BlockChild[] {
     if (node.nodeType !== NodeType.ELEMENT_NODE) continue;
 
     const tag = node.tagName.toLowerCase();
-    result.push(...convertElement(node, tag));
+    result.push(...convertElement(node, tag, parentStyle));
   }
 
   return result;
 }
 
-function convertElement(node: HTMLElement, tag: string): BlockChild[] {
+function convertElement(
+  node: HTMLElement,
+  tag: string,
+  parentStyle?: Partial<IParagraphOptions>,
+): BlockChild[] {
   if (tag in HEADING_MAP) {
-    return [convertHeading(node, tag)];
+    return [convertHeading(node, tag, parentStyle)];
   }
 
   switch (tag) {
     case 'p':
-      return [convertParagraph(node)];
+      return [convertParagraph(node, parentStyle)];
     case 'blockquote':
-      return convertBlockquote(node);
+      return convertBlockquote(node, parentStyle);
     case 'pre':
-      return [convertCodeBlock(node)];
+      return [convertCodeBlock(node, parentStyle)];
     case 'ul':
-      return convertList(node, false);
+      return convertList(node, false, 0, parentStyle);
     case 'ol':
-      return convertList(node, true);
+      return convertList(node, true, 0, parentStyle);
     case 'table':
       return [convertTable(node)];
     case 'hr':
-      return [new Paragraph({ thematicBreak: true })];
+      return [new Paragraph({ thematicBreak: true, ...parentStyle })];
     case 'br':
-      return [new Paragraph({ children: [] })];
+      return [new Paragraph({ children: [], ...parentStyle })];
     default:
-      return convertBlockNodes(node.childNodes as HTMLElement[]);
+      return convertBlockNodes(node.childNodes as HTMLElement[], parentStyle);
   }
 }
 
-function convertHeading(node: HTMLElement, tag: string): Paragraph {
+function convertHeading(
+  node: HTMLElement,
+  tag: string,
+  parentStyle?: Partial<IParagraphOptions>,
+): Paragraph {
   return new Paragraph({
+    ...parentStyle,
     heading: HEADING_MAP[tag],
     alignment: parseAlignment(node),
     children: collectInlineRuns(node, {}),
   });
 }
 
-function convertParagraph(node: HTMLElement): Paragraph {
+function convertParagraph(
+  node: HTMLElement,
+  parentStyle?: Partial<IParagraphOptions>,
+): Paragraph {
   return new Paragraph({
+    ...parentStyle,
     style: 'Normal',
     alignment: parseAlignment(node),
     children: collectInlineRuns(node, {}),
   });
 }
 
-function convertBlockquote(node: HTMLElement): BlockChild[] {
-  const blockquoteStyle = {
+function convertBlockquote(
+  node: HTMLElement,
+  parentStyle?: Partial<IParagraphOptions>,
+): BlockChild[] {
+  const blockquoteStyle: Partial<IParagraphOptions> = {
+    ...parentStyle,
     indent: { left: convertMillimetersToTwip(10) },
     border: {
       left: {
@@ -188,7 +212,7 @@ function convertBlockquote(node: HTMLElement): BlockChild[] {
           }),
         );
       } else {
-        result.push(...convertElement(child, tag));
+        result.push(...convertElement(child, tag, blockquoteStyle));
       }
     }
   }
@@ -196,7 +220,10 @@ function convertBlockquote(node: HTMLElement): BlockChild[] {
   return result;
 }
 
-function convertCodeBlock(node: HTMLElement): Paragraph {
+function convertCodeBlock(
+  node: HTMLElement,
+  parentStyle?: Partial<IParagraphOptions>,
+): Paragraph {
   const codeFont = { font: 'Courier New', size: 20 } as const;
   const children = node.text
     .split('\n')
@@ -206,6 +233,7 @@ function convertCodeBlock(node: HTMLElement): Paragraph {
     );
 
   return new Paragraph({
+    ...parentStyle,
     shading: { fill: 'F5F5F5' },
     spacing: { before: 80, after: 80 },
     children,
@@ -226,11 +254,12 @@ function convertList(
   node: HTMLElement,
   ordered: boolean,
   level = 0,
+  parentStyle?: Partial<IParagraphOptions>,
 ): Paragraph[] {
   const paragraphs: Paragraph[] = [];
 
   for (const li of node.querySelectorAll(':scope > li')) {
-    convertListItem(li, ordered, level, paragraphs);
+    convertListItem(li, ordered, level, paragraphs, parentStyle);
   }
 
   return paragraphs;
@@ -241,15 +270,19 @@ function convertListItem(
   ordered: boolean,
   level: number,
   out: Paragraph[],
+  parentStyle?: Partial<IParagraphOptions>,
 ): void {
   for (const child of li.childNodes as HTMLElement[]) {
     const childTag = child.tagName ? child.tagName.toLowerCase() : undefined;
 
     if (childTag === 'ul' || childTag === 'ol') {
-      out.push(...convertList(child, childTag === 'ol', level + 1));
+      out.push(
+        ...convertList(child, childTag === 'ol', level + 1, parentStyle),
+      );
     } else if (childTag === 'p') {
       out.push(
         new Paragraph({
+          ...parentStyle,
           children: collectInlineRuns(child, {}),
           ...listProps(ordered, level),
         }),
@@ -259,6 +292,7 @@ function convertListItem(
       if (text) {
         out.push(
           new Paragraph({
+            ...parentStyle,
             children: [new TextRun(text)],
             ...listProps(ordered, level),
           }),
