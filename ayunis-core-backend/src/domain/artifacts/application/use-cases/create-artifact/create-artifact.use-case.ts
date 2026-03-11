@@ -6,7 +6,7 @@ import { Artifact } from '../../../domain/artifact.entity';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
-import { sanitizeHtmlContent } from '../../../domain/sanitize-html-content';
+import { sanitizeHtmlContent } from '../../helpers/sanitize-html-content';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
 import {

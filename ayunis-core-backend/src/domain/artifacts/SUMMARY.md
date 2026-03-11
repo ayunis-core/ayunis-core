@@ -17,11 +17,12 @@ artifacts/
 ├── domain/
 │   ├── artifact.entity.ts
 │   ├── artifact-version.entity.ts
-│   ├── sanitize-html-content.ts
 │   └── value-objects/
 │       └── author-type.enum.ts
 ├── application/
 │   ├── artifacts.errors.ts
+│   ├── helpers/
+│   │   └── sanitize-html-content.ts
 │   ├── ports/
 │   │   ├── artifacts-repository.port.ts
 │   │   └── document-export.port.ts

@@ -8,7 +8,7 @@ import {
 } from '../../artifacts.errors';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
-import { sanitizeHtmlContent } from '../../../domain/sanitize-html-content';
+import { sanitizeHtmlContent } from '../../helpers/sanitize-html-content';
 import { ContextService } from 'src/common/context/services/context.service';
 
 const MAX_VERSION_RETRIES = 3;

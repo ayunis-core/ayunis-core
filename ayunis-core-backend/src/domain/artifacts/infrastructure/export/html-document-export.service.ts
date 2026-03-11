@@ -8,7 +8,7 @@ import { DocumentExportPort } from '../../application/ports/document-export.port
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import htmlToDocx = require('html-to-docx');
 import puppeteer, { Browser } from 'puppeteer';
-import { sanitizeHtmlContent } from '../../domain/sanitize-html-content';
+import { sanitizeHtmlContent } from '../../application/helpers/sanitize-html-content';
 
 @Injectable()
 export class HtmlDocumentExportService
