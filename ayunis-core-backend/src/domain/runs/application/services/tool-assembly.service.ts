@@ -33,6 +33,8 @@ import {
   type SkillPrefix,
 } from 'src/common/util/skill-slug';
 import type { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
+import { FindArtifactsByThreadUseCase } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.use-case';
+import { FindArtifactsByThreadQuery } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.query';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -49,6 +51,7 @@ export class ToolAssemblyService {
     private readonly findActiveAlwaysOnTemplatesUseCase: FindActiveAlwaysOnTemplatesUseCase,
     @Inject(featuresConfig.KEY)
     private readonly features: ConfigType<typeof featuresConfig>,
+    private readonly findArtifactsByThreadUseCase: FindArtifactsByThreadUseCase,
   ) {}
 
   async findActiveSkills(): Promise<Skill[]> {
@@ -346,6 +349,33 @@ export class ToolAssemblyService {
         }),
       ),
     );
+
+    // Document tools are always available
+    tools.push(
+      await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({
+          type: ToolType.CREATE_DOCUMENT,
+        }),
+      ),
+    );
+
+    const updateDocumentTool = await this.assembleToolsUseCase.execute(
+      new AssembleToolCommand({
+        type: ToolType.UPDATE_DOCUMENT,
+      }),
+    );
+    const threadArtifacts = await this.findArtifactsByThreadUseCase.execute(
+      new FindArtifactsByThreadQuery({ threadId: thread.id }),
+    );
+    if (threadArtifacts.length > 0) {
+      const artifactList = threadArtifacts
+        .map((a) => `- ${a.id}: "${a.title}"`)
+        .join('\n');
+      updateDocumentTool.descriptionLong =
+        `${updateDocumentTool.descriptionLong ?? updateDocumentTool.description}\n\n` +
+        `Available documents in this conversation:\n${artifactList}`;
+    }
+    tools.push(updateDocumentTool);
 
     // Create skill tool is available when skills feature is enabled
     if (skillsEnabled) {

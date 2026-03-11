@@ -1,0 +1,72 @@
+[deployed]
+  [deployed.agents_md]
+    store = "work"
+    source = "agents/ayunis-core.md"
+    path = "AGENTS.md"
+    hash = "855626d1c8ddff495c36f6b52c22bc6f2c9ee8425992c4f3140b2f42439dc36e"
+  [deployed.skills]
+    [deployed.skills.ayunis-core-backend]
+      store = "work"
+      source = "skills/ayunis-core-backend/"
+      path = ".pi/skills/ayunis-core-backend"
+      hash = "a6980c3fac7295e9a457b620bd2bc3768a0c522205a551d0111b2027cfc97927"
+    [deployed.skills.ayunis-core-frontend-dev]
+      store = "work"
+      source = "skills/ayunis-core-frontend-dev/"
+      path = ".pi/skills/ayunis-core-frontend-dev"
+      hash = "6e3dd62c63d01dbbc749bc593afb9e03be71c213c4e5bcca2cb6cbd87a567ae6"
+    [deployed.skills.backend-debugging]
+      store = "work"
+      source = "skills/backend-debugging/"
+      path = ".pi/skills/backend-debugging"
+      hash = "1f3aa7a336ab759203336879f2dfb4e3caf942b56503855a24aeddb97bc1414a"
+    [deployed.skills.browser-verify]
+      store = "work"
+      source = "skills/browser-verify/"
+      path = ".pi/skills/browser-verify"
+      hash = "3ec02ce54e4d80ba96ea81146d57a414eb05eff218d8c93e819a581647599a7e"
+    [deployed.skills.code-review]
+      store = "work"
+      source = "skills/code-review/"
+      path = ".pi/skills/code-review"
+      hash = "d5a9bb533be802279c134a556abfeffc7a4e2c7b1a5e197cae78e2d4226e0fe7"
+    [deployed.skills.dev-environment]
+      store = "work"
+      source = "skills/dev-environment/"
+      path = ".pi/skills/dev-environment"
+      hash = "2ea9d8ea4016419b87deb0681d746a25a342e137415294d6e4dd56409bd8e06b"
+    [deployed.skills.feature-toggles]
+      store = "work"
+      source = "skills/feature-toggles/"
+      path = ".pi/skills/feature-toggles"
+      hash = "1f94e01a8a29501cd63c0d8d39b387c54f534876decfb7b60da0dc4a134244cf"
+    [deployed.skills.git-workflow]
+      store = "work"
+      source = "skills/git-workflow/"
+      path = ".pi/skills/git-workflow"
+      hash = "9d3d54c11bfa139e682e51301a83a6f1223f1e9d11e313b23a630e7866bab703"
+    [deployed.skills.nestjs-hexagonal-backend]
+      store = "work"
+      source = "skills/nestjs-hexagonal-backend/"
+      path = ".pi/skills/nestjs-hexagonal-backend"
+      hash = "84ac03b714b3ecf04f1fe50824faf681cb8ac03530a5fddeabf769d6bb2db1e3"
+    [deployed.skills.new-page]
+      store = "work"
+      source = "skills/new-page/"
+      path = ".pi/skills/new-page"
+      hash = "1acac0c13bb203e9d7b2c6513a778dbbd11f95546b98906a71643e4d893cbe64"
+    [deployed.skills.seed-database]
+      store = "work"
+      source = "skills/seed-database/"
+      path = ".pi/skills/seed-database"
+      hash = "081d35b5935f77112a8147a1801142a87a0f67973147c03288dcc22d8c82c551"
+    [deployed.skills.typeorm-migrations]
+      store = "work"
+      source = "skills/typeorm-migrations/"
+      path = ".pi/skills/typeorm-migrations"
+      hash = "a06cee80d1151162fa9a77faae0bce449cf5fc3c6964c8b093c14205de2b4e53"
+    [deployed.skills.worktree]
+      store = "work"
+      source = "skills/worktree/"
+      path = ".pi/skills/worktree"
+      hash = "52476e931af0660789fba04feebc1e50965c57c4ce50ff8f6c486a8b7a42d0ca"

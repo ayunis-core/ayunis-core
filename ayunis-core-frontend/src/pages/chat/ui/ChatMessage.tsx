@@ -32,6 +32,8 @@ import CreateCalendarEventWidget from './chat-widgets/CreateCalendarEventWidget'
 import CreateSkillWidget from './chat-widgets/CreateSkillWidget';
 import ActivateSkillWidget from './chat-widgets/ActivateSkillWidget';
 import SkillInstructionWidget from './chat-widgets/SkillInstructionWidget';
+import CreateDocumentWidget from './chat-widgets/CreateDocumentWidget';
+import UpdateDocumentWidget from './chat-widgets/UpdateDocumentWidget';
 import {
   BarChartWidget,
   LineChartWidget,
@@ -46,6 +48,8 @@ interface ChatMessageProps {
   readonly message: Message;
   readonly hideAvatar?: boolean;
   readonly isStreaming?: boolean;
+  readonly threadId?: string;
+  readonly onOpenArtifact?: (artifactId: string) => void;
 }
 
 function CopyMessageButton({
@@ -120,6 +124,8 @@ export default function ChatMessage({
   hideAvatar = false,
   message,
   isStreaming = false,
+  threadId,
+  onOpenArtifact,
 }: ChatMessageProps) {
   const { theme } = useTheme();
   const messageContentRef = useRef<HTMLDivElement>(null);
@@ -165,7 +171,12 @@ export default function ChatMessage({
             className="space-y-2 overflow-hidden w-full"
             data-testid="assistant-message"
           >
-            {renderMessageContent(message, isStreaming)}
+            {renderMessageContent(
+              message,
+              isStreaming,
+              threadId,
+              onOpenArtifact,
+            )}
           </div>
           {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content may be undefined during streaming */}
           {message.content?.some((c) => c.type === 'text') && (
@@ -221,7 +232,12 @@ function ImageThumbnail({
 }
 
 // eslint-disable-next-line sonarjs/function-return-type
-function renderMessageContent(message: Message, isStreaming?: boolean) {
+function renderMessageContent(
+  message: Message,
+  isStreaming?: boolean,
+  threadId?: string,
+  onOpenArtifact?: (artifactId: string) => void,
+) {
   switch (message.role) {
     case 'user':
     case 'system': {
@@ -372,6 +388,34 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
                   key={`pie-chart-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
                   content={toolUseMessageContent}
                   isStreaming={isStreaming}
+                />
+              );
+            }
+
+            if (
+              toolUseMessageContent.name ===
+              ToolAssignmentDtoType.create_document
+            ) {
+              return (
+                <CreateDocumentWidget
+                  key={`create-document-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
+                  content={toolUseMessageContent}
+                  isStreaming={isStreaming}
+                  threadId={threadId ?? ''}
+                  onOpenArtifact={onOpenArtifact}
+                />
+              );
+            }
+            if (
+              toolUseMessageContent.name ===
+              ToolAssignmentDtoType.update_document
+            ) {
+              return (
+                <UpdateDocumentWidget
+                  key={`update-document-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
+                  content={toolUseMessageContent}
+                  isStreaming={isStreaming}
+                  onOpenArtifact={onOpenArtifact}
                 />
               );
             }

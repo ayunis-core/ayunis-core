@@ -1,4 +1,12 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  lazy,
+  Suspense,
+} from 'react';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
 import ChatMessage from '@/pages/chat/ui/ChatMessage';
 import StreamingLoadingIndicator from '@/pages/chat/ui/StreamingLoadingIndicator';
@@ -9,7 +17,7 @@ import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
 import UnavailableAgentWarning from './UnavailableAgentWarning';
 import type { Thread, Message } from '../model/openapi';
-import { showError } from '@/shared/lib/toast';
+import { showError, showSuccess } from '@/shared/lib/toast';
 import config from '@/shared/config';
 
 import { useConfirmation } from '@/widgets/confirmation-modal';
@@ -28,6 +36,12 @@ import { AxiosError } from 'axios';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
 import { useDeleteFileSource } from '../api/useDeleteFileSource';
+import { useArtifact } from '../api/useArtifact';
+import { useUpdateArtifact } from '../api/useUpdateArtifact';
+import { useRevertArtifact } from '../api/useRevertArtifact';
+import { useExportArtifact } from '../api/useExportArtifact';
+import { UpdateArtifactDtoAuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useAgents } from '@/features/useAgents';
 import { useIsAgentsEnabled } from '@/features/feature-toggles';
 import { usePermittedModels } from '@/features/usePermittedModels';
@@ -40,6 +54,12 @@ import {
 import { useKnowledgeBaseAttachment } from '../api/useKnowledgeBaseAttachment';
 import { useDownloadSource } from '../api/useDownloadSource';
 import type { PendingImage } from '../api/useMessageSend';
+
+const LazyArtifactEditor = lazy(() =>
+  import('@/widgets/artifact-editor').then((m) => ({
+    default: m.ArtifactEditor,
+  })),
+);
 
 interface ChatPageProps {
   readonly thread: Thread;
@@ -110,6 +130,55 @@ export default function ChatPage({
   const [isProcessingPendingSources, setIsProcessingPendingSources] =
     useState(false);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [openArtifactId, setOpenArtifactId] = useState<string | null>(null);
+
+  // Fetch the open artifact with versions
+  const { artifact: openArtifact } = useArtifact(openArtifactId);
+
+  const { updateArtifact: saveArtifact } = useUpdateArtifact({
+    artifactId: openArtifactId ?? '',
+    threadId: thread.id,
+    onSuccess: () => showSuccess(t('chat.artifactSaved')),
+  });
+
+  const { revertArtifact } = useRevertArtifact({
+    artifactId: openArtifactId ?? '',
+    threadId: thread.id,
+  });
+
+  const { exportArtifact } = useExportArtifact({
+    artifactId: openArtifactId ?? '',
+    title: openArtifact?.title ?? 'document',
+  });
+
+  const handleOpenArtifact = useCallback((artifactId: string) => {
+    setOpenArtifactId(artifactId);
+  }, []);
+
+  const handleSaveArtifact = useCallback(
+    (content: string) => {
+      saveArtifact({ content, authorType: UpdateArtifactDtoAuthorType.USER });
+    },
+    [saveArtifact],
+  );
+
+  const handleRevertArtifact = useCallback(
+    (versionNumber: number) => {
+      revertArtifact(versionNumber);
+    },
+    [revertArtifact],
+  );
+
+  const handleExportArtifact = useCallback(
+    (format: 'docx' | 'pdf') => {
+      void exportArtifact(format as ArtifactsControllerExportFormat);
+    },
+    [exportArtifact],
+  );
+
+  const handleCloseArtifact = useCallback(() => {
+    setOpenArtifactId(null);
+  }, []);
 
   const sortedMessages = useMemo(() => {
     return [...messages].sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
@@ -416,6 +485,8 @@ export default function ChatPage({
             i === sortedMessages.length - 1 &&
             message.role === 'assistant'
           }
+          threadId={thread.id}
+          onOpenArtifact={handleOpenArtifact}
         />
       ))}
       {showLoadingMessage && <StreamingLoadingIndicator />}
@@ -467,6 +538,19 @@ export default function ChatPage({
         chatHeader={chatHeader}
         chatContent={chatContent}
         chatInput={chatInput}
+        sidePanel={
+          openArtifact ? (
+            <Suspense fallback={null}>
+              <LazyArtifactEditor
+                artifact={openArtifact}
+                onSave={handleSaveArtifact}
+                onRevert={handleRevertArtifact}
+                onExport={handleExportArtifact}
+                onClose={handleCloseArtifact}
+              />
+            </Suspense>
+          ) : undefined
+        }
       />
       <RenameThreadDialog
         open={renameDialogOpen}
