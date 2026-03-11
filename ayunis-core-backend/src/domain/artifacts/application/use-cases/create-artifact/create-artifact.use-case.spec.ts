@@ -6,7 +6,8 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 import { CreateArtifactUseCase } from './create-artifact.use-case';
 import { CreateArtifactCommand } from './create-artifact.command';
@@ -133,7 +134,7 @@ describe('CreateArtifactUseCase', () => {
     expect(result.versions[0].authorId).toBeNull();
   });
 
-  it('should throw UnauthorizedException when user is not authenticated', async () => {
+  it('should throw UnauthorizedAccessError when user is not authenticated', async () => {
     const mockContextService = {
       get: jest.fn(() => undefined),
     } as unknown as jest.Mocked<ContextService>;
@@ -159,7 +160,7 @@ describe('CreateArtifactUseCase', () => {
     });
 
     await expect(useCaseNoAuth.execute(command)).rejects.toThrow(
-      UnauthorizedException,
+      UnauthorizedAccessError,
     );
   });
 

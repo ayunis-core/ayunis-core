@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateSkillTemplatesTable1772657109813
-  implements MigrationInterface
-{
+export class CreateSkillTemplatesTable1772657109813 implements MigrationInterface {
   name = 'CreateSkillTemplatesTable1772657109813';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

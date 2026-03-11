@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateThreadKnowledgeBaseAssignments1772197660397
-  implements MigrationInterface
-{
+export class CreateThreadKnowledgeBaseAssignments1772197660397 implements MigrationInterface {
   name = 'CreateThreadKnowledgeBaseAssignments1772197660397';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

@@ -1,12 +1,15 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { DocumentExportPort } from '../../ports/document-export.port';
 import { ExportArtifactCommand } from './export-artifact.command';
 import {
   ArtifactNotFoundError,
   ArtifactVersionNotFoundError,
+  UnexpectedArtifactError,
 } from '../../artifacts.errors';
 import { ContextService } from 'src/common/context/services/context.service';
+import { ApplicationError } from 'src/common/errors/base.error';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 export interface ExportResult {
   buffer: Buffer;
@@ -30,51 +33,65 @@ export class ExportArtifactUseCase {
       format: command.format,
     });
 
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedException('User not authenticated');
-    }
+    try {
+      const userId = this.contextService.get('userId');
+      if (!userId) {
+        throw new UnauthorizedAccessError();
+      }
 
-    const artifact = await this.artifactsRepository.findByIdWithVersions(
-      command.artifactId,
-      userId,
-    );
-    if (!artifact) {
-      throw new ArtifactNotFoundError(command.artifactId);
-    }
-
-    const currentVersion = artifact.versions.find(
-      (v) => v.versionNumber === artifact.currentVersionNumber,
-    );
-    if (!currentVersion) {
-      throw new ArtifactVersionNotFoundError(
+      const artifact = await this.artifactsRepository.findByIdWithVersions(
         command.artifactId,
-        artifact.currentVersionNumber,
+        userId,
       );
-    }
+      if (!artifact) {
+        throw new ArtifactNotFoundError(command.artifactId);
+      }
 
-    const safeTitle =
-      artifact.title.replace(/[^a-zA-Z0-9-_ ]/g, '').trim() || 'artifact';
+      const currentVersion = artifact.versions.find(
+        (v) => v.versionNumber === artifact.currentVersionNumber,
+      );
+      if (!currentVersion) {
+        throw new ArtifactVersionNotFoundError(
+          command.artifactId,
+          artifact.currentVersionNumber,
+        );
+      }
 
-    if (command.format === 'docx') {
-      const buffer = await this.documentExportPort.exportToDocx(
+      const safeTitle =
+        artifact.title.replace(/[^a-zA-Z0-9-_ ]/g, '').trim() || 'artifact';
+
+      if (command.format === 'docx') {
+        const buffer = await this.documentExportPort.exportToDocx(
+          currentVersion.content,
+        );
+        return {
+          buffer,
+          fileName: `${safeTitle}.docx`,
+          mimeType:
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        };
+      }
+
+      const buffer = await this.documentExportPort.exportToPdf(
         currentVersion.content,
       );
       return {
         buffer,
-        fileName: `${safeTitle}.docx`,
-        mimeType:
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        fileName: `${safeTitle}.pdf`,
+        mimeType: 'application/pdf',
       };
-    }
+    } catch (error) {
+      if (error instanceof ApplicationError) {
+        throw error;
+      }
 
-    const buffer = await this.documentExportPort.exportToPdf(
-      currentVersion.content,
-    );
-    return {
-      buffer,
-      fileName: `${safeTitle}.pdf`,
-      mimeType: 'application/pdf',
-    };
+      this.logger.error('exportArtifactUnexpectedError', {
+        artifactId: command.artifactId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw new UnexpectedArtifactError(
+        error instanceof Error ? error.message : 'Unknown error',
+      );
+    }
   }
 }

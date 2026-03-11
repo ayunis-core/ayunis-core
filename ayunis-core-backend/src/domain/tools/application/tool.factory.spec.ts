@@ -148,8 +148,9 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.KNOWLEDGE_GET_TEXT);
       expect(types).toContain(ToolType.CREATE_DOCUMENT);
       expect(types).toContain(ToolType.UPDATE_DOCUMENT);
+      expect(types).toContain(ToolType.EDIT_DOCUMENT);
 
-      expect(types.length).toBe(21);
+      expect(types.length).toBe(22);
     });
   });
 });

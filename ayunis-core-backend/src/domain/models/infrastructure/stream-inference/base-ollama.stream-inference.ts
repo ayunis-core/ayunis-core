@@ -19,9 +19,7 @@ import { ImageContentService } from 'src/domain/messages/application/services/im
 import { OllamaMessageConverter } from '../converters/ollama-message.converter';
 
 @Injectable()
-export class BaseOllamaStreamInferenceHandler
-  implements StreamInferenceHandler
-{
+export class BaseOllamaStreamInferenceHandler implements StreamInferenceHandler {
   private readonly logger = new Logger(BaseOllamaStreamInferenceHandler.name);
   private readonly thinkingParser = new ThinkingContentParser();
   protected client: Ollama;

@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddCanVisionToLanguageModel1764858162922
-  implements MigrationInterface
-{
+export class AddCanVisionToLanguageModel1764858162922 implements MigrationInterface {
   name = 'AddCanVisionToLanguageModel1764858162922';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

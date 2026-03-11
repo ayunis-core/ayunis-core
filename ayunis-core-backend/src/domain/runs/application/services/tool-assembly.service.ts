@@ -359,23 +359,9 @@ export class ToolAssemblyService {
       ),
     );
 
-    const updateDocumentTool = await this.assembleToolsUseCase.execute(
-      new AssembleToolCommand({
-        type: ToolType.UPDATE_DOCUMENT,
-      }),
-    );
-    const threadArtifacts = await this.findArtifactsByThreadUseCase.execute(
-      new FindArtifactsByThreadQuery({ threadId: thread.id }),
-    );
-    if (threadArtifacts.length > 0) {
-      const artifactList = threadArtifacts
-        .map((a) => `- ${a.id}: "${a.title}"`)
-        .join('\n');
-      updateDocumentTool.descriptionLong =
-        `${updateDocumentTool.descriptionLong ?? updateDocumentTool.description}\n\n` +
-        `Available documents in this conversation:\n${artifactList}`;
-    }
-    tools.push(updateDocumentTool);
+    // Document editing tools with artifact context
+    const documentEditTools = await this.assembleDocumentEditTools(thread);
+    tools.push(...documentEditTools);
 
     // Create skill tool is available when skills feature is enabled
     if (skillsEnabled) {
@@ -464,6 +450,35 @@ export class ToolAssemblyService {
           }),
         ),
       );
+    }
+
+    return tools;
+  }
+
+  private async assembleDocumentEditTools(thread: Thread): Promise<Tool[]> {
+    const threadArtifacts = await this.findArtifactsByThreadUseCase.execute(
+      new FindArtifactsByThreadQuery({ threadId: thread.id }),
+    );
+
+    const artifactLines = threadArtifacts.map(
+      (a) => '- ' + a.id + ': "' + a.title + '"',
+    );
+    const artifactSuffix =
+      artifactLines.length > 0
+        ? `\n\nAvailable documents in this conversation:\n${artifactLines.join('\n')}`
+        : '';
+
+    const toolTypes = [ToolType.UPDATE_DOCUMENT, ToolType.EDIT_DOCUMENT];
+    const tools: Tool[] = [];
+
+    for (const type of toolTypes) {
+      const tool = await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({ type }),
+      );
+      if (artifactSuffix) {
+        tool.descriptionLong = `${tool.descriptionLong ?? tool.description}${artifactSuffix}`;
+      }
+      tools.push(tool);
     }
 
     return tools;

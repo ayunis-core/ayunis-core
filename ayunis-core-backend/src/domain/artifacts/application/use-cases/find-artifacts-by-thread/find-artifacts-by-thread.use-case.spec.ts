@@ -1,6 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 import { FindArtifactsByThreadUseCase } from './find-artifacts-by-thread.use-case';
 import { FindArtifactsByThreadQuery } from './find-artifacts-by-thread.query';
@@ -90,7 +90,7 @@ describe('FindArtifactsByThreadUseCase', () => {
     expect(result).toEqual([]);
   });
 
-  it('should throw UnauthorizedException when user is not authenticated', async () => {
+  it('should throw UnauthorizedAccessError when user is not authenticated', async () => {
     const mockContextService = {
       get: jest.fn(() => undefined),
     } as unknown as jest.Mocked<ContextService>;
@@ -110,7 +110,7 @@ describe('FindArtifactsByThreadUseCase', () => {
     const query = new FindArtifactsByThreadQuery({ threadId: mockThreadId });
 
     await expect(useCaseNoAuth.execute(query)).rejects.toThrow(
-      UnauthorizedException,
+      UnauthorizedAccessError,
     );
   });
 });

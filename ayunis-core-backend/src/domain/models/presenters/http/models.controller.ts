@@ -113,10 +113,7 @@ export class ModelsController {
       },
     },
   })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @ApiExtraModels(ModelWithConfigResponseDto)
   async getAvailableModelsWithConfig(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
@@ -163,14 +160,8 @@ export class ModelsController {
     status: 200,
     description: 'Successfully created a permitted model',
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid model input',
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
+  @ApiResponse({ status: 400, description: 'Invalid model input' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @ApiExtraModels(CreatePermittedModelDto)
   async createPermittedModel(
     @Body() createPermittedModelDto: CreatePermittedModelDto,
@@ -191,10 +182,7 @@ export class ModelsController {
     status: 200,
     description: 'Successfully deleted a permitted model',
   })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
-  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async deletePermittedModel(
     @Param('id') id: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
@@ -217,14 +205,8 @@ export class ModelsController {
       $ref: getSchemaPath(PermittedLanguageModelResponseDto),
     },
   })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Permitted model not found',
-  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Permitted model not found' })
   @ApiExtraModels(UpdatePermittedModelDto)
   async updatePermittedModel(
     @Param('id') id: UUID,
@@ -259,10 +241,7 @@ export class ModelsController {
       },
     },
   })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @ApiExtraModels(PermittedLanguageModelResponseDto)
   async getPermittedLanguageModels(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
@@ -287,10 +266,7 @@ export class ModelsController {
       $ref: getSchemaPath(PermittedLanguageModelResponseDtoNullable),
     },
   })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @ApiExtraModels(PermittedLanguageModelResponseDtoNullable)
   async getEffectiveDefaultModel(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
@@ -329,10 +305,7 @@ export class ModelsController {
       $ref: getSchemaPath(PermittedLanguageModelResponseDtoNullable),
     },
   })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @ApiExtraModels(PermittedLanguageModelResponseDtoNullable)
   async getOrgSpecificDefaultModel(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
@@ -361,10 +334,7 @@ export class ModelsController {
       $ref: getSchemaPath(PermittedLanguageModelResponseDtoNullable),
     },
   })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @ApiExtraModels(PermittedLanguageModelResponseDtoNullable)
   async getUserSpecificDefaultModel(
     @CurrentUser(UserProperty.ID) userId: UUID,
@@ -396,14 +366,8 @@ export class ModelsController {
       $ref: getSchemaPath(PermittedLanguageModelResponseDto),
     },
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid request payload',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Permitted model not found',
-  })
+  @ApiResponse({ status: 400, description: 'Invalid request payload' })
+  @ApiResponse({ status: 404, description: 'Permitted model not found' })
   @ApiExtraModels(SetUserDefaultModelDto)
   async manageUserDefaultModel(
     @Body() setUserDefaultModelDto: SetUserDefaultModelDto,
@@ -425,10 +389,7 @@ export class ModelsController {
     status: 204,
     description: 'Successfully deleted the user default model',
   })
-  @ApiResponse({
-    status: 404,
-    description: 'User default model not found',
-  })
+  @ApiResponse({ status: 404, description: 'User default model not found' })
   async deleteUserDefaultModel(
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<void> {
@@ -450,14 +411,8 @@ export class ModelsController {
       $ref: getSchemaPath(PermittedLanguageModelResponseDto),
     },
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid request payload',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Permitted model not found',
-  })
+  @ApiResponse({ status: 400, description: 'Invalid request payload' })
+  @ApiResponse({ status: 404, description: 'Permitted model not found' })
   @ApiExtraModels(SetOrgDefaultModelDto)
   async manageOrgDefaultModel(
     @Body() setOrgDefaultModelDto: SetOrgDefaultModelDto,
@@ -484,14 +439,8 @@ export class ModelsController {
       $ref: getSchemaPath(ModelProviderInfoResponseDto),
     },
   })
-  @ApiResponse({
-    status: 404,
-    description: 'Model provider not found',
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
+  @ApiResponse({ status: 404, description: 'Model provider not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @ApiExtraModels(ModelProviderInfoResponseDto)
   getModelProviderInfo(
     @Param('provider') provider: ModelProvider,
@@ -521,82 +470,4 @@ export class ModelsController {
       await this.isEmbeddingModelEnabledUseCase.execute(query);
     return { isEmbeddingModelEnabled };
   }
-
-  /**
-   * TODO: Implement with model and provider as input
-   */
-  // @Post('inference')
-  // @ApiOperation({ summary: 'Trigger inference' })
-  // @ApiBody({ type: InferenceRequestDto })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Successfully triggered inference and returned model response',
-  //   schema: {
-  //     $ref: getSchemaPath(InferenceResponse),
-  //   },
-  // })
-  // @ApiResponse({
-  //   status: 400,
-  //   description: 'Invalid inference request payload',
-  // })
-  // @ApiResponse({
-  //   status: 404,
-  //   description: 'Model not found',
-  // })
-  // @ApiResponse({
-  //   status: 500,
-  //   description: 'Internal server error or model provider error',
-  // })
-  // @ApiExtraModels(
-  //   InferenceResponse,
-  //   ToolSpecificationDto,
-  //   UserMessageRequestDto,
-  //   SystemMessageRequestDto,
-  //   AssistantMessageRequestDto,
-  //   ToolResultMessageRequestDto,
-  //   TextMessageContentRequestDto,
-  //   ToolUseMessageContentRequestDto,
-  //   ToolResultMessageContentRequestDto,
-  // )
-  // async inference(
-  //   @Body() inferenceRequestDto: InferenceRequestDto,
-  //   @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-  // ): Promise<InferenceResponse> {
-  //   this.logger.log('inference', inferenceRequestDto);
-  //   const getModelQuery = new GetPermittedModelByNameAndProviderQuery({
-  //     name: inferenceRequestDto.modelName,
-  //     provider: inferenceRequestDto.modelProvider,
-  //     orgId,
-  //   });
-  //   const model = await this.getPermittedModelUseCase.execute(getModelQuery);
-
-  //   // Create CustomTool entities from tool specifications
-  //   const tools: Tool[] = [];
-  //   if (inferenceRequestDto.tools && inferenceRequestDto.tools.length > 0) {
-  //     for (const toolSpec of inferenceRequestDto.tools) {
-  //       const createToolCommand = new CreateCustomToolCommand(
-  //         toolSpec.name,
-  //         toolSpec.description,
-  //         toolSpec.parameters,
-  //       );
-  //       const customTool =
-  //         await this.createCustomToolUseCase.execute(createToolCommand);
-  //       tools.push(customTool);
-  //     }
-  //   }
-
-  //   // Convert MessageRequestDto[] to Message[]
-  //   const messages = this.messageRequestDtoMapper.fromDtoArray(
-  //     inferenceRequestDto.messages,
-  //   );
-
-  //   const inferenceCommand = new GetInferenceCommand({
-  //     model: model.model,
-  //     messages: messages,
-  //     tools: tools,
-  //     toolChoice: inferenceRequestDto.toolChoice || ModelToolChoice.AUTO,
-  //   });
-
-  //   return await this.triggerInferenceUseCase.execute(inferenceCommand);
-  // }
 }

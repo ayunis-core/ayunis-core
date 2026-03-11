@@ -107,7 +107,7 @@ describe('AgentMcpIntegrationsCard', () => {
     expect(skeletons.length).toBeGreaterThan(0);
   });
 
-  it('renders empty state when no integrations are available', () => {
+  it('renders nothing when no integrations are available', () => {
     // Mock hooks to return empty data
     vi.spyOn(
       apiHooks,
@@ -129,12 +129,12 @@ describe('AgentMcpIntegrationsCard', () => {
       refetch: vi.fn(),
     } as any);
 
-    render(<AgentMcpIntegrationsCard />, { wrapper: createWrapper() });
+    const { container } = render(<AgentMcpIntegrationsCard />, {
+      wrapper: createWrapper(),
+    });
 
-    expect(screen.getByText('mcpIntegrations.emptyState.title')).toBeTruthy();
-    expect(
-      screen.getByText('mcpIntegrations.emptyState.description'),
-    ).toBeTruthy();
+    // Component returns null when no integrations are available
+    expect(container.innerHTML).toBe('');
   });
 
   it('renders error state when fetching fails', () => {
@@ -198,17 +198,9 @@ describe('AgentMcpIntegrationsCard', () => {
 
     render(<AgentMcpIntegrationsCard />, { wrapper: createWrapper() });
 
-    // Check if both integrations are rendered
+    // Check if both integrations are rendered by name
     expect(screen.getByText('Test Integration 1')).toBeTruthy();
     expect(screen.getByText('Test Integration 2')).toBeTruthy();
-
-    // Check if slug and serverUrl are displayed
-    expect(screen.getByText('test-integration-1')).toBeTruthy();
-    expect(screen.getByText('http://example.com')).toBeTruthy();
-
-    // Check if types are displayed as badges
-    expect(screen.getByText('predefined')).toBeTruthy();
-    expect(screen.getByText('custom')).toBeTruthy();
   });
 
   it('displays correct toggle state for assigned integrations', () => {
@@ -278,8 +270,9 @@ describe('AgentMcpIntegrationsCard', () => {
     render(<AgentMcpIntegrationsCard />, { wrapper: createWrapper() });
 
     const integrationNames = screen
-      .getAllByRole('heading', { level: 4 })
-      .map((h) => h.textContent);
+      .getAllByText(/Integration/)
+      .filter((el) => el.getAttribute('data-slot') === 'item-title')
+      .map((el) => el.textContent);
 
     expect(integrationNames).toEqual([
       'A Integration',

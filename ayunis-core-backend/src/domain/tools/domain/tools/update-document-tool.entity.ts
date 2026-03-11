@@ -35,7 +35,9 @@ export class UpdateDocumentTool extends DisplayableTool {
       descriptionLong:
         'Use update_document when a document already exists in the conversation (was previously created with create_document). ' +
         'Use create_document instead when the user wants a brand new document. ' +
-        'Always provide the full updated content, not a partial diff.',
+        'Always provide the full updated content, not a partial diff. ' +
+        'For targeted changes (fixing typos, updating a section, inserting a paragraph), prefer edit_document instead — ' +
+        'it is more efficient and less error-prone for small edits.',
       parameters: updateDocumentToolParameters,
       type: ToolType.UPDATE_DOCUMENT,
     });

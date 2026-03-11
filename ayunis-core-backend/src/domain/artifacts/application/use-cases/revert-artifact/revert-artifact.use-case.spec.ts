@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 import { RevertArtifactUseCase } from './revert-artifact.use-case';
 import { RevertArtifactCommand } from './revert-artifact.command';
@@ -263,7 +264,7 @@ describe('RevertArtifactUseCase', () => {
     expect(result.content).toContain('<p>Safe content</p>');
   });
 
-  it('should throw UnauthorizedException when user is not authenticated', async () => {
+  it('should throw UnauthorizedAccessError when user is not authenticated', async () => {
     const mockContextService = {
       get: jest.fn(() => undefined),
     } as unknown as jest.Mocked<ContextService>;
@@ -286,7 +287,7 @@ describe('RevertArtifactUseCase', () => {
     });
 
     await expect(useCaseNoAuth.execute(command)).rejects.toThrow(
-      UnauthorizedException,
+      UnauthorizedAccessError,
     );
   });
 

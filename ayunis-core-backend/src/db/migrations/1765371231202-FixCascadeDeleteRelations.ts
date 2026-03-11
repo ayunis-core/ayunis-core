@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class FixCascadeDeleteRelations1765371231202
-  implements MigrationInterface
-{
+export class FixCascadeDeleteRelations1765371231202 implements MigrationInterface {
   name = 'FixCascadeDeleteRelations1765371231202';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

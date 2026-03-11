@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddScalewayToModelProviderEnum1772115093760
-  implements MigrationInterface
-{
+export class AddScalewayToModelProviderEnum1772115093760 implements MigrationInterface {
   name = 'AddScalewayToModelProviderEnum1772115093760';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddIndexesOnKnowledgeBaseOrgIdAndUserId1771698541252
-  implements MigrationInterface
-{
+export class AddIndexesOnKnowledgeBaseOrgIdAndUserId1771698541252 implements MigrationInterface {
   name = 'AddIndexesOnKnowledgeBaseOrgIdAndUserId1771698541252';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
