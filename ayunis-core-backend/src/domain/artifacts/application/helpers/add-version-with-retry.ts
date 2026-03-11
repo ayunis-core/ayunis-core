@@ -1,7 +1,7 @@
 import type { Logger } from '@nestjs/common';
-import type { ArtifactsRepository } from './ports/artifacts-repository.port';
-import type { ArtifactVersion } from '../domain/artifact-version.entity';
-import { ArtifactVersionConflictError } from './artifacts.errors';
+import type { ArtifactsRepository } from '../ports/artifacts-repository.port';
+import type { ArtifactVersion } from '../../domain/artifact-version.entity';
+import { ArtifactVersionConflictError } from '../artifacts.errors';
 
 const MAX_VERSION_RETRIES = 3;
 

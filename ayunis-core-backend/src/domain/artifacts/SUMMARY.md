@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Manages versioned documents (artifacts) attached to threads. Artifacts are created and updated by AI tools (`create_document`, `update_document`) or by users via the WYSIWYG editor. Each modification creates a new version, enabling full version history with revert capability.
+Manages versioned documents (artifacts) attached to threads. Artifacts are created and updated by AI tools (`create_document`, `update_document`, `edit_document`) or by users via the WYSIWYG editor. Each modification creates a new version, enabling full version history with revert capability.
 
 ## Domain Concepts
 
@@ -12,7 +12,7 @@ Manages versioned documents (artifacts) attached to threads. Artifacts are creat
 
 ## Architecture
 
-```
+```text
 artifacts/
 ├── domain/
 │   ├── artifact.entity.ts
@@ -22,11 +22,13 @@ artifacts/
 ├── application/
 │   ├── artifacts.errors.ts
 │   ├── helpers/
+│   │   ├── add-version-with-retry.ts
 │   │   └── sanitize-html-content.ts
 │   ├── ports/
 │   │   ├── artifacts-repository.port.ts
 │   │   └── document-export.port.ts
 │   └── use-cases/
+│       ├── apply-edits-to-artifact/
 │       ├── create-artifact/
 │       ├── update-artifact/
 │       ├── find-artifacts-by-thread/
@@ -64,6 +66,7 @@ artifacts/
 
 - Creating an artifact also creates version 1
 - Updating an artifact adds a new version and increments `currentVersionNumber`
+- Applying edits performs search-and-replace patches on the current content, creating a new version (errors on ambiguous or missing matches)
 - Reverting copies content from a target version into a new version (non-destructive)
 - Deleting a thread cascade-deletes all its artifacts and versions
 - Export delegates to `DocumentExportPort` for format conversion

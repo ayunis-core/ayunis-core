@@ -13,7 +13,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { sanitizeHtmlContent } from '../../helpers/sanitize-html-content';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { addVersionWithRetry } from '../../add-version-with-retry';
+import { addVersionWithRetry } from '../../helpers/add-version-with-retry';
 
 @Injectable()
 export class UpdateArtifactUseCase {
