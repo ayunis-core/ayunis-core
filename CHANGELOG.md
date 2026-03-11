@@ -1,5 +1,62 @@
 # Changelog
 
+## [1.17.0](https://github.com/ayunis-core/ayunis-core/compare/v1.16.0...v1.17.0) (2026-03-11)
+
+
+### Features
+
+* **AYC-000:** add artifact editor widget (Tiptap WYSIWYG) and API hooks ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** add artifacts backend domain module (entities, ports, use cases) ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** add artifacts database migration (CreateArtifactsTables) ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** add artifacts export infrastructure (DOCX/PDF via html-to-docx and puppeteer) ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** add artifacts HTTP controller, DTOs, and NestJS module wiring ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** add artifacts persistence layer (records, mappers, repository) ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** add backend execution handlers for create_document and update_document tools ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** add create_document/update_document tools and wire into run pipeline ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** add document chat widgets, ChatMessage integration, and split-pane layout ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** regenerate frontend API client and install Tiptap/resizable-panels deps ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** show success toast when artifact is saved ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** support hybrid displayable+executable tools and update result collector ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** update frontend API client with complete artifacts schemas ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-91:** add artifacts backend domain module (entities, ports, use cases) ([#223](https://github.com/ayunis-core/ayunis-core/issues/223)) ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-91:** finalize artifacts ([#351](https://github.com/ayunis-core/ayunis-core/issues/351)) ([bb74e88](https://github.com/ayunis-core/ayunis-core/commit/bb74e88cd9b50db0c32f7c7e1389f8b8383e85a4))
+
+
+### Bug Fixes
+
+* **AYC-000:** add i18n, fix editor sync, prevent duplicate calls, validate link URLs ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** add server-side HTML sanitization to prevent stored XSS in artifacts ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** add unique constraint on artifact version number with retry-on-conflict ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** avoid mutating React state in sortedMessages useMemo ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** enforce content size limit in artifact use cases for tool pipeline ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** fix repo name for docs update ([#353](https://github.com/ayunis-core/ayunis-core/issues/353)) ([861e324](https://github.com/ayunis-core/ayunis-core/commit/861e324121ccc9e3b58ff36aa6a9f217ebfc05c2))
+* **AYC-000:** prefer most recent artifact when matching by title in CreateDocumentWidget ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** prevent Puppeteer browser leak on concurrent relaunch, fix lazy import placement ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** regenerate artifacts migration after rebase on main ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** remove agentfiles from git tracking ([#352](https://github.com/ayunis-core/ayunis-core/issues/352)) ([e938848](https://github.com/ayunis-core/ayunis-core/commit/e9388482db26c279c637b7d53e7b02696f58fd61))
+* **AYC-000:** replace unsafe double cast with runtime type check in useExportArtifact ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** resolve artifact id from thread artifacts so widget stays clickable ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** validate thread ownership before creating artifacts ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-91:** execute hybrid displayable+executable tools before exiting run loop ([#287](https://github.com/ayunis-core/ayunis-core/issues/287)) ([407438e](https://github.com/ayunis-core/ayunis-core/commit/407438e48cc6b4e523cdba5d1a18852f58a10643))
+* **AYC-91:** fix artifact PDF/DOCX export and UX issues ([#224](https://github.com/ayunis-core/ayunis-core/issues/224)) ([d9a222a](https://github.com/ayunis-core/ayunis-core/commit/d9a222a3de5e9915ad076e7c9b692b791e20150b))
+* **AYC-91:** replace html-to-docx with docx library for reliable DOCX export ([#288](https://github.com/ayunis-core/ayunis-core/issues/288)) ([b8c28f0](https://github.com/ayunis-core/ayunis-core/commit/b8c28f0315c7cb9c33720da9737d2d58cf6e6340))
+
+
+### Performance Improvements
+
+* **AYC-000:** lazy-load ArtifactEditor to reduce initial chat page bundle ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+* **AYC-000:** reuse persistent Puppeteer browser instance for PDF exports ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+
+
+### Code Refactoring
+
+* **AYC-000:** remove mutation logic from frontend document widgets ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+
+
+### Documentation
+
+* **AYC-000:** fix incorrect directory paths in artifacts SUMMARY.md ([34a1c35](https://github.com/ayunis-core/ayunis-core/commit/34a1c355e75d82af9a7efa046a5a8a7e093da8b3))
+
 ## [1.16.0](https://github.com/ayunis-core/ayunis-core/compare/v1.15.0...v1.16.0) (2026-03-09)
 
 
