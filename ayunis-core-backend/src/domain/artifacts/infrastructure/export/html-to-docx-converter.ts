@@ -274,7 +274,9 @@ function convertListItem(
 
 function convertTable(node: HTMLElement): Table {
   const rows = node
-    .querySelectorAll('tr')
+    .querySelectorAll(
+      ':scope > tr, :scope > thead > tr, :scope > tbody > tr, :scope > tfoot > tr',
+    )
     .map(convertTableRow)
     .filter((r): r is TableRow => r !== null);
 
