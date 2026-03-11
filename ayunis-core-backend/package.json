@@ -38,6 +38,8 @@
     "cli": "node -r ./src/config/env-register dist/src/cli/main.js",
     "seed:minimal:ts": "ts-node -r tsconfig-paths/register src/db/scripts/seed-minimal.ts",
     "seed:minimal": "node -r ./src/config/env-register dist/src/db/scripts/seed-minimal.js",
+    "seed:clean:ts": "ts-node -r tsconfig-paths/register src/db/scripts/seed-minimal.ts --clean",
+    "seed:clean": "node -r ./src/config/env-register dist/src/db/scripts/seed-minimal.js --clean",
     "seed:ts": "npm run seed:minimal:ts",
     "seed": "npm run seed:minimal"
   },
@@ -106,6 +108,7 @@
     "@nestjs/testing": "^11.0.1",
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.10.7",
+    "@swc/jest": "^0.2.39",
     "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.8",
     "@types/express": "^5.0.0",
@@ -147,7 +150,12 @@
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.ts$": "ts-jest"
+      "^.+\\.ts$": [
+        "ts-jest",
+        {
+          "isolatedModules": true
+        }
+      ]
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
