@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigService, ConfigType } from '@nestjs/config';
 import { UUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { Agent } from 'src/domain/agents/domain/agent.entity';
@@ -97,8 +97,6 @@ export class ToolAssemblyService {
       (s): s is TextSource => s instanceof TextSource,
     );
 
-    const isCloudHosted = this.configService.get<boolean>('app.isCloudHosted');
-
     // Fetch user's custom system prompt (returns null if not configured)
     const userSystemPromptEntity =
       await this.getUserSystemPromptUseCase.execute();
@@ -109,7 +107,7 @@ export class ToolAssemblyService {
       tools,
       currentTime: new Date(),
       sources: textSources,
-      // Only include skills in prompt when tools are enabled and not cloud-hosted,
+      // Only include skills in prompt when tools are enabled and skills feature is on,
       // otherwise the prompt would instruct the model to use activate_skill which isn't available
       skills: canUseTools && this.features.skillsEnabled ? skillEntries : [],
       knowledgeBases: canUseTools ? thread.getUniqueKnowledgeBases() : [],
@@ -176,8 +174,7 @@ export class ToolAssemblyService {
     activeSkills: Skill[],
     slugMap: Map<string, string>,
   ): Promise<Tool[]> {
-    const isSelfhosted = this.configService.get<boolean>('app.isSelfHosted');
-    const isCloudHosted = this.configService.get<boolean>('app.isCloudHosted');
+    const skillsEnabled = this.features.skillsEnabled;
     const tools: Tool[] = [];
 
     // Collect MCP integration IDs from agent and thread (skill-injected)
@@ -189,19 +186,68 @@ export class ToolAssemblyService {
 
     // Discover MCP capabilities from all integration IDs
     if (mcpIntegrationIds.size > 0) {
-      const mcpCapabilities = await Promise.all(
-        [...mcpIntegrationIds].map((integrationId) =>
+      const integrationIdList = [...mcpIntegrationIds];
+
+      // Fetch integration entities for metadata (name, logoUrl)
+      const integrations = await this.getMcpIntegrationsByIdsUseCase.execute(
+        new GetMcpIntegrationsByIdsQuery(integrationIdList),
+      );
+      const integrationMetaMap = new Map<
+        UUID,
+        { name: string; logoUrl: string | null }
+      >();
+      for (const integration of integrations) {
+        integrationMetaMap.set(integration.id, {
+          name: integration.name,
+          logoUrl:
+            integration instanceof MarketplaceMcpIntegration
+              ? integration.logoUrl
+              : null,
+        });
+      }
+
+      const mcpResults = await Promise.allSettled(
+        integrationIdList.map((integrationId) =>
           this.discoverMcpCapabilitiesUseCase.execute(
             new DiscoverMcpCapabilitiesQuery(integrationId),
           ),
         ),
       );
+
+      // Filter successful results, log and skip failures
+      const mcpCapabilities = mcpResults
+        .map((result, index) => {
+          if (result.status === 'fulfilled') {
+            return result.value;
+          }
+          const failedId = integrationIdList[index];
+          const meta = integrationMetaMap.get(failedId);
+          this.logger.warn(
+            `MCP integration '${meta?.name ?? failedId}' unavailable, skipping`,
+            {
+              integrationId: failedId,
+              error:
+                result.reason instanceof Error
+                  ? result.reason.message
+                  : 'Unknown error',
+            },
+          );
+          return null;
+        })
+        .filter((cap): cap is NonNullable<typeof cap> => cap !== null);
+
       // Add MCP tools and resources
       tools.push(
         ...mcpCapabilities.flatMap((capability) =>
-          capability.tools.map(
-            (tool) => new McpIntegrationTool(tool, capability.returnsPii),
-          ),
+          capability.tools.map((tool) => {
+            const meta = integrationMetaMap.get(tool.integrationId);
+            return new McpIntegrationTool(
+              tool,
+              capability.returnsPii,
+              meta?.name ?? 'Unknown',
+              meta?.logoUrl ?? null,
+            );
+          }),
         ),
         ...mcpCapabilities.flatMap((capability) =>
           capability.resources.map(
@@ -331,8 +377,8 @@ export class ToolAssemblyService {
     }
     tools.push(updateDocumentTool);
 
-    // Create skill tool is available for non-cloud deployments
-    if (!isCloudHosted) {
+    // Create skill tool is available when skills feature is enabled
+    if (skillsEnabled) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
@@ -342,12 +388,8 @@ export class ToolAssemblyService {
       );
     }
 
-    // Internet search tool is always available
-    if (
-      isCloudHosted ||
-      (isSelfhosted &&
-        this.configService.get<boolean>('internetSearch.isAvailable'))
-    ) {
+    // Internet search tool is available when Brave Search credentials are configured
+    if (this.configService.get<boolean>('internetSearch.isAvailable')) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({

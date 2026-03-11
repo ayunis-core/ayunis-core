@@ -31,7 +31,6 @@ import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.en
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
 import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
 
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
@@ -72,6 +71,14 @@ export class ToolFactory {
       [ToolType.ACTIVATE_SKILL]: (p) =>
         new ActivateSkillTool(
           requireMapContext(p.context, ToolType.ACTIVATE_SKILL),
+        ),
+      [ToolType.KNOWLEDGE_QUERY]: (p) =>
+        new KnowledgeQueryTool(
+          requireKnowledgeBaseContext(p.context, ToolType.KNOWLEDGE_QUERY),
+        ),
+      [ToolType.KNOWLEDGE_GET_TEXT]: (p) =>
+        new KnowledgeGetTextTool(
+          requireKnowledgeBaseContext(p.context, ToolType.KNOWLEDGE_GET_TEXT),
         ),
     };
   }

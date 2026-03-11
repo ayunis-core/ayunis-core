@@ -10,8 +10,11 @@ import { InternetSearchTool } from '../domain/tools/internet-search-tool.entity'
 import { SourceQueryTool } from '../domain/tools/source-query-tool.entity';
 import { WebsiteContentTool } from '../domain/tools/website-content-tool.entity';
 import { CreateSkillTool } from '../domain/tools/create-skill-tool.entity';
+import { KnowledgeQueryTool } from '../domain/tools/knowledge-query-tool.entity';
+import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.entity';
 import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
 import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
+import { randomUUID } from 'crypto';
 
 describe('ToolFactory', () => {
   let factory: ToolFactory;
@@ -61,6 +64,24 @@ describe('ToolFactory', () => {
     it('should create a CreateSkillTool', () => {
       const tool = factory.createTool({ type: ToolType.CREATE_SKILL });
       expect(tool).toBeInstanceOf(CreateSkillTool);
+    });
+
+    it('should create a KnowledgeQueryTool', () => {
+      const context = [{ id: randomUUID(), name: 'Test KB' }];
+      const tool = factory.createTool({
+        type: ToolType.KNOWLEDGE_QUERY,
+        context,
+      });
+      expect(tool).toBeInstanceOf(KnowledgeQueryTool);
+    });
+
+    it('should create a KnowledgeGetTextTool', () => {
+      const context = [{ id: randomUUID(), name: 'Test KB' }];
+      const tool = factory.createTool({
+        type: ToolType.KNOWLEDGE_GET_TEXT,
+        context,
+      });
+      expect(tool).toBeInstanceOf(KnowledgeGetTextTool);
     });
 
     it('should create a CreateDocumentTool', () => {
@@ -123,10 +144,12 @@ describe('ToolFactory', () => {
 
       expect(types).toContain(ToolType.ACTIVATE_SKILL);
       expect(types).toContain(ToolType.CREATE_SKILL);
+      expect(types).toContain(ToolType.KNOWLEDGE_QUERY);
+      expect(types).toContain(ToolType.KNOWLEDGE_GET_TEXT);
       expect(types).toContain(ToolType.CREATE_DOCUMENT);
       expect(types).toContain(ToolType.UPDATE_DOCUMENT);
 
-      expect(types.length).toBe(19);
+      expect(types.length).toBe(21);
     });
   });
 });

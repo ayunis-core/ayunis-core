@@ -24,6 +24,8 @@ import { ProductKnowledgeToolHandler } from './application/handlers/product-know
 import { ProductKnowledgePort } from './application/ports/product-knowledge.port';
 import { ProductKnowledgeAdapter } from './infrastructure/product-knowledge/product-knowledge.adapter';
 import { ActivateSkillToolHandler } from './application/handlers/activate-skill-tool.handler';
+import { KnowledgeQueryToolHandler } from './application/handlers/knowledge-query-tool.handler';
+import { KnowledgeGetTextToolHandler } from './application/handlers/knowledge-get-text-tool.handler';
 import { CreateDocumentToolHandler } from './application/handlers/create-document-tool.handler';
 import { UpdateDocumentToolHandler } from './application/handlers/update-document-tool.handler';
 import { SkillsModule } from '../skills/skills.module';
@@ -60,6 +62,8 @@ import { ArtifactsModule } from '../artifacts/artifacts.module';
     McpIntegrationResourceHandler,
     ProductKnowledgeToolHandler,
     ActivateSkillToolHandler,
+    KnowledgeQueryToolHandler,
+    KnowledgeGetTextToolHandler,
     CreateDocumentToolHandler,
     UpdateDocumentToolHandler,
     {
