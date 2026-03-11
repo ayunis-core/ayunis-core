@@ -6,6 +6,7 @@ import {
   ArtifactEditAmbiguousError,
   ArtifactEditNotFoundError,
   ArtifactNotFoundError,
+  ArtifactVersionNotFoundError,
   UnexpectedArtifactError,
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from '../../artifacts.errors';
@@ -54,8 +55,9 @@ export class ApplyEditsToArtifactUseCase {
         (v) => v.versionNumber === artifact.currentVersionNumber,
       );
       if (!currentVersion) {
-        throw new Error(
-          `Current version ${artifact.currentVersionNumber} not found for artifact ${command.artifactId}`,
+        throw new ArtifactVersionNotFoundError(
+          command.artifactId,
+          artifact.currentVersionNumber,
         );
       }
 
