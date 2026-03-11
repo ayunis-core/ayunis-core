@@ -158,7 +158,16 @@
       ]
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.(t|j)s",
+      "!**/*.spec.ts",
+      "!**/*.d.ts",
+      "!**/migrations/**",
+      "!**/db/datasource.ts",
+      "!**/main.ts",
+      "!**/*.module.ts",
+      "!**/*.record.ts",
+      "!**/index.ts",
+      "!**/cli/**"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
