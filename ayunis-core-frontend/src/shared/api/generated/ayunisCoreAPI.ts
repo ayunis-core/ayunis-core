@@ -47,6 +47,7 @@ import type {
   CreateInviteDto,
   CreateInviteResponseDto,
   CreateKnowledgeBaseDto,
+  CreateKnowledgeBaseShareDto,
   CreateLanguageModelRequestDto,
   CreateOrgRequestDto,
   CreatePermittedModelDto,
@@ -54,6 +55,7 @@ import type {
   CreatePromptDto,
   CreateSkillDto,
   CreateSkillShareDto,
+  CreateSkillTemplateDto,
   CreateSubscriptionRequestDto,
   CreateTeamDto,
   CreateThreadDto,
@@ -65,6 +67,8 @@ import type {
   ErrorResponseDto,
   FeatureTogglesResponseDto,
   ForgotPasswordDto,
+  GeneratePersonalizedSystemPromptDto,
+  GeneratePersonalizedSystemPromptResponseDto,
   GetThreadResponseDto,
   GetThreadsResponseDto,
   GlobalUserUsageResponseDto,
@@ -94,6 +98,7 @@ import type {
   PermittedLanguageModelResponseDtoNullable,
   PredefinedConfigResponseDto,
   PriceResponseDto,
+  PromoteToSuperAdminDto,
   PromptResponseDto,
   ProviderUsageChartResponseDto,
   ProviderUsageResponseDto,
@@ -112,6 +117,7 @@ import type {
   SkillResponseDto,
   SkillSourceResponseDto,
   SkillSourcesControllerAddFileSourceBody,
+  SkillTemplateResponseDto,
   StorageControllerUploadFileBody,
   SubscriptionResponseDto,
   SubscriptionResponseDtoNullable,
@@ -133,6 +139,7 @@ import type {
   SuperAdminUsageDataControllerGetProviderUsageChartParams,
   SuperAdminUsageDataControllerGetProviderUsageParams,
   SuperAdminUsageDataControllerGetUserUsageParams,
+  SuperAdminUserResponseDto,
   SuperAdminUsersControllerGetUsersByOrgIdParams,
   TeamMemberResponseDto,
   TeamResponseDto,
@@ -154,6 +161,7 @@ import type {
   UpdatePromptDto,
   UpdateSeatsDto,
   UpdateSkillDto,
+  UpdateSkillTemplateDto,
   UpdateTeamDto,
   UpdateThreadTitleDto,
   UpdateTrialRequestDto,
@@ -3890,6 +3898,229 @@ export const useSuperAdminUsersControllerCreateUser = <TError = void,
     }
     
 /**
+ * Retrieve all users with super admin status. Only accessible to super admins.
+ * @summary List all super admins
+ */
+export const superAdminManagementControllerListSuperAdmins = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SuperAdminUserResponseDto[]>(
+      {url: `/super-admin/super-admins`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminManagementControllerListSuperAdminsQueryKey = () => {
+    return [
+    `/super-admin/super-admins`
+    ] as const;
+    }
+
+    
+export const getSuperAdminManagementControllerListSuperAdminsQueryOptions = <TData = Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminManagementControllerListSuperAdminsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>> = ({ signal }) => superAdminManagementControllerListSuperAdmins(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminManagementControllerListSuperAdminsQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>>
+export type SuperAdminManagementControllerListSuperAdminsQueryError = void
+
+
+export function useSuperAdminManagementControllerListSuperAdmins<TData = Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminManagementControllerListSuperAdmins<TData = Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminManagementControllerListSuperAdmins<TData = Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List all super admins
+ */
+
+export function useSuperAdminManagementControllerListSuperAdmins<TData = Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminManagementControllerListSuperAdmins>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminManagementControllerListSuperAdminsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Promote an existing user to super admin by email address. Idempotent if user is already a super admin.
+ * @summary Promote a user to super admin
+ */
+export const superAdminManagementControllerPromoteToSuperAdmin = (
+    promoteToSuperAdminDto: PromoteToSuperAdminDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SuperAdminUserResponseDto>(
+      {url: `/super-admin/super-admins`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: promoteToSuperAdminDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminManagementControllerPromoteToSuperAdminMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminManagementControllerPromoteToSuperAdmin>>, TError,{data: PromoteToSuperAdminDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminManagementControllerPromoteToSuperAdmin>>, TError,{data: PromoteToSuperAdminDto}, TContext> => {
+
+const mutationKey = ['superAdminManagementControllerPromoteToSuperAdmin'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminManagementControllerPromoteToSuperAdmin>>, {data: PromoteToSuperAdminDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminManagementControllerPromoteToSuperAdmin(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminManagementControllerPromoteToSuperAdminMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminManagementControllerPromoteToSuperAdmin>>>
+    export type SuperAdminManagementControllerPromoteToSuperAdminMutationBody = PromoteToSuperAdminDto
+    export type SuperAdminManagementControllerPromoteToSuperAdminMutationError = void
+
+    /**
+ * @summary Promote a user to super admin
+ */
+export const useSuperAdminManagementControllerPromoteToSuperAdmin = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminManagementControllerPromoteToSuperAdmin>>, TError,{data: PromoteToSuperAdminDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminManagementControllerPromoteToSuperAdmin>>,
+        TError,
+        {data: PromoteToSuperAdminDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminManagementControllerPromoteToSuperAdminMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Demote a user from super admin to customer. Cannot demote yourself.
+ * @summary Remove super admin status from a user
+ */
+export const superAdminManagementControllerDemoteFromSuperAdmin = (
+    userId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/super-admins/${userId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminManagementControllerDemoteFromSuperAdminMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminManagementControllerDemoteFromSuperAdmin>>, TError,{userId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminManagementControllerDemoteFromSuperAdmin>>, TError,{userId: string}, TContext> => {
+
+const mutationKey = ['superAdminManagementControllerDemoteFromSuperAdmin'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminManagementControllerDemoteFromSuperAdmin>>, {userId: string}> = (props) => {
+          const {userId} = props ?? {};
+
+          return  superAdminManagementControllerDemoteFromSuperAdmin(userId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminManagementControllerDemoteFromSuperAdminMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminManagementControllerDemoteFromSuperAdmin>>>
+    
+    export type SuperAdminManagementControllerDemoteFromSuperAdminMutationError = void
+
+    /**
+ * @summary Remove super admin status from a user
+ */
+export const useSuperAdminManagementControllerDemoteFromSuperAdmin = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminManagementControllerDemoteFromSuperAdmin>>, TError,{userId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminManagementControllerDemoteFromSuperAdmin>>,
+        TError,
+        {userId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminManagementControllerDemoteFromSuperAdminMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * Send an invitation to a user to join an organization with a specific role
  * @summary Create a new invite
  */
@@ -7314,6 +7545,71 @@ export const useSharesControllerCreateSkillShare = <TError = void,
       > => {
 
       const mutationOptions = getSharesControllerCreateSkillShareMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Create a share for a knowledge base
+ */
+export const sharesControllerCreateKnowledgeBaseShare = (
+    createKnowledgeBaseShareDto: CreateKnowledgeBaseShareDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ShareResponseDto>(
+      {url: `/shares/knowledge-bases`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createKnowledgeBaseShareDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSharesControllerCreateKnowledgeBaseShareMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sharesControllerCreateKnowledgeBaseShare>>, TError,{data: CreateKnowledgeBaseShareDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof sharesControllerCreateKnowledgeBaseShare>>, TError,{data: CreateKnowledgeBaseShareDto}, TContext> => {
+
+const mutationKey = ['sharesControllerCreateKnowledgeBaseShare'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sharesControllerCreateKnowledgeBaseShare>>, {data: CreateKnowledgeBaseShareDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  sharesControllerCreateKnowledgeBaseShare(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SharesControllerCreateKnowledgeBaseShareMutationResult = NonNullable<Awaited<ReturnType<typeof sharesControllerCreateKnowledgeBaseShare>>>
+    export type SharesControllerCreateKnowledgeBaseShareMutationBody = CreateKnowledgeBaseShareDto
+    export type SharesControllerCreateKnowledgeBaseShareMutationError = void
+
+    /**
+ * @summary Create a share for a knowledge base
+ */
+export const useSharesControllerCreateKnowledgeBaseShare = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sharesControllerCreateKnowledgeBaseShare>>, TError,{data: CreateKnowledgeBaseShareDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sharesControllerCreateKnowledgeBaseShare>>,
+        TError,
+        {data: CreateKnowledgeBaseShareDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSharesControllerCreateKnowledgeBaseShareMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -11208,6 +11504,389 @@ export function useSkillKnowledgeBasesControllerListSkillKnowledgeBases<TData = 
 
 
 /**
+ * Create a new skill template. Only accessible to super admins.
+ * @summary Create a new skill template
+ */
+export const superAdminSkillTemplatesControllerCreate = (
+    createSkillTemplateDto: CreateSkillTemplateDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SkillTemplateResponseDto>(
+      {url: `/super-admin/skill-templates`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createSkillTemplateDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSkillTemplatesControllerCreateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>, TError,{data: CreateSkillTemplateDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>, TError,{data: CreateSkillTemplateDto}, TContext> => {
+
+const mutationKey = ['superAdminSkillTemplatesControllerCreate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>, {data: CreateSkillTemplateDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminSkillTemplatesControllerCreate(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSkillTemplatesControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>>
+    export type SuperAdminSkillTemplatesControllerCreateMutationBody = CreateSkillTemplateDto
+    export type SuperAdminSkillTemplatesControllerCreateMutationError = void
+
+    /**
+ * @summary Create a new skill template
+ */
+export const useSuperAdminSkillTemplatesControllerCreate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>, TError,{data: CreateSkillTemplateDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSkillTemplatesControllerCreate>>,
+        TError,
+        {data: CreateSkillTemplateDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSkillTemplatesControllerCreateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Retrieve all skill templates. Only accessible to super admins.
+ * @summary Get all skill templates
+ */
+export const superAdminSkillTemplatesControllerFindAll = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SkillTemplateResponseDto[]>(
+      {url: `/super-admin/skill-templates`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminSkillTemplatesControllerFindAllQueryKey = () => {
+    return [
+    `/super-admin/skill-templates`
+    ] as const;
+    }
+
+    
+export const getSuperAdminSkillTemplatesControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminSkillTemplatesControllerFindAllQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>> = ({ signal }) => superAdminSkillTemplatesControllerFindAll(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminSkillTemplatesControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>>
+export type SuperAdminSkillTemplatesControllerFindAllQueryError = void
+
+
+export function useSuperAdminSkillTemplatesControllerFindAll<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminSkillTemplatesControllerFindAll<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminSkillTemplatesControllerFindAll<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all skill templates
+ */
+
+export function useSuperAdminSkillTemplatesControllerFindAll<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminSkillTemplatesControllerFindAllQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Retrieve a specific skill template by its ID. Only accessible to super admins.
+ * @summary Get a skill template by ID
+ */
+export const superAdminSkillTemplatesControllerFindOne = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SkillTemplateResponseDto>(
+      {url: `/super-admin/skill-templates/${id}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminSkillTemplatesControllerFindOneQueryKey = (id?: string,) => {
+    return [
+    `/super-admin/skill-templates/${id}`
+    ] as const;
+    }
+
+    
+export const getSuperAdminSkillTemplatesControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminSkillTemplatesControllerFindOneQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>> = ({ signal }) => superAdminSkillTemplatesControllerFindOne(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminSkillTemplatesControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>>
+export type SuperAdminSkillTemplatesControllerFindOneQueryError = void
+
+
+export function useSuperAdminSkillTemplatesControllerFindOne<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminSkillTemplatesControllerFindOne<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminSkillTemplatesControllerFindOne<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a skill template by ID
+ */
+
+export function useSuperAdminSkillTemplatesControllerFindOne<TData = Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminSkillTemplatesControllerFindOneQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Partially update an existing skill template. Only accessible to super admins.
+ * @summary Update a skill template
+ */
+export const superAdminSkillTemplatesControllerUpdate = (
+    id: string,
+    updateSkillTemplateDto: UpdateSkillTemplateDto,
+ ) => {
+      
+      
+      return customAxiosInstance<SkillTemplateResponseDto>(
+      {url: `/super-admin/skill-templates/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateSkillTemplateDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSkillTemplatesControllerUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>, TError,{id: string;data: UpdateSkillTemplateDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>, TError,{id: string;data: UpdateSkillTemplateDto}, TContext> => {
+
+const mutationKey = ['superAdminSkillTemplatesControllerUpdate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>, {id: string;data: UpdateSkillTemplateDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  superAdminSkillTemplatesControllerUpdate(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSkillTemplatesControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>>
+    export type SuperAdminSkillTemplatesControllerUpdateMutationBody = UpdateSkillTemplateDto
+    export type SuperAdminSkillTemplatesControllerUpdateMutationError = void
+
+    /**
+ * @summary Update a skill template
+ */
+export const useSuperAdminSkillTemplatesControllerUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>, TError,{id: string;data: UpdateSkillTemplateDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSkillTemplatesControllerUpdate>>,
+        TError,
+        {id: string;data: UpdateSkillTemplateDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSkillTemplatesControllerUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Delete a skill template. Only accessible to super admins.
+ * @summary Delete a skill template
+ */
+export const superAdminSkillTemplatesControllerDelete = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/skill-templates/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSkillTemplatesControllerDeleteMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['superAdminSkillTemplatesControllerDelete'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  superAdminSkillTemplatesControllerDelete(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSkillTemplatesControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>>
+    
+    export type SuperAdminSkillTemplatesControllerDeleteMutationError = void
+
+    /**
+ * @summary Delete a skill template
+ */
+export const useSuperAdminSkillTemplatesControllerDelete = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSkillTemplatesControllerDelete>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSkillTemplatesControllerDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * @summary Create a new artifact (document)
  */
 export const artifactsControllerCreate = (
@@ -13670,6 +14349,72 @@ export const useChatSettingsControllerDeleteSystemPrompt = <TError = unknown,
       > => {
 
       const mutationOptions = getChatSettingsControllerDeleteSystemPromptMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Generates a personalized system prompt and welcome message based on user preferences, then saves the system prompt.
+ * @summary Generate a personalized system prompt
+ */
+export const chatSettingsControllerGeneratePersonalizedSystemPrompt = (
+    generatePersonalizedSystemPromptDto: GeneratePersonalizedSystemPromptDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<GeneratePersonalizedSystemPromptResponseDto>(
+      {url: `/chat-settings/generate-personalized-system-prompt`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: generatePersonalizedSystemPromptDto, signal
+    },
+      );
+    }
+  
+
+
+export const getChatSettingsControllerGeneratePersonalizedSystemPromptMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chatSettingsControllerGeneratePersonalizedSystemPrompt>>, TError,{data: GeneratePersonalizedSystemPromptDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof chatSettingsControllerGeneratePersonalizedSystemPrompt>>, TError,{data: GeneratePersonalizedSystemPromptDto}, TContext> => {
+
+const mutationKey = ['chatSettingsControllerGeneratePersonalizedSystemPrompt'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof chatSettingsControllerGeneratePersonalizedSystemPrompt>>, {data: GeneratePersonalizedSystemPromptDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  chatSettingsControllerGeneratePersonalizedSystemPrompt(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChatSettingsControllerGeneratePersonalizedSystemPromptMutationResult = NonNullable<Awaited<ReturnType<typeof chatSettingsControllerGeneratePersonalizedSystemPrompt>>>
+    export type ChatSettingsControllerGeneratePersonalizedSystemPromptMutationBody = GeneratePersonalizedSystemPromptDto
+    export type ChatSettingsControllerGeneratePersonalizedSystemPromptMutationError = void
+
+    /**
+ * @summary Generate a personalized system prompt
+ */
+export const useChatSettingsControllerGeneratePersonalizedSystemPrompt = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chatSettingsControllerGeneratePersonalizedSystemPrompt>>, TError,{data: GeneratePersonalizedSystemPromptDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof chatSettingsControllerGeneratePersonalizedSystemPrompt>>,
+        TError,
+        {data: GeneratePersonalizedSystemPromptDto},
+        TContext
+      > => {
+
+      const mutationOptions = getChatSettingsControllerGeneratePersonalizedSystemPromptMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

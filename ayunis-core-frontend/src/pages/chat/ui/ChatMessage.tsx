@@ -171,7 +171,12 @@ export default function ChatMessage({
             className="space-y-2 overflow-hidden w-full"
             data-testid="assistant-message"
           >
-            {renderMessageContent(message, isStreaming)}
+            {renderMessageContent(
+              message,
+              isStreaming,
+              threadId,
+              onOpenArtifact,
+            )}
           </div>
           {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content may be undefined during streaming */}
           {message.content?.some((c) => c.type === 'text') && (
@@ -227,7 +232,12 @@ function ImageThumbnail({
 }
 
 // eslint-disable-next-line sonarjs/function-return-type
-function renderMessageContent(message: Message, isStreaming?: boolean) {
+function renderMessageContent(
+  message: Message,
+  isStreaming?: boolean,
+  threadId?: string,
+  onOpenArtifact?: (artifactId: string) => void,
+) {
   switch (message.role) {
     case 'user':
     case 'system': {
@@ -391,7 +401,7 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
                   key={`create-document-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
                   content={toolUseMessageContent}
                   isStreaming={isStreaming}
-                  threadId={threadId}
+                  threadId={threadId ?? ''}
                   onOpenArtifact={onOpenArtifact}
                 />
               );
@@ -405,7 +415,6 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
                   key={`update-document-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
                   content={toolUseMessageContent}
                   isStreaming={isStreaming}
-                  threadId={threadId}
                   onOpenArtifact={onOpenArtifact}
                 />
               );
