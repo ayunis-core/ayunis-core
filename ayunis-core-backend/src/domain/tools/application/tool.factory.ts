@@ -31,6 +31,7 @@ import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.en
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
 import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
+import { EditDocumentTool } from '../domain/tools/edit-document-tool.entity';
 
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
@@ -46,6 +47,7 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.CREATE_SKILL]: () => new CreateSkillTool(),
   [ToolType.CREATE_DOCUMENT]: () => new CreateDocumentTool(),
   [ToolType.UPDATE_DOCUMENT]: () => new UpdateDocumentTool(),
+  [ToolType.EDIT_DOCUMENT]: () => new EditDocumentTool(),
 };
 
 @Injectable()

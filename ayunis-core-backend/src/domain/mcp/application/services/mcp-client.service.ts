@@ -139,57 +139,8 @@ export class McpClientService {
   private async buildLegacyConnectionConfig(
     integration: McpIntegration,
   ): Promise<McpConnectionConfig> {
-    const headers: Record<string, string> = {};
-
     try {
-      const auth = integration.auth;
-
-      if (auth instanceof BearerMcpIntegrationAuth) {
-        if (!auth.authToken) {
-          throw new McpAuthenticationError('Bearer token not configured');
-        }
-
-        const decryptedToken = await this.credentialEncryption.decrypt(
-          auth.authToken,
-        );
-        const headerName = auth.getAuthHeaderName();
-
-        headers[headerName ?? 'Authorization'] =
-          headerName === 'Authorization' || !headerName
-            ? `Bearer ${decryptedToken}`
-            : decryptedToken;
-
-        this.logger.log('Built connection config for bearer authentication', {
-          integrationId: integration.id,
-        });
-      } else if (auth instanceof CustomHeaderMcpIntegrationAuth) {
-        if (!auth.secret) {
-          throw new McpAuthenticationError('Header secret not configured');
-        }
-
-        const decryptedKey = await this.credentialEncryption.decrypt(
-          auth.secret,
-        );
-
-        headers[auth.getAuthHeaderName() ?? 'Authorization'] = decryptedKey;
-      } else if (auth instanceof OAuthMcpIntegrationAuth) {
-        if (!auth.accessToken) {
-          throw new McpAuthenticationError('OAuth access token not available');
-        }
-
-        if (auth.isTokenExpired()) {
-          throw new McpAuthenticationError(
-            'OAuth token expired - refresh needed',
-          );
-        }
-
-        const decryptedToken = await this.credentialEncryption.decrypt(
-          auth.accessToken,
-        );
-
-        headers['Authorization'] = `Bearer ${decryptedToken}`;
-      }
-
+      const headers = await this.buildAuthHeaders(integration);
       return { serverUrl: integration.serverUrl, headers };
     } catch (error) {
       if (error instanceof McpAuthenticationError) {
@@ -202,6 +153,56 @@ export class McpClientService {
       });
       throw new McpAuthenticationError('Authentication configuration failed');
     }
+  }
+
+  private async buildAuthHeaders(
+    integration: McpIntegration,
+  ): Promise<Record<string, string>> {
+    const auth = integration.auth;
+
+    if (auth instanceof BearerMcpIntegrationAuth) {
+      if (!auth.authToken) {
+        throw new McpAuthenticationError('Bearer token not configured');
+      }
+      const decryptedToken = await this.credentialEncryption.decrypt(
+        auth.authToken,
+      );
+      const headerName = auth.getAuthHeaderName();
+      this.logger.log('Built connection config for bearer authentication', {
+        integrationId: integration.id,
+      });
+      return {
+        [headerName]:
+          headerName === 'Authorization'
+            ? `Bearer ${decryptedToken}`
+            : decryptedToken,
+      };
+    }
+
+    if (auth instanceof CustomHeaderMcpIntegrationAuth) {
+      if (!auth.secret) {
+        throw new McpAuthenticationError('Header secret not configured');
+      }
+      const decryptedKey = await this.credentialEncryption.decrypt(auth.secret);
+      return { [auth.getAuthHeaderName()]: decryptedKey };
+    }
+
+    if (auth instanceof OAuthMcpIntegrationAuth) {
+      if (!auth.accessToken) {
+        throw new McpAuthenticationError('OAuth access token not available');
+      }
+      if (auth.isTokenExpired()) {
+        throw new McpAuthenticationError(
+          'OAuth token expired - refresh needed',
+        );
+      }
+      const decryptedToken = await this.credentialEncryption.decrypt(
+        auth.accessToken,
+      );
+      return { Authorization: `Bearer ${decryptedToken}` };
+    }
+
+    return {};
   }
 
   /**
@@ -368,9 +369,9 @@ export class McpClientService {
   private isMethodNotFoundError(error: unknown): boolean {
     return Boolean(
       error &&
-        typeof error === 'object' &&
-        'code' in error &&
-        (error as { code?: number }).code === -32601,
+      typeof error === 'object' &&
+      'code' in error &&
+      (error as { code?: number }).code === -32601,
     );
   }
 

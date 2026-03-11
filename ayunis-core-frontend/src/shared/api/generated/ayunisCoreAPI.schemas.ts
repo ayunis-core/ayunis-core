@@ -1750,6 +1750,7 @@ export const ToolAssignmentDtoType = {
   knowledge_get_text: 'knowledge_get_text',
   create_document: 'create_document',
   update_document: 'update_document',
+  edit_document: 'edit_document',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -1803,6 +1804,7 @@ export const ToolResponseDtoType = {
   knowledge_get_text: 'knowledge_get_text',
   create_document: 'create_document',
   update_document: 'update_document',
+  edit_document: 'edit_document',
 } as const;
 
 export interface ToolResponseDto {

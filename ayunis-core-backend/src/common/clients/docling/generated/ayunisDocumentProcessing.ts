@@ -9,64 +9,88 @@ import type {
   BodyConvertFileConvertFilePost,
   ConvertPathRequest,
   ConvertResponse,
-  HealthResponse
+  HealthResponse,
 } from './ayunisDocumentProcessing.schemas';
 
 import { doclingAxiosInstance } from '../client';
 
+export const getAyunisDocumentProcessing = () => {
+  /**
+   * Health check endpoint.
+   * @summary Health Check
+   */
+  const healthCheckHealthGet = () => {
+    return doclingAxiosInstance<HealthResponse>({
+      url: `/health`,
+      method: 'GET',
+    });
+  };
 
-
-  export const getAyunisDocumentProcessing = () => {
-/**
- * Health check endpoint.
- * @summary Health Check
- */
-const healthCheckHealthGet = (
-    
- ) => {
-      return doclingAxiosInstance<HealthResponse>(
-      {url: `/health`, method: 'GET'
-    },
-      );
-    }
-  
-/**
+  /**
  * Convert an uploaded document file to Markdown.
 
 Supports PDF, DOCX, and PPTX formats.
  * @summary Convert uploaded file to Markdown
  */
-const convertFileConvertFilePost = (
+  const convertFileConvertFilePost = (
     bodyConvertFileConvertFilePost: BodyConvertFileConvertFilePost,
- ) => {const formData = new FormData();
-formData.append(`file`, bodyConvertFileConvertFilePost.file)
+  ) => {
+    const formData = new FormData();
+    formData.append(`file`, bodyConvertFileConvertFilePost.file);
 
-      return doclingAxiosInstance<ConvertResponse>(
-      {url: `/convert/file`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData
-    },
-      );
-    }
-  
-/**
+    return doclingAxiosInstance<ConvertResponse>({
+      url: `/convert/file`,
+      method: 'POST',
+      headers: { 'Content-Type': 'multipart/form-data' },
+      data: formData,
+    });
+  };
+
+  /**
  * Convert a document file from a local path to Markdown.
 
 Supports PDF, DOCX, and PPTX formats.
  * @summary Convert file from path to Markdown
  */
-const convertPathConvertPathPost = (
+  const convertPathConvertPathPost = (
     convertPathRequest: ConvertPathRequest,
- ) => {
-      return doclingAxiosInstance<ConvertResponse>(
-      {url: `/convert/path`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: convertPathRequest
-    },
-      );
-    }
-  
-return {healthCheckHealthGet,convertFileConvertFilePost,convertPathConvertPathPost}};
-export type HealthCheckHealthGetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisDocumentProcessing>['healthCheckHealthGet']>>>
-export type ConvertFileConvertFilePostResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisDocumentProcessing>['convertFileConvertFilePost']>>>
-export type ConvertPathConvertPathPostResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisDocumentProcessing>['convertPathConvertPathPost']>>>
+  ) => {
+    return doclingAxiosInstance<ConvertResponse>({
+      url: `/convert/path`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: convertPathRequest,
+    });
+  };
+
+  return {
+    healthCheckHealthGet,
+    convertFileConvertFilePost,
+    convertPathConvertPathPost,
+  };
+};
+export type HealthCheckHealthGetResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<typeof getAyunisDocumentProcessing>['healthCheckHealthGet']
+    >
+  >
+>;
+export type ConvertFileConvertFilePostResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisDocumentProcessing
+      >['convertFileConvertFilePost']
+    >
+  >
+>;
+export type ConvertPathConvertPathPostResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisDocumentProcessing
+      >['convertPathConvertPathPost']
+    >
+  >
+>;

@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class ConvertDataSourceDataToJsonb1758881662358
-  implements MigrationInterface
-{
+export class ConvertDataSourceDataToJsonb1758881662358 implements MigrationInterface {
   name = 'ConvertDataSourceDataToJsonb1758881662358';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

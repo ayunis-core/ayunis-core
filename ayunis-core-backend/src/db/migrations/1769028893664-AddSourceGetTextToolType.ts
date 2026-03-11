@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddSourceGetTextToolType1769028893664
-  implements MigrationInterface
-{
+export class AddSourceGetTextToolType1769028893664 implements MigrationInterface {
   name = 'AddSourceGetTextToolType1769028893664';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

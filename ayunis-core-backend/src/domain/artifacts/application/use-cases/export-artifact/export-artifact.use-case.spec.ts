@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 import { ExportArtifactUseCase } from './export-artifact.use-case';
 import { ExportArtifactCommand } from './export-artifact.command';
@@ -226,7 +227,7 @@ describe('ExportArtifactUseCase', () => {
     expect(result.fileName).toBe('artifact.pdf');
   });
 
-  it('should throw UnauthorizedException when user is not authenticated', async () => {
+  it('should throw UnauthorizedAccessError when user is not authenticated', async () => {
     const mockContextService = {
       get: jest.fn(() => undefined),
     } as unknown as jest.Mocked<ContextService>;
@@ -250,7 +251,7 @@ describe('ExportArtifactUseCase', () => {
     });
 
     await expect(useCaseNoAuth.execute(command)).rejects.toThrow(
-      UnauthorizedException,
+      UnauthorizedAccessError,
     );
   });
 });

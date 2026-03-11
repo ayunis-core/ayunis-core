@@ -30,6 +30,8 @@ import { CreateDocumentToolHandler } from './handlers/create-document-tool.handl
 import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
 import { UpdateDocumentToolHandler } from './handlers/update-document-tool.handler';
 import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
+import { EditDocumentToolHandler } from './handlers/edit-document-tool.handler';
+import { EditDocumentTool } from '../domain/tools/edit-document-tool.entity';
 
 @Injectable()
 export class ToolHandlerRegistry {
@@ -50,6 +52,7 @@ export class ToolHandlerRegistry {
     private readonly knowledgeGetTextToolHandler: KnowledgeGetTextToolHandler,
     private readonly createDocumentToolHandler: CreateDocumentToolHandler,
     private readonly updateDocumentToolHandler: UpdateDocumentToolHandler,
+    private readonly editDocumentToolHandler: EditDocumentToolHandler,
   ) {}
 
   getHandler(tool: Tool): ToolExecutionHandler {
@@ -95,6 +98,9 @@ export class ToolHandlerRegistry {
     }
     if (tool instanceof UpdateDocumentTool) {
       return this.updateDocumentToolHandler;
+    }
+    if (tool instanceof EditDocumentTool) {
+      return this.editDocumentToolHandler;
     }
     throw new ToolHandlerNotFoundError({
       toolType: tool.name,

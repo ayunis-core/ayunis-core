@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddIsPinnedToSkillActivations1771676835732
-  implements MigrationInterface
-{
+export class AddIsPinnedToSkillActivations1771676835732 implements MigrationInterface {
   name = 'AddIsPinnedToSkillActivations1771676835732';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

@@ -80,6 +80,12 @@
         "generating": "Aktualisierung wird generiert…",
         "openInEditor": "Im Editor öffnen"
       },
+      "edit_document": {
+        "title": "Dokument bearbeitet",
+        "updated": "Dokument bearbeitet",
+        "generating": "Änderungen werden angewendet…",
+        "openInEditor": "Im Editor öffnen"
+      },
       "create_calendar_event": {
         "title": "Titel",
         "titlePlaceholder": "Ereignistitel",

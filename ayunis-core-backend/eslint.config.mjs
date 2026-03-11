@@ -16,6 +16,8 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/dist/**',
       '**/build/**',
+      '**/coverage/**',
+      'orval.config.ts',
     ],
   },
   eslint.configs.recommended,

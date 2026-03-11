@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class RefactorSourceCreatorEnum1759761322613
-  implements MigrationInterface
-{
+export class RefactorSourceCreatorEnum1759761322613 implements MigrationInterface {
   name = 'RefactorSourceCreatorEnum1759761322613';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

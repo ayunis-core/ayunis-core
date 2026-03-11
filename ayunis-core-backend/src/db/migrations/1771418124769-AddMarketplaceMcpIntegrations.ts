@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddMarketplaceMcpIntegrations1771418124769
-  implements MigrationInterface
-{
+export class AddMarketplaceMcpIntegrations1771418124769 implements MigrationInterface {
   name = 'AddMarketplaceMcpIntegrations1771418124769';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

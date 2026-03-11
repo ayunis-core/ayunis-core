@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddSynaforceToProviders1751984861504
-  implements MigrationInterface
-{
+export class AddSynaforceToProviders1751984861504 implements MigrationInterface {
   name = 'AddSynaforceToProviders1751984861504';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

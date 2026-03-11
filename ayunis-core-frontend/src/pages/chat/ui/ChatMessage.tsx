@@ -34,6 +34,7 @@ import ActivateSkillWidget from './chat-widgets/ActivateSkillWidget';
 import SkillInstructionWidget from './chat-widgets/SkillInstructionWidget';
 import CreateDocumentWidget from './chat-widgets/CreateDocumentWidget';
 import UpdateDocumentWidget from './chat-widgets/UpdateDocumentWidget';
+import EditDocumentWidget from './chat-widgets/EditDocumentWidget';
 import {
   BarChartWidget,
   LineChartWidget,
@@ -413,6 +414,18 @@ function renderMessageContent(
               return (
                 <UpdateDocumentWidget
                   key={`update-document-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
+                  content={toolUseMessageContent}
+                  isStreaming={isStreaming}
+                  onOpenArtifact={onOpenArtifact}
+                />
+              );
+            }
+            if (
+              toolUseMessageContent.name === ToolAssignmentDtoType.edit_document
+            ) {
+              return (
+                <EditDocumentWidget
+                  key={`edit-document-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
                   content={toolUseMessageContent}
                   isStreaming={isStreaming}
                   onOpenArtifact={onOpenArtifact}

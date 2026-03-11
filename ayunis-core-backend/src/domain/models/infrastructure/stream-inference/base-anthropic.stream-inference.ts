@@ -22,9 +22,7 @@ type AnthropicCompatibleClient = {
   };
 };
 
-export abstract class BaseAnthropicStreamInferenceHandler
-  implements StreamInferenceHandler
-{
+export abstract class BaseAnthropicStreamInferenceHandler implements StreamInferenceHandler {
   private readonly logger = new Logger(
     BaseAnthropicStreamInferenceHandler.name,
   );

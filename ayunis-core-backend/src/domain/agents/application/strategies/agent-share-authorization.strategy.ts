@@ -8,9 +8,7 @@ import { AgentRepository } from '../ports/agent.repository';
  * Validates that users can only manage shares for agents they own
  */
 @Injectable()
-export class AgentShareAuthorizationStrategy
-  implements ShareAuthorizationStrategy
-{
+export class AgentShareAuthorizationStrategy implements ShareAuthorizationStrategy {
   private readonly logger = new Logger(AgentShareAuthorizationStrategy.name);
 
   constructor(

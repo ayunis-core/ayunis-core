@@ -8,9 +8,7 @@ import { KnowledgeBaseRepository } from '../ports/knowledge-base.repository';
  * Validates that users can only manage shares for knowledge bases they own.
  */
 @Injectable()
-export class KnowledgeBaseShareAuthorizationStrategy
-  implements ShareAuthorizationStrategy
-{
+export class KnowledgeBaseShareAuthorizationStrategy implements ShareAuthorizationStrategy {
   private readonly logger = new Logger(
     KnowledgeBaseShareAuthorizationStrategy.name,
   );

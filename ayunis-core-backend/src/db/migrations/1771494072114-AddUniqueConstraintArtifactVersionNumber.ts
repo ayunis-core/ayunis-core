@@ -1,8 +1,6 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddUniqueConstraintArtifactVersionNumber1771494072114
-  implements MigrationInterface
-{
+export class AddUniqueConstraintArtifactVersionNumber1771494072114 implements MigrationInterface {
   name = 'AddUniqueConstraintArtifactVersionNumber1771494072114';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

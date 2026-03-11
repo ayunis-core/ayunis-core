@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class ConvertSourcesToTextAndDataSources1758549912414
-  implements MigrationInterface
-{
+export class ConvertSourcesToTextAndDataSources1758549912414 implements MigrationInterface {
   name = 'ConvertSourcesToTextAndDataSources1758549912414';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

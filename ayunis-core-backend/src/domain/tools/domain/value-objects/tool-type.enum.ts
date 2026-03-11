@@ -21,4 +21,5 @@ export enum ToolType {
   KNOWLEDGE_GET_TEXT = 'knowledge_get_text',
   CREATE_DOCUMENT = 'create_document',
   UPDATE_DOCUMENT = 'update_document',
+  EDIT_DOCUMENT = 'edit_document',
 }

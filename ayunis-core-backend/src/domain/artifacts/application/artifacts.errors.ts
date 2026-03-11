@@ -9,6 +9,9 @@ export enum ArtifactErrorCode {
   ARTIFACT_VERSION_NOT_FOUND = 'ARTIFACT_VERSION_NOT_FOUND',
   ARTIFACT_VERSION_CONFLICT = 'ARTIFACT_VERSION_CONFLICT',
   ARTIFACT_CONTENT_TOO_LARGE = 'ARTIFACT_CONTENT_TOO_LARGE',
+  ARTIFACT_EDIT_NOT_FOUND = 'ARTIFACT_EDIT_NOT_FOUND',
+  ARTIFACT_EDIT_AMBIGUOUS = 'ARTIFACT_EDIT_AMBIGUOUS',
+  ARTIFACT_UNEXPECTED = 'ARTIFACT_UNEXPECTED',
 }
 
 export abstract class ArtifactError extends ApplicationError {
@@ -70,6 +73,43 @@ export class ArtifactContentTooLargeError extends ArtifactError {
       ArtifactErrorCode.ARTIFACT_CONTENT_TOO_LARGE,
       400,
       { contentLength, maxLength, ...metadata },
+    );
+  }
+}
+
+export class ArtifactEditNotFoundError extends ArtifactError {
+  constructor(editIndex: number, oldText: string, metadata?: ErrorMetadata) {
+    const preview =
+      oldText.length > 80 ? oldText.substring(0, 80) + '…' : oldText;
+    super(
+      `Edit ${editIndex}: old_text not found in document: "${preview}"`,
+      ArtifactErrorCode.ARTIFACT_EDIT_NOT_FOUND,
+      400,
+      { editIndex, ...metadata },
+    );
+  }
+}
+
+export class ArtifactEditAmbiguousError extends ArtifactError {
+  constructor(editIndex: number, oldText: string, metadata?: ErrorMetadata) {
+    const preview =
+      oldText.length > 80 ? oldText.substring(0, 80) + '…' : oldText;
+    super(
+      `Edit ${editIndex}: old_text matches multiple locations in the document. Include more surrounding context to make it unambiguous: "${preview}"`,
+      ArtifactErrorCode.ARTIFACT_EDIT_AMBIGUOUS,
+      400,
+      { editIndex, ...metadata },
+    );
+  }
+}
+
+export class UnexpectedArtifactError extends ArtifactError {
+  constructor(message: string, metadata?: ErrorMetadata) {
+    super(
+      `Unexpected artifact error: ${message}`,
+      ArtifactErrorCode.ARTIFACT_UNEXPECTED,
+      500,
+      metadata,
     );
   }
 }

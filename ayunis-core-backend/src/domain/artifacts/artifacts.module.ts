@@ -15,6 +15,7 @@ import { FindArtifactsByThreadUseCase } from './application/use-cases/find-artif
 import { FindArtifactWithVersionsUseCase } from './application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
 import { RevertArtifactUseCase } from './application/use-cases/revert-artifact/revert-artifact.use-case';
 import { ExportArtifactUseCase } from './application/use-cases/export-artifact/export-artifact.use-case';
+import { ApplyEditsToArtifactUseCase } from './application/use-cases/apply-edits-to-artifact/apply-edits-to-artifact.use-case';
 
 @Module({
   imports: [LocalArtifactsRepositoryModule, forwardRef(() => ThreadsModule)],
@@ -31,6 +32,7 @@ import { ExportArtifactUseCase } from './application/use-cases/export-artifact/e
     // Use cases
     CreateArtifactUseCase,
     UpdateArtifactUseCase,
+    ApplyEditsToArtifactUseCase,
     FindArtifactsByThreadUseCase,
     FindArtifactWithVersionsUseCase,
     RevertArtifactUseCase,
@@ -43,6 +45,7 @@ import { ExportArtifactUseCase } from './application/use-cases/export-artifact/e
     FindArtifactWithVersionsUseCase,
     CreateArtifactUseCase,
     UpdateArtifactUseCase,
+    ApplyEditsToArtifactUseCase,
   ],
 })
 export class ArtifactsModule {}

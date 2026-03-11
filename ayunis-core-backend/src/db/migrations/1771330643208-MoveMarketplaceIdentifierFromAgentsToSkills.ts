@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class MoveMarketplaceIdentifierFromAgentsToSkills1771330643208
-  implements MigrationInterface
-{
+export class MoveMarketplaceIdentifierFromAgentsToSkills1771330643208 implements MigrationInterface {
   name = 'MoveMarketplaceIdentifierFromAgentsToSkills1771330643208';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
