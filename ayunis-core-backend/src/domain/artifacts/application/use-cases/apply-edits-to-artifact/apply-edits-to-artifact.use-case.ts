@@ -66,6 +66,11 @@ export class ApplyEditsToArtifactUseCase {
         const edit = command.edits[i];
         const { oldText, newText } = edit;
 
+        // Guard against empty oldText which would cause infinite loop in findOccurrences
+        if (oldText.length === 0) {
+          throw new ArtifactEditNotFoundError(i + 1, oldText);
+        }
+
         // Find occurrences of oldText
         const occurrences = this.findOccurrences(content, oldText);
 
