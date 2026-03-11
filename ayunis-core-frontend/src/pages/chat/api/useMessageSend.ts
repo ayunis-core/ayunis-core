@@ -12,6 +12,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   getThreadsControllerFindAllQueryKey,
   getThreadsControllerFindOneQueryKey,
+  getArtifactsControllerFindByThreadQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
 export interface PendingImage {
@@ -234,6 +235,7 @@ export function useMessageSend(params: UseMessageSendParams) {
           [
             getThreadsControllerFindOneQueryKey(params.threadId),
             getThreadsControllerFindAllQueryKey(),
+            getArtifactsControllerFindByThreadQueryKey(params.threadId),
           ].forEach((queryKey) => {
             void queryClient.invalidateQueries({
               queryKey,
