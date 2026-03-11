@@ -181,5 +181,5 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.DOCS_REPO_PAT }}
-          repository: ayunis/ayunis-core-docs
+          repository: ayunis-core/ayunis-core-docs
           event-type: release-published
