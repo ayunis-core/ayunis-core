@@ -4,9 +4,10 @@ import { useTranslation } from 'react-i18next';
 
 interface ExportButtonsProps {
   onExport: (format: 'docx' | 'pdf') => void;
+  isExporting?: boolean;
 }
 
-export function ExportButtons({ onExport }: ExportButtonsProps) {
+export function ExportButtons({ onExport, isExporting }: ExportButtonsProps) {
   const { t } = useTranslation('artifacts');
 
   return (
@@ -15,6 +16,7 @@ export function ExportButtons({ onExport }: ExportButtonsProps) {
         variant="ghost"
         size="sm"
         className="h-8 text-xs"
+        disabled={isExporting}
         onClick={() => onExport('docx')}
       >
         <FileDown className="mr-1 size-3.5" />
@@ -24,6 +26,7 @@ export function ExportButtons({ onExport }: ExportButtonsProps) {
         variant="ghost"
         size="sm"
         className="h-8 text-xs"
+        disabled={isExporting}
         onClick={() => onExport('pdf')}
       >
         <FileDown className="mr-1 size-3.5" />
