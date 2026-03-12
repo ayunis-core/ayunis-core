@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useSuperAdminProviderUsageChart } from '../api/useSuperAdminProviderUsageChart';
-import { useSuperAdminModelsControllerGetPermittedModels } from '@/shared/api';
+import { useSuperAdminPermittedModelsControllerGetPermittedModels } from '@/shared/api';
 import { ProviderConsumptionWidget } from '@/widgets/provider-consumption-chart';
 
 interface SuperAdminProviderConsumptionProps {
@@ -27,7 +27,7 @@ export function SuperAdminProviderConsumption({
   });
 
   const { data: permittedModels } =
-    useSuperAdminModelsControllerGetPermittedModels(orgId);
+    useSuperAdminPermittedModelsControllerGetPermittedModels(orgId);
 
   const providerDisplayNames = useMemo(() => {
     const map: Record<string, string> = {};

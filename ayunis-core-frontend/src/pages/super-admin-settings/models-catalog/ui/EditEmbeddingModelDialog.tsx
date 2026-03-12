@@ -68,7 +68,6 @@ export function EditEmbeddingModelDialog({
         isArchived: model.isArchived,
         inputTokenCost: model.inputTokenCost,
         outputTokenCost: model.outputTokenCost,
-        currency: model.currency,
       });
     }
   }, [model, open, form]);

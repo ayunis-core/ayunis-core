@@ -1,7 +1,7 @@
 import type {
   EmbeddingModelResponseDto,
   LanguageModelResponseDto,
-  SuperAdminModelsControllerGetAllCatalogModels200Item,
+  SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
 } from '@/shared/api';
 import {
   Item,
@@ -15,19 +15,19 @@ import { Button } from '@/shared/ui/shadcn/button';
 import { Pencil, Trash2 } from 'lucide-react';
 
 function isLanguageModel(
-  model: SuperAdminModelsControllerGetAllCatalogModels200Item,
+  model: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
 ): model is LanguageModelResponseDto {
   return model.type === 'language';
 }
 
 function isEmbeddingModel(
-  model: SuperAdminModelsControllerGetAllCatalogModels200Item,
+  model: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
 ): model is EmbeddingModelResponseDto {
   return model.type === 'embedding';
 }
 
 interface ModelItemProps {
-  model: SuperAdminModelsControllerGetAllCatalogModels200Item;
+  model: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item;
   onEdit: () => void;
   onDelete: () => void;
   isDeleting: boolean;

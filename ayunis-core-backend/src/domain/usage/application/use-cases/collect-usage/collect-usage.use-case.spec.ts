@@ -9,7 +9,6 @@ import {
   UnexpectedUsageError,
 } from '../../usage.errors';
 import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
-import { Currency } from '../../../../models/domain/value-objects/currency.enum';
 import type { UUID } from 'crypto';
 import { LanguageModel } from '../../../../models/domain/models/language.model';
 import type { Usage } from '../../../domain/usage.entity';
@@ -94,7 +93,7 @@ describe('CollectUsageUseCase', () => {
   });
 
   describe('successful usage collection', () => {
-    it('should collect usage successfully in cloud mode', async () => {
+    it('should collect usage successfully when model has no cost info', async () => {
       const model = createMockModel();
       const command = new CollectUsageCommand({
         model,
@@ -115,17 +114,15 @@ describe('CollectUsageUseCase', () => {
           outputTokens: 50,
           totalTokens: 150,
           cost: undefined,
-          currency: undefined,
           requestId,
         }),
       );
     });
 
-    it('should collect usage with cost', async () => {
+    it('should collect usage with cost in EUR', async () => {
       const model = createMockModel({
         inputTokenCost: 1,
         outputTokenCost: 2,
-        currency: Currency.EUR,
       });
 
       const command = new CollectUsageCommand({
@@ -146,16 +143,14 @@ describe('CollectUsageUseCase', () => {
           outputTokens: 500,
           totalTokens: 1500,
           cost: expect.any(Number) as number,
-          currency: Currency.EUR,
         }),
       );
     });
 
-    it('should calculate cost correctly', async () => {
+    it('should calculate cost correctly in EUR', async () => {
       const model = createMockModel({
         inputTokenCost: 1,
         outputTokenCost: 2,
-        currency: Currency.EUR,
       });
 
       const command = new CollectUsageCommand({
@@ -179,14 +174,12 @@ describe('CollectUsageUseCase', () => {
       // outputCost = (1000/1_000_000) * 2 = 0.002
       // totalCost = 0.004
       expect(saveCall.cost).toBeCloseTo(0.004, 6);
-      expect(saveCall.currency).toBe(Currency.EUR);
     });
 
     it('should calculate and store small costs correctly', async () => {
       const model = createMockModel({
         inputTokenCost: 0.0001,
         outputTokenCost: 0.0001,
-        currency: Currency.EUR,
       });
 
       const command = new CollectUsageCommand({
@@ -210,7 +203,6 @@ describe('CollectUsageUseCase', () => {
       // outputCost = (50/1_000_000) * 0.0001 = 0.000000005
       // totalCost = 0.000000015
       expect(saveCall.cost).toBeCloseTo(0.000000015, 10);
-      expect(saveCall.currency).toBe(Currency.EUR);
     });
 
     it('should return undefined cost if model has no cost info', async () => {
@@ -237,14 +229,12 @@ describe('CollectUsageUseCase', () => {
         throw new Error('save was not called');
       }
       expect(saveCall.cost).toBeUndefined();
-      expect(saveCall.currency).toBeUndefined();
     });
 
-    it('should return undefined cost if model has costs but no currency', async () => {
+    it('should return undefined cost if only input cost is set', async () => {
       const model = createMockModel({
         inputTokenCost: 1,
-        outputTokenCost: 2,
-        currency: undefined,
+        outputTokenCost: undefined,
       });
 
       const command = new CollectUsageCommand({
@@ -264,9 +254,7 @@ describe('CollectUsageUseCase', () => {
       if (!saveCall) {
         throw new Error('save was not called');
       }
-      // Cost should be undefined because currency is missing
       expect(saveCall.cost).toBeUndefined();
-      expect(saveCall.currency).toBeUndefined();
     });
   });
 
@@ -400,7 +388,7 @@ describe('CollectUsageUseCase', () => {
       );
     });
 
-    it('should handle cost calculation gracefully when model has no cost info (per million tokens)', async () => {
+    it('should handle cost calculation gracefully when model has no cost info', async () => {
       const model = createMockModel({
         inputTokenCost: undefined,
         outputTokenCost: undefined,
@@ -419,7 +407,6 @@ describe('CollectUsageUseCase', () => {
       expect(mockUsageRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
           cost: undefined,
-          currency: undefined,
         }),
       );
     });
@@ -432,7 +419,6 @@ describe('CollectUsageUseCase', () => {
       const model = createMockModel({
         inputTokenCost: 1,
         outputTokenCost: 2,
-        currency: Currency.EUR,
       });
 
       const command = new CollectUsageCommand({
@@ -493,7 +479,6 @@ describe('CollectUsageUseCase', () => {
       const model = createMockModel({
         inputTokenCost: 1,
         outputTokenCost: 2,
-        currency: Currency.EUR,
       });
 
       const command = new CollectUsageCommand({

@@ -27,7 +27,6 @@ export class ModelMapper {
         updatedAt: record.updatedAt,
         inputTokenCost: record.inputTokenCost,
         outputTokenCost: record.outputTokenCost,
-        currency: record.currency,
       });
     }
 
@@ -43,7 +42,6 @@ export class ModelMapper {
         updatedAt: record.updatedAt,
         inputTokenCost: record.inputTokenCost,
         outputTokenCost: record.outputTokenCost,
-        currency: record.currency,
       });
     }
 
@@ -66,7 +64,6 @@ export class ModelMapper {
       record.updatedAt = domain.updatedAt;
       record.inputTokenCost = domain.inputTokenCost;
       record.outputTokenCost = domain.outputTokenCost;
-      record.currency = domain.currency;
       return record;
     }
 
@@ -82,7 +79,6 @@ export class ModelMapper {
       record.updatedAt = domain.updatedAt;
       record.inputTokenCost = domain.inputTokenCost;
       record.outputTokenCost = domain.outputTokenCost;
-      record.currency = domain.currency;
       return record;
     }
 

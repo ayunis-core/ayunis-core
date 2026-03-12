@@ -2,7 +2,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
-import { Currency } from 'src/domain/models/domain/value-objects/currency.enum';
 
 export class LanguageModelResponseDto {
   @ApiProperty({
@@ -93,23 +92,15 @@ export class LanguageModelResponseDto {
 
   @ApiPropertyOptional({
     type: 'number',
-    description: 'Cost per million input tokens',
+    description: 'Cost per million input tokens in EUR',
     example: 3,
   })
   inputTokenCost?: number;
 
   @ApiPropertyOptional({
     type: 'number',
-    description: 'Cost per million output tokens',
+    description: 'Cost per million output tokens in EUR',
     example: 15,
   })
   outputTokenCost?: number;
-
-  @ApiPropertyOptional({
-    type: 'string',
-    enum: Currency,
-    description: 'Currency for token costs',
-    example: Currency.EUR,
-  })
-  currency?: Currency;
 }

@@ -25,7 +25,6 @@ export class CatalogModelResponseDtoMapper {
       updatedAt: model.updatedAt,
       inputTokenCost: model.inputTokenCost,
       outputTokenCost: model.outputTokenCost,
-      currency: model.currency,
     };
   }
 
@@ -42,7 +41,6 @@ export class CatalogModelResponseDtoMapper {
       updatedAt: model.updatedAt,
       inputTokenCost: model.inputTokenCost,
       outputTokenCost: model.outputTokenCost,
-      currency: model.currency,
     };
   }
 

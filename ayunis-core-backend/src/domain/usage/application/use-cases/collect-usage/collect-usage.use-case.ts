@@ -10,7 +10,6 @@ import {
 } from '../../usage.errors';
 import { ApplicationError } from '../../../../../common/errors/base.error';
 import { ContextService } from '../../../../../common/context/services/context.service';
-import { Currency } from '../../../../models/domain/value-objects/currency.enum';
 import { GetCreditsPerEuroUseCase } from '../../../../../iam/platform-config/application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
 import { PlatformConfigNotFoundError } from '../../../../../iam/platform-config/application/platform-config.errors';
 
@@ -50,7 +49,7 @@ export class CollectUsageUseCase {
     try {
       this.validateCommand(command);
 
-      const { cost, currency } = this.calculateCost(command);
+      const cost = this.calculateCost(command);
       const creditsConsumed = await this.calculateCredits(cost);
 
       const usage = new Usage({
@@ -62,7 +61,6 @@ export class CollectUsageUseCase {
         outputTokens: command.outputTokens,
         totalTokens: command.totalTokens,
         cost,
-        currency,
         creditsConsumed,
         requestId: command.requestId ?? randomUUID(),
       });
@@ -136,25 +134,24 @@ export class CollectUsageUseCase {
     }
   }
 
-  private calculateCost(command: CollectUsageCommand): {
-    cost?: number;
-    currency?: Currency;
-  } {
+  /**
+   * Calculates cost in EUR based on the model's per-million-token pricing.
+   * Returns undefined if the model has no cost information configured.
+   */
+  private calculateCost(command: CollectUsageCommand): number | undefined {
     const model = command.model;
 
     if (
       model.inputTokenCost === undefined ||
-      model.outputTokenCost === undefined ||
-      model.currency === undefined
+      model.outputTokenCost === undefined
     ) {
       this.logger.debug('No cost information available for model', {
         modelId: model.id,
         hasInputCost: model.inputTokenCost !== undefined,
         hasOutputCost: model.outputTokenCost !== undefined,
-        hasCurrency: model.currency !== undefined,
       });
 
-      return { cost: undefined, currency: undefined };
+      return undefined;
     }
 
     const inputCost = (command.inputTokens / 1_000_000) * model.inputTokenCost;
@@ -162,7 +159,7 @@ export class CollectUsageUseCase {
       (command.outputTokens / 1_000_000) * model.outputTokenCost;
     const totalCost = inputCost + outputCost;
 
-    this.logger.debug('Cost calculated for usage', {
+    this.logger.debug('Cost calculated for usage (EUR)', {
       modelId: model.id,
       inputTokens: command.inputTokens,
       outputTokens: command.outputTokens,
@@ -171,12 +168,8 @@ export class CollectUsageUseCase {
       inputCost,
       outputCost,
       totalCost,
-      currency: model.currency,
     });
 
-    return {
-      cost: totalCost,
-      currency: model.currency,
-    };
+    return totalCost;
   }
 }

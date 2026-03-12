@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
@@ -21,6 +21,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
     private readonly subscriptionBillingInfoRepository: Repository<SubscriptionBillingInfoRecord>,
     private readonly subscriptionMapper: SubscriptionMapper,
     private readonly subscriptionBillingInfoMapper: SubscriptionBillingInfoMapper,
+    private readonly dataSource: DataSource,
   ) {
     super();
   }
@@ -74,7 +75,18 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
   async create(subscription: Subscription): Promise<Subscription> {
     try {
       const record = this.subscriptionMapper.toRecord(subscription);
-      await this.subscriptionRepository.save(record);
+
+      // Save subscription and billing info in a transaction to guarantee
+      // the subscription row exists before the billing info FK references it.
+      await this.dataSource.transaction(async (manager) => {
+        const billingInfo = record.billingInfo;
+        record.billingInfo =
+          undefined as unknown as SubscriptionBillingInfoRecord;
+        await manager.save(SubscriptionRecord, record);
+        await manager.save(SubscriptionBillingInfoRecord, billingInfo);
+        record.billingInfo = billingInfo;
+      });
+
       this.logger.log(`Created subscription with id ${subscription.id}`);
       return this.subscriptionMapper.toDomain(record);
     } catch (error) {

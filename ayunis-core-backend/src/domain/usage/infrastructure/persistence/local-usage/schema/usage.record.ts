@@ -5,7 +5,6 @@ import { UserRecord } from '../../../../../../iam/users/infrastructure/repositor
 import { OrgRecord } from '../../../../../../iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { ModelRecord } from '../../../../../models/infrastructure/persistence/local-models/schema/model.record';
 import { ModelProvider } from '../../../../../models/domain/value-objects/model-provider.enum';
-import { Currency } from '../../../../../models/domain/value-objects/currency.enum';
 
 const decimalTransformer = {
   to: (value?: number | null) => value,
@@ -13,6 +12,9 @@ const decimalTransformer = {
     value === null || value === undefined ? null : Number(value),
 };
 
+/**
+ * All costs are stored in EUR.
+ */
 @Entity('usage')
 @Index(['organizationId', 'createdAt'])
 @Index(['userId', 'createdAt'])
@@ -53,6 +55,7 @@ export class UsageRecord extends BaseRecord {
   @Column('integer')
   totalTokens: number;
 
+  /** Cost in EUR */
   @Column('decimal', {
     precision: 10,
     scale: 6,
@@ -60,13 +63,6 @@ export class UsageRecord extends BaseRecord {
     transformer: decimalTransformer,
   })
   cost: number | null;
-
-  @Column({
-    type: 'enum',
-    enum: Currency,
-    nullable: true,
-  })
-  currency: Currency | null;
 
   @Column('decimal', {
     precision: 16,

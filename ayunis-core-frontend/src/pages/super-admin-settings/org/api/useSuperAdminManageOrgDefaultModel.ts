@@ -1,8 +1,8 @@
 import {
-  getSuperAdminModelsControllerGetAvailableModelsQueryKey,
-  getSuperAdminModelsControllerGetPermittedModelsQueryKey,
+  getSuperAdminPermittedModelsControllerGetAvailableModelsQueryKey,
+  getSuperAdminPermittedModelsControllerGetPermittedModelsQueryKey,
   type ModelWithConfigResponseDto,
-  useSuperAdminModelsControllerManageOrgDefaultModel,
+  useSuperAdminPermittedModelsControllerManageOrgDefaultModel,
 } from '@/shared/api';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -15,11 +15,13 @@ export function useSuperAdminManageOrgDefaultModel(orgId: string) {
   const router = useRouter();
 
   const manageOrgDefaultModelMutation =
-    useSuperAdminModelsControllerManageOrgDefaultModel({
+    useSuperAdminPermittedModelsControllerManageOrgDefaultModel({
       mutation: {
         onMutate: async ({ data }) => {
           const queryKey =
-            getSuperAdminModelsControllerGetAvailableModelsQueryKey(orgId);
+            getSuperAdminPermittedModelsControllerGetAvailableModelsQueryKey(
+              orgId,
+            );
           await queryClient.cancelQueries({ queryKey });
 
           const previousModels =
@@ -59,8 +61,12 @@ export function useSuperAdminManageOrgDefaultModel(orgId: string) {
         },
         onSettled: async () => {
           const queryKeys = [
-            getSuperAdminModelsControllerGetAvailableModelsQueryKey(orgId),
-            getSuperAdminModelsControllerGetPermittedModelsQueryKey(orgId),
+            getSuperAdminPermittedModelsControllerGetAvailableModelsQueryKey(
+              orgId,
+            ),
+            getSuperAdminPermittedModelsControllerGetPermittedModelsQueryKey(
+              orgId,
+            ),
           ];
 
           await Promise.all(

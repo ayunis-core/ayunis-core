@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useGlobalProviderUsageChart } from '../api/useGlobalProviderUsageChart';
-import { useSuperAdminModelsControllerGetAllCatalogModels } from '@/shared/api';
+import { useSuperAdminCatalogModelsControllerGetAllCatalogModels } from '@/shared/api';
 import { ProviderConsumptionWidget } from '@/widgets/provider-consumption-chart';
 
 interface GlobalProviderConsumptionProps {
@@ -25,7 +25,7 @@ export function GlobalProviderConsumption({
   });
 
   const { data: catalogModels } =
-    useSuperAdminModelsControllerGetAllCatalogModels();
+    useSuperAdminCatalogModelsControllerGetAllCatalogModels();
 
   const providerDisplayNames = useMemo(() => {
     const map: Record<string, string> = {};

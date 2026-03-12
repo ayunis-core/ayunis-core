@@ -1,11 +1,11 @@
-import { useSuperAdminModelsControllerGetAvailableModels } from '@/shared/api';
+import { useSuperAdminPermittedModelsControllerGetAvailableModels } from '@/shared/api';
 
 export function useSuperAdminModels(orgId: string) {
   const {
     data: models = [],
     isLoading,
     error,
-  } = useSuperAdminModelsControllerGetAvailableModels(orgId);
+  } = useSuperAdminPermittedModelsControllerGetAvailableModels(orgId);
 
   return {
     models,
