@@ -53,11 +53,11 @@
     "allProvidersNote": "Über alle Anbieter und Modelle"
   },
   "creditUsage": {
-    "title": "Guthaben-Budget",
-    "error": "Guthaben-Nutzungsdaten konnten nicht geladen werden.",
+    "title": "Credits-Budget",
+    "error": "Credits-Nutzungsdaten konnten nicht geladen werden.",
     "budget": "Monatliches Budget",
-    "used": "Verbrauchtes Guthaben",
-    "remaining": "Verbleibendes Guthaben",
+    "used": "Verbrauchte Credits",
+    "remaining": "Verbleibende Credits",
     "usageProgress": "Nutzung"
   },
   "userUsage": {

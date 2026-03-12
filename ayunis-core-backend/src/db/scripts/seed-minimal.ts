@@ -12,7 +12,10 @@ import {
   LanguageModelRecord,
   EmbeddingModelRecord,
 } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
-import { SeatBasedSubscriptionRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription.record';
+import {
+  SeatBasedSubscriptionRecord,
+  UsageBasedSubscriptionRecord,
+} from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription.record';
 import { SubscriptionBillingInfoRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription-billing-info.record';
 import { PermittedModelRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
 import { PlatformConfigRecord } from 'src/iam/platform-config/infrastructure/persistence/postgres/schema/platform-config.record';
@@ -34,15 +37,15 @@ function log(entity: string, name: string, created: boolean): void {
 // Seed steps
 // ---------------------------------------------------------------------------
 
-async function seedOrg(): Promise<OrgRecord> {
+async function seedOrgByName(name: string): Promise<OrgRecord> {
   const repo = dataSource.getRepository(OrgRecord);
-  const existing = await repo.findOne({ where: { name: fixture.org.name } });
+  const existing = await repo.findOne({ where: { name } });
   if (existing) {
     log('Org', existing.name, false);
     return existing;
   }
 
-  const record = repo.create({ id: randomUUID(), name: fixture.org.name });
+  const record = repo.create({ id: randomUUID(), name });
   await repo.save(record);
   log('Org', record.name, true);
   return record;
@@ -94,10 +97,11 @@ async function seedEmbeddingModel(): Promise<EmbeddingModelRecord> {
 async function seedUser(
   orgId: string,
   runner: SeedRunner,
+  userData: typeof fixture.user | typeof fixture.usageUser,
 ): Promise<UserRecord> {
   const repo = dataSource.getRepository(UserRecord);
   const existing = await repo.findOne({
-    where: { email: fixture.user.email },
+    where: { email: userData.email },
   });
 
   if (existing) {
@@ -105,17 +109,17 @@ async function seedUser(
     return existing;
   }
 
-  const passwordHash = await runner.hashPassword(fixture.user.password);
+  const passwordHash = await runner.hashPassword(userData.password);
   const record = repo.create({
     id: randomUUID(),
-    email: fixture.user.email,
+    email: userData.email,
     passwordHash,
     orgId,
-    name: fixture.user.name,
-    role: fixture.user.role,
-    systemRole: fixture.user.systemRole,
-    emailVerified: fixture.user.emailVerified,
-    hasAcceptedMarketing: fixture.user.hasAcceptedMarketing,
+    name: userData.name,
+    role: userData.role,
+    systemRole: userData.systemRole,
+    emailVerified: userData.emailVerified,
+    hasAcceptedMarketing: userData.hasAcceptedMarketing,
   } as Partial<UserRecord>);
   await repo.save(record);
   log('User', record.email, true);
@@ -141,12 +145,8 @@ async function seedSubscription(
   }
 
   const subscriptionId = randomUUID();
-  const billingInfo = billingRepo.create({
-    id: randomUUID(),
-    subscriptionId,
-    ...fixture.subscription.billingInfo,
-  } as Partial<SubscriptionBillingInfoRecord>);
 
+  // Insert subscription first (FK target), then billing info
   const record = subRepo.create({
     id: subscriptionId,
     orgId,
@@ -154,11 +154,60 @@ async function seedSubscription(
     pricePerSeat: fixture.subscription.pricePerSeat,
     renewalCycle: fixture.subscription.renewalCycle,
     renewalCycleAnchor: new Date(),
-    billingInfo,
     cancelledAt: null,
   } as Partial<SeatBasedSubscriptionRecord>);
   await subRepo.save(record);
+
+  const billingInfo = billingRepo.create({
+    id: randomUUID(),
+    subscriptionId,
+    ...fixture.subscription.billingInfo,
+  } as Partial<SubscriptionBillingInfoRecord>);
+  await billingRepo.save(billingInfo);
+
+  record.billingInfo = billingInfo;
   log('Subscription', `org=${orgId}`, true);
+  return record;
+}
+
+async function seedUsageSubscription(
+  orgId: string,
+): Promise<UsageBasedSubscriptionRecord> {
+  const subRepo = dataSource.getRepository(UsageBasedSubscriptionRecord);
+  const billingRepo = dataSource.getRepository(SubscriptionBillingInfoRecord);
+
+  const existing = await subRepo.findOne({
+    where: {
+      orgId: orgId as `${string}-${string}-${string}-${string}-${string}`,
+      cancelledAt: IsNull(),
+    },
+  });
+
+  if (existing) {
+    log('Usage subscription', `org=${orgId}`, false);
+    return existing;
+  }
+
+  const subscriptionId = randomUUID();
+
+  // Insert subscription first (FK target), then billing info
+  const record = subRepo.create({
+    id: subscriptionId,
+    orgId,
+    monthlyCredits: fixture.usageSubscription.monthlyCredits,
+    cancelledAt: null,
+  } as Partial<UsageBasedSubscriptionRecord>);
+  await subRepo.save(record);
+
+  const billingInfo = billingRepo.create({
+    id: randomUUID(),
+    subscriptionId,
+    ...fixture.usageSubscription.billingInfo,
+  } as Partial<SubscriptionBillingInfoRecord>);
+  await billingRepo.save(billingInfo);
+
+  record.billingInfo = billingInfo;
+  log('Usage subscription', `org=${orgId}`, true);
   return record;
 }
 
@@ -246,16 +295,24 @@ async function seedMinimal(): Promise<void> {
     console.log('🌱 Starting minimal seed…\n'); // eslint-disable-line no-console
 
     // Seed independent entities first
-    const [org, languageModel, embeddingModel] = await Promise.all([
-      seedOrg(),
+    const [org, usageOrg, languageModel, embeddingModel] = await Promise.all([
+      seedOrgByName(fixture.org.name),
+      seedOrgByName(fixture.usageOrg.name),
       seedLanguageModel(),
       seedEmbeddingModel(),
     ]);
 
-    // Seed entities that depend on org
-    await seedUser(org.id, runner);
+    const models = { languageModel, embeddingModel };
+
+    // Seed seat-based org
+    await seedUser(org.id, runner, fixture.user);
     await seedSubscription(org.id);
-    await seedPermittedModels(org.id, { languageModel, embeddingModel });
+    await seedPermittedModels(org.id, models);
+
+    // Seed usage-based org
+    await seedUser(usageOrg.id, runner, fixture.usageUser);
+    await seedUsageSubscription(usageOrg.id);
+    await seedPermittedModels(usageOrg.id, models);
 
     // Seed platform config
     await seedPlatformConfig();

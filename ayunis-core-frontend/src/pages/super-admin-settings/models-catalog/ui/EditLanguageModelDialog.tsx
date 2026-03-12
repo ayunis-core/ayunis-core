@@ -9,6 +9,7 @@ import type {
 import { LANGUAGE_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
 import { LanguageModelCapabilityFields } from './LanguageModelCapabilityFields';
+import { ModelPricingFields } from './ModelPricingFields';
 
 interface EditLanguageModelDialogProps {
   model: LanguageModelResponseDto | null;
@@ -50,6 +51,9 @@ export function EditLanguageModelDialog({
         canVision: model.canVision,
         isReasoning: model.isReasoning,
         isArchived: model.isArchived,
+        inputTokenCost: model.inputTokenCost,
+        outputTokenCost: model.outputTokenCost,
+        currency: model.currency,
       });
     }
   }, [model, open, form]);
@@ -75,6 +79,7 @@ export function EditLanguageModelDialog({
       hasContent={!!model}
     >
       <LanguageModelCapabilityFields form={form} disabled={isUpdating} />
+      <ModelPricingFields form={form} disabled={isUpdating} />
     </ModelFormDialog>
   );
 }

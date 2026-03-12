@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { ModelsController } from './presenters/http/models.controller';
-import { SuperAdminModelsController } from './presenters/http/super-admin-models.controller';
+import { SuperAdminPermittedModelsController } from './presenters/http/super-admin-permitted-models.controller';
+import { SuperAdminCatalogModelsController } from './presenters/http/super-admin-catalog-models.controller';
 import { MistralInferenceHandler } from './infrastructure/inference/mistral.inference';
 import { InferenceHandlerRegistry } from './application/registry/inference-handler.registry';
 import { ModelProvider } from './domain/value-objects/model-provider.enum';
@@ -95,7 +96,11 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     forwardRef(() => ThreadsModule), // Threads query models, deleting permitted model updates threads
     forwardRef(() => AgentsModule), // Agents query models, deleting permitted model updates agents
   ],
-  controllers: [ModelsController, SuperAdminModelsController],
+  controllers: [
+    ModelsController,
+    SuperAdminPermittedModelsController,
+    SuperAdminCatalogModelsController,
+  ],
   providers: [
     ModelProviderInfoRegistry,
     OpenAIResponsesMessageConverter,

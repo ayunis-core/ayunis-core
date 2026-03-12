@@ -9,7 +9,7 @@ import {
 import { showError } from '@/shared/lib/toast';
 
 export function useRunErrorHandler(threadId: string) {
-  const { t } = useTranslation();
+  const { t } = useTranslation('chat');
   const queryClient = useQueryClient();
 
   return useCallback(
