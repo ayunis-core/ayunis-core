@@ -121,7 +121,7 @@ export default function SuperAdminSettingsOrgPage({
                 subscription.monthlyCredits !== undefined && (
                   <CreditBudgetSection
                     orgId={org.id}
-                    monthlyCredits={subscription.monthlyCredits ?? 0}
+                    monthlyCredits={subscription.monthlyCredits}
                   />
                 )}
               <BillingInfoSection subscription={subscription} orgId={org.id} />

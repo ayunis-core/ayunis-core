@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import type { CreateSubscriptionFormData } from '@/widgets/billing';
+import { useMemo } from 'react';
 
 interface UseSuperAdminSubscriptionCreateProps {
   orgId: string;
@@ -73,8 +74,9 @@ export default function useSuperAdminSubscriptionCreate({
   const { t } = useTranslation('super-admin-settings-org');
   const queryClient = useQueryClient();
   const router = useRouter();
+  const resolver = useMemo(() => zodResolver(buildSchema(t)), [t]);
   const form = useForm<CreateSubscriptionFormData>({
-    resolver: zodResolver(buildSchema(t)),
+    resolver,
     defaultValues: {
       companyName: '',
       subText: '',
