@@ -7,7 +7,6 @@ import {
 import { UUID } from 'crypto';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { DeleteThreadCommand } from './delete-thread.command';
-import { ThreadNotFoundError } from '../../threads.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   MessagesRepository,
@@ -50,7 +49,12 @@ export class DeleteThreadUseCase {
       const thread = await this.threadsRepository.findOne(command.id, userId);
 
       if (!thread) {
-        throw new ThreadNotFoundError(command.id, userId);
+        // Idempotent delete: treat already-deleted threads as success
+        this.logger.warn('Thread already deleted or not found, treating as success', {
+          threadId: command.id,
+          userId,
+        });
+        return;
       }
 
       // Delete associated images before deleting the thread
@@ -64,9 +68,6 @@ export class DeleteThreadUseCase {
         userId,
       });
     } catch (error) {
-      if (error instanceof ThreadNotFoundError) {
-        throw error;
-      }
       this.logger.error('Failed to delete thread', {
         threadId: command.id,
         userId,

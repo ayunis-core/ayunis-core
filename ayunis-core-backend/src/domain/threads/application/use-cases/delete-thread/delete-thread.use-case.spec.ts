@@ -4,7 +4,6 @@ import { Logger } from '@nestjs/common';
 import { DeleteThreadUseCase } from './delete-thread.use-case';
 import { DeleteThreadCommand } from './delete-thread.command';
 import { ThreadsRepository } from '../../ports/threads.repository';
-import { ThreadNotFoundError } from '../../threads.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { MESSAGES_REPOSITORY } from 'src/domain/messages/application/ports/messages.repository';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
@@ -56,6 +55,7 @@ describe('DeleteThreadUseCase', () => {
 
     // Mock logger
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
     jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
@@ -103,55 +103,45 @@ describe('DeleteThreadUseCase', () => {
       });
     });
 
-    it('should throw ThreadNotFoundError when thread does not exist', async () => {
+    it('should succeed silently when thread does not exist (idempotent delete)', async () => {
       // Arrange
       const command = new DeleteThreadCommand(mockThreadId);
 
       threadsRepository.findOne.mockResolvedValue(null);
 
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        ThreadNotFoundError,
-      );
+      const warnSpy = jest.spyOn(Logger.prototype, 'warn');
 
+      // Act
+      await useCase.execute(command);
+
+      // Assert
       expect(threadsRepository.findOne).toHaveBeenCalledWith(
         mockThreadId,
         mockUserId,
       );
       expect(threadsRepository.delete).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Thread already deleted or not found, treating as success',
+        {
+          threadId: mockThreadId,
+          userId: mockUserId,
+        },
+      );
     });
 
-    it('should throw ThreadNotFoundError when thread belongs to different user', async () => {
+    it('should succeed silently when thread belongs to different user (idempotent delete)', async () => {
       // Arrange
       const command = new DeleteThreadCommand(mockThreadId);
 
       threadsRepository.findOne.mockResolvedValue(null); // Repository returns null for threads not belonging to user
 
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        ThreadNotFoundError,
-      );
+      // Act
+      await useCase.execute(command);
 
+      // Assert
       expect(threadsRepository.findOne).toHaveBeenCalledWith(
         mockThreadId,
         mockUserId,
-      );
-      expect(threadsRepository.delete).not.toHaveBeenCalled();
-    });
-
-    it('should re-throw ThreadNotFoundError without wrapping', async () => {
-      // Arrange
-      const command = new DeleteThreadCommand(mockThreadId);
-
-      const threadNotFoundError = new ThreadNotFoundError(
-        mockThreadId,
-        mockUserId,
-      );
-      threadsRepository.findOne.mockRejectedValue(threadNotFoundError);
-
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        ThreadNotFoundError,
       );
       expect(threadsRepository.delete).not.toHaveBeenCalled();
     });
