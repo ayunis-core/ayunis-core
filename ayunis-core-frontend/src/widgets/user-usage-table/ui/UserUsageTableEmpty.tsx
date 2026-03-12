@@ -2,7 +2,6 @@ import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardContent,
 } from '@/shared/ui/shadcn/card';
 import {
@@ -22,7 +21,6 @@ export function UserUsageTableEmpty() {
     <Card>
       <CardHeader>
         <CardTitle>{t('userUsage.title')}</CardTitle>
-        <CardDescription>{t('userUsage.subtitle')}</CardDescription>
       </CardHeader>
       <CardContent>
         <Empty>
