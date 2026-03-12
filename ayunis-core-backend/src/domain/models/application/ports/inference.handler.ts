@@ -9,7 +9,7 @@ import type { Model } from '../../domain/model.entity';
 export class InferenceInput {
   public readonly model: Model;
   public readonly messages: Message[];
-  public readonly systemPrompt: string;
+  public readonly systemPrompt?: string;
   public readonly tools: Tool[];
   public readonly toolChoice?: ModelToolChoice;
   public readonly orgId: string;
@@ -17,16 +17,17 @@ export class InferenceInput {
   constructor(params: {
     model: Model;
     messages: Message[];
+    systemPrompt?: string;
     tools: Tool[];
     toolChoice: ModelToolChoice;
     orgId: string;
   }) {
     this.model = params.model;
     this.messages = params.messages;
+    this.systemPrompt = params.systemPrompt;
     this.tools = params.tools;
     // only set toolChoice if tools are provided
-    this.toolChoice =
-      params.tools && params.tools.length > 0 ? params.toolChoice : undefined;
+    this.toolChoice = params.tools.length > 0 ? params.toolChoice : undefined;
     this.orgId = params.orgId;
   }
 }
