@@ -302,6 +302,18 @@ export const CreateLanguageModelRequestDtoProvider = {
   scaleway: 'scaleway',
 } as const;
 
+/**
+ * Currency for token costs
+ */
+export type CreateLanguageModelRequestDtoCurrency = typeof CreateLanguageModelRequestDtoCurrency[keyof typeof CreateLanguageModelRequestDtoCurrency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateLanguageModelRequestDtoCurrency = {
+  EUR: 'EUR',
+  USD: 'USD',
+} as const;
+
 export interface CreateLanguageModelRequestDto {
   /** The name of the model */
   name: string;
@@ -319,6 +331,18 @@ export interface CreateLanguageModelRequestDto {
   canVision: boolean;
   /** Whether the model is archived */
   isArchived: boolean;
+  /**
+   * Cost per million input tokens (in the specified currency)
+   * @minimum 0
+   */
+  inputTokenCost?: number;
+  /**
+   * Cost per million output tokens (in the specified currency)
+   * @minimum 0
+   */
+  outputTokenCost?: number;
+  /** Currency for token costs */
+  currency?: CreateLanguageModelRequestDtoCurrency;
 }
 
 /**
@@ -343,6 +367,18 @@ export const UpdateLanguageModelRequestDtoProvider = {
   scaleway: 'scaleway',
 } as const;
 
+/**
+ * Currency for token costs
+ */
+export type UpdateLanguageModelRequestDtoCurrency = typeof UpdateLanguageModelRequestDtoCurrency[keyof typeof UpdateLanguageModelRequestDtoCurrency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateLanguageModelRequestDtoCurrency = {
+  EUR: 'EUR',
+  USD: 'USD',
+} as const;
+
 export interface UpdateLanguageModelRequestDto {
   /** The name of the model */
   name: string;
@@ -360,6 +396,18 @@ export interface UpdateLanguageModelRequestDto {
   canVision: boolean;
   /** Whether the model is archived */
   isArchived: boolean;
+  /**
+   * Cost per million input tokens (in the specified currency)
+   * @minimum 0
+   */
+  inputTokenCost?: number;
+  /**
+   * Cost per million output tokens (in the specified currency)
+   * @minimum 0
+   */
+  outputTokenCost?: number;
+  /** Currency for token costs */
+  currency?: UpdateLanguageModelRequestDtoCurrency;
 }
 
 /**
@@ -397,6 +445,18 @@ export const CreateEmbeddingModelRequestDtoDimensions = {
   NUMBER_2560: 2560,
 } as const;
 
+/**
+ * Currency for token costs
+ */
+export type CreateEmbeddingModelRequestDtoCurrency = typeof CreateEmbeddingModelRequestDtoCurrency[keyof typeof CreateEmbeddingModelRequestDtoCurrency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateEmbeddingModelRequestDtoCurrency = {
+  EUR: 'EUR',
+  USD: 'USD',
+} as const;
+
 export interface CreateEmbeddingModelRequestDto {
   /** The name of the model */
   name: string;
@@ -408,6 +468,18 @@ export interface CreateEmbeddingModelRequestDto {
   dimensions: CreateEmbeddingModelRequestDtoDimensions;
   /** Whether the model is archived */
   isArchived: boolean;
+  /**
+   * Cost per million input tokens (in the specified currency)
+   * @minimum 0
+   */
+  inputTokenCost?: number;
+  /**
+   * Cost per million output tokens (in the specified currency)
+   * @minimum 0
+   */
+  outputTokenCost?: number;
+  /** Currency for token costs */
+  currency?: CreateEmbeddingModelRequestDtoCurrency;
 }
 
 /**
@@ -445,6 +517,18 @@ export const UpdateEmbeddingModelRequestDtoDimensions = {
   NUMBER_2560: 2560,
 } as const;
 
+/**
+ * Currency for token costs
+ */
+export type UpdateEmbeddingModelRequestDtoCurrency = typeof UpdateEmbeddingModelRequestDtoCurrency[keyof typeof UpdateEmbeddingModelRequestDtoCurrency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateEmbeddingModelRequestDtoCurrency = {
+  EUR: 'EUR',
+  USD: 'USD',
+} as const;
+
 export interface UpdateEmbeddingModelRequestDto {
   /** The name of the model */
   name: string;
@@ -456,6 +540,18 @@ export interface UpdateEmbeddingModelRequestDto {
   dimensions: UpdateEmbeddingModelRequestDtoDimensions;
   /** Whether the model is archived */
   isArchived: boolean;
+  /**
+   * Cost per million input tokens (in the specified currency)
+   * @minimum 0
+   */
+  inputTokenCost?: number;
+  /**
+   * Cost per million output tokens (in the specified currency)
+   * @minimum 0
+   */
+  outputTokenCost?: number;
+  /** Currency for token costs */
+  currency?: UpdateEmbeddingModelRequestDtoCurrency;
 }
 
 /**
@@ -491,6 +587,18 @@ export const LanguageModelResponseDtoType = {
   language: 'language',
 } as const;
 
+/**
+ * Currency for token costs
+ */
+export type LanguageModelResponseDtoCurrency = typeof LanguageModelResponseDtoCurrency[keyof typeof LanguageModelResponseDtoCurrency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const LanguageModelResponseDtoCurrency = {
+  EUR: 'EUR',
+  USD: 'USD',
+} as const;
+
 export interface LanguageModelResponseDto {
   /** The unique identifier of the model */
   id: string;
@@ -516,6 +624,12 @@ export interface LanguageModelResponseDto {
   createdAt: string;
   /** The date the model was last updated */
   updatedAt: string;
+  /** Cost per million input tokens */
+  inputTokenCost?: number;
+  /** Cost per million output tokens */
+  outputTokenCost?: number;
+  /** Currency for token costs */
+  currency?: LanguageModelResponseDtoCurrency;
 }
 
 /**
@@ -567,6 +681,18 @@ export const EmbeddingModelResponseDtoDimensions = {
   NUMBER_2560: 2560,
 } as const;
 
+/**
+ * Currency for token costs
+ */
+export type EmbeddingModelResponseDtoCurrency = typeof EmbeddingModelResponseDtoCurrency[keyof typeof EmbeddingModelResponseDtoCurrency];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EmbeddingModelResponseDtoCurrency = {
+  EUR: 'EUR',
+  USD: 'USD',
+} as const;
+
 export interface EmbeddingModelResponseDto {
   /** The unique identifier of the model */
   id: string;
@@ -586,6 +712,12 @@ export interface EmbeddingModelResponseDto {
   createdAt: string;
   /** The date the model was last updated */
   updatedAt: string;
+  /** Cost per million input tokens */
+  inputTokenCost?: number;
+  /** Cost per million output tokens */
+  outputTokenCost?: number;
+  /** Currency for token costs */
+  currency?: EmbeddingModelResponseDtoCurrency;
 }
 
 export interface CreateOrgRequestDto {

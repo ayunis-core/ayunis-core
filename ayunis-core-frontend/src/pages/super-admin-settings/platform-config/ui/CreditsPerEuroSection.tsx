@@ -11,14 +11,15 @@ import { Input } from '@/shared/ui/shadcn/input';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Label } from '@/shared/ui/shadcn/label';
 import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Info, Loader2 } from 'lucide-react';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import useCreditsPerEuro from '../api/useCreditsPerEuro';
 import useSetCreditsPerEuro from '../api/useSetCreditsPerEuro';
 
 export default function CreditsPerEuroSection() {
   const { t } = useTranslation('super-admin-settings-platform-config');
-  const { creditsPerEuro, isLoading, isError } = useCreditsPerEuro();
+  const { creditsPerEuro, isLoading, isError, isNotConfigured } =
+    useCreditsPerEuro();
   const { mutate, isPending } = useSetCreditsPerEuro();
   const [editValue, setEditValue] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -65,6 +66,14 @@ export default function CreditsPerEuroSection() {
             <Loader2 className="h-4 w-4 animate-spin" />
             {t('creditsPerEuro.loading')}
           </div>
+        )}
+        {isNotConfigured && (
+          <Alert className="mb-4">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              {t('creditsPerEuro.notConfigured')}
+            </AlertDescription>
+          </Alert>
         )}
         {!isLoading && !isError && (
           <div className="space-y-4">

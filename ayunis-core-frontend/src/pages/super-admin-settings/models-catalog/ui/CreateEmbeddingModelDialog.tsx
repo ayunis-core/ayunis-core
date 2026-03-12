@@ -5,6 +5,7 @@ import type { CreateEmbeddingModelRequestDtoProvider } from '@/shared/api';
 import { EMBEDDING_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
 import { EmbeddingDimensionsField } from './EmbeddingDimensionsField';
+import { ModelPricingFields } from './ModelPricingFields';
 
 interface CreateEmbeddingModelDialogProps {
   open: boolean;
@@ -49,6 +50,7 @@ export function CreateEmbeddingModelDialog({
         disabled={isCreating}
         mode="create"
       />
+      <ModelPricingFields form={form} disabled={isCreating} />
     </ModelFormDialog>
   );
 }

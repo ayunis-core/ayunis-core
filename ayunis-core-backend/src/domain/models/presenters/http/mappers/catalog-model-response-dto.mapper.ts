@@ -23,6 +23,9 @@ export class CatalogModelResponseDtoMapper {
       canVision: model.canVision,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+      inputTokenCost: model.inputTokenCost,
+      outputTokenCost: model.outputTokenCost,
+      currency: model.currency,
     };
   }
 
@@ -37,6 +40,9 @@ export class CatalogModelResponseDtoMapper {
       dimensions: model.dimensions,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+      inputTokenCost: model.inputTokenCost,
+      outputTokenCost: model.outputTokenCost,
+      currency: model.currency,
     };
   }
 
