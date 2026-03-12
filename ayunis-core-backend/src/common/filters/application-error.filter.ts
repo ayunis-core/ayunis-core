@@ -46,6 +46,13 @@ export class ApplicationErrorFilter implements ExceptionFilter {
   }
 
   private captureToSentry(exception: ApplicationError, request: Request) {
+    // Only report server errors (5xx) to Sentry.
+    // 4xx errors are expected client errors (bad input, auth failures, etc.)
+    // and are already captured in structured logs.
+    if (exception.statusCode < 500) {
+      return;
+    }
+
     Sentry.withScope((scope) => {
       // Add user context from CLS store
       const cls = ClsServiceManager.getClsService<MyClsStore>();
