@@ -8,7 +8,7 @@ import {
 } from '@/shared/ui/shadcn/card';
 import { ItemGroup, ItemSeparator } from '@/shared/ui/shadcn/item';
 import type {
-  SuperAdminModelsControllerGetAllCatalogModels200Item,
+  SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
   LanguageModelResponseDto,
   EmbeddingModelResponseDto,
 } from '@/shared/api';
@@ -16,24 +16,24 @@ import { ModelItem } from './ModelItem';
 import { Fragment } from 'react/jsx-runtime';
 
 interface ModelsCatalogListProps {
-  models: SuperAdminModelsControllerGetAllCatalogModels200Item[];
+  models: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item[];
   onEditLanguageModel: (model: LanguageModelResponseDto) => void;
   onEditEmbeddingModel: (model: EmbeddingModelResponseDto) => void;
   onDeleteModel: (
-    model: SuperAdminModelsControllerGetAllCatalogModels200Item,
+    model: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
   ) => void;
   isDeleting: boolean;
   isArchivedView?: boolean;
 }
 
 function isLanguageModel(
-  model: SuperAdminModelsControllerGetAllCatalogModels200Item,
+  model: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
 ): model is LanguageModelResponseDto {
   return model.type === 'language';
 }
 
 function isEmbeddingModel(
-  model: SuperAdminModelsControllerGetAllCatalogModels200Item,
+  model: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
 ): model is EmbeddingModelResponseDto {
   return model.type === 'embedding';
 }

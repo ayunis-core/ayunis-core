@@ -7,19 +7,7 @@ import {
   FormMessage,
 } from '@/shared/ui/shadcn/form';
 import { Input } from '@/shared/ui/shadcn/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/shadcn/select';
 import type { ModelPricingFormData } from '../model/types';
-import { CreateLanguageModelRequestDtoCurrency } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-
-const CURRENCY_OPTIONS = Object.values(
-  CreateLanguageModelRequestDtoCurrency,
-).map((value) => ({ value, label: value }));
 
 interface ModelPricingFieldsProps<
   T extends FieldValues & ModelPricingFormData,
@@ -33,7 +21,7 @@ export function ModelPricingFields<
 >({ form, disabled }: Readonly<ModelPricingFieldsProps<T>>) {
   return (
     <div className="space-y-4 rounded-md border p-4">
-      <h4 className="text-sm font-medium">Pricing (per million tokens)</h4>
+      <h4 className="text-sm font-medium">Pricing (EUR per million tokens)</h4>
 
       <div className="grid grid-cols-2 gap-4">
         <FormField
@@ -41,7 +29,7 @@ export function ModelPricingFields<
           name={'inputTokenCost' as Path<T>}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Input Cost</FormLabel>
+              <FormLabel>Input Cost (€)</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -66,7 +54,7 @@ export function ModelPricingFields<
           name={'outputTokenCost' as Path<T>}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Output Cost</FormLabel>
+              <FormLabel>Output Cost (€)</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -86,35 +74,6 @@ export function ModelPricingFields<
           )}
         />
       </div>
-
-      <FormField
-        control={form.control}
-        name={'currency' as Path<T>}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Currency</FormLabel>
-            <Select
-              onValueChange={field.onChange}
-              value={(field.value as string | undefined) ?? ''}
-              disabled={disabled}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {CURRENCY_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
     </div>
   );
 }

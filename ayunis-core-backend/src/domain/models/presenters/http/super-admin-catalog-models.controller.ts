@@ -246,7 +246,6 @@ export class SuperAdminCatalogModelsController {
       isArchived: dto.isArchived,
       inputTokenCost: dto.inputTokenCost,
       outputTokenCost: dto.outputTokenCost,
-      currency: dto.currency,
     });
 
     const model = await this.createLanguageModelUseCase.execute(command);
@@ -309,7 +308,6 @@ export class SuperAdminCatalogModelsController {
       isArchived: dto.isArchived,
       inputTokenCost: dto.inputTokenCost,
       outputTokenCost: dto.outputTokenCost,
-      currency: dto.currency,
     });
 
     const model = await this.updateLanguageModelUseCase.execute(command);
@@ -363,7 +361,6 @@ export class SuperAdminCatalogModelsController {
       isArchived: dto.isArchived,
       inputTokenCost: dto.inputTokenCost,
       outputTokenCost: dto.outputTokenCost,
-      currency: dto.currency,
     });
 
     const model = await this.createEmbeddingModelUseCase.execute(command);
@@ -423,7 +420,6 @@ export class SuperAdminCatalogModelsController {
       isArchived: dto.isArchived,
       inputTokenCost: dto.inputTokenCost,
       outputTokenCost: dto.outputTokenCost,
-      currency: dto.currency,
     });
 
     const model = await this.updateEmbeddingModelUseCase.execute(command);

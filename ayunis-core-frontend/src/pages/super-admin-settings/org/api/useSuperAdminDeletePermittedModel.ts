@@ -1,6 +1,6 @@
 import {
-  useSuperAdminModelsControllerDeletePermittedModel,
-  getSuperAdminModelsControllerGetAvailableModelsQueryKey,
+  useSuperAdminPermittedModelsControllerDeletePermittedModel,
+  getSuperAdminPermittedModelsControllerGetAvailableModelsQueryKey,
 } from '@/shared/api';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useQueryClient } from '@tanstack/react-query';
@@ -22,10 +22,10 @@ export function useSuperAdminDeletePermittedModel(orgId: string) {
   const router = useRouter();
   const { confirm } = useConfirmation();
   const queryKey =
-    getSuperAdminModelsControllerGetAvailableModelsQueryKey(orgId);
+    getSuperAdminPermittedModelsControllerGetAvailableModelsQueryKey(orgId);
 
   const deletePermittedModelMutation =
-    useSuperAdminModelsControllerDeletePermittedModel({
+    useSuperAdminPermittedModelsControllerDeletePermittedModel({
       mutation: {
         onMutate: async ({ id }) =>
           prepareOptimisticUpdate(queryClient, queryKey, (models) =>

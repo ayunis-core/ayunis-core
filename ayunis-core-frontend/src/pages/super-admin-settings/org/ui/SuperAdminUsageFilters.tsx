@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { UsageFiltersWidget } from '@/widgets/usage-filters/ui/UsageFiltersWidget';
-import { useSuperAdminModelsControllerGetPermittedModels } from '@/shared/api';
+import { useSuperAdminPermittedModelsControllerGetPermittedModels } from '@/shared/api';
 
 interface SuperAdminUsageFiltersProps {
   orgId: string;
@@ -22,7 +22,7 @@ export function SuperAdminUsageFilters({
   onModelChange,
 }: Readonly<SuperAdminUsageFiltersProps>) {
   const { data: permittedModels } =
-    useSuperAdminModelsControllerGetPermittedModels(orgId);
+    useSuperAdminPermittedModelsControllerGetPermittedModels(orgId);
 
   const providerOptions = useMemo(() => {
     if (!permittedModels?.length) return [];

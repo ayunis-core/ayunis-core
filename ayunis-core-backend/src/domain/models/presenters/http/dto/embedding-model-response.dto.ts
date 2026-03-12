@@ -3,7 +3,6 @@ import { UUID } from 'crypto';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
-import { Currency } from 'src/domain/models/domain/value-objects/currency.enum';
 
 export class EmbeddingModelResponseDto {
   @ApiProperty({
@@ -74,23 +73,15 @@ export class EmbeddingModelResponseDto {
 
   @ApiPropertyOptional({
     type: 'number',
-    description: 'Cost per million input tokens',
+    description: 'Cost per million input tokens in EUR',
     example: 0.13,
   })
   inputTokenCost?: number;
 
   @ApiPropertyOptional({
     type: 'number',
-    description: 'Cost per million output tokens',
+    description: 'Cost per million output tokens in EUR',
     example: 0,
   })
   outputTokenCost?: number;
-
-  @ApiPropertyOptional({
-    type: 'string',
-    enum: Currency,
-    description: 'Currency for token costs',
-    example: Currency.EUR,
-  })
-  currency?: Currency;
 }

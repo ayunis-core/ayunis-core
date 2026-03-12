@@ -1,8 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import {
-  useSuperAdminModelsControllerCreateLanguageModel,
-  getSuperAdminModelsControllerGetAllCatalogModelsQueryKey,
+  useSuperAdminCatalogModelsControllerCreateLanguageModel,
+  getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey,
   type CreateLanguageModelRequestDto,
 } from '@/shared/api';
 import { useRouter } from '@tanstack/react-router';
@@ -12,11 +12,12 @@ export function useCreateLanguageModel(onSuccess?: () => void) {
   const { t } = useTranslation('super-admin-settings-org');
   const queryClient = useQueryClient();
   const router = useRouter();
-  const mutation = useSuperAdminModelsControllerCreateLanguageModel({
+  const mutation = useSuperAdminCatalogModelsControllerCreateLanguageModel({
     mutation: {
       onSuccess: async () => {
         await queryClient.invalidateQueries({
-          queryKey: getSuperAdminModelsControllerGetAllCatalogModelsQueryKey(),
+          queryKey:
+            getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey(),
         });
         showSuccess(t('models.createSuccess'));
         onSuccess?.();

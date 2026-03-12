@@ -9,14 +9,9 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { Currency } from 'src/domain/models/domain/value-objects/currency.enum';
 
 function hasAnyCostField(o: BaseLanguageModelRequestDto): boolean {
-  return (
-    o.inputTokenCost !== undefined ||
-    o.outputTokenCost !== undefined ||
-    o.currency !== undefined
-  );
+  return o.inputTokenCost !== undefined || o.outputTokenCost !== undefined;
 }
 
 export abstract class BaseLanguageModelRequestDto {
@@ -80,7 +75,7 @@ export abstract class BaseLanguageModelRequestDto {
   isArchived: boolean;
 
   @ApiPropertyOptional({
-    description: 'Cost per million input tokens (in the specified currency)',
+    description: 'Cost per million input tokens in EUR',
     example: 3,
     minimum: 0,
   })
@@ -90,7 +85,7 @@ export abstract class BaseLanguageModelRequestDto {
   inputTokenCost?: number;
 
   @ApiPropertyOptional({
-    description: 'Cost per million output tokens (in the specified currency)',
+    description: 'Cost per million output tokens in EUR',
     example: 15,
     minimum: 0,
   })
@@ -98,13 +93,4 @@ export abstract class BaseLanguageModelRequestDto {
   @IsNumber()
   @Min(0)
   outputTokenCost?: number;
-
-  @ApiPropertyOptional({
-    description: 'Currency for token costs',
-    enum: Currency,
-    example: Currency.EUR,
-  })
-  @ValidateIf((o: BaseLanguageModelRequestDto) => hasAnyCostField(o))
-  @IsEnum(Currency)
-  currency?: Currency;
 }

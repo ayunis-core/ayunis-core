@@ -10,14 +10,9 @@ import {
 } from 'class-validator';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
-import { Currency } from 'src/domain/models/domain/value-objects/currency.enum';
 
 function hasAnyCostField(o: BaseEmbeddingModelRequestDto): boolean {
-  return (
-    o.inputTokenCost !== undefined ||
-    o.outputTokenCost !== undefined ||
-    o.currency !== undefined
-  );
+  return o.inputTokenCost !== undefined || o.outputTokenCost !== undefined;
 }
 
 export abstract class BaseEmbeddingModelRequestDto {
@@ -61,7 +56,7 @@ export abstract class BaseEmbeddingModelRequestDto {
   isArchived: boolean;
 
   @ApiPropertyOptional({
-    description: 'Cost per million input tokens (in the specified currency)',
+    description: 'Cost per million input tokens in EUR',
     example: 0.13,
     minimum: 0,
   })
@@ -71,7 +66,7 @@ export abstract class BaseEmbeddingModelRequestDto {
   inputTokenCost?: number;
 
   @ApiPropertyOptional({
-    description: 'Cost per million output tokens (in the specified currency)',
+    description: 'Cost per million output tokens in EUR',
     example: 0,
     minimum: 0,
   })
@@ -79,13 +74,4 @@ export abstract class BaseEmbeddingModelRequestDto {
   @IsNumber()
   @Min(0)
   outputTokenCost?: number;
-
-  @ApiPropertyOptional({
-    description: 'Currency for token costs',
-    enum: Currency,
-    example: Currency.EUR,
-  })
-  @ValidateIf((o: BaseEmbeddingModelRequestDto) => hasAnyCostField(o))
-  @IsEnum(Currency)
-  currency?: Currency;
 }

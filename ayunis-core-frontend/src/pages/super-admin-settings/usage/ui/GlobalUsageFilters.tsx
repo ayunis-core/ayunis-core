@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useSuperAdminModelsControllerGetAllCatalogModels } from '@/shared/api';
+import { useSuperAdminCatalogModelsControllerGetAllCatalogModels } from '@/shared/api';
 import { UsageFiltersWidget } from '@/widgets/usage-filters/ui/UsageFiltersWidget';
 
 interface GlobalUsageFiltersProps {
@@ -20,7 +20,7 @@ export function GlobalUsageFilters({
   onModelChange,
 }: Readonly<GlobalUsageFiltersProps>) {
   const { data: catalogModels } =
-    useSuperAdminModelsControllerGetAllCatalogModels();
+    useSuperAdminCatalogModelsControllerGetAllCatalogModels();
 
   const providerOptions = useMemo(() => {
     if (!catalogModels?.length) return [];

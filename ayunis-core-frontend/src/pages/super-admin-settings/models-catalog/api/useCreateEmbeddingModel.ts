@@ -1,8 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import {
-  useSuperAdminModelsControllerCreateEmbeddingModel,
-  getSuperAdminModelsControllerGetAllCatalogModelsQueryKey,
+  useSuperAdminCatalogModelsControllerCreateEmbeddingModel,
+  getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey,
   type CreateEmbeddingModelRequestDto,
 } from '@/shared/api';
 import { useRouter } from '@tanstack/react-router';
@@ -13,11 +13,12 @@ export function useCreateEmbeddingModel(onSuccess?: () => void) {
   const { t } = useTranslation('super-admin-settings-org');
   const queryClient = useQueryClient();
   const router = useRouter();
-  const mutation = useSuperAdminModelsControllerCreateEmbeddingModel({
+  const mutation = useSuperAdminCatalogModelsControllerCreateEmbeddingModel({
     mutation: {
       onSuccess: async () => {
         await queryClient.invalidateQueries({
-          queryKey: getSuperAdminModelsControllerGetAllCatalogModelsQueryKey(),
+          queryKey:
+            getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey(),
         });
         showSuccess(t('models.createSuccess'));
         onSuccess?.();

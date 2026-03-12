@@ -1,8 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import {
-  getSuperAdminModelsControllerGetAllCatalogModelsQueryKey,
-  useSuperAdminModelsControllerDeleteCatalogModel,
+  getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey,
+  useSuperAdminCatalogModelsControllerDeleteCatalogModel,
 } from '@/shared/api';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
@@ -12,11 +12,12 @@ export function useDeleteModel() {
   const { t } = useTranslation('super-admin-settings-org');
   const queryClient = useQueryClient();
   const router = useRouter();
-  const mutation = useSuperAdminModelsControllerDeleteCatalogModel({
+  const mutation = useSuperAdminCatalogModelsControllerDeleteCatalogModel({
     mutation: {
       onSuccess: async () => {
         await queryClient.invalidateQueries({
-          queryKey: getSuperAdminModelsControllerGetAllCatalogModelsQueryKey(),
+          queryKey:
+            getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey(),
         });
         showSuccess(t('models.deleteSuccess'));
       },

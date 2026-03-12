@@ -3,7 +3,6 @@ import { BaseRecord } from '../../../../../../common/db/base-record';
 import { ModelProvider } from '../../../../domain/value-objects/model-provider.enum';
 import { EmbeddingDimensions } from '../../../../domain/value-objects/embedding-dimensions.enum';
 import { Column, Entity, Index, TableInheritance, ChildEntity } from 'typeorm';
-import { Currency } from '../../../../domain/value-objects/currency.enum';
 
 const tokenCostColumnOptions = {
   type: 'decimal' as const,
@@ -70,13 +69,6 @@ export class LanguageModelRecord extends ModelRecord {
 
   @Column(tokenCostColumnOptions)
   outputTokenCost?: number;
-
-  @Column({
-    type: 'enum',
-    enum: Currency,
-    nullable: true,
-  })
-  currency?: Currency;
 }
 
 @ChildEntity(ModelType.EMBEDDING)
@@ -91,11 +83,4 @@ export class EmbeddingModelRecord extends ModelRecord {
 
   @Column(tokenCostColumnOptions)
   outputTokenCost?: number;
-
-  @Column({
-    type: 'enum',
-    enum: Currency,
-    nullable: true,
-  })
-  currency?: Currency;
 }

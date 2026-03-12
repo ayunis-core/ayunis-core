@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/dropdown-menu';
 import type {
-  SuperAdminModelsControllerGetAllCatalogModels200Item,
+  SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
   LanguageModelResponseDto,
   EmbeddingModelResponseDto,
 } from '@/shared/api';
@@ -25,7 +25,7 @@ import { useConfirmation } from '@/widgets/confirmation-modal';
 export default function ModelsCatalogPage({
   models,
 }: Readonly<{
-  models: SuperAdminModelsControllerGetAllCatalogModels200Item[];
+  models: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item[];
 }>) {
   const { t } = useTranslation('super-admin-settings-layout');
   const [createLanguageDialogOpen, setCreateLanguageDialogOpen] =
@@ -43,7 +43,7 @@ export default function ModelsCatalogPage({
   const archivedModels = models.filter((m) => m.isArchived);
 
   function handleDeleteModel(
-    model: SuperAdminModelsControllerGetAllCatalogModels200Item,
+    model: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
   ) {
     confirm({
       title: 'Delete model',

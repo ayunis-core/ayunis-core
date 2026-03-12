@@ -1,7 +1,7 @@
 import {
-  useSuperAdminModelsControllerCreatePermittedModel,
+  useSuperAdminPermittedModelsControllerCreatePermittedModel,
   type CreatePermittedModelDto,
-  getSuperAdminModelsControllerGetAvailableModelsQueryKey,
+  getSuperAdminPermittedModelsControllerGetAvailableModelsQueryKey,
 } from '@/shared/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -24,10 +24,10 @@ export function useSuperAdminCreatePermittedModel(orgId: string) {
   const router = useRouter();
   const { t } = useTranslation('admin-settings-models');
   const queryKey =
-    getSuperAdminModelsControllerGetAvailableModelsQueryKey(orgId);
+    getSuperAdminPermittedModelsControllerGetAvailableModelsQueryKey(orgId);
 
   const createPermittedModelMutation =
-    useSuperAdminModelsControllerCreatePermittedModel({
+    useSuperAdminPermittedModelsControllerCreatePermittedModel({
       mutation: {
         onMutate: async ({ data }) =>
           prepareOptimisticUpdate(queryClient, queryKey, (models) =>

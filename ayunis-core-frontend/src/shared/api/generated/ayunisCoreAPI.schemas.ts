@@ -302,18 +302,6 @@ export const CreateLanguageModelRequestDtoProvider = {
   scaleway: 'scaleway',
 } as const;
 
-/**
- * Currency for token costs
- */
-export type CreateLanguageModelRequestDtoCurrency = typeof CreateLanguageModelRequestDtoCurrency[keyof typeof CreateLanguageModelRequestDtoCurrency];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateLanguageModelRequestDtoCurrency = {
-  EUR: 'EUR',
-  USD: 'USD',
-} as const;
-
 export interface CreateLanguageModelRequestDto {
   /** The name of the model */
   name: string;
@@ -332,17 +320,15 @@ export interface CreateLanguageModelRequestDto {
   /** Whether the model is archived */
   isArchived: boolean;
   /**
-   * Cost per million input tokens (in the specified currency)
+   * Cost per million input tokens in EUR
    * @minimum 0
    */
   inputTokenCost?: number;
   /**
-   * Cost per million output tokens (in the specified currency)
+   * Cost per million output tokens in EUR
    * @minimum 0
    */
   outputTokenCost?: number;
-  /** Currency for token costs */
-  currency?: CreateLanguageModelRequestDtoCurrency;
 }
 
 /**
@@ -367,18 +353,6 @@ export const UpdateLanguageModelRequestDtoProvider = {
   scaleway: 'scaleway',
 } as const;
 
-/**
- * Currency for token costs
- */
-export type UpdateLanguageModelRequestDtoCurrency = typeof UpdateLanguageModelRequestDtoCurrency[keyof typeof UpdateLanguageModelRequestDtoCurrency];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateLanguageModelRequestDtoCurrency = {
-  EUR: 'EUR',
-  USD: 'USD',
-} as const;
-
 export interface UpdateLanguageModelRequestDto {
   /** The name of the model */
   name: string;
@@ -397,17 +371,15 @@ export interface UpdateLanguageModelRequestDto {
   /** Whether the model is archived */
   isArchived: boolean;
   /**
-   * Cost per million input tokens (in the specified currency)
+   * Cost per million input tokens in EUR
    * @minimum 0
    */
   inputTokenCost?: number;
   /**
-   * Cost per million output tokens (in the specified currency)
+   * Cost per million output tokens in EUR
    * @minimum 0
    */
   outputTokenCost?: number;
-  /** Currency for token costs */
-  currency?: UpdateLanguageModelRequestDtoCurrency;
 }
 
 /**
@@ -445,18 +417,6 @@ export const CreateEmbeddingModelRequestDtoDimensions = {
   NUMBER_2560: 2560,
 } as const;
 
-/**
- * Currency for token costs
- */
-export type CreateEmbeddingModelRequestDtoCurrency = typeof CreateEmbeddingModelRequestDtoCurrency[keyof typeof CreateEmbeddingModelRequestDtoCurrency];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateEmbeddingModelRequestDtoCurrency = {
-  EUR: 'EUR',
-  USD: 'USD',
-} as const;
-
 export interface CreateEmbeddingModelRequestDto {
   /** The name of the model */
   name: string;
@@ -469,17 +429,15 @@ export interface CreateEmbeddingModelRequestDto {
   /** Whether the model is archived */
   isArchived: boolean;
   /**
-   * Cost per million input tokens (in the specified currency)
+   * Cost per million input tokens in EUR
    * @minimum 0
    */
   inputTokenCost?: number;
   /**
-   * Cost per million output tokens (in the specified currency)
+   * Cost per million output tokens in EUR
    * @minimum 0
    */
   outputTokenCost?: number;
-  /** Currency for token costs */
-  currency?: CreateEmbeddingModelRequestDtoCurrency;
 }
 
 /**
@@ -517,18 +475,6 @@ export const UpdateEmbeddingModelRequestDtoDimensions = {
   NUMBER_2560: 2560,
 } as const;
 
-/**
- * Currency for token costs
- */
-export type UpdateEmbeddingModelRequestDtoCurrency = typeof UpdateEmbeddingModelRequestDtoCurrency[keyof typeof UpdateEmbeddingModelRequestDtoCurrency];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateEmbeddingModelRequestDtoCurrency = {
-  EUR: 'EUR',
-  USD: 'USD',
-} as const;
-
 export interface UpdateEmbeddingModelRequestDto {
   /** The name of the model */
   name: string;
@@ -541,17 +487,15 @@ export interface UpdateEmbeddingModelRequestDto {
   /** Whether the model is archived */
   isArchived: boolean;
   /**
-   * Cost per million input tokens (in the specified currency)
+   * Cost per million input tokens in EUR
    * @minimum 0
    */
   inputTokenCost?: number;
   /**
-   * Cost per million output tokens (in the specified currency)
+   * Cost per million output tokens in EUR
    * @minimum 0
    */
   outputTokenCost?: number;
-  /** Currency for token costs */
-  currency?: UpdateEmbeddingModelRequestDtoCurrency;
 }
 
 /**
@@ -587,18 +531,6 @@ export const LanguageModelResponseDtoType = {
   language: 'language',
 } as const;
 
-/**
- * Currency for token costs
- */
-export type LanguageModelResponseDtoCurrency = typeof LanguageModelResponseDtoCurrency[keyof typeof LanguageModelResponseDtoCurrency];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const LanguageModelResponseDtoCurrency = {
-  EUR: 'EUR',
-  USD: 'USD',
-} as const;
-
 export interface LanguageModelResponseDto {
   /** The unique identifier of the model */
   id: string;
@@ -624,12 +556,10 @@ export interface LanguageModelResponseDto {
   createdAt: string;
   /** The date the model was last updated */
   updatedAt: string;
-  /** Cost per million input tokens */
+  /** Cost per million input tokens in EUR */
   inputTokenCost?: number;
-  /** Cost per million output tokens */
+  /** Cost per million output tokens in EUR */
   outputTokenCost?: number;
-  /** Currency for token costs */
-  currency?: LanguageModelResponseDtoCurrency;
 }
 
 /**
@@ -681,18 +611,6 @@ export const EmbeddingModelResponseDtoDimensions = {
   NUMBER_2560: 2560,
 } as const;
 
-/**
- * Currency for token costs
- */
-export type EmbeddingModelResponseDtoCurrency = typeof EmbeddingModelResponseDtoCurrency[keyof typeof EmbeddingModelResponseDtoCurrency];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const EmbeddingModelResponseDtoCurrency = {
-  EUR: 'EUR',
-  USD: 'USD',
-} as const;
-
 export interface EmbeddingModelResponseDto {
   /** The unique identifier of the model */
   id: string;
@@ -712,12 +630,10 @@ export interface EmbeddingModelResponseDto {
   createdAt: string;
   /** The date the model was last updated */
   updatedAt: string;
-  /** Cost per million input tokens */
+  /** Cost per million input tokens in EUR */
   inputTokenCost?: number;
-  /** Cost per million output tokens */
+  /** Cost per million output tokens in EUR */
   outputTokenCost?: number;
-  /** Currency for token costs */
-  currency?: EmbeddingModelResponseDtoCurrency;
 }
 
 export interface CreateOrgRequestDto {
@@ -3329,6 +3245,33 @@ export interface CreditUsageResponseDto {
   creditsRemaining: number | null;
 }
 
+export interface UserUsageDto {
+  /** User ID */
+  userId: string;
+  /** User name */
+  userName: string;
+  /** User email */
+  userEmail: string;
+  /** Total tokens for this user */
+  tokens: number;
+  /** Total requests for this user */
+  requests: number;
+  /**
+   * Last activity date (null if no activity)
+   * @nullable
+   */
+  lastActivity: string | null;
+  /** Whether the user is considered active */
+  isActive: boolean;
+}
+
+export interface UserUsageResponseDto {
+  /** User usage statistics */
+  data: UserUsageDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+}
+
 export interface UsageStatsResponseDto {
   /** Total tokens consumed across all users and models in the specified period */
   totalTokens: number;
@@ -3340,6 +3283,50 @@ export interface UsageStatsResponseDto {
   totalUsers: number;
   /** List of the most frequently used model names, ordered by usage */
   topModels: string[];
+}
+
+/**
+ * Model provider
+ */
+export type ModelDistributionDtoProvider = typeof ModelDistributionDtoProvider[keyof typeof ModelDistributionDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelDistributionDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+export interface ModelDistributionDto {
+  /** Model ID */
+  modelId: string;
+  /** Model name */
+  modelName: string;
+  /** Model display name */
+  displayName: string;
+  /** Model provider */
+  provider: ModelDistributionDtoProvider;
+  /** Total tokens for this model */
+  tokens: number;
+  /** Total requests for this model */
+  requests: number;
+  /** Percentage of total usage */
+  percentage: number;
+}
+
+export interface ModelDistributionResponseDto {
+  /** Model distribution statistics */
+  models: ModelDistributionDto[];
 }
 
 export interface TimeSeriesPointDto {
@@ -3416,77 +3403,6 @@ export interface ProviderTimeSeriesRowDto {
 export interface ProviderUsageChartResponseDto {
   /** Aligned time series rows by date with provider token values */
   timeSeries: ProviderTimeSeriesRowDto[];
-}
-
-/**
- * Model provider
- */
-export type ModelDistributionDtoProvider = typeof ModelDistributionDtoProvider[keyof typeof ModelDistributionDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelDistributionDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-export interface ModelDistributionDto {
-  /** Model ID */
-  modelId: string;
-  /** Model name */
-  modelName: string;
-  /** Model display name */
-  displayName: string;
-  /** Model provider */
-  provider: ModelDistributionDtoProvider;
-  /** Total tokens for this model */
-  tokens: number;
-  /** Total requests for this model */
-  requests: number;
-  /** Percentage of total usage */
-  percentage: number;
-}
-
-export interface ModelDistributionResponseDto {
-  /** Model distribution statistics */
-  models: ModelDistributionDto[];
-}
-
-export interface UserUsageDto {
-  /** User ID */
-  userId: string;
-  /** User name */
-  userName: string;
-  /** User email */
-  userEmail: string;
-  /** Total tokens for this user */
-  tokens: number;
-  /** Total requests for this user */
-  requests: number;
-  /**
-   * Last activity date (null if no activity)
-   * @nullable
-   */
-  lastActivity: string | null;
-  /** Whether the user is considered active */
-  isActive: boolean;
-}
-
-export interface UserUsageResponseDto {
-  /** User usage statistics */
-  data: UserUsageDto[];
-  /** Pagination metadata */
-  pagination: PaginationDto;
 }
 
 export interface GlobalUserUsageDto {
@@ -3674,13 +3590,13 @@ export interface MeResponseDto {
   name: string;
 }
 
-export type SuperAdminModelsControllerGetCatalogModelById200 = LanguageModelResponseDto | EmbeddingModelResponseDto;
+export type SuperAdminPermittedModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
 
-export type SuperAdminModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
+export type SuperAdminPermittedModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
 
-export type SuperAdminModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
+export type SuperAdminCatalogModelsControllerGetAllCatalogModels200Item = LanguageModelResponseDto | EmbeddingModelResponseDto;
 
-export type SuperAdminModelsControllerGetAllCatalogModels200Item = LanguageModelResponseDto | EmbeddingModelResponseDto;
+export type SuperAdminCatalogModelsControllerGetCatalogModelById200 = LanguageModelResponseDto | EmbeddingModelResponseDto;
 
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
 /**
@@ -3868,72 +3784,6 @@ export type RunsControllerSendMessageBody = {
 };
 
 export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;
-
-export type UsageControllerGetUsageStatsParams = {
-/**
- * Start date in ISO format. If provided, must be used with endDate.
- */
-startDate?: string;
-/**
- * End date in ISO format. If provided, must be used with startDate.
- */
-endDate?: string;
-};
-
-export type UsageControllerGetProviderUsageParams = {
-/**
- * Start date in ISO format
- */
-startDate?: string;
-/**
- * End date in ISO format
- */
-endDate?: string;
-/**
- * Whether to include time series data for trend charts. Defaults to true.
- */
-includeTimeSeries?: boolean;
-/**
- * Filter by provider (e.g., openai, anthropic)
- */
-provider?: string;
-/**
- * Filter by model ID
- */
-modelId?: string;
-};
-
-export type UsageControllerGetProviderUsageChartParams = {
-startDate?: string;
-endDate?: string;
-/**
- * Filter by provider (e.g., openai, anthropic)
- */
-provider?: string;
-/**
- * Filter by model ID
- */
-modelId?: string;
-};
-
-export type UsageControllerGetModelDistributionParams = {
-/**
- * Start date in ISO format
- */
-startDate?: string;
-/**
- * End date in ISO format
- */
-endDate?: string;
-/**
- * Maximum number of models to return. Defaults to 10. Frontend can decide how to handle aggregation if needed.
- */
-maxModels?: number;
-/**
- * Filter by model ID
- */
-modelId?: string;
-};
 
 export type UsageControllerGetUserUsageParams = {
 /**

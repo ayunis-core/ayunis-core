@@ -50,10 +50,13 @@ export class DeleteThreadUseCase {
 
       if (!thread) {
         // Idempotent delete: treat already-deleted threads as success
-        this.logger.warn('Thread already deleted or not found, treating as success', {
-          threadId: command.id,
-          userId,
-        });
+        this.logger.warn(
+          'Thread already deleted or not found, treating as success',
+          {
+            threadId: command.id,
+            userId,
+          },
+        );
         return;
       }
 
