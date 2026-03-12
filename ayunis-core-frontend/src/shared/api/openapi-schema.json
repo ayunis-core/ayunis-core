@@ -8144,6 +8144,71 @@
           "Authentication"
         ]
       }
+    },
+    "/super-admin/platform-config/credits-per-euro": {
+      "get": {
+        "description": "Retrieve the global credits-per-euro value used for credit calculations. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_getCreditsPerEuro",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved credits-per-euro value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditsPerEuroResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Credits-per-euro value has not been configured"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get the current credits-per-euro configuration",
+        "tags": [
+          "Super Admin Platform Config"
+        ]
+      },
+      "put": {
+        "description": "Update the global credits-per-euro value used for credit calculations. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_setCreditsPerEuro",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCreditsPerEuroRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated credits-per-euro value"
+          },
+          "400": {
+            "description": "Invalid value provided (must be positive number)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Set the credits-per-euro configuration",
+        "tags": [
+          "Super Admin Platform Config"
+        ]
+      }
     }
   },
   "info": {
@@ -14214,6 +14279,32 @@
           "role",
           "systemRole",
           "name"
+        ]
+      },
+      "CreditsPerEuroResponseDto": {
+        "type": "object",
+        "properties": {
+          "creditsPerEuro": {
+            "type": "number",
+            "description": "Number of credits per euro of token cost",
+            "example": 1000
+          }
+        },
+        "required": [
+          "creditsPerEuro"
+        ]
+      },
+      "SetCreditsPerEuroRequestDto": {
+        "type": "object",
+        "properties": {
+          "creditsPerEuro": {
+            "type": "number",
+            "description": "Number of credits per euro of token cost. Must be positive.",
+            "example": 1000
+          }
+        },
+        "required": [
+          "creditsPerEuro"
         ]
       }
     }
