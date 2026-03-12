@@ -62,7 +62,6 @@
   },
   "userUsage": {
     "title": "Nutzerverbrauch",
-    "subtitle": "Individual Nutzerverbrauch",
     "viewAll": "Alle anzeigen",
     "noData": "Keine Nutzerverbrauchdaten verfügbar",
     "error": "Fehler beim Laden der Nutzerverbrauchdaten",
