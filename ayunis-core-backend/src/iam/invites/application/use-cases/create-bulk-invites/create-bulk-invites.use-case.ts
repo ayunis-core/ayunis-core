@@ -8,6 +8,7 @@ import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/
 import { GetActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.query';
 import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
 import { UpdateSeatsCommand } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.command';
+import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import {
   BulkInviteValidationFailedError,
   InvalidSeatsError,
@@ -243,9 +244,18 @@ export class CreateBulkInvitesUseCase {
       return;
     }
 
+    // Seat management only applies to seat-based subscriptions
+    const sub = subscription.subscription;
+    if (!isSeatBased(sub)) {
+      return;
+    }
+
     const inviteCount = command.invites.length;
 
-    if (subscription.availableSeats < 0) {
+    if (
+      subscription.availableSeats !== null &&
+      subscription.availableSeats < 0
+    ) {
       throw new InvalidSeatsError({
         orgId: command.orgId,
         availableSeats: subscription.availableSeats,
@@ -253,14 +263,16 @@ export class CreateBulkInvitesUseCase {
     }
 
     // If not enough seats, increase seat count
-    if (subscription.availableSeats < inviteCount) {
+    if (
+      subscription.availableSeats !== null &&
+      subscription.availableSeats < inviteCount
+    ) {
       const additionalSeatsNeeded = inviteCount - subscription.availableSeats;
       await this.updateSeatsUseCase.execute(
         new UpdateSeatsCommand({
           orgId: command.orgId,
           requestingUserId: command.userId,
-          noOfSeats:
-            subscription.subscription.noOfSeats + additionalSeatsNeeded,
+          noOfSeats: sub.noOfSeats + additionalSeatsNeeded,
         }),
       );
     }

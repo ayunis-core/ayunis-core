@@ -8,7 +8,11 @@ import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscr
 import { UncancelSubscriptionUseCase } from './application/use-cases/uncancel-subscription/uncancel-subscription.use-case';
 import { SubscriptionRepository } from './application/ports/subscription.repository';
 import { LocalSubscriptionsRepository } from './infrastructure/persistence/local/local-subscriptions.repository';
-import { SubscriptionRecord } from './infrastructure/persistence/local/schema/subscription.record';
+import {
+  SubscriptionRecord,
+  SeatBasedSubscriptionRecord,
+  UsageBasedSubscriptionRecord,
+} from './infrastructure/persistence/local/schema/subscription.record';
 import { SubscriptionMapper } from './infrastructure/persistence/local/mappers/subscription.mapper';
 import { SubscriptionsController } from './presenters/http/subscriptions.controller';
 import { SuperAdminSubscriptionsController } from './presenters/http/super-admin-subscriptions.controller';
@@ -25,6 +29,8 @@ import { GetCurrentPriceUseCase } from './application/use-cases/get-current-pric
   imports: [
     TypeOrmModule.forFeature([
       SubscriptionRecord,
+      SeatBasedSubscriptionRecord,
+      UsageBasedSubscriptionRecord,
       SubscriptionBillingInfoRecord,
     ]),
     forwardRef(() => UsersModule),

@@ -24,6 +24,17 @@ export default function LicenseSeatsSection({
 }: Readonly<LicenseSeatsSectionProps>) {
   const { t } = useTranslation(translationNamespace);
 
+  const noOfSeats = subscription.noOfSeats;
+  const availableSeats = subscription.availableSeats;
+
+  if (
+    noOfSeats === undefined ||
+    availableSeats === undefined ||
+    availableSeats === null
+  ) {
+    return null;
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -46,9 +57,7 @@ export default function LicenseSeatsSection({
                 {t('licenseSeats.usedSeats')}
               </span>
             </div>
-            <Badge variant="outline">
-              {subscription.noOfSeats - subscription.availableSeats}
-            </Badge>
+            <Badge variant="outline">{noOfSeats - availableSeats}</Badge>
           </div>
 
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -57,7 +66,7 @@ export default function LicenseSeatsSection({
                 {t('licenseSeats.availableSeats')}
               </span>
             </div>
-            <Badge variant="outline">{subscription.availableSeats}</Badge>
+            <Badge variant="outline">{availableSeats}</Badge>
           </div>
         </div>
       </CardContent>

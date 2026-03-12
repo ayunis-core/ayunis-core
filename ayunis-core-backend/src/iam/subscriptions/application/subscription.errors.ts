@@ -13,6 +13,8 @@ export enum SubscriptionErrorCode {
   INVALID_RENEWAL_CYCLE = 'INVALID_RENEWAL_CYCLE',
   UNAUTHORIZED_SUBSCRIPTION_ACCESS = 'UNAUTHORIZED_SUBSCRIPTION_ACCESS',
   INVALID_SUBSCRIPTION_DATA = 'INVALID_SUBSCRIPTION_DATA',
+  INVALID_SUBSCRIPTION_TYPE = 'INVALID_SUBSCRIPTION_TYPE',
+  SUBSCRIPTION_EXPIRED = 'SUBSCRIPTION_EXPIRED',
   UNEXPECTED_ERROR = 'UNEXPECTED_ERROR',
   PRICE_NOT_FOUND = 'PRICE_NOT_FOUND',
 }
@@ -214,6 +216,37 @@ export class UnexpectedSubscriptionError extends SubscriptionError {
       `Unexpected error: ${reason ? `: ${reason}` : ''}`,
       SubscriptionErrorCode.UNEXPECTED_ERROR,
       500,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when trying to uncancel a subscription whose billing period has expired
+ */
+export class SubscriptionExpiredError extends SubscriptionError {
+  constructor(orgId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Subscription for organization '${orgId}' has expired and cannot be uncancelled`,
+      SubscriptionErrorCode.SUBSCRIPTION_EXPIRED,
+      400,
+      {
+        orgId,
+        ...metadata,
+      },
+    );
+  }
+}
+
+/**
+ * Error thrown when an operation is attempted on the wrong subscription type
+ */
+export class InvalidSubscriptionTypeError extends SubscriptionError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(
+      `Invalid subscription type: ${reason}`,
+      SubscriptionErrorCode.INVALID_SUBSCRIPTION_TYPE,
+      400,
       metadata,
     );
   }

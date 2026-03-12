@@ -43,6 +43,24 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
     }
   }
 
+  async findLatestByOrgId(orgId: UUID): Promise<Subscription | null> {
+    try {
+      const record = await this.subscriptionRepository.findOne({
+        where: { orgId },
+        relations: { billingInfo: true },
+        order: { createdAt: 'DESC' },
+      });
+
+      return record ? this.subscriptionMapper.toDomain(record) : null;
+    } catch (error) {
+      this.logger.error(
+        `Failed to find latest subscription by orgId ${orgId}`,
+        error,
+      );
+      throw error;
+    }
+  }
+
   async findAll(): Promise<Subscription[]> {
     try {
       const records = await this.subscriptionRepository.find();

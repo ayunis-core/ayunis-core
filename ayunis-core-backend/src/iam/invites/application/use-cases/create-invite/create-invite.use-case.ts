@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { InviteJwtService } from '../../services/invite-jwt.service';
 import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
 import { GetActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.query';
+import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
 import { UpdateSeatsCommand } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.command';
 import {
@@ -138,7 +139,16 @@ export class CreateInviteUseCase {
       return;
     }
 
-    if (subscription.availableSeats < 0) {
+    // Seat management only applies to seat-based subscriptions
+    const sub = subscription.subscription;
+    if (!isSeatBased(sub)) {
+      return;
+    }
+
+    if (
+      subscription.availableSeats !== null &&
+      subscription.availableSeats < 0
+    ) {
       throw new InvalidSeatsError({
         orgId,
         availableSeats: subscription.availableSeats,
@@ -149,7 +159,7 @@ export class CreateInviteUseCase {
         new UpdateSeatsCommand({
           orgId,
           requestingUserId: userId,
-          noOfSeats: subscription.subscription.noOfSeats + 1,
+          noOfSeats: sub.noOfSeats + 1,
         }),
       );
     }

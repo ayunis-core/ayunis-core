@@ -29,7 +29,13 @@ export default function LicenseSeatsUpdateDialog({
   isPending,
 }: Readonly<LicenseSeatsUpdateDialogProps>) {
   const { t } = useTranslation(translationNamespace);
-  const [selectedSeats, setSelectedSeats] = useState(subscription.noOfSeats);
+  const [selectedSeats, setSelectedSeats] = useState(
+    subscription.noOfSeats ?? 1,
+  );
+
+  if (subscription.noOfSeats === undefined) {
+    return null;
+  }
 
   function handleDecreaseSeats() {
     setSelectedSeats((prev) => Math.max(1, prev - 1));

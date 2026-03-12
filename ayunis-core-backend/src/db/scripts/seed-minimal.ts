@@ -12,7 +12,7 @@ import {
   LanguageModelRecord,
   EmbeddingModelRecord,
 } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
-import { SubscriptionRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription.record';
+import { SeatBasedSubscriptionRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription.record';
 import { SubscriptionBillingInfoRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription-billing-info.record';
 import { PermittedModelRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
 
@@ -120,8 +120,10 @@ async function seedUser(
   return record;
 }
 
-async function seedSubscription(orgId: string): Promise<SubscriptionRecord> {
-  const subRepo = dataSource.getRepository(SubscriptionRecord);
+async function seedSubscription(
+  orgId: string,
+): Promise<SeatBasedSubscriptionRecord> {
+  const subRepo = dataSource.getRepository(SeatBasedSubscriptionRecord);
   const billingRepo = dataSource.getRepository(SubscriptionBillingInfoRecord);
 
   const existing = await subRepo.findOne({
@@ -152,7 +154,7 @@ async function seedSubscription(orgId: string): Promise<SubscriptionRecord> {
     renewalCycleAnchor: new Date(),
     billingInfo,
     cancelledAt: null,
-  } as Partial<SubscriptionRecord>);
+  } as Partial<SeatBasedSubscriptionRecord>);
   await subRepo.save(record);
   log('Subscription', `org=${orgId}`, true);
   return record;
