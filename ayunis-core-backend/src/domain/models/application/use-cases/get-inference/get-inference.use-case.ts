@@ -38,6 +38,7 @@ export class GetInferenceUseCase {
           new InferenceInput({
             model: command.model,
             messages: command.messages,
+            systemPrompt: command.instructions,
             tools: command.tools,
             toolChoice: command.toolChoice,
             orgId,
