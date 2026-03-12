@@ -50,6 +50,7 @@
     "createErrorCityRequired": "Stadt ist erforderlich",
     "createErrorCountryRequired": "Land ist erforderlich",
     "createErrorNoOfSeatsRequired": "Anzahl der Plätze ist erforderlich",
+    "createErrorMonthlyCreditsRequired": "Monatliches Guthaben ist erforderlich",
     "cancelErrorSubscriptionNotFound": "Abonnement nicht gefunden",
     "cancelError": "Ein unerwarteter Fehler ist aufgetreten",
     "uncancelErrorSubscriptionNotFound": "Abonnement nicht gefunden",
@@ -113,7 +114,14 @@
     "description": "Bitte geben Sie die Unternehmensdaten ein, um das Abonnement für diese Organisation einzurichten.",
     "createSubscription": "Abonnement erstellen",
     "creating": "Wird erstellt...",
-    "noOfSeatsDescription": "Sie können die Anzahl der Plätze jederzeit ändern."
+    "typeLabel": "Abonnement-Typ",
+    "typePlaceholder": "Typ auswählen",
+    "typeSeatBased": "Platzbasiert",
+    "typeUsageBased": "Nutzungsbasiert",
+    "noOfSeatsDescription": "Sie können die Anzahl der Plätze jederzeit ändern.",
+    "monthlyCreditsLabel": "Monatliches Guthaben",
+    "monthlyCreditsPlaceholder": "1000",
+    "monthlyCreditsDescription": "Das monatliche Guthaben-Budget für diese Organisation. Wird am 1. jedes Monats zurückgesetzt."
   },
   "trialDialog": {
     "title": "Trial erstellen",
@@ -180,6 +188,15 @@
     "error": "Benutzer konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
     "emailProviderBlacklisted": "Dieser E-Mail-Anbieter ist nicht erlaubt.",
     "userAlreadyExists": "Ein Benutzer mit dieser E-Mail existiert bereits."
+  },
+  "creditBudget": {
+    "title": "Guthaben-Budget",
+    "loading": "Guthaben-Nutzung wird geladen…",
+    "budget": "Monatliches Budget",
+    "used": "Verbrauchtes Guthaben",
+    "remaining": "Verbleibendes Guthaben",
+    "usageProgress": "Nutzung",
+    "error": "Guthaben-Nutzungsdaten konnten nicht geladen werden."
   },
   "noSubscription": {
     "title": "Noch kein Abonnement",

@@ -18,9 +18,14 @@ export class GetProviderUsageUseCase {
   async execute(query: GetProviderUsageQuery): Promise<ProviderUsage[]> {
     validateOptionalDateRange(query.startDate, query.endDate);
 
+    this.logger.log('Getting provider usage', {
+      organizationId: query.organizationId,
+      startDate: query.startDate?.toISOString(),
+      endDate: query.endDate?.toISOString(),
+    });
+
     try {
       const providerUsage = await this.usageRepository.getProviderUsage(query);
-
       return calculateProviderPercentages(providerUsage);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;

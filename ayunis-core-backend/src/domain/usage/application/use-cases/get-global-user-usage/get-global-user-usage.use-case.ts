@@ -17,6 +17,11 @@ export class GetGlobalUserUsageUseCase {
   ): Promise<GlobalUserUsageItem[]> {
     validateOptionalDateRange(query.startDate, query.endDate);
 
+    this.logger.log('Getting global user usage', {
+      startDate: query.startDate?.toISOString(),
+      endDate: query.endDate?.toISOString(),
+    });
+
     try {
       return await this.usageRepository.getGlobalUserUsage(query);
     } catch (error) {
