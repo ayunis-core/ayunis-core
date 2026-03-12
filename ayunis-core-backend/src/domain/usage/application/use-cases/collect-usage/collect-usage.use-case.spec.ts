@@ -123,8 +123,8 @@ describe('CollectUsageUseCase', () => {
 
     it('should collect usage with cost', async () => {
       const model = createMockModel({
-        inputTokenCost: 0.001,
-        outputTokenCost: 0.002,
+        inputTokenCost: 1,
+        outputTokenCost: 2,
         currency: Currency.EUR,
       });
 
@@ -153,8 +153,8 @@ describe('CollectUsageUseCase', () => {
 
     it('should calculate cost correctly', async () => {
       const model = createMockModel({
-        inputTokenCost: 0.001,
-        outputTokenCost: 0.002,
+        inputTokenCost: 1,
+        outputTokenCost: 2,
         currency: Currency.EUR,
       });
 
@@ -175,8 +175,8 @@ describe('CollectUsageUseCase', () => {
       if (!saveCall) {
         throw new Error('save was not called');
       }
-      // inputCost = (2000/1000) * 0.001 = 0.002
-      // outputCost = (1000/1000) * 0.002 = 0.002
+      // inputCost = (2000/1_000_000) * 1 = 0.002
+      // outputCost = (1000/1_000_000) * 2 = 0.002
       // totalCost = 0.004
       expect(saveCall.cost).toBeCloseTo(0.004, 6);
       expect(saveCall.currency).toBe(Currency.EUR);
@@ -184,8 +184,8 @@ describe('CollectUsageUseCase', () => {
 
     it('should calculate and store small costs correctly', async () => {
       const model = createMockModel({
-        inputTokenCost: 0.0000001,
-        outputTokenCost: 0.0000001,
+        inputTokenCost: 0.0001,
+        outputTokenCost: 0.0001,
         currency: Currency.EUR,
       });
 
@@ -206,8 +206,8 @@ describe('CollectUsageUseCase', () => {
       if (!saveCall) {
         throw new Error('save was not called');
       }
-      // inputCost = (100/1000) * 0.0000001 = 0.00000001
-      // outputCost = (50/1000) * 0.0000001 = 0.000000005
+      // inputCost = (100/1_000_000) * 0.0001 = 0.00000001
+      // outputCost = (50/1_000_000) * 0.0001 = 0.000000005
       // totalCost = 0.000000015
       expect(saveCall.cost).toBeCloseTo(0.000000015, 10);
       expect(saveCall.currency).toBe(Currency.EUR);
@@ -242,8 +242,8 @@ describe('CollectUsageUseCase', () => {
 
     it('should return undefined cost if model has costs but no currency', async () => {
       const model = createMockModel({
-        inputTokenCost: 0.001,
-        outputTokenCost: 0.002,
+        inputTokenCost: 1,
+        outputTokenCost: 2,
         currency: undefined,
       });
 
@@ -400,7 +400,7 @@ describe('CollectUsageUseCase', () => {
       );
     });
 
-    it('should handle cost calculation gracefully when model has no cost info', async () => {
+    it('should handle cost calculation gracefully when model has no cost info (per million tokens)', async () => {
       const model = createMockModel({
         inputTokenCost: undefined,
         outputTokenCost: undefined,
@@ -430,8 +430,8 @@ describe('CollectUsageUseCase', () => {
       mockGetCreditsPerEuroUseCase.execute.mockResolvedValue(100);
 
       const model = createMockModel({
-        inputTokenCost: 0.001,
-        outputTokenCost: 0.002,
+        inputTokenCost: 1,
+        outputTokenCost: 2,
         currency: Currency.EUR,
       });
 
@@ -452,7 +452,7 @@ describe('CollectUsageUseCase', () => {
       if (!saveCall) {
         throw new Error('save was not called');
       }
-      // cost = (2000/1000)*0.001 + (1000/1000)*0.002 = 0.004
+      // cost = (2000/1_000_000)*1 + (1000/1_000_000)*2 = 0.004
       // creditsConsumed = 0.004 * 100 = 0.4
       expect(saveCall.creditsConsumed).toBeCloseTo(0.4, 6);
     });
@@ -491,8 +491,8 @@ describe('CollectUsageUseCase', () => {
       );
 
       const model = createMockModel({
-        inputTokenCost: 0.001,
-        outputTokenCost: 0.002,
+        inputTokenCost: 1,
+        outputTokenCost: 2,
         currency: Currency.EUR,
       });
 

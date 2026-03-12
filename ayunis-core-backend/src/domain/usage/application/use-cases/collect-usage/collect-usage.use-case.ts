@@ -32,8 +32,8 @@ export class CollectUsageUseCase {
       throw new UsageCollectionFailedError(
         'User ID or Organization ID not available in context',
         {
-          userId: userId || undefined,
-          organizationId: organizationId || undefined,
+          userId: userId ?? undefined,
+          organizationId: organizationId ?? undefined,
           modelId: command.modelId,
         },
       );
@@ -64,7 +64,7 @@ export class CollectUsageUseCase {
         cost,
         currency,
         creditsConsumed,
-        requestId: command.requestId || randomUUID(),
+        requestId: command.requestId ?? randomUUID(),
       });
 
       await this.usageRepository.save(usage);
@@ -157,8 +157,9 @@ export class CollectUsageUseCase {
       return { cost: undefined, currency: undefined };
     }
 
-    const inputCost = (command.inputTokens / 1000) * model.inputTokenCost;
-    const outputCost = (command.outputTokens / 1000) * model.outputTokenCost;
+    const inputCost = (command.inputTokens / 1_000_000) * model.inputTokenCost;
+    const outputCost =
+      (command.outputTokens / 1_000_000) * model.outputTokenCost;
     const totalCost = inputCost + outputCost;
 
     this.logger.debug('Cost calculated for usage', {

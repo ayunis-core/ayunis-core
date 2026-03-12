@@ -10,6 +10,7 @@ import { CreateEmbeddingModelRequestDtoDimensions } from '@/shared/api/generated
 import { EMBEDDING_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
 import { EmbeddingDimensionsField } from './EmbeddingDimensionsField';
+import { ModelPricingFields } from './ModelPricingFields';
 
 interface EditEmbeddingModelDialogProps {
   model: EmbeddingModelResponseDto | null;
@@ -65,6 +66,9 @@ export function EditEmbeddingModelDialog({
         displayName: model.displayName,
         dimensions: parseDimensions(model.dimensions),
         isArchived: model.isArchived,
+        inputTokenCost: model.inputTokenCost,
+        outputTokenCost: model.outputTokenCost,
+        currency: model.currency,
       });
     }
   }, [model, open, form]);
@@ -90,6 +94,7 @@ export function EditEmbeddingModelDialog({
       hasContent={!!model}
     >
       <EmbeddingDimensionsField form={form} disabled={isUpdating} mode="edit" />
+      <ModelPricingFields form={form} disabled={isUpdating} />
     </ModelFormDialog>
   );
 }

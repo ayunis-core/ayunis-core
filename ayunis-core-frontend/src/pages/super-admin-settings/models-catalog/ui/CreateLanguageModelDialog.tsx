@@ -5,6 +5,7 @@ import type { CreateLanguageModelRequestDtoProvider } from '@/shared/api';
 import { LANGUAGE_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
 import { LanguageModelCapabilityFields } from './LanguageModelCapabilityFields';
+import { ModelPricingFields } from './ModelPricingFields';
 
 interface CreateLanguageModelDialogProps {
   open: boolean;
@@ -48,6 +49,7 @@ export function CreateLanguageModelDialog({
       displayNamePlaceholder="e.g., GPT-4"
     >
       <LanguageModelCapabilityFields form={form} disabled={isCreating} />
+      <ModelPricingFields form={form} disabled={isCreating} />
     </ModelFormDialog>
   );
 }

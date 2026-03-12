@@ -11,6 +11,7 @@
     "updateSuccess": "Credits per euro updated successfully.",
     "updateError": "Failed to update credits per euro.",
     "validationError": "Please enter a positive number.",
-    "hint": "Changing this value only affects future usage records. Historical records retain their original credit values."
+    "hint": "Changing this value only affects future usage records. Historical records retain their original credit values.",
+    "notConfigured": "No value has been configured yet. Please set an initial value."
   }
 }

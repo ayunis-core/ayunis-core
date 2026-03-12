@@ -1,115 +1,110 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { UUID } from 'crypto';
+import {
+  IsString,
+  IsNotEmpty,
+  IsEnum,
+  IsBoolean,
+  IsNumber,
+  Min,
+  ValidateIf,
+} from 'class-validator';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
 import { Currency } from 'src/domain/models/domain/value-objects/currency.enum';
 
-export class LanguageModelResponseDto {
-  @ApiProperty({
-    type: 'string',
-    format: 'uuid',
-    description: 'The unique identifier of the model',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  id: UUID;
+function hasAnyCostField(o: BaseLanguageModelRequestDto): boolean {
+  return (
+    o.inputTokenCost !== undefined ||
+    o.outputTokenCost !== undefined ||
+    o.currency !== undefined
+  );
+}
 
+export abstract class BaseLanguageModelRequestDto {
   @ApiProperty({
-    type: 'string',
     description: 'The name of the model',
     example: 'gpt-4',
   })
+  @IsString()
+  @IsNotEmpty()
   name: string;
 
   @ApiProperty({
-    type: 'string',
-    enum: Object.values(ModelProvider),
     description: 'The provider of the model',
+    enum: ModelProvider,
     example: ModelProvider.OPENAI,
   })
+  @IsEnum(ModelProvider)
   provider: ModelProvider;
 
   @ApiProperty({
-    type: 'string',
     description: 'The display name of the model',
     example: 'GPT-4',
   })
+  @IsString()
+  @IsNotEmpty()
   displayName: string;
 
   @ApiProperty({
-    type: 'string',
-    enum: [ModelType.LANGUAGE],
-    description: 'The type of the model (always language)',
-  })
-  type: ModelType.LANGUAGE;
-
-  @ApiProperty({
-    type: 'boolean',
-    description: 'Whether the model is archived',
-    example: false,
-  })
-  isArchived: boolean;
-
-  @ApiProperty({
-    type: 'boolean',
     description: 'Whether the model supports streaming',
     example: true,
   })
+  @IsBoolean()
   canStream: boolean;
 
   @ApiProperty({
-    type: 'boolean',
     description: 'Whether the model supports tool use',
     example: true,
   })
+  @IsBoolean()
   canUseTools: boolean;
 
   @ApiProperty({
-    type: 'boolean',
     description: 'Whether the model has reasoning capabilities',
     example: false,
   })
+  @IsBoolean()
   isReasoning: boolean;
 
   @ApiProperty({
-    type: 'boolean',
     description: 'Whether the model supports vision (image processing)',
     example: false,
   })
+  @IsBoolean()
   canVision: boolean;
 
   @ApiProperty({
-    type: 'string',
-    format: 'date-time',
-    description: 'The date the model was created',
+    description: 'Whether the model is archived',
+    example: false,
   })
-  createdAt: Date;
-
-  @ApiProperty({
-    type: 'string',
-    format: 'date-time',
-    description: 'The date the model was last updated',
-  })
-  updatedAt: Date;
+  @IsBoolean()
+  isArchived: boolean;
 
   @ApiPropertyOptional({
-    type: 'number',
-    description: 'Cost per million input tokens',
+    description: 'Cost per million input tokens (in the specified currency)',
     example: 3,
+    minimum: 0,
   })
+  @ValidateIf((o: BaseLanguageModelRequestDto) => hasAnyCostField(o))
+  @IsNumber()
+  @Min(0)
   inputTokenCost?: number;
 
   @ApiPropertyOptional({
-    type: 'number',
-    description: 'Cost per million output tokens',
+    description: 'Cost per million output tokens (in the specified currency)',
     example: 15,
+    minimum: 0,
   })
+  @ValidateIf((o: BaseLanguageModelRequestDto) => hasAnyCostField(o))
+  @IsNumber()
+  @Min(0)
   outputTokenCost?: number;
 
   @ApiPropertyOptional({
-    type: 'string',
-    enum: Currency,
     description: 'Currency for token costs',
+    enum: Currency,
     example: Currency.EUR,
   })
+  @ValidateIf((o: BaseLanguageModelRequestDto) => hasAnyCostField(o))
+  @IsEnum(Currency)
   currency?: Currency;
 }

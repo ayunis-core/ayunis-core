@@ -1,10 +1,17 @@
 import type {
   CreateEmbeddingModelRequestDtoDimensions,
   CreateEmbeddingModelRequestDtoProvider,
+  CreateLanguageModelRequestDtoCurrency,
   CreateLanguageModelRequestDtoProvider,
 } from '@/shared/api';
 
-export interface LanguageModelFormData {
+export interface ModelPricingFormData {
+  inputTokenCost?: number;
+  outputTokenCost?: number;
+  currency?: CreateLanguageModelRequestDtoCurrency;
+}
+
+export interface LanguageModelFormData extends ModelPricingFormData {
   name: string;
   provider: CreateLanguageModelRequestDtoProvider;
   displayName: string;
@@ -15,7 +22,7 @@ export interface LanguageModelFormData {
   isArchived: boolean;
 }
 
-export interface EmbeddingModelFormData {
+export interface EmbeddingModelFormData extends ModelPricingFormData {
   name: string;
   provider: CreateEmbeddingModelRequestDtoProvider;
   displayName: string;

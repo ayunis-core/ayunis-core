@@ -50,7 +50,7 @@
     "createErrorCityRequired": "Stadt ist erforderlich",
     "createErrorCountryRequired": "Land ist erforderlich",
     "createErrorNoOfSeatsRequired": "Anzahl der Plätze ist erforderlich",
-    "createErrorMonthlyCreditsRequired": "Monatliches Guthaben ist erforderlich",
+    "createErrorMonthlyCreditsRequired": "Monatliche Credits sind erforderlich",
     "cancelErrorSubscriptionNotFound": "Abonnement nicht gefunden",
     "cancelError": "Ein unerwarteter Fehler ist aufgetreten",
     "uncancelErrorSubscriptionNotFound": "Abonnement nicht gefunden",
@@ -119,9 +119,9 @@
     "typeSeatBased": "Platzbasiert",
     "typeUsageBased": "Nutzungsbasiert",
     "noOfSeatsDescription": "Sie können die Anzahl der Plätze jederzeit ändern.",
-    "monthlyCreditsLabel": "Monatliches Guthaben",
+    "monthlyCreditsLabel": "Monatliche Credits",
     "monthlyCreditsPlaceholder": "1000",
-    "monthlyCreditsDescription": "Das monatliche Guthaben-Budget für diese Organisation. Wird am 1. jedes Monats zurückgesetzt."
+    "monthlyCreditsDescription": "Das monatliche Credits-Budget für diese Organisation. Wird am 1. jedes Monats zurückgesetzt."
   },
   "trialDialog": {
     "title": "Trial erstellen",
@@ -190,12 +190,12 @@
     "userAlreadyExists": "Ein Benutzer mit dieser E-Mail existiert bereits."
   },
   "creditBudget": {
-    "title": "Guthaben-Budget",
+    "title": "Credits-Budget",
     "budget": "Monatliches Budget",
-    "used": "Verbrauchtes Guthaben",
-    "remaining": "Verbleibendes Guthaben",
+    "used": "Verbrauchte Credits",
+    "remaining": "Verbleibende Credits",
     "usageProgress": "Nutzung",
-    "error": "Guthaben-Nutzungsdaten konnten nicht geladen werden."
+    "error": "Credits-Nutzungsdaten konnten nicht geladen werden."
   },
   "noSubscription": {
     "title": "Noch kein Abonnement",
