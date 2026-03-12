@@ -74,7 +74,11 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
 
     const contentType =
       response.headers.get('content-type')?.toLowerCase() ?? '';
-    if (contentType && !contentType.includes('text/html')) {
+    if (
+      contentType &&
+      !contentType.includes('text/html') &&
+      !contentType.includes('xhtml')
+    ) {
       throw new UrlRetrieverUnsupportedContentTypeError(
         url,
         contentType.split(';')[0].trim(),
