@@ -21,10 +21,14 @@ export function useAddUrl(knowledgeBaseId: string) {
         showSuccess(t('detail.documents.addUrlSuccess'));
       },
       onError: (error: unknown) => {
-        const errorData = extractErrorData(error);
-        if (errorData.code === 'UNSUPPORTED_CONTENT_TYPE') {
-          showError(t('detail.documents.addUrlUnsupportedContentType'));
-        } else {
+        try {
+          const errorData = extractErrorData(error);
+          if (errorData.code === 'UNSUPPORTED_CONTENT_TYPE') {
+            showError(t('detail.documents.addUrlUnsupportedContentType'));
+          } else {
+            showError(t('detail.documents.addUrlError'));
+          }
+        } catch {
           showError(t('detail.documents.addUrlError'));
         }
       },

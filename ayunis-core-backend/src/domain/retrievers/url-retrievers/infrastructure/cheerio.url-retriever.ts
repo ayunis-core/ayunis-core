@@ -29,7 +29,7 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     try {
       return await this.fetchAndParse(input);
     } catch (error) {
-      return this.handleTopLevelError(error);
+      return this.handleTopLevelError(error, input.url);
     }
   }
 
@@ -101,7 +101,7 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     }
   }
 
-  private handleTopLevelError(error: unknown): never {
+  private handleTopLevelError(error: unknown, url: string): never {
     this.logger.error(
       `HTTP URL retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       error instanceof Error ? error.stack : 'Unknown error',
@@ -112,6 +112,7 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     }
 
     throw new UrlRetrieverRetrievalError('Failed to retrieve URL with HTTP', {
+      url,
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : 'Unknown error',
     });
