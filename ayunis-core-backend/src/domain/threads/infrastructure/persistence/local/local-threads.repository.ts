@@ -13,8 +13,6 @@ import { ThreadMapper } from './mappers/thread.mapper';
 import { UUID } from 'crypto';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
-import { ThreadSourceAssignmentRecord } from './schema/thread-source-assignment.record';
-import { ThreadKnowledgeBaseAssignmentRecord } from './schema/thread-knowledge-base-assignment.record';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
 import { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
@@ -26,10 +24,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
   constructor(
     @InjectRepository(ThreadRecord)
     private readonly threadRepository: Repository<ThreadRecord>,
-    @InjectRepository(ThreadSourceAssignmentRecord)
-    private readonly threadSourceAssignmentRepository: Repository<ThreadSourceAssignmentRecord>,
-    @InjectRepository(ThreadKnowledgeBaseAssignmentRecord)
-    private readonly threadKbAssignmentRepository: Repository<ThreadKnowledgeBaseAssignmentRecord>,
     private readonly threadMapper: ThreadMapper,
     private readonly assignments: LocalThreadAssignmentsRepository,
   ) {
