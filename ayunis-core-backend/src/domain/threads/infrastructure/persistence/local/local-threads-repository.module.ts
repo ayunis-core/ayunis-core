@@ -4,6 +4,7 @@ import { ThreadRecord } from './schema/thread.record';
 import { ThreadSourceAssignmentRecord } from './schema/thread-source-assignment.record';
 import { ThreadKnowledgeBaseAssignmentRecord } from './schema/thread-knowledge-base-assignment.record';
 import { LocalThreadsRepository } from './local-threads.repository';
+import { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
 import { LocalMessagesRepositoryModule } from 'src/domain/messages/infrastructure/persistence/local/local-messages-repository.module';
 import { ThreadMapper } from './mappers/thread.mapper';
 import { ThreadSourceAssignmentMapper } from './mappers/thread-source-assignment.mapper';
@@ -26,6 +27,7 @@ import { LocalSourceRepositoryModule } from 'src/domain/sources/infrastructure/p
   ],
   providers: [
     LocalThreadsRepository,
+    LocalThreadAssignmentsRepository,
     ThreadMapper,
     ThreadSourceAssignmentMapper,
     ThreadKnowledgeBaseAssignmentMapper,

@@ -7,18 +7,15 @@ import {
 } from 'src/domain/threads/application/ports/threads.repository';
 import { Logger, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsRelations, IsNull, Repository } from 'typeorm';
+import { FindOptionsRelations, Repository } from 'typeorm';
 import { ThreadRecord } from './schema/thread.record';
 import { ThreadMapper } from './mappers/thread.mapper';
-import { UUID, randomUUID } from 'crypto';
+import { UUID } from 'crypto';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
-import { ThreadSourceAssignmentMapper } from './mappers/thread-source-assignment.mapper';
-import { ThreadSourceAssignmentRecord } from './schema/thread-source-assignment.record';
-import { ThreadKnowledgeBaseAssignmentRecord } from './schema/thread-knowledge-base-assignment.record';
 import { Paginated } from 'src/common/pagination/paginated.entity';
-import type { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
+import { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
 
 @Injectable()
 export class LocalThreadsRepository extends ThreadsRepository {
@@ -27,12 +24,8 @@ export class LocalThreadsRepository extends ThreadsRepository {
   constructor(
     @InjectRepository(ThreadRecord)
     private readonly threadRepository: Repository<ThreadRecord>,
-    @InjectRepository(ThreadSourceAssignmentRecord)
-    private readonly threadSourceAssignmentRepository: Repository<ThreadSourceAssignmentRecord>,
-    @InjectRepository(ThreadKnowledgeBaseAssignmentRecord)
-    private readonly threadKbAssignmentRepository: Repository<ThreadKnowledgeBaseAssignmentRecord>,
     private readonly threadMapper: ThreadMapper,
-    private readonly sourceAssignmentMapper: ThreadSourceAssignmentMapper,
+    private readonly assignments: LocalThreadAssignmentsRepository,
   ) {
     super();
   }
@@ -54,7 +47,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
       ],
       order: {
         messages: {
-          createdAt: 'ASC', // Ensure messages are ordered chronologically
+          createdAt: 'ASC',
         },
       },
     });
@@ -84,7 +77,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
       },
       order: {
         messages: {
-          createdAt: 'ASC', // Ensure messages are ordered chronologically
+          createdAt: 'ASC',
         },
       },
     });
@@ -118,7 +111,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
       });
     }
 
-    // Add relations based on options
     if (options?.withMessages) {
       queryBuilder.leftJoinAndSelect('thread.messages', 'messages');
     }
@@ -151,16 +143,12 @@ export class LocalThreadsRepository extends ThreadsRepository {
       queryBuilder.leftJoinAndSelect('thread.model', 'model');
     }
 
-    // Order by most recent first (by creation time)
     queryBuilder.orderBy('thread.createdAt', 'DESC');
 
-    // Apply messages ordering if needed
     if (options?.withMessages) {
       queryBuilder.addOrderBy('messages.createdAt', 'ASC');
     }
 
-    // Apply pagination and get data with count in one call
-    // getManyAndCount() automatically uses COUNT(DISTINCT thread.id) for correct totals with joins
     const limit = pagination?.limit ?? ThreadsConstants.DEFAULT_LIMIT;
     const offset = pagination?.offset ?? 0;
 
@@ -190,11 +178,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
       where: { modelId },
       relations: this.getRelations(options),
       order: options?.withMessages
-        ? {
-            messages: {
-              createdAt: 'ASC', // Ensure messages are ordered chronologically
-            },
-          }
+        ? { messages: { createdAt: 'ASC' } }
         : undefined,
     });
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
@@ -209,11 +193,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
       where: { agentId },
       relations: this.getRelations(options),
       order: options?.withMessages
-        ? {
-            messages: {
-              createdAt: 'ASC', // Ensure messages are ordered chronologically
-            },
-          }
+        ? { messages: { createdAt: 'ASC' } }
         : undefined,
     });
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
@@ -222,20 +202,15 @@ export class LocalThreadsRepository extends ThreadsRepository {
   private getRelations(
     options?: ThreadsFindAllOptions,
   ): FindOptionsRelations<ThreadRecord> {
-    const relations: FindOptionsRelations<ThreadRecord> = {
+    return {
       messages: options?.withMessages ? true : false,
-      sourceAssignments: options?.withSources
-        ? {
-            source: true,
-          }
-        : false,
+      sourceAssignments: options?.withSources ? { source: true } : false,
       model: options?.withModel ? true : false,
       knowledgeBaseAssignments: options?.withKnowledgeBases
         ? { knowledgeBase: true }
         : false,
       mcpIntegrations: true,
     };
-    return relations;
   }
 
   async update(thread: Thread): Promise<Thread> {
@@ -265,41 +240,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
     userId: UUID;
     sourceAssignments: SourceAssignment[];
   }): Promise<void> {
-    this.logger.log('updateSourceAssignments', { params });
-
-    // Find the thread with existing source assignments
-    const threadEntity = await this.threadRepository.findOne({
-      where: { id: params.threadId, userId: params.userId },
-      relations: ['sourceAssignments'],
-    });
-
-    if (!threadEntity) {
-      throw new ThreadNotFoundError(params.threadId, params.userId);
-    }
-
-    // Delete the source assignments that are not in the new list
-    const sourceAssignmentsToDelete =
-      threadEntity.sourceAssignments?.filter(
-        (assignment) =>
-          !params.sourceAssignments.some(
-            (s) => s.source.id === assignment.source.id,
-          ),
-      ) ?? [];
-
-    await this.threadSourceAssignmentRepository.remove(
-      sourceAssignmentsToDelete,
-    );
-
-    // Map domain source assignments to records
-    const sourceAssignmentRecords = params.sourceAssignments.map((assignment) =>
-      this.sourceAssignmentMapper.toRecord(assignment, params.threadId),
-    );
-
-    // Update the source assignments (cascade will handle the database operations)
-    threadEntity.sourceAssignments = sourceAssignmentRecords;
-
-    // Save the thread with updated source assignments
-    await this.threadRepository.save(threadEntity);
+    return this.assignments.updateSourceAssignments(params);
   }
 
   async updateModel(params: {
@@ -334,25 +275,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
     userId: UUID;
     mcpIntegrationIds: UUID[];
   }): Promise<void> {
-    this.logger.log('updateMcpIntegrations', {
-      threadId: params.threadId,
-      mcpIntegrationIds: params.mcpIntegrationIds,
-    });
-
-    const threadEntity = await this.threadRepository.findOne({
-      where: { id: params.threadId, userId: params.userId },
-      relations: ['mcpIntegrations'],
-    });
-
-    if (!threadEntity) {
-      throw new ThreadNotFoundError(params.threadId, params.userId);
-    }
-
-    threadEntity.mcpIntegrations = params.mcpIntegrationIds.map(
-      (id) => ({ id }) as McpIntegrationRecord,
-    );
-
-    await this.threadRepository.save(threadEntity);
+    return this.assignments.updateMcpIntegrations(params);
   }
 
   async addKnowledgeBaseAssignment(params: {
@@ -361,27 +284,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
     knowledgeBaseId: UUID;
     originSkillId?: UUID;
   }): Promise<void> {
-    this.logger.log('addKnowledgeBaseAssignment', {
-      threadId: params.threadId,
-      knowledgeBaseId: params.knowledgeBaseId,
-      originSkillId: params.originSkillId,
-    });
-
-    const threadEntity = await this.threadRepository.findOne({
-      where: { id: params.threadId, userId: params.userId },
-    });
-
-    if (!threadEntity) {
-      throw new ThreadNotFoundError(params.threadId, params.userId);
-    }
-
-    const record = new ThreadKnowledgeBaseAssignmentRecord();
-    record.id = randomUUID();
-    record.threadId = params.threadId;
-    record.knowledgeBaseId = params.knowledgeBaseId;
-    record.originSkillId = params.originSkillId ?? null;
-
-    await this.threadKbAssignmentRepository.save(record);
+    return this.assignments.addKnowledgeBaseAssignment(params);
   }
 
   async removeKnowledgeBaseAssignment(params: {
@@ -390,25 +293,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
     knowledgeBaseId: UUID;
     originSkillId?: UUID;
   }): Promise<void> {
-    this.logger.log('removeKnowledgeBaseAssignment', {
-      threadId: params.threadId,
-      knowledgeBaseId: params.knowledgeBaseId,
-      originSkillId: params.originSkillId,
-    });
-
-    const threadEntity = await this.threadRepository.findOne({
-      where: { id: params.threadId, userId: params.userId },
-    });
-
-    if (!threadEntity) {
-      throw new ThreadNotFoundError(params.threadId, params.userId);
-    }
-
-    await this.threadKbAssignmentRepository.delete({
-      threadId: params.threadId,
-      knowledgeBaseId: params.knowledgeBaseId,
-      originSkillId: params.originSkillId ?? IsNull(),
-    });
+    return this.assignments.removeKnowledgeBaseAssignment(params);
   }
 
   async delete(id: UUID, userId: UUID): Promise<void> {
@@ -420,34 +305,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
     originSkillId: UUID;
     userIds: UUID[];
   }): Promise<void> {
-    this.logger.log('removeSourceAssignmentsByOriginSkill', {
-      originSkillId: params.originSkillId,
-      userCount: params.userIds.length,
-    });
-
-    if (params.userIds.length === 0) {
-      return;
-    }
-
-    await this.threadSourceAssignmentRepository
-      .createQueryBuilder('tsa')
-      .delete()
-      .from(ThreadSourceAssignmentRecord)
-      .where(
-        'id IN ' +
-          this.threadSourceAssignmentRepository
-            .createQueryBuilder('tsa')
-            .select('tsa.id')
-            .innerJoin('tsa.thread', 'thread')
-            .where('tsa.originSkillId = :originSkillId')
-            .andWhere('thread.userId IN (:...userIds)')
-            .getQuery(),
-      )
-      .setParameters({
-        originSkillId: params.originSkillId,
-        userIds: params.userIds,
-      })
-      .execute();
+    return this.assignments.removeSourceAssignmentsByOriginSkill(params);
   }
 
   async removeKnowledgeBaseAssignmentsByOriginSkill(params: {
@@ -455,77 +313,14 @@ export class LocalThreadsRepository extends ThreadsRepository {
     userIds: UUID[];
     knowledgeBaseId?: UUID;
   }): Promise<void> {
-    this.logger.log('removeKnowledgeBaseAssignmentsByOriginSkill', {
-      originSkillId: params.originSkillId,
-      userCount: params.userIds.length,
-      knowledgeBaseId: params.knowledgeBaseId,
-    });
-
-    if (params.userIds.length === 0) {
-      return;
-    }
-
-    const subQuery = this.threadKbAssignmentRepository
-      .createQueryBuilder('tkba')
-      .select('tkba.id')
-      .innerJoin('tkba.thread', 'thread')
-      .where('tkba.originSkillId = :originSkillId')
-      .andWhere('thread.userId IN (:...userIds)');
-
-    if (params.knowledgeBaseId) {
-      subQuery.andWhere('tkba.knowledgeBaseId = :knowledgeBaseId');
-    }
-
-    const queryParams: Record<string, unknown> = {
-      originSkillId: params.originSkillId,
-      userIds: params.userIds,
-    };
-
-    if (params.knowledgeBaseId) {
-      queryParams.knowledgeBaseId = params.knowledgeBaseId;
-    }
-
-    await this.threadKbAssignmentRepository
-      .createQueryBuilder('tkba')
-      .delete()
-      .from(ThreadKnowledgeBaseAssignmentRecord)
-      .where(`id IN (${subQuery.getQuery()})`)
-      .setParameters(queryParams)
-      .execute();
+    return this.assignments.removeKnowledgeBaseAssignmentsByOriginSkill(params);
   }
 
   async removeDirectKnowledgeBaseAssignments(params: {
     knowledgeBaseId: UUID;
     userIds: UUID[];
   }): Promise<void> {
-    this.logger.log('removeDirectKnowledgeBaseAssignments', {
-      knowledgeBaseId: params.knowledgeBaseId,
-      userCount: params.userIds.length,
-    });
-
-    if (params.userIds.length === 0) {
-      return;
-    }
-
-    await this.threadKbAssignmentRepository
-      .createQueryBuilder('tkba')
-      .delete()
-      .from(ThreadKnowledgeBaseAssignmentRecord)
-      .where(
-        `id IN (${this.threadKbAssignmentRepository
-          .createQueryBuilder('tkba')
-          .select('tkba.id')
-          .innerJoin('tkba.thread', 'thread')
-          .where('tkba.knowledgeBaseId = :knowledgeBaseId')
-          .andWhere('tkba.originSkillId IS NULL')
-          .andWhere('thread.userId IN (:...userIds)')
-          .getQuery()})`,
-      )
-      .setParameters({
-        knowledgeBaseId: params.knowledgeBaseId,
-        userIds: params.userIds,
-      })
-      .execute();
+    return this.assignments.removeDirectKnowledgeBaseAssignments(params);
   }
 
   async findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]> {
