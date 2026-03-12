@@ -4,6 +4,7 @@ import {
   NotFoundException,
   InternalServerErrorException,
   RequestTimeoutException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 
 /**
@@ -15,6 +16,7 @@ export enum UrlRetrieverErrorCode {
   TIMEOUT = 'TIMEOUT',
   HTTP_ERROR = 'HTTP_ERROR',
   PARSING_ERROR = 'PARSING_ERROR',
+  UNSUPPORTED_CONTENT_TYPE = 'UNSUPPORTED_CONTENT_TYPE',
 }
 
 /**
@@ -43,6 +45,12 @@ export abstract class UrlRetrieverError extends ApplicationError {
         });
       case 408:
         return new RequestTimeoutException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      case 422:
+        return new UnprocessableEntityException({
           code: this.code,
           message: this.message,
           ...(this.metadata && { metadata: this.metadata }),
@@ -109,5 +117,17 @@ export class UrlRetrieverParsingError extends UrlRetrieverError {
       metadata,
     );
     this.name = 'UrlRetrieverParsingError';
+  }
+}
+
+export class UrlRetrieverUnsupportedContentTypeError extends UrlRetrieverError {
+  constructor(url: string, contentType: string, metadata?: ErrorMetadata) {
+    super(
+      `Unsupported content type '${contentType}' for URL '${url}'`,
+      UrlRetrieverErrorCode.UNSUPPORTED_CONTENT_TYPE,
+      422,
+      metadata,
+    );
+    this.name = 'UrlRetrieverUnsupportedContentTypeError';
   }
 }

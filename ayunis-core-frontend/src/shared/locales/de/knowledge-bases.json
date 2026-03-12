@@ -150,6 +150,7 @@
       "urlLabel": "Website-URL",
       "addUrlSuccess": "URL erfolgreich hinzugefügt! Der Website-Inhalt wird verarbeitet.",
       "addUrlError": "URL konnte nicht hinzugefügt werden. Bitte überprüfen Sie die URL und versuchen Sie es erneut.",
+      "addUrlUnsupportedContentType": "Diese URL verweist auf eine Datei (z. B. PDF) statt auf eine Website. Bitte laden Sie die Datei herunter und laden Sie sie direkt hoch.",
       "removeSuccess": "Dokument erfolgreich entfernt!",
       "removeError": "Dokument konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
       "urlDialogCancel": "Abbrechen"
