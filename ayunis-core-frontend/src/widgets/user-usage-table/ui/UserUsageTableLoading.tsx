@@ -2,7 +2,6 @@ import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardContent,
 } from '@/shared/ui/shadcn/card';
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
@@ -15,7 +14,6 @@ export function UserUsageTableLoading() {
     <Card>
       <CardHeader>
         <CardTitle>{t('userUsage.title')}</CardTitle>
-        <CardDescription>{t('userUsage.subtitle')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">

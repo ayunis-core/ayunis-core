@@ -12,7 +12,6 @@ import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardContent,
 } from '@/shared/ui/shadcn/card';
 import { UserUsageTableRow } from './UserUsageTableRow';
@@ -37,7 +36,6 @@ export function UserUsageTableContent({
     <Card>
       <CardHeader>
         <CardTitle>{t('userUsage.title')}</CardTitle>
-        <CardDescription>{t('userUsage.subtitle')}</CardDescription>
       </CardHeader>
       <CardContent>
         <Table className="w-[750px]">

@@ -58,7 +58,6 @@ import { GetMonthlyCreditLimitUseCase } from './application/use-cases/get-monthl
     GetMonthlyCreditLimitUseCase,
   ],
   exports: [
-    SubscriptionRepository,
     HasActiveSubscriptionUseCase,
     GetActiveSubscriptionUseCase,
     CreateSubscriptionUseCase,
