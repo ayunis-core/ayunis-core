@@ -65,7 +65,9 @@ export function CreditBudgetDisplay({
             <ItemTitle>{labels.budget}</ItemTitle>
           </ItemContent>
           <ItemActions>
-            <Badge variant="outline">{monthlyCredits.toLocaleString()}</Badge>
+            <Badge variant="outline">
+              {Math.round(monthlyCredits).toLocaleString()}
+            </Badge>
           </ItemActions>
         </Item>
         <Item variant="muted" size="sm">
@@ -73,7 +75,9 @@ export function CreditBudgetDisplay({
             <ItemTitle>{labels.used}</ItemTitle>
           </ItemContent>
           <ItemActions>
-            <Badge variant="outline">{creditsUsed.toLocaleString()}</Badge>
+            <Badge variant="outline">
+              {Math.round(creditsUsed).toLocaleString()}
+            </Badge>
           </ItemActions>
         </Item>
         <Item variant="muted" size="sm">
@@ -81,7 +85,9 @@ export function CreditBudgetDisplay({
             <ItemTitle>{labels.remaining}</ItemTitle>
           </ItemContent>
           <ItemActions>
-            <Badge variant="outline">{creditsRemaining.toLocaleString()}</Badge>
+            <Badge variant="outline">
+              {Math.round(creditsRemaining).toLocaleString()}
+            </Badge>
           </ItemActions>
         </Item>
       </div>

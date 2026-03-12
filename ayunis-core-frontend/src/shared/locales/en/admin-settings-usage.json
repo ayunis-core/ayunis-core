@@ -62,7 +62,6 @@
   },
   "userUsage": {
     "title": "User Usage",
-    "subtitle": "Individual user consumption breakdown",
     "viewAll": "View All",
     "noData": "No user usage data available",
     "error": "Error loading user usage data",
@@ -76,4 +75,3 @@
     "emptyState": "No users match the selected filters on this page. Try adjusting your filters or navigate to another page."
   }
 }
-

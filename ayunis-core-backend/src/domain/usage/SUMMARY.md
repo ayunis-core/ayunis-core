@@ -5,7 +5,7 @@ Usage tracks every AI inference request—recording tokens consumed, costs incur
 
 The usage module provides comprehensive analytics for AI resource consumption. The `Usage` entity records each inference request with user, organization, model, provider, token counts (input/output/total), cost, and currency. Supporting entities include `ProviderUsage` (aggregated provider stats with time series), `ModelDistribution` (model popularity breakdown), `UsageStats` (aggregate metrics like active users and request counts), `UserUsageItem` (per-user consumption), and `TimeSeriesPoint` (temporal data).
 
-**Organization-scoped use cases**: collecting usage after each run (`CollectUsageUseCase`), querying provider-level usage (`GetProviderUsageUseCase`), model distribution analytics (`GetModelDistributionUseCase`), aggregate stats (`GetUsageStatsUseCase`), per-user usage reports (`GetUserUsageUseCase`), and monthly credit usage tracking (`GetMonthlyCreditUsageUseCase`).
+**Organization-scoped use cases**: collecting usage after each run (`CollectUsageUseCase` — includes `calculateCredits` logic that converts cost to credits via `GetCreditsPerEuroUseCase` from **platform-config**), querying provider-level usage (`GetProviderUsageUseCase`), model distribution analytics (`GetModelDistributionUseCase`), aggregate stats (`GetUsageStatsUseCase`), per-user usage reports (`GetUserUsageUseCase`), and monthly credit usage tracking (`GetMonthlyCreditUsageUseCase`).
 
 **Global (cross-organization) use cases**: `GetGlobalProviderUsageUseCase`, `GetGlobalModelDistributionUseCase`, and `GetGlobalUserUsageUseCase` aggregate usage data across all organizations for super admin analytics dashboards.
 
