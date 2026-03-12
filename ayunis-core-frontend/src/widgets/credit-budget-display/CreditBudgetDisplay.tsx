@@ -1,5 +1,11 @@
 import { Badge } from '@/shared/ui/shadcn/badge';
 import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
+import {
+  Item,
+  ItemContent,
+  ItemTitle,
+  ItemActions,
+} from '@/shared/ui/shadcn/item';
 import { Progress } from '@/shared/ui/shadcn/progress';
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
 import { AlertCircle } from 'lucide-react';
@@ -54,18 +60,30 @@ export function CreditBudgetDisplay({
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-          <span className="text-sm font-medium">{labels.budget}</span>
-          <Badge variant="outline">{monthlyCredits.toLocaleString()}</Badge>
-        </div>
-        <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-          <span className="text-sm font-medium">{labels.used}</span>
-          <Badge variant="outline">{creditsUsed.toLocaleString()}</Badge>
-        </div>
-        <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-          <span className="text-sm font-medium">{labels.remaining}</span>
-          <Badge variant="outline">{creditsRemaining.toLocaleString()}</Badge>
-        </div>
+        <Item variant="muted" size="sm">
+          <ItemContent>
+            <ItemTitle>{labels.budget}</ItemTitle>
+          </ItemContent>
+          <ItemActions>
+            <Badge variant="outline">{monthlyCredits.toLocaleString()}</Badge>
+          </ItemActions>
+        </Item>
+        <Item variant="muted" size="sm">
+          <ItemContent>
+            <ItemTitle>{labels.used}</ItemTitle>
+          </ItemContent>
+          <ItemActions>
+            <Badge variant="outline">{creditsUsed.toLocaleString()}</Badge>
+          </ItemActions>
+        </Item>
+        <Item variant="muted" size="sm">
+          <ItemContent>
+            <ItemTitle>{labels.remaining}</ItemTitle>
+          </ItemContent>
+          <ItemActions>
+            <Badge variant="outline">{creditsRemaining.toLocaleString()}</Badge>
+          </ItemActions>
+        </Item>
       </div>
       <div className="space-y-1">
         <div className="flex justify-between text-xs text-muted-foreground">
