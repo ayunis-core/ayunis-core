@@ -10015,12 +10015,28 @@
             "description": "VAT number for the subscription",
             "example": "1234567890"
           },
+          "type": {
+            "type": "string",
+            "description": "Subscription type. Defaults to SEAT_BASED if not specified.",
+            "enum": [
+              "SEAT_BASED",
+              "USAGE_BASED"
+            ],
+            "example": "SEAT_BASED",
+            "default": "SEAT_BASED"
+          },
           "noOfSeats": {
             "type": "number",
             "description": "Number of seats for the subscription (seat-based only)",
             "example": 10,
             "minimum": 1,
             "default": 1
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Monthly credit budget (usage-based only)",
+            "example": 1000,
+            "minimum": 1
           },
           "subText": {
             "type": "string",

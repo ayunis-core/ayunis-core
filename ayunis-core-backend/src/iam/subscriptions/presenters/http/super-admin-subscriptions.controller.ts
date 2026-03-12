@@ -176,7 +176,9 @@ export class SuperAdminSubscriptionsController {
     const command = new CreateSubscriptionCommand({
       orgId,
       requestingUserId: userId,
+      type: createSubscriptionDto.type,
       noOfSeats: createSubscriptionDto.noOfSeats,
+      monthlyCredits: createSubscriptionDto.monthlyCredits,
       companyName: createSubscriptionDto.companyName,
       subText: createSubscriptionDto.subText,
       street: createSubscriptionDto.street,
