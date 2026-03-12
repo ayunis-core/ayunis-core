@@ -41,6 +41,7 @@ export function useVoiceRecording(
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const cancelledRef = useRef<boolean>(false);
+  const processedRef = useRef<boolean>(false);
 
   const cleanup = useCallback(() => {
     cancelledRef.current = true;
@@ -66,6 +67,13 @@ export function useVoiceRecording(
   const processRecording = useCallback(
     async (chunks: Blob[], mimeType: string) => {
       const blob = new Blob(chunks, { type: mimeType });
+
+      // Guard against empty recordings (Safari can fire onstop before ondataavailable)
+      if (blob.size === 0) {
+        setState('idle');
+        return;
+      }
+
       const ext = getFileExtension(mimeType);
       const fileName = `recording.${ext}`;
 
@@ -123,29 +131,41 @@ export function useVoiceRecording(
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
       startTimeRef.current = Date.now();
+      processedRef.current = false;
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           chunksRef.current.push(event.data);
         }
-      };
 
-      mediaRecorder.onerror = () => {
-        cleanup();
-        setState('idle');
-        onError('chatInput.transcriptionFailed');
-      };
+        // On iOS Safari, ondataavailable fires AFTER onstop, so we
+        // cannot rely on onstop to read the chunks. Instead, process
+        // here once the recorder is inactive (i.e. stop() was called).
+        // onstop handles cleanup (stopping tracks); this handler only
+        // handles processing.
+        if (
+          mediaRecorder.state === 'inactive' &&
+          !processedRef.current &&
+          !cancelledRef.current
+        ) {
+          processedRef.current = true;
 
-      mediaRecorder.onstop = () => {
-        // If cleanup was called (e.g., unmount), skip processing entirely
-        if (cancelledRef.current) {
-          return;
+          const duration = Date.now() - startTimeRef.current;
+          const chunks = [...chunksRef.current];
+
+          if (duration < MIN_RECORDING_DURATION_MS) {
+            setState('idle');
+            return;
+          }
+
+          void processRecording(chunks, mimeType);
         }
+      };
 
-        const duration = Date.now() - startTimeRef.current;
-        const chunks = [...chunksRef.current];
-
-        // Stop all tracks
+      // Safety-net cleanup: always runs regardless of ondataavailable
+      // ordering (Safari fires onstop before ondataavailable). Only
+      // does cleanup — never processing — so it's safe in any order.
+      mediaRecorder.onstop = () => {
         stream.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
 
@@ -153,14 +173,12 @@ export function useVoiceRecording(
           clearTimeout(timeoutRef.current);
           timeoutRef.current = null;
         }
+      };
 
-        // Discard very short recordings
-        if (duration < MIN_RECORDING_DURATION_MS) {
-          setState('idle');
-          return;
-        }
-
-        void processRecording(chunks, mimeType);
+      mediaRecorder.onerror = () => {
+        cleanup();
+        setState('idle');
+        onError('chatInput.transcriptionFailed');
       };
 
       mediaRecorder.start();
