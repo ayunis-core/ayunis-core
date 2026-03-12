@@ -6,6 +6,7 @@ import { ProviderUsageChartResponseDto } from './dto/provider-usage-chart-respon
 import { ModelDistributionResponseDto } from './dto/model-distribution-response.dto';
 import { UserUsageResponseDto } from './dto/user-usage-response.dto';
 import { UsageConfigResponseDto } from './dto/usage-config-response.dto';
+import { CreditUsageResponseDto } from './dto/credit-usage-response.dto';
 import { UsageResponseMapper } from './mappers/usage-response.mapper';
 import { UsageUseCasesFacade } from './usage-use-cases.facade';
 import { ConfigService } from '@nestjs/config';
@@ -58,6 +59,28 @@ export class UsageController {
 
     return {
       isSelfHosted,
+    };
+  }
+
+  @Get('credits')
+  @ApiOperation({
+    summary: 'Get credit usage for the current month',
+    description:
+      'Returns the monthly credit budget, credits consumed this month, and credits remaining. Fields are null if the organization does not have a usage-based subscription.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Credit usage retrieved successfully.',
+    type: CreditUsageResponseDto,
+  })
+  async getCreditUsage(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  ): Promise<CreditUsageResponseDto> {
+    const creditUsage = await this.useCases.getCreditUsage(orgId);
+    return {
+      monthlyCredits: creditUsage.monthlyCredits,
+      creditsUsed: creditUsage.creditsUsed,
+      creditsRemaining: creditUsage.creditsRemaining,
     };
   }
 

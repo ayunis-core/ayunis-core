@@ -9,8 +9,7 @@ export interface SubscriptionWebhookPayloadBase {
   updatedAt: string;
 }
 
-export interface SeatBasedWebhookPayload
-  extends SubscriptionWebhookPayloadBase {
+export interface SeatBasedWebhookPayload extends SubscriptionWebhookPayloadBase {
   type: 'SEAT_BASED';
   noOfSeats: number;
   pricePerSeat: number;
@@ -18,8 +17,7 @@ export interface SeatBasedWebhookPayload
   renewalCycleAnchor: string;
 }
 
-export interface UsageBasedWebhookPayload
-  extends SubscriptionWebhookPayloadBase {
+export interface UsageBasedWebhookPayload extends SubscriptionWebhookPayloadBase {
   type: 'USAGE_BASED';
   monthlyCredits: number;
 }

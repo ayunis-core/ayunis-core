@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddSubscriptionPolymorphism1773096734098
-  implements MigrationInterface
-{
+export class AddSubscriptionPolymorphism1773096734098 implements MigrationInterface {
   name = 'AddSubscriptionPolymorphism1773096734098';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

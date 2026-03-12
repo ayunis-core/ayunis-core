@@ -1,5 +1,4 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { UsageModule } from '../../domain/usage/usage.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WebhooksModule } from '../../common/webhooks/webhooks.module';
 import { HasActiveSubscriptionUseCase } from './application/use-cases/has-active-subscription/has-active-subscription.use-case';
@@ -25,7 +24,7 @@ import { UpdateBillingInfoUseCase } from './application/use-cases/update-billing
 import { SubscriptionBillingInfoMapper } from './infrastructure/persistence/local/mappers/subscription-billing-info.mapper';
 import { SubscriptionBillingInfoRecord } from './infrastructure/persistence/local/schema/subscription-billing-info.record';
 import { GetCurrentPriceUseCase } from './application/use-cases/get-current-price/get-current-price.use-case';
-import { CheckCreditBudgetUseCase } from './application/use-cases/check-credit-budget/check-credit-budget.use-case';
+import { GetMonthlyCreditLimitUseCase } from './application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
 
 @Module({
   imports: [
@@ -38,7 +37,6 @@ import { CheckCreditBudgetUseCase } from './application/use-cases/check-credit-b
     forwardRef(() => UsersModule),
     forwardRef(() => InvitesModule),
     WebhooksModule,
-    forwardRef(() => UsageModule),
   ],
   controllers: [SubscriptionsController, SuperAdminSubscriptionsController],
   providers: [
@@ -57,7 +55,7 @@ import { CheckCreditBudgetUseCase } from './application/use-cases/check-credit-b
     UpdateSeatsUseCase,
     UpdateBillingInfoUseCase,
     GetCurrentPriceUseCase,
-    CheckCreditBudgetUseCase,
+    GetMonthlyCreditLimitUseCase,
   ],
   exports: [
     SubscriptionRepository,
@@ -65,7 +63,7 @@ import { CheckCreditBudgetUseCase } from './application/use-cases/check-credit-b
     GetActiveSubscriptionUseCase,
     CreateSubscriptionUseCase,
     UpdateSeatsUseCase,
-    CheckCreditBudgetUseCase,
+    GetMonthlyCreditLimitUseCase,
   ],
 })
 export class SubscriptionsModule {}
