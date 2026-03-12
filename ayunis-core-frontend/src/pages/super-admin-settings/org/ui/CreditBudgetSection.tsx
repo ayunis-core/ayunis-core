@@ -4,20 +4,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/ui/shadcn/card';
-import { Badge } from '@/shared/ui/shadcn/badge';
-import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemGroup,
-  ItemTitle,
-} from '@/shared/ui/shadcn/item';
-import { Progress } from '@/shared/ui/shadcn/progress';
-import { Skeleton } from '@/shared/ui/shadcn/skeleton';
-import { AlertCircle } from 'lucide-react';
+import { CreditBudgetDisplay } from '@/widgets/credit-budget-display';
 import { useTranslation } from 'react-i18next';
 import useSuperAdminCreditUsage from '../api/useSuperAdminCreditUsage';
+import { computeUsagePercent } from '@/shared/lib/computeUsagePercent';
 
 interface CreditBudgetSectionProps {
   orgId: string;
@@ -35,10 +25,7 @@ export default function CreditBudgetSection({
 
   const creditsUsed = creditUsage?.creditsUsed ?? 0;
   const creditsRemaining = Math.max(0, monthlyCredits - creditsUsed);
-  const usagePercent =
-    monthlyCredits > 0
-      ? Math.min(100, Math.round((creditsUsed / monthlyCredits) * 100))
-      : 0;
+  const usagePercent = computeUsagePercent(creditsUsed, monthlyCredits);
 
   return (
     <Card>
@@ -48,65 +35,21 @@ export default function CreditBudgetSection({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isError && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{t('creditBudget.error')}</AlertDescription>
-          </Alert>
-        )}
-        {!isError && isLoading && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Skeleton className="h-12 rounded-lg" />
-              <Skeleton className="h-12 rounded-lg" />
-              <Skeleton className="h-12 rounded-lg" />
-            </div>
-            <Skeleton className="h-2 rounded-full" />
-          </div>
-        )}
-        {!isError && !isLoading && (
-          <>
-            <ItemGroup className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Item variant="muted" size="sm">
-                <ItemContent>
-                  <ItemTitle>{t('creditBudget.budget')}</ItemTitle>
-                </ItemContent>
-                <ItemActions>
-                  <Badge variant="outline">
-                    {monthlyCredits.toLocaleString()}
-                  </Badge>
-                </ItemActions>
-              </Item>
-              <Item variant="muted" size="sm">
-                <ItemContent>
-                  <ItemTitle>{t('creditBudget.used')}</ItemTitle>
-                </ItemContent>
-                <ItemActions>
-                  <Badge variant="outline">
-                    {creditsUsed.toLocaleString()}
-                  </Badge>
-                </ItemActions>
-              </Item>
-              <Item variant="muted" size="sm">
-                <ItemContent>
-                  <ItemTitle>{t('creditBudget.remaining')}</ItemTitle>
-                </ItemContent>
-                <ItemActions>
-                  <Badge variant="outline">
-                    {creditsRemaining.toLocaleString()}
-                  </Badge>
-                </ItemActions>
-              </Item>
-            </ItemGroup>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{t('creditBudget.usageProgress')}</span>
-                <span>{usagePercent}%</span>
-              </div>
-              <Progress value={usagePercent} />
-            </div>
-          </>
-        )}
+        <CreditBudgetDisplay
+          monthlyCredits={monthlyCredits}
+          creditsUsed={creditsUsed}
+          creditsRemaining={creditsRemaining}
+          usagePercent={usagePercent}
+          isLoading={isLoading}
+          isError={isError}
+          labels={{
+            error: t('creditBudget.error'),
+            budget: t('creditBudget.budget'),
+            used: t('creditBudget.used'),
+            remaining: t('creditBudget.remaining'),
+            usageProgress: t('creditBudget.usageProgress'),
+          }}
+        />
       </CardContent>
     </Card>
   );

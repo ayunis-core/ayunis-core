@@ -4,6 +4,7 @@ import {
   BarChart3,
   Sparkles,
   ShieldCheck,
+  Settings2,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -39,6 +40,11 @@ export function SuperAdminSettingsSidebar() {
       to: '/super-admin-settings/super-admins',
       icon: <ShieldCheck />,
       label: t('layout.superAdmins'),
+    },
+    {
+      to: '/super-admin-settings/platform-config',
+      icon: <Settings2 />,
+      label: t('layout.platformConfig'),
     },
   ];
 

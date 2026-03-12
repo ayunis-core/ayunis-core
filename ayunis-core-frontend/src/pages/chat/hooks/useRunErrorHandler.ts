@@ -50,6 +50,9 @@ export function useRunErrorHandler(threadId: string) {
           );
           break;
         }
+        case 'CREDIT_BUDGET_EXCEEDED':
+          showError(t('chat.errorCreditBudgetExceeded'));
+          break;
         case undefined:
         default:
           showError(t('chat.errorUnexpected'));

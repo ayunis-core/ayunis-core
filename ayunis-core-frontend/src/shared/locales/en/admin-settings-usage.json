@@ -52,6 +52,14 @@
     "inactive": "Inactive",
     "allProvidersNote": "Across all providers and models"
   },
+  "creditUsage": {
+    "title": "Credit Budget",
+    "error": "Failed to load credit usage data.",
+    "budget": "Monthly Budget",
+    "used": "Credits Used",
+    "remaining": "Credits Remaining",
+    "usageProgress": "Usage"
+  },
   "userUsage": {
     "title": "User Usage",
     "subtitle": "Individual user consumption breakdown",

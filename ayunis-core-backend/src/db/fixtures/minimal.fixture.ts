@@ -55,6 +55,10 @@ export const minimalFixture = {
     },
   },
 
+  platformConfig: {
+    creditsPerEuro: 100,
+  },
+
   permittedModels: [
     {
       // Language model as default

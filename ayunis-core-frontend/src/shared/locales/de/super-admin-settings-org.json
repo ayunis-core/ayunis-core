@@ -191,7 +191,6 @@
   },
   "creditBudget": {
     "title": "Guthaben-Budget",
-    "loading": "Guthaben-Nutzung wird geladen…",
     "budget": "Monatliches Budget",
     "used": "Verbrauchtes Guthaben",
     "remaining": "Verbleibendes Guthaben",
