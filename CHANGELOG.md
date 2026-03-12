@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.17.1](https://github.com/ayunis-core/ayunis-core/compare/v1.17.0...v1.17.1) (2026-03-12)
+
+
+### Bug Fixes
+
+* **AYC-000:** fix microphone issues on safari ([#361](https://github.com/ayunis-core/ayunis-core/issues/361)) ([d20691c](https://github.com/ayunis-core/ayunis-core/commit/d20691c4d9afadc73a75da26b37ca872fea55470))
+* **AYC-000:** fix sql query for skill removal ([#360](https://github.com/ayunis-core/ayunis-core/issues/360)) ([81edae2](https://github.com/ayunis-core/ayunis-core/commit/81edae2985386369d1302b587eabd8d17975e993))
+* **AYC-000:** improve prompt to avoid content warning flag from ms azure ([#357](https://github.com/ayunis-core/ayunis-core/issues/357)) ([1b1cd27](https://github.com/ayunis-core/ayunis-core/commit/1b1cd27247085c39e61f63afc3f1aa22ce55c9b1))
+* **AYC-000:** make thread deletion idempotent to prevent stale-cache errors ([#363](https://github.com/ayunis-core/ayunis-core/issues/363)) ([4942b84](https://github.com/ayunis-core/ayunis-core/commit/4942b84b2fefb6290f85c91090dd5dab70baacb5))
+* **AYC-000:** only add 5xx errors to sentry ([#364](https://github.com/ayunis-core/ayunis-core/issues/364)) ([715e51c](https://github.com/ayunis-core/ayunis-core/commit/715e51cd35efa8ec40aad75cf0029ad7e6ebc6d2))
+* **AYC-000:** preserve newlines on message clipboard copy ([#362](https://github.com/ayunis-core/ayunis-core/issues/362)) ([de7c946](https://github.com/ayunis-core/ayunis-core/commit/de7c94660e0a6ba0556fe207a27842f6dcee2e3a))
+* **AYC-000:** show helpful error for URLs pointing to PDFs ([#358](https://github.com/ayunis-core/ayunis-core/issues/358)) ([ea24a79](https://github.com/ayunis-core/ayunis-core/commit/ea24a79b54fef30301694ec793c388e14eab5a15))
+
 ## [1.17.0](https://github.com/ayunis-core/ayunis-core/compare/v1.16.0...v1.17.0) (2026-03-11)
 
 
