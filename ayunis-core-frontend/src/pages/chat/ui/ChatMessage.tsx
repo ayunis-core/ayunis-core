@@ -72,7 +72,7 @@ function CopyMessageButton({
     const textParts: string[] = [];
     copyableElements.forEach((element) => {
       htmlParts.push(element.innerHTML);
-      textParts.push(element.textContent || '');
+      textParts.push((element as HTMLElement).innerText || '');
     });
 
     const html = htmlParts.join('<br><br>');
