@@ -7999,6 +7999,171 @@
         ]
       }
     },
+    "/letterheads": {
+      "post": {
+        "operationId": "LetterheadsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLetterheadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The letterhead has been created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LetterheadResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          }
+        },
+        "summary": "Create a new letterhead",
+        "tags": [
+          "letterheads"
+        ]
+      },
+      "get": {
+        "operationId": "LetterheadsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of letterheads",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LetterheadResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List all letterheads for the current org",
+        "tags": [
+          "letterheads"
+        ]
+      }
+    },
+    "/letterheads/{id}": {
+      "get": {
+        "operationId": "LetterheadsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the letterhead",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The letterhead",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LetterheadResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Letterhead not found"
+          }
+        },
+        "summary": "Get a letterhead by ID",
+        "tags": [
+          "letterheads"
+        ]
+      },
+      "patch": {
+        "operationId": "LetterheadsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the letterhead",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLetterheadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated letterhead",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LetterheadResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Letterhead not found"
+          }
+        },
+        "summary": "Update a letterhead",
+        "tags": [
+          "letterheads"
+        ]
+      },
+      "delete": {
+        "operationId": "LetterheadsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the letterhead",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Letterhead deleted"
+          },
+          "404": {
+            "description": "Letterhead not found"
+          }
+        },
+        "summary": "Delete a letterhead",
+        "tags": [
+          "letterheads"
+        ]
+      }
+    },
     "/auth/login": {
       "post": {
         "description": "Authenticate user with email and password. Sets authentication cookies on successful login.",
@@ -14361,6 +14526,152 @@
         "required": [
           "text"
         ]
+      },
+      "CreateLetterheadDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the letterhead",
+            "example": "Stadtverwaltung Musterstadt"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the letterhead (used by AI for context)",
+            "example": "Offizielles Briefpapier der Stadtverwaltung"
+          },
+          "firstPageMargins": {
+            "type": "string",
+            "description": "JSON string of { top, bottom, left, right } margins in mm"
+          },
+          "continuationPageMargins": {
+            "type": "string",
+            "description": "JSON string of { top, bottom, left, right } margins in mm"
+          }
+        },
+        "required": [
+          "name",
+          "firstPageMargins",
+          "continuationPageMargins"
+        ]
+      },
+      "PageMarginsDto": {
+        "type": "object",
+        "properties": {
+          "top": {
+            "type": "number",
+            "description": "Top margin in mm",
+            "example": 55
+          },
+          "bottom": {
+            "type": "number",
+            "description": "Bottom margin in mm",
+            "example": 20
+          },
+          "left": {
+            "type": "number",
+            "description": "Left margin in mm",
+            "example": 25
+          },
+          "right": {
+            "type": "number",
+            "description": "Right margin in mm",
+            "example": 15
+          }
+        },
+        "required": [
+          "top",
+          "bottom",
+          "left",
+          "right"
+        ]
+      },
+      "LetterheadResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the letterhead",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the letterhead",
+            "example": "Stadtverwaltung Musterstadt"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the letterhead",
+            "example": "Offizielles Briefpapier der Stadtverwaltung",
+            "nullable": true
+          },
+          "firstPageMargins": {
+            "description": "Margins for the first page in mm",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PageMarginsDto"
+              }
+            ]
+          },
+          "continuationPageMargins": {
+            "description": "Margins for continuation pages in mm",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PageMarginsDto"
+              }
+            ]
+          },
+          "hasContinuationPage": {
+            "type": "boolean",
+            "description": "Whether a continuation page PDF is configured"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When the letterhead was created",
+            "example": "2026-01-15T10:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "When the letterhead was last updated",
+            "example": "2026-01-15T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "firstPageMargins",
+          "continuationPageMargins",
+          "hasContinuationPage",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateLetterheadDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the letterhead",
+            "example": "Stadtverwaltung Musterstadt — Neues Design"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the letterhead",
+            "example": "Überarbeitetes Briefpapier 2026"
+          },
+          "firstPageMargins": {
+            "type": "string",
+            "description": "JSON string of { top, bottom, left, right } margins in mm"
+          },
+          "continuationPageMargins": {
+            "type": "string",
+            "description": "JSON string of { top, bottom, left, right } margins in mm"
+          },
+          "removeContinuationPage": {
+            "type": "string",
+            "description": "Set to \"true\" to remove the continuation page PDF. Ignored if a new continuationPagePdf file is uploaded."
+          }
+        }
       },
       "LoginDto": {
         "type": "object",

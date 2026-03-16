@@ -49,6 +49,7 @@ import type {
   CreateKnowledgeBaseDto,
   CreateKnowledgeBaseShareDto,
   CreateLanguageModelRequestDto,
+  CreateLetterheadDto,
   CreateOrgRequestDto,
   CreatePermittedModelDto,
   CreatePredefinedIntegrationDto,
@@ -86,6 +87,7 @@ import type {
   KnowledgeBaseResponseDto,
   KnowledgeBasesControllerAddDocumentBody,
   LanguageModelResponseDto,
+  LetterheadResponseDto,
   LoginDto,
   MarketplaceIntegrationResponseDto,
   MarketplaceSkillResponseDto,
@@ -160,6 +162,7 @@ import type {
   UpdateEmbeddingModelRequestDto,
   UpdateKnowledgeBaseDto,
   UpdateLanguageModelRequestDto,
+  UpdateLetterheadDto,
   UpdateMcpIntegrationDto,
   UpdatePasswordDto,
   UpdatePermittedModelDto,
@@ -15216,6 +15219,407 @@ export const useTranscriptionsControllerTranscribe = <TError = void,
       > => {
 
       const mutationOptions = getTranscriptionsControllerTranscribeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Create a new letterhead
+ */
+export const letterheadsControllerCreate = (
+    createLetterheadDto: CreateLetterheadDto,
+ signal?: AbortSignal
+) => {
+      
+      const formData = new FormData();
+formData.append(`name`, createLetterheadDto.name)
+if(createLetterheadDto.description !== undefined) {
+ formData.append(`description`, createLetterheadDto.description)
+ }
+formData.append(`firstPageMargins`, createLetterheadDto.firstPageMargins)
+formData.append(`continuationPageMargins`, createLetterheadDto.continuationPageMargins)
+
+      return customAxiosInstance<LetterheadResponseDto>(
+      {url: `/letterheads`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      );
+    }
+  
+
+
+export const getLetterheadsControllerCreateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerCreate>>, TError,{data: CreateLetterheadDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerCreate>>, TError,{data: CreateLetterheadDto}, TContext> => {
+
+const mutationKey = ['letterheadsControllerCreate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof letterheadsControllerCreate>>, {data: CreateLetterheadDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  letterheadsControllerCreate(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LetterheadsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerCreate>>>
+    export type LetterheadsControllerCreateMutationBody = CreateLetterheadDto
+    export type LetterheadsControllerCreateMutationError = void
+
+    /**
+ * @summary Create a new letterhead
+ */
+export const useLetterheadsControllerCreate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerCreate>>, TError,{data: CreateLetterheadDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof letterheadsControllerCreate>>,
+        TError,
+        {data: CreateLetterheadDto},
+        TContext
+      > => {
+
+      const mutationOptions = getLetterheadsControllerCreateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary List all letterheads for the current org
+ */
+export const letterheadsControllerFindAll = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<LetterheadResponseDto[]>(
+      {url: `/letterheads`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getLetterheadsControllerFindAllQueryKey = () => {
+    return [
+    `/letterheads`
+    ] as const;
+    }
+
+    
+export const getLetterheadsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getLetterheadsControllerFindAllQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof letterheadsControllerFindAll>>> = ({ signal }) => letterheadsControllerFindAll(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type LetterheadsControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerFindAll>>>
+export type LetterheadsControllerFindAllQueryError = unknown
+
+
+export function useLetterheadsControllerFindAll<TData = Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof letterheadsControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof letterheadsControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLetterheadsControllerFindAll<TData = Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof letterheadsControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof letterheadsControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLetterheadsControllerFindAll<TData = Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List all letterheads for the current org
+ */
+
+export function useLetterheadsControllerFindAll<TData = Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getLetterheadsControllerFindAllQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Get a letterhead by ID
+ */
+export const letterheadsControllerFindOne = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<LetterheadResponseDto>(
+      {url: `/letterheads/${id}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getLetterheadsControllerFindOneQueryKey = (id?: string,) => {
+    return [
+    `/letterheads/${id}`
+    ] as const;
+    }
+
+    
+export const getLetterheadsControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getLetterheadsControllerFindOneQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof letterheadsControllerFindOne>>> = ({ signal }) => letterheadsControllerFindOne(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type LetterheadsControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerFindOne>>>
+export type LetterheadsControllerFindOneQueryError = void
+
+
+export function useLetterheadsControllerFindOne<TData = Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof letterheadsControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof letterheadsControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLetterheadsControllerFindOne<TData = Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof letterheadsControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof letterheadsControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLetterheadsControllerFindOne<TData = Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a letterhead by ID
+ */
+
+export function useLetterheadsControllerFindOne<TData = Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getLetterheadsControllerFindOneQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Update a letterhead
+ */
+export const letterheadsControllerUpdate = (
+    id: string,
+    updateLetterheadDto: UpdateLetterheadDto,
+ ) => {
+      
+      const formData = new FormData();
+if(updateLetterheadDto.name !== undefined) {
+ formData.append(`name`, updateLetterheadDto.name)
+ }
+if(updateLetterheadDto.description !== undefined) {
+ formData.append(`description`, updateLetterheadDto.description)
+ }
+if(updateLetterheadDto.firstPageMargins !== undefined) {
+ formData.append(`firstPageMargins`, updateLetterheadDto.firstPageMargins)
+ }
+if(updateLetterheadDto.continuationPageMargins !== undefined) {
+ formData.append(`continuationPageMargins`, updateLetterheadDto.continuationPageMargins)
+ }
+if(updateLetterheadDto.removeContinuationPage !== undefined) {
+ formData.append(`removeContinuationPage`, updateLetterheadDto.removeContinuationPage)
+ }
+
+      return customAxiosInstance<LetterheadResponseDto>(
+      {url: `/letterheads/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData
+    },
+      );
+    }
+  
+
+
+export const getLetterheadsControllerUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerUpdate>>, TError,{id: string;data: UpdateLetterheadDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerUpdate>>, TError,{id: string;data: UpdateLetterheadDto}, TContext> => {
+
+const mutationKey = ['letterheadsControllerUpdate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof letterheadsControllerUpdate>>, {id: string;data: UpdateLetterheadDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  letterheadsControllerUpdate(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LetterheadsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerUpdate>>>
+    export type LetterheadsControllerUpdateMutationBody = UpdateLetterheadDto
+    export type LetterheadsControllerUpdateMutationError = void
+
+    /**
+ * @summary Update a letterhead
+ */
+export const useLetterheadsControllerUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerUpdate>>, TError,{id: string;data: UpdateLetterheadDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof letterheadsControllerUpdate>>,
+        TError,
+        {id: string;data: UpdateLetterheadDto},
+        TContext
+      > => {
+
+      const mutationOptions = getLetterheadsControllerUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Delete a letterhead
+ */
+export const letterheadsControllerRemove = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/letterheads/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getLetterheadsControllerRemoveMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerRemove>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerRemove>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['letterheadsControllerRemove'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof letterheadsControllerRemove>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  letterheadsControllerRemove(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LetterheadsControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerRemove>>>
+    
+    export type LetterheadsControllerRemoveMutationError = void
+
+    /**
+ * @summary Delete a letterhead
+ */
+export const useLetterheadsControllerRemove = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerRemove>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof letterheadsControllerRemove>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getLetterheadsControllerRemoveMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
