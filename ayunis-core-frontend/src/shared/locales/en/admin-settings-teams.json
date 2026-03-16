@@ -79,6 +79,28 @@
       "notInSameOrg": "User must be in the same organization",
       "userNotFound": "User not found"
     },
+    "tabs": {
+      "members": "Members",
+      "models": "Models"
+    },
+    "models": {
+      "overrideTitle": "Model Access Override",
+      "overrideDescription": "When enabled, this team's members will only see the models you select below instead of the organization's default model set.",
+      "overrideLabel": "Override model access",
+      "overrideDisabledMessage": "This team uses the organization's model settings. Enable the override to restrict which models this team can access.",
+      "overrideToggleSuccess": "Model override setting updated",
+      "overrideToggleError": "Failed to update model override setting",
+      "overrideToggleNotFound": "Team not found",
+      "enableSuccess": "Model enabled for team",
+      "enableError": "Failed to enable model for team",
+      "enableAlreadyEnabled": "This model is already enabled for the team",
+      "enableModelNotFound": "Model not found",
+      "enableModelInvalid": "This model cannot be enabled for the team",
+      "disableSuccess": "Model disabled for team",
+      "disableError": "Failed to disable model for team",
+      "disableModelNotFound": "Model not found",
+      "disableModelInvalid": "This model cannot be disabled for the team"
+    },
     "removeMember": {
       "confirmTitle": "Remove Member",
       "confirmDescription": "Are you sure you want to remove this member from the team?",

@@ -182,10 +182,12 @@ export interface PermittedLanguageModelResponseDto {
   providerDisplayName: string;
   /** The display name of the model */
   displayName: string;
-  /** The type of the model (always language) */
-  type: PermittedLanguageModelResponseDtoType;
   /** Whether the model is archived */
   isArchived: boolean;
+  /** The catalog model UUID */
+  modelId: string;
+  /** The type of the model (always language) */
+  type: PermittedLanguageModelResponseDtoType;
   /** Whether the model can stream */
   canStream: boolean;
   /** Whether the model can reason */
@@ -281,10 +283,10 @@ export interface PermittedEmbeddingModelResponseDto {
   providerDisplayName: string;
   /** The display name of the model */
   displayName: string;
-  /** The type of the model (always embedding) */
-  type: PermittedEmbeddingModelResponseDtoType;
   /** Whether the model is archived */
   isArchived: boolean;
+  /** The type of the model (always embedding) */
+  type: PermittedEmbeddingModelResponseDtoType;
   /**
    * The number of dimensions for embeddings
    * @nullable

@@ -21,6 +21,7 @@ export class ModelResponseDtoMapper {
 
     return {
       id: permittedModel.id,
+      modelId: permittedModel.model.id,
       name: permittedModel.model.name,
       provider: permittedModel.model.provider,
       providerDisplayName: providerInfo.displayName,

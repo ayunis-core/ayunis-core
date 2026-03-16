@@ -8490,16 +8490,20 @@
             "type": "string",
             "description": "The display name of the model"
           },
+          "isArchived": {
+            "type": "boolean",
+            "description": "Whether the model is archived"
+          },
+          "modelId": {
+            "type": "string",
+            "description": "The catalog model UUID"
+          },
           "type": {
             "type": "string",
             "enum": [
               "language"
             ],
             "description": "The type of the model (always language)"
-          },
-          "isArchived": {
-            "type": "boolean",
-            "description": "Whether the model is archived"
           },
           "canStream": {
             "type": "boolean",
@@ -8524,8 +8528,9 @@
           "provider",
           "providerDisplayName",
           "displayName",
-          "type",
           "isArchived",
+          "modelId",
+          "type",
           "canStream",
           "isReasoning",
           "canVision",
@@ -8657,16 +8662,16 @@
             "type": "string",
             "description": "The display name of the model"
           },
+          "isArchived": {
+            "type": "boolean",
+            "description": "Whether the model is archived"
+          },
           "type": {
             "type": "string",
             "enum": [
               "embedding"
             ],
             "description": "The type of the model (always embedding)"
-          },
-          "isArchived": {
-            "type": "boolean",
-            "description": "Whether the model is archived"
           },
           "dimensions": {
             "type": "number",
@@ -8680,8 +8685,8 @@
           "provider",
           "providerDisplayName",
           "displayName",
-          "type",
           "isArchived",
+          "type",
           "dimensions"
         ]
       },

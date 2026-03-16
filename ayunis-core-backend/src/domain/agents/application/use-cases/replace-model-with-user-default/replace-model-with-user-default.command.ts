@@ -1,5 +1,8 @@
 import type { UUID } from 'crypto';
 
 export class ReplaceModelWithUserDefaultCommand {
-  constructor(public readonly oldPermittedModelId: UUID) {}
+  constructor(
+    public readonly oldPermittedModelId: UUID,
+    public readonly catalogModelId: UUID,
+  ) {}
 }

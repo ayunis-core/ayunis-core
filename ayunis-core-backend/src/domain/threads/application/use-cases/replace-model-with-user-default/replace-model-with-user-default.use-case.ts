@@ -39,8 +39,8 @@ export class ReplaceModelWithUserDefaultUseCase {
           new GetDefaultModelQuery({
             orgId: command.orgId,
             userId: thread.userId,
-            blacklistedModelIds: command.oldPermittedModelId
-              ? [command.oldPermittedModelId]
+            blacklistedModelIds: command.catalogModelId
+              ? [command.catalogModelId]
               : [],
           }),
         );

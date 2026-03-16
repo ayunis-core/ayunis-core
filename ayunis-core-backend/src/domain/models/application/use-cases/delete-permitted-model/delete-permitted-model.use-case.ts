@@ -148,6 +148,7 @@ export class DeletePermittedModelUseCase {
       new ReplaceModelWithUserDefaultCommand({
         orgId,
         oldPermittedModelId: model.id,
+        catalogModelId: model.model.id,
       }),
     );
 
@@ -158,7 +159,7 @@ export class DeletePermittedModelUseCase {
     // Replace the model in all agents that use it
     // This will fall back to the user's default model or org default model
     await this.replaceModelWithUserDefaultUseCaseAgents.execute(
-      new ReplaceModelWithUserDefaultCommandAgents(model.id),
+      new ReplaceModelWithUserDefaultCommandAgents(model.id, model.model.id),
     );
 
     // Cascade: remove team-scoped permitted models referencing the same catalog model
