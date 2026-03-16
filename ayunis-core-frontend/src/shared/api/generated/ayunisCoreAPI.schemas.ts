@@ -3610,6 +3610,16 @@ export interface MeResponseDto {
   name: string;
 }
 
+export interface IpAllowlistResponseDto {
+  /** List of allowed CIDR ranges */
+  cidrs: string[];
+}
+
+export interface UpdateIpAllowlistRequestDto {
+  /** List of CIDR ranges to allow (e.g. "192.168.1.0/24") */
+  cidrs: string[];
+}
+
 export type SuperAdminPermittedModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
 
 export type SuperAdminPermittedModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;

@@ -13,7 +13,10 @@ export function getClientIp(request: Request): string | null {
   const forwardedFor = request.headers['x-forwarded-for'];
   if (forwardedFor) {
     const ips = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor;
-    return ips.split(',')[0].trim();
+    const firstIp = ips.split(',')[0].trim();
+    if (firstIp) {
+      return firstIp;
+    }
   }
 
   const realIp = request.headers['x-real-ip'];

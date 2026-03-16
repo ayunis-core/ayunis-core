@@ -8220,6 +8220,74 @@
           "Authentication"
         ]
       }
+    },
+    "/ip-allowlist": {
+      "get": {
+        "operationId": "IpAllowlistController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current IP allow list (empty array if none)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IpAllowlistResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the IP allow list for the current org",
+        "tags": [
+          "ip-allowlist"
+        ]
+      },
+      "put": {
+        "operationId": "IpAllowlistController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIpAllowlistRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated IP allow list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IpAllowlistResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid CIDR"
+          }
+        },
+        "summary": "Replace the IP allow list for the current org",
+        "tags": [
+          "ip-allowlist"
+        ]
+      },
+      "delete": {
+        "operationId": "IpAllowlistController_remove",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "IP allow list removed"
+          }
+        },
+        "summary": "Remove the IP allow list (disable IP restriction)",
+        "tags": [
+          "ip-allowlist"
+        ]
+      }
     }
   },
   "info": {
@@ -14464,6 +14532,42 @@
           "role",
           "systemRole",
           "name"
+        ]
+      },
+      "IpAllowlistResponseDto": {
+        "type": "object",
+        "properties": {
+          "cidrs": {
+            "description": "List of allowed CIDR ranges",
+            "example": [
+              "203.0.113.0/24"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "cidrs"
+        ]
+      },
+      "UpdateIpAllowlistRequestDto": {
+        "type": "object",
+        "properties": {
+          "cidrs": {
+            "description": "List of CIDR ranges to allow (e.g. \"192.168.1.0/24\")",
+            "example": [
+              "203.0.113.0/24"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "cidrs"
         ]
       }
     }

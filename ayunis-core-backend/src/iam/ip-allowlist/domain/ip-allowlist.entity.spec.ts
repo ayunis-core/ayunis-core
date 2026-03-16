@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-hardcoded-ip -- test fixtures require hardcoded IPs */
 import type { UUID } from 'crypto';
 import { IpAllowlist } from './ip-allowlist.entity';
-import { InvalidCidrError } from './ip-allowlist.errors';
+import { EmptyCidrsError, InvalidCidrError } from './ip-allowlist.errors';
 
 describe('IpAllowlist', () => {
   const orgId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' as UUID;
@@ -68,8 +68,21 @@ describe('IpAllowlist', () => {
     }
   });
 
-  it('should accept an empty CIDR array without throwing', () => {
-    const entity = new IpAllowlist({ orgId, cidrs: [] });
-    expect(entity.cidrs).toEqual([]);
+  it('should throw EmptyCidrsError for an empty CIDR array', () => {
+    expect(() => new IpAllowlist({ orgId, cidrs: [] })).toThrow(
+      EmptyCidrsError,
+    );
+  });
+
+  it('should include a descriptive message for empty CIDR array', () => {
+    try {
+      new IpAllowlist({ orgId, cidrs: [] });
+      fail('Expected EmptyCidrsError');
+    } catch (error) {
+      expect(error).toBeInstanceOf(EmptyCidrsError);
+      expect((error as EmptyCidrsError).message).toBe(
+        'At least one CIDR range is required',
+      );
+    }
   });
 });
