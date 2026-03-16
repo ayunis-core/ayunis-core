@@ -74,12 +74,11 @@ export class CreateTeamPermittedModelUseCase {
     modelId: CreateTeamPermittedModelCommand['modelId'],
     orgId: CreateTeamPermittedModelCommand['orgId'],
   ): Promise<void> {
-    const orgPermittedModels =
-      await this.permittedModelsRepository.findAll(orgId);
-    const isOrgPermitted = orgPermittedModels.some(
-      (pm) => pm.model.id === modelId,
+    const orgPermittedModels = await this.permittedModelsRepository.findAll(
+      orgId,
+      { modelId },
     );
-    if (!isOrgPermitted) {
+    if (orgPermittedModels.length === 0) {
       throw new ModelNotFoundError(modelId, {
         reason: 'Model is not permitted at the organization level',
       });
