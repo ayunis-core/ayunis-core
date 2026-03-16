@@ -9317,6 +9317,12 @@
             "example": "123e4567-e89b-12d3-a456-426614174001",
             "format": "uuid"
           },
+          "department": {
+            "type": "string",
+            "description": "Department the user belongs to",
+            "example": "hauptamt",
+            "nullable": true
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string",
@@ -9552,6 +9558,12 @@
             "description": "Organization ID the user belongs to",
             "example": "123e4567-e89b-12d3-a456-426614174001",
             "format": "uuid"
+          },
+          "department": {
+            "type": "string",
+            "description": "Department the user belongs to",
+            "example": "hauptamt",
+            "nullable": true
           },
           "createdAt": {
             "format": "date-time",
@@ -9926,6 +9938,11 @@
             "type": "boolean",
             "description": "Marketing acceptance",
             "example": true
+          },
+          "department": {
+            "type": "string",
+            "description": "Department within the municipality",
+            "example": "hauptamt"
           }
         },
         "required": [
@@ -14417,6 +14434,11 @@
             "type": "boolean",
             "description": "Marketing acceptance",
             "example": true
+          },
+          "department": {
+            "type": "string",
+            "description": "Department within the municipality",
+            "example": "hauptamt"
           }
         },
         "required": [

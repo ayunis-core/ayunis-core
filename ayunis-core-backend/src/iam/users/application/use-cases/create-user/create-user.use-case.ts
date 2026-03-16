@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
+import { Counter } from 'prom-client';
 import { UsersRepository } from '../../ports/users.repository';
 import { CreateUserCommand } from './create-user.command';
 import { User } from '../../../domain/user.entity';
@@ -17,6 +19,8 @@ import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/se
 import { ConfigService } from '@nestjs/config';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UserCreatedEvent } from '../../events/user-created.event';
+import { AYUNIS_USER_CREATIONS_TOTAL } from 'src/metrics/metrics.constants';
+import { safeMetric } from 'src/metrics/metrics.utils';
 
 @Injectable()
 export class CreateUserUseCase {
@@ -28,6 +32,8 @@ export class CreateUserUseCase {
     private readonly sendWebhookUseCase: SendWebhookUseCase,
     private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
+    @InjectMetric(AYUNIS_USER_CREATIONS_TOTAL)
+    private readonly userCreationsCounter: Counter<string>,
   ) {}
 
   async execute(command: CreateUserCommand): Promise<User> {
@@ -92,6 +98,16 @@ export class CreateUserUseCase {
       this.logger.debug('User created successfully', {
         userId: createdUser.id,
         role: command.role,
+      });
+
+      safeMetric(this.logger, () => {
+        this.userCreationsCounter.inc({
+          org_id: command.orgId,
+          department:
+            (createdUser.department?.startsWith('other:')
+              ? 'other'
+              : createdUser.department) ?? 'none',
+        });
       });
 
       // Send webhook asynchronously (don't block the main operation)
