@@ -1,10 +1,28 @@
-import { RegisterDtoDepartment } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-
 /**
- * Selectable department keys derived from the backend OpenAPI schema.
- * Do NOT duplicate — the backend `department.constants.ts` is the single source of truth.
+ * Selectable department keys — mirrors the backend `department.constants.ts`.
+ * The backend is the single source of truth; keep this list in sync.
  */
-export const DEPARTMENT_KEYS = Object.values(RegisterDtoDepartment);
+export const DEPARTMENT_KEYS = [
+  'hauptamt',
+  'kaemmerei',
+  'ordnungsamt',
+  'bauamt',
+  'sozialamt',
+  'jugendamt',
+  'standesamt',
+  'einwohnermeldeamt',
+  'schulamt',
+  'kulturamt',
+  'umweltamt',
+  'tiefbauamt',
+  'hochbauamt',
+  'personalamt',
+  'rechtsamt',
+  'gesundheitsamt',
+  'liegenschaftsamt',
+  'it',
+  'pressestelle',
+] as const;
 
 export type DepartmentKey = (typeof DEPARTMENT_KEYS)[number];
 

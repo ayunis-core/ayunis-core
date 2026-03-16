@@ -9,7 +9,6 @@ import {
   computeDepartment,
   refineDepartmentOther,
 } from '@/shared/lib/compute-department';
-import type { AcceptInviteDtoDepartment } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { DEPARTMENT_OTHER_MAX_LENGTH } from '@/shared/constants/department';
 import { useTranslation } from 'react-i18next';
 import * as z from 'zod';
@@ -64,7 +63,7 @@ export function useInviteAccept(invite: Invite, inviteToken: string) {
           department: computeDepartment(
             values.department,
             values.departmentOther,
-          ) as AcceptInviteDtoDepartment | undefined,
+          ) as string | undefined,
           hasAcceptedMarketing: values.hasAcceptedMarketing,
         },
       },
