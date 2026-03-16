@@ -16,6 +16,7 @@ export class UserResponseDtoMapper {
       email: user.email,
       role: user.role,
       orgId: user.orgId,
+      department: user.department,
       createdAt: user.createdAt,
     };
   }

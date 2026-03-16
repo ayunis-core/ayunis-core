@@ -9,6 +9,7 @@ export class CreateUserCommand {
   public readonly role: UserRole;
   public readonly emailVerified: boolean;
   public readonly hasAcceptedMarketing: boolean;
+  public readonly department?: string;
 
   constructor({
     email,
@@ -18,6 +19,7 @@ export class CreateUserCommand {
     role,
     emailVerified,
     hasAcceptedMarketing,
+    department,
   }: {
     email: string;
     password: string;
@@ -26,6 +28,7 @@ export class CreateUserCommand {
     role: UserRole;
     emailVerified: boolean;
     hasAcceptedMarketing: boolean;
+    department?: string;
   }) {
     this.email = email;
     this.password = password;
@@ -34,5 +37,6 @@ export class CreateUserCommand {
     this.role = role;
     this.emailVerified = emailVerified;
     this.hasAcceptedMarketing = hasAcceptedMarketing;
+    this.department = department;
   }
 }
