@@ -11,10 +11,14 @@ import {
   AdminLockoutError,
   InvalidCidrApplicationError,
 } from '../../ip-allowlist.errors';
+import { IpAllowlistGuard } from '../../guards/ip-allowlist.guard';
 
 @Injectable()
 export class UpdateIpAllowlistUseCase {
-  constructor(private readonly repository: IpAllowlistRepository) {}
+  constructor(
+    private readonly repository: IpAllowlistRepository,
+    private readonly ipAllowlistGuard: IpAllowlistGuard,
+  ) {}
 
   async execute(command: UpdateIpAllowlistCommand): Promise<IpAllowlist> {
     // Validate CIDRs before lockout check so malformed input
@@ -42,6 +46,9 @@ export class UpdateIpAllowlistUseCase {
       throw new AdminLockoutError({ clientIp: command.clientIp });
     }
 
-    return this.repository.upsert(entity);
+    const result = await this.repository.upsert(entity);
+    this.ipAllowlistGuard.invalidateCache(command.orgId);
+
+    return result;
   }
 }
