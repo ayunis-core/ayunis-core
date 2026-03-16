@@ -1,6 +1,6 @@
 /**
- * Selectable department keys — mirrors the backend `department.constants.ts`.
- * Do NOT duplicate freely — the backend is the single source of truth.
+ * Selectable department keys — mirrors the backend `department.constants.ts`,
+ * plus `'other'` for the UI dropdown (backend validates the `other:` prefix pattern).
  */
 export const DEPARTMENT_KEYS = [
   'hauptamt',
@@ -22,6 +22,7 @@ export const DEPARTMENT_KEYS = [
   'liegenschaftsamt',
   'it',
   'pressestelle',
+  'other',
 ] as const;
 
 export type DepartmentKey = (typeof DEPARTMENT_KEYS)[number];
