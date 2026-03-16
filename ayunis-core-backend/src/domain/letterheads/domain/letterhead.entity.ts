@@ -1,6 +1,9 @@
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
-import type { PageMargins } from './value-objects/page-margins';
+import {
+  createPageMargins,
+  type PageMargins,
+} from './value-objects/page-margins';
 
 export class Letterhead {
   public readonly id: UUID;
@@ -33,8 +36,10 @@ export class Letterhead {
     this.firstPageStoragePath = params.firstPageStoragePath;
     this.continuationPageStoragePath =
       params.continuationPageStoragePath ?? null;
-    this.firstPageMargins = params.firstPageMargins;
-    this.continuationPageMargins = params.continuationPageMargins;
+    this.firstPageMargins = createPageMargins(params.firstPageMargins);
+    this.continuationPageMargins = createPageMargins(
+      params.continuationPageMargins,
+    );
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }
