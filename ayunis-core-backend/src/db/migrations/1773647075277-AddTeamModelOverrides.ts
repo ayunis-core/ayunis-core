@@ -17,7 +17,6 @@ export class AddTeamModelOverrides1773647075277 implements MigrationInterface {
       `ALTER TABLE "permitted_models" ADD "teamId" character varying`,
     );
 
-    // Deduplicate existing rows on (orgId, modelId) before creating the unique index
     await queryRunner.query(`
       DELETE FROM "permitted_models"
       WHERE "id" IN (
@@ -45,7 +44,6 @@ export class AddTeamModelOverrides1773647075277 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    // Delete team-scoped rows first to avoid duplicate (orgId, modelId) after columns are dropped
     await queryRunner.query(
       `DELETE FROM "permitted_models" WHERE "scope" = 'team'`,
     );
