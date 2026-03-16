@@ -34,6 +34,9 @@ import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retriever
 import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
 import { MIME_TYPES } from 'src/common/util/file-type';
 
+/** Max concurrent embedding API calls per source ingestion to avoid rate limits */
+const EMBEDDING_CONCURRENCY = 20;
+
 @Injectable()
 export class CreateTextSourceUseCase {
   private readonly logger = new Logger(CreateTextSourceUseCase.name);
@@ -181,6 +184,7 @@ export class CreateTextSourceUseCase {
    * Index source content using the indexers module.
    * Uses delete-once-then-parallel-ingest pattern to avoid race conditions
    * while maintaining performance for parallel chunk processing.
+   * Concurrency is capped to avoid hitting embedding API rate limits.
    */
   private async indexSourceContentChunks(params: {
     source: TextSource;
@@ -194,20 +198,24 @@ export class CreateTextSourceUseCase {
       new DeleteContentCommand({ documentId: params.source.id }),
     );
 
-    // Step 2: Ingest all chunks in PARALLEL
+    // Step 2: Ingest all chunks with bounded concurrency
     // Safe because deletion is handled above, not in the ingest use case
+    const { default: pLimit } = await import('p-limit');
+    const limit = pLimit(EMBEDDING_CONCURRENCY);
     await Promise.all(
-      params.source.contentChunks.map(async (chunk) => {
-        const ingestCommand = new IngestContentCommand({
-          orgId: params.orgId,
-          documentId: params.source.id,
-          chunkId: chunk.id,
-          content: chunk.content,
-          type: IndexType.PARENT_CHILD,
-        });
+      params.source.contentChunks.map((chunk) =>
+        limit(async () => {
+          const ingestCommand = new IngestContentCommand({
+            orgId: params.orgId,
+            documentId: params.source.id,
+            chunkId: chunk.id,
+            content: chunk.content,
+            type: IndexType.PARENT_CHILD,
+          });
 
-        await this.ingestContentUseCase.execute(ingestCommand);
-      }),
+          await this.ingestContentUseCase.execute(ingestCommand);
+        }),
+      ),
     );
 
     this.logger.debug(

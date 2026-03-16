@@ -86,6 +86,7 @@
     "nodemailer": "^7.0.5",
     "ollama": "^0.6.3",
     "openai": "^4.104.0",
+    "p-limit": "^7.3.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
