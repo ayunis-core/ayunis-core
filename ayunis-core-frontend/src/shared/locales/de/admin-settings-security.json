@@ -1,0 +1,25 @@
+{
+  "ipAllowlist": {
+    "heading": "IP-Zulassungsliste",
+    "description": "Beschränken Sie den Zugriff auf Ihre Organisation nach IP-Adresse. Nur Benutzer, die sich von den angegebenen CIDR-Bereichen aus verbinden, können die Anwendung nutzen. Lassen Sie das Feld leer, um alle IPs zuzulassen.",
+    "cidrsLabel": "Erlaubte CIDR-Bereiche",
+    "cidrsPlaceholder": "Geben Sie einen CIDR-Bereich pro Zeile ein, z.B.\n192.168.1.0/24\n10.0.0.0/8\n2001:db8::/32",
+    "saveButton": "Speichern",
+    "saving": "Speichern...",
+    "removeButton": "Alle Einschränkungen entfernen",
+    "removing": "Entfernen...",
+    "removeConfirmTitle": "IP-Einschränkungen entfernen",
+    "removeConfirmDescription": "Sind Sie sicher, dass Sie alle IP-Einschränkungen entfernen möchten? Alle Benutzer können dann von jeder IP-Adresse auf die Anwendung zugreifen.",
+    "removeConfirmCancel": "Abbrechen",
+    "removeConfirmConfirm": "Einschränkungen entfernen",
+    "saveSuccess": "IP-Zulassungsliste erfolgreich aktualisiert.",
+    "removeSuccess": "IP-Einschränkungen erfolgreich entfernt.",
+    "saveError": "Fehler beim Aktualisieren der IP-Zulassungsliste.",
+    "removeError": "Fehler beim Entfernen der IP-Einschränkungen.",
+    "lockoutError": "Diese Änderung würde Sie aussperren. Stellen Sie sicher, dass Ihre aktuelle IP-Adresse in den erlaubten Bereichen enthalten ist.",
+    "invalidCidr": "Ungültiger CIDR-Bereich in Zeile {{line}}: \"{{value}}\"",
+    "propagationNote": "Änderungen können bis zu 60 Sekunden dauern, bis sie auf allen Diensten wirksam werden.",
+    "noRestrictions": "Derzeit sind keine IP-Einschränkungen konfiguriert. Alle IP-Adressen sind erlaubt.",
+    "loadError": "Fehler beim Laden der IP-Zulassungslisten-Einstellungen."
+  }
+}
