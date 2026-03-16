@@ -7,10 +7,16 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { TrialsModule } from '../trials/trials.module';
 import { EmailConfirmGuard } from './application/guards/email-confirm.guard';
 import { SystemRolesGuard } from './application/guards/system-roles.guard';
+import { IpAllowlistModule } from '../ip-allowlist/ip-allowlist.module';
+import { IpAllowlistGuard } from '../ip-allowlist/application/guards/ip-allowlist.guard';
 
 @Module({
-  imports: [SubscriptionsModule, TrialsModule],
+  imports: [SubscriptionsModule, TrialsModule, IpAllowlistModule],
   providers: [
+    {
+      provide: APP_GUARD,
+      useExisting: IpAllowlistGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: EmailConfirmGuard,
