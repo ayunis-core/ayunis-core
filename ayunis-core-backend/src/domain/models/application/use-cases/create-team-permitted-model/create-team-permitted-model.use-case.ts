@@ -71,7 +71,7 @@ export class CreateTeamPermittedModelUseCase {
     const orgPermittedModels =
       await this.permittedModelsRepository.findAll(orgId);
     const isOrgPermitted = orgPermittedModels.some(
-      (pm) => pm.model.id === modelId,
+      (pm) => pm.model.id === modelId && pm.scope === PermittedModelScope.ORG,
     );
     if (!isOrgPermitted) {
       throw new ModelNotFoundError(modelId, {
