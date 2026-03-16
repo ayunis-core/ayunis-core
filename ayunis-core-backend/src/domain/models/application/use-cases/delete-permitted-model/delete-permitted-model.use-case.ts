@@ -161,6 +161,12 @@ export class DeletePermittedModelUseCase {
       new ReplaceModelWithUserDefaultCommandAgents(model.id),
     );
 
+    // Cascade: remove team-scoped permitted models referencing the same catalog model
+    await this.permittedModelsRepository.deleteTeamScopedByOrgAndModelId(
+      orgId,
+      model.model.id,
+    );
+
     await this.permittedModelsRepository.delete({
       id: model.id,
       orgId: orgId,

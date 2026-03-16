@@ -24,6 +24,8 @@ export enum ModelErrorCode {
   MODEL_PROVIDER_INFO_NOT_FOUND = 'MODEL_PROVIDER_INFO_NOT_FOUND',
   MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED = 'MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED',
   UNEXPECTED_MODEL_ERROR = 'UNEXPECTED_MODEL_ERROR',
+  DUPLICATE_TEAM_PERMITTED_MODEL = 'DUPLICATE_TEAM_PERMITTED_MODEL',
+  TEAM_NOT_FOUND_IN_ORG = 'TEAM_NOT_FOUND_IN_ORG',
 }
 
 /**
@@ -316,6 +318,35 @@ export class MultipleEmbeddingModelsNotAllowedError extends ModelError {
       'Multiple embedding models are not allowed',
       ModelErrorCode.MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED,
       400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when a team-scoped permitted model already exists for the
+ * given team + model combination.
+ */
+export class DuplicateTeamPermittedModelError extends ModelError {
+  constructor(teamId: UUID, modelId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Model '${modelId}' is already permitted for team '${teamId}'`,
+      ModelErrorCode.DUPLICATE_TEAM_PERMITTED_MODEL,
+      409,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when the specified team does not exist in the caller's org.
+ */
+export class TeamNotFoundInOrgError extends ModelError {
+  constructor(teamId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Team '${teamId}' not found in organization`,
+      ModelErrorCode.TEAM_NOT_FOUND_IN_ORG,
+      404,
       metadata,
     );
   }

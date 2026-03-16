@@ -248,6 +248,26 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
       ) as PermittedLanguageModel[];
   }
 
+  async findByTeamAndModelId(
+    teamId: UUID,
+    modelId: UUID,
+    orgId: UUID,
+  ): Promise<PermittedModel | null> {
+    const record = await this.permittedModelRepository.findOne({
+      where: {
+        teamId,
+        modelId,
+        orgId,
+        scope: PermittedModelScope.TEAM,
+      },
+      relations: { model: true },
+    });
+    if (!record) {
+      return null;
+    }
+    return this.permittedModelMapper.toDomain(record);
+  }
+
   async create(permittedModel: PermittedModel): Promise<PermittedModel> {
     // Enforce single permitted embedding model per org at repository layer
     if (permittedModel.model instanceof EmbeddingModel) {

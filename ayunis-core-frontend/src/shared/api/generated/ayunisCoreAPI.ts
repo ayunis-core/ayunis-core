@@ -58,6 +58,7 @@ import type {
   CreateSkillTemplateDto,
   CreateSubscriptionRequestDto,
   CreateTeamDto,
+  CreateTeamPermittedModelDto,
   CreateThreadDto,
   CreateTrialRequestDto,
   CreateUserDto,
@@ -113,6 +114,7 @@ import type {
   RunsControllerSendMessageBody,
   SetCreditsPerEuroRequestDto,
   SetOrgDefaultModelDto,
+  SetTeamDefaultModelDto,
   SetUserConfigDto,
   SetUserDefaultModelDto,
   ShareResponseDto,
@@ -848,7 +850,8 @@ export const useModelsControllerUpdatePermittedModel = <TError = void,
     }
     
 /**
- * @summary Get all permitted language models
+ * Returns the effective set of language models for the current user, considering team overrides. If the user is in any team with model override enabled, only those teams' models are returned (union). Otherwise, org-level models are returned.
+ * @summary Get effective permitted language models for the current user
  */
 export const modelsControllerGetPermittedLanguageModels = (
     
@@ -919,7 +922,7 @@ export function useModelsControllerGetPermittedLanguageModels<TData = Awaited<Re
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get all permitted language models
+ * @summary Get effective permitted language models for the current user
  */
 
 export function useModelsControllerGetPermittedLanguageModels<TData = Awaited<ReturnType<typeof modelsControllerGetPermittedLanguageModels>>, TError = void>(
@@ -928,6 +931,100 @@ export function useModelsControllerGetPermittedLanguageModels<TData = Awaited<Re
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getModelsControllerGetPermittedLanguageModelsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Returns only org-scoped permitted language models, ignoring team overrides. Used by the admin model settings page.
+ * @summary Get org-level permitted language models (admin view)
+ */
+export const modelsControllerGetOrgPermittedLanguageModels = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<PermittedLanguageModelResponseDto[]>(
+      {url: `/models/permitted/language-models/org`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getModelsControllerGetOrgPermittedLanguageModelsQueryKey = () => {
+    return [
+    `/models/permitted/language-models/org`
+    ] as const;
+    }
+
+    
+export const getModelsControllerGetOrgPermittedLanguageModelsQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelsControllerGetOrgPermittedLanguageModelsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>> = ({ signal }) => modelsControllerGetOrgPermittedLanguageModels(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelsControllerGetOrgPermittedLanguageModelsQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>>
+export type ModelsControllerGetOrgPermittedLanguageModelsQueryError = void
+
+
+export function useModelsControllerGetOrgPermittedLanguageModels<TData = Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerGetOrgPermittedLanguageModels<TData = Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerGetOrgPermittedLanguageModels<TData = Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get org-level permitted language models (admin view)
+ */
+
+export function useModelsControllerGetOrgPermittedLanguageModels<TData = Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetOrgPermittedLanguageModels>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelsControllerGetOrgPermittedLanguageModelsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1601,6 +1698,295 @@ export function useModelsControllerIsEmbeddingModelEnabled<TData = Awaited<Retur
 
 
 
+/**
+ * @summary List a team's permitted language models
+ */
+export const teamPermittedModelsControllerListTeamPermittedModels = (
+    teamId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<PermittedLanguageModelResponseDto[]>(
+      {url: `/teams/${teamId}/permitted-models`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey = (teamId?: string,) => {
+    return [
+    `/teams/${teamId}/permitted-models`
+    ] as const;
+    }
+
+    
+export const getTeamPermittedModelsControllerListTeamPermittedModelsQueryOptions = <TData = Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>, TError = void>(teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey(teamId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>> = ({ signal }) => teamPermittedModelsControllerListTeamPermittedModels(teamId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(teamId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TeamPermittedModelsControllerListTeamPermittedModelsQueryResult = NonNullable<Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>>
+export type TeamPermittedModelsControllerListTeamPermittedModelsQueryError = void
+
+
+export function useTeamPermittedModelsControllerListTeamPermittedModels<TData = Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>, TError = void>(
+ teamId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>,
+          TError,
+          Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTeamPermittedModelsControllerListTeamPermittedModels<TData = Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>, TError = void>(
+ teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>,
+          TError,
+          Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTeamPermittedModelsControllerListTeamPermittedModels<TData = Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>, TError = void>(
+ teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List a team's permitted language models
+ */
+
+export function useTeamPermittedModelsControllerListTeamPermittedModels<TData = Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>, TError = void>(
+ teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamPermittedModels>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTeamPermittedModelsControllerListTeamPermittedModelsQueryOptions(teamId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Creates a team-scoped permitted model. The model must already be permitted at the organization level.
+ * @summary Add a permitted model to a team
+ */
+export const teamPermittedModelsControllerCreateTeamPermittedModel = (
+    teamId: string,
+    createTeamPermittedModelDto: CreateTeamPermittedModelDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<PermittedLanguageModelResponseDto>(
+      {url: `/teams/${teamId}/permitted-models`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createTeamPermittedModelDto, signal
+    },
+      );
+    }
+  
+
+
+export const getTeamPermittedModelsControllerCreateTeamPermittedModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerCreateTeamPermittedModel>>, TError,{teamId: string;data: CreateTeamPermittedModelDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerCreateTeamPermittedModel>>, TError,{teamId: string;data: CreateTeamPermittedModelDto}, TContext> => {
+
+const mutationKey = ['teamPermittedModelsControllerCreateTeamPermittedModel'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof teamPermittedModelsControllerCreateTeamPermittedModel>>, {teamId: string;data: CreateTeamPermittedModelDto}> = (props) => {
+          const {teamId,data} = props ?? {};
+
+          return  teamPermittedModelsControllerCreateTeamPermittedModel(teamId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TeamPermittedModelsControllerCreateTeamPermittedModelMutationResult = NonNullable<Awaited<ReturnType<typeof teamPermittedModelsControllerCreateTeamPermittedModel>>>
+    export type TeamPermittedModelsControllerCreateTeamPermittedModelMutationBody = CreateTeamPermittedModelDto
+    export type TeamPermittedModelsControllerCreateTeamPermittedModelMutationError = void
+
+    /**
+ * @summary Add a permitted model to a team
+ */
+export const useTeamPermittedModelsControllerCreateTeamPermittedModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerCreateTeamPermittedModel>>, TError,{teamId: string;data: CreateTeamPermittedModelDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof teamPermittedModelsControllerCreateTeamPermittedModel>>,
+        TError,
+        {teamId: string;data: CreateTeamPermittedModelDto},
+        TContext
+      > => {
+
+      const mutationOptions = getTeamPermittedModelsControllerCreateTeamPermittedModelMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Remove a permitted model from a team
+ */
+export const teamPermittedModelsControllerDeleteTeamPermittedModel = (
+    teamId: string,
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/teams/${teamId}/permitted-models/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getTeamPermittedModelsControllerDeleteTeamPermittedModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerDeleteTeamPermittedModel>>, TError,{teamId: string;id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerDeleteTeamPermittedModel>>, TError,{teamId: string;id: string}, TContext> => {
+
+const mutationKey = ['teamPermittedModelsControllerDeleteTeamPermittedModel'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof teamPermittedModelsControllerDeleteTeamPermittedModel>>, {teamId: string;id: string}> = (props) => {
+          const {teamId,id} = props ?? {};
+
+          return  teamPermittedModelsControllerDeleteTeamPermittedModel(teamId,id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TeamPermittedModelsControllerDeleteTeamPermittedModelMutationResult = NonNullable<Awaited<ReturnType<typeof teamPermittedModelsControllerDeleteTeamPermittedModel>>>
+    
+    export type TeamPermittedModelsControllerDeleteTeamPermittedModelMutationError = void
+
+    /**
+ * @summary Remove a permitted model from a team
+ */
+export const useTeamPermittedModelsControllerDeleteTeamPermittedModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerDeleteTeamPermittedModel>>, TError,{teamId: string;id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof teamPermittedModelsControllerDeleteTeamPermittedModel>>,
+        TError,
+        {teamId: string;id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getTeamPermittedModelsControllerDeleteTeamPermittedModelMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Sets the specified team-scoped permitted model as the default model for the team.
+ * @summary Set the team's default model
+ */
+export const teamPermittedModelsControllerSetTeamDefaultModel = (
+    teamId: string,
+    setTeamDefaultModelDto: SetTeamDefaultModelDto,
+ ) => {
+      
+      
+      return customAxiosInstance<PermittedLanguageModelResponseDto>(
+      {url: `/teams/${teamId}/permitted-models/default`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setTeamDefaultModelDto
+    },
+      );
+    }
+  
+
+
+export const getTeamPermittedModelsControllerSetTeamDefaultModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerSetTeamDefaultModel>>, TError,{teamId: string;data: SetTeamDefaultModelDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerSetTeamDefaultModel>>, TError,{teamId: string;data: SetTeamDefaultModelDto}, TContext> => {
+
+const mutationKey = ['teamPermittedModelsControllerSetTeamDefaultModel'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof teamPermittedModelsControllerSetTeamDefaultModel>>, {teamId: string;data: SetTeamDefaultModelDto}> = (props) => {
+          const {teamId,data} = props ?? {};
+
+          return  teamPermittedModelsControllerSetTeamDefaultModel(teamId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TeamPermittedModelsControllerSetTeamDefaultModelMutationResult = NonNullable<Awaited<ReturnType<typeof teamPermittedModelsControllerSetTeamDefaultModel>>>
+    export type TeamPermittedModelsControllerSetTeamDefaultModelMutationBody = SetTeamDefaultModelDto
+    export type TeamPermittedModelsControllerSetTeamDefaultModelMutationError = void
+
+    /**
+ * @summary Set the team's default model
+ */
+export const useTeamPermittedModelsControllerSetTeamDefaultModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerSetTeamDefaultModel>>, TError,{teamId: string;data: SetTeamDefaultModelDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof teamPermittedModelsControllerSetTeamDefaultModel>>,
+        TError,
+        {teamId: string;data: SetTeamDefaultModelDto},
+        TContext
+      > => {
+
+      const mutationOptions = getTeamPermittedModelsControllerSetTeamDefaultModelMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
 /**
  * Retrieve all available models from the registry with their permitted status for the specified organization. This endpoint is only accessible to super admins.
  * @summary Get all available models
