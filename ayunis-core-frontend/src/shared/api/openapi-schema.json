@@ -8267,7 +8267,7 @@
             }
           },
           "400": {
-            "description": "Invalid CIDR"
+            "description": "Invalid CIDR or admin lockout (requesting IP not in new allowlist)"
           }
         },
         "summary": "Replace the IP allow list for the current org",

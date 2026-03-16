@@ -9,6 +9,8 @@ import { GetIpAllowlistUseCase } from './application/use-cases/get-ip-allowlist/
 import { UpdateIpAllowlistUseCase } from './application/use-cases/update-ip-allowlist/update-ip-allowlist.use-case';
 import { DeleteIpAllowlistUseCase } from './application/use-cases/delete-ip-allowlist/delete-ip-allowlist.use-case';
 
+import { IpAllowlistGuard } from './application/guards/ip-allowlist.guard';
+import { IpAllowlistCachePort } from './application/ports/ip-allowlist-cache.port';
 import { IpAllowlistController } from './presenters/http/ip-allowlist.controller';
 
 @Module({
@@ -22,11 +24,17 @@ import { IpAllowlistController } from './presenters/http/ip-allowlist.controller
     GetIpAllowlistUseCase,
     UpdateIpAllowlistUseCase,
     DeleteIpAllowlistUseCase,
+    IpAllowlistGuard,
+    {
+      provide: IpAllowlistCachePort,
+      useExisting: IpAllowlistGuard,
+    },
   ],
   exports: [
     GetIpAllowlistUseCase,
     UpdateIpAllowlistUseCase,
     DeleteIpAllowlistUseCase,
+    IpAllowlistGuard,
   ],
 })
 export class IpAllowlistModule {}
