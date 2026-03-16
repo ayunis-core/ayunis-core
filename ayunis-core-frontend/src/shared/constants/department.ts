@@ -22,6 +22,7 @@ export const DEPARTMENT_KEYS = [
   'liegenschaftsamt',
   'it',
   'pressestelle',
+  'other',
 ] as const;
 
 export type DepartmentKey = (typeof DEPARTMENT_KEYS)[number];
