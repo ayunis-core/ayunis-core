@@ -130,6 +130,7 @@ export class AuthenticationController {
         password: body.password,
         orgName: body.orgName,
         hasAcceptedMarketing: body.marketingAcceptance,
+        department: body.department,
       }),
     );
     const tokens = await this.loginUseCase.execute(new LoginCommand(user));
