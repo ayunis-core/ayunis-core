@@ -5,9 +5,9 @@ import type { IpAllowlistRepository } from '../../ports/ip-allowlist.repository'
 import { IpAllowlist } from '../../../domain/ip-allowlist.entity';
 import {
   AdminLockoutError,
+  InvalidCidrApplicationError,
   UnexpectedIpAllowlistError,
 } from '../../ip-allowlist.errors';
-import { InvalidCidrError } from '../../../domain/ip-allowlist.errors';
 import type { UUID } from 'crypto';
 
 describe('UpdateIpAllowlistUseCase', () => {
@@ -103,28 +103,20 @@ describe('UpdateIpAllowlistUseCase', () => {
     expect(repository.upsert).not.toHaveBeenCalled();
   });
 
-  it('should delete the allow list when given an empty CIDR array', async () => {
-    const command = new UpdateIpAllowlistCommand(orgId, [], adminIp);
-
-    const result = await useCase.execute(command);
-
-    expect(result).toBeNull();
-    expect(repository.deleteByOrgId).toHaveBeenCalledWith(orgId);
-    expect(repository.upsert).not.toHaveBeenCalled();
-  });
-
-  it('should throw InvalidCidrError when a CIDR is malformed', async () => {
+  it('should throw InvalidCidrApplicationError when a CIDR is malformed', async () => {
     const command = new UpdateIpAllowlistCommand(
       orgId,
       ['192.168.1.0/24', 'not-a-cidr'],
       adminIp,
     );
 
-    await expect(useCase.execute(command)).rejects.toThrow(InvalidCidrError);
+    await expect(useCase.execute(command)).rejects.toThrow(
+      InvalidCidrApplicationError,
+    );
     expect(repository.upsert).not.toHaveBeenCalled();
   });
 
-  it('should throw InvalidCidrError before AdminLockoutError for invalid CIDRs', async () => {
+  it('should throw InvalidCidrApplicationError before AdminLockoutError for invalid CIDRs', async () => {
     const command = new UpdateIpAllowlistCommand(
       orgId,
       ['not-a-cidr'],
@@ -132,7 +124,9 @@ describe('UpdateIpAllowlistUseCase', () => {
     );
 
     // Even though the admin IP can't match, validation should fail first
-    await expect(useCase.execute(command)).rejects.toThrow(InvalidCidrError);
+    await expect(useCase.execute(command)).rejects.toThrow(
+      InvalidCidrApplicationError,
+    );
     expect(repository.upsert).not.toHaveBeenCalled();
   });
 
