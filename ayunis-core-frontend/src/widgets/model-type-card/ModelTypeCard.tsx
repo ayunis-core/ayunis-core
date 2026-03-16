@@ -21,12 +21,13 @@ import { getFlagByProvider } from '@/shared/lib/getFlagByProvider';
 
 export interface ModelActions {
   readonly deletePermittedModel: (permittedModelId: string) => void;
-  readonly updatePermittedModel: (params: {
+  readonly updatePermittedModel?: (params: {
     permittedModelId: string;
     anonymousOnly: boolean;
   }) => void;
   readonly enableModel: (model: ModelWithConfigResponseDto) => void;
   readonly isEnabling: boolean;
+  readonly isDisabling?: boolean;
 }
 
 interface ModelTypeCardProps {
@@ -71,6 +72,7 @@ export default function ModelTypeCard({
     updatePermittedModel,
     enableModel,
     isEnabling,
+    isDisabling,
   } = actions;
 
   const title =
@@ -100,7 +102,7 @@ export default function ModelTypeCard({
     model: ModelWithConfigResponseDto,
     anonymousOnly: boolean,
   ) {
-    if (!model.permittedModelId) return;
+    if (!model.permittedModelId || !updatePermittedModel) return;
     updatePermittedModel({
       permittedModelId: model.permittedModelId,
       anonymousOnly,
@@ -165,7 +167,7 @@ export default function ModelTypeCard({
                     </ItemTitle>
                   </ItemContent>
                   <ItemActions>
-                    {model.isPermitted && (
+                    {model.isPermitted && updatePermittedModel && (
                       <div className="flex items-center gap-2">
                         <Label
                           htmlFor={`${modelKey}-anonymous`}
@@ -192,7 +194,7 @@ export default function ModelTypeCard({
                       </Label>
                       <Switch
                         id={modelKey}
-                        disabled={isEnabling}
+                        disabled={isEnabling || isDisabling}
                         checked={model.isPermitted}
                         onCheckedChange={(isPermitted) =>
                           handleModelToggle(model, isPermitted)

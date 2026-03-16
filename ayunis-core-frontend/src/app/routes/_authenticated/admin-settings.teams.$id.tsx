@@ -5,6 +5,8 @@ import {
   getTeamsControllerGetTeamQueryKey,
   teamsControllerListTeamMembers,
   getTeamsControllerListTeamMembersQueryKey,
+  teamPermittedModelsControllerListTeamPermittedModels,
+  getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
 export const Route = createFileRoute(
@@ -12,6 +14,12 @@ export const Route = createFileRoute(
 )({
   component: RouteComponent,
   loader: async ({ context: { queryClient }, params: { id } }) => {
+    void queryClient.prefetchQuery({
+      queryKey:
+        getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey(id),
+      queryFn: () => teamPermittedModelsControllerListTeamPermittedModels(id),
+    });
+
     const [team, membersResponse] = await Promise.all([
       queryClient.fetchQuery({
         queryKey: getTeamsControllerGetTeamQueryKey(id),
