@@ -4,8 +4,9 @@ import {
   IsString,
   MaxLength,
   ValidateNested,
+  IsBoolean,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { PageMarginsDto } from './page-margins.dto';
 
 export class UpdateLetterheadDto {
@@ -44,4 +45,14 @@ export class UpdateLetterheadDto {
   @ValidateNested()
   @Type(() => PageMarginsDto)
   continuationPageMargins?: PageMarginsDto;
+
+  @ApiPropertyOptional({
+    description:
+      'Set to true to remove the continuation page PDF. Ignored if a new continuationPagePdf file is uploaded.',
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
+  clearContinuationPage?: boolean;
 }

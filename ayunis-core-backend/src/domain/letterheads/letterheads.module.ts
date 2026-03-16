@@ -10,6 +10,7 @@ import { UpdateLetterheadUseCase } from './application/use-cases/update-letterhe
 import { DeleteLetterheadUseCase } from './application/use-cases/delete-letterhead/delete-letterhead.use-case';
 import { LetterheadsController } from './presenters/http/letterheads.controller';
 import { LetterheadDtoMapper } from './presenters/http/mappers/letterhead-dto.mapper';
+import { LetterheadPdfService } from './application/services/letterhead-pdf.service';
 
 @Module({
   imports: [LocalLetterheadsRepositoryModule, StorageModule],
@@ -19,6 +20,7 @@ import { LetterheadDtoMapper } from './presenters/http/mappers/letterhead-dto.ma
       provide: LetterheadsRepository,
       useExisting: LocalLetterheadsRepository,
     },
+    LetterheadPdfService,
     CreateLetterheadUseCase,
     FindAllLetterheadsUseCase,
     FindLetterheadUseCase,
@@ -27,7 +29,6 @@ import { LetterheadDtoMapper } from './presenters/http/mappers/letterhead-dto.ma
     LetterheadDtoMapper,
   ],
   exports: [
-    LetterheadsRepository,
     CreateLetterheadUseCase,
     FindAllLetterheadsUseCase,
     FindLetterheadUseCase,

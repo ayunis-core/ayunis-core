@@ -10,6 +10,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { LetterheadInvalidPdfError } from '../../letterheads.errors';
+import { LetterheadPdfService } from '../../services/letterhead-pdf.service';
 
 async function createSinglePagePdf(): Promise<Buffer> {
   const doc = await PDFDocument.create();
@@ -60,6 +61,7 @@ describe('CreateLetterheadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateLetterheadUseCase,
+        LetterheadPdfService,
         { provide: LetterheadsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: UploadObjectUseCase, useValue: mockUploadObjectUseCase },
@@ -176,6 +178,7 @@ describe('CreateLetterheadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateLetterheadUseCase,
+        LetterheadPdfService,
         { provide: LetterheadsRepository, useValue: letterheadsRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: UploadObjectUseCase, useValue: uploadObjectUseCase },

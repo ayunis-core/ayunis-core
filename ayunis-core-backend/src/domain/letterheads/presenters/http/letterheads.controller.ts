@@ -217,13 +217,21 @@ export class LetterheadsController {
       ? parseMargins(dto.continuationPageMargins, 'continuationPageMargins')
       : undefined;
 
+    const continuationFile = files?.continuationPagePdf?.[0]?.buffer;
+    let continuationPagePdfBuffer: Buffer | null | undefined;
+    if (continuationFile) {
+      continuationPagePdfBuffer = continuationFile;
+    } else if (dto.clearContinuationPage) {
+      continuationPagePdfBuffer = null;
+    }
+
     const letterhead = await this.updateLetterheadUseCase.execute(
       new UpdateLetterheadCommand({
         letterheadId: id,
         name: dto.name,
         description: dto.description,
         firstPagePdfBuffer: files?.firstPagePdf?.[0]?.buffer,
-        continuationPagePdfBuffer: files?.continuationPagePdf?.[0]?.buffer,
+        continuationPagePdfBuffer,
         firstPageMargins,
         continuationPageMargins,
       }),

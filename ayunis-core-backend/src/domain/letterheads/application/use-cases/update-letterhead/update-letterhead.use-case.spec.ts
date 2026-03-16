@@ -14,6 +14,7 @@ import {
   LetterheadInvalidPdfError,
 } from '../../letterheads.errors';
 import { Letterhead } from '../../../domain/letterhead.entity';
+import { LetterheadPdfService } from '../../services/letterhead-pdf.service';
 
 async function createSinglePagePdf(): Promise<Buffer> {
   const doc = await PDFDocument.create();
@@ -76,6 +77,7 @@ describe('UpdateLetterheadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateLetterheadUseCase,
+        LetterheadPdfService,
         { provide: LetterheadsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: UploadObjectUseCase, useValue: mockUploadObjectUseCase },
@@ -210,6 +212,7 @@ describe('UpdateLetterheadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateLetterheadUseCase,
+        LetterheadPdfService,
         { provide: LetterheadsRepository, useValue: letterheadsRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: UploadObjectUseCase, useValue: uploadObjectUseCase },

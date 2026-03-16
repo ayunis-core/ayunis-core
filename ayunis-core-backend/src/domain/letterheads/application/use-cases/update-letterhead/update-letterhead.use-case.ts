@@ -1,16 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { UUID } from 'crypto';
-import { PDFDocument } from 'pdf-lib';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
 import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
 import { Letterhead } from '../../../domain/letterhead.entity';
-import {
-  LetterheadNotFoundError,
-  LetterheadInvalidPdfError,
-} from '../../letterheads.errors';
+import { LetterheadNotFoundError } from '../../letterheads.errors';
+import { LetterheadPdfService } from '../../services/letterhead-pdf.service';
 import { UpdateLetterheadCommand } from './update-letterhead.command';
 
 @Injectable()
@@ -21,6 +17,7 @@ export class UpdateLetterheadUseCase {
     private readonly letterheadsRepository: LetterheadsRepository,
     private readonly contextService: ContextService,
     private readonly uploadObjectUseCase: UploadObjectUseCase,
+    private readonly letterheadPdfService: LetterheadPdfService,
   ) {}
 
   async execute(command: UpdateLetterheadCommand): Promise<Letterhead> {
@@ -43,11 +40,11 @@ export class UpdateLetterheadUseCase {
 
     let firstPageStoragePath = existing.firstPageStoragePath;
     if (command.firstPagePdfBuffer) {
-      await this.validateSinglePagePdf(
+      await this.letterheadPdfService.validateSinglePagePdf(
         command.firstPagePdfBuffer,
         'first page',
       );
-      firstPageStoragePath = this.buildStoragePath(
+      firstPageStoragePath = this.letterheadPdfService.buildStoragePath(
         orgId,
         existing.id,
         'first-page.pdf',
@@ -63,11 +60,11 @@ export class UpdateLetterheadUseCase {
     let continuationPageStoragePath = existing.continuationPageStoragePath;
     if (command.continuationPagePdfBuffer !== undefined) {
       if (command.continuationPagePdfBuffer) {
-        await this.validateSinglePagePdf(
+        await this.letterheadPdfService.validateSinglePagePdf(
           command.continuationPagePdfBuffer,
           'continuation page',
         );
-        continuationPageStoragePath = this.buildStoragePath(
+        continuationPageStoragePath = this.letterheadPdfService.buildStoragePath(
           orgId,
           existing.id,
           'continuation.pdf',
@@ -101,33 +98,5 @@ export class UpdateLetterheadUseCase {
     });
 
     return this.letterheadsRepository.save(updated);
-  }
-
-  private async validateSinglePagePdf(
-    buffer: Buffer,
-    label: string,
-  ): Promise<void> {
-    try {
-      const pdfDoc = await PDFDocument.load(buffer);
-      const pageCount = pdfDoc.getPageCount();
-      if (pageCount !== 1) {
-        throw new LetterheadInvalidPdfError(
-          `${label} PDF must be exactly 1 page, got ${pageCount}`,
-        );
-      }
-    } catch (error) {
-      if (error instanceof LetterheadInvalidPdfError) {
-        throw error;
-      }
-      throw new LetterheadInvalidPdfError(`${label} is not a valid PDF file`);
-    }
-  }
-
-  private buildStoragePath(
-    orgId: UUID,
-    letterheadId: UUID,
-    fileName: string,
-  ): string {
-    return `letterheads/${orgId}/${letterheadId}/${fileName}`;
   }
 }
