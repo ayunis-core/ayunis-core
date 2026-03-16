@@ -1,0 +1,25 @@
+{
+  "title": "Security",
+  "ipAllowlist": {
+    "heading": "IP Allow List",
+    "description": "Restrict access to your organization by IP address. Only users connecting from the specified CIDR ranges will be able to use the application. Leave empty to allow all IPs.",
+    "cidrsLabel": "Allowed CIDR Ranges",
+    "cidrsPlaceholder": "Enter one CIDR range per line, e.g.\n192.168.1.0/24\n10.0.0.0/8\n2001:db8::/32",
+    "saveButton": "Save",
+    "saving": "Saving...",
+    "removeButton": "Remove All Restrictions",
+    "removing": "Removing...",
+    "removeConfirmTitle": "Remove IP Restrictions",
+    "removeConfirmDescription": "Are you sure you want to remove all IP restrictions? All users will be able to access the application from any IP address.",
+    "removeConfirmCancel": "Cancel",
+    "removeConfirmConfirm": "Remove Restrictions",
+    "saveSuccess": "IP allow list updated successfully.",
+    "removeSuccess": "IP restrictions removed successfully.",
+    "saveError": "Failed to update IP allow list.",
+    "removeError": "Failed to remove IP restrictions.",
+    "lockoutError": "This change would lock you out. Make sure your current IP address is included in the allowed ranges.",
+    "invalidCidr": "Invalid CIDR range on line {{line}}: \"{{value}}\"",
+    "propagationNote": "Changes may take up to 60 seconds to take effect across all services.",
+    "noRestrictions": "No IP restrictions are currently configured. All IP addresses are allowed."
+  }
+}

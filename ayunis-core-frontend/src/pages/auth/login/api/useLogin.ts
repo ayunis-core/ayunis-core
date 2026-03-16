@@ -46,7 +46,9 @@ export function useLogin({ redirect }: { redirect?: string }) {
           console.error('Login failed:', error);
           try {
             const { status, code } = extractErrorData(error);
-            if (status === 401 || status === 403) {
+            if (code === 'IP_NOT_ALLOWED') {
+              showError(t('login.error.ipNotAllowed'));
+            } else if (status === 401 || status === 403) {
               showError(t('login.error.invalidCredentials'));
             } else if (code === 'RATE_LIMIT_EXCEEDED') {
               showError(t('login.error.rateLimitExceeded'));
