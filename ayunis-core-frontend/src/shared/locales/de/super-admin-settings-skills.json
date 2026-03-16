@@ -46,6 +46,24 @@
     "duplicateName": "Eine Skill-Vorlage mit diesem Namen existiert bereits",
     "notFound": "Skill-Vorlage nicht gefunden"
   },
+  "validation": {
+    "name": {
+      "isNotEmpty": "Name ist erforderlich",
+      "maxLength": "Name darf maximal 100 Zeichen lang sein",
+      "invalid": "Ungültiger Name"
+    },
+    "shortDescription": {
+      "isNotEmpty": "Kurzbeschreibung ist erforderlich",
+      "maxLength": "Kurzbeschreibung darf maximal 500 Zeichen lang sein",
+      "invalid": "Ungültige Kurzbeschreibung"
+    },
+    "instructions": {
+      "isNotEmpty": "Anweisungen sind erforderlich",
+      "maxLength": "Anweisungen dürfen maximal 10.000 Zeichen lang sein",
+      "invalid": "Ungültige Anweisungen"
+    },
+    "invalid": "Ungültige Eingabe"
+  },
   "delete": {
     "title": "Skill-Vorlage löschen",
     "description": "Möchten Sie \"{{name}}\" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
