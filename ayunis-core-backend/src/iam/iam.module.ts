@@ -16,6 +16,7 @@ import { LegalAcceptancesModule } from './legal-acceptances/legal-acceptances.mo
 import { QuotasModule } from './quotas/quotas.module';
 import { TeamsModule } from './teams/teams.module';
 import { PlatformConfigModule } from './platform-config/platform-config.module';
+import { IpAllowlistModule } from './ip-allowlist/ip-allowlist.module';
 
 @Module({})
 export class IamModule {
@@ -38,6 +39,7 @@ export class IamModule {
         QuotasModule,
         TeamsModule,
         PlatformConfigModule,
+        IpAllowlistModule,
       ],
       exports: [
         AuthenticationModule,
@@ -52,6 +54,7 @@ export class IamModule {
         QuotasModule,
         TeamsModule,
         PlatformConfigModule,
+        IpAllowlistModule,
       ],
     };
   }
