@@ -4,12 +4,21 @@ applyDomPatch(); // Must be called before React renders
 import { initSentry } from '@/shared/lib/sentry';
 initSentry();
 
+// Auto-reload when Vite chunk imports fail after a deployment
+// (users with stale index.html try to load chunks that no longer exist)
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault();
+  window.location.reload();
+});
+
 import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import RootLayout from './layouts/root-layout';
 import { ErrorBoundary } from '@/shared/ui/error-boundary';
+import { ErrorFallback } from '@/shared/ui/error-boundary/ErrorFallback';
+import { isChunkLoadError } from '@/shared/lib/is-chunk-load-error';
 
 // Import the generated route tree
 import { routeTree } from './app/routeTree.gen.ts';
@@ -47,6 +56,15 @@ const router = createRouter({
   scrollRestoration: true,
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,
+  defaultErrorComponent: ({ error }) => {
+    // Auto-reload on chunk load errors (stale deployment)
+    if (isChunkLoadError(error)) {
+      window.location.reload();
+      return null;
+    }
+
+    return <ErrorFallback onReset={() => window.location.reload()} />;
+  },
 });
 
 // Register the router instance for type safety
