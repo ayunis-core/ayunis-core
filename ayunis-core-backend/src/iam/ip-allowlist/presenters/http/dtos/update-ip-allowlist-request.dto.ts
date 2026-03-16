@@ -14,9 +14,12 @@ export class UpdateIpAllowlistRequestDto {
     example: ['203.0.113.0/24'],
     type: [String],
   })
-  @Transform(({ value }: { value: string[] }) =>
-    value.map((s: string) => s.trim()),
-  )
+  @Transform(({ value }: { value: unknown }): string[] | unknown => {
+    if (!Array.isArray(value)) {
+      return value;
+    }
+    return value.map((s: string) => s.trim());
+  })
   @IsArray()
   @ArrayNotEmpty()
   @ArrayMaxSize(500)
