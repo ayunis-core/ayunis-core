@@ -64,6 +64,8 @@ import { Roles } from 'src/iam/authorization/application/decorators/roles.decora
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { GetPermittedLanguageModelsQuery } from '../../application/use-cases/get-permitted-language-models/get-permitted-language-models.query';
 import { GetPermittedLanguageModelsUseCase } from '../../application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
+import { GetEffectiveLanguageModelsUseCase } from '../../application/use-cases/get-effective-language-models/get-effective-language-models.use-case';
+import { GetEffectiveLanguageModelsQuery } from '../../application/use-cases/get-effective-language-models/get-effective-language-models.query';
 import { IsEmbeddingModelEnabledUseCase } from '../../application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.use-case';
 import { IsEmbeddingModelEnabledQuery } from '../../application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.query';
 import { EmbeddingModelEnabledResponseDto } from './dto/embedding-model-enabled-response.dto';
@@ -97,6 +99,7 @@ export class ModelsController {
     private readonly modelWithConfigResponseDtoMapper: ModelWithConfigResponseDtoMapper,
     private readonly modelProviderInfoResponseDtoMapper: ModelProviderInfoResponseDtoMapper,
     private readonly getPermittedLanguageModelsUseCase: GetPermittedLanguageModelsUseCase,
+    private readonly getEffectiveLanguageModelsUseCase: GetEffectiveLanguageModelsUseCase,
     private readonly isEmbeddingModelEnabledUseCase: IsEmbeddingModelEnabledUseCase,
   ) {}
 
@@ -230,10 +233,17 @@ export class ModelsController {
   }
 
   @Get('permitted/language-models')
-  @ApiOperation({ summary: 'Get all permitted language models' })
+  @ApiOperation({
+    summary: 'Get effective permitted language models for the current user',
+    description:
+      'Returns the effective set of language models for the current user, ' +
+      'considering team overrides. If the user is in any team with model ' +
+      "override enabled, only those teams' models are returned (union). " +
+      'Otherwise, org-level models are returned.',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Successfully retrieved all permitted language models',
+    description: 'Successfully retrieved effective language models',
     schema: {
       type: 'array',
       items: {
@@ -244,6 +254,37 @@ export class ModelsController {
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @ApiExtraModels(PermittedLanguageModelResponseDto)
   async getPermittedLanguageModels(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+    @CurrentUser(UserProperty.ID) userId: UUID,
+  ): Promise<PermittedLanguageModelResponseDto[]> {
+    const query = new GetEffectiveLanguageModelsQuery(orgId, userId);
+    const result = await this.getEffectiveLanguageModelsUseCase.execute(query);
+    return result.models.map((model) =>
+      this.modelResponseDtoMapper.toLanguageModelDto(model),
+    );
+  }
+
+  @Get('permitted/language-models/org')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Get org-level permitted language models (admin view)',
+    description:
+      'Returns only org-scoped permitted language models, ignoring team ' +
+      'overrides. Used by the admin model settings page.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully retrieved org-level language models',
+    schema: {
+      type: 'array',
+      items: {
+        $ref: getSchemaPath(PermittedLanguageModelResponseDto),
+      },
+    },
+  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiExtraModels(PermittedLanguageModelResponseDto)
+  async getOrgPermittedLanguageModels(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<PermittedLanguageModelResponseDto[]> {
     const query = new GetPermittedLanguageModelsQuery(orgId);

@@ -79,6 +79,12 @@ import { ScalewayStreamInferenceHandler } from './infrastructure/stream-inferenc
 import { ConfigService } from '@nestjs/config';
 import { TeamsModule } from 'src/iam/teams/teams.module';
 import { GetEffectiveLanguageModelsUseCase } from './application/use-cases/get-effective-language-models/get-effective-language-models.use-case';
+import { CreateTeamPermittedModelUseCase } from './application/use-cases/create-team-permitted-model/create-team-permitted-model.use-case';
+import { DeleteTeamPermittedModelUseCase } from './application/use-cases/delete-team-permitted-model/delete-team-permitted-model.use-case';
+import { GetTeamPermittedModelsUseCase } from './application/use-cases/get-team-permitted-models/get-team-permitted-models.use-case';
+import { SetTeamDefaultModelUseCase } from './application/use-cases/set-team-default-model/set-team-default-model.use-case';
+import { TeamPermittedModelsController } from './presenters/http/team-permitted-models.controller';
+import { TeamPermittedModelValidator } from './application/services/team-permitted-model-validator.service';
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
 import { OpenAIResponsesMessageConverter } from './infrastructure/converters/openai-responses-message.converter';
@@ -101,6 +107,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
   ],
   controllers: [
     ModelsController,
+    TeamPermittedModelsController,
     SuperAdminPermittedModelsController,
     SuperAdminCatalogModelsController,
   ],
@@ -243,8 +250,14 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
         ConfigService,
       ],
     },
+    // Services
+    TeamPermittedModelValidator,
     // Use Cases
     GetEffectiveLanguageModelsUseCase,
+    GetTeamPermittedModelsUseCase,
+    CreateTeamPermittedModelUseCase,
+    DeleteTeamPermittedModelUseCase,
+    SetTeamDefaultModelUseCase,
     CreatePermittedModelUseCase,
     DeletePermittedModelUseCase,
     UpdatePermittedModelUseCase,
