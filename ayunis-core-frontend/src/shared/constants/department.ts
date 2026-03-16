@@ -1,6 +1,6 @@
 /**
- * Selectable department keys — mirrors the backend `department.constants.ts`.
- * Do NOT duplicate freely — the backend is the single source of truth.
+ * Selectable department keys — the frontend is the single source of truth.
+ * The backend accepts any string; this list drives UI dropdowns only.
  */
 export const DEPARTMENT_KEYS = [
   'hauptamt',
