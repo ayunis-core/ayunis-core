@@ -15,4 +15,7 @@ export class TeamRecord extends BaseRecord {
   @ManyToOne(() => OrgRecord, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'org_id' })
   org: OrgRecord;
+
+  @Column({ name: 'model_override_enabled', default: false })
+  modelOverrideEnabled: boolean;
 }

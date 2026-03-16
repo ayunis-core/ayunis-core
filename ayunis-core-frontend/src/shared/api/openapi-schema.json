@@ -11609,6 +11609,11 @@
             "type": "string",
             "description": "The new name of the team",
             "example": "Engineering"
+          },
+          "modelOverrideEnabled": {
+            "type": "boolean",
+            "description": "Whether model access override is enabled for this team",
+            "example": false
           }
         },
         "required": [
@@ -11644,6 +11649,11 @@
             "type": "string",
             "description": "The date and time when the team was last updated",
             "example": "2024-01-15T10:30:00.000Z"
+          },
+          "modelOverrideEnabled": {
+            "type": "boolean",
+            "description": "Whether model access override is enabled for this team",
+            "example": false
           }
         },
         "required": [
@@ -11651,7 +11661,8 @@
           "name",
           "orgId",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "modelOverrideEnabled"
         ]
       },
       "TeamMemberResponseDto": {
