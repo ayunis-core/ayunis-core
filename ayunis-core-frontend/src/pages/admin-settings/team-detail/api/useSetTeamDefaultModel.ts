@@ -15,8 +15,17 @@ export function useSetTeamDefaultModel(teamId: string) {
       onSuccess: () => {
         showSuccess(t('models.defaultModel.success'));
       },
-      onError: () => {
-        showError(t('models.defaultModel.error'));
+      onError: (error: unknown) => {
+        const errorObj = error as { response?: { data?: { code?: string } } };
+        const errorCode = errorObj.response?.data?.code;
+
+        if (errorCode === 'MODEL_NOT_FOUND') {
+          showError(t('models.defaultModel.modelNotFound'));
+        } else if (errorCode === 'MODEL_INVALID') {
+          showError(t('models.defaultModel.modelInvalid'));
+        } else {
+          showError(t('models.defaultModel.error'));
+        }
       },
       onSettled: () => {
         void queryClient.invalidateQueries({

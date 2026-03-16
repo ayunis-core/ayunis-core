@@ -121,7 +121,9 @@
       "loading": "Modelle werden geladen...",
       "empty": "Aktivieren Sie mindestens ein Modell, um ein Standardmodell festzulegen.",
       "success": "Team-Standardmodell aktualisiert",
-      "error": "Team-Standardmodell konnte nicht festgelegt werden"
+      "error": "Team-Standardmodell konnte nicht festgelegt werden",
+      "modelNotFound": "Modell nicht gefunden",
+      "modelInvalid": "Dieses Modell kann nicht als Standard für das Team festgelegt werden"
     }
   }
 }

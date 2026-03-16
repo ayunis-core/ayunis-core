@@ -121,7 +121,9 @@
       "loading": "Loading models...",
       "empty": "Enable at least one model to set a default.",
       "success": "Team default model updated",
-      "error": "Failed to set team default model"
+      "error": "Failed to set team default model",
+      "modelNotFound": "Model not found",
+      "modelInvalid": "This model cannot be set as default for the team"
     }
   }
 }
