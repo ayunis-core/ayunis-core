@@ -28,6 +28,10 @@ export abstract class PermittedModelsRepository {
   abstract findOrgDefaultLanguage(
     orgId: UUID,
   ): Promise<PermittedLanguageModel | null>;
+  abstract findTeamDefaultLanguage(
+    teamId: UUID,
+    orgId: UUID,
+  ): Promise<PermittedLanguageModel | null>;
   abstract findOne(params: FindOneParams): Promise<PermittedModel | null>;
   abstract findOneLanguage(
     params: FindOneParams,
@@ -36,11 +40,20 @@ export abstract class PermittedModelsRepository {
     orgId: UUID,
   ): Promise<PermittedEmbeddingModel | null>;
   abstract findManyLanguage(orgId: UUID): Promise<PermittedLanguageModel[]>;
+  abstract findManyLanguageByTeam(
+    teamId: UUID,
+    orgId: UUID,
+  ): Promise<PermittedLanguageModel[]>;
   abstract create(permittedModel: PermittedModel): Promise<PermittedModel>;
   abstract delete(params: { id: UUID; orgId: UUID }): Promise<void>;
+  abstract deleteTeamScopedByOrgAndModelId(
+    orgId: UUID,
+    modelId: UUID,
+  ): Promise<void>;
   abstract setAsDefault(params: {
     id: UUID;
     orgId: UUID;
+    teamId?: UUID;
   }): Promise<PermittedLanguageModel>;
   abstract update(permittedModel: PermittedModel): Promise<PermittedModel>;
   abstract findAllByCatalogModelId(
