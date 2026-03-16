@@ -9,6 +9,7 @@ import { UnexpectedModelError } from '../../models.errors';
 import { TeamMembershipPort } from '../../ports/team-membership.port';
 import { GetEffectiveLanguageModelsQuery } from './get-effective-language-models.query';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import type { EffectiveLanguageModelsResult } from './effective-language-models-result';
 
 @Injectable()
 export class GetEffectiveLanguageModelsUseCase {
@@ -22,69 +23,81 @@ export class GetEffectiveLanguageModelsUseCase {
 
   async execute(
     query: GetEffectiveLanguageModelsQuery,
-  ): Promise<PermittedLanguageModel[]> {
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError({ reason: 'Missing user context' });
-    }
-
+  ): Promise<EffectiveLanguageModelsResult> {
     this.logger.log('Resolving effective language models', {
-      userId,
+      userId: query.userId,
       orgId: query.orgId,
     });
 
     try {
-      const orgId = this.contextService.get('orgId');
-      const systemRole = this.contextService.get('systemRole');
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      const isFromOrg = orgId === query.orgId;
-      if (!isFromOrg && !isSuperAdmin) {
-        throw new UnauthorizedAccessError();
+      this.validateOrgAccess(query.orgId);
+
+      if (!query.userId) {
+        return this.buildOrgFallback(query.orgId);
       }
 
-      const teams = await this.teamMembershipPort.findTeamsByUserIdAndOrg(
-        userId,
-        query.orgId,
-      );
-
-      const overrideTeams = teams.filter((team) => team.modelOverrideEnabled);
-
-      if (overrideTeams.length === 0) {
-        this.logger.debug(
-          'No override teams found, returning org-level models',
-          {
-            userId,
-            orgId: query.orgId,
-          },
-        );
-        return this.permittedModelsRepository.findManyLanguage(query.orgId);
-      }
-
-      const merged = await this.mergeTeamModels(
-        overrideTeams.map((t) => t.id),
-        query.orgId,
-      );
-
-      if (merged.length === 0) {
-        this.logger.debug(
-          'Override teams have no configured models, falling back to org-level models',
-          { userId, orgId: query.orgId },
-        );
-        return this.permittedModelsRepository.findManyLanguage(query.orgId);
-      }
-
-      return merged;
+      return this.resolveForUser(query.userId, query.orgId);
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
       this.logger.error('Error resolving effective language models', {
-        userId,
+        userId: query.userId,
         orgId: query.orgId,
         error: error instanceof Error ? error : new Error('Unknown error'),
       });
       throw new UnexpectedModelError(error as Error);
     }
+  }
+
+  private validateOrgAccess(queryOrgId: UUID): void {
+    const orgId = this.contextService.get('orgId');
+    const systemRole = this.contextService.get('systemRole');
+    const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+    const isFromOrg = orgId === queryOrgId;
+    if (!isFromOrg && !isSuperAdmin) {
+      throw new UnauthorizedAccessError();
+    }
+  }
+
+  private async resolveForUser(
+    userId: UUID,
+    orgId: UUID,
+  ): Promise<EffectiveLanguageModelsResult> {
+    const teams = await this.teamMembershipPort.findTeamsByUserIdAndOrg(
+      userId,
+      orgId,
+    );
+
+    const overrideTeams = teams.filter((team) => team.modelOverrideEnabled);
+    const overrideTeamIds = overrideTeams.map((t) => t.id);
+
+    if (overrideTeams.length === 0) {
+      this.logger.debug('No override teams found, returning org-level models', {
+        userId,
+        orgId,
+      });
+      return this.buildOrgFallback(orgId);
+    }
+
+    const merged = await this.mergeTeamModels(overrideTeamIds, orgId);
+
+    if (merged.length === 0) {
+      this.logger.debug(
+        'Override teams have no configured models, falling back to org-level models',
+        { userId, orgId },
+      );
+      return this.buildOrgFallback(orgId);
+    }
+
+    return { models: merged, overrideTeamIds };
+  }
+
+  private async buildOrgFallback(
+    orgId: UUID,
+  ): Promise<EffectiveLanguageModelsResult> {
+    const models = await this.permittedModelsRepository.findManyLanguage(orgId);
+    return { models, overrideTeamIds: [] };
   }
 
   private async mergeTeamModels(
