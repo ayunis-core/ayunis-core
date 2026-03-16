@@ -6,9 +6,11 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { UnexpectedModelError } from '../../models.errors';
-import { ListMyTeamsUseCase } from 'src/iam/teams/application/use-cases/list-my-teams/list-my-teams.use-case';
+import { FindTeamsByUserIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-user-id/find-teams-by-user-id.use-case';
+import { FindTeamsByUserIdQuery } from 'src/iam/teams/application/use-cases/find-teams-by-user-id/find-teams-by-user-id.query';
 import { GetEffectiveLanguageModelsQuery } from './get-effective-language-models.query';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import type { EffectiveLanguageModelsResult } from './effective-language-models-result';
 
 @Injectable()
 export class GetEffectiveLanguageModelsUseCase {
@@ -16,74 +18,88 @@ export class GetEffectiveLanguageModelsUseCase {
 
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
-    private readonly listMyTeamsUseCase: ListMyTeamsUseCase,
+    private readonly findTeamsByUserIdUseCase: FindTeamsByUserIdUseCase,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(
     query: GetEffectiveLanguageModelsQuery,
-  ): Promise<PermittedLanguageModel[]> {
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError({ reason: 'Missing user context' });
-    }
-
+  ): Promise<EffectiveLanguageModelsResult> {
     this.logger.log('Resolving effective language models', {
-      userId,
+      userId: query.userId,
       orgId: query.orgId,
     });
 
     try {
-      const orgId = this.contextService.get('orgId');
-      const systemRole = this.contextService.get('systemRole');
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      const isFromOrg = orgId === query.orgId;
-      if (!isFromOrg && !isSuperAdmin) {
-        throw new UnauthorizedAccessError();
+      this.validateOrgAccess(query.orgId);
+
+      if (!query.userId) {
+        return this.buildOrgFallback(query.orgId);
       }
 
-      const allTeams = await this.listMyTeamsUseCase.execute();
-      const orgTeams = allTeams.filter((team) => team.orgId === query.orgId);
-      const overrideTeams = orgTeams.filter(
-        (team) => team.modelOverrideEnabled,
-      );
-
-      if (overrideTeams.length === 0) {
-        this.logger.debug(
-          'No override teams found, returning org-level models',
-          {
-            userId,
-            orgId: query.orgId,
-          },
-        );
-        return this.permittedModelsRepository.findManyLanguage(query.orgId);
-      }
-
-      const merged = await this.mergeTeamModels(
-        overrideTeams.map((t) => t.id),
-        query.orgId,
-      );
-
-      if (merged.length === 0) {
-        this.logger.debug(
-          'Override teams have no configured models, falling back to org-level models',
-          { userId, orgId: query.orgId },
-        );
-        return this.permittedModelsRepository.findManyLanguage(query.orgId);
-      }
-
-      return merged;
+      return this.resolveForUser(query.userId, query.orgId);
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
       this.logger.error('Error resolving effective language models', {
-        userId,
+        userId: query.userId,
         orgId: query.orgId,
         error: error instanceof Error ? error : new Error('Unknown error'),
       });
       throw new UnexpectedModelError(error as Error);
     }
+  }
+
+  private validateOrgAccess(queryOrgId: UUID): void {
+    const orgId = this.contextService.get('orgId');
+    const systemRole = this.contextService.get('systemRole');
+    const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+    const isFromOrg = orgId === queryOrgId;
+    if (!isFromOrg && !isSuperAdmin) {
+      throw new UnauthorizedAccessError();
+    }
+  }
+
+  private async resolveForUser(
+    userId: UUID,
+    orgId: UUID,
+  ): Promise<EffectiveLanguageModelsResult> {
+    const allTeams = await this.findTeamsByUserIdUseCase.execute(
+      new FindTeamsByUserIdQuery(userId),
+    );
+    const orgTeams = allTeams.filter((team) => team.orgId === orgId);
+    const overrideTeams = orgTeams.filter(
+      (team) => team.modelOverrideEnabled,
+    );
+    const overrideTeamIds = overrideTeams.map((t) => t.id);
+
+    if (overrideTeams.length === 0) {
+      this.logger.debug('No override teams found, returning org-level models', {
+        userId,
+        orgId,
+      });
+      return this.buildOrgFallback(orgId);
+    }
+
+    const merged = await this.mergeTeamModels(overrideTeamIds, orgId);
+
+    if (merged.length === 0) {
+      this.logger.debug(
+        'Override teams have no configured models, falling back to org-level models',
+        { userId, orgId },
+      );
+      return this.buildOrgFallback(orgId);
+    }
+
+    return { models: merged, overrideTeamIds };
+  }
+
+  private async buildOrgFallback(
+    orgId: UUID,
+  ): Promise<EffectiveLanguageModelsResult> {
+    const models = await this.permittedModelsRepository.findManyLanguage(orgId);
+    return { models, overrideTeamIds: [] };
   }
 
   private async mergeTeamModels(
