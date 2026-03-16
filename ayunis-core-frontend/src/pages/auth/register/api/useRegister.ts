@@ -4,6 +4,12 @@ import { useNavigate } from '@tanstack/react-router';
 import { useAuthenticationControllerRegister } from '@/shared/api/generated/ayunisCoreAPI';
 import { showError } from '@/shared/lib/toast';
 import extractErrorData from '@/shared/api/extract-error-data';
+import {
+  computeDepartment,
+  refineDepartmentOther,
+} from '@/shared/lib/compute-department';
+import type { RegisterDtoDepartment } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { DEPARTMENT_OTHER_MAX_LENGTH } from '@/shared/constants/department';
 import { useTranslation } from 'react-i18next';
 import * as z from 'zod';
 
@@ -12,22 +18,28 @@ export function useRegister() {
   const { t } = useTranslation('auth');
   const registerMutation = useAuthenticationControllerRegister();
 
-  const registerFormSchema = z.object({
-    email: z.string().email({
-      message: t('register.emailInvalid'),
-    }),
-    password: z.string().min(8, {
-      message: t('register.passwordTooShort'),
-    }),
-    orgName: z.string().min(1, {
-      message: t('register.orgNameRequired'),
-    }),
-    userName: z.string().min(1, {
-      message: t('register.userNameRequired'),
-    }),
-    legalAcceptance: z.boolean(),
-    marketingAcceptance: z.boolean(),
-  });
+  const registerFormSchema = z
+    .object({
+      email: z.string().email({
+        message: t('register.emailInvalid'),
+      }),
+      password: z.string().min(8, {
+        message: t('register.passwordTooShort'),
+      }),
+      orgName: z.string().min(1, {
+        message: t('register.orgNameRequired'),
+      }),
+      userName: z.string().min(1, {
+        message: t('register.userNameRequired'),
+      }),
+      department: z.string().optional(),
+      departmentOther: z.string().max(DEPARTMENT_OTHER_MAX_LENGTH).optional(),
+      legalAcceptance: z.boolean(),
+      marketingAcceptance: z.boolean(),
+    })
+    .superRefine((data, ctx) => {
+      refineDepartmentOther(data, ctx, t('register.departmentOtherRequired'));
+    });
 
   const form = useForm<z.infer<typeof registerFormSchema>>({
     resolver: zodResolver(registerFormSchema),
@@ -36,6 +48,8 @@ export function useRegister() {
       password: '',
       orgName: '',
       userName: '',
+      department: undefined,
+      departmentOther: '',
       legalAcceptance: false,
       marketingAcceptance: false,
     },
@@ -49,6 +63,10 @@ export function useRegister() {
           password: values.password,
           orgName: values.orgName,
           userName: values.userName,
+          department: computeDepartment(
+            values.department,
+            values.departmentOther,
+          ) as RegisterDtoDepartment | undefined,
           marketingAcceptance: values.marketingAcceptance,
         },
       },

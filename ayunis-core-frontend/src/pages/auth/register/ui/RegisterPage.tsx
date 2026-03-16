@@ -18,6 +18,7 @@ import { Label } from '@/shared/ui/shadcn/label';
 import { useGtm } from '@/features/useGtm';
 import config from '@/shared/config';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
+import { DepartmentField } from '@/shared/ui/department-field';
 
 interface RegisterPageProps {
   isCloud: boolean;
@@ -148,6 +149,13 @@ export function RegisterPage({
                 <FormMessage />
               </FormItem>
             )}
+          />
+          <DepartmentField
+            form={form}
+            departmentName="department"
+            departmentOtherName="departmentOther"
+            translationPrefix="register"
+            t={t}
           />
           <FormField
             control={form.control}

@@ -5,6 +5,12 @@ import { useInvitesControllerAcceptInvite } from '@/shared/api/generated/ayunisC
 import type { Invite } from '../model/openapi';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
+import {
+  computeDepartment,
+  refineDepartmentOther,
+} from '@/shared/lib/compute-department';
+import type { AcceptInviteDtoDepartment } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { DEPARTMENT_OTHER_MAX_LENGTH } from '@/shared/constants/department';
 import { useTranslation } from 'react-i18next';
 import * as z from 'zod';
 
@@ -13,17 +19,27 @@ export function useInviteAccept(invite: Invite, inviteToken: string) {
   const acceptInviteMutation = useInvitesControllerAcceptInvite();
   const { t } = useTranslation('auth');
 
-  const inviteAcceptFormSchema = z.object({
-    email: z.string().email(),
-    name: z.string().min(1, {
-      message: t('inviteAccept.nameRequired'),
-    }),
-    password: z.string().min(8, {
-      message: t('inviteAccept.passwordTooShort'),
-    }),
-    inviteToken: z.string(),
-    hasAcceptedMarketing: z.boolean(),
-  });
+  const inviteAcceptFormSchema = z
+    .object({
+      email: z.string().email(),
+      name: z.string().min(1, {
+        message: t('inviteAccept.nameRequired'),
+      }),
+      password: z.string().min(8, {
+        message: t('inviteAccept.passwordTooShort'),
+      }),
+      department: z.string().optional(),
+      departmentOther: z.string().max(DEPARTMENT_OTHER_MAX_LENGTH).optional(),
+      inviteToken: z.string(),
+      hasAcceptedMarketing: z.boolean(),
+    })
+    .superRefine((data, ctx) => {
+      refineDepartmentOther(
+        data,
+        ctx,
+        t('inviteAccept.departmentOtherRequired'),
+      );
+    });
 
   const form = useForm<z.infer<typeof inviteAcceptFormSchema>>({
     resolver: zodResolver(inviteAcceptFormSchema),
@@ -31,6 +47,8 @@ export function useInviteAccept(invite: Invite, inviteToken: string) {
       email: invite.email,
       name: '',
       password: '',
+      department: undefined,
+      departmentOther: '',
       inviteToken: inviteToken,
       hasAcceptedMarketing: false,
     },
@@ -43,6 +61,10 @@ export function useInviteAccept(invite: Invite, inviteToken: string) {
           inviteToken: values.inviteToken,
           userName: values.name,
           password: values.password,
+          department: computeDepartment(
+            values.department,
+            values.departmentOther,
+          ) as AcceptInviteDtoDepartment | undefined,
           hasAcceptedMarketing: values.hasAcceptedMarketing,
         },
       },

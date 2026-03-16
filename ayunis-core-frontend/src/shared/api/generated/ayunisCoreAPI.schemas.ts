@@ -1064,6 +1064,36 @@ export interface InviteDetailResponseDto {
   organizationName: string;
 }
 
+/**
+ * Department within the municipality
+ */
+export type AcceptInviteDtoDepartment = typeof AcceptInviteDtoDepartment[keyof typeof AcceptInviteDtoDepartment];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AcceptInviteDtoDepartment = {
+  hauptamt: 'hauptamt',
+  kaemmerei: 'kaemmerei',
+  ordnungsamt: 'ordnungsamt',
+  bauamt: 'bauamt',
+  sozialamt: 'sozialamt',
+  jugendamt: 'jugendamt',
+  standesamt: 'standesamt',
+  einwohnermeldeamt: 'einwohnermeldeamt',
+  schulamt: 'schulamt',
+  kulturamt: 'kulturamt',
+  umweltamt: 'umweltamt',
+  tiefbauamt: 'tiefbauamt',
+  hochbauamt: 'hochbauamt',
+  personalamt: 'personalamt',
+  rechtsamt: 'rechtsamt',
+  gesundheitsamt: 'gesundheitsamt',
+  liegenschaftsamt: 'liegenschaftsamt',
+  it: 'it',
+  pressestelle: 'pressestelle',
+  other: 'other',
+} as const;
+
 export interface AcceptInviteDto {
   /** JWT token from the invite */
   inviteToken: string;
@@ -1074,7 +1104,7 @@ export interface AcceptInviteDto {
   /** Marketing acceptance */
   hasAcceptedMarketing: boolean;
   /** Department within the municipality */
-  department?: string;
+  department?: AcceptInviteDtoDepartment;
 }
 
 export interface AcceptInviteResponseDto {
@@ -3574,6 +3604,36 @@ export interface ErrorResponseDto {
   message: string;
 }
 
+/**
+ * Department within the municipality
+ */
+export type RegisterDtoDepartment = typeof RegisterDtoDepartment[keyof typeof RegisterDtoDepartment];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RegisterDtoDepartment = {
+  hauptamt: 'hauptamt',
+  kaemmerei: 'kaemmerei',
+  ordnungsamt: 'ordnungsamt',
+  bauamt: 'bauamt',
+  sozialamt: 'sozialamt',
+  jugendamt: 'jugendamt',
+  standesamt: 'standesamt',
+  einwohnermeldeamt: 'einwohnermeldeamt',
+  schulamt: 'schulamt',
+  kulturamt: 'kulturamt',
+  umweltamt: 'umweltamt',
+  tiefbauamt: 'tiefbauamt',
+  hochbauamt: 'hochbauamt',
+  personalamt: 'personalamt',
+  rechtsamt: 'rechtsamt',
+  gesundheitsamt: 'gesundheitsamt',
+  liegenschaftsamt: 'liegenschaftsamt',
+  it: 'it',
+  pressestelle: 'pressestelle',
+  other: 'other',
+} as const;
+
 export interface RegisterDto {
   /** Email address for the user account */
   email: string;
@@ -3586,7 +3646,7 @@ export interface RegisterDto {
   /** Marketing acceptance */
   marketingAcceptance: boolean;
   /** Department within the municipality */
-  department?: string;
+  department?: RegisterDtoDepartment;
 }
 
 /**
