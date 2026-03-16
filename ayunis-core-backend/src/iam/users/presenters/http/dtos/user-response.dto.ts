@@ -38,6 +38,14 @@ export class UserResponseDto {
   orgId: UUID;
 
   @ApiProperty({
+    description: 'Department the user belongs to',
+    example: 'hauptamt',
+    required: false,
+    nullable: true,
+  })
+  department?: string;
+
+  @ApiProperty({
     description: 'Date when the user was created',
     example: '2024-01-15T10:30:00Z',
     type: Date,
