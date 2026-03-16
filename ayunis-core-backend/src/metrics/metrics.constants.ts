@@ -11,6 +11,7 @@ export const AYUNIS_MESSAGES_TOTAL = 'ayunis_messages_total';
 export const AYUNIS_USER_ACTIVITY_TOTAL = 'ayunis_user_activity_total';
 export const AYUNIS_THREAD_MESSAGE_COUNT = 'ayunis_thread_message_count';
 export const AYUNIS_TOOL_USES_TOTAL = 'ayunis_tool_uses_total';
+export const AYUNIS_USER_CREATIONS_TOTAL = 'ayunis_user_creations_total';
 
 // Shared label names
 //
@@ -29,3 +30,4 @@ export const LABEL_ROLE = 'role';
 export const LABEL_ERROR_TYPE = 'error_type';
 export const LABEL_STREAMING = 'streaming';
 export const LABEL_TOOL_NAME = 'tool_name';
+export const LABEL_DEPARTMENT = 'department';

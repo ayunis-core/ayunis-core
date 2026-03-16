@@ -21,6 +21,7 @@ describe('CreateUserUseCase', () => {
   let sendWebhookUseCase: jest.Mocked<SendWebhookUseCase>;
   let configService: jest.Mocked<ConfigService>;
   let eventEmitter: jest.Mocked<EventEmitter2>;
+  let mockCounter: { inc: jest.Mock };
 
   const orgId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
 
@@ -59,12 +60,15 @@ describe('CreateUserUseCase', () => {
       emitAsync: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<EventEmitter2>;
 
+    mockCounter = { inc: jest.fn() };
+
     useCase = new CreateUserUseCase(
       usersRepository,
       hashTextUseCase,
       sendWebhookUseCase,
       configService,
       eventEmitter,
+      mockCounter as never,
     );
   });
 
@@ -78,6 +82,55 @@ describe('CreateUserUseCase', () => {
         orgId,
       }),
     );
+  });
+
+  it('should increment user creations counter with correct labels', async () => {
+    const commandWithDept = new CreateUserCommand({
+      email: 'counter@ayunis.de',
+      password: 'Sicher3sPasswort!',
+      orgId,
+      name: 'Counter Test',
+      role: UserRole.USER,
+      emailVerified: false,
+      hasAcceptedMarketing: false,
+      department: 'bauamt',
+    });
+
+    await useCase.execute(commandWithDept);
+
+    expect(mockCounter.inc).toHaveBeenCalledWith({
+      org_id: orgId,
+      department: 'bauamt',
+    });
+  });
+
+  it('should normalize other: department prefix to "other" in counter label', async () => {
+    const commandWithOtherDept = new CreateUserCommand({
+      email: 'other@ayunis.de',
+      password: 'Sicher3sPasswort!',
+      orgId,
+      name: 'Other Dept Test',
+      role: UserRole.USER,
+      emailVerified: false,
+      hasAcceptedMarketing: false,
+      department: 'other:Bürgermeisterbüro',
+    });
+
+    await useCase.execute(commandWithOtherDept);
+
+    expect(mockCounter.inc).toHaveBeenCalledWith({
+      org_id: orgId,
+      department: 'other',
+    });
+  });
+
+  it('should use "none" as department label when department is undefined', async () => {
+    await useCase.execute(validCommand);
+
+    expect(mockCounter.inc).toHaveBeenCalledWith({
+      org_id: orgId,
+      department: 'none',
+    });
   });
 
   it('should not emit UserCreatedEvent when user already exists', async () => {

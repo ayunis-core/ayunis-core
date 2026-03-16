@@ -13,6 +13,7 @@ import {
   AYUNIS_USER_ACTIVITY_TOTAL,
   AYUNIS_THREAD_MESSAGE_COUNT,
   AYUNIS_TOOL_USES_TOTAL,
+  AYUNIS_USER_CREATIONS_TOTAL,
   LABEL_USER_ID,
   LABEL_ORG_ID,
   LABEL_MODEL,
@@ -22,6 +23,7 @@ import {
   LABEL_ERROR_TYPE,
   LABEL_STREAMING,
   LABEL_TOOL_NAME,
+  LABEL_DEPARTMENT,
 } from './metrics.constants';
 import { MetricsAuthMiddleware } from './metrics-auth.middleware';
 import { MetricsController } from './metrics.controller';
@@ -76,6 +78,12 @@ const toolUsesCounter = makeCounterProvider({
   labelNames: [LABEL_USER_ID, LABEL_ORG_ID, LABEL_TOOL_NAME],
 });
 
+const userCreationsCounter = makeCounterProvider({
+  name: AYUNIS_USER_CREATIONS_TOTAL,
+  help: 'Total number of user creations (registration, invite accept, admin)',
+  labelNames: [LABEL_ORG_ID, LABEL_DEPARTMENT],
+});
+
 const metricProviders = [
   tokensCounter,
   inferenceDurationHistogram,
@@ -84,6 +92,7 @@ const metricProviders = [
   userActivityCounter,
   threadMessageCountHistogram,
   toolUsesCounter,
+  userCreationsCounter,
 ];
 
 @Global()

@@ -701,6 +701,11 @@ export interface UserResponseDto {
   role: UserResponseDtoRole;
   /** Organization ID the user belongs to */
   orgId: string;
+  /**
+   * Department the user belongs to
+   * @nullable
+   */
+  department?: string | null;
   /** Date when the user was created */
   createdAt: string;
 }
@@ -844,6 +849,11 @@ export interface SuperAdminUserResponseDto {
   role: SuperAdminUserResponseDtoRole;
   /** Organization ID the user belongs to */
   orgId: string;
+  /**
+   * Department the user belongs to
+   * @nullable
+   */
+  department?: string | null;
   /** Date when the user was created */
   createdAt: string;
   /** System-level role of the user */
@@ -1059,6 +1069,8 @@ export interface AcceptInviteDto {
   password: string;
   /** Marketing acceptance */
   hasAcceptedMarketing: boolean;
+  /** Department within the municipality */
+  department?: string;
 }
 
 export interface AcceptInviteResponseDto {
@@ -3569,6 +3581,8 @@ export interface RegisterDto {
   userName: string;
   /** Marketing acceptance */
   marketingAcceptance: boolean;
+  /** Department within the municipality */
+  department?: string;
 }
 
 /**
