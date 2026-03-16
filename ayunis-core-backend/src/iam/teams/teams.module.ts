@@ -20,6 +20,7 @@ import { AddTeamMemberUseCase } from './application/use-cases/add-team-member/ad
 import { RemoveTeamMemberUseCase } from './application/use-cases/remove-team-member/remove-team-member.use-case';
 import { CheckUserTeamMembershipUseCase } from './application/use-cases/check-user-team-membership/check-user-team-membership.use-case';
 import { FindAllUserIdsByTeamIdUseCase } from './application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.use-case';
+import { FindTeamsByUserIdUseCase } from './application/use-cases/find-teams-by-user-id/find-teams-by-user-id.use-case';
 
 import { TeamsController } from './presenters/http/teams.controller';
 import { TeamDtoMapper } from './presenters/http/mappers/team-dto.mapper';
@@ -57,12 +58,12 @@ import { UsersModule } from '../users/users.module';
     RemoveTeamMemberUseCase,
     CheckUserTeamMembershipUseCase,
     FindAllUserIdsByTeamIdUseCase,
+    FindTeamsByUserIdUseCase,
     // Mappers
     TeamDtoMapper,
     TeamMemberDtoMapper,
   ],
   exports: [
-    TeamsRepository,
     CreateTeamUseCase,
     UpdateTeamUseCase,
     DeleteTeamUseCase,
@@ -74,6 +75,7 @@ import { UsersModule } from '../users/users.module';
     RemoveTeamMemberUseCase,
     CheckUserTeamMembershipUseCase,
     FindAllUserIdsByTeamIdUseCase,
+    FindTeamsByUserIdUseCase,
   ],
 })
 export class TeamsModule {}

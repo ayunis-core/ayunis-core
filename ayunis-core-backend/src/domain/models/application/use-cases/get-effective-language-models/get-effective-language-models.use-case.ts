@@ -23,13 +23,16 @@ export class GetEffectiveLanguageModelsUseCase {
   async execute(
     query: GetEffectiveLanguageModelsQuery,
   ): Promise<PermittedLanguageModel[]> {
-    const userId = this.contextService.get('userId');
-    if (!userId) {
+    const contextUserId = this.contextService.get('userId');
+    if (!contextUserId) {
       throw new UnauthorizedAccessError({ reason: 'Missing user context' });
     }
 
+    const targetUserId = query.userId ?? contextUserId;
+
     this.logger.log('Resolving effective language models', {
-      userId,
+      contextUserId,
+      targetUserId,
       orgId: query.orgId,
     });
 
@@ -43,7 +46,7 @@ export class GetEffectiveLanguageModelsUseCase {
       }
 
       const teams = await this.teamMembershipPort.findTeamsByUserIdAndOrg(
-        userId,
+        targetUserId,
         query.orgId,
       );
 
@@ -53,7 +56,7 @@ export class GetEffectiveLanguageModelsUseCase {
         this.logger.debug(
           'No override teams found, returning org-level models',
           {
-            userId,
+            targetUserId,
             orgId: query.orgId,
           },
         );
@@ -68,7 +71,7 @@ export class GetEffectiveLanguageModelsUseCase {
       if (merged.length === 0) {
         this.logger.debug(
           'Override teams have no configured models, falling back to org-level models',
-          { userId, orgId: query.orgId },
+          { targetUserId, orgId: query.orgId },
         );
         return this.permittedModelsRepository.findManyLanguage(query.orgId);
       }
@@ -79,7 +82,7 @@ export class GetEffectiveLanguageModelsUseCase {
         throw error;
       }
       this.logger.error('Error resolving effective language models', {
-        userId,
+        targetUserId,
         orgId: query.orgId,
         error: error instanceof Error ? error : new Error('Unknown error'),
       });

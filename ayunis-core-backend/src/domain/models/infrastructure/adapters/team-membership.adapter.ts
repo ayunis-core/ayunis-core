@@ -4,11 +4,14 @@ import {
   TeamMembershipPort,
   type TeamMembershipInfo,
 } from '../../application/ports/team-membership.port';
-import { TeamsRepository } from 'src/iam/teams/application/ports/teams.repository';
+import { FindTeamsByUserIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-user-id/find-teams-by-user-id.use-case';
+import { FindTeamsByUserIdQuery } from 'src/iam/teams/application/use-cases/find-teams-by-user-id/find-teams-by-user-id.query';
 
 @Injectable()
 export class TeamMembershipAdapter extends TeamMembershipPort {
-  constructor(private readonly teamsRepository: TeamsRepository) {
+  constructor(
+    private readonly findTeamsByUserIdUseCase: FindTeamsByUserIdUseCase,
+  ) {
     super();
   }
 
@@ -16,7 +19,9 @@ export class TeamMembershipAdapter extends TeamMembershipPort {
     userId: UUID,
     orgId: UUID,
   ): Promise<TeamMembershipInfo[]> {
-    const teams = await this.teamsRepository.findByUserId(userId);
+    const teams = await this.findTeamsByUserIdUseCase.execute(
+      new FindTeamsByUserIdQuery(userId),
+    );
 
     return teams
       .filter((team) => team.orgId === orgId)

@@ -26,7 +26,7 @@ export class GetDefaultModelUseCase {
     try {
       const effectiveModels =
         await this.getEffectiveLanguageModelsUseCase.execute(
-          new GetEffectiveLanguageModelsQuery(query.orgId),
+          new GetEffectiveLanguageModelsQuery(query.orgId, query.userId),
         );
 
       const effectiveModelIds = new Set(effectiveModels.map((m) => m.model.id));
