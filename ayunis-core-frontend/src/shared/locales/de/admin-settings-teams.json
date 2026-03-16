@@ -110,5 +110,18 @@
       "error": "Mitglied konnte nicht entfernt werden",
       "notFound": "Mitglied nicht gefunden"
     }
+  },
+  "models": {
+    "defaultModel": {
+      "title": "Team-Standardmodell",
+      "description": "Wählen Sie das Standardmodell für die Mitglieder dieses Teams.",
+      "label": "Standardmodell",
+      "helper": "Teammitglieder starten mit diesem Modell, sofern sie kein anderes auswählen.",
+      "placeholder": "Standardmodell auswählen",
+      "loading": "Modelle werden geladen...",
+      "empty": "Aktivieren Sie mindestens ein Modell, um ein Standardmodell festzulegen.",
+      "success": "Team-Standardmodell aktualisiert",
+      "error": "Team-Standardmodell konnte nicht festgelegt werden"
+    }
   }
 }

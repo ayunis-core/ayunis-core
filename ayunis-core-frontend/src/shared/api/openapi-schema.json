@@ -8517,6 +8517,10 @@
             "type": "boolean",
             "description": "Whether the model supports vision (image processing)"
           },
+          "isDefault": {
+            "type": "boolean",
+            "description": "Whether this is the default model"
+          },
           "anonymousOnly": {
             "type": "boolean",
             "description": "Whether this model enforces anonymous mode"
@@ -8534,6 +8538,7 @@
           "canStream",
           "isReasoning",
           "canVision",
+          "isDefault",
           "anonymousOnly"
         ]
       },

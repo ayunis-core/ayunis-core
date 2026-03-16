@@ -37,6 +37,12 @@ export class PermittedLanguageModelResponseDto extends BasePermittedModelRespons
 
   @ApiProperty({
     type: 'boolean',
+    description: 'Whether this is the default model',
+  })
+  isDefault: boolean;
+
+  @ApiProperty({
+    type: 'boolean',
     description: 'Whether this model enforces anonymous mode',
   })
   anonymousOnly: boolean;

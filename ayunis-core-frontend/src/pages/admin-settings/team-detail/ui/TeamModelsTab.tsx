@@ -21,6 +21,7 @@ import { useTeamPermittedModels } from '../api/useTeamPermittedModels';
 import { useCreateTeamPermittedModel } from '../api/useCreateTeamPermittedModel';
 import { useDeleteTeamPermittedModel } from '../api/useDeleteTeamPermittedModel';
 import { useToggleModelOverride } from '../api/useToggleModelOverride';
+import { TeamDefaultModelCard } from './TeamDefaultModelCard';
 
 interface TeamModelsTabProps {
   readonly teamId: string;
@@ -45,7 +46,8 @@ export function TeamModelsTab({
     teamName,
   );
   const { models: orgModels } = useModelsWithConfig();
-  const { models: teamPermittedModels } = useTeamPermittedModels(teamId);
+  const { models: teamPermittedModels, isLoading: isLoadingTeamModels } =
+    useTeamPermittedModels(teamId);
   const { createTeamPermittedModel, isCreating } =
     useCreateTeamPermittedModel(teamId);
   const { deleteTeamPermittedModel, isDeleting } =
@@ -66,6 +68,7 @@ export function TeamModelsTab({
       return {
         ...model,
         isPermitted: permittedModelIds.has(model.modelId),
+        isDefault: teamModel?.isDefault ?? false,
         permittedModelId: teamModel?.id ?? null,
         anonymousOnly: teamModel?.anonymousOnly ?? null,
       };
@@ -109,11 +112,18 @@ export function TeamModelsTab({
       </Card>
 
       {effectiveOverrideEnabled ? (
-        <ModelTypeCard
-          type="language"
-          models={modelsForCard}
-          actions={actions}
-        />
+        <>
+          <ModelTypeCard
+            type="language"
+            models={modelsForCard}
+            actions={actions}
+          />
+          <TeamDefaultModelCard
+            teamId={teamId}
+            models={modelsForCard}
+            isLoading={isLoadingTeamModels}
+          />
+        </>
       ) : (
         <Card>
           <CardContent className="py-6">

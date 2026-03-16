@@ -110,5 +110,18 @@
       "error": "Failed to remove member",
       "notFound": "Member not found"
     }
+  },
+  "models": {
+    "defaultModel": {
+      "title": "Team default model",
+      "description": "Choose which permitted model should be used as the default for this team's members.",
+      "label": "Default model",
+      "helper": "Team members will start with this model unless they select a different one.",
+      "placeholder": "Select a default model",
+      "loading": "Loading models...",
+      "empty": "Enable at least one model to set a default.",
+      "success": "Team default model updated",
+      "error": "Failed to set team default model"
+    }
   }
 }

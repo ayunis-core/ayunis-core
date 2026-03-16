@@ -31,6 +31,7 @@ export class ModelResponseDtoMapper {
       canStream: permittedModel.model.canStream,
       isReasoning: permittedModel.model.isReasoning,
       canVision: permittedModel.model.canVision,
+      isDefault: permittedModel.isDefault,
       anonymousOnly: permittedModel.anonymousOnly,
       // Note: Cost fields (inputTokenCost, outputTokenCost) are intentionally
       // not exposed to users. They are tracked internally for usage analytics only.

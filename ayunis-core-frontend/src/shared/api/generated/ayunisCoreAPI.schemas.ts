@@ -194,6 +194,8 @@ export interface PermittedLanguageModelResponseDto {
   isReasoning: boolean;
   /** Whether the model supports vision (image processing) */
   canVision: boolean;
+  /** Whether this is the default model */
+  isDefault: boolean;
   /** Whether this model enforces anonymous mode */
   anonymousOnly: boolean;
 }
