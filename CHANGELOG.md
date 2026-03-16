@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.18.0](https://github.com/ayunis-core/ayunis-core/compare/v1.17.1...v1.18.0) (2026-03-16)
+
+
+### Features
+
+* **AYC-107:** collect department for new users ([#389](https://github.com/ayunis-core/ayunis-core/issues/389)) ([2bc52d3](https://github.com/ayunis-core/ayunis-core/commit/2bc52d30ad56cb32bd04be3934974d51e299e593))
+* **AYC-77:** restrict models for teams ([#383](https://github.com/ayunis-core/ayunis-core/issues/383)) ([f463504](https://github.com/ayunis-core/ayunis-core/commit/f463504ddbbf5ba9f1b84cdca093d84cccde512b))
+
+
+### Bug Fixes
+
+* **AYC-000:** auto-reload on stale chunk load errors after deployment ([#375](https://github.com/ayunis-core/ayunis-core/issues/375)) ([4b40b7e](https://github.com/ayunis-core/ayunis-core/commit/4b40b7ef846665c0f6a396920cdee98b21fab548))
+* **AYC-000:** stagger mistral API calls to avoid rate limit ([#376](https://github.com/ayunis-core/ayunis-core/issues/376)) ([46272e7](https://github.com/ayunis-core/ayunis-core/commit/46272e76243a550ae8bed3dc6cb1247b880c43fd))
+* **AYC-000:** strip unsupported json schema formats for openai function calling ([#381](https://github.com/ayunis-core/ayunis-core/issues/381)) ([341b1e9](https://github.com/ayunis-core/ayunis-core/commit/341b1e9aefcf69b8efa6c489d0dc5360838a32df))
+
 ## [1.17.1](https://github.com/ayunis-core/ayunis-core/compare/v1.17.0...v1.17.1) (2026-03-12)
 
 
