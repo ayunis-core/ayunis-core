@@ -1,4 +1,4 @@
-import { User, Users, Brain, Plug, BarChart3 } from 'lucide-react';
+import { User, Users, Brain, Plug, BarChart3, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAppControllerIsCloud } from '@/shared/api';
 import {
@@ -31,6 +31,11 @@ export function AdminSettingsSidebar() {
       to: '/admin-settings/integrations',
       icon: <Plug />,
       label: t('layout.integrations'),
+    },
+    {
+      to: '/admin-settings/security',
+      icon: <Shield />,
+      label: t('layout.security'),
     },
   ];
 
