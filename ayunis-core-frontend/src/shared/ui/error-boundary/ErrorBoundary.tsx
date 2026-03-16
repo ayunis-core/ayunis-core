@@ -2,6 +2,7 @@ import { Component, type ReactNode } from 'react';
 import { ErrorFallback } from './ErrorFallback';
 import { Sentry } from '@/shared/lib/sentry';
 import { isChunkLoadError } from '@/shared/lib/is-chunk-load-error';
+import { attemptChunkReload } from '@/shared/lib/chunk-reload-guard';
 
 interface Props {
   children: ReactNode;
@@ -25,8 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Auto-reload on stale chunk errors instead of showing error UI
-    if (isChunkLoadError(error)) {
-      window.location.reload();
+    if (isChunkLoadError(error) && attemptChunkReload()) {
       return;
     }
 

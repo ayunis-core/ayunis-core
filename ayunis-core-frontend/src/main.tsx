@@ -4,11 +4,19 @@ applyDomPatch(); // Must be called before React renders
 import { initSentry } from '@/shared/lib/sentry';
 initSentry();
 
+import {
+  attemptChunkReload,
+  clearChunkReloadFlag,
+} from '@/shared/lib/chunk-reload-guard';
+
+// Clear the reload flag on successful load to allow future reloads if needed
+clearChunkReloadFlag();
+
 // Auto-reload when Vite chunk imports fail after a deployment
 // (users with stale index.html try to load chunks that no longer exist)
 window.addEventListener('vite:preloadError', (event) => {
   event.preventDefault();
-  window.location.reload();
+  attemptChunkReload();
 });
 
 import { StrictMode } from 'react';
@@ -58,8 +66,7 @@ const router = createRouter({
   defaultPreloadStaleTime: 0,
   defaultErrorComponent: ({ error }) => {
     // Auto-reload on chunk load errors (stale deployment)
-    if (isChunkLoadError(error)) {
-      window.location.reload();
+    if (isChunkLoadError(error) && attemptChunkReload()) {
       return null;
     }
 
