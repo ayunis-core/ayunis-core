@@ -1,14 +1,21 @@
 import { AxiosError } from 'axios';
 
+export interface FieldError {
+  field: string;
+  constraints: string[];
+}
+
 interface ErrorData {
   code: string;
   message: string;
   status: number;
+  errors?: FieldError[];
 }
 
 interface ResponseData {
   code?: string;
   message?: string;
+  errors?: FieldError[];
 }
 
 export default function extractErrorData(error: unknown): ErrorData {
@@ -20,6 +27,7 @@ export default function extractErrorData(error: unknown): ErrorData {
       code: code ?? 'UNKNOWN_ERROR',
       message: message ?? 'An unknown error occurred',
       status: error.response?.status ?? 500,
+      errors: responseData?.errors,
     };
   }
   throw error;

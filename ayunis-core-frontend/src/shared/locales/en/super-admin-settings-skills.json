@@ -46,6 +46,24 @@
     "duplicateName": "A skill template with this name already exists",
     "notFound": "Skill template not found"
   },
+  "validation": {
+    "name": {
+      "isNotEmpty": "Name is required",
+      "maxLength": "Name must be 100 characters or fewer",
+      "invalid": "Invalid name"
+    },
+    "shortDescription": {
+      "isNotEmpty": "Short description is required",
+      "maxLength": "Short description must be 500 characters or fewer",
+      "invalid": "Invalid short description"
+    },
+    "instructions": {
+      "isNotEmpty": "Instructions are required",
+      "maxLength": "Instructions must be 10,000 characters or fewer",
+      "invalid": "Invalid instructions"
+    },
+    "invalid": "Invalid input"
+  },
   "delete": {
     "title": "Delete Skill Template",
     "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
