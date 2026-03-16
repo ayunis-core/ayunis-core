@@ -62,6 +62,7 @@ import { UsersModule } from '../users/users.module';
     TeamMemberDtoMapper,
   ],
   exports: [
+    TeamsRepository,
     CreateTeamUseCase,
     UpdateTeamUseCase,
     DeleteTeamUseCase,
