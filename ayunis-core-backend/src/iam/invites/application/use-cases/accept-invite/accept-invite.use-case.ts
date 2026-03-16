@@ -104,6 +104,7 @@ export class AcceptInviteUseCase {
             name: command.userName,
             emailVerified: true,
             hasAcceptedMarketing: command.hasAcceptedMarketing,
+            department: command.department,
           }),
         );
       } else if (invite.role === UserRole.USER) {
@@ -115,6 +116,7 @@ export class AcceptInviteUseCase {
             password: command.password,
             emailVerified: true,
             hasAcceptedMarketing: command.hasAcceptedMarketing,
+            department: command.department,
           }),
         );
       } else {

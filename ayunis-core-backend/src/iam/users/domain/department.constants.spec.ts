@@ -8,7 +8,6 @@ describe('isValidDepartment', () => {
     'bauamt',
     'it',
     'pressestelle',
-    'other',
   ])('should accept known department key "%s"', (key) => {
     expect(isValidDepartment(key)).toBe(true);
   });
@@ -20,6 +19,10 @@ describe('isValidDepartment', () => {
 
   it('should reject other: with empty text', () => {
     expect(isValidDepartment('other:')).toBe(false);
+  });
+
+  it('should reject bare "other" without text suffix', () => {
+    expect(isValidDepartment('other')).toBe(false);
   });
 
   it('should reject unknown department keys', () => {
