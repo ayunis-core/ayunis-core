@@ -44,6 +44,11 @@ export abstract class PermittedModelsRepository {
     teamId: UUID,
     orgId: UUID,
   ): Promise<PermittedLanguageModel[]>;
+  abstract findByTeamAndModelId(
+    teamId: UUID,
+    modelId: UUID,
+    orgId: UUID,
+  ): Promise<PermittedModel | null>;
   abstract create(permittedModel: PermittedModel): Promise<PermittedModel>;
   abstract delete(params: { id: UUID; orgId: UUID }): Promise<void>;
   abstract deleteTeamScopedByOrgAndModelId(

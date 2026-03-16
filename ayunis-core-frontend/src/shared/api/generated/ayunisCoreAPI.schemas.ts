@@ -225,6 +225,18 @@ export interface EmbeddingModelEnabledResponseDto {
   isEmbeddingModelEnabled: boolean;
 }
 
+export interface CreateTeamPermittedModelDto {
+  /** The ID of the catalog model to permit for the team */
+  modelId: string;
+  /** Whether this model should enforce anonymous mode */
+  anonymousOnly?: boolean;
+}
+
+export interface SetTeamDefaultModelDto {
+  /** The ID of the team-scoped permitted model to set as the team default */
+  permittedModelId: string;
+}
+
 /**
  * The provider of the model
  */

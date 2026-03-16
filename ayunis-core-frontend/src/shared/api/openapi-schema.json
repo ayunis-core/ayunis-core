@@ -218,11 +218,12 @@
     },
     "/models/permitted/language-models": {
       "get": {
+        "description": "Returns the effective set of language models for the current user, considering team overrides. If the user is in any team with model override enabled, only those teams' models are returned (union). Otherwise, org-level models are returned.",
         "operationId": "ModelsController_getPermittedLanguageModels",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Successfully retrieved all permitted language models",
+            "description": "Successfully retrieved effective language models",
             "content": {
               "application/json": {
                 "schema": {
@@ -238,7 +239,36 @@
             "description": "Internal server error"
           }
         },
-        "summary": "Get all permitted language models",
+        "summary": "Get effective permitted language models for the current user",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/models/permitted/language-models/org": {
+      "get": {
+        "description": "Returns only org-scoped permitted language models, ignoring team overrides. Used by the admin model settings page.",
+        "operationId": "ModelsController_getOrgPermittedLanguageModels",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved org-level language models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get org-level permitted language models (admin view)",
         "tags": [
           "models"
         ]
@@ -472,6 +502,172 @@
         "summary": "Check if an embedding model is enabled for this org",
         "tags": [
           "models"
+        ]
+      }
+    },
+    "/teams/{teamId}/permitted-models": {
+      "get": {
+        "operationId": "TeamPermittedModelsController_listTeamPermittedModels",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved team's permitted language models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Team not found"
+          }
+        },
+        "summary": "List a team's permitted language models",
+        "tags": [
+          "team-permitted-models"
+        ]
+      },
+      "post": {
+        "description": "Creates a team-scoped permitted model. The model must already be permitted at the organization level.",
+        "operationId": "TeamPermittedModelsController_createTeamPermittedModel",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTeamPermittedModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully added permitted model to team",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or model not org-permitted"
+          },
+          "404": {
+            "description": "Model not found"
+          },
+          "409": {
+            "description": "Model already permitted for this team"
+          }
+        },
+        "summary": "Add a permitted model to a team",
+        "tags": [
+          "team-permitted-models"
+        ]
+      }
+    },
+    "/teams/{teamId}/permitted-models/{id}": {
+      "delete": {
+        "operationId": "TeamPermittedModelsController_deleteTeamPermittedModel",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully removed permitted model from team"
+          },
+          "404": {
+            "description": "Permitted model not found"
+          }
+        },
+        "summary": "Remove a permitted model from a team",
+        "tags": [
+          "team-permitted-models"
+        ]
+      }
+    },
+    "/teams/{teamId}/permitted-models/default": {
+      "put": {
+        "description": "Sets the specified team-scoped permitted model as the default model for the team.",
+        "operationId": "TeamPermittedModelsController_setTeamDefaultModel",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetTeamDefaultModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully set team default model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Permitted model not found"
+          }
+        },
+        "summary": "Set the team's default model",
+        "tags": [
+          "team-permitted-models"
         ]
       }
     },
@@ -8390,6 +8586,38 @@
         },
         "required": [
           "isEmbeddingModelEnabled"
+        ]
+      },
+      "CreateTeamPermittedModelDto": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "description": "The ID of the catalog model to permit for the team",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "anonymousOnly": {
+            "type": "boolean",
+            "description": "Whether this model should enforce anonymous mode",
+            "example": false,
+            "default": false
+          }
+        },
+        "required": [
+          "modelId"
+        ]
+      },
+      "SetTeamDefaultModelDto": {
+        "type": "object",
+        "properties": {
+          "permittedModelId": {
+            "type": "string",
+            "description": "The ID of the team-scoped permitted model to set as the team default",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        },
+        "required": [
+          "permittedModelId"
         ]
       },
       "PermittedEmbeddingModelResponseDto": {
