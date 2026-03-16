@@ -29,7 +29,6 @@ import { IpAllowlistController } from './presenters/http/ip-allowlist.controller
     GetIpAllowlistUseCase,
     UpdateIpAllowlistUseCase,
     DeleteIpAllowlistUseCase,
-    IpAllowlistRepository,
     IpAllowlistGuard,
   ],
 })

@@ -15,7 +15,7 @@ import { IpAllowlistGuard } from '../ip-allowlist/application/guards/ip-allowlis
   providers: [
     {
       provide: APP_GUARD,
-      useClass: IpAllowlistGuard,
+      useExisting: IpAllowlistGuard,
     },
     {
       provide: APP_GUARD,
