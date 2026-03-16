@@ -35,11 +35,19 @@ export function useToggleModelOverride(teamId: string, teamName: string) {
       onSuccess: () => {
         showSuccess(t('teamDetail.models.overrideToggleSuccess'));
       },
-      onError: (_error, _variables, context) => {
+      onError: (error: unknown, _variables, context) => {
         if (context?.previous) {
           queryClient.setQueryData<TeamResponseDto>(queryKey, context.previous);
         }
-        showError(t('teamDetail.models.overrideToggleError'));
+
+        const errorObj = error as { response?: { data?: { code?: string } } };
+        const errorCode = errorObj.response?.data?.code;
+
+        if (errorCode === 'TEAM_NOT_FOUND') {
+          showError(t('teamDetail.models.overrideToggleNotFound'));
+        } else {
+          showError(t('teamDetail.models.overrideToggleError'));
+        }
       },
       onSettled: () => {
         void queryClient.invalidateQueries({ queryKey });

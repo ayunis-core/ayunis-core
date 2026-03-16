@@ -15,8 +15,19 @@ export function useCreateTeamPermittedModel(teamId: string) {
       onSuccess: () => {
         showSuccess(t('teamDetail.models.enableSuccess'));
       },
-      onError: () => {
-        showError(t('teamDetail.models.enableError'));
+      onError: (error: unknown) => {
+        const errorObj = error as { response?: { data?: { code?: string } } };
+        const errorCode = errorObj.response?.data?.code;
+
+        if (errorCode === 'DUPLICATE_TEAM_PERMITTED_MODEL') {
+          showError(t('teamDetail.models.enableAlreadyEnabled'));
+        } else if (errorCode === 'MODEL_NOT_FOUND') {
+          showError(t('teamDetail.models.enableModelNotFound'));
+        } else if (errorCode === 'MODEL_INVALID') {
+          showError(t('teamDetail.models.enableModelInvalid'));
+        } else {
+          showError(t('teamDetail.models.enableError'));
+        }
       },
       onSettled: () => {
         void queryClient.invalidateQueries({

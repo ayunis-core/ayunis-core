@@ -15,8 +15,17 @@ export function useDeleteTeamPermittedModel(teamId: string) {
       onSuccess: () => {
         showSuccess(t('teamDetail.models.disableSuccess'));
       },
-      onError: () => {
-        showError(t('teamDetail.models.disableError'));
+      onError: (error: unknown) => {
+        const errorObj = error as { response?: { data?: { code?: string } } };
+        const errorCode = errorObj.response?.data?.code;
+
+        if (errorCode === 'MODEL_NOT_FOUND') {
+          showError(t('teamDetail.models.disableModelNotFound'));
+        } else if (errorCode === 'MODEL_INVALID') {
+          showError(t('teamDetail.models.disableModelInvalid'));
+        } else {
+          showError(t('teamDetail.models.disableError'));
+        }
       },
       onSettled: () => {
         void queryClient.invalidateQueries({
