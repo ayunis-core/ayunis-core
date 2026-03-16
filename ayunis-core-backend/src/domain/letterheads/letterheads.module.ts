@@ -11,6 +11,5 @@ import { LocalLetterheadsRepository } from './infrastructure/persistence/local/l
       useExisting: LocalLetterheadsRepository,
     },
   ],
-  exports: [LetterheadsRepository],
 })
 export class LetterheadsModule {}
