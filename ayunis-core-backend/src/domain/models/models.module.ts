@@ -77,6 +77,8 @@ import { StackitStreamInferenceHandler } from './infrastructure/stream-inference
 import { ScalewayInferenceHandler } from './infrastructure/inference/scaleway.inference';
 import { ScalewayStreamInferenceHandler } from './infrastructure/stream-inference/scaleway.stream-inference';
 import { ConfigService } from '@nestjs/config';
+import { TeamsModule } from 'src/iam/teams/teams.module';
+import { GetEffectiveLanguageModelsUseCase } from './application/use-cases/get-effective-language-models/get-effective-language-models.use-case';
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
 import { OpenAIResponsesMessageConverter } from './infrastructure/converters/openai-responses-message.converter';
@@ -90,6 +92,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     LocalModelsRepositoryModule,
     OrgsModule,
     UsersModule,
+    TeamsModule,
     StorageModule,
     forwardRef(() => MessagesModule), // ImageContentService for inference handlers
     forwardRef(() => SourcesModule), // Sources → Retrievers → FileRetrievers → Models (circular)
@@ -241,6 +244,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
       ],
     },
     // Use Cases
+    GetEffectiveLanguageModelsUseCase,
     CreatePermittedModelUseCase,
     DeletePermittedModelUseCase,
     UpdatePermittedModelUseCase,
@@ -287,6 +291,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     GetPermittedModelsUseCase,
     IsModelPermittedUseCase,
     GetDefaultModelUseCase,
+    GetEffectiveLanguageModelsUseCase,
     // Use Cases
     GetInferenceUseCase,
     StreamInferenceUseCase,
