@@ -131,6 +131,26 @@ describe('CreateUserUseCase', () => {
     await new Promise(process.nextTick);
   });
 
+  it('should pass department from command to the created user entity', async () => {
+    const commandWithDepartment = new CreateUserCommand({
+      email: 'maria.garcia@ayunis.de',
+      password: 'Sicher3sPasswort!',
+      orgId,
+      name: 'Maria Garcia',
+      role: UserRole.USER,
+      emailVerified: false,
+      hasAcceptedMarketing: true,
+      department: 'bauamt',
+    });
+
+    const result = await useCase.execute(commandWithDepartment);
+
+    expect(result.department).toBe('bauamt');
+    expect(usersRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ department: 'bauamt' }),
+    );
+  });
+
   it('should not emit UserCreatedEvent when repository create fails', async () => {
     usersRepository.create.mockRejectedValue(new Error('Database error'));
 

@@ -85,6 +85,7 @@ export class CreateUserUseCase {
         role: command.role,
         name: command.name,
         hasAcceptedMarketing: command.hasAcceptedMarketing,
+        department: command.department,
       });
 
       const createdUser = await this.usersRepository.create(user);

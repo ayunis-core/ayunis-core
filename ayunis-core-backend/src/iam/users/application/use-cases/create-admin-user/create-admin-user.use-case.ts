@@ -25,6 +25,7 @@ export class CreateAdminUserUseCase {
       role: UserRole.ADMIN,
       emailVerified: command.emailVerified,
       hasAcceptedMarketing: command.hasAcceptedMarketing,
+      department: command.department,
     });
 
     return this.createUserUseCase.execute(createUserCommand);
