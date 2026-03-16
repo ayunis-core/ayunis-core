@@ -107,6 +107,7 @@ export class RegisterUserUseCase {
           name: command.userName,
           emailVerified: shouldConfirmEmail ? false : true,
           hasAcceptedMarketing: command.hasAcceptedMarketing,
+          department: command.department,
         }),
       );
 
