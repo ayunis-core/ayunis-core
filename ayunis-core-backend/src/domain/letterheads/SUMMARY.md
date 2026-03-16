@@ -20,9 +20,8 @@ letterheads/
 │       └── page-margins.ts
 ├── application/
 │   ├── letterheads.errors.ts
-│   ├── ports/
-│   │   └── letterheads-repository.port.ts
-│   └── use-cases/
+│   └── ports/
+│       └── letterheads-repository.port.ts
 ├── infrastructure/
 │   └── persistence/local/
 │       ├── schema/
@@ -31,7 +30,6 @@ letterheads/
 │       │   └── letterhead.mapper.ts
 │       ├── local-letterheads.repository.ts
 │       └── local-letterheads-repository.module.ts
-├── presenters/http/
 └── letterheads.module.ts
 ```
 
