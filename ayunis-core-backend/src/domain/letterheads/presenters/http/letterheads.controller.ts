@@ -78,6 +78,12 @@ function parseMargins(value: unknown, label: string): PageMargins {
     );
   }
 
+  if (parsed === null || typeof parsed !== 'object') {
+    throw new BadRequestException(
+      `Invalid ${label}: must be a JSON object with top, bottom, left, right`,
+    );
+  }
+
   const margins: Record<string, number> = {};
   for (const key of MARGIN_KEYS) {
     const num = Number(parsed[key]);
