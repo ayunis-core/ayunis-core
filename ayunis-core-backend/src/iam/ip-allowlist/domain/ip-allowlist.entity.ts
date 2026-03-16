@@ -1,7 +1,7 @@
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import { isValidCidr } from './cidr.util';
-import { InvalidCidrError } from './ip-allowlist.errors';
+import { EmptyCidrsError, InvalidCidrError } from './ip-allowlist.errors';
 
 export interface IpAllowlistParams {
   id?: UUID;
@@ -29,6 +29,10 @@ export class IpAllowlist {
   }
 
   private validateCidrs(): void {
+    if (this.cidrs.length === 0) {
+      throw new EmptyCidrsError();
+    }
+
     for (const cidr of this.cidrs) {
       if (!isValidCidr(cidr)) {
         throw new InvalidCidrError(cidr);
