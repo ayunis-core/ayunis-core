@@ -74,6 +74,9 @@ export class UpdateTeamUseCase {
       });
 
       team.name = trimmedName;
+      if (command.modelOverrideEnabled !== undefined) {
+        team.modelOverrideEnabled = command.modelOverrideEnabled;
+      }
       team.updatedAt = new Date();
 
       const updatedTeam = await this.teamsRepository.update(team);

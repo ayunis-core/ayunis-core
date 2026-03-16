@@ -11,6 +11,7 @@ export class TeamDtoMapper {
       orgId: team.orgId,
       createdAt: team.createdAt,
       updatedAt: team.updatedAt,
+      modelOverrideEnabled: team.modelOverrideEnabled,
     };
   }
 
