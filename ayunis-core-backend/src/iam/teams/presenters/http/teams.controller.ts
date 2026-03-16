@@ -259,9 +259,15 @@ export class TeamsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() updateTeamDto: UpdateTeamDto,
   ): Promise<TeamResponseDto> {
-    this.logger.log(`Updating team ${id} with name: ${updateTeamDto.name}`);
+    this.logger.log(
+      `Updating team ${id} with name: ${updateTeamDto.name}, modelOverrideEnabled: ${updateTeamDto.modelOverrideEnabled}`,
+    );
 
-    const command = new UpdateTeamCommand(id, updateTeamDto.name);
+    const command = new UpdateTeamCommand(
+      id,
+      updateTeamDto.name,
+      updateTeamDto.modelOverrideEnabled,
+    );
     const team = await this.updateTeamUseCase.execute(command);
 
     this.logger.log(`Successfully updated team with id: ${team.id}`);

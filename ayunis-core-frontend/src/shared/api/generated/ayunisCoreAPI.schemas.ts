@@ -2184,6 +2184,8 @@ export interface CreateTeamDto {
 export interface UpdateTeamDto {
   /** The new name of the team */
   name: string;
+  /** Whether model access override is enabled for this team */
+  modelOverrideEnabled?: boolean;
 }
 
 export interface TeamResponseDto {
@@ -2197,6 +2199,8 @@ export interface TeamResponseDto {
   createdAt: string;
   /** The date and time when the team was last updated */
   updatedAt: string;
+  /** Whether model access override is enabled for this team */
+  modelOverrideEnabled: boolean;
 }
 
 /**

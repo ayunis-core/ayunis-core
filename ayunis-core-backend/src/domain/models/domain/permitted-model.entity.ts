@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import type { Model } from './model.entity';
 import type { LanguageModel } from './models/language.model';
 import type { EmbeddingModel } from './models/embedding.model';
+import { PermittedModelScope } from './value-objects/permitted-model-scope.enum';
 
 export class PermittedModel {
   public readonly id: UUID;
@@ -10,6 +11,8 @@ export class PermittedModel {
   public readonly orgId: UUID;
   public readonly isDefault: boolean;
   public readonly anonymousOnly: boolean;
+  public readonly scope: PermittedModelScope;
+  public readonly teamId: UUID | null;
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
 
@@ -19,6 +22,8 @@ export class PermittedModel {
     orgId: UUID;
     isDefault?: boolean;
     anonymousOnly?: boolean;
+    scope?: PermittedModelScope;
+    teamId?: UUID | null;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -27,6 +32,16 @@ export class PermittedModel {
     this.orgId = params.orgId;
     this.isDefault = params.isDefault ?? false;
     this.anonymousOnly = params.anonymousOnly ?? false;
+    this.scope = params.scope ?? PermittedModelScope.ORG;
+    this.teamId = params.teamId ?? null;
+
+    if (this.scope === PermittedModelScope.TEAM && this.teamId === null) {
+      throw new Error('teamId is required when scope is TEAM');
+    }
+    if (this.scope === PermittedModelScope.ORG && this.teamId !== null) {
+      throw new Error('teamId must be null when scope is ORG');
+    }
+
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }
@@ -40,6 +55,8 @@ export class PermittedLanguageModel extends PermittedModel {
     orgId: UUID;
     isDefault?: boolean;
     anonymousOnly?: boolean;
+    scope?: PermittedModelScope;
+    teamId?: UUID | null;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -56,6 +73,8 @@ export class PermittedEmbeddingModel extends PermittedModel {
     orgId: UUID;
     isDefault?: boolean;
     anonymousOnly?: boolean;
+    scope?: PermittedModelScope;
+    teamId?: UUID | null;
     createdAt?: Date;
     updatedAt?: Date;
   }) {

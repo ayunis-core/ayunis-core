@@ -7,6 +7,7 @@ export class TeamMapper {
       id: record.id,
       name: record.name,
       orgId: record.orgId,
+      modelOverrideEnabled: record.modelOverrideEnabled,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -17,6 +18,7 @@ export class TeamMapper {
     record.id = domain.id;
     record.name = domain.name;
     record.orgId = domain.orgId;
+    record.modelOverrideEnabled = domain.modelOverrideEnabled;
     record.createdAt = domain.createdAt;
     record.updatedAt = domain.updatedAt;
     return record;
