@@ -3577,6 +3577,63 @@ export interface TranscriptionResponseDto {
   text: string;
 }
 
+export interface CreateLetterheadDto {
+  /** Name of the letterhead */
+  name: string;
+  /** Description of the letterhead (used by AI for context) */
+  description?: string;
+  /** JSON string of { top, bottom, left, right } margins in mm */
+  firstPageMargins: string;
+  /** JSON string of { top, bottom, left, right } margins in mm */
+  continuationPageMargins: string;
+}
+
+export interface PageMarginsDto {
+  /** Top margin in mm */
+  top: number;
+  /** Bottom margin in mm */
+  bottom: number;
+  /** Left margin in mm */
+  left: number;
+  /** Right margin in mm */
+  right: number;
+}
+
+export interface LetterheadResponseDto {
+  /** Unique identifier of the letterhead */
+  id: string;
+  /** Name of the letterhead */
+  name: string;
+  /**
+   * Description of the letterhead
+   * @nullable
+   */
+  description?: string | null;
+  /** Margins for the first page in mm */
+  firstPageMargins: PageMarginsDto;
+  /** Margins for continuation pages in mm */
+  continuationPageMargins: PageMarginsDto;
+  /** Whether a continuation page PDF is configured */
+  hasContinuationPage: boolean;
+  /** When the letterhead was created */
+  createdAt: string;
+  /** When the letterhead was last updated */
+  updatedAt: string;
+}
+
+export interface UpdateLetterheadDto {
+  /** Name of the letterhead */
+  name?: string;
+  /** Description of the letterhead */
+  description?: string;
+  /** JSON string of { top, bottom, left, right } margins in mm */
+  firstPageMargins?: string;
+  /** JSON string of { top, bottom, left, right } margins in mm */
+  continuationPageMargins?: string;
+  /** Set to "true" to remove the continuation page PDF. Ignored if a new continuationPagePdf file is uploaded. */
+  removeContinuationPage?: string;
+}
+
 export interface LoginDto {
   /** Email address for authentication */
   email: string;

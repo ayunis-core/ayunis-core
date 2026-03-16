@@ -22,7 +22,14 @@ letterheads/
 │   ├── letterheads.errors.ts
 │   ├── ports/
 │   │   └── letterheads-repository.port.ts
+│   ├── services/
+│   │   └── letterhead-pdf.service.ts   # Shared PDF validation & storage path builder
 │   └── use-cases/
+│       ├── create-letterhead/
+│       ├── delete-letterhead/
+│       ├── find-all-letterheads/
+│       ├── find-letterhead/
+│       └── update-letterhead/
 ├── infrastructure/
 │   └── persistence/local/
 │       ├── schema/
@@ -32,12 +39,20 @@ letterheads/
 │       ├── local-letterheads.repository.ts
 │       └── local-letterheads-repository.module.ts
 ├── presenters/http/
+│   ├── letterheads.controller.ts
+│   ├── dtos/
+│   │   ├── create-letterhead.dto.ts
+│   │   ├── update-letterhead.dto.ts
+│   │   ├── letterhead-response.dto.ts
+│   │   └── page-margins.dto.ts
+│   └── mappers/
+│       └── letterhead-dto.mapper.ts
 └── letterheads.module.ts
 ```
 
 ## Dependencies
 
-None — standalone module.
+- **StorageModule** — File storage for letterhead PDF uploads
 
 ## Ports
 
