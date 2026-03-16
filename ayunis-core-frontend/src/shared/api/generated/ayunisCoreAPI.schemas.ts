@@ -3557,6 +3557,74 @@ export interface TranscriptionResponseDto {
   text: string;
 }
 
+export interface PageMarginsDto {
+  /** Top margin in mm */
+  top: number;
+  /** Bottom margin in mm */
+  bottom: number;
+  /** Left margin in mm */
+  left: number;
+  /** Right margin in mm */
+  right: number;
+}
+
+export interface CreateLetterheadDto {
+  /** Name of the letterhead */
+  name: string;
+  /** Description of the letterhead (used by AI for context) */
+  description?: string;
+  /** Margins for the first page in mm (JSON string) */
+  firstPageMargins: PageMarginsDto;
+  /** Margins for continuation pages in mm (JSON string) */
+  continuationPageMargins: PageMarginsDto;
+}
+
+/**
+ * Description of the letterhead
+ * @nullable
+ */
+export type LetterheadResponseDtoDescription = { [key: string]: unknown } | null;
+
+export interface LetterheadResponseDto {
+  /** Unique identifier of the letterhead */
+  id: string;
+  /** Name of the letterhead */
+  name: string;
+  /**
+   * Description of the letterhead
+   * @nullable
+   */
+  description?: LetterheadResponseDtoDescription;
+  /** Margins for the first page in mm */
+  firstPageMargins: PageMarginsDto;
+  /** Margins for continuation pages in mm */
+  continuationPageMargins: PageMarginsDto;
+  /** Whether a continuation page PDF is configured */
+  hasContinuationPage: boolean;
+  /** When the letterhead was created */
+  createdAt: string;
+  /** When the letterhead was last updated */
+  updatedAt: string;
+}
+
+/**
+ * Set to true to remove the continuation page PDF. Ignored if a new continuationPagePdf file is uploaded.
+ */
+export type UpdateLetterheadDtoRemoveContinuationPage = { [key: string]: unknown };
+
+export interface UpdateLetterheadDto {
+  /** Name of the letterhead */
+  name?: string;
+  /** Description of the letterhead */
+  description?: string;
+  /** Margins for the first page in mm (JSON string) */
+  firstPageMargins?: PageMarginsDto;
+  /** Margins for continuation pages in mm (JSON string) */
+  continuationPageMargins?: PageMarginsDto;
+  /** Set to true to remove the continuation page PDF. Ignored if a new continuationPagePdf file is uploaded. */
+  removeContinuationPage?: UpdateLetterheadDtoRemoveContinuationPage;
+}
+
 export interface LoginDto {
   /** Email address for authentication */
   email: string;
