@@ -63,6 +63,7 @@ ayunis-core/
 | [trials](ayunis-core-backend/src/iam/trials/SUMMARY.md) | Trial Access | Free trial management |
 | [legal-acceptances](ayunis-core-backend/src/iam/legal-acceptances/SUMMARY.md) | Compliance | Terms acceptance tracking |
 | [hashing](ayunis-core-backend/src/iam/hashing/SUMMARY.md) | Security | Password hashing |
+| [ip-allowlist](ayunis-core-backend/src/iam/ip-allowlist/SUMMARY.md) | Network Security | Per-organization IP allowlist enforcement |
 
 ### Infrastructure & Support
 
