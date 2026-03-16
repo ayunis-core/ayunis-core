@@ -23,13 +23,13 @@ export class CreateLetterheadsTable1773697364898 implements MigrationInterface {
       `CREATE INDEX "IDX_ed5c8c0b59525d6ee217b5e271" ON "letterheads" ("orgId")`,
     );
     await queryRunner.query(
-      `ALTER TABLE "letterheads" ADD CONSTRAINT "FK_letterheads_orgId_orgs" FOREIGN KEY ("orgId") REFERENCES "orgs"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "letterheads" ADD CONSTRAINT "FK_ed5c8c0b59525d6ee217b5e2714" FOREIGN KEY ("orgId") REFERENCES "orgs"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE "letterheads" DROP CONSTRAINT "FK_letterheads_orgId_orgs"`,
+      `ALTER TABLE "letterheads" DROP CONSTRAINT "FK_ed5c8c0b59525d6ee217b5e2714"`,
     );
     await queryRunner.query(
       `DROP INDEX "public"."IDX_ed5c8c0b59525d6ee217b5e271"`,
