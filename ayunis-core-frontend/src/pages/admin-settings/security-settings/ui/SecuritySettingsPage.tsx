@@ -154,7 +154,8 @@ export function SecuritySettingsPage() {
             {t('ipAllowlist.loadError')}
             <Button
               variant="link"
-              className="ml-2 h-auto p-0"
+              size="xs"
+              className="ml-2"
               onClick={() => void refetch()}
             >
               {t('ipAllowlist.retry')}
