@@ -22,6 +22,8 @@ letterheads/
 │   ├── letterheads.errors.ts
 │   ├── ports/
 │   │   └── letterheads-repository.port.ts
+│   ├── services/
+│   │   └── letterhead-pdf.service.ts   # Shared PDF validation & storage path builder
 │   └── use-cases/
 ├── infrastructure/
 │   └── persistence/local/
