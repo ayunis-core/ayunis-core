@@ -25,15 +25,15 @@ export class CreateLetterheadDto {
   // Validation is handled by parseMargins() in the controller.
   @ApiProperty({
     description: 'Margins for the first page in mm (JSON string)',
-    type: PageMarginsDto,
-    default: { top: 20, bottom: 20, left: 20, right: 20 },
+    type: String,
+    default: '{"top":20,"bottom":20,"left":20,"right":20}',
   })
   firstPageMargins: unknown;
 
   @ApiProperty({
     description: 'Margins for continuation pages in mm (JSON string)',
-    type: PageMarginsDto,
-    default: { top: 20, bottom: 20, left: 20, right: 20 },
+    type: String,
+    default: '{"top":20,"bottom":20,"left":20,"right":20}',
   })
   continuationPageMargins: unknown;
 }

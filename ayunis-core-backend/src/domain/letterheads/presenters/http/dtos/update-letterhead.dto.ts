@@ -25,14 +25,14 @@ export class UpdateLetterheadDto {
   // Validation is handled by parseMargins() in the controller.
   @ApiPropertyOptional({
     description: 'Margins for the first page in mm (JSON string)',
-    type: PageMarginsDto,
+    type: String,
   })
   @IsOptional()
   firstPageMargins?: unknown;
 
   @ApiPropertyOptional({
     description: 'Margins for continuation pages in mm (JSON string)',
-    type: PageMarginsDto,
+    type: String,
   })
   @IsOptional()
   continuationPageMargins?: unknown;
@@ -41,6 +41,7 @@ export class UpdateLetterheadDto {
     description:
       'Set to true to remove the continuation page PDF. Ignored if a new continuationPagePdf file is uploaded.',
     example: true,
+    type: Boolean,
   })
   @IsOptional()
   removeContinuationPage?: boolean | string;

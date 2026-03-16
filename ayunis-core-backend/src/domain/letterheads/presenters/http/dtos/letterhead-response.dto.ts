@@ -18,6 +18,7 @@ export class LetterheadResponseDto {
     description: 'Description of the letterhead',
     example: 'Offizielles Briefpapier der Stadtverwaltung',
     nullable: true,
+    type: String,
   })
   description: string | null;
 
