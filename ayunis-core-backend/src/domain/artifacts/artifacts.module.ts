@@ -7,6 +7,7 @@ import { LocalArtifactsRepository } from './infrastructure/persistence/local/loc
 import { HtmlDocumentExportService } from './infrastructure/export/html-document-export.service';
 import { ArtifactDtoMapper } from './presenters/http/mappers/artifact-dto.mapper';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
+import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
 
 // Use cases
 import { CreateArtifactUseCase } from './application/use-cases/create-artifact/create-artifact.use-case';
@@ -18,7 +19,11 @@ import { ExportArtifactUseCase } from './application/use-cases/export-artifact/e
 import { ApplyEditsToArtifactUseCase } from './application/use-cases/apply-edits-to-artifact/apply-edits-to-artifact.use-case';
 
 @Module({
-  imports: [LocalArtifactsRepositoryModule, forwardRef(() => ThreadsModule)],
+  imports: [
+    LocalArtifactsRepositoryModule,
+    forwardRef(() => ThreadsModule),
+    LetterheadsModule,
+  ],
   controllers: [ArtifactsController],
   providers: [
     {

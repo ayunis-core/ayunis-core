@@ -1,3 +1,9 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
@@ -15,10 +21,13 @@ import {
 import { Artifact } from '../../../domain/artifact.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
+import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
+import { LetterheadNotFoundError } from 'src/domain/letterheads/application/letterheads.errors';
 
 describe('UpdateArtifactUseCase', () => {
   let useCase: UpdateArtifactUseCase;
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
+  let findLetterheadUseCase: jest.Mocked<FindLetterheadUseCase>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockArtifactId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -33,6 +42,7 @@ describe('UpdateArtifactUseCase', () => {
       addVersion: jest.fn(),
       updateCurrentVersionNumber: jest.fn(),
       addVersionAndUpdateCurrent: jest.fn(),
+      updateLetterheadId: jest.fn(),
       delete: jest.fn(),
     };
 
@@ -43,16 +53,25 @@ describe('UpdateArtifactUseCase', () => {
       }),
     } as unknown as jest.Mocked<ContextService>;
 
+    const mockFindLetterheadUseCase = {
+      execute: jest.fn().mockResolvedValue({}),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateArtifactUseCase,
         { provide: ArtifactsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
+        {
+          provide: FindLetterheadUseCase,
+          useValue: mockFindLetterheadUseCase,
+        },
       ],
     }).compile();
 
     useCase = module.get<UpdateArtifactUseCase>(UpdateArtifactUseCase);
     artifactsRepository = module.get(ArtifactsRepository);
+    findLetterheadUseCase = module.get(FindLetterheadUseCase);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'warn').mockImplementation();
@@ -289,6 +308,94 @@ describe('UpdateArtifactUseCase', () => {
     expect(result.versionNumber).toBe(2);
   });
 
+  it('should update letterheadId when provided in command', async () => {
+    const mockLetterheadId =
+      '423e4567-e89b-12d3-a456-426614174000' as import('crypto').UUID;
+
+    const existingArtifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Official Letter',
+      currentVersionNumber: 1,
+    });
+
+    artifactsRepository.findById.mockResolvedValue(existingArtifact);
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
+      async (version) => version,
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p>Updated content</p>',
+      authorType: AuthorType.USER,
+      letterheadId: mockLetterheadId,
+    });
+
+    await useCase.execute(command);
+
+    expect(artifactsRepository.updateLetterheadId).toHaveBeenCalledWith(
+      mockArtifactId,
+      mockLetterheadId,
+    );
+  });
+
+  it('should not update letterheadId when not provided in command', async () => {
+    const existingArtifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Regular Document',
+      currentVersionNumber: 1,
+    });
+
+    artifactsRepository.findById.mockResolvedValue(existingArtifact);
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
+      async (version) => version,
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p>Updated content</p>',
+      authorType: AuthorType.USER,
+    });
+
+    await useCase.execute(command);
+
+    expect(artifactsRepository.updateLetterheadId).not.toHaveBeenCalled();
+  });
+
+  it('should update letterheadId to null to remove letterhead', async () => {
+    const existingArtifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Letter with letterhead',
+      letterheadId:
+        '423e4567-e89b-12d3-a456-426614174000' as import('crypto').UUID,
+      currentVersionNumber: 1,
+    });
+
+    artifactsRepository.findById.mockResolvedValue(existingArtifact);
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
+      async (version) => version,
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p>Content without letterhead</p>',
+      authorType: AuthorType.USER,
+      letterheadId: null,
+    });
+
+    await useCase.execute(command);
+
+    expect(artifactsRepository.updateLetterheadId).toHaveBeenCalledWith(
+      mockArtifactId,
+      null,
+    );
+  });
+
   it('should throw UnauthorizedAccessError when user is not authenticated', async () => {
     const mockContextService = {
       get: jest.fn(() => undefined),
@@ -299,6 +406,10 @@ describe('UpdateArtifactUseCase', () => {
         UpdateArtifactUseCase,
         { provide: ArtifactsRepository, useValue: artifactsRepository },
         { provide: ContextService, useValue: mockContextService },
+        {
+          provide: FindLetterheadUseCase,
+          useValue: findLetterheadUseCase,
+        },
       ],
     }).compile();
 
@@ -314,6 +425,75 @@ describe('UpdateArtifactUseCase', () => {
 
     await expect(useCaseNoAuth.execute(command)).rejects.toThrow(
       UnauthorizedAccessError,
+    );
+  });
+
+  it('should not update letterheadId when artifact does not belong to user', async () => {
+    artifactsRepository.findById.mockResolvedValue(null);
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p>Unauthorized letterhead change</p>',
+      authorType: AuthorType.USER,
+      letterheadId:
+        '423e4567-e89b-12d3-a456-426614174000' as import('crypto').UUID,
+    });
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      ArtifactNotFoundError,
+    );
+    expect(artifactsRepository.updateLetterheadId).not.toHaveBeenCalled();
+  });
+
+  it('should throw LetterheadNotFoundError when letterheadId does not belong to org', async () => {
+    const crossOrgLetterheadId =
+      '523e4567-e89b-12d3-a456-426614174000' as import('crypto').UUID;
+
+    findLetterheadUseCase.execute.mockRejectedValue(
+      new LetterheadNotFoundError(crossOrgLetterheadId),
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p>Cross-org letterhead attempt</p>',
+      authorType: AuthorType.USER,
+      letterheadId: crossOrgLetterheadId,
+    });
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      LetterheadNotFoundError,
+    );
+    expect(artifactsRepository.updateLetterheadId).not.toHaveBeenCalled();
+  });
+
+  it('should validate letterheadId belongs to org before updating', async () => {
+    const mockLetterheadId =
+      '423e4567-e89b-12d3-a456-426614174000' as import('crypto').UUID;
+
+    const existingArtifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Official Letter',
+      currentVersionNumber: 1,
+    });
+
+    artifactsRepository.findById.mockResolvedValue(existingArtifact);
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
+      async (version) => version,
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p>Content with valid letterhead</p>',
+      authorType: AuthorType.USER,
+      letterheadId: mockLetterheadId,
+    });
+
+    await useCase.execute(command);
+
+    expect(findLetterheadUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ letterheadId: mockLetterheadId }),
     );
   });
 

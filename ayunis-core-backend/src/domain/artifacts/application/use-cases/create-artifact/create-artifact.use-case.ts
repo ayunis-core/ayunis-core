@@ -9,6 +9,8 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { sanitizeHtmlContent } from '../../helpers/sanitize-html-content';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
+import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
+import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.query';
 import {
   ArtifactContentTooLargeError,
   UnexpectedArtifactError,
@@ -25,6 +27,7 @@ export class CreateArtifactUseCase {
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
     private readonly findThreadUseCase: FindThreadUseCase,
+    private readonly findLetterheadUseCase: FindLetterheadUseCase,
   ) {}
 
   @Transactional()
@@ -48,10 +51,17 @@ export class CreateArtifactUseCase {
         new FindThreadQuery(command.threadId),
       );
 
+      if (command.letterheadId) {
+        await this.findLetterheadUseCase.execute(
+          new FindLetterheadQuery({ letterheadId: command.letterheadId }),
+        );
+      }
+
       const artifact = new Artifact({
         threadId: command.threadId,
         userId,
         title: command.title,
+        letterheadId: command.letterheadId ?? null,
         currentVersionNumber: 1,
       });
 
