@@ -10,6 +10,11 @@ const editDocumentToolParameters = {
       type: 'string' as const,
       description: 'The UUID of the existing artifact (document) to edit',
     },
+    expected_version: {
+      type: 'integer' as const,
+      description:
+        'The version number you expect the document to be at. Pass the version from your last create/update/edit result, or from read_document. The operation will fail if the document has been modified since.',
+    },
     edits: {
       type: 'array' as const,
       description: 'Array of search-and-replace edits to apply sequentially',
@@ -34,7 +39,7 @@ const editDocumentToolParameters = {
       maxItems: 50,
     },
   },
-  required: ['artifact_id', 'edits'],
+  required: ['artifact_id', 'expected_version', 'edits'],
   additionalProperties: false,
 } as const satisfies JSONSchema;
 
@@ -53,7 +58,9 @@ export class EditDocumentTool extends DisplayableTool {
         'This tool applies search-and-replace edits sequentially to the current document content. ' +
         'Each old_text must match exactly one location in the document - include enough surrounding context to make it unambiguous. ' +
         'The old_text must match the exact HTML source (tags, whitespace, etc.). ' +
-        'For full rewrites or major restructuring, use update_document instead.',
+        'For full rewrites or major restructuring, use update_document instead. ' +
+        'You must pass expected_version with the version number from your last tool result or from read_document. ' +
+        'If the document was modified by the user since then, the operation will fail — use read_document to get the current content first.',
       parameters: editDocumentToolParameters,
       type: ToolType.EDIT_DOCUMENT,
     });

@@ -150,7 +150,7 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.UPDATE_DOCUMENT);
       expect(types).toContain(ToolType.EDIT_DOCUMENT);
 
-      expect(types.length).toBe(22);
+      expect(types.length).toBe(23);
     });
   });
 });

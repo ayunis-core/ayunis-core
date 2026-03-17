@@ -8,6 +8,7 @@ import { UpdateArtifactCommand } from './update-artifact.command';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import {
   ArtifactContentTooLargeError,
+  ArtifactExpectedVersionMismatchError,
   ArtifactNotFoundError,
   ArtifactVersionConflictError,
   ARTIFACT_MAX_CONTENT_LENGTH,
@@ -315,6 +316,82 @@ describe('UpdateArtifactUseCase', () => {
     await expect(useCaseNoAuth.execute(command)).rejects.toThrow(
       UnauthorizedAccessError,
     );
+  });
+
+  describe('expected version check', () => {
+    it('should throw ArtifactExpectedVersionMismatchError when expected version does not match', async () => {
+      const existingArtifact = new Artifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'User-Edited Report',
+        currentVersionNumber: 5,
+      });
+
+      artifactsRepository.findById.mockResolvedValue(existingArtifact);
+
+      const command = new UpdateArtifactCommand({
+        artifactId: mockArtifactId,
+        content: '<p>Stale content</p>',
+        authorType: AuthorType.ASSISTANT,
+        expectedVersionNumber: 3,
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        ArtifactExpectedVersionMismatchError,
+      );
+    });
+
+    it('should succeed when expected version matches current version', async () => {
+      const existingArtifact = new Artifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'Current Report',
+        currentVersionNumber: 3,
+      });
+
+      artifactsRepository.findById.mockResolvedValue(existingArtifact);
+      artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
+        async (version) => version,
+      );
+
+      const command = new UpdateArtifactCommand({
+        artifactId: mockArtifactId,
+        content: '<p>Updated content</p>',
+        authorType: AuthorType.ASSISTANT,
+        expectedVersionNumber: 3,
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.versionNumber).toBe(4);
+    });
+
+    it('should skip version check when expectedVersionNumber is not provided', async () => {
+      const existingArtifact = new Artifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'No Version Check Report',
+        currentVersionNumber: 5,
+      });
+
+      artifactsRepository.findById.mockResolvedValue(existingArtifact);
+      artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
+        async (version) => version,
+      );
+
+      const command = new UpdateArtifactCommand({
+        artifactId: mockArtifactId,
+        content: '<p>Content without version check</p>',
+        authorType: AuthorType.USER,
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.versionNumber).toBe(6);
+    });
   });
 
   describe('retry on version conflict', () => {

@@ -96,6 +96,7 @@ describe('CreateDocumentToolHandler', () => {
 
     expect(result).toContain(mockArtifactId);
     expect(result).toContain('Document created successfully');
+    expect(result).toContain('version: 1');
   });
 
   it('should throw ToolExecutionFailedError when CreateArtifactUseCase fails', async () => {

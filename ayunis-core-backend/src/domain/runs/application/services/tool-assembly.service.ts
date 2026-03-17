@@ -35,6 +35,9 @@ import {
 import type { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { FindArtifactsByThreadUseCase } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.use-case';
 import { FindArtifactsByThreadQuery } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.query';
+import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
+import { FindArtifactWithVersionsQuery } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.query';
+import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -52,6 +55,7 @@ export class ToolAssemblyService {
     @Inject(featuresConfig.KEY)
     private readonly features: ConfigType<typeof featuresConfig>,
     private readonly findArtifactsByThreadUseCase: FindArtifactsByThreadUseCase,
+    private readonly findArtifactWithVersionsUseCase: FindArtifactWithVersionsUseCase,
   ) {}
 
   async findActiveSkills(): Promise<Skill[]> {
@@ -460,27 +464,35 @@ export class ToolAssemblyService {
       new FindArtifactsByThreadQuery({ threadId: thread.id }),
     );
 
-    const artifactLines = threadArtifacts.map(
-      (a) => '- ' + a.id + ': "' + a.title + '"',
-    );
-    const artifactSuffix =
+    const artifactLines: string[] = [];
+    for (const a of threadArtifacts) {
+      const full = await this.findArtifactWithVersionsUseCase.execute(
+        new FindArtifactWithVersionsQuery({ artifactId: a.id }),
+      );
+      const cur = full.versions.find(
+        (v) => v.versionNumber === full.currentVersionNumber,
+      );
+      const warn =
+        cur?.authorType === AuthorType.USER
+          ? ' (⚠ user-edited — use read_document before editing)'
+          : '';
+      artifactLines.push(`- ${a.id}: "${a.title}"${warn}`);
+    }
+
+    const suffix =
       artifactLines.length > 0
         ? `\n\nAvailable documents in this conversation:\n${artifactLines.join('\n')}`
         : '';
 
-    const toolTypes = [ToolType.UPDATE_DOCUMENT, ToolType.EDIT_DOCUMENT];
+    const toolTypes = [ToolType.UPDATE_DOCUMENT, ToolType.EDIT_DOCUMENT, ToolType.READ_DOCUMENT];
     const tools: Tool[] = [];
-
     for (const type of toolTypes) {
-      const tool = await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({ type }),
-      );
-      if (artifactSuffix) {
-        tool.descriptionLong = `${tool.descriptionLong ?? tool.description}${artifactSuffix}`;
+      const tool = await this.assembleToolsUseCase.execute(new AssembleToolCommand({ type }));
+      if (suffix) {
+        tool.descriptionLong = `${tool.descriptionLong ?? tool.description}${suffix}`;
       }
       tools.push(tool);
     }
-
     return tools;
   }
 }
