@@ -1,4 +1,5 @@
 import type { Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import type { ArtifactsRepository } from '../ports/artifacts-repository.port';
 import type { ArtifactVersion } from '../../domain/artifact-version.entity';
 import { ArtifactVersionConflictError } from '../artifacts.errors';
@@ -15,15 +16,19 @@ export async function addVersionWithRetry(params: {
   repository: ArtifactsRepository;
   logger: Logger;
   artifactId: string;
-  buildVersion: () => Promise<ArtifactVersion>;
+  buildVersion: () => Promise<{
+    version: ArtifactVersion;
+    expectedCurrentVersionNumber: number;
+    letterheadId?: UUID | null;
+  }>;
 }): Promise<ArtifactVersion> {
   const { repository, logger, artifactId } = params;
 
   for (let attempt = 1; attempt <= MAX_VERSION_RETRIES; attempt++) {
-    const version = await params.buildVersion();
+    const updateParams = await params.buildVersion();
 
     try {
-      return await repository.addVersionAndUpdateCurrent(version);
+      return await repository.addVersionAndUpdateArtifact(updateParams);
     } catch (error) {
       if (
         error instanceof ArtifactVersionConflictError &&
@@ -31,7 +36,7 @@ export async function addVersionWithRetry(params: {
       ) {
         logger.warn(`Version conflict on attempt ${attempt}, retrying`, {
           artifactId,
-          versionNumber: version.versionNumber,
+          versionNumber: updateParams.version.versionNumber,
         });
         continue;
       }

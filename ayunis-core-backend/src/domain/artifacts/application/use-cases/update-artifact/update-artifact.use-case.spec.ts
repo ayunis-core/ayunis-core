@@ -16,10 +16,13 @@ import {
 import { Artifact } from '../../../domain/artifact.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
+import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
+import { LetterheadNotFoundError } from 'src/domain/letterheads/application/letterheads.errors';
 
 describe('UpdateArtifactUseCase', () => {
   let useCase: UpdateArtifactUseCase;
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
+  let findLetterheadUseCase: jest.Mocked<FindLetterheadUseCase>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockArtifactId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -33,7 +36,7 @@ describe('UpdateArtifactUseCase', () => {
       findByIdWithVersions: jest.fn(),
       addVersion: jest.fn(),
       updateCurrentVersionNumber: jest.fn(),
-      addVersionAndUpdateCurrent: jest.fn(),
+      addVersionAndUpdateArtifact: jest.fn(),
       delete: jest.fn(),
     };
 
@@ -44,16 +47,25 @@ describe('UpdateArtifactUseCase', () => {
       }),
     } as unknown as jest.Mocked<ContextService>;
 
+    const mockFindLetterheadUseCase = {
+      execute: jest.fn().mockResolvedValue({}),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateArtifactUseCase,
         { provide: ArtifactsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
+        {
+          provide: FindLetterheadUseCase,
+          useValue: mockFindLetterheadUseCase,
+        },
       ],
     }).compile();
 
     useCase = module.get<UpdateArtifactUseCase>(UpdateArtifactUseCase);
     artifactsRepository = module.get(ArtifactsRepository);
+    findLetterheadUseCase = module.get(FindLetterheadUseCase);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'warn').mockImplementation();
@@ -73,8 +85,8 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     artifactsRepository.findById.mockResolvedValue(existingArtifact);
-    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
-      async (version) => version,
+    artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+      async ({ version }) => version,
     );
 
     const command = new UpdateArtifactCommand({
@@ -97,7 +109,7 @@ describe('UpdateArtifactUseCase', () => {
     );
   });
 
-  it('should call addVersionAndUpdateCurrent with the new version', async () => {
+  it('should call addVersionAndUpdateArtifact with the new version', async () => {
     const existingArtifact = new Artifact({
       id: mockArtifactId,
       threadId: mockThreadId,
@@ -107,8 +119,8 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     artifactsRepository.findById.mockResolvedValue(existingArtifact);
-    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
-      async (version) => version,
+    artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+      async ({ version }) => version,
     );
 
     const command = new UpdateArtifactCommand({
@@ -120,12 +132,14 @@ describe('UpdateArtifactUseCase', () => {
     await useCase.execute(command);
 
     expect(
-      artifactsRepository.addVersionAndUpdateCurrent,
+      artifactsRepository.addVersionAndUpdateArtifact,
     ).toHaveBeenCalledTimes(1);
-    const passedVersion =
-      artifactsRepository.addVersionAndUpdateCurrent.mock.calls[0][0];
-    expect(passedVersion.artifactId).toBe(mockArtifactId);
-    expect(passedVersion.versionNumber).toBe(2);
+    const passedParams =
+      artifactsRepository.addVersionAndUpdateArtifact.mock.calls[0][0];
+    expect(passedParams.version.artifactId).toBe(mockArtifactId);
+    expect(passedParams.version.versionNumber).toBe(2);
+    expect(passedParams.expectedCurrentVersionNumber).toBe(1);
+    expect(passedParams.letterheadId).toBeUndefined();
   });
 
   it('should throw ArtifactNotFoundError when artifact does not exist', async () => {
@@ -152,8 +166,8 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     artifactsRepository.findById.mockResolvedValue(existingArtifact);
-    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
-      async (version) => version,
+    artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+      async ({ version }) => version,
     );
 
     const command = new UpdateArtifactCommand({
@@ -177,8 +191,8 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     artifactsRepository.findById.mockResolvedValue(existingArtifact);
-    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
-      async (version) => version,
+    artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+      async ({ version }) => version,
     );
 
     const command = new UpdateArtifactCommand({
@@ -203,8 +217,8 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     artifactsRepository.findById.mockResolvedValue(existingArtifact);
-    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
-      async (version) => version,
+    artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+      async ({ version }) => version,
     );
 
     const command = new UpdateArtifactCommand({
@@ -229,8 +243,8 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     artifactsRepository.findById.mockResolvedValue(existingArtifact);
-    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
-      async (version) => version,
+    artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+      async ({ version }) => version,
     );
 
     const safeContent =
@@ -275,8 +289,8 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     artifactsRepository.findById.mockResolvedValue(existingArtifact);
-    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
-      async (version) => version,
+    artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+      async ({ version }) => version,
     );
 
     const command = new UpdateArtifactCommand({
@@ -290,6 +304,111 @@ describe('UpdateArtifactUseCase', () => {
     expect(result.versionNumber).toBe(2);
   });
 
+  it('should pass letterheadId to the atomic artifact update when provided in command', async () => {
+    const mockLetterheadId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
+
+    const existingArtifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Official Letter',
+      currentVersionNumber: 1,
+    });
+
+    artifactsRepository.findById.mockResolvedValue(existingArtifact);
+    artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+      async ({ version }) => version,
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p>Updated content</p>',
+      authorType: AuthorType.USER,
+      letterheadId: mockLetterheadId,
+    });
+
+    await useCase.execute(command);
+
+    expect(
+      artifactsRepository.addVersionAndUpdateArtifact,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        expectedCurrentVersionNumber: 1,
+        letterheadId: mockLetterheadId,
+        version: expect.objectContaining({
+          artifactId: mockArtifactId,
+          versionNumber: 2,
+        }),
+      }),
+    );
+  });
+
+  it('should leave letterheadId unchanged when not provided in command', async () => {
+    const existingArtifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Regular Document',
+      currentVersionNumber: 1,
+    });
+
+    artifactsRepository.findById.mockResolvedValue(existingArtifact);
+    artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+      async ({ version }) => version,
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p>Updated content</p>',
+      authorType: AuthorType.USER,
+    });
+
+    await useCase.execute(command);
+
+    expect(
+      artifactsRepository.addVersionAndUpdateArtifact,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        expectedCurrentVersionNumber: 1,
+        letterheadId: undefined,
+      }),
+    );
+  });
+
+  it('should pass letterheadId as null to remove letterhead atomically', async () => {
+    const existingArtifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Letter with letterhead',
+      letterheadId: '423e4567-e89b-12d3-a456-426614174000' as UUID,
+      currentVersionNumber: 1,
+    });
+
+    artifactsRepository.findById.mockResolvedValue(existingArtifact);
+    artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+      async ({ version }) => version,
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p>Content without letterhead</p>',
+      authorType: AuthorType.USER,
+      letterheadId: null,
+    });
+
+    await useCase.execute(command);
+
+    expect(
+      artifactsRepository.addVersionAndUpdateArtifact,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        expectedCurrentVersionNumber: 1,
+        letterheadId: null,
+      }),
+    );
+  });
+
   it('should throw UnauthorizedAccessError when user is not authenticated', async () => {
     const mockContextService = {
       get: jest.fn(() => undefined),
@@ -300,6 +419,10 @@ describe('UpdateArtifactUseCase', () => {
         UpdateArtifactUseCase,
         { provide: ArtifactsRepository, useValue: artifactsRepository },
         { provide: ContextService, useValue: mockContextService },
+        {
+          provide: FindLetterheadUseCase,
+          useValue: findLetterheadUseCase,
+        },
       ],
     }).compile();
 
@@ -352,8 +475,8 @@ describe('UpdateArtifactUseCase', () => {
       });
 
       artifactsRepository.findById.mockResolvedValue(existingArtifact);
-      artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
-        async (version) => version,
+      artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+        async ({ version }) => version,
       );
 
       const command = new UpdateArtifactCommand({
@@ -378,8 +501,8 @@ describe('UpdateArtifactUseCase', () => {
       });
 
       artifactsRepository.findById.mockResolvedValue(existingArtifact);
-      artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
-        async (version) => version,
+      artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+        async ({ version }) => version,
       );
 
       const command = new UpdateArtifactCommand({
@@ -394,8 +517,80 @@ describe('UpdateArtifactUseCase', () => {
     });
   });
 
+  it('should not call the atomic artifact update when artifact is not found', async () => {
+    const mockLetterheadId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
+
+    artifactsRepository.findById.mockResolvedValue(null);
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p>Unauthorized letterhead change</p>',
+      authorType: AuthorType.USER,
+      letterheadId: mockLetterheadId,
+    });
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      ArtifactNotFoundError,
+    );
+    expect(
+      artifactsRepository.addVersionAndUpdateArtifact,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('should throw LetterheadNotFoundError when letterheadId does not belong to org before atomic update', async () => {
+    const crossOrgLetterheadId = '523e4567-e89b-12d3-a456-426614174000' as UUID;
+
+    findLetterheadUseCase.execute.mockRejectedValue(
+      new LetterheadNotFoundError(crossOrgLetterheadId),
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p>Cross-org letterhead attempt</p>',
+      authorType: AuthorType.USER,
+      letterheadId: crossOrgLetterheadId,
+    });
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      LetterheadNotFoundError,
+    );
+    expect(
+      artifactsRepository.addVersionAndUpdateArtifact,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('should validate letterheadId belongs to org before updating', async () => {
+    const mockLetterheadId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
+
+    const existingArtifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Official Letter',
+      currentVersionNumber: 1,
+    });
+
+    artifactsRepository.findById.mockResolvedValue(existingArtifact);
+    artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+      async ({ version }) => version,
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p>Content with valid letterhead</p>',
+      authorType: AuthorType.USER,
+      letterheadId: mockLetterheadId,
+    });
+
+    await useCase.execute(command);
+
+    expect(findLetterheadUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ letterheadId: mockLetterheadId }),
+    );
+  });
+
   describe('retry on version conflict', () => {
-    it('should retry and succeed when addVersionAndUpdateCurrent fails once with conflict', async () => {
+    it('should retry and succeed when addVersionAndUpdateArtifact fails once with conflict', async () => {
       const artifactV2 = new Artifact({
         id: mockArtifactId,
         threadId: mockThreadId,
@@ -416,9 +611,9 @@ describe('UpdateArtifactUseCase', () => {
         .mockResolvedValueOnce(artifactV2)
         .mockResolvedValueOnce(artifactV3);
 
-      artifactsRepository.addVersionAndUpdateCurrent
+      artifactsRepository.addVersionAndUpdateArtifact
         .mockRejectedValueOnce(new ArtifactVersionConflictError(mockArtifactId))
-        .mockImplementationOnce(async (version) => version);
+        .mockImplementationOnce(async ({ version }) => version);
 
       const command = new UpdateArtifactCommand({
         artifactId: mockArtifactId,
@@ -431,7 +626,7 @@ describe('UpdateArtifactUseCase', () => {
       expect(result.versionNumber).toBe(4);
       expect(artifactsRepository.findById).toHaveBeenCalledTimes(2);
       expect(
-        artifactsRepository.addVersionAndUpdateCurrent,
+        artifactsRepository.addVersionAndUpdateArtifact,
       ).toHaveBeenCalledTimes(2);
     });
 
@@ -445,7 +640,7 @@ describe('UpdateArtifactUseCase', () => {
       });
 
       artifactsRepository.findById.mockResolvedValue(artifact);
-      artifactsRepository.addVersionAndUpdateCurrent.mockRejectedValue(
+      artifactsRepository.addVersionAndUpdateArtifact.mockRejectedValue(
         new ArtifactVersionConflictError(mockArtifactId),
       );
 
@@ -461,7 +656,7 @@ describe('UpdateArtifactUseCase', () => {
 
       expect(artifactsRepository.findById).toHaveBeenCalledTimes(3);
       expect(
-        artifactsRepository.addVersionAndUpdateCurrent,
+        artifactsRepository.addVersionAndUpdateArtifact,
       ).toHaveBeenCalledTimes(3);
     });
 
@@ -475,7 +670,7 @@ describe('UpdateArtifactUseCase', () => {
       });
 
       artifactsRepository.findById.mockResolvedValue(artifact);
-      artifactsRepository.addVersionAndUpdateCurrent.mockRejectedValue(
+      artifactsRepository.addVersionAndUpdateArtifact.mockRejectedValue(
         new Error('Connection refused'),
       );
 
@@ -491,7 +686,7 @@ describe('UpdateArtifactUseCase', () => {
 
       expect(artifactsRepository.findById).toHaveBeenCalledTimes(1);
       expect(
-        artifactsRepository.addVersionAndUpdateCurrent,
+        artifactsRepository.addVersionAndUpdateArtifact,
       ).toHaveBeenCalledTimes(1);
     });
   });

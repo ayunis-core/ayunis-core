@@ -15,6 +15,8 @@ import { sanitizeHtmlContent } from '../../helpers/sanitize-html-content';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { addVersionWithRetry } from '../../helpers/add-version-with-retry';
+import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
+import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.query';
 
 @Injectable()
 export class UpdateArtifactUseCase {
@@ -23,6 +25,7 @@ export class UpdateArtifactUseCase {
   constructor(
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
+    private readonly findLetterheadUseCase: FindLetterheadUseCase,
   ) {}
 
   async execute(command: UpdateArtifactCommand): Promise<ArtifactVersion> {
@@ -38,6 +41,12 @@ export class UpdateArtifactUseCase {
         throw new ArtifactContentTooLargeError(
           command.content.length,
           ARTIFACT_MAX_CONTENT_LENGTH,
+        );
+      }
+
+      if (command.letterheadId) {
+        await this.findLetterheadUseCase.execute(
+          new FindLetterheadQuery({ letterheadId: command.letterheadId }),
         );
       }
 
@@ -67,13 +76,17 @@ export class UpdateArtifactUseCase {
             );
           }
 
-          return new ArtifactVersion({
-            artifactId: artifact.id,
-            versionNumber: artifact.currentVersionNumber + 1,
-            content: sanitizedContent,
-            authorType: command.authorType,
-            authorId: command.authorType === AuthorType.USER ? userId : null,
-          });
+          return {
+            expectedCurrentVersionNumber: artifact.currentVersionNumber,
+            letterheadId: command.letterheadId,
+            version: new ArtifactVersion({
+              artifactId: artifact.id,
+              versionNumber: artifact.currentVersionNumber + 1,
+              content: sanitizedContent,
+              authorType: command.authorType,
+              authorId: command.authorType === AuthorType.USER ? userId : null,
+            }),
+          };
         },
       });
     } catch (error) {

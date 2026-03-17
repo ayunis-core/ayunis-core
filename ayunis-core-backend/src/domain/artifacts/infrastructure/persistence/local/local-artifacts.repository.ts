@@ -81,12 +81,18 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
   }
 
   @Transactional()
-  async addVersionAndUpdateCurrent(
-    version: ArtifactVersion,
-  ): Promise<ArtifactVersion> {
-    this.logger.log('addVersionAndUpdateCurrent', {
+  async addVersionAndUpdateArtifact(params: {
+    version: ArtifactVersion;
+    expectedCurrentVersionNumber: number;
+    letterheadId?: UUID | null;
+  }): Promise<ArtifactVersion> {
+    const { version, expectedCurrentVersionNumber, letterheadId } = params;
+
+    this.logger.log('addVersionAndUpdateArtifact', {
       artifactId: version.artifactId,
       versionNumber: version.versionNumber,
+      expectedCurrentVersionNumber,
+      shouldUpdateLetterhead: letterheadId !== undefined,
     });
 
     try {
@@ -94,10 +100,33 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
       const saved = await this.versionRepo.save(record);
       const createdVersion = this.versionMapper.toDomain(saved);
 
-      await this.artifactRepo.update(
-        { id: version.artifactId },
-        { currentVersionNumber: version.versionNumber },
-      );
+      const result =
+        letterheadId === undefined
+          ? await this.artifactRepo.update(
+              {
+                id: version.artifactId,
+                currentVersionNumber: expectedCurrentVersionNumber,
+              },
+              {
+                currentVersionNumber: version.versionNumber,
+                updatedAt: new Date(),
+              },
+            )
+          : await this.artifactRepo.update(
+              {
+                id: version.artifactId,
+                currentVersionNumber: expectedCurrentVersionNumber,
+              },
+              {
+                currentVersionNumber: version.versionNumber,
+                letterheadId,
+                updatedAt: new Date(),
+              },
+            );
+
+      if (result.affected !== 1) {
+        throw new ArtifactVersionConflictError(version.artifactId);
+      }
 
       return createdVersion;
     } catch (error) {

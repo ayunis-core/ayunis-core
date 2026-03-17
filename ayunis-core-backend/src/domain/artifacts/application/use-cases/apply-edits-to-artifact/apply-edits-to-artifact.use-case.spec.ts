@@ -36,7 +36,7 @@ describe('ApplyEditsToArtifactUseCase', () => {
       findByIdWithVersions: jest.fn(),
       addVersion: jest.fn(),
       updateCurrentVersionNumber: jest.fn(),
-      addVersionAndUpdateCurrent: jest.fn(),
+      addVersionAndUpdateArtifact: jest.fn(),
       delete: jest.fn(),
     };
 

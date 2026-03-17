@@ -16,14 +16,17 @@ export abstract class ArtifactsRepository {
     versionNumber: number,
   ): Promise<void>;
   /**
-   * Atomically adds a version and updates the artifact's current version number.
+   * Atomically adds a version and updates the artifact row.
    * Each call runs in its own transaction so that a unique-constraint failure
    * does not poison the caller's transaction context.
    *
-   * @throws ArtifactVersionConflictError when the version number already exists.
+   * @throws ArtifactVersionConflictError when the version number already exists
+   * or when the artifact was concurrently modified.
    */
-  abstract addVersionAndUpdateCurrent(
-    version: ArtifactVersion,
-  ): Promise<ArtifactVersion>;
+  abstract addVersionAndUpdateArtifact(params: {
+    version: ArtifactVersion;
+    expectedCurrentVersionNumber: number;
+    letterheadId?: UUID | null;
+  }): Promise<ArtifactVersion>;
   abstract delete(id: UUID): Promise<void>;
 }
