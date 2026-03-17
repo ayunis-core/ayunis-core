@@ -6,7 +6,6 @@ import {
   MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsValidDepartment } from '../../../../users/domain/is-valid-department.validator';
 
 export class RegisterDto {
   @ApiProperty({
@@ -51,6 +50,5 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   @MaxLength(100)
-  @IsValidDepartment()
   department?: string;
 }
