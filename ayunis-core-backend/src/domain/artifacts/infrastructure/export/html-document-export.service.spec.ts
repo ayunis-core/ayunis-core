@@ -1,4 +1,6 @@
 import { HtmlDocumentExportService } from './html-document-export.service';
+import type { PdfLetterheadCompositor } from './pdf-letterhead-compositor';
+import type { LetterheadConfig } from '../../application/ports/document-export.port';
 
 // ---------------------------------------------------------------------------
 // Puppeteer mock — avoids launching a real browser in unit tests
@@ -26,6 +28,7 @@ jest.mock('puppeteer-core', () => ({
 
 describe('HtmlDocumentExportService', () => {
   let service: HtmlDocumentExportService;
+  let compositor: jest.Mocked<PdfLetterheadCompositor>;
 
   const sampleHtml = `
     <h1>Test Document</h1>
@@ -41,7 +44,10 @@ describe('HtmlDocumentExportService', () => {
   `;
 
   beforeAll(() => {
-    service = new HtmlDocumentExportService();
+    compositor = {
+      composite: jest.fn().mockResolvedValue(Buffer.from('%PDF-composited')),
+    } as unknown as jest.Mocked<PdfLetterheadCompositor>;
+    service = new HtmlDocumentExportService(compositor);
   });
 
   afterAll(async () => {
@@ -51,6 +57,7 @@ describe('HtmlDocumentExportService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockBrowser.connected = true;
+    compositor.composite.mockResolvedValue(Buffer.from('%PDF-composited'));
   });
 
   describe('exportToDocx', () => {
@@ -160,7 +167,7 @@ describe('HtmlDocumentExportService', () => {
       );
     });
 
-    it('should generate A4 PDF with correct margins', async () => {
+    it('should generate A4 PDF with correct margins when no letterhead', async () => {
       await service.exportToPdf('<p>Hello</p>');
 
       expect(mockPage.pdf).toHaveBeenCalledWith({
@@ -191,6 +198,71 @@ describe('HtmlDocumentExportService', () => {
       await service.exportToPdf('<p>After reconnect</p>');
 
       expect(mockLaunch).toHaveBeenCalled();
+    });
+
+    describe('with letterhead', () => {
+      const letterheadConfig: LetterheadConfig = {
+        firstPagePdf: Buffer.from('%PDF-first-bg'),
+        continuationPagePdf: Buffer.from('%PDF-cont-bg'),
+        firstPageMargins: { top: 55, right: 15, bottom: 20, left: 15 },
+        continuationPageMargins: { top: 20, right: 15, bottom: 20, left: 15 },
+      };
+
+      it('should set zero margins in Puppeteer when letterhead is provided', async () => {
+        await service.exportToPdf('<p>Hello</p>', letterheadConfig);
+
+        expect(mockPage.pdf).toHaveBeenCalledWith({
+          format: 'A4',
+          margin: {
+            top: '0mm',
+            right: '0mm',
+            bottom: '0mm',
+            left: '0mm',
+          },
+          preferCSSPageSize: true,
+          printBackground: true,
+        });
+      });
+
+      it('should inject @page CSS rules with letterhead margins', async () => {
+        await service.exportToPdf('<p>Hello</p>', letterheadConfig);
+
+        const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+        expect(htmlArg).toContain('@page :first');
+        expect(htmlArg).toContain('55mm');
+        expect(htmlArg).toContain('15mm');
+        expect(htmlArg).toContain(
+          '@page {\n    margin: 20mm 15mm 20mm 15mm;\n  }',
+        );
+      });
+
+      it('should call compositor with content PDF and background PDFs', async () => {
+        await service.exportToPdf('<p>Hello</p>', letterheadConfig);
+
+        expect(compositor.composite).toHaveBeenCalledWith(
+          FAKE_PDF,
+          letterheadConfig.firstPagePdf,
+          letterheadConfig.continuationPagePdf,
+        );
+      });
+
+      it('should return the composited PDF buffer', async () => {
+        const compositedPdf = Buffer.from('%PDF-composited-result');
+        compositor.composite.mockResolvedValue(compositedPdf);
+
+        const result = await service.exportToPdf(
+          '<p>Hello</p>',
+          letterheadConfig,
+        );
+
+        expect(result).toBe(compositedPdf);
+      });
+
+      it('should not call compositor when no letterhead is provided', async () => {
+        await service.exportToPdf('<p>Hello</p>');
+
+        expect(compositor.composite).not.toHaveBeenCalled();
+      });
     });
   });
 });
