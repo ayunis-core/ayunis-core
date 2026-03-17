@@ -21,6 +21,12 @@
       "redo": "Wiederholen"
     }
   },
+  "letterhead": {
+    "none": "Kein Briefpapier",
+    "changeError": "Fehler beim Ändern des Briefpapiers.",
+    "notFound": "Briefpapier nicht gefunden. Es wurde möglicherweise gelöscht.",
+    "documentNotFound": "Dokument nicht gefunden. Es wurde möglicherweise gelöscht."
+  },
   "export": {
     "word": "Word",
     "pdf": "PDF",

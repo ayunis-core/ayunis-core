@@ -28,5 +28,9 @@ export abstract class ArtifactsRepository {
     expectedCurrentVersionNumber: number;
     letterheadId?: UUID | null;
   }): Promise<ArtifactVersion>;
+  abstract updateLetterheadId(
+    artifactId: UUID,
+    letterheadId: UUID | null,
+  ): Promise<void>;
   abstract delete(id: UUID): Promise<void>;
 }

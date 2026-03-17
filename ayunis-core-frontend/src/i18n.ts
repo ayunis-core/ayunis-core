@@ -56,6 +56,8 @@ import enSuperAdminSettingsPlatformConfig from './shared/locales/en/super-admin-
 import deSuperAdminSettingsPlatformConfig from './shared/locales/de/super-admin-settings-platform-config.json';
 import enAdminSettingsSecurity from './shared/locales/en/admin-settings-security.json';
 import deAdminSettingsSecurity from './shared/locales/de/admin-settings-security.json';
+import enAdminSettingsLetterheads from './shared/locales/en/admin-settings-letterheads.json';
+import deAdminSettingsLetterheads from './shared/locales/de/admin-settings-letterheads.json';
 
 const resources = {
   en: {
@@ -86,6 +88,7 @@ const resources = {
     artifacts: enArtifacts,
     'super-admin-settings-platform-config': enSuperAdminSettingsPlatformConfig,
     'admin-settings-security': enAdminSettingsSecurity,
+    'admin-settings-letterheads': enAdminSettingsLetterheads,
   },
   de: {
     auth: deAuth,
@@ -115,6 +118,7 @@ const resources = {
     artifacts: deArtifacts,
     'super-admin-settings-platform-config': deSuperAdminSettingsPlatformConfig,
     'admin-settings-security': deAdminSettingsSecurity,
+    'admin-settings-letterheads': deAdminSettingsLetterheads,
   },
 };
 

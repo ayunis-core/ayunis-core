@@ -6442,6 +6442,9 @@
               }
             }
           },
+          "204": {
+            "description": "Letterhead updated (no content change)"
+          },
           "404": {
             "description": "Artifact not found"
           }
@@ -13549,12 +13552,12 @@
         "properties": {
           "content": {
             "type": "string",
-            "description": "Updated HTML content of the document",
+            "description": "Updated HTML content of the document. When omitted, no new version is created.",
             "example": "<p>Updated meeting notes...</p>"
           },
           "authorType": {
             "type": "string",
-            "description": "Who authored this version",
+            "description": "Who authored this version. Required when content is provided.",
             "enum": [
               "USER",
               "ASSISTANT"
@@ -13568,11 +13571,7 @@
             "format": "uuid",
             "nullable": true
           }
-        },
-        "required": [
-          "content",
-          "authorType"
-        ]
+        }
       },
       "RevertArtifactDto": {
         "type": "object",

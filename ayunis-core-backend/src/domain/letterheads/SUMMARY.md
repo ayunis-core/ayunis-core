@@ -52,7 +52,7 @@ letterheads/
 
 ## Dependencies
 
-- **StorageModule** — File storage for letterhead PDF uploads
+- **StorageModule** — File storage for uploaded letterhead PDFs
 
 ## Ports
 
@@ -61,5 +61,10 @@ letterheads/
 ## Key Behaviors
 
 - Page margins are validated (non-negative, finite) when a `Letterhead` entity is constructed
+- Uploaded PDFs are validated with `pdf-lib` and must be exactly one page each
+- Create stores the first-page PDF and optional continuation PDF under org-scoped storage paths like `letterheads/<orgId>/<letterheadId>/...`
+- Update can replace either PDF, update metadata/margins, or remove the continuation page and delete its stored object
+- Find-all and find-one are organization-scoped via request context
 - Delete throws `LetterheadNotFoundError` if no matching record exists
 - Each letterhead is scoped to an organization via `orgId`
+- Other modules (notably **artifacts** and **runs**) consume this module to validate letterhead assignments and expose available letterheads to document tools

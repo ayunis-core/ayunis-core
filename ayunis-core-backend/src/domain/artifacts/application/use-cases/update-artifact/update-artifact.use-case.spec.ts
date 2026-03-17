@@ -14,6 +14,7 @@ import {
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from '../../artifacts.errors';
 import { Artifact } from '../../../domain/artifact.entity';
+import type { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
@@ -37,6 +38,7 @@ describe('UpdateArtifactUseCase', () => {
       addVersion: jest.fn(),
       updateCurrentVersionNumber: jest.fn(),
       addVersionAndUpdateArtifact: jest.fn(),
+      updateLetterheadId: jest.fn(),
       delete: jest.fn(),
     };
 
@@ -95,8 +97,7 @@ describe('UpdateArtifactUseCase', () => {
       authorType: AuthorType.USER,
     });
 
-    const result = await useCase.execute(command);
-
+    const result = (await useCase.execute(command)) as ArtifactVersion;
     expect(result.versionNumber).toBe(3);
     expect(result.content).toBe(
       '<h1>Updated Budget Report</h1><p>Revised figures...</p>',
@@ -176,8 +177,7 @@ describe('UpdateArtifactUseCase', () => {
       authorType: AuthorType.ASSISTANT,
     });
 
-    const result = await useCase.execute(command);
-
+    const result = (await useCase.execute(command)) as ArtifactVersion;
     expect(result.authorId).toBeNull();
   });
 
@@ -201,8 +201,7 @@ describe('UpdateArtifactUseCase', () => {
       authorType: AuthorType.USER,
     });
 
-    const result = await useCase.execute(command);
-
+    const result = (await useCase.execute(command)) as ArtifactVersion;
     expect(result.content).toBe('<h1>Updated</h1><p>Content</p>');
     expect(result.content).not.toContain('<script');
   });
@@ -227,8 +226,7 @@ describe('UpdateArtifactUseCase', () => {
       authorType: AuthorType.ASSISTANT,
     });
 
-    const result = await useCase.execute(command);
-
+    const result = (await useCase.execute(command)) as ArtifactVersion;
     expect(result.content).toBe('<p>Hover me</p>');
     expect(result.content).not.toContain('onmouseover');
   });
@@ -256,8 +254,7 @@ describe('UpdateArtifactUseCase', () => {
       authorType: AuthorType.USER,
     });
 
-    const result = await useCase.execute(command);
-
+    const result = (await useCase.execute(command)) as ArtifactVersion;
     expect(result.content).toBe(safeContent);
   });
 
@@ -299,8 +296,7 @@ describe('UpdateArtifactUseCase', () => {
       authorType: AuthorType.USER,
     });
 
-    const result = await useCase.execute(command);
-
+    const result = (await useCase.execute(command)) as ArtifactVersion;
     expect(result.versionNumber).toBe(2);
   });
 
@@ -488,7 +484,7 @@ describe('UpdateArtifactUseCase', () => {
 
       const result = await useCase.execute(command);
 
-      expect(result.versionNumber).toBe(4);
+      expect(result?.versionNumber).toBe(4);
     });
 
     it('should skip version check when expectedVersionNumber is not provided', async () => {
@@ -513,8 +509,42 @@ describe('UpdateArtifactUseCase', () => {
 
       const result = await useCase.execute(command);
 
-      expect(result.versionNumber).toBe(6);
+      expect(result?.versionNumber).toBe(6);
     });
+  });
+
+  it('should update only letterheadId without creating a new version when no content is provided', async () => {
+    const mockLetterheadId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
+
+    const existingArtifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Official Letter',
+      currentVersionNumber: 1,
+    });
+
+    artifactsRepository.findById.mockResolvedValue(existingArtifact);
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      letterheadId: mockLetterheadId,
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(result).toBeUndefined();
+    expect(artifactsRepository.findById).toHaveBeenCalledWith(
+      mockArtifactId,
+      mockUserId,
+    );
+    expect(artifactsRepository.updateLetterheadId).toHaveBeenCalledWith(
+      mockArtifactId,
+      mockLetterheadId,
+    );
+    expect(
+      artifactsRepository.addVersionAndUpdateArtifact,
+    ).not.toHaveBeenCalled();
   });
 
   it('should not call the atomic artifact update when artifact is not found', async () => {
@@ -532,6 +562,7 @@ describe('UpdateArtifactUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow(
       ArtifactNotFoundError,
     );
+    expect(artifactsRepository.updateLetterheadId).not.toHaveBeenCalled();
     expect(
       artifactsRepository.addVersionAndUpdateArtifact,
     ).not.toHaveBeenCalled();
@@ -607,7 +638,9 @@ describe('UpdateArtifactUseCase', () => {
         currentVersionNumber: 3,
       });
 
+      // 1st call: ownership check, 2nd call: buildVersion attempt 1, 3rd call: buildVersion retry
       artifactsRepository.findById
+        .mockResolvedValueOnce(artifactV2)
         .mockResolvedValueOnce(artifactV2)
         .mockResolvedValueOnce(artifactV3);
 
@@ -621,10 +654,10 @@ describe('UpdateArtifactUseCase', () => {
         authorType: AuthorType.USER,
       });
 
-      const result = await useCase.execute(command);
-
+      const result = (await useCase.execute(command)) as ArtifactVersion;
       expect(result.versionNumber).toBe(4);
-      expect(artifactsRepository.findById).toHaveBeenCalledTimes(2);
+      // 1 ownership check + 2 buildVersion calls
+      expect(artifactsRepository.findById).toHaveBeenCalledTimes(3);
       expect(
         artifactsRepository.addVersionAndUpdateArtifact,
       ).toHaveBeenCalledTimes(2);
@@ -654,7 +687,8 @@ describe('UpdateArtifactUseCase', () => {
         ArtifactVersionConflictError,
       );
 
-      expect(artifactsRepository.findById).toHaveBeenCalledTimes(3);
+      // 1 ownership check + 3 buildVersion retries
+      expect(artifactsRepository.findById).toHaveBeenCalledTimes(4);
       expect(
         artifactsRepository.addVersionAndUpdateArtifact,
       ).toHaveBeenCalledTimes(3);
@@ -684,7 +718,8 @@ describe('UpdateArtifactUseCase', () => {
         'Connection refused',
       );
 
-      expect(artifactsRepository.findById).toHaveBeenCalledTimes(1);
+      // 1 ownership check + 1 buildVersion attempt
+      expect(artifactsRepository.findById).toHaveBeenCalledTimes(2);
       expect(
         artifactsRepository.addVersionAndUpdateArtifact,
       ).toHaveBeenCalledTimes(1);

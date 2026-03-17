@@ -82,7 +82,9 @@ export class ApplyEditsToArtifactUseCase {
         authorType: command.authorType,
       });
 
-      return await this.updateArtifactUseCase.execute(updateCommand);
+      const result = await this.updateArtifactUseCase.execute(updateCommand);
+      // Content is always provided here so result is always an ArtifactVersion
+      return result as ArtifactVersion;
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;

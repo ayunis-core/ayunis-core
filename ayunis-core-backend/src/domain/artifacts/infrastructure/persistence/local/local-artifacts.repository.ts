@@ -80,6 +80,16 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     );
   }
 
+  async updateLetterheadId(
+    artifactId: UUID,
+    letterheadId: UUID | null,
+  ): Promise<void> {
+    await this.artifactRepo.update(
+      { id: artifactId },
+      { letterheadId, updatedAt: new Date() },
+    );
+  }
+
   @Transactional()
   async addVersionAndUpdateArtifact(params: {
     version: ArtifactVersion;

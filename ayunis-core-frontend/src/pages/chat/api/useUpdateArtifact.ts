@@ -10,12 +10,14 @@ interface UseUpdateArtifactOptions {
   artifactId: string;
   threadId: string;
   onSuccess?: () => void;
+  onError?: (error: unknown) => void;
 }
 
 export function useUpdateArtifact({
   artifactId,
   threadId,
   onSuccess,
+  onError,
 }: UseUpdateArtifactOptions) {
   const queryClient = useQueryClient();
 
@@ -23,6 +25,7 @@ export function useUpdateArtifact({
     mutationFn: (data: UpdateArtifactDto) =>
       artifactsControllerUpdate(artifactId, data),
     onSuccess,
+    onError,
     onSettled: () => {
       void queryClient.invalidateQueries({
         queryKey: getArtifactsControllerFindOneQueryKey(artifactId),
