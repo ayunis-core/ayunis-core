@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.19.0](https://github.com/ayunis-core/ayunis-core/compare/v1.18.0...v1.19.0) (2026-03-17)
+
+
+### Features
+
+* **AYC-000:** add structured validation error handling for forms ([#396](https://github.com/ayunis-core/ayunis-core/issues/396)) ([a9b2d45](https://github.com/ayunis-core/ayunis-core/commit/a9b2d45541e633f4686b1f0d0bf5d8f807c8cbe4))
+
+
+### Bug Fixes
+
+* **AYC-000:** auto-save unsaved editor changes before artifact export ([#431](https://github.com/ayunis-core/ayunis-core/issues/431)) ([0ad68fb](https://github.com/ayunis-core/ayunis-core/commit/0ad68fb495feb2011a44633d0a68f11e3dbd7f4b))
+* **AYC-000:** preserve chat scroll position when opening artifact editor ([#434](https://github.com/ayunis-core/ayunis-core/issues/434)) ([b246c30](https://github.com/ayunis-core/ayunis-core/commit/b246c300ff7b139544986741ef2760ca2a8350ef))
+* **AYC-000:** prevent AI from overwriting user edits to artifacts ([#432](https://github.com/ayunis-core/ayunis-core/issues/432)) ([288378e](https://github.com/ayunis-core/ayunis-core/commit/288378e960fab13a851e4355f4c691183f862462))
+* **AYC-000:** resolve frontend lint errors and warnings ([#433](https://github.com/ayunis-core/ayunis-core/issues/433)) ([8055d6a](https://github.com/ayunis-core/ayunis-core/commit/8055d6a93e1f4b3f4503254332a360da4f922c7a))
+* **AYC-000:** support text/plain content type in url retriever ([#427](https://github.com/ayunis-core/ayunis-core/issues/427)) ([5237aea](https://github.com/ayunis-core/ayunis-core/commit/5237aea07f7a94119ff39440887bc5be15ebd292))
+
+
+### Code Refactoring
+
+* **AYC-000:** move department list ownership to frontend ([#430](https://github.com/ayunis-core/ayunis-core/issues/430)) ([4834a6c](https://github.com/ayunis-core/ayunis-core/commit/4834a6c0b8c72554d52b52c08d3e48e3308a7a33))
+
+
+### Miscellaneous
+
+* **AYC-000:** remove product knowledge tool and fix department enum derivation ([#428](https://github.com/ayunis-core/ayunis-core/issues/428)) ([1348481](https://github.com/ayunis-core/ayunis-core/commit/13484815e5ce07e5eb8612067184a82e99748ca3))
+* **deps-anonymize:** bump presidio-analyzer from 2.2.361 to 2.2.362 in /ayunis-core-anonymize ([#370](https://github.com/ayunis-core/ayunis-core/issues/370)) ([5b4f10e](https://github.com/ayunis-core/ayunis-core/commit/5b4f10ee5455cdd1b48bf809683b6ae24adcfd50))
+* **deps-backend:** bump @aws-sdk/client-bedrock-runtime from 3.995.0 to 3.1009.0 in /ayunis-core-backend ([#371](https://github.com/ayunis-core/ayunis-core/issues/371)) ([3ba6f15](https://github.com/ayunis-core/ayunis-core/commit/3ba6f15cd3228db016286c11805fb094a7cf48c3))
+* **deps-backend:** bump ajv from 8.17.1 to 8.18.0 in /ayunis-core-backend ([#218](https://github.com/ayunis-core/ayunis-core/issues/218)) ([f664581](https://github.com/ayunis-core/ayunis-core/commit/f6645817415eb9c16a559f07eb8c70983f1364a5))
+* **deps-backend:** bump jest from 30.2.0 to 30.3.0 in /ayunis-core-backend in the testing group ([#369](https://github.com/ayunis-core/ayunis-core/issues/369)) ([e2e3774](https://github.com/ayunis-core/ayunis-core/commit/e2e3774aff9e1ba7ff8b0caf93e0087e77f62206))
+* **deps-backend:** bump prettier from 3.6.2 to 3.8.1 in /ayunis-core-backend ([#208](https://github.com/ayunis-core/ayunis-core/issues/208)) ([a5a14f1](https://github.com/ayunis-core/ayunis-core/commit/a5a14f1bc3e2f34ce67c8a285ee6e338d37f2142))
+* **deps-frontend:** bump @base-ui/react from 1.1.0 to 1.2.0 in /ayunis-core-frontend ([#212](https://github.com/ayunis-core/ayunis-core/issues/212)) ([1334b5f](https://github.com/ayunis-core/ayunis-core/commit/1334b5f1c1221b9fb216b1a31e748fda8f34759b))
+* **deps-frontend:** bump @tailwindcss/vite from 4.1.8 to 4.2.0 in /ayunis-core-frontend ([#213](https://github.com/ayunis-core/ayunis-core/issues/213)) ([9d6f958](https://github.com/ayunis-core/ayunis-core/commit/9d6f95811b508dc8946e43456b9424612df9f3cf))
+* **deps-frontend:** bump the radix group across 1 directory with 2 updates ([#368](https://github.com/ayunis-core/ayunis-core/issues/368)) ([ed9d49a](https://github.com/ayunis-core/ayunis-core/commit/ed9d49a995e4bd1d70173641deb9a14d2574d6cd))
+* **deps-frontend:** bump the tanstack group across 1 directory with 4 updates ([#195](https://github.com/ayunis-core/ayunis-core/issues/195)) ([e75bcad](https://github.com/ayunis-core/ayunis-core/commit/e75bcad49e442e86bcc1c0bb05cc4cc22b760ca3))
+* **deps:** bump knip from 5.84.1 to 5.86.0 ([#337](https://github.com/ayunis-core/ayunis-core/issues/337)) ([00a8073](https://github.com/ayunis-core/ayunis-core/commit/00a80736d7d23f249fdc2a96eb9381feff9ab94e))
+
 ## [1.18.0](https://github.com/ayunis-core/ayunis-core/compare/v1.17.1...v1.18.0) (2026-03-16)
 
 
