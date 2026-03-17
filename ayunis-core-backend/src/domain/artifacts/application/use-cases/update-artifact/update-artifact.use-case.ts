@@ -51,7 +51,7 @@ export class UpdateArtifactUseCase {
 
       const sanitizedContent = sanitizeHtmlContent(command.content);
 
-      return await addVersionWithRetry({
+      const version = await addVersionWithRetry({
         repository: this.artifactsRepository,
         logger: this.logger,
         artifactId: command.artifactId,
@@ -64,13 +64,6 @@ export class UpdateArtifactUseCase {
             throw new ArtifactNotFoundError(command.artifactId);
           }
 
-          if (command.letterheadId !== undefined) {
-            await this.artifactsRepository.updateLetterheadId(
-              command.artifactId,
-              command.letterheadId,
-            );
-          }
-
           return new ArtifactVersion({
             artifactId: artifact.id,
             versionNumber: artifact.currentVersionNumber + 1,
@@ -80,6 +73,15 @@ export class UpdateArtifactUseCase {
           });
         },
       });
+
+      if (command.letterheadId !== undefined) {
+        await this.artifactsRepository.updateLetterheadId(
+          command.artifactId,
+          command.letterheadId,
+        );
+      }
+
+      return version;
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
