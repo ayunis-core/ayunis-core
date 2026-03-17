@@ -26,7 +26,7 @@ export function UserConfigDialog({
   integration,
   open,
   onOpenChange,
-}: UserConfigDialogProps) {
+}: Readonly<UserConfigDialogProps>) {
   const { t } = useTranslation('admin-settings-integrations');
 
   if (!integration) return null;

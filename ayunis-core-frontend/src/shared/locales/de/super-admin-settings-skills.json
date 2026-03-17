@@ -49,7 +49,7 @@
   "validation": {
     "name": {
       "isNotEmpty": "Name ist erforderlich",
-      "maxLength": "Name darf maximal 100 Zeichen lang sein",
+      "isLength": "Name darf maximal 100 Zeichen lang sein",
       "invalid": "Ungültiger Name"
     },
     "shortDescription": {

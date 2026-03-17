@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type SyntheticEvent } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -55,7 +55,7 @@ export function RenameThreadDialog({
     }
   }, [open, currentTitle]);
 
-  const handleSubmit = (e: React.SyntheticEvent) => {
+  const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
     const trimmedTitle = title.trim();
 

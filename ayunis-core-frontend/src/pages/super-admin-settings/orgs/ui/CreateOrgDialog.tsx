@@ -32,7 +32,7 @@ export default function CreateOrgDialog() {
     onSuccessCallback: handleClose,
   });
 
-  const handleSubmit = (event: SyntheticEvent) => {
+  const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!name.trim()) {
       return;
