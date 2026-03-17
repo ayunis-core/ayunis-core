@@ -45,7 +45,8 @@ artifacts/
 │   └── export/
 │       ├── html-document-export.service.ts
 │       ├── html-to-docx-converter.ts
-│       └── docx-document-config.ts
+│       ├── docx-document-config.ts
+│       └── pdf-letterhead-compositor.ts
 ├── presenters/http/
 │   ├── artifacts.controller.ts
 │   ├── dtos/
@@ -56,7 +57,8 @@ artifacts/
 ## Dependencies
 
 - **ThreadsModule** — Imported for thread ownership validation when creating artifacts
-- **LetterheadsModule** — Imported for letterhead validation when creating or updating artifacts
+- **LetterheadsModule** — Imported for letterhead validation when creating or updating artifacts, and for finding letterheads during PDF export
+- **StorageModule** — Imported for downloading letterhead PDF files during export
 
 ## Ports
 

@@ -36,12 +36,16 @@ export class PdfLetterheadCompositor {
     const outputDoc = await PDFDocument.create();
     const contentPageCount = contentDoc.getPageCount();
 
+    const [firstBgPage] = await outputDoc.embedPdf(firstBgDoc, [0]);
+    const continuationBgPage = continuationBgDoc
+      ? (await outputDoc.embedPdf(continuationBgDoc, [0]))[0]
+      : null;
+
     for (let i = 0; i < contentPageCount; i++) {
       const isFirstPage = i === 0;
-      const bgDoc = isFirstPage ? firstBgDoc : continuationBgDoc;
+      const bgPage = isFirstPage ? firstBgPage : continuationBgPage;
 
-      if (bgDoc) {
-        const [bgPage] = await outputDoc.embedPdf(bgDoc, [0]);
+      if (bgPage) {
         const contentPage = contentDoc.getPage(i);
         const { width, height } = contentPage.getSize();
 
