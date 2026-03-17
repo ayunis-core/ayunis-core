@@ -23,7 +23,6 @@ import { BarChartTool } from '../domain/tools/bar-chart-tool.entity';
 import { LineChartTool } from '../domain/tools/line-chart-tool.entity';
 import { PieChartTool } from '../domain/tools/pie-chart-tool.entity';
 import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
-import { ProductKnowledgeTool } from '../domain/tools/product-knowledge-tool.entity';
 import { ActivateSkillTool } from '../domain/tools/activate-skill-tool.entity';
 import { CreateSkillTool } from '../domain/tools/create-skill-tool.entity';
 import { KnowledgeQueryTool } from '../domain/tools/knowledge-query-tool.entity';
@@ -44,7 +43,6 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.BAR_CHART]: () => new BarChartTool(),
   [ToolType.LINE_CHART]: () => new LineChartTool(),
   [ToolType.PIE_CHART]: () => new PieChartTool(),
-  [ToolType.PRODUCT_KNOWLEDGE]: () => new ProductKnowledgeTool(),
   [ToolType.CREATE_SKILL]: () => new CreateSkillTool(),
   [ToolType.CREATE_DOCUMENT]: () => new CreateDocumentTool(),
   [ToolType.UPDATE_DOCUMENT]: () => new UpdateDocumentTool(),

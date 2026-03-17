@@ -345,15 +345,6 @@ export class ToolAssemblyService {
       ),
     );
 
-    // Product knowledge tool is always available
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.PRODUCT_KNOWLEDGE,
-        }),
-      ),
-    );
-
     // Document tools are always available
     tools.push(
       await this.assembleToolsUseCase.execute(

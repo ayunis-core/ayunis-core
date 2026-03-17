@@ -140,7 +140,6 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.BAR_CHART);
       expect(types).toContain(ToolType.LINE_CHART);
       expect(types).toContain(ToolType.PIE_CHART);
-      expect(types).toContain(ToolType.PRODUCT_KNOWLEDGE);
 
       expect(types).toContain(ToolType.ACTIVATE_SKILL);
       expect(types).toContain(ToolType.CREATE_SKILL);
@@ -149,8 +148,9 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.CREATE_DOCUMENT);
       expect(types).toContain(ToolType.UPDATE_DOCUMENT);
       expect(types).toContain(ToolType.EDIT_DOCUMENT);
+      expect(types).toContain(ToolType.READ_DOCUMENT);
 
-      expect(types.length).toBe(23);
+      expect(types.length).toBe(22);
     });
   });
 });
