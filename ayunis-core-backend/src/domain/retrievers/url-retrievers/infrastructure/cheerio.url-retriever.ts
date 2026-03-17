@@ -52,7 +52,15 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
 
       this.validateResponse(response, input.url);
 
-      return this.parseHtml(await response.text(), input.url);
+      const contentType =
+        response.headers.get('content-type')?.toLowerCase() ?? '';
+      const body = await response.text();
+
+      if (contentType.includes('text/plain')) {
+        return new UrlRetrieverResult(body.trim(), input.url, '');
+      }
+
+      return this.parseHtml(body, input.url);
     } catch (error) {
       clearTimeout(timeoutId);
 
@@ -77,6 +85,7 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     if (
       contentType &&
       !contentType.includes('text/html') &&
+      !contentType.includes('text/plain') &&
       !contentType.includes('xhtml')
     ) {
       throw new UrlRetrieverUnsupportedContentTypeError(
