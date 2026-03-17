@@ -14,9 +14,11 @@ import {
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
-import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
-import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
+import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
+import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.query';
+import { LetterheadNotFoundError } from 'src/domain/letterheads/application/letterheads.errors';
+import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
+import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import type { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 
 export interface ExportResult {
@@ -33,8 +35,8 @@ export class ExportArtifactUseCase {
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly documentExportPort: DocumentExportPort,
     private readonly contextService: ContextService,
-    private readonly letterheadsRepository: LetterheadsRepository,
-    private readonly objectStoragePort: ObjectStoragePort,
+    private readonly findLetterheadUseCase: FindLetterheadUseCase,
+    private readonly downloadObjectUseCase: DownloadObjectUseCase,
   ) {}
 
   async execute(command: ExportArtifactCommand): Promise<ExportResult> {
@@ -115,23 +117,20 @@ export class ExportArtifactUseCase {
       return undefined;
     }
 
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      return undefined;
-    }
-
-    const letterhead = await this.letterheadsRepository.findById(
-      orgId,
-      artifact.letterheadId,
-    );
-    if (!letterhead) {
-      this.logger.warn(
-        `Letterhead ${artifact.letterheadId} not found, exporting without background`,
+    try {
+      const letterhead = await this.findLetterheadUseCase.execute(
+        new FindLetterheadQuery({ letterheadId: artifact.letterheadId }),
       );
-      return undefined;
+      return this.downloadLetterheadPdfs(letterhead);
+    } catch (error) {
+      if (error instanceof LetterheadNotFoundError) {
+        this.logger.warn(
+          `Letterhead ${artifact.letterheadId} not found, exporting without background`,
+        );
+        return undefined;
+      }
+      throw error;
     }
-
-    return this.downloadLetterheadPdfs(letterhead);
   }
 
   private async downloadLetterheadPdfs(
@@ -154,8 +153,9 @@ export class ExportArtifactUseCase {
   }
 
   private async downloadPdf(storagePath: string): Promise<Buffer> {
-    const storageUrl = new StorageUrl(storagePath, 'default');
-    const stream = await this.objectStoragePort.download(storageUrl);
+    const stream = await this.downloadObjectUseCase.execute(
+      new DownloadObjectCommand(storagePath),
+    );
     return this.streamToBuffer(stream);
   }
 
