@@ -1,6 +1,10 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { DocumentExportPort } from '../../application/ports/document-export.port';
+import {
+  DocumentExportPort,
+  LetterheadConfig,
+} from '../../application/ports/document-export.port';
 import { convertHtmlToDocx } from './html-to-docx-converter';
+import { PdfLetterheadCompositor } from './pdf-letterhead-compositor';
 import puppeteer, { Browser } from 'puppeteer-core';
 import { existsSync } from 'fs';
 import { sanitizeHtmlContent } from '../../application/helpers/sanitize-html-content';
@@ -50,6 +54,10 @@ export class HtmlDocumentExportService
   private browser: Browser | null = null;
   private launchPromise: Promise<void> | null = null;
 
+  constructor(
+    private readonly pdfLetterheadCompositor: PdfLetterheadCompositor,
+  ) {}
+
   async onModuleDestroy(): Promise<void> {
     await this.closeBrowser();
   }
@@ -61,26 +69,60 @@ export class HtmlDocumentExportService
     return convertHtmlToDocx(sanitized);
   }
 
-  async exportToPdf(html: string): Promise<Buffer> {
+  async exportToPdf(
+    html: string,
+    letterhead?: LetterheadConfig,
+  ): Promise<Buffer> {
     this.logger.log('Exporting HTML to PDF');
 
-    const wrappedHtml = this.wrapHtmlForPdf(html);
+    const wrappedHtml = this.wrapHtmlForPdf(html, letterhead);
     const browser = await this.getBrowser();
     const page = await browser.newPage();
 
     try {
       await page.setContent(wrappedHtml, { waitUntil: 'networkidle0' });
 
-      const pdfBuffer = await page.pdf({
-        format: 'A4',
-        margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
-        printBackground: true,
-      });
+      const pdfOptions = letterhead
+        ? this.buildLetterheadPdfOptions()
+        : this.buildDefaultPdfOptions();
 
-      return Buffer.from(pdfBuffer);
+      const pdfBuffer = await page.pdf(pdfOptions);
+      const contentPdf = Buffer.from(pdfBuffer);
+
+      if (!letterhead) {
+        return contentPdf;
+      }
+
+      return this.pdfLetterheadCompositor.composite(
+        contentPdf,
+        letterhead.firstPagePdf,
+        letterhead.continuationPagePdf,
+      );
     } finally {
       await page.close();
     }
+  }
+
+  private buildDefaultPdfOptions() {
+    return {
+      format: 'A4' as const,
+      margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
+      printBackground: true,
+    };
+  }
+
+  /**
+   * When using letterhead, margins are set via CSS @page rules
+   * so Chromium handles text reflow correctly per page type.
+   * Puppeteer margin is set to 0 — the CSS controls it.
+   */
+  private buildLetterheadPdfOptions() {
+    return {
+      format: 'A4' as const,
+      margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' },
+      preferCSSPageSize: true,
+      printBackground: true,
+    };
   }
 
   private async getBrowser(): Promise<Browser> {
@@ -139,15 +181,33 @@ export class HtmlDocumentExportService
     }
   }
 
-  private wrapHtmlForPdf(unsafeHtml: string): string {
+  private wrapHtmlForPdf(
+    unsafeHtml: string,
+    letterhead?: LetterheadConfig,
+  ): string {
     const html = sanitizeHtmlContent(unsafeHtml);
+    const marginCss = letterhead ? this.buildMarginCss(letterhead) : '';
+
     return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <style>${PDF_CSS}</style>
+  <style>${PDF_CSS}${marginCss}</style>
 </head>
 <body>${html}</body>
 </html>`;
+  }
+
+  private buildMarginCss(letterhead: LetterheadConfig): string {
+    const { continuationPageMargins: cont, firstPageMargins: first } =
+      letterhead;
+
+    return `
+  @page {
+    margin: ${cont.top}mm ${cont.right}mm ${cont.bottom}mm ${cont.left}mm;
+  }
+  @page :first {
+    margin: ${first.top}mm ${first.right}mm ${first.bottom}mm ${first.left}mm;
+  }`;
   }
 }
