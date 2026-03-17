@@ -41,7 +41,8 @@ export default function CreateDocumentWidget({
 }: CreateDocumentWidgetProps) {
   const { t } = useTranslation('chat');
 
-  const params = content.params as {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content.params may be undefined during streaming even if typed as required
+  const params = (content.params || {}) as {
     title?: string;
     content?: string;
   };
@@ -71,7 +72,8 @@ export default function CreateDocumentWidget({
       contentKey={content.name}
       contentId={content.id}
       isStreaming={isStreaming}
-      title={params.title ?? t('chat.tools.create_document.title')}
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentionally using || to fall back for empty strings during streaming
+      title={params.title || t('chat.tools.create_document.title')}
       statusLabel={statusLabel}
       buttonLabel={t('chat.tools.create_document.openInEditor')}
       artifactId={artifactId}
