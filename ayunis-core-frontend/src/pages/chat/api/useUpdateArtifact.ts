@@ -35,6 +35,8 @@ export function useUpdateArtifact({
 
   return {
     updateArtifact: (data: UpdateArtifactDto) => mutation.mutate(data),
+    updateArtifactAsync: (data: UpdateArtifactDto) =>
+      mutation.mutateAsync(data),
     isUpdating: mutation.isPending,
   };
 }

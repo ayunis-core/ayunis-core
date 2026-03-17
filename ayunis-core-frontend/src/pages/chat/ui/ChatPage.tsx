@@ -11,13 +11,12 @@ import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfac
 import ChatMessage from '@/pages/chat/ui/ChatMessage';
 import StreamingLoadingIndicator from '@/pages/chat/ui/StreamingLoadingIndicator';
 import ChatInput from '@/widgets/chat-input';
-import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import { useMessageSend } from '../api/useMessageSend';
 import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
 import UnavailableAgentWarning from './UnavailableAgentWarning';
 import type { Thread, Message } from '../model/openapi';
-import { showError, showSuccess } from '@/shared/lib/toast';
+import { showError } from '@/shared/lib/toast';
 import config from '@/shared/config';
 
 import { useConfirmation } from '@/widgets/confirmation-modal';
@@ -36,12 +35,8 @@ import { AxiosError } from 'axios';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
 import { useDeleteFileSource } from '../api/useDeleteFileSource';
-import { useArtifact } from '../api/useArtifact';
-import { useUpdateArtifact } from '../api/useUpdateArtifact';
-import { useRevertArtifact } from '../api/useRevertArtifact';
-import { useExportArtifact } from '../api/useExportArtifact';
-import { UpdateArtifactDtoAuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useArtifactActions } from '../hooks/useArtifactActions';
+import { usePendingMessage } from '../hooks/usePendingMessage';
 import { useAgents } from '@/features/useAgents';
 import { useIsAgentsEnabled } from '@/features/feature-toggles';
 import { usePermittedModels } from '@/features/usePermittedModels';
@@ -107,78 +102,23 @@ export default function ChatPage({
   ]);
 
   const queryClient = useQueryClient();
-  const processedPendingMessageRef = useRef<string | null>(null);
   const chatInputRef = useRef<ChatInputRef>(null);
 
-  const {
-    pendingMessage,
-    setPendingMessage,
-    sources,
-    setSources,
-    pendingImages,
-    setPendingImages,
-    pendingKnowledgeBases,
-    setPendingKnowledgeBases,
-    pendingSkillId,
-    setPendingSkillId,
-  } = useChatContext();
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
     thread.title,
   );
   const [messages, setMessages] = useState<Message[]>(thread.messages);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [isProcessingPendingSources, setIsProcessingPendingSources] =
-    useState(false);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
-  const [openArtifactId, setOpenArtifactId] = useState<string | null>(null);
-
-  // Fetch the open artifact with versions
-  const { artifact: openArtifact } = useArtifact(openArtifactId);
-
-  const { updateArtifact: saveArtifact } = useUpdateArtifact({
-    artifactId: openArtifactId ?? '',
-    threadId: thread.id,
-    onSuccess: () => showSuccess(t('chat.artifactSaved')),
-  });
-
-  const { revertArtifact } = useRevertArtifact({
-    artifactId: openArtifactId ?? '',
-    threadId: thread.id,
-  });
-
-  const { exportArtifact, isExporting } = useExportArtifact({
-    artifactId: openArtifactId ?? '',
-    title: openArtifact?.title ?? 'document',
-  });
-
-  const handleOpenArtifact = useCallback((artifactId: string) => {
-    setOpenArtifactId(artifactId);
-  }, []);
-
-  const handleSaveArtifact = useCallback(
-    (content: string) => {
-      saveArtifact({ content, authorType: UpdateArtifactDtoAuthorType.USER });
-    },
-    [saveArtifact],
-  );
-
-  const handleRevertArtifact = useCallback(
-    (versionNumber: number) => {
-      revertArtifact(versionNumber);
-    },
-    [revertArtifact],
-  );
-
-  const handleExportArtifact = useCallback(
-    (format: 'docx' | 'pdf') => {
-      void exportArtifact(format as ArtifactsControllerExportFormat);
-    },
-    [exportArtifact],
-  );
-
-  const handleCloseArtifact = useCallback(() => {
-    setOpenArtifactId(null);
-  }, []);
+  const {
+    openArtifact,
+    isExporting,
+    handleOpenArtifact,
+    handleSaveArtifact,
+    handleRevertArtifact,
+    handleExportArtifact,
+    handleCloseArtifact,
+  } = useArtifactActions(thread.id);
 
   const sortedMessages = useMemo(() => {
     return [...messages].sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
@@ -209,9 +149,6 @@ export default function ChatPage({
   const { addKnowledgeBase, addKnowledgeBaseAsync, removeKnowledgeBase } =
     useKnowledgeBaseAttachment({ threadId: thread.id });
   const { downloadSource } = useDownloadSource(thread);
-
-  const isTotallyCreatingFileSource =
-    isCreatingFileSource || isProcessingPendingSources;
 
   const handleMessage = useCallback((message: RunMessageResponseDtoMessage) => {
     setMessages((prev) => {
@@ -273,6 +210,17 @@ export default function ChatPage({
       setIsStreaming(false);
     },
   });
+
+  const { isProcessingPendingSources } = usePendingMessage({
+    sendTextMessage,
+    createFileSourceAsync,
+    resetCreateFileSourceMutation,
+    addKnowledgeBaseAsync,
+    chatInputRef,
+  });
+
+  const isTotallyCreatingFileSource =
+    isCreatingFileSource || isProcessingPendingSources;
 
   async function handleSend(
     message: string,
@@ -360,95 +308,6 @@ export default function ChatPage({
     setMessages(thread.messages);
     setThreadTitle(thread.title);
   }, [thread]);
-
-  // Send pending message from NewChatPage if it exists
-  useEffect(() => {
-    async function uploadPendingSources() {
-      if (sources.length === 0) return;
-      setIsProcessingPendingSources(true);
-      const promises = sources.map((source) =>
-        createFileSourceAsync({
-          file: source.file,
-          name: source.name,
-          description: `File source: ${source.name}`,
-        }),
-      );
-      await Promise.all(promises as Promise<unknown>[]);
-      resetCreateFileSourceMutation();
-    }
-
-    async function attachPendingKnowledgeBases() {
-      if (pendingKnowledgeBases.length === 0) return;
-      const results = await Promise.allSettled(
-        pendingKnowledgeBases.map((kb) => addKnowledgeBaseAsync(kb.id)),
-      );
-      const failed = results.filter((r) => r.status === 'rejected');
-      if (failed.length > 0) {
-        console.error(
-          `Failed to attach ${String(failed.length)} knowledge base(s)`,
-        );
-      }
-    }
-
-    function buildPendingImages(): PendingImage[] | undefined {
-      if (pendingImages.length === 0) return undefined;
-      return pendingImages.map((img) => ({
-        file: img.file,
-        altText: img.altText ?? (img.file.name || 'Pasted image'),
-      }));
-    }
-
-    async function sendPendingMessage() {
-      if (
-        !pendingMessage ||
-        processedPendingMessageRef.current === pendingMessage
-      ) {
-        return;
-      }
-      processedPendingMessageRef.current = pendingMessage;
-      try {
-        await uploadPendingSources();
-        setSources([]);
-        await attachPendingKnowledgeBases();
-        await sendTextMessage({
-          text: pendingMessage,
-          images: buildPendingImages(),
-          skillId: pendingSkillId,
-        });
-      } catch (error) {
-        if (error instanceof AxiosError && error.response?.status === 403) {
-          showError(t('chat.upgradeToProError'));
-        } else {
-          showError(t('chat.errorSendMessage'));
-        }
-        chatInputRef.current?.setMessage(pendingMessage);
-      } finally {
-        setIsProcessingPendingSources(false);
-        setPendingMessage('');
-        setPendingImages([]);
-        setPendingKnowledgeBases([]);
-        setPendingSkillId(undefined);
-      }
-    }
-    void sendPendingMessage();
-  }, [
-    pendingMessage,
-    sendTextMessage,
-    setPendingMessage,
-    sources,
-    createFileSourceAsync,
-    setSources,
-    pendingImages,
-    setPendingImages,
-    pendingKnowledgeBases,
-    setPendingKnowledgeBases,
-    pendingSkillId,
-    setPendingSkillId,
-    addKnowledgeBaseAsync,
-    chatInputRef,
-    t,
-    resetCreateFileSourceMutation,
-  ]);
 
   const chatHeader = (
     <ChatHeader

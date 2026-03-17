@@ -14,12 +14,12 @@ import { VersionHistory } from './VersionHistory';
 import { ExportButtons } from './ExportButtons';
 
 interface ArtifactEditorProps {
-  artifact: ArtifactResponseDto;
-  onSave: (content: string) => void;
-  onRevert: (versionNumber: number) => void;
-  onExport: (format: 'docx' | 'pdf') => void;
-  onClose: () => void;
-  isExporting?: boolean;
+  readonly artifact: ArtifactResponseDto;
+  readonly onSave: (content: string) => void;
+  readonly onRevert: (versionNumber: number) => void;
+  readonly onExport: (format: 'docx' | 'pdf', unsavedContent?: string) => void;
+  readonly onClose: () => void;
+  readonly isExporting?: boolean;
 }
 
 export function ArtifactEditor({
@@ -58,7 +58,7 @@ export function ArtifactEditor({
 
   // Update editor content only when the version number actually changes
   useEffect(() => {
-    if (!editor || !currentVersion) return;
+    if (!currentVersion) return;
 
     if (loadedVersionRef.current !== artifact.currentVersionNumber) {
       loadedVersionRef.current = artifact.currentVersionNumber;
@@ -67,9 +67,17 @@ export function ArtifactEditor({
   }, [editor, currentVersion, artifact.currentVersionNumber]);
 
   const handleSave = useCallback(() => {
-    if (!editor) return;
     onSave(editor.getHTML());
   }, [editor, onSave]);
+
+  const handleExport = useCallback(
+    (format: 'docx' | 'pdf') => {
+      const isDirty =
+        currentVersion && editor.getHTML() !== currentVersion.content;
+      onExport(format, isDirty ? editor.getHTML() : undefined);
+    },
+    [editor, currentVersion, onExport],
+  );
 
   return (
     <div className="flex h-full flex-col overflow-hidden border-l">
@@ -79,7 +87,7 @@ export function ArtifactEditor({
           {artifact.title}
         </h3>
         <div className="flex items-center gap-1">
-          <ExportButtons onExport={onExport} isExporting={isExporting} />
+          <ExportButtons onExport={handleExport} isExporting={isExporting} />
           <Button
             variant="default"
             size="sm"
