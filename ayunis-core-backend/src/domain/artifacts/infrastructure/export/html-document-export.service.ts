@@ -121,6 +121,7 @@ export class HtmlDocumentExportService
       format: 'A4' as const,
       margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' },
       printBackground: true,
+      preferCSSPageSize: true,
     };
   }
 
