@@ -53,6 +53,31 @@ describe('CreateDocumentTool', () => {
       expect(() => tool.validateParams({})).toThrow();
     });
 
+    it('should accept valid parameters with optional letterhead_id', () => {
+      const params = {
+        title: 'Official Letter',
+        content: '<h1>Dear Sir</h1><p>Body text...</p>',
+        letterhead_id: '550e8400-e29b-41d4-a716-446655440000',
+      };
+
+      const result = tool.validateParams(params);
+
+      expect(result.title).toBe('Official Letter');
+      expect(result.letterhead_id).toBe('550e8400-e29b-41d4-a716-446655440000');
+    });
+
+    it('should accept valid parameters without letterhead_id', () => {
+      const params = {
+        title: 'Casual Note',
+        content: '<p>Just a note</p>',
+      };
+
+      const result = tool.validateParams(params);
+
+      expect(result.title).toBe('Casual Note');
+      expect(result.letterhead_id).toBeUndefined();
+    });
+
     it('should reject additional properties', () => {
       const params = {
         title: 'Doc Title',

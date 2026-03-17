@@ -72,6 +72,31 @@ describe('UpdateDocumentTool', () => {
       expect(() => tool.validateParams({})).toThrow();
     });
 
+    it('should accept valid parameters with optional letterhead_id', () => {
+      const params = {
+        artifact_id: '550e8400-e29b-41d4-a716-446655440000',
+        content: '<h1>Updated Letter</h1><p>New content</p>',
+        letterhead_id: '660e8400-e29b-41d4-a716-446655440000',
+      };
+
+      const result = tool.validateParams(params);
+
+      expect(result.artifact_id).toBe('550e8400-e29b-41d4-a716-446655440000');
+      expect(result.letterhead_id).toBe('660e8400-e29b-41d4-a716-446655440000');
+    });
+
+    it('should accept valid parameters without letterhead_id', () => {
+      const params = {
+        artifact_id: '550e8400-e29b-41d4-a716-446655440000',
+        content: '<p>Updated content</p>',
+      };
+
+      const result = tool.validateParams(params);
+
+      expect(result.artifact_id).toBe('550e8400-e29b-41d4-a716-446655440000');
+      expect(result.letterhead_id).toBeUndefined();
+    });
+
     it('should reject additional properties', () => {
       const params = {
         artifact_id: '550e8400-e29b-41d4-a716-446655440000',

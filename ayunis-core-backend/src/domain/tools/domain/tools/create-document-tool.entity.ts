@@ -15,6 +15,11 @@ const createDocumentToolParameters = {
       description:
         'The full HTML content of the document. Use semantic HTML tags (h1, h2, p, ul, ol, li, strong, em, etc.)',
     },
+    letterhead_id: {
+      type: 'string' as const,
+      description:
+        'Optional UUID of the letterhead (Briefpapier) to apply as background when exporting to PDF. Only include when the user requests a specific letterhead.',
+    },
   },
   required: ['title', 'content'],
   additionalProperties: false,

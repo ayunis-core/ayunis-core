@@ -27,6 +27,7 @@ import { SkillsModule } from 'src/domain/skills/skills.module';
 import { SkillTemplatesModule } from 'src/domain/skill-templates/skill-templates.module';
 import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.module';
 import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
+import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
     SkillTemplatesModule,
     ChatSettingsModule,
     ArtifactsModule,
+    LetterheadsModule,
   ],
   controllers: [RunsController],
   providers: [

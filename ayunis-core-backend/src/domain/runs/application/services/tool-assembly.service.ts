@@ -38,6 +38,8 @@ import { FindArtifactsByThreadQuery } from 'src/domain/artifacts/application/use
 import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
 import { FindArtifactWithVersionsQuery } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.query';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
+import { FindAllLetterheadsUseCase } from 'src/domain/letterheads/application/use-cases/find-all-letterheads/find-all-letterheads.use-case';
+import type { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -56,6 +58,7 @@ export class ToolAssemblyService {
     private readonly features: ConfigType<typeof featuresConfig>,
     private readonly findArtifactsByThreadUseCase: FindArtifactsByThreadUseCase,
     private readonly findArtifactWithVersionsUseCase: FindArtifactWithVersionsUseCase,
+    private readonly findAllLetterheadsUseCase: FindAllLetterheadsUseCase,
   ) {}
 
   async findActiveSkills(): Promise<Skill[]> {
@@ -181,86 +184,9 @@ export class ToolAssemblyService {
     const skillsEnabled = this.features.skillsEnabled;
     const tools: Tool[] = [];
 
-    // Collect MCP integration IDs from agent and thread (skill-injected)
-    const mcpIntegrationIds = new Set<UUID>();
-    if (agent) {
-      agent.mcpIntegrationIds.forEach((id) => mcpIntegrationIds.add(id));
-    }
-    thread.mcpIntegrationIds.forEach((id) => mcpIntegrationIds.add(id));
-
-    // Discover MCP capabilities from all integration IDs
-    if (mcpIntegrationIds.size > 0) {
-      const integrationIdList = [...mcpIntegrationIds];
-
-      // Fetch integration entities for metadata (name, logoUrl)
-      const integrations = await this.getMcpIntegrationsByIdsUseCase.execute(
-        new GetMcpIntegrationsByIdsQuery(integrationIdList),
-      );
-      const integrationMetaMap = new Map<
-        UUID,
-        { name: string; logoUrl: string | null }
-      >();
-      for (const integration of integrations) {
-        integrationMetaMap.set(integration.id, {
-          name: integration.name,
-          logoUrl:
-            integration instanceof MarketplaceMcpIntegration
-              ? integration.logoUrl
-              : null,
-        });
-      }
-
-      const mcpResults = await Promise.allSettled(
-        integrationIdList.map((integrationId) =>
-          this.discoverMcpCapabilitiesUseCase.execute(
-            new DiscoverMcpCapabilitiesQuery(integrationId),
-          ),
-        ),
-      );
-
-      // Filter successful results, log and skip failures
-      const mcpCapabilities = mcpResults
-        .map((result, index) => {
-          if (result.status === 'fulfilled') {
-            return result.value;
-          }
-          const failedId = integrationIdList[index];
-          const meta = integrationMetaMap.get(failedId);
-          this.logger.warn(
-            `MCP integration '${meta?.name ?? failedId}' unavailable, skipping`,
-            {
-              integrationId: failedId,
-              error:
-                result.reason instanceof Error
-                  ? result.reason.message
-                  : 'Unknown error',
-            },
-          );
-          return null;
-        })
-        .filter((cap): cap is NonNullable<typeof cap> => cap !== null);
-
-      // Add MCP tools and resources
-      tools.push(
-        ...mcpCapabilities.flatMap((capability) =>
-          capability.tools.map((tool) => {
-            const meta = integrationMetaMap.get(tool.integrationId);
-            return new McpIntegrationTool(
-              tool,
-              capability.returnsPii,
-              meta?.name ?? 'Unknown',
-              meta?.logoUrl ?? null,
-            );
-          }),
-        ),
-        ...mcpCapabilities.flatMap((capability) =>
-          capability.resources.map(
-            (resource) =>
-              new McpIntegrationResource(resource, capability.returnsPii),
-          ),
-        ),
-      );
-    }
+    // Discover and add MCP tools/resources from agent and thread integrations
+    const mcpTools = await this.assembleMcpTools(thread, agent);
+    tools.push(...mcpTools);
 
     if (agent) {
       // Add native tools from the agent (excluding always-available tools)
@@ -295,67 +221,41 @@ export class ToolAssemblyService {
       ),
     );
 
-    // Website content tool is always available
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.WEBSITE_CONTENT,
-        }),
-      ),
-    );
+    // Always-available tools
+    const alwaysOnTypes = [
+      ToolType.WEBSITE_CONTENT,
+      ToolType.SEND_EMAIL,
+      ToolType.CREATE_CALENDAR_EVENT,
+      ToolType.BAR_CHART,
+      ToolType.LINE_CHART,
+      ToolType.PIE_CHART,
+    ];
+    for (const type of alwaysOnTypes) {
+      tools.push(
+        await this.assembleToolsUseCase.execute(
+          new AssembleToolCommand({ type }),
+        ),
+      );
+    }
 
-    // E-Mail tool is always available
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.SEND_EMAIL,
-        }),
-      ),
-    );
-
-    // Calendar event tool is always available
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.CREATE_CALENDAR_EVENT,
-        }),
-      ),
-    );
-
-    // Chart tools are always available
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.BAR_CHART,
-        }),
-      ),
-    );
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.LINE_CHART,
-        }),
-      ),
-    );
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.PIE_CHART,
-        }),
-      ),
-    );
+    // Fetch org letterheads for document tool descriptions
+    const letterheads = await this.fetchLetterheadsSafe();
+    const letterheadSuffix = this.buildLetterheadSuffix(letterheads);
 
     // Document tools are always available
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.CREATE_DOCUMENT,
-        }),
-      ),
+    const createDocTool = await this.assembleToolsUseCase.execute(
+      new AssembleToolCommand({ type: ToolType.CREATE_DOCUMENT }),
     );
+    if (letterheadSuffix) {
+      createDocTool.descriptionLong = `${createDocTool.descriptionLong ?? createDocTool.description}${letterheadSuffix}`;
+    }
+    tools.push(createDocTool);
 
-    // Document editing tools with artifact context
-    const documentEditTools = await this.assembleDocumentEditTools(thread);
+    // Document editing tools with artifact context + letterhead info
+    const documentEditTools = await this.assembleDocumentEditTools(
+      thread,
+      letterheadSuffix,
+    );
     tools.push(...documentEditTools);
 
     // Create skill tool is available when skills feature is enabled
@@ -391,48 +291,30 @@ export class ToolAssemblyService {
 
     const allTextSources = [...threadTextSources, ...agentTextSources];
 
-    // Source query and source get text tools are available if there are text sources
+    // Source query/get tools — available when there are text sources
     if (allTextSources.length > 0) {
-      tools.push(
-        await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({
-            type: ToolType.SOURCE_QUERY,
-            context: allTextSources,
-          }),
-        ),
-      );
-
-      tools.push(
-        await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({
-            type: ToolType.SOURCE_GET_TEXT,
-            context: allTextSources,
-          }),
-        ),
-      );
+      for (const type of [ToolType.SOURCE_QUERY, ToolType.SOURCE_GET_TEXT]) {
+        tools.push(
+          await this.assembleToolsUseCase.execute(
+            new AssembleToolCommand({ type, context: allTextSources }),
+          ),
+        );
+      }
     }
 
-    // Knowledge base tools are available if the thread has knowledge bases
+    // Knowledge base tools — available when the thread has knowledge bases
     const knowledgeBases = thread.getUniqueKnowledgeBases();
-
     if (knowledgeBases.length > 0) {
-      tools.push(
-        await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({
-            type: ToolType.KNOWLEDGE_QUERY,
-            context: knowledgeBases,
-          }),
-        ),
-      );
-
-      tools.push(
-        await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({
-            type: ToolType.KNOWLEDGE_GET_TEXT,
-            context: knowledgeBases,
-          }),
-        ),
-      );
+      for (const type of [
+        ToolType.KNOWLEDGE_QUERY,
+        ToolType.KNOWLEDGE_GET_TEXT,
+      ]) {
+        tools.push(
+          await this.assembleToolsUseCase.execute(
+            new AssembleToolCommand({ type, context: knowledgeBases }),
+          ),
+        );
+      }
     }
 
     // Activate skill tool is available if there are activatable skills (user or system) and skills feature is enabled
@@ -450,7 +332,91 @@ export class ToolAssemblyService {
     return tools;
   }
 
-  private async assembleDocumentEditTools(thread: Thread): Promise<Tool[]> {
+  private async assembleMcpTools(
+    thread: Thread,
+    agent: Agent | undefined,
+  ): Promise<Tool[]> {
+    const mcpIntegrationIds = new Set<UUID>();
+    if (agent) {
+      agent.mcpIntegrationIds.forEach((id) => mcpIntegrationIds.add(id));
+    }
+    thread.mcpIntegrationIds.forEach((id) => mcpIntegrationIds.add(id));
+
+    if (mcpIntegrationIds.size === 0) return [];
+
+    const integrationIdList = [...mcpIntegrationIds];
+
+    const integrations = await this.getMcpIntegrationsByIdsUseCase.execute(
+      new GetMcpIntegrationsByIdsQuery(integrationIdList),
+    );
+    const integrationMetaMap = new Map<
+      UUID,
+      { name: string; logoUrl: string | null }
+    >();
+    for (const integration of integrations) {
+      integrationMetaMap.set(integration.id, {
+        name: integration.name,
+        logoUrl:
+          integration instanceof MarketplaceMcpIntegration
+            ? integration.logoUrl
+            : null,
+      });
+    }
+
+    const mcpResults = await Promise.allSettled(
+      integrationIdList.map((integrationId) =>
+        this.discoverMcpCapabilitiesUseCase.execute(
+          new DiscoverMcpCapabilitiesQuery(integrationId),
+        ),
+      ),
+    );
+
+    const mcpCapabilities = mcpResults
+      .map((result, index) => {
+        if (result.status === 'fulfilled') {
+          return result.value;
+        }
+        const failedId = integrationIdList[index];
+        const meta = integrationMetaMap.get(failedId);
+        this.logger.warn(
+          `MCP integration '${meta?.name ?? failedId}' unavailable, skipping`,
+          {
+            integrationId: failedId,
+            error:
+              result.reason instanceof Error
+                ? result.reason.message
+                : 'Unknown error',
+          },
+        );
+        return null;
+      })
+      .filter((cap): cap is NonNullable<typeof cap> => cap !== null);
+
+    return [
+      ...mcpCapabilities.flatMap((capability) =>
+        capability.tools.map((tool) => {
+          const meta = integrationMetaMap.get(tool.integrationId);
+          return new McpIntegrationTool(
+            tool,
+            capability.returnsPii,
+            meta?.name ?? 'Unknown',
+            meta?.logoUrl ?? null,
+          );
+        }),
+      ),
+      ...mcpCapabilities.flatMap((capability) =>
+        capability.resources.map(
+          (resource) =>
+            new McpIntegrationResource(resource, capability.returnsPii),
+        ),
+      ),
+    ];
+  }
+
+  private async assembleDocumentEditTools(
+    thread: Thread,
+    letterheadSuffix: string,
+  ): Promise<Tool[]> {
     const threadArtifacts = await this.findArtifactsByThreadUseCase.execute(
       new FindArtifactsByThreadQuery({ threadId: thread.id }),
     );
@@ -475,15 +441,49 @@ export class ToolAssemblyService {
         ? `\n\nAvailable documents in this conversation:\n${artifactLines.join('\n')}`
         : '';
 
-    const toolTypes = [ToolType.UPDATE_DOCUMENT, ToolType.EDIT_DOCUMENT, ToolType.READ_DOCUMENT];
+    const toolTypes = [
+      ToolType.UPDATE_DOCUMENT,
+      ToolType.EDIT_DOCUMENT,
+      ToolType.READ_DOCUMENT,
+    ];
     const tools: Tool[] = [];
     for (const type of toolTypes) {
-      const tool = await this.assembleToolsUseCase.execute(new AssembleToolCommand({ type }));
-      if (suffix) {
-        tool.descriptionLong = `${tool.descriptionLong ?? tool.description}${suffix}`;
+      const tool = await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({ type }),
+      );
+      const extra =
+        type === ToolType.UPDATE_DOCUMENT
+          ? `${suffix}${letterheadSuffix}`
+          : suffix;
+      if (extra) {
+        tool.descriptionLong = `${tool.descriptionLong ?? tool.description}${extra}`;
       }
       tools.push(tool);
     }
     return tools;
+  }
+
+  private async fetchLetterheadsSafe(): Promise<Letterhead[]> {
+    try {
+      return await this.findAllLetterheadsUseCase.execute();
+    } catch (error) {
+      this.logger.warn('Failed to fetch letterheads, continuing without them', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return [];
+    }
+  }
+
+  private buildLetterheadSuffix(letterheads: Letterhead[]): string {
+    if (letterheads.length === 0) return '';
+    const lines = letterheads.map((l) => {
+      const desc = l.description ? ` — ${l.description}` : '';
+      return `- ${l.id}: "${l.name}"${desc}`;
+    });
+    return (
+      '\n\nAvailable letterheads (Briefpapier) for this organization:\n' +
+      `${lines.join('\n')}\n` +
+      'When the user asks for an official letter or document that should use a specific letterhead, include the letterhead_id parameter.'
+    );
   }
 }
