@@ -76,6 +76,7 @@ export class ArtifactsController {
         title: dto.title,
         content: dto.content,
         authorType: dto.authorType,
+        letterheadId: dto.letterheadId,
       }),
     );
     return this.artifactDtoMapper.toDto(artifact);
@@ -105,6 +106,7 @@ export class ArtifactsController {
         artifactId: id,
         content: dto.content,
         authorType: dto.authorType,
+        letterheadId: dto.letterheadId,
       }),
     );
     return this.artifactDtoMapper.toVersionDto(version);

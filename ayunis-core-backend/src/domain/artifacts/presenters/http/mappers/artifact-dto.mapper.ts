@@ -14,6 +14,7 @@ export class ArtifactDtoMapper {
     dto.threadId = artifact.threadId;
     dto.userId = artifact.userId;
     dto.title = artifact.title;
+    dto.letterheadId = artifact.letterheadId;
     dto.currentVersionNumber = artifact.currentVersionNumber;
     dto.createdAt = artifact.createdAt.toISOString();
     dto.updatedAt = artifact.updatedAt.toISOString();

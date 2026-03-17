@@ -108,6 +108,13 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     }
   }
 
+  async updateLetterheadId(
+    artifactId: UUID,
+    letterheadId: UUID | null,
+  ): Promise<void> {
+    await this.artifactRepo.update({ id: artifactId }, { letterheadId });
+  }
+
   async delete(id: UUID): Promise<void> {
     await this.artifactRepo.delete({ id });
   }
