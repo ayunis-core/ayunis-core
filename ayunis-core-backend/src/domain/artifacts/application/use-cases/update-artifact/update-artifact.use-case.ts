@@ -40,6 +40,13 @@ export class UpdateArtifactUseCase {
         );
       }
 
+      if (command.letterheadId !== undefined) {
+        await this.artifactsRepository.updateLetterheadId(
+          command.artifactId,
+          command.letterheadId,
+        );
+      }
+
       const sanitizedContent = sanitizeHtmlContent(command.content);
 
       return await addVersionWithRetry({

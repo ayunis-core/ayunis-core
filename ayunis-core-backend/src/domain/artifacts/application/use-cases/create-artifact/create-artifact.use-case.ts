@@ -52,6 +52,7 @@ export class CreateArtifactUseCase {
         threadId: command.threadId,
         userId,
         title: command.title,
+        letterheadId: command.letterheadId ?? null,
         currentVersionNumber: 1,
       });
 

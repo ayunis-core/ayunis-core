@@ -1,5 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+} from 'class-validator';
+import type { UUID } from 'crypto';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ARTIFACT_MAX_CONTENT_LENGTH } from '../../../application/artifacts.errors';
 
@@ -20,4 +28,16 @@ export class UpdateArtifactDto {
   })
   @IsEnum(AuthorType)
   authorType: AuthorType;
+
+  @ApiPropertyOptional({
+    description:
+      'Optional letterhead to apply to this artifact (null to remove)',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    type: 'string',
+    format: 'uuid',
+    nullable: true,
+  })
+  @IsUUID()
+  @IsOptional()
+  letterheadId?: UUID | null;
 }

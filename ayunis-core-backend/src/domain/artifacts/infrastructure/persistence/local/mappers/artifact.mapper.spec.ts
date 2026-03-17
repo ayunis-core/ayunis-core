@@ -20,6 +20,7 @@ describe('ArtifactMapper', () => {
   const artifactId = randomUUID();
   const threadId = randomUUID();
   const userId = randomUUID();
+  const letterheadId = randomUUID();
 
   describe('toDomain', () => {
     it('should map a record without versions to a domain entity', () => {
@@ -28,6 +29,7 @@ describe('ArtifactMapper', () => {
       record.threadId = threadId;
       record.userId = userId;
       record.title = 'Budget Report Q1 2026';
+      record.letterheadId = null;
       record.currentVersionNumber = 3;
       record.createdAt = now;
       record.updatedAt = now;
@@ -39,9 +41,26 @@ describe('ArtifactMapper', () => {
       expect(domain.threadId).toBe(threadId);
       expect(domain.userId).toBe(userId);
       expect(domain.title).toBe('Budget Report Q1 2026');
+      expect(domain.letterheadId).toBeNull();
       expect(domain.currentVersionNumber).toBe(3);
       expect(domain.createdAt).toBe(now);
       expect(domain.updatedAt).toBe(now);
+    });
+
+    it('should map a record with letterheadId to a domain entity', () => {
+      const record = new ArtifactRecord();
+      record.id = artifactId;
+      record.threadId = threadId;
+      record.userId = userId;
+      record.title = 'Official Letter';
+      record.letterheadId = letterheadId;
+      record.currentVersionNumber = 1;
+      record.createdAt = now;
+      record.updatedAt = now;
+
+      const domain = mapper.toDomain(record);
+
+      expect(domain.letterheadId).toBe(letterheadId);
     });
 
     it('should map a record with versions to a domain entity', () => {
@@ -59,6 +78,7 @@ describe('ArtifactMapper', () => {
       record.threadId = threadId;
       record.userId = userId;
       record.title = 'Budget Report Q1 2026';
+      record.letterheadId = null;
       record.currentVersionNumber = 1;
       record.versions = [versionRecord];
       record.createdAt = now;
@@ -91,7 +111,25 @@ describe('ArtifactMapper', () => {
       expect(record.threadId).toBe(threadId);
       expect(record.userId).toBe(userId);
       expect(record.title).toBe('Budget Report Q1 2026');
+      expect(record.letterheadId).toBeNull();
       expect(record.currentVersionNumber).toBe(2);
+    });
+
+    it('should map a domain entity with letterheadId to a record', () => {
+      const domain = new Artifact({
+        id: artifactId,
+        threadId,
+        userId,
+        title: 'Official Letter',
+        letterheadId,
+        currentVersionNumber: 1,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      const record = mapper.toRecord(domain);
+
+      expect(record.letterheadId).toBe(letterheadId);
     });
   });
 
@@ -111,6 +149,7 @@ describe('ArtifactMapper', () => {
         threadId,
         userId,
         title: 'Project Plan Document',
+        letterheadId,
         currentVersionNumber: 1,
         versions: [version],
         createdAt: now,
@@ -130,6 +169,7 @@ describe('ArtifactMapper', () => {
       expect(reconstructed.threadId).toBe(original.threadId);
       expect(reconstructed.userId).toBe(original.userId);
       expect(reconstructed.title).toBe(original.title);
+      expect(reconstructed.letterheadId).toBe(original.letterheadId);
       expect(reconstructed.currentVersionNumber).toBe(
         original.currentVersionNumber,
       );

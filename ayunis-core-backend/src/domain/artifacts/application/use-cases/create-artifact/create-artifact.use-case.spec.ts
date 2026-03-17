@@ -37,6 +37,7 @@ describe('CreateArtifactUseCase', () => {
       findByIdWithVersions: jest.fn(),
       addVersion: jest.fn(),
       updateCurrentVersionNumber: jest.fn(),
+      updateLetterheadId: jest.fn(),
       delete: jest.fn(),
     };
 
@@ -89,6 +90,7 @@ describe('CreateArtifactUseCase', () => {
     expect(result.title).toBe('Quarterly Budget Report');
     expect(result.threadId).toBe(mockThreadId);
     expect(result.userId).toBe(mockUserId);
+    expect(result.letterheadId).toBeNull();
     expect(result.currentVersionNumber).toBe(1);
     expect(result.versions).toHaveLength(1);
     expect(result.versions[0].versionNumber).toBe(1);
@@ -96,6 +98,28 @@ describe('CreateArtifactUseCase', () => {
       '<h1>Budget Report</h1><p>Q1 2026 expenses...</p>',
     );
     expect(result.versions[0].authorType).toBe(AuthorType.ASSISTANT);
+  });
+
+  it('should create an artifact with letterheadId when provided', async () => {
+    const mockLetterheadId =
+      '423e4567-e89b-12d3-a456-426614174000' as import('crypto').UUID;
+
+    const command = new CreateArtifactCommand({
+      threadId: mockThreadId,
+      title: 'Official Letter',
+      content: '<p>Dear Sir or Madam...</p>',
+      authorType: AuthorType.ASSISTANT,
+      letterheadId: mockLetterheadId,
+    });
+
+    artifactsRepository.create.mockImplementation(async (artifact) => artifact);
+    artifactsRepository.addVersion.mockImplementation(
+      async (version) => version,
+    );
+
+    const result = await useCase.execute(command);
+
+    expect(result.letterheadId).toBe(mockLetterheadId);
   });
 
   it('should set authorId to userId when author type is USER', async () => {

@@ -33,6 +33,7 @@ describe('UpdateArtifactUseCase', () => {
       addVersion: jest.fn(),
       updateCurrentVersionNumber: jest.fn(),
       addVersionAndUpdateCurrent: jest.fn(),
+      updateLetterheadId: jest.fn(),
       delete: jest.fn(),
     };
 
@@ -287,6 +288,94 @@ describe('UpdateArtifactUseCase', () => {
     const result = await useCase.execute(command);
 
     expect(result.versionNumber).toBe(2);
+  });
+
+  it('should update letterheadId when provided in command', async () => {
+    const mockLetterheadId =
+      '423e4567-e89b-12d3-a456-426614174000' as import('crypto').UUID;
+
+    const existingArtifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Official Letter',
+      currentVersionNumber: 1,
+    });
+
+    artifactsRepository.findById.mockResolvedValue(existingArtifact);
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
+      async (version) => version,
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p>Updated content</p>',
+      authorType: AuthorType.USER,
+      letterheadId: mockLetterheadId,
+    });
+
+    await useCase.execute(command);
+
+    expect(artifactsRepository.updateLetterheadId).toHaveBeenCalledWith(
+      mockArtifactId,
+      mockLetterheadId,
+    );
+  });
+
+  it('should not update letterheadId when not provided in command', async () => {
+    const existingArtifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Regular Document',
+      currentVersionNumber: 1,
+    });
+
+    artifactsRepository.findById.mockResolvedValue(existingArtifact);
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
+      async (version) => version,
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p>Updated content</p>',
+      authorType: AuthorType.USER,
+    });
+
+    await useCase.execute(command);
+
+    expect(artifactsRepository.updateLetterheadId).not.toHaveBeenCalled();
+  });
+
+  it('should update letterheadId to null to remove letterhead', async () => {
+    const existingArtifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Letter with letterhead',
+      letterheadId:
+        '423e4567-e89b-12d3-a456-426614174000' as import('crypto').UUID,
+      currentVersionNumber: 1,
+    });
+
+    artifactsRepository.findById.mockResolvedValue(existingArtifact);
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
+      async (version) => version,
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p>Content without letterhead</p>',
+      authorType: AuthorType.USER,
+      letterheadId: null,
+    });
+
+    await useCase.execute(command);
+
+    expect(artifactsRepository.updateLetterheadId).toHaveBeenCalledWith(
+      mockArtifactId,
+      null,
+    );
   });
 
   it('should throw UnauthorizedAccessError when user is not authenticated', async () => {

@@ -25,5 +25,9 @@ export abstract class ArtifactsRepository {
   abstract addVersionAndUpdateCurrent(
     version: ArtifactVersion,
   ): Promise<ArtifactVersion>;
+  abstract updateLetterheadId(
+    artifactId: UUID,
+    letterheadId: UUID | null,
+  ): Promise<void>;
   abstract delete(id: UUID): Promise<void>;
 }
