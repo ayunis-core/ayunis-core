@@ -8,6 +8,7 @@ export enum ArtifactErrorCode {
   ARTIFACT_NOT_FOUND = 'ARTIFACT_NOT_FOUND',
   ARTIFACT_VERSION_NOT_FOUND = 'ARTIFACT_VERSION_NOT_FOUND',
   ARTIFACT_VERSION_CONFLICT = 'ARTIFACT_VERSION_CONFLICT',
+  ARTIFACT_EXPECTED_VERSION_MISMATCH = 'ARTIFACT_EXPECTED_VERSION_MISMATCH',
   ARTIFACT_CONTENT_TOO_LARGE = 'ARTIFACT_CONTENT_TOO_LARGE',
   ARTIFACT_EDIT_NOT_FOUND = 'ARTIFACT_EDIT_NOT_FOUND',
   ARTIFACT_EDIT_AMBIGUOUS = 'ARTIFACT_EDIT_AMBIGUOUS',
@@ -58,6 +59,24 @@ export class ArtifactVersionConflictError extends ArtifactError {
       ArtifactErrorCode.ARTIFACT_VERSION_CONFLICT,
       409,
       { artifactId, ...metadata },
+    );
+  }
+}
+
+export class ArtifactExpectedVersionMismatchError extends ArtifactError {
+  constructor(
+    artifactId: string,
+    expectedVersion: number,
+    actualVersion: number,
+    metadata?: ErrorMetadata,
+  ) {
+    super(
+      `Version conflict: you expected version ${expectedVersion} but the document is at version ${actualVersion}. ` +
+        `The document has been edited since you last saw it. ` +
+        `Use read_document to get the current content and version, then retry your edit.`,
+      ArtifactErrorCode.ARTIFACT_EXPECTED_VERSION_MISMATCH,
+      409,
+      { artifactId, expectedVersion, actualVersion, ...metadata },
     );
   }
 }

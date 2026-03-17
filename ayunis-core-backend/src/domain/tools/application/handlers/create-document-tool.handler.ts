@@ -37,7 +37,7 @@ export class CreateDocumentToolHandler extends ToolExecutionHandler {
         }),
       );
 
-      return `Document created successfully. Artifact ID: ${artifact.id}`;
+      return `Document created successfully. Artifact ID: ${artifact.id}, version: ${artifact.currentVersionNumber}`;
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
         throw error;

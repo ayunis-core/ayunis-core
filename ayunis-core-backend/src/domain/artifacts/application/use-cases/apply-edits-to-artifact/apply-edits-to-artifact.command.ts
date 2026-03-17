@@ -10,14 +10,17 @@ export class ApplyEditsToArtifactCommand {
   readonly artifactId: UUID;
   readonly edits: ArtifactEdit[];
   readonly authorType: AuthorType;
+  readonly expectedVersionNumber?: number;
 
   constructor(params: {
     artifactId: UUID;
     edits: ArtifactEdit[];
     authorType: AuthorType;
+    expectedVersionNumber?: number;
   }) {
     this.artifactId = params.artifactId;
     this.edits = params.edits;
     this.authorType = params.authorType;
+    this.expectedVersionNumber = params.expectedVersionNumber;
   }
 }

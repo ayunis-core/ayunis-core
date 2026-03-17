@@ -9,6 +9,7 @@ import {
   ArtifactContentTooLargeError,
   ArtifactEditAmbiguousError,
   ArtifactEditNotFoundError,
+  ArtifactExpectedVersionMismatchError,
   ArtifactNotFoundError,
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from '../../artifacts.errors';
@@ -213,6 +214,66 @@ describe('ApplyEditsToArtifactUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         ArtifactContentTooLargeError,
       );
+    });
+
+    it('should throw ArtifactExpectedVersionMismatchError when expected version does not match', async () => {
+      const advancedArtifact = new Artifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'Test Document',
+        currentVersionNumber: 5,
+        versions: [
+          new ArtifactVersion({
+            artifactId: mockArtifactId,
+            versionNumber: 5,
+            content: '<p>User-edited content</p>',
+            authorType: AuthorType.USER,
+            authorId: mockUserId,
+          }),
+        ],
+      });
+
+      artifactsRepository.findByIdWithVersions.mockResolvedValue(
+        advancedArtifact,
+      );
+
+      const command = new ApplyEditsToArtifactCommand({
+        artifactId: mockArtifactId,
+        edits: [{ oldText: 'Hello', newText: 'Hi' }],
+        authorType: AuthorType.ASSISTANT,
+        expectedVersionNumber: 1,
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        ArtifactExpectedVersionMismatchError,
+      );
+    });
+
+    it('should succeed when expected version matches current version', async () => {
+      const originalContent = '<p>Hello world</p>';
+      const mockArtifact = createArtifactWithVersions(originalContent);
+
+      const mockVersion = new ArtifactVersion({
+        artifactId: mockArtifactId,
+        versionNumber: 2,
+        content: '<p>Hello universe</p>',
+        authorType: AuthorType.ASSISTANT,
+        authorId: null,
+      });
+
+      artifactsRepository.findByIdWithVersions.mockResolvedValue(mockArtifact);
+      updateArtifactUseCase.execute.mockResolvedValue(mockVersion);
+
+      const command = new ApplyEditsToArtifactCommand({
+        artifactId: mockArtifactId,
+        edits: [{ oldText: 'world', newText: 'universe' }],
+        authorType: AuthorType.ASSISTANT,
+        expectedVersionNumber: 1,
+      });
+
+      const result = await useCase.execute(command);
+      expect(result).toBe(mockVersion);
     });
 
     it('should throw ArtifactNotFoundError when artifact does not exist', async () => {

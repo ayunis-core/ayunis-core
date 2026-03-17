@@ -12,6 +12,7 @@ import { UUID } from 'crypto';
 import {
   ArtifactEditAmbiguousError,
   ArtifactEditNotFoundError,
+  ArtifactExpectedVersionMismatchError,
 } from 'src/domain/artifacts/application/artifacts.errors';
 
 @Injectable()
@@ -40,23 +41,32 @@ export class EditDocumentToolHandler extends ToolExecutionHandler {
         newText: edit.new_text,
       }));
 
-      await this.applyEditsToArtifactUseCase.execute(
+      const version = await this.applyEditsToArtifactUseCase.execute(
         new ApplyEditsToArtifactCommand({
           artifactId: validatedInput.artifact_id as UUID,
           edits: edits,
           authorType: AuthorType.ASSISTANT,
+          expectedVersionNumber: validatedInput.expected_version,
         }),
       );
 
       const editCount = edits.length;
       const editWord = editCount === 1 ? 'edit' : 'edits';
-      return `Document edited successfully. Applied ${editCount} ${editWord} to artifact ID: ${validatedInput.artifact_id}`;
+      return `Document edited successfully. Applied ${editCount} ${editWord} to artifact ID: ${validatedInput.artifact_id}, version: ${version.versionNumber}`;
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
       }
 
-      // Map artifact edit errors to tool execution errors that can be retried by the LLM
+      // Map artifact errors to tool execution errors that can be retried by the LLM
+      if (error instanceof ArtifactExpectedVersionMismatchError) {
+        throw new ToolExecutionFailedError({
+          toolName: tool.name,
+          message: error.message,
+          exposeToLLM: true,
+        });
+      }
+
       if (
         error instanceof ArtifactEditNotFoundError ||
         error instanceof ArtifactEditAmbiguousError
