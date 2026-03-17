@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { UpdateArtifactCommand } from './update-artifact.command';
 import {
@@ -24,6 +25,7 @@ export class UpdateArtifactUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @Transactional()
   async execute(command: UpdateArtifactCommand): Promise<ArtifactVersion> {
     this.logger.log('Updating artifact', { artifactId: command.artifactId });
 
@@ -40,6 +42,14 @@ export class UpdateArtifactUseCase {
         );
       }
 
+      const artifact = await this.artifactsRepository.findById(
+        command.artifactId,
+        userId,
+      );
+      if (!artifact) {
+        throw new ArtifactNotFoundError(command.artifactId);
+      }
+
       if (command.letterheadId !== undefined) {
         await this.artifactsRepository.updateLetterheadId(
           command.artifactId,
@@ -54,17 +64,17 @@ export class UpdateArtifactUseCase {
         logger: this.logger,
         artifactId: command.artifactId,
         buildVersion: async () => {
-          const artifact = await this.artifactsRepository.findById(
+          const freshArtifact = await this.artifactsRepository.findById(
             command.artifactId,
             userId,
           );
-          if (!artifact) {
+          if (!freshArtifact) {
             throw new ArtifactNotFoundError(command.artifactId);
           }
 
           return new ArtifactVersion({
-            artifactId: artifact.id,
-            versionNumber: artifact.currentVersionNumber + 1,
+            artifactId: freshArtifact.id,
+            versionNumber: freshArtifact.currentVersionNumber + 1,
             content: sanitizedContent,
             authorType: command.authorType,
             authorId: command.authorType === AuthorType.USER ? userId : null,

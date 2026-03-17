@@ -6,7 +6,7 @@ Manages versioned documents (artifacts) attached to threads. Artifacts are creat
 
 ## Domain Concepts
 
-- **Artifact** — A named document belonging to a thread and user. Tracks the current version number.
+- **Artifact** — A named document belonging to a thread and user. Tracks the current version number. Optionally references a letterhead for document styling.
 - **ArtifactVersion** — An immutable snapshot of an artifact's content (HTML string) at a specific version number. Tracks who authored it (user or assistant).
 - **AuthorType** — Enum distinguishing whether a version was created by a `USER` or `ASSISTANT`.
 
@@ -56,10 +56,11 @@ artifacts/
 ## Dependencies
 
 - **ThreadsModule** — Imported for thread ownership validation when creating artifacts
+- **LetterheadsModule** — Referenced via foreign key for optional letterhead association (SET NULL on delete)
 
 ## Ports
 
-- **ArtifactsRepository** — CRUD for artifacts and versions
+- **ArtifactsRepository** — CRUD for artifacts and versions; includes `updateLetterheadId` for updating an artifact's letterhead association
 - **DocumentExportPort** — Converts HTML content to DOCX/PDF buffers
 
 ## Key Behaviors
