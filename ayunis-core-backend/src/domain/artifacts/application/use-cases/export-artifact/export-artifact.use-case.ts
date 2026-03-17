@@ -1,6 +1,10 @@
+import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
-import { DocumentExportPort } from '../../ports/document-export.port';
+import {
+  DocumentExportPort,
+  LetterheadConfig,
+} from '../../ports/document-export.port';
 import { ExportArtifactCommand } from './export-artifact.command';
 import {
   ArtifactNotFoundError,
@@ -10,6 +14,10 @@ import {
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
+import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
+import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
+import type { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 
 export interface ExportResult {
   buffer: Buffer;
@@ -25,6 +33,8 @@ export class ExportArtifactUseCase {
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly documentExportPort: DocumentExportPort,
     private readonly contextService: ContextService,
+    private readonly letterheadsRepository: LetterheadsRepository,
+    private readonly objectStoragePort: ObjectStoragePort,
   ) {}
 
   async execute(command: ExportArtifactCommand): Promise<ExportResult> {
@@ -72,8 +82,11 @@ export class ExportArtifactUseCase {
         };
       }
 
+      const letterheadConfig = await this.resolveLetterhead(artifact);
+
       const buffer = await this.documentExportPort.exportToPdf(
         currentVersion.content,
+        letterheadConfig,
       );
       return {
         buffer,
@@ -93,5 +106,64 @@ export class ExportArtifactUseCase {
         error instanceof Error ? error.message : 'Unknown error',
       );
     }
+  }
+
+  private async resolveLetterhead(artifact: {
+    letterheadId: UUID | null;
+  }): Promise<LetterheadConfig | undefined> {
+    if (!artifact.letterheadId) {
+      return undefined;
+    }
+
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      return undefined;
+    }
+
+    const letterhead = await this.letterheadsRepository.findById(
+      orgId,
+      artifact.letterheadId,
+    );
+    if (!letterhead) {
+      this.logger.warn(
+        `Letterhead ${artifact.letterheadId} not found, exporting without background`,
+      );
+      return undefined;
+    }
+
+    return this.downloadLetterheadPdfs(letterhead);
+  }
+
+  private async downloadLetterheadPdfs(
+    letterhead: Letterhead,
+  ): Promise<LetterheadConfig> {
+    const firstPagePdf = await this.downloadPdf(
+      letterhead.firstPageStoragePath,
+    );
+
+    const continuationPagePdf = letterhead.continuationPageStoragePath
+      ? await this.downloadPdf(letterhead.continuationPageStoragePath)
+      : undefined;
+
+    return {
+      firstPagePdf,
+      continuationPagePdf,
+      firstPageMargins: letterhead.firstPageMargins,
+      continuationPageMargins: letterhead.continuationPageMargins,
+    };
+  }
+
+  private async downloadPdf(storagePath: string): Promise<Buffer> {
+    const storageUrl = new StorageUrl(storagePath, 'default');
+    const stream = await this.objectStoragePort.download(storageUrl);
+    return this.streamToBuffer(stream);
+  }
+
+  private async streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
   }
 }
