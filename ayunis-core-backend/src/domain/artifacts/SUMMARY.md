@@ -56,6 +56,7 @@ artifacts/
 ## Dependencies
 
 - **ThreadsModule** — Imported for thread ownership validation when creating artifacts
+- **LetterheadsModule** — Imported for letterhead validation when creating and updating artifacts
 
 ## Ports
 
