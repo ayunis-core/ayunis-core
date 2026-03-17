@@ -17,9 +17,9 @@ import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generate
 import { SECRET_MASK } from '@/shared/constants/secret-mask';
 
 interface UserConfigDialogProps {
-  integration: McpIntegration | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  readonly integration: McpIntegration | null;
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
 }
 
 export function UserConfigDialog({
@@ -54,10 +54,10 @@ export function UserConfigDialog({
 function UserConfigForm({
   integration,
   onClose,
-}: {
+}: Readonly<{
   integration: McpIntegration;
   onClose: () => void;
-}) {
+}>) {
   const { t } = useTranslation('admin-settings-integrations');
   const { userConfig, isLoadingUserConfig } = useGetUserConfig(integration.id);
   const { setUserConfig, isSaving } = useSetUserConfig(integration.id, onClose);
@@ -75,7 +75,7 @@ function UserConfigForm({
     return <UserConfigLoadingSkeleton />;
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
     setUserConfig(formValues);
   };

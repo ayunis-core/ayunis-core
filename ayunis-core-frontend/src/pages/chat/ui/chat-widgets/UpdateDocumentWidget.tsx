@@ -1,12 +1,34 @@
+import type { ReactNode } from 'react';
+import type { TFunction } from 'i18next';
 import type { ToolUseMessageContent } from '../../model/openapi';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
 import { DocumentWidgetCard } from './DocumentWidgetCard';
 
+// eslint-disable-next-line sonarjs/function-return-type -- intentional: returns JSX or string, both valid ReactNode
+function getUpdateStatusLabel(
+  artifactId: string,
+  isStreaming: boolean,
+  t: TFunction<'chat'>,
+): ReactNode {
+  if (!isStreaming && artifactId) {
+    return (
+      <span className="flex items-center gap-1">
+        <Check className="size-3" />
+        {t('chat.tools.update_document.updated')}
+      </span>
+    );
+  }
+  if (isStreaming) {
+    return t('chat.tools.update_document.generating');
+  }
+  return t('chat.tools.update_document.title');
+}
+
 interface UpdateDocumentWidgetProps {
-  content: ToolUseMessageContent;
-  isStreaming?: boolean;
-  onOpenArtifact?: (artifactId: string) => void;
+  readonly content: ToolUseMessageContent;
+  readonly isStreaming?: boolean;
+  readonly onOpenArtifact?: (artifactId: string) => void;
 }
 
 export default function UpdateDocumentWidget({
@@ -16,12 +38,13 @@ export default function UpdateDocumentWidget({
 }: UpdateDocumentWidgetProps) {
   const { t } = useTranslation('chat');
 
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content.params may be undefined during streaming even if typed as required
   const params = (content.params || {}) as {
     artifact_id?: string;
     content?: string;
   };
 
-  const artifactId = params.artifact_id || '';
+  const artifactId = params.artifact_id ?? '';
 
   const handleOpen = () => {
     if (artifactId && onOpenArtifact) {
@@ -29,17 +52,7 @@ export default function UpdateDocumentWidget({
     }
   };
 
-  const statusLabel =
-    !isStreaming && artifactId ? (
-      <span className="flex items-center gap-1">
-        <Check className="size-3" />
-        {t('chat.tools.update_document.updated')}
-      </span>
-    ) : isStreaming ? (
-      t('chat.tools.update_document.generating')
-    ) : (
-      t('chat.tools.update_document.title')
-    );
+  const statusLabel = getUpdateStatusLabel(artifactId, isStreaming, t);
 
   return (
     <DocumentWidgetCard

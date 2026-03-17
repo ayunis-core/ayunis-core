@@ -15,7 +15,7 @@ interface CreateEntityDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onCancel: () => void;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  onSubmit: (e: React.SyntheticEvent<HTMLFormElement>) => void;
   isLoading: boolean;
   translations: {
     buttonText: string;
