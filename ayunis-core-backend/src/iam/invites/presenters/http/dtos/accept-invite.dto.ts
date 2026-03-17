@@ -1,6 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
-import { IsValidDepartment } from '../../../../users/domain/is-valid-department.validator';
 
 export class AcceptInviteDto {
   @ApiProperty({
@@ -38,6 +37,5 @@ export class AcceptInviteDto {
   @IsOptional()
   @IsString()
   @MaxLength(100)
-  @IsValidDepartment()
   department?: string;
 }
