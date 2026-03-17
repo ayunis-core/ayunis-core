@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { UpdateArtifactCommand } from './update-artifact.command';
 import {
@@ -14,6 +15,8 @@ import { sanitizeHtmlContent } from '../../helpers/sanitize-html-content';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { addVersionWithRetry } from '../../helpers/add-version-with-retry';
+import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
+import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.query';
 
 @Injectable()
 export class UpdateArtifactUseCase {
@@ -22,8 +25,10 @@ export class UpdateArtifactUseCase {
   constructor(
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
+    private readonly findLetterheadUseCase: FindLetterheadUseCase,
   ) {}
 
+  @Transactional()
   async execute(command: UpdateArtifactCommand): Promise<ArtifactVersion> {
     this.logger.log('Updating artifact', { artifactId: command.artifactId });
 
@@ -40,9 +45,15 @@ export class UpdateArtifactUseCase {
         );
       }
 
+      if (command.letterheadId) {
+        await this.findLetterheadUseCase.execute(
+          new FindLetterheadQuery({ letterheadId: command.letterheadId }),
+        );
+      }
+
       const sanitizedContent = sanitizeHtmlContent(command.content);
 
-      return await addVersionWithRetry({
+      const version = await addVersionWithRetry({
         repository: this.artifactsRepository,
         logger: this.logger,
         artifactId: command.artifactId,
@@ -64,6 +75,15 @@ export class UpdateArtifactUseCase {
           });
         },
       });
+
+      if (command.letterheadId !== undefined) {
+        await this.artifactsRepository.updateLetterheadId(
+          command.artifactId,
+          command.letterheadId,
+        );
+      }
+
+      return version;
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;

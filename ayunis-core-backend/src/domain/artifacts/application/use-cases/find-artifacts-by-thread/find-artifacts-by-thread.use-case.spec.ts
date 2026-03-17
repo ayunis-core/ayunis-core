@@ -23,6 +23,7 @@ describe('FindArtifactsByThreadUseCase', () => {
       findByIdWithVersions: jest.fn(),
       addVersion: jest.fn(),
       updateCurrentVersionNumber: jest.fn(),
+      updateLetterheadId: jest.fn(),
       delete: jest.fn(),
     };
 
