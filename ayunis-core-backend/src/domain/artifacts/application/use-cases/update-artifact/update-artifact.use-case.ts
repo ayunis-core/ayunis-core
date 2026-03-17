@@ -58,7 +58,7 @@ export class UpdateArtifactUseCase {
 
       const sanitizedContent = sanitizeHtmlContent(command.content);
 
-      return addVersionWithRetry({
+      return await addVersionWithRetry({
         repository: this.artifactsRepository,
         logger: this.logger,
         artifactId: command.artifactId,
