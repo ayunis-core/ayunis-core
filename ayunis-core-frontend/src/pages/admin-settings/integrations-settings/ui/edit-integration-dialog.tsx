@@ -45,6 +45,53 @@ function getEditableOrgFields(
   );
 }
 
+function buildMarketplacePayload(
+  payload: UpdateIntegrationFormData,
+  editableFields: MarketplaceIntegrationConfigFieldDto[],
+  configFormValues: Record<string, string>,
+  currentOrgValues: Record<string, string>,
+): void {
+  const orgConfigValues: Record<string, string> = {};
+  let hasConfigChanges = false;
+
+  for (const field of editableFields) {
+    const value = configFormValues[field.key] ?? '';
+    if (field.type === 'secret') {
+      if (value.trim()) {
+        orgConfigValues[field.key] = value;
+        hasConfigChanges = true;
+      }
+    } else {
+      orgConfigValues[field.key] = value;
+      if (value !== (currentOrgValues[field.key] ?? '')) {
+        hasConfigChanges = true;
+      }
+    }
+  }
+
+  if (hasConfigChanges) {
+    payload.orgConfigValues = orgConfigValues;
+  }
+}
+
+function buildCustomPayload(
+  payload: UpdateIntegrationFormData,
+  data: UpdateIntegrationFormData,
+  integration: McpIntegration,
+): void {
+  const trimmedCredentials = data.credentials?.trim();
+  if (trimmedCredentials) {
+    payload.credentials = trimmedCredentials;
+  }
+
+  if (integration.authMethod === 'CUSTOM_HEADER') {
+    const trimmedHeaderName = data.authHeaderName?.trim();
+    if (trimmedHeaderName && trimmedHeaderName !== integration.authHeaderName) {
+      payload.authHeaderName = trimmedHeaderName;
+    }
+  }
+}
+
 export function EditIntegrationDialog({
   integration,
   open,
@@ -111,44 +158,14 @@ export function EditIntegrationDialog({
     }
 
     if (isMarketplace) {
-      // Build orgConfigValues: include non-secret fields always, secret fields only if non-empty
-      const orgConfigValues: Record<string, string> = {};
-      let hasConfigChanges = false;
-
-      for (const field of editableFields) {
-        const value = configFormValues[field.key] ?? '';
-        if (field.type === 'secret') {
-          // Only include if the admin entered a new value
-          if (value.trim()) {
-            orgConfigValues[field.key] = value;
-            hasConfigChanges = true;
-          }
-        } else {
-          orgConfigValues[field.key] = value;
-          if (value !== (currentOrgValues[field.key] ?? '')) {
-            hasConfigChanges = true;
-          }
-        }
-      }
-
-      if (hasConfigChanges) {
-        payload.orgConfigValues = orgConfigValues;
-      }
+      buildMarketplacePayload(
+        payload,
+        editableFields,
+        configFormValues,
+        currentOrgValues,
+      );
     } else {
-      const trimmedCredentials = data.credentials?.trim();
-      if (trimmedCredentials) {
-        payload.credentials = trimmedCredentials;
-      }
-
-      if (integration.authMethod === 'CUSTOM_HEADER') {
-        const trimmedHeaderName = data.authHeaderName?.trim();
-        if (
-          trimmedHeaderName &&
-          trimmedHeaderName !== integration.authHeaderName
-        ) {
-          payload.authHeaderName = trimmedHeaderName;
-        }
-      }
+      buildCustomPayload(payload, data, integration);
     }
 
     if (Object.keys(payload).length === 0) {

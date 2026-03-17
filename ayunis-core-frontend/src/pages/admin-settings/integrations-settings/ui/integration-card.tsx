@@ -113,9 +113,9 @@ export function IntegrationCard({
 
 function IntegrationDescription({
   integration,
-}: {
+}: Readonly<{
   integration: McpIntegration;
-}) {
+}>) {
   if (integration.type === 'marketplace') {
     return <>{integration.marketplaceIdentifier ?? ''}</>;
   }

@@ -4,14 +4,14 @@ import { Label } from '@/shared/ui/shadcn/label';
 import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface ConfigFieldInputProps {
-  field: MarketplaceIntegrationConfigFieldDto;
-  value: string;
-  onChange: (value: string) => void;
-  disabled: boolean;
+  readonly field: MarketplaceIntegrationConfigFieldDto;
+  readonly value: string;
+  readonly onChange: (value: string) => void;
+  readonly disabled: boolean;
   /** Override placeholder for secret fields (e.g. "Leave blank to keep existing") */
-  secretPlaceholder?: string;
+  readonly secretPlaceholder?: string;
   /** Prefix for the input id attribute (default: "config-field") */
-  idPrefix?: string;
+  readonly idPrefix?: string;
 }
 
 export function ConfigFieldInput({
