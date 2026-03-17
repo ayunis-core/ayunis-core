@@ -55,7 +55,7 @@ export function RenameThreadDialog({
     }
   }, [open, currentTitle]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
     const trimmedTitle = title.trim();
 
