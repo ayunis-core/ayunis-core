@@ -20,9 +20,6 @@ import { ThreadsModule } from '../threads/threads.module';
 import { McpModule } from '../mcp/mcp.module';
 import { McpIntegrationToolHandler } from './application/handlers/mcp-integration-tool.handler';
 import { McpIntegrationResourceHandler } from './application/handlers/mcp-integration-resource.handler';
-import { ProductKnowledgeToolHandler } from './application/handlers/product-knowledge-tool.handler';
-import { ProductKnowledgePort } from './application/ports/product-knowledge.port';
-import { ProductKnowledgeAdapter } from './infrastructure/product-knowledge/product-knowledge.adapter';
 import { ActivateSkillToolHandler } from './application/handlers/activate-skill-tool.handler';
 import { KnowledgeQueryToolHandler } from './application/handlers/knowledge-query-tool.handler';
 import { KnowledgeGetTextToolHandler } from './application/handlers/knowledge-get-text-tool.handler';
@@ -62,7 +59,6 @@ import { ArtifactsModule } from '../artifacts/artifacts.module';
     CodeExecutionToolHandler,
     McpIntegrationToolHandler,
     McpIntegrationResourceHandler,
-    ProductKnowledgeToolHandler,
     ActivateSkillToolHandler,
     KnowledgeQueryToolHandler,
     KnowledgeGetTextToolHandler,
@@ -70,10 +66,6 @@ import { ArtifactsModule } from '../artifacts/artifacts.module';
     UpdateDocumentToolHandler,
     EditDocumentToolHandler,
     ReadDocumentToolHandler,
-    {
-      provide: ProductKnowledgePort,
-      useClass: ProductKnowledgeAdapter,
-    },
     // Repositories and factories
     {
       provide: ToolConfigRepository,

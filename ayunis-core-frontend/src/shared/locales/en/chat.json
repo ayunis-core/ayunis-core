@@ -42,7 +42,6 @@
       "knowledge_query": "Search knowledge base",
       "knowledge_get_text": "Read knowledge base document",
       "read_document": "Read document",
-      "product_knowledge": "Search product knowledge",
       "send_email": {
         "subject": "Subject",
         "body": "Body",

@@ -18,8 +18,6 @@ import { McpIntegrationToolHandler } from './handlers/mcp-integration-tool.handl
 import { McpIntegrationResourceHandler } from './handlers/mcp-integration-resource.handler';
 import { McpIntegrationTool } from '../domain/tools/mcp-integration-tool.entity';
 import { McpIntegrationResource } from '../domain/tools/mcp-integration-resource.entity';
-import { ProductKnowledgeToolHandler } from './handlers/product-knowledge-tool.handler';
-import { ProductKnowledgeTool } from '../domain/tools/product-knowledge-tool.entity';
 import { ActivateSkillToolHandler } from './handlers/activate-skill-tool.handler';
 import { ActivateSkillTool } from '../domain/tools/activate-skill-tool.entity';
 import { KnowledgeQueryToolHandler } from './handlers/knowledge-query-tool.handler';
@@ -52,7 +50,6 @@ export class ToolHandlerRegistry {
     codeExecutionToolHandler: CodeExecutionToolHandler,
     mcpIntegrationToolHandler: McpIntegrationToolHandler,
     mcpIntegrationResourceHandler: McpIntegrationResourceHandler,
-    productKnowledgeToolHandler: ProductKnowledgeToolHandler,
     activateSkillToolHandler: ActivateSkillToolHandler,
     knowledgeQueryToolHandler: KnowledgeQueryToolHandler,
     knowledgeGetTextToolHandler: KnowledgeGetTextToolHandler,
@@ -70,7 +67,6 @@ export class ToolHandlerRegistry {
       [CodeExecutionTool, codeExecutionToolHandler],
       [McpIntegrationTool, mcpIntegrationToolHandler],
       [McpIntegrationResource, mcpIntegrationResourceHandler],
-      [ProductKnowledgeTool, productKnowledgeToolHandler],
       [ActivateSkillTool, activateSkillToolHandler],
       [KnowledgeQueryTool, knowledgeQueryToolHandler],
       [KnowledgeGetTextTool, knowledgeGetTextToolHandler],
