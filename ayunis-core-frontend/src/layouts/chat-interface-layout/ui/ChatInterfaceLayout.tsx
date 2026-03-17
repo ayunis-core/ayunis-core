@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAutoScroll } from '@/features/useAutoScroll';
 import {
   Panel,
   Group as PanelGroup,
   Separator as PanelResizeHandle,
+  usePanelRef,
 } from 'react-resizable-panels';
 
 interface ChatInterfaceLayoutProps {
@@ -22,6 +23,11 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
   className = '',
 }) => {
   const { scrollRef, handleScroll } = useAutoScroll(chatContent);
+  const chatPanelRef = usePanelRef();
+
+  useEffect(() => {
+    chatPanelRef.current?.resize(sidePanel ? 50 : 100);
+  }, [sidePanel, chatPanelRef]);
 
   const chatPane = (
     <div className={`flex flex-col h-full px-4 ${className}`}>
@@ -48,7 +54,7 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
   // unmounted/remounted when the side panel opens or closes.
   return (
     <PanelGroup orientation="horizontal" className="absolute inset-0">
-      <Panel defaultSize={sidePanel ? 50 : 100} minSize={30}>
+      <Panel panelRef={chatPanelRef} defaultSize={100} minSize={30}>
         {chatPane}
       </Panel>
       {sidePanel && (
