@@ -3,8 +3,8 @@ import { FileDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface ExportButtonsProps {
-  onExport: (format: 'docx' | 'pdf') => void;
-  isExporting?: boolean;
+  readonly onExport: (format: 'docx' | 'pdf') => void;
+  readonly isExporting?: boolean;
 }
 
 export function ExportButtons({ onExport, isExporting }: ExportButtonsProps) {

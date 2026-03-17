@@ -1,4 +1,4 @@
-import { useState, useCallback, type FormEvent } from 'react';
+import { useState, useCallback, type SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
@@ -32,7 +32,7 @@ export default function CreateOrgDialog() {
     onSuccessCallback: handleClose,
   });
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: SyntheticEvent) => {
     event.preventDefault();
     if (!name.trim()) {
       return;

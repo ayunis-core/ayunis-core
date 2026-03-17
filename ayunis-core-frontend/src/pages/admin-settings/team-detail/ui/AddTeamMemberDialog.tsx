@@ -73,7 +73,7 @@ export function AddTeamMemberDialog({
         label: `${user.name} (${user.email})`,
       })) ?? [];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (selectedUser) {
       addTeamMember(selectedUser.value);
