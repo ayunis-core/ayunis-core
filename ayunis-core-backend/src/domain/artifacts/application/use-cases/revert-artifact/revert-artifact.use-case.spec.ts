@@ -53,6 +53,7 @@ describe('RevertArtifactUseCase', () => {
       addVersion: jest.fn(),
       updateCurrentVersionNumber: jest.fn(),
       addVersionAndUpdateCurrent: jest.fn(),
+      updateLetterheadId: jest.fn(),
       delete: jest.fn(),
     };
 

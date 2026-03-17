@@ -1,7 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
   IsUUID,
   MaxLength,
@@ -45,4 +46,14 @@ export class CreateArtifactDto {
   })
   @IsEnum(AuthorType)
   authorType: AuthorType;
+
+  @ApiPropertyOptional({
+    description: 'Optional letterhead to apply to this artifact',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    type: 'string',
+    format: 'uuid',
+  })
+  @IsUUID()
+  @IsOptional()
+  letterheadId?: UUID;
 }
