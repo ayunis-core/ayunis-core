@@ -7,6 +7,7 @@ export class Artifact {
   public readonly threadId: UUID;
   public readonly userId: UUID;
   public readonly title: string;
+  public readonly letterheadId: UUID | null;
   public readonly currentVersionNumber: number;
   public readonly versions: ArtifactVersion[];
   public readonly createdAt: Date;
@@ -17,6 +18,7 @@ export class Artifact {
     threadId: UUID;
     userId: UUID;
     title: string;
+    letterheadId?: UUID | null;
     currentVersionNumber?: number;
     versions?: ArtifactVersion[];
     createdAt?: Date;
@@ -26,6 +28,7 @@ export class Artifact {
     this.threadId = params.threadId;
     this.userId = params.userId;
     this.title = params.title;
+    this.letterheadId = params.letterheadId ?? null;
     this.currentVersionNumber = params.currentVersionNumber ?? 1;
     this.versions = params.versions ?? [];
     this.createdAt = params.createdAt ?? new Date();
