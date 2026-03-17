@@ -14,6 +14,8 @@ import { sanitizeHtmlContent } from '../../helpers/sanitize-html-content';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { addVersionWithRetry } from '../../helpers/add-version-with-retry';
+import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
+import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.query';
 
 @Injectable()
 export class UpdateArtifactUseCase {
@@ -22,6 +24,7 @@ export class UpdateArtifactUseCase {
   constructor(
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
+    private readonly findLetterheadUseCase: FindLetterheadUseCase,
   ) {}
 
   async execute(command: UpdateArtifactCommand): Promise<ArtifactVersion> {
@@ -40,9 +43,22 @@ export class UpdateArtifactUseCase {
         );
       }
 
+      if (command.letterheadId) {
+        await this.findLetterheadUseCase.execute(
+          new FindLetterheadQuery({ letterheadId: command.letterheadId }),
+        );
+      }
+
+      if (command.letterheadId !== undefined) {
+        await this.artifactsRepository.updateLetterheadId(
+          command.artifactId,
+          command.letterheadId,
+        );
+      }
+
       const sanitizedContent = sanitizeHtmlContent(command.content);
 
-      return await addVersionWithRetry({
+      return addVersionWithRetry({
         repository: this.artifactsRepository,
         logger: this.logger,
         artifactId: command.artifactId,
