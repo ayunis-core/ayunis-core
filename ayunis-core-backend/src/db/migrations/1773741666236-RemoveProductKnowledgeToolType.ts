@@ -5,6 +5,9 @@ export class RemoveProductKnowledgeToolType1773741666236 implements MigrationInt
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
+      `DELETE FROM "agent_tools" WHERE "toolType" = 'product_knowledge'`,
+    );
+    await queryRunner.query(
       `ALTER TYPE "public"."agent_tools_tooltype_enum" RENAME TO "agent_tools_tooltype_enum_old"`,
     );
     await queryRunner.query(
