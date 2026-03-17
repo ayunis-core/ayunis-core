@@ -5,6 +5,7 @@ import {
   ArtifactContentTooLargeError,
   ArtifactEditAmbiguousError,
   ArtifactEditNotFoundError,
+  ArtifactExpectedVersionMismatchError,
   ArtifactNotFoundError,
   ArtifactVersionNotFoundError,
   UnexpectedArtifactError,
@@ -50,6 +51,17 @@ export class ApplyEditsToArtifactUseCase {
         throw new ArtifactNotFoundError(command.artifactId);
       }
 
+      if (
+        command.expectedVersionNumber !== undefined &&
+        command.expectedVersionNumber !== artifact.currentVersionNumber
+      ) {
+        throw new ArtifactExpectedVersionMismatchError(
+          command.artifactId,
+          command.expectedVersionNumber,
+          artifact.currentVersionNumber,
+        );
+      }
+
       // Find current version content
       const currentVersion = artifact.versions.find(
         (v) => v.versionNumber === artifact.currentVersionNumber,
@@ -61,44 +73,7 @@ export class ApplyEditsToArtifactUseCase {
         );
       }
 
-      let content = currentVersion.content;
-
-      // Apply edits sequentially
-      for (let i = 0; i < command.edits.length; i++) {
-        const edit = command.edits[i];
-        const { oldText, newText } = edit;
-
-        // Guard against empty oldText which would cause infinite loop in findOccurrences
-        if (oldText.length === 0) {
-          throw new ArtifactEditNotFoundError(i + 1, oldText);
-        }
-
-        // Find occurrences of oldText
-        const occurrences = this.findOccurrences(content, oldText);
-
-        if (occurrences.length === 0) {
-          throw new ArtifactEditNotFoundError(i + 1, oldText);
-        }
-
-        if (occurrences.length > 1) {
-          throw new ArtifactEditAmbiguousError(i + 1, oldText);
-        }
-
-        // Apply the edit
-        const index = occurrences[0];
-        content =
-          content.substring(0, index) +
-          newText +
-          content.substring(index + oldText.length);
-      }
-
-      // Check content length after edits
-      if (content.length > ARTIFACT_MAX_CONTENT_LENGTH) {
-        throw new ArtifactContentTooLargeError(
-          content.length,
-          ARTIFACT_MAX_CONTENT_LENGTH,
-        );
-      }
+      const content = this.applyEdits(currentVersion.content, command.edits);
 
       // Sanitize and save using UpdateArtifactUseCase
       const updateCommand = new UpdateArtifactCommand({
@@ -121,6 +96,45 @@ export class ApplyEditsToArtifactUseCase {
         error instanceof Error ? error.message : 'Unknown error',
       );
     }
+  }
+
+  private applyEdits(
+    originalContent: string,
+    edits: ApplyEditsToArtifactCommand['edits'],
+  ): string {
+    let content = originalContent;
+
+    for (let i = 0; i < edits.length; i++) {
+      const { oldText, newText } = edits[i];
+
+      if (oldText.length === 0) {
+        throw new ArtifactEditNotFoundError(i + 1, oldText);
+      }
+
+      const occurrences = this.findOccurrences(content, oldText);
+
+      if (occurrences.length === 0) {
+        throw new ArtifactEditNotFoundError(i + 1, oldText);
+      }
+      if (occurrences.length > 1) {
+        throw new ArtifactEditAmbiguousError(i + 1, oldText);
+      }
+
+      const index = occurrences[0];
+      content =
+        content.substring(0, index) +
+        newText +
+        content.substring(index + oldText.length);
+    }
+
+    if (content.length > ARTIFACT_MAX_CONTENT_LENGTH) {
+      throw new ArtifactContentTooLargeError(
+        content.length,
+        ARTIFACT_MAX_CONTENT_LENGTH,
+      );
+    }
+
+    return content;
   }
 
   private findOccurrences(content: string, searchText: string): number[] {

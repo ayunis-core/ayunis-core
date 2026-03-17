@@ -22,4 +22,5 @@ export enum ToolType {
   CREATE_DOCUMENT = 'create_document',
   UPDATE_DOCUMENT = 'update_document',
   EDIT_DOCUMENT = 'edit_document',
+  READ_DOCUMENT = 'read_document',
 }
