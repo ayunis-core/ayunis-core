@@ -5,7 +5,8 @@ import './common/sentry/instrument';
 // Utils
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe, BadRequestException, Logger } from '@nestjs/common';
+import type { ValidationError } from 'class-validator';
 import { ConfigService } from '@nestjs/config';
 import { WinstonModule } from 'nest-winston';
 import { logger } from './common/logger/logger';
@@ -44,6 +45,14 @@ class Bootstrap {
       new ValidationPipe({
         whitelist: true,
         transform: true,
+        exceptionFactory: (errors: ValidationError[]) => {
+          const fieldErrors = flattenValidationErrors(errors);
+          return new BadRequestException({
+            code: 'VALIDATION_ERROR',
+            message: 'Validation failed',
+            errors: fieldErrors,
+          });
+        },
       }),
     );
     app.enableShutdownHooks();
@@ -70,6 +79,8 @@ class Bootstrap {
     );
   }
 
+  // CORS origin must return string[] | boolean per Express typing
+  // eslint-disable-next-line sonarjs/function-return-type
   private static determineAllowedOrigins(
     configService: ConfigService,
     isProduction: boolean,
@@ -134,6 +145,33 @@ class Bootstrap {
 
     SwaggerModule.setup('api/docs', app, document);
   }
+}
+
+interface FieldError {
+  field: string;
+  constraints: string[];
+}
+
+function flattenValidationErrors(
+  errors: ValidationError[],
+  parentField = '',
+): FieldError[] {
+  const result: FieldError[] = [];
+  for (const error of errors) {
+    const field = parentField
+      ? `${parentField}.${error.property}`
+      : error.property;
+    if (error.constraints) {
+      result.push({
+        field,
+        constraints: Object.keys(error.constraints),
+      });
+    }
+    if (error.children?.length) {
+      result.push(...flattenValidationErrors(error.children, field));
+    }
+  }
+  return result;
 }
 
 Bootstrap.start().catch((err) => {
