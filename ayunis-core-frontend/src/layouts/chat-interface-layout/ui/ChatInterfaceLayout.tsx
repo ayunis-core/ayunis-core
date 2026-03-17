@@ -44,19 +44,21 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
     </div>
   );
 
-  if (!sidePanel) {
-    return <div className="absolute inset-0">{chatPane}</div>;
-  }
-
+  // Always render the PanelGroup so the chat pane's scroll container is never
+  // unmounted/remounted when the side panel opens or closes.
   return (
     <PanelGroup orientation="horizontal" className="absolute inset-0">
-      <Panel defaultSize={50} minSize={30}>
+      <Panel defaultSize={sidePanel ? 50 : 100} minSize={30}>
         {chatPane}
       </Panel>
-      <PanelResizeHandle className="w-1 bg-border hover:bg-primary/20 transition-colors" />
-      <Panel defaultSize={50} minSize={30}>
-        {sidePanel}
-      </Panel>
+      {sidePanel && (
+        <>
+          <PanelResizeHandle className="w-1 bg-border hover:bg-primary/20 transition-colors" />
+          <Panel defaultSize={50} minSize={30}>
+            {sidePanel}
+          </Panel>
+        </>
+      )}
     </PanelGroup>
   );
 };
