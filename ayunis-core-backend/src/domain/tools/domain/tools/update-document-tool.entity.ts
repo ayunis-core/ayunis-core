@@ -15,8 +15,13 @@ const updateDocumentToolParameters = {
       description:
         'The full updated HTML content of the document. Provide the complete document content, not just the changes.',
     },
+    expected_version: {
+      type: 'integer' as const,
+      description:
+        'The version number you expect the document to be at. Pass the version from your last create/update/edit result, or from read_document. The operation will fail if the document has been modified since.',
+    },
   },
-  required: ['artifact_id', 'content'],
+  required: ['artifact_id', 'content', 'expected_version'],
   additionalProperties: false,
 } as const satisfies JSONSchema;
 
@@ -37,7 +42,9 @@ export class UpdateDocumentTool extends DisplayableTool {
         'Use create_document instead when the user wants a brand new document. ' +
         'Always provide the full updated content, not a partial diff. ' +
         'For targeted changes (fixing typos, updating a section, inserting a paragraph), prefer edit_document instead — ' +
-        'it is more efficient and less error-prone for small edits.',
+        'it is more efficient and less error-prone for small edits. ' +
+        'You must pass expected_version with the version number from your last tool result or from read_document. ' +
+        'If the document was modified by the user since then, the operation will fail — use read_document to get the current content first.',
       parameters: updateDocumentToolParameters,
       type: ToolType.UPDATE_DOCUMENT,
     });

@@ -1938,6 +1938,7 @@ export const ToolAssignmentDtoType = {
   create_document: 'create_document',
   update_document: 'update_document',
   edit_document: 'edit_document',
+  read_document: 'read_document',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -1992,6 +1993,7 @@ export const ToolResponseDtoType = {
   create_document: 'create_document',
   update_document: 'update_document',
   edit_document: 'edit_document',
+  read_document: 'read_document',
 } as const;
 
 export interface ToolResponseDto {

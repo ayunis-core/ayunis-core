@@ -3,6 +3,7 @@ import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { UpdateArtifactCommand } from './update-artifact.command';
 import {
   ArtifactContentTooLargeError,
+  ArtifactExpectedVersionMismatchError,
   ArtifactNotFoundError,
   UnexpectedArtifactError,
   ARTIFACT_MAX_CONTENT_LENGTH,
@@ -53,6 +54,17 @@ export class UpdateArtifactUseCase {
           );
           if (!artifact) {
             throw new ArtifactNotFoundError(command.artifactId);
+          }
+
+          if (
+            command.expectedVersionNumber !== undefined &&
+            command.expectedVersionNumber !== artifact.currentVersionNumber
+          ) {
+            throw new ArtifactExpectedVersionMismatchError(
+              command.artifactId,
+              command.expectedVersionNumber,
+              artifact.currentVersionNumber,
+            );
           }
 
           return new ArtifactVersion({

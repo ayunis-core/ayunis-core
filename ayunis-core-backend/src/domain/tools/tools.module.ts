@@ -29,6 +29,7 @@ import { KnowledgeGetTextToolHandler } from './application/handlers/knowledge-ge
 import { CreateDocumentToolHandler } from './application/handlers/create-document-tool.handler';
 import { UpdateDocumentToolHandler } from './application/handlers/update-document-tool.handler';
 import { EditDocumentToolHandler } from './application/handlers/edit-document-tool.handler';
+import { ReadDocumentToolHandler } from './application/handlers/read-document-tool.handler';
 import { SkillsModule } from '../skills/skills.module';
 import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
 import { SkillTemplatesModule } from '../skill-templates/skill-templates.module';
@@ -68,6 +69,7 @@ import { ArtifactsModule } from '../artifacts/artifacts.module';
     CreateDocumentToolHandler,
     UpdateDocumentToolHandler,
     EditDocumentToolHandler,
+    ReadDocumentToolHandler,
     {
       provide: ProductKnowledgePort,
       useClass: ProductKnowledgeAdapter,

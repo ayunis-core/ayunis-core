@@ -8,6 +8,7 @@ import { UpdateDocumentTool } from '../../domain/tools/update-document-tool.enti
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ToolExecutionFailedError } from '../tools.errors';
+import { ArtifactExpectedVersionMismatchError } from 'src/domain/artifacts/application/artifacts.errors';
 
 describe('UpdateDocumentToolHandler', () => {
   let handler: UpdateDocumentToolHandler;
@@ -53,7 +54,7 @@ describe('UpdateDocumentToolHandler', () => {
     });
   }
 
-  it('should call UpdateArtifactUseCase with correct artifactId, content, and authorType', async () => {
+  it('should call UpdateArtifactUseCase with correct artifactId, content, authorType, and expectedVersionNumber', async () => {
     const version = createMockVersion();
     mockUpdateArtifactUseCase.execute.mockResolvedValue(version);
 
@@ -61,6 +62,7 @@ describe('UpdateDocumentToolHandler', () => {
     const input = {
       artifact_id: mockArtifactId,
       content: '<h1>Updated Budget Report</h1><p>Revised figures</p>',
+      expected_version: 1,
     };
 
     await handler.execute({
@@ -76,9 +78,10 @@ describe('UpdateDocumentToolHandler', () => {
       '<h1>Updated Budget Report</h1><p>Revised figures</p>',
     );
     expect(command.authorType).toBe(AuthorType.ASSISTANT);
+    expect(command.expectedVersionNumber).toBe(1);
   });
 
-  it('should return a success message containing the artifact ID', async () => {
+  it('should return a success message containing the artifact ID and version number', async () => {
     const version = createMockVersion();
     mockUpdateArtifactUseCase.execute.mockResolvedValue(version);
 
@@ -86,6 +89,7 @@ describe('UpdateDocumentToolHandler', () => {
     const input = {
       artifact_id: mockArtifactId,
       content: '<h1>Updated Report</h1>',
+      expected_version: 1,
     };
 
     const result = await handler.execute({
@@ -96,6 +100,7 @@ describe('UpdateDocumentToolHandler', () => {
 
     expect(result).toContain(mockArtifactId);
     expect(result).toContain('Document updated successfully');
+    expect(result).toContain('version: 2');
   });
 
   it('should throw ToolExecutionFailedError when UpdateArtifactUseCase fails', async () => {
@@ -107,6 +112,7 @@ describe('UpdateDocumentToolHandler', () => {
     const input = {
       artifact_id: mockArtifactId,
       content: '<h1>Will Fail</h1>',
+      expected_version: 1,
     };
 
     await expect(
@@ -116,6 +122,40 @@ describe('UpdateDocumentToolHandler', () => {
         context: { threadId: mockThreadId, orgId: mockOrgId },
       }),
     ).rejects.toThrow(ToolExecutionFailedError);
+  });
+
+  it('should throw ToolExecutionFailedError with exposeToLLM when version mismatch occurs', async () => {
+    mockUpdateArtifactUseCase.execute.mockRejectedValue(
+      new ArtifactExpectedVersionMismatchError(mockArtifactId, 1, 3),
+    );
+
+    const tool = new UpdateDocumentTool();
+    const input = {
+      artifact_id: mockArtifactId,
+      content: '<h1>Stale Update</h1>',
+      expected_version: 1,
+    };
+
+    await expect(
+      handler.execute({
+        tool,
+        input,
+        context: { threadId: mockThreadId, orgId: mockOrgId },
+      }),
+    ).rejects.toThrow(ToolExecutionFailedError);
+
+    try {
+      await handler.execute({
+        tool,
+        input,
+        context: { threadId: mockThreadId, orgId: mockOrgId },
+      });
+    } catch (error) {
+      expect(error).toBeInstanceOf(ToolExecutionFailedError);
+      expect((error as ToolExecutionFailedError).message).toContain(
+        'read_document',
+      );
+    }
   });
 
   it('should throw ToolExecutionFailedError when input validation fails', async () => {

@@ -32,78 +32,63 @@ import { UpdateDocumentToolHandler } from './handlers/update-document-tool.handl
 import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
 import { EditDocumentToolHandler } from './handlers/edit-document-tool.handler';
 import { EditDocumentTool } from '../domain/tools/edit-document-tool.entity';
+import { ReadDocumentToolHandler } from './handlers/read-document-tool.handler';
+import { ReadDocumentTool } from '../domain/tools/read-document-tool.entity';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- constructor types vary; used only as Map keys for instanceof matching
+type ToolConstructor = abstract new (...args: any[]) => Tool;
 
 @Injectable()
 export class ToolHandlerRegistry {
   private readonly logger = new Logger(ToolHandlerRegistry.name);
+  private readonly handlers: [ToolConstructor, ToolExecutionHandler][];
 
   constructor(
-    private readonly httpToolHandler: HttpToolHandler,
-    private readonly sourceQueryToolHandler: SourceQueryToolHandler,
-    private readonly sourceGetTextToolHandler: SourceGetTextToolHandler,
-    private readonly internetSearchToolHandler: InternetSearchToolHandler,
-    private readonly websiteContentToolHandler: WebsiteContentToolHandler,
-    private readonly codeExecutionToolHandler: CodeExecutionToolHandler,
-    private readonly mcpIntegrationToolHandler: McpIntegrationToolHandler,
-    private readonly mcpIntegrationResourceHandler: McpIntegrationResourceHandler,
-    private readonly productKnowledgeToolHandler: ProductKnowledgeToolHandler,
-    private readonly activateSkillToolHandler: ActivateSkillToolHandler,
-    private readonly knowledgeQueryToolHandler: KnowledgeQueryToolHandler,
-    private readonly knowledgeGetTextToolHandler: KnowledgeGetTextToolHandler,
-    private readonly createDocumentToolHandler: CreateDocumentToolHandler,
-    private readonly updateDocumentToolHandler: UpdateDocumentToolHandler,
-    private readonly editDocumentToolHandler: EditDocumentToolHandler,
-  ) {}
+    httpToolHandler: HttpToolHandler,
+    sourceQueryToolHandler: SourceQueryToolHandler,
+    sourceGetTextToolHandler: SourceGetTextToolHandler,
+    internetSearchToolHandler: InternetSearchToolHandler,
+    websiteContentToolHandler: WebsiteContentToolHandler,
+    codeExecutionToolHandler: CodeExecutionToolHandler,
+    mcpIntegrationToolHandler: McpIntegrationToolHandler,
+    mcpIntegrationResourceHandler: McpIntegrationResourceHandler,
+    productKnowledgeToolHandler: ProductKnowledgeToolHandler,
+    activateSkillToolHandler: ActivateSkillToolHandler,
+    knowledgeQueryToolHandler: KnowledgeQueryToolHandler,
+    knowledgeGetTextToolHandler: KnowledgeGetTextToolHandler,
+    createDocumentToolHandler: CreateDocumentToolHandler,
+    updateDocumentToolHandler: UpdateDocumentToolHandler,
+    editDocumentToolHandler: EditDocumentToolHandler,
+    readDocumentToolHandler: ReadDocumentToolHandler,
+  ) {
+    this.handlers = [
+      [HttpTool, httpToolHandler],
+      [SourceQueryTool, sourceQueryToolHandler],
+      [SourceGetTextTool, sourceGetTextToolHandler],
+      [InternetSearchTool, internetSearchToolHandler],
+      [WebsiteContentTool, websiteContentToolHandler],
+      [CodeExecutionTool, codeExecutionToolHandler],
+      [McpIntegrationTool, mcpIntegrationToolHandler],
+      [McpIntegrationResource, mcpIntegrationResourceHandler],
+      [ProductKnowledgeTool, productKnowledgeToolHandler],
+      [ActivateSkillTool, activateSkillToolHandler],
+      [KnowledgeQueryTool, knowledgeQueryToolHandler],
+      [KnowledgeGetTextTool, knowledgeGetTextToolHandler],
+      [CreateDocumentTool, createDocumentToolHandler],
+      [UpdateDocumentTool, updateDocumentToolHandler],
+      [EditDocumentTool, editDocumentToolHandler],
+      [ReadDocumentTool, readDocumentToolHandler],
+    ];
+  }
 
   getHandler(tool: Tool): ToolExecutionHandler {
     this.logger.log(`Getting handler for tool: ${tool.name}`);
-    if (tool instanceof HttpTool) {
-      return this.httpToolHandler;
+
+    const entry = this.handlers.find(([ctor]) => tool instanceof ctor);
+    if (entry) {
+      return entry[1];
     }
-    if (tool instanceof SourceQueryTool) {
-      return this.sourceQueryToolHandler;
-    }
-    if (tool instanceof SourceGetTextTool) {
-      return this.sourceGetTextToolHandler;
-    }
-    if (tool instanceof InternetSearchTool) {
-      return this.internetSearchToolHandler;
-    }
-    if (tool instanceof WebsiteContentTool) {
-      return this.websiteContentToolHandler;
-    }
-    if (tool instanceof CodeExecutionTool) {
-      return this.codeExecutionToolHandler;
-    }
-    if (tool instanceof McpIntegrationTool) {
-      return this.mcpIntegrationToolHandler;
-    }
-    if (tool instanceof McpIntegrationResource) {
-      return this.mcpIntegrationResourceHandler;
-    }
-    if (tool instanceof ProductKnowledgeTool) {
-      return this.productKnowledgeToolHandler;
-    }
-    if (tool instanceof ActivateSkillTool) {
-      return this.activateSkillToolHandler;
-    }
-    if (tool instanceof KnowledgeQueryTool) {
-      return this.knowledgeQueryToolHandler;
-    }
-    if (tool instanceof KnowledgeGetTextTool) {
-      return this.knowledgeGetTextToolHandler;
-    }
-    if (tool instanceof CreateDocumentTool) {
-      return this.createDocumentToolHandler;
-    }
-    if (tool instanceof UpdateDocumentTool) {
-      return this.updateDocumentToolHandler;
-    }
-    if (tool instanceof EditDocumentTool) {
-      return this.editDocumentToolHandler;
-    }
-    throw new ToolHandlerNotFoundError({
-      toolType: tool.name,
-    });
+
+    throw new ToolHandlerNotFoundError({ toolType: tool.name });
   }
 }
