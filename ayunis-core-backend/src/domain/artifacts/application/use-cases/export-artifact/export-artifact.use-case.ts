@@ -124,7 +124,7 @@ export class ExportArtifactUseCase {
     } catch (error) {
       this.logger.warn(
         `Failed to resolve letterhead ${artifact.letterheadId}, exporting without background`,
-        error instanceof Error ? error.message : 'Unknown error',
+        { error: error instanceof Error ? error.message : 'Unknown error' },
       );
       return undefined;
     }
