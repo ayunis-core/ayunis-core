@@ -5,9 +5,9 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface VersionHistoryProps {
-  versions: ArtifactVersionResponseDto[];
-  currentVersionNumber: number;
-  onRevert: (versionNumber: number) => void;
+  readonly versions: ArtifactVersionResponseDto[];
+  readonly currentVersionNumber: number;
+  readonly onRevert: (versionNumber: number) => void;
 }
 
 function formatTimestamp(iso: string): string {

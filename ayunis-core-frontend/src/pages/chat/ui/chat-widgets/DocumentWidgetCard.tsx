@@ -4,14 +4,14 @@ import { FileText, ExternalLink } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 interface DocumentWidgetCardProps {
-  contentKey: string;
-  contentId: string;
-  isStreaming?: boolean;
-  title: string;
-  statusLabel: ReactNode;
-  buttonLabel: string;
-  artifactId: string | null;
-  onOpen: () => void;
+  readonly contentKey: string;
+  readonly contentId: string;
+  readonly isStreaming?: boolean;
+  readonly title: string;
+  readonly statusLabel: ReactNode;
+  readonly buttonLabel: string;
+  readonly artifactId: string | null;
+  readonly onOpen: () => void;
 }
 
 export function DocumentWidgetCard({

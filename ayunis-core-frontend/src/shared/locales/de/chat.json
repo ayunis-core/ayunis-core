@@ -41,6 +41,7 @@
       "activate_skill": "Fähigkeit aktivieren",
       "knowledge_query": "Wissen abrufen",
       "knowledge_get_text": "Wissen abrufen",
+      "read_document": "Dokument lesen",
       "product_knowledge": "Produktwissen durchsuchen",
       "send_email": {
         "subject": "Betreff",

@@ -1,14 +1,36 @@
+import type { ReactNode } from 'react';
+import type { TFunction } from 'i18next';
 import type { ToolUseMessageContent } from '../../model/openapi';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
 import { useThreadArtifacts } from '../../api/useThreadArtifacts';
 import { DocumentWidgetCard } from './DocumentWidgetCard';
 
+// eslint-disable-next-line sonarjs/function-return-type -- intentional: returns JSX or string, both valid ReactNode
+function getCreateStatusLabel(
+  artifactId: string | null,
+  isStreaming: boolean,
+  t: TFunction<'chat'>,
+): ReactNode {
+  if (artifactId) {
+    return (
+      <span className="flex items-center gap-1">
+        <Check className="size-3" />
+        {t('chat.tools.create_document.created')}
+      </span>
+    );
+  }
+  if (isStreaming) {
+    return t('chat.tools.create_document.generating');
+  }
+  return t('chat.tools.create_document.title');
+}
+
 interface CreateDocumentWidgetProps {
-  content: ToolUseMessageContent;
-  isStreaming?: boolean;
-  threadId: string;
-  onOpenArtifact?: (artifactId: string) => void;
+  readonly content: ToolUseMessageContent;
+  readonly isStreaming?: boolean;
+  readonly threadId: string;
+  readonly onOpenArtifact?: (artifactId: string) => void;
 }
 
 export default function CreateDocumentWidget({
@@ -19,7 +41,7 @@ export default function CreateDocumentWidget({
 }: CreateDocumentWidgetProps) {
   const { t } = useTranslation('chat');
 
-  const params = (content.params || {}) as {
+  const params = content.params as {
     title?: string;
     content?: string;
   };
@@ -42,23 +64,14 @@ export default function CreateDocumentWidget({
     }
   };
 
-  const statusLabel = artifactId ? (
-    <span className="flex items-center gap-1">
-      <Check className="size-3" />
-      {t('chat.tools.create_document.created')}
-    </span>
-  ) : isStreaming ? (
-    t('chat.tools.create_document.generating')
-  ) : (
-    t('chat.tools.create_document.title')
-  );
+  const statusLabel = getCreateStatusLabel(artifactId, isStreaming, t);
 
   return (
     <DocumentWidgetCard
       contentKey={content.name}
       contentId={content.id}
       isStreaming={isStreaming}
-      title={params.title || t('chat.tools.create_document.title')}
+      title={params.title ?? t('chat.tools.create_document.title')}
       statusLabel={statusLabel}
       buttonLabel={t('chat.tools.create_document.openInEditor')}
       artifactId={artifactId}

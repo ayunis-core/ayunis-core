@@ -20,7 +20,7 @@ import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface EditorToolbarProps {
-  editor: Editor | null;
+  readonly editor: Editor | null;
 }
 
 interface ToolbarItem {
@@ -37,12 +37,12 @@ function ToolbarButton({
   isActive,
   icon: Icon,
   title,
-}: {
+}: Readonly<{
   onClick: () => void;
   isActive: boolean;
   icon: React.ComponentType<{ className?: string }>;
   title: string;
-}) {
+}>) {
   return (
     <Button
       type="button"
