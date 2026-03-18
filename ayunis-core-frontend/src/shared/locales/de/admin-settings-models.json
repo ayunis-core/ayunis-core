@@ -2,7 +2,7 @@
   "models": {
     "teamHint": {
       "title": "Team-spezifische Modellbeschränkungen",
-      "description": "Sie können einschränken, welche Modelle für bestimmte Teams verfügbar sind, in den <teamsLink>Team-Einstellungen</teamsLink>."
+      "description": "Sie können in den <teamsLink>Team-Einstellungen</teamsLink> einschränken, welche Modelle für bestimmte Teams verfügbar sind."
     },
     "loading": "Modelle werden geladen...",
     "noModelsAvailable": "Keine Modelle verfügbar. Bitte überprüfen Sie Ihre Konfiguration.",
