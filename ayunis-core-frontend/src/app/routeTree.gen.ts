@@ -16,6 +16,7 @@ import { Route as IndexImport } from './routes/index'
 import { Route as AuthenticatedInstallImport } from './routes/_authenticated/install'
 import { Route as onboardingRegisterImport } from './routes/(onboarding)/register'
 import { Route as onboardingLoginImport } from './routes/(onboarding)/login'
+import { Route as onboardingIpBlockedImport } from './routes/(onboarding)/ip-blocked'
 import { Route as onboardingEmailConfirmImport } from './routes/(onboarding)/email-confirm'
 import { Route as onboardingConfirmEmailImport } from './routes/(onboarding)/confirm-email'
 import { Route as onboardingAcceptInviteImport } from './routes/(onboarding)/accept-invite'
@@ -37,6 +38,7 @@ import { Route as AuthenticatedChatsThreadIdImport } from './routes/_authenticat
 import { Route as AuthenticatedAgentsIdImport } from './routes/_authenticated/agents.$id'
 import { Route as AuthenticatedAdminSettingsUsersImport } from './routes/_authenticated/admin-settings.users'
 import { Route as AuthenticatedAdminSettingsUsageImport } from './routes/_authenticated/admin-settings.usage'
+import { Route as AuthenticatedAdminSettingsSecurityImport } from './routes/_authenticated/admin-settings.security'
 import { Route as AuthenticatedAdminSettingsModelsImport } from './routes/_authenticated/admin-settings.models'
 import { Route as AuthenticatedAdminSettingsIntegrationsImport } from './routes/_authenticated/admin-settings.integrations'
 import { Route as onboardingPasswordResetImport } from './routes/(onboarding)/password.reset'
@@ -79,6 +81,12 @@ const onboardingRegisterRoute = onboardingRegisterImport.update({
 const onboardingLoginRoute = onboardingLoginImport.update({
   id: '/(onboarding)/login',
   path: '/login',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const onboardingIpBlockedRoute = onboardingIpBlockedImport.update({
+  id: '/(onboarding)/ip-blocked',
+  path: '/ip-blocked',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -220,6 +228,13 @@ const AuthenticatedAdminSettingsUsageRoute =
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
+const AuthenticatedAdminSettingsSecurityRoute =
+  AuthenticatedAdminSettingsSecurityImport.update({
+    id: '/admin-settings/security',
+    path: '/admin-settings/security',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+
 const AuthenticatedAdminSettingsModelsRoute =
   AuthenticatedAdminSettingsModelsImport.update({
     id: '/admin-settings/models',
@@ -348,6 +363,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof onboardingEmailConfirmImport
       parentRoute: typeof rootRoute
     }
+    '/(onboarding)/ip-blocked': {
+      id: '/(onboarding)/ip-blocked'
+      path: '/ip-blocked'
+      fullPath: '/ip-blocked'
+      preLoaderRoute: typeof onboardingIpBlockedImport
+      parentRoute: typeof rootRoute
+    }
     '/(onboarding)/login': {
       id: '/(onboarding)/login'
       path: '/login'
@@ -395,6 +417,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-settings/models'
       fullPath: '/admin-settings/models'
       preLoaderRoute: typeof AuthenticatedAdminSettingsModelsImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/admin-settings/security': {
+      id: '/_authenticated/admin-settings/security'
+      path: '/admin-settings/security'
+      fullPath: '/admin-settings/security'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsSecurityImport
       parentRoute: typeof AuthenticatedImport
     }
     '/_authenticated/admin-settings/usage': {
@@ -595,6 +624,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedInstallRoute: typeof AuthenticatedInstallRoute
   AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
   AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
+  AuthenticatedAdminSettingsSecurityRoute: typeof AuthenticatedAdminSettingsSecurityRoute
   AuthenticatedAdminSettingsUsageRoute: typeof AuthenticatedAdminSettingsUsageRoute
   AuthenticatedAdminSettingsUsersRoute: typeof AuthenticatedAdminSettingsUsersRoute
   AuthenticatedAgentsIdRoute: typeof AuthenticatedAgentsIdRoute
@@ -629,6 +659,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminSettingsIntegrationsRoute:
     AuthenticatedAdminSettingsIntegrationsRoute,
   AuthenticatedAdminSettingsModelsRoute: AuthenticatedAdminSettingsModelsRoute,
+  AuthenticatedAdminSettingsSecurityRoute:
+    AuthenticatedAdminSettingsSecurityRoute,
   AuthenticatedAdminSettingsUsageRoute: AuthenticatedAdminSettingsUsageRoute,
   AuthenticatedAdminSettingsUsersRoute: AuthenticatedAdminSettingsUsersRoute,
   AuthenticatedAgentsIdRoute: AuthenticatedAgentsIdRoute,
@@ -678,6 +710,7 @@ export interface FileRoutesByFullPath {
   '/accept-invite': typeof onboardingAcceptInviteRoute
   '/confirm-email': typeof onboardingConfirmEmailRoute
   '/email-confirm': typeof onboardingEmailConfirmRoute
+  '/ip-blocked': typeof onboardingIpBlockedRoute
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
   '/install': typeof AuthenticatedInstallRoute
@@ -685,6 +718,7 @@ export interface FileRoutesByFullPath {
   '/password/reset': typeof onboardingPasswordResetRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
   '/agents/$id': typeof AuthenticatedAgentsIdRoute
@@ -720,6 +754,7 @@ export interface FileRoutesByTo {
   '/accept-invite': typeof onboardingAcceptInviteRoute
   '/confirm-email': typeof onboardingConfirmEmailRoute
   '/email-confirm': typeof onboardingEmailConfirmRoute
+  '/ip-blocked': typeof onboardingIpBlockedRoute
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
   '/install': typeof AuthenticatedInstallRoute
@@ -727,6 +762,7 @@ export interface FileRoutesByTo {
   '/password/reset': typeof onboardingPasswordResetRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
   '/agents/$id': typeof AuthenticatedAgentsIdRoute
@@ -763,6 +799,7 @@ export interface FileRoutesById {
   '/(onboarding)/accept-invite': typeof onboardingAcceptInviteRoute
   '/(onboarding)/confirm-email': typeof onboardingConfirmEmailRoute
   '/(onboarding)/email-confirm': typeof onboardingEmailConfirmRoute
+  '/(onboarding)/ip-blocked': typeof onboardingIpBlockedRoute
   '/(onboarding)/login': typeof onboardingLoginRoute
   '/(onboarding)/register': typeof onboardingRegisterRoute
   '/_authenticated/install': typeof AuthenticatedInstallRoute
@@ -770,6 +807,7 @@ export interface FileRoutesById {
   '/(onboarding)/password/reset': typeof onboardingPasswordResetRoute
   '/_authenticated/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/_authenticated/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/_authenticated/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/_authenticated/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/_authenticated/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
   '/_authenticated/agents/$id': typeof AuthenticatedAgentsIdRoute
@@ -807,6 +845,7 @@ export interface FileRouteTypes {
     | '/accept-invite'
     | '/confirm-email'
     | '/email-confirm'
+    | '/ip-blocked'
     | '/login'
     | '/register'
     | '/install'
@@ -814,6 +853,7 @@ export interface FileRouteTypes {
     | '/password/reset'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
+    | '/admin-settings/security'
     | '/admin-settings/usage'
     | '/admin-settings/users'
     | '/agents/$id'
@@ -848,6 +888,7 @@ export interface FileRouteTypes {
     | '/accept-invite'
     | '/confirm-email'
     | '/email-confirm'
+    | '/ip-blocked'
     | '/login'
     | '/register'
     | '/install'
@@ -855,6 +896,7 @@ export interface FileRouteTypes {
     | '/password/reset'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
+    | '/admin-settings/security'
     | '/admin-settings/usage'
     | '/admin-settings/users'
     | '/agents/$id'
@@ -889,6 +931,7 @@ export interface FileRouteTypes {
     | '/(onboarding)/accept-invite'
     | '/(onboarding)/confirm-email'
     | '/(onboarding)/email-confirm'
+    | '/(onboarding)/ip-blocked'
     | '/(onboarding)/login'
     | '/(onboarding)/register'
     | '/_authenticated/install'
@@ -896,6 +939,7 @@ export interface FileRouteTypes {
     | '/(onboarding)/password/reset'
     | '/_authenticated/admin-settings/integrations'
     | '/_authenticated/admin-settings/models'
+    | '/_authenticated/admin-settings/security'
     | '/_authenticated/admin-settings/usage'
     | '/_authenticated/admin-settings/users'
     | '/_authenticated/agents/$id'
@@ -932,6 +976,7 @@ export interface RootRouteChildren {
   onboardingAcceptInviteRoute: typeof onboardingAcceptInviteRoute
   onboardingConfirmEmailRoute: typeof onboardingConfirmEmailRoute
   onboardingEmailConfirmRoute: typeof onboardingEmailConfirmRoute
+  onboardingIpBlockedRoute: typeof onboardingIpBlockedRoute
   onboardingLoginRoute: typeof onboardingLoginRoute
   onboardingRegisterRoute: typeof onboardingRegisterRoute
   onboardingPasswordForgotRoute: typeof onboardingPasswordForgotRoute
@@ -944,6 +989,7 @@ const rootRouteChildren: RootRouteChildren = {
   onboardingAcceptInviteRoute: onboardingAcceptInviteRoute,
   onboardingConfirmEmailRoute: onboardingConfirmEmailRoute,
   onboardingEmailConfirmRoute: onboardingEmailConfirmRoute,
+  onboardingIpBlockedRoute: onboardingIpBlockedRoute,
   onboardingLoginRoute: onboardingLoginRoute,
   onboardingRegisterRoute: onboardingRegisterRoute,
   onboardingPasswordForgotRoute: onboardingPasswordForgotRoute,
@@ -965,6 +1011,7 @@ export const routeTree = rootRoute
         "/(onboarding)/accept-invite",
         "/(onboarding)/confirm-email",
         "/(onboarding)/email-confirm",
+        "/(onboarding)/ip-blocked",
         "/(onboarding)/login",
         "/(onboarding)/register",
         "/(onboarding)/password/forgot",
@@ -980,6 +1027,7 @@ export const routeTree = rootRoute
         "/_authenticated/install",
         "/_authenticated/admin-settings/integrations",
         "/_authenticated/admin-settings/models",
+        "/_authenticated/admin-settings/security",
         "/_authenticated/admin-settings/usage",
         "/_authenticated/admin-settings/users",
         "/_authenticated/agents/$id",
@@ -1018,6 +1066,9 @@ export const routeTree = rootRoute
     "/(onboarding)/email-confirm": {
       "filePath": "(onboarding)/email-confirm.tsx"
     },
+    "/(onboarding)/ip-blocked": {
+      "filePath": "(onboarding)/ip-blocked.tsx"
+    },
     "/(onboarding)/login": {
       "filePath": "(onboarding)/login.tsx"
     },
@@ -1040,6 +1091,10 @@ export const routeTree = rootRoute
     },
     "/_authenticated/admin-settings/models": {
       "filePath": "_authenticated/admin-settings.models.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/admin-settings/security": {
+      "filePath": "_authenticated/admin-settings.security.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/admin-settings/usage": {

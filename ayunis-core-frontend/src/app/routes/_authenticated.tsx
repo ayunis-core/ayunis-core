@@ -34,6 +34,11 @@ export const Route = createFileRoute('/_authenticated')({
     } catch (error) {
       try {
         const { code } = extractErrorData(error);
+        if (code === 'IP_NOT_ALLOWED') {
+          throw redirect({
+            to: '/ip-blocked',
+          });
+        }
         if (code === 'EMAIL_NOT_VERIFIED') {
           throw redirect({
             to: '/email-confirm',
