@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.20.0](https://github.com/ayunis-core/ayunis-core/compare/v1.19.0...v1.20.0) (2026-03-18)
+
+
+### Features
+
+* **admin-settings:** add hint about team-specific model restrictions on models page ([#439](https://github.com/ayunis-core/ayunis-core/issues/439)) ([78065ae](https://github.com/ayunis-core/ayunis-core/commit/78065ae6dc6695dfb38fc0d52bf01150cbef355d))
+* **AYC-106:** add security settings page with IP allow list management ([#400](https://github.com/ayunis-core/ayunis-core/issues/400)) ([fbf5052](https://github.com/ayunis-core/ayunis-core/commit/fbf50520bd1c0344c10339b68513f9d59272dfd0))
+
+
+### Bug Fixes
+
+* **AYC-000:** add retry and fix status code check in mistral transcription service ([#436](https://github.com/ayunis-core/ayunis-core/issues/436)) ([7118ff1](https://github.com/ayunis-core/ayunis-core/commit/7118ff19eacd7e94877e7069c60b04c8b3860bb4))
+* **AYC-000:** add retry with backoff to mistral embeddings handler ([#435](https://github.com/ayunis-core/ayunis-core/issues/435)) ([2e7533e](https://github.com/ayunis-core/ayunis-core/commit/2e7533ec0f93cf744cca03a87d31d04039693dd1))
+* **AYC-000:** make mistral file cleanup best-effort in file retriever ([#437](https://github.com/ayunis-core/ayunis-core/issues/437)) ([c0c1930](https://github.com/ayunis-core/ayunis-core/commit/c0c19300a30572c2d61a8fba97b1ef5ab53a8521))
+* **AYC-000:** return 422 for url retrieval failures instead of 500 ([#440](https://github.com/ayunis-core/ayunis-core/issues/440)) ([98698fa](https://github.com/ayunis-core/ayunis-core/commit/98698fa431a1fade88819ca080067108238a5d56))
+* **AYC-000:** use SentryGlobalFilter for reliable 5xx error reporting ([#442](https://github.com/ayunis-core/ayunis-core/issues/442)) ([122fa74](https://github.com/ayunis-core/ayunis-core/commit/122fa74d27c2a570aef6429d5165d84bc3e917de))
+* **AYC-106:** wrap security settings page content in card ([#444](https://github.com/ayunis-core/ayunis-core/issues/444)) ([90d609f](https://github.com/ayunis-core/ayunis-core/commit/90d609ff13a60dea9f841c8c6831811396dd5af7))
+
+
+### Code Refactoring
+
+* **AYC-000:** rewrite bedrock handlers to extend base anthropic classes ([#443](https://github.com/ayunis-core/ayunis-core/issues/443)) ([e60bc9b](https://github.com/ayunis-core/ayunis-core/commit/e60bc9b0cb1df814884c056ff451a166de4fefb4))
+
 ## [1.19.0](https://github.com/ayunis-core/ayunis-core/compare/v1.18.0...v1.19.0) (2026-03-17)
 
 
