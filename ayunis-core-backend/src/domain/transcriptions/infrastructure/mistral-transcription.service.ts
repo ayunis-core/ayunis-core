@@ -1,11 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Mistral } from '@mistralai/mistralai';
+import { SDKError } from '@mistralai/mistralai/models/errors';
 import { TranscriptionPort } from '../application/ports/transcription.port';
 import {
   TranscriptionFailedError,
   TranscriptionServiceUnavailableError,
 } from '../application/transcription.errors';
+import retryWithBackoff from 'src/common/util/retryWithBackoff';
 
 @Injectable()
 export class MistralTranscriptionService extends TranscriptionPort {
@@ -50,8 +52,26 @@ export class MistralTranscriptionService extends TranscriptionPort {
         language,
       });
 
-      const response =
-        await this.client.audio.transcriptions.complete(transcriptionRequest);
+      const response = await retryWithBackoff({
+        fn: () =>
+          this.client.audio.transcriptions.complete(transcriptionRequest),
+        maxRetries: 3,
+        delay: 2000,
+        retryIfError: (error: Error) => {
+          const isTransient =
+            error instanceof SDKError && error.statusCode >= 500;
+          if (isTransient) {
+            this.logger.warn(
+              'Retrying Mistral transcription after transient error',
+              {
+                statusCode: (error as SDKError).statusCode,
+                message: error.message,
+              },
+            );
+          }
+          return isTransient;
+        },
+      });
 
       const transcriptedText = response.text.trim() || '';
 
@@ -84,16 +104,15 @@ export class MistralTranscriptionService extends TranscriptionPort {
 
   private isServiceUnavailableError(error: unknown): boolean {
     // Check for common service unavailable indicators
+    if (error instanceof SDKError && error.statusCode >= 500) {
+      return true;
+    }
     const err = error as
       | {
-          status?: number;
           message?: string;
           name?: string;
         }
       | undefined;
-    if (err?.status === 503 || err?.status === 502) {
-      return true;
-    }
     if (err?.name === 'RequestTimeoutError' || err?.name === 'TimeoutError') {
       return true;
     }
