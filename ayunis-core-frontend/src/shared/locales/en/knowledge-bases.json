@@ -150,6 +150,7 @@
       "urlLabel": "Website URL",
       "addUrlSuccess": "URL added successfully! The website content is being processed.",
       "addUrlError": "Failed to add URL. Please check the URL and try again.",
+      "addUrlRetrievalFailed": "The website could not be reached. Please check that the URL is correct and the website is accessible.",
       "addUrlUnsupportedContentType": "This URL points to a file (e.g. PDF) instead of a website. Please download the file and upload it directly.",
       "removeSuccess": "Document removed successfully!",
       "removeError": "Failed to remove document. Please try again.",

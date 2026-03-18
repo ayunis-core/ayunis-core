@@ -67,7 +67,7 @@ export abstract class UrlRetrieverError extends ApplicationError {
 
 export class UrlRetrieverRetrievalError extends UrlRetrieverError {
   constructor(message: string, metadata?: ErrorMetadata) {
-    super(message, UrlRetrieverErrorCode.RETRIEVAL_FAILED, 500, metadata);
+    super(message, UrlRetrieverErrorCode.RETRIEVAL_FAILED, 422, metadata);
     this.name = 'UrlRetrieverRetrievalError';
   }
 }
@@ -101,7 +101,7 @@ export class UrlRetrieverHttpError extends UrlRetrieverError {
     super(
       `HTTP error when retrieving '${url}': ${statusCode}`,
       UrlRetrieverErrorCode.HTTP_ERROR,
-      500,
+      422,
       metadata,
     );
     this.name = 'UrlRetrieverHttpError';
@@ -113,7 +113,7 @@ export class UrlRetrieverParsingError extends UrlRetrieverError {
     super(
       `Failed to parse content from '${url}': ${message}`,
       UrlRetrieverErrorCode.PARSING_ERROR,
-      500,
+      422,
       metadata,
     );
     this.name = 'UrlRetrieverParsingError';
