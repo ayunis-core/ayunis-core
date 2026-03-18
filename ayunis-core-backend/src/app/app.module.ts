@@ -1,4 +1,5 @@
 import { Module, Logger, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getDataSourceToken, TypeOrmModule } from '@nestjs/typeorm';
@@ -44,6 +45,7 @@ import { emailsConfig } from '../config/emails.config';
 import { CookieParserMiddleware } from '../common/middleware/cookie-parser.middleware';
 import dataSource from '../db/datasource';
 import { SecurityHeadersMiddleware } from '../common/middleware/security-headers.middleware';
+import { SentryContextMiddleware } from '../common/middleware/sentry-context.middleware';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import internetSearchConfig from 'src/config/internet-search.config';
@@ -59,6 +61,7 @@ import { ContextModule } from 'src/common/context/context.module';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { SentryModule } from '@sentry/nestjs/setup';
+import { ApplicationErrorFilter } from 'src/common/filters/application-error.filter';
 import { MetricsModule } from '../metrics/metrics.module';
 
 @Module({
@@ -150,9 +153,19 @@ import { MetricsModule } from '../metrics/metrics.module';
   ],
   controllers: [AppController],
   providers: [
+    // ApplicationErrorFilter is the single catch-all filter.
+    // - ApplicationErrors → proper HTTP status via toHttpException()
+    // - Everything else   → NestJS BaseExceptionFilter defaults
+    // @SentryExceptionCaptured() on catch() reports unexpected errors to Sentry.
+    // 4xx errors are dropped by the beforeSend hook in instrument.ts.
+    {
+      provide: APP_FILTER,
+      useClass: ApplicationErrorFilter,
+    },
     Logger,
     CookieParserMiddleware,
     SecurityHeadersMiddleware,
+    SentryContextMiddleware,
     IsCloudUseCase,
     IsRegistrationDisabledUseCase,
   ],
@@ -160,7 +173,11 @@ import { MetricsModule } from '../metrics/metrics.module';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(CookieParserMiddleware, SecurityHeadersMiddleware)
+      .apply(
+        CookieParserMiddleware,
+        SecurityHeadersMiddleware,
+        SentryContextMiddleware,
+      )
       .forRoutes('*');
   }
 }
