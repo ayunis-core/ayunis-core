@@ -397,6 +397,17 @@ export class RunsController {
       // Listen for client disconnect
       params.response.on('close', disconnectHandler);
 
+      // Send periodic heartbeat comments to keep the connection alive
+      // through proxies (e.g. nginx proxy_read_timeout) and prevent
+      // the browser from treating the connection as dead during long
+      // pauses in the LLM stream (tool call generation, thinking, etc.).
+      // SSE comments (lines starting with ':') are ignored by clients.
+      const heartbeatInterval = setInterval(() => {
+        if (!connection.disconnected) {
+          params.response.write(': heartbeat\n\n');
+        }
+      }, 15_000);
+
       try {
         for await (const event of eventGenerator) {
           // Check if client disconnected before writing
@@ -430,6 +441,7 @@ export class RunsController {
           this.writeSSEEvent(params.response, eventId, responseDto);
         }
       } finally {
+        clearInterval(heartbeatInterval);
         // Clean up disconnect listener
         params.response.off('close', disconnectHandler);
       }
