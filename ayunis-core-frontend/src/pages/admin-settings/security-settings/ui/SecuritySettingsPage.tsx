@@ -6,6 +6,13 @@ import { Button } from '@/shared/ui/shadcn/button';
 import { Textarea } from '@/shared/ui/shadcn/textarea';
 import { Label } from '@/shared/ui/shadcn/label';
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/ui/shadcn/card';
+import {
   useIpAllowlistControllerGet,
   useIpAllowlistControllerUpdate,
   useIpAllowlistControllerRemove,
@@ -30,8 +37,7 @@ export function SecuritySettingsPage() {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
 
-  const displayText =
-    cidrsText !== null ? cidrsText : cidrsFromServer.join('\n');
+  const displayText = cidrsText ?? cidrsFromServer.join('\n');
 
   const updateMutation = useIpAllowlistControllerUpdate();
   const removeMutation = useIpAllowlistControllerRemove();
@@ -138,9 +144,11 @@ export function SecuritySettingsPage() {
   if (isLoading) {
     return (
       <SettingsLayout title={tLayout('layout.security')}>
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
+        <Card>
+          <CardContent className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </CardContent>
+        </Card>
       </SettingsLayout>
     );
   }
@@ -148,90 +156,95 @@ export function SecuritySettingsPage() {
   if (isError) {
     return (
       <SettingsLayout title={tLayout('layout.security')}>
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {t('ipAllowlist.loadError')}
-            <Button
-              variant="link"
-              className="ml-2 h-auto p-0"
-              onClick={() => void refetch()}
-            >
-              {t('ipAllowlist.retry')}
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <Card>
+          <CardContent className="pt-6">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {t('ipAllowlist.loadError')}
+                <Button
+                  variant="link"
+                  className="ml-2 h-auto p-0"
+                  onClick={() => void refetch()}
+                >
+                  {t('ipAllowlist.retry')}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
       </SettingsLayout>
     );
   }
 
   return (
     <SettingsLayout title={tLayout('layout.security')}>
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-lg font-medium">{t('ipAllowlist.heading')}</h3>
-          <p className="text-sm text-muted-foreground">
-            {t('ipAllowlist.description')}
-          </p>
-        </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('ipAllowlist.heading')}</CardTitle>
+          <CardDescription>{t('ipAllowlist.description')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {!hasExistingRestrictions && !isDirty && (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                {t('ipAllowlist.noRestrictions')}
+              </AlertDescription>
+            </Alert>
+          )}
 
-        {!hasExistingRestrictions && !isDirty && (
-          <Alert>
+          <div className="space-y-2">
+            <Label htmlFor="cidrs-textarea">
+              {t('ipAllowlist.cidrsLabel')}
+            </Label>
+            <Textarea
+              id="cidrs-textarea"
+              placeholder={t('ipAllowlist.cidrsPlaceholder')}
+              value={displayText}
+              onChange={(e) => {
+                setCidrsText(e.target.value);
+                setValidationError(null);
+              }}
+              rows={8}
+              className="font-mono text-sm"
+            />
+            {validationError && (
+              <div className="flex items-center gap-2 text-sm text-destructive">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{validationError}</span>
+              </div>
+            )}
+          </div>
+
+          <Alert variant="default">
             <Info className="h-4 w-4" />
             <AlertDescription>
-              {t('ipAllowlist.noRestrictions')}
+              {t('ipAllowlist.propagationNote')}
             </AlertDescription>
           </Alert>
-        )}
 
-        <div className="space-y-2">
-          <Label htmlFor="cidrs-textarea">{t('ipAllowlist.cidrsLabel')}</Label>
-          <Textarea
-            id="cidrs-textarea"
-            placeholder={t('ipAllowlist.cidrsPlaceholder')}
-            value={displayText}
-            onChange={(e) => {
-              setCidrsText(e.target.value);
-              setValidationError(null);
-            }}
-            rows={8}
-            className="font-mono text-sm"
-          />
-          {validationError && (
-            <div className="flex items-center gap-2 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{validationError}</span>
-            </div>
-          )}
-        </div>
-
-        <Alert variant="default">
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            {t('ipAllowlist.propagationNote')}
-          </AlertDescription>
-        </Alert>
-
-        <div className="flex gap-3">
-          <Button onClick={handleSave} disabled={isMutating}>
-            {updateMutation.isPending
-              ? t('ipAllowlist.saving')
-              : t('ipAllowlist.saveButton')}
-          </Button>
-
-          {hasExistingRestrictions && (
-            <Button
-              variant="destructive"
-              onClick={() => setRemoveDialogOpen(true)}
-              disabled={isMutating}
-            >
-              {removeMutation.isPending
-                ? t('ipAllowlist.removing')
-                : t('ipAllowlist.removeButton')}
+          <div className="flex gap-3">
+            <Button onClick={handleSave} disabled={isMutating}>
+              {updateMutation.isPending
+                ? t('ipAllowlist.saving')
+                : t('ipAllowlist.saveButton')}
             </Button>
-          )}
-        </div>
-      </div>
+
+            {hasExistingRestrictions && (
+              <Button
+                variant="destructive"
+                onClick={() => setRemoveDialogOpen(true)}
+                disabled={isMutating}
+              >
+                {removeMutation.isPending
+                  ? t('ipAllowlist.removing')
+                  : t('ipAllowlist.removeButton')}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <RemoveRestrictionsDialog
         open={removeDialogOpen}
