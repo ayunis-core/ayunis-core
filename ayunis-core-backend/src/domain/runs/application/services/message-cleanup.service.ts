@@ -129,7 +129,10 @@ export class MessageCleanupService {
     threadMessages: Message[],
   ): Promise<void> {
     const lastMessage = threadMessages[threadMessages.length - 1];
-    if (lastMessage.role !== MessageRole.ASSISTANT) {
+    if (
+      lastMessage.role !== MessageRole.ASSISTANT ||
+      this.hasToolUseContent(lastMessage)
+    ) {
       const messagesToDelete: Message[] = [];
       for (let i = threadMessages.length - 1; i >= 0; i--) {
         const message = threadMessages[i];
