@@ -8,11 +8,13 @@ import {
   InvalidCidrApplicationError,
   UnexpectedIpAllowlistError,
 } from '../../ip-allowlist.errors';
+import type { IpAllowlistCachePort } from '../../ports/ip-allowlist-cache.port';
 import type { UUID } from 'crypto';
 
 describe('UpdateIpAllowlistUseCase', () => {
   let useCase: UpdateIpAllowlistUseCase;
   let repository: jest.Mocked<IpAllowlistRepository>;
+  let guard: jest.Mocked<IpAllowlistCachePort>;
 
   const orgId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' as UUID;
   const adminIp = '192.168.1.50';
@@ -24,10 +26,14 @@ describe('UpdateIpAllowlistUseCase', () => {
       deleteByOrgId: jest.fn(),
     } as jest.Mocked<IpAllowlistRepository>;
 
+    guard = {
+      invalidateCache: jest.fn(),
+    };
+
     repository.upsert.mockImplementation(async (entity) => entity);
     repository.findByOrgId.mockResolvedValue(null);
 
-    useCase = new UpdateIpAllowlistUseCase(repository);
+    useCase = new UpdateIpAllowlistUseCase(repository, guard);
   });
 
   it('should save valid CIDRs when admin IP is within the new allow list', async () => {
@@ -153,6 +159,29 @@ describe('UpdateIpAllowlistUseCase', () => {
 
     await expect(useCase.execute(command)).rejects.toThrow(AdminLockoutError);
     expect(repository.upsert).not.toHaveBeenCalled();
+  });
+
+  it('should invalidate the guard cache after a successful upsert', async () => {
+    const command = new UpdateIpAllowlistCommand(
+      orgId,
+      ['192.168.1.0/24'],
+      adminIp,
+    );
+
+    await useCase.execute(command);
+
+    expect(guard.invalidateCache).toHaveBeenCalledWith(orgId);
+  });
+
+  it('should not invalidate the guard cache when validation fails', async () => {
+    const command = new UpdateIpAllowlistCommand(
+      orgId,
+      ['not-a-cidr'],
+      adminIp,
+    );
+
+    await expect(useCase.execute(command)).rejects.toThrow();
+    expect(guard.invalidateCache).not.toHaveBeenCalled();
   });
 
   it('should throw UnexpectedIpAllowlistError when repository throws unexpected error', async () => {

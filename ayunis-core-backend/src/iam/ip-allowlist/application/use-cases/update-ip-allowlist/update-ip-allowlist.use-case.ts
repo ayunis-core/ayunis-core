@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
+import { IpAllowlistCachePort } from '../../ports/ip-allowlist-cache.port';
 import {
   AdminLockoutError,
   InvalidCidrApplicationError,
@@ -18,7 +19,10 @@ import { isIpInCidrs } from '../../../domain/cidr.util';
 export class UpdateIpAllowlistUseCase {
   private readonly logger = new Logger(UpdateIpAllowlistUseCase.name);
 
-  constructor(private readonly repository: IpAllowlistRepository) {}
+  constructor(
+    private readonly repository: IpAllowlistRepository,
+    private readonly ipAllowlistCache: IpAllowlistCachePort,
+  ) {}
 
   async execute(command: UpdateIpAllowlistCommand): Promise<IpAllowlist> {
     this.logger.debug('Updating IP allowlist', {
@@ -52,7 +56,10 @@ export class UpdateIpAllowlistUseCase {
         throw new AdminLockoutError({ clientIp: command.clientIp });
       }
 
-      return await this.repository.upsert(entity);
+      const result = await this.repository.upsert(entity);
+      this.ipAllowlistCache.invalidateCache(command.orgId);
+
+      return result;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
 
