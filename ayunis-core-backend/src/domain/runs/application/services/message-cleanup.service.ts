@@ -83,28 +83,8 @@ export class MessageCleanupService {
     const savedMessage = threadMessages[savedMessageIndex];
     const messagesAfterAssistant = threadMessages.slice(savedMessageIndex + 1);
 
-    if (messagesAfterAssistant.length === 0) {
-      // Even when no trailing messages exist, the saved assistant message
-      // may contain tool_use content without a corresponding tool_result
-      // (e.g., run interrupted after saving tool_use but before tool execution).
-      // This orphaned tool_use must be cleaned up.
-      if (this.hasToolUseContent(savedMessage)) {
-        this.logger.log(
-          'Saved assistant message has orphaned tool_use (no trailing messages), deleting',
-          { threadId, assistantMessageId: savedMessageId },
-        );
-        const remaining = threadMessages.slice(0, savedMessageIndex);
-        await this.deleteMessagesUntilAssistant(threadId, [
-          ...remaining,
-          savedMessage,
-        ]);
-      } else {
-        this.logger.debug('Thread correctly ends with assistant message', {
-          threadId,
-          lastMessageId: savedMessageId,
-        });
-      }
-    } else {
+    // First, delete any trailing messages after the saved assistant message
+    if (messagesAfterAssistant.length > 0) {
       this.logger.log(
         'Found messages after saved assistant message, cleaning up',
         {
@@ -114,22 +94,29 @@ export class MessageCleanupService {
         },
       );
       await this.deleteTrailingMessages(threadId, messagesAfterAssistant);
+    }
 
-      // If the saved assistant message contains tool_use content, its
-      // tool_results were just deleted — leaving it would corrupt the
-      // conversation (tool_use without tool_result). Delete it too and
-      // continue cleanup from there.
-      if (this.hasToolUseContent(savedMessage)) {
-        this.logger.log(
-          'Saved assistant message has orphaned tool_use, deleting',
-          { threadId, assistantMessageId: savedMessageId },
-        );
-        const remaining = threadMessages.slice(0, savedMessageIndex);
-        await this.deleteMessagesUntilAssistant(threadId, [
-          ...remaining,
-          savedMessage,
-        ]);
-      }
+    // Check if the saved assistant message has orphaned tool_use content.
+    // This can happen when:
+    // - There were no trailing messages but the run was interrupted after
+    //   saving tool_use but before tool execution
+    // - Trailing messages (including tool_results) were just deleted above
+    // In either case, tool_use without tool_result corrupts the conversation.
+    if (this.hasToolUseContent(savedMessage)) {
+      this.logger.log(
+        'Saved assistant message has orphaned tool_use, deleting',
+        { threadId, assistantMessageId: savedMessageId },
+      );
+      const remaining = threadMessages.slice(0, savedMessageIndex);
+      await this.deleteMessagesUntilAssistant(threadId, [
+        ...remaining,
+        savedMessage,
+      ]);
+    } else if (messagesAfterAssistant.length === 0) {
+      this.logger.debug('Thread correctly ends with assistant message', {
+        threadId,
+        lastMessageId: savedMessageId,
+      });
     }
   }
 
