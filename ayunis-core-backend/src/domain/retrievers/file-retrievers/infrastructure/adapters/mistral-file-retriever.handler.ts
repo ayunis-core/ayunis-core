@@ -68,9 +68,9 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
           `Mistral OCR signed URL retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
           error instanceof Error ? error.stack : 'Unknown error',
         );
-        await this.client.files.delete({
-          fileId: uploaded_pdf.id,
-        });
+        await this.client.files
+          .delete({ fileId: uploaded_pdf.id })
+          .catch(() => undefined);
         throw error;
       });
 
@@ -92,12 +92,15 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
           `Mistral OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
           error instanceof Error ? error.stack : 'Unknown error',
         );
-        await this.client.files.delete({
-          fileId: uploaded_pdf.id,
-        });
+        await this.client.files
+          .delete({ fileId: uploaded_pdf.id })
+          .catch(() => undefined);
         throw error;
       });
 
+      // Best-effort cleanup — don't fail the operation if the file
+      // was already auto-deleted by Mistral (404) or is temporarily
+      // unreachable (5xx). The OCR result is already obtained.
       await retryWithBackoff({
         fn: () =>
           this.client.files.delete({
@@ -105,6 +108,11 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
           }),
         maxRetries: 3,
         delay: 1000,
+      }).catch((error) => {
+        this.logger.warn('Failed to delete file from Mistral (best-effort)', {
+          fileId: uploaded_pdf.id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
       });
 
       // Parse the response
