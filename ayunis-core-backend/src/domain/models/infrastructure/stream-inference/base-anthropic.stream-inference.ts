@@ -85,6 +85,11 @@ export abstract class BaseAnthropicStreamInferenceHandler implements StreamInfer
 
       subscriber.complete();
     } catch (error) {
+      this.logger.error('Anthropic stream inference failed', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        name: error instanceof Error ? error.name : undefined,
+      });
       subscriber.error(error);
     }
   }

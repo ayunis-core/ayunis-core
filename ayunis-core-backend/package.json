@@ -44,8 +44,8 @@
     "seed": "npm run seed:minimal"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.52.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.1009.0",
+    "@anthropic-ai/bedrock-sdk": "^0.26.4",
+    "@anthropic-ai/sdk": "^0.59.0",
     "@google/genai": "^1.41.0",
     "@mistralai/mistralai": "^1.14.0",
     "@modelcontextprotocol/sdk": "^1.20.2",
