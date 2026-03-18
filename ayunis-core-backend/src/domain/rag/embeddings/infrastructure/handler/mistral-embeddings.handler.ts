@@ -2,10 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EmbeddingsHandler } from '../../application/ports/embeddings.handler';
 import { Embedding } from '../../domain/embedding.entity';
 import { Mistral } from '@mistralai/mistralai';
+import { SDKError } from '@mistralai/mistralai/models/errors';
 import { ConfigService } from '@nestjs/config';
 import { EmbeddingModel } from '../../domain/embedding-model.entity';
 import { EmbeddingsProvider } from '../../domain/embeddings-provider.enum';
 import { NoEmbeddingsReturnedError } from '../../application/embeddings.errors';
+import retryWithBackoff from 'src/common/util/retryWithBackoff';
 
 @Injectable()
 export class MistralEmbeddingsHandler extends EmbeddingsHandler {
@@ -28,9 +30,29 @@ export class MistralEmbeddingsHandler extends EmbeddingsHandler {
       model: model.name,
       input: input.length,
     });
-    const embeddingsBatchResponse = await this.mistral.embeddings.create({
-      model: model.name,
-      inputs: input,
+    const embeddingsBatchResponse = await retryWithBackoff({
+      fn: () =>
+        this.mistral.embeddings.create({
+          model: model.name,
+          inputs: input,
+        }),
+      maxRetries: 3,
+      delay: 2000,
+      retryIfError: (error: Error) => {
+        const isTransient =
+          error instanceof SDKError &&
+          (error.statusCode >= 500 || error.statusCode === 429);
+        if (isTransient) {
+          this.logger.warn(
+            'Retrying Mistral embeddings after transient error',
+            {
+              statusCode: (error as SDKError).statusCode,
+              message: error.message,
+            },
+          );
+        }
+        return isTransient;
+      },
     });
 
     return embeddingsBatchResponse.data.map((data) => {
