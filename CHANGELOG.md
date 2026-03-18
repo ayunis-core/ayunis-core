@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.1](https://github.com/ayunis-core/ayunis-core/compare/v1.20.0...v1.20.1) (2026-03-18)
+
+
+### Bug Fixes
+
+* **AYC-000:** add SSE heartbeat to prevent stream disconnects during long LLM pauses ([#445](https://github.com/ayunis-core/ayunis-core/issues/445)) ([9b5d4d6](https://github.com/ayunis-core/ayunis-core/commit/9b5d4d65e2da0337cd6f62275bf76a814deb89c0))
+
 ## [1.20.0](https://github.com/ayunis-core/ayunis-core/compare/v1.19.0...v1.20.0) (2026-03-18)
 
 
