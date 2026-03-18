@@ -1,9 +1,12 @@
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
+import { Alert, AlertTitle, AlertDescription } from '@/shared/ui/shadcn/alert';
+import { Info } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 import ModelTypeCard from './ModelTypeCard';
 import { OrgDefaultModelCard } from './OrgDefaultModelCard';
 import SettingsLayout from '../../admin-settings-layout';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { useModelsWithConfig } from '../api';
 
 export default function ModelSettingsPage() {
@@ -23,6 +26,24 @@ export default function ModelSettingsPage() {
       title={tLayout('layout.models')}
     >
       <div className="space-y-4">
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle>{t('models.teamHint.title')}</AlertTitle>
+          <AlertDescription>
+            <Trans
+              i18nKey="models.teamHint.description"
+              ns="admin-settings-models"
+              components={{
+                teamsLink: (
+                  <Link
+                    to="/admin-settings/teams"
+                    className="font-medium underline underline-offset-4 hover:text-primary"
+                  />
+                ),
+              }}
+            />
+          </AlertDescription>
+        </Alert>
         <OrgDefaultModelCard
           models={languageModels}
           isLoading={modelsLoading}

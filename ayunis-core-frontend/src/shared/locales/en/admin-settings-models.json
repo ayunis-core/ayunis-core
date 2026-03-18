@@ -1,5 +1,9 @@
 {
   "models": {
+    "teamHint": {
+      "title": "Team-specific model restrictions",
+      "description": "You can restrict which models are available to specific teams in the <teamsLink>Teams settings</teamsLink>."
+    },
     "loading": "Loading models...",
     "noModelsAvailable": "No models available. Please check your configuration.",
     "noModelsForProvider": "No models available for this provider.",
