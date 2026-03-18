@@ -40,12 +40,16 @@ export class MistralEmbeddingsHandler extends EmbeddingsHandler {
       delay: 2000,
       retryIfError: (error: Error) => {
         const isTransient =
-          error instanceof SDKError && error.statusCode >= 500;
+          error instanceof SDKError &&
+          (error.statusCode >= 500 || error.statusCode === 429);
         if (isTransient) {
-          this.logger.warn('Retrying Mistral embeddings after transient error', {
-            statusCode: (error as SDKError).statusCode,
-            message: error.message,
-          });
+          this.logger.warn(
+            'Retrying Mistral embeddings after transient error',
+            {
+              statusCode: (error as SDKError).statusCode,
+              message: error.message,
+            },
+          );
         }
         return isTransient;
       },
