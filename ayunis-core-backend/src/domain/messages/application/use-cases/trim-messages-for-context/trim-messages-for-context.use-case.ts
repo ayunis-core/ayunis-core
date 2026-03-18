@@ -4,6 +4,8 @@ import { CountTokensCommand } from 'src/common/token-counter/application/use-cas
 import { TokenCounterType } from 'src/common/token-counter/application/ports/token-counter.handler.port';
 import { Message } from '../../../domain/message.entity';
 import { MessageRole } from '../../../domain/value-objects/message-role.object';
+import { AssistantMessage } from '../../../domain/messages/assistant-message.entity';
+import { ToolUseMessageContent } from '../../../domain/message-contents/tool-use.message-content.entity';
 import { TrimMessagesForContextCommand } from './trim-messages-for-context.command';
 import { extractTextFromMessage } from '../../utils/message-text-extractor.util';
 
@@ -50,8 +52,12 @@ export class TrimMessagesForContextUseCase {
       }
     }
 
-    // Ensure the first message is a user message
-    const trimmedMessages = this.ensureFirstMessageIsUser(selectedMessages);
+    // Ensure the first message is a user message and no tool_use is orphaned
+    const withoutOrphanedToolUse =
+      this.removeLeadingOrphanedToolPairs(selectedMessages);
+    const trimmedMessages = this.ensureFirstMessageIsUser(
+      withoutOrphanedToolUse,
+    );
 
     this.logger.log('execute completed', {
       originalCount: command.messages.length,
@@ -75,6 +81,36 @@ export class TrimMessagesForContextUseCase {
     return this.countTokensUseCase.execute(
       new CountTokensCommand(text, counterType),
     );
+  }
+
+  /**
+   * After trimming, the first messages might be orphaned tool_result or
+   * assistant(tool_use) blocks whose counterpart was trimmed away.
+   * Drop leading messages until we reach a message that doesn't depend
+   * on a missing predecessor.
+   */
+  private removeLeadingOrphanedToolPairs(messages: Message[]): Message[] {
+    let startIndex = 0;
+    while (startIndex < messages.length) {
+      const msg = messages[startIndex];
+      // A tool_result without a preceding tool_use — skip it
+      if (msg.role === MessageRole.TOOL) {
+        startIndex++;
+        continue;
+      }
+      // An assistant message with tool_use followed by no tool_result — skip it
+      if (
+        msg instanceof AssistantMessage &&
+        msg.content.some((c) => c instanceof ToolUseMessageContent) &&
+        (startIndex + 1 >= messages.length ||
+          messages[startIndex + 1].role !== MessageRole.TOOL)
+      ) {
+        startIndex++;
+        continue;
+      }
+      break;
+    }
+    return startIndex > 0 ? messages.slice(startIndex) : messages;
   }
 
   private ensureFirstMessageIsUser(messages: Message[]): Message[] {
