@@ -92,6 +92,15 @@ describe('getClientIp', () => {
     expect(getClientIp(request)).toBe('172.16.0.5');
   });
 
+  it('should fall through when x-forwarded-for has an empty first entry', () => {
+    const request = createMockRequest({
+      'x-forwarded-for': ',10.0.0.1',
+      'x-real-ip': '172.16.0.5',
+    });
+
+    expect(getClientIp(request)).toBe('172.16.0.5');
+  });
+
   it('should trim whitespace from x-forwarded-for IPs', () => {
     const request = createMockRequest({
       'x-forwarded-for': '  203.0.113.50  , 70.41.3.18',
