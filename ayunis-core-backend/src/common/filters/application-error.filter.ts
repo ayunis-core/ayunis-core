@@ -1,28 +1,51 @@
-import { ExceptionFilter, Catch, ArgumentsHost } from '@nestjs/common';
+import { Catch, ArgumentsHost, UnauthorizedException } from '@nestjs/common';
+import { BaseExceptionFilter } from '@nestjs/core';
+import { SentryExceptionCaptured } from '@sentry/nestjs';
 import { Request, Response } from 'express';
 import { ApplicationError } from '../errors/base.error';
-import * as Sentry from '@sentry/nestjs';
-import { ClsServiceManager } from 'nestjs-cls';
-import { MyClsStore } from '../context/services/context.service';
 
 /**
- * Global exception filter that handles domain-specific ApplicationErrors
- * and converts them to appropriate HTTP responses.
+ * Global exception filter that:
+ * 1. Converts domain-specific ApplicationErrors to proper HTTP responses
+ * 2. Delegates all other exceptions to NestJS's BaseExceptionFilter
+ * 3. Reports unexpected errors to Sentry via @SentryExceptionCaptured()
  *
- * Enriches Sentry error reports with:
- * - User context (userId, orgId, role)
- * - Request context (path, method, body, params, query)
- * - Error metadata (code, custom metadata)
+ * Must be registered via APP_FILTER (DI-based) so that BaseExceptionFilter
+ * receives the HTTP adapter reference it needs.
+ *
+ * Note: UnauthorizedException is explicitly re-thrown to allow
+ * UnauthorizedExceptionFilter to handle it with token-refresh logic.
  */
-@Catch(ApplicationError)
-export class ApplicationErrorFilter implements ExceptionFilter {
-  catch(exception: ApplicationError, host: ArgumentsHost) {
+@Catch()
+export class ApplicationErrorFilter extends BaseExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost) {
+    // UnauthorizedException must be handled by UnauthorizedExceptionFilter
+    // which contains token-refresh business logic. Re-throw to bypass this filter.
+    if (exception instanceof UnauthorizedException) {
+      throw exception;
+    }
+
+    this.handleWithSentry(exception, host);
+  }
+
+  @SentryExceptionCaptured()
+  private handleWithSentry(exception: unknown, host: ArgumentsHost) {
+    if (exception instanceof ApplicationError) {
+      this.handleApplicationError(exception, host);
+      return;
+    }
+
+    // HttpExceptions, raw Errors, and anything else — delegate to NestJS defaults
+    super.catch(exception, host);
+  }
+
+  private handleApplicationError(
+    exception: ApplicationError,
+    host: ArgumentsHost,
+  ): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-
-    // Capture exception with enriched context
-    this.captureToSentry(exception, request);
 
     const httpException = exception.toHttpException();
     const status = httpException.getStatus();
@@ -43,61 +66,5 @@ export class ApplicationErrorFilter implements ExceptionFilter {
         path: request.url,
       });
     }
-  }
-
-  private captureToSentry(exception: ApplicationError, request: Request) {
-    // Only report server errors (5xx) to Sentry.
-    // 4xx errors are expected client errors (bad input, auth failures, etc.)
-    // and are already captured in structured logs.
-    if (exception.statusCode < 500) {
-      return;
-    }
-
-    Sentry.withScope((scope) => {
-      // Add user context from CLS store
-      const cls = ClsServiceManager.getClsService<MyClsStore>();
-      const userId = cls.get('userId');
-      const orgId = cls.get('orgId');
-      const role = cls.get('role');
-
-      if (userId) {
-        scope.setUser({
-          id: userId,
-          orgId: orgId as string | undefined,
-          role: role as string | undefined,
-        });
-      }
-
-      // Add request context as tags for filtering
-      scope.setTag('path', request.path);
-      scope.setTag('method', request.method);
-      scope.setTag('errorCode', exception.code);
-
-      // Add request details as extra context
-      scope.setExtra('requestBody', this.sanitizeBody(request.body));
-      scope.setExtra('requestParams', request.params);
-      scope.setExtra('requestQuery', request.query);
-      scope.setExtra('errorMetadata', exception.metadata);
-
-      Sentry.captureException(exception);
-    });
-  }
-
-  /**
-   * Sanitize request body to avoid capturing sensitive data
-   */
-  private sanitizeBody(body: unknown): unknown {
-    if (!body || typeof body !== 'object') return body;
-
-    const sensitiveKeys = ['password', 'token', 'secret', 'apiKey', 'api_key'];
-    const sanitized = { ...body } as Record<string, unknown>;
-
-    for (const key of Object.keys(sanitized)) {
-      if (sensitiveKeys.some((sk) => key.toLowerCase().includes(sk))) {
-        sanitized[key] = '[REDACTED]';
-      }
-    }
-
-    return sanitized;
   }
 }

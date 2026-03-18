@@ -5,6 +5,7 @@ import {
   CallHandler,
 } from '@nestjs/common';
 import { Request } from 'express';
+import * as Sentry from '@sentry/nestjs';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ActiveUser } from '../../domain/active-user.entity';
 
@@ -21,6 +22,12 @@ export class UserContextInterceptor implements NestInterceptor {
       this.contextService.set('orgId', user.orgId);
       this.contextService.set('role', user.role);
       this.contextService.set('systemRole', user.systemRole);
+
+      Sentry.getCurrentScope().setUser({
+        id: user.id,
+        orgId: user.orgId,
+        role: user.role,
+      });
     }
 
     return next.handle();

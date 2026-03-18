@@ -14,7 +14,6 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 
 import { AppModule } from './app/app.module';
-import { ApplicationErrorFilter } from './common/filters/application-error.filter';
 import { METRICS_PATH } from './metrics/metrics.constants';
 
 class Bootstrap {
@@ -40,7 +39,6 @@ class Bootstrap {
       // strip leading '/' — setGlobalPrefix exclude expects bare paths
       exclude: [METRICS_PATH.slice(1)],
     });
-    app.useGlobalFilters(new ApplicationErrorFilter());
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,

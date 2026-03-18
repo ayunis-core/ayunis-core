@@ -1,8 +1,10 @@
 import * as Sentry from '@sentry/nestjs';
+import { HttpException } from '@nestjs/common';
+import { ApplicationError } from '../errors/base.error';
 
 // Ensure to call this before requiring any other modules!
 const sentryDsn = process.env.SENTRY_DSN;
-const environment = process.env.NODE_ENV || 'development';
+const environment = process.env.NODE_ENV ?? 'development';
 
 if (sentryDsn) {
   Sentry.init({
@@ -10,9 +12,25 @@ if (sentryDsn) {
     environment,
     // Performance Monitoring - sample 100% in dev, 10% in prod
     tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
+    beforeSend(event, hint) {
+      const error = hint.originalException;
+
+      // Drop 4xx ApplicationErrors — expected client errors (bad input, auth
+      // failures, etc.) that are already captured in structured logs.
+      if (error instanceof ApplicationError && error.statusCode < 500) {
+        return null;
+      }
+
+      // Drop 4xx NestJS HttpExceptions (validation errors, 404s, etc.)
+      if (error instanceof HttpException && error.getStatus() < 500) {
+        return null;
+      }
+
+      return event;
+    },
   });
 
-  console.log(`✅ Sentry initialized for environment: ${environment}`);
+  console.warn(`✅ Sentry initialized for environment: ${environment}`);
 } else {
   console.warn('⚠️  SENTRY_DSN not configured - error tracking disabled');
 }

@@ -1,9 +1,6 @@
 import { createLogger, format, transports } from 'winston';
-import Transport from 'winston-transport';
-import * as Sentry from '@sentry/nestjs';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
-const hasSentry = !!process.env.SENTRY_DSN;
 
 function createConsoleFormat() {
   if (isDevelopment) {
@@ -29,24 +26,15 @@ function createConsoleFormat() {
   }
 }
 
-function createTransports() {
-  const transportList: Transport[] = [
+// Sentry error reporting is handled by @SentryExceptionCaptured() on the
+// ApplicationErrorFilter (exception pipeline), not via a Winston transport.
+// This avoids duplicate events when logger.error() is followed by a thrown
+// exception that the filter also captures.
+export const logger = createLogger({
+  level: isDevelopment ? 'debug' : 'info',
+  transports: [
     new transports.Console({
       format: createConsoleFormat(),
     }),
-  ];
-
-  // Add Sentry transport only if configured
-  if (hasSentry) {
-    const SentryWinstonTransport =
-      Sentry.createSentryWinstonTransport(Transport);
-    transportList.push(new SentryWinstonTransport());
-  }
-
-  return transportList;
-}
-
-export const logger = createLogger({
-  level: isDevelopment ? 'debug' : 'info',
-  transports: createTransports(),
+  ],
 });
