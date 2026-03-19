@@ -38,6 +38,7 @@ import { GetSourcesByKnowledgeBaseIdUseCase } from './application/use-cases/get-
     GetSourcesByKnowledgeBaseIdUseCase,
   ],
   exports: [
+    RetrieverModule,
     LocalSourceRepositoryModule,
     GetTextSourceByIdUseCase,
     GetSourceByIdUseCase,

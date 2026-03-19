@@ -71,11 +71,13 @@ import {
   MissingFileError,
 } from '../../application/agents.errors';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
-import { createSourcesFromFile } from 'src/domain/sources/application/file-source-creator';
+import {
+  buildSourceCreationDeps,
+  createSourcesFromFile,
+} from 'src/domain/sources/application/file-source-creator';
 import { AgentSourceAssignment } from '../../domain/agent-source-assignment.entity';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
-
 @ApiTags('agents')
 @RequireFeature(FeatureFlag.Agents)
 @Controller('agents')
@@ -359,24 +361,17 @@ export class AgentsController {
       fileName: file.originalname,
     });
     try {
-      const sources = await createSourcesFromFile(file as Express.Multer.File, {
-        createTextSource: (cmd) => this.createTextSourceUseCase.execute(cmd),
-        createDataSource: (cmd) => this.createDataSourceUseCase.execute(cmd),
-        throwEmptyFileError: (fileName) => {
-          throw new EmptyFileDataError(fileName);
-        },
-        throwUnsupportedTypeError: (type) => {
-          throw new UnsupportedFileTypeError(type, [
-            'PDF',
-            'DOCX',
-            'PPTX',
-            'TXT',
-            'CSV',
-            'XLSX',
-            'XLS',
-          ]);
-        },
+      const deps = buildSourceCreationDeps({
+        createTextSourceUseCase: this.createTextSourceUseCase,
+        createDataSourceUseCase: this.createDataSourceUseCase,
+        preflightCheckUseCase: null,
+        EmptyFileDataError,
+        UnsupportedFileTypeError,
       });
+      const sources = await createSourcesFromFile(
+        file as Express.Multer.File,
+        deps,
+      );
 
       // Add all sources to the agent
       const sourceAssignments: AgentSourceAssignment[] = [];

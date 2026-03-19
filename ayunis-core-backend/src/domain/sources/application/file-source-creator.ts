@@ -13,12 +13,59 @@ import {
 } from 'src/common/util/file-type';
 import { parseCSV } from 'src/common/util/csv';
 import { parseExcel } from 'src/common/util/excel';
+import type { CreateTextSourceUseCase } from 'src/domain/sources/application/use-cases/create-text-source/create-text-source.use-case';
+import type { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
+import type { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
+import { PreflightCheckCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.command';
 
-interface SourceCreationDeps {
+export interface SourceCreationDeps {
   createTextSource: (command: CreateFileSourceCommand) => Promise<Source>;
   createDataSource: (command: CreateCSVDataSourceCommand) => Promise<Source>;
   throwEmptyFileError: (fileName: string) => never;
   throwUnsupportedTypeError: (type: string) => never;
+  preflightCheck?: (
+    fileData: Buffer,
+    fileName: string,
+    fileType: string,
+  ) => Promise<void>;
+}
+
+const SUPPORTED_FILE_TYPES = [
+  'PDF',
+  'DOCX',
+  'PPTX',
+  'TXT',
+  'CSV',
+  'XLSX',
+  'XLS',
+];
+
+export function buildSourceCreationDeps(params: {
+  createTextSourceUseCase: CreateTextSourceUseCase;
+  createDataSourceUseCase: CreateDataSourceUseCase;
+  preflightCheckUseCase: PreflightCheckUseCase | null;
+  EmptyFileDataError: new (fileName: string) => Error;
+  UnsupportedFileTypeError: new (
+    type: string,
+    supportedTypes: string[],
+  ) => Error;
+}): SourceCreationDeps {
+  return {
+    createTextSource: (cmd) => params.createTextSourceUseCase.execute(cmd),
+    createDataSource: (cmd) => params.createDataSourceUseCase.execute(cmd),
+    throwEmptyFileError: (fileName: string) => {
+      throw new params.EmptyFileDataError(fileName);
+    },
+    throwUnsupportedTypeError: (type: string) => {
+      throw new params.UnsupportedFileTypeError(type, SUPPORTED_FILE_TYPES);
+    },
+    preflightCheck: params.preflightCheckUseCase
+      ? (fileData, fileName, fileType) =>
+          params.preflightCheckUseCase!.execute(
+            new PreflightCheckCommand({ fileData, fileName, fileType }),
+          )
+      : undefined,
+  };
 }
 
 export async function createSourcesFromFile(
@@ -50,6 +97,11 @@ async function createDocumentSource(
   deps: SourceCreationDeps,
 ): Promise<Source> {
   const fileData = fs.readFileSync(file.path);
+
+  if (deps.preflightCheck) {
+    await deps.preflightCheck(fileData, file.originalname, file.mimetype);
+  }
+
   const canonicalMimeType = getCanonicalMimeType(detectedType);
   if (!canonicalMimeType) {
     throw new Error(

@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { MistralFileRetrieverHandler } from './infrastructure/adapters/mistral-file-retriever.handler';
 import { FileRetrieverRegistry } from './application/file-retriever-handler.registry';
 import { RetrieveFileContentUseCase } from './application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
+import { PreflightCheckUseCase } from './application/use-cases/preflight-check/preflight-check.use-case';
 import { FileRetrieverType } from './domain/value-objects/file-retriever-type.enum';
 import { NpmPdfParseFileRetrieverHandler } from './infrastructure/adapters/npm-pdf-parse-file-retriever.handler';
 import { GotenbergConverterService } from './infrastructure/adapters/gotenberg-converter.service';
@@ -21,6 +22,7 @@ import { gotenbergConfig } from 'src/config/gotenberg.config';
     NpmPdfParseFileRetrieverHandler,
     GotenbergConverterService,
     RetrieveFileContentUseCase,
+    PreflightCheckUseCase,
     {
       provide: DocumentConverterPort,
       useExisting: GotenbergConverterService,
@@ -42,6 +44,10 @@ import { gotenbergConfig } from 'src/config/gotenberg.config';
       inject: [NpmPdfParseFileRetrieverHandler, MistralFileRetrieverHandler],
     },
   ],
-  exports: [RetrieveFileContentUseCase, FileRetrieverRegistry],
+  exports: [
+    RetrieveFileContentUseCase,
+    PreflightCheckUseCase,
+    FileRetrieverRegistry,
+  ],
 })
 export class FileRetrieverModule {}
