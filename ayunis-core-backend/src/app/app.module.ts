@@ -55,6 +55,8 @@ import { marketplaceConfig } from '../config/marketplace.config';
 import toolsConfig from '../config/tools.config';
 import { featuresConfig } from '../config/features.config';
 import { metricsConfig } from '../config/metrics.config';
+import { redisConfig } from '../config/redis.config';
+import { gotenbergConfig } from '../config/gotenberg.config';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 import { IsRegistrationDisabledUseCase } from './application/use-cases/is-registration-disabled/is-registration-disabled.use-case';
 import { ClsModule } from 'nestjs-cls';
@@ -86,6 +88,8 @@ import { MetricsModule } from '../metrics/metrics.module';
         toolsConfig,
         featuresConfig,
         metricsConfig,
+        redisConfig,
+        gotenbergConfig,
       ],
     }),
     ClsModule.forRoot({

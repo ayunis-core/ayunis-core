@@ -16,6 +16,7 @@ import {
   TextType,
 } from '../../../../domain/source-type.enum';
 import { SourceCreator } from '../../../../domain/source-creator.enum';
+import { SourceStatus } from '../../../../domain/source-status.enum';
 import { TextSourceDetailsRecord } from './text-source-details.record';
 import { DataSourceDetailsRecord } from './data-source-details.record';
 import { KnowledgeBaseRecord } from '../../../../../knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
@@ -32,6 +33,19 @@ export abstract class SourceRecord extends BaseRecord {
     default: SourceCreator.USER,
   })
   createdBy: SourceCreator;
+
+  @Column({
+    type: 'enum',
+    enum: SourceStatus,
+    default: SourceStatus.READY,
+  })
+  status: SourceStatus;
+
+  @Column({ type: 'text', nullable: true })
+  processingError: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  processingStartedAt: Date | null;
 
   @Column({ nullable: true })
   knowledgeBaseId: UUID | null;

@@ -42,6 +42,8 @@ export class SourceDtoMapper {
     fileDto.fileType = source.fileType;
     fileDto.name = source.name;
     fileDto.createdBy = source.createdBy;
+    fileDto.status = source.status;
+    fileDto.processingError = source.processingError ?? undefined;
     fileDto.createdAt = source.createdAt.toISOString();
     fileDto.updatedAt = source.updatedAt.toISOString();
 
@@ -60,6 +62,8 @@ export class SourceDtoMapper {
     urlDto.url = source.url;
     urlDto.name = source.name;
     urlDto.createdBy = source.createdBy;
+    urlDto.status = source.status;
+    urlDto.processingError = source.processingError ?? undefined;
     urlDto.createdAt = source.createdAt.toISOString();
     urlDto.updatedAt = source.updatedAt.toISOString();
 
@@ -78,6 +82,8 @@ export class SourceDtoMapper {
     csvDto.data = source.data;
     csvDto.name = source.name;
     csvDto.createdBy = source.createdBy;
+    csvDto.status = source.status;
+    csvDto.processingError = source.processingError ?? undefined;
     csvDto.createdAt = source.createdAt.toISOString();
     csvDto.updatedAt = source.updatedAt.toISOString();
 

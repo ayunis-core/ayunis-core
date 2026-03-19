@@ -8,6 +8,8 @@ export interface RetrievalConfig {
     serviceUrl: string | undefined;
     apiKey: string | undefined;
   };
+  chatUploadMaxPdfPages: number;
+  chatUploadMaxFileSizeMb: number;
 }
 
 export default registerAs(
@@ -20,5 +22,13 @@ export default registerAs(
       serviceUrl: process.env.DOCLING_SERVICE_URL,
       apiKey: process.env.DOCLING_API_KEY,
     },
+    chatUploadMaxPdfPages: parseInt(
+      process.env.CHAT_UPLOAD_MAX_PDF_PAGES || '50',
+      10,
+    ),
+    chatUploadMaxFileSizeMb: parseInt(
+      process.env.CHAT_UPLOAD_MAX_FILE_SIZE_MB || '5',
+      10,
+    ),
   }),
 );

@@ -3,6 +3,7 @@ import { Source } from '../source.entity';
 import type { FileType } from '../source-type.enum';
 import { SourceType, TextType } from '../source-type.enum';
 import type { SourceCreator } from '../source-creator.enum';
+import type { SourceStatus } from '../source-status.enum';
 
 export abstract class TextSource extends Source {
   textType: TextType;
@@ -12,6 +13,9 @@ export abstract class TextSource extends Source {
     name: string;
     type: TextType;
     knowledgeBaseId?: UUID | null;
+    status?: SourceStatus;
+    processingError?: string | null;
+    processingStartedAt?: Date | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;
@@ -30,6 +34,9 @@ export class FileSource extends TextSource {
     name: string;
     type: TextType;
     knowledgeBaseId?: UUID | null;
+    status?: SourceStatus;
+    processingError?: string | null;
+    processingStartedAt?: Date | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;
@@ -48,6 +55,9 @@ export class UrlSource extends TextSource {
     name: string;
     type: TextType;
     knowledgeBaseId?: UUID | null;
+    status?: SourceStatus;
+    processingError?: string | null;
+    processingStartedAt?: Date | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;
