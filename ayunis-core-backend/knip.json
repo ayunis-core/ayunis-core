@@ -7,7 +7,6 @@
     "**/*.spec.ts",
     "**/*.test.ts",
     "src/common/clients/locaboo/**",
-    "src/common/clients/docling/**",
     "src/config/evals.config.ts",
     "src/config/locaboo3.config.ts"
   ],

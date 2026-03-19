@@ -39,7 +39,7 @@ import {
   useRemoveDocument,
 } from '../api';
 
-const ACCEPTED_FILE_TYPES = '.pdf,.docx,.pptx,.txt';
+const ACCEPTED_FILE_TYPES = '.pdf,.docx,.pptx,.txt,.md';
 
 function isValidUrl(value: string): boolean {
   try {

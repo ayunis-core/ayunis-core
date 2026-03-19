@@ -118,7 +118,7 @@ export default function KnowledgeBaseCard({
                 type="file"
                 className="hidden"
                 onChange={handleFileChange}
-                accept=".pdf,.docx,.pptx,.txt,.csv,.xlsx,.xls"
+                accept=".pdf,.docx,.pptx,.txt,.md,.csv,.xlsx,.xls"
               />
               <TooltipIf
                 condition={!isEnabled}
