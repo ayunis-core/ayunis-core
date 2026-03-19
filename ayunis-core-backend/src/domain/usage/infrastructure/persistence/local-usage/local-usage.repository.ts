@@ -165,8 +165,8 @@ export class LocalUsageRepository extends UsageRepository {
     query: GetUserUsageQuery,
   ): Promise<Paginated<UserUsageItem>> {
     // Determine sort field and order
-    const sortField = this.mapSortFieldForUsers(query.sortBy || 'tokens');
-    const sortOrder = (query.sortOrder || 'desc').toUpperCase() as
+    const sortField = this.mapSortFieldForUsers(query.sortBy);
+    const sortOrder = query.sortOrder.toUpperCase() as
       | 'ASC'
       | 'DESC';
 
@@ -194,13 +194,13 @@ export class LocalUsageRepository extends UsageRepository {
     ]);
 
     const users = userStats.map((stat) => {
-      const { tokens, requests, lastActivity } = this.mapUsageRow(stat);
+      const { credits, requests, lastActivity } = this.mapUsageRow(stat);
 
       return new UserUsageItem({
         userId: stat.userId as unknown as UUID,
-        userName: stat.userName || '',
-        userEmail: stat.userEmail || '',
-        tokens,
+        userName: stat.userName ?? '',
+        userEmail: stat.userEmail ?? '',
+        credits,
         requests,
         lastActivity,
         isActive: UserUsageItem.computeIsActive(lastActivity),
@@ -344,28 +344,28 @@ export class LocalUsageRepository extends UsageRepository {
     });
 
     return rows.map((row) => {
-      const { tokens, requests, lastActivity } = this.mapUsageRow(row);
+      const { credits, requests, lastActivity } = this.mapUsageRow(row);
 
       return new GlobalUserUsageItem({
         userId: row.userId as unknown as UUID,
-        userName: row.userName || '',
-        userEmail: row.userEmail || '',
-        tokens,
+        userName: row.userName ?? '',
+        userEmail: row.userEmail ?? '',
+        credits,
         requests,
         lastActivity,
         isActive: UserUsageItem.computeIsActive(lastActivity),
-        organizationName: row.organizationName || '',
+        organizationName: row.organizationName ?? '',
       });
     });
   }
 
   private mapUsageRow(row: {
-    tokens?: string | null;
+    credits?: string | null;
     requests?: string | null;
     lastActivity?: Date | string | null;
-  }): { tokens: number; requests: number; lastActivity: Date | null } {
+  }): { credits: number; requests: number; lastActivity: Date | null } {
     return {
-      tokens: row.tokens ? parseInt(row.tokens, 10) : 0,
+      credits: row.credits ? parseFloat(row.credits) : 0,
       requests: row.requests ? parseInt(row.requests, 10) : 0,
       lastActivity: row.lastActivity ? new Date(row.lastActivity) : null,
     };
@@ -373,8 +373,8 @@ export class LocalUsageRepository extends UsageRepository {
 
   private mapSortFieldForUsers(sortBy: string): string {
     switch (sortBy) {
-      case 'tokens':
-        return 'COALESCE(SUM(usage.totalTokens), 0)';
+      case 'credits':
+        return 'COALESCE(SUM(usage.creditsConsumed), 0)';
       case 'requests':
         return 'COUNT(usage.id)';
       case 'lastActivity':
@@ -382,7 +382,7 @@ export class LocalUsageRepository extends UsageRepository {
       case 'userName':
         return 'user.name';
       default:
-        return 'COALESCE(SUM(usage.totalTokens), 0)';
+        return 'COALESCE(SUM(usage.creditsConsumed), 0)';
     }
   }
 }

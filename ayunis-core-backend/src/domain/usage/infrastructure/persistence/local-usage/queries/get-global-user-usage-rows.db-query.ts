@@ -1,4 +1,4 @@
-import type { Repository } from 'typeorm';
+import type { Repository, SelectQueryBuilder } from 'typeorm';
 import { UsageRecord } from '../schema/usage.record';
 import type { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 
@@ -6,7 +6,7 @@ export interface GlobalUserUsageRow {
   userId: string;
   userName: string | null;
   userEmail: string | null;
-  tokens: string | null;
+  credits: string | null;
   requests: string;
   lastActivity: Date | null;
   organizationName: string | null;
@@ -20,36 +20,46 @@ export interface GetGlobalUserUsageQueryParams {
   limit: number;
 }
 
-export async function getGlobalUserUsageRows(
+function buildUsageSubquery(
   params: GetGlobalUserUsageQueryParams,
-): Promise<GlobalUserUsageRow[]> {
-  // Subquery: aggregate tokens and requests per user (optionally filtered by date)
-  const usageSubquery = params.usageRepository.manager
+): SelectQueryBuilder<UsageRecord> {
+  const qb = params.usageRepository.manager
     .createQueryBuilder()
     .select('usage.userId', 'userId')
-    .addSelect('SUM(usage.totalTokens)', 'tokens')
+    .addSelect('COALESCE(SUM(usage.creditsConsumed), 0)', 'credits')
     .addSelect('COUNT(usage.id)', 'requests')
     .from(UsageRecord, 'usage')
     .groupBy('usage.userId');
 
   if (params.startDate) {
-    usageSubquery.andWhere('usage.createdAt >= :startDate', {
+    qb.andWhere('usage.createdAt >= :startDate', {
       startDate: params.startDate,
     });
   }
   if (params.endDate) {
-    usageSubquery.andWhere('usage.createdAt <= :endDate', {
+    qb.andWhere('usage.createdAt <= :endDate', {
       endDate: params.endDate,
     });
   }
+  return qb;
+}
 
-  // Subquery: last activity per user (no date filter — always global)
-  const lastActivitySubquery = params.usageRepository.manager
+function buildLastActivitySubquery(
+  params: GetGlobalUserUsageQueryParams,
+): SelectQueryBuilder<UsageRecord> {
+  return params.usageRepository.manager
     .createQueryBuilder()
     .select('usageAll.userId', 'userId')
     .addSelect('MAX(usageAll.createdAt)', 'lastActivity')
     .from(UsageRecord, 'usageAll')
     .groupBy('usageAll.userId');
+}
+
+export async function getGlobalUserUsageRows(
+  params: GetGlobalUserUsageQueryParams,
+): Promise<GlobalUserUsageRow[]> {
+  const usageSubquery = buildUsageSubquery(params);
+  const lastActivitySubquery = buildLastActivitySubquery(params);
 
   const qb = params.userRepository
     .createQueryBuilder('user')
@@ -67,7 +77,7 @@ export async function getGlobalUserUsageRows(
     .select('user.id', 'userId')
     .addSelect('user.name', 'userName')
     .addSelect('user.email', 'userEmail')
-    .addSelect('COALESCE("usageagg"."tokens", 0)', 'tokens')
+    .addSelect('COALESCE("usageagg"."credits", 0)', 'credits')
     .addSelect('COALESCE("usageagg"."requests", 0)', 'requests')
     .addSelect('"lastactivityagg"."lastActivity"', 'lastActivity')
     .addSelect('org.name', 'organizationName')
@@ -75,7 +85,7 @@ export async function getGlobalUserUsageRows(
       ...usageSubquery.getParameters(),
       ...lastActivitySubquery.getParameters(),
     })
-    .orderBy('COALESCE("usageagg"."tokens", 0)', 'DESC')
+    .orderBy('COALESCE("usageagg"."credits", 0)', 'DESC')
     .addOrderBy('user.name', 'ASC')
     .limit(params.limit);
 

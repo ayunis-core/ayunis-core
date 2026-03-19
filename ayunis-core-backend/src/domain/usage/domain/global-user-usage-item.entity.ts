@@ -8,7 +8,7 @@ export class GlobalUserUsageItem extends UserUsageItem {
     userId: UUID;
     userName: string;
     userEmail: string;
-    tokens: number;
+    credits: number;
     requests: number;
     lastActivity: Date | null;
     isActive: boolean;

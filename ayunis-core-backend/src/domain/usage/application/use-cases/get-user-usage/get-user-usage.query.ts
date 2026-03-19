@@ -6,7 +6,7 @@ import { PaginatedQuery } from 'src/common/pagination';
 import { UsageConstants } from '../../../domain/value-objects/usage.constants';
 
 export type UserUsageSortBy =
-  | 'tokens'
+  | 'credits'
   | 'requests'
   | 'lastActivity'
   | 'userName';
@@ -38,7 +38,7 @@ export class GetUserUsageQuery extends PaginatedQuery {
     this.startDate = params.startDate;
     this.endDate = params.endDate;
     this.searchTerm = params.searchTerm;
-    this.sortBy = params.sortBy ?? 'tokens';
+    this.sortBy = params.sortBy ?? 'credits';
     this.sortOrder = params.sortOrder ?? 'desc';
   }
 }

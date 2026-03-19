@@ -8,7 +8,7 @@ export class GlobalUserUsageDto extends BaseUserUsageDto {
 
 export class GlobalUserUsageResponseDto {
   @ApiProperty({
-    description: 'Top users by token usage across all organizations',
+    description: 'Top users by credit usage across all organizations',
     type: [GlobalUserUsageDto],
   })
   data: GlobalUserUsageDto[];

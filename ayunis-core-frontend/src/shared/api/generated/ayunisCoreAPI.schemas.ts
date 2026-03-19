@@ -3302,8 +3302,8 @@ export interface UserUsageDto {
   userName: string;
   /** User email */
   userEmail: string;
-  /** Total tokens for this user */
-  tokens: number;
+  /** Total credits consumed by this user */
+  credits: number;
   /** Total requests for this user */
   requests: number;
   /**
@@ -3462,8 +3462,8 @@ export interface GlobalUserUsageDto {
   userName: string;
   /** User email */
   userEmail: string;
-  /** Total tokens for this user */
-  tokens: number;
+  /** Total credits consumed by this user */
+  credits: number;
   /** Total requests for this user */
   requests: number;
   /**
@@ -3478,7 +3478,7 @@ export interface GlobalUserUsageDto {
 }
 
 export interface GlobalUserUsageResponseDto {
-  /** Top users by token usage across all organizations */
+  /** Top users by credit usage across all organizations */
   data: GlobalUserUsageDto[];
 }
 
@@ -3869,7 +3869,7 @@ offset?: number;
  */
 search?: string;
 /**
- * Field to sort users by. Defaults to tokens.
+ * Field to sort users by. Defaults to credits.
  */
 sortBy?: UsageControllerGetUserUsageSortBy;
 /**
@@ -3883,7 +3883,7 @@ export type UsageControllerGetUserUsageSortBy = typeof UsageControllerGetUserUsa
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UsageControllerGetUserUsageSortBy = {
-  tokens: 'tokens',
+  credits: 'credits',
   requests: 'requests',
   lastActivity: 'lastActivity',
   userName: 'userName',
@@ -3940,7 +3940,7 @@ export type SuperAdminUsageDataControllerGetUserUsageSortBy = typeof SuperAdminU
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const SuperAdminUsageDataControllerGetUserUsageSortBy = {
-  tokens: 'tokens',
+  credits: 'credits',
   requests: 'requests',
   lastActivity: 'lastActivity',
   userName: 'userName',
