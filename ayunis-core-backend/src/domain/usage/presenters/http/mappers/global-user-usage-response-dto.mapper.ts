@@ -18,7 +18,7 @@ export class GlobalUserUsageResponseDtoMapper {
       userId: item.userId,
       userName: item.userName,
       userEmail: item.userEmail,
-      tokens: item.tokens,
+      credits: item.credits,
       requests: item.requests,
       lastActivity: item.lastActivity,
       isActive: item.isActive,

@@ -53,7 +53,7 @@ export class GetUserUsageUseCase {
 
     // Validate sort parameters
     const validSortFields: Array<typeof query.sortBy> = [
-      'tokens',
+      'credits',
       'requests',
       'lastActivity',
       'userName',

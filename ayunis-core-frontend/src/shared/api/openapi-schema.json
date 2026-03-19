@@ -6975,10 +6975,10 @@
             "name": "sortBy",
             "required": false,
             "in": "query",
-            "description": "Field to sort users by. Defaults to tokens.",
+            "description": "Field to sort users by. Defaults to credits.",
             "schema": {
               "enum": [
-                "tokens",
+                "credits",
                 "requests",
                 "lastActivity",
                 "userName"
@@ -7396,7 +7396,7 @@
             "in": "query",
             "schema": {
               "enum": [
-                "tokens",
+                "credits",
                 "requests",
                 "lastActivity",
                 "userName"
@@ -13855,9 +13855,9 @@
             "type": "string",
             "description": "User email"
           },
-          "tokens": {
+          "credits": {
             "type": "number",
-            "description": "Total tokens for this user"
+            "description": "Total credits consumed by this user"
           },
           "requests": {
             "type": "number",
@@ -13878,7 +13878,7 @@
           "userId",
           "userName",
           "userEmail",
-          "tokens",
+          "credits",
           "requests",
           "lastActivity",
           "isActive"
@@ -14191,9 +14191,9 @@
             "type": "string",
             "description": "User email"
           },
-          "tokens": {
+          "credits": {
             "type": "number",
-            "description": "Total tokens for this user"
+            "description": "Total credits consumed by this user"
           },
           "requests": {
             "type": "number",
@@ -14218,7 +14218,7 @@
           "userId",
           "userName",
           "userEmail",
-          "tokens",
+          "credits",
           "requests",
           "lastActivity",
           "isActive",
@@ -14229,7 +14229,7 @@
         "type": "object",
         "properties": {
           "data": {
-            "description": "Top users by token usage across all organizations",
+            "description": "Top users by credit usage across all organizations",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/GlobalUserUsageDto"

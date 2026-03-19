@@ -24,7 +24,7 @@ export class UserUsageResponseDtoMapper {
       userId: user.userId,
       userName: user.userName,
       userEmail: user.userEmail,
-      tokens: user.tokens,
+      credits: user.credits,
       requests: user.requests,
       lastActivity: user.lastActivity,
       isActive: user.isActive,

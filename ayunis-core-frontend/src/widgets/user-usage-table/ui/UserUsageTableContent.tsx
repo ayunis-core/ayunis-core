@@ -42,7 +42,7 @@ export function UserUsageTableContent({
           <TableHeader>
             <TableRow className="border-border/40">
               <TableHead>{t('userUsage.user')}</TableHead>
-              <TableHead>{t('userUsage.tokens')}</TableHead>
+              <TableHead>{t('userUsage.credits')}</TableHead>
               <TableHead>{t('userUsage.requests')}</TableHead>
               <TableHead>{t('userUsage.lastActive')}</TableHead>
               <TableHead>{t('userUsage.status')}</TableHead>

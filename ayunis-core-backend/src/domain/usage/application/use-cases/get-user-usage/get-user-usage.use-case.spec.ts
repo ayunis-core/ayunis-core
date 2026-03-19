@@ -50,7 +50,7 @@ describe('GetUserUsageUseCase', () => {
             userId,
             userName: 'Test User',
             userEmail: 'test@example.com',
-            tokens: 100,
+            credits: 100,
             requests: 5,
             lastActivity: new Date(),
             isActive: true,
@@ -249,7 +249,7 @@ describe('GetUserUsageUseCase', () => {
     it('should throw InvalidPaginationError for invalid sort order', async () => {
       const query = new GetUserUsageQuery({
         organizationId: orgId,
-        sortBy: 'tokens',
+        sortBy: 'credits',
         sortOrder: 'invalid' as any,
       });
 
@@ -261,7 +261,7 @@ describe('GetUserUsageUseCase', () => {
     it('should accept valid sort parameters', async () => {
       const query = new GetUserUsageQuery({
         organizationId: orgId,
-        sortBy: 'tokens',
+        sortBy: 'credits',
         sortOrder: 'desc',
       });
 

@@ -10,8 +10,8 @@ export class BaseUserUsageDto {
   @ApiProperty({ description: 'User email' })
   userEmail: string;
 
-  @ApiProperty({ description: 'Total tokens for this user' })
-  tokens: number;
+  @ApiProperty({ description: 'Total credits consumed by this user' })
+  credits: number;
 
   @ApiProperty({ description: 'Total requests for this user' })
   requests: number;

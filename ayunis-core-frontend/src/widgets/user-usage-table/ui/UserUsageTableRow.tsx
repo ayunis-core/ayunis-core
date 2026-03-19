@@ -24,9 +24,9 @@ export function UserUsageTableRow({ user }: Readonly<UserUsageTableRowProps>) {
         </div>
       </TableCell>
       <TableCell>
-        <div className="font-medium">{formatCompact(user.tokens)}</div>
+        <div className="font-medium">{formatCompact(user.credits)}</div>
         <div className="text-xs text-muted-foreground">
-          {t('userUsage.tokens')}
+          {t('userUsage.credits')}
         </div>
       </TableCell>
       <TableCell>
