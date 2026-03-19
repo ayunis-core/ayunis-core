@@ -40,7 +40,7 @@ export interface UserUsageRow {
   userId: string;
   userName: string | null;
   userEmail: string | null;
-  tokens: string | null;
+  credits: string | null;
   requests: string;
   lastActivity: Date | null;
 }

@@ -11,7 +11,7 @@ export async function countUsersForUserUsage(
   const usageSubquery = params.userRepository.manager
     .createQueryBuilder()
     .select('usage.userId', 'userId')
-    .addSelect('SUM(usage.totalTokens)', 'tokens')
+    .addSelect('COALESCE(SUM(usage.creditsConsumed), 0)', 'credits')
     .addSelect('COUNT(usage.id)', 'requests')
     .addSelect('SUM(usage.cost)', 'cost')
     .from(UsageRecord, 'usage')
@@ -43,7 +43,7 @@ export async function countUsersForUserUsage(
       orgId: params.organizationId.toString(),
     })
     .groupBy('user.id')
-    .addGroupBy('"usageagg"."tokens"')
+    .addGroupBy('"usageagg"."credits"')
     .addGroupBy('"usageagg"."requests"')
     .addGroupBy('"usageagg"."cost"');
 

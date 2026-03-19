@@ -12,7 +12,7 @@ export async function getUserUsageRows(
   const usageSubquery = params.userRepository.manager
     .createQueryBuilder()
     .select('usage.userId', 'userId')
-    .addSelect('SUM(usage.totalTokens)', 'tokens')
+    .addSelect('COALESCE(SUM(usage.creditsConsumed), 0)', 'credits')
     .addSelect('COUNT(usage.id)', 'requests')
     .from(UsageRecord, 'usage')
     .where('CAST(usage.organizationId AS uuid) = CAST(:orgId AS uuid)', {
@@ -57,7 +57,7 @@ export async function getUserUsageRows(
     .select('user.id', 'userId')
     .addSelect('user.name', 'userName')
     .addSelect('user.email', 'userEmail')
-    .addSelect('COALESCE("usageagg"."tokens", 0)', 'tokens')
+    .addSelect('COALESCE("usageagg"."credits", 0)', 'credits')
     .addSelect('COALESCE("usageagg"."requests", 0)', 'requests')
     .addSelect('"lastactivityagg"."lastActivity"', 'lastActivity')
     .where('CAST(user.orgId AS uuid) = CAST(:orgId AS uuid)', {
@@ -66,7 +66,7 @@ export async function getUserUsageRows(
     .groupBy('user.id')
     .addGroupBy('user.name')
     .addGroupBy('user.email')
-    .addGroupBy('"usageagg"."tokens"')
+    .addGroupBy('"usageagg"."credits"')
     .addGroupBy('"usageagg"."requests"')
     .addGroupBy('"lastactivityagg"."lastActivity"');
 
@@ -86,10 +86,10 @@ export async function getUserUsageRows(
   // Map sortField to use the correct column reference
   let orderByField = params.sortField;
   if (
-    params.sortField === 'COALESCE(SUM(usage.totalTokens), 0)' ||
-    params.sortField.includes('usage.totalTokens')
+    params.sortField === 'COALESCE(SUM(usage.creditsConsumed), 0)' ||
+    params.sortField.includes('usage.creditsConsumed')
   ) {
-    orderByField = 'COALESCE("usageagg"."tokens", 0)';
+    orderByField = 'COALESCE("usageagg"."credits", 0)';
   } else if (
     params.sortField === 'COUNT(usage.id)' ||
     params.sortField.includes('usage.id')

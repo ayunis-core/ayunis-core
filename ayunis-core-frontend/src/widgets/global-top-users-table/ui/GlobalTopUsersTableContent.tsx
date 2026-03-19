@@ -71,7 +71,7 @@ export function GlobalTopUsersTableContent({
               <TableHead>{t('globalTopUsers.email')}</TableHead>
               <TableHead>{t('globalTopUsers.organization')}</TableHead>
               <TableHead className="text-right">
-                {t('globalTopUsers.tokens')}
+                {t('globalTopUsers.credits')}
               </TableHead>
               <TableHead className="text-right">
                 {t('globalTopUsers.requests')}
@@ -117,7 +117,7 @@ export function GlobalTopUsersTableContent({
                 </TableCell>
                 <TableCell>{user.organizationName}</TableCell>
                 <TableCell className="text-right font-medium">
-                  {formatCompact(user.tokens)}
+                  {formatCompact(user.credits)}
                 </TableCell>
                 <TableCell className="text-right font-medium">
                   {formatCompact(user.requests)}

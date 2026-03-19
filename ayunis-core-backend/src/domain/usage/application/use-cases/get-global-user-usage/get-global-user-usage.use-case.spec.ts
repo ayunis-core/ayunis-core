@@ -42,7 +42,7 @@ describe('GetGlobalUserUsageUseCase', () => {
           userId,
           userName: 'Alice Müller',
           userEmail: 'alice@stadt-koeln.de',
-          tokens: 15000,
+          credits: 15000,
           requests: 42,
           lastActivity: new Date(),
           isActive: true,
