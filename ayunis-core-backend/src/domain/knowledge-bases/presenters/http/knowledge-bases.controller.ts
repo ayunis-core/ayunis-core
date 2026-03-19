@@ -285,9 +285,11 @@ export class KnowledgeBasesController {
       required: ['file'],
     },
   })
+  @HttpCode(HttpStatus.ACCEPTED)
   @ApiResponse({
-    status: 201,
-    description: 'The document has been added to the knowledge base',
+    status: 202,
+    description:
+      'The document has been accepted and is being processed in the background',
     type: KnowledgeBaseDocumentResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Knowledge base not found' })

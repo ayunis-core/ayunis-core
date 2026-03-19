@@ -29,6 +29,7 @@ describe('GetSourcesByIdsUseCase', () => {
       findByIds: jest.fn(),
       findByKnowledgeBaseId: jest.fn(),
       saveTextSource: jest.fn(),
+      findStaleProcessingSources: jest.fn(),
       save: jest.fn(),
       extractTextLines: jest.fn(),
       findContentChunksByIds: jest.fn(),

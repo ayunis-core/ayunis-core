@@ -7,6 +7,7 @@ export enum SourceErrorCode {
   INVALID_SOURCE_TYPE = 'INVALID_SOURCE_TYPE',
   EMPTY_FILE_DATA = 'EMPTY_FILE_DATA',
   UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
+  UNSUPPORTED_SOURCE_FILE_TYPE = 'UNSUPPORTED_SOURCE_FILE_TYPE',
 }
 
 export abstract class SourceError extends ApplicationError {
@@ -68,6 +69,17 @@ export class UnsupportedFileTypeError extends SourceError {
     super(
       `File type '${fileType}' is not supported. Supported types: ${supportedTypes.join(', ')}`,
       SourceErrorCode.UNSUPPORTED_FILE_TYPE,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class UnsupportedSourceFileTypeError extends SourceError {
+  constructor(mimeType: string, metadata?: ErrorMetadata) {
+    super(
+      `Unsupported file type: '${mimeType}'`,
+      SourceErrorCode.UNSUPPORTED_SOURCE_FILE_TYPE,
       400,
       metadata,
     );

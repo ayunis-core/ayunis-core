@@ -3,6 +3,7 @@ import { LocalKnowledgeBaseRepositoryModule } from './infrastructure/persistence
 import { SourcesModule } from '../sources/sources.module';
 import { IndexersModule } from '../rag/indexers/indexers.module';
 import { ContextModule } from 'src/common/context/context.module';
+import { StorageModule } from '../storage/storage.module';
 import { SharesModule } from '../shares/shares.module';
 import { getShareAuthStrategyToken } from '../shares/application/factories/share-authorization.factory';
 import { SharedEntityType } from '../shares/domain/value-objects/shared-entity-type.enum';
@@ -36,6 +37,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     SourcesModule,
     IndexersModule,
     ContextModule,
+    StorageModule,
     forwardRef(() => SharesModule),
     forwardRef(() => SkillsModule),
     forwardRef(() => ThreadsModule),
