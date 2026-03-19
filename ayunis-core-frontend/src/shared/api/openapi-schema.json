@@ -10074,11 +10074,13 @@
               "SEAT_BASED",
               "USAGE_BASED"
             ],
-            "example": "SEAT_BASED"
+            "example": "SEAT_BASED",
+            "nullable": true
           }
         },
         "required": [
-          "hasActiveSubscription"
+          "hasActiveSubscription",
+          "subscriptionType"
         ]
       },
       "PriceResponseDto": {

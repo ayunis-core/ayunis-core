@@ -1093,8 +1093,9 @@ export interface DeleteAllPendingInvitesResponseDto {
 
 /**
  * Type of the active subscription. Null when there is no active subscription or on self-hosted deployments.
+ * @nullable
  */
-export type ActiveSubscriptionResponseDtoSubscriptionType = typeof ActiveSubscriptionResponseDtoSubscriptionType[keyof typeof ActiveSubscriptionResponseDtoSubscriptionType];
+export type ActiveSubscriptionResponseDtoSubscriptionType = typeof ActiveSubscriptionResponseDtoSubscriptionType[keyof typeof ActiveSubscriptionResponseDtoSubscriptionType] | null;
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -1106,8 +1107,11 @@ export const ActiveSubscriptionResponseDtoSubscriptionType = {
 export interface ActiveSubscriptionResponseDto {
   /** Whether the organization has an active subscription */
   hasActiveSubscription: boolean;
-  /** Type of the active subscription. Null when there is no active subscription or on self-hosted deployments. */
-  subscriptionType?: ActiveSubscriptionResponseDtoSubscriptionType;
+  /**
+   * Type of the active subscription. Null when there is no active subscription or on self-hosted deployments.
+   * @nullable
+   */
+  subscriptionType: ActiveSubscriptionResponseDtoSubscriptionType;
 }
 
 export interface PriceResponseDto {
