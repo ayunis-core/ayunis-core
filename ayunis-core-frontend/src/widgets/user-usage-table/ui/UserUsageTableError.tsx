@@ -35,7 +35,7 @@ export function UserUsageTableError({
     <Card>
       <CardHeader>
         <CardTitle>{t('userUsage.title')}</CardTitle>
-        <CardDescription>{description ?? t('userUsage.error')}</CardDescription>
+        {description && <CardDescription>{description}</CardDescription>}
         {headerAction && <CardAction>{headerAction}</CardAction>}
       </CardHeader>
       <CardContent>
