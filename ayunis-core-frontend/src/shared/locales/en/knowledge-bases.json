@@ -142,6 +142,7 @@
       "upload": "Upload",
       "empty": "No documents uploaded yet. Upload a PDF or DOCX file to get started.",
       "uploadSuccess": "Document uploaded successfully!",
+      "uploadAccepted": "Document uploaded — processing in the background...",
       "uploadError": "Failed to upload document. Please try again.",
       "addUrl": "Add URL",
       "urlPlaceholder": "https://example.com",
