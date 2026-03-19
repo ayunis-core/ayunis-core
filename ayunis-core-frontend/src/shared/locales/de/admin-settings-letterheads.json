@@ -3,13 +3,11 @@
     "title": "Briefpapier",
     "add": "Hinzufügen",
     "empty": "Noch kein Briefpapier vorhanden. Erstellen Sie ein Briefpapier, um es bei Dokumenten als Hintergrund zu verwenden.",
-    "table": {
-      "name": "Name",
-      "description": "Beschreibung",
-      "continuationPage": "Folgeseite",
-      "continuationPageYes": "Ja",
-      "continuationPageNo": "Nein",
-      "actions": "Aktionen"
+    "noDescription": "Keine Beschreibung",
+    "detail": {
+      "general": "Allgemein",
+      "firstPage": "Erste Seite",
+      "continuationPage": "Folgeseite"
     },
     "createDialog": {
       "title": "Briefpapier erstellen",

@@ -6,13 +6,16 @@ import {
   Delete,
   Param,
   Body,
+  Res,
   ParseUUIDPipe,
   Logger,
   UseInterceptors,
   UploadedFiles,
   BadRequestException,
+  NotFoundException,
   HttpCode,
   HttpStatus,
+  StreamableFile,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import {
@@ -21,7 +24,12 @@ import {
   ApiResponse,
   ApiParam,
   ApiConsumes,
+  ApiProduces,
 } from '@nestjs/swagger';
+import type { Response } from 'express';
+import { Readable } from 'stream';
+import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
+import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import type { UUID } from 'crypto';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -104,6 +112,7 @@ export class LetterheadsController {
     private readonly updateLetterheadUseCase: UpdateLetterheadUseCase,
     private readonly deleteLetterheadUseCase: DeleteLetterheadUseCase,
     private readonly letterheadDtoMapper: LetterheadDtoMapper,
+    private readonly downloadObjectUseCase: DownloadObjectUseCase,
   ) {}
 
   @Post()
@@ -131,7 +140,7 @@ export class LetterheadsController {
   ): Promise<LetterheadResponseDto> {
     this.logger.log('create', { name: dto.name });
 
-    const firstPageFile = files?.firstPagePdf?.[0];
+    const firstPageFile = files.firstPagePdf?.[0];
     if (!firstPageFile) {
       throw new BadRequestException('First page PDF file is required');
     }
@@ -151,7 +160,7 @@ export class LetterheadsController {
         description: dto.description,
         firstPagePdfBuffer: firstPageFile.buffer,
         continuationPagePdfBuffer:
-          files?.continuationPagePdf?.[0]?.buffer ?? null,
+          files.continuationPagePdf?.[0]?.buffer ?? null,
         firstPageMargins,
         continuationPageMargins,
       }),
@@ -194,6 +203,74 @@ export class LetterheadsController {
       new FindLetterheadQuery({ letterheadId: id }),
     );
     return this.letterheadDtoMapper.toDto(letterhead);
+  }
+
+  @Get(':id/first-page-pdf')
+  @ApiOperation({ summary: 'Download the first-page PDF of a letterhead' })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the letterhead',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiProduces('application/pdf')
+  @ApiResponse({ status: 200, description: 'The first-page PDF file' })
+  @ApiResponse({ status: 404, description: 'Letterhead not found' })
+  async downloadFirstPagePdf(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const letterhead = await this.findLetterheadUseCase.execute(
+      new FindLetterheadQuery({ letterheadId: id }),
+    );
+    return this.streamPdf(res, letterhead.firstPageStoragePath, 'first-page');
+  }
+
+  @Get(':id/continuation-page-pdf')
+  @ApiOperation({
+    summary: 'Download the continuation-page PDF of a letterhead',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the letterhead',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiProduces('application/pdf')
+  @ApiResponse({ status: 200, description: 'The continuation-page PDF file' })
+  @ApiResponse({ status: 404, description: 'Letterhead or PDF not found' })
+  async downloadContinuationPagePdf(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const letterhead = await this.findLetterheadUseCase.execute(
+      new FindLetterheadQuery({ letterheadId: id }),
+    );
+    if (!letterhead.continuationPageStoragePath) {
+      throw new NotFoundException(
+        'This letterhead has no continuation page PDF',
+      );
+    }
+    return this.streamPdf(
+      res,
+      letterhead.continuationPageStoragePath,
+      'continuation-page',
+    );
+  }
+
+  private async streamPdf(
+    res: Response,
+    storagePath: string,
+    filename: string,
+  ): Promise<StreamableFile> {
+    const stream = await this.downloadObjectUseCase.execute(
+      new DownloadObjectCommand(storagePath),
+    );
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="${filename}.pdf"`,
+    });
+    return new StreamableFile(stream as unknown as Readable);
   }
 
   @Patch(':id')
@@ -242,8 +319,8 @@ export class LetterheadsController {
         letterheadId: id,
         name: dto.name,
         description: dto.description,
-        firstPagePdfBuffer: files?.firstPagePdf?.[0]?.buffer,
-        continuationPagePdfBuffer: files?.continuationPagePdf?.[0]?.buffer,
+        firstPagePdfBuffer: files.firstPagePdf?.[0]?.buffer,
+        continuationPagePdfBuffer: files.continuationPagePdf?.[0]?.buffer,
         removeContinuationPage,
         firstPageMargins,
         continuationPageMargins,

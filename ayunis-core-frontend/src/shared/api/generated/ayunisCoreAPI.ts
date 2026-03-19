@@ -13162,6 +13162,192 @@ export const useLetterheadsControllerRemove = <TError = void,
     }
     
 /**
+ * @summary Download the first-page PDF of a letterhead
+ */
+export const letterheadsControllerDownloadFirstPagePdf = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/letterheads/${id}/first-page-pdf`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getLetterheadsControllerDownloadFirstPagePdfQueryKey = (id?: string,) => {
+    return [
+    `/letterheads/${id}/first-page-pdf`
+    ] as const;
+    }
+
+    
+export const getLetterheadsControllerDownloadFirstPagePdfQueryOptions = <TData = Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getLetterheadsControllerDownloadFirstPagePdfQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>> = ({ signal }) => letterheadsControllerDownloadFirstPagePdf(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type LetterheadsControllerDownloadFirstPagePdfQueryResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>>
+export type LetterheadsControllerDownloadFirstPagePdfQueryError = void
+
+
+export function useLetterheadsControllerDownloadFirstPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>,
+          TError,
+          Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLetterheadsControllerDownloadFirstPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>,
+          TError,
+          Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLetterheadsControllerDownloadFirstPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download the first-page PDF of a letterhead
+ */
+
+export function useLetterheadsControllerDownloadFirstPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getLetterheadsControllerDownloadFirstPagePdfQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Download the continuation-page PDF of a letterhead
+ */
+export const letterheadsControllerDownloadContinuationPagePdf = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/letterheads/${id}/continuation-page-pdf`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getLetterheadsControllerDownloadContinuationPagePdfQueryKey = (id?: string,) => {
+    return [
+    `/letterheads/${id}/continuation-page-pdf`
+    ] as const;
+    }
+
+    
+export const getLetterheadsControllerDownloadContinuationPagePdfQueryOptions = <TData = Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getLetterheadsControllerDownloadContinuationPagePdfQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>> = ({ signal }) => letterheadsControllerDownloadContinuationPagePdf(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type LetterheadsControllerDownloadContinuationPagePdfQueryResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>>
+export type LetterheadsControllerDownloadContinuationPagePdfQueryError = void
+
+
+export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>,
+          TError,
+          Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>,
+          TError,
+          Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download the continuation-page PDF of a letterhead
+ */
+
+export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getLetterheadsControllerDownloadContinuationPagePdfQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
  * Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.
  * @summary Send a message with optional images and receive streaming response
  */

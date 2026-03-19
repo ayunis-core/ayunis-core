@@ -1,11 +1,15 @@
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
-import { getLetterheadsControllerFindAllQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
+import { useRouter } from '@tanstack/react-router';
+import {
+  getLetterheadsControllerFindAllQueryKey,
+  getLetterheadsControllerFindOneQueryKey,
+} from '@/shared/api/generated/ayunisCoreAPI';
 import { customAxiosInstance } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
 import type { LetterheadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import type { PageMargins } from '../model/types';
+import type { PageMargins } from '@/shared/lib/letterhead-margins';
 
 interface UpdateLetterheadParams {
   id: string;
@@ -18,9 +22,10 @@ interface UpdateLetterheadParams {
   removeContinuationPage?: boolean;
 }
 
-export function useUpdateLetterhead(onSuccess?: () => void) {
+export function useUpdateLetterhead() {
   const queryClient = useQueryClient();
   const { t } = useTranslation('admin-settings-letterheads');
+  const router = useRouter();
 
   const mutation = useMutation({
     mutationFn: (params: UpdateLetterheadParams) => {
@@ -60,12 +65,15 @@ export function useUpdateLetterhead(onSuccess?: () => void) {
         data: formData,
       });
     },
-    onSuccess: () => {
+    onSuccess: (_data, params) => {
       void queryClient.invalidateQueries({
         queryKey: getLetterheadsControllerFindAllQueryKey(),
       });
+      void queryClient.invalidateQueries({
+        queryKey: getLetterheadsControllerFindOneQueryKey(params.id),
+      });
+      void router.invalidate();
       showSuccess(t('letterheads.editDialog.success'));
-      onSuccess?.();
     },
     onError: (error) => {
       try {

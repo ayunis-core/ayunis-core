@@ -203,6 +203,13 @@ export class HtmlDocumentExportService
       letterhead;
 
     return `
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  body > *:first-child {
+    margin-top: 0;
+  }
   @page {
     margin: ${cont.top}mm ${cont.right}mm ${cont.bottom}mm ${cont.left}mm;
   }
