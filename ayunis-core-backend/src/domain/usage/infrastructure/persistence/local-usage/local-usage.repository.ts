@@ -8,6 +8,7 @@ import {
   UsageRepository,
   ProviderUsage,
   ModelDistribution,
+  type UserUsageResult,
 } from '../../../application/ports/usage.repository';
 import { GetProviderUsageQuery } from '../../../application/use-cases/get-provider-usage/get-provider-usage.query';
 import { GetModelDistributionQuery } from '../../../application/use-cases/get-model-distribution/get-model-distribution.query';
@@ -28,6 +29,7 @@ import { getGlobalProviderTimeSeries } from './queries/get-global-provider-time-
 import { getGlobalModelStats } from './queries/get-global-model-stats.db-query';
 import { getUserUsageRows } from './queries/get-user-usage-rows.db-query';
 import { countUsersForUserUsage } from './queries/count-users-for-user-usage.db-query';
+import { sumCreditsForOrg } from './queries/sum-credits-for-org.db-query';
 import { findUsageRecordsByOrganization } from './queries/find-usage-records-by-organization.db-query';
 import { findUsageRecordsByUser } from './queries/find-usage-records-by-user.db-query';
 import { findUsageRecordsByModel } from './queries/find-usage-records-by-model.db-query';
@@ -161,17 +163,13 @@ export class LocalUsageRepository extends UsageRepository {
     return this.usageQueryMapper.mapModelStatsToDistribution(modelStats).items;
   }
 
-  async getUserUsage(
-    query: GetUserUsageQuery,
-  ): Promise<Paginated<UserUsageItem>> {
+  async getUserUsage(query: GetUserUsageQuery): Promise<UserUsageResult> {
     // Determine sort field and order
     const sortField = this.mapSortFieldForUsers(query.sortBy);
-    const sortOrder = query.sortOrder.toUpperCase() as
-      | 'ASC'
-      | 'DESC';
+    const sortOrder = query.sortOrder.toUpperCase() as 'ASC' | 'DESC';
 
-    // Fetch total count for pagination and rows via query helpers
-    const [total, userStats] = await Promise.all([
+    // Fetch total count, credit sum, and rows in parallel
+    const [total, totalCredits, userStats] = await Promise.all([
       countUsersForUserUsage({
         userRepository: this.userRepository,
         organizationId: query.organizationId,
@@ -179,6 +177,13 @@ export class LocalUsageRepository extends UsageRepository {
         endDate: query.endDate,
         searchTerm: query.searchTerm,
       }),
+
+      sumCreditsForOrg(
+        this.usageRepository,
+        query.organizationId,
+        query.startDate,
+        query.endDate,
+      ),
 
       getUserUsageRows({
         userRepository: this.userRepository,
@@ -207,12 +212,15 @@ export class LocalUsageRepository extends UsageRepository {
       });
     });
 
-    return new Paginated<UserUsageItem>({
-      data: users,
-      limit: query.limit,
-      offset: query.offset,
-      total,
-    });
+    return {
+      users: new Paginated<UserUsageItem>({
+        data: users,
+        limit: query.limit,
+        offset: query.offset,
+        total,
+      }),
+      totalCredits,
+    };
   }
 
   async getUsageStats(query: GetUsageStatsQuery): Promise<UsageStats> {
@@ -365,7 +373,7 @@ export class LocalUsageRepository extends UsageRepository {
     lastActivity?: Date | string | null;
   }): { credits: number; requests: number; lastActivity: Date | null } {
     return {
-      credits: row.credits ? parseFloat(row.credits) : 0,
+      credits: row.credits ? Math.round(parseFloat(row.credits)) : 0,
       requests: row.requests ? parseInt(row.requests, 10) : 0,
       lastActivity: row.lastActivity ? new Date(row.lastActivity) : null,
     };

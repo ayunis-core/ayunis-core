@@ -27,7 +27,7 @@ export async function getTopModels(
     qb.andWhere('usage.createdAt >= :startDate', { startDate });
   }
   if (endDate) {
-    qb.andWhere('usage.createdAt <= :endDate', { endDate });
+    qb.andWhere('usage.createdAt < :endDate', { endDate });
   }
 
   return await qb

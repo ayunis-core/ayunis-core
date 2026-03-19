@@ -1,5 +1,6 @@
 import {
   Card,
+  CardAction,
   CardHeader,
   CardTitle,
   CardDescription,
@@ -17,10 +18,14 @@ import { AlertCircle } from 'lucide-react';
 
 interface UserUsageTableErrorProps {
   error: unknown;
+  headerAction?: React.ReactNode;
+  description?: React.ReactNode;
 }
 
 export function UserUsageTableError({
   error,
+  headerAction,
+  description,
 }: Readonly<UserUsageTableErrorProps>) {
   const { t } = useTranslation('admin-settings-usage');
   const errorMessage =
@@ -30,7 +35,8 @@ export function UserUsageTableError({
     <Card>
       <CardHeader>
         <CardTitle>{t('userUsage.title')}</CardTitle>
-        <CardDescription>{t('userUsage.error')}</CardDescription>
+        <CardDescription>{description ?? t('userUsage.error')}</CardDescription>
+        {headerAction && <CardAction>{headerAction}</CardAction>}
       </CardHeader>
       <CardContent>
         <Empty>

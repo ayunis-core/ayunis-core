@@ -3320,6 +3320,8 @@ export interface UserUsageResponseDto {
   data: UserUsageDto[];
   /** Pagination metadata */
   pagination: PaginationDto;
+  /** Total credits consumed across all users in the filtered period */
+  totalCredits: number;
 }
 
 export interface UsageStatsResponseDto {

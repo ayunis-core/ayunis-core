@@ -13901,11 +13901,16 @@
                 "$ref": "#/components/schemas/PaginationDto"
               }
             ]
+          },
+          "totalCredits": {
+            "type": "number",
+            "description": "Total credits consumed across all users in the filtered period"
           }
         },
         "required": [
           "data",
-          "pagination"
+          "pagination",
+          "totalCredits"
         ]
       },
       "UsageStatsResponseDto": {

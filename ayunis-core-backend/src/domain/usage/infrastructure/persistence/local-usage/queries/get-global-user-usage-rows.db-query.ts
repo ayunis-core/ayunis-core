@@ -37,7 +37,7 @@ function buildUsageSubquery(
     });
   }
   if (params.endDate) {
-    qb.andWhere('usage.createdAt <= :endDate', {
+    qb.andWhere('usage.createdAt < :endDate', {
       endDate: params.endDate,
     });
   }

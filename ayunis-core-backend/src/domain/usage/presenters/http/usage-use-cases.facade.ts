@@ -13,8 +13,7 @@ import { GetUsageStatsQuery } from '../../application/use-cases/get-usage-stats/
 import { UsageStats } from '../../domain/usage-stats.entity';
 import { ProviderUsage } from '../../domain/provider-usage.entity';
 import { ModelDistribution } from '../../domain/model-distribution.entity';
-import { UserUsageItem } from '../../domain/user-usage-item.entity';
-import { Paginated } from 'src/common/pagination';
+import type { UserUsageResult } from '../../application/ports/usage.repository';
 import type { CreditUsage } from '../../domain/credit-usage';
 
 @Injectable()
@@ -37,7 +36,7 @@ export class UsageUseCasesFacade {
     return this.getModelDistributionUseCase.execute(query);
   }
 
-  getUserUsage(query: GetUserUsageQuery): Promise<Paginated<UserUsageItem>> {
+  getUserUsage(query: GetUserUsageQuery): Promise<UserUsageResult> {
     return this.getUserUsageUseCase.execute(query);
   }
 

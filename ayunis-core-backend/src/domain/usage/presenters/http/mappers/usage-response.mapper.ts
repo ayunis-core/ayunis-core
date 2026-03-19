@@ -7,8 +7,7 @@ import { UserUsageResponseDtoMapper } from './user-usage-response-dto.mapper';
 import { UsageStats } from '../../../domain/usage-stats.entity';
 import { ProviderUsage } from '../../../domain/provider-usage.entity';
 import { ModelDistribution } from '../../../domain/model-distribution.entity';
-import { UserUsageItem } from '../../../domain/user-usage-item.entity';
-import { Paginated } from 'src/common/pagination';
+import type { UserUsageResult } from '../../../application/ports/usage.repository';
 import { UsageStatsResponseDto } from '../dto/usage-stats-response.dto';
 import { ProviderUsageResponseDto } from '../dto/provider-usage-response.dto';
 import { ProviderUsageChartResponseDto } from '../dto/provider-usage-chart-response.dto';
@@ -45,7 +44,7 @@ export class UsageResponseMapper {
     return this.modelDistributionMapper.toDto(modelDistribution);
   }
 
-  toUserUsageDto(userUsage: Paginated<UserUsageItem>): UserUsageResponseDto {
-    return this.userUsageMapper.toDto(userUsage);
+  toUserUsageDto(result: UserUsageResult): UserUsageResponseDto {
+    return this.userUsageMapper.toDto(result);
   }
 }

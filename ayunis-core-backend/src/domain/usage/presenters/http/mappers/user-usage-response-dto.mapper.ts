@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UserUsageItem } from '../../../domain/user-usage-item.entity';
-import { Paginated } from 'src/common/pagination';
+import type { UserUsageResult } from '../../../application/ports/usage.repository';
 import {
   UserUsageResponseDto,
   UserUsageDto,
@@ -8,14 +8,15 @@ import {
 
 @Injectable()
 export class UserUsageResponseDtoMapper {
-  toDto(userUsageResult: Paginated<UserUsageItem>): UserUsageResponseDto {
+  toDto(result: UserUsageResult): UserUsageResponseDto {
     return {
-      data: userUsageResult.data.map((user) => this.toUserDto(user)),
+      data: result.users.data.map((user) => this.toUserDto(user)),
       pagination: {
-        limit: userUsageResult.limit,
-        offset: userUsageResult.offset,
-        total: userUsageResult.total,
+        limit: result.users.limit,
+        offset: result.users.offset,
+        total: result.users.total,
       },
+      totalCredits: result.totalCredits,
     };
   }
 

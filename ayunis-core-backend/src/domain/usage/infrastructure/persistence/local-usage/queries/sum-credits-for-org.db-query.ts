@@ -2,7 +2,7 @@ import type { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 import type { UsageRecord } from '../schema/usage.record';
 
-export async function countUsagesInRange(
+export async function sumCreditsForOrg(
   usageRepository: Repository<UsageRecord>,
   organizationId: UUID,
   startDate?: Date,
@@ -10,6 +10,7 @@ export async function countUsagesInRange(
 ): Promise<number> {
   const qb = usageRepository
     .createQueryBuilder('usage')
+    .select('COALESCE(SUM(usage.creditsConsumed), 0)', 'totalCredits')
     .where('usage.organizationId = :orgId', { orgId: organizationId });
 
   if (startDate) {
@@ -19,5 +20,7 @@ export async function countUsagesInRange(
     qb.andWhere('usage.createdAt < :endDate', { endDate });
   }
 
-  return await qb.getCount();
+  const result = await qb.getRawOne<{ totalCredits: string }>();
+
+  return Math.round(parseFloat(result?.totalCredits ?? '0'));
 }

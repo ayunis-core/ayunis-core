@@ -10,4 +10,10 @@ export class UserUsageResponseDto {
 
   @ApiProperty({ description: 'Pagination metadata', type: PaginationDto })
   pagination: PaginationDto;
+
+  @ApiProperty({
+    description:
+      'Total credits consumed across all users in the filtered period',
+  })
+  totalCredits: number;
 }
