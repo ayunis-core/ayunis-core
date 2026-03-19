@@ -72,6 +72,7 @@
     "status": "Status",
     "active": "aktiv",
     "inactive": "inaktiv",
+    "totalCredits": "Gesamt: {{credits}} Credits",
     "emptyState": "Keine Benutzer entsprechen den ausgewählten Filtern auf dieser Seite. Versuchen Sie, Ihre Filter anzupassen oder zu einer anderen Seite zu navigieren."
   }
 }

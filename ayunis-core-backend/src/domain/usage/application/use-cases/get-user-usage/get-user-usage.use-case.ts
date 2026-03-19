@@ -1,13 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetUserUsageQuery } from './get-user-usage.query';
-import { UsageRepository, UserUsageItem } from '../../ports/usage.repository';
+import {
+  UsageRepository,
+  type UserUsageResult,
+} from '../../ports/usage.repository';
 import {
   InvalidPaginationError,
   UnexpectedUsageError,
 } from '../../usage.errors';
 import { validateOptionalDateRange } from '../../usage.utils';
 import { UsageConstants } from '../../../domain/value-objects/usage.constants';
-import { Paginated } from 'src/common/pagination';
 import { ApplicationError } from '../../../../../common/errors/base.error';
 
 @Injectable()
@@ -16,7 +18,7 @@ export class GetUserUsageUseCase {
 
   constructor(private readonly usageRepository: UsageRepository) {}
 
-  async execute(query: GetUserUsageQuery): Promise<Paginated<UserUsageItem>> {
+  async execute(query: GetUserUsageQuery): Promise<UserUsageResult> {
     this.validateQuery(query);
 
     try {

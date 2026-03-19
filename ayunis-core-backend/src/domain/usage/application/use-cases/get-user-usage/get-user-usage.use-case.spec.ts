@@ -9,8 +9,16 @@ import {
 } from '../../usage.errors';
 import { Paginated } from 'src/common/pagination';
 import { UserUsageItem } from '../../../domain/user-usage-item.entity';
+import type { UserUsageResult } from '../../ports/usage.repository';
 import type { UUID } from 'crypto';
 import { UsageConstants } from '../../../domain/value-objects/usage.constants';
+
+function mockUserUsageResult(
+  users: Paginated<UserUsageItem>,
+  totalCredits = 0,
+): UserUsageResult {
+  return { users, totalCredits };
+}
 
 describe('GetUserUsageUseCase', () => {
   let useCase: GetUserUsageUseCase;
@@ -44,35 +52,39 @@ describe('GetUserUsageUseCase', () => {
     it('should return user usage data', async () => {
       const userId = 'user-id' as UUID;
 
-      const mockUserUsage = new Paginated<UserUsageItem>({
-        data: [
-          new UserUsageItem({
-            userId,
-            userName: 'Test User',
-            userEmail: 'test@example.com',
-            credits: 100,
-            requests: 5,
-            lastActivity: new Date(),
-            isActive: true,
-          }),
-        ],
-        limit: 50,
-        offset: 0,
-        total: 1,
-      });
+      const mockResult = mockUserUsageResult(
+        new Paginated<UserUsageItem>({
+          data: [
+            new UserUsageItem({
+              userId,
+              userName: 'Test User',
+              userEmail: 'test@example.com',
+              credits: 100,
+              requests: 5,
+              lastActivity: new Date(),
+              isActive: true,
+            }),
+          ],
+          limit: 50,
+          offset: 0,
+          total: 1,
+        }),
+        100,
+      );
 
       jest
         .spyOn(mockUsageRepository, 'getUserUsage')
-        .mockResolvedValue(mockUserUsage);
+        .mockResolvedValue(mockResult);
 
       const query = new GetUserUsageQuery({ organizationId: orgId });
 
       const result = await useCase.execute(query);
 
       expect(result).toBeDefined();
-      expect(result.data).toHaveLength(1);
-      expect(result.data[0].userId).toBe(userId);
-      expect(result.data[0].isActive).toBe(true);
+      expect(result.users.data).toHaveLength(1);
+      expect(result.users.data[0].userId).toBe(userId);
+      expect(result.users.data[0].isActive).toBe(true);
+      expect(result.totalCredits).toBe(100);
     });
   });
 
@@ -152,14 +164,18 @@ describe('GetUserUsageUseCase', () => {
         endDate,
       });
 
-      jest.spyOn(mockUsageRepository, 'getUserUsage').mockResolvedValue(
-        new Paginated<UserUsageItem>({
-          data: [],
-          limit: 50,
-          offset: 0,
-          total: 0,
-        }),
-      );
+      jest
+        .spyOn(mockUsageRepository, 'getUserUsage')
+        .mockResolvedValue(
+          mockUserUsageResult(
+            new Paginated<UserUsageItem>({
+              data: [],
+              limit: 50,
+              offset: 0,
+              total: 0,
+            }),
+          ),
+        );
 
       await expect(useCase.execute(query)).resolves.toBeDefined();
     });
@@ -221,14 +237,18 @@ describe('GetUserUsageUseCase', () => {
         offset: 0,
       });
 
-      jest.spyOn(mockUsageRepository, 'getUserUsage').mockResolvedValue(
-        new Paginated<UserUsageItem>({
-          data: [],
-          limit: 50,
-          offset: 0,
-          total: 0,
-        }),
-      );
+      jest
+        .spyOn(mockUsageRepository, 'getUserUsage')
+        .mockResolvedValue(
+          mockUserUsageResult(
+            new Paginated<UserUsageItem>({
+              data: [],
+              limit: 50,
+              offset: 0,
+              total: 0,
+            }),
+          ),
+        );
 
       await expect(useCase.execute(query)).resolves.toBeDefined();
     });
@@ -265,14 +285,18 @@ describe('GetUserUsageUseCase', () => {
         sortOrder: 'desc',
       });
 
-      jest.spyOn(mockUsageRepository, 'getUserUsage').mockResolvedValue(
-        new Paginated<UserUsageItem>({
-          data: [],
-          limit: 50,
-          offset: 0,
-          total: 0,
-        }),
-      );
+      jest
+        .spyOn(mockUsageRepository, 'getUserUsage')
+        .mockResolvedValue(
+          mockUserUsageResult(
+            new Paginated<UserUsageItem>({
+              data: [],
+              limit: 50,
+              offset: 0,
+              total: 0,
+            }),
+          ),
+        );
 
       await expect(useCase.execute(query)).resolves.toBeDefined();
     });

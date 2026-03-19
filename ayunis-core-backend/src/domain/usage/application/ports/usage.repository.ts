@@ -23,6 +23,11 @@ export {
   GlobalUserUsageItem,
 };
 
+export interface UserUsageResult {
+  users: Paginated<UserUsageItem>;
+  totalCredits: number;
+}
+
 export abstract class UsageRepository {
   abstract save(usage: Usage): Promise<void>;
   abstract saveBatch(usages: Usage[]): Promise<void>;
@@ -47,9 +52,7 @@ export abstract class UsageRepository {
   abstract getModelDistribution(
     query: GetModelDistributionQuery,
   ): Promise<ModelDistribution[]>;
-  abstract getUserUsage(
-    query: GetUserUsageQuery,
-  ): Promise<Paginated<UserUsageItem>>;
+  abstract getUserUsage(query: GetUserUsageQuery): Promise<UserUsageResult>;
   abstract getUsageStats(query: GetUsageStatsQuery): Promise<UsageStats>;
   abstract getUsageCount(
     organizationId: UUID,

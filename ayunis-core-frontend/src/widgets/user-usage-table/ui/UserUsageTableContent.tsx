@@ -10,6 +10,8 @@ import {
 } from '@/shared/ui/shadcn/table';
 import {
   Card,
+  CardAction,
+  CardDescription,
   CardHeader,
   CardTitle,
   CardContent,
@@ -22,6 +24,8 @@ interface UserUsageTableContentProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  headerAction?: React.ReactNode;
+  description?: React.ReactNode;
 }
 
 export function UserUsageTableContent({
@@ -29,6 +33,8 @@ export function UserUsageTableContent({
   currentPage,
   totalPages,
   onPageChange,
+  headerAction,
+  description,
 }: Readonly<UserUsageTableContentProps>) {
   const { t } = useTranslation('admin-settings-usage');
 
@@ -36,6 +42,8 @@ export function UserUsageTableContent({
     <Card>
       <CardHeader>
         <CardTitle>{t('userUsage.title')}</CardTitle>
+        {description && <CardDescription>{description}</CardDescription>}
+        {headerAction && <CardAction>{headerAction}</CardAction>}
       </CardHeader>
       <CardContent>
         <Table className="w-[750px]">
@@ -45,7 +53,6 @@ export function UserUsageTableContent({
               <TableHead>{t('userUsage.credits')}</TableHead>
               <TableHead>{t('userUsage.requests')}</TableHead>
               <TableHead>{t('userUsage.lastActive')}</TableHead>
-              <TableHead>{t('userUsage.status')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -56,7 +63,7 @@ export function UserUsageTableContent({
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={4}
                   className="text-center py-8 text-muted-foreground"
                 >
                   {t('userUsage.emptyState')}
