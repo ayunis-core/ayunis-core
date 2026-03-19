@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { UUID } from 'crypto';
+import { SourceStatus } from '../../../domain/source-status.enum';
 import { TextSource } from '../../../domain/sources/text-source.entity';
 import { DataSource } from '../../../domain/sources/data-source.entity';
 import { SourceRepository } from '../../../application/ports/source.repository';
@@ -46,13 +47,14 @@ export class LocalSourceRepository extends SourceRepository {
       return null;
     }
     if (record instanceof TextSourceRecord) {
-      const textSourceDetails = await this.textSourceDetailsRepository.findOne({
+      // Only check that the details row exists — never load the `text`
+      // column, which can be very large, into application memory.
+      const detailsExist = await this.textSourceDetailsRepository.exists({
         where: { source: { id } },
       });
-      if (!textSourceDetails) {
+      if (!detailsExist) {
         return null;
       }
-      record.textSourceDetails = textSourceDetails;
       return this.mapper.toDomain(record);
     }
     if (record instanceof DataSourceRecord) {
@@ -126,10 +128,28 @@ export class LocalSourceRepository extends SourceRepository {
     return this.mapper.toDomain(savedSource as TextSourceRecord);
   }
 
+  async findStaleProcessingSources(threshold: Date): Promise<Source[]> {
+    this.logger.log('findStaleProcessingSources', { threshold });
+    const records = await this.sourceRepository.find({
+      where: {
+        status: SourceStatus.PROCESSING,
+        processingStartedAt: LessThan(threshold),
+      },
+    });
+    return records.map((record) => this.mapper.toDomain(record));
+  }
+
+  async save(source: TextSource): Promise<TextSource>;
   async save(source: DataSource): Promise<DataSource>;
   async save(source: Source): Promise<Source>;
   async save(source: Source): Promise<Source> {
     this.logger.log('save', { sourceId: source.id });
+    if (source instanceof TextSource) {
+      const { source: sourceRecord } = this.mapper.toRecord(source);
+      const savedSource = await this.sourceRepository.save(sourceRecord);
+      this.logger.debug('Saved source record with id', { id: savedSource.id });
+      return this.mapper.toDomain(savedSource as TextSourceRecord);
+    }
     if (source instanceof DataSource) {
       const { source: sourceRecord, details } = this.mapper.toRecord(source);
       sourceRecord.dataSourceDetails = details;
@@ -139,7 +159,7 @@ export class LocalSourceRepository extends SourceRepository {
       savedSource.dataSourceDetails = savedDetails;
       return this.mapper.toDomain(savedSource);
     }
-    throw new Error('Use saveTextSource for TextSource entities');
+    throw new Error('Unsupported source type');
   }
 
   async extractTextLines(

@@ -3,6 +3,7 @@ import { LocalSourceRepositoryModule } from './infrastructure/persistence/local/
 import { SplitterModule } from '../rag/splitters/splitter.module';
 import { RetrieverModule } from '../retrievers/retriever.module';
 import { IndexersModule } from '../rag/indexers/indexers.module';
+import { DocumentProcessingModule } from './infrastructure/queue/document-processing.module';
 
 // Import all use cases
 import { GetTextSourceByIdUseCase } from './application/use-cases/get-text-source-by-id/get-text-source-by-id.use-case';
@@ -17,6 +18,9 @@ import { FindContentChunksByIdsUseCase } from './application/use-cases/find-cont
 import { ExtractTextLinesUseCase } from './application/use-cases/extract-text-lines/extract-text-lines.use-case';
 import { GetSourcesByKnowledgeBaseIdUseCase } from './application/use-cases/get-sources-by-knowledge-base-id/get-sources-by-knowledge-base-id.use-case';
 import { CreateSourcesFromFileUseCase } from './application/use-cases/create-sources-from-file/create-sources-from-file.use-case';
+import { CreateProcessingSourceUseCase } from './application/use-cases/create-processing-source/create-processing-source.use-case';
+import { MarkSourceFailedUseCase } from './application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import { EnqueueDocumentProcessingUseCase } from './application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
 
 @Module({
   imports: [
@@ -24,6 +28,7 @@ import { CreateSourcesFromFileUseCase } from './application/use-cases/create-sou
     RetrieverModule,
     SplitterModule,
     IndexersModule,
+    DocumentProcessingModule,
   ],
   providers: [
     GetTextSourceByIdUseCase,
@@ -38,9 +43,13 @@ import { CreateSourcesFromFileUseCase } from './application/use-cases/create-sou
     ExtractTextLinesUseCase,
     GetSourcesByKnowledgeBaseIdUseCase,
     CreateSourcesFromFileUseCase,
+    CreateProcessingSourceUseCase,
+    MarkSourceFailedUseCase,
+    EnqueueDocumentProcessingUseCase,
   ],
   exports: [
     LocalSourceRepositoryModule,
+    DocumentProcessingModule,
     GetTextSourceByIdUseCase,
     GetSourceByIdUseCase,
     DeleteSourceUseCase,
@@ -53,6 +62,9 @@ import { CreateSourcesFromFileUseCase } from './application/use-cases/create-sou
     ExtractTextLinesUseCase,
     GetSourcesByKnowledgeBaseIdUseCase,
     CreateSourcesFromFileUseCase,
+    CreateProcessingSourceUseCase,
+    MarkSourceFailedUseCase,
+    EnqueueDocumentProcessingUseCase,
   ],
 })
 export class SourcesModule {}

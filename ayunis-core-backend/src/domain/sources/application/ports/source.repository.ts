@@ -12,6 +12,7 @@ export abstract class SourceRepository {
     source: TextSource,
     content: { text: string; chunks: TextSourceContentChunk[] },
   ): Promise<TextSource>;
+  abstract findStaleProcessingSources(threshold: Date): Promise<Source[]>;
   abstract save(source: Source): Promise<Source>;
   abstract extractTextLines(
     sourceId: UUID,
