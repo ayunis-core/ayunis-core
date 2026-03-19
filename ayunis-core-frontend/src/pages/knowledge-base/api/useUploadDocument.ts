@@ -1,10 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { showSuccess, showError } from '@/shared/lib/toast';
+import { showSuccess } from '@/shared/lib/toast';
 import {
   useKnowledgeBasesControllerAddDocument,
   getKnowledgeBasesControllerListDocumentsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 
 export function useUploadDocument(knowledgeBaseId: string) {
   const { t } = useTranslation('knowledge-bases');
@@ -19,8 +20,8 @@ export function useUploadDocument(knowledgeBaseId: string) {
         });
         showSuccess(t('detail.documents.uploadSuccess'));
       },
-      onError: () => {
-        showError(t('detail.documents.uploadError'));
+      onError: (error: unknown) => {
+        handleSourceUploadError(error, t);
       },
     },
   });
