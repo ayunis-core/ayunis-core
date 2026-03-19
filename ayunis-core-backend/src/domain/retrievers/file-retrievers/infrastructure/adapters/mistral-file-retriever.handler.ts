@@ -7,7 +7,10 @@ import {
 import {
   FileRetrievalFailedError,
   FileRetrieverUnexpectedError,
+  ServiceBusyError,
+  ServiceTimeoutError,
 } from '../../application/file-retriever.errors';
+import { MistralError } from '@mistralai/mistralai/models/errors';
 import { Mistral } from '@mistralai/mistralai';
 import { OCRResponse } from '@mistralai/mistralai/models/components';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
@@ -122,9 +125,19 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
         `Mistral OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         error instanceof Error ? error.stack : 'Unknown error',
       );
-      throw new FileRetrieverUnexpectedError(error as Error, {
-        model: this.MODEL_NAME,
-      });
+
+      const metadata = { model: this.MODEL_NAME };
+
+      if (error instanceof MistralError) {
+        if (error.statusCode === 502 || error.statusCode === 503) {
+          throw new ServiceBusyError(metadata);
+        }
+        if (error.statusCode === 504) {
+          throw new ServiceTimeoutError(metadata);
+        }
+      }
+
+      throw new FileRetrieverUnexpectedError(error as Error, metadata);
     }
   }
 
