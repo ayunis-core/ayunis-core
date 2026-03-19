@@ -21,9 +21,15 @@ import {
 } from '@/shared/ui/shadcn/dialog';
 import {
   KnowledgeBaseDocumentResponseDtoTextType,
+  KnowledgeBaseDocumentResponseDtoStatus,
   type KnowledgeBaseDocumentResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { Upload, X, FileText, Globe, Loader2 } from 'lucide-react';
+import { Upload, X, FileText, Globe, Loader2, AlertCircle } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/shared/ui/shadcn/tooltip';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import {
@@ -215,17 +221,41 @@ function DocumentItem({
   isRemoving: boolean;
   disabled?: boolean;
 }>) {
+  const { t } = useTranslation('knowledge-bases');
   const isWeb = doc.textType === KnowledgeBaseDocumentResponseDtoTextType.web;
-  const Icon = isWeb ? Globe : FileText;
+  const isProcessing =
+    doc.status === KnowledgeBaseDocumentResponseDtoStatus.processing;
+  const isFailed = doc.status === KnowledgeBaseDocumentResponseDtoStatus.failed;
 
   return (
     <Badge
-      variant="secondary"
+      variant={isFailed ? 'destructive' : 'secondary'}
       className="flex items-center gap-1.5 py-1.5 px-3"
       title={isWeb ? (doc.url ?? undefined) : undefined}
     >
-      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <DocumentItemIcon
+        isWeb={isWeb}
+        isProcessing={isProcessing}
+        isFailed={isFailed}
+      />
       <span className="max-w-[200px] truncate">{doc.name}</span>
+      {isProcessing && (
+        <span className="text-xs text-muted-foreground">
+          {t('detail.documents.statusProcessing')}
+        </span>
+      )}
+      {isFailed && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="text-xs cursor-help">
+              {t('detail.documents.statusFailed')}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            {doc.processingError ?? t('detail.documents.retryUpload')}
+          </TooltipContent>
+        </Tooltip>
+      )}
       {!disabled && (
         <Button
           type="button"
@@ -240,6 +270,25 @@ function DocumentItem({
       )}
     </Badge>
   );
+}
+
+function DocumentItemIcon({
+  isWeb,
+  isProcessing,
+  isFailed,
+}: Readonly<{
+  isWeb: boolean;
+  isProcessing: boolean;
+  isFailed: boolean;
+}>) {
+  if (isProcessing) {
+    return <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />;
+  }
+  if (isFailed) {
+    return <AlertCircle className="h-3.5 w-3.5 shrink-0" />;
+  }
+  const Icon = isWeb ? Globe : FileText;
+  return <Icon className="h-3.5 w-3.5 shrink-0" />;
 }
 
 function AddUrlDialog({

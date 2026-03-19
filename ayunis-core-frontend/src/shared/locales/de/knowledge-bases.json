@@ -152,6 +152,9 @@
       "addUrlError": "URL konnte nicht hinzugefügt werden. Bitte überprüfen Sie die URL und versuchen Sie es erneut.",
       "addUrlRetrievalFailed": "Die Website konnte nicht erreicht werden. Bitte überprüfen Sie, ob die URL korrekt ist und die Website erreichbar ist.",
       "addUrlUnsupportedContentType": "Diese URL verweist auf eine Datei (z. B. PDF) statt auf eine Website. Bitte laden Sie die Datei herunter und laden Sie sie direkt hoch.",
+      "statusProcessing": "Wird verarbeitet…",
+      "statusFailed": "Fehlgeschlagen",
+      "retryUpload": "Entfernen und erneut hochladen",
       "removeSuccess": "Dokument erfolgreich entfernt!",
       "removeError": "Dokument konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
       "urlDialogCancel": "Abbrechen"
