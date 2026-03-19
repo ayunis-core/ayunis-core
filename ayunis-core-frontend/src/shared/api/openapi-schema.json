@@ -5385,8 +5385,8 @@
           }
         },
         "responses": {
-          "201": {
-            "description": "The document has been added to the knowledge base",
+          "202": {
+            "description": "The document has been accepted and is being processed in the background",
             "content": {
               "application/json": {
                 "schema": {

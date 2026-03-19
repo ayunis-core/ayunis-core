@@ -7,3 +7,7 @@ export function showSuccess(message: string) {
 export function showError(message: string) {
   toast.error(message, { position: 'bottom-center', closeButton: true });
 }
+
+export function showInfo(message: string) {
+  toast.info(message, { position: 'bottom-center', closeButton: true });
+}
