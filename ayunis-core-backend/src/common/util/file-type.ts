@@ -22,6 +22,9 @@ export const MIME_TYPES = {
 
   // Plain text
   TXT: 'text/plain',
+
+  // Markdown
+  MD: 'text/markdown',
 } as const;
 
 /**
@@ -35,6 +38,7 @@ export const FILE_EXTENSIONS = {
   XLS: '.xls',
   CSV: '.csv',
   TXT: '.txt',
+  MD: '.md',
 } as const;
 
 export type DetectedFileType =
@@ -56,6 +60,7 @@ const MIME_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [MIME_TYPES.CSV]: 'csv',
   // Note: MIME_TYPES.XLS is intentionally excluded — XLS MIME can also indicate CSV files
   // Note: MIME_TYPES.TXT is intentionally excluded — text/plain is too broad (matches .md, .log, .json, etc.)
+  [MIME_TYPES.MD]: 'txt',
 };
 
 /** Lookup: file extension → detected file type */
@@ -67,6 +72,7 @@ const EXT_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [FILE_EXTENSIONS.XLS]: 'xls',
   [FILE_EXTENSIONS.CSV]: 'csv',
   [FILE_EXTENSIONS.TXT]: 'txt',
+  [FILE_EXTENSIONS.MD]: 'txt',
 };
 
 /**
@@ -99,8 +105,7 @@ export function isPlainTextFile(fileType: DetectedFileType): boolean {
 }
 
 /**
- * Check if the file type is a document that should be processed through Docling
- * (PDF, Word, PowerPoint)
+ * Check if the file type is a document (PDF, Word, PowerPoint)
  */
 export function isDocumentFile(fileType: DetectedFileType): boolean {
   return fileType === 'pdf' || fileType === 'docx' || fileType === 'pptx';

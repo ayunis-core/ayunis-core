@@ -5,22 +5,30 @@ import { FileRetrieverRegistry } from './application/file-retriever-handler.regi
 import { RetrieveFileContentUseCase } from './application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
 import { FileRetrieverType } from './domain/value-objects/file-retriever-type.enum';
 import { NpmPdfParseFileRetrieverHandler } from './infrastructure/adapters/npm-pdf-parse-file-retriever.handler';
-import { DoclingFileRetrieverHandler } from './infrastructure/adapters/docling-file-retriever.handler';
+import { GotenbergConverterService } from './infrastructure/adapters/gotenberg-converter.service';
+import { DocumentConverterPort } from './application/ports/document-converter.port';
 import retrievalConfig from 'src/config/retrieval.config';
+import { gotenbergConfig } from 'src/config/gotenberg.config';
 
 @Module({
-  imports: [ConfigModule.forFeature(retrievalConfig)],
+  imports: [
+    ConfigModule.forFeature(retrievalConfig),
+    ConfigModule.forFeature(gotenbergConfig),
+  ],
   providers: [
     FileRetrieverRegistry,
-    MistralFileRetrieverHandler, // Keep handler code - may be re-enabled in future
+    MistralFileRetrieverHandler,
     NpmPdfParseFileRetrieverHandler,
-    DoclingFileRetrieverHandler,
+    GotenbergConverterService,
     RetrieveFileContentUseCase,
+    {
+      provide: DocumentConverterPort,
+      useExisting: GotenbergConverterService,
+    },
     {
       provide: FileRetrieverRegistry,
       useFactory: (
         npmPdfParseHandler: NpmPdfParseFileRetrieverHandler,
-        doclingHandler: DoclingFileRetrieverHandler,
         mistralHandler: MistralFileRetrieverHandler,
       ) => {
         const registry = new FileRetrieverRegistry();
@@ -28,15 +36,10 @@ import retrievalConfig from 'src/config/retrieval.config';
           FileRetrieverType.NPM_PDF_PARSE,
           npmPdfParseHandler,
         );
-        registry.registerHandler(FileRetrieverType.DOCLING, doclingHandler);
         registry.registerHandler(FileRetrieverType.MISTRAL, mistralHandler);
         return registry;
       },
-      inject: [
-        NpmPdfParseFileRetrieverHandler,
-        DoclingFileRetrieverHandler,
-        MistralFileRetrieverHandler,
-      ],
+      inject: [NpmPdfParseFileRetrieverHandler, MistralFileRetrieverHandler],
     },
   ],
   exports: [RetrieveFileContentUseCase, FileRetrieverRegistry],
