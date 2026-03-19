@@ -60,7 +60,7 @@ describe('HasActiveSubscriptionUseCase', () => {
   });
 
   describe('execute', () => {
-    it('should return true for self-hosted instances', async () => {
+    it('should return true with null type for self-hosted instances', async () => {
       // Arrange
       const query = new HasActiveSubscriptionQuery(mockOrgId);
       configService.get.mockReturnValue(true);
@@ -69,7 +69,10 @@ describe('HasActiveSubscriptionUseCase', () => {
       const result = await useCase.execute(query);
 
       // Assert
-      expect(result).toBe(true);
+      expect(result).toEqual({
+        hasActiveSubscription: true,
+        subscriptionType: null,
+      });
       expect(configService.get).toHaveBeenCalledWith('app.isSelfHosted');
       expect(subscriptionRepository.findByOrgId).not.toHaveBeenCalled();
     });
@@ -84,20 +87,23 @@ describe('HasActiveSubscriptionUseCase', () => {
       const result = await useCase.execute(query);
 
       // Assert
-      expect(result).toBe(false);
+      expect(result).toEqual({
+        hasActiveSubscription: false,
+        subscriptionType: null,
+      });
       expect(subscriptionRepository.findByOrgId).toHaveBeenCalledWith(
         mockOrgId,
       );
     });
 
-    it('should return true when at least one active subscription exists', async () => {
+    it('should return true with subscription type when active subscription exists', async () => {
       // Arrange
       const query = new HasActiveSubscriptionQuery(mockOrgId);
       configService.get.mockReturnValue(false);
 
       const mockSubscriptions = [
-        { id: '1', orgId: mockOrgId } as any,
-        { id: '2', orgId: mockOrgId } as any,
+        { id: '1', orgId: mockOrgId, type: 'USAGE_BASED' } as any,
+        { id: '2', orgId: mockOrgId, type: 'SEAT_BASED' } as any,
       ];
 
       subscriptionRepository.findByOrgId.mockResolvedValue(
@@ -109,7 +115,10 @@ describe('HasActiveSubscriptionUseCase', () => {
       const result = await useCase.execute(query);
 
       // Assert
-      expect(result).toBe(true);
+      expect(result).toEqual({
+        hasActiveSubscription: true,
+        subscriptionType: 'USAGE_BASED',
+      });
       expect(subscriptionRepository.findByOrgId).toHaveBeenCalledWith(
         mockOrgId,
       );
@@ -135,7 +144,10 @@ describe('HasActiveSubscriptionUseCase', () => {
       const result = await useCase.execute(query);
 
       // Assert
-      expect(result).toBe(false);
+      expect(result).toEqual({
+        hasActiveSubscription: false,
+        subscriptionType: null,
+      });
       expect(subscriptionRepository.findByOrgId).toHaveBeenCalledWith(
         mockOrgId,
       );

@@ -48,6 +48,7 @@ export class SubscriptionGuard implements CanActivate {
       .getRequest<RequestWithSubscriptionContext>();
     const user = request.user;
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive guard for runtime safety
     if (!user) {
       this.logger.warn('User not found in request context');
       return false;
@@ -59,7 +60,7 @@ export class SubscriptionGuard implements CanActivate {
     });
 
     try {
-      const hasActiveSubscription =
+      const { hasActiveSubscription } =
         await this.hasActiveSubscriptionUseCase.execute(
           new HasActiveSubscriptionQuery(user.orgId),
         );
@@ -87,6 +88,7 @@ export class SubscriptionGuard implements CanActivate {
         new GetTrialQuery(user.orgId),
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive guard for runtime safety
       if (!trial) {
         this.logger.warn('Access denied: no trial found', {
           orgId: user.orgId,

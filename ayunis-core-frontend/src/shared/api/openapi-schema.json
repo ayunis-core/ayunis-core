@@ -10066,6 +10066,15 @@
             "type": "boolean",
             "description": "Whether the organization has an active subscription",
             "example": true
+          },
+          "subscriptionType": {
+            "type": "string",
+            "description": "Type of the active subscription. Null when there is no active subscription or on self-hosted deployments.",
+            "enum": [
+              "SEAT_BASED",
+              "USAGE_BASED"
+            ],
+            "example": "SEAT_BASED"
           }
         },
         "required": [

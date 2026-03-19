@@ -49,14 +49,16 @@ export class SubscriptionsController {
     this.logger.log(`Checking active subscription for org ${orgId}`);
 
     const query = new HasActiveSubscriptionQuery(orgId);
-    const hasActiveSubscription =
-      await this.hasActiveSubscriptionUseCase.execute(query);
+    const result = await this.hasActiveSubscriptionUseCase.execute(query);
 
     this.logger.log(
-      `Active subscription check result for org ${orgId}: ${hasActiveSubscription}`,
+      `Active subscription check result for org ${orgId}: ${result.hasActiveSubscription}`,
     );
 
-    return { hasActiveSubscription };
+    return {
+      hasActiveSubscription: result.hasActiveSubscription,
+      subscriptionType: result.subscriptionType,
+    };
   }
 
   @Get('price')

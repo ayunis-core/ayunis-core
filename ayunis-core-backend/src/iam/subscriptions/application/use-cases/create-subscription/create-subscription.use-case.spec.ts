@@ -110,7 +110,10 @@ describe('CreateSubscriptionUseCase', () => {
   }
 
   function mockNoActiveSubscription(): void {
-    hasActiveSubscriptionUseCase.execute.mockResolvedValue(false);
+    hasActiveSubscriptionUseCase.execute.mockResolvedValue({
+      hasActiveSubscription: false,
+      subscriptionType: null,
+    });
   }
 
   function mockInvitesAndUsers(openInvites: number, userCount: number): void {
@@ -270,7 +273,10 @@ describe('CreateSubscriptionUseCase', () => {
   describe('common validation', () => {
     it('should reject creation when subscription already exists', async () => {
       setupSuperAdminContext();
-      hasActiveSubscriptionUseCase.execute.mockResolvedValue(true);
+      hasActiveSubscriptionUseCase.execute.mockResolvedValue({
+        hasActiveSubscription: true,
+        subscriptionType: SubscriptionType.SEAT_BASED,
+      });
 
       const command = new CreateSubscriptionCommand({
         orgId,
