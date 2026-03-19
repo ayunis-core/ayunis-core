@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HasActiveSubscriptionQuery } from './has-active-subscription.query';
+import { HasActiveSubscriptionResult } from './has-active-subscription.result';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { ConfigService } from '@nestjs/config';
 import { isActive } from '../../util/is-active';
@@ -14,13 +15,15 @@ export class HasActiveSubscriptionUseCase {
     private readonly configService: ConfigService,
   ) {}
 
-  async execute(query: HasActiveSubscriptionQuery): Promise<boolean> {
+  async execute(
+    query: HasActiveSubscriptionQuery,
+  ): Promise<HasActiveSubscriptionResult> {
     // Self-hosted instances are not required to have an active subscription
     // This is used in the subscription guard to allow access to the subscription endpoint
     // And as a separate endpoint for the frontend to display "get a subscription" hints
     const isSelfHosted = this.configService.get<boolean>('app.isSelfHosted');
     if (isSelfHosted) {
-      return true;
+      return { hasActiveSubscription: true, subscriptionType: null };
     }
 
     this.logger.log('Checking active subscription', {
@@ -36,16 +39,19 @@ export class HasActiveSubscriptionUseCase {
         this.logger.debug('No subscription found for organization', {
           orgId: query.orgId,
         });
-        return false;
+        return { hasActiveSubscription: false, subscriptionType: null };
       }
 
       for (const subscription of subscriptions) {
         if (isActive(subscription)) {
-          return true;
+          return {
+            hasActiveSubscription: true,
+            subscriptionType: subscription.type,
+          };
         }
       }
 
-      return false;
+      return { hasActiveSubscription: false, subscriptionType: null };
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;

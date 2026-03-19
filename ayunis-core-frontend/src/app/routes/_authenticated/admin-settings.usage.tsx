@@ -1,15 +1,20 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import {
   getUsageControllerGetUsageConfigQueryOptions,
-  appControllerIsCloud,
+  subscriptionsControllerHasActiveSubscription,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { ActiveSubscriptionResponseDtoSubscriptionType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import UsageSettingsPage from '@/pages/admin-settings/usage-settings';
 
 export const Route = createFileRoute('/_authenticated/admin-settings/usage')({
   component: RouteComponent,
   beforeLoad: async () => {
-    const { isCloud } = await appControllerIsCloud();
-    if (isCloud) {
+    const { subscriptionType } =
+      await subscriptionsControllerHasActiveSubscription();
+    if (
+      subscriptionType !==
+      ActiveSubscriptionResponseDtoSubscriptionType.USAGE_BASED
+    ) {
       throw redirect({ to: '/admin-settings/users' });
     }
   },

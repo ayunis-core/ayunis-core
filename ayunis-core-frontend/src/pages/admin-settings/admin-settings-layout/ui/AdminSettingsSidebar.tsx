@@ -1,6 +1,9 @@
 import { User, Users, Brain, Plug, BarChart3, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useAppControllerIsCloud } from '@/shared/api';
+import {
+  ActiveSubscriptionResponseDtoSubscriptionType,
+  useSubscriptionsControllerHasActiveSubscription,
+} from '@/shared/api';
 import {
   SettingsSidebarWidget,
   type SidebarMenuItem,
@@ -8,8 +11,11 @@ import {
 
 export function AdminSettingsSidebar() {
   const { t } = useTranslation('admin-settings-layout');
-  const { data: appConfig } = useAppControllerIsCloud();
-  const isCloud = appConfig?.isCloud ?? false;
+  const { data: subscriptionData } =
+    useSubscriptionsControllerHasActiveSubscription();
+  const isUsageBased =
+    subscriptionData?.subscriptionType ===
+    ActiveSubscriptionResponseDtoSubscriptionType.USAGE_BASED;
 
   const menuItems: SidebarMenuItem[] = [
     {
@@ -39,7 +45,7 @@ export function AdminSettingsSidebar() {
     },
   ];
 
-  if (!isCloud) {
+  if (isUsageBased) {
     menuItems.push({
       to: '/admin-settings/usage',
       icon: <BarChart3 />,

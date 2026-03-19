@@ -95,7 +95,7 @@ export class CreateSubscriptionUseCase {
   private async ensureNoActiveSubscription(
     orgId: Subscription['orgId'],
   ): Promise<void> {
-    const hasActiveSubscription =
+    const { hasActiveSubscription } =
       await this.hasActiveSubscriptionUseCase.execute(
         new HasActiveSubscriptionQuery(orgId),
       );
