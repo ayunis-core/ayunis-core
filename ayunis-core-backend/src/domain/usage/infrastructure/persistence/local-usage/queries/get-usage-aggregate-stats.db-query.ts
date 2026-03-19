@@ -20,7 +20,7 @@ export async function getUsageAggregateStats(
     qb.andWhere('usage.createdAt >= :startDate', { startDate });
   }
   if (endDate) {
-    qb.andWhere('usage.createdAt <= :endDate', { endDate });
+    qb.andWhere('usage.createdAt < :endDate', { endDate });
   }
 
   const res = await qb.getRawOne<UsageAggregateRow>();

@@ -22,7 +22,7 @@ export async function getProviderStats(
     qb.andWhere('usage.createdAt >= :startDate', { startDate });
   }
   if (endDate) {
-    qb.andWhere('usage.createdAt <= :endDate', { endDate });
+    qb.andWhere('usage.createdAt < :endDate', { endDate });
   }
   if (provider) {
     qb.andWhere('usage.provider = :provider', { provider });

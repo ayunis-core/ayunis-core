@@ -17,7 +17,7 @@ export async function sumCreditsForOrg(
     qb.andWhere('usage.createdAt >= :startDate', { startDate });
   }
   if (endDate) {
-    qb.andWhere('usage.createdAt <= :endDate', { endDate });
+    qb.andWhere('usage.createdAt < :endDate', { endDate });
   }
 
   const result = await qb.getRawOne<{ totalCredits: string }>();

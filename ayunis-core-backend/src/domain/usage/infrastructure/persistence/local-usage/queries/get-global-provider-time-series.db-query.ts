@@ -21,7 +21,7 @@ export async function getGlobalProviderTimeSeries(
     qb.andWhere('usage.createdAt >= :startDate', { startDate });
   }
   if (endDate) {
-    qb.andWhere('usage.createdAt <= :endDate', { endDate });
+    qb.andWhere('usage.createdAt < :endDate', { endDate });
   }
   if (modelId) {
     qb.andWhere('usage.modelId = :modelId', { modelId });

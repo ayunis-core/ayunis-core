@@ -26,7 +26,7 @@ export async function countUsersForUserUsage(
     });
   }
   if (params.endDate) {
-    usageSubquery.andWhere('usage.createdAt <= :endDate', {
+    usageSubquery.andWhere('usage.createdAt < :endDate', {
       endDate: params.endDate,
     });
   }
