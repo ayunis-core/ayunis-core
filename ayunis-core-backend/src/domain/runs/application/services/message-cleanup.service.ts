@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
+import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
+import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { DeleteMessageUseCase } from 'src/domain/messages/application/use-cases/delete-message/delete-message.use-case';
 import { DeleteMessageCommand } from 'src/domain/messages/application/use-cases/delete-message/delete-message.command';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
@@ -78,14 +80,11 @@ export class MessageCleanupService {
       return;
     }
 
+    const savedMessage = threadMessages[savedMessageIndex];
     const messagesAfterAssistant = threadMessages.slice(savedMessageIndex + 1);
 
-    if (messagesAfterAssistant.length === 0) {
-      this.logger.debug('Thread correctly ends with assistant message', {
-        threadId,
-        lastMessageId: savedMessageId,
-      });
-    } else {
+    // First, delete any trailing messages after the saved assistant message
+    if (messagesAfterAssistant.length > 0) {
       this.logger.log(
         'Found messages after saved assistant message, cleaning up',
         {
@@ -96,27 +95,67 @@ export class MessageCleanupService {
       );
       await this.deleteTrailingMessages(threadId, messagesAfterAssistant);
     }
+
+    // Check if the saved assistant message has orphaned tool_use content.
+    // This can happen when:
+    // - There were no trailing messages but the run was interrupted after
+    //   saving tool_use but before tool execution
+    // - Trailing messages (including tool_results) were just deleted above
+    // In either case, tool_use without tool_result corrupts the conversation.
+    if (this.hasToolUseContent(savedMessage)) {
+      this.logger.log(
+        'Saved assistant message has orphaned tool_use, deleting',
+        { threadId, assistantMessageId: savedMessageId },
+      );
+      const remaining = threadMessages.slice(0, savedMessageIndex);
+      await this.deleteMessagesUntilAssistant(threadId, [
+        ...remaining,
+        savedMessage,
+      ]);
+    } else if (messagesAfterAssistant.length === 0) {
+      this.logger.debug('Thread correctly ends with assistant message', {
+        threadId,
+        lastMessageId: savedMessageId,
+      });
+    }
   }
 
   /**
-   * Deletes messages from the end of the thread until an assistant message is found.
+   * Deletes messages from the end of the thread until a "clean" assistant
+   * message is found — one that does NOT contain tool_use content.
+   * An assistant message with tool_use but no corresponding tool_result
+   * would leave the conversation in an invalid state for providers like
+   * Anthropic that require tool_use → tool_result pairing.
    */
   async deleteMessagesUntilAssistant(
     threadId: UUID,
     threadMessages: Message[],
   ): Promise<void> {
     const lastMessage = threadMessages[threadMessages.length - 1];
-    if (lastMessage.role !== MessageRole.ASSISTANT) {
+    if (
+      lastMessage.role !== MessageRole.ASSISTANT ||
+      this.hasToolUseContent(lastMessage)
+    ) {
       const messagesToDelete: Message[] = [];
       for (let i = threadMessages.length - 1; i >= 0; i--) {
         const message = threadMessages[i];
-        if (message.role === MessageRole.ASSISTANT) {
+        if (
+          message.role === MessageRole.ASSISTANT &&
+          !this.hasToolUseContent(message)
+        ) {
           break;
         }
         messagesToDelete.push(message);
       }
       await this.deleteTrailingMessages(threadId, messagesToDelete);
     }
+  }
+
+  private hasToolUseContent(message: Message): boolean {
+    return (
+      message instanceof AssistantMessage &&
+      message.content.some((c) => c instanceof ToolUseMessageContent)
+    );
   }
 
   async deleteTrailingMessages(
