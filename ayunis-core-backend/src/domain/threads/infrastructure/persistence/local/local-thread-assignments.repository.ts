@@ -56,8 +56,7 @@ export class LocalThreadAssignmentsRepository {
       this.sourceAssignmentMapper.toRecord(assignment, params.threadId),
     );
 
-    threadEntity.sourceAssignments = sourceAssignmentRecords;
-    await this.threadRepository.save(threadEntity);
+    await this.threadSourceAssignmentRepository.save(sourceAssignmentRecords);
   }
 
   async updateMcpIntegrations(params: {
