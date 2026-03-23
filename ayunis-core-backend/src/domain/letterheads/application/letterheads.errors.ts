@@ -7,6 +7,7 @@ export enum LetterheadErrorCode {
   LETTERHEAD_NOT_FOUND = 'LETTERHEAD_NOT_FOUND',
   LETTERHEAD_INVALID_PDF = 'LETTERHEAD_INVALID_PDF',
   LETTERHEAD_ORG_MISMATCH = 'LETTERHEAD_ORG_MISMATCH',
+  UNEXPECTED_LETTERHEAD_ERROR = 'UNEXPECTED_LETTERHEAD_ERROR',
 }
 
 export abstract class LetterheadError extends ApplicationError {
@@ -49,6 +50,17 @@ export class LetterheadOrgMismatchError extends LetterheadError {
       LetterheadErrorCode.LETTERHEAD_ORG_MISMATCH,
       403,
       { letterheadId, ...metadata },
+    );
+  }
+}
+
+export class UnexpectedLetterheadError extends LetterheadError {
+  constructor(message: string, metadata?: ErrorMetadata) {
+    super(
+      message,
+      LetterheadErrorCode.UNEXPECTED_LETTERHEAD_ERROR,
+      500,
+      metadata,
     );
   }
 }
