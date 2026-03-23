@@ -37,6 +37,12 @@ import { MIME_TYPES } from 'src/common/util/file-type';
 /** Max concurrent embedding API calls per source ingestion to avoid rate limits */
 const EMBEDDING_CONCURRENCY = 20;
 
+interface TextSourceWithContent {
+  source: TextSource;
+  text: string;
+  chunks: TextSourceContentChunk[];
+}
+
 @Injectable()
 export class CreateTextSourceUseCase {
   private readonly logger = new Logger(CreateTextSourceUseCase.name);
@@ -61,18 +67,25 @@ export class CreateTextSourceUseCase {
       if (!orgId) {
         throw new UnauthorizedException('User not authenticated');
       }
-      let source: TextSource;
+      let result: TextSourceWithContent;
       if (command instanceof CreateFileSourceCommand) {
-        source = await this.createFileSource(command);
+        result = await this.createFileSource(command);
       } else if (command instanceof CreateUrlSourceCommand) {
-        source = await this.createUrlSource(command);
+        result = await this.createUrlSource(command);
       } else {
         throw new InvalidSourceTypeError(command.constructor.name);
       }
-      this.logger.debug('Saving source', { sourceId: source.id });
-      await this.sourceRepository.save(source);
-      await this.indexSourceContentChunks({ source, orgId });
-      return source;
+      this.logger.debug('Saving source', { sourceId: result.source.id });
+      const saved = await this.sourceRepository.saveTextSource(result.source, {
+        text: result.text,
+        chunks: result.chunks,
+      });
+      await this.indexSourceContentChunks({
+        sourceId: saved.id,
+        chunks: result.chunks,
+        orgId,
+      });
+      return saved;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Error creating text source', {
@@ -86,7 +99,7 @@ export class CreateTextSourceUseCase {
 
   private async createFileSource(
     command: CreateFileSourceCommand,
-  ): Promise<FileSource> {
+  ): Promise<TextSourceWithContent> {
     const fileRetrieverResult = await this.retrieveFileContentUseCase.execute(
       new RetrieveFileContentCommand({
         fileData: command.fileData,
@@ -95,36 +108,37 @@ export class CreateTextSourceUseCase {
       }),
     );
     const text = fileRetrieverResult.pages.map((page) => page.text).join('\n');
-    const contentChunks = this.getChunksFromText(text, {
+    const chunks = this.getChunksFromText(text, {
       fileName: command.fileName,
     });
 
-    return new FileSource({
+    const source = new FileSource({
       fileType: this.getFileType(command.fileType),
       name: command.fileName,
-      text,
-      contentChunks,
       type: TextType.FILE,
     });
+
+    return { source, text, chunks };
   }
 
   private async createUrlSource(
     command: CreateUrlSourceCommand,
-  ): Promise<UrlSource> {
+  ): Promise<TextSourceWithContent> {
     const urlRetrieverResult = await this.retrieveUrlUseCase.execute(
       new RetrieveUrlCommand(command.url),
     );
 
-    const sourceContents = this.getChunksFromText(urlRetrieverResult.content, {
+    const chunks = this.getChunksFromText(urlRetrieverResult.content, {
       url: command.url,
     });
-    return new UrlSource({
-      contentChunks: sourceContents,
-      text: urlRetrieverResult.content,
+
+    const source = new UrlSource({
       name: urlRetrieverResult.websiteTitle,
       type: TextType.WEB,
       url: command.url,
     });
+
+    return { source, text: urlRetrieverResult.content, chunks };
   }
 
   private getFileType(mimeType: string): FileType {
@@ -164,8 +178,6 @@ export class CreateTextSourceUseCase {
     );
 
     for (const contentBlock of contentBlocks.chunks) {
-      // Create source content for each content block
-      // Merge source metadata (fileName, URL) with splitter metadata (index, line numbers)
       const chunk = new TextSourceContentChunk({
         content: contentBlock.text,
         meta: {
@@ -187,15 +199,16 @@ export class CreateTextSourceUseCase {
    * Concurrency is capped to avoid hitting embedding API rate limits.
    */
   private async indexSourceContentChunks(params: {
-    source: TextSource;
+    sourceId: UUID;
+    chunks: TextSourceContentChunk[];
     orgId: UUID;
   }): Promise<void> {
-    this.logger.debug(`Indexing content for source: ${params.source.id}`);
+    this.logger.debug(`Indexing content for source: ${params.sourceId}`);
 
     // Step 1: Delete any existing index entries for this source ONCE
     // (handles re-upload/re-index scenarios, no-op for new sources)
     await this.deleteContentUseCase.execute(
-      new DeleteContentCommand({ documentId: params.source.id }),
+      new DeleteContentCommand({ documentId: params.sourceId }),
     );
 
     // Step 2: Ingest all chunks with bounded concurrency
@@ -203,11 +216,11 @@ export class CreateTextSourceUseCase {
     const { default: pLimit } = await import('p-limit');
     const limit = pLimit(EMBEDDING_CONCURRENCY);
     await Promise.all(
-      params.source.contentChunks.map((chunk) =>
+      params.chunks.map((chunk) =>
         limit(async () => {
           const ingestCommand = new IngestContentCommand({
             orgId: params.orgId,
-            documentId: params.source.id,
+            documentId: params.sourceId,
             chunkId: chunk.id,
             content: chunk.content,
             type: IndexType.PARENT_CHILD,
@@ -219,7 +232,7 @@ export class CreateTextSourceUseCase {
     );
 
     this.logger.debug(
-      `Successfully indexed ${params.source.contentChunks.length} content blocks for source: ${params.source.id}`,
+      `Successfully indexed ${params.chunks.length} content blocks for source: ${params.sourceId}`,
     );
   }
 }

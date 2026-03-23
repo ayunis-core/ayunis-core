@@ -112,8 +112,7 @@ describe('CreateArtifactUseCase', () => {
   });
 
   it('should create an artifact with letterheadId when provided', async () => {
-    const mockLetterheadId =
-      '423e4567-e89b-12d3-a456-426614174000' as UUID;
+    const mockLetterheadId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
 
     const command = new CreateArtifactCommand({
       threadId: mockThreadId,
@@ -361,8 +360,7 @@ describe('CreateArtifactUseCase', () => {
   });
 
   it('should validate letterheadId belongs to org when provided', async () => {
-    const mockLetterheadId =
-      '423e4567-e89b-12d3-a456-426614174000' as UUID;
+    const mockLetterheadId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
 
     const command = new CreateArtifactCommand({
       threadId: mockThreadId,
@@ -385,8 +383,7 @@ describe('CreateArtifactUseCase', () => {
   });
 
   it('should throw LetterheadNotFoundError when letterheadId does not belong to org', async () => {
-    const crossOrgLetterheadId =
-      '523e4567-e89b-12d3-a456-426614174000' as UUID;
+    const crossOrgLetterheadId = '523e4567-e89b-12d3-a456-426614174000' as UUID;
 
     findLetterheadUseCase.execute.mockRejectedValue(
       new LetterheadNotFoundError(crossOrgLetterheadId),

@@ -72,8 +72,6 @@ describe('AddUrlToKnowledgeBaseUseCase', () => {
       url: 'https://example.com/stadtrat',
       name: 'example.com/stadtrat',
       type: TextType.WEB,
-      text: 'Webseite Inhalt...',
-      contentChunks: [],
     });
     mockCreateTextSourceUseCase.execute.mockResolvedValue(
       createdSource as never,

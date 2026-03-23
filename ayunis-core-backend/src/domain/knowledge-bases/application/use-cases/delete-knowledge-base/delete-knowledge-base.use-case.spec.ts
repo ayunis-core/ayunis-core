@@ -12,8 +12,8 @@ jest.mock('@nestjs-cls/transactional', () => ({
 import { DeleteKnowledgeBaseUseCase } from './delete-knowledge-base.use-case';
 import { DeleteKnowledgeBaseCommand } from './delete-knowledge-base.command';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
-import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
+import { GetSourcesByKnowledgeBaseIdUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-knowledge-base-id/get-sources-by-knowledge-base-id.use-case';
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
 import { KnowledgeBase } from '../../../domain/knowledge-base.entity';
 import {
@@ -27,9 +27,7 @@ import type { UUID } from 'crypto';
 describe('DeleteKnowledgeBaseUseCase', () => {
   let useCase: DeleteKnowledgeBaseUseCase;
   let mockKbRepository: jest.Mocked<KnowledgeBaseRepository>;
-  let mockSourceRepository: jest.Mocked<
-    Pick<SourceRepository, 'findByKnowledgeBaseId'>
-  >;
+  let mockGetSourcesByKbId: jest.Mocked<GetSourcesByKnowledgeBaseIdUseCase>;
   let mockDeleteSourcesUseCase: jest.Mocked<
     Pick<DeleteSourcesUseCase, 'execute'>
   >;
@@ -50,9 +48,9 @@ describe('DeleteKnowledgeBaseUseCase', () => {
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
     } as jest.Mocked<KnowledgeBaseRepository>;
 
-    mockSourceRepository = {
-      findByKnowledgeBaseId: jest.fn(),
-    };
+    mockGetSourcesByKbId = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetSourcesByKnowledgeBaseIdUseCase>;
 
     mockDeleteSourcesUseCase = {
       execute: jest.fn(),
@@ -62,7 +60,10 @@ describe('DeleteKnowledgeBaseUseCase', () => {
       providers: [
         DeleteKnowledgeBaseUseCase,
         { provide: KnowledgeBaseRepository, useValue: mockKbRepository },
-        { provide: SourceRepository, useValue: mockSourceRepository },
+        {
+          provide: GetSourcesByKnowledgeBaseIdUseCase,
+          useValue: mockGetSourcesByKbId,
+        },
         { provide: DeleteSourcesUseCase, useValue: mockDeleteSourcesUseCase },
       ],
     }).compile();
@@ -84,21 +85,17 @@ describe('DeleteKnowledgeBaseUseCase', () => {
         url: 'https://gemeinde-musterstadt.de/protokoll-01.pdf',
         name: 'Protokoll Januar',
         type: TextType.WEB,
-        text: 'Protokoll-Inhalt',
-        contentChunks: [],
       }),
       new UrlSource({
         id: '55555555-5555-5555-5555-555555555555' as UUID,
         url: 'https://gemeinde-musterstadt.de/protokoll-02.pdf',
         name: 'Protokoll Februar',
         type: TextType.WEB,
-        text: 'Protokoll-Inhalt',
-        contentChunks: [],
       }),
     ];
 
     mockKbRepository.findById.mockResolvedValue(existing);
-    mockSourceRepository.findByKnowledgeBaseId.mockResolvedValue(sources);
+    mockGetSourcesByKbId.execute.mockResolvedValue(sources);
     mockDeleteSourcesUseCase.execute.mockResolvedValue(undefined);
     mockKbRepository.delete.mockResolvedValue(undefined);
 
@@ -106,11 +103,11 @@ describe('DeleteKnowledgeBaseUseCase', () => {
       new DeleteKnowledgeBaseCommand({ knowledgeBaseId, userId }),
     );
 
-    expect(mockSourceRepository.findByKnowledgeBaseId).toHaveBeenCalledWith(
-      knowledgeBaseId,
+    expect(mockGetSourcesByKbId.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ knowledgeBaseId }),
     );
     expect(mockDeleteSourcesUseCase.execute).toHaveBeenCalledWith(
-      new DeleteSourcesCommand(sources),
+      new DeleteSourcesCommand(sources.map((s) => s.id)),
     );
     expect(mockKbRepository.delete).toHaveBeenCalledWith(existing);
   });
@@ -124,7 +121,7 @@ describe('DeleteKnowledgeBaseUseCase', () => {
     });
 
     mockKbRepository.findById.mockResolvedValue(existing);
-    mockSourceRepository.findByKnowledgeBaseId.mockResolvedValue([]);
+    mockGetSourcesByKbId.execute.mockResolvedValue([]);
     mockDeleteSourcesUseCase.execute.mockResolvedValue(undefined);
     mockKbRepository.delete.mockResolvedValue(undefined);
 
@@ -147,7 +144,7 @@ describe('DeleteKnowledgeBaseUseCase', () => {
       ),
     ).rejects.toThrow(KnowledgeBaseNotFoundError);
 
-    expect(mockSourceRepository.findByKnowledgeBaseId).not.toHaveBeenCalled();
+    expect(mockGetSourcesByKbId.execute).not.toHaveBeenCalled();
     expect(mockDeleteSourcesUseCase.execute).not.toHaveBeenCalled();
     expect(mockKbRepository.delete).not.toHaveBeenCalled();
   });
@@ -169,7 +166,7 @@ describe('DeleteKnowledgeBaseUseCase', () => {
       ),
     ).rejects.toThrow(KnowledgeBaseNotFoundError);
 
-    expect(mockSourceRepository.findByKnowledgeBaseId).not.toHaveBeenCalled();
+    expect(mockGetSourcesByKbId.execute).not.toHaveBeenCalled();
     expect(mockDeleteSourcesUseCase.execute).not.toHaveBeenCalled();
     expect(mockKbRepository.delete).not.toHaveBeenCalled();
   });
@@ -183,7 +180,7 @@ describe('DeleteKnowledgeBaseUseCase', () => {
     });
 
     mockKbRepository.findById.mockResolvedValue(existing);
-    mockSourceRepository.findByKnowledgeBaseId.mockResolvedValue([]);
+    mockGetSourcesByKbId.execute.mockResolvedValue([]);
 
     const callOrder: string[] = [];
     mockDeleteSourcesUseCase.execute.mockImplementation(async () => {

@@ -2,9 +2,24 @@ import { randomUUID } from 'crypto';
 import { SourceMapper } from './source.mapper';
 import type { SourceContentChunkMapper } from './source-content-chunk.mapper';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
+import {
+  FileSource,
+  UrlSource,
+} from 'src/domain/sources/domain/sources/text-source.entity';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
-import { DataSourceRecord } from '../schema/source.record';
+import {
+  DataType,
+  FileType,
+  TextType,
+} from 'src/domain/sources/domain/source-type.enum';
+import { DataSourceRecord, TextSourceRecord } from '../schema/source.record';
 import { CSVDataSourceDetailsRecord } from '../schema/data-source-details.record';
+import {
+  FileSourceDetailsRecord,
+  UrlSourceDetailsRecord,
+} from '../schema/text-source-details.record';
+import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
+import { SourceContentChunkRecord } from '../schema/source-content-chunk.record';
 
 describe('SourceMapper', () => {
   let mapper: SourceMapper;
@@ -13,7 +28,7 @@ describe('SourceMapper', () => {
   beforeEach(() => {
     mockContentChunkMapper = {
       toDomain: jest.fn(),
-      toRecord: jest.fn(),
+      toRecord: jest.fn().mockReturnValue(new SourceContentChunkRecord()),
     };
     mapper = new SourceMapper(
       mockContentChunkMapper as SourceContentChunkMapper,
@@ -27,6 +42,7 @@ describe('SourceMapper', () => {
         record.id = randomUUID();
         record.name = 'Test CSV';
         record.createdBy = SourceCreator.USER;
+        record.dataType = DataType.CSV;
         record.createdAt = new Date();
         record.updatedAt = new Date();
 
@@ -45,6 +61,7 @@ describe('SourceMapper', () => {
         record.id = randomUUID();
         record.name = 'Test CSV';
         record.createdBy = SourceCreator.LLM;
+        record.dataType = DataType.CSV;
         record.createdAt = new Date();
         record.updatedAt = new Date();
 
@@ -63,6 +80,7 @@ describe('SourceMapper', () => {
         record.id = randomUUID();
         record.name = 'Test CSV';
         record.createdBy = SourceCreator.SYSTEM;
+        record.dataType = DataType.CSV;
         record.createdAt = new Date();
         record.updatedAt = new Date();
 
@@ -119,6 +137,123 @@ describe('SourceMapper', () => {
         expect(record).toBeInstanceOf(DataSourceRecord);
         expect(record.createdBy).toBe(SourceCreator.SYSTEM);
       });
+    });
+  });
+
+  describe('TextSource toDomain', () => {
+    it('should map FileSource from record columns without loading details', () => {
+      const record = new TextSourceRecord();
+      record.id = randomUUID();
+      record.name = 'Test File';
+      record.createdBy = SourceCreator.USER;
+      record.knowledgeBaseId = null;
+      record.textType = TextType.FILE;
+      record.fileType = FileType.PDF;
+      record.url = null;
+      record.createdAt = new Date();
+      record.updatedAt = new Date();
+      // textSourceDetails intentionally NOT set
+
+      const domain = mapper.toDomain(record);
+
+      expect(domain).toBeInstanceOf(FileSource);
+      expect(domain.name).toBe('Test File');
+      expect((domain as FileSource).fileType).toBe(FileType.PDF);
+      expect('text' in domain).toBe(false);
+      expect('contentChunks' in domain).toBe(false);
+    });
+
+    it('should map UrlSource from record columns without loading details', () => {
+      const record = new TextSourceRecord();
+      record.id = randomUUID();
+      record.name = 'Test URL';
+      record.createdBy = SourceCreator.USER;
+      record.knowledgeBaseId = null;
+      record.textType = TextType.WEB;
+      record.fileType = null;
+      record.url = 'https://example.com';
+      record.createdAt = new Date();
+      record.updatedAt = new Date();
+      // textSourceDetails intentionally NOT set
+
+      const domain = mapper.toDomain(record);
+
+      expect(domain).toBeInstanceOf(UrlSource);
+      expect(domain.name).toBe('Test URL');
+      expect((domain as UrlSource).url).toBe('https://example.com');
+      expect('text' in domain).toBe(false);
+      expect('contentChunks' in domain).toBe(false);
+    });
+  });
+
+  describe('toTextSourceRecord', () => {
+    it('should create records for FileSource with content', () => {
+      const source = new FileSource({
+        id: randomUUID(),
+        fileType: FileType.PDF,
+        name: 'Test File',
+        type: TextType.FILE,
+        createdBy: SourceCreator.USER,
+      });
+
+      const chunks = [
+        new TextSourceContentChunk({
+          content: 'chunk 1',
+          meta: { page: 1 },
+        }),
+      ];
+
+      const result = mapper.toTextSourceRecord(source, {
+        text: 'full text',
+        chunks,
+      });
+
+      expect(result.source).toBeInstanceOf(TextSourceRecord);
+      expect(result.source.id).toBe(source.id);
+      expect(result.source.textType).toBe(TextType.FILE);
+      expect(result.source.fileType).toBe(FileType.PDF);
+      expect(result.source.url).toBeNull();
+      expect(result.details).toBeInstanceOf(FileSourceDetailsRecord);
+      expect(result.details.text).toBe('full text');
+      expect(result.contentChunks).toHaveLength(1);
+      expect(mockContentChunkMapper.toRecord).toHaveBeenCalledWith(
+        result.details,
+        chunks[0],
+      );
+    });
+
+    it('should create records for UrlSource with content', () => {
+      const source = new UrlSource({
+        id: randomUUID(),
+        url: 'https://example.com',
+        name: 'Test URL',
+        type: TextType.WEB,
+        createdBy: SourceCreator.USER,
+      });
+
+      const chunks = [
+        new TextSourceContentChunk({
+          content: 'chunk 1',
+          meta: {},
+        }),
+        new TextSourceContentChunk({
+          content: 'chunk 2',
+          meta: {},
+        }),
+      ];
+
+      const result = mapper.toTextSourceRecord(source, {
+        text: 'full url text',
+        chunks,
+      });
+
+      expect(result.source).toBeInstanceOf(TextSourceRecord);
+      expect(result.source.textType).toBe(TextType.WEB);
+      expect(result.source.fileType).toBeNull();
+      expect(result.source.url).toBe('https://example.com');
+      expect(result.details).toBeInstanceOf(UrlSourceDetailsRecord);
+      expect(result.details.text).toBe('full url text');
+      expect(result.contentChunks).toHaveLength(2);
     });
   });
 });

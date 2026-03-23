@@ -58,8 +58,6 @@ describe('SkillActivationService', () => {
     new UrlSource({
       id,
       url: `https://example.com/doc-${id}`,
-      contentChunks: [],
-      text: 'Sample document content.',
       name: `Source ${id}`,
       type: TextType.WEB,
     });

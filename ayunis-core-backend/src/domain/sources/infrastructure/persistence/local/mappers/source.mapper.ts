@@ -26,6 +26,7 @@ import {
 } from '../schema/source.record';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { SourceContentChunkRecord } from '../schema/source-content-chunk.record';
+import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 
 @Injectable()
 export class SourceMapper {
@@ -48,60 +49,66 @@ export class SourceMapper {
     throw new Error(`Invalid source type`);
   }
 
-  private mapContentChunks(
-    details: TextSourceDetailsRecord,
-  ): ReturnType<SourceContentChunkMapper['toDomain']>[] {
-    return (details.contentChunks ?? []).map((c) =>
-      this.sourceContentChunkMapper.toDomain(c),
-    );
-  }
-
   private textSourceToDomain(record: TextSourceRecord): TextSource {
-    if (record.textSourceDetails instanceof FileSourceDetailsRecord) {
-      return new FileSource({
-        id: record.id,
-        fileType: record.textSourceDetails.fileType,
-        name: record.name,
-        type: TextType.FILE,
-        text: record.textSourceDetails.text,
-        contentChunks: this.mapContentChunks(record.textSourceDetails),
-        knowledgeBaseId: record.knowledgeBaseId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        createdBy: record.createdBy,
-      });
+    switch (record.textType) {
+      case TextType.FILE:
+        return new FileSource({
+          id: record.id,
+          fileType: record.fileType!,
+          name: record.name,
+          type: TextType.FILE,
+          knowledgeBaseId: record.knowledgeBaseId,
+          createdAt: record.createdAt,
+          updatedAt: record.updatedAt,
+          createdBy: record.createdBy,
+        });
+      case TextType.WEB:
+        return new UrlSource({
+          id: record.id,
+          url: record.url!,
+          name: record.name,
+          type: TextType.WEB,
+          knowledgeBaseId: record.knowledgeBaseId,
+          createdAt: record.createdAt,
+          updatedAt: record.updatedAt,
+          createdBy: record.createdBy,
+        });
     }
-    if (record.textSourceDetails instanceof UrlSourceDetailsRecord) {
-      return new UrlSource({
-        id: record.id,
-        url: record.textSourceDetails.url,
-        name: record.name,
-        type: TextType.WEB,
-        text: record.textSourceDetails.text,
-        contentChunks: this.mapContentChunks(record.textSourceDetails),
-        knowledgeBaseId: record.knowledgeBaseId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        createdBy: record.createdBy,
-      });
-    }
-
-    throw new Error(`Invalid source type`);
   }
 
   private dataSourceToDomain(record: DataSourceRecord): DataSource {
-    if (record.dataSourceDetails instanceof CSVDataSourceDetailsRecord) {
-      return new CSVDataSource({
-        id: record.id,
-        data: record.dataSourceDetails.data,
-        name: record.name,
-        knowledgeBaseId: record.knowledgeBaseId,
-        createdBy: record.createdBy,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-      });
+    const details = record.dataSourceDetails as CSVDataSourceDetailsRecord;
+    return new CSVDataSource({
+      id: record.id,
+      data: details.data,
+      name: record.name,
+      knowledgeBaseId: record.knowledgeBaseId,
+      createdBy: record.createdBy,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    });
+  }
+
+  /**
+   * Create records for a TextSource with its content (text + chunks).
+   * Used by the save path where content is provided alongside the entity.
+   */
+  toTextSourceRecord(
+    source: TextSource,
+    content: { text: string; chunks: TextSourceContentChunk[] },
+  ): {
+    source: TextSourceRecord;
+    details: TextSourceDetailsRecord;
+    contentChunks: SourceContentChunkRecord[];
+  } {
+    if (source instanceof FileSource) {
+      return this.fileSourceToRecord(source, content);
     }
-    throw new Error('not implemented');
+    if (source instanceof UrlSource) {
+      return this.urlSourceToRecord(source, content);
+    }
+
+    throw new Error('Invalid text source type');
   }
 
   /**
@@ -110,11 +117,6 @@ export class SourceMapper {
    * It seems that because we initialize the IDs in the domain layer,
    * TypeORM is unable to properly set the IDs in the records during cascading.
    */
-  toRecord(source: TextSource): {
-    source: TextSourceRecord;
-    details: TextSourceDetailsRecord;
-    contentChunks: SourceContentChunkRecord[];
-  };
   toRecord(source: DataSource): {
     source: DataSourceRecord;
     details: DataSourceDetailsRecord;
@@ -125,11 +127,8 @@ export class SourceMapper {
   toRecord(source: Source): {
     source: SourceRecord;
   } {
-    if (source instanceof FileSource) {
-      return this.fileSourceToRecord(source);
-    }
-    if (source instanceof UrlSource) {
-      return this.urlSourceToRecord(source);
+    if (source instanceof FileSource || source instanceof UrlSource) {
+      return { source: this.createTextSourceRecord(source) };
     }
     if (source instanceof CSVDataSource) {
       return this.dataSourceToRecord(source);
@@ -144,6 +143,9 @@ export class SourceMapper {
     record.name = source.name;
     record.createdBy = source.createdBy;
     record.knowledgeBaseId = source.knowledgeBaseId;
+    record.textType = source.textType;
+    record.fileType = source instanceof FileSource ? source.fileType : null;
+    record.url = source instanceof UrlSource ? source.url : null;
     record.createdAt = source.createdAt;
     record.updatedAt = source.updatedAt;
     return record;
@@ -152,20 +154,23 @@ export class SourceMapper {
   private buildTextSourceResult<T extends TextSourceDetailsRecord>(
     record: TextSourceRecord,
     details: T,
-    source: TextSource,
+    chunks: TextSourceContentChunk[],
   ): {
     source: TextSourceRecord;
     details: T;
     contentChunks: SourceContentChunkRecord[];
   } {
-    const contentChunks = source.contentChunks.map((c) =>
+    const contentChunks = chunks.map((c) =>
       this.sourceContentChunkMapper.toRecord(details, c),
     );
     record.textSourceDetails = details;
     return { source: record, details, contentChunks };
   }
 
-  private fileSourceToRecord(source: FileSource): {
+  private fileSourceToRecord(
+    source: FileSource,
+    content: { text: string; chunks: TextSourceContentChunk[] },
+  ): {
     source: TextSourceRecord;
     details: FileSourceDetailsRecord;
     contentChunks: SourceContentChunkRecord[];
@@ -176,14 +181,17 @@ export class SourceMapper {
     details.id = source.id;
     details.fileType = source.fileType;
     details.source = record;
-    details.text = source.text;
+    details.text = content.text;
     details.createdAt = source.createdAt;
     details.updatedAt = source.updatedAt;
 
-    return this.buildTextSourceResult(record, details, source);
+    return this.buildTextSourceResult(record, details, content.chunks);
   }
 
-  private urlSourceToRecord(source: UrlSource): {
+  private urlSourceToRecord(
+    source: UrlSource,
+    content: { text: string; chunks: TextSourceContentChunk[] },
+  ): {
     source: TextSourceRecord;
     details: UrlSourceDetailsRecord;
     contentChunks: SourceContentChunkRecord[];
@@ -193,12 +201,12 @@ export class SourceMapper {
     const details = new UrlSourceDetailsRecord();
     details.id = source.id;
     details.url = source.url;
-    details.text = source.text;
+    details.text = content.text;
     details.source = record;
     details.createdAt = source.createdAt;
     details.updatedAt = source.updatedAt;
 
-    return this.buildTextSourceResult(record, details, source);
+    return this.buildTextSourceResult(record, details, content.chunks);
   }
 
   private dataSourceToRecord(source: CSVDataSource): {
@@ -210,6 +218,7 @@ export class SourceMapper {
     record.name = source.name;
     record.createdBy = source.createdBy;
     record.knowledgeBaseId = source.knowledgeBaseId;
+    record.dataType = source.dataType;
     record.createdAt = source.createdAt;
     record.updatedAt = source.updatedAt;
 

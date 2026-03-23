@@ -9,7 +9,12 @@ import {
 } from 'typeorm';
 import type { UUID } from 'crypto';
 import { BaseRecord } from '../../../../../../common/db/base-record';
-import { SourceType } from '../../../../domain/source-type.enum';
+import {
+  DataType,
+  FileType,
+  SourceType,
+  TextType,
+} from '../../../../domain/source-type.enum';
 import { SourceCreator } from '../../../../domain/source-creator.enum';
 import { TextSourceDetailsRecord } from './text-source-details.record';
 import { DataSourceDetailsRecord } from './data-source-details.record';
@@ -41,18 +46,28 @@ export abstract class SourceRecord extends BaseRecord {
 
 @ChildEntity(SourceType.TEXT)
 export class TextSourceRecord extends SourceRecord {
+  @Column({ type: 'enum', enum: TextType })
+  textType: TextType;
+
+  @Column({ type: 'enum', enum: FileType, nullable: true })
+  fileType: FileType | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  url: string | null;
+
   @OneToOne(() => TextSourceDetailsRecord, (details) => details.source, {
     cascade: true,
-    eager: true,
   })
   textSourceDetails: TextSourceDetailsRecord;
 }
 
 @ChildEntity(SourceType.DATA)
 export class DataSourceRecord extends SourceRecord {
+  @Column({ type: 'enum', enum: DataType })
+  dataType: DataType;
+
   @OneToOne(() => DataSourceDetailsRecord, (details) => details.source, {
     cascade: true,
-    eager: true,
   })
   dataSourceDetails: DataSourceDetailsRecord;
 }

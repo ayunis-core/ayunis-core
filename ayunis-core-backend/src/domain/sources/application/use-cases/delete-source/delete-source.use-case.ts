@@ -18,18 +18,18 @@ export class DeleteSourceUseCase {
 
   @Transactional()
   async execute(command: DeleteSourceCommand): Promise<void> {
-    this.logger.debug(`Deleting source: ${command.source.id}`);
+    this.logger.debug(`Deleting source: ${command.sourceId}`);
     try {
       // Delete indexed content first
       const deleteContentCommand = new DeleteContentCommand({
-        documentId: command.source.id,
+        documentId: command.sourceId,
       });
 
       await this.deleteContentUseCase.execute(deleteContentCommand);
-      await this.sourceRepository.delete(command.source);
+      await this.sourceRepository.delete(command.sourceId);
 
       this.logger.debug(
-        `Successfully deleted source and indexed content: ${command.source.id}`,
+        `Successfully deleted source and indexed content: ${command.sourceId}`,
       );
     } catch (error) {
       if (error instanceof ApplicationError) {

@@ -35,7 +35,7 @@ export class RemoveSourceFromThreadUseCase {
       }
 
       await this.deleteSourceUseCase.execute(
-        new DeleteSourceCommand(assignmentToRemove.source),
+        new DeleteSourceCommand(assignmentToRemove.source.id),
       );
     } catch (error) {
       if (error instanceof ApplicationError) {
