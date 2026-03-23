@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.21.0](https://github.com/ayunis-core/ayunis-core/compare/v1.20.1...v1.21.0) (2026-03-20)
+
+
+### Features
+
+* **AYC-77:** add month filter and total credits to admin user usage table ([#451](https://github.com/ayunis-core/ayunis-core/issues/451)) ([36b6302](https://github.com/ayunis-core/ayunis-core/commit/36b63023ee32d5b0e1eb38159abab1d07ba3b2bb))
+* **AYC-77:** display credits instead of tokens in user usage tables ([#449](https://github.com/ayunis-core/ayunis-core/issues/449)) ([48f7613](https://github.com/ayunis-core/ayunis-core/commit/48f7613376464234655a020c623429d56ebd473f))
+* **AYC-77:** show usage tab for usage-based subscriptions instead of non-cloud only ([#447](https://github.com/ayunis-core/ayunis-core/issues/447)) ([eb69796](https://github.com/ayunis-core/ayunis-core/commit/eb6979674f75a7444ea5c8520b1756dca076cab9))
+
+
+### Bug Fixes
+
+* **AYC-000:** map transient mistral api errors to service busy/timeout responses ([#455](https://github.com/ayunis-core/ayunis-core/issues/455)) ([bc1ca5d](https://github.com/ayunis-core/ayunis-core/commit/bc1ca5deb37077e474f0841df8707c6675b1a1ec))
+* **AYC-000:** prevent orphaned tool_use in message cleanup and context trimming ([#438](https://github.com/ayunis-core/ayunis-core/issues/438)) ([4a6d6f0](https://github.com/ayunis-core/ayunis-core/commit/4a6d6f0f4b38e7a43095ac19f5fc20dc408f8442))
+* **AYC-000:** save source assignments directly to avoid TypeORM cascade orphan bug ([#460](https://github.com/ayunis-core/ayunis-core/issues/460)) ([2d3cd5e](https://github.com/ayunis-core/ayunis-core/commit/2d3cd5e513d907f9f4e3cd347826a129a6e4bf95))
+* **AYC-000:** use shared error handler for knowledge base document uploads ([#456](https://github.com/ayunis-core/ayunis-core/issues/456)) ([0451be4](https://github.com/ayunis-core/ayunis-core/commit/0451be42b9d4c2371809c2527d19a77ebd24a367))
+
 ## [1.20.1](https://github.com/ayunis-core/ayunis-core/compare/v1.20.0...v1.20.1) (2026-03-18)
 
 
