@@ -28,7 +28,10 @@ describe('GetSourcesByIdsUseCase', () => {
       findById: jest.fn(),
       findByIds: jest.fn(),
       findByKnowledgeBaseId: jest.fn(),
+      saveTextSource: jest.fn(),
       save: jest.fn(),
+      extractTextLines: jest.fn(),
+      findContentChunksByIds: jest.fn(),
       delete: jest.fn(),
       deleteMany: jest.fn(),
     } as jest.Mocked<SourceRepository>;

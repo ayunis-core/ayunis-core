@@ -112,8 +112,6 @@ describe('ListSkillSourcesUseCase', () => {
       name,
       type: TextType.FILE,
       fileType: FileType.PDF,
-      text: 'test content',
-      contentChunks: [],
     });
   };
 

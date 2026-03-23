@@ -15,11 +15,13 @@ import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { KnowledgeBaseAccessService } from '../../services/knowledge-base-access.service';
+import { FindContentChunksByIdsUseCase } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.use-case';
 import type { UUID } from 'crypto';
 
 describe('QueryKnowledgeBaseUseCase', () => {
   let useCase: QueryKnowledgeBaseUseCase;
   let mockKbRepo: jest.Mocked<KnowledgeBaseRepository>;
+  let mockFindChunks: jest.Mocked<FindContentChunksByIdsUseCase>;
   let mockSearchContent: jest.Mocked<SearchContentUseCase>;
   let mockContextService: Partial<ContextService>;
   let mockAccessService: jest.Mocked<KnowledgeBaseAccessService>;
@@ -42,6 +44,10 @@ describe('QueryKnowledgeBaseUseCase', () => {
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
     } as jest.Mocked<KnowledgeBaseRepository>;
 
+    mockFindChunks = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<FindContentChunksByIdsUseCase>;
+
     mockSearchContent = {
       execute: jest.fn(),
       executeMulti: jest.fn(),
@@ -62,6 +68,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
       providers: [
         QueryKnowledgeBaseUseCase,
         { provide: KnowledgeBaseRepository, useValue: mockKbRepo },
+        { provide: FindContentChunksByIdsUseCase, useValue: mockFindChunks },
         { provide: SearchContentUseCase, useValue: mockSearchContent },
         { provide: ContextService, useValue: mockContextService },
         {
@@ -93,8 +100,6 @@ describe('QueryKnowledgeBaseUseCase', () => {
       name: 'Haushaltssatzung_2025.pdf',
       fileType: FileType.PDF,
       type: TextType.FILE,
-      text: 'full text...',
-      contentChunks: [chunk],
     });
 
     const indexEntry = new IndexEntry({
@@ -105,6 +110,9 @@ describe('QueryKnowledgeBaseUseCase', () => {
     mockAccessService.findAccessibleKnowledgeBase.mockResolvedValue(kb);
     mockKbRepo.findSourcesByKnowledgeBaseId.mockResolvedValue([source]);
     mockSearchContent.executeMulti.mockResolvedValue([indexEntry]);
+    mockFindChunks.execute.mockResolvedValue([
+      { chunk, sourceId, sourceName: 'Haushaltssatzung_2025.pdf' },
+    ]);
 
     const query = new QueryKnowledgeBaseQuery({
       knowledgeBaseId: kbId,
@@ -125,9 +133,12 @@ describe('QueryKnowledgeBaseUseCase', () => {
         query: 'Grundsteuer',
       }),
     );
+    expect(mockFindChunks.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ chunkIds: [chunkId] }),
+    );
   });
 
-  it('should look up sources from pre-loaded map instead of fetching individually', async () => {
+  it('should fetch chunks by ID instead of loading full sources', async () => {
     const kb = new KnowledgeBase({
       id: kbId,
       name: 'Stadtratsprotokolle',
@@ -146,8 +157,6 @@ describe('QueryKnowledgeBaseUseCase', () => {
       name: 'Bebauungsplan_42.pdf',
       fileType: FileType.PDF,
       type: TextType.FILE,
-      text: 'full text...',
-      contentChunks: [chunk],
     });
 
     const indexEntry = new IndexEntry({
@@ -158,6 +167,9 @@ describe('QueryKnowledgeBaseUseCase', () => {
     mockAccessService.findAccessibleKnowledgeBase.mockResolvedValue(kb);
     mockKbRepo.findSourcesByKnowledgeBaseId.mockResolvedValue([source]);
     mockSearchContent.executeMulti.mockResolvedValue([indexEntry]);
+    mockFindChunks.execute.mockResolvedValue([
+      { chunk, sourceId, sourceName: 'Bebauungsplan_42.pdf' },
+    ]);
 
     const query = new QueryKnowledgeBaseQuery({
       knowledgeBaseId: kbId,
@@ -274,7 +286,7 @@ describe('QueryKnowledgeBaseUseCase', () => {
     );
   });
 
-  it('should skip index entries where source content chunk is not found', async () => {
+  it('should skip index entries where chunk is not found in DB', async () => {
     const kb = new KnowledgeBase({
       id: kbId,
       name: 'Stadtratsprotokolle',
@@ -287,8 +299,6 @@ describe('QueryKnowledgeBaseUseCase', () => {
       name: 'Protokoll.pdf',
       fileType: FileType.PDF,
       type: TextType.FILE,
-      text: 'text...',
-      contentChunks: [],
     });
 
     const indexEntry = new IndexEntry({
@@ -299,6 +309,8 @@ describe('QueryKnowledgeBaseUseCase', () => {
     mockAccessService.findAccessibleKnowledgeBase.mockResolvedValue(kb);
     mockKbRepo.findSourcesByKnowledgeBaseId.mockResolvedValue([source]);
     mockSearchContent.executeMulti.mockResolvedValue([indexEntry]);
+    // Chunk not found in DB
+    mockFindChunks.execute.mockResolvedValue([]);
 
     const query = new QueryKnowledgeBaseQuery({
       knowledgeBaseId: kbId,

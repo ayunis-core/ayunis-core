@@ -69,8 +69,6 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
       fileType: FileType.PDF,
       name: 'Protokoll_März_2025.pdf',
       type: TextType.FILE,
-      text: 'Protokoll Inhalt...',
-      contentChunks: [],
     });
     mockCreateTextSourceUseCase.execute.mockResolvedValue(
       createdSource as never,

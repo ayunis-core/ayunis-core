@@ -17,25 +17,23 @@ export class DeleteSourcesUseCase {
 
   @Transactional()
   async execute(command: DeleteSourcesCommand): Promise<void> {
-    if (command.sources.length === 0) {
+    if (command.sourceIds.length === 0) {
       return;
     }
 
-    this.logger.debug(`Deleting ${command.sources.length} sources`);
+    this.logger.debug(`Deleting ${command.sourceIds.length} sources`);
     try {
-      const sourceIds = command.sources.map((s) => s.id);
-
       // Batch delete indexed content from all indices
       const indices = this.indexRegistry.getAll();
       for (const index of indices) {
-        await index.deleteMany(sourceIds);
+        await index.deleteMany(command.sourceIds);
       }
 
       // Batch delete sources
-      await this.sourceRepository.deleteMany(sourceIds);
+      await this.sourceRepository.deleteMany(command.sourceIds);
 
       this.logger.debug(
-        `Successfully deleted ${command.sources.length} sources and their indexed content`,
+        `Successfully deleted ${command.sourceIds.length} sources and their indexed content`,
       );
     } catch (error) {
       if (error instanceof ApplicationError) {
