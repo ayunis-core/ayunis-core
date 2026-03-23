@@ -39,6 +39,14 @@ export class UpdateLetterheadDto {
   @ApiPropertyOptional({
     type: String,
     description:
+      'Set to "true" to clear the description. Ignored if a new description is provided.',
+  })
+  @IsOptional()
+  removeDescription?: string;
+
+  @ApiPropertyOptional({
+    type: String,
+    description:
       'Set to "true" to remove the continuation page PDF. Ignored if a new continuationPagePdf file is uploaded.',
   })
   @IsOptional()

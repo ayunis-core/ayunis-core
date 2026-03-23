@@ -235,13 +235,15 @@ export class LetterheadsController {
       ? parseMargins(dto.continuationPageMargins, 'continuationPageMargins')
       : undefined;
 
+    const removeDescription =
+      dto.removeDescription === 'true' && dto.description === undefined;
     const removeContinuationPage = dto.removeContinuationPage === 'true';
 
     const letterhead = await this.updateLetterheadUseCase.execute(
       new UpdateLetterheadCommand({
         letterheadId: id,
         name: dto.name,
-        description: dto.description,
+        description: removeDescription ? null : dto.description,
         firstPagePdfBuffer: files?.firstPagePdf?.[0]?.buffer,
         continuationPagePdfBuffer: files?.continuationPagePdf?.[0]?.buffer,
         removeContinuationPage,
