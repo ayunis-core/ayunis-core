@@ -3,6 +3,7 @@ import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { getLetterheadsControllerFindAllQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
 import { customAxiosInstance } from '@/shared/api';
+import extractErrorData from '@/shared/api/extract-error-data';
 import type { LetterheadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type { PageMargins } from '../model/types';
 
@@ -66,8 +67,22 @@ export function useUpdateLetterhead(onSuccess?: () => void) {
       showSuccess(t('letterheads.editDialog.success'));
       onSuccess?.();
     },
-    onError: () => {
-      showError(t('letterheads.editDialog.error'));
+    onError: (error) => {
+      try {
+        const { code } = extractErrorData(error);
+        switch (code) {
+          case 'LETTERHEAD_INVALID_PDF':
+            showError(t('letterheads.editDialog.invalidPdf'));
+            break;
+          case 'LETTERHEAD_INVALID_PAGE_MARGINS':
+            showError(t('letterheads.editDialog.invalidPageMargins'));
+            break;
+          default:
+            showError(t('letterheads.editDialog.error'));
+        }
+      } catch {
+        showError(t('letterheads.editDialog.error'));
+      }
     },
   });
 

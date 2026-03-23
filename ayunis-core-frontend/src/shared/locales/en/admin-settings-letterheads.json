@@ -44,6 +44,8 @@
       "saving": "Saving…",
       "success": "Letterhead updated successfully.",
       "error": "Failed to update letterhead.",
+      "invalidPdf": "Please upload a valid PDF file.",
+      "invalidPageMargins": "Please enter valid non-negative page margins.",
       "removeContinuationPage": "Remove continuation page"
     },
     "deleteDialog": {

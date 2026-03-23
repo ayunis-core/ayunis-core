@@ -44,6 +44,8 @@
       "saving": "Wird gespeichert…",
       "success": "Briefpapier erfolgreich aktualisiert.",
       "error": "Fehler beim Aktualisieren des Briefpapiers.",
+      "invalidPdf": "Bitte laden Sie eine gültige PDF-Datei hoch.",
+      "invalidPageMargins": "Bitte geben Sie gültige nicht-negative Seitenränder ein.",
       "removeContinuationPage": "Folgeseite entfernen"
     },
     "deleteDialog": {
