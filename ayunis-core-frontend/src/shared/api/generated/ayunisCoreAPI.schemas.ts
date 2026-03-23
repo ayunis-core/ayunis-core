@@ -17,6 +17,8 @@ export interface FeatureTogglesResponseDto {
   agentsEnabled: boolean;
   /** Whether the standalone knowledge bases feature is enabled */
   knowledgeBasesEnabled: boolean;
+  /** Whether the letterheads feature is enabled */
+  letterheadsEnabled: boolean;
   /** Whether the prompts feature is enabled */
   promptsEnabled: boolean;
   /** Whether the skills feature is enabled */

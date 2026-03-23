@@ -64,6 +64,7 @@ export class AppController {
     return {
       agentsEnabled: this.features.agentsEnabled,
       knowledgeBasesEnabled: this.features.knowledgeBasesEnabled,
+      letterheadsEnabled: this.features.letterheadsEnabled,
       promptsEnabled: this.features.promptsEnabled,
       skillsEnabled: this.features.skillsEnabled,
     };

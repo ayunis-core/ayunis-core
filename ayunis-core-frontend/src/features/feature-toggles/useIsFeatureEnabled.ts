@@ -20,6 +20,10 @@ export function useIsKnowledgeBasesEnabled(): boolean {
   return useIsFeatureEnabled('knowledgeBasesEnabled');
 }
 
+export function useIsLetterheadsEnabled(): boolean {
+  return useIsFeatureEnabled('letterheadsEnabled');
+}
+
 export function useIsSkillsEnabled(): boolean {
   return useIsFeatureEnabled('skillsEnabled');
 }

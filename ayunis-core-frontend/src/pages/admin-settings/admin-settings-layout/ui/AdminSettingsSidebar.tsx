@@ -16,6 +16,7 @@ import {
   SettingsSidebarWidget,
   type SidebarMenuItem,
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
+import { useIsLetterheadsEnabled } from '@/features/feature-toggles';
 
 export function AdminSettingsSidebar() {
   const { t } = useTranslation('admin-settings-layout');
@@ -24,6 +25,7 @@ export function AdminSettingsSidebar() {
   const isUsageBased =
     subscriptionData?.subscriptionType ===
     ActiveSubscriptionResponseDtoSubscriptionType.USAGE_BASED;
+  const isLetterheadsEnabled = useIsLetterheadsEnabled();
 
   const menuItems: SidebarMenuItem[] = [
     {
@@ -51,11 +53,15 @@ export function AdminSettingsSidebar() {
       icon: <Shield />,
       label: t('layout.security'),
     },
-    {
-      to: '/admin-settings/letterheads',
-      icon: <FileText />,
-      label: t('layout.letterheads'),
-    },
+    ...(isLetterheadsEnabled
+      ? [
+          {
+            to: '/admin-settings/letterheads' as const,
+            icon: <FileText />,
+            label: t('layout.letterheads'),
+          },
+        ]
+      : []),
   ];
 
   if (isUsageBased) {
