@@ -64,7 +64,7 @@ export class MistralTranscriptionService extends TranscriptionPort {
             this.logger.warn(
               'Retrying Mistral transcription after transient error',
               {
-                statusCode: (error as SDKError).statusCode,
+                statusCode: error.statusCode,
                 message: error.message,
               },
             );

@@ -59,14 +59,22 @@ describe('PdfLetterheadCompositor', () => {
     expect(outputDoc.getPageCount()).toBe(3);
   });
 
-  it('should copy continuation pages as-is when no continuation background is provided', async () => {
-    const contentPdf = await createMultiPagePdf(2);
+  it('should use first-page background for continuation pages when no continuation background is provided', async () => {
+    const contentPdf = await createMultiPagePdf(3);
     const firstPagePdf = await createSinglePagePdf('First BG');
 
     const result = await compositor.composite(contentPdf, firstPagePdf);
 
     const outputDoc = await PDFDocument.load(result);
-    expect(outputDoc.getPageCount()).toBe(2);
+    expect(outputDoc.getPageCount()).toBe(3);
+
+    // All pages should have the same dimensions (background was applied)
+    for (let i = 0; i < 3; i++) {
+      const page = outputDoc.getPage(i);
+      const { width, height } = page.getSize();
+      expect(width).toBeCloseTo(595.28, 1);
+      expect(height).toBeCloseTo(841.89, 1);
+    }
   });
 
   it('should produce a valid PDF buffer', async () => {

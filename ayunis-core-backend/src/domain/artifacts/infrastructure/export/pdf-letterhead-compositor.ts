@@ -43,22 +43,18 @@ export class PdfLetterheadCompositor {
 
     for (let i = 0; i < contentPageCount; i++) {
       const isFirstPage = i === 0;
-      const embeddedBg = isFirstPage ? embeddedFirstBg : embeddedContinuationBg;
+      const embeddedBg = isFirstPage
+        ? embeddedFirstBg
+        : (embeddedContinuationBg ?? embeddedFirstBg);
 
-      if (embeddedBg) {
-        const contentPage = contentDoc.getPage(i);
-        const { width, height } = contentPage.getSize();
+      const contentPage = contentDoc.getPage(i);
+      const { width, height } = contentPage.getSize();
 
-        const outputPage = outputDoc.addPage([width, height]);
-        outputPage.drawPage(embeddedBg, { x: 0, y: 0, width, height });
+      const outputPage = outputDoc.addPage([width, height]);
+      outputPage.drawPage(embeddedBg, { x: 0, y: 0, width, height });
 
-        const [embeddedContent] = await outputDoc.embedPdf(contentDoc, [i]);
-        outputPage.drawPage(embeddedContent, { x: 0, y: 0, width, height });
-      } else {
-        // No background for this page type — copy content page as-is
-        const [copiedPage] = await outputDoc.copyPages(contentDoc, [i]);
-        outputDoc.addPage(copiedPage);
-      }
+      const [embeddedContent] = await outputDoc.embedPdf(contentDoc, [i]);
+      outputPage.drawPage(embeddedContent, { x: 0, y: 0, width, height });
     }
 
     const outputBytes = await outputDoc.save();

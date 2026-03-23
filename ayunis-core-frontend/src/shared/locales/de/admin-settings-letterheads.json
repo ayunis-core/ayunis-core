@@ -6,25 +6,26 @@
     "noDescription": "Keine Beschreibung",
     "detail": {
       "general": "Allgemein",
-      "firstPage": "Erste Seite",
-      "continuationPage": "Folgeseite"
+      "firstPage": "Briefpapier",
+      "followingPages": "Folgeseiten"
     },
     "createDialog": {
       "title": "Briefpapier erstellen",
-      "description": "Laden Sie PDF-Dateien für die erste Seite und optional für Folgeseiten hoch.",
+      "description": "Laden Sie ein PDF als Briefpapier-Hintergrund hoch. Optional können Sie ein separates PDF für Folgeseiten hochladen — andernfalls wird das Briefpapier der ersten Seite für alle Seiten verwendet.",
       "nameLabel": "Name",
       "namePlaceholder": "z.B. Offizielles Briefpapier",
       "nameRequired": "Name ist erforderlich",
       "descriptionLabel": "Beschreibung",
       "descriptionPlaceholder": "Beschreibung für die KI (optional)",
-      "firstPagePdfLabel": "Erste Seite (PDF)",
-      "continuationPagePdfLabel": "Folgeseite (PDF, optional)",
+      "firstPagePdfLabel": "Briefpapier (PDF)",
+      "followingPagesPdfLabel": "Folgeseiten (PDF)",
       "firstPageMarginsLabel": "Seitenränder erste Seite (mm)",
-      "continuationPageMarginsLabel": "Seitenränder Folgeseiten (mm)",
+      "followingPagesMarginsLabel": "Seitenränder Folgeseiten (mm)",
       "top": "Oben",
       "bottom": "Unten",
       "left": "Links",
       "right": "Rechts",
+      "useDifferentFollowingPages": "Anderes Briefpapier für Folgeseiten verwenden",
       "cancel": "Abbrechen",
       "create": "Erstellen",
       "creating": "Wird erstellt…",
@@ -44,7 +45,8 @@
       "error": "Fehler beim Aktualisieren des Briefpapiers.",
       "invalidPdf": "Bitte laden Sie eine gültige PDF-Datei hoch.",
       "invalidPageMargins": "Bitte geben Sie gültige nicht-negative Seitenränder ein.",
-      "removeContinuationPage": "Folgeseite entfernen"
+      "removeContinuationPage": "Folgeseiten-Briefpapier entfernen",
+      "useDifferentFollowingPages": "Anderes Briefpapier für Folgeseiten verwenden"
     },
     "deleteDialog": {
       "title": "Briefpapier löschen",
