@@ -96,7 +96,7 @@ export default function UsersTable({
       variant: 'default',
       onConfirm: () => {
         setResetDialogState((prev) => ({ ...prev, email: user.email }));
-        triggerPasswordResetMutation.mutate(user.id);
+        triggerPasswordResetMutation.mutate({ userId: user.id });
       },
     });
   };
