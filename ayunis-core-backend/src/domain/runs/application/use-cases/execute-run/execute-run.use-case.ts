@@ -207,16 +207,18 @@ export class ExecuteRunUseCase {
         }
       }
     } catch (error) {
+      // Clean up orphaned messages only on failure/interruption.
+      // On the success path the orchestration loop already leaves the
+      // thread in a valid state — running cleanup there risks deleting
+      // intentional terminal messages (e.g., display-only tool_use).
+      await this.messageCleanupService.cleanupTrailingNonAssistantMessages(
+        params.thread.id,
+      );
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Run execution failed', { error: error as Error });
       throw new RunExecutionFailedError(
         error instanceof Error ? error.message : 'Unknown error',
         { originalError: error as Error },
-      );
-    } finally {
-      await this.messageCleanupService.cleanupTrailingNonAssistantMessages(
-        params.thread.id,
-        null,
       );
     }
   }
