@@ -13,6 +13,7 @@ import { EditorToolbar } from './EditorToolbar';
 import { VersionHistory } from './VersionHistory';
 import { ExportButtons } from './ExportButtons';
 import { LetterheadPicker } from './LetterheadPicker';
+import { useIsLetterheadsEnabled } from '@/features/feature-toggles';
 
 interface ArtifactEditorProps {
   readonly artifact: ArtifactResponseDto;
@@ -34,6 +35,7 @@ export function ArtifactEditor({
   isExporting,
 }: ArtifactEditorProps) {
   const { t } = useTranslation('artifacts');
+  const isLetterheadsEnabled = useIsLetterheadsEnabled();
 
   const currentVersion = artifact.versions?.find(
     (v) => v.versionNumber === artifact.currentVersionNumber,
@@ -91,7 +93,7 @@ export function ArtifactEditor({
         </h3>
         <div className="flex items-center gap-1">
           <ExportButtons onExport={handleExport} isExporting={isExporting} />
-          {onLetterheadChange && (
+          {isLetterheadsEnabled && onLetterheadChange && (
             <LetterheadPicker
               letterheadId={artifact.letterheadId}
               onLetterheadChange={onLetterheadChange}

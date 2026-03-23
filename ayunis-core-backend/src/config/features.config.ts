@@ -3,6 +3,7 @@ import { registerAs } from '@nestjs/config';
 export enum FeatureFlag {
   Agents = 'agentsEnabled',
   KnowledgeBases = 'knowledgeBasesEnabled',
+  Letterheads = 'letterheadsEnabled',
   Prompts = 'promptsEnabled',
   Skills = 'skillsEnabled',
 }
@@ -27,6 +28,10 @@ export const featuresConfig = registerAs(
     knowledgeBasesEnabled: parseBooleanWithDefault(
       process.env.FEATURE_KNOWLEDGE_BASES_ENABLED,
       true,
+    ),
+    letterheadsEnabled: parseBooleanWithDefault(
+      process.env.FEATURE_LETTERHEADS_ENABLED,
+      false,
     ),
     promptsEnabled: parseBooleanWithDefault(
       process.env.FEATURE_PROMPTS_ENABLED,

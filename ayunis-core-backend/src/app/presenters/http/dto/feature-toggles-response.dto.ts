@@ -14,6 +14,12 @@ export class FeatureTogglesResponseDto {
   knowledgeBasesEnabled: boolean;
 
   @ApiProperty({
+    description: 'Whether the letterheads feature is enabled',
+    example: false,
+  })
+  letterheadsEnabled: boolean;
+
+  @ApiProperty({
     description: 'Whether the prompts feature is enabled',
     example: true,
   })
