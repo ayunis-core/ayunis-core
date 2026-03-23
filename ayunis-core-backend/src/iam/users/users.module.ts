@@ -41,6 +41,7 @@ import { PasswordResetJwtService } from './application/services/password-reset-j
 import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { FindAllUserIdsByOrgIdUseCase } from './application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
 import { AdminTriggerPasswordResetUseCase } from './application/use-cases/admin-trigger-password-reset/admin-trigger-password-reset.use-case';
+import { SuperAdminTriggerPasswordResetUseCase } from './application/use-cases/super-admin-trigger-password-reset/super-admin-trigger-password-reset.use-case';
 import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
 import { InvitesModule } from '../invites/invites.module';
 import { SuperAdminUsersController } from './presenters/http/super-admin-users.controller';
@@ -111,6 +112,7 @@ import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from
     FindUserByEmailUseCase,
     FindAllUserIdsByOrgIdUseCase,
     AdminTriggerPasswordResetUseCase,
+    SuperAdminTriggerPasswordResetUseCase,
     FindSuperAdminsUseCase,
     PromoteToSuperAdminUseCase,
     DemoteFromSuperAdminUseCase,

@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/dropdown-menu';
 import { Trash2, MoreHorizontal, Mail } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { UserResponseDto, PaginationDto } from '@/shared/api';
 import { formatDate } from '@/shared/lib/format-date';
@@ -28,6 +29,7 @@ import { useSuperAdminDeleteUser } from '../api/useSuperAdminDeleteUser';
 import { useSuperAdminTriggerPasswordReset } from '../api/useSuperAdminTriggerPasswordReset';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import CreateUserDialog from './CreateUserDialog';
+import PasswordResetSuccessDialog from './PasswordResetSuccessDialog';
 import SuperAdminUsersSearch from './SuperAdminUsersSearch';
 import SuperAdminUsersPagination from './SuperAdminUsersPagination';
 
@@ -50,8 +52,17 @@ export default function UsersTable({
   const { deleteUser, isLoading: isDeleting } = useSuperAdminDeleteUser({
     orgId,
   });
-  const { triggerPasswordReset, isLoading: isTriggeringReset } =
-    useSuperAdminTriggerPasswordReset();
+  const [resetDialogState, setResetDialogState] = useState<{
+    open: boolean;
+    resetUrl: string;
+    email: string;
+  }>({ open: false, resetUrl: '', email: '' });
+
+  const triggerPasswordResetMutation = useSuperAdminTriggerPasswordReset({
+    onSuccess: (resetUrl: string) => {
+      setResetDialogState((prev) => ({ ...prev, open: true, resetUrl }));
+    },
+  });
   const { confirm } = useConfirmation();
 
   const total = pagination?.total ?? 0;
@@ -84,12 +95,13 @@ export default function UsersTable({
       cancelText: t('confirmPasswordReset.cancelText'),
       variant: 'default',
       onConfirm: () => {
-        triggerPasswordReset(user.id);
+        setResetDialogState((prev) => ({ ...prev, email: user.email }));
+        triggerPasswordResetMutation.mutate({ userId: user.id });
       },
     });
   };
 
-  const isLoading = isDeleting || isTriggeringReset;
+  const isLoading = isDeleting || triggerPasswordResetMutation.isPending;
 
   return (
     <Card>
@@ -186,6 +198,14 @@ export default function UsersTable({
           </>
         )}
       </CardContent>
+      <PasswordResetSuccessDialog
+        open={resetDialogState.open}
+        onOpenChange={(open) =>
+          setResetDialogState((prev) => ({ ...prev, open }))
+        }
+        resetUrl={resetDialogState.resetUrl}
+        userEmail={resetDialogState.email}
+      />
     </Card>
   );
 }

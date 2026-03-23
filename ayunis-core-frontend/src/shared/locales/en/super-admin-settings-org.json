@@ -156,7 +156,17 @@
   },
   "triggerPasswordReset": {
     "success": "Password reset email sent successfully",
-    "error": "Failed to send password reset email. Please try again."
+    "error": "Failed to send password reset email. Please try again.",
+    "notFound": "User not found."
+  },
+  "passwordResetSuccess": {
+    "title": "Password Reset Email Sent",
+    "description": "A password reset email has been sent to {{email}}. You can also share the reset link directly.",
+    "urlLabel": "Password Reset Link",
+    "copyButton": "Copy",
+    "copiedButton": "Copied",
+    "copied": "Link copied to clipboard",
+    "close": "Close"
   },
   "confirmPasswordReset": {
     "title": "Send Password Reset Email",
