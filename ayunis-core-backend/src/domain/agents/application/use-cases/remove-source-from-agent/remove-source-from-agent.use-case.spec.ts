@@ -13,7 +13,6 @@ import { RemoveSourceFromAgentUseCase } from './remove-source-from-agent.use-cas
 import { RemoveSourceFromAgentCommand } from './remove-source-from-agent.command';
 import { AgentRepository } from '../../ports/agent.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { GetTextSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.use-case';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { Agent } from '../../../domain/agent.entity';
 import { AgentSourceAssignment } from '../../../domain/agent-source-assignment.entity';
@@ -35,7 +34,6 @@ describe('RemoveSourceFromAgentUseCase', () => {
   let useCase: RemoveSourceFromAgentUseCase;
   let agentRepository: jest.Mocked<AgentRepository>;
   let contextService: jest.Mocked<ContextService>;
-  let getSourceByIdUseCase: jest.Mocked<GetTextSourceByIdUseCase>;
   let deleteSourceUseCase: jest.Mocked<DeleteSourceUseCase>;
 
   const mockUserId = randomUUID();
@@ -57,10 +55,6 @@ describe('RemoveSourceFromAgentUseCase', () => {
       get: jest.fn(),
     };
 
-    const mockGetSourceByIdUseCase = {
-      execute: jest.fn(),
-    };
-
     const mockDeleteSourceUseCase = {
       execute: jest.fn(),
     };
@@ -70,10 +64,6 @@ describe('RemoveSourceFromAgentUseCase', () => {
         RemoveSourceFromAgentUseCase,
         { provide: AgentRepository, useValue: mockAgentRepository },
         { provide: ContextService, useValue: mockContextService },
-        {
-          provide: GetTextSourceByIdUseCase,
-          useValue: mockGetSourceByIdUseCase,
-        },
         { provide: DeleteSourceUseCase, useValue: mockDeleteSourceUseCase },
       ],
     }).compile();
@@ -83,7 +73,6 @@ describe('RemoveSourceFromAgentUseCase', () => {
     );
     agentRepository = module.get(AgentRepository);
     contextService = module.get(ContextService);
-    getSourceByIdUseCase = module.get(GetTextSourceByIdUseCase);
     deleteSourceUseCase = module.get(DeleteSourceUseCase);
 
     // Mock logger
@@ -144,7 +133,6 @@ describe('RemoveSourceFromAgentUseCase', () => {
       });
 
       const mockAgent = createMockAgent();
-      const mockSource = mockAgent.sourceAssignments[0].source;
       const updatedAgent = new Agent({
         ...mockAgent,
         sourceAssignments: [],
@@ -152,7 +140,6 @@ describe('RemoveSourceFromAgentUseCase', () => {
 
       contextService.get.mockReturnValue(mockUserId);
       agentRepository.findOne.mockResolvedValue(mockAgent);
-      getSourceByIdUseCase.execute.mockResolvedValue(mockSource);
       deleteSourceUseCase.execute.mockResolvedValue(undefined);
       agentRepository.update.mockResolvedValue(updatedAgent);
 
@@ -165,14 +152,9 @@ describe('RemoveSourceFromAgentUseCase', () => {
         mockAgentId,
         mockUserId,
       );
-      expect(getSourceByIdUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: mockSourceId,
-        }),
-      );
       expect(deleteSourceUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
-          source: mockSource,
+          sourceId: mockSourceId,
         }),
       );
       expect(agentRepository.update).toHaveBeenCalledWith(
@@ -219,7 +201,6 @@ describe('RemoveSourceFromAgentUseCase', () => {
         mockAgentId,
         mockUserId,
       );
-      expect(getSourceByIdUseCase.execute).not.toHaveBeenCalled();
       expect(deleteSourceUseCase.execute).not.toHaveBeenCalled();
       expect(agentRepository.update).not.toHaveBeenCalled();
     });
@@ -244,7 +225,6 @@ describe('RemoveSourceFromAgentUseCase', () => {
         mockAgentId,
         mockUserId,
       );
-      expect(getSourceByIdUseCase.execute).not.toHaveBeenCalled();
       expect(deleteSourceUseCase.execute).not.toHaveBeenCalled();
       expect(agentRepository.update).not.toHaveBeenCalled();
     });
@@ -289,9 +269,6 @@ describe('RemoveSourceFromAgentUseCase', () => {
 
       contextService.get.mockReturnValue(mockUserId);
       agentRepository.findOne.mockResolvedValue(agentWithMultipleSources);
-      getSourceByIdUseCase.execute.mockResolvedValue(
-        mockAgent.sourceAssignments[0].source,
-      );
       deleteSourceUseCase.execute.mockResolvedValue(undefined);
       agentRepository.update.mockResolvedValue(updatedAgent);
 
@@ -331,32 +308,6 @@ describe('RemoveSourceFromAgentUseCase', () => {
       );
     });
 
-    it('should throw UnexpectedAgentError when getSourceById fails', async () => {
-      // Arrange
-      const command = new RemoveSourceFromAgentCommand({
-        agentId: mockAgentId,
-        sourceAssignmentId: mockSourceAssignmentId,
-      });
-
-      const mockAgent = createMockAgent();
-      const sourceError = new Error('Source not found');
-
-      contextService.get.mockReturnValue(mockUserId);
-      agentRepository.findOne.mockResolvedValue(mockAgent);
-      getSourceByIdUseCase.execute.mockRejectedValue(sourceError);
-
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        UnexpectedAgentError,
-      );
-      expect(Logger.prototype.error).toHaveBeenCalledWith(
-        'Error removing source from agent',
-        expect.objectContaining({
-          error: sourceError,
-        }),
-      );
-    });
-
     it('should throw UnexpectedAgentError when deleteSource fails', async () => {
       // Arrange
       const command = new RemoveSourceFromAgentCommand({
@@ -365,12 +316,10 @@ describe('RemoveSourceFromAgentUseCase', () => {
       });
 
       const mockAgent = createMockAgent();
-      const mockSource = mockAgent.sourceAssignments[0].source;
       const deleteError = new Error('Delete operation failed');
 
       contextService.get.mockReturnValue(mockUserId);
       agentRepository.findOne.mockResolvedValue(mockAgent);
-      getSourceByIdUseCase.execute.mockResolvedValue(mockSource);
       deleteSourceUseCase.execute.mockRejectedValue(deleteError);
 
       // Act & Assert
@@ -412,7 +361,6 @@ describe('RemoveSourceFromAgentUseCase', () => {
       });
 
       const mockAgent = createMockAgent();
-      const mockSource = mockAgent.sourceAssignments[0].source;
       const updatedAgent = new Agent({
         ...mockAgent,
         sourceAssignments: [],
@@ -420,7 +368,6 @@ describe('RemoveSourceFromAgentUseCase', () => {
 
       contextService.get.mockReturnValue(mockUserId);
       agentRepository.findOne.mockResolvedValue(mockAgent);
-      getSourceByIdUseCase.execute.mockResolvedValue(mockSource);
       deleteSourceUseCase.execute.mockResolvedValue(undefined);
       agentRepository.update.mockResolvedValue(updatedAgent);
 

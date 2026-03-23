@@ -39,8 +39,9 @@ export class DeleteKnowledgeBaseUseCase {
       const sources = await this.sourceRepository.findByKnowledgeBaseId(
         command.knowledgeBaseId,
       );
+      const sourceIds = sources.map((s) => s.id);
       await this.deleteSourcesUseCase.execute(
-        new DeleteSourcesCommand(sources),
+        new DeleteSourcesCommand(sourceIds),
       );
 
       await this.knowledgeBaseRepository.delete(existing);

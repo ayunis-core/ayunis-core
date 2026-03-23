@@ -52,8 +52,6 @@ describe('ListKnowledgeBaseDocumentsUseCase', () => {
       url: 'https://stadt.de/protokoll',
       name: 'Protokoll März 2025',
       type: TextType.WEB,
-      text: 'Inhalt',
-      contentChunks: [],
     });
     mockRepository.findSourcesByKnowledgeBaseId.mockResolvedValue([source]);
 

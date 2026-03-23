@@ -68,8 +68,6 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
     const source = new FileSource({
       id: documentId,
       name: 'building-codes.pdf',
-      text: 'Building code regulations...',
-      contentChunks: [],
       type: TextType.FILE,
       fileType: FileType.PDF,
     });
@@ -143,8 +141,6 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
     const source = new FileSource({
       id: documentId,
       name: 'shared-building-codes.pdf',
-      text: 'Shared building code regulations...',
-      contentChunks: [],
       type: TextType.FILE,
       fileType: FileType.PDF,
     });

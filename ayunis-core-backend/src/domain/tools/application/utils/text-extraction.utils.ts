@@ -9,7 +9,7 @@ interface TextExtractionParams {
   maxChars: number;
 }
 
-interface TextExtractionResult {
+export interface TextExtractionResult {
   totalLines: number;
   effectiveStartLine: number;
   effectiveEndLine: number;
@@ -85,6 +85,10 @@ function validateCharLimit(
   }
 }
 
+/**
+ * Extract text by line range from a full text string.
+ * Used when the full text is available in memory.
+ */
 export function extractTextByLineRange(
   params: TextExtractionParams,
 ): TextExtractionResult {
@@ -121,6 +125,51 @@ export function extractTextByLineRange(
     effectiveStartLine: effectiveStart,
     effectiveEndLine: effectiveEnd,
     extractedText,
+    isEmpty: false,
+  };
+}
+
+/**
+ * Validate text extracted by the DB (pre-sliced).
+ * Used after `sourceRepository.extractTextLines()` returns { totalLines, text }.
+ */
+export function validateTextExtraction(params: {
+  toolName: string;
+  dbResult: { totalLines: number; text: string };
+  startLine: number;
+  endLine: number;
+  maxLines: number;
+  maxChars: number;
+}): TextExtractionResult {
+  const { toolName, dbResult, startLine, endLine, maxLines, maxChars } = params;
+  const { totalLines, text } = dbResult;
+
+  if (totalLines === 0 || (text === '' && totalLines <= 1)) {
+    return { ...EMPTY_RESULT, totalLines };
+  }
+
+  const { effectiveStart, effectiveEnd } = clampLineRange(
+    startLine,
+    endLine,
+    totalLines,
+  );
+  const lineCount = effectiveEnd - effectiveStart + 1;
+
+  validateLineRange({
+    toolName,
+    startLine,
+    effectiveEnd,
+    totalLines,
+    maxLines,
+  });
+
+  validateCharLimit(toolName, text, lineCount, maxChars);
+
+  return {
+    totalLines,
+    effectiveStartLine: effectiveStart,
+    effectiveEndLine: effectiveEnd,
+    extractedText: text,
     isEmpty: false,
   };
 }

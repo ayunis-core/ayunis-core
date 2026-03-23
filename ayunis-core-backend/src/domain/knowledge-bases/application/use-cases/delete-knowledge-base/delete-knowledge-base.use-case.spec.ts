@@ -84,16 +84,12 @@ describe('DeleteKnowledgeBaseUseCase', () => {
         url: 'https://gemeinde-musterstadt.de/protokoll-01.pdf',
         name: 'Protokoll Januar',
         type: TextType.WEB,
-        text: 'Protokoll-Inhalt',
-        contentChunks: [],
       }),
       new UrlSource({
         id: '55555555-5555-5555-5555-555555555555' as UUID,
         url: 'https://gemeinde-musterstadt.de/protokoll-02.pdf',
         name: 'Protokoll Februar',
         type: TextType.WEB,
-        text: 'Protokoll-Inhalt',
-        contentChunks: [],
       }),
     ];
 
@@ -110,7 +106,7 @@ describe('DeleteKnowledgeBaseUseCase', () => {
       knowledgeBaseId,
     );
     expect(mockDeleteSourcesUseCase.execute).toHaveBeenCalledWith(
-      new DeleteSourcesCommand(sources),
+      new DeleteSourcesCommand(sources.map((s) => s.id)),
     );
     expect(mockKbRepository.delete).toHaveBeenCalledWith(existing);
   });

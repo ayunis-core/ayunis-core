@@ -43,7 +43,6 @@ export abstract class SourceRecord extends BaseRecord {
 export class TextSourceRecord extends SourceRecord {
   @OneToOne(() => TextSourceDetailsRecord, (details) => details.source, {
     cascade: true,
-    eager: true,
   })
   textSourceDetails: TextSourceDetailsRecord;
 }
@@ -52,7 +51,6 @@ export class TextSourceRecord extends SourceRecord {
 export class DataSourceRecord extends SourceRecord {
   @OneToOne(() => DataSourceDetailsRecord, (details) => details.source, {
     cascade: true,
-    eager: true,
   })
   dataSourceDetails: DataSourceDetailsRecord;
 }

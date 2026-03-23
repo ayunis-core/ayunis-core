@@ -12,11 +12,15 @@ import {
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import toolsConfig from 'src/config/tools.config';
-import { extractTextByLineRange } from '../utils/text-extraction.utils';
+import { validateTextExtraction } from '../utils/text-extraction.utils';
 import {
   KnowledgeBaseNotFoundError,
   DocumentNotInKnowledgeBaseError,
 } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+
+/** PostgreSQL max int for "read to end" when endLine is -1 */
+const MAX_END_LINE = 2147483647;
 
 interface KnowledgeGetTextResult {
   knowledgeBaseId: string;
@@ -36,6 +40,7 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
 
   constructor(
     private readonly getDocumentTextUseCase: GetKnowledgeBaseDocumentTextUseCase,
+    private readonly sourceRepository: SourceRepository,
     private readonly contextService: ContextService,
     @Inject(toolsConfig.KEY)
     private readonly config: ConfigType<typeof toolsConfig>,
@@ -72,6 +77,7 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
         });
       }
 
+      // Ownership check — returns metadata-only Source
       const source = await this.getDocumentTextUseCase.execute(
         new GetKnowledgeBaseDocumentTextQuery({
           knowledgeBaseId: knowledgeBaseId as UUID,
@@ -89,10 +95,25 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
         });
       }
 
-      const text = source.text || '';
-      const extraction = extractTextByLineRange({
+      // Extract text lines at DB level
+      const dbEndLine = endLine === -1 ? MAX_END_LINE : endLine;
+      const dbResult = await this.sourceRepository.extractTextLines(
+        source.id,
+        startLine,
+        dbEndLine,
+      );
+
+      if (!dbResult) {
+        throw new ToolExecutionFailedError({
+          toolName: tool.name,
+          message: `Document text not found for "${source.name}"`,
+          exposeToLLM: true,
+        });
+      }
+
+      const extraction = validateTextExtraction({
         toolName: tool.name,
-        text,
+        dbResult,
         startLine,
         endLine,
         maxLines,

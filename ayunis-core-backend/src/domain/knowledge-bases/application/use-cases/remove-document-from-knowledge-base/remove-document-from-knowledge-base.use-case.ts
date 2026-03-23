@@ -51,7 +51,9 @@ export class RemoveDocumentFromKnowledgeBaseUseCase {
         );
       }
 
-      await this.deleteSourceUseCase.execute(new DeleteSourceCommand(source));
+      await this.deleteSourceUseCase.execute(
+        new DeleteSourceCommand(command.documentId),
+      );
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
