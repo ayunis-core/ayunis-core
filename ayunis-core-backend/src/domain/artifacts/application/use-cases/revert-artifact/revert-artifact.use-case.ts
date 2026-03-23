@@ -58,13 +58,16 @@ export class RevertArtifactUseCase {
             );
           }
 
-          return new ArtifactVersion({
-            artifactId: artifact.id,
-            versionNumber: artifact.currentVersionNumber + 1,
-            content: sanitizeHtmlContent(targetVersion.content),
-            authorType: AuthorType.USER,
-            authorId: userId,
-          });
+          return {
+            expectedCurrentVersionNumber: artifact.currentVersionNumber,
+            version: new ArtifactVersion({
+              artifactId: artifact.id,
+              versionNumber: artifact.currentVersionNumber + 1,
+              content: sanitizeHtmlContent(targetVersion.content),
+              authorType: AuthorType.USER,
+              authorId: userId,
+            }),
+          };
         },
       });
     } catch (error) {

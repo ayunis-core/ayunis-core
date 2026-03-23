@@ -52,7 +52,7 @@ describe('RevertArtifactUseCase', () => {
       findByIdWithVersions: jest.fn(),
       addVersion: jest.fn(),
       updateCurrentVersionNumber: jest.fn(),
-      addVersionAndUpdateCurrent: jest.fn(),
+      addVersionAndUpdateArtifact: jest.fn(),
       delete: jest.fn(),
     };
 
@@ -109,8 +109,8 @@ describe('RevertArtifactUseCase', () => {
     });
 
     artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
-    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
-      async (version) => version,
+    artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+      async ({ version }) => version,
     );
 
     const command = new RevertArtifactCommand({
@@ -130,7 +130,7 @@ describe('RevertArtifactUseCase', () => {
     );
   });
 
-  it('should call addVersionAndUpdateCurrent with the reverted version', async () => {
+  it('should call addVersionAndUpdateArtifact with the reverted version', async () => {
     const versions = [
       new ArtifactVersion({
         artifactId: mockArtifactId,
@@ -157,8 +157,8 @@ describe('RevertArtifactUseCase', () => {
     });
 
     artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
-    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
-      async (version) => version,
+    artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+      async ({ version }) => version,
     );
 
     const command = new RevertArtifactCommand({
@@ -169,12 +169,14 @@ describe('RevertArtifactUseCase', () => {
     await useCase.execute(command);
 
     expect(
-      artifactsRepository.addVersionAndUpdateCurrent,
+      artifactsRepository.addVersionAndUpdateArtifact,
     ).toHaveBeenCalledTimes(1);
-    const passedVersion =
-      artifactsRepository.addVersionAndUpdateCurrent.mock.calls[0][0];
-    expect(passedVersion.artifactId).toBe(mockArtifactId);
-    expect(passedVersion.versionNumber).toBe(3);
+    const passedParams =
+      artifactsRepository.addVersionAndUpdateArtifact.mock.calls[0][0];
+    expect(passedParams.version.artifactId).toBe(mockArtifactId);
+    expect(passedParams.version.versionNumber).toBe(3);
+    expect(passedParams.expectedCurrentVersionNumber).toBe(2);
+    expect(passedParams.letterheadId).toBeUndefined();
   });
 
   it('should throw ArtifactNotFoundError when artifact does not exist', async () => {
@@ -248,8 +250,8 @@ describe('RevertArtifactUseCase', () => {
     });
 
     artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
-    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
-      async (version) => version,
+    artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+      async ({ version }) => version,
     );
 
     const command = new RevertArtifactCommand({
@@ -292,7 +294,7 @@ describe('RevertArtifactUseCase', () => {
   });
 
   describe('retry on version conflict', () => {
-    it('should retry and succeed when addVersionAndUpdateCurrent fails once with conflict', async () => {
+    it('should retry and succeed when addVersionAndUpdateArtifact fails once with conflict', async () => {
       const artifactV2 = new Artifact({
         id: mockArtifactId,
         threadId: mockThreadId,
@@ -324,9 +326,9 @@ describe('RevertArtifactUseCase', () => {
         .mockResolvedValueOnce(artifactV2)
         .mockResolvedValueOnce(artifactV3);
 
-      artifactsRepository.addVersionAndUpdateCurrent
+      artifactsRepository.addVersionAndUpdateArtifact
         .mockRejectedValueOnce(new ArtifactVersionConflictError(mockArtifactId))
-        .mockImplementationOnce(async (version) => version);
+        .mockImplementationOnce(async ({ version }) => version);
 
       const command = new RevertArtifactCommand({
         artifactId: mockArtifactId,
@@ -339,7 +341,7 @@ describe('RevertArtifactUseCase', () => {
       expect(result.content).toBe('<p>Original municipal plan</p>');
       expect(artifactsRepository.findByIdWithVersions).toHaveBeenCalledTimes(2);
       expect(
-        artifactsRepository.addVersionAndUpdateCurrent,
+        artifactsRepository.addVersionAndUpdateArtifact,
       ).toHaveBeenCalledTimes(2);
     });
 
@@ -354,7 +356,7 @@ describe('RevertArtifactUseCase', () => {
       });
 
       artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
-      artifactsRepository.addVersionAndUpdateCurrent.mockRejectedValue(
+      artifactsRepository.addVersionAndUpdateArtifact.mockRejectedValue(
         new ArtifactVersionConflictError(mockArtifactId),
       );
 
@@ -369,7 +371,7 @@ describe('RevertArtifactUseCase', () => {
 
       expect(artifactsRepository.findByIdWithVersions).toHaveBeenCalledTimes(3);
       expect(
-        artifactsRepository.addVersionAndUpdateCurrent,
+        artifactsRepository.addVersionAndUpdateArtifact,
       ).toHaveBeenCalledTimes(3);
     });
 
@@ -384,7 +386,7 @@ describe('RevertArtifactUseCase', () => {
       });
 
       artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
-      artifactsRepository.addVersionAndUpdateCurrent.mockRejectedValue(
+      artifactsRepository.addVersionAndUpdateArtifact.mockRejectedValue(
         new Error('Connection refused'),
       );
 
@@ -399,7 +401,7 @@ describe('RevertArtifactUseCase', () => {
 
       expect(artifactsRepository.findByIdWithVersions).toHaveBeenCalledTimes(1);
       expect(
-        artifactsRepository.addVersionAndUpdateCurrent,
+        artifactsRepository.addVersionAndUpdateArtifact,
       ).toHaveBeenCalledTimes(1);
     });
   });

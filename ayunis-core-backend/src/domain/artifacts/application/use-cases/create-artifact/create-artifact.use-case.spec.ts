@@ -16,6 +16,8 @@ import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
+import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
+import { LetterheadNotFoundError } from 'src/domain/letterheads/application/letterheads.errors';
 import {
   ArtifactContentTooLargeError,
   ARTIFACT_MAX_CONTENT_LENGTH,
@@ -25,6 +27,7 @@ describe('CreateArtifactUseCase', () => {
   let useCase: CreateArtifactUseCase;
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
   let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
+  let findLetterheadUseCase: jest.Mocked<FindLetterheadUseCase>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockThreadId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -51,18 +54,27 @@ describe('CreateArtifactUseCase', () => {
       execute: jest.fn().mockResolvedValue({ thread: {}, isLongChat: false }),
     };
 
+    const mockFindLetterheadUseCase = {
+      execute: jest.fn().mockResolvedValue({}),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateArtifactUseCase,
         { provide: ArtifactsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: FindThreadUseCase, useValue: mockFindThreadUseCase },
+        {
+          provide: FindLetterheadUseCase,
+          useValue: mockFindLetterheadUseCase,
+        },
       ],
     }).compile();
 
     useCase = module.get<CreateArtifactUseCase>(CreateArtifactUseCase);
     artifactsRepository = module.get(ArtifactsRepository);
     findThreadUseCase = module.get(FindThreadUseCase);
+    findLetterheadUseCase = module.get(FindLetterheadUseCase);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
@@ -89,6 +101,7 @@ describe('CreateArtifactUseCase', () => {
     expect(result.title).toBe('Quarterly Budget Report');
     expect(result.threadId).toBe(mockThreadId);
     expect(result.userId).toBe(mockUserId);
+    expect(result.letterheadId).toBeNull();
     expect(result.currentVersionNumber).toBe(1);
     expect(result.versions).toHaveLength(1);
     expect(result.versions[0].versionNumber).toBe(1);
@@ -96,6 +109,28 @@ describe('CreateArtifactUseCase', () => {
       '<h1>Budget Report</h1><p>Q1 2026 expenses...</p>',
     );
     expect(result.versions[0].authorType).toBe(AuthorType.ASSISTANT);
+  });
+
+  it('should create an artifact with letterheadId when provided', async () => {
+    const mockLetterheadId =
+      '423e4567-e89b-12d3-a456-426614174000' as UUID;
+
+    const command = new CreateArtifactCommand({
+      threadId: mockThreadId,
+      title: 'Official Letter',
+      content: '<p>Dear Sir or Madam...</p>',
+      authorType: AuthorType.ASSISTANT,
+      letterheadId: mockLetterheadId,
+    });
+
+    artifactsRepository.create.mockImplementation(async (artifact) => artifact);
+    artifactsRepository.addVersion.mockImplementation(
+      async (version) => version,
+    );
+
+    const result = await useCase.execute(command);
+
+    expect(result.letterheadId).toBe(mockLetterheadId);
   });
 
   it('should set authorId to userId when author type is USER', async () => {
@@ -145,6 +180,10 @@ describe('CreateArtifactUseCase', () => {
         { provide: ArtifactsRepository, useValue: artifactsRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: FindThreadUseCase, useValue: findThreadUseCase },
+        {
+          provide: FindLetterheadUseCase,
+          useValue: findLetterheadUseCase,
+        },
       ],
     }).compile();
 
@@ -319,6 +358,70 @@ describe('CreateArtifactUseCase', () => {
     const result = await useCase.execute(command);
 
     expect(result.title).toBe('Maximum Size Document');
+  });
+
+  it('should validate letterheadId belongs to org when provided', async () => {
+    const mockLetterheadId =
+      '423e4567-e89b-12d3-a456-426614174000' as UUID;
+
+    const command = new CreateArtifactCommand({
+      threadId: mockThreadId,
+      title: 'Letter with Letterhead',
+      content: '<p>Official content</p>',
+      authorType: AuthorType.ASSISTANT,
+      letterheadId: mockLetterheadId,
+    });
+
+    artifactsRepository.create.mockImplementation(async (artifact) => artifact);
+    artifactsRepository.addVersion.mockImplementation(
+      async (version) => version,
+    );
+
+    await useCase.execute(command);
+
+    expect(findLetterheadUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ letterheadId: mockLetterheadId }),
+    );
+  });
+
+  it('should throw LetterheadNotFoundError when letterheadId does not belong to org', async () => {
+    const crossOrgLetterheadId =
+      '523e4567-e89b-12d3-a456-426614174000' as UUID;
+
+    findLetterheadUseCase.execute.mockRejectedValue(
+      new LetterheadNotFoundError(crossOrgLetterheadId),
+    );
+
+    const command = new CreateArtifactCommand({
+      threadId: mockThreadId,
+      title: 'Cross-Org Letterhead Attempt',
+      content: '<p>Should not be created</p>',
+      authorType: AuthorType.ASSISTANT,
+      letterheadId: crossOrgLetterheadId,
+    });
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      LetterheadNotFoundError,
+    );
+    expect(artifactsRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('should not validate letterheadId when not provided', async () => {
+    const command = new CreateArtifactCommand({
+      threadId: mockThreadId,
+      title: 'No Letterhead Document',
+      content: '<p>Content without letterhead</p>',
+      authorType: AuthorType.ASSISTANT,
+    });
+
+    artifactsRepository.create.mockImplementation(async (artifact) => artifact);
+    artifactsRepository.addVersion.mockImplementation(
+      async (version) => version,
+    );
+
+    await useCase.execute(command);
+
+    expect(findLetterheadUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('should persist the artifact before adding the version', async () => {
