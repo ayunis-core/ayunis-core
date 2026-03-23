@@ -63,7 +63,7 @@ const MARGIN_KEYS: ReadonlyArray<keyof PageMargins> = [
 
 function parseMargins(value: unknown, label: string): PageMargins {
   if (!value) {
-    return { top: 20, bottom: 20, left: 20, right: 20 };
+    throw new BadRequestException(`Invalid ${label}: value is required`);
   }
 
   let parsed: MarginsInput;
