@@ -156,7 +156,17 @@
   },
   "triggerPasswordReset": {
     "success": "Passwort-Reset-E-Mail erfolgreich gesendet",
-    "error": "Passwort-Reset-E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es erneut."
+    "error": "Passwort-Reset-E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Benutzer nicht gefunden."
+  },
+  "passwordResetSuccess": {
+    "title": "Passwort-Reset-E-Mail gesendet",
+    "description": "Eine Passwort-Reset-E-Mail wurde an {{email}} gesendet. Sie können den Reset-Link auch direkt teilen.",
+    "urlLabel": "Passwort-Reset-Link",
+    "copyButton": "Kopieren",
+    "copiedButton": "Kopiert",
+    "copied": "Link in Zwischenablage kopiert",
+    "close": "Schließen"
   },
   "confirmPasswordReset": {
     "title": "Passwort-Reset-E-Mail senden",

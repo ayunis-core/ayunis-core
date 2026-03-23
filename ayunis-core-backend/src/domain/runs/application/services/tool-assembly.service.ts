@@ -475,10 +475,16 @@ export class ToolAssemblyService {
         ? `\n\nAvailable documents in this conversation:\n${artifactLines.join('\n')}`
         : '';
 
-    const toolTypes = [ToolType.UPDATE_DOCUMENT, ToolType.EDIT_DOCUMENT, ToolType.READ_DOCUMENT];
+    const toolTypes = [
+      ToolType.UPDATE_DOCUMENT,
+      ToolType.EDIT_DOCUMENT,
+      ToolType.READ_DOCUMENT,
+    ];
     const tools: Tool[] = [];
     for (const type of toolTypes) {
-      const tool = await this.assembleToolsUseCase.execute(new AssembleToolCommand({ type }));
+      const tool = await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({ type }),
+      );
       if (suffix) {
         tool.descriptionLong = `${tool.descriptionLong ?? tool.description}${suffix}`;
       }

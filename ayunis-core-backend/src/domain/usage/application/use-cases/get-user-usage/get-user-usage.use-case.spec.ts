@@ -164,18 +164,16 @@ describe('GetUserUsageUseCase', () => {
         endDate,
       });
 
-      jest
-        .spyOn(mockUsageRepository, 'getUserUsage')
-        .mockResolvedValue(
-          mockUserUsageResult(
-            new Paginated<UserUsageItem>({
-              data: [],
-              limit: 50,
-              offset: 0,
-              total: 0,
-            }),
-          ),
-        );
+      jest.spyOn(mockUsageRepository, 'getUserUsage').mockResolvedValue(
+        mockUserUsageResult(
+          new Paginated<UserUsageItem>({
+            data: [],
+            limit: 50,
+            offset: 0,
+            total: 0,
+          }),
+        ),
+      );
 
       await expect(useCase.execute(query)).resolves.toBeDefined();
     });
@@ -237,18 +235,16 @@ describe('GetUserUsageUseCase', () => {
         offset: 0,
       });
 
-      jest
-        .spyOn(mockUsageRepository, 'getUserUsage')
-        .mockResolvedValue(
-          mockUserUsageResult(
-            new Paginated<UserUsageItem>({
-              data: [],
-              limit: 50,
-              offset: 0,
-              total: 0,
-            }),
-          ),
-        );
+      jest.spyOn(mockUsageRepository, 'getUserUsage').mockResolvedValue(
+        mockUserUsageResult(
+          new Paginated<UserUsageItem>({
+            data: [],
+            limit: 50,
+            offset: 0,
+            total: 0,
+          }),
+        ),
+      );
 
       await expect(useCase.execute(query)).resolves.toBeDefined();
     });
@@ -285,18 +281,16 @@ describe('GetUserUsageUseCase', () => {
         sortOrder: 'desc',
       });
 
-      jest
-        .spyOn(mockUsageRepository, 'getUserUsage')
-        .mockResolvedValue(
-          mockUserUsageResult(
-            new Paginated<UserUsageItem>({
-              data: [],
-              limit: 50,
-              offset: 0,
-              total: 0,
-            }),
-          ),
-        );
+      jest.spyOn(mockUsageRepository, 'getUserUsage').mockResolvedValue(
+        mockUserUsageResult(
+          new Paginated<UserUsageItem>({
+            data: [],
+            limit: 50,
+            offset: 0,
+            total: 0,
+          }),
+        ),
+      );
 
       await expect(useCase.execute(query)).resolves.toBeDefined();
     });

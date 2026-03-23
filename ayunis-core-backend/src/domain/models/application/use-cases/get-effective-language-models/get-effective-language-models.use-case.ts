@@ -69,9 +69,7 @@ export class GetEffectiveLanguageModelsUseCase {
       new FindTeamsByUserIdQuery(userId),
     );
     const orgTeams = allTeams.filter((team) => team.orgId === orgId);
-    const overrideTeams = orgTeams.filter(
-      (team) => team.modelOverrideEnabled,
-    );
+    const overrideTeams = orgTeams.filter((team) => team.modelOverrideEnabled);
     const overrideTeamIds = overrideTeams.map((t) => t.id);
 
     if (overrideTeams.length === 0) {

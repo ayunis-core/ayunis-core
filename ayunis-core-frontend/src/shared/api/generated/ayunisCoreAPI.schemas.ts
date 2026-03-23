@@ -795,6 +795,11 @@ export interface ResetPasswordDto {
   newPasswordConfirmation: string;
 }
 
+export interface TriggerPasswordResetResponseDto {
+  /** The password reset URL sent to the user */
+  resetUrl: string;
+}
+
 /**
  * Role for the user
  */
