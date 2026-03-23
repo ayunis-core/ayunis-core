@@ -38,7 +38,6 @@ import { Route as AuthenticatedAdminSettingsUsersRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminSettingsUsageRouteImport } from './routes/_authenticated/admin-settings.usage'
 import { Route as AuthenticatedAdminSettingsSecurityRouteImport } from './routes/_authenticated/admin-settings.security'
 import { Route as AuthenticatedAdminSettingsModelsRouteImport } from './routes/_authenticated/admin-settings.models'
-import { Route as AuthenticatedAdminSettingsLetterheadsRouteImport } from './routes/_authenticated/admin-settings.letterheads'
 import { Route as AuthenticatedAdminSettingsIntegrationsRouteImport } from './routes/_authenticated/admin-settings.integrations'
 import { Route as onboardingPasswordResetRouteImport } from './routes/(onboarding)/password.reset'
 import { Route as onboardingPasswordForgotRouteImport } from './routes/(onboarding)/password.forgot'
@@ -49,8 +48,10 @@ import { Route as AuthenticatedSuperAdminSettingsPlatformConfigIndexRouteImport 
 import { Route as AuthenticatedSuperAdminSettingsOrgsIndexRouteImport } from './routes/_authenticated/super-admin-settings.orgs.index'
 import { Route as AuthenticatedSuperAdminSettingsModelsCatalogIndexRouteImport } from './routes/_authenticated/super-admin-settings.models-catalog.index'
 import { Route as AuthenticatedAdminSettingsTeamsIndexRouteImport } from './routes/_authenticated/admin-settings.teams.index'
+import { Route as AuthenticatedAdminSettingsLetterheadsIndexRouteImport } from './routes/_authenticated/admin-settings.letterheads.index'
 import { Route as AuthenticatedSuperAdminSettingsOrgsIdRouteImport } from './routes/_authenticated/super-admin-settings.orgs.$id'
 import { Route as AuthenticatedAdminSettingsTeamsIdRouteImport } from './routes/_authenticated/admin-settings.teams.$id'
+import { Route as AuthenticatedAdminSettingsLetterheadsIdRouteImport } from './routes/_authenticated/admin-settings.letterheads.$id'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -212,12 +213,6 @@ const AuthenticatedAdminSettingsModelsRoute =
     path: '/admin-settings/models',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedAdminSettingsLetterheadsRoute =
-  AuthenticatedAdminSettingsLetterheadsRouteImport.update({
-    id: '/admin-settings/letterheads',
-    path: '/admin-settings/letterheads',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedAdminSettingsIntegrationsRoute =
   AuthenticatedAdminSettingsIntegrationsRouteImport.update({
     id: '/admin-settings/integrations',
@@ -277,6 +272,12 @@ const AuthenticatedAdminSettingsTeamsIndexRoute =
     path: '/admin-settings/teams/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminSettingsLetterheadsIndexRoute =
+  AuthenticatedAdminSettingsLetterheadsIndexRouteImport.update({
+    id: '/admin-settings/letterheads/',
+    path: '/admin-settings/letterheads/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSuperAdminSettingsOrgsIdRoute =
   AuthenticatedSuperAdminSettingsOrgsIdRouteImport.update({
     id: '/super-admin-settings/orgs/$id',
@@ -287,6 +288,12 @@ const AuthenticatedAdminSettingsTeamsIdRoute =
   AuthenticatedAdminSettingsTeamsIdRouteImport.update({
     id: '/admin-settings/teams/$id',
     path: '/admin-settings/teams/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminSettingsLetterheadsIdRoute =
+  AuthenticatedAdminSettingsLetterheadsIdRouteImport.update({
+    id: '/admin-settings/letterheads/$id',
+    path: '/admin-settings/letterheads/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
@@ -302,7 +309,6 @@ export interface FileRoutesByFullPath {
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
-  '/admin-settings/letterheads': typeof AuthenticatedAdminSettingsLetterheadsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
@@ -323,8 +329,10 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/skills/': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
+  '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/admin-settings/letterheads/': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
   '/super-admin-settings/models-catalog/': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   '/super-admin-settings/orgs/': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
@@ -345,7 +353,6 @@ export interface FileRoutesByTo {
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
-  '/admin-settings/letterheads': typeof AuthenticatedAdminSettingsLetterheadsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
@@ -366,8 +373,10 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/skills': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsIndexRoute
+  '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/admin-settings/letterheads': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/admin-settings/teams': typeof AuthenticatedAdminSettingsTeamsIndexRoute
   '/super-admin-settings/models-catalog': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   '/super-admin-settings/orgs': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
@@ -390,7 +399,6 @@ export interface FileRoutesById {
   '/(onboarding)/password/forgot': typeof onboardingPasswordForgotRoute
   '/(onboarding)/password/reset': typeof onboardingPasswordResetRoute
   '/_authenticated/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
-  '/_authenticated/admin-settings/letterheads': typeof AuthenticatedAdminSettingsLetterheadsRoute
   '/_authenticated/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/_authenticated/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/_authenticated/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
@@ -411,8 +419,10 @@ export interface FileRoutesById {
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/skills/': typeof AuthenticatedSkillsIndexRoute
   '/_authenticated/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
+  '/_authenticated/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/_authenticated/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/_authenticated/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/_authenticated/admin-settings/letterheads/': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/_authenticated/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
   '/_authenticated/super-admin-settings/models-catalog/': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   '/_authenticated/super-admin-settings/orgs/': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
@@ -435,7 +445,6 @@ export interface FileRouteTypes {
     | '/password/forgot'
     | '/password/reset'
     | '/admin-settings/integrations'
-    | '/admin-settings/letterheads'
     | '/admin-settings/models'
     | '/admin-settings/security'
     | '/admin-settings/usage'
@@ -456,8 +465,10 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/skills/'
     | '/super-admin-settings/'
+    | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
+    | '/admin-settings/letterheads/'
     | '/admin-settings/teams/'
     | '/super-admin-settings/models-catalog/'
     | '/super-admin-settings/orgs/'
@@ -478,7 +489,6 @@ export interface FileRouteTypes {
     | '/password/forgot'
     | '/password/reset'
     | '/admin-settings/integrations'
-    | '/admin-settings/letterheads'
     | '/admin-settings/models'
     | '/admin-settings/security'
     | '/admin-settings/usage'
@@ -499,8 +509,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/skills'
     | '/super-admin-settings'
+    | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
+    | '/admin-settings/letterheads'
     | '/admin-settings/teams'
     | '/super-admin-settings/models-catalog'
     | '/super-admin-settings/orgs'
@@ -522,7 +534,6 @@ export interface FileRouteTypes {
     | '/(onboarding)/password/forgot'
     | '/(onboarding)/password/reset'
     | '/_authenticated/admin-settings/integrations'
-    | '/_authenticated/admin-settings/letterheads'
     | '/_authenticated/admin-settings/models'
     | '/_authenticated/admin-settings/security'
     | '/_authenticated/admin-settings/usage'
@@ -543,8 +554,10 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/'
     | '/_authenticated/skills/'
     | '/_authenticated/super-admin-settings/'
+    | '/_authenticated/admin-settings/letterheads/$id'
     | '/_authenticated/admin-settings/teams/$id'
     | '/_authenticated/super-admin-settings/orgs/$id'
+    | '/_authenticated/admin-settings/letterheads/'
     | '/_authenticated/admin-settings/teams/'
     | '/_authenticated/super-admin-settings/models-catalog/'
     | '/_authenticated/super-admin-settings/orgs/'
@@ -772,13 +785,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsModelsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/admin-settings/letterheads': {
-      id: '/_authenticated/admin-settings/letterheads'
-      path: '/admin-settings/letterheads'
-      fullPath: '/admin-settings/letterheads'
-      preLoaderRoute: typeof AuthenticatedAdminSettingsLetterheadsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/admin-settings/integrations': {
       id: '/_authenticated/admin-settings/integrations'
       path: '/admin-settings/integrations'
@@ -849,6 +855,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsTeamsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin-settings/letterheads/': {
+      id: '/_authenticated/admin-settings/letterheads/'
+      path: '/admin-settings/letterheads'
+      fullPath: '/admin-settings/letterheads/'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsLetterheadsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/super-admin-settings/orgs/$id': {
       id: '/_authenticated/super-admin-settings/orgs/$id'
       path: '/super-admin-settings/orgs/$id'
@@ -863,13 +876,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsTeamsIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin-settings/letterheads/$id': {
+      id: '/_authenticated/admin-settings/letterheads/$id'
+      path: '/admin-settings/letterheads/$id'
+      fullPath: '/admin-settings/letterheads/$id'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsLetterheadsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedInstallRoute: typeof AuthenticatedInstallRoute
   AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
-  AuthenticatedAdminSettingsLetterheadsRoute: typeof AuthenticatedAdminSettingsLetterheadsRoute
   AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
   AuthenticatedAdminSettingsSecurityRoute: typeof AuthenticatedAdminSettingsSecurityRoute
   AuthenticatedAdminSettingsUsageRoute: typeof AuthenticatedAdminSettingsUsageRoute
@@ -890,8 +909,10 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedSkillsIndexRoute: typeof AuthenticatedSkillsIndexRoute
   AuthenticatedSuperAdminSettingsIndexRoute: typeof AuthenticatedSuperAdminSettingsIndexRoute
+  AuthenticatedAdminSettingsLetterheadsIdRoute: typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   AuthenticatedAdminSettingsTeamsIdRoute: typeof AuthenticatedAdminSettingsTeamsIdRoute
   AuthenticatedSuperAdminSettingsOrgsIdRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  AuthenticatedAdminSettingsLetterheadsIndexRoute: typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   AuthenticatedAdminSettingsTeamsIndexRoute: typeof AuthenticatedAdminSettingsTeamsIndexRoute
   AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   AuthenticatedSuperAdminSettingsOrgsIndexRoute: typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
@@ -905,8 +926,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedInstallRoute: AuthenticatedInstallRoute,
   AuthenticatedAdminSettingsIntegrationsRoute:
     AuthenticatedAdminSettingsIntegrationsRoute,
-  AuthenticatedAdminSettingsLetterheadsRoute:
-    AuthenticatedAdminSettingsLetterheadsRoute,
   AuthenticatedAdminSettingsModelsRoute: AuthenticatedAdminSettingsModelsRoute,
   AuthenticatedAdminSettingsSecurityRoute:
     AuthenticatedAdminSettingsSecurityRoute,
@@ -929,10 +948,14 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSkillsIndexRoute: AuthenticatedSkillsIndexRoute,
   AuthenticatedSuperAdminSettingsIndexRoute:
     AuthenticatedSuperAdminSettingsIndexRoute,
+  AuthenticatedAdminSettingsLetterheadsIdRoute:
+    AuthenticatedAdminSettingsLetterheadsIdRoute,
   AuthenticatedAdminSettingsTeamsIdRoute:
     AuthenticatedAdminSettingsTeamsIdRoute,
   AuthenticatedSuperAdminSettingsOrgsIdRoute:
     AuthenticatedSuperAdminSettingsOrgsIdRoute,
+  AuthenticatedAdminSettingsLetterheadsIndexRoute:
+    AuthenticatedAdminSettingsLetterheadsIndexRoute,
   AuthenticatedAdminSettingsTeamsIndexRoute:
     AuthenticatedAdminSettingsTeamsIndexRoute,
   AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute:

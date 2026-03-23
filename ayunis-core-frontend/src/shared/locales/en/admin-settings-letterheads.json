@@ -3,13 +3,11 @@
     "title": "Letterheads",
     "add": "Add",
     "empty": "No letterheads yet. Create a letterhead to use as a background on documents.",
-    "table": {
-      "name": "Name",
-      "description": "Description",
-      "continuationPage": "Continuation Page",
-      "continuationPageYes": "Yes",
-      "continuationPageNo": "No",
-      "actions": "Actions"
+    "noDescription": "No description",
+    "detail": {
+      "general": "General",
+      "firstPage": "First Page",
+      "continuationPage": "Continuation Page"
     },
     "createDialog": {
       "title": "Create Letterhead",
