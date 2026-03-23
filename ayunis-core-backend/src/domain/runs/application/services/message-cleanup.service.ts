@@ -10,9 +10,13 @@ import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
 
 /**
- * Ensures threads end with an assistant message after a run completes or is interrupted.
- * Deletes trailing non-assistant messages (e.g., tool results) that would leave the
- * conversation in an inconsistent state.
+ * Cleans up threads after a failed or interrupted run.
+ * Deletes trailing non-assistant messages (e.g., tool results) and orphaned
+ * tool_use assistant messages that would leave the conversation in an
+ * inconsistent state for providers requiring tool_use → tool_result pairing.
+ *
+ * Only called on the error path — successful runs leave the thread in a
+ * valid state by design.
  */
 @Injectable()
 export class MessageCleanupService {
@@ -24,15 +28,10 @@ export class MessageCleanupService {
   ) {}
 
   /**
-   * Ensures the thread ends with an assistant message by deleting any trailing messages
-   * that come after the specified saved assistant message. This is critical when the stream
-   * is interrupted - we need to delete any trailing non-assistant messages (like tool results)
-   * to maintain conversation integrity.
+   * Ensures the thread ends with a clean assistant message (no tool_use)
+   * by deleting trailing non-assistant messages and orphaned tool_use messages.
    */
-  async cleanupTrailingNonAssistantMessages(
-    threadId: UUID,
-    savedMessageId: UUID | null,
-  ): Promise<void> {
+  async cleanupTrailingNonAssistantMessages(threadId: UUID): Promise<void> {
     try {
       const { thread: updatedThread } = await this.findThreadUseCase.execute(
         new FindThreadQuery(threadId),
@@ -44,79 +43,13 @@ export class MessageCleanupService {
         return;
       }
 
-      if (savedMessageId) {
-        await this.cleanupAfterSavedMessage(
-          threadId,
-          threadMessages,
-          savedMessageId,
-        );
-      } else {
-        await this.deleteMessagesUntilAssistant(threadId, threadMessages);
-      }
+      await this.deleteMessagesUntilAssistant(threadId, threadMessages);
     } catch (error) {
       this.logger.error('Error during message cleanup', {
         threadId,
         error: error as Error,
       });
       // Don't throw - we want to gracefully handle cleanup failures
-    }
-  }
-
-  private async cleanupAfterSavedMessage(
-    threadId: UUID,
-    threadMessages: Message[],
-    savedMessageId: UUID,
-  ): Promise<void> {
-    const savedMessageIndex = threadMessages.findIndex(
-      (m) => m.id === savedMessageId,
-    );
-
-    if (savedMessageIndex === -1) {
-      this.logger.warn('Saved assistant message not found in thread', {
-        threadId,
-        assistantMessageId: savedMessageId,
-      });
-      await this.deleteMessagesUntilAssistant(threadId, threadMessages);
-      return;
-    }
-
-    const savedMessage = threadMessages[savedMessageIndex];
-    const messagesAfterAssistant = threadMessages.slice(savedMessageIndex + 1);
-
-    // First, delete any trailing messages after the saved assistant message
-    if (messagesAfterAssistant.length > 0) {
-      this.logger.log(
-        'Found messages after saved assistant message, cleaning up',
-        {
-          threadId,
-          assistantMessageId: savedMessageId,
-          messagesAfterCount: messagesAfterAssistant.length,
-        },
-      );
-      await this.deleteTrailingMessages(threadId, messagesAfterAssistant);
-    }
-
-    // Check if the saved assistant message has orphaned tool_use content.
-    // This can happen when:
-    // - There were no trailing messages but the run was interrupted after
-    //   saving tool_use but before tool execution
-    // - Trailing messages (including tool_results) were just deleted above
-    // In either case, tool_use without tool_result corrupts the conversation.
-    if (this.hasToolUseContent(savedMessage)) {
-      this.logger.log(
-        'Saved assistant message has orphaned tool_use, deleting',
-        { threadId, assistantMessageId: savedMessageId },
-      );
-      const remaining = threadMessages.slice(0, savedMessageIndex);
-      await this.deleteMessagesUntilAssistant(threadId, [
-        ...remaining,
-        savedMessage,
-      ]);
-    } else if (messagesAfterAssistant.length === 0) {
-      this.logger.debug('Thread correctly ends with assistant message', {
-        threadId,
-        lastMessageId: savedMessageId,
-      });
     }
   }
 

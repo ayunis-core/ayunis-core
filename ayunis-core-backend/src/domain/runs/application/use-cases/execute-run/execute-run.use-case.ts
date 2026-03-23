@@ -181,6 +181,7 @@ export class ExecuteRunUseCase {
   ): AsyncGenerator<Message, void, void> {
     this.logger.log('orchestrateRun', { threadId: params.thread.id });
     const iterations = 20;
+    let succeeded = false;
     try {
       for (let i = 0; i < iterations; i++) {
         this.logger.debug('iteration', i);
@@ -206,6 +207,7 @@ export class ExecuteRunUseCase {
           throw new RunMaxIterationsReachedError(iterations);
         }
       }
+      succeeded = true;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Run execution failed', { error: error as Error });
@@ -214,10 +216,17 @@ export class ExecuteRunUseCase {
         { originalError: error as Error },
       );
     } finally {
-      await this.messageCleanupService.cleanupTrailingNonAssistantMessages(
-        params.thread.id,
-        null,
-      );
+      // Clean up orphaned messages only on failure/interruption.
+      // On the success path the orchestration loop already leaves the
+      // thread in a valid state — running cleanup there risks deleting
+      // intentional terminal messages (e.g., display-only tool_use).
+      // Using finally (not catch) so cleanup also runs when the generator
+      // is early-returned via .return() on client disconnect.
+      if (!succeeded) {
+        await this.messageCleanupService.cleanupTrailingNonAssistantMessages(
+          params.thread.id,
+        );
+      }
     }
   }
 
