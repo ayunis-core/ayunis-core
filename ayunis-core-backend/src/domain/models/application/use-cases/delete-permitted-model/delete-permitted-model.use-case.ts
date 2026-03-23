@@ -183,15 +183,15 @@ export class DeletePermittedModelUseCase {
       new FindAllThreadsByOrgWithSourcesQuery(orgId),
     );
 
-    // Collect all sources from all threads
-    const sources = threads
-      .flatMap((t) => t.sourceAssignments?.map((sa) => sa.source) ?? [])
+    // Collect all source IDs from all threads
+    const sourceIds = threads
+      .flatMap((t) => t.sourceAssignments?.map((sa) => sa.source.id) ?? [])
       .filter(Boolean);
 
     // Batch delete RAG index + sources (2 queries total)
-    if (sources.length > 0) {
+    if (sourceIds.length > 0) {
       await this.deleteSourcesUseCase.execute(
-        new DeleteSourcesCommand(sources),
+        new DeleteSourcesCommand(sourceIds),
       );
     }
 

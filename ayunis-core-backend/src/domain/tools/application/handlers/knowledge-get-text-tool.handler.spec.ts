@@ -10,6 +10,7 @@ import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import toolsConfig from 'src/config/tools.config';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { ExtractTextLinesUseCase } from 'src/domain/sources/application/use-cases/extract-text-lines/extract-text-lines.use-case';
 
 function createMockTool(knowledgeBaseId: string, documentId: string) {
   return {
@@ -26,6 +27,7 @@ function createMockTool(knowledgeBaseId: string, documentId: string) {
 describe('KnowledgeGetTextToolHandler', () => {
   let handler: KnowledgeGetTextToolHandler;
   let mockGetDocTextUseCase: jest.Mocked<GetKnowledgeBaseDocumentTextUseCase>;
+  let mockExtractTextLines: jest.Mocked<ExtractTextLinesUseCase>;
   let mockContextService: jest.Mocked<ContextService>;
 
   const mockKbId = randomUUID();
@@ -39,6 +41,10 @@ describe('KnowledgeGetTextToolHandler', () => {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetKnowledgeBaseDocumentTextUseCase>;
 
+    mockExtractTextLines = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<ExtractTextLinesUseCase>;
+
     mockContextService = {
       get: jest.fn().mockReturnValue(mockUserId),
     } as unknown as jest.Mocked<ContextService>;
@@ -49,6 +55,10 @@ describe('KnowledgeGetTextToolHandler', () => {
         {
           provide: GetKnowledgeBaseDocumentTextUseCase,
           useValue: mockGetDocTextUseCase,
+        },
+        {
+          provide: ExtractTextLinesUseCase,
+          useValue: mockExtractTextLines,
         },
         {
           provide: ContextService,
@@ -77,13 +87,15 @@ describe('KnowledgeGetTextToolHandler', () => {
     const mockSource = new FileSource({
       id: mockDocId,
       name: 'policy-document.pdf',
-      text: 'Line 1\nLine 2\nLine 3',
-      contentChunks: [],
       type: TextType.FILE,
       fileType: FileType.PDF,
     });
 
     mockGetDocTextUseCase.execute.mockResolvedValue(mockSource);
+    mockExtractTextLines.execute.mockResolvedValue({
+      totalLines: 3,
+      text: 'Line 1\nLine 2\nLine 3',
+    });
 
     const tool = createMockTool(mockKbId, mockDocId);
     const result = await handler.execute({
@@ -98,6 +110,13 @@ describe('KnowledgeGetTextToolHandler', () => {
     expect(parsed.documentName).toBe('policy-document.pdf');
     expect(parsed.totalLines).toBe(3);
     expect(parsed.text).toBe('Line 1\nLine 2\nLine 3');
+    expect(mockExtractTextLines.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceId: mockDocId,
+        startLine: 1,
+        endLine: 100,
+      }),
+    );
   });
 
   it('should throw when knowledge base is not found', async () => {
@@ -159,13 +178,15 @@ describe('KnowledgeGetTextToolHandler', () => {
     const mockSource = new FileSource({
       id: mockDocId,
       name: 'empty-doc.pdf',
-      text: '',
-      contentChunks: [],
       type: TextType.FILE,
       fileType: FileType.PDF,
     });
 
     mockGetDocTextUseCase.execute.mockResolvedValue(mockSource);
+    mockExtractTextLines.execute.mockResolvedValue({
+      totalLines: 0,
+      text: '',
+    });
 
     const tool = createMockTool(mockKbId, mockDocId);
     const result = await handler.execute({

@@ -11,7 +11,12 @@ import {
 } from '../ports/execution.handler';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import toolsConfig from 'src/config/tools.config';
-import { extractTextByLineRange } from '../utils/text-extraction.utils';
+import { validateTextExtraction } from '../utils/text-extraction.utils';
+import { ExtractTextLinesUseCase } from 'src/domain/sources/application/use-cases/extract-text-lines/extract-text-lines.use-case';
+import { ExtractTextLinesQuery } from 'src/domain/sources/application/use-cases/extract-text-lines/extract-text-lines.query';
+
+/** PostgreSQL max int for "read to end" when endLine is -1 */
+const MAX_END_LINE = 2147483647;
 
 interface SourceGetTextResult {
   sourceId: string;
@@ -30,6 +35,7 @@ export class SourceGetTextToolHandler extends ToolExecutionHandler {
 
   constructor(
     private readonly getSourceByIdUseCase: GetTextSourceByIdUseCase,
+    private readonly extractTextLinesUseCase: ExtractTextLinesUseCase,
     @Inject(toolsConfig.KEY)
     private readonly config: ConfigType<typeof toolsConfig>,
   ) {
@@ -49,6 +55,7 @@ export class SourceGetTextToolHandler extends ToolExecutionHandler {
       const { sourceId, startLine = 1, endLine = -1 } = validatedInput;
       const { maxLines, maxChars } = this.config.sourceGetText;
 
+      // Load metadata-only source for type check and name
       const source = await this.getSourceByIdUseCase.execute(
         new GetTextSourceByIdQuery(sourceId as UUID),
       );
@@ -61,10 +68,27 @@ export class SourceGetTextToolHandler extends ToolExecutionHandler {
         });
       }
 
-      const text = source.text || '';
-      const extraction = extractTextByLineRange({
+      // Extract text lines at DB level
+      const dbEndLine = endLine === -1 ? MAX_END_LINE : endLine;
+      const dbResult = await this.extractTextLinesUseCase.execute(
+        new ExtractTextLinesQuery({
+          sourceId: source.id,
+          startLine,
+          endLine: dbEndLine,
+        }),
+      );
+
+      if (!dbResult) {
+        throw new ToolExecutionFailedError({
+          toolName: tool.name,
+          message: `Source text not found for "${source.name}"`,
+          exposeToLLM: true,
+        });
+      }
+
+      const extraction = validateTextExtraction({
         toolName: tool.name,
-        text,
+        dbResult,
         startLine,
         endLine,
         maxLines,

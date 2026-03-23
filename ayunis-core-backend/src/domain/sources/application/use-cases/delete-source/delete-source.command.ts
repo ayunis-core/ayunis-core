@@ -1,5 +1,5 @@
-import type { Source } from 'src/domain/sources/domain/source.entity';
+import type { UUID } from 'crypto';
 
 export class DeleteSourceCommand {
-  constructor(public readonly source: Source) {}
+  constructor(public readonly sourceId: UUID) {}
 }

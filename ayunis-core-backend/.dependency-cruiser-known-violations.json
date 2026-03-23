@@ -1,1 +1,137 @@
-[]
+[
+  {
+    "type": "dependency",
+    "from": "src/domain/agents/application/strategies/agent-share-authorization.strategy.ts",
+    "to": "src/domain/shares/application/ports/share-authorization-strategy.port.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/agents/application/use-cases/assign-mcp-integration-to-agent/assign-mcp-integration-to-agent.use-case.ts",
+    "to": "src/domain/mcp/application/ports/mcp-integrations.repository.port.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/chat-settings/application/use-cases/generate-personalized-system-prompt/generate-personalized-system-prompt.use-case.ts",
+    "to": "src/domain/models/application/ports/inference.handler.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/knowledge-bases/application/listeners/share-deleted.listener.ts",
+    "to": "src/domain/shares/application/ports/shares-repository.port.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/knowledge-bases/application/listeners/share-deleted.listener.ts",
+    "to": "src/domain/skills/application/ports/skill.repository.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/knowledge-bases/application/strategies/knowledge-base-share-authorization.strategy.ts",
+    "to": "src/domain/shares/application/ports/share-authorization-strategy.port.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/messages/application/use-cases/cleanup-orphaned-images/cleanup-orphaned-images.use-case.ts",
+    "to": "src/domain/storage/application/ports/object-storage.port.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/runs/application/services/non-streaming-inference.service.ts",
+    "to": "src/domain/models/application/ports/inference.handler.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/runs/application/services/streaming-inference.service.ts",
+    "to": "src/domain/models/application/ports/stream-inference.handler.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/skills/application/services/marketplace-skill-installation.service.ts",
+    "to": "src/domain/marketplace/application/ports/marketplace-client.port.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/skills/application/strategies/skill-share-authorization.strategy.ts",
+    "to": "src/domain/shares/application/ports/share-authorization-strategy.port.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/skills/application/use-cases/assign-mcp-integration-to-skill/assign-mcp-integration-to-skill.use-case.ts",
+    "to": "src/domain/mcp/application/ports/mcp-integrations.repository.port.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/threads/application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.use-case.ts",
+    "to": "src/domain/knowledge-bases/application/ports/knowledge-base.repository.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/threads/application/use-cases/delete-thread/delete-thread.use-case.ts",
+    "to": "src/domain/messages/application/ports/messages.repository.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/iam/invites/application/use-cases/create-bulk-invites/create-bulk-invites.use-case.ts",
+    "to": "src/iam/users/application/ports/users.repository.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  }
+]
