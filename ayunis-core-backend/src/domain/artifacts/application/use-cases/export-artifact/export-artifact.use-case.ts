@@ -85,10 +85,22 @@ export class ExportArtifactUseCase {
 
       const letterheadConfig = await this.resolveLetterhead(artifact);
 
-      const buffer = await this.documentExportPort.exportToPdf(
-        currentVersion.content,
-        letterheadConfig,
-      );
+      let buffer: Buffer;
+      try {
+        buffer = await this.documentExportPort.exportToPdf(
+          currentVersion.content,
+          letterheadConfig,
+        );
+      } catch (error) {
+        if (!letterheadConfig) throw error;
+        const reason = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn(
+          `Letterhead compositing failed, exporting without letterhead: ${reason}`,
+        );
+        buffer = await this.documentExportPort.exportToPdf(
+          currentVersion.content,
+        );
+      }
       return {
         buffer,
         fileName: `${safeTitle}.pdf`,
@@ -133,13 +145,12 @@ export class ExportArtifactUseCase {
   private async downloadLetterheadPdfs(
     letterhead: Letterhead,
   ): Promise<LetterheadConfig> {
-    const firstPagePdf = await this.downloadPdf(
-      letterhead.firstPageStoragePath,
-    );
-
-    const continuationPagePdf = letterhead.continuationPageStoragePath
-      ? await this.downloadPdf(letterhead.continuationPageStoragePath)
-      : undefined;
+    const [firstPagePdf, continuationPagePdf] = await Promise.all([
+      this.downloadPdf(letterhead.firstPageStoragePath),
+      letterhead.continuationPageStoragePath
+        ? this.downloadPdf(letterhead.continuationPageStoragePath)
+        : undefined,
+    ]);
 
     return {
       firstPagePdf,
