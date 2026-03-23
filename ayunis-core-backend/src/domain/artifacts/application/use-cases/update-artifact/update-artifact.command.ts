@@ -3,15 +3,15 @@ import type { AuthorType } from '../../../domain/value-objects/author-type.enum'
 
 export class UpdateArtifactCommand {
   readonly artifactId: UUID;
-  readonly content: string;
-  readonly authorType: AuthorType;
+  readonly content?: string;
+  readonly authorType?: AuthorType;
   readonly expectedVersionNumber?: number;
   readonly letterheadId?: UUID | null;
 
   constructor(params: {
     artifactId: UUID;
-    content: string;
-    authorType: AuthorType;
+    content?: string;
+    authorType?: AuthorType;
     expectedVersionNumber?: number;
     letterheadId?: UUID | null;
   }) {

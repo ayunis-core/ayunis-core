@@ -3018,7 +3018,7 @@ export interface ArtifactResponseDto {
 }
 
 /**
- * Who authored this version
+ * Who authored this version. Required when content is provided.
  */
 export type UpdateArtifactDtoAuthorType = typeof UpdateArtifactDtoAuthorType[keyof typeof UpdateArtifactDtoAuthorType];
 
@@ -3030,10 +3030,10 @@ export const UpdateArtifactDtoAuthorType = {
 } as const;
 
 export interface UpdateArtifactDto {
-  /** Updated HTML content of the document */
-  content: string;
-  /** Who authored this version */
-  authorType: UpdateArtifactDtoAuthorType;
+  /** Updated HTML content of the document. When omitted, no new version is created. */
+  content?: string;
+  /** Who authored this version. Required when content is provided. */
+  authorType?: UpdateArtifactDtoAuthorType;
   /**
    * Optional letterhead to apply to this artifact (null to remove)
    * @nullable

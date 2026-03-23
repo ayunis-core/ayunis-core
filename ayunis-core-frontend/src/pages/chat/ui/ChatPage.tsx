@@ -30,13 +30,14 @@ import type {
   RunThreadResponseDto,
 } from '@/shared/api';
 import { useRunErrorHandler } from '../hooks/useRunErrorHandler';
+import { useLetterheadChange } from '../hooks/useLetterheadChange';
+import { usePendingMessage } from '../hooks/usePendingMessage';
 import AppLayout from '@/layouts/app-layout';
 import { AxiosError } from 'axios';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
 import { useDeleteFileSource } from '../api/useDeleteFileSource';
 import { useArtifactActions } from '../hooks/useArtifactActions';
-import { usePendingMessage } from '../hooks/usePendingMessage';
 import { useAgents } from '@/features/useAgents';
 import { useIsAgentsEnabled } from '@/features/feature-toggles';
 import { usePermittedModels } from '@/features/usePermittedModels';
@@ -119,6 +120,11 @@ export default function ChatPage({
     handleExportArtifact,
     handleCloseArtifact,
   } = useArtifactActions(thread.id);
+
+  const { handleLetterheadChange } = useLetterheadChange({
+    artifactId: openArtifact?.id ?? '',
+    threadId: thread.id,
+  });
 
   const sortedMessages = useMemo(() => {
     return [...messages].sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
@@ -406,6 +412,7 @@ export default function ChatPage({
                 onRevert={handleRevertArtifact}
                 onExport={handleExportArtifact}
                 onClose={handleCloseArtifact}
+                onLetterheadChange={handleLetterheadChange}
                 isExporting={isExporting}
               />
             </Suspense>

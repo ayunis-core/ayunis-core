@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { EditorToolbar } from './EditorToolbar';
 import { VersionHistory } from './VersionHistory';
 import { ExportButtons } from './ExportButtons';
+import { LetterheadPicker } from './LetterheadPicker';
 
 interface ArtifactEditorProps {
   readonly artifact: ArtifactResponseDto;
@@ -19,6 +20,7 @@ interface ArtifactEditorProps {
   readonly onRevert: (versionNumber: number) => void;
   readonly onExport: (format: 'docx' | 'pdf', unsavedContent?: string) => void;
   readonly onClose: () => void;
+  readonly onLetterheadChange?: (letterheadId: string | null) => void;
   readonly isExporting?: boolean;
 }
 
@@ -28,6 +30,7 @@ export function ArtifactEditor({
   onRevert,
   onExport,
   onClose,
+  onLetterheadChange,
   isExporting,
 }: ArtifactEditorProps) {
   const { t } = useTranslation('artifacts');
@@ -88,6 +91,12 @@ export function ArtifactEditor({
         </h3>
         <div className="flex items-center gap-1">
           <ExportButtons onExport={handleExport} isExporting={isExporting} />
+          {onLetterheadChange && (
+            <LetterheadPicker
+              letterheadId={artifact.letterheadId}
+              onLetterheadChange={onLetterheadChange}
+            />
+          )}
           <Button
             variant="default"
             size="sm"

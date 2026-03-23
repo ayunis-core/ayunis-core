@@ -28,7 +28,9 @@ export class UpdateArtifactUseCase {
     private readonly findLetterheadUseCase: FindLetterheadUseCase,
   ) {}
 
-  async execute(command: UpdateArtifactCommand): Promise<ArtifactVersion> {
+  async execute(
+    command: UpdateArtifactCommand,
+  ): Promise<ArtifactVersion | void> {
     this.logger.log('Updating artifact', { artifactId: command.artifactId });
 
     try {
@@ -37,7 +39,11 @@ export class UpdateArtifactUseCase {
         throw new UnauthorizedAccessError();
       }
 
-      if (command.content.length > ARTIFACT_MAX_CONTENT_LENGTH) {
+      // Validate content length early before any DB calls
+      if (
+        command.content !== undefined &&
+        command.content.length > ARTIFACT_MAX_CONTENT_LENGTH
+      ) {
         throw new ArtifactContentTooLargeError(
           command.content.length,
           ARTIFACT_MAX_CONTENT_LENGTH,
@@ -50,41 +56,63 @@ export class UpdateArtifactUseCase {
         );
       }
 
+      // Verify ownership before any mutation
+      const artifact = await this.artifactsRepository.findById(
+        command.artifactId,
+        userId,
+      );
+      if (!artifact) {
+        throw new ArtifactNotFoundError(command.artifactId);
+      }
+
+      // When no content is provided, update only the letterhead — no new version needed
+      if (command.content === undefined) {
+        if (command.letterheadId !== undefined) {
+          await this.artifactsRepository.updateLetterheadId(
+            command.artifactId,
+            command.letterheadId,
+          );
+        }
+
+        return;
+      }
+
       const sanitizedContent = sanitizeHtmlContent(command.content);
+      const authorType = command.authorType ?? AuthorType.USER;
 
       return await addVersionWithRetry({
         repository: this.artifactsRepository,
         logger: this.logger,
         artifactId: command.artifactId,
         buildVersion: async () => {
-          const artifact = await this.artifactsRepository.findById(
+          const freshArtifact = await this.artifactsRepository.findById(
             command.artifactId,
             userId,
           );
-          if (!artifact) {
+          if (!freshArtifact) {
             throw new ArtifactNotFoundError(command.artifactId);
           }
 
           if (
             command.expectedVersionNumber !== undefined &&
-            command.expectedVersionNumber !== artifact.currentVersionNumber
+            command.expectedVersionNumber !== freshArtifact.currentVersionNumber
           ) {
             throw new ArtifactExpectedVersionMismatchError(
               command.artifactId,
               command.expectedVersionNumber,
-              artifact.currentVersionNumber,
+              freshArtifact.currentVersionNumber,
             );
           }
 
           return {
-            expectedCurrentVersionNumber: artifact.currentVersionNumber,
+            expectedCurrentVersionNumber: freshArtifact.currentVersionNumber,
             letterheadId: command.letterheadId,
             version: new ArtifactVersion({
-              artifactId: artifact.id,
-              versionNumber: artifact.currentVersionNumber + 1,
+              artifactId: freshArtifact.id,
+              versionNumber: freshArtifact.currentVersionNumber + 1,
               content: sanitizedContent,
-              authorType: command.authorType,
-              authorId: command.authorType === AuthorType.USER ? userId : null,
+              authorType,
+              authorId: authorType === AuthorType.USER ? userId : null,
             }),
           };
         },

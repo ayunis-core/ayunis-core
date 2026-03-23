@@ -1,0 +1,65 @@
+{
+  "letterheads": {
+    "title": "Briefpapier",
+    "add": "Hinzufügen",
+    "empty": "Noch kein Briefpapier vorhanden. Erstellen Sie ein Briefpapier, um es bei Dokumenten als Hintergrund zu verwenden.",
+    "table": {
+      "name": "Name",
+      "description": "Beschreibung",
+      "continuationPage": "Folgeseite",
+      "continuationPageYes": "Ja",
+      "continuationPageNo": "Nein",
+      "actions": "Aktionen"
+    },
+    "createDialog": {
+      "title": "Briefpapier erstellen",
+      "description": "Laden Sie PDF-Dateien für die erste Seite und optional für Folgeseiten hoch.",
+      "nameLabel": "Name",
+      "namePlaceholder": "z.B. Offizielles Briefpapier",
+      "nameRequired": "Name ist erforderlich",
+      "descriptionLabel": "Beschreibung",
+      "descriptionPlaceholder": "Beschreibung für die KI (optional)",
+      "firstPagePdfLabel": "Erste Seite (PDF)",
+      "continuationPagePdfLabel": "Folgeseite (PDF, optional)",
+      "firstPageMarginsLabel": "Seitenränder erste Seite (mm)",
+      "continuationPageMarginsLabel": "Seitenränder Folgeseiten (mm)",
+      "top": "Oben",
+      "bottom": "Unten",
+      "left": "Links",
+      "right": "Rechts",
+      "cancel": "Abbrechen",
+      "create": "Erstellen",
+      "creating": "Wird erstellt…",
+      "success": "Briefpapier erfolgreich erstellt.",
+      "error": "Fehler beim Erstellen des Briefpapiers.",
+      "firstPageRequired": "Eine PDF-Datei für die erste Seite ist erforderlich.",
+      "invalidPdf": "Bitte laden Sie eine gültige PDF-Datei hoch.",
+      "invalidPageMargins": "Bitte geben Sie gültige nicht-negative Seitenränder ein.",
+      "pdfPreviewError": "PDF-Vorschau konnte nicht gerendert werden."
+    },
+    "editDialog": {
+      "title": "Briefpapier bearbeiten",
+      "description": "Ändern Sie Namen, Beschreibung, Seitenränder oder ersetzen Sie die PDF-Dateien.",
+      "save": "Speichern",
+      "saving": "Wird gespeichert…",
+      "success": "Briefpapier erfolgreich aktualisiert.",
+      "error": "Fehler beim Aktualisieren des Briefpapiers.",
+      "invalidPdf": "Bitte laden Sie eine gültige PDF-Datei hoch.",
+      "invalidPageMargins": "Bitte geben Sie gültige nicht-negative Seitenränder ein.",
+      "removeContinuationPage": "Folgeseite entfernen"
+    },
+    "deleteDialog": {
+      "title": "Briefpapier löschen",
+      "description": "Sind Sie sicher, dass Sie das Briefpapier \"{{name}}\" löschen möchten? Dokumente, die dieses Briefpapier verwenden, werden ohne Hintergrund exportiert.",
+      "cancel": "Abbrechen",
+      "delete": "Löschen",
+      "deleting": "Wird gelöscht…",
+      "success": "Briefpapier erfolgreich gelöscht.",
+      "notFound": "Briefpapier nicht gefunden. Es wurde möglicherweise bereits gelöscht.",
+      "error": "Fehler beim Löschen des Briefpapiers."
+    },
+    "marginEditor": {
+      "contentArea": "Inhaltsbereich"
+    }
+  }
+}

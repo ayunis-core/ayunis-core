@@ -12350,7 +12350,7 @@ export const artifactsControllerUpdate = (
  ) => {
       
       
-      return customAxiosInstance<ArtifactVersionResponseDto>(
+      return customAxiosInstance<ArtifactVersionResponseDto | void>(
       {url: `/artifacts/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateArtifactDto

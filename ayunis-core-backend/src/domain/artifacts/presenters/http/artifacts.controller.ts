@@ -10,6 +10,7 @@ import {
   Logger,
   Res,
   StreamableFile,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -95,13 +96,18 @@ export class ArtifactsController {
     description: 'The new version has been created',
     type: ArtifactVersionResponseDto,
   })
+  @ApiResponse({
+    status: 204,
+    description: 'Letterhead updated (no content change)',
+  })
   @ApiResponse({ status: 404, description: 'Artifact not found' })
   async update(
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateArtifactDto,
-  ): Promise<ArtifactVersionResponseDto> {
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ArtifactVersionResponseDto | void> {
     this.logger.log('update', { artifactId: id });
-    const version = await this.updateArtifactUseCase.execute(
+    const result = await this.updateArtifactUseCase.execute(
       new UpdateArtifactCommand({
         artifactId: id,
         content: dto.content,
@@ -109,7 +115,10 @@ export class ArtifactsController {
         letterheadId: dto.letterheadId,
       }),
     );
-    return this.artifactDtoMapper.toVersionDto(version);
+    if (result) {
+      return this.artifactDtoMapper.toVersionDto(result);
+    }
+    res.status(HttpStatus.NO_CONTENT);
   }
 
   @Get(':id')

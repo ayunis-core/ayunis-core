@@ -21,6 +21,12 @@
       "redo": "Redo"
     }
   },
+  "letterhead": {
+    "none": "No letterhead",
+    "changeError": "Failed to change letterhead.",
+    "notFound": "Letterhead not found. It may have been deleted.",
+    "documentNotFound": "Document not found. It may have been deleted."
+  },
   "export": {
     "word": "Word",
     "pdf": "PDF",

@@ -44,7 +44,7 @@ export class UpdateDocumentToolHandler extends ToolExecutionHandler {
         }),
       );
 
-      return `Document updated successfully. Artifact ID: ${validatedInput.artifact_id}, version: ${version.versionNumber}`;
+      return `Document updated successfully. Artifact ID: ${validatedInput.artifact_id}, version: ${version?.versionNumber}`;
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
         throw error;

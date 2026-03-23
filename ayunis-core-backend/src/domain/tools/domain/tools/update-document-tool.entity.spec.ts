@@ -76,6 +76,7 @@ describe('UpdateDocumentTool', () => {
       const params = {
         artifact_id: '550e8400-e29b-41d4-a716-446655440000',
         content: '<h1>Updated Letter</h1><p>New content</p>',
+        expected_version: 1,
         letterhead_id: '660e8400-e29b-41d4-a716-446655440000',
       };
 
@@ -89,6 +90,7 @@ describe('UpdateDocumentTool', () => {
       const params = {
         artifact_id: '550e8400-e29b-41d4-a716-446655440000',
         content: '<p>Updated content</p>',
+        expected_version: 1,
       };
 
       const result = tool.validateParams(params);

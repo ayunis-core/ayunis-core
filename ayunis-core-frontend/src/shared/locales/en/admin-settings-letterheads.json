@@ -1,0 +1,65 @@
+{
+  "letterheads": {
+    "title": "Letterheads",
+    "add": "Add",
+    "empty": "No letterheads yet. Create a letterhead to use as a background on documents.",
+    "table": {
+      "name": "Name",
+      "description": "Description",
+      "continuationPage": "Continuation Page",
+      "continuationPageYes": "Yes",
+      "continuationPageNo": "No",
+      "actions": "Actions"
+    },
+    "createDialog": {
+      "title": "Create Letterhead",
+      "description": "Upload PDF files for the first page and optionally for continuation pages.",
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Official Letterhead",
+      "nameRequired": "Name is required",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Description for AI (optional)",
+      "firstPagePdfLabel": "First Page (PDF)",
+      "continuationPagePdfLabel": "Continuation Page (PDF, optional)",
+      "firstPageMarginsLabel": "First Page Margins (mm)",
+      "continuationPageMarginsLabel": "Continuation Page Margins (mm)",
+      "top": "Top",
+      "bottom": "Bottom",
+      "left": "Left",
+      "right": "Right",
+      "cancel": "Cancel",
+      "create": "Create",
+      "creating": "Creating…",
+      "success": "Letterhead created successfully.",
+      "error": "Failed to create letterhead.",
+      "firstPageRequired": "A PDF file for the first page is required.",
+      "invalidPdf": "Please upload a valid PDF file.",
+      "invalidPageMargins": "Please enter valid non-negative page margins.",
+      "pdfPreviewError": "Could not render PDF preview."
+    },
+    "editDialog": {
+      "title": "Edit Letterhead",
+      "description": "Change name, description, margins, or replace PDF files.",
+      "save": "Save",
+      "saving": "Saving…",
+      "success": "Letterhead updated successfully.",
+      "error": "Failed to update letterhead.",
+      "invalidPdf": "Please upload a valid PDF file.",
+      "invalidPageMargins": "Please enter valid non-negative page margins.",
+      "removeContinuationPage": "Remove continuation page"
+    },
+    "deleteDialog": {
+      "title": "Delete Letterhead",
+      "description": "Are you sure you want to delete the letterhead \"{{name}}\"? Documents using this letterhead will be exported without a background.",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "success": "Letterhead deleted successfully.",
+      "notFound": "Letterhead not found. It may have already been deleted.",
+      "error": "Failed to delete letterhead."
+    },
+    "marginEditor": {
+      "contentArea": "Content area"
+    }
+  }
+}

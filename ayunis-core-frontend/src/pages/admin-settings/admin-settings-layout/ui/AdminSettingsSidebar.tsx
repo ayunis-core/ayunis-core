@@ -1,4 +1,12 @@
-import { User, Users, Brain, Plug, BarChart3, Shield } from 'lucide-react';
+import {
+  User,
+  Users,
+  Brain,
+  Plug,
+  BarChart3,
+  Shield,
+  FileText,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   ActiveSubscriptionResponseDtoSubscriptionType,
@@ -42,6 +50,11 @@ export function AdminSettingsSidebar() {
       to: '/admin-settings/security',
       icon: <Shield />,
       label: t('layout.security'),
+    },
+    {
+      to: '/admin-settings/letterheads',
+      icon: <FileText />,
+      label: t('layout.letterheads'),
     },
   ];
 

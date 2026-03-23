@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEnum,
   IsNotEmpty,
@@ -13,22 +13,26 @@ import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ARTIFACT_MAX_CONTENT_LENGTH } from '../../../application/artifacts.errors';
 
 export class UpdateArtifactDto {
-  @ApiProperty({
-    description: 'Updated HTML content of the document',
+  @ApiPropertyOptional({
+    description:
+      'Updated HTML content of the document. When omitted, no new version is created.',
     example: '<p>Updated meeting notes...</p>',
   })
+  @ValidateIf((o: UpdateArtifactDto) => o.content !== undefined)
   @IsString()
   @IsNotEmpty()
   @MaxLength(ARTIFACT_MAX_CONTENT_LENGTH)
-  content: string;
+  content?: string;
 
-  @ApiProperty({
-    description: 'Who authored this version',
+  @ApiPropertyOptional({
+    description:
+      'Who authored this version. Required when content is provided.',
     enum: AuthorType,
     example: AuthorType.USER,
   })
+  @ValidateIf((o: UpdateArtifactDto) => o.content !== undefined)
   @IsEnum(AuthorType)
-  authorType: AuthorType;
+  authorType?: AuthorType;
 
   @ApiPropertyOptional({
     description:
