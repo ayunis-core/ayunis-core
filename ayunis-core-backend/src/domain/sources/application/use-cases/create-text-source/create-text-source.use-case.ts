@@ -22,9 +22,9 @@ import { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/applica
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { UUID } from 'crypto';
-import { IngestContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.command';
+import { IngestBulkContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.command';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
-import { IngestContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.use-case';
+import { IngestBulkContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.use-case';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
 import { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
 import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
@@ -33,9 +33,6 @@ import { SourceRepository } from '../../ports/source.repository';
 import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
 import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
 import { MIME_TYPES } from 'src/common/util/file-type';
-
-/** Max concurrent embedding API calls per source ingestion to avoid rate limits */
-const EMBEDDING_CONCURRENCY = 20;
 
 interface TextSourceWithContent {
   source: TextSource;
@@ -52,7 +49,7 @@ export class CreateTextSourceUseCase {
     private readonly contextService: ContextService,
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
     private readonly splitTextUseCase: SplitTextUseCase,
-    private readonly ingestContentUseCase: IngestContentUseCase,
+    private readonly ingestBulkContentUseCase: IngestBulkContentUseCase,
     private readonly deleteContentUseCase: DeleteContentUseCase,
     private readonly sourceRepository: SourceRepository,
   ) {}
@@ -194,9 +191,10 @@ export class CreateTextSourceUseCase {
 
   /**
    * Index source content using the indexers module.
-   * Uses delete-once-then-parallel-ingest pattern to avoid race conditions
-   * while maintaining performance for parallel chunk processing.
-   * Concurrency is capped to avoid hitting embedding API rate limits.
+   * Uses bulk ingestion to minimize embedding API calls and DB round-trips:
+   * - Embedding model is resolved once (not per chunk)
+   * - All child chunk texts are embedded in batched API calls
+   * - All parent chunks are saved in a single DB write
    */
   private async indexSourceContentChunks(params: {
     sourceId: UUID;
@@ -205,30 +203,23 @@ export class CreateTextSourceUseCase {
   }): Promise<void> {
     this.logger.debug(`Indexing content for source: ${params.sourceId}`);
 
-    // Step 1: Delete any existing index entries for this source ONCE
+    // Step 1: Delete any existing index entries for this source
     // (handles re-upload/re-index scenarios, no-op for new sources)
     await this.deleteContentUseCase.execute(
       new DeleteContentCommand({ documentId: params.sourceId }),
     );
 
-    // Step 2: Ingest all chunks with bounded concurrency
-    // Safe because deletion is handled above, not in the ingest use case
-    const { default: pLimit } = await import('p-limit');
-    const limit = pLimit(EMBEDDING_CONCURRENCY);
-    await Promise.all(
-      params.chunks.map((chunk) =>
-        limit(async () => {
-          const ingestCommand = new IngestContentCommand({
-            orgId: params.orgId,
-            documentId: params.sourceId,
-            chunkId: chunk.id,
-            content: chunk.content,
-            type: IndexType.PARENT_CHILD,
-          });
-
-          await this.ingestContentUseCase.execute(ingestCommand);
-        }),
-      ),
+    // Step 2: Bulk ingest all chunks in one operation
+    await this.ingestBulkContentUseCase.execute(
+      new IngestBulkContentCommand({
+        orgId: params.orgId,
+        entries: params.chunks.map((chunk) => ({
+          documentId: params.sourceId,
+          chunkId: chunk.id,
+          content: chunk.content,
+        })),
+        type: IndexType.PARENT_CHILD,
+      }),
     );
 
     this.logger.debug(

@@ -50,10 +50,10 @@ export const minimalFixture = {
   },
 
   embeddingModel: {
-    name: 'text-embedding-3-large',
-    displayName: 'Text Embedding 3 Large',
-    provider: ModelProvider.OPENAI,
-    dimensions: EmbeddingDimensions.DIMENSION_1536,
+    name: 'mistral-embed',
+    displayName: 'Mistral Embed',
+    provider: ModelProvider.MISTRAL,
+    dimensions: EmbeddingDimensions.DIMENSION_1024,
   },
 
   subscription: {
@@ -94,9 +94,9 @@ export const minimalFixture = {
       anonymousOnly: false,
     },
     {
-      // Embedding model (not default)
+      // Embedding model as default
       modelKey: 'embeddingModel',
-      isDefault: false,
+      isDefault: true,
       anonymousOnly: false,
     },
   ],
