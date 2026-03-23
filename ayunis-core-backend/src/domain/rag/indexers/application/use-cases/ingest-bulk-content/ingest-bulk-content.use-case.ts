@@ -13,7 +13,7 @@ export class IngestBulkContentUseCase {
   async execute(command: IngestBulkContentCommand): Promise<void> {
     try {
       const index = this.indexRegistry.get(command.type);
-      return index.ingestBulk({
+      return await index.ingestBulk({
         orgId: command.orgId,
         entries: command.entries.map((entry) => ({
           indexEntry: new IndexEntry({
