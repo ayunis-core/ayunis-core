@@ -52,7 +52,7 @@ letterheads/
 
 ## Dependencies
 
-- **StorageModule** — File storage for uploaded letterhead PDFs
+- **StorageModule** — File storage for uploaded letterhead PDFs and streaming downloads of stored PDFs
 
 ## Ports
 
@@ -67,4 +67,5 @@ letterheads/
 - Find-all and find-one are organization-scoped via request context
 - Delete throws `LetterheadNotFoundError` if no matching record exists
 - Each letterhead is scoped to an organization via `orgId`
+- Download endpoints stream the first-page or continuation-page PDF as a `StreamableFile` response
 - Other modules (notably **artifacts** and **runs**) consume this module to validate letterhead assignments and expose available letterheads to document tools
