@@ -185,7 +185,7 @@ export class DeletePermittedModelUseCase {
 
     // Collect all source IDs from all threads
     const sourceIds = threads
-      .flatMap((t) => t.sourceAssignments?.map((sa) => sa.source.id) ?? [])
+      .flatMap((t) => t.sourceAssignments?.map((sa) => sa.source?.id) ?? [])
       .filter(Boolean);
 
     // Batch delete RAG index + sources (2 queries total)
