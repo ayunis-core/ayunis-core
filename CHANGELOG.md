@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.22.0](https://github.com/ayunis-core/ayunis-core/compare/v1.21.1...v1.22.0) (2026-03-23)
+
+
+### Features
+
+* **letterheads:** Allow letterheads for pdf exports of documents (AYC-101) ([#480](https://github.com/ayunis-core/ayunis-core/issues/480)) ([5e6d17d](https://github.com/ayunis-core/ayunis-core/commit/5e6d17dbc1e5df74b16029c37bbb39498762e2e7))
+* open markdown links in new window with target=_blank ([#475](https://github.com/ayunis-core/ayunis-core/issues/475)) ([b87170e](https://github.com/ayunis-core/ayunis-core/commit/b87170e5ce1cf3f8b3d81170ca80e4ee89ee910f))
+* **super-admin:** show pw reset link to user after triggering pw reset (AYC-000) ([#479](https://github.com/ayunis-core/ayunis-core/issues/479)) ([5f17e14](https://github.com/ayunis-core/ayunis-core/commit/5f17e146ebc2f58ef0f4ef7e27069a5aaa57d421))
+
+
+### Bug Fixes
+
+* **sources:** bulk create embeddings (AYC-000) ([#484](https://github.com/ayunis-core/ayunis-core/issues/484)) ([143e4d8](https://github.com/ayunis-core/ayunis-core/commit/143e4d8824cc32e9e60d70f077bd7f6895771ac9))
+* **sources:** do not bypass error handling on ingestion (AYC-000) ([#485](https://github.com/ayunis-core/ayunis-core/issues/485)) ([5336dfd](https://github.com/ayunis-core/ayunis-core/commit/5336dfda548c67f057e8fd6e3dc718284d259bb1))
+* **sources:** lazy load sources to avoid out of memory errors (AYC-000) ([#481](https://github.com/ayunis-core/ayunis-core/issues/481)) ([a9e7823](https://github.com/ayunis-core/ayunis-core/commit/a9e78235b0d03214262585d6d9cb180d6ec77796))
+* **super-admin:** update openapi spec (AYC-000) ([#483](https://github.com/ayunis-core/ayunis-core/issues/483)) ([e9a0094](https://github.com/ayunis-core/ayunis-core/commit/e9a00940b7143807d3b0cbd12d6983b925c32e65))
+
 ## [1.21.1](https://github.com/ayunis-core/ayunis-core/compare/v1.21.0...v1.21.1) (2026-03-23)
 
 
