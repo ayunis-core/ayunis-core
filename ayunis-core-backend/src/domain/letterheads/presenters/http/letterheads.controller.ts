@@ -33,6 +33,8 @@ import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/
 import type { UUID } from 'crypto';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { RequireFeature } from 'src/common/guards/feature.guard';
+import { FeatureFlag } from 'src/config/features.config';
 import { CreateLetterheadUseCase } from '../../application/use-cases/create-letterhead/create-letterhead.use-case';
 import { FindAllLetterheadsUseCase } from '../../application/use-cases/find-all-letterheads/find-all-letterheads.use-case';
 import { FindLetterheadUseCase } from '../../application/use-cases/find-letterhead/find-letterhead.use-case';
@@ -101,6 +103,7 @@ function parseMargins(value: unknown, label: string): PageMargins {
 }
 
 @ApiTags('letterheads')
+@RequireFeature(FeatureFlag.Letterheads)
 @Controller('letterheads')
 export class LetterheadsController {
   private readonly logger = new Logger(LetterheadsController.name);
