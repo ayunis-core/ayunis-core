@@ -1,6 +1,5 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
 import { SuperAdminTriggerPasswordResetUseCase } from './super-admin-trigger-password-reset.use-case';
 import { SuperAdminTriggerPasswordResetCommand } from './super-admin-trigger-password-reset.command';
 import { UsersRepository } from '../../ports/users.repository';
@@ -16,7 +15,6 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
   let mockUsersRepository: Partial<UsersRepository>;
   let mockPasswordResetJwtService: Partial<PasswordResetJwtService>;
   let mockSendPasswordResetEmailUseCase: Partial<SendPasswordResetEmailUseCase>;
-  let mockConfigService: Partial<ConfigService>;
 
   const userId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
   const userEmail = 'maria.mueller@gemeinde.de';
@@ -50,10 +48,6 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
       execute: jest.fn(),
     };
 
-    mockConfigService = {
-      get: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SuperAdminTriggerPasswordResetUseCase,
@@ -66,7 +60,6 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
           provide: SendPasswordResetEmailUseCase,
           useValue: mockSendPasswordResetEmailUseCase,
         },
-        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
@@ -84,13 +77,9 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
       .mockReturnValue(resetToken);
     jest
       .spyOn(mockSendPasswordResetEmailUseCase, 'execute')
-      .mockResolvedValue(undefined);
-    jest.spyOn(mockConfigService, 'get').mockImplementation((key: string) => {
-      if (key === 'app.frontend.baseUrl') return frontendBaseUrl;
-      if (key === 'app.frontend.passwordResetEndpoint')
-        return passwordResetEndpoint;
-      return undefined;
-    });
+      .mockResolvedValue(
+        `${frontendBaseUrl}${passwordResetEndpoint}?token=${resetToken}`,
+      );
   });
 
   it('should send password reset email and return the reset URL', async () => {
