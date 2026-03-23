@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { SuperAdminTriggerPasswordResetCommand } from './super-admin-trigger-password-reset.command';
 import { SuperAdminTriggerPasswordResetResult } from './super-admin-trigger-password-reset.result';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -19,7 +18,6 @@ export class SuperAdminTriggerPasswordResetUseCase {
     private readonly usersRepository: UsersRepository,
     private readonly passwordResetJwtService: PasswordResetJwtService,
     private readonly sendPasswordResetEmailUseCase: SendPasswordResetEmailUseCase,
-    private readonly configService: ConfigService,
   ) {}
 
   async execute(
@@ -41,15 +39,7 @@ export class SuperAdminTriggerPasswordResetUseCase {
           email: user.email,
         });
 
-      const frontendBaseUrl = this.configService.get<string>(
-        'app.frontend.baseUrl',
-      );
-      const passwordResetEndpoint = this.configService.get<string>(
-        'app.frontend.passwordResetEndpoint',
-      );
-      const resetUrl = `${frontendBaseUrl}${passwordResetEndpoint}?token=${resetToken}`;
-
-      await this.sendPasswordResetEmailUseCase.execute(
+      const resetUrl = await this.sendPasswordResetEmailUseCase.execute(
         new SendPasswordResetEmailCommand(user.email, resetToken, user.name),
       );
 

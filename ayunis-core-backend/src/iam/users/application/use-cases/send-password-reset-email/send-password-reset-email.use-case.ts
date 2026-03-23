@@ -19,7 +19,7 @@ export class SendPasswordResetEmailUseCase {
     private readonly renderTemplateUseCase: RenderTemplateUseCase,
   ) {}
 
-  async execute(command: SendPasswordResetEmailCommand): Promise<void> {
+  async execute(command: SendPasswordResetEmailCommand): Promise<string> {
     try {
       this.logger.log('execute', {
         email: command.userEmail,
@@ -74,6 +74,8 @@ export class SendPasswordResetEmailUseCase {
       this.logger.debug('Password reset email sent successfully', {
         email: command.userEmail,
       });
+
+      return resetUrl;
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
