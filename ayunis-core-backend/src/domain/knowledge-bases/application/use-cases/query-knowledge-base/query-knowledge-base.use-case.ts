@@ -12,7 +12,8 @@ import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-co
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { KnowledgeBaseAccessService } from '../../services/knowledge-base-access.service';
-import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { FindContentChunksByIdsUseCase } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.use-case';
+import { FindContentChunksByIdsQuery } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.query';
 
 export interface KnowledgeBaseQueryResult {
   chunk: TextSourceContentChunk;
@@ -26,7 +27,7 @@ export class QueryKnowledgeBaseUseCase {
 
   constructor(
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
-    private readonly sourceRepository: SourceRepository,
+    private readonly findContentChunksByIdsUseCase: FindContentChunksByIdsUseCase,
     private readonly searchContentUseCase: SearchContentUseCase,
     private readonly contextService: ContextService,
     private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
@@ -96,8 +97,9 @@ export class QueryKnowledgeBaseUseCase {
 
     // Fetch only the matched chunks by ID (single query)
     const chunkIds = indexEntries.map((entry) => entry.relatedChunkId);
-    const chunkResults =
-      await this.sourceRepository.findContentChunksByIds(chunkIds);
+    const chunkResults = await this.findContentChunksByIdsUseCase.execute(
+      new FindContentChunksByIdsQuery(chunkIds),
+    );
 
     // Build a lookup map for quick access
     const chunkMap = new Map(chunkResults.map((r) => [r.chunk.id, r]));

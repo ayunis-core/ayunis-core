@@ -12,7 +12,8 @@ import {
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import toolsConfig from 'src/config/tools.config';
 import { validateTextExtraction } from '../utils/text-extraction.utils';
-import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { ExtractTextLinesUseCase } from 'src/domain/sources/application/use-cases/extract-text-lines/extract-text-lines.use-case';
+import { ExtractTextLinesQuery } from 'src/domain/sources/application/use-cases/extract-text-lines/extract-text-lines.query';
 
 /** PostgreSQL max int for "read to end" when endLine is -1 */
 const MAX_END_LINE = 2147483647;
@@ -34,7 +35,7 @@ export class SourceGetTextToolHandler extends ToolExecutionHandler {
 
   constructor(
     private readonly getSourceByIdUseCase: GetTextSourceByIdUseCase,
-    private readonly sourceRepository: SourceRepository,
+    private readonly extractTextLinesUseCase: ExtractTextLinesUseCase,
     @Inject(toolsConfig.KEY)
     private readonly config: ConfigType<typeof toolsConfig>,
   ) {
@@ -69,10 +70,8 @@ export class SourceGetTextToolHandler extends ToolExecutionHandler {
 
       // Extract text lines at DB level
       const dbEndLine = endLine === -1 ? MAX_END_LINE : endLine;
-      const dbResult = await this.sourceRepository.extractTextLines(
-        source.id,
-        startLine,
-        dbEndLine,
+      const dbResult = await this.extractTextLinesUseCase.execute(
+        new ExtractTextLinesQuery(source.id, startLine, dbEndLine),
       );
 
       if (!dbResult) {

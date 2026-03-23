@@ -17,7 +17,8 @@ import {
   KnowledgeBaseNotFoundError,
   DocumentNotInKnowledgeBaseError,
 } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
-import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { ExtractTextLinesUseCase } from 'src/domain/sources/application/use-cases/extract-text-lines/extract-text-lines.use-case';
+import { ExtractTextLinesQuery } from 'src/domain/sources/application/use-cases/extract-text-lines/extract-text-lines.query';
 
 /** PostgreSQL max int for "read to end" when endLine is -1 */
 const MAX_END_LINE = 2147483647;
@@ -40,7 +41,7 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
 
   constructor(
     private readonly getDocumentTextUseCase: GetKnowledgeBaseDocumentTextUseCase,
-    private readonly sourceRepository: SourceRepository,
+    private readonly extractTextLinesUseCase: ExtractTextLinesUseCase,
     private readonly contextService: ContextService,
     @Inject(toolsConfig.KEY)
     private readonly config: ConfigType<typeof toolsConfig>,
@@ -97,10 +98,8 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
 
       // Extract text lines at DB level
       const dbEndLine = endLine === -1 ? MAX_END_LINE : endLine;
-      const dbResult = await this.sourceRepository.extractTextLines(
-        source.id,
-        startLine,
-        dbEndLine,
+      const dbResult = await this.extractTextLinesUseCase.execute(
+        new ExtractTextLinesQuery(source.id, startLine, dbEndLine),
       );
 
       if (!dbResult) {

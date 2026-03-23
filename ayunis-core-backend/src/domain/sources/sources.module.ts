@@ -13,6 +13,8 @@ import { CreateTextSourceUseCase } from './application/use-cases/create-text-sou
 import { QueryTextSourceUseCase } from './application/use-cases/query-text-source/query-text-source.use-case';
 import { CreateDataSourceUseCase } from './application/use-cases/create-data-source/create-data-source.use-case';
 import { GetSourcesByIdsUseCase } from './application/use-cases/get-sources-by-ids/get-sources-by-ids.use-case';
+import { FindContentChunksByIdsUseCase } from './application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.use-case';
+import { ExtractTextLinesUseCase } from './application/use-cases/extract-text-lines/extract-text-lines.use-case';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { GetSourcesByIdsUseCase } from './application/use-cases/get-sources-by-i
     CreateDataSourceUseCase,
     GetSourcesByIdsUseCase,
     QueryTextSourceUseCase,
+    FindContentChunksByIdsUseCase,
+    ExtractTextLinesUseCase,
   ],
   exports: [
     LocalSourceRepositoryModule,
@@ -41,6 +45,8 @@ import { GetSourcesByIdsUseCase } from './application/use-cases/get-sources-by-i
     CreateDataSourceUseCase,
     GetSourcesByIdsUseCase,
     QueryTextSourceUseCase,
+    FindContentChunksByIdsUseCase,
+    ExtractTextLinesUseCase,
   ],
 })
 export class SourcesModule {}
