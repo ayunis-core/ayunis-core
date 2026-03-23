@@ -73,6 +73,8 @@ export class SourceMapper {
           updatedAt: record.updatedAt,
           createdBy: record.createdBy,
         });
+      default:
+        throw new Error(`Invalid text source type: ${record.textType}`);
     }
   }
 

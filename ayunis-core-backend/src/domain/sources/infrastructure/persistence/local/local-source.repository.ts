@@ -77,12 +77,6 @@ export class LocalSourceRepository extends SourceRepository {
     const records = await this.sourceRepository
       .createQueryBuilder('source')
       .leftJoinAndSelect(
-        'source.textSourceDetails',
-        'textSourceDetails',
-        'source.type = :textType',
-        { textType: 'text' },
-      )
-      .leftJoinAndSelect(
         'source.dataSourceDetails',
         'dataSourceDetails',
         'source.type = :dataType',
@@ -97,12 +91,6 @@ export class LocalSourceRepository extends SourceRepository {
     this.logger.log('findByKnowledgeBaseId', { knowledgeBaseId });
     const records = await this.sourceRepository
       .createQueryBuilder('source')
-      .leftJoinAndSelect(
-        'source.textSourceDetails',
-        'textSourceDetails',
-        'source.type = :textType',
-        { textType: 'text' },
-      )
       .leftJoinAndSelect(
         'source.dataSourceDetails',
         'dataSourceDetails',
