@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.1](https://github.com/ayunis-core/ayunis-core/compare/v1.21.0...v1.21.1) (2026-03-23)
+
+
+### Bug Fixes
+
+* **chat:** preserve display-only tool_use messages from cleanup deletion (AYC-000) ([#476](https://github.com/ayunis-core/ayunis-core/issues/476)) ([f912bf1](https://github.com/ayunis-core/ayunis-core/commit/f912bf15cd44d9d22e98c21fe94c62d1456c48fd))
+
 ## [1.21.0](https://github.com/ayunis-core/ayunis-core/compare/v1.20.1...v1.21.0) (2026-03-20)
 
 
