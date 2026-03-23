@@ -1,7 +1,4 @@
-import { useState } from 'react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import { getLetterheadsControllerFindAllQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
@@ -9,13 +6,8 @@ import { customAxiosInstance } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
 import type { LetterheadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type { PageMargins } from '../model/types';
-import { DEFAULT_MARGINS } from '../model/types';
-import {
-  createLetterheadFormSchema,
-  type LetterheadFormValues,
-} from '../model/letterheadFormSchema';
 
-interface CreateLetterheadMutationParams {
+interface CreateLetterheadParams {
   name: string;
   description?: string;
   firstPagePdf: File;
@@ -24,35 +16,12 @@ interface CreateLetterheadMutationParams {
   continuationPageMargins: PageMargins;
 }
 
-interface UseCreateLetterheadOptions {
-  onClose?: () => void;
-}
-
-export function useCreateLetterhead({
-  onClose,
-}: UseCreateLetterheadOptions = {}) {
+export function useCreateLetterhead(onSuccess?: () => void) {
   const queryClient = useQueryClient();
   const { t } = useTranslation('admin-settings-letterheads');
 
-  const [firstPagePdf, setFirstPagePdf] = useState<File | null>(null);
-  const [continuationPagePdf, setContinuationPagePdf] = useState<File | null>(
-    null,
-  );
-  const [firstPageMargins, setFirstPageMargins] =
-    useState<PageMargins>(DEFAULT_MARGINS);
-  const [continuationPageMargins, setContinuationPageMargins] =
-    useState<PageMargins>(DEFAULT_MARGINS);
-
-  const form = useForm<LetterheadFormValues>({
-    resolver: zodResolver(createLetterheadFormSchema(t)),
-    defaultValues: {
-      name: '',
-      description: '',
-    },
-  });
-
   const mutation = useMutation({
-    mutationFn: (params: CreateLetterheadMutationParams) => {
+    mutationFn: (params: CreateLetterheadParams) => {
       const formData = new FormData();
       formData.append('name', params.name);
       if (params.description) {
@@ -83,7 +52,7 @@ export function useCreateLetterhead({
         queryKey: getLetterheadsControllerFindAllQueryKey(),
       });
       showSuccess(t('letterheads.createDialog.success'));
-      onClose?.();
+      onSuccess?.();
     },
     onError: (error) => {
       try {
@@ -104,38 +73,9 @@ export function useCreateLetterhead({
     },
   });
 
-  const onSubmit = (data: LetterheadFormValues) => {
-    if (!firstPagePdf) return;
-    mutation.mutate({
-      name: data.name,
-      description: data.description,
-      firstPagePdf,
-      continuationPagePdf: continuationPagePdf ?? undefined,
-      firstPageMargins,
-      continuationPageMargins,
-    });
-  };
-
-  const resetForm = () => {
-    form.reset();
-    setFirstPagePdf(null);
-    setContinuationPagePdf(null);
-    setFirstPageMargins(DEFAULT_MARGINS);
-    setContinuationPageMargins(DEFAULT_MARGINS);
-  };
-
   return {
-    form,
-    onSubmit,
-    resetForm,
-    isLoading: mutation.isPending,
-    firstPagePdf,
-    setFirstPagePdf,
-    continuationPagePdf,
-    setContinuationPagePdf,
-    firstPageMargins,
-    setFirstPageMargins,
-    continuationPageMargins,
-    setContinuationPageMargins,
+    createLetterhead: (params: CreateLetterheadParams) =>
+      mutation.mutate(params),
+    isCreating: mutation.isPending,
   };
 }

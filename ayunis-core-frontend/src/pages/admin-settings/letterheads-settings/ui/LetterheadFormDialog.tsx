@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
   DialogContent,
@@ -20,6 +23,12 @@ import { Input } from '@/shared/ui/shadcn/input';
 import { Label } from '@/shared/ui/shadcn/label';
 import { MarginEditor } from '@/widgets/margin-editor';
 import { useCreateLetterhead } from '../api/useCreateLetterhead';
+import type { PageMargins } from '../model/types';
+import { DEFAULT_MARGINS } from '../model/types';
+import {
+  createLetterheadFormSchema,
+  type LetterheadFormValues,
+} from '../model/letterheadFormSchema';
 
 interface LetterheadFormDialogProps {
   open: boolean;
@@ -54,25 +63,49 @@ function LetterheadFormContent({
   onOpenChange,
   t,
 }: Readonly<LetterheadFormContentProps>) {
+  const [firstPagePdf, setFirstPagePdf] = useState<File | null>(null);
+  const [continuationPagePdf, setContinuationPagePdf] = useState<File | null>(
+    null,
+  );
+  const [firstPageMargins, setFirstPageMargins] =
+    useState<PageMargins>(DEFAULT_MARGINS);
+  const [continuationPageMargins, setContinuationPageMargins] =
+    useState<PageMargins>(DEFAULT_MARGINS);
+
+  const form = useForm<LetterheadFormValues>({
+    resolver: zodResolver(createLetterheadFormSchema(t)),
+    defaultValues: {
+      name: '',
+      description: '',
+    },
+  });
+
+  const resetForm = () => {
+    form.reset();
+    setFirstPagePdf(null);
+    setContinuationPagePdf(null);
+    setFirstPageMargins(DEFAULT_MARGINS);
+    setContinuationPageMargins(DEFAULT_MARGINS);
+  };
+
   const handleClose = () => {
     resetForm();
     onOpenChange(false);
   };
 
-  const {
-    form,
-    onSubmit,
-    resetForm,
-    isLoading,
-    firstPagePdf,
-    setFirstPagePdf,
-    continuationPagePdf,
-    setContinuationPagePdf,
-    firstPageMargins,
-    setFirstPageMargins,
-    continuationPageMargins,
-    setContinuationPageMargins,
-  } = useCreateLetterhead({ onClose: handleClose });
+  const { createLetterhead, isCreating } = useCreateLetterhead(handleClose);
+
+  const onSubmit = (data: LetterheadFormValues) => {
+    if (!firstPagePdf) return;
+    createLetterhead({
+      name: data.name,
+      description: data.description,
+      firstPagePdf,
+      continuationPagePdf: continuationPagePdf ?? undefined,
+      firstPageMargins,
+      continuationPageMargins,
+    });
+  };
 
   return (
     <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
@@ -99,7 +132,7 @@ function LetterheadFormContent({
                       placeholder={t(
                         'letterheads.createDialog.namePlaceholder',
                       )}
-                      disabled={isLoading}
+                      disabled={isCreating}
                     />
                   </FormControl>
                   <FormMessage />
@@ -121,7 +154,7 @@ function LetterheadFormContent({
                       placeholder={t(
                         'letterheads.createDialog.descriptionPlaceholder',
                       )}
-                      disabled={isLoading}
+                      disabled={isCreating}
                     />
                   </FormControl>
                   <FormMessage />
@@ -135,7 +168,7 @@ function LetterheadFormContent({
               <Input
                 type="file"
                 accept="application/pdf"
-                disabled={isLoading}
+                disabled={isCreating}
                 onChange={(e) => setFirstPagePdf(e.target.files?.[0] ?? null)}
               />
             </div>
@@ -156,7 +189,7 @@ function LetterheadFormContent({
               <Input
                 type="file"
                 accept="application/pdf"
-                disabled={isLoading}
+                disabled={isCreating}
                 onChange={(e) =>
                   setContinuationPagePdf(e.target.files?.[0] ?? null)
                 }
@@ -176,12 +209,12 @@ function LetterheadFormContent({
               type="button"
               variant="outline"
               onClick={handleClose}
-              disabled={isLoading}
+              disabled={isCreating}
             >
               {t('letterheads.createDialog.cancel')}
             </Button>
-            <Button type="submit" disabled={isLoading || !firstPagePdf}>
-              {isLoading
+            <Button type="submit" disabled={isCreating || !firstPagePdf}>
+              {isCreating
                 ? t('letterheads.createDialog.creating')
                 : t('letterheads.createDialog.create')}
             </Button>
