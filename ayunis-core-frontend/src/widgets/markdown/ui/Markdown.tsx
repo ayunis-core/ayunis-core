@@ -19,6 +19,11 @@ interface TableComponentProps {
   children?: ReactNode;
 }
 
+interface AnchorComponentProps {
+  href?: string;
+  children?: ReactNode;
+}
+
 function Markdown({ children, className = '' }: Readonly<MarkdownProps>) {
   return (
     <div
@@ -85,6 +90,11 @@ function Markdown({ children, className = '' }: Readonly<MarkdownProps>) {
           ),
           td: ({ children }: TableComponentProps) => (
             <td className="px-2 py-2 text-foreground">{children}</td>
+          ),
+          a: ({ href, children }: AnchorComponentProps) => (
+            <a href={href} target="_blank" rel="noopener noreferrer">
+              {children}
+            </a>
           ),
         }}
       >
