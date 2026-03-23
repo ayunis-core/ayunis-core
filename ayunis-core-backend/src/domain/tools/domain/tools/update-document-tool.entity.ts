@@ -20,6 +20,11 @@ const updateDocumentToolParameters = {
       description:
         'The version number you expect the document to be at. Pass the version from your last create/update/edit result, or from read_document. The operation will fail if the document has been modified since.',
     },
+    letterhead_id: {
+      type: 'string' as const,
+      description:
+        'Optional UUID of the letterhead (Briefpapier) to apply as background when exporting to PDF. Only include when the user requests a specific letterhead.',
+    },
   },
   required: ['artifact_id', 'content', 'expected_version'],
   additionalProperties: false,

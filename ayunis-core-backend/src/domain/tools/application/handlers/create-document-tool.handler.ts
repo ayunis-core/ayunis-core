@@ -8,6 +8,7 @@ import { ToolExecutionFailedError } from '../tools.errors';
 import { CreateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/create-artifact/create-artifact.use-case';
 import { CreateArtifactCommand } from 'src/domain/artifacts/application/use-cases/create-artifact/create-artifact.command';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
+import type { UUID } from 'crypto';
 
 @Injectable()
 export class CreateDocumentToolHandler extends ToolExecutionHandler {
@@ -28,12 +29,17 @@ export class CreateDocumentToolHandler extends ToolExecutionHandler {
     try {
       const validatedInput = tool.validateParams(input);
 
+      const letterheadId = validatedInput.letterhead_id
+        ? (validatedInput.letterhead_id as UUID)
+        : undefined;
+
       const artifact = await this.createArtifactUseCase.execute(
         new CreateArtifactCommand({
           threadId: context.threadId,
           title: validatedInput.title,
           content: validatedInput.content,
           authorType: AuthorType.ASSISTANT,
+          letterheadId,
         }),
       );
 

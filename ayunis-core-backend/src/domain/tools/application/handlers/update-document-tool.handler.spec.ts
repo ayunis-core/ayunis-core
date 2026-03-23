@@ -103,6 +103,50 @@ describe('UpdateDocumentToolHandler', () => {
     expect(result).toContain('version: 2');
   });
 
+  it('should pass letterheadId to UpdateArtifactCommand when letterhead_id is provided', async () => {
+    const version = createMockVersion();
+    mockUpdateArtifactUseCase.execute.mockResolvedValue(version);
+
+    const letterheadId = randomUUID();
+    const tool = new UpdateDocumentTool();
+    const input = {
+      artifact_id: mockArtifactId,
+      content: '<h1>Updated with letterhead</h1>',
+      expected_version: 1,
+      letterhead_id: letterheadId,
+    };
+
+    await handler.execute({
+      tool,
+      input,
+      context: { threadId: mockThreadId, orgId: mockOrgId },
+    });
+
+    const command = mockUpdateArtifactUseCase.execute.mock.calls[0][0];
+    expect(command.letterheadId).toBe(letterheadId);
+  });
+
+  it('should not pass letterheadId when letterhead_id is not provided', async () => {
+    const version = createMockVersion();
+    mockUpdateArtifactUseCase.execute.mockResolvedValue(version);
+
+    const tool = new UpdateDocumentTool();
+    const input = {
+      artifact_id: mockArtifactId,
+      content: '<h1>Updated without letterhead</h1>',
+      expected_version: 1,
+    };
+
+    await handler.execute({
+      tool,
+      input,
+      context: { threadId: mockThreadId, orgId: mockOrgId },
+    });
+
+    const command = mockUpdateArtifactUseCase.execute.mock.calls[0][0];
+    expect(command.letterheadId).toBeUndefined();
+  });
+
   it('should throw ToolExecutionFailedError when UpdateArtifactUseCase fails', async () => {
     mockUpdateArtifactUseCase.execute.mockRejectedValue(
       new Error('Artifact not found'),

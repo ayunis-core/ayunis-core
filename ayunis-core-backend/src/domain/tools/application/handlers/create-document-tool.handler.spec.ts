@@ -99,6 +99,48 @@ describe('CreateDocumentToolHandler', () => {
     expect(result).toContain('version: 1');
   });
 
+  it('should pass letterheadId to CreateArtifactCommand when letterhead_id is provided', async () => {
+    const artifact = createMockArtifact();
+    mockCreateArtifactUseCase.execute.mockResolvedValue(artifact);
+
+    const letterheadId = randomUUID();
+    const tool = new CreateDocumentTool();
+    const input = {
+      title: 'Official Letter',
+      content: '<h1>Dear Sir</h1><p>Body</p>',
+      letterhead_id: letterheadId,
+    };
+
+    await handler.execute({
+      tool,
+      input,
+      context: { threadId: mockThreadId, orgId: mockOrgId },
+    });
+
+    const command = mockCreateArtifactUseCase.execute.mock.calls[0][0];
+    expect(command.letterheadId).toBe(letterheadId);
+  });
+
+  it('should not pass letterheadId when letterhead_id is not provided', async () => {
+    const artifact = createMockArtifact();
+    mockCreateArtifactUseCase.execute.mockResolvedValue(artifact);
+
+    const tool = new CreateDocumentTool();
+    const input = {
+      title: 'Simple Note',
+      content: '<p>No letterhead</p>',
+    };
+
+    await handler.execute({
+      tool,
+      input,
+      context: { threadId: mockThreadId, orgId: mockOrgId },
+    });
+
+    const command = mockCreateArtifactUseCase.execute.mock.calls[0][0];
+    expect(command.letterheadId).toBeUndefined();
+  });
+
   it('should throw ToolExecutionFailedError when CreateArtifactUseCase fails', async () => {
     mockCreateArtifactUseCase.execute.mockRejectedValue(
       new Error('Database connection lost'),

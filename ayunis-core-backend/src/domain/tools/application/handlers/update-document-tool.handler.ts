@@ -30,12 +30,17 @@ export class UpdateDocumentToolHandler extends ToolExecutionHandler {
     try {
       const validatedInput = tool.validateParams(input);
 
+      const letterheadId = validatedInput.letterhead_id
+        ? (validatedInput.letterhead_id as UUID)
+        : undefined;
+
       const version = await this.updateArtifactUseCase.execute(
         new UpdateArtifactCommand({
           artifactId: validatedInput.artifact_id as UUID,
           content: validatedInput.content,
           authorType: AuthorType.ASSISTANT,
           expectedVersionNumber: validatedInput.expected_version,
+          letterheadId,
         }),
       );
 
