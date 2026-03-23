@@ -9810,6 +9810,17 @@
           "resetUrl"
         ]
       },
+      "TriggerPasswordResetResponseDto": {
+        "type": "object",
+        "properties": {
+          "resetUrl": {
+            "type": "string",
+            "description": "The password reset URL sent to the user",
+            "example": "https://app.ayunis.de/password/reset?token=eyJhbGci..."
+          }
+        },
+        "required": ["resetUrl"]
+      },
       "CreateUserDto": {
         "type": "object",
         "properties": {

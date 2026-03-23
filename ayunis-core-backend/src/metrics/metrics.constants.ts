@@ -1,6 +1,5 @@
 // Metric names — single source of truth for all Prometheus metric identifiers.
 // Use these constants everywhere instead of magic strings.
-
 export const METRICS_PATH = '/metrics';
 
 export const AYUNIS_TOKENS_TOTAL = 'ayunis_tokens_total';
