@@ -71,7 +71,6 @@ export default function PasswordResetSuccessDialog({
                 type="button"
                 variant="outline"
                 onClick={() => void copyToClipboard()}
-                className="flex items-center space-x-2"
               >
                 {isCopied ? (
                   <>
