@@ -6,25 +6,26 @@
     "noDescription": "No description",
     "detail": {
       "general": "General",
-      "firstPage": "First Page",
-      "continuationPage": "Continuation Page"
+      "firstPage": "Letterhead",
+      "followingPages": "Following Pages"
     },
     "createDialog": {
       "title": "Create Letterhead",
-      "description": "Upload PDF files for the first page and optionally for continuation pages.",
+      "description": "Upload a PDF to use as letterhead background. Optionally, upload a separate PDF for following pages — if omitted, the first page letterhead is used for all pages.",
       "nameLabel": "Name",
       "namePlaceholder": "e.g. Official Letterhead",
       "nameRequired": "Name is required",
       "descriptionLabel": "Description",
       "descriptionPlaceholder": "Description for AI (optional)",
-      "firstPagePdfLabel": "First Page (PDF)",
-      "continuationPagePdfLabel": "Continuation Page (PDF, optional)",
+      "firstPagePdfLabel": "Letterhead (PDF)",
+      "followingPagesPdfLabel": "Following Pages (PDF)",
       "firstPageMarginsLabel": "First Page Margins (mm)",
-      "continuationPageMarginsLabel": "Continuation Page Margins (mm)",
+      "followingPagesMarginsLabel": "Following Pages Margins (mm)",
       "top": "Top",
       "bottom": "Bottom",
       "left": "Left",
       "right": "Right",
+      "useDifferentFollowingPages": "Use different letterhead for following pages",
       "cancel": "Cancel",
       "create": "Create",
       "creating": "Creating…",
@@ -44,7 +45,8 @@
       "error": "Failed to update letterhead.",
       "invalidPdf": "Please upload a valid PDF file.",
       "invalidPageMargins": "Please enter valid non-negative page margins.",
-      "removeContinuationPage": "Remove continuation page"
+      "removeContinuationPage": "Remove following pages letterhead",
+      "useDifferentFollowingPages": "Use different letterhead for following pages"
     },
     "deleteDialog": {
       "title": "Delete Letterhead",

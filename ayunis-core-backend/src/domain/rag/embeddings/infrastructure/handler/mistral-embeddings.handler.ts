@@ -46,7 +46,7 @@ export class MistralEmbeddingsHandler extends EmbeddingsHandler {
           this.logger.warn(
             'Retrying Mistral embeddings after transient error',
             {
-              statusCode: (error as SDKError).statusCode,
+              statusCode: error.statusCode,
               message: error.message,
             },
           );

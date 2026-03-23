@@ -21,6 +21,7 @@ import {
 import { Button } from '@/shared/ui/shadcn/button';
 import { Input } from '@/shared/ui/shadcn/input';
 import { Label } from '@/shared/ui/shadcn/label';
+import { Switch } from '@/shared/ui/shadcn/switch';
 import { MarginEditor } from '@/widgets/margin-editor';
 import { useCreateLetterhead } from '../api/useCreateLetterhead';
 import type { PageMargins } from '../model/types';
@@ -64,6 +65,8 @@ function LetterheadFormContent({
   t,
 }: Readonly<LetterheadFormContentProps>) {
   const [firstPagePdf, setFirstPagePdf] = useState<File | null>(null);
+  const [useDifferentFollowingPages, setUseDifferentFollowingPages] =
+    useState(false);
   const [continuationPagePdf, setContinuationPagePdf] = useState<File | null>(
     null,
   );
@@ -83,6 +86,7 @@ function LetterheadFormContent({
   const resetForm = () => {
     form.reset();
     setFirstPagePdf(null);
+    setUseDifferentFollowingPages(false);
     setContinuationPagePdf(null);
     setFirstPageMargins(DEFAULT_MARGINS);
     setContinuationPageMargins(DEFAULT_MARGINS);
@@ -101,9 +105,14 @@ function LetterheadFormContent({
       name: data.name,
       description: data.description,
       firstPagePdf,
-      continuationPagePdf: continuationPagePdf ?? undefined,
+      continuationPagePdf:
+        useDifferentFollowingPages && continuationPagePdf
+          ? continuationPagePdf
+          : undefined,
       firstPageMargins,
-      continuationPageMargins,
+      continuationPageMargins: useDifferentFollowingPages
+        ? continuationPageMargins
+        : firstPageMargins,
     });
   };
 
@@ -181,28 +190,47 @@ function LetterheadFormContent({
               label={t('letterheads.createDialog.firstPageMarginsLabel')}
             />
 
-            {/* Continuation Page PDF */}
-            <div className="grid gap-2">
-              <Label>
-                {t('letterheads.createDialog.continuationPagePdfLabel')}
-              </Label>
-              <Input
-                type="file"
-                accept="application/pdf"
+            {/* Toggle: different letterhead for following pages */}
+            <div className="flex items-center gap-2">
+              <Switch
+                id="use-different-following"
+                checked={useDifferentFollowingPages}
+                onCheckedChange={setUseDifferentFollowingPages}
                 disabled={isCreating}
-                onChange={(e) =>
-                  setContinuationPagePdf(e.target.files?.[0] ?? null)
-                }
               />
+              <Label htmlFor="use-different-following">
+                {t('letterheads.createDialog.useDifferentFollowingPages')}
+              </Label>
             </div>
 
-            {/* Continuation Page Margins */}
-            <MarginEditor
-              pdfSource={continuationPagePdf}
-              margins={continuationPageMargins}
-              onMarginsChange={setContinuationPageMargins}
-              label={t('letterheads.createDialog.continuationPageMarginsLabel')}
-            />
+            {useDifferentFollowingPages && (
+              <>
+                {/* Following Pages PDF */}
+                <div className="grid gap-2">
+                  <Label>
+                    {t('letterheads.createDialog.followingPagesPdfLabel')}
+                  </Label>
+                  <Input
+                    type="file"
+                    accept="application/pdf"
+                    disabled={isCreating}
+                    onChange={(e) =>
+                      setContinuationPagePdf(e.target.files?.[0] ?? null)
+                    }
+                  />
+                </div>
+
+                {/* Following Pages Margins */}
+                <MarginEditor
+                  pdfSource={continuationPagePdf}
+                  margins={continuationPageMargins}
+                  onMarginsChange={setContinuationPageMargins}
+                  label={t(
+                    'letterheads.createDialog.followingPagesMarginsLabel',
+                  )}
+                />
+              </>
+            )}
           </div>
           <DialogFooter>
             <Button

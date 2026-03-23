@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Input } from '@/shared/ui/shadcn/input';
 import { Label } from '@/shared/ui/shadcn/label';
-import { Checkbox } from '@/shared/ui/shadcn/checkbox';
+import { Switch } from '@/shared/ui/shadcn/switch';
 import {
   Card,
   CardContent,
@@ -38,6 +38,9 @@ export function LetterheadDetailPage({
   );
 
   const [firstPagePdf, setFirstPagePdf] = useState<File | null>(null);
+  const [useDifferentFollowingPages, setUseDifferentFollowingPages] = useState(
+    letterhead.hasContinuationPage,
+  );
   const [continuationPagePdf, setContinuationPagePdf] = useState<File | null>(
     null,
   );
@@ -46,7 +49,6 @@ export function LetterheadDetailPage({
   );
   const [continuationPageMargins, setContinuationPageMargins] =
     useState<PageMargins>(initialMargins.continuationPage);
-  const [removeContinuation, setRemoveContinuation] = useState(false);
 
   const { updateLetterhead, isUpdating } = useUpdateLetterhead();
 
@@ -61,17 +63,24 @@ export function LetterheadDetailPage({
     },
   });
 
+  const shouldRemoveContinuation =
+    !useDifferentFollowingPages && letterhead.hasContinuationPage;
+
   const onSubmit = (data: LetterheadFormFields) => {
     updateLetterhead({
       id: letterhead.id,
       name: data.name,
       description: data.description,
       firstPagePdf: firstPagePdf ?? undefined,
-      continuationPagePdf: continuationPagePdf ?? undefined,
+      continuationPagePdf:
+        useDifferentFollowingPages && continuationPagePdf
+          ? continuationPagePdf
+          : undefined,
       firstPageMargins,
-      continuationPageMargins,
-      removeContinuationPage:
-        removeContinuation && !continuationPagePdf ? true : undefined,
+      continuationPageMargins: useDifferentFollowingPages
+        ? continuationPageMargins
+        : firstPageMargins,
+      removeContinuationPage: shouldRemoveContinuation || undefined,
     });
   };
 
@@ -82,7 +91,7 @@ export function LetterheadDetailPage({
   const continuationPageSource: PdfSource = getContinuationPageSource(
     continuationPagePdf,
     letterhead,
-    removeContinuation,
+    !useDifferentFollowingPages,
   );
 
   return (
@@ -154,39 +163,45 @@ export function LetterheadDetailPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>{t('letterheads.detail.continuationPage')}</CardTitle>
+            <CardTitle>{t('letterheads.detail.followingPages')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <Label>
-                {t('letterheads.createDialog.continuationPagePdfLabel')}
-              </Label>
-              <Input
-                type="file"
-                accept="application/pdf"
-                onChange={(e) =>
-                  setContinuationPagePdf(e.target.files?.[0] ?? null)
-                }
+            <div className="flex items-center gap-2">
+              <Switch
+                id="use-different-following"
+                checked={useDifferentFollowingPages}
+                onCheckedChange={setUseDifferentFollowingPages}
               />
-              {letterhead.hasContinuationPage && (
-                <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Checkbox
-                    checked={removeContinuation}
-                    onCheckedChange={(checked) =>
-                      setRemoveContinuation(checked === true)
-                    }
-                  />
-                  {t('letterheads.editDialog.removeContinuationPage')}
-                </label>
-              )}
+              <Label htmlFor="use-different-following">
+                {t('letterheads.editDialog.useDifferentFollowingPages')}
+              </Label>
             </div>
 
-            <MarginEditor
-              pdfSource={continuationPageSource}
-              margins={continuationPageMargins}
-              onMarginsChange={setContinuationPageMargins}
-              label={t('letterheads.createDialog.continuationPageMarginsLabel')}
-            />
+            {useDifferentFollowingPages && (
+              <>
+                <div className="grid gap-2">
+                  <Label>
+                    {t('letterheads.createDialog.followingPagesPdfLabel')}
+                  </Label>
+                  <Input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) =>
+                      setContinuationPagePdf(e.target.files?.[0] ?? null)
+                    }
+                  />
+                </div>
+
+                <MarginEditor
+                  pdfSource={continuationPageSource}
+                  margins={continuationPageMargins}
+                  onMarginsChange={setContinuationPageMargins}
+                  label={t(
+                    'letterheads.createDialog.followingPagesMarginsLabel',
+                  )}
+                />
+              </>
+            )}
           </CardContent>
         </Card>
 

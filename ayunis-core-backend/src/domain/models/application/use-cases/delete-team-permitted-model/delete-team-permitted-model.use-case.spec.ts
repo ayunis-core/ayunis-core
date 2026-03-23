@@ -51,9 +51,11 @@ describe('DeleteTeamPermittedModelUseCase', () => {
     } as unknown as jest.Mocked<PermittedModelsRepository>;
 
     getTeamUseCase = {
-      execute: jest.fn().mockResolvedValue(
-        new Team({ name: 'test-team', orgId, modelOverrideEnabled: false }),
-      ),
+      execute: jest
+        .fn()
+        .mockResolvedValue(
+          new Team({ name: 'test-team', orgId, modelOverrideEnabled: false }),
+        ),
     } as unknown as jest.Mocked<GetTeamUseCase>;
 
     contextService = {
