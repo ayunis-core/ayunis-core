@@ -1,39 +1,36 @@
-import { useSuperAdminUsersControllerTriggerPasswordReset } from '@/shared/api/generated/ayunisCoreAPI';
-import { showError, showSuccess } from '@/shared/lib/toast';
+import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { showError } from '@/shared/lib/toast';
+import { superAdminUsersControllerTriggerPasswordReset } from '@/shared/api/generated/ayunisCoreAPI';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 interface UseSuperAdminTriggerPasswordResetOptions {
-  onSuccessCallback?: () => void;
+  onSuccess?: (resetUrl: string) => void;
 }
 
 export function useSuperAdminTriggerPasswordReset(
   options?: UseSuperAdminTriggerPasswordResetOptions,
 ) {
   const { t } = useTranslation('super-admin-settings-org');
-  const triggerPasswordResetMutation =
-    useSuperAdminUsersControllerTriggerPasswordReset({
-      mutation: {
-        onSuccess: () => {
-          showSuccess(t('triggerPasswordReset.success'));
-          if (options?.onSuccessCallback) {
-            options.onSuccessCallback();
-          }
-        },
-        onError: (err) => {
-          console.error('Error triggering password reset', err);
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      return superAdminUsersControllerTriggerPasswordReset(userId);
+    },
+    onSuccess: (data) => {
+      options?.onSuccess?.(data.resetUrl);
+    },
+    onError: (error) => {
+      try {
+        const { code } = extractErrorData(error);
+        if (code === 'USER_NOT_FOUND') {
+          showError(t('triggerPasswordReset.notFound'));
+        } else {
           showError(t('triggerPasswordReset.error'));
-        },
-      },
-    });
-
-  function triggerPasswordReset(userId: string) {
-    triggerPasswordResetMutation.mutate({ userId });
-  }
-
-  return {
-    triggerPasswordReset,
-    isLoading: triggerPasswordResetMutation.isPending,
-    isError: triggerPasswordResetMutation.isError,
-    error: triggerPasswordResetMutation.error,
-  };
+        }
+      } catch {
+        showError(t('triggerPasswordReset.error'));
+      }
+    },
+  });
 }

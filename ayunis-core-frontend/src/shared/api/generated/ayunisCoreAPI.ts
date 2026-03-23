@@ -157,6 +157,7 @@ import type {
   ThreadsControllerGetThreadSources200Item,
   TranscriptionResponseDto,
   TranscriptionsControllerTranscribeBody,
+  TriggerPasswordResetResponseDto,
   UpdateAgentDto,
   UpdateArtifactDto,
   UpdateBillingInfoDto,
@@ -4157,7 +4158,7 @@ export const useSuperAdminUsersControllerDeleteUser = <TError = void,
     }
     
 /**
- * Send a password reset email to the specified user. This endpoint is only accessible to super admins.
+ * Send a password reset email to the specified user and return the reset URL. This endpoint is only accessible to super admins.
  * @summary Trigger password reset for a user
  */
 export const superAdminUsersControllerTriggerPasswordReset = (
@@ -4166,7 +4167,7 @@ export const superAdminUsersControllerTriggerPasswordReset = (
 ) => {
       
       
-      return customAxiosInstance<void>(
+      return customAxiosInstance<TriggerPasswordResetResponseDto>(
       {url: `/super-admin/users/${userId}/trigger-password-reset`, method: 'POST', signal
     },
       );

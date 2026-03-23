@@ -27,6 +27,8 @@ import { FindUserByIdUseCase } from '../../application/use-cases/find-user-by-id
 import { DeleteUserUseCase } from '../../application/use-cases/delete-user/delete-user.use-case';
 import { TriggerPasswordResetUseCase } from '../../application/use-cases/trigger-password-reset/trigger-password-reset.use-case';
 import { TriggerPasswordResetCommand } from '../../application/use-cases/trigger-password-reset/trigger-password-reset.command';
+import { SuperAdminTriggerPasswordResetUseCase } from '../../application/use-cases/super-admin-trigger-password-reset/super-admin-trigger-password-reset.use-case';
+import { SuperAdminTriggerPasswordResetCommand } from '../../application/use-cases/super-admin-trigger-password-reset/super-admin-trigger-password-reset.command';
 import { CreateUserUseCase } from '../../application/use-cases/create-user/create-user.use-case';
 import { CreateUserCommand } from '../../application/use-cases/create-user/create-user.command';
 import { UserResponseDtoMapper } from './mappers/user-response-dto.mapper';
@@ -35,6 +37,7 @@ import {
   PaginatedUsersListResponseDto,
 } from './dtos/user-response.dto';
 import { CreateUserDto } from './dtos/create-user.dto';
+import { TriggerPasswordResetResponseDto } from './dtos/trigger-password-reset-response.dto';
 import { GetUsersQueryParamsDto } from './dtos/get-users-query-params.dto';
 import { FindUsersByOrgIdQuery } from '../../application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
 import { FindUserByIdQuery } from '../../application/use-cases/find-user-by-id/find-user-by-id.query';
@@ -55,6 +58,7 @@ export class SuperAdminUsersController {
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
     private readonly deleteUserUseCase: DeleteUserUseCase,
     private readonly triggerPasswordResetUseCase: TriggerPasswordResetUseCase,
+    private readonly superAdminTriggerPasswordResetUseCase: SuperAdminTriggerPasswordResetUseCase,
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly userResponseDtoMapper: UserResponseDtoMapper,
   ) {}
@@ -141,11 +145,11 @@ export class SuperAdminUsersController {
   }
 
   @Post(':userId/trigger-password-reset')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Trigger password reset for a user',
     description:
-      'Send a password reset email to the specified user. This endpoint is only accessible to super admins.',
+      'Send a password reset email to the specified user and return the reset URL. This endpoint is only accessible to super admins.',
   })
   @ApiParam({
     name: 'userId',
@@ -154,8 +158,9 @@ export class SuperAdminUsersController {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
+    status: HttpStatus.OK,
     description: 'Password reset email sent successfully',
+    type: TriggerPasswordResetResponseDto,
   })
   @ApiNotFoundResponse({
     description: 'User not found',
@@ -167,17 +172,16 @@ export class SuperAdminUsersController {
     description:
       'Internal server error occurred while sending password reset email',
   })
-  async triggerPasswordReset(@Param('userId') userId: UUID): Promise<void> {
+  async triggerPasswordReset(
+    @Param('userId') userId: UUID,
+  ): Promise<TriggerPasswordResetResponseDto> {
     this.logger.log('triggerPasswordReset', { userId });
 
-    // Get the user to retrieve their email
-    const user = await this.findUserByIdUseCase.execute(
-      new FindUserByIdQuery(userId),
+    const result = await this.superAdminTriggerPasswordResetUseCase.execute(
+      new SuperAdminTriggerPasswordResetCommand(userId),
     );
 
-    await this.triggerPasswordResetUseCase.execute(
-      new TriggerPasswordResetCommand(user.email),
-    );
+    return new TriggerPasswordResetResponseDto(result.resetUrl);
   }
 
   @Post(':orgId/create')
