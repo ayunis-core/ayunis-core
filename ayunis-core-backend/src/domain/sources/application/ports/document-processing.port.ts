@@ -14,4 +14,6 @@ export interface DocumentProcessingJobData {
  */
 export abstract class DocumentProcessingPort {
   abstract enqueue(data: DocumentProcessingJobData): Promise<void>;
+  /** Best-effort cancellation: remove a waiting/delayed job or signal an active one. */
+  abstract cancelJob(sourceId: UUID): Promise<void>;
 }

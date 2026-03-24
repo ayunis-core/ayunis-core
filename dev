@@ -65,6 +65,7 @@ export MAILCATCHER_SMTP_HOST_PORT=$((1025 + OFFSET))
 export MAILCATCHER_WEB_HOST_PORT=$((1080 + OFFSET))
 export CODE_EXEC_HOST_PORT=$((8080 + OFFSET))
 export ANONYMIZE_HOST_PORT=$((8002 + OFFSET))
+export REDIS_HOST_PORT=$((6379 + OFFSET))
 
 BACKEND_PORT=$((3000 + OFFSET))
 FRONTEND_PORT=$((3001 + OFFSET))
@@ -115,6 +116,8 @@ ANONYMIZE_SERVICE_URL=http://localhost:$ANONYMIZE_HOST_PORT
 FRONTEND_BASEURL=http://localhost:$FRONTEND_PORT
 CORS_ALLOWED_ORIGINS=http://localhost:$FRONTEND_PORT,http://localhost:$BACKEND_PORT
 MARKETPLACE_SERVICE_URL=http://localhost:3002
+REDIS_HOST=localhost
+REDIS_PORT=$REDIS_HOST_PORT
 EOF
 
   # -- 3. Run database migrations ------------------------------------------

@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SourceStatus } from '../../../domain/source-status.enum';
 import { SourceRepository } from '../../ports/source.repository';
-import { SourceNotFoundError, UnexpectedSourceError } from '../../sources.errors';
+import {
+  SourceNotFoundError,
+  UnexpectedSourceError,
+} from '../../sources.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { MarkSourceFailedCommand } from './mark-source-failed.command';
 

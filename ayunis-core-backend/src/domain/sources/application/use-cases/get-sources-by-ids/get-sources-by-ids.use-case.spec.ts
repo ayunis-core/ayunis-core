@@ -35,6 +35,7 @@ describe('GetSourcesByIdsUseCase', () => {
       findContentChunksByIds: jest.fn(),
       delete: jest.fn(),
       deleteMany: jest.fn(),
+      updateStatusConditionally: jest.fn(),
     } as jest.Mocked<SourceRepository>;
 
     useCase = new GetSourcesByIdsUseCase(sourceRepository);

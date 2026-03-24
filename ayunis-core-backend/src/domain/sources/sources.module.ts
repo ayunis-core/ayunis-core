@@ -3,6 +3,7 @@ import { LocalSourceRepositoryModule } from './infrastructure/persistence/local/
 import { SplitterModule } from '../rag/splitters/splitter.module';
 import { RetrieverModule } from '../retrievers/retriever.module';
 import { IndexersModule } from '../rag/indexers/indexers.module';
+import { StorageModule } from '../storage/storage.module';
 import { DocumentProcessingModule } from './infrastructure/queue/document-processing.module';
 
 // Import all use cases
@@ -21,6 +22,7 @@ import { CreateSourcesFromFileUseCase } from './application/use-cases/create-sou
 import { CreateProcessingSourceUseCase } from './application/use-cases/create-processing-source/create-processing-source.use-case';
 import { MarkSourceFailedUseCase } from './application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import { EnqueueDocumentProcessingUseCase } from './application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
+import { SourceProcessingCleanupService } from './application/services/source-processing-cleanup.service';
 
 @Module({
   imports: [
@@ -28,9 +30,11 @@ import { EnqueueDocumentProcessingUseCase } from './application/use-cases/enqueu
     RetrieverModule,
     SplitterModule,
     IndexersModule,
+    StorageModule,
     DocumentProcessingModule,
   ],
   providers: [
+    SourceProcessingCleanupService,
     GetTextSourceByIdUseCase,
     GetSourceByIdUseCase,
     DeleteSourceUseCase,
