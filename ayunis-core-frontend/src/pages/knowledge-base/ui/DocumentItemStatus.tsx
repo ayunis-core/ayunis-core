@@ -3,44 +3,44 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { ItemDescription } from '@/shared/ui/shadcn/item';
 import type { TFunction } from 'i18next';
 
-export function DocumentItemStatus({
-  isProcessing,
-  isProcessingSlow,
-  isFailed,
-  processingError,
-  t,
-}: Readonly<{
+interface DocumentItemStatusProps {
+  isWeb: boolean;
+  url: string | null | undefined;
   isProcessing: boolean;
   isProcessingSlow: boolean;
   isFailed: boolean;
   processingError: string | null | undefined;
   t: TFunction<'knowledge-bases'>;
-}>) {
-  if (isProcessing) {
-    return (
-      <span
-        className={cn(
-          'text-xs',
-          isProcessingSlow ? 'text-warning' : 'text-muted-foreground',
-        )}
-      >
-        {isProcessingSlow
-          ? t('detail.documents.statusProcessingSlow')
-          : t('detail.documents.statusProcessing')}
-      </span>
-    );
-  }
+}
 
+export function DocumentItemStatus({
+  isWeb,
+  url,
+  isProcessing,
+  isProcessingSlow,
+  isFailed,
+  processingError,
+  t,
+}: Readonly<DocumentItemStatusProps>) {
+  if (isProcessing) {
+    const className = isProcessingSlow
+      ? 'text-amber-600 dark:text-amber-400'
+      : undefined;
+    const key = isProcessingSlow
+      ? 'detail.documents.statusProcessingSlow'
+      : 'detail.documents.statusProcessing';
+    return <ItemDescription className={className}>{t(key)}</ItemDescription>;
+  }
   if (isFailed) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="text-xs cursor-help">
+          <ItemDescription className="text-destructive cursor-help">
             {t('detail.documents.statusFailed')}
-          </span>
+          </ItemDescription>
         </TooltipTrigger>
         <TooltipContent>
           {processingError ?? t('detail.documents.retryUpload')}
@@ -48,6 +48,6 @@ export function DocumentItemStatus({
       </Tooltip>
     );
   }
-
+  if (isWeb && url) return <ItemDescription>{url}</ItemDescription>;
   return null;
 }
