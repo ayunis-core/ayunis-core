@@ -133,7 +133,7 @@ import { MetricsModule } from '../metrics/metrics.module';
           connection: {
             host: redis.host,
             port: redis.port,
-            maxRetriesPerRequest: 3,
+            // BullMQ's RedisConnection always overrides maxRetriesPerRequest to null
             connectTimeout: 5000,
           },
         };

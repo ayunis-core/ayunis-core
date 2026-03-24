@@ -22,6 +22,7 @@ import { CreateSourcesFromFileUseCase } from './application/use-cases/create-sou
 import { CreateProcessingSourceUseCase } from './application/use-cases/create-processing-source/create-processing-source.use-case';
 import { MarkSourceFailedUseCase } from './application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import { EnqueueDocumentProcessingUseCase } from './application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
+import { ProcessingFilesCleanupService } from './application/services/processing-files-cleanup.service';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { EnqueueDocumentProcessingUseCase } from './application/use-cases/enqueu
     CreateProcessingSourceUseCase,
     MarkSourceFailedUseCase,
     EnqueueDocumentProcessingUseCase,
+    ProcessingFilesCleanupService,
   ],
   exports: [
     LocalSourceRepositoryModule,

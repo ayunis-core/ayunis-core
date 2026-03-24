@@ -13,9 +13,7 @@ import { randomUUID } from 'crypto';
 import { DeleteSourceUseCase } from './delete-source.use-case';
 import { DeleteSourceCommand } from './delete-source.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
-import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
-import { ListObjectsUseCase } from 'src/domain/storage/application/use-cases/list-objects/list-objects.use-case';
-import { ContextService } from 'src/common/context/services/context.service';
+import { ProcessingFilesCleanupService } from '../../services/processing-files-cleanup.service';
 import { DocumentProcessingPort } from '../../ports/document-processing.port';
 import { SourceRepository } from '../../ports/source.repository';
 import { SourceStatus } from '../../../domain/source-status.enum';
@@ -50,9 +48,7 @@ describe('DeleteSourceUseCase', () => {
   let useCase: DeleteSourceUseCase;
   let mockSourceRepository: Record<string, jest.Mock>;
   let mockDocumentProcessingPort: Record<string, jest.Mock>;
-  let mockListObjectsUseCase: Record<string, jest.Mock>;
-  let mockDeleteObjectUseCase: Record<string, jest.Mock>;
-  let mockContextService: Record<string, jest.Mock>;
+  let mockProcessingFilesCleanupService: Record<string, jest.Mock>;
   let mockDeleteContentUseCase: Record<string, jest.Mock>;
 
   beforeAll(async () => {
@@ -64,14 +60,8 @@ describe('DeleteSourceUseCase', () => {
       cancelJob: jest.fn().mockResolvedValue(undefined),
       enqueue: jest.fn(),
     };
-    mockListObjectsUseCase = {
-      execute: jest.fn().mockResolvedValue([]),
-    };
-    mockDeleteObjectUseCase = {
-      execute: jest.fn().mockResolvedValue(undefined),
-    };
-    mockContextService = {
-      get: jest.fn().mockReturnValue(ORG_ID),
+    mockProcessingFilesCleanupService = {
+      cleanup: jest.fn().mockResolvedValue(undefined),
     };
     mockDeleteContentUseCase = {
       execute: jest.fn().mockResolvedValue(undefined),
@@ -85,9 +75,10 @@ describe('DeleteSourceUseCase', () => {
           provide: DocumentProcessingPort,
           useValue: mockDocumentProcessingPort,
         },
-        { provide: ListObjectsUseCase, useValue: mockListObjectsUseCase },
-        { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
-        { provide: ContextService, useValue: mockContextService },
+        {
+          provide: ProcessingFilesCleanupService,
+          useValue: mockProcessingFilesCleanupService,
+        },
         { provide: DeleteContentUseCase, useValue: mockDeleteContentUseCase },
       ],
     }).compile();
@@ -100,10 +91,8 @@ describe('DeleteSourceUseCase', () => {
     mockSourceRepository.findById.mockResolvedValue(null);
     mockSourceRepository.delete.mockResolvedValue(undefined);
     mockDocumentProcessingPort.cancelJob.mockResolvedValue(undefined);
-    mockListObjectsUseCase.execute.mockResolvedValue([]);
-    mockDeleteObjectUseCase.execute.mockResolvedValue(undefined);
+    mockProcessingFilesCleanupService.cleanup.mockResolvedValue(undefined);
     mockDeleteContentUseCase.execute.mockResolvedValue(undefined);
-    mockContextService.get.mockReturnValue(ORG_ID);
   });
 
   it('should be defined', () => {
@@ -123,19 +112,14 @@ describe('DeleteSourceUseCase', () => {
 
   it('should clean up MinIO files when deleting a processing source', async () => {
     const sourceId = randomUUID();
-    const minioFile = `${ORG_ID}/processing/${sourceId}/doc.pdf`;
     mockSourceRepository.findById.mockResolvedValue(
       makeProcessingSource(sourceId),
     );
-    mockListObjectsUseCase.execute.mockResolvedValue([minioFile]);
 
     await useCase.execute(new DeleteSourceCommand(sourceId));
 
-    expect(mockListObjectsUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ prefix: `${ORG_ID}/processing/${sourceId}/` }),
-    );
-    expect(mockDeleteObjectUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ objectName: minioFile }),
+    expect(mockProcessingFilesCleanupService.cleanup).toHaveBeenCalledWith(
+      sourceId,
     );
   });
 
@@ -146,7 +130,7 @@ describe('DeleteSourceUseCase', () => {
     await useCase.execute(new DeleteSourceCommand(sourceId));
 
     expect(mockDocumentProcessingPort.cancelJob).not.toHaveBeenCalled();
-    expect(mockListObjectsUseCase.execute).not.toHaveBeenCalled();
+    expect(mockProcessingFilesCleanupService.cleanup).not.toHaveBeenCalled();
   });
 
   it('should wrap repository errors into UnexpectedSourceError', async () => {

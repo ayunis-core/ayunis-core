@@ -38,6 +38,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
+import { cn } from '@/shared/lib/shadcn/utils';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import {
@@ -263,7 +264,12 @@ function DocumentItem({
       <span className="max-w-[200px] truncate">{doc.name}</span>
       {isProcessing && (
         <span
-          className={`text-xs ${isProcessingSlow ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}
+          className={cn(
+            'text-xs',
+            isProcessingSlow
+              ? 'text-amber-600 dark:text-amber-400'
+              : 'text-muted-foreground',
+          )}
         >
           {isProcessingSlow
             ? t('detail.documents.statusProcessingSlow')
