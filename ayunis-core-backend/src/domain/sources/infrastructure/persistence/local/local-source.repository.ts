@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { SourceStatus } from '../../../domain/source-status.enum';
 import { TextSource } from '../../../domain/sources/text-source.entity';
 import { DataSource } from '../../../domain/sources/data-source.entity';
@@ -47,13 +47,17 @@ export class LocalSourceRepository extends SourceRepository {
       return null;
     }
     if (record instanceof TextSourceRecord) {
-      // Only check that the details row exists — never load the `text`
-      // column, which can be very large, into application memory.
-      const detailsExist = await this.textSourceDetailsRepository.exists({
-        where: { source: { id } },
-      });
-      if (!detailsExist) {
-        return null;
+      // Processing sources don't have details yet — the async pipeline
+      // creates them. Skip the check so the consumer can load the source.
+      if (record.status !== SourceStatus.PROCESSING) {
+        // Only check that the details row exists — never load the `text`
+        // column, which can be very large, into application memory.
+        const detailsExist = await this.textSourceDetailsRepository.exists({
+          where: { source: { id } },
+        });
+        if (!detailsExist) {
+          return null;
+        }
       }
       return this.mapper.toDomain(record);
     }
@@ -160,6 +164,34 @@ export class LocalSourceRepository extends SourceRepository {
       return this.mapper.toDomain(savedSource);
     }
     throw new Error('Unsupported source type');
+  }
+
+  async updateStatusConditionally(
+    sourceId: UUID,
+    fromStatus: SourceStatus,
+    toStatus: SourceStatus,
+    updates?: Partial<{ processingError: string | null }>,
+  ): Promise<boolean> {
+    this.logger.log('updateStatusConditionally', {
+      sourceId,
+      fromStatus,
+      toStatus,
+    });
+    const qb = this.sourceRepository
+      .createQueryBuilder()
+      .update()
+      .set({
+        status: toStatus,
+        ...(updates?.processingError !== undefined
+          ? { processingError: updates.processingError }
+          : {}),
+      })
+      .where('id = :id AND status = :fromStatus', {
+        id: sourceId,
+        fromStatus,
+      });
+    const result = await qb.execute();
+    return (result.affected ?? 0) > 0;
   }
 
   async extractTextLines(

@@ -3,6 +3,7 @@ import { LocalSourceRepositoryModule } from './infrastructure/persistence/local/
 import { SplitterModule } from '../rag/splitters/splitter.module';
 import { RetrieverModule } from '../retrievers/retriever.module';
 import { IndexersModule } from '../rag/indexers/indexers.module';
+import { StorageModule } from '../storage/storage.module';
 import { DocumentProcessingModule } from './infrastructure/queue/document-processing.module';
 
 // Import all use cases
@@ -28,6 +29,7 @@ import { EnqueueDocumentProcessingUseCase } from './application/use-cases/enqueu
     RetrieverModule,
     SplitterModule,
     IndexersModule,
+    StorageModule,
     DocumentProcessingModule,
   ],
   providers: [

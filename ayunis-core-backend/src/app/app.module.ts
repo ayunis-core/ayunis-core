@@ -133,6 +133,8 @@ import { MetricsModule } from '../metrics/metrics.module';
           connection: {
             host: redis.host,
             port: redis.port,
+            maxRetriesPerRequest: 3,
+            connectTimeout: 5000,
           },
         };
       },

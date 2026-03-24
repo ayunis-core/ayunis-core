@@ -154,6 +154,7 @@
       "addUrlRetrievalFailed": "Die Website konnte nicht erreicht werden. Bitte überprüfen Sie, ob die URL korrekt ist und die Website erreichbar ist.",
       "addUrlUnsupportedContentType": "Diese URL verweist auf eine Datei (z. B. PDF) statt auf eine Website. Bitte laden Sie die Datei herunter und laden Sie sie direkt hoch.",
       "statusProcessing": "Wird verarbeitet…",
+      "statusProcessingSlow": "Verarbeitung dauert länger als erwartet…",
       "statusFailed": "Fehlgeschlagen",
       "retryUpload": "Entfernen und erneut hochladen",
       "removeSuccess": "Dokument erfolgreich entfernt!",
