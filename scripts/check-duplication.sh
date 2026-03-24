@@ -106,8 +106,8 @@ MATCHES=$(jq --argjson staged "$JQ_PATTERNS" --argjson known "$KNOWN_PAIRS" '
     ((.firstFile.name as $f | $staged | any(. == $f)) or
      (.secondFile.name as $s | $staged | any(. == $s)))
     and
-    ([.firstFile.name, .secondFile.name] | sort) as $pair |
-    ($known | any(. == $pair)) | not
+    (([.firstFile.name, .secondFile.name] | sort) as $pair |
+    ($known | any(. == $pair)) | not)
   )]
 ' "$REPORT_FILE")
 
