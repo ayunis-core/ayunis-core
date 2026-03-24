@@ -55,6 +55,7 @@
     "fileSourceTooManyPagesError": "Dokument hat zu viele Seiten zur Verarbeitung.",
     "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist beschäftigt. Bitte versuchen Sie es später erneut.",
     "fileSourceTimeoutError": "Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex.",
+    "documentTooLargeForChat": "Dieses Dokument ist zu groß für die Verarbeitung im Chat. Bitte laden Sie es stattdessen in eine Wissenssammlung hoch.",
     "fileSourceDeleteError": "Fehler beim Löschen der Datei",
     "sourceNotFound": "Datei nicht gefunden. Sie wurde möglicherweise gelöscht.",
     "uploadDocument": "Dokument hochladen",

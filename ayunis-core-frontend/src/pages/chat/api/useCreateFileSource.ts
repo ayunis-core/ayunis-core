@@ -68,6 +68,9 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
           case 'TOO_MANY_PAGES':
             showError(t('chatInput.fileSourceTooManyPagesError'));
             break;
+          case 'DOCUMENT_TOO_LARGE_FOR_CHAT':
+            showError(t('chatInput.documentTooLargeForChat'));
+            break;
           case 'SERVICE_BUSY':
             showError(t('chatInput.fileSourceServiceBusyError'));
             break;

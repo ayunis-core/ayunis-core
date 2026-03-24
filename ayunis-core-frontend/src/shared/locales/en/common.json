@@ -55,6 +55,7 @@
     "fileSourceTooManyPagesError": "Document has too many pages to process.",
     "fileSourceServiceBusyError": "The document processing service is busy. Please try again later.",
     "fileSourceTimeoutError": "Document processing timed out. The file may be too complex.",
+    "documentTooLargeForChat": "This document is too large to process in a chat. Please add it to a knowledge base instead.",
     "fileSourceDeleteError": "Error deleting file",
     "sourceNotFound": "File not found. It may have been deleted.",
     "uploadDocument": "Upload Document",

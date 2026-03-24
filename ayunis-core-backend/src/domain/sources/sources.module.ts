@@ -16,6 +16,7 @@ import { GetSourcesByIdsUseCase } from './application/use-cases/get-sources-by-i
 import { FindContentChunksByIdsUseCase } from './application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.use-case';
 import { ExtractTextLinesUseCase } from './application/use-cases/extract-text-lines/extract-text-lines.use-case';
 import { GetSourcesByKnowledgeBaseIdUseCase } from './application/use-cases/get-sources-by-knowledge-base-id/get-sources-by-knowledge-base-id.use-case';
+import { CreateSourcesFromFileUseCase } from './application/use-cases/create-sources-from-file/create-sources-from-file.use-case';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { GetSourcesByKnowledgeBaseIdUseCase } from './application/use-cases/get-
     FindContentChunksByIdsUseCase,
     ExtractTextLinesUseCase,
     GetSourcesByKnowledgeBaseIdUseCase,
+    CreateSourcesFromFileUseCase,
   ],
   exports: [
     LocalSourceRepositoryModule,
@@ -50,6 +52,7 @@ import { GetSourcesByKnowledgeBaseIdUseCase } from './application/use-cases/get-
     FindContentChunksByIdsUseCase,
     ExtractTextLinesUseCase,
     GetSourcesByKnowledgeBaseIdUseCase,
+    CreateSourcesFromFileUseCase,
   ],
 })
 export class SourcesModule {}
