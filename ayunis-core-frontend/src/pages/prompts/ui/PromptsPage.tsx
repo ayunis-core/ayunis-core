@@ -21,7 +21,7 @@ export default function PromptsPage({ prompts }: Readonly<PromptsPageProps>) {
         <FullScreenMessageLayout
           header={
             <ContentAreaHeader
-              title={t('page.title')}
+              breadcrumbs={[{ label: t('page.title') }]}
               action={<CreatePromptDialog />}
             />
           }
@@ -36,7 +36,7 @@ export default function PromptsPage({ prompts }: Readonly<PromptsPageProps>) {
       <ContentAreaLayout
         contentHeader={
           <ContentAreaHeader
-            title={t('page.title')}
+            breadcrumbs={[{ label: t('page.title') }]}
             action={<CreatePromptDialog />}
           />
         }

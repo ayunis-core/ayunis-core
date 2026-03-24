@@ -97,7 +97,10 @@ export function KnowledgeBasePage({
       <ContentAreaLayout
         contentHeader={
           <ContentAreaHeader
-            title={knowledgeBase.name}
+            breadcrumbs={[
+              { label: t('page.title'), href: '/knowledge-bases' },
+              { label: knowledgeBase.name },
+            ]}
             badge={
               isReadOnly ? (
                 <Badge variant="secondary">{t('shared.badge')}</Badge>

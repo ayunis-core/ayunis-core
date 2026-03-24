@@ -92,11 +92,22 @@ for f in "${STAGED_FILES[@]}"; do
 done
 JQ_PATTERNS+="]"
 
-# Extract clones where at least one side is a staged file
-MATCHES=$(jq --argjson staged "$JQ_PATTERNS" '
+# ── Load known-duplicate pairs to ignore ─────────────────────────────────────
+KNOWN_FILE="$PROJECT_DIR/.jscpd-known-duplicates.json"
+if [ -f "$KNOWN_FILE" ]; then
+  KNOWN_PAIRS=$(jq '[.[] | .files | sort]' "$KNOWN_FILE")
+else
+  KNOWN_PAIRS="[]"
+fi
+
+# Extract clones where at least one side is a staged file, excluding known pairs
+MATCHES=$(jq --argjson staged "$JQ_PATTERNS" --argjson known "$KNOWN_PAIRS" '
   [.duplicates[] | select(
-    (.firstFile.name as $f | $staged | any(. == $f)) or
-    (.secondFile.name as $s | $staged | any(. == $s))
+    ((.firstFile.name as $f | $staged | any(. == $f)) or
+     (.secondFile.name as $s | $staged | any(. == $s)))
+    and
+    ([.firstFile.name, .secondFile.name] | sort) as $pair |
+    ($known | any(. == $pair)) | not
   )]
 ' "$REPORT_FILE")
 

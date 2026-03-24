@@ -96,7 +96,10 @@ export function SkillPage({
       <ContentAreaLayout
         contentHeader={
           <ContentAreaHeader
-            title={skill.name}
+            breadcrumbs={[
+              { label: t('breadcrumb.skills'), href: '/skills' },
+              { label: skill.name },
+            ]}
             badge={
               isReadOnly ? (
                 <Badge variant="secondary">{t('shared.badge')}</Badge>

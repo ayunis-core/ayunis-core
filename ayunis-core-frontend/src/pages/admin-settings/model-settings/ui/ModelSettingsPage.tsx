@@ -29,7 +29,7 @@ export default function ModelSettingsPage() {
         <Alert>
           <Info className="h-4 w-4" />
           <AlertTitle>{t('models.teamHint.title')}</AlertTitle>
-          <AlertDescription>
+          <AlertDescription className="inline">
             <Trans
               i18nKey="models.teamHint.description"
               ns="admin-settings-models"

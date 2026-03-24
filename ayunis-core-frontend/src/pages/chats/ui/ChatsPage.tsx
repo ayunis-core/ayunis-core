@@ -41,7 +41,7 @@ export default function ChatsPage({
         <FullScreenMessageLayout
           header={
             <ContentAreaHeader
-              title={t('page.title')}
+              breadcrumbs={[{ label: t('page.title') }]}
               action={<HelpLink path="chat/" />}
             />
           }
@@ -57,7 +57,7 @@ export default function ChatsPage({
       <ContentAreaLayout
         contentHeader={
           <ContentAreaHeader
-            title={t('page.title')}
+            breadcrumbs={[{ label: t('page.title') }]}
             action={<HelpLink path="chat/" />}
           />
         }

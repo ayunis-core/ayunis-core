@@ -30,7 +30,7 @@ import {
 import { ChatsSidebarGroup } from './ChatsSidebarGroup';
 import { useMe } from '../api/useMe';
 import { useLogout } from '../api/useLogout';
-import { Link } from '@tanstack/react-router';
+import { Link, useLocation } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useNavigate } from '@tanstack/react-router';
@@ -51,6 +51,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navigate = useNavigate();
   const { closeMobileWithCleanup } = useSidebar();
   const featureToggles = useFeatureToggles();
+  const location = useLocation();
   useKeyboardShortcut(['j', 'Meta'], () => {
     void navigate({ to: '/chat' });
   });
@@ -126,7 +127,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenu>
             {items.map((item) => (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton
+                  asChild
+                  isActive={
+                    item.url === '/chat'
+                      ? location.pathname === '/chat'
+                      : location.pathname.startsWith(item.url)
+                  }
+                >
                   <Link to={item.url}>
                     <item.icon />
                     <span>{item.title}</span>

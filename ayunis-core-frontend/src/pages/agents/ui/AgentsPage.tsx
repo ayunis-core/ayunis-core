@@ -38,7 +38,7 @@ export default function AgentsPage({ agents }: Readonly<AgentsPageProps>) {
         <FullScreenMessageLayout
           header={
             <ContentAreaHeader
-              title={t('page.title')}
+              breadcrumbs={[{ label: t('page.title') }]}
               action={<CreateAgentDialog />}
             />
           }
@@ -54,7 +54,7 @@ export default function AgentsPage({ agents }: Readonly<AgentsPageProps>) {
       <ContentAreaLayout
         contentHeader={
           <ContentAreaHeader
-            title={t('page.title')}
+            breadcrumbs={[{ label: t('page.title') }]}
             action={<CreateAgentDialog />}
           />
         }

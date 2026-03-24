@@ -1,0 +1,9 @@
+[
+  {
+    "comment": "List pages share identical empty-state + tabs layout structure — intentional structural similarity",
+    "files": [
+      "src/pages/knowledge-bases/ui/KnowledgeBasesPage.tsx",
+      "src/pages/skills/ui/SkillsPage.tsx"
+    ]
+  }
+]

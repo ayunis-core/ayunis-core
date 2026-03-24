@@ -7,7 +7,7 @@
   "deleteError": "Prompt konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
   "notFound": "Prompt nicht gefunden. Er wurde möglicherweise gelöscht.",
   "page": {
-    "title": "Meine Prompts"
+    "title": "Prompts"
   },
   "emptyState": {
     "title": "Noch keine Prompts",

@@ -30,21 +30,36 @@ export default function ChatHeader({
 }: Readonly<ChatHeaderProps>) {
   const { t } = useTranslation('chat');
 
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: empty string should show "Untitled"
+  const displayTitle = threadTitle || t('chat.untitled');
+
+  const anonymousBadge = isAnonymous ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Badge variant="secondary">
+          <ShieldCheck className="h-3 w-3" />
+          {t('chat.anonymousMode')}
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent>{t('chat.anonymousModeTooltip')}</TooltipContent>
+    </Tooltip>
+  ) : undefined;
+
   return (
     <ContentAreaHeader
-      title={
-        <span
-          className="group inline-flex items-center gap-2"
-          data-testid="header"
-        >
-          {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: empty string should show "Untitled" */}
-          {threadTitle || t('chat.untitled')}
+      breadcrumbs={[
+        { label: t('chat.chats'), href: '/chats' },
+        { label: displayTitle },
+      ]}
+      badge={anonymousBadge}
+      action={
+        <>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 onClick={() => onRename()}
                 variant="ghost"
-                className="opacity-0 group-hover:opacity-100"
+                size="icon"
                 aria-label={t('chat.renameThread')}
               >
                 <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
@@ -52,37 +67,24 @@ export default function ChatHeader({
             </TooltipTrigger>
             <TooltipContent>{t('chat.renameThread')}</TooltipContent>
           </Tooltip>
-          {isAnonymous && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Badge variant="secondary">
-                  <ShieldCheck className="h-3 w-3" />
-                  {t('chat.anonymousMode')}
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent>{t('chat.anonymousModeTooltip')}</TooltipContent>
-            </Tooltip>
-          )}
-        </span>
-      }
-      action={
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-5 w-5 text-primary" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onRename(true)}>
-              <Pencil className="h-4 w-4" />
-              <span>{t('chat.renameThread')}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete} variant="destructive">
-              <Trash2 className="h-4 w-4" />
-              <span>{t('chat.deleteThread')}</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="h-5 w-5 text-primary" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onRename(true)}>
+                <Pencil className="h-4 w-4" />
+                <span>{t('chat.renameThread')}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onDelete} variant="destructive">
+                <Trash2 className="h-4 w-4" />
+                <span>{t('chat.deleteThread')}</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
       }
     />
   );
