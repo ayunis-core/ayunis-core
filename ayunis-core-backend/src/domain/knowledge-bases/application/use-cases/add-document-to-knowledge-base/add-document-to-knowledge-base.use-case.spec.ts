@@ -1,33 +1,51 @@
-jest.mock('@nestjs-cls/transactional', () => ({
-  Transactional:
-    () =>
-    (_target: unknown, _propertyName: string, descriptor: PropertyDescriptor) =>
-      descriptor,
-}));
-
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { AddDocumentToKnowledgeBaseUseCase } from './add-document-to-knowledge-base.use-case';
 import { AddDocumentToKnowledgeBaseCommand } from './add-document-to-knowledge-base.command';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
 import { KnowledgeBase } from '../../../domain/knowledge-base.entity';
 import { KnowledgeBaseNotFoundError } from '../../knowledge-bases.errors';
-import { CreateTextSourceUseCase } from 'src/domain/sources/application/use-cases/create-text-source/create-text-source.use-case';
+import { CreateProcessingSourceUseCase } from 'src/domain/sources/application/use-cases/create-processing-source/create-processing-source.use-case';
+import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import { EnqueueDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
+import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
+import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
+import { ContextService } from 'src/common/context/services/context.service';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import { TextType, FileType } from 'src/domain/sources/domain/source-type.enum';
+import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 
 describe('AddDocumentToKnowledgeBaseUseCase', () => {
   let useCase: AddDocumentToKnowledgeBaseUseCase;
-  let mockRepository: jest.Mocked<KnowledgeBaseRepository>;
-  let mockCreateTextSourceUseCase: jest.Mocked<CreateTextSourceUseCase>;
+  let mockKbRepository: jest.Mocked<KnowledgeBaseRepository>;
+  let mockCreateProcessingSourceUseCase: jest.Mocked<CreateProcessingSourceUseCase>;
+  let mockMarkSourceFailedUseCase: jest.Mocked<MarkSourceFailedUseCase>;
+  let mockUploadObjectUseCase: jest.Mocked<UploadObjectUseCase>;
+  let mockDeleteObjectUseCase: jest.Mocked<DeleteObjectUseCase>;
+  let mockEnqueueDocumentProcessingUseCase: jest.Mocked<EnqueueDocumentProcessingUseCase>;
+  let mockContextService: jest.Mocked<ContextService>;
+  let mockTxHost: { withTransaction: jest.Mock };
 
   const userId = '11111111-1111-1111-1111-111111111111' as UUID;
   const orgId = '22222222-2222-2222-2222-222222222222' as UUID;
   const knowledgeBaseId = '33333333-3333-3333-3333-333333333333' as UUID;
 
+  function buildProcessingSource(
+    overrides: Partial<{ name: string }> = {},
+  ): FileSource {
+    return new FileSource({
+      fileType: FileType.PDF,
+      name: overrides.name ?? 'Protokoll.pdf',
+      type: TextType.FILE,
+      status: SourceStatus.PROCESSING,
+      processingStartedAt: new Date(),
+    });
+  }
+
   beforeEach(async () => {
-    mockRepository = {
+    mockKbRepository = {
       findById: jest.fn(),
       findAllByUserId: jest.fn(),
       findByIds: jest.fn(),
@@ -38,42 +56,79 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
     } as jest.Mocked<KnowledgeBaseRepository>;
 
-    mockCreateTextSourceUseCase = {
+    mockCreateProcessingSourceUseCase = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<CreateTextSourceUseCase>;
+    } as unknown as jest.Mocked<CreateProcessingSourceUseCase>;
+
+    mockMarkSourceFailedUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<MarkSourceFailedUseCase>;
+
+    mockUploadObjectUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<UploadObjectUseCase>;
+
+    mockDeleteObjectUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<DeleteObjectUseCase>;
+
+    mockEnqueueDocumentProcessingUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<EnqueueDocumentProcessingUseCase>;
+
+    mockContextService = {
+      get: jest.fn().mockImplementation((key: string) => {
+        if (key === 'orgId') return orgId;
+        if (key === 'userId') return userId;
+        return undefined;
+      }),
+    } as unknown as jest.Mocked<ContextService>;
+
+    mockTxHost = {
+      withTransaction: jest
+        .fn()
+        .mockImplementation(async (fn: () => Promise<unknown>) => fn()),
+    };
+
+    // Default: return a processing source
+    mockCreateProcessingSourceUseCase.execute.mockImplementation(async (cmd) =>
+      buildProcessingSource({ name: cmd.fileName }),
+    );
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AddDocumentToKnowledgeBaseUseCase,
-        { provide: KnowledgeBaseRepository, useValue: mockRepository },
+        { provide: KnowledgeBaseRepository, useValue: mockKbRepository },
         {
-          provide: CreateTextSourceUseCase,
-          useValue: mockCreateTextSourceUseCase,
+          provide: CreateProcessingSourceUseCase,
+          useValue: mockCreateProcessingSourceUseCase,
         },
+        {
+          provide: MarkSourceFailedUseCase,
+          useValue: mockMarkSourceFailedUseCase,
+        },
+        { provide: UploadObjectUseCase, useValue: mockUploadObjectUseCase },
+        { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
+        {
+          provide: EnqueueDocumentProcessingUseCase,
+          useValue: mockEnqueueDocumentProcessingUseCase,
+        },
+        { provide: ContextService, useValue: mockContextService },
+        { provide: TransactionHost, useValue: mockTxHost },
       ],
     }).compile();
 
     useCase = module.get(AddDocumentToKnowledgeBaseUseCase);
   });
 
-  it('should create a file source and assign it to the knowledge base', async () => {
+  it('should create a PROCESSING source, upload to MinIO, and enqueue job', async () => {
     const knowledgeBase = new KnowledgeBase({
       id: knowledgeBaseId,
       name: 'Stadtratsprotokolle 2025',
       orgId,
       userId,
     });
-    mockRepository.findById.mockResolvedValue(knowledgeBase);
-
-    const createdSource = new FileSource({
-      fileType: FileType.PDF,
-      name: 'Protokoll_März_2025.pdf',
-      type: TextType.FILE,
-    });
-    mockCreateTextSourceUseCase.execute.mockResolvedValue(
-      createdSource as never,
-    );
-    mockRepository.assignSourceToKnowledgeBase.mockResolvedValue(undefined);
+    mockKbRepository.findById.mockResolvedValue(knowledgeBase);
 
     const command = new AddDocumentToKnowledgeBaseCommand({
       knowledgeBaseId,
@@ -85,11 +140,31 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
 
     const result = await useCase.execute(command);
 
-    expect(result).toBe(createdSource);
-    expect(mockCreateTextSourceUseCase.execute).toHaveBeenCalledTimes(1);
-    expect(mockRepository.assignSourceToKnowledgeBase).toHaveBeenCalledWith(
-      createdSource.id,
+    // Source created with PROCESSING status
+    expect(result.status).toBe(SourceStatus.PROCESSING);
+    expect(result.name).toBe('Protokoll_März_2025.pdf');
+
+    // Source created via use case
+    expect(mockCreateProcessingSourceUseCase.execute).toHaveBeenCalledTimes(1);
+
+    // Assigned to KB
+    expect(mockKbRepository.assignSourceToKnowledgeBase).toHaveBeenCalledWith(
+      result.id,
       knowledgeBaseId,
+    );
+
+    // File uploaded to MinIO
+    expect(mockUploadObjectUseCase.execute).toHaveBeenCalledTimes(1);
+
+    // Job enqueued
+    expect(mockEnqueueDocumentProcessingUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceId: result.id,
+        orgId,
+        userId,
+        fileName: 'Protokoll_März_2025.pdf',
+        fileType: 'application/pdf',
+      }),
     );
   });
 
@@ -101,7 +176,7 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
       orgId,
       userId: otherUserId,
     });
-    mockRepository.findById.mockResolvedValue(knowledgeBase);
+    mockKbRepository.findById.mockResolvedValue(knowledgeBase);
 
     const command = new AddDocumentToKnowledgeBaseCommand({
       knowledgeBaseId,
@@ -114,11 +189,11 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow(
       KnowledgeBaseNotFoundError,
     );
-    expect(mockCreateTextSourceUseCase.execute).not.toHaveBeenCalled();
+    expect(mockCreateProcessingSourceUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('should throw KnowledgeBaseNotFoundError when KB does not exist', async () => {
-    mockRepository.findById.mockResolvedValue(null);
+    mockKbRepository.findById.mockResolvedValue(null);
 
     const command = new AddDocumentToKnowledgeBaseCommand({
       knowledgeBaseId,
@@ -130,6 +205,66 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
 
     await expect(useCase.execute(command)).rejects.toThrow(
       KnowledgeBaseNotFoundError,
+    );
+  });
+
+  it('should mark source as FAILED when MinIO upload fails', async () => {
+    const knowledgeBase = new KnowledgeBase({
+      id: knowledgeBaseId,
+      name: 'Stadtratsprotokolle 2025',
+      orgId,
+      userId,
+    });
+    mockKbRepository.findById.mockResolvedValue(knowledgeBase);
+    mockUploadObjectUseCase.execute.mockRejectedValue(
+      new Error('MinIO connection refused'),
+    );
+
+    const command = new AddDocumentToKnowledgeBaseCommand({
+      knowledgeBaseId,
+      userId,
+      fileData: Buffer.from('fake pdf content'),
+      fileName: 'Protokoll.pdf',
+      fileType: 'application/pdf',
+    });
+
+    await expect(useCase.execute(command)).rejects.toThrow();
+
+    // Source should be marked as FAILED via use case
+    expect(mockMarkSourceFailedUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        errorMessage: 'Failed to upload file to storage',
+      }),
+    );
+  });
+
+  it('should mark source as FAILED when enqueue fails after MinIO upload', async () => {
+    const knowledgeBase = new KnowledgeBase({
+      id: knowledgeBaseId,
+      name: 'Stadtratsprotokolle 2025',
+      orgId,
+      userId,
+    });
+    mockKbRepository.findById.mockResolvedValue(knowledgeBase);
+    mockEnqueueDocumentProcessingUseCase.execute.mockRejectedValue(
+      new Error('Redis connection refused'),
+    );
+
+    const command = new AddDocumentToKnowledgeBaseCommand({
+      knowledgeBaseId,
+      userId,
+      fileData: Buffer.from('fake pdf content'),
+      fileName: 'Protokoll.pdf',
+      fileType: 'application/pdf',
+    });
+
+    await expect(useCase.execute(command)).rejects.toThrow();
+
+    // Source should be marked as FAILED via use case
+    expect(mockMarkSourceFailedUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        errorMessage: 'Failed to enqueue processing job',
+      }),
     );
   });
 });

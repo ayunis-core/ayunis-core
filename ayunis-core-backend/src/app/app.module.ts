@@ -55,8 +55,9 @@ import { marketplaceConfig } from '../config/marketplace.config';
 import toolsConfig from '../config/tools.config';
 import { featuresConfig } from '../config/features.config';
 import { metricsConfig } from '../config/metrics.config';
-import { redisConfig } from '../config/redis.config';
+import { redisConfig, type RedisConfig } from '../config/redis.config';
 import { gotenbergConfig } from '../config/gotenberg.config';
+import { BullModule } from '@nestjs/bullmq';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 import { IsRegistrationDisabledUseCase } from './application/use-cases/is-registration-disabled/is-registration-disabled.use-case';
 import { ClsModule } from 'nestjs-cls';
@@ -122,6 +123,18 @@ import { MetricsModule } from '../metrics/metrics.module';
         await dataSource.initialize();
 
         return dataSource;
+      },
+    }),
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const redis = configService.get<RedisConfig>('redis')!;
+        return {
+          connection: {
+            host: redis.host,
+            port: redis.port,
+          },
+        };
       },
     }),
     EventEmitterModule.forRoot(),
