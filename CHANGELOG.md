@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.22.1](https://github.com/ayunis-core/ayunis-core/compare/v1.22.0...v1.22.1) (2026-03-24)
+
+
+### Bug Fixes
+
+* **models:** handle null cost fields in model update validation (AYC-000) ([#486](https://github.com/ayunis-core/ayunis-core/issues/486)) ([994e637](https://github.com/ayunis-core/ayunis-core/commit/994e637e8aa524501492448e6604e1d7abd66b39))
+* **threads:** remove textSourceDetails eager loading from thread queries (AYC-000) ([#487](https://github.com/ayunis-core/ayunis-core/issues/487)) ([de5bd39](https://github.com/ayunis-core/ayunis-core/commit/de5bd39633217a0f7f2403c9e636b38d5e4ed0f2))
+
 ## [1.22.0](https://github.com/ayunis-core/ayunis-core/compare/v1.21.1...v1.22.0) (2026-03-23)
 
 
