@@ -46,6 +46,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { randomUUID } from 'crypto';
 import * as fs from 'fs';
+import { Transactional } from '@nestjs-cls/transactional';
 import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
 import { StartDocumentProcessingCommand } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.command';
 import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
@@ -234,7 +235,6 @@ export class SkillSourcesController {
     skillId: UUID,
     file: { originalname: string; mimetype: string; path: string },
   ): Promise<Skill> {
-    const sources: Source[] = [];
     const detectedType = detectFileType(file.mimetype, file.originalname);
 
     if (isDocumentFile(detectedType) || isPlainTextFile(detectedType)) {
@@ -252,27 +252,44 @@ export class SkillSourcesController {
           fileType: canonicalMimeType,
         }),
       );
-      sources.push(source);
+      return this.addSourceToSkillUseCase.execute(
+        new AddSourceToSkillCommand({ skillId, sourceId: source.id }),
+      );
     } else if (isCSVFile(detectedType)) {
-      const source = await this.createCsvSource(file);
-      sources.push(source);
+      return this.processCSVUpload(skillId, file);
     } else if (isSpreadsheetFile(detectedType)) {
-      const sheetSources = await this.createSpreadsheetSources(file);
-      sources.push(...sheetSources);
+      return this.processSpreadsheetUpload(skillId, file);
     } else {
       throw new UnsupportedFileTypeError(
         detectedType === 'unknown' ? file.originalname : detectedType,
         ['PDF', 'DOCX', 'PPTX', 'TXT', 'CSV', 'XLSX', 'XLS'],
       );
     }
+  }
 
+  @Transactional()
+  private async processCSVUpload(
+    skillId: UUID,
+    file: { originalname: string; path: string },
+  ): Promise<Skill> {
+    const source = await this.createCsvSource(file);
+    return this.addSourceToSkillUseCase.execute(
+      new AddSourceToSkillCommand({ skillId, sourceId: source.id }),
+    );
+  }
+
+  @Transactional()
+  private async processSpreadsheetUpload(
+    skillId: UUID,
+    file: { originalname: string; path: string },
+  ): Promise<Skill> {
+    const sources = await this.createSpreadsheetSources(file);
     let updatedSkill: Skill | undefined;
     for (const source of sources) {
       updatedSkill = await this.addSourceToSkillUseCase.execute(
         new AddSourceToSkillCommand({ skillId, sourceId: source.id }),
       );
     }
-
     return updatedSkill!;
   }
 
