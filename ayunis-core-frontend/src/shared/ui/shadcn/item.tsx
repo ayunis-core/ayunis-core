@@ -141,18 +141,33 @@ function ItemTitle({
   );
 }
 
+const itemDescriptionVariants = cva(
+  'line-clamp-2 text-sm leading-normal font-normal text-balance [&>a:hover]:text-primary [&>a]:underline [&>a]:underline-offset-4',
+  {
+    variants: {
+      variant: {
+        default: 'text-muted-foreground',
+        warning: 'text-warning',
+        destructive: 'text-destructive',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+    },
+  },
+);
+
 function ItemDescription({
   className,
+  variant = 'default',
   ...props
-}: React.ComponentProps<'p'>): React.ReactElement {
+}: React.ComponentProps<'p'> &
+  VariantProps<typeof itemDescriptionVariants>): React.ReactElement {
   return (
     <p
       data-slot="item-description"
-      className={cn(
-        'text-muted-foreground line-clamp-2 text-sm leading-normal font-normal text-balance',
-        '[&>a:hover]:text-primary [&>a]:underline [&>a]:underline-offset-4',
-        className,
-      )}
+      data-variant={variant}
+      className={cn(itemDescriptionVariants({ variant }), className)}
       {...props}
     />
   );
