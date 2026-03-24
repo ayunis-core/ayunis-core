@@ -7,12 +7,7 @@ import { AddDocumentToKnowledgeBaseCommand } from './add-document-to-knowledge-b
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
 import { KnowledgeBase } from '../../../domain/knowledge-base.entity';
 import { KnowledgeBaseNotFoundError } from '../../knowledge-bases.errors';
-import { CreateProcessingSourceUseCase } from 'src/domain/sources/application/use-cases/create-processing-source/create-processing-source.use-case';
-import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
-import { EnqueueDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
-import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
-import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
-import { ContextService } from 'src/common/context/services/context.service';
+import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
@@ -20,12 +15,7 @@ import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 describe('AddDocumentToKnowledgeBaseUseCase', () => {
   let useCase: AddDocumentToKnowledgeBaseUseCase;
   let mockKbRepository: jest.Mocked<KnowledgeBaseRepository>;
-  let mockCreateProcessingSourceUseCase: jest.Mocked<CreateProcessingSourceUseCase>;
-  let mockMarkSourceFailedUseCase: jest.Mocked<MarkSourceFailedUseCase>;
-  let mockUploadObjectUseCase: jest.Mocked<UploadObjectUseCase>;
-  let mockDeleteObjectUseCase: jest.Mocked<DeleteObjectUseCase>;
-  let mockEnqueueDocumentProcessingUseCase: jest.Mocked<EnqueueDocumentProcessingUseCase>;
-  let mockContextService: jest.Mocked<ContextService>;
+  let mockStartDocumentProcessingUseCase: jest.Mocked<StartDocumentProcessingUseCase>;
   let mockTxHost: { withTransaction: jest.Mock };
 
   const userId = '11111111-1111-1111-1111-111111111111' as UUID;
@@ -56,33 +46,9 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
     } as jest.Mocked<KnowledgeBaseRepository>;
 
-    mockCreateProcessingSourceUseCase = {
+    mockStartDocumentProcessingUseCase = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<CreateProcessingSourceUseCase>;
-
-    mockMarkSourceFailedUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<MarkSourceFailedUseCase>;
-
-    mockUploadObjectUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<UploadObjectUseCase>;
-
-    mockDeleteObjectUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<DeleteObjectUseCase>;
-
-    mockEnqueueDocumentProcessingUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<EnqueueDocumentProcessingUseCase>;
-
-    mockContextService = {
-      get: jest.fn().mockImplementation((key: string) => {
-        if (key === 'orgId') return orgId;
-        if (key === 'userId') return userId;
-        return undefined;
-      }),
-    } as unknown as jest.Mocked<ContextService>;
+    } as unknown as jest.Mocked<StartDocumentProcessingUseCase>;
 
     mockTxHost = {
       withTransaction: jest
@@ -91,7 +57,7 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
     };
 
     // Default: return a processing source
-    mockCreateProcessingSourceUseCase.execute.mockImplementation(async (cmd) =>
+    mockStartDocumentProcessingUseCase.execute.mockImplementation(async (cmd) =>
       buildProcessingSource({ name: cmd.fileName }),
     );
 
@@ -100,20 +66,9 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
         AddDocumentToKnowledgeBaseUseCase,
         { provide: KnowledgeBaseRepository, useValue: mockKbRepository },
         {
-          provide: CreateProcessingSourceUseCase,
-          useValue: mockCreateProcessingSourceUseCase,
+          provide: StartDocumentProcessingUseCase,
+          useValue: mockStartDocumentProcessingUseCase,
         },
-        {
-          provide: MarkSourceFailedUseCase,
-          useValue: mockMarkSourceFailedUseCase,
-        },
-        { provide: UploadObjectUseCase, useValue: mockUploadObjectUseCase },
-        { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
-        {
-          provide: EnqueueDocumentProcessingUseCase,
-          useValue: mockEnqueueDocumentProcessingUseCase,
-        },
-        { provide: ContextService, useValue: mockContextService },
         { provide: TransactionHost, useValue: mockTxHost },
       ],
     }).compile();
@@ -121,7 +76,7 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
     useCase = module.get(AddDocumentToKnowledgeBaseUseCase);
   });
 
-  it('should create a PROCESSING source, upload to MinIO, and enqueue job', async () => {
+  it('should validate KB, start document processing, and assign source to KB', async () => {
     const knowledgeBase = new KnowledgeBase({
       id: knowledgeBaseId,
       name: 'Stadtratsprotokolle 2025',
@@ -144,27 +99,19 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
     expect(result.status).toBe(SourceStatus.PROCESSING);
     expect(result.name).toBe('Protokoll_März_2025.pdf');
 
-    // Source created via use case
-    expect(mockCreateProcessingSourceUseCase.execute).toHaveBeenCalledTimes(1);
+    // StartDocumentProcessingUseCase called with correct params
+    expect(mockStartDocumentProcessingUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fileData: command.fileData,
+        fileName: 'Protokoll_März_2025.pdf',
+        fileType: 'application/pdf',
+      }),
+    );
 
     // Assigned to KB
     expect(mockKbRepository.assignSourceToKnowledgeBase).toHaveBeenCalledWith(
       result.id,
       knowledgeBaseId,
-    );
-
-    // File uploaded to MinIO
-    expect(mockUploadObjectUseCase.execute).toHaveBeenCalledTimes(1);
-
-    // Job enqueued
-    expect(mockEnqueueDocumentProcessingUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        sourceId: result.id,
-        orgId,
-        userId,
-        fileName: 'Protokoll_März_2025.pdf',
-        fileType: 'application/pdf',
-      }),
     );
   });
 
@@ -189,7 +136,7 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow(
       KnowledgeBaseNotFoundError,
     );
-    expect(mockCreateProcessingSourceUseCase.execute).not.toHaveBeenCalled();
+    expect(mockStartDocumentProcessingUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('should throw KnowledgeBaseNotFoundError when KB does not exist', async () => {
@@ -208,7 +155,7 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
     );
   });
 
-  it('should mark source as FAILED when MinIO upload fails', async () => {
+  it('should propagate StartDocumentProcessingUseCase failure', async () => {
     const knowledgeBase = new KnowledgeBase({
       id: knowledgeBaseId,
       name: 'Stadtratsprotokolle 2025',
@@ -216,7 +163,7 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
       userId,
     });
     mockKbRepository.findById.mockResolvedValue(knowledgeBase);
-    mockUploadObjectUseCase.execute.mockRejectedValue(
+    mockStartDocumentProcessingUseCase.execute.mockRejectedValue(
       new Error('MinIO connection refused'),
     );
 
@@ -230,15 +177,11 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
 
     await expect(useCase.execute(command)).rejects.toThrow();
 
-    // Source should be marked as FAILED via use case
-    expect(mockMarkSourceFailedUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        errorMessage: 'Failed to upload file to storage',
-      }),
-    );
+    // Source should NOT be assigned to KB
+    expect(mockKbRepository.assignSourceToKnowledgeBase).not.toHaveBeenCalled();
   });
 
-  it('should mark source as FAILED when enqueue fails after MinIO upload', async () => {
+  it('should leave orphaned source when KB assignment fails after processing starts', async () => {
     const knowledgeBase = new KnowledgeBase({
       id: knowledgeBaseId,
       name: 'Stadtratsprotokolle 2025',
@@ -246,8 +189,8 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
       userId,
     });
     mockKbRepository.findById.mockResolvedValue(knowledgeBase);
-    mockEnqueueDocumentProcessingUseCase.execute.mockRejectedValue(
-      new Error('Redis connection refused'),
+    mockKbRepository.assignSourceToKnowledgeBase.mockRejectedValue(
+      new Error('DB constraint violation'),
     );
 
     const command = new AddDocumentToKnowledgeBaseCommand({
@@ -258,13 +201,10 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
       fileType: 'application/pdf',
     });
 
+    // Should throw — orphaned source will be cleaned by stale processing cron
     await expect(useCase.execute(command)).rejects.toThrow();
 
-    // Source should be marked as FAILED via use case
-    expect(mockMarkSourceFailedUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        errorMessage: 'Failed to enqueue processing job',
-      }),
-    );
+    // Processing was started (source created)
+    expect(mockStartDocumentProcessingUseCase.execute).toHaveBeenCalledTimes(1);
   });
 });

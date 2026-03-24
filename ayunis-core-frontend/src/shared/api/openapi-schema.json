@@ -9810,17 +9810,6 @@
           "resetUrl"
         ]
       },
-      "TriggerPasswordResetResponseDto": {
-        "type": "object",
-        "properties": {
-          "resetUrl": {
-            "type": "string",
-            "description": "The password reset URL sent to the user",
-            "example": "https://app.ayunis.de/password/reset?token=eyJhbGci..."
-          }
-        },
-        "required": ["resetUrl"]
-      },
       "CreateUserDto": {
         "type": "object",
         "properties": {
@@ -13376,12 +13365,35 @@
             "type": "string",
             "description": "The type of source",
             "example": "file"
+          },
+          "status": {
+            "type": "string",
+            "description": "Processing status of the source",
+            "enum": [
+              "processing",
+              "ready",
+              "failed"
+            ],
+            "example": "ready"
+          },
+          "processingError": {
+            "type": "string",
+            "description": "Error message if processing failed",
+            "example": "OCR extraction timed out"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "The date and time when the source was created",
+            "example": "2025-01-15T10:00:00.000Z",
+            "format": "date-time"
           }
         },
         "required": [
           "id",
           "name",
-          "type"
+          "type",
+          "status",
+          "createdAt"
         ]
       },
       "CreateSkillTemplateDto": {
