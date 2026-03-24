@@ -82,7 +82,11 @@
     "description": "Dokumente direkt zu dieser Fähigkeit hochladen",
     "adding": "Wird hinzugefügt...",
     "addSource": "Quelle hinzufügen",
-    "disabledTooltip": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein."
+    "disabledTooltip": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein.",
+    "statusProcessing": "wird verarbeitet…",
+    "statusProcessingSlow": "wird noch verarbeitet…",
+    "statusFailed": "fehlgeschlagen",
+    "retryUpload": "Versuchen Sie, die Datei erneut hochzuladen."
   },
   "knowledgeBases": {
     "title": "Wissenssammlungen",

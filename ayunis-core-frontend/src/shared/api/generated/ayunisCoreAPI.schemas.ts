@@ -2906,6 +2906,19 @@ export interface UpdateSkillDto {
   instructions: string;
 }
 
+/**
+ * Processing status of the source
+ */
+export type SkillSourceResponseDtoStatus = typeof SkillSourceResponseDtoStatus[keyof typeof SkillSourceResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SkillSourceResponseDtoStatus = {
+  processing: 'processing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
 export interface SkillSourceResponseDto {
   /** The unique identifier of the source */
   id: string;
@@ -2913,6 +2926,12 @@ export interface SkillSourceResponseDto {
   name: string;
   /** The type of source */
   type: string;
+  /** Processing status of the source */
+  status: SkillSourceResponseDtoStatus;
+  /** Error message if processing failed */
+  processingError?: string;
+  /** The date and time when the source was created */
+  createdAt: string;
 }
 
 /**
