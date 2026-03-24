@@ -318,11 +318,7 @@ function DocumentItemDescription({
 }>) {
   if (isProcessing) {
     return (
-      <ItemDescription
-        className={
-          isProcessingSlow ? 'text-amber-600 dark:text-amber-400' : undefined
-        }
-      >
+      <ItemDescription variant={isProcessingSlow ? 'warning' : 'default'}>
         {isProcessingSlow
           ? t('detail.documents.statusProcessingSlow')
           : t('detail.documents.statusProcessing')}
@@ -333,7 +329,7 @@ function DocumentItemDescription({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <ItemDescription className="text-destructive cursor-help">
+          <ItemDescription variant="destructive" className="cursor-help">
             {t('detail.documents.statusFailed')}
           </ItemDescription>
         </TooltipTrigger>
