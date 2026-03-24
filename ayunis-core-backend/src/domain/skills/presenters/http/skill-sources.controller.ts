@@ -47,14 +47,13 @@ import { extname } from 'path';
 import { randomUUID } from 'crypto';
 import * as fs from 'fs';
 import { Transactional } from '@nestjs-cls/transactional';
-import { CreateFileSourceCommand } from 'src/domain/sources/application/use-cases/create-text-source/create-text-source.command';
-import { CreateTextSourceUseCase } from 'src/domain/sources/application/use-cases/create-text-source/create-text-source.use-case';
+import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
+import { StartDocumentProcessingCommand } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.command';
 import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { Skill } from '../../domain/skill.entity';
 import {
-  DetectedFileType,
   detectFileType,
   getCanonicalMimeType,
   isDocumentFile,
@@ -83,7 +82,7 @@ export class SkillSourcesController {
     private readonly removeSourceFromSkillUseCase: RemoveSourceFromSkillUseCase,
     private readonly listSkillSourcesUseCase: ListSkillSourcesUseCase,
     private readonly skillDtoMapper: SkillDtoMapper,
-    private readonly createTextSourceUseCase: CreateTextSourceUseCase,
+    private readonly startDocumentProcessingUseCase: StartDocumentProcessingUseCase,
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
     private readonly skillAccessService: SkillAccessService,
   ) {}
@@ -159,7 +158,6 @@ export class SkillSourcesController {
       }),
     }),
   )
-  @Transactional()
   async addFileSource(
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) skillId: UUID,
@@ -237,54 +235,62 @@ export class SkillSourcesController {
     skillId: UUID,
     file: { originalname: string; mimetype: string; path: string },
   ): Promise<Skill> {
-    const sources: Source[] = [];
     const detectedType = detectFileType(file.mimetype, file.originalname);
 
     if (isDocumentFile(detectedType) || isPlainTextFile(detectedType)) {
-      const source = await this.createDocumentSource(file, detectedType);
-      sources.push(source);
+      const fileData = fs.readFileSync(file.path);
+      const canonicalMimeType = getCanonicalMimeType(detectedType);
+      if (!canonicalMimeType) {
+        throw new Error(
+          `Unable to determine MIME type for detected file type: ${detectedType}`,
+        );
+      }
+      const source = await this.startDocumentProcessingUseCase.execute(
+        new StartDocumentProcessingCommand({
+          fileData,
+          fileName: file.originalname,
+          fileType: canonicalMimeType,
+        }),
+      );
+      return this.addSourceToSkillUseCase.execute(
+        new AddSourceToSkillCommand({ skillId, sourceId: source.id }),
+      );
     } else if (isCSVFile(detectedType)) {
-      const source = await this.createCsvSource(file);
-      sources.push(source);
+      return this.processCSVUpload(skillId, file);
     } else if (isSpreadsheetFile(detectedType)) {
-      const sheetSources = await this.createSpreadsheetSources(file);
-      sources.push(...sheetSources);
+      return this.processSpreadsheetUpload(skillId, file);
     } else {
       throw new UnsupportedFileTypeError(
         detectedType === 'unknown' ? file.originalname : detectedType,
         ['PDF', 'DOCX', 'PPTX', 'TXT', 'CSV', 'XLSX', 'XLS'],
       );
     }
+  }
 
+  @Transactional()
+  private async processCSVUpload(
+    skillId: UUID,
+    file: { originalname: string; path: string },
+  ): Promise<Skill> {
+    const source = await this.createCsvSource(file);
+    return this.addSourceToSkillUseCase.execute(
+      new AddSourceToSkillCommand({ skillId, sourceId: source.id }),
+    );
+  }
+
+  @Transactional()
+  private async processSpreadsheetUpload(
+    skillId: UUID,
+    file: { originalname: string; path: string },
+  ): Promise<Skill> {
+    const sources = await this.createSpreadsheetSources(file);
     let updatedSkill: Skill | undefined;
     for (const source of sources) {
       updatedSkill = await this.addSourceToSkillUseCase.execute(
         new AddSourceToSkillCommand({ skillId, sourceId: source.id }),
       );
     }
-
     return updatedSkill!;
-  }
-
-  private async createDocumentSource(
-    file: { originalname: string; path: string },
-    detectedType: DetectedFileType,
-  ): Promise<Source> {
-    const fileData = fs.readFileSync(file.path);
-    const canonicalMimeType = getCanonicalMimeType(detectedType);
-    if (!canonicalMimeType) {
-      throw new Error(
-        `Unable to determine MIME type for detected file type: ${detectedType}`,
-      );
-    }
-
-    return this.createTextSourceUseCase.execute(
-      new CreateFileSourceCommand({
-        fileType: canonicalMimeType,
-        fileData: fileData,
-        fileName: file.originalname,
-      }),
-    );
   }
 
   private async createCsvSource(file: {

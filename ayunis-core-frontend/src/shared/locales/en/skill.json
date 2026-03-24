@@ -85,7 +85,11 @@
     "description": "Upload documents directly to this skill",
     "adding": "Adding...",
     "addSource": "Add Source",
-    "disabledTooltip": "To upload documents, an embedding model must be enabled."
+    "disabledTooltip": "To upload documents, an embedding model must be enabled.",
+    "statusProcessing": "processing…",
+    "statusProcessingSlow": "still processing…",
+    "statusFailed": "failed",
+    "retryUpload": "Try uploading the file again."
   },
   "knowledgeBases": {
     "title": "Knowledge Bases",

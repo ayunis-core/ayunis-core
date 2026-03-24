@@ -23,6 +23,7 @@ import { CreateProcessingSourceUseCase } from './application/use-cases/create-pr
 import { MarkSourceFailedUseCase } from './application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import { EnqueueDocumentProcessingUseCase } from './application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
 import { SourceProcessingCleanupService } from './application/services/source-processing-cleanup.service';
+import { StartDocumentProcessingUseCase } from './application/use-cases/start-document-processing/start-document-processing.use-case';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { SourceProcessingCleanupService } from './application/services/source-pr
     CreateProcessingSourceUseCase,
     MarkSourceFailedUseCase,
     EnqueueDocumentProcessingUseCase,
+    StartDocumentProcessingUseCase,
   ],
   exports: [
     LocalSourceRepositoryModule,
@@ -69,6 +71,7 @@ import { SourceProcessingCleanupService } from './application/services/source-pr
     CreateProcessingSourceUseCase,
     MarkSourceFailedUseCase,
     EnqueueDocumentProcessingUseCase,
+    StartDocumentProcessingUseCase,
   ],
 })
 export class SourcesModule {}
