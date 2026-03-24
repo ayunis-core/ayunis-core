@@ -195,12 +195,18 @@ services:
         condition: service_healthy
       anonymize:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      gotenberg:
+        condition: service_healthy
     env_file:
       - ./ayunis-core-backend/.env
       - ./ayunis-core-frontend/.env
     environment:
       CODE_EXECUTION_SERVICE_URL: http://code-execution:8080
       ANONYMIZE_SERVICE_URL: http://anonymize:8000
+      GOTENBERG_URL: http://gotenberg:3000
+      REDIS_HOST: redis
     volumes:
       - app-uploads:/app/uploads
     networks:
@@ -226,6 +232,53 @@ services:
       resources:
         limits:
           memory: 1G
+          cpus: "2"
+        reservations:
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    container_name: ayunis-redis-prod
+    restart: unless-stopped
+    command: redis-server --maxmemory 128mb --maxmemory-policy noeviction
+    networks:
+      - ayunis-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.25"
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: ayunis-gotenberg-prod
+    restart: unless-stopped
+    networks:
+      - ayunis-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: 2G
           cpus: "2"
         reservations:
           memory: 512M

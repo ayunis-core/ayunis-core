@@ -11361,6 +11361,19 @@
               "system"
             ]
           },
+          "status": {
+            "type": "string",
+            "description": "Processing status of the source",
+            "enum": [
+              "processing",
+              "ready",
+              "failed"
+            ]
+          },
+          "processingError": {
+            "type": "string",
+            "description": "Error message if processing failed"
+          },
           "createdAt": {
             "type": "string",
             "description": "Creation timestamp"
@@ -11376,6 +11389,7 @@
           "name",
           "type",
           "createdBy",
+          "status",
           "createdAt",
           "updatedAt"
         ]
@@ -11412,6 +11426,19 @@
               "system"
             ]
           },
+          "status": {
+            "type": "string",
+            "description": "Processing status of the source",
+            "enum": [
+              "processing",
+              "ready",
+              "failed"
+            ]
+          },
+          "processingError": {
+            "type": "string",
+            "description": "Error message if processing failed"
+          },
           "createdAt": {
             "type": "string",
             "description": "Creation timestamp"
@@ -11445,6 +11472,7 @@
           "name",
           "type",
           "createdBy",
+          "status",
           "createdAt",
           "updatedAt",
           "textType",
@@ -11483,6 +11511,19 @@
               "system"
             ]
           },
+          "status": {
+            "type": "string",
+            "description": "Processing status of the source",
+            "enum": [
+              "processing",
+              "ready",
+              "failed"
+            ]
+          },
+          "processingError": {
+            "type": "string",
+            "description": "Error message if processing failed"
+          },
           "createdAt": {
             "type": "string",
             "description": "Creation timestamp"
@@ -11510,6 +11551,7 @@
           "name",
           "type",
           "createdBy",
+          "status",
           "createdAt",
           "updatedAt",
           "textType",
@@ -11547,6 +11589,19 @@
               "llm",
               "system"
             ]
+          },
+          "status": {
+            "type": "string",
+            "description": "Processing status of the source",
+            "enum": [
+              "processing",
+              "ready",
+              "failed"
+            ]
+          },
+          "processingError": {
+            "type": "string",
+            "description": "Error message if processing failed"
           },
           "createdAt": {
             "type": "string",
@@ -11594,6 +11649,7 @@
           "name",
           "type",
           "createdBy",
+          "status",
           "createdAt",
           "updatedAt",
           "dataType",
@@ -13084,6 +13140,21 @@
             "example": "2025-01-15T10:00:00.000Z",
             "format": "date-time"
           },
+          "status": {
+            "type": "string",
+            "description": "The processing status of the document",
+            "enum": [
+              "processing",
+              "ready",
+              "failed"
+            ],
+            "example": "ready"
+          },
+          "processingError": {
+            "type": "string",
+            "description": "Error message if processing failed (only present when status is failed)",
+            "example": "OCR extraction timed out"
+          },
           "textType": {
             "type": "string",
             "description": "The text source subtype (e.g. file, web)",
@@ -13105,7 +13176,8 @@
           "type",
           "createdBy",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "status"
         ]
       },
       "KnowledgeBaseDocumentListResponseDto": {

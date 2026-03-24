@@ -4,6 +4,7 @@ import {
   TextType,
 } from 'src/domain/sources/domain/source-type.enum';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 
 export class KnowledgeBaseDocumentResponseDto {
   @ApiProperty({
@@ -49,6 +50,20 @@ export class KnowledgeBaseDocumentResponseDto {
     format: 'date-time',
   })
   updatedAt: string;
+
+  @ApiProperty({
+    description: 'The processing status of the document',
+    enum: SourceStatus,
+    example: SourceStatus.READY,
+  })
+  status: SourceStatus;
+
+  @ApiPropertyOptional({
+    description:
+      'Error message if processing failed (only present when status is failed)',
+    example: 'OCR extraction timed out',
+  })
+  processingError?: string;
 
   @ApiPropertyOptional({
     description: 'The text source subtype (e.g. file, web)',

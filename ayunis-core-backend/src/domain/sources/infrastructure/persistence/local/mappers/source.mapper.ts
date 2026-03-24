@@ -58,6 +58,9 @@ export class SourceMapper {
           name: record.name,
           type: TextType.FILE,
           knowledgeBaseId: record.knowledgeBaseId,
+          status: record.status,
+          processingError: record.processingError,
+          processingStartedAt: record.processingStartedAt,
           createdAt: record.createdAt,
           updatedAt: record.updatedAt,
           createdBy: record.createdBy,
@@ -69,6 +72,9 @@ export class SourceMapper {
           name: record.name,
           type: TextType.WEB,
           knowledgeBaseId: record.knowledgeBaseId,
+          status: record.status,
+          processingError: record.processingError,
+          processingStartedAt: record.processingStartedAt,
           createdAt: record.createdAt,
           updatedAt: record.updatedAt,
           createdBy: record.createdBy,
@@ -85,6 +91,9 @@ export class SourceMapper {
       data: details.data,
       name: record.name,
       knowledgeBaseId: record.knowledgeBaseId,
+      status: record.status,
+      processingError: record.processingError,
+      processingStartedAt: record.processingStartedAt,
       createdBy: record.createdBy,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
@@ -144,6 +153,9 @@ export class SourceMapper {
     record.id = source.id;
     record.name = source.name;
     record.createdBy = source.createdBy;
+    record.status = source.status;
+    record.processingError = source.processingError;
+    record.processingStartedAt = source.processingStartedAt;
     record.knowledgeBaseId = source.knowledgeBaseId;
     record.textType = source.textType;
     record.fileType = source instanceof FileSource ? source.fileType : null;
@@ -219,6 +231,9 @@ export class SourceMapper {
     record.id = source.id;
     record.name = source.name;
     record.createdBy = source.createdBy;
+    record.status = source.status;
+    record.processingError = source.processingError;
+    record.processingStartedAt = source.processingStartedAt;
     record.knowledgeBaseId = source.knowledgeBaseId;
     record.dataType = source.dataType;
     record.createdAt = source.createdAt;

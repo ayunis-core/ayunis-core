@@ -1654,6 +1654,19 @@ export const SourceResponseDtoCreatedBy = {
   system: 'system',
 } as const;
 
+/**
+ * Processing status of the source
+ */
+export type SourceResponseDtoStatus = typeof SourceResponseDtoStatus[keyof typeof SourceResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SourceResponseDtoStatus = {
+  processing: 'processing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
 export interface SourceResponseDto {
   /** Unique identifier for the source */
   id: string;
@@ -1665,6 +1678,10 @@ export interface SourceResponseDto {
   type: SourceResponseDtoType;
   /** Creator of the source */
   createdBy: SourceResponseDtoCreatedBy;
+  /** Processing status of the source */
+  status: SourceResponseDtoStatus;
+  /** Error message if processing failed */
+  processingError?: string;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -1694,6 +1711,19 @@ export const FileSourceResponseDtoCreatedBy = {
   user: 'user',
   llm: 'llm',
   system: 'system',
+} as const;
+
+/**
+ * Processing status of the source
+ */
+export type FileSourceResponseDtoStatus = typeof FileSourceResponseDtoStatus[keyof typeof FileSourceResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FileSourceResponseDtoStatus = {
+  processing: 'processing',
+  ready: 'ready',
+  failed: 'failed',
 } as const;
 
 /**
@@ -1733,6 +1763,10 @@ export interface FileSourceResponseDto {
   type: FileSourceResponseDtoType;
   /** Creator of the source */
   createdBy: FileSourceResponseDtoCreatedBy;
+  /** Processing status of the source */
+  status: FileSourceResponseDtoStatus;
+  /** Error message if processing failed */
+  processingError?: string;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -1769,6 +1803,19 @@ export const UrlSourceResponseDtoCreatedBy = {
 } as const;
 
 /**
+ * Processing status of the source
+ */
+export type UrlSourceResponseDtoStatus = typeof UrlSourceResponseDtoStatus[keyof typeof UrlSourceResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UrlSourceResponseDtoStatus = {
+  processing: 'processing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+/**
  * Type of text
  */
 export type UrlSourceResponseDtoTextType = typeof UrlSourceResponseDtoTextType[keyof typeof UrlSourceResponseDtoTextType];
@@ -1791,6 +1838,10 @@ export interface UrlSourceResponseDto {
   type: UrlSourceResponseDtoType;
   /** Creator of the source */
   createdBy: UrlSourceResponseDtoCreatedBy;
+  /** Processing status of the source */
+  status: UrlSourceResponseDtoStatus;
+  /** Error message if processing failed */
+  processingError?: string;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -1827,6 +1878,19 @@ export const CSVDataSourceResponseDtoCreatedBy = {
 } as const;
 
 /**
+ * Processing status of the source
+ */
+export type CSVDataSourceResponseDtoStatus = typeof CSVDataSourceResponseDtoStatus[keyof typeof CSVDataSourceResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CSVDataSourceResponseDtoStatus = {
+  processing: 'processing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+/**
  * Type of data
  */
 export type CSVDataSourceResponseDtoDataType = typeof CSVDataSourceResponseDtoDataType[keyof typeof CSVDataSourceResponseDtoDataType];
@@ -1858,6 +1922,10 @@ export interface CSVDataSourceResponseDto {
   type: CSVDataSourceResponseDtoType;
   /** Creator of the source */
   createdBy: CSVDataSourceResponseDtoCreatedBy;
+  /** Processing status of the source */
+  status: CSVDataSourceResponseDtoStatus;
+  /** Error message if processing failed */
+  processingError?: string;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -2720,6 +2788,19 @@ export const KnowledgeBaseDocumentResponseDtoCreatedBy = {
 } as const;
 
 /**
+ * The processing status of the document
+ */
+export type KnowledgeBaseDocumentResponseDtoStatus = typeof KnowledgeBaseDocumentResponseDtoStatus[keyof typeof KnowledgeBaseDocumentResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const KnowledgeBaseDocumentResponseDtoStatus = {
+  processing: 'processing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+/**
  * The text source subtype (e.g. file, web)
  */
 export type KnowledgeBaseDocumentResponseDtoTextType = typeof KnowledgeBaseDocumentResponseDtoTextType[keyof typeof KnowledgeBaseDocumentResponseDtoTextType];
@@ -2744,6 +2825,10 @@ export interface KnowledgeBaseDocumentResponseDto {
   createdAt: string;
   /** The date and time when the document was last updated */
   updatedAt: string;
+  /** The processing status of the document */
+  status: KnowledgeBaseDocumentResponseDtoStatus;
+  /** Error message if processing failed (only present when status is failed) */
+  processingError?: string;
   /** The text source subtype (e.g. file, web) */
   textType?: KnowledgeBaseDocumentResponseDtoTextType;
   /** The URL of the source (only for web sources) */
