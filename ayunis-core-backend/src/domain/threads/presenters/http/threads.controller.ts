@@ -76,6 +76,8 @@ import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { CreateSourcesFromFileUseCase } from 'src/domain/sources/application/use-cases/create-sources-from-file/create-sources-from-file.use-case';
 import { CreateSourcesFromFileCommand } from 'src/domain/sources/application/use-cases/create-sources-from-file/create-sources-from-file.command';
+import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
+import { PreflightCheckCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.command';
 
 @ApiTags('threads')
 @Controller('threads')
@@ -92,6 +94,7 @@ export class ThreadsController {
     private readonly removeSourceFromThreadUseCase: RemoveSourceFromThreadUseCase,
     private readonly getThreadSourcesUseCase: GetThreadSourcesUseCase,
     private readonly createSourcesFromFileUseCase: CreateSourcesFromFileUseCase,
+    private readonly preflightCheckUseCase: PreflightCheckUseCase,
     private readonly getSourceByIdUseCase: GetSourceByIdUseCase,
     private readonly sourceDtoMapper: SourceDtoMapper,
     private readonly getThreadDtoMapper: GetThreadDtoMapper,
@@ -363,6 +366,15 @@ export class ThreadsController {
   ): Promise<void> {
     this.logger.log('addFileSource', { threadId, fileName: file.originalname });
     try {
+      const fileData = fs.readFileSync(file.path);
+      await this.preflightCheckUseCase.execute(
+        new PreflightCheckCommand({
+          fileData,
+          fileName: file.originalname,
+          fileType: file.mimetype,
+        }),
+      );
+
       const sources = await this.createSourcesFromFileUseCase.execute(
         new CreateSourcesFromFileCommand({
           filePath: file.path,

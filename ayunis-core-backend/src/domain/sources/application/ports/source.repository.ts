@@ -3,6 +3,7 @@ import type { TextSource } from '../../domain/sources/text-source.entity';
 import type { DataSource } from '../../domain/sources/data-source.entity';
 import type { Source } from '../../domain/source.entity';
 import type { TextSourceContentChunk } from '../../domain/source-content-chunk.entity';
+import type { SourceStatus } from '../../domain/source-status.enum';
 
 export abstract class SourceRepository {
   abstract findById(id: UUID): Promise<TextSource | DataSource | null>;
@@ -14,6 +15,13 @@ export abstract class SourceRepository {
   ): Promise<TextSource>;
   abstract findStaleProcessingSources(threshold: Date): Promise<Source[]>;
   abstract save(source: Source): Promise<Source>;
+  /** Atomically update status only if the current status matches `fromStatus`. Returns true if the row was updated. */
+  abstract updateStatusConditionally(
+    sourceId: UUID,
+    fromStatus: SourceStatus,
+    toStatus: SourceStatus,
+    updates?: Partial<{ processingError: string | null }>,
+  ): Promise<boolean>;
   abstract extractTextLines(
     sourceId: UUID,
     startLine: number,

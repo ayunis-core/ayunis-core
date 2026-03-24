@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import type { UUID } from 'crypto';
 import {
   DocumentProcessingPort,
   type DocumentProcessingJobData,
@@ -25,6 +26,7 @@ export class DocumentProcessingProducer extends DocumentProcessingPort {
     });
 
     await this.queue.add('process-document', data, {
+      jobId: data.sourceId,
       attempts: 3,
       backoff: {
         type: 'exponential',
@@ -33,5 +35,30 @@ export class DocumentProcessingProducer extends DocumentProcessingPort {
       removeOnComplete: 100,
       removeOnFail: 200,
     });
+  }
+
+  async cancelJob(sourceId: UUID): Promise<void> {
+    try {
+      const job = await this.queue.getJob(sourceId);
+      if (!job) {
+        this.logger.debug('No job found to cancel', { sourceId });
+        return;
+      }
+
+      const state = await job.getState();
+      if (state === 'active') {
+        // Active jobs can't be removed — let the consumer's guard handle it.
+        this.logger.debug('Job is active, skipping removal', { sourceId });
+        return;
+      }
+
+      await job.remove();
+      this.logger.log('Cancelled queued job', { sourceId, state });
+    } catch (err) {
+      this.logger.warn('Best-effort job cancellation failed', {
+        sourceId,
+        error: err as Error,
+      });
+    }
   }
 }
