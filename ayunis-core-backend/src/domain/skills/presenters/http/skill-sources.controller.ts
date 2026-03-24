@@ -46,7 +46,6 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { randomUUID } from 'crypto';
 import * as fs from 'fs';
-import { Transactional } from '@nestjs-cls/transactional';
 import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
 import { StartDocumentProcessingCommand } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.command';
 import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
@@ -158,7 +157,6 @@ export class SkillSourcesController {
       }),
     }),
   )
-  @Transactional()
   async addFileSource(
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) skillId: UUID,
