@@ -121,10 +121,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
       );
       queryBuilder.leftJoinAndSelect('sourceAssignments.source', 'source');
       queryBuilder.leftJoinAndSelect(
-        'source.textSourceDetails',
-        'textSourceDetails',
-      );
-      queryBuilder.leftJoinAndSelect(
         'source.dataSourceDetails',
         'dataSourceDetails',
       );
@@ -336,7 +332,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
       .innerJoin('users', 'user', 'user.id = thread.userId')
       .leftJoinAndSelect('thread.sourceAssignments', 'sourceAssignments')
       .leftJoinAndSelect('sourceAssignments.source', 'source')
-      .leftJoinAndSelect('source.textSourceDetails', 'textSourceDetails')
       .leftJoinAndSelect('source.dataSourceDetails', 'dataSourceDetails')
       .where('user.orgId = :orgId', { orgId })
       .getMany();
