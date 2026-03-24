@@ -1,3 +1,4 @@
+import { Fragment } from 'react/jsx-runtime';
 import {
   Card,
   CardContent,
@@ -5,7 +6,15 @@ import {
   CardTitle,
   CardDescription,
 } from '@/shared/ui/shadcn/card';
-import { Badge } from '@/shared/ui/shadcn/badge';
+import {
+  Item,
+  ItemContent,
+  ItemTitle,
+  ItemActions,
+  ItemMedia,
+  ItemGroup,
+  ItemSeparator,
+} from '@/shared/ui/shadcn/item';
 import { FileText, Loader, X } from 'lucide-react';
 import { Input } from '@/shared/ui/shadcn/input';
 import { Button } from '@/shared/ui/shadcn/button';
@@ -90,24 +99,33 @@ export default function KnowledgeBaseCard({
             </div>
           )}
           {!isLoadingSources && sources.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {sources.map((source) => (
-                <Badge
-                  key={source.id}
-                  variant="secondary"
-                  className="flex items-center gap-2 px-3 py-1"
-                  onClick={
-                    disabled ? undefined : () => handleFileRemove(source.id)
-                  }
-                >
-                  <FileText className="h-4 w-4" />
-                  <span className="text-sm">{source.name}</span>
-                  {!disabled && (
-                    <X className="h-3 w-3 cursor-pointer hover:text-destructive" />
-                  )}
-                </Badge>
+            <ItemGroup>
+              {sources.map((source, index) => (
+                <Fragment key={source.id}>
+                  <Item>
+                    <ItemMedia variant="icon">
+                      <FileText className="h-4 w-4" />
+                    </ItemMedia>
+                    <ItemContent>
+                      <ItemTitle>{source.name}</ItemTitle>
+                    </ItemContent>
+                    {!disabled && (
+                      <ItemActions>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleFileRemove(source.id)}
+                          disabled={removeSourcePending}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </ItemActions>
+                    )}
+                  </Item>
+                  {index < sources.length - 1 && <ItemSeparator />}
+                </Fragment>
               ))}
-            </div>
+            </ItemGroup>
           )}
 
           {/* Add Source Button */}
