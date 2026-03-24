@@ -86,8 +86,8 @@
     "adding": "Adding...",
     "addSource": "Add Source",
     "disabledTooltip": "To upload documents, an embedding model must be enabled.",
-    "statusProcessing": "processing…",
-    "statusProcessingSlow": "still processing…",
+    "statusProcessing": "processing… You can safely navigate away.",
+    "statusProcessingSlow": "still processing… You can safely navigate away.",
     "statusFailed": "failed",
     "retryUpload": "Try uploading the file again."
   },

@@ -86,8 +86,8 @@
     "adding": "Wird hinzugefügt...",
     "addSource": "Quelle hinzufügen",
     "disabledTooltip": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein.",
-    "statusProcessing": "wird verarbeitet…",
-    "statusProcessingSlow": "wird noch verarbeitet…",
+    "statusProcessing": "wird verarbeitet… Sie können diese Seite verlassen.",
+    "statusProcessingSlow": "wird noch verarbeitet… Sie können diese Seite verlassen.",
     "statusFailed": "fehlgeschlagen",
     "retryUpload": "Versuchen Sie, die Datei erneut hochzuladen."
   },
