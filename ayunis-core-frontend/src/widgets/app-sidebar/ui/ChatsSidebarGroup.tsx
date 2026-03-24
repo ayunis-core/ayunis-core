@@ -177,7 +177,10 @@ export function ChatsSidebarGroup() {
               <SidebarMenu>
                 {threads.map((thread) => (
                   <SidebarMenuItem key={thread.id} data-testid="chat">
-                    <SidebarMenuButton asChild>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={params.threadId === thread.id}
+                    >
                       <Link
                         to={'/chats/$threadId'}
                         params={{ threadId: thread.id }}

@@ -17,7 +17,10 @@ export default function SuperAdminSettingsLayout({
 }: Readonly<SuperAdminSettingsLayoutProps>) {
   const { t } = useTranslation('super-admin-settings-layout');
   const contentHeader = (
-    <ContentAreaHeader title={pageTitle ?? t('layout.title')} action={action} />
+    <ContentAreaHeader
+      breadcrumbs={[{ label: pageTitle ?? t('layout.title') }]}
+      action={action}
+    />
   );
 
   return (

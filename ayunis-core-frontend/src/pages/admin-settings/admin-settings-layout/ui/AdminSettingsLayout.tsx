@@ -17,7 +17,10 @@ export default function SettingsLayout({
 }: Readonly<SettingsLayoutProps>) {
   const { t } = useTranslation('admin-settings-layout');
   const contentHeader = (
-    <ContentAreaHeader title={title ?? t('layout.title')} action={action} />
+    <ContentAreaHeader
+      breadcrumbs={[{ label: title ?? t('layout.title') }]}
+      action={action}
+    />
   );
 
   return (

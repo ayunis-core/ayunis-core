@@ -44,7 +44,10 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
       <AppLayout>
         <FullScreenMessageLayout
           header={
-            <ContentAreaHeader title={t('page.title')} action={headerAction} />
+            <ContentAreaHeader
+              breadcrumbs={[{ label: t('page.title') }]}
+              action={headerAction}
+            />
           }
         >
           <SkillsEmptyState />
@@ -57,7 +60,10 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
     <AppLayout>
       <ContentAreaLayout
         contentHeader={
-          <ContentAreaHeader title={t('page.title')} action={headerAction} />
+          <ContentAreaHeader
+            breadcrumbs={[{ label: t('page.title') }]}
+            action={headerAction}
+          />
         }
         contentArea={
           <Tabs defaultValue="personal" className="w-full">

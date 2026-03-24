@@ -63,7 +63,10 @@ export function AgentPage({
       <ContentAreaLayout
         contentHeader={
           <ContentAreaHeader
-            title={agent.name}
+            breadcrumbs={[
+              { label: t('breadcrumb.agents'), href: '/agents' },
+              { label: agent.name },
+            ]}
             badge={
               isReadOnly ? (
                 <Badge variant="secondary">{t('shared.badge')}</Badge>
