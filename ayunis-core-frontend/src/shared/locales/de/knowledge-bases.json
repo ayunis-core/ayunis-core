@@ -142,6 +142,7 @@
       "upload": "Hochladen",
       "empty": "Noch keine Dokumente hochgeladen. Laden Sie eine PDF- oder DOCX-Datei hoch, um zu beginnen.",
       "uploadSuccess": "Dokument erfolgreich hochgeladen!",
+      "uploadAccepted": "Dokument hochgeladen — wird im Hintergrund verarbeitet...",
       "uploadError": "Dokument konnte nicht hochgeladen werden. Bitte versuchen Sie es erneut.",
       "addUrl": "URL hinzufügen",
       "urlPlaceholder": "https://beispiel.de",
