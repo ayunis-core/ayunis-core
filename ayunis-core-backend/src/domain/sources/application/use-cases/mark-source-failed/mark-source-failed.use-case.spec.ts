@@ -27,6 +27,7 @@ describe('MarkSourceFailedUseCase', () => {
       findContentChunksByIds: jest.fn(),
       delete: jest.fn(),
       deleteMany: jest.fn(),
+      updateStatusConditionally: jest.fn(),
     } as jest.Mocked<SourceRepository>;
 
     const module: TestingModule = await Test.createTestingModule({

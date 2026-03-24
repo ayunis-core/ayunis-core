@@ -65,9 +65,14 @@ export class DocumentProcessingConsumer extends WorkerHost {
         if (!source) return;
 
         const { text, chunks } = await this.downloadAndExtractText(job.data);
+
+        // Guard: re-check the source still exists and is PROCESSING
+        // before writing content. Prevents resurrection of deleted sources.
+        if (!(await this.isSourceStillProcessing(sourceId, minioPath))) return;
+
         await this.updateSourceWithContent(source, text, chunks);
         await this.indexChunks(sourceId, orgId, chunks);
-        await this.markSourceReady(source, minioPath);
+        await this.markSourceReady(sourceId, minioPath);
 
         this.logger.log('Document processing complete', {
           sourceId,
@@ -162,6 +167,22 @@ export class DocumentProcessingConsumer extends WorkerHost {
     return { text, chunks };
   }
 
+  private async isSourceStillProcessing(
+    sourceId: UUID,
+    minioPath: string,
+  ): Promise<boolean> {
+    const source = await this.sourceRepository.findById(sourceId);
+    if (source?.status !== SourceStatus.PROCESSING) {
+      this.logger.warn('Source deleted or status changed mid-processing', {
+        sourceId,
+        found: !!source,
+      });
+      await this.cleanupMinioFile(minioPath);
+      return false;
+    }
+    return true;
+  }
+
   private async updateSourceWithContent(
     source: TextSource,
     text: string,
@@ -171,12 +192,22 @@ export class DocumentProcessingConsumer extends WorkerHost {
   }
 
   private async markSourceReady(
-    source: TextSource,
+    sourceId: UUID,
     minioPath: string,
   ): Promise<void> {
-    source.status = SourceStatus.READY;
-    source.processingError = null;
-    await this.sourceRepository.save(source);
+    const updated = await this.sourceRepository.updateStatusConditionally(
+      sourceId,
+      SourceStatus.PROCESSING,
+      SourceStatus.READY,
+      { processingError: null },
+    );
+    if (!updated) {
+      this.logger.warn(
+        'Conditional update to READY failed — source was deleted or status changed',
+        { sourceId },
+      );
+      await this.cleanupPartialIndex(sourceId);
+    }
     await this.cleanupMinioFile(minioPath);
   }
 
