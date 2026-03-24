@@ -56,17 +56,9 @@ import {
   useAddUrl,
   useRemoveDocument,
 } from '../api';
+import { isValidUrl } from '../lib/isValidUrl';
 
 const ACCEPTED_FILE_TYPES = '.pdf,.docx,.pptx,.txt,.md';
-
-function isValidUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
 
 export default function KnowledgeBaseDocumentsCard({
   knowledgeBaseId,
