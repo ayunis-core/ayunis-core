@@ -154,6 +154,7 @@
       "addUrlRetrievalFailed": "The website could not be reached. Please check that the URL is correct and the website is accessible.",
       "addUrlUnsupportedContentType": "This URL points to a file (e.g. PDF) instead of a website. Please download the file and upload it directly.",
       "statusProcessing": "Processing…",
+      "statusProcessingSlow": "Taking longer than expected…",
       "statusFailed": "Failed",
       "retryUpload": "Remove and re-upload",
       "removeSuccess": "Document removed successfully!",

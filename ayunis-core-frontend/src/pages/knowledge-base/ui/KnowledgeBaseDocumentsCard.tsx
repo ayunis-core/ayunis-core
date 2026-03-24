@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -24,13 +24,22 @@ import {
   KnowledgeBaseDocumentResponseDtoStatus,
   type KnowledgeBaseDocumentResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { Upload, X, FileText, Globe, Loader2, AlertCircle } from 'lucide-react';
+import {
+  Upload,
+  X,
+  FileText,
+  Globe,
+  Loader2,
+  AlertCircle,
+  Clock,
+} from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
 import { useTranslation } from 'react-i18next';
+import { cn } from '@/shared/lib/shadcn/utils';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import {
   useKnowledgeBaseDocuments,
@@ -210,6 +219,9 @@ function DocumentsContent({
   );
 }
 
+/** Processing sources older than this are shown with a slow-processing warning. */
+const SLOW_PROCESSING_THRESHOLD_MS = 3 * 60 * 1000; // 3 minutes
+
 function DocumentItem({
   doc,
   removeDocument,
@@ -226,6 +238,16 @@ function DocumentItem({
   const isProcessing =
     doc.status === KnowledgeBaseDocumentResponseDtoStatus.processing;
   const isFailed = doc.status === KnowledgeBaseDocumentResponseDtoStatus.failed;
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!isProcessing) return;
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, [isProcessing]);
+
+  const isProcessingSlow =
+    isProcessing &&
+    now - new Date(doc.createdAt).getTime() > SLOW_PROCESSING_THRESHOLD_MS;
 
   return (
     <Badge
@@ -236,12 +258,17 @@ function DocumentItem({
       <DocumentItemIcon
         isWeb={isWeb}
         isProcessing={isProcessing}
+        isProcessingSlow={isProcessingSlow}
         isFailed={isFailed}
       />
       <span className="max-w-[200px] truncate">{doc.name}</span>
       {isProcessing && (
-        <span className="text-xs text-muted-foreground">
-          {t('detail.documents.statusProcessing')}
+        <span
+          className={cn('text-xs', isProcessingSlow ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground')}
+        >
+          {isProcessingSlow
+            ? t('detail.documents.statusProcessingSlow')
+            : t('detail.documents.statusProcessing')}
         </span>
       )}
       {isFailed && (
@@ -275,12 +302,19 @@ function DocumentItem({
 function DocumentItemIcon({
   isWeb,
   isProcessing,
+  isProcessingSlow,
   isFailed,
 }: Readonly<{
   isWeb: boolean;
   isProcessing: boolean;
+  isProcessingSlow: boolean;
   isFailed: boolean;
 }>) {
+  if (isProcessingSlow) {
+    return (
+      <Clock className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+    );
+  }
   if (isProcessing) {
     return <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />;
   }

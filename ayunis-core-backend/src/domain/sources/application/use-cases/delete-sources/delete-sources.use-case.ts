@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import { SourceRepository } from '../../ports/source.repository';
 import { DeleteSourcesCommand } from './delete-sources.command';
+import { SourceProcessingCleanupService } from '../../services/source-processing-cleanup.service';
+import { SourceStatus } from '../../../domain/source-status.enum';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedSourceError } from '../../sources.errors';
 import { Transactional } from '@nestjs-cls/transactional';
@@ -13,6 +16,7 @@ export class DeleteSourcesUseCase {
   constructor(
     private readonly indexRegistry: IndexRegistry,
     private readonly sourceRepository: SourceRepository,
+    private readonly sourceProcessingCleanupService: SourceProcessingCleanupService,
   ) {}
 
   @Transactional()
@@ -23,6 +27,9 @@ export class DeleteSourcesUseCase {
 
     this.logger.debug(`Deleting ${command.sourceIds.length} sources`);
     try {
+      // Cancel jobs and clean MinIO for any processing sources
+      await this.cancelProcessingSources(command.sourceIds);
+
       // Batch delete indexed content from all indices
       const indices = this.indexRegistry.getAll();
       for (const index of indices) {
@@ -45,6 +52,16 @@ export class DeleteSourcesUseCase {
       throw new UnexpectedSourceError('Error deleting sources', {
         error: error as Error,
       });
+    }
+  }
+
+  private async cancelProcessingSources(sourceIds: UUID[]): Promise<void> {
+    const sources = await this.sourceRepository.findByIds(sourceIds);
+    const processing = sources.filter(
+      (s) => s.status === SourceStatus.PROCESSING,
+    );
+    for (const source of processing) {
+      await this.sourceProcessingCleanupService.cancelAndCleanup(source.id);
     }
   }
 }
