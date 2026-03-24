@@ -30,18 +30,20 @@ export default function ModelSettingsPage() {
           <Info className="h-4 w-4" />
           <AlertTitle>{t('models.teamHint.title')}</AlertTitle>
           <AlertDescription>
-            <Trans
-              i18nKey="models.teamHint.description"
-              ns="admin-settings-models"
-              components={{
-                teamsLink: (
-                  <Link
-                    to="/admin-settings/teams"
-                    className="font-medium underline underline-offset-4 hover:text-primary"
-                  />
-                ),
-              }}
-            />
+            <span>
+              <Trans
+                i18nKey="models.teamHint.description"
+                ns="admin-settings-models"
+                components={{
+                  teamsLink: (
+                    <Link
+                      to="/admin-settings/teams"
+                      className="font-medium underline underline-offset-4 hover:text-primary"
+                    />
+                  ),
+                }}
+              />
+            </span>
           </AlertDescription>
         </Alert>
         <OrgDefaultModelCard

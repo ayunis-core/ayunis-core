@@ -14,7 +14,9 @@ export default function SettingsLayout({
   children,
   action,
 }: Readonly<SettingsLayoutProps>) {
-  const contentHeader = <ContentAreaHeader title={title} action={action} />;
+  const contentHeader = (
+    <ContentAreaHeader breadcrumbs={[{ label: title }]} action={action} />
+  );
 
   return (
     <AppLayout sidebar={<SettingsSidebar />}>

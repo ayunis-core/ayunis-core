@@ -1,5 +1,6 @@
 {
   "chat": {
+    "chats": "Chats",
     "untitled": "Ohne Titel",
     "anonymousMode": "Anonym",
     "anonymousModeTooltip": "Dieser Chat ist im anonymen Modus. Personenbezogene Daten werden automatisch entfernt.",

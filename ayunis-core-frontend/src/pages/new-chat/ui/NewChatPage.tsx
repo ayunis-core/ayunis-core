@@ -161,7 +161,9 @@ export default function NewChatPage({
   if (!isSystemPromptLoading && !isSystemPromptError && !hasSystemPrompt) {
     return (
       <NewChatPageLayout
-        header={<ContentAreaHeader title={t('newChat.newChat')} />}
+        header={
+          <ContentAreaHeader breadcrumbs={[{ label: t('newChat.newChat') }]} />
+        }
       >
         <PersonalizationCard
           onSkip={skip}
@@ -180,7 +182,7 @@ export default function NewChatPage({
     <NewChatPageLayout
       header={
         <ContentAreaHeader
-          title={t('newChat.newChat')}
+          breadcrumbs={[{ label: t('newChat.newChat') }]}
           action={<HelpLink path="" />}
         />
       }

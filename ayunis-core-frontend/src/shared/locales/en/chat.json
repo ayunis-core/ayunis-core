@@ -1,5 +1,6 @@
 {
   "chat": {
+    "chats": "Chats",
     "untitled": "Untitled",
     "anonymousMode": "Anonymous",
     "anonymousModeTooltip": "This chat is in anonymous mode. Personal data is automatically redacted.",

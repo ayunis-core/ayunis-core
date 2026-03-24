@@ -7,7 +7,7 @@
   "deleteError": "Failed to delete prompt. Please try again.",
   "notFound": "Prompt not found. It may have been deleted.",
   "page": {
-    "title": "My Prompts"
+    "title": "Prompts"
   },
   "emptyState": {
     "title": "No prompts yet",

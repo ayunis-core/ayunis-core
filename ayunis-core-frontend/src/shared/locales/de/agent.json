@@ -1,4 +1,7 @@
 {
+  "breadcrumb": {
+    "agents": "Agenten"
+  },
   "shared": {
     "badge": "Geteilt"
   },
