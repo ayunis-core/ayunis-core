@@ -10,6 +10,7 @@ import { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases
 import { GetSourcesByIdsQuery } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.query';
 import { SourceAlreadyAssignedError } from 'src/domain/threads/application/threads.errors';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { UUID } from 'crypto';
 
@@ -46,10 +47,21 @@ export class SkillActivationService {
 
     const skill = await this.skillAccessService.findAccessibleSkill(skillId);
 
-    // Copy skill's sources to the thread
-    const sources = await this.getSourcesByIdsUseCase.execute(
+    // Copy skill's sources to the thread (skip non-ready sources)
+    const allSources = await this.getSourcesByIdsUseCase.execute(
       new GetSourcesByIdsQuery(skill.sourceIds),
     );
+    const sources = allSources.filter((source) => {
+      if (source.status !== SourceStatus.READY) {
+        this.logger.warn('Skipping non-ready source', {
+          sourceId: source.id,
+          status: source.status,
+          threadId: thread.id,
+        });
+        return false;
+      }
+      return true;
+    });
     for (const source of sources) {
       try {
         await this.addSourceToThreadUseCase.execute(
