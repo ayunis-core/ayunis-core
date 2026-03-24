@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Fragment } from 'react/jsx-runtime';
 import {
   Card,
   CardContent,
@@ -10,7 +11,16 @@ import {
 import { Button } from '@/shared/ui/shadcn/button';
 import { Input } from '@/shared/ui/shadcn/input';
 import { Label } from '@/shared/ui/shadcn/label';
-import { Badge } from '@/shared/ui/shadcn/badge';
+import {
+  Item,
+  ItemContent,
+  ItemTitle,
+  ItemDescription,
+  ItemActions,
+  ItemMedia,
+  ItemGroup,
+  ItemSeparator,
+} from '@/shared/ui/shadcn/item';
 import {
   Dialog,
   DialogContent,
@@ -39,7 +49,6 @@ import {
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/shared/lib/shadcn/utils';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import {
   useKnowledgeBaseDocuments,
@@ -205,17 +214,19 @@ function DocumentsContent({
     );
   }
   return (
-    <div className="flex flex-wrap gap-2">
-      {documents.map((doc) => (
-        <DocumentItem
-          key={doc.id}
-          doc={doc}
-          removeDocument={removeDocument}
-          isRemoving={isRemoving}
-          disabled={disabled}
-        />
+    <ItemGroup>
+      {documents.map((doc, index) => (
+        <Fragment key={doc.id}>
+          <DocumentItem
+            doc={doc}
+            removeDocument={removeDocument}
+            isRemoving={isRemoving}
+            disabled={disabled}
+          />
+          {index < documents.length - 1 && <ItemSeparator />}
+        </Fragment>
       ))}
-    </div>
+    </ItemGroup>
   );
 }
 
@@ -250,53 +261,92 @@ function DocumentItem({
     now - new Date(doc.createdAt).getTime() > SLOW_PROCESSING_THRESHOLD_MS;
 
   return (
-    <Badge
-      variant={isFailed ? 'destructive' : 'secondary'}
-      className="flex items-center gap-1.5 py-1.5 px-3"
-      title={isWeb ? (doc.url ?? undefined) : undefined}
-    >
-      <DocumentItemIcon
-        isWeb={isWeb}
-        isProcessing={isProcessing}
-        isProcessingSlow={isProcessingSlow}
-        isFailed={isFailed}
-      />
-      <span className="max-w-[200px] truncate">{doc.name}</span>
-      {isProcessing && (
-        <span
-          className={cn('text-xs', isProcessingSlow ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground')}
-        >
-          {isProcessingSlow
-            ? t('detail.documents.statusProcessingSlow')
-            : t('detail.documents.statusProcessing')}
-        </span>
-      )}
-      {isFailed && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="text-xs cursor-help">
-              {t('detail.documents.statusFailed')}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            {doc.processingError ?? t('detail.documents.retryUpload')}
-          </TooltipContent>
-        </Tooltip>
-      )}
+    <Item>
+      <ItemMedia variant="icon">
+        <DocumentItemIcon
+          isWeb={isWeb}
+          isProcessing={isProcessing}
+          isProcessingSlow={isProcessingSlow}
+          isFailed={isFailed}
+        />
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle>{doc.name}</ItemTitle>
+        <DocumentItemDescription
+          isWeb={isWeb}
+          url={doc.url}
+          isProcessing={isProcessing}
+          isProcessingSlow={isProcessingSlow}
+          isFailed={isFailed}
+          processingError={doc.processingError}
+          t={t}
+        />
+      </ItemContent>
       {!disabled && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => removeDocument(doc.id)}
-          disabled={isRemoving}
-          className="ml-1 h-5 w-5 rounded-full"
-        >
-          <X className="h-3 w-3" />
-        </Button>
+        <ItemActions>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => removeDocument(doc.id)}
+            disabled={isRemoving}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </ItemActions>
       )}
-    </Badge>
+    </Item>
   );
+}
+
+function DocumentItemDescription({
+  isWeb,
+  url,
+  isProcessing,
+  isProcessingSlow,
+  isFailed,
+  processingError,
+  t,
+}: Readonly<{
+  isWeb: boolean;
+  url: string | null | undefined;
+  isProcessing: boolean;
+  isProcessingSlow: boolean;
+  isFailed: boolean;
+  processingError: string | null | undefined;
+  t: (key: string) => string;
+}>) {
+  if (isProcessing) {
+    return (
+      <ItemDescription
+        className={
+          isProcessingSlow ? 'text-amber-600 dark:text-amber-400' : undefined
+        }
+      >
+        {isProcessingSlow
+          ? t('detail.documents.statusProcessingSlow')
+          : t('detail.documents.statusProcessing')}
+      </ItemDescription>
+    );
+  }
+  if (isFailed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <ItemDescription className="text-destructive cursor-help">
+            {t('detail.documents.statusFailed')}
+          </ItemDescription>
+        </TooltipTrigger>
+        <TooltipContent>
+          {processingError ?? t('detail.documents.retryUpload')}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+  if (isWeb && url) {
+    return <ItemDescription>{url}</ItemDescription>;
+  }
+  return null;
 }
 
 function DocumentItemIcon({
