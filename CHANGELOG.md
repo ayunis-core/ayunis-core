@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.23.0](https://github.com/ayunis-core/ayunis-core/compare/v1.22.1...v1.23.0) (2026-03-24)
+
+
+### Features
+
+* **skills:** process uploads async (AYC-108) ([#492](https://github.com/ayunis-core/ayunis-core/issues/492)) ([8108245](https://github.com/ayunis-core/ayunis-core/commit/810824560e7d50d878811a821569527626eb13a3))
+* **sources:** process uploads async (AYC-108) ([#458](https://github.com/ayunis-core/ayunis-core/issues/458)) ([7d55889](https://github.com/ayunis-core/ayunis-core/commit/7d5588905aaf41378a43b9c833e66f34b91acd5d))
+* **ui:** improve visual cues for navigation (AYC-000) ([#493](https://github.com/ayunis-core/ayunis-core/issues/493)) ([f2ded29](https://github.com/ayunis-core/ayunis-core/commit/f2ded2994524cb742bfb9542c134f6b92a8d19d7))
+
+
+### Bug Fixes
+
+* **sources:** fix async create and delete chain (AYC-108) ([#490](https://github.com/ayunis-core/ayunis-core/issues/490)) ([53c117e](https://github.com/ayunis-core/ayunis-core/commit/53c117ee9876d87d792599b1eba9bf7554ec3dea))
+
 ## [1.22.1](https://github.com/ayunis-core/ayunis-core/compare/v1.22.0...v1.22.1) (2026-03-24)
 
 
