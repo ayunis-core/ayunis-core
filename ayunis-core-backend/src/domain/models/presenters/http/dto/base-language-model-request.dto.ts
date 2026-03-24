@@ -8,7 +8,9 @@ import {
   Min,
   ValidateIf,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { nullToUndefined } from 'src/common/util/null-to-undefined';
 
 function hasAnyCostField(o: BaseLanguageModelRequestDto): boolean {
   return o.inputTokenCost !== undefined || o.outputTokenCost !== undefined;
@@ -79,6 +81,7 @@ export abstract class BaseLanguageModelRequestDto {
     example: 3,
     minimum: 0,
   })
+  @Transform(nullToUndefined)
   @ValidateIf((o: BaseLanguageModelRequestDto) => hasAnyCostField(o))
   @IsNumber()
   @Min(0)
@@ -89,6 +92,7 @@ export abstract class BaseLanguageModelRequestDto {
     example: 15,
     minimum: 0,
   })
+  @Transform(nullToUndefined)
   @ValidateIf((o: BaseLanguageModelRequestDto) => hasAnyCostField(o))
   @IsNumber()
   @Min(0)

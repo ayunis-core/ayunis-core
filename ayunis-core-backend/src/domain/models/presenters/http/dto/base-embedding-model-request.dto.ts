@@ -8,8 +8,10 @@ import {
   Min,
   ValidateIf,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
+import { nullToUndefined } from 'src/common/util/null-to-undefined';
 
 function hasAnyCostField(o: BaseEmbeddingModelRequestDto): boolean {
   return o.inputTokenCost !== undefined || o.outputTokenCost !== undefined;
@@ -60,6 +62,7 @@ export abstract class BaseEmbeddingModelRequestDto {
     example: 0.13,
     minimum: 0,
   })
+  @Transform(nullToUndefined)
   @ValidateIf((o: BaseEmbeddingModelRequestDto) => hasAnyCostField(o))
   @IsNumber()
   @Min(0)
@@ -70,6 +73,7 @@ export abstract class BaseEmbeddingModelRequestDto {
     example: 0,
     minimum: 0,
   })
+  @Transform(nullToUndefined)
   @ValidateIf((o: BaseEmbeddingModelRequestDto) => hasAnyCostField(o))
   @IsNumber()
   @Min(0)
