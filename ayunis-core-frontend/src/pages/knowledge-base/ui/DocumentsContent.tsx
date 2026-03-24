@@ -1,4 +1,6 @@
+import { Fragment } from 'react/jsx-runtime';
 import type { KnowledgeBaseDocumentResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { ItemGroup, ItemSeparator } from '@/shared/ui/shadcn/item';
 import { Loader2 } from 'lucide-react';
 import { DocumentItem } from './DocumentItem';
 
@@ -32,16 +34,18 @@ export function DocumentsContent({
     );
   }
   return (
-    <div className="flex flex-wrap gap-2">
-      {documents.map((doc) => (
-        <DocumentItem
-          key={doc.id}
-          doc={doc}
-          removeDocument={removeDocument}
-          isRemoving={isRemoving}
-          disabled={disabled}
-        />
+    <ItemGroup>
+      {documents.map((doc, index) => (
+        <Fragment key={doc.id}>
+          <DocumentItem
+            doc={doc}
+            removeDocument={removeDocument}
+            isRemoving={isRemoving}
+            disabled={disabled}
+          />
+          {index < documents.length - 1 && <ItemSeparator />}
+        </Fragment>
       ))}
-    </div>
+    </ItemGroup>
   );
 }

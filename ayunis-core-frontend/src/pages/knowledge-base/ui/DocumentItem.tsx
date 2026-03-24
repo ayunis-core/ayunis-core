@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Badge } from '@/shared/ui/shadcn/badge';
 import { Button } from '@/shared/ui/shadcn/button';
+import {
+  Item,
+  ItemContent,
+  ItemTitle,
+  ItemActions,
+  ItemMedia,
+} from '@/shared/ui/shadcn/item';
 import {
   KnowledgeBaseDocumentResponseDtoTextType,
   KnowledgeBaseDocumentResponseDtoStatus,
@@ -8,7 +14,6 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/shared/lib/shadcn/utils';
 import { DocumentItemIcon } from './DocumentItemIcon';
 import { DocumentItemStatus } from './DocumentItemStatus';
 
@@ -43,37 +48,40 @@ export function DocumentItem({
     now - new Date(doc.createdAt).getTime() > SLOW_PROCESSING_THRESHOLD_MS;
 
   return (
-    <Badge
-      variant={isFailed ? 'destructive' : 'secondary'}
-      className={cn('flex items-center gap-1.5 py-1.5 px-3')}
-      title={isWeb ? (doc.url ?? undefined) : undefined}
-    >
-      <DocumentItemIcon
-        isWeb={isWeb}
-        isProcessing={isProcessing}
-        isProcessingSlow={isProcessingSlow}
-        isFailed={isFailed}
-      />
-      <span className="max-w-[200px] truncate">{doc.name}</span>
-      <DocumentItemStatus
-        isProcessing={isProcessing}
-        isProcessingSlow={isProcessingSlow}
-        isFailed={isFailed}
-        processingError={doc.processingError}
-        t={t}
-      />
+    <Item>
+      <ItemMedia variant="icon">
+        <DocumentItemIcon
+          isWeb={isWeb}
+          isProcessing={isProcessing}
+          isProcessingSlow={isProcessingSlow}
+          isFailed={isFailed}
+        />
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle>{doc.name}</ItemTitle>
+        <DocumentItemStatus
+          isWeb={isWeb}
+          url={doc.url}
+          isProcessing={isProcessing}
+          isProcessingSlow={isProcessingSlow}
+          isFailed={isFailed}
+          processingError={doc.processingError}
+          t={t}
+        />
+      </ItemContent>
       {!disabled && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => removeDocument(doc.id)}
-          disabled={isRemoving}
-          className="ml-1 h-5 w-5 rounded-full"
-        >
-          <X className="h-3 w-3" />
-        </Button>
+        <ItemActions>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => removeDocument(doc.id)}
+            disabled={isRemoving}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </ItemActions>
       )}
-    </Badge>
+    </Item>
   );
 }
