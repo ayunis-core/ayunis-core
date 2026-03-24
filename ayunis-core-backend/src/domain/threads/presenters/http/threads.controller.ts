@@ -366,7 +366,7 @@ export class ThreadsController {
   ): Promise<void> {
     this.logger.log('addFileSource', { threadId, fileName: file.originalname });
     try {
-      const fileData = fs.readFileSync(file.path);
+      const fileData = await fs.promises.readFile(file.path);
       await this.preflightCheckUseCase.execute(
         new PreflightCheckCommand({
           fileData,
