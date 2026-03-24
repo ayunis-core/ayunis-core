@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { SidebarTrigger } from '@/shared/ui/shadcn/sidebar';
 import { Separator } from '@/shared/ui/shadcn/separator';
@@ -42,21 +42,21 @@ export default function ContentAreaHeader({
             {breadcrumbs.map((crumb, index) => {
               const isLast = index === breadcrumbs.length - 1;
               return (
-                <BreadcrumbItem key={crumb.label}>
-                  {isLast ? (
-                    <>
-                      <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                      {badge}
-                    </>
-                  ) : (
-                    <>
+                <Fragment key={crumb.label}>
+                  <BreadcrumbItem>
+                    {isLast ? (
+                      <>
+                        <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                        {badge}
+                      </>
+                    ) : (
                       <BreadcrumbLink asChild>
                         <Link to={crumb.href}>{crumb.label}</Link>
                       </BreadcrumbLink>
-                      <BreadcrumbSeparator />
-                    </>
-                  )}
-                </BreadcrumbItem>
+                    )}
+                  </BreadcrumbItem>
+                  {!isLast && <BreadcrumbSeparator />}
+                </Fragment>
               );
             })}
           </BreadcrumbList>
