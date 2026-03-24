@@ -53,7 +53,7 @@ import { UpdateThreadTitleCommand } from '../../application/use-cases/update-thr
 import { AddSourceCommand } from '../../application/use-cases/add-source-to-thread/add-source.command';
 import { RemoveSourceCommand } from '../../application/use-cases/remove-source-from-thread/remove-source.command';
 import { FindThreadSourcesQuery } from '../../application/use-cases/get-thread-sources/get-thread-sources.query';
-import { CreateTextSourceUseCase } from '../../../sources/application/use-cases/create-text-source/create-text-source.use-case';
+
 import { AddFileSourceToThreadDto } from './dto/add-source-to-thread.dto';
 import {
   FileSourceResponseDto,
@@ -70,20 +70,12 @@ import { FindAllThreadsQueryParamsDto } from './dto/find-all-threads-query-param
 import { GetThreadDtoMapper } from './mappers/get-thread.mapper';
 import { GetThreadsDtoMapper } from './mappers/get-threads.mapper';
 import * as fs from 'fs';
-import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
 import { convertCSVToString } from 'src/common/util/csv';
-import {
-  buildSourceCreationDeps,
-  createSourcesFromFile,
-} from 'src/domain/sources/application/file-source-creator';
 import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
 import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
-import {
-  EmptyFileDataError,
-  UnsupportedFileTypeError,
-} from '../../application/threads.errors';
-import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
+import { CreateSourcesFromFileUseCase } from 'src/domain/sources/application/use-cases/create-sources-from-file/create-sources-from-file.use-case';
+import { CreateSourcesFromFileCommand } from 'src/domain/sources/application/use-cases/create-sources-from-file/create-sources-from-file.command';
 
 @ApiTags('threads')
 @Controller('threads')
@@ -99,10 +91,8 @@ export class ThreadsController {
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
     private readonly removeSourceFromThreadUseCase: RemoveSourceFromThreadUseCase,
     private readonly getThreadSourcesUseCase: GetThreadSourcesUseCase,
-    private readonly createTextSourceUseCase: CreateTextSourceUseCase,
-    private readonly createDataSourceUseCase: CreateDataSourceUseCase,
+    private readonly createSourcesFromFileUseCase: CreateSourcesFromFileUseCase,
     private readonly getSourceByIdUseCase: GetSourceByIdUseCase,
-    private readonly preflightCheckUseCase: PreflightCheckUseCase,
     private readonly sourceDtoMapper: SourceDtoMapper,
     private readonly getThreadDtoMapper: GetThreadDtoMapper,
     private readonly getThreadsDtoMapper: GetThreadsDtoMapper,
@@ -373,16 +363,12 @@ export class ThreadsController {
   ): Promise<void> {
     this.logger.log('addFileSource', { threadId, fileName: file.originalname });
     try {
-      const deps = buildSourceCreationDeps({
-        createTextSourceUseCase: this.createTextSourceUseCase,
-        createDataSourceUseCase: this.createDataSourceUseCase,
-        preflightCheckUseCase: this.preflightCheckUseCase,
-        EmptyFileDataError,
-        UnsupportedFileTypeError,
-      });
-      const sources = await createSourcesFromFile(
-        file as Express.Multer.File,
-        deps,
+      const sources = await this.createSourcesFromFileUseCase.execute(
+        new CreateSourcesFromFileCommand({
+          filePath: file.path,
+          originalName: file.originalname,
+          mimeType: file.mimetype,
+        }),
       );
 
       const { thread } = await this.findThreadUseCase.execute(

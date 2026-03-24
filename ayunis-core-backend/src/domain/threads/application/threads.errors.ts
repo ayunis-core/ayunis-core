@@ -14,8 +14,6 @@ export enum ThreadErrorCode {
   MODEL_REPLACEMENT_FAILED = 'MODEL_REPLACEMENT_FAILED',
   NO_MODEL_OR_AGENT_PROVIDED = 'NO_MODEL_OR_AGENT_PROVIDED',
   UNEXPECTED_THREAD_ERROR = 'UNEXPECTED_THREAD_ERROR',
-  EMPTY_FILE_DATA = 'EMPTY_FILE_DATA',
-  UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
 }
 
 /**
@@ -35,7 +33,8 @@ export abstract class ThreadError extends ApplicationError {
 export class ThreadNotFoundError extends ThreadError {
   constructor(threadId: string, userId?: string, metadata?: ErrorMetadata) {
     super(
-      `Thread with ID '${threadId}' not found${userId ? ` for user '${userId}'` : ''}`,
+      `Thread with ID '${threadId}' not found` +
+        (userId ? ` for user '${userId}'` : ''),
       ThreadErrorCode.THREAD_NOT_FOUND,
       404,
       {
@@ -185,38 +184,6 @@ export class UnexpecteThreadError extends ThreadError {
       {
         ...metadata,
       },
-    );
-  }
-}
-
-export class EmptyFileDataError extends ThreadError {
-  constructor(fileName: string, metadata?: ErrorMetadata) {
-    super(
-      `The file '${fileName}' contains no processable data`,
-      ThreadErrorCode.EMPTY_FILE_DATA,
-      400,
-      {
-        fileName,
-        ...metadata,
-      },
-    );
-  }
-}
-
-/**
- * Error thrown when an unsupported file type is uploaded to a thread
- */
-export class UnsupportedFileTypeError extends ThreadError {
-  constructor(
-    fileType: string,
-    supportedTypes: string[],
-    metadata?: ErrorMetadata,
-  ) {
-    super(
-      `File type '${fileType}' is not supported. Supported types: ${supportedTypes.join(', ')}`,
-      ThreadErrorCode.UNSUPPORTED_FILE_TYPE,
-      400,
-      metadata,
     );
   }
 }
