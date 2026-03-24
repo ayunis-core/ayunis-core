@@ -23,6 +23,8 @@ import {
   UnexpectedSourceError,
 } from '../../sources.errors';
 import { CreateSourcesFromFileCommand } from './create-sources-from-file.command';
+import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
+import { PreflightCheckCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.command';
 
 const SUPPORTED_FILE_TYPES = [
   'PDF',
@@ -41,6 +43,7 @@ export class CreateSourcesFromFileUseCase {
   constructor(
     private readonly createTextSourceUseCase: CreateTextSourceUseCase,
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
+    private readonly preflightCheckUseCase: PreflightCheckUseCase,
   ) {}
 
   async execute(command: CreateSourcesFromFileCommand): Promise<Source[]> {
@@ -86,6 +89,15 @@ export class CreateSourcesFromFileUseCase {
     detectedType: DetectedFileType,
   ): Promise<Source> {
     const fileData = fs.readFileSync(command.filePath);
+
+    await this.preflightCheckUseCase.execute(
+      new PreflightCheckCommand({
+        fileData,
+        fileName: command.originalName,
+        fileType: command.mimeType,
+      }),
+    );
+
     const canonicalMimeType = getCanonicalMimeType(detectedType);
     if (!canonicalMimeType) {
       throw new Error(
