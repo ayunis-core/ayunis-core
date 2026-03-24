@@ -7,7 +7,7 @@ import {
 } from 'src/domain/threads/application/ports/threads.repository';
 import { Logger, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsRelations, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { ThreadRecord } from './schema/thread.record';
 import { ThreadMapper } from './mappers/thread.mapper';
 import { UUID } from 'crypto';
@@ -41,6 +41,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
         'model',
         'sourceAssignments',
         'sourceAssignments.source',
+        'sourceAssignments.source.dataSourceDetails',
         'knowledgeBaseAssignments',
         'knowledgeBaseAssignments.knowledgeBase',
         'mcpIntegrations',
@@ -64,17 +65,16 @@ export class LocalThreadsRepository extends ThreadsRepository {
     this.logger.log('findOne', { id, userId });
     const threadEntity = await this.threadRepository.findOne({
       where: { id, userId },
-      relations: {
-        messages: true,
-        model: true,
-        sourceAssignments: {
-          source: true,
-        },
-        knowledgeBaseAssignments: {
-          knowledgeBase: true,
-        },
-        mcpIntegrations: true,
-      },
+      relations: [
+        'messages',
+        'model',
+        'sourceAssignments',
+        'sourceAssignments.source',
+        'sourceAssignments.source.dataSourceDetails',
+        'knowledgeBaseAssignments',
+        'knowledgeBaseAssignments.knowledgeBase',
+        'mcpIntegrations',
+      ],
       order: {
         messages: {
           createdAt: 'ASC',
@@ -199,18 +199,24 @@ export class LocalThreadsRepository extends ThreadsRepository {
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
   }
 
-  private getRelations(
-    options?: ThreadsFindAllOptions,
-  ): FindOptionsRelations<ThreadRecord> {
-    return {
-      messages: options?.withMessages ? true : false,
-      sourceAssignments: options?.withSources ? { source: true } : false,
-      model: options?.withModel ? true : false,
-      knowledgeBaseAssignments: options?.withKnowledgeBases
-        ? { knowledgeBase: true }
-        : false,
-      mcpIntegrations: true,
-    };
+  private getRelations(options?: ThreadsFindAllOptions): string[] {
+    const relations: string[] = ['mcpIntegrations'];
+    if (options?.withMessages) relations.push('messages');
+    if (options?.withModel) relations.push('model');
+    if (options?.withSources) {
+      relations.push(
+        'sourceAssignments',
+        'sourceAssignments.source',
+        'sourceAssignments.source.dataSourceDetails',
+      );
+    }
+    if (options?.withKnowledgeBases) {
+      relations.push(
+        'knowledgeBaseAssignments',
+        'knowledgeBaseAssignments.knowledgeBase',
+      );
+    }
+    return relations;
   }
 
   async update(thread: Thread): Promise<Thread> {
