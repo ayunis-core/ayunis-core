@@ -49,7 +49,6 @@ import { EnqueueDocumentProcessingUseCase } from './application/use-cases/enqueu
   ],
   exports: [
     LocalSourceRepositoryModule,
-    DocumentProcessingModule,
     GetTextSourceByIdUseCase,
     GetSourceByIdUseCase,
     DeleteSourceUseCase,
