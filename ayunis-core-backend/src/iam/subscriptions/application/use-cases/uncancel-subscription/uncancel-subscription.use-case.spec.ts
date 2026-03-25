@@ -39,12 +39,14 @@ function createSeatBased(
     renewalCycleAnchor: Date;
   }> = {},
 ): SeatBasedSubscription {
+  const anchor = overrides.renewalCycleAnchor ?? new Date('2025-01-01');
   return new SeatBasedSubscription({
     orgId: mockOrgId,
     noOfSeats: 10,
     pricePerSeat: 9.99,
     renewalCycle: RenewalCycle.MONTHLY,
-    renewalCycleAnchor: overrides.renewalCycleAnchor ?? new Date('2025-01-01'),
+    renewalCycleAnchor: anchor,
+    startsAt: anchor,
     cancelledAt: overrides.cancelledAt ?? null,
     billingInfo: createBillingInfo(),
   });
@@ -56,6 +58,7 @@ function createUsageBased(
   return new UsageBasedSubscription({
     orgId: mockOrgId,
     monthlyCredits: 1000,
+    startsAt: new Date('2025-01-01'),
     cancelledAt: overrides.cancelledAt ?? null,
     billingInfo: createBillingInfo(),
   });

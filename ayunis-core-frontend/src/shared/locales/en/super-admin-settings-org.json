@@ -54,7 +54,9 @@
     "cancelErrorSubscriptionNotFound": "Subscription not found",
     "cancelError": "An unexpected error occurred",
     "uncancelErrorSubscriptionNotFound": "Subscription not found",
-    "uncancelError": "An unexpected error occurred"
+    "uncancelError": "An unexpected error occurred",
+    "scheduled": "Scheduled",
+    "scheduledDescription": "This subscription is scheduled to start on {{date}}."
   },
   "licenseSeats": {
     "title": "License Seats",
@@ -121,7 +123,10 @@
     "noOfSeatsDescription": "You can change the number of seats at any time.",
     "monthlyCreditsLabel": "Monthly Credits",
     "monthlyCreditsPlaceholder": "1000",
-    "monthlyCreditsDescription": "The monthly credit budget for this organization. Resets on the 1st of each month."
+    "monthlyCreditsDescription": "The monthly credit budget for this organization. Resets on the 1st of each month.",
+    "startsAtLabel": "Start Date",
+    "startsAtPlaceholder": "Starts immediately",
+    "startsAtDescription": "Leave empty for the subscription to start immediately, or pick a future date."
   },
   "trialDialog": {
     "title": "Create Trial",

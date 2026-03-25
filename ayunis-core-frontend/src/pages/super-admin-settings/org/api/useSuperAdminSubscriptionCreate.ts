@@ -42,6 +42,7 @@ function buildSchema(t: (key: string) => string) {
       type: z.enum(subscriptionTypes),
       noOfSeats: z.coerce.number().optional(),
       monthlyCredits: z.coerce.number().optional(),
+      startsAt: z.string().optional(),
     })
     .superRefine((data, ctx) => {
       if (
@@ -87,6 +88,7 @@ export default function useSuperAdminSubscriptionCreate({
       type: 'SEAT_BASED',
       noOfSeats: 5,
       monthlyCredits: 1000,
+      startsAt: undefined,
     },
   });
 
@@ -143,6 +145,7 @@ export default function useSuperAdminSubscriptionCreate({
         noOfSeats: data.type === 'SEAT_BASED' ? data.noOfSeats : undefined,
         monthlyCredits:
           data.type === 'USAGE_BASED' ? data.monthlyCredits : undefined,
+        startsAt: data.startsAt,
       },
     });
   });

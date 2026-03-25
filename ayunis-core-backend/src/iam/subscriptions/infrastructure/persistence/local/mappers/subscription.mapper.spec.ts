@@ -40,6 +40,7 @@ function createSeatBasedRecord(
   record.createdAt = new Date();
   record.updatedAt = new Date();
   record.cancelledAt = null;
+  record.startsAt = new Date('2025-01-01');
   record.orgId = randomUUID();
   record.noOfSeats =
     overrides.noOfSeats === null
@@ -113,6 +114,7 @@ describe('SubscriptionMapper', () => {
       record.createdAt = new Date();
       record.updatedAt = new Date();
       record.cancelledAt = null;
+      record.startsAt = new Date('2025-01-01');
       record.orgId = randomUUID();
       record.monthlyCredits = 500;
       record.billingInfo = createBillingInfoRecord();
@@ -129,6 +131,7 @@ describe('SubscriptionMapper', () => {
       record.createdAt = new Date();
       record.updatedAt = new Date();
       record.cancelledAt = null;
+      record.startsAt = new Date('2025-01-01');
       record.orgId = randomUUID();
       record.monthlyCredits = null as unknown as number;
       record.billingInfo = createBillingInfoRecord();
@@ -147,6 +150,7 @@ describe('SubscriptionMapper', () => {
         pricePerSeat: 14.5,
         renewalCycle: RenewalCycle.YEARLY,
         renewalCycleAnchor: new Date('2025-06-15'),
+        startsAt: new Date('2025-06-15'),
         billingInfo: new SubscriptionBillingInfo({
           companyName: 'Stadt Beispielburg',
           street: 'Rathausplatz',
@@ -168,12 +172,14 @@ describe('SubscriptionMapper', () => {
       expect(restored.pricePerSeat).toBe(original.pricePerSeat);
       expect(restored.renewalCycle).toBe(original.renewalCycle);
       expect(restored.renewalCycleAnchor).toEqual(original.renewalCycleAnchor);
+      expect(restored.startsAt).toEqual(original.startsAt);
     });
 
     it('should preserve all usage-based fields through domain → record → domain', () => {
       const original = new UsageBasedSubscription({
         orgId: randomUUID(),
         monthlyCredits: 2000,
+        startsAt: new Date('2026-01-01'),
         billingInfo: new SubscriptionBillingInfo({
           companyName: 'Verein Digital',
           street: 'Digitalweg',
@@ -192,6 +198,7 @@ describe('SubscriptionMapper', () => {
       expect(restored.id).toBe(original.id);
       expect(restored.orgId).toBe(original.orgId);
       expect(restored.monthlyCredits).toBe(original.monthlyCredits);
+      expect(restored.startsAt).toEqual(original.startsAt);
     });
   });
 });

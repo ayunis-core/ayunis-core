@@ -15,6 +15,7 @@ export class CreateSubscriptionCommand {
   public readonly city: string;
   public readonly country: string;
   public readonly vatNumber?: string;
+  public readonly startsAt?: Date;
 
   constructor(params: {
     orgId: UUID;
@@ -30,6 +31,7 @@ export class CreateSubscriptionCommand {
     city: string;
     country: string;
     vatNumber?: string;
+    startsAt?: Date;
   }) {
     this.orgId = params.orgId;
     this.requestingUserId = params.requestingUserId;
@@ -44,5 +46,6 @@ export class CreateSubscriptionCommand {
     this.city = params.city;
     this.country = params.country;
     this.vatNumber = params.vatNumber;
+    this.startsAt = params.startsAt;
   }
 }
