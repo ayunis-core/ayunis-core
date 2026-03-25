@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.23.1](https://github.com/ayunis-core/ayunis-core/compare/v1.23.0...v1.23.1) (2026-03-25)
+
+
+### Bug Fixes
+
+* **ci:** improve formatting of slack message (AYC-000) ([#496](https://github.com/ayunis-core/ayunis-core/issues/496)) ([3ce10aa](https://github.com/ayunis-core/ayunis-core/commit/3ce10aa38766a2a294f76dde71bf64051218cd8d))
+* **documents:** narrow instructions for document creation to prefer inline in most cases (AYC-000) ([#498](https://github.com/ayunis-core/ayunis-core/issues/498)) ([8b07077](https://github.com/ayunis-core/ayunis-core/commit/8b0707769497c86d3bf51a3857d3ab9edd45e504))
+* **sources:** add hint to loading text that it is save to navigate away (AYC-000) ([#495](https://github.com/ayunis-core/ayunis-core/issues/495)) ([ab5ad1e](https://github.com/ayunis-core/ayunis-core/commit/ab5ad1e6165096fa97ae8c3a4c1b0d39a3ef8224))
+
+
+### Miscellaneous
+
+* **deps-actions:** bump actions/setup-node from 4 to 6 ([#205](https://github.com/ayunis-core/ayunis-core/issues/205)) ([5c2a0f9](https://github.com/ayunis-core/ayunis-core/commit/5c2a0f9d26dd44739137f28249ba9f079626666f))
+* **deps-actions:** bump amannn/action-semantic-pull-request from 5 to 6 ([#207](https://github.com/ayunis-core/ayunis-core/issues/207)) ([cc16c3f](https://github.com/ayunis-core/ayunis-core/commit/cc16c3f9f14782186663024ef3520c2062590cb5))
+* **deps-actions:** bump peter-evans/repository-dispatch from 3 to 4 ([#204](https://github.com/ayunis-core/ayunis-core/issues/204)) ([8d1deb0](https://github.com/ayunis-core/ayunis-core/commit/8d1deb056afd58a3447b3548b72e7ec5a88a0256))
+* **deps-backend:** bump class-validator from 0.14.3 to 0.15.1 in /ayunis-core-backend ([#372](https://github.com/ayunis-core/ayunis-core/issues/372)) ([3c6e74d](https://github.com/ayunis-core/ayunis-core/commit/3c6e74d62619ed89d91716c9bf9435ff6e2f10c8))
+* **deps-backend:** bump eslint-plugin-sonarjs from 3.0.7 to 4.0.2 in /ayunis-core-backend ([#463](https://github.com/ayunis-core/ayunis-core/issues/463)) ([ba1b343](https://github.com/ayunis-core/ayunis-core/commit/ba1b343a117f286b47b04e2997b721aae436ed12))
+* **deps-backend:** bump the nest group across 1 directory with 5 updates ([#356](https://github.com/ayunis-core/ayunis-core/issues/356)) ([b16b468](https://github.com/ayunis-core/ayunis-core/commit/b16b46862513c870912fb8186f9716f865cfa63d))
+
 ## [1.23.0](https://github.com/ayunis-core/ayunis-core/compare/v1.22.1...v1.23.0) (2026-03-24)
 
 
