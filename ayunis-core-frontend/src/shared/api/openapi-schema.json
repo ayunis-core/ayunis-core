@@ -3656,7 +3656,7 @@
     },
     "/threads/{id}/sources": {
       "get": {
-        "operationId": "ThreadsController_getThreadSources",
+        "operationId": "ThreadSourcesController_getThreadSources",
         "parameters": [
           {
             "name": "id",
@@ -3708,7 +3708,7 @@
     },
     "/threads/{id}/sources/file": {
       "post": {
-        "operationId": "ThreadsController_addFileSource",
+        "operationId": "ThreadSourcesController_addFileSource",
         "parameters": [
           {
             "name": "id",
@@ -3751,7 +3751,27 @@
         },
         "responses": {
           "201": {
-            "description": "The file source has been successfully added to the thread"
+            "description": "The file source has been successfully added to the thread",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/FileSourceResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/UrlSourceResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/CSVDataSourceResponseDto"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
           }
         },
         "summary": "Add a file source to a thread",
@@ -3762,7 +3782,7 @@
     },
     "/threads/{id}/sources/{sourceId}": {
       "delete": {
-        "operationId": "ThreadsController_removeSource",
+        "operationId": "ThreadSourcesController_removeSource",
         "parameters": [
           {
             "name": "id",
@@ -3801,7 +3821,7 @@
     },
     "/threads/{id}/sources/{sourceId}/download": {
       "get": {
-        "operationId": "ThreadsController_downloadSource",
+        "operationId": "ThreadSourcesController_downloadSource",
         "parameters": [
           {
             "name": "id",
@@ -10422,6 +10442,12 @@
             "description": "Date when the subscription was cancelled (if applicable)",
             "example": "2023-12-15T10:00:00Z"
           },
+          "startsAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the subscription becomes active",
+            "example": "2026-07-01T00:00:00Z"
+          },
           "orgId": {
             "type": "string",
             "description": "Organization ID associated with the subscription",
@@ -10492,6 +10518,7 @@
           "id",
           "createdAt",
           "updatedAt",
+          "startsAt",
           "orgId",
           "type",
           "nextRenewalDate",
@@ -10576,6 +10603,11 @@
             "type": "string",
             "description": "Sub text for the subscription",
             "example": "Sub text"
+          },
+          "startsAt": {
+            "type": "string",
+            "description": "Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately.",
+            "example": "2026-07-01T00:00:00.000Z"
           }
         },
         "required": [

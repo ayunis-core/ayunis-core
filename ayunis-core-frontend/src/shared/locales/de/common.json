@@ -111,5 +111,14 @@
     "description": "Ein unerwarteter Fehler ist aufgetreten. Bitte laden Sie die Seite neu, um fortzufahren.",
     "reloadPage": "Seite neu laden",
     "tryAgain": "Erneut versuchen"
+  },
+  "sources": {
+    "failedToAdd": "Fehler beim Hochladen der Datei",
+    "invalidFileTypeError": "Dieser Dateityp wird derzeit nicht unterstützt.",
+    "fileSourceEmptyDataError": "Die hochgeladene Datei enthält keine verarbeitbaren Daten.",
+    "fileSourceTooLargeError": "Datei ist zu groß. Maximale Dateigröße ist 50MB.",
+    "fileSourceTooManyPagesError": "Dokument hat zu viele Seiten zur Verarbeitung.",
+    "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist beschäftigt. Bitte versuchen Sie es später erneut.",
+    "fileSourceTimeoutError": "Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex."
   }
 }

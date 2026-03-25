@@ -111,5 +111,14 @@
     "description": "An unexpected error occurred. Please reload the page to continue.",
     "reloadPage": "Reload page",
     "tryAgain": "Try again"
+  },
+  "sources": {
+    "failedToAdd": "Error uploading file",
+    "invalidFileTypeError": "This file type is currently not supported.",
+    "fileSourceEmptyDataError": "The uploaded file contains no processable data.",
+    "fileSourceTooLargeError": "File is too large. Maximum file size is 50MB.",
+    "fileSourceTooManyPagesError": "Document has too many pages to process.",
+    "fileSourceServiceBusyError": "The document processing service is busy. Please try again later.",
+    "fileSourceTimeoutError": "Document processing timed out. The file may be too complex."
   }
 }

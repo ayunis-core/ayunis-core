@@ -1,7 +1,7 @@
 import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { useCallback } from 'react';
-import { threadsControllerDownloadSource } from '@/shared/api/generated/ayunisCoreAPI';
+import { threadSourcesControllerDownloadSource } from '@/shared/api/generated/ayunisCoreAPI';
 import type { Thread } from '../model/openapi';
 
 export function useDownloadSource(thread: Thread) {
@@ -10,7 +10,10 @@ export function useDownloadSource(thread: Thread) {
   const downloadSource = useCallback(
     async (sourceId: string) => {
       try {
-        const blob = await threadsControllerDownloadSource(thread.id, sourceId);
+        const blob = await threadSourcesControllerDownloadSource(
+          thread.id,
+          sourceId,
+        );
 
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');

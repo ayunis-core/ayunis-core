@@ -6,6 +6,7 @@ import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useTranslation } from 'react-i18next';
 import type {
   SourceResponseDtoCreatedBy,
+  SourceResponseDtoStatus,
   SourceResponseDtoType,
 } from '@/shared/api';
 import PlusButton from './PlusButton';
@@ -39,6 +40,8 @@ interface ChatInputProps {
     name: string;
     type: SourceResponseDtoType;
     createdBy?: SourceResponseDtoCreatedBy;
+    status?: SourceResponseDtoStatus;
+    processingError?: string;
   }[];
   knowledgeBases?: KnowledgeBaseSummary[];
   isStreaming?: boolean;

@@ -20,7 +20,7 @@ export function buildCsvSourceCommand(file: {
 
 /**
  * Parse a spreadsheet file and return one data source command per sheet.
- * Throws if the spreadsheet contains no sheets.
+ * Returns an empty array if the spreadsheet contains no sheets.
  */
 export function buildSpreadsheetSourceCommands(file: {
   originalname: string;

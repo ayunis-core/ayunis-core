@@ -1181,6 +1181,8 @@ export interface SubscriptionResponseDto {
   updatedAt: string;
   /** Date when the subscription was cancelled (if applicable) */
   cancelledAt?: SubscriptionResponseDtoCancelledAt;
+  /** Date when the subscription becomes active */
+  startsAt: string;
   /** Organization ID associated with the subscription */
   orgId: string;
   /** Subscription type */
@@ -1252,6 +1254,8 @@ export interface CreateSubscriptionRequestDto {
   monthlyCredits?: number;
   /** Sub text for the subscription */
   subText?: string;
+  /** Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately. */
+  startsAt?: string;
 }
 
 export interface UpdateBillingInfoDto {
@@ -3948,9 +3952,9 @@ limit?: number;
 offset?: number;
 };
 
-export type ThreadsControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
+export type ThreadSourcesControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 
-export type ThreadsControllerAddFileSourceBody = {
+export type ThreadSourcesControllerAddFileSourceBody = {
   /** The file to upload */
   file: Blob;
   /** The display name for the file source */
@@ -3958,6 +3962,8 @@ export type ThreadsControllerAddFileSourceBody = {
   /** A description of the file source */
   description?: string;
 };
+
+export type ThreadSourcesControllerAddFileSource201Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 
 export type AgentsControllerAddFileSourceBody = {
   /** The file to upload */
