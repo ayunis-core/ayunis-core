@@ -6,7 +6,7 @@ import { Thread } from '../../../domain/thread.entity';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { getToken } from '@willsoto/nestjs-prometheus';
-import { AYUNIS_THREAD_MESSAGE_COUNT } from 'src/metrics/metrics.constants';
+import { AYUNIS_THREAD_MESSAGE_COUNT } from 'src/integrations/metrics/metrics.constants';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 
 describe('AddMessageToThreadUseCase', () => {

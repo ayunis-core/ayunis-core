@@ -14,7 +14,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 
 import { AppModule } from './app/app.module';
-import { METRICS_PATH } from './metrics/metrics.constants';
+import { METRICS_PATH } from './integrations/metrics/metrics.constants';
 
 class Bootstrap {
   private static readonly PORT = process.env.PORT ?? 3000;

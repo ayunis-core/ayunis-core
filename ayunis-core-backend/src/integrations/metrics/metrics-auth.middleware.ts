@@ -2,7 +2,7 @@ import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { timingSafeEqual } from 'crypto';
 import type { Request, Response, NextFunction } from 'express';
-import type { MetricsConfig } from '../config/metrics.config';
+import type { MetricsConfig } from '../../config/metrics.config';
 
 @Injectable()
 export class MetricsAuthMiddleware implements NestMiddleware {

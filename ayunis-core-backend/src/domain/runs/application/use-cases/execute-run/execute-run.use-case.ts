@@ -49,8 +49,8 @@ import { StreamingInferenceService } from '../../services/streaming-inference.se
 import { NonStreamingInferenceService } from '../../services/non-streaming-inference.service';
 import { enrichContentWithIntegration } from '../../helpers/resolve-integration.helper';
 import type { RunParams } from './run-params.interface';
-import { AYUNIS_USER_ACTIVITY_TOTAL } from 'src/metrics/metrics.constants';
-import { safeMetric } from 'src/metrics/metrics.utils';
+import { AYUNIS_USER_ACTIVITY_TOTAL } from 'src/integrations/metrics/metrics.constants';
+import { safeMetric } from 'src/integrations/metrics/metrics.utils';
 
 const MAX_CONTEXT_TOKENS = 80000;
 

@@ -8,9 +8,9 @@ import {
   UnexpectedSubscriptionError,
 } from '../../subscription.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
-import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { SubscriptionUncancelledWebhookEvent } from 'src/common/webhooks/domain/webhook-events/subscription-uncancelled.webhook-event';
+import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { SendWebhookCommand } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.command';
+import { SubscriptionUncancelledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-uncancelled.webhook-event';
 import { toSubscriptionWebhookPayload } from '../../mappers/subscription-webhook-payload.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { validateSubscriptionAccess } from '../../util/validate-subscription-access';

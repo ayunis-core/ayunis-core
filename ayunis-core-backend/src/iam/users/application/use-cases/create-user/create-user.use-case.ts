@@ -13,14 +13,14 @@ import {
   UserEmailProviderBlacklistedError,
 } from '../../users.errors';
 import { HashingError } from '../../../../hashing/application/hashing.errors';
-import { UserCreatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/user-created.webhook-event';
-import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { UserCreatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-created.webhook-event';
+import { SendWebhookCommand } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.command';
+import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { ConfigService } from '@nestjs/config';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UserCreatedEvent } from '../../events/user-created.event';
-import { AYUNIS_USER_CREATIONS_TOTAL } from 'src/metrics/metrics.constants';
-import { safeMetric } from 'src/metrics/metrics.utils';
+import { AYUNIS_USER_CREATIONS_TOTAL } from 'src/integrations/metrics/metrics.constants';
+import { safeMetric } from 'src/integrations/metrics/metrics.utils';
 
 @Injectable()
 export class CreateUserUseCase {

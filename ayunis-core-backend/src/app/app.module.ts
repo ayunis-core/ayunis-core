@@ -66,7 +66,7 @@ import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-t
 import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { ApplicationErrorFilter } from 'src/common/filters/application-error.filter';
-import { MetricsModule } from '../metrics/metrics.module';
+import { IntegrationsModule } from '../integrations/integrations.module';
 
 @Module({
   imports: [
@@ -143,7 +143,7 @@ import { MetricsModule } from '../metrics/metrics.module';
     }),
     EventEmitterModule.forRoot(),
     SentryModule.forRoot(),
-    MetricsModule,
+    IntegrationsModule,
     ContextModule, // Global
     ModelsModule,
     AgentsModule,
