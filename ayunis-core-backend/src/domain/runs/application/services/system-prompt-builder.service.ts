@@ -271,6 +271,12 @@ ${skillEntries}
     }
 
     const readySources = sources.filter((s) => s.status === SourceStatus.READY);
+    const readyTextSources = readySources.filter(
+      (s) => s instanceof TextSource,
+    );
+    const readyDataSources = readySources.filter(
+      (s) => s instanceof DataSource,
+    );
     const processingSources = sources.filter(
       (s) => s.status === SourceStatus.PROCESSING,
     );
@@ -280,8 +286,12 @@ ${skillEntries}
 
     const sections: string[] = [];
 
-    if (readySources.length > 0) {
-      sections.push(this.buildAvailableFilesSection(readySources));
+    if (readyTextSources.length > 0) {
+      sections.push(this.buildAvailableFilesSection(readyTextSources));
+    }
+
+    if (readyDataSources.length > 0) {
+      sections.push(this.buildDataSourcesSection(readyDataSources));
     }
 
     if (processingSources.length > 0) {
@@ -339,6 +349,20 @@ ${systemFiles.map(formatFile).join('\n')}
 </available_files>`;
 
     return section;
+  }
+
+  private buildDataSourcesSection(sources: Source[]): string {
+    const formatFile = (source: Source): string => {
+      const type = this.getFileTypeLabel(source);
+      return `<file id="${source.id}" name="${this.escapeXml(source.name)}" type="${type}" />`;
+    };
+
+    return `<available_data_sources>
+The following data sources are available for analysis using the code_execution tool.
+These are structured data files (e.g., CSV) and cannot be searched with source_query.
+
+${sources.map(formatFile).join('\n')}
+</available_data_sources>`;
   }
 
   private buildPendingFilesSection(sources: Source[]): string {
