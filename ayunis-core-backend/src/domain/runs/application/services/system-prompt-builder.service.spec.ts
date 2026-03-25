@@ -1,5 +1,11 @@
 import type { SkillEntry } from 'src/common/util/skill-slug';
 import { SystemPromptBuilderService } from './system-prompt-builder.service';
+import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
+import type { Source } from 'src/domain/sources/domain/source.entity';
+import { randomUUID } from 'crypto';
 
 describe('SystemPromptBuilderService', () => {
   let service: SystemPromptBuilderService;
@@ -145,6 +151,146 @@ describe('SystemPromptBuilderService', () => {
       const readyPos = result.indexOf('You are now ready to assist the user.');
       expect(userPos).toBeGreaterThan(-1);
       expect(readyPos).toBeGreaterThan(userPos);
+    });
+  });
+
+  describe('files section with source status', () => {
+    function createFileSource(
+      overrides: Partial<{
+        name: string;
+        status: SourceStatus;
+        processingError: string | null;
+        createdBy: SourceCreator;
+      }> = {},
+    ): Source {
+      return new FileSource({
+        id: randomUUID(),
+        fileType: FileType.PDF,
+        name: overrides.name ?? 'test.pdf',
+        type: TextType.FILE,
+        status: overrides.status ?? SourceStatus.READY,
+        processingError: overrides.processingError ?? null,
+        createdBy: overrides.createdBy ?? SourceCreator.USER,
+      });
+    }
+
+    it('should show processing sources in pending_files section, not in available_files', () => {
+      const processingSource = createFileSource({
+        name: 'uploading.pdf',
+        status: SourceStatus.PROCESSING,
+      });
+
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        sources: [processingSource],
+      });
+
+      expect(result).toContain('<pending_files>');
+      expect(result).toContain('name="uploading.pdf"');
+      expect(result).toContain('status="processing"');
+      expect(result).not.toContain('<available_files>');
+    });
+
+    it('should show failed sources in failed_files section with error message', () => {
+      const failedSource = createFileSource({
+        name: 'broken.pdf',
+        status: SourceStatus.FAILED,
+        processingError: 'Extraction timed out',
+      });
+
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        sources: [failedSource],
+      });
+
+      expect(result).toContain('<failed_files>');
+      expect(result).toContain('name="broken.pdf"');
+      expect(result).toContain('error="Extraction timed out"');
+      expect(result).not.toContain('<available_files>');
+      expect(result).not.toContain('<pending_files>');
+    });
+
+    it('should show ready sources in available_files section (regression)', () => {
+      const readySource = createFileSource({
+        name: 'ready.pdf',
+        status: SourceStatus.READY,
+      });
+
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        sources: [readySource],
+      });
+
+      expect(result).toContain('<available_files>');
+      expect(result).toContain('name="ready.pdf"');
+      expect(result).not.toContain('<pending_files>');
+      expect(result).not.toContain('<failed_files>');
+    });
+
+    it('should render all three sections for mixed ready + processing + failed sources', () => {
+      const readySource = createFileSource({
+        name: 'done.pdf',
+        status: SourceStatus.READY,
+      });
+      const processingSource = createFileSource({
+        name: 'loading.pdf',
+        status: SourceStatus.PROCESSING,
+      });
+      const failedSource = createFileSource({
+        name: 'error.pdf',
+        status: SourceStatus.FAILED,
+        processingError: 'Parse error',
+      });
+
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        sources: [readySource, processingSource, failedSource],
+      });
+
+      expect(result).toContain('<available_files>');
+      expect(result).toContain('name="done.pdf"');
+      expect(result).toContain('<pending_files>');
+      expect(result).toContain('name="loading.pdf"');
+      expect(result).toContain('<failed_files>');
+      expect(result).toContain('name="error.pdf"');
+      expect(result).toContain('error="Parse error"');
+    });
+
+    it('should produce no file sections when sources array is empty (regression)', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        sources: [],
+      });
+
+      expect(result).not.toContain('<available_files>');
+      expect(result).not.toContain('<pending_files>');
+      expect(result).not.toContain('<failed_files>');
+    });
+
+    it('should escape XML-special characters in source names and errors', () => {
+      const failedSource = createFileSource({
+        name: 'file<with>&"quotes\'.pdf',
+        status: SourceStatus.FAILED,
+        processingError: 'Error: <tag> & "stuff"',
+      });
+
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        sources: [failedSource],
+      });
+
+      expect(result).toContain(
+        'name="file&lt;with&gt;&amp;&quot;quotes&apos;.pdf"',
+      );
+      expect(result).toContain(
+        'error="Error: &lt;tag&gt; &amp; &quot;stuff&quot;"',
+      );
     });
   });
 });
