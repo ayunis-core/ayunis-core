@@ -24,7 +24,7 @@ import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/applicat
 import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
 import { CreateTrialUseCase } from 'src/iam/trials/application/use-cases/create-trial/create-trial.use-case';
 import { ConfigService } from '@nestjs/config';
-import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { FindUserByEmailUseCase } from '../../../../users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 
 describe('RegisterUserUseCase', () => {

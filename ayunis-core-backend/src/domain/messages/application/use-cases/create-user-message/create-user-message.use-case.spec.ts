@@ -13,7 +13,7 @@ import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/de
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedException } from '@nestjs/common';
 import { getToken } from '@willsoto/nestjs-prometheus';
-import { AYUNIS_MESSAGES_TOTAL } from 'src/metrics/metrics.constants';
+import { AYUNIS_MESSAGES_TOTAL } from 'src/integrations/metrics/metrics.constants';
 
 describe('CreateUserMessageUseCase', () => {
   let useCase: CreateUserMessageUseCase;

@@ -19,13 +19,13 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import {
   AYUNIS_INFERENCE_DURATION_SECONDS,
   AYUNIS_INFERENCE_ERRORS_TOTAL,
-} from 'src/metrics/metrics.constants';
+} from 'src/integrations/metrics/metrics.constants';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { resolveIntegration } from '../helpers/resolve-integration.helper';
 import { safeJsonParse } from 'src/common/util/unicode-sanitizer';
-import { recordInferenceMetrics } from 'src/metrics/record-inference-metrics.helper';
+import { recordInferenceMetrics } from 'src/integrations/metrics/record-inference-metrics.helper';
 
 type AssistantContentBlock =
   | TextMessageContent

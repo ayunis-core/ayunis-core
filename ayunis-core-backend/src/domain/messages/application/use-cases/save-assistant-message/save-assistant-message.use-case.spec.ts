@@ -9,7 +9,7 @@ import { MessageCreationError } from '../../messages.errors';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { getToken } from '@willsoto/nestjs-prometheus';
-import { AYUNIS_MESSAGES_TOTAL } from 'src/metrics/metrics.constants';
+import { AYUNIS_MESSAGES_TOTAL } from 'src/integrations/metrics/metrics.constants';
 
 describe('SaveAssistantMessageUseCase', () => {
   let useCase: SaveAssistantMessageUseCase;

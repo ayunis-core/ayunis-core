@@ -10,8 +10,11 @@ import {
 import { MessageRole } from '../../../domain/value-objects/message-role.object';
 import { MessageCreationError } from '../../messages.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { AYUNIS_MESSAGES_TOTAL } from 'src/metrics/metrics.constants';
-import { getUserContextLabels, safeMetric } from 'src/metrics/metrics.utils';
+import { AYUNIS_MESSAGES_TOTAL } from 'src/integrations/metrics/metrics.constants';
+import {
+  getUserContextLabels,
+  safeMetric,
+} from 'src/integrations/metrics/metrics.utils';
 
 @Injectable()
 export class CreateAssistantMessageUseCase {
