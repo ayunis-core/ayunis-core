@@ -48,6 +48,7 @@ function makeSeatBasedPayload(): SeatBasedSubscriptionEventData {
     orgId: ORG_ID,
     type: SubscriptionType.SEAT_BASED,
     cancelledAt: null,
+    startsAt: new Date('2025-01-01T00:00:00Z'),
     createdAt: new Date('2025-01-01T00:00:00Z'),
     updatedAt: new Date('2025-01-02T00:00:00Z'),
     noOfSeats: 10,
@@ -131,6 +132,7 @@ describe('WebhookDispatchListener', () => {
       expect(command.event.data).toEqual(
         expect.objectContaining({
           type: 'SEAT_BASED',
+          startsAt: '2025-01-01T00:00:00.000Z',
           createdAt: '2025-01-01T00:00:00.000Z',
         }),
       );
