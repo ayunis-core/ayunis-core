@@ -24,8 +24,8 @@ import type { StreamingInferenceService } from '../../services/streaming-inferen
 import type { NonStreamingInferenceService } from '../../services/non-streaming-inference.service';
 import type { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
-import type { Counter } from 'prom-client';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
+import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { randomUUID } from 'crypto';
 
@@ -120,7 +120,9 @@ describe('ExecuteRunUseCase', () => {
       {
         activateOnThread: jest.fn(),
       } as unknown as jest.Mocked<SkillActivationService>,
-      { inc: jest.fn() } as unknown as Counter<string>,
+      {
+        emitAsync: jest.fn().mockResolvedValue([]),
+      } as unknown as EventEmitter2,
     );
   });
 

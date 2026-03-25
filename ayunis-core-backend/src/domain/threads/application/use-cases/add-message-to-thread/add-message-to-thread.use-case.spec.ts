@@ -5,30 +5,29 @@ import { AddMessageCommand } from './add-message.command';
 import { Thread } from '../../../domain/thread.entity';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
-import { getToken } from '@willsoto/nestjs-prometheus';
-import { AYUNIS_THREAD_MESSAGE_COUNT } from 'src/integrations/metrics/metrics.constants';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ThreadMessageAddedEvent } from '../../events/thread-message-added.event';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 
 describe('AddMessageToThreadUseCase', () => {
   let useCase: AddMessageToThreadUseCase;
   let mockContextService: Partial<ContextService>;
-  let mockHistogram: { observe: jest.Mock };
+  let mockEventEmitter: { emitAsync: jest.Mock };
 
   beforeAll(async () => {
     mockContextService = {
       get: jest.fn().mockReturnValue(randomUUID()),
     };
 
-    mockHistogram = { observe: jest.fn() };
+    mockEventEmitter = {
+      emitAsync: jest.fn().mockResolvedValue([]),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AddMessageToThreadUseCase,
         { provide: ContextService, useValue: mockContextService },
-        {
-          provide: getToken(AYUNIS_THREAD_MESSAGE_COUNT),
-          useValue: mockHistogram,
-        },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 
@@ -44,7 +43,7 @@ describe('AddMessageToThreadUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should add a message to the thread and observe the histogram', () => {
+  it('should add a message to the thread and emit ThreadMessageAddedEvent', () => {
     const thread = new Thread({
       userId: randomUUID(),
       messages: [],
@@ -60,13 +59,16 @@ describe('AddMessageToThreadUseCase', () => {
 
     expect(result.messages).toContain(message);
     expect(result.messages).toHaveLength(1);
-    expect(mockHistogram.observe).toHaveBeenCalledWith(
-      expect.objectContaining({ user_id: expect.any(String) }),
-      1,
+    expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+      ThreadMessageAddedEvent.EVENT_NAME,
+      expect.objectContaining({
+        threadId: thread.id,
+        messageCount: 1,
+      }),
     );
   });
 
-  it('should observe correct message count for thread with existing messages', () => {
+  it('should emit correct message count for thread with existing messages', () => {
     const existingMessage = new AssistantMessage({
       threadId: randomUUID(),
       content: [],
@@ -84,6 +86,11 @@ describe('AddMessageToThreadUseCase', () => {
 
     useCase.execute(command);
 
-    expect(mockHistogram.observe).toHaveBeenCalledWith(expect.any(Object), 2);
+    expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+      ThreadMessageAddedEvent.EVENT_NAME,
+      expect.objectContaining({
+        messageCount: 2,
+      }),
+    );
   });
 });
