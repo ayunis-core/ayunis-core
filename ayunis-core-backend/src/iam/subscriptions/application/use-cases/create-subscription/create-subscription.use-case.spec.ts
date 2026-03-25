@@ -6,7 +6,6 @@ import { randomUUID } from 'crypto';
 import { CreateSubscriptionUseCase } from './create-subscription.use-case';
 import { CreateSubscriptionCommand } from './create-subscription.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { HasActiveSubscriptionUseCase } from '../has-active-subscription/has-active-subscription.use-case';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
@@ -27,7 +26,6 @@ import type { Subscription } from 'src/iam/subscriptions/domain/subscription.ent
 describe('CreateSubscriptionUseCase', () => {
   let useCase: CreateSubscriptionUseCase;
   let subscriptionRepository: jest.Mocked<SubscriptionRepository>;
-  let hasActiveSubscriptionUseCase: jest.Mocked<HasActiveSubscriptionUseCase>;
   let getInvitesByOrgUseCase: jest.Mocked<GetInvitesByOrgUseCase>;
   let findUsersByOrgIdUseCase: jest.Mocked<FindUsersByOrgIdUseCase>;
   let configService: jest.Mocked<ConfigService>;
@@ -53,11 +51,8 @@ describe('CreateSubscriptionUseCase', () => {
           provide: SubscriptionRepository,
           useValue: {
             create: jest.fn((sub: Subscription) => Promise.resolve(sub)),
+            findByOrgId: jest.fn(),
           },
-        },
-        {
-          provide: HasActiveSubscriptionUseCase,
-          useValue: { execute: jest.fn() },
         },
         {
           provide: GetInvitesByOrgUseCase,
@@ -84,7 +79,6 @@ describe('CreateSubscriptionUseCase', () => {
 
     useCase = module.get(CreateSubscriptionUseCase);
     subscriptionRepository = module.get(SubscriptionRepository);
-    hasActiveSubscriptionUseCase = module.get(HasActiveSubscriptionUseCase);
     getInvitesByOrgUseCase = module.get(GetInvitesByOrgUseCase);
     findUsersByOrgIdUseCase = module.get(FindUsersByOrgIdUseCase);
     configService = module.get(ConfigService);
@@ -109,11 +103,8 @@ describe('CreateSubscriptionUseCase', () => {
     }) as never);
   }
 
-  function mockNoActiveSubscription(): void {
-    hasActiveSubscriptionUseCase.execute.mockResolvedValue({
-      hasActiveSubscription: false,
-      subscriptionType: null,
-    });
+  function mockNoExistingSubscription(): void {
+    subscriptionRepository.findByOrgId.mockResolvedValue([]);
   }
 
   function mockInvitesAndUsers(openInvites: number, userCount: number): void {
@@ -138,7 +129,7 @@ describe('CreateSubscriptionUseCase', () => {
   describe('usage-based subscription creation', () => {
     it('should create a UsageBasedSubscription when type is USAGE_BASED', async () => {
       setupSuperAdminContext();
-      mockNoActiveSubscription();
+      mockNoExistingSubscription();
 
       const command = new CreateSubscriptionCommand({
         orgId,
@@ -158,9 +149,29 @@ describe('CreateSubscriptionUseCase', () => {
       );
     });
 
+    it('should set startsAt to the provided date for usage-based', async () => {
+      setupSuperAdminContext();
+      mockNoExistingSubscription();
+
+      const futureDate = new Date('2026-07-01T00:00:00.000Z');
+      const command = new CreateSubscriptionCommand({
+        orgId,
+        requestingUserId,
+        type: SubscriptionType.USAGE_BASED,
+        monthlyCredits: 500,
+        startsAt: futureDate,
+        ...baseBillingParams,
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result).toBeInstanceOf(UsageBasedSubscription);
+      expect(result.startsAt).toEqual(futureDate);
+    });
+
     it('should reject usage-based subscription with monthlyCredits <= 0', async () => {
       setupSuperAdminContext();
-      mockNoActiveSubscription();
+      mockNoExistingSubscription();
 
       const command = new CreateSubscriptionCommand({
         orgId,
@@ -177,7 +188,7 @@ describe('CreateSubscriptionUseCase', () => {
 
     it('should reject usage-based subscription without monthlyCredits', async () => {
       setupSuperAdminContext();
-      mockNoActiveSubscription();
+      mockNoExistingSubscription();
 
       const command = new CreateSubscriptionCommand({
         orgId,
@@ -193,7 +204,7 @@ describe('CreateSubscriptionUseCase', () => {
 
     it('should not query invites or users for usage-based subscription', async () => {
       setupSuperAdminContext();
-      mockNoActiveSubscription();
+      mockNoExistingSubscription();
 
       const command = new CreateSubscriptionCommand({
         orgId,
@@ -213,7 +224,7 @@ describe('CreateSubscriptionUseCase', () => {
   describe('seat-based subscription creation', () => {
     it('should create a SeatBasedSubscription when type is SEAT_BASED', async () => {
       setupSuperAdminContext();
-      mockNoActiveSubscription();
+      mockNoExistingSubscription();
       mockInvitesAndUsers(0, 1);
       configService.get.mockReturnValue(99.99);
 
@@ -232,9 +243,33 @@ describe('CreateSubscriptionUseCase', () => {
       expect((result as SeatBasedSubscription).pricePerSeat).toBe(99.99);
     });
 
+    it('should set startsAt and renewalCycleAnchor to the provided date for seat-based', async () => {
+      setupSuperAdminContext();
+      mockNoExistingSubscription();
+      mockInvitesAndUsers(0, 1);
+      configService.get.mockReturnValue(99.99);
+
+      const futureDate = new Date('2026-07-01T00:00:00.000Z');
+      const command = new CreateSubscriptionCommand({
+        orgId,
+        requestingUserId,
+        type: SubscriptionType.SEAT_BASED,
+        noOfSeats: 5,
+        startsAt: futureDate,
+        ...baseBillingParams,
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result).toBeInstanceOf(SeatBasedSubscription);
+      const seatBased = result as SeatBasedSubscription;
+      expect(seatBased.startsAt).toEqual(futureDate);
+      expect(seatBased.renewalCycleAnchor).toEqual(futureDate);
+    });
+
     it('should default to SEAT_BASED when type is not specified', async () => {
       setupSuperAdminContext();
-      mockNoActiveSubscription();
+      mockNoExistingSubscription();
       mockInvitesAndUsers(0, 1);
       configService.get.mockReturnValue(99.99);
 
@@ -252,7 +287,7 @@ describe('CreateSubscriptionUseCase', () => {
 
     it('should reject seat-based subscription when users plus open invites exceed noOfSeats', async () => {
       setupSuperAdminContext();
-      mockNoActiveSubscription();
+      mockNoExistingSubscription();
       mockInvitesAndUsers(3, 4);
       configService.get.mockReturnValue(99.99);
 
@@ -271,12 +306,11 @@ describe('CreateSubscriptionUseCase', () => {
   });
 
   describe('common validation', () => {
-    it('should reject creation when subscription already exists', async () => {
+    it('should reject creation when a non-cancelled subscription exists', async () => {
       setupSuperAdminContext();
-      hasActiveSubscriptionUseCase.execute.mockResolvedValue({
-        hasActiveSubscription: true,
-        subscriptionType: SubscriptionType.SEAT_BASED,
-      });
+      subscriptionRepository.findByOrgId.mockResolvedValue([
+        { cancelledAt: null } as unknown as Subscription,
+      ]);
 
       const command = new CreateSubscriptionCommand({
         orgId,
@@ -289,6 +323,47 @@ describe('CreateSubscriptionUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         SubscriptionAlreadyExistsError,
       );
+    });
+
+    it('should reject creation when a non-cancelled future-dated subscription already exists', async () => {
+      setupSuperAdminContext();
+      subscriptionRepository.findByOrgId.mockResolvedValue([
+        {
+          cancelledAt: null,
+          startsAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+        } as unknown as Subscription,
+      ]);
+
+      const command = new CreateSubscriptionCommand({
+        orgId,
+        requestingUserId,
+        type: SubscriptionType.USAGE_BASED,
+        monthlyCredits: 500,
+        ...baseBillingParams,
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        SubscriptionAlreadyExistsError,
+      );
+    });
+
+    it('should allow creation when only cancelled subscriptions exist', async () => {
+      setupSuperAdminContext();
+      subscriptionRepository.findByOrgId.mockResolvedValue([
+        { cancelledAt: new Date() } as unknown as Subscription,
+      ]);
+
+      const command = new CreateSubscriptionCommand({
+        orgId,
+        requestingUserId,
+        type: SubscriptionType.USAGE_BASED,
+        monthlyCredits: 500,
+        ...baseBillingParams,
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result).toBeInstanceOf(UsageBasedSubscription);
     });
   });
 });

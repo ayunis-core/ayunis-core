@@ -25,6 +25,7 @@ export function toSubscriptionWebhookPayload(
     orgId: subscription.orgId,
     type: subscription.type,
     cancelledAt: subscription.cancelledAt?.toISOString() ?? null,
+    startsAt: subscription.startsAt.toISOString(),
     createdAt: subscription.createdAt.toISOString(),
     updatedAt: subscription.updatedAt.toISOString(),
   };

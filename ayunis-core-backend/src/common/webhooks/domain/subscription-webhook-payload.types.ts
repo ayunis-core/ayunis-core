@@ -5,6 +5,7 @@ export interface SubscriptionWebhookPayloadBase {
   orgId: UUID;
   type: string;
   cancelledAt: string | null;
+  startsAt: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -53,12 +53,14 @@ describe('toSubscriptionWebhookPayload', () => {
   });
 
   it('should serialize dates as ISO strings', () => {
+    const startsAt = new Date('2026-07-01T00:00:00.000Z');
     const sub = new SeatBasedSubscription({
       orgId: randomUUID(),
       noOfSeats: 5,
       pricePerSeat: 12.0,
       renewalCycle: RenewalCycle.YEARLY,
       renewalCycleAnchor: new Date('2025-06-15T00:00:00.000Z'),
+      startsAt,
       billingInfo: createBillingInfo(),
     });
 
@@ -66,6 +68,7 @@ describe('toSubscriptionWebhookPayload', () => {
 
     expect(typeof payload.createdAt).toBe('string');
     expect(typeof payload.updatedAt).toBe('string');
+    expect(payload.startsAt).toBe('2026-07-01T00:00:00.000Z');
     expect(payload.cancelledAt).toBeNull();
   });
 

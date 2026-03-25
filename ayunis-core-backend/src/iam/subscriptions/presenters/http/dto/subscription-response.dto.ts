@@ -76,6 +76,12 @@ export class SubscriptionResponseDto {
   cancelledAt: Date | null;
 
   @ApiProperty({
+    description: 'Date when the subscription becomes active',
+    example: '2026-07-01T00:00:00Z',
+  })
+  startsAt: Date;
+
+  @ApiProperty({
     description: 'Organization ID associated with the subscription',
     example: '123e4567-e89b-12d3-a456-426614174000',
     format: 'uuid',

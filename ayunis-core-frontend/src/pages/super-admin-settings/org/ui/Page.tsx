@@ -7,6 +7,9 @@ import type {
   PaginationDto,
 } from '@/shared/api';
 import { SubscriptionResponseDtoType } from '@/shared/api';
+import { Badge } from '@/shared/ui/shadcn/badge';
+import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
+import { ClockIcon } from 'lucide-react';
 import UsersTable from './UsersTable';
 import OrgDetails from './OrgDetails';
 import LicenseSeatsSection from './LicenseSeatsSection';
@@ -111,6 +114,21 @@ export default function SuperAdminSettingsOrgPage({
         <TabsContent value="subscriptions" className="mt-4">
           {subscription ? (
             <div className="space-y-4">
+              {new Date(subscription.startsAt) > new Date() && (
+                <Alert>
+                  <ClockIcon className="h-4 w-4" />
+                  <AlertDescription className="flex items-center gap-2">
+                    <Badge variant="outline">
+                      {t('subscription.scheduled')}
+                    </Badge>
+                    {t('subscription.scheduledDescription', {
+                      date: new Date(
+                        subscription.startsAt,
+                      ).toLocaleDateString(),
+                    })}
+                  </AlertDescription>
+                </Alert>
+              )}
               {subscription.type === SubscriptionResponseDtoType.SEAT_BASED && (
                 <LicenseSeatsSection
                   subscription={subscription}

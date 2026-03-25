@@ -26,6 +26,9 @@ export abstract class SubscriptionRecord extends BaseRecord {
   @Column({ type: 'timestamp', nullable: true })
   cancelledAt: Date | null;
 
+  @Column({ type: 'timestamp' })
+  startsAt: Date;
+
   @ManyToOne(() => OrgRecord, { onDelete: 'CASCADE' })
   org: OrgRecord;
 
