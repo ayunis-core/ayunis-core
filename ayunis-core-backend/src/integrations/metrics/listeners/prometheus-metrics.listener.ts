@@ -55,7 +55,7 @@ export class PrometheusMetricsListener {
     safeMetric(this.logger, () => {
       this.userCreationsCounter.inc({
         org_id: event.orgId,
-        department: normalizeDepartment(event.department),
+        department: normalizeDepartment(event.user.department),
       });
     });
   }
