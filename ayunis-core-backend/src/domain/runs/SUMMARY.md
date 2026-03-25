@@ -15,6 +15,13 @@ The runs module is the central orchestrator for AI conversation execution. The `
 - **MessageCleanupService** — Cleans up threads after a failed or interrupted run by deleting trailing non-assistant messages and assistant messages with orphaned `tool_use` content (tool calls without corresponding tool results). Only called on the error path — successful runs leave the thread in a valid state by design.
 - **SystemPromptBuilderService** — Builds system prompts from agent configuration, thread context, and active skills. Accepts `SkillEntry[]` (slug + description) instead of `Skill[]` — the slug is used as the skill name in the prompt.
 
+### Domain Events
+
+- **RunExecutedEvent** (`run.executed`) — Emitted when a run completes execution. Carries userId and orgId.
+- **InferenceCompletedEvent** (`run.inference-completed`) — Emitted after an inference call completes. Carries userId, orgId, model, provider, streaming flag, durationMs, and optional error.
+- **TokensConsumedEvent** (`run.tokens-consumed`) — Emitted when tokens are consumed during inference. Carries userId, orgId, model, provider, inputTokens, and outputTokens.
+- **ToolUsedEvent** (`run.tool-used`) — Emitted when a tool is invoked during a run. Carries userId, orgId, and toolName.
+
 ### Helpers
 
 - **resolve-integration.helper.ts** — Pure functions for resolving MCP integration metadata. `resolveIntegration` matches tool names to `McpIntegrationTool` instances and extracts integration metadata. `enrichContentWithIntegration` attaches integration metadata to `ToolUseMessageContent` blocks in assistant responses.
