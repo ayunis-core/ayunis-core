@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ConfirmEmailCommand } from './confirm-email.command';
 import { UsersRepository } from '../../ports/users.repository';
 import {
@@ -11,10 +12,8 @@ import {
   EmailConfirmationJwtService,
   EmailConfirmationJwtPayload,
 } from '../../services/email-confirmation-jwt.service';
-import { SendWebhookCommand } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { UserUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-updated.webhook-event';
-import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { UserUpdatedEvent } from '../../events/user-updated.event';
 
 @Injectable()
 export class ConfirmEmailUseCase {
@@ -23,7 +22,7 @@ export class ConfirmEmailUseCase {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly emailConfirmationJwtService: EmailConfirmationJwtService,
-    private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: ConfirmEmailCommand): Promise<void> {
@@ -69,10 +68,17 @@ export class ConfirmEmailUseCase {
         email: user.email,
       });
 
-      // Send webhook asynchronously (don't block the main operation)
-      void this.sendWebhookUseCase.execute(
-        new SendWebhookCommand(new UserUpdatedWebhookEvent(user)),
-      );
+      this.eventEmitter
+        .emitAsync(
+          UserUpdatedEvent.EVENT_NAME,
+          new UserUpdatedEvent(user.id, user.orgId, user),
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit UserUpdatedEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            userId: user.id,
+          });
+        });
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
