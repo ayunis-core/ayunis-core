@@ -1,7 +1,7 @@
 import {
-  useThreadsControllerRemoveSource,
+  useThreadSourcesControllerRemoveSource,
   type SourceResponseDto,
-  getThreadsControllerGetThreadSourcesQueryKey,
+  getThreadSourcesControllerGetThreadSourcesQueryKey,
   getThreadsControllerFindOneQueryKey,
 } from '@/shared/api';
 import { useQueryClient } from '@tanstack/react-query';
@@ -20,15 +20,19 @@ export function useDeleteFileSource({
   const queryClient = useQueryClient();
   const { t } = useTranslation('common');
   const router = useRouter();
-  const deleteFileSourceMutation = useThreadsControllerRemoveSource({
+  const deleteFileSourceMutation = useThreadSourcesControllerRemoveSource({
     mutation: {
-      onMutate: async ({ sourceId }) => {
+      onMutate: async ({ sourceId }: { sourceId: string }) => {
         if (!threadId) {
           console.warn('Thread ID is required for optimistic update');
-          return;
+          return {
+            previousData: undefined,
+            queryKey: [] as readonly unknown[],
+          };
         }
 
-        const queryKey = getThreadsControllerGetThreadSourcesQueryKey(threadId);
+        const queryKey =
+          getThreadSourcesControllerGetThreadSourcesQueryKey(threadId);
 
         await queryClient.cancelQueries({
           queryKey,
@@ -49,9 +53,18 @@ export function useDeleteFileSource({
           );
         });
 
-        return { previousData, queryKey };
+        return { previousData, queryKey: queryKey as readonly unknown[] };
       },
-      onError: (error, _, context) => {
+      onError: (
+        error: unknown,
+        _: { id: string; sourceId: string },
+        context:
+          | {
+              previousData: SourceResponseDto[] | undefined;
+              queryKey: readonly unknown[];
+            }
+          | undefined,
+      ) => {
         console.error('Error deleting file source', error);
         try {
           const { code } = extractErrorData(error);
