@@ -27,6 +27,7 @@ import {
 } from './metrics.constants';
 import { MetricsAuthMiddleware } from './metrics-auth.middleware';
 import { MetricsController } from './metrics.controller';
+import { PrometheusMetricsListener } from './listeners/prometheus-metrics.listener';
 
 const tokensCounter = makeCounterProvider({
   name: AYUNIS_TOKENS_TOTAL,
@@ -104,7 +105,7 @@ const metricProviders = [
       controller: MetricsController,
     }),
   ],
-  providers: metricProviders,
+  providers: [...metricProviders, PrometheusMetricsListener],
   exports: metricProviders,
 })
 export class MetricsModule implements NestModule {
