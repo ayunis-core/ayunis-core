@@ -49,7 +49,6 @@ import * as fs from 'fs';
 import { Transactional } from '@nestjs-cls/transactional';
 import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
 import { StartDocumentProcessingCommand } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.command';
-import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { Skill } from '../../domain/skill.entity';
@@ -66,8 +65,10 @@ import {
   EmptyFileDataError,
   MissingFileError,
 } from '../../application/skills.errors';
-import { parseCSV } from 'src/common/util/csv';
-import { parseExcel } from 'src/common/util/excel';
+import {
+  buildCsvSourceCommand,
+  buildSpreadsheetSourceCommands,
+} from 'src/common/util/data-source-parsing';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
 
@@ -297,45 +298,25 @@ export class SkillSourcesController {
     originalname: string;
     path: string;
   }): Promise<Source> {
-    const fileData = fs.readFileSync(file.path, 'utf8');
-    const { headers, data } = parseCSV(fileData);
-    return this.createDataSourceUseCase.execute(
-      new CreateCSVDataSourceCommand({
-        name: file.originalname,
-        data: { headers, rows: data },
-      }),
-    );
+    const command = buildCsvSourceCommand(file);
+    return this.createDataSourceUseCase.execute(command);
   }
 
   private async createSpreadsheetSources(file: {
     originalname: string;
     path: string;
   }): Promise<Source[]> {
-    const fileData = fs.readFileSync(file.path);
-    const sheets = parseExcel(fileData);
+    const commands = buildSpreadsheetSourceCommands(file);
 
-    if (sheets.length === 0) {
+    if (commands.length === 0) {
       throw new EmptyFileDataError(file.originalname);
     }
 
-    const baseFileName = file.originalname.replace(/\.(xlsx|xls)$/i, '');
     const sources: Source[] = [];
-
-    for (const sheet of sheets) {
-      const sourceName =
-        sheets.length === 1
-          ? `${baseFileName}.csv`
-          : `${baseFileName}_${sheet.sheetName.replace(/\s+/g, '_')}.csv`;
-
-      const source = await this.createDataSourceUseCase.execute(
-        new CreateCSVDataSourceCommand({
-          name: sourceName,
-          data: { headers: sheet.headers, rows: sheet.rows },
-        }),
-      );
+    for (const command of commands) {
+      const source = await this.createDataSourceUseCase.execute(command);
       sources.push(source);
     }
-
     return sources;
   }
 }

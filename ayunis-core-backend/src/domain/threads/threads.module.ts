@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { ThreadsController } from './presenters/http/threads.controller';
+import { ThreadSourcesController } from './presenters/http/thread-sources.controller';
 import { ThreadKnowledgeBasesController } from './presenters/http/thread-knowledge-bases.controller';
 import { ThreadsRepository } from './application/ports/threads.repository';
 import { LocalThreadsRepositoryModule } from './infrastructure/persistence/local/local-threads-repository.module';
@@ -51,7 +52,7 @@ import { RetrieverModule } from '../retrievers/retriever.module';
     SharesModule,
     RetrieverModule,
   ],
-  controllers: [ThreadsController, ThreadKnowledgeBasesController],
+  controllers: [ThreadsController, ThreadSourcesController, ThreadKnowledgeBasesController],
   providers: [
     {
       provide: ThreadsRepository,

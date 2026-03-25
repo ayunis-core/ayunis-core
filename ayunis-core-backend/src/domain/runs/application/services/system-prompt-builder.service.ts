@@ -3,6 +3,7 @@ import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import {
   TextSource,
   FileSource,
@@ -269,6 +270,32 @@ ${skillEntries}
       return '';
     }
 
+    const readySources = sources.filter((s) => s.status === SourceStatus.READY);
+    const processingSources = sources.filter(
+      (s) => s.status === SourceStatus.PROCESSING,
+    );
+    const failedSources = sources.filter(
+      (s) => s.status === SourceStatus.FAILED,
+    );
+
+    const sections: string[] = [];
+
+    if (readySources.length > 0) {
+      sections.push(this.buildAvailableFilesSection(readySources));
+    }
+
+    if (processingSources.length > 0) {
+      sections.push(this.buildPendingFilesSection(processingSources));
+    }
+
+    if (failedSources.length > 0) {
+      sections.push(this.buildFailedFilesSection(failedSources));
+    }
+
+    return sections.join('\n\n');
+  }
+
+  private buildAvailableFilesSection(sources: Source[]): string {
     const userFiles = sources.filter((s) => s.createdBy === SourceCreator.USER);
     const systemFiles = sources.filter(
       (s) => s.createdBy === SourceCreator.SYSTEM,
@@ -312,6 +339,35 @@ ${systemFiles.map(formatFile).join('\n')}
 </available_files>`;
 
     return section;
+  }
+
+  private buildPendingFilesSection(sources: Source[]): string {
+    const files = sources
+      .map(
+        (s) =>
+          `<file id="${s.id}" name="${this.escapeXml(s.name)}" status="processing" />`,
+      )
+      .join('\n');
+
+    return `<pending_files>
+The following files are currently being processed and are NOT yet available for search.
+If the user asks about these files, let them know the upload is still processing.
+${files}
+</pending_files>`;
+  }
+
+  private buildFailedFilesSection(sources: Source[]): string {
+    const files = sources
+      .map(
+        (s) =>
+          `<file id="${s.id}" name="${this.escapeXml(s.name)}" error="${this.escapeXml(s.processingError ?? 'Unknown error')}" />`,
+      )
+      .join('\n');
+
+    return `<failed_files>
+The following file uploads failed. Let the user know if they ask about them.
+${files}
+</failed_files>`;
   }
 
   private getFileTypeLabel(source: Source): string {
