@@ -1,6 +1,7 @@
 import type { SkillEntry } from 'src/common/util/skill-slug';
 import { SystemPromptBuilderService } from './system-prompt-builder.service';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
@@ -270,6 +271,52 @@ describe('SystemPromptBuilderService', () => {
       expect(result).not.toContain('<available_files>');
       expect(result).not.toContain('<pending_files>');
       expect(result).not.toContain('<failed_files>');
+    });
+
+    it('should list DataSources in available_data_sources, not available_files', () => {
+      const csvSource = new CSVDataSource({
+        id: randomUUID(),
+        name: 'sales-data.csv',
+        data: { headers: ['month', 'revenue'], rows: [['Jan', '1000']] },
+        status: SourceStatus.READY,
+        createdBy: SourceCreator.USER,
+      });
+
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        sources: [csvSource],
+      });
+
+      expect(result).not.toContain('<available_files>');
+      expect(result).toContain('<available_data_sources>');
+      expect(result).toContain('name="sales-data.csv"');
+      expect(result).toContain('code_execution');
+    });
+
+    it('should separate TextSources into available_files and DataSources into available_data_sources', () => {
+      const textSource = createFileSource({
+        name: 'report.pdf',
+        status: SourceStatus.READY,
+      });
+      const csvSource = new CSVDataSource({
+        id: randomUUID(),
+        name: 'data.csv',
+        data: { headers: ['a'], rows: [['1']] },
+        status: SourceStatus.READY,
+        createdBy: SourceCreator.USER,
+      });
+
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        sources: [textSource, csvSource],
+      });
+
+      expect(result).toContain('<available_files>');
+      expect(result).toContain('name="report.pdf"');
+      expect(result).toContain('<available_data_sources>');
+      expect(result).toContain('name="data.csv"');
     });
 
     it('should escape XML-special characters in source names and errors', () => {

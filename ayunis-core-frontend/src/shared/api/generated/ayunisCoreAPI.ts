@@ -152,9 +152,10 @@ import type {
   TeamMemberResponseDto,
   TeamResponseDto,
   TeamsControllerListTeamMembersParams,
-  ThreadsControllerAddFileSourceBody,
+  ThreadSourcesControllerAddFileSource201Item,
+  ThreadSourcesControllerAddFileSourceBody,
+  ThreadSourcesControllerGetThreadSources200Item,
   ThreadsControllerFindAllParams,
-  ThreadsControllerGetThreadSources200Item,
   TranscriptionResponseDto,
   TranscriptionsControllerTranscribeBody,
   TriggerPasswordResetResponseDto,
@@ -7140,13 +7141,13 @@ export const useThreadsControllerUpdateTitle = <TError = void,
 /**
  * @summary Get all sources for a thread
  */
-export const threadsControllerGetThreadSources = (
+export const threadSourcesControllerGetThreadSources = (
     id: string,
  signal?: AbortSignal
 ) => {
       
       
-      return customAxiosInstance<ThreadsControllerGetThreadSources200Item[]>(
+      return customAxiosInstance<ThreadSourcesControllerGetThreadSources200Item[]>(
       {url: `/threads/${id}/sources`, method: 'GET', signal
     },
       );
@@ -7155,69 +7156,69 @@ export const threadsControllerGetThreadSources = (
 
 
 
-export const getThreadsControllerGetThreadSourcesQueryKey = (id?: string,) => {
+export const getThreadSourcesControllerGetThreadSourcesQueryKey = (id?: string,) => {
     return [
     `/threads/${id}/sources`
     ] as const;
     }
 
     
-export const getThreadsControllerGetThreadSourcesQueryOptions = <TData = Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData>>, }
+export const getThreadSourcesControllerGetThreadSourcesQueryOptions = <TData = Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getThreadsControllerGetThreadSourcesQueryKey(id);
+  const queryKey =  queryOptions?.queryKey ?? getThreadSourcesControllerGetThreadSourcesQueryKey(id);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>> = ({ signal }) => threadsControllerGetThreadSources(id, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>> = ({ signal }) => threadSourcesControllerGetThreadSources(id, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type ThreadsControllerGetThreadSourcesQueryResult = NonNullable<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>>
-export type ThreadsControllerGetThreadSourcesQueryError = void
+export type ThreadSourcesControllerGetThreadSourcesQueryResult = NonNullable<Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>>
+export type ThreadSourcesControllerGetThreadSourcesQueryError = void
 
 
-export function useThreadsControllerGetThreadSources<TData = Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError = void>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData>> & Pick<
+export function useThreadSourcesControllerGetThreadSources<TData = Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsControllerGetThreadSources>>,
+          Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>,
           TError,
-          Awaited<ReturnType<typeof threadsControllerGetThreadSources>>
+          Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadsControllerGetThreadSources<TData = Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData>> & Pick<
+export function useThreadSourcesControllerGetThreadSources<TData = Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsControllerGetThreadSources>>,
+          Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>,
           TError,
-          Awaited<ReturnType<typeof threadsControllerGetThreadSources>>
+          Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadsControllerGetThreadSources<TData = Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData>>, }
+export function useThreadSourcesControllerGetThreadSources<TData = Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Get all sources for a thread
  */
 
-export function useThreadsControllerGetThreadSources<TData = Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData>>, }
+export function useThreadSourcesControllerGetThreadSources<TData = Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerGetThreadSources>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getThreadsControllerGetThreadSourcesQueryOptions(id,options)
+  const queryOptions = getThreadSourcesControllerGetThreadSourcesQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -7233,22 +7234,16 @@ export function useThreadsControllerGetThreadSources<TData = Awaited<ReturnType<
 /**
  * @summary Add a file source to a thread
  */
-export const threadsControllerAddFileSource = (
+export const threadSourcesControllerAddFileSource = (
     id: string,
-    threadsControllerAddFileSourceBody: ThreadsControllerAddFileSourceBody,
+    threadSourcesControllerAddFileSourceBody: ThreadSourcesControllerAddFileSourceBody,
  signal?: AbortSignal
 ) => {
       
       const formData = new FormData();
-formData.append(`file`, threadsControllerAddFileSourceBody.file)
-if(threadsControllerAddFileSourceBody.name !== undefined) {
- formData.append(`name`, threadsControllerAddFileSourceBody.name)
- }
-if(threadsControllerAddFileSourceBody.description !== undefined) {
- formData.append(`description`, threadsControllerAddFileSourceBody.description)
- }
+formData.append(`file`, threadSourcesControllerAddFileSourceBody.file)
 
-      return customAxiosInstance<void>(
+      return customAxiosInstance<ThreadSourcesControllerAddFileSource201Item[]>(
       {url: `/threads/${id}/sources/file`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
@@ -7258,11 +7253,11 @@ if(threadsControllerAddFileSourceBody.description !== undefined) {
   
 
 
-export const getThreadsControllerAddFileSourceMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerAddFileSource>>, TError,{id: string;data: ThreadsControllerAddFileSourceBody}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerAddFileSource>>, TError,{id: string;data: ThreadsControllerAddFileSourceBody}, TContext> => {
+export const getThreadSourcesControllerAddFileSourceMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerAddFileSource>>, TError,{id: string;data: ThreadSourcesControllerAddFileSourceBody}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerAddFileSource>>, TError,{id: string;data: ThreadSourcesControllerAddFileSourceBody}, TContext> => {
 
-const mutationKey = ['threadsControllerAddFileSource'];
+const mutationKey = ['threadSourcesControllerAddFileSource'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -7272,10 +7267,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerAddFileSource>>, {id: string;data: ThreadsControllerAddFileSourceBody}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadSourcesControllerAddFileSource>>, {id: string;data: ThreadSourcesControllerAddFileSourceBody}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  threadsControllerAddFileSource(id,data,)
+          return  threadSourcesControllerAddFileSource(id,data,)
         }
 
         
@@ -7283,23 +7278,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ThreadsControllerAddFileSourceMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerAddFileSource>>>
-    export type ThreadsControllerAddFileSourceMutationBody = ThreadsControllerAddFileSourceBody
-    export type ThreadsControllerAddFileSourceMutationError = unknown
+    export type ThreadSourcesControllerAddFileSourceMutationResult = NonNullable<Awaited<ReturnType<typeof threadSourcesControllerAddFileSource>>>
+    export type ThreadSourcesControllerAddFileSourceMutationBody = ThreadSourcesControllerAddFileSourceBody
+    export type ThreadSourcesControllerAddFileSourceMutationError = unknown
 
     /**
  * @summary Add a file source to a thread
  */
-export const useThreadsControllerAddFileSource = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerAddFileSource>>, TError,{id: string;data: ThreadsControllerAddFileSourceBody}, TContext>, }
+export const useThreadSourcesControllerAddFileSource = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerAddFileSource>>, TError,{id: string;data: ThreadSourcesControllerAddFileSourceBody}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof threadsControllerAddFileSource>>,
+        Awaited<ReturnType<typeof threadSourcesControllerAddFileSource>>,
         TError,
-        {id: string;data: ThreadsControllerAddFileSourceBody},
+        {id: string;data: ThreadSourcesControllerAddFileSourceBody},
         TContext
       > => {
 
-      const mutationOptions = getThreadsControllerAddFileSourceMutationOptions(options);
+      const mutationOptions = getThreadSourcesControllerAddFileSourceMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -7307,7 +7302,7 @@ export const useThreadsControllerAddFileSource = <TError = unknown,
 /**
  * @summary Remove a source from a thread
  */
-export const threadsControllerRemoveSource = (
+export const threadSourcesControllerRemoveSource = (
     id: string,
     sourceId: string,
  ) => {
@@ -7321,11 +7316,11 @@ export const threadsControllerRemoveSource = (
   
 
 
-export const getThreadsControllerRemoveSourceMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext> => {
+export const getThreadSourcesControllerRemoveSourceMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext> => {
 
-const mutationKey = ['threadsControllerRemoveSource'];
+const mutationKey = ['threadSourcesControllerRemoveSource'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -7335,10 +7330,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerRemoveSource>>, {id: string;sourceId: string}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadSourcesControllerRemoveSource>>, {id: string;sourceId: string}> = (props) => {
           const {id,sourceId} = props ?? {};
 
-          return  threadsControllerRemoveSource(id,sourceId,)
+          return  threadSourcesControllerRemoveSource(id,sourceId,)
         }
 
         
@@ -7346,23 +7341,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ThreadsControllerRemoveSourceMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerRemoveSource>>>
+    export type ThreadSourcesControllerRemoveSourceMutationResult = NonNullable<Awaited<ReturnType<typeof threadSourcesControllerRemoveSource>>>
     
-    export type ThreadsControllerRemoveSourceMutationError = void
+    export type ThreadSourcesControllerRemoveSourceMutationError = void
 
     /**
  * @summary Remove a source from a thread
  */
-export const useThreadsControllerRemoveSource = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext>, }
+export const useThreadSourcesControllerRemoveSource = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof threadsControllerRemoveSource>>,
+        Awaited<ReturnType<typeof threadSourcesControllerRemoveSource>>,
         TError,
         {id: string;sourceId: string},
         TContext
       > => {
 
-      const mutationOptions = getThreadsControllerRemoveSourceMutationOptions(options);
+      const mutationOptions = getThreadSourcesControllerRemoveSourceMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -7370,7 +7365,7 @@ export const useThreadsControllerRemoveSource = <TError = void,
 /**
  * @summary Download a data source as CSV
  */
-export const threadsControllerDownloadSource = (
+export const threadSourcesControllerDownloadSource = (
     id: string,
     sourceId: string,
  signal?: AbortSignal
@@ -7387,7 +7382,7 @@ export const threadsControllerDownloadSource = (
 
 
 
-export const getThreadsControllerDownloadSourceQueryKey = (id?: string,
+export const getThreadSourcesControllerDownloadSourceQueryKey = (id?: string,
     sourceId?: string,) => {
     return [
     `/threads/${id}/sources/${sourceId}/download`
@@ -7395,67 +7390,67 @@ export const getThreadsControllerDownloadSourceQueryKey = (id?: string,
     }
 
     
-export const getThreadsControllerDownloadSourceQueryOptions = <TData = Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError = void>(id: string,
-    sourceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError, TData>>, }
+export const getThreadSourcesControllerDownloadSourceQueryOptions = <TData = Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>, TError = void>(id: string,
+    sourceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getThreadsControllerDownloadSourceQueryKey(id,sourceId);
+  const queryKey =  queryOptions?.queryKey ?? getThreadSourcesControllerDownloadSourceQueryKey(id,sourceId);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadsControllerDownloadSource>>> = ({ signal }) => threadsControllerDownloadSource(id,sourceId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>> = ({ signal }) => threadSourcesControllerDownloadSource(id,sourceId, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id && sourceId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id && sourceId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type ThreadsControllerDownloadSourceQueryResult = NonNullable<Awaited<ReturnType<typeof threadsControllerDownloadSource>>>
-export type ThreadsControllerDownloadSourceQueryError = void
+export type ThreadSourcesControllerDownloadSourceQueryResult = NonNullable<Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>>
+export type ThreadSourcesControllerDownloadSourceQueryError = void
 
 
-export function useThreadsControllerDownloadSource<TData = Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError = void>(
+export function useThreadSourcesControllerDownloadSource<TData = Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>, TError = void>(
  id: string,
-    sourceId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError, TData>> & Pick<
+    sourceId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsControllerDownloadSource>>,
+          Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>,
           TError,
-          Awaited<ReturnType<typeof threadsControllerDownloadSource>>
+          Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadsControllerDownloadSource<TData = Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError = void>(
+export function useThreadSourcesControllerDownloadSource<TData = Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>, TError = void>(
  id: string,
-    sourceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError, TData>> & Pick<
+    sourceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsControllerDownloadSource>>,
+          Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>,
           TError,
-          Awaited<ReturnType<typeof threadsControllerDownloadSource>>
+          Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadsControllerDownloadSource<TData = Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError = void>(
+export function useThreadSourcesControllerDownloadSource<TData = Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>, TError = void>(
  id: string,
-    sourceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError, TData>>, }
+    sourceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Download a data source as CSV
  */
 
-export function useThreadsControllerDownloadSource<TData = Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError = void>(
+export function useThreadSourcesControllerDownloadSource<TData = Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>, TError = void>(
  id: string,
-    sourceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError, TData>>, }
+    sourceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerDownloadSource>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getThreadsControllerDownloadSourceQueryOptions(id,sourceId,options)
+  const queryOptions = getThreadSourcesControllerDownloadSourceQueryOptions(id,sourceId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

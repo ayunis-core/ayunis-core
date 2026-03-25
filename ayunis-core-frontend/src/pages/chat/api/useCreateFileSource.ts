@@ -1,13 +1,14 @@
 import {
   getThreadsControllerFindOneQueryKey,
-  threadsControllerAddFileSource,
+  threadSourcesControllerAddFileSource,
 } from '@/shared/api';
-import type { ThreadsControllerAddFileSourceBody } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import extractErrorData from '@/shared/api/extract-error-data';
-import { showError } from '@/shared/lib/toast';
+import type { ThreadSourcesControllerAddFileSourceBody } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
+
+const UPLOAD_TIMEOUT_MS = 60_000;
 
 interface UseFileSourceProps {
   threadId?: string;
@@ -15,8 +16,6 @@ interface UseFileSourceProps {
 
 interface UploadFileParams {
   file: File;
-  name?: string;
-  description?: string;
 }
 
 export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
@@ -25,66 +24,20 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
   const queryClient = useQueryClient();
   const createFileSourceMutation = useMutation({
     retry: 0,
-    mutationFn: async ({
+    mutationFn: ({
       id,
       data,
     }: {
       id: string;
-      data: ThreadsControllerAddFileSourceBody;
-    }) => {
-      // Create custom AbortController with 5 minute timeout
-      // because the default timeout is 10 seconds and this will take longer
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes
-
-      try {
-        const result = await threadsControllerAddFileSource(
-          id,
-          data,
-          controller.signal,
-        );
-        clearTimeout(timeoutId);
-        return result;
-      } catch (error) {
-        clearTimeout(timeoutId);
-        throw error;
-      }
-    },
+      data: ThreadSourcesControllerAddFileSourceBody;
+    }) =>
+      threadSourcesControllerAddFileSource(
+        id,
+        data,
+        AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
+      ),
     onError: (error: unknown) => {
-      console.error('Failed to create file source:', error);
-      try {
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'INVALID_FILE_TYPE':
-          case 'UNSUPPORTED_FILE_TYPE':
-            showError(t('chatInput.invalidFileTypeError'));
-            break;
-          case 'EMPTY_FILE_DATA':
-            showError(t('chatInput.fileSourceEmptyDataError'));
-            break;
-          case 'FILE_TOO_LARGE':
-            showError(t('chatInput.fileSourceTooLargeError'));
-            break;
-          case 'TOO_MANY_PAGES':
-            showError(t('chatInput.fileSourceTooManyPagesError'));
-            break;
-          case 'DOCUMENT_TOO_LARGE_FOR_CHAT':
-            showError(t('chatInput.documentTooLargeForChat'));
-            break;
-          case 'SERVICE_BUSY':
-            showError(t('chatInput.fileSourceServiceBusyError'));
-            break;
-          case 'SERVICE_TIMEOUT':
-            showError(t('chatInput.fileSourceTimeoutError'));
-            break;
-          default:
-            showError(t('chatInput.fileSourceUploadError'));
-            break;
-        }
-      } catch {
-        // Non-AxiosError (network failure, request cancellation, etc.)
-        showError(t('chatInput.fileSourceUploadError'));
-      }
+      handleSourceUploadError(error, t);
     },
     onSettled: () => {
       if (!threadId) return;
@@ -95,39 +48,23 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
     },
   });
 
-  function createFileSource({ file, name, description }: UploadFileParams) {
+  function createFileSource({ file }: UploadFileParams) {
     if (!threadId) {
       console.error('Thread ID is required');
-      showError('Thread ID is required');
       return;
     }
 
-    const data: ThreadsControllerAddFileSourceBody = {
-      file,
-      name: name ?? file.name,
-      description,
-    };
-
+    const data: ThreadSourcesControllerAddFileSourceBody = { file };
     createFileSourceMutation.mutate({ id: threadId, data });
   }
 
-  function createFileSourceAsync({
-    file,
-    name,
-    description,
-  }: UploadFileParams) {
+  function createFileSourceAsync({ file }: UploadFileParams) {
     if (!threadId) {
       console.error('Thread ID is required');
-      showError('Thread ID is required');
       return;
     }
 
-    const data: ThreadsControllerAddFileSourceBody = {
-      file,
-      name: name ?? file.name,
-      description,
-    };
-
+    const data: ThreadSourcesControllerAddFileSourceBody = { file };
     return createFileSourceMutation.mutateAsync({ id: threadId, data });
   }
 

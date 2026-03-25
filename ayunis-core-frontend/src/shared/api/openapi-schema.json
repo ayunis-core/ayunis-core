@@ -3656,7 +3656,7 @@
     },
     "/threads/{id}/sources": {
       "get": {
-        "operationId": "ThreadsController_getThreadSources",
+        "operationId": "ThreadSourcesController_getThreadSources",
         "parameters": [
           {
             "name": "id",
@@ -3708,7 +3708,7 @@
     },
     "/threads/{id}/sources/file": {
       "post": {
-        "operationId": "ThreadsController_addFileSource",
+        "operationId": "ThreadSourcesController_addFileSource",
         "parameters": [
           {
             "name": "id",
@@ -3732,14 +3732,6 @@
                     "type": "string",
                     "format": "binary",
                     "description": "The file to upload"
-                  },
-                  "name": {
-                    "type": "string",
-                    "description": "The display name for the file source"
-                  },
-                  "description": {
-                    "type": "string",
-                    "description": "A description of the file source"
                   }
                 },
                 "required": [
@@ -3751,7 +3743,27 @@
         },
         "responses": {
           "201": {
-            "description": "The file source has been successfully added to the thread"
+            "description": "The file source has been successfully added to the thread",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/FileSourceResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/UrlSourceResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/CSVDataSourceResponseDto"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
           }
         },
         "summary": "Add a file source to a thread",
@@ -3762,7 +3774,7 @@
     },
     "/threads/{id}/sources/{sourceId}": {
       "delete": {
-        "operationId": "ThreadsController_removeSource",
+        "operationId": "ThreadSourcesController_removeSource",
         "parameters": [
           {
             "name": "id",
@@ -3801,7 +3813,7 @@
     },
     "/threads/{id}/sources/{sourceId}/download": {
       "get": {
-        "operationId": "ThreadsController_downloadSource",
+        "operationId": "ThreadSourcesController_downloadSource",
         "parameters": [
           {
             "name": "id",
