@@ -276,10 +276,10 @@ ${skillEntries}
       (s) => s.status === SourceStatus.READY && s instanceof TextSource,
     );
     const processingSources = sources.filter(
-      (s) => s.status === SourceStatus.PROCESSING,
+      (s) => s.status === SourceStatus.PROCESSING && s instanceof TextSource,
     );
     const failedSources = sources.filter(
-      (s) => s.status === SourceStatus.FAILED,
+      (s) => s.status === SourceStatus.FAILED && s instanceof TextSource,
     );
 
     const sections: string[] = [];
