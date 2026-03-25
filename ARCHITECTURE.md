@@ -70,6 +70,7 @@ ayunis-core/
 | Module | Summary | Detail |
 |--------|---------|--------|
 | [common](ayunis-core-backend/src/common/SUMMARY.md) | Shared Infrastructure | Base classes, utilities, cross-cutting concerns |
+| [integrations](ayunis-core-backend/src/integrations/SUMMARY.md) | External Integrations | Prometheus metrics and outbound webhook delivery |
 | [admin](ayunis-core-backend/src/admin/SUMMARY.md) | Platform Admin | Super admin routes for platform management |
 | [app](ayunis-core-backend/src/app/SUMMARY.md) | Bootstrap | Application initialization |
 | [config](ayunis-core-backend/src/config/SUMMARY.md) | Configuration | Environment config modules |

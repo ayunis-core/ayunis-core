@@ -5,8 +5,11 @@ import { Thread } from '../../../domain/thread.entity';
 import { AddMessageCommand } from './add-message.command';
 import { MessageAdditionError } from '../../threads.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { AYUNIS_THREAD_MESSAGE_COUNT } from 'src/metrics/metrics.constants';
-import { getUserContextLabels, safeMetric } from 'src/metrics/metrics.utils';
+import { AYUNIS_THREAD_MESSAGE_COUNT } from 'src/integrations/metrics/metrics.constants';
+import {
+  getUserContextLabels,
+  safeMetric,
+} from 'src/integrations/metrics/metrics.utils';
 
 @Injectable()
 export class AddMessageToThreadUseCase {

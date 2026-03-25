@@ -17,8 +17,11 @@ import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-c
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { AYUNIS_TOOL_USES_TOTAL } from 'src/metrics/metrics.constants';
-import { getUserContextLabels, safeMetric } from 'src/metrics/metrics.utils';
+import { AYUNIS_TOOL_USES_TOTAL } from 'src/integrations/metrics/metrics.constants';
+import {
+  getUserContextLabels,
+  safeMetric,
+} from 'src/integrations/metrics/metrics.utils';
 import {
   RunAnonymizationUnavailableError,
   RunToolExecutionFailedError,
