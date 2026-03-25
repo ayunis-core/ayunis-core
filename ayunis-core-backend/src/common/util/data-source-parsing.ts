@@ -3,11 +3,6 @@ import { parseCSV } from 'src/common/util/csv';
 import { parseExcel } from 'src/common/util/excel';
 import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
 
-export interface ParsedCSV {
-  name: string;
-  command: CreateCSVDataSourceCommand;
-}
-
 /**
  * Parse a CSV file and return a data source command.
  */
