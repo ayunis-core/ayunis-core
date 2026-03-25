@@ -14,10 +14,12 @@ import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-s
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
-import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SubscriptionUncancelledEvent } from '../../events/subscription-uncancelled.event';
+import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 
 const mockOrgId = randomUUID();
 const mockUserId = randomUUID();
@@ -68,6 +70,7 @@ describe('UncancelSubscriptionUseCase', () => {
   let useCase: UncancelSubscriptionUseCase;
   let subscriptionRepository: jest.Mocked<SubscriptionRepository>;
   let contextService: jest.Mocked<ContextService>;
+  let eventEmitter: jest.Mocked<Pick<EventEmitter2, 'emitAsync'>>;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -81,8 +84,8 @@ describe('UncancelSubscriptionUseCase', () => {
           },
         },
         {
-          provide: SendWebhookUseCase,
-          useValue: { execute: jest.fn().mockResolvedValue(undefined) },
+          provide: EventEmitter2,
+          useValue: { emitAsync: jest.fn().mockResolvedValue([]) },
         },
         {
           provide: ContextService,
@@ -94,6 +97,7 @@ describe('UncancelSubscriptionUseCase', () => {
     useCase = module.get(UncancelSubscriptionUseCase);
     subscriptionRepository = module.get(SubscriptionRepository);
     contextService = module.get(ContextService);
+    eventEmitter = module.get(EventEmitter2);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'debug').mockImplementation();
@@ -125,6 +129,7 @@ describe('UncancelSubscriptionUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow(
       SubscriptionNotFoundError,
     );
+    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 
   it('should throw SubscriptionNotCancelledError when subscription is not cancelled', async () => {
@@ -135,6 +140,7 @@ describe('UncancelSubscriptionUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow(
       SubscriptionNotCancelledError,
     );
+    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 
   it('should uncancel a seat-based subscription still within its billing period', async () => {
@@ -154,6 +160,17 @@ describe('UncancelSubscriptionUseCase', () => {
 
     expect(subscription.cancelledAt).toBeNull();
     expect(subscriptionRepository.update).toHaveBeenCalledWith(subscription);
+    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+      SubscriptionUncancelledEvent.EVENT_NAME,
+      expect.objectContaining({
+        orgId: mockOrgId,
+        payload: expect.objectContaining({
+          orgId: mockOrgId,
+          type: SubscriptionType.SEAT_BASED,
+          noOfSeats: 10,
+        }),
+      }),
+    );
   });
 
   it('should reject uncancelling a seat-based subscription past its billing period', async () => {
@@ -166,6 +183,7 @@ describe('UncancelSubscriptionUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow(
       SubscriptionExpiredError,
     );
+    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 
   it('should uncancel a usage-based subscription cancelled in the current month', async () => {
@@ -181,6 +199,17 @@ describe('UncancelSubscriptionUseCase', () => {
 
     expect(subscription.cancelledAt).toBeNull();
     expect(subscriptionRepository.update).toHaveBeenCalledWith(subscription);
+    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+      SubscriptionUncancelledEvent.EVENT_NAME,
+      expect.objectContaining({
+        orgId: mockOrgId,
+        payload: expect.objectContaining({
+          orgId: mockOrgId,
+          type: SubscriptionType.USAGE_BASED,
+          monthlyCredits: 1000,
+        }),
+      }),
+    );
   });
 
   it('should reject uncancelling a usage-based subscription cancelled in a previous month', async () => {
@@ -194,5 +223,6 @@ describe('UncancelSubscriptionUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow(
       SubscriptionExpiredError,
     );
+    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 });

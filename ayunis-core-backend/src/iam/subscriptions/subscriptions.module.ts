@@ -1,6 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { WebhooksModule } from 'src/integrations/webhooks/webhooks.module';
 import { HasActiveSubscriptionUseCase } from './application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import { GetActiveSubscriptionUseCase } from './application/use-cases/get-active-subscription/get-active-subscription.use-case';
 import { GetLatestSubscriptionUseCase } from './application/use-cases/get-latest-subscription/get-latest-subscription.use-case';
@@ -38,7 +37,6 @@ import { UpdateStartDateUseCase } from './application/use-cases/update-start-dat
     ]),
     forwardRef(() => UsersModule),
     forwardRef(() => InvitesModule),
-    WebhooksModule,
   ],
   controllers: [SubscriptionsController, SuperAdminSubscriptionsController],
   providers: [
