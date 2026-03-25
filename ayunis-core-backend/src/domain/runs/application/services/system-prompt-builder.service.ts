@@ -131,6 +131,14 @@ When using tools:
 4. **Verify before actions** — For consequential actions (sending emails, creating events), confirm with the user first
 </tool_guidelines>
 
+<document_usage>
+**Default to inline responses.** Respond directly in the chat for questions, explanations, summaries, brainstorming, code snippets, and general conversation — even if the response is long or uses formatting.
+
+Only use create_document when the user explicitly asks for a document they intend to edit, export, or download — for example: "Write me a letter", "Create a report I can export as PDF", "Draft a formal document". Keywords like "document", "letter", "report", "draft", "Schreiben", "Dokument", "Brief", or "Vorlage" are strong signals.
+
+If in doubt, respond inline. The user can always ask you to turn a response into a document.
+</document_usage>
+
 ${toolSpecificSections}
 
 </tool_usage>`;
