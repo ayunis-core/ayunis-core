@@ -2,31 +2,32 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateUserNameUseCase } from './update-user-name.use-case';
 import { UpdateUserNameCommand } from './update-user-name.command';
+import { UserUpdatedEvent } from '../../events/user-updated.event';
 import { UsersRepository } from '../../ports/users.repository';
 import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
 import type { UUID } from 'crypto';
-import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('UpdateUserNameUseCase', () => {
   let useCase: UpdateUserNameUseCase;
   let mockUsersRepository: Partial<UsersRepository>;
-  let mockSendWebhookUseCase: Partial<SendWebhookUseCase>;
+  let mockEventEmitter: { emitAsync: jest.Mock };
 
   beforeAll(async () => {
     mockUsersRepository = {
       findOneById: jest.fn(),
       update: jest.fn(),
     };
-    mockSendWebhookUseCase = {
-      execute: jest.fn(),
+    mockEventEmitter = {
+      emitAsync: jest.fn().mockResolvedValue([]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateUserNameUseCase,
         { provide: UsersRepository, useValue: mockUsersRepository },
-        { provide: SendWebhookUseCase, useValue: mockSendWebhookUseCase },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 
@@ -67,6 +68,34 @@ describe('UpdateUserNameUseCase', () => {
     expect(result).toBe(updatedUser);
   });
 
+  it('should emit UserUpdatedEvent after successful update', async () => {
+    const command = new UpdateUserNameCommand('user-id' as UUID, 'New Name');
+    const mockUser = new User({
+      id: 'user-id' as UUID,
+      email: 'test@example.com',
+      emailVerified: false,
+      passwordHash: 'hash',
+      role: UserRole.USER,
+      orgId: 'org-id' as UUID,
+      name: 'Old Name',
+      hasAcceptedMarketing: false,
+    });
+
+    jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
+    jest.spyOn(mockUsersRepository, 'update').mockResolvedValue(mockUser);
+
+    await useCase.execute(command);
+
+    expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+      UserUpdatedEvent.EVENT_NAME,
+      expect.objectContaining({
+        userId: mockUser.id,
+        orgId: mockUser.orgId,
+        user: mockUser,
+      }),
+    );
+  });
+
   it('should handle repository errors when finding user', async () => {
     const command = new UpdateUserNameCommand('user-id' as UUID, 'New Name');
     const error = new Error('User not found');
@@ -76,6 +105,7 @@ describe('UpdateUserNameUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow();
     expect(mockUsersRepository.findOneById).toHaveBeenCalledWith('user-id');
     expect(mockUsersRepository.update).not.toHaveBeenCalled();
+    expect(mockEventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 
   it('should handle repository errors when updating user', async () => {
@@ -98,5 +128,6 @@ describe('UpdateUserNameUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow();
     expect(mockUsersRepository.findOneById).toHaveBeenCalledWith('user-id');
     expect(mockUsersRepository.update).toHaveBeenCalledWith(mockUser);
+    expect(mockEventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 });

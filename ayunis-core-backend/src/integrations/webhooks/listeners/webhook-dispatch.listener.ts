@@ -37,7 +37,6 @@ export class WebhookDispatchListener {
 
   @OnEvent(UserCreatedEvent.EVENT_NAME)
   async handleUserCreated(event: UserCreatedEvent): Promise<void> {
-    if (!event.user) return;
     await this.dispatch(
       new UserCreatedWebhookEvent({ user: event.user, orgId: event.orgId }),
     );
