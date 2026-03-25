@@ -1,17 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UsersRepository } from '../../ports/users.repository';
 import { DeleteUserCommand } from './delete-user.command';
 import { UserNotFoundError, UserUnauthorizedError } from '../../users.errors';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { SendWebhookCommand } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
-import { UserDeletedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-deleted.webhook-event';
 import { DeleteInviteByEmailUseCase } from 'src/iam/invites/application/use-cases/delete-invite-by-email/delete-invite-by-email.use-case';
 import { DeleteInviteByEmailCommand } from 'src/iam/invites/application/use-cases/delete-invite-by-email/delete-invite-by-email.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Transactional } from '@nestjs-cls/transactional';
 import { InviteNotFoundError } from 'src/iam/invites/application/invites.errors';
+import { UserDeletedEvent } from '../../events/user-deleted.event';
 
 @Injectable()
 export class DeleteUserUseCase {
@@ -20,7 +19,7 @@ export class DeleteUserUseCase {
   constructor(
     private readonly contextService: ContextService,
     private readonly usersRepository: UsersRepository,
-    private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly eventEmitter: EventEmitter2,
     private readonly deleteInviteByEmailUseCase: DeleteInviteByEmailUseCase,
   ) {}
 
@@ -65,8 +64,16 @@ export class DeleteUserUseCase {
         }
         throw error;
       });
-    void this.sendWebhookUseCase.execute(
-      new SendWebhookCommand(new UserDeletedWebhookEvent(command.userId)),
-    );
+    this.eventEmitter
+      .emitAsync(
+        UserDeletedEvent.EVENT_NAME,
+        new UserDeletedEvent(command.userId, userToDelete.orgId),
+      )
+      .catch((err: unknown) => {
+        this.logger.error('Failed to emit UserDeletedEvent', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+          userId: command.userId,
+        });
+      });
   }
 }

@@ -1,12 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UsersRepository } from '../../ports/users.repository';
 import { UpdateUserRoleCommand } from './update-user-role.command';
 import { User } from '../../../domain/user.entity';
 import { UserNotFoundError, UserUnexpectedError } from '../../users.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
-import { SendWebhookCommand } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { UserUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-updated.webhook-event';
+import { UserUpdatedEvent } from '../../events/user-updated.event';
 
 @Injectable()
 export class UpdateUserRoleUseCase {
@@ -14,7 +13,7 @@ export class UpdateUserRoleUseCase {
 
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: UpdateUserRoleCommand): Promise<User> {
@@ -36,9 +35,17 @@ export class UpdateUserRoleUseCase {
       // Save the updated user
       const updatedUser = await this.usersRepository.update(user);
 
-      void this.sendWebhookUseCase.execute(
-        new SendWebhookCommand(new UserUpdatedWebhookEvent(updatedUser)),
-      );
+      this.eventEmitter
+        .emitAsync(
+          UserUpdatedEvent.EVENT_NAME,
+          new UserUpdatedEvent(updatedUser.id, updatedUser.orgId, updatedUser),
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit UserUpdatedEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            userId: updatedUser.id,
+          });
+        });
 
       return updatedUser;
     } catch (error) {

@@ -1,7 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { InjectMetric } from '@willsoto/nestjs-prometheus';
-import { Counter } from 'prom-client';
 import { UsersRepository } from '../../ports/users.repository';
 import { CreateUserCommand } from './create-user.command';
 import { User } from '../../../domain/user.entity';
@@ -13,14 +11,9 @@ import {
   UserEmailProviderBlacklistedError,
 } from '../../users.errors';
 import { HashingError } from '../../../../hashing/application/hashing.errors';
-import { UserCreatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-created.webhook-event';
-import { SendWebhookCommand } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { ConfigService } from '@nestjs/config';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UserCreatedEvent } from '../../events/user-created.event';
-import { AYUNIS_USER_CREATIONS_TOTAL } from 'src/integrations/metrics/metrics.constants';
-import { safeMetric } from 'src/integrations/metrics/metrics.utils';
 
 @Injectable()
 export class CreateUserUseCase {
@@ -29,11 +22,8 @@ export class CreateUserUseCase {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly hashTextUseCase: HashTextUseCase,
-    private readonly sendWebhookUseCase: SendWebhookUseCase,
     private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
-    @InjectMetric(AYUNIS_USER_CREATIONS_TOTAL)
-    private readonly userCreationsCounter: Counter<string>,
   ) {}
 
   async execute(command: CreateUserCommand): Promise<User> {
@@ -100,30 +90,10 @@ export class CreateUserUseCase {
         role: command.role,
       });
 
-      safeMetric(this.logger, () => {
-        this.userCreationsCounter.inc({
-          org_id: command.orgId,
-          department:
-            (createdUser.department?.startsWith('other:')
-              ? 'other'
-              : createdUser.department) ?? 'none',
-        });
-      });
-
-      // Send webhook asynchronously (don't block the main operation)
-      void this.sendWebhookUseCase.execute(
-        new SendWebhookCommand(
-          new UserCreatedWebhookEvent({
-            user: createdUser,
-            orgId: command.orgId,
-          }),
-        ),
-      );
-
       this.eventEmitter
         .emitAsync(
           UserCreatedEvent.EVENT_NAME,
-          new UserCreatedEvent(createdUser.id, command.orgId),
+          new UserCreatedEvent(createdUser.id, command.orgId, createdUser),
         )
         .catch((err: unknown) => {
           this.logger.error('Failed to emit UserCreatedEvent', {

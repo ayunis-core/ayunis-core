@@ -18,7 +18,7 @@ export const minimalFixture = {
 
   user: {
     email: 'admin@demo.local',
-    password: 'admin', // eslint-disable-line sonarjs/no-hardcoded-passwords -- test fixture, not a real credential
+    password: 'admin',
     name: 'Admin',
     role: UserRole.ADMIN,
     systemRole: SystemRole.SUPER_ADMIN,
@@ -28,7 +28,7 @@ export const minimalFixture = {
 
   usageUser: {
     email: 'admin@usage.local',
-    password: 'admin', // eslint-disable-line sonarjs/no-hardcoded-passwords -- test fixture, not a real credential
+    password: 'admin',
     name: 'Usage Admin',
     role: UserRole.ADMIN,
     systemRole: SystemRole.CUSTOMER,

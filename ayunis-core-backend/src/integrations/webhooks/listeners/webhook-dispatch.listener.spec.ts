@@ -70,21 +70,15 @@ describe('WebhookDispatchListener', () => {
   });
 
   describe('handleUserCreated', () => {
-    it('should dispatch UserCreatedWebhookEvent when user is present', async () => {
+    it('should dispatch UserCreatedWebhookEvent', async () => {
       const user = makeUser();
       await listener.handleUserCreated(
-        new UserCreatedEvent(USER_ID, ORG_ID, user, 'engineering'),
+        new UserCreatedEvent(USER_ID, ORG_ID, user),
       );
 
       expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
       const command = sendWebhookUseCase.execute.mock.calls[0][0];
       expect(command.event.eventType).toBe(WebhookEventType.USER_CREATED);
-    });
-
-    it('should not dispatch when user is absent', async () => {
-      await listener.handleUserCreated(new UserCreatedEvent(USER_ID, ORG_ID));
-
-      expect(sendWebhookUseCase.execute).not.toHaveBeenCalled();
     });
   });
 
