@@ -13,6 +13,5 @@ import { WebhookDispatchListener } from './listeners/webhook-dispatch.listener';
     SendWebhookUseCase,
     WebhookDispatchListener,
   ],
-  exports: [SendWebhookUseCase],
 })
 export class WebhooksModule {}

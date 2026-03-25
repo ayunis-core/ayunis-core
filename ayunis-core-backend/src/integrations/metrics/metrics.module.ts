@@ -1,4 +1,4 @@
-import { Global, Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import {
   PrometheusModule,
   makeCounterProvider,
@@ -96,7 +96,6 @@ const metricProviders = [
   userCreationsCounter,
 ];
 
-@Global()
 @Module({
   imports: [
     PrometheusModule.register({
@@ -106,7 +105,6 @@ const metricProviders = [
     }),
   ],
   providers: [...metricProviders, PrometheusMetricsListener],
-  exports: metricProviders,
 })
 export class MetricsModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
