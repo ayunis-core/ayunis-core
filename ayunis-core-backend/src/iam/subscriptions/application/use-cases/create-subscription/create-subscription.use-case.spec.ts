@@ -9,7 +9,7 @@ import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { HasActiveSubscriptionUseCase } from '../has-active-subscription/has-active-subscription.use-case';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
-import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
@@ -23,6 +23,7 @@ import {
   TooManyUsedSeatsError,
 } from '../../subscription.errors';
 import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
+import { SubscriptionCreatedEvent } from '../../events/subscription-created.event';
 
 describe('CreateSubscriptionUseCase', () => {
   let useCase: CreateSubscriptionUseCase;
@@ -32,6 +33,7 @@ describe('CreateSubscriptionUseCase', () => {
   let findUsersByOrgIdUseCase: jest.Mocked<FindUsersByOrgIdUseCase>;
   let configService: jest.Mocked<ConfigService>;
   let contextService: jest.Mocked<ContextService>;
+  let eventEmitter: jest.Mocked<Pick<EventEmitter2, 'emitAsync'>>;
 
   const orgId = randomUUID();
   const requestingUserId = randomUUID();
@@ -68,8 +70,8 @@ describe('CreateSubscriptionUseCase', () => {
           useValue: { execute: jest.fn() },
         },
         {
-          provide: SendWebhookUseCase,
-          useValue: { execute: jest.fn().mockResolvedValue(undefined) },
+          provide: EventEmitter2,
+          useValue: { emitAsync: jest.fn().mockResolvedValue([]) },
         },
         {
           provide: ConfigService,
@@ -89,6 +91,7 @@ describe('CreateSubscriptionUseCase', () => {
     findUsersByOrgIdUseCase = module.get(FindUsersByOrgIdUseCase);
     configService = module.get(ConfigService);
     contextService = module.get(ContextService);
+    eventEmitter = module.get(EventEmitter2);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'debug').mockImplementation();
@@ -156,6 +159,17 @@ describe('CreateSubscriptionUseCase', () => {
       expect(subscriptionRepository.create).toHaveBeenCalledWith(
         expect.any(UsageBasedSubscription),
       );
+      expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+        SubscriptionCreatedEvent.EVENT_NAME,
+        expect.objectContaining({
+          orgId,
+          payload: expect.objectContaining({
+            orgId,
+            type: SubscriptionType.USAGE_BASED,
+            monthlyCredits: 500,
+          }),
+        }),
+      );
     });
 
     it('should reject usage-based subscription with monthlyCredits <= 0', async () => {
@@ -173,6 +187,7 @@ describe('CreateSubscriptionUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         InvalidSubscriptionDataError,
       );
+      expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
     });
 
     it('should reject usage-based subscription without monthlyCredits', async () => {
@@ -189,6 +204,7 @@ describe('CreateSubscriptionUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         InvalidSubscriptionDataError,
       );
+      expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
     });
 
     it('should not query invites or users for usage-based subscription', async () => {
@@ -230,6 +246,18 @@ describe('CreateSubscriptionUseCase', () => {
       expect(result).toBeInstanceOf(SeatBasedSubscription);
       expect((result as SeatBasedSubscription).noOfSeats).toBe(5);
       expect((result as SeatBasedSubscription).pricePerSeat).toBe(99.99);
+      expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+        SubscriptionCreatedEvent.EVENT_NAME,
+        expect.objectContaining({
+          orgId,
+          payload: expect.objectContaining({
+            orgId,
+            type: SubscriptionType.SEAT_BASED,
+            noOfSeats: 5,
+            pricePerSeat: 99.99,
+          }),
+        }),
+      );
     });
 
     it('should default to SEAT_BASED when type is not specified', async () => {
@@ -267,6 +295,7 @@ describe('CreateSubscriptionUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         TooManyUsedSeatsError,
       );
+      expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
     });
   });
 
@@ -289,6 +318,7 @@ describe('CreateSubscriptionUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         SubscriptionAlreadyExistsError,
       );
+      expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
     });
   });
 });

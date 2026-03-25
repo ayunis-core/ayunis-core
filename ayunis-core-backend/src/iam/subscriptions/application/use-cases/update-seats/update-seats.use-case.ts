@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UpdateSeatsCommand } from './update-seats.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import {
@@ -16,10 +17,8 @@ import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-
 import { GetActiveSubscriptionQuery } from '../get-active-subscription/get-active-subscription.query';
 import { GetActiveSubscriptionUseCase } from '../get-active-subscription/get-active-subscription.use-case';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
-import { SendWebhookCommand } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { SubscriptionSeatsUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-seats-updated.webhook-event';
-import { toSubscriptionWebhookPayload } from '../../mappers/subscription-webhook-payload.mapper';
+import { SubscriptionSeatsUpdatedEvent } from '../../events/subscription-seats-updated.event';
+import { toSubscriptionEventData } from '../../mappers/to-subscription-event-data.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
 
@@ -32,7 +31,7 @@ export class UpdateSeatsUseCase {
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
-    private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
   ) {}
 
@@ -125,14 +124,20 @@ export class UpdateSeatsUseCase {
         newSeats: subscription.noOfSeats,
       });
 
-      // Send webhook asynchronously (don't block the main operation)
-      void this.sendWebhookUseCase.execute(
-        new SendWebhookCommand(
-          new SubscriptionSeatsUpdatedWebhookEvent(
-            toSubscriptionWebhookPayload(subscription),
+      this.eventEmitter
+        .emitAsync(
+          SubscriptionSeatsUpdatedEvent.EVENT_NAME,
+          new SubscriptionSeatsUpdatedEvent(
+            command.orgId,
+            toSubscriptionEventData(subscription),
           ),
-        ),
-      );
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit SubscriptionSeatsUpdatedEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            orgId: command.orgId,
+          });
+        });
     } catch (error) {
       if (error instanceof ApplicationError) {
         // Already logged and properly typed error, just rethrow

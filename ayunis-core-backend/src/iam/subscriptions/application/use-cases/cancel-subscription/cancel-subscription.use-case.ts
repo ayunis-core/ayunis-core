@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CancelSubscriptionCommand } from './cancel-subscription.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import {
@@ -9,10 +10,8 @@ import {
 import { GetActiveSubscriptionUseCase } from '../get-active-subscription/get-active-subscription.use-case';
 import { GetActiveSubscriptionQuery } from '../get-active-subscription/get-active-subscription.query';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
-import { SendWebhookCommand } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { SubscriptionCancelledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-cancelled.webhook-event';
-import { toSubscriptionWebhookPayload } from '../../mappers/subscription-webhook-payload.mapper';
+import { SubscriptionCancelledEvent } from '../../events/subscription-cancelled.event';
+import { toSubscriptionEventData } from '../../mappers/to-subscription-event-data.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
 
@@ -23,7 +22,7 @@ export class CancelSubscriptionUseCase {
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
-    private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
   ) {}
 
@@ -74,14 +73,20 @@ export class CancelSubscriptionUseCase {
         cancelledAt: subscription.cancelledAt,
       });
 
-      // Send webhook asynchronously (don't block the main operation)
-      void this.sendWebhookUseCase.execute(
-        new SendWebhookCommand(
-          new SubscriptionCancelledWebhookEvent(
-            toSubscriptionWebhookPayload(subscription),
+      this.eventEmitter
+        .emitAsync(
+          SubscriptionCancelledEvent.EVENT_NAME,
+          new SubscriptionCancelledEvent(
+            command.orgId,
+            toSubscriptionEventData(subscription),
           ),
-        ),
-      );
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit SubscriptionCancelledEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            orgId: command.orgId,
+          });
+        });
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
