@@ -17,6 +17,7 @@ The runs module is the central orchestrator for AI conversation execution. The `
 
 ### Helpers
 
+- **extract-inference-error-info.helper.ts** — Pure function `extractInferenceErrorInfo` that builds an `InferenceErrorInfo` from an unknown caught error. Handles `Error` instances, plain objects with a `message` property, and arbitrary non-Error exceptions (stringified). Extracts provider SDK status codes (`status` / `statusCode`) when present.
 - **resolve-integration.helper.ts** — Pure functions for resolving MCP integration metadata. `resolveIntegration` matches tool names to `McpIntegrationTool` instances and extracts integration metadata. `enrichContentWithIntegration` attaches integration metadata to `ToolUseMessageContent` blocks in assistant responses.
 - **skill-slug.ts** — Located in `src/common/util/`. Pure functions for slugifying skill names (`slugify` with German transliteration), building prefixed slugs (`buildSkillSlug`), parsing slugs back to prefix + slug (`parseSkillSlug`), and building collision-safe slug→name maps (`buildSlugMap`). Defines `SYSTEM_PREFIX` (`system`) and `USER_PREFIX` (`user`) constants.
 
