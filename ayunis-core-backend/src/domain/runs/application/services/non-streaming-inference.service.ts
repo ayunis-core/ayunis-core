@@ -11,8 +11,8 @@ import { Tool } from 'src/domain/tools/domain/tool.entity';
 import {
   AYUNIS_INFERENCE_DURATION_SECONDS,
   AYUNIS_INFERENCE_ERRORS_TOTAL,
-} from 'src/metrics/metrics.constants';
-import { recordInferenceMetrics } from 'src/metrics/record-inference-metrics.helper';
+} from 'src/integrations/metrics/metrics.constants';
+import { recordInferenceMetrics } from 'src/integrations/metrics/record-inference-metrics.helper';
 
 /**
  * Executes non-streaming inference with metrics instrumentation.

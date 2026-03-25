@@ -9,7 +9,7 @@ import {
 } from '../../users.errors';
 import type { UsersRepository } from '../../ports/users.repository';
 import type { HashTextUseCase } from '../../../../hashing/application/use-cases/hash-text/hash-text.use-case';
-import type { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import type { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import type { ConfigService } from '@nestjs/config';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
