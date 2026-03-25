@@ -36,7 +36,7 @@ export class CreateDocumentTool extends DisplayableTool {
     super({
       name: ToolType.CREATE_DOCUMENT,
       description:
-        'Create a new document that the user can view and edit in a WYSIWYG editor. Use this when the user asks you to write, draft, or create a document, report, letter, or any structured text content.',
+        'Create a new document that the user can view and edit in a WYSIWYG editor. Only use this when the user explicitly asks for a document they can edit, export, or download — for example a letter, report, or formal text. Do not use this for regular conversational answers.',
       parameters: createDocumentToolParameters,
       type: ToolType.CREATE_DOCUMENT,
     });
