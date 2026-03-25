@@ -114,6 +114,8 @@ jobs:
             sed 's/^### \(.*\)/*\1*/g' | \
             # Convert markdown links [text](url) to Slack format <url|text>
             sed 's/\[\([^]]*\)\](\([^)]*\))/<\2|\1>/g' | \
+            # Convert **bold** (GitHub Markdown) to *bold* (Slack mrkdwn)
+            sed 's/\*\*\([^*]*\)\*\*/\*\1\*/g' | \
             # Convert bullet points to proper bullets
             sed 's/^\* /• /g' | \
             # Remove empty lines at the start
