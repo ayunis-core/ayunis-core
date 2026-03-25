@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UncancelSubscriptionCommand } from './uncancel-subscription.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import {
@@ -8,10 +9,8 @@ import {
   UnexpectedSubscriptionError,
 } from '../../subscription.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
-import { SendWebhookCommand } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { SubscriptionUncancelledWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-uncancelled.webhook-event';
-import { toSubscriptionWebhookPayload } from '../../mappers/subscription-webhook-payload.mapper';
+import { SubscriptionUncancelledEvent } from '../../events/subscription-uncancelled.event';
+import { toSubscriptionEventData } from '../../mappers/to-subscription-event-data.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
 import { isActive } from '../../util/is-active';
@@ -24,7 +23,7 @@ export class UncancelSubscriptionUseCase {
 
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
-    private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
   ) {}
 
@@ -78,14 +77,20 @@ export class UncancelSubscriptionUseCase {
         orgId: command.orgId,
       });
 
-      // Send webhook asynchronously (don't block the main operation)
-      void this.sendWebhookUseCase.execute(
-        new SendWebhookCommand(
-          new SubscriptionUncancelledWebhookEvent(
-            toSubscriptionWebhookPayload(subscription),
+      this.eventEmitter
+        .emitAsync(
+          SubscriptionUncancelledEvent.EVENT_NAME,
+          new SubscriptionUncancelledEvent(
+            command.orgId,
+            toSubscriptionEventData(subscription),
           ),
-        ),
-      );
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit SubscriptionUncancelledEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            orgId: command.orgId,
+          });
+        });
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;

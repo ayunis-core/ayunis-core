@@ -9,10 +9,9 @@ import { GetActiveSubscriptionUseCase } from '../get-active-subscription/get-act
 import { UpdateBillingInfoCommand } from './update-billing-info.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { Injectable, Logger } from '@nestjs/common';
-import { SendWebhookCommand } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { SubscriptionBillingInfoUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-billing-info-updated.webhook-event';
-import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
-import type { BillingInfoPayload } from 'src/integrations/webhooks/domain/subscription-webhook-payload.types';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { SubscriptionBillingInfoUpdatedEvent } from '../../events/subscription-billing-info-updated.event';
+import type { BillingInfoEventData } from '../../events/subscription-event-data.types';
 import { ContextService } from 'src/common/context/services/context.service';
 import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
 
@@ -23,7 +22,7 @@ export class UpdateBillingInfoUseCase {
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
-    private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
   ) {}
 
@@ -57,7 +56,7 @@ export class UpdateBillingInfoUseCase {
 
       subscription.subscription.billingInfo = billingInfo;
 
-      const billingInfoPayload: BillingInfoPayload = {
+      const billingInfoEventData: BillingInfoEventData = {
         companyName: billingInfo.companyName,
         street: billingInfo.street,
         houseNumber: billingInfo.houseNumber,
@@ -70,11 +69,23 @@ export class UpdateBillingInfoUseCase {
         subscriptionId: subscription.subscription.id,
       };
 
-      void this.sendWebhookUseCase.execute(
-        new SendWebhookCommand(
-          new SubscriptionBillingInfoUpdatedWebhookEvent(billingInfoPayload),
-        ),
-      );
+      this.eventEmitter
+        .emitAsync(
+          SubscriptionBillingInfoUpdatedEvent.EVENT_NAME,
+          new SubscriptionBillingInfoUpdatedEvent(
+            command.orgId,
+            billingInfoEventData,
+          ),
+        )
+        .catch((err: unknown) => {
+          this.logger.error(
+            'Failed to emit SubscriptionBillingInfoUpdatedEvent',
+            {
+              error: err instanceof Error ? err.message : 'Unknown error',
+              orgId: command.orgId,
+            },
+          );
+        });
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error(error);

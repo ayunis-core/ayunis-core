@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateSubscriptionCommand } from './create-subscription.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
@@ -21,10 +22,8 @@ import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-
 import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
-import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
-import { SendWebhookCommand } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { SubscriptionCreatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-created.webhook-events';
-import { toSubscriptionWebhookPayload } from '../../mappers/subscription-webhook-payload.mapper';
+import { SubscriptionCreatedEvent } from '../../events/subscription-created.event';
+import { toSubscriptionEventData } from '../../mappers/to-subscription-event-data.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
 
@@ -37,7 +36,7 @@ export class CreateSubscriptionUseCase {
     private readonly configService: ConfigService,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
-    private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
   ) {}
 
@@ -65,13 +64,20 @@ export class CreateSubscriptionUseCase {
         type: command.type,
       });
 
-      void this.sendWebhookUseCase.execute(
-        new SendWebhookCommand(
-          new SubscriptionCreatedWebhookEvent(
-            toSubscriptionWebhookPayload(createdSubscription),
+      this.eventEmitter
+        .emitAsync(
+          SubscriptionCreatedEvent.EVENT_NAME,
+          new SubscriptionCreatedEvent(
+            command.orgId,
+            toSubscriptionEventData(createdSubscription),
           ),
-        ),
-      );
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit SubscriptionCreatedEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            orgId: command.orgId,
+          });
+        });
 
       return createdSubscription;
     } catch (error) {
