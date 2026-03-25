@@ -35,6 +35,6 @@ export interface BillingInfoEventData {
   country: string;
   vatNumber?: string;
   subText?: string;
-  orgId: string;
-  subscriptionId: string;
+  orgId: UUID;
+  subscriptionId: UUID;
 }
