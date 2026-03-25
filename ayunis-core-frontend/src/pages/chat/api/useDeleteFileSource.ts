@@ -1,7 +1,7 @@
 import {
-  useThreadsControllerRemoveSource,
+  useThreadSourcesControllerRemoveSource,
   type SourceResponseDto,
-  getThreadsControllerGetThreadSourcesQueryKey,
+  getThreadSourcesControllerGetThreadSourcesQueryKey,
   getThreadsControllerFindOneQueryKey,
 } from '@/shared/api';
 import { useQueryClient } from '@tanstack/react-query';
@@ -20,7 +20,7 @@ export function useDeleteFileSource({
   const queryClient = useQueryClient();
   const { t } = useTranslation('common');
   const router = useRouter();
-  const deleteFileSourceMutation = useThreadsControllerRemoveSource({
+  const deleteFileSourceMutation = useThreadSourcesControllerRemoveSource({
     mutation: {
       onMutate: async ({ sourceId }) => {
         if (!threadId) {
@@ -28,7 +28,8 @@ export function useDeleteFileSource({
           return;
         }
 
-        const queryKey = getThreadsControllerGetThreadSourcesQueryKey(threadId);
+        const queryKey =
+          getThreadSourcesControllerGetThreadSourcesQueryKey(threadId);
 
         await queryClient.cancelQueries({
           queryKey,

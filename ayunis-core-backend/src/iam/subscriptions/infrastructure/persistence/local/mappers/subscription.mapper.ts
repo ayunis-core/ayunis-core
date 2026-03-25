@@ -37,6 +37,7 @@ export class SubscriptionMapper {
       record.createdAt = domain.createdAt;
       record.updatedAt = domain.updatedAt;
       record.cancelledAt = domain.cancelledAt;
+      record.startsAt = domain.startsAt;
       record.orgId = domain.orgId;
       record.noOfSeats = domain.noOfSeats;
       record.pricePerSeat = domain.pricePerSeat;
@@ -55,6 +56,7 @@ export class SubscriptionMapper {
       record.createdAt = domain.createdAt;
       record.updatedAt = domain.updatedAt;
       record.cancelledAt = domain.cancelledAt;
+      record.startsAt = domain.startsAt;
       record.orgId = domain.orgId;
       record.monthlyCredits = domain.monthlyCredits;
       record.billingInfo = this.subscriptionBillingInfoMapper.toRecord(
@@ -79,7 +81,7 @@ export class SubscriptionMapper {
         'renewalCycle',
         'renewalCycleAnchor',
       ] as const
-    ).filter((field) => record[field] === null || record[field] === undefined);
+    ).filter((field) => record[field] === null);
 
     if (nullFields.length > 0) {
       throw new InvalidSubscriptionDataError(
@@ -92,6 +94,7 @@ export class SubscriptionMapper {
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
       cancelledAt: record.cancelledAt,
+      startsAt: record.startsAt,
       orgId: record.orgId,
       noOfSeats: record.noOfSeats!,
       pricePerSeat: record.pricePerSeat!,
@@ -106,7 +109,7 @@ export class SubscriptionMapper {
   private usageBasedToDomain(
     record: UsageBasedSubscriptionRecord,
   ): UsageBasedSubscription {
-    if (record.monthlyCredits === null || record.monthlyCredits === undefined) {
+    if (record.monthlyCredits === null) {
       throw new InvalidSubscriptionDataError(
         `Usage-based subscription ${record.id} has null monthlyCredits`,
       );
@@ -117,6 +120,7 @@ export class SubscriptionMapper {
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
       cancelledAt: record.cancelledAt,
+      startsAt: record.startsAt,
       orgId: record.orgId,
       monthlyCredits: record.monthlyCredits,
       billingInfo: this.subscriptionBillingInfoMapper.toDomain(

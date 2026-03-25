@@ -40,7 +40,7 @@ import {
 import { CreateSubscriptionRequestDto } from './dto/create-subscription-request.dto';
 import { ActiveSubscriptionResponseDto } from './dto/active-subscription-response.dto';
 import { SubscriptionResponseMapper } from './mappers/subscription-response.mapper';
-import { HasActiveSubscriptionUseCase } from '../../application/use-cases/has-active-subscription/has-active-subscription.use-case';
+
 import { UpdateSeatsCommand } from '../../application/use-cases/update-seats/update-seats.command';
 import { UpdateSeatsDto } from './dto/update-seats.dto';
 import { UpdateSeatsUseCase } from '../../application/use-cases/update-seats/update-seats.use-case';
@@ -69,7 +69,6 @@ export class SuperAdminSubscriptionsController {
     private readonly createSubscriptionUseCase: CreateSubscriptionUseCase,
     private readonly cancelSubscriptionUseCase: CancelSubscriptionUseCase,
     private readonly uncancelSubscriptionUseCase: UncancelSubscriptionUseCase,
-    private readonly hasActiveSubscriptionUseCase: HasActiveSubscriptionUseCase,
     private readonly subscriptionResponseMapper: SubscriptionResponseMapper,
     private readonly updateSeatsUseCase: UpdateSeatsUseCase,
     private readonly updateBillingInfoUseCase: UpdateBillingInfoUseCase,
@@ -187,6 +186,9 @@ export class SuperAdminSubscriptionsController {
       city: createSubscriptionDto.city,
       country: createSubscriptionDto.country,
       vatNumber: createSubscriptionDto.vatNumber,
+      startsAt: createSubscriptionDto.startsAt
+        ? new Date(createSubscriptionDto.startsAt)
+        : undefined,
     });
 
     await this.createSubscriptionUseCase.execute(command);

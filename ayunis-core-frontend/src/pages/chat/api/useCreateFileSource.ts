@@ -1,8 +1,8 @@
 import {
   getThreadsControllerFindOneQueryKey,
-  threadsControllerAddFileSource,
+  threadSourcesControllerAddFileSource,
 } from '@/shared/api';
-import type { ThreadsControllerAddFileSourceBody } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ThreadSourcesControllerAddFileSourceBody } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
@@ -30,7 +30,7 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
       data,
     }: {
       id: string;
-      data: ThreadsControllerAddFileSourceBody;
+      data: ThreadSourcesControllerAddFileSourceBody;
     }) => {
       // Create custom AbortController with 5 minute timeout
       // because the default timeout is 10 seconds and this will take longer
@@ -38,7 +38,7 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
       const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes
 
       try {
-        const result = await threadsControllerAddFileSource(
+        const result = await threadSourcesControllerAddFileSource(
           id,
           data,
           controller.signal,
@@ -102,7 +102,7 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
       return;
     }
 
-    const data: ThreadsControllerAddFileSourceBody = {
+    const data: ThreadSourcesControllerAddFileSourceBody = {
       file,
       name: name ?? file.name,
       description,
@@ -122,7 +122,7 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
       return;
     }
 
-    const data: ThreadsControllerAddFileSourceBody = {
+    const data: ThreadSourcesControllerAddFileSourceBody = {
       file,
       name: name ?? file.name,
       description,

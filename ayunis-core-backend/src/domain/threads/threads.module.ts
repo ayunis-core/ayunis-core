@@ -52,7 +52,11 @@ import { RetrieverModule } from '../retrievers/retriever.module';
     SharesModule,
     RetrieverModule,
   ],
-  controllers: [ThreadsController, ThreadSourcesController, ThreadKnowledgeBasesController],
+  controllers: [
+    ThreadsController,
+    ThreadSourcesController,
+    ThreadKnowledgeBasesController,
+  ],
   providers: [
     {
       provide: ThreadsRepository,

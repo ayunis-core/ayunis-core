@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsDateString,
   IsEnum,
   IsNumber,
   IsOptional,
@@ -57,4 +58,13 @@ export class CreateSubscriptionRequestDto extends BillingInfoFieldsDto {
   @IsOptional()
   @IsString()
   subText?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately.',
+    example: '2026-07-01T00:00:00.000Z',
+  })
+  @IsOptional()
+  @IsDateString()
+  startsAt?: string;
 }
