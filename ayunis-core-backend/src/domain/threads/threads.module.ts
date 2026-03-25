@@ -38,7 +38,6 @@ import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module'
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
 import { SharesModule } from '../shares/shares.module';
-import { RetrieverModule } from '../retrievers/retriever.module';
 @Module({
   imports: [
     LocalThreadsRepositoryModule,
@@ -50,7 +49,6 @@ import { RetrieverModule } from '../retrievers/retriever.module';
     OrgsModule,
     StorageModule,
     SharesModule,
-    RetrieverModule,
   ],
   controllers: [ThreadsController, ThreadSourcesController, ThreadKnowledgeBasesController],
   providers: [
