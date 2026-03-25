@@ -50,6 +50,8 @@ import {
 } from '@/shared/ui/shadcn/tooltip';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import { cn } from '@/shared/lib/shadcn/utils';
+import { useDocumentDrop } from '@/shared/hooks/useDocumentDrop';
 import {
   useKnowledgeBaseDocuments,
   useUploadDocument,
@@ -59,6 +61,7 @@ import {
 import { isValidUrl } from '../lib/isValidUrl';
 
 const ACCEPTED_FILE_TYPES = '.pdf,.docx,.pptx,.txt,.md';
+const ACCEPTED_EXTENSIONS = ['.pdf', '.docx', '.pptx', '.txt', '.md'];
 
 export default function KnowledgeBaseDocumentsCard({
   knowledgeBaseId,
@@ -68,13 +71,22 @@ export default function KnowledgeBaseDocumentsCard({
   disabled?: boolean;
 }>) {
   const { t } = useTranslation('knowledge-bases');
+  const { t: tCommon } = useTranslation('common');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const [urlDialogOpen, setUrlDialogOpen] = useState(false);
   const [urlInput, setUrlInput] = useState('');
   const { documents, isLoading } = useKnowledgeBaseDocuments(knowledgeBaseId);
   const { uploadDocument, isUploading } = useUploadDocument(knowledgeBaseId);
   const { addUrlAsync, isAddingUrl } = useAddUrl(knowledgeBaseId);
   const { removeDocument, isRemoving } = useRemoveDocument(knowledgeBaseId);
+
+  const { isDragging } = useDocumentDrop({
+    containerRef: cardRef,
+    onDrop: uploadDocument,
+    acceptedExtensions: ACCEPTED_EXTENSIONS,
+    disabled,
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -105,7 +117,20 @@ export default function KnowledgeBaseDocumentsCard({
   };
 
   return (
-    <Card>
+    <Card
+      ref={cardRef}
+      className={cn(
+        'relative',
+        isDragging && 'border-2 border-dashed border-primary bg-primary/5',
+      )}
+    >
+      {isDragging && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-primary/5">
+          <p className="text-sm font-medium text-primary">
+            {tCommon('chatInput.dropFilesHint')}
+          </p>
+        </div>
+      )}
       <CardHeader>
         <CardTitle>{t('detail.documents.title')}</CardTitle>
         <CardDescription>{t('detail.documents.description')}</CardDescription>
