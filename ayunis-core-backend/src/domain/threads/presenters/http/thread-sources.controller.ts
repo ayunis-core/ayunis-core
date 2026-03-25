@@ -7,7 +7,6 @@ import {
   Logger,
   Param,
   ParseUUIDPipe,
-  Body,
   UseInterceptors,
   UploadedFile,
   HttpCode,
@@ -15,6 +14,7 @@ import {
   Res,
   StreamableFile,
 } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { Response } from 'express';
 import { UUID } from 'crypto';
 import {
@@ -40,7 +40,6 @@ import { GetThreadSourcesUseCase } from '../../application/use-cases/get-thread-
 import { AddSourceCommand } from '../../application/use-cases/add-source-to-thread/add-source.command';
 import { RemoveSourceCommand } from '../../application/use-cases/remove-source-from-thread/remove-source.command';
 import { FindThreadSourcesQuery } from '../../application/use-cases/get-thread-sources/get-thread-sources.query';
-import { AddFileSourceToThreadDto } from './dto/add-source-to-thread.dto';
 import {
   FileSourceResponseDto,
   UrlSourceResponseDto,
@@ -66,7 +65,22 @@ import {
 import {
   buildCsvSourceCommand,
   buildSpreadsheetSourceCommands,
-} from 'src/common/util/data-source-parsing';
+} from 'src/domain/sources/application/util/data-source-parsing';
+import {
+  UnsupportedFileTypeError,
+  UnsupportedSourceFileTypeError,
+  EmptyFileDataError,
+} from 'src/domain/sources/application/sources.errors';
+
+const SUPPORTED_FILE_TYPES = [
+  'PDF',
+  'DOCX',
+  'PPTX',
+  'TXT',
+  'CSV',
+  'XLSX',
+  'XLS',
+];
 
 @ApiTags('threads')
 @Controller('threads')
@@ -193,7 +207,6 @@ export class ThreadSourcesController {
   )
   async addFileSource(
     @Param('id', ParseUUIDPipe) threadId: UUID,
-    @Body() addFileSourceDto: AddFileSourceToThreadDto,
     @UploadedFile()
     file:
       | {
@@ -223,7 +236,11 @@ export class ThreadSourcesController {
       );
     } catch (error: unknown) {
       this.logger.error('addFileSource', { error });
-      fs.unlinkSync(file.path);
+      try {
+        fs.unlinkSync(file.path);
+      } catch {
+        // Ignore cleanup errors (e.g. ENOENT) to avoid masking the original error
+      }
       throw error;
     }
   }
@@ -318,6 +335,7 @@ export class ThreadSourcesController {
     return new StreamableFile(Buffer.from(csvString, 'utf-8'));
   }
 
+  @Transactional()
   private async processFileUpload(
     threadId: UUID,
     file: { originalname: string; mimetype: string; path: string },
@@ -343,9 +361,7 @@ export class ThreadSourcesController {
     if (isDocumentFile(detectedType) || isPlainTextFile(detectedType)) {
       const canonicalMimeType = getCanonicalMimeType(detectedType);
       if (!canonicalMimeType) {
-        throw new BadRequestException(
-          `Unable to determine MIME type for: ${detectedType}`,
-        );
+        throw new UnsupportedSourceFileTypeError(detectedType);
       }
       const source = await this.startDocumentProcessingUseCase.execute(
         new StartDocumentProcessingCommand({
@@ -363,9 +379,7 @@ export class ThreadSourcesController {
     } else if (isSpreadsheetFile(detectedType)) {
       const commands = buildSpreadsheetSourceCommands(file);
       if (commands.length === 0) {
-        throw new BadRequestException(
-          `The file '${file.originalname}' contains no processable data`,
-        );
+        throw new EmptyFileDataError(file.originalname);
       }
       const sources: Source[] = [];
       for (const cmd of commands) {
@@ -373,8 +387,9 @@ export class ThreadSourcesController {
       }
       return sources;
     }
-    throw new BadRequestException(
-      `File type '${detectedType === 'unknown' ? file.originalname : detectedType}' is not supported. Supported types: PDF, DOCX, PPTX, TXT, CSV, XLSX, XLS`,
+    throw new UnsupportedFileTypeError(
+      detectedType === 'unknown' ? file.originalname : detectedType,
+      SUPPORTED_FILE_TYPES,
     );
   }
 }

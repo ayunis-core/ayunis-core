@@ -29,6 +29,7 @@ import type {
   RunSessionResponseDto,
   RunThreadResponseDto,
 } from '@/shared/api';
+import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useRunErrorHandler } from '../hooks/useRunErrorHandler';
 import { useLetterheadChange } from '../hooks/useLetterheadChange';
 import { usePendingMessage } from '../hooks/usePendingMessage';
@@ -74,10 +75,21 @@ export default function ChatPage({
     enabled: isAgentsEnabled,
   });
   const { models, isLoading: isLoadingModels } = usePermittedModels();
+  const PROCESSING_POLL_INTERVAL = 5000;
   const { data: thread = initialThread } = useQuery({
     queryKey: getThreadsControllerFindOneQueryKey(initialThread.id),
     queryFn: () => threadsControllerFindOne(initialThread.id),
     initialData: initialThread,
+    staleTime: 0,
+    // eslint-disable-next-line sonarjs/function-return-type -- React Query's refetchInterval expects number | false
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data) return false;
+      const hasProcessing = data.sources.some(
+        (s) => s.status === SourceResponseDtoStatus.processing,
+      );
+      return hasProcessing ? PROCESSING_POLL_INTERVAL : false;
+    },
   });
 
   const selectedAgent = agents.find((agent) => agent.id === thread.agentId);

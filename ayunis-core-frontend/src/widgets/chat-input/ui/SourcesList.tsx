@@ -3,15 +3,29 @@ import type {
   SourceResponseDtoType,
   SourceResponseDtoCreatedBy,
 } from '@/shared/api';
+import { SourceResponseDtoStatus } from '@/shared/api';
 
 // Utils
 import { cn } from '@/shared/lib/shadcn/utils';
 
 // UI
 import { Badge } from '@/shared/ui/shadcn/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/shared/ui/shadcn/tooltip';
 
 // Icons
-import { XIcon, FileIcon, DatabaseIcon, Sparkles, Brain } from 'lucide-react';
+import {
+  XIcon,
+  FileIcon,
+  DatabaseIcon,
+  Sparkles,
+  Brain,
+  Loader2,
+  AlertCircle,
+} from 'lucide-react';
 import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
 
 interface Source {
@@ -19,6 +33,8 @@ interface Source {
   name: string;
   type: SourceResponseDtoType;
   createdBy?: SourceResponseDtoCreatedBy;
+  status?: SourceResponseDtoStatus;
+  processingError?: string;
 }
 
 interface SourcesListProps {
@@ -77,29 +93,51 @@ export function SourcesList({
           )}
         </Badge>
       ))}
-      {visibleSources.map((source) => (
-        <Badge
-          key={source.id}
-          variant="secondary"
-          className={cn(
-            'flex items-center gap-1 cursor-pointer',
-            source.createdBy === 'llm' && 'bg-[#8178C3]/10 text-[#8178C3]',
-          )}
-          onClick={() => source.type === 'data' && onDownload?.(source.id)}
-        >
-          {getSourceIcon(source)}
-          {source.name}
-          <div
-            className="cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove(source.id);
-            }}
+      {visibleSources.map((source) => {
+        const isProcessing =
+          source.status === SourceResponseDtoStatus.processing;
+        const isFailed = source.status === SourceResponseDtoStatus.failed;
+
+        const badge = (
+          <Badge
+            key={source.id}
+            variant="secondary"
+            className={cn(
+              'flex items-center gap-1 cursor-pointer',
+              source.createdBy === 'llm' && 'bg-[#8178C3]/10 text-[#8178C3]',
+              isFailed && 'bg-destructive/10 text-destructive',
+            )}
+            onClick={() => source.type === 'data' && onDownload?.(source.id)}
           >
-            <XIcon className="h-3 w-3" />
-          </div>
-        </Badge>
-      ))}
+            {isProcessing && <Loader2 className="h-3 w-3 animate-spin" />}
+            {isFailed && <AlertCircle className="h-3 w-3" />}
+            {!isProcessing && !isFailed && getSourceIcon(source)}
+            {source.name}
+            {!isProcessing && (
+              <div
+                className="cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(source.id);
+                }}
+              >
+                <XIcon className="h-3 w-3" />
+              </div>
+            )}
+          </Badge>
+        );
+
+        if (isFailed && source.processingError) {
+          return (
+            <Tooltip key={source.id}>
+              <TooltipTrigger asChild>{badge}</TooltipTrigger>
+              <TooltipContent>{source.processingError}</TooltipContent>
+            </Tooltip>
+          );
+        }
+
+        return badge;
+      })}
     </div>
   );
 }

@@ -1,8 +1,8 @@
 import {
   getThreadsControllerFindOneQueryKey,
-  threadsControllerAddFileSource,
+  threadSourcesControllerAddFileSource,
 } from '@/shared/api';
-import type { ThreadsControllerAddFileSourceBody } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ThreadSourcesControllerAddFileSourceBody } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
@@ -25,31 +25,13 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
   const queryClient = useQueryClient();
   const createFileSourceMutation = useMutation({
     retry: 0,
-    mutationFn: async ({
+    mutationFn: ({
       id,
       data,
     }: {
       id: string;
-      data: ThreadsControllerAddFileSourceBody;
-    }) => {
-      // Create custom AbortController with 5 minute timeout
-      // because the default timeout is 10 seconds and this will take longer
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes
-
-      try {
-        const result = await threadsControllerAddFileSource(
-          id,
-          data,
-          controller.signal,
-        );
-        clearTimeout(timeoutId);
-        return result;
-      } catch (error) {
-        clearTimeout(timeoutId);
-        throw error;
-      }
-    },
+      data: ThreadSourcesControllerAddFileSourceBody;
+    }) => threadSourcesControllerAddFileSource(id, data),
     onError: (error: unknown) => {
       console.error('Failed to create file source:', error);
       try {
@@ -64,12 +46,6 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
             break;
           case 'FILE_TOO_LARGE':
             showError(t('chatInput.fileSourceTooLargeError'));
-            break;
-          case 'TOO_MANY_PAGES':
-            showError(t('chatInput.fileSourceTooManyPagesError'));
-            break;
-          case 'DOCUMENT_TOO_LARGE_FOR_CHAT':
-            showError(t('chatInput.documentTooLargeForChat'));
             break;
           case 'SERVICE_BUSY':
             showError(t('chatInput.fileSourceServiceBusyError'));
@@ -102,7 +78,7 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
       return;
     }
 
-    const data: ThreadsControllerAddFileSourceBody = {
+    const data: ThreadSourcesControllerAddFileSourceBody = {
       file,
       name: name ?? file.name,
       description,
@@ -122,7 +98,7 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
       return;
     }
 
-    const data: ThreadsControllerAddFileSourceBody = {
+    const data: ThreadSourcesControllerAddFileSourceBody = {
       file,
       name: name ?? file.name,
       description,

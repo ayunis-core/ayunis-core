@@ -3948,9 +3948,9 @@ limit?: number;
 offset?: number;
 };
 
-export type ThreadsControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
+export type ThreadSourcesControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 
-export type ThreadsControllerAddFileSourceBody = {
+export type ThreadSourcesControllerAddFileSourceBody = {
   /** The file to upload */
   file: Blob;
   /** The display name for the file source */
@@ -3958,6 +3958,8 @@ export type ThreadsControllerAddFileSourceBody = {
   /** A description of the file source */
   description?: string;
 };
+
+export type ThreadSourcesControllerAddFileSource201Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 
 export type AgentsControllerAddFileSourceBody = {
   /** The file to upload */

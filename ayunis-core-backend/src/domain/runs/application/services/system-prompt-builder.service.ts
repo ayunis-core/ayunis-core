@@ -270,7 +270,11 @@ ${skillEntries}
       return '';
     }
 
-    const readySources = sources.filter((s) => s.status === SourceStatus.READY);
+    // Only TextSources are searchable via source_query — DataSources are
+    // handled by the code_execution tool and should not appear here.
+    const readyTextSources = sources.filter(
+      (s) => s.status === SourceStatus.READY && s instanceof TextSource,
+    );
     const processingSources = sources.filter(
       (s) => s.status === SourceStatus.PROCESSING,
     );
@@ -280,8 +284,8 @@ ${skillEntries}
 
     const sections: string[] = [];
 
-    if (readySources.length > 0) {
-      sections.push(this.buildAvailableFilesSection(readySources));
+    if (readyTextSources.length > 0) {
+      sections.push(this.buildAvailableFilesSection(readyTextSources));
     }
 
     if (processingSources.length > 0) {
