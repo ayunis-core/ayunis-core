@@ -1,6 +1,5 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
-import { Counter } from 'prom-client';
-import { InjectMetric } from '@willsoto/nestjs-prometheus';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SaveAssistantMessageCommand } from './save-assistant-message.command';
 import { AssistantMessage } from '../../../domain/messages/assistant-message.entity';
 import {
@@ -10,11 +9,8 @@ import {
 import { MessageRole } from '../../../domain/value-objects/message-role.object';
 import { MessageCreationError } from '../../messages.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { AYUNIS_MESSAGES_TOTAL } from 'src/integrations/metrics/metrics.constants';
-import {
-  getUserContextLabels,
-  safeMetric,
-} from 'src/integrations/metrics/metrics.utils';
+import { AssistantMessageCreatedEvent } from '../../events/assistant-message-created.event';
+import type { UUID } from 'crypto';
 
 @Injectable()
 export class SaveAssistantMessageUseCase {
@@ -24,8 +20,7 @@ export class SaveAssistantMessageUseCase {
     @Inject(MESSAGES_REPOSITORY)
     private readonly messagesRepository: MessagesRepository,
     private readonly contextService: ContextService,
-    @InjectMetric(AYUNIS_MESSAGES_TOTAL)
-    private readonly messagesCounter: Counter<string>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(
@@ -41,10 +36,24 @@ export class SaveAssistantMessageUseCase {
         command.message,
       )) as AssistantMessage;
 
-      safeMetric(this.logger, () => {
-        const labels = getUserContextLabels(this.contextService);
-        this.messagesCounter.inc({ ...labels, role: 'assistant' });
-      });
+      const userId = this.contextService.get('userId');
+      const orgId = this.contextService.get('orgId');
+      this.eventEmitter
+        .emitAsync(
+          AssistantMessageCreatedEvent.EVENT_NAME,
+          new AssistantMessageCreatedEvent(
+            userId ?? ('unknown' as UUID),
+            orgId ?? ('unknown' as UUID),
+            command.message.threadId,
+            saved.id,
+          ),
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit AssistantMessageCreatedEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            messageId: saved.id,
+          });
+        });
 
       return saved;
     } catch (error) {

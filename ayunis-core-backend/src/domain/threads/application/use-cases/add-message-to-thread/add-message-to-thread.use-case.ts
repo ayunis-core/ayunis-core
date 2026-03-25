@@ -1,15 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Histogram } from 'prom-client';
-import { InjectMetric } from '@willsoto/nestjs-prometheus';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import type { UUID } from 'crypto';
 import { Thread } from '../../../domain/thread.entity';
 import { AddMessageCommand } from './add-message.command';
 import { MessageAdditionError } from '../../threads.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { AYUNIS_THREAD_MESSAGE_COUNT } from 'src/integrations/metrics/metrics.constants';
-import {
-  getUserContextLabels,
-  safeMetric,
-} from 'src/integrations/metrics/metrics.utils';
+import { ThreadMessageAddedEvent } from '../../events/thread-message-added.event';
 
 @Injectable()
 export class AddMessageToThreadUseCase {
@@ -17,8 +13,7 @@ export class AddMessageToThreadUseCase {
 
   constructor(
     private readonly contextService: ContextService,
-    @InjectMetric(AYUNIS_THREAD_MESSAGE_COUNT)
-    private readonly threadMessageHistogram: Histogram<string>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   execute(command: AddMessageCommand): Thread {
@@ -29,16 +24,27 @@ export class AddMessageToThreadUseCase {
     try {
       command.thread.messages.push(command.message);
 
-      // Observing on every message addition is intentional: it gives the
+      // Emitting on every message addition is intentional: it gives the
       // distribution of thread sizes at write time. The _sum/_count ratio
       // yields average thread length across all writes.
-      safeMetric(this.logger, () => {
-        const labels = getUserContextLabels(this.contextService);
-        this.threadMessageHistogram.observe(
-          labels,
-          command.thread.messages.length,
-        );
-      });
+      const userId = this.contextService.get('userId');
+      const orgId = this.contextService.get('orgId');
+      this.eventEmitter
+        .emitAsync(
+          ThreadMessageAddedEvent.EVENT_NAME,
+          new ThreadMessageAddedEvent(
+            userId ?? ('unknown' as UUID),
+            orgId ?? ('unknown' as UUID),
+            command.thread.id,
+            command.thread.messages.length,
+          ),
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit ThreadMessageAddedEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            threadId: command.thread.id,
+          });
+        });
 
       return command.thread;
     } catch (error) {

@@ -1,4 +1,3 @@
-import type { Counter } from 'prom-client';
 import { AnonymizationFailedError } from 'src/common/anonymization/application/anonymization.errors';
 import type { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { RunAnonymizationUnavailableError } from '../runs.errors';
@@ -86,16 +85,16 @@ describe('ToolResultCollectorService', () => {
       get: jest.fn().mockReturnValue(randomUUID()),
     } as unknown as jest.Mocked<ContextService>;
 
-    const toolUsesCounter = {
-      inc: jest.fn(),
-    } as unknown as Counter<string>;
+    const mockEventEmitter = {
+      emitAsync: jest.fn().mockResolvedValue([]),
+    };
 
     service = new ToolResultCollectorService(
       executeToolUseCase,
       checkToolCapabilitiesUseCase,
       anonymizeTextUseCase,
       contextService,
-      toolUsesCounter,
+      mockEventEmitter as never,
     );
   });
 

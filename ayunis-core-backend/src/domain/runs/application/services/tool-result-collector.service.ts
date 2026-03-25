@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Counter } from 'prom-client';
-import { InjectMetric } from '@willsoto/nestjs-prometheus';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UUID } from 'crypto';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
@@ -17,11 +16,7 @@ import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-c
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { AYUNIS_TOOL_USES_TOTAL } from 'src/integrations/metrics/metrics.constants';
-import {
-  getUserContextLabels,
-  safeMetric,
-} from 'src/integrations/metrics/metrics.utils';
+import { ToolUsedEvent } from '../events/tool-used.event';
 import {
   RunAnonymizationUnavailableError,
   RunToolExecutionFailedError,
@@ -39,8 +34,7 @@ export class ToolResultCollectorService {
     private readonly checkToolCapabilitiesUseCase: CheckToolCapabilitiesUseCase,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
     private readonly contextService: ContextService,
-    @InjectMetric(AYUNIS_TOOL_USES_TOTAL)
-    private readonly toolUsesCounter: Counter<string>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async collectToolResults(params: {
@@ -94,13 +88,18 @@ export class ToolResultCollectorService {
       );
     }
 
-    safeMetric(this.logger, () => {
-      const labels = getUserContextLabels(this.contextService);
-      this.toolUsesCounter.inc({
-        ...labels,
-        tool_name: content.name,
+    const userId = this.contextService.get('userId');
+    this.eventEmitter
+      .emitAsync(
+        ToolUsedEvent.EVENT_NAME,
+        new ToolUsedEvent(userId ?? ('unknown' as UUID), orgId, content.name),
+      )
+      .catch((err: unknown) => {
+        this.logger.error('Failed to emit ToolUsedEvent', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+          toolName: content.name,
+        });
       });
-    });
 
     try {
       const capabilities = this.checkToolCapabilitiesUseCase.execute(
