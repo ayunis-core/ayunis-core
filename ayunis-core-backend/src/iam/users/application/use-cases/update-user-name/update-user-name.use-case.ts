@@ -1,12 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UsersRepository } from '../../ports/users.repository';
 import { UpdateUserNameCommand } from './update-user-name.command';
 import { User } from '../../../domain/user.entity';
 import { UserNotFoundError, UserUnexpectedError } from '../../users.errors';
-import { UserUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/user-updated.webhook-event';
-import { SendWebhookCommand } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { UserUpdatedEvent } from '../../events/user-updated.event';
 
 @Injectable()
 export class UpdateUserNameUseCase {
@@ -14,7 +13,7 @@ export class UpdateUserNameUseCase {
 
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: UpdateUserNameCommand): Promise<User> {
@@ -39,9 +38,17 @@ export class UpdateUserNameUseCase {
         newName: updatedUser.name,
       });
 
-      void this.sendWebhookUseCase.execute(
-        new SendWebhookCommand(new UserUpdatedWebhookEvent(updatedUser)),
-      );
+      this.eventEmitter
+        .emitAsync(
+          UserUpdatedEvent.EVENT_NAME,
+          new UserUpdatedEvent(updatedUser.id, updatedUser.orgId, updatedUser),
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit UserUpdatedEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            userId: updatedUser.id,
+          });
+        });
 
       return updatedUser;
     } catch (error) {

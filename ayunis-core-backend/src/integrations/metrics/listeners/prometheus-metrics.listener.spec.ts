@@ -8,11 +8,27 @@ import { InferenceCompletedEvent } from 'src/domain/runs/application/events/infe
 import { TokensConsumedEvent } from 'src/domain/runs/application/events/tokens-consumed.event';
 import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
 import { ThreadMessageAddedEvent } from 'src/domain/threads/application/events/thread-message-added.event';
+import { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 const USER_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 const ORG_ID = '00000000-0000-0000-0000-000000000002' as UUID;
 const THREAD_ID = '00000000-0000-0000-0000-000000000003' as UUID;
 const MESSAGE_ID = '00000000-0000-0000-0000-000000000004' as UUID;
+
+function makeUser(overrides?: Partial<{ department: string }>): User {
+  return new User({
+    id: USER_ID,
+    email: 'test@example.com',
+    emailVerified: true,
+    passwordHash: 'hashed',
+    role: UserRole.ADMIN,
+    orgId: ORG_ID,
+    name: 'Test User',
+    hasAcceptedMarketing: false,
+    department: overrides?.department,
+  });
+}
 
 function mockCounter() {
   return { inc: jest.fn() };
@@ -58,7 +74,11 @@ describe('PrometheusMetricsListener', () => {
   describe('handleUserCreated', () => {
     it('should increment user creations counter with org and department', () => {
       listener.handleUserCreated(
-        new UserCreatedEvent(USER_ID, ORG_ID, undefined, 'engineering'),
+        new UserCreatedEvent(
+          USER_ID,
+          ORG_ID,
+          makeUser({ department: 'engineering' }),
+        ),
       );
 
       expect(userCreationsCounter.inc).toHaveBeenCalledWith({
@@ -69,7 +89,11 @@ describe('PrometheusMetricsListener', () => {
 
     it('should normalize "other:" prefixed departments to "other"', () => {
       listener.handleUserCreated(
-        new UserCreatedEvent(USER_ID, ORG_ID, undefined, 'other:custom'),
+        new UserCreatedEvent(
+          USER_ID,
+          ORG_ID,
+          makeUser({ department: 'other:custom' }),
+        ),
       );
 
       expect(userCreationsCounter.inc).toHaveBeenCalledWith({
@@ -79,7 +103,9 @@ describe('PrometheusMetricsListener', () => {
     });
 
     it('should use "none" when department is undefined', () => {
-      listener.handleUserCreated(new UserCreatedEvent(USER_ID, ORG_ID));
+      listener.handleUserCreated(
+        new UserCreatedEvent(USER_ID, ORG_ID, makeUser()),
+      );
 
       expect(userCreationsCounter.inc).toHaveBeenCalledWith({
         org_id: ORG_ID,
@@ -279,7 +305,9 @@ describe('PrometheusMetricsListener', () => {
       });
 
       expect(() =>
-        listener.handleUserCreated(new UserCreatedEvent(USER_ID, ORG_ID)),
+        listener.handleUserCreated(
+          new UserCreatedEvent(USER_ID, ORG_ID, makeUser()),
+        ),
       ).not.toThrow();
     });
   });

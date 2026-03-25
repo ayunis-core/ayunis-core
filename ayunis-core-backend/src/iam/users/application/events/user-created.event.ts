@@ -7,7 +7,6 @@ export class UserCreatedEvent {
   constructor(
     public readonly userId: UUID,
     public readonly orgId: UUID,
-    public readonly user?: User,
-    public readonly department?: string,
+    public readonly user: User,
   ) {}
 }
