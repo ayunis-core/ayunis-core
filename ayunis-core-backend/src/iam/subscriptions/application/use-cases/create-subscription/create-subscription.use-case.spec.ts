@@ -22,6 +22,8 @@ import {
   TooManyUsedSeatsError,
 } from '../../subscription.errors';
 import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
+import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
+import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 
 describe('CreateSubscriptionUseCase', () => {
   let useCase: CreateSubscriptionUseCase;
@@ -349,9 +351,13 @@ describe('CreateSubscriptionUseCase', () => {
 
     it('should allow creation when only cancelled subscriptions exist', async () => {
       setupSuperAdminContext();
-      subscriptionRepository.findByOrgId.mockResolvedValue([
-        { cancelledAt: new Date() } as unknown as Subscription,
-      ]);
+      const cancelledSub = new UsageBasedSubscription({
+        orgId,
+        monthlyCredits: 100,
+        billingInfo: new SubscriptionBillingInfo(baseBillingParams),
+      });
+      cancelledSub.cancelledAt = new Date();
+      subscriptionRepository.findByOrgId.mockResolvedValue([cancelledSub]);
 
       const command = new CreateSubscriptionCommand({
         orgId,
@@ -364,6 +370,42 @@ describe('CreateSubscriptionUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result).toBeInstanceOf(UsageBasedSubscription);
+    });
+
+    it('should reject creation when a cancelled seat-based subscription is still within its billing period', async () => {
+      setupSuperAdminContext();
+      const now = new Date();
+      const cancelledSeatSub = new SeatBasedSubscription({
+        orgId,
+        noOfSeats: 5,
+        pricePerSeat: 99.99,
+        renewalCycle: RenewalCycle.YEARLY,
+        renewalCycleAnchor: new Date(
+          now.getFullYear() - 1,
+          now.getMonth(),
+          now.getDate(),
+        ),
+        startsAt: new Date(
+          now.getFullYear() - 1,
+          now.getMonth(),
+          now.getDate(),
+        ),
+        billingInfo: new SubscriptionBillingInfo(baseBillingParams),
+      });
+      cancelledSeatSub.cancelledAt = now;
+      subscriptionRepository.findByOrgId.mockResolvedValue([cancelledSeatSub]);
+
+      const command = new CreateSubscriptionCommand({
+        orgId,
+        requestingUserId,
+        type: SubscriptionType.USAGE_BASED,
+        monthlyCredits: 500,
+        ...baseBillingParams,
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        SubscriptionAlreadyExistsError,
+      );
     });
   });
 });

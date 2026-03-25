@@ -27,6 +27,7 @@ import { SubscriptionCreatedWebhookEvent } from 'src/common/webhooks/domain/webh
 import { toSubscriptionWebhookPayload } from '../../mappers/subscription-webhook-payload.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
+import { isActive } from '../../util/is-active';
 
 @Injectable()
 export class CreateSubscriptionUseCase {
@@ -94,8 +95,10 @@ export class CreateSubscriptionUseCase {
     orgId: Subscription['orgId'],
   ): Promise<void> {
     const subscriptions = await this.subscriptionRepository.findByOrgId(orgId);
-    const hasNonCancelled = subscriptions.some((s) => !s.cancelledAt);
-    if (hasNonCancelled) {
+    const hasExisting = subscriptions.some(
+      (s) => !s.cancelledAt || isActive(s),
+    );
+    if (hasExisting) {
       this.logger.warn('Subscription already exists for organization', {
         orgId,
       });
