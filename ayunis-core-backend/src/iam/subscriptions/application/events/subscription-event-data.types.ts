@@ -4,7 +4,6 @@ import type { SubscriptionType } from '../../domain/value-objects/subscription-t
 
 export interface SubscriptionEventDataBase {
   id: UUID;
-  orgId: UUID;
   type: SubscriptionType;
   cancelledAt: Date | null;
   createdAt: Date;
@@ -37,6 +36,5 @@ export interface BillingInfoEventData {
   country: string;
   vatNumber?: string;
   subText?: string;
-  orgId: UUID;
   subscriptionId: UUID;
 }
