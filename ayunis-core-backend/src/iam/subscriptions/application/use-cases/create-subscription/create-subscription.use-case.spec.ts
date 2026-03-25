@@ -9,7 +9,7 @@ import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { HasActiveSubscriptionUseCase } from '../has-active-subscription/has-active-subscription.use-case';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
-import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
@@ -68,8 +68,8 @@ describe('CreateSubscriptionUseCase', () => {
           useValue: { execute: jest.fn() },
         },
         {
-          provide: SendWebhookUseCase,
-          useValue: { execute: jest.fn().mockResolvedValue(undefined) },
+          provide: EventEmitter2,
+          useValue: { emitAsync: jest.fn().mockResolvedValue([]) },
         },
         {
           provide: ConfigService,

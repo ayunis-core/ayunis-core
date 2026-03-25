@@ -1,6 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { WebhooksModule } from 'src/integrations/webhooks/webhooks.module';
 import { HasActiveSubscriptionUseCase } from './application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import { GetActiveSubscriptionUseCase } from './application/use-cases/get-active-subscription/get-active-subscription.use-case';
 import { CreateSubscriptionUseCase } from './application/use-cases/create-subscription/create-subscription.use-case';
@@ -36,7 +35,6 @@ import { GetMonthlyCreditLimitUseCase } from './application/use-cases/get-monthl
     ]),
     forwardRef(() => UsersModule),
     forwardRef(() => InvitesModule),
-    WebhooksModule,
   ],
   controllers: [SubscriptionsController, SuperAdminSubscriptionsController],
   providers: [

@@ -14,7 +14,7 @@ import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-s
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
-import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -78,8 +78,8 @@ describe('UncancelSubscriptionUseCase', () => {
           },
         },
         {
-          provide: SendWebhookUseCase,
-          useValue: { execute: jest.fn().mockResolvedValue(undefined) },
+          provide: EventEmitter2,
+          useValue: { emitAsync: jest.fn().mockResolvedValue([]) },
         },
         {
           provide: ContextService,
