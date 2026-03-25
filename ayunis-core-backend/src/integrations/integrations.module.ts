@@ -4,6 +4,5 @@ import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
   imports: [MetricsModule, WebhooksModule],
-  exports: [WebhooksModule],
 })
 export class IntegrationsModule {}
