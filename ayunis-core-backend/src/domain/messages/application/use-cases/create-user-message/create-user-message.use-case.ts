@@ -4,8 +4,7 @@ import {
   Inject,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Counter } from 'prom-client';
-import { InjectMetric } from '@willsoto/nestjs-prometheus';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateUserMessageCommand } from './create-user-message.command';
 import { UserMessage } from '../../../domain/messages/user-message.entity';
 import {
@@ -22,11 +21,8 @@ import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/de
 import { TextMessageContent } from '../../../domain/message-contents/text-message-content.entity';
 import { ImageMessageContent } from '../../../domain/message-contents/image-message-content.entity';
 import { getImageStoragePath } from '../../../domain/image-storage-path.util';
-import { AYUNIS_MESSAGES_TOTAL } from 'src/integrations/metrics/metrics.constants';
-import {
-  getUserContextLabels,
-  safeMetric,
-} from 'src/integrations/metrics/metrics.utils';
+import { UserMessageCreatedEvent } from '../../events/user-message-created.event';
+import type { UUID } from 'crypto';
 
 @Injectable()
 export class CreateUserMessageUseCase {
@@ -38,8 +34,7 @@ export class CreateUserMessageUseCase {
     private readonly uploadObjectUseCase: UploadObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly contextService: ContextService,
-    @InjectMetric(AYUNIS_MESSAGES_TOTAL)
-    private readonly messagesCounter: Counter<string>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: CreateUserMessageCommand): Promise<UserMessage> {
@@ -116,10 +111,23 @@ export class CreateUserMessageUseCase {
         userMessage,
       )) as UserMessage;
 
-      safeMetric(this.logger, () => {
-        const labels = getUserContextLabels(this.contextService);
-        this.messagesCounter.inc({ ...labels, role: 'user' });
-      });
+      const userId = this.contextService.get('userId');
+      this.eventEmitter
+        .emitAsync(
+          UserMessageCreatedEvent.EVENT_NAME,
+          new UserMessageCreatedEvent(
+            userId ?? ('unknown' as UUID),
+            orgId,
+            command.threadId,
+            savedMessage.id,
+          ),
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit UserMessageCreatedEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            messageId: savedMessage.id,
+          });
+        });
 
       this.logger.log('User message created successfully', {
         messageId: savedMessage.id,

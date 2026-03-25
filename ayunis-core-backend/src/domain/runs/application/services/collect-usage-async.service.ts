@@ -1,16 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
-import { Counter } from 'prom-client';
-import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { CollectUsageUseCase } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.use-case';
 import { CollectUsageCommand } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.command';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ContextService } from 'src/common/context/services/context.service';
-import { AYUNIS_TOKENS_TOTAL } from 'src/integrations/metrics/metrics.constants';
-import {
-  getUserContextLabels,
-  safeMetric,
-} from 'src/integrations/metrics/metrics.utils';
+import { TokensConsumedEvent } from '../events/tokens-consumed.event';
 
 /**
  * Collects usage data asynchronously (fire-and-forget).
@@ -23,8 +18,7 @@ export class CollectUsageAsyncService {
   constructor(
     private readonly collectUsageUseCase: CollectUsageUseCase,
     private readonly contextService: ContextService,
-    @InjectMetric(AYUNIS_TOKENS_TOTAL)
-    private readonly tokensCounter: Counter<string>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   collect(
@@ -41,35 +35,26 @@ export class CollectUsageAsyncService {
       messageId,
     });
 
-    const labels = getUserContextLabels(this.contextService);
+    const userId = this.contextService.get('userId');
+    const orgId = this.contextService.get('orgId');
 
-    if (inputTokens > 0) {
-      safeMetric(this.logger, () => {
-        this.tokensCounter.inc(
-          {
-            ...labels,
-            model: model.name,
-            provider: model.provider,
-            direction: 'input',
-          },
+    this.eventEmitter
+      .emitAsync(
+        TokensConsumedEvent.EVENT_NAME,
+        new TokensConsumedEvent(
+          userId ?? ('unknown' as UUID),
+          orgId ?? ('unknown' as UUID),
+          model.name,
+          model.provider,
           inputTokens,
-        );
-      });
-    }
-
-    if (outputTokens > 0) {
-      safeMetric(this.logger, () => {
-        this.tokensCounter.inc(
-          {
-            ...labels,
-            model: model.name,
-            provider: model.provider,
-            direction: 'output',
-          },
           outputTokens,
-        );
+        ),
+      )
+      .catch((err: unknown) => {
+        this.logger.error('Failed to emit TokensConsumedEvent', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+        });
       });
-    }
 
     this.collectUsageUseCase
       .execute(

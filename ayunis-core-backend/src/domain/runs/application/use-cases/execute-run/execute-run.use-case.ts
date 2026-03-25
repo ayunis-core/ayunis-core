@@ -1,6 +1,5 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { Counter } from 'prom-client';
-import { InjectMetric } from '@willsoto/nestjs-prometheus';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Message } from '../../../../messages/domain/message.entity';
 import { AddMessageCommand } from '../../../../threads/application/use-cases/add-message-to-thread/add-message.command';
 import { Thread } from '../../../../threads/domain/thread.entity';
@@ -49,8 +48,7 @@ import { StreamingInferenceService } from '../../services/streaming-inference.se
 import { NonStreamingInferenceService } from '../../services/non-streaming-inference.service';
 import { enrichContentWithIntegration } from '../../helpers/resolve-integration.helper';
 import type { RunParams } from './run-params.interface';
-import { AYUNIS_USER_ACTIVITY_TOTAL } from 'src/integrations/metrics/metrics.constants';
-import { safeMetric } from 'src/integrations/metrics/metrics.utils';
+import { RunExecutedEvent } from '../../events/run-executed.event';
 
 const MAX_CONTEXT_TOKENS = 80000;
 
@@ -75,8 +73,7 @@ export class ExecuteRunUseCase {
     private readonly streamingInferenceService: StreamingInferenceService,
     private readonly nonStreamingInferenceService: NonStreamingInferenceService,
     private readonly skillActivationService: SkillActivationService,
-    @InjectMetric(AYUNIS_USER_ACTIVITY_TOTAL)
-    private readonly userActivityCounter: Counter<string>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(
@@ -96,9 +93,17 @@ export class ExecuteRunUseCase {
 
       // Counts "attempted runs" — fires before run validity is established.
       // This is intentional: it serves as the DAU (daily active users) metric.
-      safeMetric(this.logger, () =>
-        this.userActivityCounter.inc({ user_id: userId, org_id: orgId }),
-      );
+      this.eventEmitter
+        .emitAsync(
+          RunExecutedEvent.EVENT_NAME,
+          new RunExecutedEvent(userId, orgId),
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit RunExecutedEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            userId,
+          });
+        });
 
       const { thread } = await this.findThreadUseCase.execute(
         new FindThreadQuery(command.threadId),

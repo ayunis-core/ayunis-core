@@ -1,5 +1,10 @@
 import type { UUID } from 'crypto';
 
+export interface InferenceErrorInfo {
+  message: string;
+  statusCode?: number;
+}
+
 export class InferenceCompletedEvent {
   static readonly EVENT_NAME = 'run.inference-completed';
 
@@ -10,6 +15,6 @@ export class InferenceCompletedEvent {
     public readonly provider: string,
     public readonly streaming: boolean,
     public readonly durationMs: number,
-    public readonly error?: string,
+    public readonly error?: InferenceErrorInfo,
   ) {}
 }

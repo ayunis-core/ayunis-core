@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UUID } from 'crypto';
-import { Counter, Histogram } from 'prom-client';
-import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
@@ -16,16 +15,14 @@ import {
 } from 'src/domain/models/application/ports/stream-inference.handler';
 import { CollectUsageAsyncService } from './collect-usage-async.service';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import {
-  AYUNIS_INFERENCE_DURATION_SECONDS,
-  AYUNIS_INFERENCE_ERRORS_TOTAL,
-} from 'src/integrations/metrics/metrics.constants';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { resolveIntegration } from '../helpers/resolve-integration.helper';
 import { safeJsonParse } from 'src/common/util/unicode-sanitizer';
-import { recordInferenceMetrics } from 'src/integrations/metrics/record-inference-metrics.helper';
+import { ContextService } from 'src/common/context/services/context.service';
+import { InferenceCompletedEvent } from '../events/inference-completed.event';
+import { extractInferenceErrorInfo } from '../helpers/extract-inference-error-info.helper';
 
 type AssistantContentBlock =
   | TextMessageContent
@@ -60,10 +57,8 @@ export class StreamingInferenceService {
     private readonly streamInferenceUseCase: StreamInferenceUseCase,
     private readonly saveAssistantMessageUseCase: SaveAssistantMessageUseCase,
     private readonly collectUsageAsyncService: CollectUsageAsyncService,
-    @InjectMetric(AYUNIS_INFERENCE_DURATION_SECONDS)
-    private readonly inferenceHistogram: Histogram<string>,
-    @InjectMetric(AYUNIS_INFERENCE_ERRORS_TOTAL)
-    private readonly inferenceErrorsCounter: Counter<string>,
+    private readonly contextService: ContextService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async *executeStreamingInference(params: {
@@ -123,18 +118,28 @@ export class StreamingInferenceService {
       inferenceError = error;
       throw error;
     } finally {
-      recordInferenceMetrics(
-        {
-          histogram: this.inferenceHistogram,
-          errorCounter: this.inferenceErrorsCounter,
-          logger: this.logger,
-          model: model.name,
-          provider: model.provider,
-          streaming: 'true',
-        },
-        Date.now() - startTime,
-        inferenceError,
-      );
+      const userId = this.contextService.get('userId');
+      const contextOrgId = this.contextService.get('orgId');
+      this.eventEmitter
+        .emitAsync(
+          InferenceCompletedEvent.EVENT_NAME,
+          new InferenceCompletedEvent(
+            userId ?? ('unknown' as UUID),
+            contextOrgId ?? orgId,
+            model.name,
+            model.provider,
+            true,
+            Date.now() - startTime,
+            inferenceError
+              ? extractInferenceErrorInfo(inferenceError)
+              : undefined,
+          ),
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit InferenceCompletedEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+          });
+        });
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- mutated in callback, TS can't track
       if (streamCompletedSuccessfully && allChunks.length > 0) {
         const usage = this.extractUsageFromChunks(allChunks);
