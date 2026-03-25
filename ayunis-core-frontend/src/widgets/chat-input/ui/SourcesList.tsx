@@ -95,11 +95,10 @@ export function SourcesList({
         return (
           <Badge
             key={source.id}
-            variant="secondary"
+            variant={isFailed ? 'destructive-subtle' : 'secondary'}
             className={cn(
               'flex items-center gap-1 cursor-pointer',
               source.createdBy === 'llm' && 'bg-[#8178C3]/10 text-[#8178C3]',
-              isFailed && 'bg-destructive/10 text-destructive',
             )}
             onClick={() => source.type === 'data' && onDownload?.(source.id)}
           >

@@ -58,6 +58,8 @@ const LazyArtifactEditor = lazy(() =>
   })),
 );
 
+const PROCESSING_POLL_INTERVAL = 5000;
+
 interface ChatPageProps {
   readonly thread: Thread;
   readonly isEmbeddingModelEnabled: boolean;
@@ -75,7 +77,6 @@ export default function ChatPage({
     enabled: isAgentsEnabled,
   });
   const { models, isLoading: isLoadingModels } = usePermittedModels();
-  const PROCESSING_POLL_INTERVAL = 5000;
   const { data: thread = initialThread } = useQuery({
     queryKey: getThreadsControllerFindOneQueryKey(initialThread.id),
     queryFn: () => threadsControllerFindOne(initialThread.id),
