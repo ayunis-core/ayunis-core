@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.24.0](https://github.com/ayunis-core/ayunis-core/compare/v1.23.1...v1.24.0) (2026-03-26)
+
+
+### Features
+
+* **subscriptions:** add edit action to subscription details (AYC-45) ([#511](https://github.com/ayunis-core/ayunis-core/issues/511)) ([24984ef](https://github.com/ayunis-core/ayunis-core/commit/24984ef545c6de4ba538518ec2201a3a50f7153c))
+* **subscriptions:** allow subscription start in the future (AYC-45) ([#505](https://github.com/ayunis-core/ayunis-core/issues/505)) ([2ad3dfc](https://github.com/ayunis-core/ayunis-core/commit/2ad3dfc6e0444fa7316fd01038f6bdcca6a79860))
+
 ## [1.23.1](https://github.com/ayunis-core/ayunis-core/compare/v1.23.0...v1.23.1) (2026-03-25)
 
 
