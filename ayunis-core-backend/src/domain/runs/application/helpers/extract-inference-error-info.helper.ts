@@ -2,13 +2,14 @@ import type { InferenceErrorInfo } from '../events/inference-completed.event';
 
 /**
  * Extracts a status code from an unknown error object.
- * Provider SDKs (OpenAI, Anthropic) attach `status` or `statusCode` properties.
+ * Provider SDKs (OpenAI, Anthropic) attach `status`, `statusCode`, or `code` properties.
  */
 function extractStatusCode(error: unknown): number | undefined {
   if (typeof error !== 'object' || error === null) return undefined;
   const record = error as Record<string, unknown>;
   if (typeof record['status'] === 'number') return record['status'];
   if (typeof record['statusCode'] === 'number') return record['statusCode'];
+  if (typeof record['code'] === 'number') return record['code'];
   return undefined;
 }
 
