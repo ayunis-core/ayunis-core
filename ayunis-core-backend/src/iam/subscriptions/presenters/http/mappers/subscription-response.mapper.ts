@@ -20,6 +20,7 @@ export class SubscriptionResponseMapper {
       createdAt: subscription.createdAt,
       updatedAt: subscription.updatedAt,
       cancelledAt: subscription.cancelledAt,
+      startsAt: subscription.startsAt,
       orgId: subscription.orgId,
       type: subscription.type,
       nextRenewalDate,

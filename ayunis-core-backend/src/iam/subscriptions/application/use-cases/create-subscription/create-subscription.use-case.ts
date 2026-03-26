@@ -14,8 +14,7 @@ import {
   TooManyUsedSeatsError,
 } from '../../subscription.errors';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
-import { HasActiveSubscriptionQuery } from '../has-active-subscription/has-active-subscription.query';
-import { HasActiveSubscriptionUseCase } from '../has-active-subscription/has-active-subscription.use-case';
+
 import { ApplicationError } from 'src/common/errors/base.error';
 import type { User } from 'src/iam/users/domain/user.entity';
 import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.query';
@@ -36,7 +35,6 @@ export class CreateSubscriptionUseCase {
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly configService: ConfigService,
-    private readonly hasActiveSubscriptionUseCase: HasActiveSubscriptionUseCase,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
     private readonly sendWebhookUseCase: SendWebhookUseCase,
@@ -51,7 +49,7 @@ export class CreateSubscriptionUseCase {
         command.orgId,
       );
 
-      await this.ensureNoActiveSubscription(command.orgId);
+      await this.ensureNoExistingSubscription(command.orgId);
 
       const subscription =
         command.type === SubscriptionType.USAGE_BASED
@@ -92,14 +90,12 @@ export class CreateSubscriptionUseCase {
     }
   }
 
-  private async ensureNoActiveSubscription(
+  private async ensureNoExistingSubscription(
     orgId: Subscription['orgId'],
   ): Promise<void> {
-    const { hasActiveSubscription } =
-      await this.hasActiveSubscriptionUseCase.execute(
-        new HasActiveSubscriptionQuery(orgId),
-      );
-    if (hasActiveSubscription) {
+    const subscriptions = await this.subscriptionRepository.findByOrgId(orgId);
+    const hasNonCancelled = subscriptions.some((s) => !s.cancelledAt);
+    if (hasNonCancelled) {
       this.logger.warn('Subscription already exists for organization', {
         orgId,
       });
@@ -124,6 +120,7 @@ export class CreateSubscriptionUseCase {
     return new UsageBasedSubscription({
       orgId: command.orgId,
       monthlyCredits: command.monthlyCredits,
+      startsAt: command.startsAt,
       billingInfo: this.buildBillingInfo(command),
     });
   }
@@ -157,12 +154,14 @@ export class CreateSubscriptionUseCase {
       throw new InvalidSubscriptionDataError('Price per seat not configured');
     }
 
+    const startsAt = command.startsAt ?? new Date();
     return new SeatBasedSubscription({
       orgId: command.orgId,
       noOfSeats,
       renewalCycle: RenewalCycle.YEARLY,
       pricePerSeat,
-      renewalCycleAnchor: new Date(),
+      renewalCycleAnchor: startsAt,
+      startsAt,
       billingInfo: this.buildBillingInfo(command),
     });
   }

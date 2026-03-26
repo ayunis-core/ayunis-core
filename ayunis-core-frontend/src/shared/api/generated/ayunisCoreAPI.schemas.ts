@@ -1181,6 +1181,8 @@ export interface SubscriptionResponseDto {
   updatedAt: string;
   /** Date when the subscription was cancelled (if applicable) */
   cancelledAt?: SubscriptionResponseDtoCancelledAt;
+  /** Date when the subscription becomes active */
+  startsAt: string;
   /** Organization ID associated with the subscription */
   orgId: string;
   /** Subscription type */
@@ -1252,6 +1254,8 @@ export interface CreateSubscriptionRequestDto {
   monthlyCredits?: number;
   /** Sub text for the subscription */
   subText?: string;
+  /** Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately. */
+  startsAt?: string;
 }
 
 export interface UpdateBillingInfoDto {

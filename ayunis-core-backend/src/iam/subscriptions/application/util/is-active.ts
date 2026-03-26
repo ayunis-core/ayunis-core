@@ -7,6 +7,10 @@ import { assertNever } from 'src/common/util/assert-never';
 import { getNextDate } from './get-date-for-anchor-and-cycle';
 
 export function isActive(subscription: Subscription): boolean {
+  if (new Date() < subscription.startsAt) {
+    return false;
+  }
+
   if (!subscription.cancelledAt) {
     return true;
   }
@@ -16,6 +20,11 @@ export function isActive(subscription: Subscription): boolean {
   }
 
   if (isSeatBased(subscription)) {
+    // If cancelled before the subscription started, it never became active
+    if (subscription.cancelledAt < subscription.startsAt) {
+      return false;
+    }
+
     const lastBillingDate = getNextDate({
       anchorDate: subscription.renewalCycleAnchor,
       targetDate: subscription.cancelledAt,

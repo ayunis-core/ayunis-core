@@ -54,7 +54,9 @@
     "cancelErrorSubscriptionNotFound": "Abonnement nicht gefunden",
     "cancelError": "Ein unerwarteter Fehler ist aufgetreten",
     "uncancelErrorSubscriptionNotFound": "Abonnement nicht gefunden",
-    "uncancelError": "Ein unerwarteter Fehler ist aufgetreten"
+    "uncancelError": "Ein unerwarteter Fehler ist aufgetreten",
+    "scheduled": "Geplant",
+    "scheduledDescription": "Dieses Abonnement startet am {{date}}."
   },
   "licenseSeats": {
     "title": "Lizenzplätze",
@@ -121,7 +123,10 @@
     "noOfSeatsDescription": "Sie können die Anzahl der Plätze jederzeit ändern.",
     "monthlyCreditsLabel": "Monatliche Credits",
     "monthlyCreditsPlaceholder": "1000",
-    "monthlyCreditsDescription": "Das monatliche Credits-Budget für diese Organisation. Wird am 1. jedes Monats zurückgesetzt."
+    "monthlyCreditsDescription": "Das monatliche Credits-Budget für diese Organisation. Wird am 1. jedes Monats zurückgesetzt.",
+    "startsAtLabel": "Startdatum",
+    "startsAtPlaceholder": "Startet sofort",
+    "startsAtDescription": "Leer lassen, damit das Abonnement sofort startet, oder ein zukünftiges Datum wählen."
   },
   "trialDialog": {
     "title": "Trial erstellen",
