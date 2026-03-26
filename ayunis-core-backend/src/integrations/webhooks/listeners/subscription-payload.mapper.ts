@@ -18,6 +18,7 @@ export function mapSubscriptionToWebhookPayload(
     id: data.id,
     orgId: data.orgId,
     cancelledAt: data.cancelledAt?.toISOString() ?? null,
+    startsAt: data.startsAt.toISOString(),
     createdAt: data.createdAt.toISOString(),
     updatedAt: data.updatedAt.toISOString(),
   };
