@@ -8,14 +8,14 @@ import { assertNever } from 'src/common/util/assert-never';
 import type {
   SubscriptionWebhookPayload,
   SubscriptionWebhookPayloadBase,
-} from 'src/common/webhooks/domain/subscription-webhook-payload.types';
+} from 'src/integrations/webhooks/domain/subscription-webhook-payload.types';
 
 export type {
   SubscriptionWebhookPayload,
   SeatBasedWebhookPayload,
   UsageBasedWebhookPayload,
   BillingInfoPayload,
-} from 'src/common/webhooks/domain/subscription-webhook-payload.types';
+} from 'src/integrations/webhooks/domain/subscription-webhook-payload.types';
 
 export function toSubscriptionWebhookPayload(
   subscription: Subscription,

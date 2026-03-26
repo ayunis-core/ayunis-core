@@ -9,10 +9,10 @@ import { GetActiveSubscriptionUseCase } from '../get-active-subscription/get-act
 import { UpdateBillingInfoCommand } from './update-billing-info.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { Injectable, Logger } from '@nestjs/common';
-import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { SubscriptionBillingInfoUpdatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/subscription-billing-info-updated.webhook-event';
-import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
-import type { BillingInfoPayload } from 'src/common/webhooks/domain/subscription-webhook-payload.types';
+import { SendWebhookCommand } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.command';
+import { SubscriptionBillingInfoUpdatedWebhookEvent } from 'src/integrations/webhooks/domain/webhook-events/subscription-billing-info-updated.webhook-event';
+import { SendWebhookUseCase } from 'src/integrations/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import type { BillingInfoPayload } from 'src/integrations/webhooks/domain/subscription-webhook-payload.types';
 import { ContextService } from 'src/common/context/services/context.service';
 import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
 

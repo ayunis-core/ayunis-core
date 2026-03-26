@@ -6,8 +6,11 @@ import { CollectUsageUseCase } from 'src/domain/usage/application/use-cases/coll
 import { CollectUsageCommand } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.command';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ContextService } from 'src/common/context/services/context.service';
-import { AYUNIS_TOKENS_TOTAL } from 'src/metrics/metrics.constants';
-import { getUserContextLabels, safeMetric } from 'src/metrics/metrics.utils';
+import { AYUNIS_TOKENS_TOTAL } from 'src/integrations/metrics/metrics.constants';
+import {
+  getUserContextLabels,
+  safeMetric,
+} from 'src/integrations/metrics/metrics.utils';
 
 /**
  * Collects usage data asynchronously (fire-and-forget).

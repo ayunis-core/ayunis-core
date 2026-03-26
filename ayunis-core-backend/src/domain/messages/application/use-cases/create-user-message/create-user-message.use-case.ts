@@ -22,8 +22,11 @@ import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/de
 import { TextMessageContent } from '../../../domain/message-contents/text-message-content.entity';
 import { ImageMessageContent } from '../../../domain/message-contents/image-message-content.entity';
 import { getImageStoragePath } from '../../../domain/image-storage-path.util';
-import { AYUNIS_MESSAGES_TOTAL } from 'src/metrics/metrics.constants';
-import { getUserContextLabels, safeMetric } from 'src/metrics/metrics.utils';
+import { AYUNIS_MESSAGES_TOTAL } from 'src/integrations/metrics/metrics.constants';
+import {
+  getUserContextLabels,
+  safeMetric,
+} from 'src/integrations/metrics/metrics.utils';
 
 @Injectable()
 export class CreateUserMessageUseCase {

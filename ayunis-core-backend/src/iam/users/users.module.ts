@@ -42,7 +42,7 @@ import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-ema
 import { FindAllUserIdsByOrgIdUseCase } from './application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
 import { AdminTriggerPasswordResetUseCase } from './application/use-cases/admin-trigger-password-reset/admin-trigger-password-reset.use-case';
 import { SuperAdminTriggerPasswordResetUseCase } from './application/use-cases/super-admin-trigger-password-reset/super-admin-trigger-password-reset.use-case';
-import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
+import { WebhooksModule } from 'src/integrations/webhooks/webhooks.module';
 import { InvitesModule } from '../invites/invites.module';
 import { SuperAdminUsersController } from './presenters/http/super-admin-users.controller';
 import { SuperAdminManagementController } from './presenters/http/super-admin-management.controller';
