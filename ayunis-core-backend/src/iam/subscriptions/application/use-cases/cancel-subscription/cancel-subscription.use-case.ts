@@ -45,6 +45,7 @@ export class CancelSubscriptionUseCase {
         new GetActiveSubscriptionQuery({
           orgId: command.orgId,
           requestingUserId: command.requestingUserId,
+          includeScheduled: true,
         }),
       );
       if (!result) {

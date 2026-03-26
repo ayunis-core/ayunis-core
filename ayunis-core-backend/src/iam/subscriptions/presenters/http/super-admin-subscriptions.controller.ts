@@ -112,6 +112,7 @@ export class SuperAdminSubscriptionsController {
       const query = new GetActiveSubscriptionQuery({
         orgId,
         requestingUserId: userId,
+        includeScheduled: true,
       });
 
       const result = await this.getSubscriptionUseCase.execute(query);

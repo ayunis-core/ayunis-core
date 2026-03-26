@@ -6,6 +6,14 @@ import {
 import { assertNever } from 'src/common/util/assert-never';
 import { getNextDate } from './get-date-for-anchor-and-cycle';
 
+export function isActiveOrScheduled(subscription: Subscription): boolean {
+  if (!subscription.cancelledAt) {
+    return true;
+  }
+
+  return isActive(subscription);
+}
+
 export function isActive(subscription: Subscription): boolean {
   if (new Date() < subscription.startsAt) {
     return false;

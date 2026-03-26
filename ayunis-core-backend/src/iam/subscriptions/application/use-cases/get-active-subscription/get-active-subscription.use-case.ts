@@ -10,7 +10,7 @@ import {
   SubscriptionNotFoundError,
   MultipleActiveSubscriptionsError,
 } from '../../subscription.errors';
-import { isActive } from '../../util/is-active';
+import { isActive, isActiveOrScheduled } from '../../util/is-active';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
@@ -46,9 +46,10 @@ export class GetActiveSubscriptionUseCase {
         query.orgId,
       );
 
+      const filterFn = query.includeScheduled ? isActiveOrScheduled : isActive;
       const subscriptions = (
         await this.subscriptionRepository.findByOrgId(query.orgId)
-      ).filter(isActive);
+      ).filter(filterFn);
       if (subscriptions.length === 0) {
         this.logger.warn('Subscription not found', {
           orgId: query.orgId,
