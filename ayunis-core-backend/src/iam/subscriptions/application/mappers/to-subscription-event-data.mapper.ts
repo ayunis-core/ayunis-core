@@ -36,6 +36,7 @@ export function toSubscriptionEventData(
     orgId: subscription.orgId,
     type: subscription.type,
     cancelledAt: subscription.cancelledAt,
+    startsAt: subscription.startsAt,
     createdAt: subscription.createdAt,
     updatedAt: subscription.updatedAt,
   };

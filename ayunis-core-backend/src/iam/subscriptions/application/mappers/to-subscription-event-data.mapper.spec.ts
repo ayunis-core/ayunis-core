@@ -22,6 +22,7 @@ describe('toSubscriptionEventData', () => {
     it('should map all seat-based fields correctly', () => {
       const orgId = randomUUID();
       const anchor = new Date('2025-06-15T00:00:00.000Z');
+      const startsAt = new Date('2025-05-01T00:00:00.000Z');
       const cancelledAt = new Date('2025-07-01T10:00:00.000Z');
       const sub = new SeatBasedSubscription({
         orgId,
@@ -29,6 +30,7 @@ describe('toSubscriptionEventData', () => {
         pricePerSeat: 9.99,
         renewalCycle: RenewalCycle.YEARLY,
         renewalCycleAnchor: anchor,
+        startsAt,
         cancelledAt,
         billingInfo: createBillingInfo(),
       });
@@ -40,6 +42,7 @@ describe('toSubscriptionEventData', () => {
         orgId,
         type: SubscriptionType.SEAT_BASED,
         cancelledAt,
+        startsAt,
         createdAt: sub.createdAt,
         updatedAt: sub.updatedAt,
         noOfSeats: 10,
@@ -87,10 +90,12 @@ describe('toSubscriptionEventData', () => {
   describe('usage-based subscription', () => {
     it('should map all usage-based fields correctly', () => {
       const orgId = randomUUID();
+      const startsAt = new Date('2025-08-01T00:00:00.000Z');
       const cancelledAt = new Date('2025-08-10T14:30:00.000Z');
       const sub = new UsageBasedSubscription({
         orgId,
         monthlyCredits: 500,
+        startsAt,
         cancelledAt,
         billingInfo: createBillingInfo(),
       });
@@ -102,6 +107,7 @@ describe('toSubscriptionEventData', () => {
         orgId,
         type: SubscriptionType.USAGE_BASED,
         cancelledAt,
+        startsAt,
         createdAt: sub.createdAt,
         updatedAt: sub.updatedAt,
         monthlyCredits: 500,
