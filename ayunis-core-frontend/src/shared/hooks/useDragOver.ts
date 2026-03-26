@@ -25,7 +25,11 @@ export function useDragOver({
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || disabled) return;
+    if (!container || disabled) {
+      setIsDragging(false);
+      setDragCounter(0);
+      return;
+    }
 
     const handleDragEnter = (e: DragEvent) => {
       e.preventDefault();
