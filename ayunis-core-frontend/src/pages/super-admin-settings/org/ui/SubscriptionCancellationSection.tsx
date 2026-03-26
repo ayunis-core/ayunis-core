@@ -6,7 +6,10 @@ import { useTranslation } from 'react-i18next';
 import { SubscriptionCancellationSection as SharedSubscriptionCancellationSection } from '@/widgets/subscription-cancellation-section';
 import useSuperAdminSubscriptionCancel from '../api/useSuperAdminSubscriptionCancel';
 import useSuperAdminSubscriptionUncancel from '../api/useSuperAdminSubscriptionUncancel';
-import { toCalendarDateKey } from '../lib/subscription-start-date';
+import {
+  toCalendarDateKey,
+  utcDateToLocal,
+} from '../lib/subscription-start-date';
 import SubscriptionStartDateUpdateDialog from './SubscriptionStartDateUpdateDialog';
 
 interface SubscriptionCancellationSectionProps {
@@ -15,7 +18,7 @@ interface SubscriptionCancellationSectionProps {
 }
 
 function formatDate(value: string): string {
-  return new Date(value).toLocaleDateString();
+  return utcDateToLocal(value).toLocaleDateString();
 }
 
 export default function SubscriptionCancellationSection({

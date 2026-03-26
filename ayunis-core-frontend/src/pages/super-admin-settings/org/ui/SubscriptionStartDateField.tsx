@@ -19,6 +19,7 @@ import {
 import { cn } from '@/shared/lib/shadcn/utils';
 import { CalendarIcon } from 'lucide-react';
 import type { UpdateSubscriptionStartDateFormData } from '../model/types';
+import { utcDateToLocal } from '../lib/subscription-start-date';
 
 interface SubscriptionStartDateFieldProps {
   form: UseFormReturn<UpdateSubscriptionStartDateFormData>;
@@ -45,14 +46,14 @@ export default function SubscriptionStartDateField({
                   className={cn('w-full justify-start font-normal')}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {new Date(field.value).toLocaleDateString()}
+                  {utcDateToLocal(field.value).toLocaleDateString()}
                 </Button>
               </FormControl>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={new Date(field.value)}
+                selected={utcDateToLocal(field.value)}
                 onSelect={(date) => {
                   if (!date) {
                     return;
