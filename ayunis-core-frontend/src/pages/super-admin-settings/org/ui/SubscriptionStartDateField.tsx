@@ -57,7 +57,14 @@ export default function SubscriptionStartDateField({
                   if (!date) {
                     return;
                   }
-                  field.onChange(date.toISOString());
+                  const utcDate = new Date(
+                    Date.UTC(
+                      date.getFullYear(),
+                      date.getMonth(),
+                      date.getDate(),
+                    ),
+                  );
+                  field.onChange(utcDate.toISOString());
                   setOpen(false);
                 }}
                 captionLayout="dropdown"
