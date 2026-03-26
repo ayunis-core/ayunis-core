@@ -45,7 +45,7 @@ jobs:
           # - /db/migrations/: auto-generated migrations
           # - ayunis-core-frontend/: lizard doesn't handle React/JSX well
           # - /email-templates/: MJML HTML strings (CCN=1-2, just long templates)
-          # - .command.ts / .query.ts: data-carrier constructors (high arg count is acceptable)
+          # - .command.ts / .query.ts / .event.ts: data-carrier constructors (high arg count is acceptable)
           # - .db-query.ts: raw SQL query functions (high arg count for query params)
           # - unicode-sanitizer.ts: lizard misparses chained .replace() as 85 NLOC (actual: ~25)
           FILTERED=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' \
@@ -58,6 +58,7 @@ jobs:
             | grep -v '/email-templates/' \
             | grep -v '\.command\.ts$' \
             | grep -v '\.query\.ts$' \
+            | grep -v '\.event\.ts$' \
             | grep -v '\.db-query\.ts$' \
             | grep -v 'unicode-sanitizer\.ts$' \
             || true)
