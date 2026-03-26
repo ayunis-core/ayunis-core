@@ -15,6 +15,8 @@ import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { SubscriptionNotFoundError } from '../../subscription.errors';
 import { ContextService } from 'src/common/context/services/context.service';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 function createBillingInfo(): SubscriptionBillingInfo {
   return new SubscriptionBillingInfo({
@@ -71,6 +73,7 @@ describe('GetLatestSubscriptionUseCase', () => {
   let subscriptionRepository: jest.Mocked<SubscriptionRepository>;
   let getInvitesByOrgUseCase: jest.Mocked<GetInvitesByOrgUseCase>;
   let findUsersByOrgIdUseCase: jest.Mocked<FindUsersByOrgIdUseCase>;
+  let contextService: jest.Mocked<ContextService>;
 
   const orgId = randomUUID();
   const requestingUserId = randomUUID();
@@ -102,11 +105,21 @@ describe('GetLatestSubscriptionUseCase', () => {
     subscriptionRepository = module.get(SubscriptionRepository);
     getInvitesByOrgUseCase = module.get(GetInvitesByOrgUseCase);
     findUsersByOrgIdUseCase = module.get(FindUsersByOrgIdUseCase);
+    contextService = module.get(ContextService);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'debug').mockImplementation();
     jest.spyOn(Logger.prototype, 'warn').mockImplementation();
     jest.spyOn(Logger.prototype, 'error').mockImplementation();
+  });
+
+  beforeEach(() => {
+    contextService.get.mockImplementation((key) => {
+      if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
+      if (key === 'role') return UserRole.ADMIN;
+      if (key === 'orgId') return orgId;
+      return undefined;
+    });
   });
 
   afterEach(() => {
