@@ -55,8 +55,28 @@
     "cancelError": "An unexpected error occurred",
     "uncancelErrorSubscriptionNotFound": "Subscription not found",
     "uncancelError": "An unexpected error occurred",
+    "edit": "Edit",
+    "startsAtLabel": "Start date",
+    "startsAtPlaceholder": "Select a start date",
+    "startsAtDescription": "Choose the date when this subscription should start.",
+    "updateStartDateTitle": "Edit start date",
+    "updateStartDateDescription": "Adjust when this subscription becomes active.",
+    "updateStartDateAction": "Save start date",
+    "updatingStartDate": "Saving...",
+    "updateStartDateSuccess": "Start date updated successfully",
+    "updateStartDateErrorSubscriptionNotFound": "Subscription not found",
+    "updateStartDateErrorSubscriptionAlreadyCancelled": "Cancelled subscriptions cannot be edited",
+    "updateStartDateErrorUnexpected": "An unexpected error occurred",
     "scheduled": "Scheduled",
-    "scheduledDescription": "This subscription is scheduled to start on {{date}}."
+    "scheduledDescription": "This subscription is scheduled to start on {{date}}.",
+    "validation": {
+      "startsAt": {
+        "required": "Start date is required",
+        "isDateString": "Start date is invalid",
+        "invalid": "Start date is invalid"
+      },
+      "invalid": "Invalid input"
+    }
   },
   "licenseSeats": {
     "title": "License Seats",

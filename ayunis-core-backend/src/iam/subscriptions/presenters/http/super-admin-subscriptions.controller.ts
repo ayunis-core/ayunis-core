@@ -25,8 +25,8 @@ import {
   CurrentUser,
   UserProperty,
 } from '../../../authentication/application/decorators/current-user.decorator';
-import { GetActiveSubscriptionUseCase } from '../../application/use-cases/get-active-subscription/get-active-subscription.use-case';
-import { GetActiveSubscriptionQuery } from '../../application/use-cases/get-active-subscription/get-active-subscription.query';
+import { GetLatestSubscriptionUseCase } from '../../application/use-cases/get-latest-subscription/get-latest-subscription.use-case';
+import { GetLatestSubscriptionQuery } from '../../application/use-cases/get-latest-subscription/get-latest-subscription.query';
 import { CreateSubscriptionUseCase } from '../../application/use-cases/create-subscription/create-subscription.use-case';
 import { CreateSubscriptionCommand } from '../../application/use-cases/create-subscription/create-subscription.command';
 import { CancelSubscriptionUseCase } from '../../application/use-cases/cancel-subscription/cancel-subscription.use-case';
@@ -47,9 +47,12 @@ import { UpdateSeatsUseCase } from '../../application/use-cases/update-seats/upd
 import { UpdateBillingInfoDto } from './dto/update-billing-info.dto';
 import { UpdateBillingInfoUseCase } from '../../application/use-cases/update-billing-info/update-billing-info.use-case';
 import { UpdateBillingInfoCommand } from '../../application/use-cases/update-billing-info/update-billing-info.command';
+import { UpdateStartDateUseCase } from '../../application/use-cases/update-start-date/update-start-date.use-case';
+import { UpdateStartDateCommand } from '../../application/use-cases/update-start-date/update-start-date.command';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { SubscriptionNotFoundError } from '../../application/subscription.errors';
+import { UpdateStartDateDto } from './dto/update-start-date.dto';
 
 @ApiTags('Super Admin Subscriptions')
 @Controller('super-admin/subscriptions')
@@ -60,18 +63,20 @@ import { SubscriptionNotFoundError } from '../../application/subscription.errors
   CreateSubscriptionRequestDto,
   ActiveSubscriptionResponseDto,
   UpdateBillingInfoDto,
+  UpdateStartDateDto,
 )
 export class SuperAdminSubscriptionsController {
   private readonly logger = new Logger(SuperAdminSubscriptionsController.name);
 
   constructor(
-    private readonly getSubscriptionUseCase: GetActiveSubscriptionUseCase,
+    private readonly getLatestSubscriptionUseCase: GetLatestSubscriptionUseCase,
     private readonly createSubscriptionUseCase: CreateSubscriptionUseCase,
     private readonly cancelSubscriptionUseCase: CancelSubscriptionUseCase,
     private readonly uncancelSubscriptionUseCase: UncancelSubscriptionUseCase,
     private readonly subscriptionResponseMapper: SubscriptionResponseMapper,
     private readonly updateSeatsUseCase: UpdateSeatsUseCase,
     private readonly updateBillingInfoUseCase: UpdateBillingInfoUseCase,
+    private readonly updateStartDateUseCase: UpdateStartDateUseCase,
   ) {}
 
   @Get(':orgId')
@@ -109,12 +114,12 @@ export class SuperAdminSubscriptionsController {
     );
 
     try {
-      const query = new GetActiveSubscriptionQuery({
+      const query = new GetLatestSubscriptionQuery({
         orgId,
         requestingUserId: userId,
       });
 
-      const result = await this.getSubscriptionUseCase.execute(query);
+      const result = await this.getLatestSubscriptionUseCase.execute(query);
 
       const responseDto = this.subscriptionResponseMapper.toDto(result);
       this.logger.log(`Successfully retrieved subscription for org ${orgId}`);
@@ -295,6 +300,58 @@ export class SuperAdminSubscriptionsController {
     });
     await this.updateBillingInfoUseCase.execute(command);
     this.logger.log(`Successfully updated billing info for org ${orgId}`);
+  }
+
+  @Put(':orgId/start-date')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Update the start date for a specific organization subscription',
+    description:
+      'Update the start date for the latest subscription of the specified organization. This endpoint is only accessible to super admins.',
+  })
+  @ApiParam({
+    name: 'orgId',
+    description: 'Organization ID to update the subscription start date for',
+    format: 'uuid',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Successfully updated subscription start date',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid start date provided',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'No subscription found for the organization',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User not authenticated or not authorized as super admin',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error',
+  })
+  async updateStartDate(
+    @Param('orgId') orgId: UUID,
+    @CurrentUser(UserProperty.ID) userId: UUID,
+    @Body() updateStartDateDto: UpdateStartDateDto,
+  ): Promise<void> {
+    this.logger.log(
+      `Updating subscription start date for org ${orgId} by super admin ${userId}`,
+    );
+
+    const command = new UpdateStartDateCommand({
+      orgId,
+      requestingUserId: userId,
+      startsAt: new Date(updateStartDateDto.startsAt),
+    });
+
+    await this.updateStartDateUseCase.execute(command);
+    this.logger.log(
+      `Successfully updated subscription start date for org ${orgId}`,
+    );
   }
 
   @Delete(':orgId')
