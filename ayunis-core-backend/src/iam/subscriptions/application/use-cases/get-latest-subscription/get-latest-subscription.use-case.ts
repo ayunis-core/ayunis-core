@@ -14,6 +14,8 @@ import {
   UnexpectedSubscriptionError,
 } from '../../subscription.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { ContextService } from 'src/common/context/services/context.service';
+import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
 
 @Injectable()
 export class GetLatestSubscriptionUseCase {
@@ -23,6 +25,7 @@ export class GetLatestSubscriptionUseCase {
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(query: GetLatestSubscriptionQuery): Promise<{
@@ -36,6 +39,12 @@ export class GetLatestSubscriptionUseCase {
     });
 
     try {
+      validateSubscriptionAccess(
+        this.contextService,
+        query.requestingUserId,
+        query.orgId,
+      );
+
       const subscription = await this.subscriptionRepository.findLatestByOrgId(
         query.orgId,
       );
