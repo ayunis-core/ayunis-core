@@ -5,6 +5,7 @@ import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guar
 import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import {
+  InvalidSubscriptionDataError,
   SubscriptionAlreadyCancelledError,
   SubscriptionNotFoundError,
   UnexpectedSubscriptionError,
@@ -44,6 +45,13 @@ export class UpdateStartDateUseCase {
 
       if (subscription.cancelledAt) {
         throw new SubscriptionAlreadyCancelledError(command.orgId);
+      }
+
+      const now = new Date();
+      if (subscription.startsAt <= now && command.startsAt > now) {
+        throw new InvalidSubscriptionDataError(
+          'Cannot move the start date to the future for an already active subscription',
+        );
       }
 
       return await this.subscriptionRepository.updateStartDate({

@@ -6,6 +6,7 @@ import { UpdateStartDateUseCase } from './update-start-date.use-case';
 import { UpdateStartDateCommand } from './update-start-date.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import {
+  InvalidSubscriptionDataError,
   SubscriptionAlreadyCancelledError,
   SubscriptionNotFoundError,
 } from '../../subscription.errors';
@@ -200,6 +201,28 @@ describe('UpdateStartDateUseCase', () => {
         }),
       ),
     ).rejects.toThrow(SubscriptionAlreadyCancelledError);
+  });
+
+  it('should throw InvalidSubscriptionDataError when moving an active subscription start date to the future', async () => {
+    const activeSubscription = createSeatBasedSubscription({
+      startsAt: new Date('2020-01-01T00:00:00.000Z'),
+      renewalCycleAnchor: new Date('2020-01-01T00:00:00.000Z'),
+    });
+    subscriptionRepository.findLatestByOrgId.mockResolvedValue(
+      activeSubscription,
+    );
+
+    const futureDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+
+    await expect(
+      useCase.execute(
+        new UpdateStartDateCommand({
+          orgId: mockOrgId,
+          requestingUserId: mockUserId,
+          startsAt: futureDate,
+        }),
+      ),
+    ).rejects.toThrow(InvalidSubscriptionDataError);
   });
 
   it('should wrap unexpected repository errors', async () => {

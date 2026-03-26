@@ -72,6 +72,7 @@ describe('GetLatestSubscriptionUseCase', () => {
   let findUsersByOrgIdUseCase: jest.Mocked<FindUsersByOrgIdUseCase>;
 
   const orgId = randomUUID();
+  const requestingUserId = randomUUID();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -129,7 +130,7 @@ describe('GetLatestSubscriptionUseCase', () => {
   it('should throw SubscriptionNotFoundError when no subscription exists', async () => {
     subscriptionRepository.findLatestByOrgId.mockResolvedValue(null);
 
-    const query = new GetLatestSubscriptionQuery({ orgId });
+    const query = new GetLatestSubscriptionQuery({ orgId, requestingUserId });
 
     await expect(useCase.execute(query)).rejects.toThrow(
       SubscriptionNotFoundError,
@@ -146,7 +147,7 @@ describe('GetLatestSubscriptionUseCase', () => {
     subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
     mockInvitesAndUsers(2, 5);
 
-    const query = new GetLatestSubscriptionQuery({ orgId });
+    const query = new GetLatestSubscriptionQuery({ orgId, requestingUserId });
     const result = await useCase.execute(query);
 
     expect(result.subscription).toBe(subscription);
@@ -159,7 +160,7 @@ describe('GetLatestSubscriptionUseCase', () => {
     subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
     mockInvitesAndUsers(2, 5);
 
-    const query = new GetLatestSubscriptionQuery({ orgId });
+    const query = new GetLatestSubscriptionQuery({ orgId, requestingUserId });
     const result = await useCase.execute(query);
 
     expect(result.subscription).toBe(subscription);
@@ -174,7 +175,7 @@ describe('GetLatestSubscriptionUseCase', () => {
     });
     subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
 
-    const query = new GetLatestSubscriptionQuery({ orgId });
+    const query = new GetLatestSubscriptionQuery({ orgId, requestingUserId });
     const result = await useCase.execute(query);
 
     expect(result.subscription).toBe(subscription);
@@ -186,7 +187,7 @@ describe('GetLatestSubscriptionUseCase', () => {
     const subscription = createUsageBasedSubscription(orgId);
     subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
 
-    const query = new GetLatestSubscriptionQuery({ orgId });
+    const query = new GetLatestSubscriptionQuery({ orgId, requestingUserId });
     const result = await useCase.execute(query);
 
     expect(result.availableSeats).toBeNull();
@@ -196,7 +197,7 @@ describe('GetLatestSubscriptionUseCase', () => {
     const subscription = createUsageBasedSubscription(orgId);
     subscriptionRepository.findLatestByOrgId.mockResolvedValue(subscription);
 
-    const query = new GetLatestSubscriptionQuery({ orgId });
+    const query = new GetLatestSubscriptionQuery({ orgId, requestingUserId });
     await useCase.execute(query);
 
     expect(getInvitesByOrgUseCase.execute).not.toHaveBeenCalled();

@@ -7,14 +7,11 @@ import { SubscriptionCancellationSection as SharedSubscriptionCancellationSectio
 import useSuperAdminSubscriptionCancel from '../api/useSuperAdminSubscriptionCancel';
 import useSuperAdminSubscriptionUncancel from '../api/useSuperAdminSubscriptionUncancel';
 import SubscriptionStartDateUpdateDialog from './SubscriptionStartDateUpdateDialog';
+import { toCalendarDateKey } from '../lib/subscription-start-date';
 
 interface SubscriptionCancellationSectionProps {
   subscription: SubscriptionResponseDto;
   orgId: string;
-}
-
-function getCalendarDateKey(value: string): string {
-  return new Date(value).toISOString().slice(0, 10);
 }
 
 function formatDate(value: string): string {
@@ -34,8 +31,8 @@ export default function SubscriptionCancellationSection({
   const nextRenewalDateFormatted = formatDate(subscription.nextRenewalDate);
   const showNextRenewalDate =
     !isScheduled ||
-    getCalendarDateKey(subscription.startsAt) !==
-      getCalendarDateKey(subscription.nextRenewalDate);
+    toCalendarDateKey(subscription.startsAt) !==
+      toCalendarDateKey(subscription.nextRenewalDate);
 
   return (
     <SharedSubscriptionCancellationSection

@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { UUID } from 'crypto';
 import { GetLatestSubscriptionQuery } from './get-latest-subscription.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
@@ -43,7 +42,7 @@ export class GetLatestSubscriptionUseCase {
 
       const availableSeats = await this.computeAvailableSeats(
         subscription,
-        query.orgId,
+        query,
       );
       const nextRenewalDate = this.getNextRenewalDate(subscription);
 
@@ -61,7 +60,7 @@ export class GetLatestSubscriptionUseCase {
 
   private async computeAvailableSeats(
     subscription: Subscription,
-    orgId: UUID,
+    query: GetLatestSubscriptionQuery,
   ): Promise<number | null> {
     if (!isSeatBased(subscription)) {
       return null;
@@ -70,14 +69,14 @@ export class GetLatestSubscriptionUseCase {
     const [invitesResult, usersResult] = await Promise.all([
       this.getInvitesByOrgUseCase.execute(
         new GetInvitesByOrgQuery({
-          orgId,
-          requestingUserId: orgId,
+          orgId: query.orgId,
+          requestingUserId: query.requestingUserId,
           onlyOpen: true,
         }),
       ),
       this.findUsersByOrgIdUseCase.execute(
         new FindUsersByOrgIdQuery({
-          orgId,
+          orgId: query.orgId,
           pagination: { limit: 1000, offset: 0 },
         }),
       ),

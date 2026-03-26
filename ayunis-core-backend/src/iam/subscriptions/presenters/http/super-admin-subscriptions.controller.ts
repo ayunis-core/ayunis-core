@@ -114,7 +114,7 @@ export class SuperAdminSubscriptionsController {
     );
 
     try {
-      const query = new GetLatestSubscriptionQuery({ orgId });
+      const query = new GetLatestSubscriptionQuery({ orgId, requestingUserId: userId });
 
       const result = await this.getLatestSubscriptionUseCase.execute(query);
 
