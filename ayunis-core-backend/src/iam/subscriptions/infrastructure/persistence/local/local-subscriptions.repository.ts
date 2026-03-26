@@ -4,7 +4,10 @@ import { DataSource, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
-import { SubscriptionRecord } from './schema/subscription.record';
+import {
+  SeatBasedSubscriptionRecord,
+  SubscriptionRecord,
+} from './schema/subscription.record';
 import { SubscriptionMapper } from './mappers/subscription.mapper';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
 import { SubscriptionBillingInfoRecord } from './schema/subscription-billing-info.record';
@@ -107,6 +110,45 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
     } catch (error) {
       this.logger.error(
         `Failed to update subscription with id ${subscription.id}`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  async updateStartDate(params: {
+    subscriptionId: UUID;
+    startsAt: Date;
+    renewalCycleAnchor?: Date;
+  }): Promise<Subscription> {
+    try {
+      const record = await this.subscriptionRepository.findOne({
+        where: { id: params.subscriptionId },
+        relations: { billingInfo: true },
+      });
+
+      if (!record) {
+        throw new Error(
+          `Subscription with id ${params.subscriptionId} not found`,
+        );
+      }
+
+      record.startsAt = params.startsAt;
+      if (
+        record instanceof SeatBasedSubscriptionRecord &&
+        params.renewalCycleAnchor
+      ) {
+        record.renewalCycleAnchor = params.renewalCycleAnchor;
+      }
+
+      const updatedRecord = await this.subscriptionRepository.save(record);
+      this.logger.log(
+        `Updated start date for subscription with id ${params.subscriptionId}`,
+      );
+      return this.subscriptionMapper.toDomain(updatedRecord);
+    } catch (error) {
+      this.logger.error(
+        `Failed to update start date for subscription with id ${params.subscriptionId}`,
         error,
       );
       throw error;

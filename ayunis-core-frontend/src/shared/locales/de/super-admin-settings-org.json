@@ -55,8 +55,28 @@
     "cancelError": "Ein unerwarteter Fehler ist aufgetreten",
     "uncancelErrorSubscriptionNotFound": "Abonnement nicht gefunden",
     "uncancelError": "Ein unerwarteter Fehler ist aufgetreten",
+    "edit": "Bearbeiten",
+    "startsAtLabel": "Startdatum",
+    "startsAtPlaceholder": "Startdatum auswählen",
+    "startsAtDescription": "Wählen Sie das Datum, an dem dieses Abonnement starten soll.",
+    "updateStartDateTitle": "Startdatum bearbeiten",
+    "updateStartDateDescription": "Passen Sie an, wann dieses Abonnement aktiv wird.",
+    "updateStartDateAction": "Startdatum speichern",
+    "updatingStartDate": "Wird gespeichert...",
+    "updateStartDateSuccess": "Startdatum erfolgreich aktualisiert",
+    "updateStartDateErrorSubscriptionNotFound": "Abonnement nicht gefunden",
+    "updateStartDateErrorSubscriptionAlreadyCancelled": "Gekündigte Abonnements können nicht bearbeitet werden",
+    "updateStartDateErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten",
     "scheduled": "Geplant",
-    "scheduledDescription": "Dieses Abonnement startet am {{date}}."
+    "scheduledDescription": "Dieses Abonnement startet am {{date}}.",
+    "validation": {
+      "startsAt": {
+        "required": "Startdatum ist erforderlich",
+        "isDateString": "Startdatum ist ungültig",
+        "invalid": "Startdatum ist ungültig"
+      },
+      "invalid": "Ungültige Eingabe"
+    }
   },
   "licenseSeats": {
     "title": "Lizenzplätze",
