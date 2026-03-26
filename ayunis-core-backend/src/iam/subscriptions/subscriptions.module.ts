@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { WebhooksModule } from '../../common/webhooks/webhooks.module';
 import { HasActiveSubscriptionUseCase } from './application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import { GetActiveSubscriptionUseCase } from './application/use-cases/get-active-subscription/get-active-subscription.use-case';
+import { GetLatestSubscriptionUseCase } from './application/use-cases/get-latest-subscription/get-latest-subscription.use-case';
 import { CreateSubscriptionUseCase } from './application/use-cases/create-subscription/create-subscription.use-case';
 import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription/cancel-subscription.use-case';
 import { UncancelSubscriptionUseCase } from './application/use-cases/uncancel-subscription/uncancel-subscription.use-case';
@@ -25,6 +26,7 @@ import { SubscriptionBillingInfoMapper } from './infrastructure/persistence/loca
 import { SubscriptionBillingInfoRecord } from './infrastructure/persistence/local/schema/subscription-billing-info.record';
 import { GetCurrentPriceUseCase } from './application/use-cases/get-current-price/get-current-price.use-case';
 import { GetMonthlyCreditLimitUseCase } from './application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
+import { UpdateStartDateUseCase } from './application/use-cases/update-start-date/update-start-date.use-case';
 
 @Module({
   imports: [
@@ -49,11 +51,13 @@ import { GetMonthlyCreditLimitUseCase } from './application/use-cases/get-monthl
     SubscriptionBillingInfoMapper,
     HasActiveSubscriptionUseCase,
     GetActiveSubscriptionUseCase,
+    GetLatestSubscriptionUseCase,
     CreateSubscriptionUseCase,
     CancelSubscriptionUseCase,
     UncancelSubscriptionUseCase,
     UpdateSeatsUseCase,
     UpdateBillingInfoUseCase,
+    UpdateStartDateUseCase,
     GetCurrentPriceUseCase,
     GetMonthlyCreditLimitUseCase,
   ],

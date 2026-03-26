@@ -1275,6 +1275,11 @@ export interface UpdateBillingInfoDto {
   vatNumber?: string;
 }
 
+export interface UpdateStartDateDto {
+  /** New subscription start date (ISO 8601) */
+  startsAt: string;
+}
+
 export interface UpdateSeatsDto { [key: string]: unknown }
 
 export interface CreateTeamDto {

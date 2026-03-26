@@ -174,6 +174,7 @@ import type {
   UpdateSeatsDto,
   UpdateSkillDto,
   UpdateSkillTemplateDto,
+  UpdateStartDateDto,
   UpdateTeamDto,
   UpdateThreadTitleDto,
   UpdateTrialRequestDto,
@@ -5627,6 +5628,72 @@ export const useSuperAdminSubscriptionsControllerUpdateBillingInfo = <TError = v
       > => {
 
       const mutationOptions = getSuperAdminSubscriptionsControllerUpdateBillingInfoMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Update the start date for the latest subscription of the specified organization. This endpoint is only accessible to super admins.
+ * @summary Update the start date for a specific organization subscription
+ */
+export const superAdminSubscriptionsControllerUpdateStartDate = (
+    orgId: string,
+    updateStartDateDto: UpdateStartDateDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/subscriptions/${orgId}/start-date`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateStartDateDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSubscriptionsControllerUpdateStartDateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateStartDate>>, TError,{orgId: string;data: UpdateStartDateDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateStartDate>>, TError,{orgId: string;data: UpdateStartDateDto}, TContext> => {
+
+const mutationKey = ['superAdminSubscriptionsControllerUpdateStartDate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateStartDate>>, {orgId: string;data: UpdateStartDateDto}> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminSubscriptionsControllerUpdateStartDate(orgId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSubscriptionsControllerUpdateStartDateMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateStartDate>>>
+    export type SuperAdminSubscriptionsControllerUpdateStartDateMutationBody = UpdateStartDateDto
+    export type SuperAdminSubscriptionsControllerUpdateStartDateMutationError = void
+
+    /**
+ * @summary Update the start date for a specific organization subscription
+ */
+export const useSuperAdminSubscriptionsControllerUpdateStartDate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateStartDate>>, TError,{orgId: string;data: UpdateStartDateDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateStartDate>>,
+        TError,
+        {orgId: string;data: UpdateStartDateDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSubscriptionsControllerUpdateStartDateMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
