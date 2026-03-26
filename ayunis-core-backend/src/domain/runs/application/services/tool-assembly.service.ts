@@ -93,16 +93,13 @@ export class ToolAssemblyService {
       ? await this.assembleTools(thread, agent, activeSkills, slugMap)
       : [];
 
-    // Collect all sources from thread and agent for the system prompt
-    // Filter to only TextSources since DataSources (e.g., CSV) can only be used
-    // with code_execution tool, not source_query or source_get_text
+    // Collect all sources from thread and agent for the system prompt.
+    // All types and statuses are passed — the system prompt builder partitions
+    // them into ready / processing / failed sections.
     const allSources = [
       ...(thread.sourceAssignments?.map((a) => a.source) ?? []),
       ...(agent?.sourceAssignments.map((a) => a.source) ?? []),
     ];
-    const textSources = allSources.filter(
-      (s): s is TextSource => s instanceof TextSource,
-    );
 
     // Fetch user's custom system prompt (returns null if not configured)
     const userSystemPromptEntity =
@@ -113,7 +110,7 @@ export class ToolAssemblyService {
       agent,
       tools,
       currentTime: new Date(),
-      sources: textSources,
+      sources: allSources,
       // Only include skills in prompt when tools are enabled and skills feature is on,
       // otherwise the prompt would instruct the model to use activate_skill which isn't available
       skills: canUseTools && this.features.skillsEnabled ? skillEntries : [],
