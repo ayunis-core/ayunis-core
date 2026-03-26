@@ -2708,6 +2708,54 @@
         "tags": ["Super Admin Subscriptions"]
       }
     },
+    "/super-admin/subscriptions/{orgId}/start-date": {
+      "put": {
+        "description": "Update the start date for the latest subscription of the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminSubscriptionsController_updateStartDate",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to update the subscription start date for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStartDateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated subscription start date"
+          },
+          "400": {
+            "description": "Invalid start date provided"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "No subscription found for the organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update the start date for a specific organization subscription",
+        "tags": ["Super Admin Subscriptions"]
+      }
+    },
     "/super-admin/subscriptions/{orgId}/uncancel": {
       "post": {
         "description": "Uncancel the subscription for the specified organization. This endpoint is only accessible to super admins.",
@@ -10032,6 +10080,17 @@
           "city",
           "country"
         ]
+      },
+      "UpdateStartDateDto": {
+        "type": "object",
+        "properties": {
+          "startsAt": {
+            "type": "string",
+            "description": "New subscription start date (ISO 8601)",
+            "example": "2026-08-15T00:00:00.000Z"
+          }
+        },
+        "required": ["startsAt"]
       },
       "UpdateSeatsDto": {
         "type": "object",
