@@ -195,7 +195,7 @@ describe('PrometheusMetricsListener', () => {
       );
     });
 
-    it('should increment error counter when error is present', () => {
+    it('should classify and increment error counter when error is present', () => {
       listener.handleInferenceCompleted(
         new InferenceCompletedEvent(
           USER_ID,
@@ -204,7 +204,10 @@ describe('PrometheusMetricsListener', () => {
           'openai',
           false,
           500,
-          'rate_limit',
+          {
+            message: 'Too Many Requests',
+            statusCode: 429,
+          },
         ),
       );
 
@@ -212,6 +215,52 @@ describe('PrometheusMetricsListener', () => {
         model: 'gpt-4',
         provider: 'openai',
         error_type: 'rate_limit',
+        streaming: 'false',
+      });
+    });
+
+    it('should classify error by message when no statusCode', () => {
+      listener.handleInferenceCompleted(
+        new InferenceCompletedEvent(
+          USER_ID,
+          ORG_ID,
+          'gpt-4',
+          'openai',
+          false,
+          500,
+          {
+            message: 'Request timed out',
+          },
+        ),
+      );
+
+      expect(inferenceErrorsCounter.inc).toHaveBeenCalledWith({
+        model: 'gpt-4',
+        provider: 'openai',
+        error_type: 'timeout',
+        streaming: 'false',
+      });
+    });
+
+    it('should classify unknown errors as "unknown"', () => {
+      listener.handleInferenceCompleted(
+        new InferenceCompletedEvent(
+          USER_ID,
+          ORG_ID,
+          'gpt-4',
+          'openai',
+          false,
+          500,
+          {
+            message: 'Something completely unexpected happened',
+          },
+        ),
+      );
+
+      expect(inferenceErrorsCounter.inc).toHaveBeenCalledWith({
+        model: 'gpt-4',
+        provider: 'openai',
+        error_type: 'unknown',
         streaming: 'false',
       });
     });

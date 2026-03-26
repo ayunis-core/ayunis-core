@@ -21,6 +21,7 @@ import {
   AYUNIS_THREAD_MESSAGE_COUNT,
 } from '../metrics.constants';
 import { safeMetric } from '../metrics.utils';
+import { classifyInferenceError } from '../classify-inference-error.helper';
 
 /**
  * Subscribes to domain events and records the corresponding Prometheus
@@ -112,7 +113,10 @@ export class PrometheusMetricsListener {
         this.inferenceErrorsCounter.inc({
           model: event.model,
           provider: event.provider,
-          error_type: event.error!,
+          error_type: classifyInferenceError({
+            message: event.error!.message,
+            status: event.error!.statusCode,
+          }),
           streaming: streamingLabel,
         });
       });

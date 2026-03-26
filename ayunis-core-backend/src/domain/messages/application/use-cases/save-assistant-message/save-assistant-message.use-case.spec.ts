@@ -8,14 +8,14 @@ import { AssistantMessage } from '../../../domain/messages/assistant-message.ent
 import { MessageCreationError } from '../../messages.errors';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
-import { getToken } from '@willsoto/nestjs-prometheus';
-import { AYUNIS_MESSAGES_TOTAL } from 'src/integrations/metrics/metrics.constants';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { AssistantMessageCreatedEvent } from '../../events/assistant-message-created.event';
 
 describe('SaveAssistantMessageUseCase', () => {
   let useCase: SaveAssistantMessageUseCase;
   let mockMessagesRepository: Partial<MessagesRepository>;
   let mockContextService: Partial<ContextService>;
-  let mockMessagesCounter: { inc: jest.Mock };
+  let mockEventEmitter: { emitAsync: jest.Mock };
 
   beforeAll(async () => {
     mockMessagesRepository = {
@@ -26,17 +26,16 @@ describe('SaveAssistantMessageUseCase', () => {
       get: jest.fn().mockReturnValue(randomUUID()),
     };
 
-    mockMessagesCounter = { inc: jest.fn() };
+    mockEventEmitter = {
+      emitAsync: jest.fn().mockResolvedValue([]),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SaveAssistantMessageUseCase,
         { provide: MESSAGES_REPOSITORY, useValue: mockMessagesRepository },
         { provide: ContextService, useValue: mockContextService },
-        {
-          provide: getToken(AYUNIS_MESSAGES_TOTAL),
-          useValue: mockMessagesCounter,
-        },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 
@@ -54,7 +53,7 @@ describe('SaveAssistantMessageUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should save an assistant message and increment the metric', async () => {
+  it('should save an assistant message and emit event', async () => {
     const threadId = randomUUID();
     const message = new AssistantMessage({ threadId, content: [] });
     const command = new SaveAssistantMessageCommand(message);
@@ -65,8 +64,12 @@ describe('SaveAssistantMessageUseCase', () => {
 
     expect(result).toBe(message);
     expect(mockMessagesRepository.create).toHaveBeenCalledWith(message);
-    expect(mockMessagesCounter.inc).toHaveBeenCalledWith(
-      expect.objectContaining({ role: 'assistant' }),
+    expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+      AssistantMessageCreatedEvent.EVENT_NAME,
+      expect.objectContaining({
+        threadId: message.threadId,
+        messageId: message.id,
+      }),
     );
   });
 
@@ -84,15 +87,15 @@ describe('SaveAssistantMessageUseCase', () => {
     );
   });
 
-  it('should not propagate metric errors', async () => {
+  it('should not propagate event emission errors', async () => {
     const threadId = randomUUID();
     const message = new AssistantMessage({ threadId, content: [] });
     const command = new SaveAssistantMessageCommand(message);
 
     jest.spyOn(mockMessagesRepository, 'create').mockResolvedValue(message);
-    mockMessagesCounter.inc.mockImplementation(() => {
-      throw new Error('Metric registration error');
-    });
+    mockEventEmitter.emitAsync.mockRejectedValue(
+      new Error('Event emission error'),
+    );
 
     const result = await useCase.execute(command);
 

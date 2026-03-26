@@ -12,8 +12,8 @@ import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/up
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedException } from '@nestjs/common';
-import { getToken } from '@willsoto/nestjs-prometheus';
-import { AYUNIS_MESSAGES_TOTAL } from 'src/integrations/metrics/metrics.constants';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { UserMessageCreatedEvent } from '../../events/user-message-created.event';
 
 describe('CreateUserMessageUseCase', () => {
   let useCase: CreateUserMessageUseCase;
@@ -21,6 +21,7 @@ describe('CreateUserMessageUseCase', () => {
   let mockUploadObjectUseCase: Partial<UploadObjectUseCase>;
   let mockDeleteObjectUseCase: Partial<DeleteObjectUseCase>;
   let mockContextService: Partial<ContextService>;
+  let mockEventEmitter: { emitAsync: jest.Mock };
 
   const mockOrgId = randomUUID();
 
@@ -41,6 +42,10 @@ describe('CreateUserMessageUseCase', () => {
       get: jest.fn().mockReturnValue(mockOrgId),
     };
 
+    mockEventEmitter = {
+      emitAsync: jest.fn().mockResolvedValue([]),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateUserMessageUseCase,
@@ -48,10 +53,7 @@ describe('CreateUserMessageUseCase', () => {
         { provide: UploadObjectUseCase, useValue: mockUploadObjectUseCase },
         { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
         { provide: ContextService, useValue: mockContextService },
-        {
-          provide: getToken(AYUNIS_MESSAGES_TOTAL),
-          useValue: { inc: jest.fn() },
-        },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 
@@ -219,6 +221,58 @@ describe('CreateUserMessageUseCase', () => {
       expect(mockMessagesRepository.create).toHaveBeenCalledWith(
         expect.any(UserMessage),
       );
+    });
+
+    it('should emit UserMessageCreatedEvent on success', async () => {
+      // Arrange
+      const threadId = randomUUID();
+      const text = 'Hello world';
+      const command = new CreateUserMessageCommand(threadId, text);
+
+      const expectedMessage = new UserMessage({
+        threadId,
+        content: [],
+      });
+      jest
+        .spyOn(mockMessagesRepository, 'create')
+        .mockResolvedValue(expectedMessage);
+
+      // Act
+      await useCase.execute(command);
+
+      // Assert
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+        UserMessageCreatedEvent.EVENT_NAME,
+        expect.objectContaining({
+          orgId: mockOrgId,
+          threadId,
+          messageId: expectedMessage.id,
+        }),
+      );
+    });
+
+    it('should not propagate event emission errors', async () => {
+      // Arrange
+      const threadId = randomUUID();
+      const text = 'Hello world';
+      const command = new CreateUserMessageCommand(threadId, text);
+
+      const expectedMessage = new UserMessage({
+        threadId,
+        content: [],
+      });
+      jest
+        .spyOn(mockMessagesRepository, 'create')
+        .mockResolvedValue(expectedMessage);
+      mockEventEmitter.emitAsync.mockRejectedValue(
+        new Error('Event emission error'),
+      );
+
+      // Act
+      const result = await useCase.execute(command);
+
+      // Assert
+      expect(result).toBe(expectedMessage);
     });
 
     it('should handle non-Error repository failures', async () => {
