@@ -14,6 +14,7 @@ import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscripti
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { SubscriptionNotFoundError } from '../../subscription.errors';
+import { ContextService } from 'src/common/context/services/context.service';
 
 function createBillingInfo(): SubscriptionBillingInfo {
   return new SubscriptionBillingInfo({
@@ -89,6 +90,10 @@ describe('GetLatestSubscriptionUseCase', () => {
         {
           provide: FindUsersByOrgIdUseCase,
           useValue: { execute: jest.fn() },
+        },
+        {
+          provide: ContextService,
+          useValue: { get: jest.fn() },
         },
       ],
     }).compile();
