@@ -25,11 +25,7 @@ export function useDragOver({
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || disabled) {
-      setIsDragging(false);
-      setDragCounter(0);
-      return;
-    }
+    if (!container || disabled) return;
 
     const handleDragEnter = (e: DragEvent) => {
       e.preventDefault();
@@ -77,6 +73,8 @@ export function useDragOver({
       container.removeEventListener('dragleave', handleDragLeave);
       container.removeEventListener('dragover', handleDragOver);
       container.removeEventListener('drop', handleDrop);
+      setIsDragging(false);
+      setDragCounter(0);
     };
   }, [containerRef, onDrop, disabled]);
 
