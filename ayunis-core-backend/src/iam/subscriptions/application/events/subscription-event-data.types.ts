@@ -6,6 +6,7 @@ export interface SubscriptionEventDataBase {
   id: UUID;
   orgId: UUID;
   type: SubscriptionType;
+  startsAt: Date;
   cancelledAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
