@@ -13,11 +13,7 @@ interface UsePendingMessageParams {
     images?: PendingImage[];
     skillId?: string;
   }) => Promise<void>;
-  createFileSourceAsync: (params: {
-    file: File;
-    name: string;
-    description: string;
-  }) => unknown;
+  createFileSourceAsync: (params: { file: File }) => unknown;
   resetCreateFileSourceMutation: () => void;
   addKnowledgeBaseAsync: (id: string) => Promise<unknown>;
   chatInputRef: RefObject<ChatInputRef | null>;
@@ -53,11 +49,7 @@ export function usePendingMessage({
       if (sources.length === 0) return;
       setIsProcessingPendingSources(true);
       const promises = sources.map((source) =>
-        createFileSourceAsync({
-          file: source.file,
-          name: source.name,
-          description: `File source: ${source.name}`,
-        }),
+        createFileSourceAsync({ file: source.file }),
       );
       await Promise.all(promises as Promise<unknown>[]);
       resetCreateFileSourceMutation();

@@ -29,6 +29,7 @@ import type {
   RunSessionResponseDto,
   RunThreadResponseDto,
 } from '@/shared/api';
+import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useRunErrorHandler } from '../hooks/useRunErrorHandler';
 import { useLetterheadChange } from '../hooks/useLetterheadChange';
 import { usePendingMessage } from '../hooks/usePendingMessage';
@@ -57,6 +58,8 @@ const LazyArtifactEditor = lazy(() =>
   })),
 );
 
+const PROCESSING_POLL_INTERVAL = 5000;
+
 interface ChatPageProps {
   readonly thread: Thread;
   readonly isEmbeddingModelEnabled: boolean;
@@ -78,6 +81,16 @@ export default function ChatPage({
     queryKey: getThreadsControllerFindOneQueryKey(initialThread.id),
     queryFn: () => threadsControllerFindOne(initialThread.id),
     initialData: initialThread,
+    staleTime: 0,
+    // eslint-disable-next-line sonarjs/function-return-type -- React Query's refetchInterval expects number | false
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data) return false;
+      const hasProcessing = data.sources.some(
+        (s) => s.status === SourceResponseDtoStatus.processing,
+      );
+      return hasProcessing ? PROCESSING_POLL_INTERVAL : false;
+    },
   });
 
   const selectedAgent = agents.find((agent) => agent.id === thread.agentId);
@@ -166,11 +179,7 @@ export default function ChatPage({
 
   const handleFileUpload = useCallback(
     (file: File) => {
-      createFileSource({
-        file,
-        name: file.name,
-        description: `File source: ${file.name}`,
-      });
+      createFileSource({ file });
     },
     [createFileSource],
   );

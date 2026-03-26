@@ -68,7 +68,7 @@ import {
 import {
   buildCsvSourceCommand,
   buildSpreadsheetSourceCommands,
-} from 'src/common/util/data-source-parsing';
+} from 'src/domain/sources/application/util/data-source-parsing';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
 

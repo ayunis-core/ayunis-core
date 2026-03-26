@@ -270,12 +270,13 @@ ${skillEntries}
       return '';
     }
 
-    const readySources = sources.filter((s) => s.status === SourceStatus.READY);
-    const readyTextSources = readySources.filter(
-      (s) => s instanceof TextSource,
+    // Only TextSources are searchable via source_query — DataSources are
+    // handled by the code_execution tool and listed separately.
+    const readyTextSources = sources.filter(
+      (s) => s.status === SourceStatus.READY && s instanceof TextSource,
     );
-    const readyDataSources = readySources.filter(
-      (s) => s instanceof DataSource,
+    const readyDataSources = sources.filter(
+      (s) => s.status === SourceStatus.READY && s instanceof DataSource,
     );
     const processingSources = sources.filter(
       (s) => s.status === SourceStatus.PROCESSING,
