@@ -29,6 +29,7 @@ jest.mock('puppeteer-core', () => ({
 describe('HtmlDocumentExportService', () => {
   let service: HtmlDocumentExportService;
   let compositor: jest.Mocked<PdfLetterheadCompositor>;
+  const originalPuppeteerExecutablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
 
   const sampleHtml = `
     <h1>Test Document</h1>
@@ -44,6 +45,8 @@ describe('HtmlDocumentExportService', () => {
   `;
 
   beforeAll(() => {
+    process.env.PUPPETEER_EXECUTABLE_PATH = '/mock/chromium';
+
     compositor = {
       composite: jest.fn().mockResolvedValue(Buffer.from('%PDF-composited')),
     } as unknown as jest.Mocked<PdfLetterheadCompositor>;
@@ -52,6 +55,13 @@ describe('HtmlDocumentExportService', () => {
 
   afterAll(async () => {
     await service.onModuleDestroy();
+
+    if (originalPuppeteerExecutablePath === undefined) {
+      delete process.env.PUPPETEER_EXECUTABLE_PATH;
+      return;
+    }
+
+    process.env.PUPPETEER_EXECUTABLE_PATH = originalPuppeteerExecutablePath;
   });
 
   beforeEach(() => {

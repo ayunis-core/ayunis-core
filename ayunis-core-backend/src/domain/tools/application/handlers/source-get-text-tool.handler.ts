@@ -11,7 +11,10 @@ import {
 } from '../ports/execution.handler';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import toolsConfig from 'src/config/tools.config';
-import { validateTextExtraction } from '../utils/text-extraction.utils';
+import {
+  TextExtractionTruncationReason,
+  validateTextExtraction,
+} from '../utils/text-extraction.utils';
 import { ExtractTextLinesUseCase } from 'src/domain/sources/application/use-cases/extract-text-lines/extract-text-lines.use-case';
 import { ExtractTextLinesQuery } from 'src/domain/sources/application/use-cases/extract-text-lines/extract-text-lines.query';
 
@@ -26,6 +29,8 @@ interface SourceGetTextResult {
   requestedEndLine: number;
   actualStartLine: number;
   actualEndLine: number;
+  truncated: boolean;
+  truncationReasons: TextExtractionTruncationReason[];
   text: string;
 }
 
@@ -103,6 +108,8 @@ export class SourceGetTextToolHandler extends ToolExecutionHandler {
         requestedEndLine: endLine,
         actualStartLine: extraction.effectiveStartLine,
         actualEndLine: extraction.effectiveEndLine,
+        truncated: extraction.truncated,
+        truncationReasons: extraction.truncationReasons,
         text: extraction.extractedText,
       };
 

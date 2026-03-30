@@ -9,12 +9,16 @@ interface TextExtractionParams {
   maxChars: number;
 }
 
+export type TextExtractionTruncationReason = 'document_end' | 'max_chars';
+
 export interface TextExtractionResult {
   totalLines: number;
   effectiveStartLine: number;
   effectiveEndLine: number;
   extractedText: string;
   isEmpty: boolean;
+  truncated: boolean;
+  truncationReasons: TextExtractionTruncationReason[];
 }
 
 const EMPTY_RESULT: Readonly<TextExtractionResult> = Object.freeze({
@@ -23,6 +27,8 @@ const EMPTY_RESULT: Readonly<TextExtractionResult> = Object.freeze({
   effectiveEndLine: 0,
   extractedText: '',
   isEmpty: true,
+  truncated: false,
+  truncationReasons: [],
 });
 
 function clampLineRange(
@@ -38,51 +44,134 @@ function clampLineRange(
   return { effectiveStart, effectiveEnd };
 }
 
-interface ValidateLineRangeOptions {
+interface BuildExtractionResultParams {
   toolName: string;
-  startLine: number;
-  effectiveEnd: number;
   totalLines: number;
+  startLine: number;
+  effectiveStartLine: number;
+  effectiveEndLine: number;
+  requestedEndLine: number;
+  extractedText: string;
   maxLines: number;
+  maxChars: number;
 }
 
-function validateLineRange(options: ValidateLineRangeOptions): void {
-  const { toolName, startLine, effectiveEnd, totalLines, maxLines } = options;
+interface TruncateToCharLimitResult {
+  text: string;
+  actualEndLine: number;
+  charLimited: boolean;
+}
 
-  if (startLine > effectiveEnd && startLine !== 1) {
-    throw new ToolExecutionFailedError({
+const buildRangeValidationError = (params: {
+  toolName: string;
+  totalLines: number;
+  startLine: number;
+  effectiveEndLine: number;
+  maxLines: number;
+}): ToolExecutionFailedError | null => {
+  const { toolName, totalLines, startLine, effectiveEndLine, maxLines } = params;
+  const clampedStart = Math.max(1, Math.min(startLine, totalLines));
+  const requestedLineCount = effectiveEndLine - clampedStart + 1;
+
+  if (startLine > effectiveEndLine && startLine !== 1) {
+    return new ToolExecutionFailedError({
       toolName,
       message: `Invalid line range: startLine (${startLine}) is greater than the file's total lines (${totalLines}).`,
       exposeToLLM: true,
     });
   }
 
-  const clampedStart = Math.max(1, Math.min(startLine, totalLines));
-  const requestedLineCount = effectiveEnd - clampedStart + 1;
   if (requestedLineCount > maxLines) {
-    const suggestedEnd = clampedStart + maxLines - 1;
-    throw new ToolExecutionFailedError({
+    return new ToolExecutionFailedError({
       toolName,
-      message: `Requested range (${requestedLineCount} lines) exceeds maximum of ${maxLines} lines. Try lines ${clampedStart} to ${suggestedEnd}.`,
+      message: `Requested range (${requestedLineCount} lines) exceeds maximum of ${maxLines} lines. Try lines ${clampedStart} to ${clampedStart + maxLines - 1}.`,
       exposeToLLM: true,
     });
   }
-}
 
-function validateCharLimit(
-  toolName: string,
-  text: string,
-  lineCount: number,
-  maxChars: number,
-): void {
-  if (text.length > maxChars) {
-    const suggestedLines = Math.floor(maxChars / (text.length / lineCount));
-    throw new ToolExecutionFailedError({
-      toolName,
-      message: `Requested text (${text.length} characters) exceeds maximum of ${maxChars} characters. Try ~${suggestedLines} lines at a time.`,
-      exposeToLLM: true,
-    });
+  return null;
+};
+
+const truncateToCharLimit = (params: {
+  extractedText: string;
+  maxChars: number;
+  effectiveStartLine: number;
+  effectiveEndLine: number;
+}): TruncateToCharLimitResult => {
+  const { extractedText, maxChars, effectiveStartLine, effectiveEndLine } =
+    params;
+  if (extractedText.length <= maxChars) {
+    return {
+      text: extractedText,
+      actualEndLine: effectiveEndLine,
+      charLimited: false,
+    };
   }
+
+  let text = '';
+  let actualEndLine = effectiveStartLine;
+  for (const line of extractedText.split('\n')) {
+    const candidate = text === '' ? line : `${text}\n${line}`;
+    if (candidate.length > maxChars) {
+      return {
+        text: text === '' ? line.slice(0, maxChars) : text,
+        actualEndLine,
+        charLimited: true,
+      };
+    }
+    text = candidate;
+    actualEndLine += text === line ? 0 : 1;
+  }
+
+  return { text, actualEndLine, charLimited: true };
+};
+
+const buildTruncationReasons = (params: {
+  requestedEndLine: number;
+  totalLines: number;
+  charLimited: boolean;
+}): TextExtractionTruncationReason[] => {
+  const reasons: TextExtractionTruncationReason[] = [];
+
+  if (params.requestedEndLine !== -1 && params.requestedEndLine > params.totalLines) {
+    reasons.push('document_end');
+  }
+  if (params.charLimited) {
+    reasons.push('max_chars');
+  }
+
+  return reasons;
+};
+
+function buildExtractionResult(
+  params: BuildExtractionResultParams,
+): TextExtractionResult {
+  const rangeError = buildRangeValidationError(params);
+  if (rangeError) {
+    throw rangeError;
+  }
+
+  const charLimitResult = truncateToCharLimit({
+    extractedText: params.extractedText,
+    maxChars: params.maxChars,
+    effectiveStartLine: params.effectiveStartLine,
+    effectiveEndLine: params.effectiveEndLine,
+  });
+  const truncationReasons = buildTruncationReasons({
+    requestedEndLine: params.requestedEndLine,
+    totalLines: params.totalLines,
+    charLimited: charLimitResult.charLimited,
+  });
+
+  return {
+    totalLines: params.totalLines,
+    effectiveStartLine: params.effectiveStartLine,
+    effectiveEndLine: charLimitResult.actualEndLine,
+    extractedText: charLimitResult.text,
+    isEmpty: false,
+    truncated: truncationReasons.length > 0,
+    truncationReasons,
+  };
 }
 
 /**
@@ -105,28 +194,18 @@ export function extractTextByLineRange(
     endLine,
     totalLines,
   );
-  const lineCount = effectiveEnd - effectiveStart + 1;
 
-  validateLineRange({
+  return buildExtractionResult({
     toolName,
+    totalLines,
     startLine,
-    effectiveEnd,
-    totalLines,
-    maxLines,
-  });
-
-  const extractedText = lines
-    .slice(effectiveStart - 1, effectiveEnd)
-    .join('\n');
-  validateCharLimit(toolName, extractedText, lineCount, maxChars);
-
-  return {
-    totalLines,
     effectiveStartLine: effectiveStart,
     effectiveEndLine: effectiveEnd,
-    extractedText,
-    isEmpty: false,
-  };
+    requestedEndLine: endLine,
+    extractedText: lines.slice(effectiveStart - 1, effectiveEnd).join('\n'),
+    maxLines,
+    maxChars,
+  });
 }
 
 /**
@@ -153,23 +232,16 @@ export function validateTextExtraction(params: {
     endLine,
     totalLines,
   );
-  const lineCount = effectiveEnd - effectiveStart + 1;
 
-  validateLineRange({
+  return buildExtractionResult({
     toolName,
+    totalLines,
     startLine,
-    effectiveEnd,
-    totalLines,
-    maxLines,
-  });
-
-  validateCharLimit(toolName, text, lineCount, maxChars);
-
-  return {
-    totalLines,
     effectiveStartLine: effectiveStart,
     effectiveEndLine: effectiveEnd,
+    requestedEndLine: endLine,
     extractedText: text,
-    isEmpty: false,
-  };
+    maxLines,
+    maxChars,
+  });
 }

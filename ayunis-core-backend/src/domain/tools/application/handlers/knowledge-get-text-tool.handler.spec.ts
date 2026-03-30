@@ -29,6 +29,9 @@ describe('KnowledgeGetTextToolHandler', () => {
   let mockGetDocTextUseCase: jest.Mocked<GetKnowledgeBaseDocumentTextUseCase>;
   let mockExtractTextLines: jest.Mocked<ExtractTextLinesUseCase>;
   let mockContextService: jest.Mocked<ContextService>;
+  const mockToolsConfig = {
+    sourceGetText: { maxLines: 500, maxChars: 50000 },
+  };
 
   const mockKbId = randomUUID();
   const mockDocId = randomUUID();
@@ -66,9 +69,7 @@ describe('KnowledgeGetTextToolHandler', () => {
         },
         {
           provide: toolsConfig.KEY,
-          useValue: {
-            sourceGetText: { maxLines: 500, maxChars: 50000 },
-          },
+          useValue: mockToolsConfig,
         },
       ],
     }).compile();
@@ -81,6 +82,8 @@ describe('KnowledgeGetTextToolHandler', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockContextService.get.mockReturnValue(mockUserId);
+    mockToolsConfig.sourceGetText.maxLines = 500;
+    mockToolsConfig.sourceGetText.maxChars = 50000;
   });
 
   it('should return text content for a valid document', async () => {
@@ -198,6 +201,42 @@ describe('KnowledgeGetTextToolHandler', () => {
     const parsed = JSON.parse(result);
     expect(parsed.totalLines).toBe(0);
     expect(parsed.text).toBe('');
+  });
+
+  it('should include truncation metadata when text exceeds the char limit', async () => {
+    mockToolsConfig.sourceGetText.maxChars = 11;
+
+    const mockSource = new FileSource({
+      id: mockDocId,
+      name: 'policy-document.pdf',
+      type: TextType.FILE,
+      fileType: FileType.PDF,
+    });
+
+    mockGetDocTextUseCase.execute.mockResolvedValue(mockSource);
+    mockExtractTextLines.execute.mockResolvedValue({
+      totalLines: 3,
+      text: 'AAAAA\nBBBBB\nCCCCC',
+    });
+
+    const tool = createMockTool(mockKbId, mockDocId);
+    tool.validateParams = jest.fn().mockReturnValue({
+      knowledgeBaseId: mockKbId,
+      documentId: mockDocId,
+      startLine: 1,
+      numLines: 3,
+    });
+    const result = await handler.execute({
+      tool,
+      input: { knowledgeBaseId: mockKbId, documentId: mockDocId },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    const parsed = JSON.parse(result);
+    expect(parsed.actualEndLine).toBe(2);
+    expect(parsed.text).toBe('AAAAA\nBBBBB');
+    expect(parsed.truncated).toBe(true);
+    expect(parsed.truncationReasons).toEqual(['max_chars']);
   });
 
   it('should throw when user is not authenticated', async () => {

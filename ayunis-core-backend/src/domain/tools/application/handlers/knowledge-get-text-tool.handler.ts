@@ -12,7 +12,10 @@ import {
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import toolsConfig from 'src/config/tools.config';
-import { validateTextExtraction } from '../utils/text-extraction.utils';
+import {
+  TextExtractionTruncationReason,
+  validateTextExtraction,
+} from '../utils/text-extraction.utils';
 import {
   KnowledgeBaseNotFoundError,
   DocumentNotInKnowledgeBaseError,
@@ -32,6 +35,8 @@ interface KnowledgeGetTextResult {
   requestedNumLines: number;
   actualStartLine: number;
   actualEndLine: number;
+  truncated: boolean;
+  truncationReasons: TextExtractionTruncationReason[];
   text: string;
 }
 
@@ -133,6 +138,8 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
           numLines,
           actualStartLine: extraction.effectiveStartLine,
           actualEndLine: extraction.effectiveEndLine,
+          truncated: extraction.truncated,
+          truncationReasons: extraction.truncationReasons,
           text: extraction.extractedText,
         }),
       );
@@ -180,6 +187,8 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
     numLines: number;
     actualStartLine: number;
     actualEndLine: number;
+    truncated: boolean;
+    truncationReasons: TextExtractionTruncationReason[];
     text: string;
   }): KnowledgeGetTextResult {
     return {
@@ -191,6 +200,8 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
       requestedNumLines: params.numLines,
       actualStartLine: params.actualStartLine,
       actualEndLine: params.actualEndLine,
+      truncated: params.truncated,
+      truncationReasons: params.truncationReasons,
       text: params.text,
     };
   }
