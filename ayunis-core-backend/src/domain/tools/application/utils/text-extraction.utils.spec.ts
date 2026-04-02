@@ -88,17 +88,47 @@ describe('extractTextByLineRange', () => {
     ).toThrow(ToolExecutionFailedError);
   });
 
-  it('should throw when extracted text exceeds maxChars', () => {
-    const longLine = 'A'.repeat(10000);
-    expect(() =>
-      extractTextByLineRange({
-        ...defaultParams,
-        text: `${longLine}\n${longLine}\n${longLine}`,
-        startLine: 1,
-        endLine: -1,
-        maxChars: 100,
-      }),
-    ).toThrow(ToolExecutionFailedError);
+  it('should truncate extracted text when it exceeds maxChars', () => {
+    const result = extractTextByLineRange({
+      ...defaultParams,
+      text: 'AAAAA\nBBBBB\nCCCCC',
+      startLine: 1,
+      endLine: -1,
+      maxChars: 11,
+    });
+
+    expect(result.extractedText).toBe('AAAAA\nBBBBB');
+    expect(result.effectiveEndLine).toBe(2);
+    expect(result.truncated).toBe(true);
+    expect(result.truncationReasons).toEqual(['max_chars']);
+  });
+
+  it('should report document_end truncation when request exceeds total lines', () => {
+    const result = extractTextByLineRange({
+      ...defaultParams,
+      text: 'Line 1\nLine 2\nLine 3',
+      startLine: 1,
+      endLine: 10,
+    });
+
+    expect(result.effectiveEndLine).toBe(3);
+    expect(result.truncated).toBe(true);
+    expect(result.truncationReasons).toEqual(['document_end']);
+  });
+
+  it('should include both truncation reasons when both limits apply', () => {
+    const result = extractTextByLineRange({
+      ...defaultParams,
+      text: 'AAAAA\nBBBBB\nCCCCC',
+      startLine: 1,
+      endLine: 10,
+      maxChars: 11,
+    });
+
+    expect(result.extractedText).toBe('AAAAA\nBBBBB');
+    expect(result.effectiveEndLine).toBe(2);
+    expect(result.truncated).toBe(true);
+    expect(result.truncationReasons).toEqual(['document_end', 'max_chars']);
   });
 
   it('should extract a specific line range', () => {
@@ -197,16 +227,47 @@ describe('validateTextExtraction', () => {
     ).toThrow(ToolExecutionFailedError);
   });
 
-  it('should throw when text exceeds maxChars', () => {
-    const longText = 'A'.repeat(200);
-    expect(() =>
-      validateTextExtraction({
-        ...defaultParams,
-        dbResult: { totalLines: 3, text: longText },
-        startLine: 1,
-        endLine: 3,
-        maxChars: 100,
-      }),
-    ).toThrow(ToolExecutionFailedError);
+  it('should truncate text when it exceeds maxChars', () => {
+    const result = validateTextExtraction({
+      ...defaultParams,
+      dbResult: { totalLines: 3, text: 'AAAAA\nBBBBB\nCCCCC' },
+      startLine: 1,
+      endLine: 3,
+      maxChars: 11,
+    });
+
+    expect(result.extractedText).toBe('AAAAA\nBBBBB');
+    expect(result.effectiveEndLine).toBe(2);
+    expect(result.truncated).toBe(true);
+    expect(result.truncationReasons).toEqual(['max_chars']);
+  });
+
+  it('should report document_end truncation when DB text is clamped to file end', () => {
+    const result = validateTextExtraction({
+      ...defaultParams,
+      dbResult: { totalLines: 3, text: 'Line 2\nLine 3' },
+      startLine: 2,
+      endLine: 10,
+    });
+
+    expect(result.effectiveStartLine).toBe(2);
+    expect(result.effectiveEndLine).toBe(3);
+    expect(result.truncated).toBe(true);
+    expect(result.truncationReasons).toEqual(['document_end']);
+  });
+
+  it('should include both truncation reasons when DB text hits both limits', () => {
+    const result = validateTextExtraction({
+      ...defaultParams,
+      dbResult: { totalLines: 3, text: 'AAAAA\nBBBBB\nCCCCC' },
+      startLine: 1,
+      endLine: 10,
+      maxChars: 11,
+    });
+
+    expect(result.extractedText).toBe('AAAAA\nBBBBB');
+    expect(result.effectiveEndLine).toBe(2);
+    expect(result.truncated).toBe(true);
+    expect(result.truncationReasons).toEqual(['document_end', 'max_chars']);
   });
 });
