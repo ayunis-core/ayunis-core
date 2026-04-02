@@ -100,7 +100,7 @@ export default function KnowledgeBaseCard({
       ref={cardRef}
       className={cn(
         'relative',
-        isDragging && 'outline-2 outline-dashed outline-primary bg-primary/5',
+        isDragging && 'outline-2 outline-dashed outline-primary',
       )}
     >
       {isDragging && (

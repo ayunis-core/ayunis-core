@@ -1,4 +1,4 @@
-import { useEffect, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 
 interface UseDragOverOptions {
   containerRef: RefObject<HTMLElement | null>;
@@ -22,6 +22,9 @@ export function useDragOver({
 }: UseDragOverOptions): UseDragOverResult {
   const [isDragging, setIsDragging] = useState(false);
   const [, setDragCounter] = useState(0);
+
+  const onDropRef = useRef(onDrop);
+  onDropRef.current = onDrop;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -59,7 +62,7 @@ export function useDragOver({
 
       const files = e.dataTransfer?.files;
       if (files && files.length > 0) {
-        onDrop(files);
+        onDropRef.current(files);
       }
     };
 
@@ -76,7 +79,7 @@ export function useDragOver({
       setIsDragging(false);
       setDragCounter(0);
     };
-  }, [containerRef, onDrop, disabled]);
+  }, [containerRef, disabled]);
 
   return { isDragging };
 }
