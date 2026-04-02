@@ -69,7 +69,8 @@ const buildRangeValidationError = (params: {
   effectiveEndLine: number;
   maxLines: number;
 }): ToolExecutionFailedError | null => {
-  const { toolName, totalLines, startLine, effectiveEndLine, maxLines } = params;
+  const { toolName, totalLines, startLine, effectiveEndLine, maxLines } =
+    params;
   const clampedStart = Math.max(1, Math.min(startLine, totalLines));
   const requestedLineCount = effectiveEndLine - clampedStart + 1;
 
@@ -109,18 +110,22 @@ const truncateToCharLimit = (params: {
   }
 
   let text = '';
+  let isFirst = true;
   let actualEndLine = effectiveStartLine;
   for (const line of extractedText.split('\n')) {
-    const candidate = text === '' ? line : `${text}\n${line}`;
+    const candidate = isFirst ? line : `${text}\n${line}`;
     if (candidate.length > maxChars) {
       return {
-        text: text === '' ? line.slice(0, maxChars) : text,
+        text: isFirst ? line.slice(0, maxChars) : text,
         actualEndLine,
         charLimited: true,
       };
     }
     text = candidate;
-    actualEndLine += text === line ? 0 : 1;
+    if (!isFirst) {
+      actualEndLine += 1;
+    }
+    isFirst = false;
   }
 
   return { text, actualEndLine, charLimited: true };
@@ -133,7 +138,10 @@ const buildTruncationReasons = (params: {
 }): TextExtractionTruncationReason[] => {
   const reasons: TextExtractionTruncationReason[] = [];
 
-  if (params.requestedEndLine !== -1 && params.requestedEndLine > params.totalLines) {
+  if (
+    params.requestedEndLine !== -1 &&
+    params.requestedEndLine > params.totalLines
+  ) {
     reasons.push('document_end');
   }
   if (params.charLimited) {
