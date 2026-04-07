@@ -2,6 +2,9 @@
   "name": "core-frontend-tanstack",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "vite --port 3001",
     "start": "vite --port 3001",
