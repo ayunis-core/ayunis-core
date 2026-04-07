@@ -16,8 +16,6 @@ A NestJS backend application built with hexagonal architecture for the Ayunis pl
   - [Domain Modules](#domain-modules)
 - [API Documentation](#api-documentation)
 - [Testing](#testing)
-- [Deployment](#deployment)
-- [Useful Commands](#useful-commands)
 
 ## Overview
 
@@ -25,7 +23,7 @@ This is the core backend for the Ayunis platform, built with NestJS and followin
 
 ## Prerequisites
 
-- Node.js (v18+)
+- Node.js (v24+)
 - npm or yarn
 - Docker and Docker Compose
 - PostgreSQL with pgvector extension
@@ -35,9 +33,9 @@ This is the core backend for the Ayunis platform, built with NestJS and followin
 1. Clone the repository
 2. Copy the example environment file:
 
-```bash
-cp .env.example .env
-```
+   ```bash
+   cp .env.example .env
+   ```
 
 3. Update the `.env` file with your specific configuration values
 
@@ -79,6 +77,7 @@ npm run start:prod
 
 Check `.env.example` for necessary environment variables
 
+```text
 # Database
 
 POSTGRES_HOST=postgres
@@ -90,8 +89,7 @@ POSTGRES_DB=ayunis
 # Mistral API
 
 MISTRAL_API_KEY=your_mistral_api_key
-
-````
+```
 
 ## Database Migrations
 
@@ -115,7 +113,7 @@ npm run migration:generate:prod
 npm run migration:run:prod
 npm run migration:revert:prod
 npm run migration:show:prod
-````
+```
 
 ## Project Structure
 
@@ -125,7 +123,7 @@ The application follows a hexagonal (ports and adapters) architecture.
 
 The project structure follows the hexagonal architecture pattern:
 
-```
+```text
 src/
 ├── domain/                  # Domain modules
 │   ├── <module>/            # Domain module

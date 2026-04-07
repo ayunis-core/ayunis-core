@@ -15,7 +15,7 @@ This guide covers deploying Ayunis Core to production and managing configuration
 
 ### Prerequisites
 
-- Node.js 18 or higher
+- Node.js 24 or higher
 - npm
 - Docker and Docker Compose
 - PostgreSQL database (can be containerized)
@@ -24,12 +24,14 @@ This guide covers deploying Ayunis Core to production and managing configuration
 ### Deployment Steps
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/your-org/ayunis-core.git
    cd ayunis-core
    ```
 
 2. **Create environment files**
+
    ```bash
    cp .env.example .env
    cp ayunis-core-backend/.env.example ayunis-core-backend/.env
@@ -42,20 +44,22 @@ This guide covers deploying Ayunis Core to production and managing configuration
    - Critical variables: `JWT_SECRET`, `COOKIE_SECRET`, `MCP_ENCRYPTION_KEY`, `DATABASE_*`
 
 4. **Start services**
+
    ```bash
    docker compose up -d --build
    ```
 
 5. **Run migrations**
+
    ```bash
    cd ayunis-core-backend
    npm run migration:run
    ```
 
 6. **Verify deployment**
-   - Frontend: http://your-domain:3000
-   - Backend API: http://your-domain:3000/api
-   - Swagger UI: http://your-domain:3000/api/docs
+   - Frontend: <http://your-domain:3000>
+   - Backend API: <http://your-domain:3000/api>
+   - Swagger UI: <http://your-domain:3000/api/docs>
 
 ## Environment Configuration
 
@@ -73,13 +77,17 @@ These variables MUST be configured before deployment:
 #### Authentication
 
 - `JWT_SECRET`: Secure random string for signing JWT tokens
+
   ```bash
   openssl rand -hex 32
   ```
+
 - `COOKIE_SECRET`: Secure random string for signing cookies
+
   ```bash
   openssl rand -hex 32
   ```
+
 - `COOKIE_SECURE`: Set to `true` in production (requires HTTPS)
 
 #### Database
@@ -93,9 +101,11 @@ These variables MUST be configured before deployment:
 #### MCP Integration (Required)
 
 - `MCP_ENCRYPTION_KEY`: 64-character hex string for encrypting credentials
+
   ```bash
   openssl rand -hex 32
   ```
+
   - Must be set before starting the application
   - Application will fail to start if invalid
   - Used for AES-256-GCM encryption of MCP credentials
@@ -191,6 +201,7 @@ If deploying with Locaboo 4 integration:
    - Note the base URL (e.g., `http://locaboo-server:8080`)
 
 2. **Set LOCABOO_4_URL in environment**
+
    ```bash
    LOCABOO_4_URL=http://locaboo-server:8080
    ```
@@ -228,11 +239,13 @@ Encryption happens transparently; no application code changes needed for key rot
 ### Updating Environment Variables
 
 1. **Edit environment file**
+
    ```bash
    nano ayunis-core-backend/.env
    ```
 
 2. **Restart application**
+
    ```bash
    docker compose restart ayunis-core-backend
    ```
@@ -265,17 +278,20 @@ Then restart the backend for changes to take effect.
 MCP_ENCRYPTION_KEY can be rotated without data loss:
 
 1. **Generate new key**
+
    ```bash
    openssl rand -hex 32
    ```
 
 2. **Update environment**
+
    ```bash
    # Update ayunis-core-backend/.env
    MCP_ENCRYPTION_KEY=<new-64-char-hex-string>
    ```
 
 3. **Restart application**
+
    ```bash
    docker compose restart ayunis-core-backend
    ```
@@ -303,19 +319,20 @@ The application validates critical configuration on startup:
 
 If validation fails:
 
-```
+```text
 MCP_ENCRYPTION_KEY environment variable is not configured. Generate a key with: openssl rand -hex 32
 ```
 
 or
 
-```
+```text
 MCP_ENCRYPTION_KEY must be a 64-character hex string (32 bytes). Generate a key with: openssl rand -hex 32
 ```
 
 ### Resolving Validation Failures
 
 1. **Check configuration**
+
    ```bash
    # Verify key format
    echo $MCP_ENCRYPTION_KEY | wc -c  # Should be 65 (64 chars + newline)
@@ -323,11 +340,13 @@ MCP_ENCRYPTION_KEY must be a 64-character hex string (32 bytes). Generate a key 
    ```
 
 2. **Generate new key**
+
    ```bash
    openssl rand -hex 32
    ```
 
 3. **Update environment and restart**
+
    ```bash
    docker compose restart ayunis-core-backend
    ```
@@ -346,7 +365,7 @@ crontab -e
 
 Add this line (adjust the path to your checkout):
 
-```
+```text
 0 3 * * * /opt/ayunis/ayunis-core/scripts/backup.sh >> /var/log/ayunis-backup.log 2>&1
 ```
 
@@ -354,7 +373,7 @@ Add this line (adjust the path to your checkout):
 
 Order a [Storage Box](https://www.hetzner.com/storage/storage-box/) and configure SSH key access, then set `BACKUP_REMOTE` in your cron entry:
 
-```
+```text
 0 3 * * * BACKUP_REMOTE="u123456@u123456.your-storagebox.de:backups/" /opt/ayunis/ayunis-core/scripts/backup.sh >> /var/log/ayunis-backup.log 2>&1
 ```
 
@@ -390,8 +409,8 @@ source /opt/ayunis/ayunis-core/ayunis-core-backend/.env
 
 ### Health Checks
 
-- **Frontend**: http://your-domain/health (Vite dev mode only)
-- **Backend**: http://your-domain/api/health
+- **Frontend**: <http://your-domain/health> (Vite dev mode only)
+- **Backend**: <http://your-domain/api/health>
 - **MCP integrations**: Check via `/api/mcp-integrations` endpoint
 
 ### Logs
@@ -426,11 +445,13 @@ ORDER BY pg_total_relation_size(relid) DESC;
 ### Application fails to start
 
 **Check MCP encryption key**:
+
 ```bash
 docker compose logs ayunis-core-backend | grep -i "encryption"
 ```
 
 **Verify environment variables**:
+
 ```bash
 docker exec ayunis-core-backend env | grep -E "(MCP|JWT|COOKIE|POSTGRES)"
 ```

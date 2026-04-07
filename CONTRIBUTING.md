@@ -31,7 +31,7 @@ By participating in this project, you agree to abide by our Code of Conduct. Ple
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js (v24 or higher)
 - npm
 - Docker and Docker Compose
 
@@ -65,8 +65,8 @@ npm run dev
 
 **Access the application:**
 
-- Frontend: http://localhost:3001
-- Backend API: http://localhost:3000
+- Frontend: <http://localhost:3001>
+- Backend API: <http://localhost:3000>
 
 ## Architecture Overview
 
@@ -74,7 +74,7 @@ npm run dev
 
 Ayunis Core follows a **Hexagonal Architecture** (Ports and Adapters) pattern with clear separation of concerns:
 
-```
+```text
 src/domain/[module-name]/
 ├── application/
 │   ├── use-cases/          # Business logic use cases with commands / queries
@@ -87,7 +87,7 @@ src/domain/[module-name]/
     └── http/
 ```
 
-**Key Principles**
+#### Backend Key Principles
 
 - **Domain modules** live in `src/domain/[module-name]`
 - **Interfaces** are represented through abstract classes when possible
@@ -107,7 +107,7 @@ The frontend follows a **feature sliced design** architecture with:
 - `features/` - Reusable feature modules
 - `shared/` - Common utilities and components
 
-**Key Principles**
+#### Frontend Key Principles
 
 - **Data loading** in routes, optionally used as initial data for page specific data queries
 - **Import hierarchy** according to feature sliced design guidelines
@@ -171,12 +171,14 @@ npm run test:integration
 
 1. **Create a feature branch** from `main`
 2. **Write clear commit messages** following conventional commits:
-   ```
+
+   ```text
    feat: add user authentication
    fix: resolve database connection issue
    docs: update API documentation
    refac: split create-user-use-case
    ```
+
 3. **Update documentation** if needed
 4. **Add/update tests** for your changes
 5. **Ensure all tests pass** locally
