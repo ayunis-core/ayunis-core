@@ -1,7 +1,7 @@
 import { registerAs } from '@nestjs/config';
 
 function envOrDefault(key: string, fallback: string): string {
-  return process.env[key] ?? fallback;
+  return process.env[key] || fallback;
 }
 
 function buildFrontendConfig() {
