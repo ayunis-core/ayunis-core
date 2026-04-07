@@ -351,7 +351,7 @@ function UploadButton({
         type="file"
         className="hidden"
         onChange={handleFileChange}
-        accept=".pdf,.docx,.pptx,.txt,.md,.csv,.xlsx,.xls"
+        accept={ACCEPTED_EXTENSIONS.join(',')}
       />
       <TooltipIf
         condition={!isEnabled}

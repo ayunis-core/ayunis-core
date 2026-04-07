@@ -24,7 +24,9 @@ export function useDragOver({
   const [, setDragCounter] = useState(0);
 
   const onDropRef = useRef(onDrop);
-  onDropRef.current = onDrop;
+  useEffect(() => {
+    onDropRef.current = onDrop;
+  }, [onDrop]);
 
   useEffect(() => {
     const container = containerRef.current;

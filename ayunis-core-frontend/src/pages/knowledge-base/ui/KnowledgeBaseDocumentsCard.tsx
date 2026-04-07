@@ -60,8 +60,8 @@ import {
 } from '../api';
 import { isValidUrl } from '../lib/isValidUrl';
 
-const ACCEPTED_FILE_TYPES = '.pdf,.docx,.pptx,.txt,.md';
 const ACCEPTED_EXTENSIONS = ['.pdf', '.docx', '.pptx', '.txt', '.md'];
+const ACCEPTED_FILE_TYPES = ACCEPTED_EXTENSIONS.join(',');
 
 export default function KnowledgeBaseDocumentsCard({
   knowledgeBaseId,
