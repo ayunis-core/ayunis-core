@@ -38,6 +38,10 @@ import { AgentNotFoundError } from 'src/domain/agents/application/agents.errors'
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { CollectUsageAsyncService } from '../../services/collect-usage-async.service';
+import { CreditBudgetGuardService } from '../../services/credit-budget-guard.service';
+import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
+import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
+import { tierToFairUseQuotaType } from 'src/iam/quotas/domain/tier-to-quota-type';
 import { TrimMessagesForContextUseCase } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.use-case';
 import { TrimMessagesForContextCommand } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.command';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
@@ -66,6 +70,8 @@ export class ExecuteRunUseCase {
     private readonly contextService: ContextService,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
     private readonly collectUsageAsyncService: CollectUsageAsyncService,
+    private readonly checkQuotaUseCase: CheckQuotaUseCase,
+    private readonly creditBudgetGuardService: CreditBudgetGuardService,
     private readonly trimMessagesForContextUseCase: TrimMessagesForContextUseCase,
     private readonly toolAssemblyService: ToolAssemblyService,
     private readonly toolResultCollectorService: ToolResultCollectorService,
@@ -110,6 +116,14 @@ export class ExecuteRunUseCase {
       );
       const agent = await this.resolveThreadAgent(thread, command.threadId);
       const model = this.pickModel(thread, agent);
+
+      // Enforce fair-use + credit budget AFTER pickModel so the tiered quota
+      // bucket matches the resolved model. Untiered models default to MEDIUM.
+      await this.checkQuotaUseCase.execute(
+        new CheckQuotaQuery(userId, tierToFairUseQuotaType(model.model.tier)),
+      );
+      await this.creditBudgetGuardService.ensureBudgetAvailable(orgId);
+
       const effectiveIsAnonymous = thread.isAnonymous || model.anonymousOnly;
       const activeSkills = await this.toolAssemblyService.findActiveSkills();
       const { tools, instructions } =

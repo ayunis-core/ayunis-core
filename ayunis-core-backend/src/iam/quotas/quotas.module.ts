@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PlatformConfigModule } from '../platform-config/platform-config.module';
 import { UsageQuotaRecord } from './infrastructure/persistence/postgres/schema/usage-quota.record';
 import { UsageQuotaRepositoryPort } from './application/ports/usage-quota.repository.port';
 import { UsageQuotaRepository } from './infrastructure/persistence/postgres/usage-quota.repository';
@@ -7,7 +8,7 @@ import { QuotaLimitResolverService } from './application/services/quota-limit-re
 import { CheckQuotaUseCase } from './application/use-cases/check-quota/check-quota.use-case';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UsageQuotaRecord])],
+  imports: [TypeOrmModule.forFeature([UsageQuotaRecord]), PlatformConfigModule],
   providers: [
     {
       provide: UsageQuotaRepositoryPort,

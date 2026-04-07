@@ -32,14 +32,22 @@ export class QuotaExceededError extends QuotaError {
   constructor(
     quotaType: string,
     limit: number,
+    windowMs: number,
     retryAfterSeconds: number,
     metadata?: ErrorMetadata,
   ) {
+    // Avoid hardcoding the window length in the message — `windowMs` is
+    // super-admin-configurable per tier and the value can change at any time.
+    // Phrase the message in terms of the retry hint instead so it stays
+    // accurate regardless of how the window is configured. The internal
+    // `quotaType` enum identifier is intentionally omitted from the message
+    // to avoid leaking implementation details into logs and HTTP response
+    // bodies — consumers get the tier via `code` / `metadata` instead.
     super(
-      `Fair use limit exceeded. Maximum ${limit} messages per 3 hours. Try again in ${Math.ceil(retryAfterSeconds / 60)} minutes.`,
+      `Fair use limit reached (${limit} messages). Try again in ${Math.ceil(retryAfterSeconds / 60)} minutes.`,
       QuotaErrorCode.QUOTA_EXCEEDED,
       HttpStatus.TOO_MANY_REQUESTS,
-      { quotaType, limit, retryAfterSeconds, ...metadata },
+      { quotaType, limit, windowMs, retryAfterSeconds, ...metadata },
     );
   }
 }
