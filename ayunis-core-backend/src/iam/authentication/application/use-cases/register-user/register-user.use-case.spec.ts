@@ -148,9 +148,16 @@ describe('RegisterUserUseCase', () => {
       expect.objectContaining({
         orgId: 'org-id',
         org: mockOrg,
-        user: mockUser,
       }),
     );
+    // OrgCreatedEvent must no longer carry the user — that's what
+    // user.created is for.
+    const orgCreatedCall = (
+      eventEmitter.emitAsync as jest.Mock
+    ).mock.calls.find(
+      ([eventName]: [string]) => eventName === OrgCreatedEvent.EVENT_NAME,
+    );
+    expect(orgCreatedCall?.[1]).not.toHaveProperty('user');
   });
 
   it('should pass department to create-admin-user command', async () => {

@@ -107,14 +107,17 @@ describe('WebhookDispatchListener', () => {
   });
 
   describe('handleOrgCreated', () => {
-    it('should dispatch OrgCreatedWebhookEvent', async () => {
-      await listener.handleOrgCreated(
-        new OrgCreatedEvent(ORG_ID, makeOrg(), makeUser()),
-      );
+    it('should dispatch OrgCreatedWebhookEvent with the bare Org payload', async () => {
+      const org = makeOrg();
+      await listener.handleOrgCreated(new OrgCreatedEvent(ORG_ID, org));
 
       expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
       const command = sendWebhookUseCase.execute.mock.calls[0][0];
       expect(command.event.eventType).toBe(WebhookEventType.ORG_CREATED);
+      expect(command.event.data).toBe(org);
+      // No userEmail / userName leaked from the previous payload shape.
+      expect(command.event.data).not.toHaveProperty('userEmail');
+      expect(command.event.data).not.toHaveProperty('userName');
     });
   });
 
