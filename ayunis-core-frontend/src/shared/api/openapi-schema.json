@@ -7514,6 +7514,64 @@
         "tags": ["Super Admin Platform Config"]
       }
     },
+    "/super-admin/platform-config/fair-use-limits": {
+      "get": {
+        "description": "Retrieve the configured messages-per-window limit for low, medium, and high model tiers. Missing keys fall back to baked-in defaults so this endpoint always returns 200. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_getFairUseLimits",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved fair-use limits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FairUseLimitsResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get the current fair-use limits for every model tier",
+        "tags": ["Super Admin Platform Config"]
+      },
+      "put": {
+        "description": "Update the messages-per-window limit for one model tier (low, medium, or high). Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_setFairUseLimit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetFairUseLimitRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated fair-use limit for the given tier"
+          },
+          "400": {
+            "description": "Invalid value provided (limit and windowMs must be positive)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Set the fair-use limit for a single model tier",
+        "tags": ["Super Admin Platform Config"]
+      }
+    },
     "/chat-settings/system-prompt": {
       "get": {
         "description": "Returns the custom system prompt for the authenticated user, or null if not set.",
@@ -13779,6 +13837,76 @@
           }
         },
         "required": ["creditsPerEuro"]
+      },
+      "FairUseTierLimitDto": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of messages allowed within the window",
+            "example": 200
+          },
+          "windowMs": {
+            "type": "number",
+            "description": "Sliding window duration in milliseconds",
+            "example": 10800000
+          }
+        },
+        "required": ["limit", "windowMs"]
+      },
+      "FairUseLimitsResponseDto": {
+        "type": "object",
+        "properties": {
+          "low": {
+            "description": "Fair-use limit for low-tier (cheap) language models",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
+          },
+          "medium": {
+            "description": "Fair-use limit for medium-tier language models",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
+          },
+          "high": {
+            "description": "Fair-use limit for high-tier (expensive) language models",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
+          }
+        },
+        "required": ["low", "medium", "high"]
+      },
+      "SetFairUseLimitRequestDto": {
+        "type": "object",
+        "properties": {
+          "tier": {
+            "type": "string",
+            "description": "Model tier whose fair-use limit is being updated",
+            "enum": ["low", "medium", "high"],
+            "example": "medium"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of messages allowed within the sliding window. Must be a positive integer.",
+            "example": 200,
+            "minimum": 1
+          },
+          "windowMs": {
+            "type": "number",
+            "description": "Sliding window duration in milliseconds. Must be a positive integer.",
+            "example": 10800000,
+            "minimum": 1
+          }
+        },
+        "required": ["tier", "limit", "windowMs"]
       },
       "UserSystemPromptResponseDto": {
         "type": "object",

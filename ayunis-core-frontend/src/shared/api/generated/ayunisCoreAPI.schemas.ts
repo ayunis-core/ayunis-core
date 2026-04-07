@@ -3743,6 +3743,50 @@ export interface SetCreditsPerEuroRequestDto {
   creditsPerEuro: number;
 }
 
+export interface FairUseTierLimitDto {
+  /** Maximum number of messages allowed within the window */
+  limit: number;
+  /** Sliding window duration in milliseconds */
+  windowMs: number;
+}
+
+export interface FairUseLimitsResponseDto {
+  /** Fair-use limit for low-tier (cheap) language models */
+  low: FairUseTierLimitDto;
+  /** Fair-use limit for medium-tier language models */
+  medium: FairUseTierLimitDto;
+  /** Fair-use limit for high-tier (expensive) language models */
+  high: FairUseTierLimitDto;
+}
+
+/**
+ * Model tier whose fair-use limit is being updated
+ */
+export type SetFairUseLimitRequestDtoTier = typeof SetFairUseLimitRequestDtoTier[keyof typeof SetFairUseLimitRequestDtoTier];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SetFairUseLimitRequestDtoTier = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface SetFairUseLimitRequestDto {
+  /** Model tier whose fair-use limit is being updated */
+  tier: SetFairUseLimitRequestDtoTier;
+  /**
+   * Maximum number of messages allowed within the sliding window. Must be a positive integer.
+   * @minimum 1
+   */
+  limit: number;
+  /**
+   * Sliding window duration in milliseconds. Must be a positive integer.
+   * @minimum 1
+   */
+  windowMs: number;
+}
+
 export interface UserSystemPromptResponseDto {
   /**
    * The custom system prompt for the user, or null if not set

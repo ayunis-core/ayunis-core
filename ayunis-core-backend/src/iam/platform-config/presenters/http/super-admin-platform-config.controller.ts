@@ -19,8 +19,13 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 import { GetCreditsPerEuroUseCase } from '../../application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
 import { SetCreditsPerEuroUseCase } from '../../application/use-cases/set-credits-per-euro/set-credits-per-euro.use-case';
 import { SetCreditsPerEuroCommand } from '../../application/use-cases/set-credits-per-euro/set-credits-per-euro.command';
+import { GetFairUseLimitsUseCase } from '../../application/use-cases/get-fair-use-limits/get-fair-use-limits.use-case';
+import { SetFairUseLimitUseCase } from '../../application/use-cases/set-fair-use-limit/set-fair-use-limit.use-case';
+import { SetFairUseLimitCommand } from '../../application/use-cases/set-fair-use-limit/set-fair-use-limit.command';
 import { CreditsPerEuroResponseDto } from './dto/credits-per-euro-response.dto';
 import { SetCreditsPerEuroRequestDto } from './dto/set-credits-per-euro-request.dto';
+import { FairUseLimitsResponseDto } from './dto/fair-use-limits-response.dto';
+import { SetFairUseLimitRequestDto } from './dto/set-fair-use-limit-request.dto';
 
 @ApiTags('Super Admin Platform Config')
 @Controller('super-admin/platform-config')
@@ -31,6 +36,8 @@ export class SuperAdminPlatformConfigController {
   constructor(
     private readonly getCreditsPerEuroUseCase: GetCreditsPerEuroUseCase,
     private readonly setCreditsPerEuroUseCase: SetCreditsPerEuroUseCase,
+    private readonly getFairUseLimitsUseCase: GetFairUseLimitsUseCase,
+    private readonly setFairUseLimitUseCase: SetFairUseLimitUseCase,
   ) {}
 
   @Get('credits-per-euro')
@@ -91,5 +98,63 @@ export class SuperAdminPlatformConfigController {
     });
     await this.setCreditsPerEuroUseCase.execute(command);
     this.logger.log('Successfully updated credits-per-euro configuration');
+  }
+
+  @Get('fair-use-limits')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get the current fair-use limits for every model tier',
+    description:
+      'Retrieve the configured messages-per-window limit for low, medium, and high model tiers. Missing keys fall back to baked-in defaults so this endpoint always returns 200. Super admin only.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Successfully retrieved fair-use limits',
+    type: FairUseLimitsResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User not authenticated or not authorized as super admin',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error',
+  })
+  async getFairUseLimits(): Promise<FairUseLimitsResponseDto> {
+    this.logger.log('Getting fair-use limits configuration');
+    const limits = await this.getFairUseLimitsUseCase.execute();
+    return limits;
+  }
+
+  @Put('fair-use-limits')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Set the fair-use limit for a single model tier',
+    description:
+      'Update the messages-per-window limit for one model tier (low, medium, or high). Super admin only.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Successfully updated fair-use limit for the given tier',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid value provided (limit and windowMs must be positive)',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User not authenticated or not authorized as super admin',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error',
+  })
+  async setFairUseLimit(@Body() dto: SetFairUseLimitRequestDto): Promise<void> {
+    this.logger.log(
+      `Setting fair-use limit for tier '${dto.tier}' to ${dto.limit}/${dto.windowMs}ms`,
+    );
+    const command = new SetFairUseLimitCommand({
+      tier: dto.tier,
+      limit: dto.limit,
+      windowMs: dto.windowMs,
+    });
+    await this.setFairUseLimitUseCase.execute(command);
+    this.logger.log('Successfully updated fair-use limit');
   }
 }

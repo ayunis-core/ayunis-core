@@ -15,6 +15,7 @@ import type { Usage } from '../../../domain/usage.entity';
 import { ContextService } from '../../../../../common/context/services/context.service';
 import { GetCreditsPerEuroUseCase } from '../../../../../iam/platform-config/application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
 import { PlatformConfigNotFoundError } from '../../../../../iam/platform-config/application/platform-config.errors';
+import { PlatformConfigKey } from '../../../../../iam/platform-config/domain/platform-config-keys.enum';
 
 describe('CollectUsageUseCase', () => {
   let useCase: CollectUsageUseCase;
@@ -473,7 +474,7 @@ describe('CollectUsageUseCase', () => {
 
     it('should set creditsConsumed to undefined when creditsPerEuro is not configured', async () => {
       mockGetCreditsPerEuroUseCase.execute.mockRejectedValue(
-        new PlatformConfigNotFoundError('creditsPerEuro'),
+        new PlatformConfigNotFoundError(PlatformConfigKey.CREDITS_PER_EURO),
       );
 
       const model = createMockModel({
