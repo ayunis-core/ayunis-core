@@ -28,6 +28,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import { showError } from '@/shared/lib/toast';
+import { cn } from '@/shared/lib/shadcn/utils';
+import { useDocumentDrop } from '@/shared/hooks/useDocumentDrop';
 
 export interface Source {
   id: string;
@@ -54,6 +56,17 @@ interface KnowledgeBaseCardProps {
   sourcesHook: SourcesHook;
 }
 
+const ACCEPTED_EXTENSIONS = [
+  '.pdf',
+  '.docx',
+  '.pptx',
+  '.txt',
+  '.md',
+  '.csv',
+  '.xlsx',
+  '.xls',
+];
+
 export default function KnowledgeBaseCard({
   entity,
   isEnabled,
@@ -62,7 +75,9 @@ export default function KnowledgeBaseCard({
   sourcesHook,
 }: Readonly<KnowledgeBaseCardProps>) {
   const { t } = useTranslation(translationNamespace);
+  const { t: tCommon } = useTranslation('common');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const {
     sources,
@@ -73,8 +88,28 @@ export default function KnowledgeBaseCard({
     removeSourcePending,
   } = sourcesHook;
 
+  const { isDragging } = useDocumentDrop({
+    containerRef: cardRef,
+    onDrop: (file) => addFileSource({ id: entity.id, data: { file } }),
+    acceptedExtensions: ACCEPTED_EXTENSIONS,
+    disabled: disabled || !isEnabled,
+  });
+
   return (
-    <Card>
+    <Card
+      ref={cardRef}
+      className={cn(
+        'relative',
+        isDragging && 'outline-2 outline-dashed outline-primary',
+      )}
+    >
+      {isDragging && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-primary/5">
+          <p className="text-sm font-medium text-primary">
+            {tCommon('chatInput.dropFilesHint')}
+          </p>
+        </div>
+      )}
       <CardHeader>
         <CardTitle>{t('additionalDocuments.title')}</CardTitle>
         <CardDescription>
@@ -316,7 +351,7 @@ function UploadButton({
         type="file"
         className="hidden"
         onChange={handleFileChange}
-        accept=".pdf,.docx,.pptx,.txt,.md,.csv,.xlsx,.xls"
+        accept={ACCEPTED_EXTENSIONS.join(',')}
       />
       <TooltipIf
         condition={!isEnabled}
