@@ -1,5 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CollectUsageUseCase } from './collect-usage.use-case';
 import { CollectUsageCommand } from './collect-usage.command';
 import { UsageRepository } from '../../ports/usage.repository';
@@ -8,6 +9,7 @@ import {
   UsageCollectionFailedError,
   UnexpectedUsageError,
 } from '../../usage.errors';
+import { UsageCollectedEvent } from '../../events/usage-collected.event';
 import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
 import type { UUID } from 'crypto';
 import { LanguageModel } from '../../../../models/domain/models/language.model';
@@ -21,6 +23,7 @@ describe('CollectUsageUseCase', () => {
   let mockUsageRepository: Partial<UsageRepository>;
   let mockContextService: Partial<ContextService>;
   let mockGetCreditsPerEuroUseCase: { execute: jest.Mock };
+  let mockEventEmitter: { emitAsync: jest.Mock };
 
   const userId = 'user-id' as UUID;
   const orgId = 'org-id' as UUID;
@@ -61,6 +64,10 @@ describe('CollectUsageUseCase', () => {
       execute: jest.fn().mockResolvedValue(100),
     };
 
+    mockEventEmitter = {
+      emitAsync: jest.fn().mockResolvedValue([]),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CollectUsageUseCase,
@@ -70,6 +77,7 @@ describe('CollectUsageUseCase', () => {
           provide: GetCreditsPerEuroUseCase,
           useValue: mockGetCreditsPerEuroUseCase,
         },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 
@@ -86,6 +94,7 @@ describe('CollectUsageUseCase', () => {
     );
     (mockUsageRepository.save as jest.Mock).mockResolvedValue(undefined);
     mockGetCreditsPerEuroUseCase.execute.mockResolvedValue(100);
+    mockEventEmitter.emitAsync.mockResolvedValue([]);
   });
 
   it('should be defined', () => {
@@ -502,6 +511,64 @@ describe('CollectUsageUseCase', () => {
       expect(saveCall.cost).toBeDefined();
       // But credits should be undefined (graceful fallback)
       expect(saveCall.creditsConsumed).toBeUndefined();
+    });
+  });
+
+  describe('UsageCollectedEvent emission', () => {
+    it('should emit UsageCollectedEvent after a successful save', async () => {
+      const model = createMockModel({ name: 'gpt-4o-mini' });
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: 50,
+        requestId,
+      });
+
+      await useCase.execute(command);
+
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledTimes(1);
+      const [eventName, payload] = mockEventEmitter.emitAsync.mock.calls[0];
+      expect(eventName).toBe(UsageCollectedEvent.EVENT_NAME);
+      expect(payload).toBeInstanceOf(UsageCollectedEvent);
+      expect((payload as UsageCollectedEvent).modelName).toBe('gpt-4o-mini');
+      expect((payload as UsageCollectedEvent).usage.userId).toBe(userId);
+      expect((payload as UsageCollectedEvent).usage.organizationId).toBe(orgId);
+      expect((payload as UsageCollectedEvent).usage.totalTokens).toBe(150);
+    });
+
+    it('should not emit UsageCollectedEvent when save fails', async () => {
+      jest
+        .spyOn(mockUsageRepository, 'save')
+        .mockRejectedValue(new Error('boom'));
+
+      const model = createMockModel();
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: 50,
+        requestId,
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        UnexpectedUsageError,
+      );
+      expect(mockEventEmitter.emitAsync).not.toHaveBeenCalled();
+    });
+
+    it('should not throw when emitAsync rejects', async () => {
+      mockEventEmitter.emitAsync.mockRejectedValue(
+        new Error('listener failed'),
+      );
+
+      const model = createMockModel();
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: 50,
+        requestId,
+      });
+
+      await expect(useCase.execute(command)).resolves.toBeUndefined();
     });
   });
 });

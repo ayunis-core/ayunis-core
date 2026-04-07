@@ -9,6 +9,9 @@ import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/ev
 import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/events/subscription-uncancelled.event';
 import { SubscriptionSeatsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-seats-updated.event';
 import { SubscriptionBillingInfoUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-billing-info-updated.event';
+import { UsageCollectedEvent } from 'src/domain/usage/application/events/usage-collected.event';
+import { Usage } from 'src/domain/usage/domain/usage.entity';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { WebhookEventType } from '../domain/value-objects/webhook-event-type.enum';
 import { User } from 'src/iam/users/domain/user.entity';
 import { Org } from 'src/iam/orgs/domain/org.entity';
@@ -218,6 +221,50 @@ describe('WebhookDispatchListener', () => {
         orgId: ORG_ID,
         subscriptionId: SUB_ID,
       });
+    });
+  });
+
+  describe('handleUsageCollected', () => {
+    it('should dispatch UsageCollectedWebhookEvent with the model name and ISO createdAt', async () => {
+      const usage = new Usage({
+        id: '00000000-0000-0000-0000-000000000099' as UUID,
+        userId: USER_ID,
+        organizationId: ORG_ID,
+        modelId: '00000000-0000-0000-0000-0000000000aa' as UUID,
+        provider: ModelProvider.OPENAI,
+        inputTokens: 100,
+        outputTokens: 50,
+        totalTokens: 150,
+        cost: 0.0012,
+        creditsConsumed: 0.12,
+        requestId: '00000000-0000-0000-0000-0000000000bb' as UUID,
+        createdAt: new Date('2026-04-07T12:00:00.000Z'),
+      });
+
+      await listener.handleUsageCollected(
+        new UsageCollectedEvent(usage, 'gpt-4o-mini'),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.USAGE_COLLECTED);
+      expect(command.event.data).toEqual(
+        expect.objectContaining({
+          id: usage.id,
+          userId: USER_ID,
+          organizationId: ORG_ID,
+          modelId: usage.modelId,
+          modelName: 'gpt-4o-mini',
+          provider: ModelProvider.OPENAI,
+          inputTokens: 100,
+          outputTokens: 50,
+          totalTokens: 150,
+          cost: 0.0012,
+          creditsConsumed: 0.12,
+          requestId: usage.requestId,
+          createdAt: '2026-04-07T12:00:00.000Z',
+        }),
+      );
     });
   });
 

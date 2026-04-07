@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
 import { CollectUsageCommand } from './collect-usage.command';
 import { Usage } from '../../../domain/usage.entity';
@@ -8,6 +9,7 @@ import {
   UsageCollectionFailedError,
   UnexpectedUsageError,
 } from '../../usage.errors';
+import { UsageCollectedEvent } from '../../events/usage-collected.event';
 import { ApplicationError } from '../../../../../common/errors/base.error';
 import { ContextService } from '../../../../../common/context/services/context.service';
 import { GetCreditsPerEuroUseCase } from '../../../../../iam/platform-config/application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
@@ -21,6 +23,7 @@ export class CollectUsageUseCase {
     private readonly usageRepository: UsageRepository,
     private readonly contextService: ContextService,
     private readonly getCreditsPerEuroUseCase: GetCreditsPerEuroUseCase,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: CollectUsageCommand): Promise<void> {
@@ -66,6 +69,22 @@ export class CollectUsageUseCase {
       });
 
       await this.usageRepository.save(usage);
+
+      // Fire-and-forget: notify downstream listeners (webhook dispatch,
+      // metrics, sync services) that a usage row has been persisted.
+      // We do this AFTER save() resolves so receivers never observe
+      // usage that did not actually make it to the database.
+      this.eventEmitter
+        .emitAsync(
+          UsageCollectedEvent.EVENT_NAME,
+          new UsageCollectedEvent(usage, command.model.name),
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit UsageCollectedEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            usageId: usage.id,
+          });
+        });
 
       this.logger.log('Usage collected successfully', {
         userId,
