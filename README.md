@@ -32,19 +32,19 @@ Ayunis Core is a comprehensive AI platform that enables intelligent conversation
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js (v24 or higher)
 - npm
 - Docker and Docker Compose
 
 ### Installation
 
-**Clone the repository and navigate to the project root**
+#### Clone the repository and navigate to the project root
 
 ```bash
 cd /path/to/ayunis-core
 ```
 
-**Create your production environment file**
+#### Create your production environment file
 
 > [!] You must create each env file, even if you don't change variables
 
@@ -54,28 +54,28 @@ cp ./ayunis-core-backend/.env.example ./ayunis-core-backend/.env
 cp ./ayunis-core-frontend/.env.example ./ayunis-core-frontend/.env
 ```
 
-**Edit the backend environment file with your production values**
+#### Edit the backend environment file with your production values
 
 ```bash
 nano ./ayunis-core-backend/.env
 ```
 
-**Build and start the production stack**
+#### Build and start the production stack
 
 ```bash
 docker compose up -d --build
 ```
 
-**Change application port**
+#### Change application port
 
 Change `HOST_PORT` in the `.env` file in the project root
 
-**Access the application**
+#### Access the application
 
-- Application: http://localhost:3000
-- Backend Base URL: http://localhost:3000/api
-- SwaggerUI: http://localhost:3000/api/docs
-- OpenAPI JSON: http://localhost:3000/api/docs-json
+- Application: <http://localhost:3000>
+- Backend Base URL: <http://localhost:3000/api>
+- SwaggerUI: <http://localhost:3000/api/docs>
+- OpenAPI JSON: <http://localhost:3000/api/docs-json>
 
 ## ⚙️ Configuration
 
@@ -96,16 +96,20 @@ MCP integration enables Ayunis Core to connect to external data sources through 
 #### Required Configuration
 
 **MCP_ENCRYPTION_KEY** (Required):
+
 - Encrypts all MCP integration credentials (API keys, bearer tokens) at rest in the database
 - Uses AES-256-GCM encryption
 - Must be a 64-character hexadecimal string (32 bytes)
 - Generate a secure key with:
+
   ```bash
   openssl rand -hex 32
   ```
+
 - The application will fail to start if this variable is not set or is invalid
 
 **LOCABOO_4_URL** (Required for Locaboo 4 integration):
+
 - Base URL of the Locaboo 4 MCP server instance
 - Example values:
   - Local development: `http://localhost:8080`
@@ -138,6 +142,7 @@ Ayunis Core uses a simplified authentication system for MCP integrations:
 #### Configuration Validation
 
 The application validates MCP configuration on startup:
+
 - `MCP_ENCRYPTION_KEY` must be set and valid (64 hex characters)
 - If validation fails, the application will not start
 - Check application logs for specific error messages if startup fails
@@ -180,6 +185,7 @@ Then use the authenticated API to manage the model catalog. See the full endpoin
 > [!ATTENTION] The embedding model dimension must match the model's required dimensions. If you need other dimensions, create a Github Issue and we will take care of it.
 
 See also:
+
 - `/src/domain/models/domain/models/language.model.ts`
 - `/src/domain/models/domain/models/embedding.model.ts`
 - `/src/domain/models/domain/value-objects/embedding-dimensions.enum.ts`
@@ -225,11 +231,12 @@ This installs Husky and configures Git to use the hooks in the `.husky/` directo
 
 Commit messages must follow this format:
 
-```
+```text
 <type>: <description> (AYC-<task-id>)
 ```
 
 Examples:
+
 - `feat: add new chart widget (AYC-123)`
 - `fix: correct date validation (AYC-456)`
 - `chore: update dependencies (AYC-789)`
