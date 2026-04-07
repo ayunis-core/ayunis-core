@@ -54,7 +54,7 @@ export class WebhookDispatchListener {
 
   @OnEvent(OrgCreatedEvent.EVENT_NAME)
   async handleOrgCreated(event: OrgCreatedEvent): Promise<void> {
-    await this.dispatch(new OrgCreatedWebhookEvent(event.org, event.user));
+    await this.dispatch(new OrgCreatedWebhookEvent(event.org));
   }
 
   @OnEvent(SubscriptionCreatedEvent.EVENT_NAME)
