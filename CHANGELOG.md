@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.25.0](https://github.com/ayunis-core/ayunis-core/compare/v1.24.0...v1.25.0) (2026-04-07)
+
+
+### Features
+
+* **sources:** add drag-and-drop file upload dropzone to knowledge base and skill source cards (AYC-000) ([#500](https://github.com/ayunis-core/ayunis-core/issues/500)) ([eae1c36](https://github.com/ayunis-core/ayunis-core/commit/eae1c36f5c03f19697a2d2b0bbdeb0c8b2cc6a81))
+
+
+### Bug Fixes
+
+* **documents:** handle char exceeded errors in document extract tools gracefully (AYC-000) ([#522](https://github.com/ayunis-core/ayunis-core/issues/522)) ([66f57a9](https://github.com/ayunis-core/ayunis-core/commit/66f57a957689db349375be7f145080a381d821d9))
+
+
+### Documentation
+
+* bump documented node prerequisite to v24 (AYC-000) ([#529](https://github.com/ayunis-core/ayunis-core/issues/529)) ([a6afeda](https://github.com/ayunis-core/ayunis-core/commit/a6afeda349e1076dfcff416046c4fe9de5d17ff6))
+
+
+### Miscellaneous
+
+* **deps-backend:** bump @types/node to v24 (AYC-000) ([#527](https://github.com/ayunis-core/ayunis-core/issues/527)) ([6453f19](https://github.com/ayunis-core/ayunis-core/commit/6453f193f63a6aa2eb641ece16f65db37ede8851))
+* pin node engines to &gt;=24 (AYC-000) ([#528](https://github.com/ayunis-core/ayunis-core/issues/528)) ([9e45153](https://github.com/ayunis-core/ayunis-core/commit/9e4515358c55b9b7b4563e3d5d945eb97a2a9c17))
+* upgrade to node 24 LTS (AYC-000) ([#499](https://github.com/ayunis-core/ayunis-core/issues/499)) ([c001527](https://github.com/ayunis-core/ayunis-core/commit/c001527561e1e79450d97b805d523b109db836a6))
+
 ## [1.24.0](https://github.com/ayunis-core/ayunis-core/compare/v1.23.1...v1.24.0) (2026-03-26)
 
 
