@@ -50,6 +50,14 @@
     },
     "anonymousOnly": "Anonymer Modus",
     "permitted": "Freigeschaltet",
+    "tier": {
+      "label": "Stufe",
+      "unset": "Nicht festgelegt",
+      "low": "Niedrig",
+      "medium": "Mittel",
+      "high": "Hoch",
+      "tooltip": "Stufe: {{label}}"
+    },
     "defaultModel": {
       "title": "Standardmodell der Organisation",
       "description": "Wählen Sie, welches freigeschaltete Modell als Standard für Ihre Organisation verwendet werden soll.",

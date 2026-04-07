@@ -50,6 +50,14 @@
     },
     "anonymousOnly": "Anonymous mode",
     "permitted": "Permitted",
+    "tier": {
+      "label": "Tier",
+      "unset": "Unset",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "tooltip": "Tier: {{label}}"
+    },
     "defaultModel": {
       "title": "Organization default model",
       "description": "Choose which permitted model should be used as the default for your organization.",

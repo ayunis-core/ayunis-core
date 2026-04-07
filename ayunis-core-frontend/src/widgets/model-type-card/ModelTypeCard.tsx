@@ -8,7 +8,10 @@ import {
 import { Switch } from '@/shared/ui/shadcn/switch';
 import { Label } from '@/shared/ui/shadcn/label';
 import { Separator } from '@/shared/ui/shadcn/separator';
-import type { ModelWithConfigResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import {
+  ModelWithConfigResponseDtoTier,
+  type ModelWithConfigResponseDto,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useTranslation } from 'react-i18next';
 import {
   Item,
@@ -16,8 +19,56 @@ import {
   ItemContent,
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/shared/ui/shadcn/tooltip';
+import { Star } from 'lucide-react';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { getFlagByProvider } from '@/shared/lib/getFlagByProvider';
+
+const TIER_FILLED_COUNT: Record<ModelWithConfigResponseDtoTier, number> = {
+  [ModelWithConfigResponseDtoTier.low]: 1,
+  [ModelWithConfigResponseDtoTier.medium]: 2,
+  [ModelWithConfigResponseDtoTier.high]: 3,
+};
+
+interface ModelTierStarsProps {
+  readonly tier: ModelWithConfigResponseDtoTier;
+}
+
+function ModelTierStars({ tier }: ModelTierStarsProps) {
+  const { t } = useTranslation('admin-settings-models');
+  const filled = TIER_FILLED_COUNT[tier];
+  const tierLabel = t('models.tier.tooltip', {
+    label: t(`models.tier.${tier}`),
+  });
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          className="ml-1 inline-flex items-center align-middle"
+          aria-label={tierLabel}
+          tabIndex={0}
+        >
+          {[0, 1, 2].map((index) => (
+            <Star
+              key={index}
+              className={cn(
+                'h-3 w-3',
+                index < filled
+                  ? 'fill-current text-foreground'
+                  : 'fill-none text-muted-foreground',
+              )}
+            />
+          ))}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{tierLabel}</TooltipContent>
+    </Tooltip>
+  );
+}
 
 export interface ModelActions {
   readonly deletePermittedModel: (permittedModelId: string) => void;
@@ -164,6 +215,7 @@ export default function ModelTypeCard({
                     <ItemTitle>
                       {flag && <span className="mr-1">{flag}</span>}
                       {model.displayName || model.name}
+                      {model.tier && <ModelTierStars tier={model.tier} />}
                     </ItemTitle>
                   </ItemContent>
                   <ItemActions>

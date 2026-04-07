@@ -2,6 +2,7 @@ import type {
   CreateEmbeddingModelRequestDtoDimensions,
   CreateEmbeddingModelRequestDtoProvider,
   CreateLanguageModelRequestDtoProvider,
+  CreateLanguageModelRequestDtoTier,
 } from '@/shared/api';
 
 export interface ModelPricingFormData {
@@ -18,6 +19,7 @@ export interface LanguageModelFormData extends ModelPricingFormData {
   canVision: boolean;
   isReasoning: boolean;
   isArchived: boolean;
+  tier?: CreateLanguageModelRequestDtoTier;
 }
 
 export interface EmbeddingModelFormData extends ModelPricingFormData {

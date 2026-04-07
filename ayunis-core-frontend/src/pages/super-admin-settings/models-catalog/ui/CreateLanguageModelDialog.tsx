@@ -5,6 +5,7 @@ import type { CreateLanguageModelRequestDtoProvider } from '@/shared/api';
 import { LANGUAGE_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
 import { LanguageModelCapabilityFields } from './LanguageModelCapabilityFields';
+import { LanguageModelTierField } from './LanguageModelTierField';
 import { ModelPricingFields } from './ModelPricingFields';
 
 interface CreateLanguageModelDialogProps {
@@ -26,6 +27,7 @@ export function CreateLanguageModelDialog({
       canVision: false,
       isReasoning: false,
       isArchived: false,
+      tier: undefined,
     },
   });
 
@@ -50,6 +52,7 @@ export function CreateLanguageModelDialog({
     >
       <LanguageModelCapabilityFields form={form} disabled={isCreating} />
       <ModelPricingFields form={form} disabled={isCreating} />
+      <LanguageModelTierField form={form} disabled={isCreating} />
     </ModelFormDialog>
   );
 }
