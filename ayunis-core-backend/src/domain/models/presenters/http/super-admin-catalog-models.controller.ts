@@ -246,6 +246,7 @@ export class SuperAdminCatalogModelsController {
       isArchived: dto.isArchived,
       inputTokenCost: dto.inputTokenCost,
       outputTokenCost: dto.outputTokenCost,
+      tier: dto.tier,
     });
 
     const model = await this.createLanguageModelUseCase.execute(command);
@@ -308,6 +309,7 @@ export class SuperAdminCatalogModelsController {
       isArchived: dto.isArchived,
       inputTokenCost: dto.inputTokenCost,
       outputTokenCost: dto.outputTokenCost,
+      tier: dto.tier,
     });
 
     const model = await this.updateLanguageModelUseCase.execute(command);

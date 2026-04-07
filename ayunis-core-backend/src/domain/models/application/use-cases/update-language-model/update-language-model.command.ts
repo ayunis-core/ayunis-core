@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
 import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import type { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 
 export class UpdateLanguageModelCommand {
   id: UUID;
@@ -13,6 +14,7 @@ export class UpdateLanguageModelCommand {
   canVision: boolean;
   inputTokenCost?: number;
   outputTokenCost?: number;
+  tier?: ModelTier;
 
   constructor(params: {
     id: UUID;
@@ -26,6 +28,7 @@ export class UpdateLanguageModelCommand {
     canVision: boolean;
     inputTokenCost?: number;
     outputTokenCost?: number;
+    tier?: ModelTier;
   }) {
     this.id = params.id;
     this.name = params.name;
@@ -38,5 +41,6 @@ export class UpdateLanguageModelCommand {
     this.canVision = params.canVision;
     this.inputTokenCost = params.inputTokenCost;
     this.outputTokenCost = params.outputTokenCost;
+    this.tier = params.tier;
   }
 }

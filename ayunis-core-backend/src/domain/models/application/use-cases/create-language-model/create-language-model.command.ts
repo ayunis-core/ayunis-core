@@ -1,4 +1,5 @@
 import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import type { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 
 export class CreateLanguageModelCommand {
   name: string;
@@ -11,6 +12,7 @@ export class CreateLanguageModelCommand {
   isArchived: boolean;
   inputTokenCost?: number;
   outputTokenCost?: number;
+  tier?: ModelTier;
 
   constructor(params: {
     name: string;
@@ -23,6 +25,7 @@ export class CreateLanguageModelCommand {
     isArchived: boolean;
     inputTokenCost?: number;
     outputTokenCost?: number;
+    tier?: ModelTier;
   }) {
     this.name = params.name;
     this.provider = params.provider;
@@ -34,5 +37,6 @@ export class CreateLanguageModelCommand {
     this.isArchived = params.isArchived;
     this.inputTokenCost = params.inputTokenCost;
     this.outputTokenCost = params.outputTokenCost;
+    this.tier = params.tier;
   }
 }

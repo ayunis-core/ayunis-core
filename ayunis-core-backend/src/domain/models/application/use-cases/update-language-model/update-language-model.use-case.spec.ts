@@ -7,6 +7,7 @@ import { ModelsRepository } from '../../ports/models.repository';
 import { ClearDefaultsByCatalogModelIdUseCase } from '../clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import { ModelNotFoundByIdError } from '../../models.errors';
 import type { UUID } from 'crypto';
 
@@ -60,6 +61,7 @@ describe('UpdateLanguageModelUseCase', () => {
   const createMockLanguageModel = (
     id: UUID,
     isArchived: boolean,
+    tier?: ModelTier,
   ): LanguageModel => {
     return new LanguageModel({
       id,
@@ -71,12 +73,14 @@ describe('UpdateLanguageModelUseCase', () => {
       isArchived,
       canUseTools: true,
       canVision: false,
+      tier,
     });
   };
 
   const createUpdateCommand = (
     id: UUID,
     isArchived: boolean,
+    tier?: ModelTier,
   ): UpdateLanguageModelCommand => {
     return new UpdateLanguageModelCommand({
       id,
@@ -88,6 +92,7 @@ describe('UpdateLanguageModelUseCase', () => {
       isArchived,
       canUseTools: true,
       canVision: false,
+      tier,
     });
   };
 
@@ -230,6 +235,50 @@ describe('UpdateLanguageModelUseCase', () => {
       expect(logSpy).toHaveBeenCalledWith(
         'Model is being archived, clearing defaults',
         { modelId: mockModelId },
+      );
+    });
+
+    it('should forward tier into the saved language model when set', async () => {
+      // Arrange
+      const existingModel = createMockLanguageModel(mockModelId, false);
+      const command = createUpdateCommand(mockModelId, false, ModelTier.HIGH);
+
+      modelsRepository.findOne.mockResolvedValue(existingModel);
+      modelsRepository.save.mockResolvedValue();
+
+      // Act
+      const result = await useCase.execute(command);
+
+      // Assert
+      expect(result).toBeInstanceOf(LanguageModel);
+      expect(result.tier).toBe(ModelTier.HIGH);
+      expect(modelsRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ tier: ModelTier.HIGH }),
+      );
+    });
+
+    it('should clear tier when omitted from the command (full-replace semantics)', async () => {
+      // Arrange — existing model has a tier set; the update command omits it.
+      // The use case treats updates as a full replace, so the saved model
+      // must have its tier cleared rather than carried over from the existing row.
+      const existingModel = createMockLanguageModel(
+        mockModelId,
+        false,
+        ModelTier.HIGH,
+      );
+      const command = createUpdateCommand(mockModelId, false);
+
+      modelsRepository.findOne.mockResolvedValue(existingModel);
+      modelsRepository.save.mockResolvedValue();
+
+      // Act
+      const result = await useCase.execute(command);
+
+      // Assert
+      expect(existingModel.tier).toBe(ModelTier.HIGH);
+      expect(result.tier).toBeUndefined();
+      expect(modelsRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ tier: undefined }),
       );
     });
 

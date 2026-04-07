@@ -5,11 +5,13 @@ import {
   IsEnum,
   IsBoolean,
   IsNumber,
+  IsOptional,
   Min,
   ValidateIf,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import { nullToUndefined } from 'src/common/util/null-to-undefined';
 
 function hasAnyCostField(o: BaseLanguageModelRequestDto): boolean {
@@ -97,4 +99,15 @@ export abstract class BaseLanguageModelRequestDto {
   @IsNumber()
   @Min(0)
   outputTokenCost?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109.',
+    enum: ModelTier,
+    example: ModelTier.MEDIUM,
+  })
+  @Transform(nullToUndefined)
+  @IsOptional()
+  @IsEnum(ModelTier)
+  tier?: ModelTier;
 }
