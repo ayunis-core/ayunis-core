@@ -93,7 +93,7 @@ function TierRow({ tier, current }: TierRowProps) {
   const inputId = `fair-use-${tier}`;
 
   return (
-    <div className="space-y-2 rounded-md border p-4">
+    <Card className="space-y-2 p-4">
       <h4 className="text-sm font-medium">{t(`fairUseLimits.tier.${tier}`)}</h4>
       <div className="flex flex-wrap items-end gap-3">
         <div className="space-y-1">
@@ -143,7 +143,7 @@ function TierRow({ tier, current }: TierRowProps) {
           </div>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 

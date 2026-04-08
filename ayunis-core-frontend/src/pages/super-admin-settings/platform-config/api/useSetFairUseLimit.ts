@@ -64,9 +64,8 @@ export default function useSetFairUseLimit(
     // get rejected by the backend's `@IsInt() @Min(1)` with an opaque 400.
     // Fail loudly client-side instead.
     if (windowMs < 1) {
-      throw new Error(
-        `windowHours=${input.windowHours} rounds to windowMs=${windowMs}, which is below the backend minimum of 1`,
-      );
+      showError(t('fairUseLimits.validationError.windowHours'));
+      return;
     }
 
     mutate({
