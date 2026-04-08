@@ -12,7 +12,8 @@ The MCP module manages connections to external Model Context Protocol servers at
 - `ListOrgMcpIntegrationsUseCase` — Lists all integrations for the current org
 - `ListAvailableMcpIntegrationsUseCase` — Lists enabled integrations for the current org
 - `UpdateMcpIntegrationUseCase` — Updates integration settings (name, credentials, org config values, etc.)
-- `DeleteMcpIntegrationUseCase` — Deletes an integration and its associated user configs
+- `CreateSelfDefinedMcpIntegrationUseCase` — Creates a self-defined integration with config schema, org-level config values, and optional OAuth client credentials
+- `DeleteMcpIntegrationUseCase` — Deletes an integration and its associated user configs and OAuth tokens
 - `EnableMcpIntegrationUseCase` / `DisableMcpIntegrationUseCase` — Toggles integration enabled state
 - `ValidateMcpIntegrationUseCase` — Validates connection to the MCP server
 - `ListPredefinedMcpIntegrationConfigsUseCase` — Lists available predefined integration configurations
