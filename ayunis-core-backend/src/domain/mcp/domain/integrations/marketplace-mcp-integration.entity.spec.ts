@@ -161,4 +161,85 @@ describe('MarketplaceMcpIntegration', () => {
 
     expect(integration.orgConfigValues).toEqual({});
   });
+
+  it('should round-trip OAuth client credentials passed through the constructor', () => {
+    const integration = new MarketplaceMcpIntegration({
+      orgId,
+      name: 'OParl Integration',
+      serverUrl: 'https://oparl-mcp.ayunis.de/mcp',
+      marketplaceIdentifier: 'oparl',
+      configSchema,
+      orgConfigValues: {},
+      auth: new NoAuthMcpIntegrationAuth(),
+      oauthClientId: 'client-abc-123',
+      oauthClientSecretEncrypted: 'enc-secret-xyz',
+    });
+
+    expect(integration.oauthClientId).toBe('client-abc-123');
+    expect(integration.oauthClientSecretEncrypted).toBe('enc-secret-xyz');
+  });
+
+  it('should not bump updatedAt when OAuth client credentials are passed through the constructor (rehydration path)', () => {
+    const fixedUpdatedAt = new Date('2024-01-01T00:00:00.000Z');
+    const integration = new MarketplaceMcpIntegration({
+      orgId,
+      name: 'OParl Integration',
+      serverUrl: 'https://oparl-mcp.ayunis.de/mcp',
+      marketplaceIdentifier: 'oparl',
+      configSchema,
+      orgConfigValues: {},
+      auth: new NoAuthMcpIntegrationAuth(),
+      updatedAt: fixedUpdatedAt,
+      oauthClientId: 'client-abc-123',
+      oauthClientSecretEncrypted: 'enc-secret-xyz',
+    });
+
+    expect(integration.updatedAt).toEqual(fixedUpdatedAt);
+  });
+
+  describe('Constructor both-or-neither OAuth client credentials guard', () => {
+    const buildMarketplace = (oauth: {
+      oauthClientId?: string;
+      oauthClientSecretEncrypted?: string;
+    }) =>
+      new MarketplaceMcpIntegration({
+        orgId,
+        name: 'OParl Integration',
+        serverUrl: 'https://oparl-mcp.ayunis.de/mcp',
+        marketplaceIdentifier: 'oparl',
+        configSchema,
+        orgConfigValues: {},
+        auth: new NoAuthMcpIntegrationAuth(),
+        ...oauth,
+      });
+
+    it('should throw when only oauthClientId is set', () => {
+      expect(() =>
+        buildMarketplace({ oauthClientId: 'client-abc-123' }),
+      ).toThrow(
+        'oauthClientId and oauthClientSecretEncrypted must be set together',
+      );
+    });
+
+    it('should throw when only oauthClientSecretEncrypted is set', () => {
+      expect(() =>
+        buildMarketplace({ oauthClientSecretEncrypted: 'enc-secret-xyz' }),
+      ).toThrow(
+        'oauthClientId and oauthClientSecretEncrypted must be set together',
+      );
+    });
+
+    it('should accept both set together', () => {
+      expect(() =>
+        buildMarketplace({
+          oauthClientId: 'client-abc-123',
+          oauthClientSecretEncrypted: 'enc-secret-xyz',
+        }),
+      ).not.toThrow();
+    });
+
+    it('should accept neither set', () => {
+      expect(() => buildMarketplace({})).not.toThrow();
+    });
+  });
 });
