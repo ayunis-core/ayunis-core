@@ -33,6 +33,21 @@ export abstract class McpIntegrationRecord extends BaseRecord {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
+  @Column({
+    name: 'oauth_client_id',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  oauthClientId?: string;
+
+  @Column({
+    name: 'oauth_client_secret_encrypted',
+    type: 'text',
+    nullable: true,
+  })
+  oauthClientSecretEncrypted?: string;
+
   @OneToOne(() => McpIntegrationAuthRecord, (auth) => auth.integration, {
     cascade: ['insert', 'update'],
     eager: true,
