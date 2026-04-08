@@ -3,6 +3,7 @@ import { McpIntegration } from '../../../../domain/mcp-integration.entity';
 import { CustomMcpIntegration } from '../../../../domain/integrations/custom-mcp-integration.entity';
 import { PredefinedMcpIntegration } from '../../../../domain/integrations/predefined-mcp-integration.entity';
 import { MarketplaceMcpIntegration } from '../../../../domain/integrations/marketplace-mcp-integration.entity';
+import { SelfDefinedMcpIntegration } from '../../../../domain/integrations/self-defined-mcp-integration.entity';
 import { McpIntegrationAuth } from '../../../../domain/auth/mcp-integration-auth.entity';
 import { NoAuthMcpIntegrationAuth } from '../../../../domain/auth/no-auth-mcp-integration-auth.entity';
 import { BearerMcpIntegrationAuth } from '../../../../domain/auth/bearer-mcp-integration-auth.entity';
@@ -17,6 +18,7 @@ import {
   CustomHeaderMcpIntegrationAuthRecord,
   CustomMcpIntegrationRecord,
   MarketplaceMcpIntegrationRecord,
+  SelfDefinedMcpIntegrationRecord,
   McpIntegrationAuthRecord,
   NoAuthMcpIntegrationAuthRecord,
   OAuthMcpIntegrationAuthRecord,
@@ -51,6 +53,9 @@ export class McpIntegrationMapper {
     if (record instanceof MarketplaceMcpIntegrationRecord) {
       return this.marketplaceToDomain(base, record);
     }
+    if (record instanceof SelfDefinedMcpIntegrationRecord) {
+      return this.selfDefinedToDomain(base, record);
+    }
     throw new Error(
       `Unknown MCP integration record type: ${record.constructor.name}`,
     );
@@ -67,6 +72,9 @@ export class McpIntegrationMapper {
     }
     if (entity instanceof MarketplaceMcpIntegration) {
       return this.marketplaceToRecord(entity, authRecord);
+    }
+    if (entity instanceof SelfDefinedMcpIntegration) {
+      return this.selfDefinedToRecord(entity, authRecord);
     }
     throw new Error(
       `Unknown MCP integration entity type: ${entity.constructor.name}`,
@@ -91,6 +99,8 @@ export class McpIntegrationMapper {
       lastConnectionCheck: record.lastConnectionCheck,
       returnsPii: record.returnsPii,
       description: record.description,
+      oauthClientId: record.oauthClientId,
+      oauthClientSecretEncrypted: record.oauthClientSecretEncrypted,
     } as const;
   }
 
@@ -145,6 +155,8 @@ export class McpIntegrationMapper {
     record.lastConnectionCheck = entity.lastConnectionCheck;
     record.returnsPii = entity.returnsPii;
     record.description = entity.description;
+    record.oauthClientId = entity.oauthClientId;
+    record.oauthClientSecretEncrypted = entity.oauthClientSecretEncrypted;
     record.auth = authRecord;
     authRecord.integration = record;
   }
@@ -178,6 +190,29 @@ export class McpIntegrationMapper {
     record.configSchema = entity.configSchema;
     record.orgConfigValues = entity.orgConfigValues;
     record.logoUrl = entity.logoUrl;
+    return record;
+  }
+
+  private selfDefinedToDomain(
+    base: ReturnType<McpIntegrationMapper['extractBaseFromRecord']>,
+    record: SelfDefinedMcpIntegrationRecord,
+  ): McpIntegration {
+    return this.integrationFactory.createIntegration({
+      kind: McpIntegrationKind.SELF_DEFINED,
+      ...base,
+      configSchema: record.configSchema,
+      orgConfigValues: record.orgConfigValues,
+    });
+  }
+
+  private selfDefinedToRecord(
+    entity: SelfDefinedMcpIntegration,
+    authRecord: McpIntegrationAuthRecord,
+  ): SelfDefinedMcpIntegrationRecord {
+    const record = new SelfDefinedMcpIntegrationRecord();
+    this.applyBaseToRecord(record, entity, authRecord);
+    record.configSchema = entity.configSchema;
+    record.orgConfigValues = entity.orgConfigValues;
     return record;
   }
 
