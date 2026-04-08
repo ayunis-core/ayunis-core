@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.0](https://github.com/ayunis-core/ayunis-core/compare/v1.25.0...v1.26.0) (2026-04-08)
+
+
+### Features
+
+* **quotas:** add model categories and make quota adjustable per category (AYC-109) ([#539](https://github.com/ayunis-core/ayunis-core/issues/539)) ([2021b58](https://github.com/ayunis-core/ayunis-core/commit/2021b58f550e951980a31baaae2120a6aa0cfc19))
+
 ## [1.25.0](https://github.com/ayunis-core/ayunis-core/compare/v1.24.0...v1.25.0) (2026-04-07)
 
 
