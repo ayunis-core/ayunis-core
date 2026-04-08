@@ -1,4 +1,5 @@
 import {
+  BadGatewayException,
   BadRequestException,
   ConflictException,
   ForbiddenException,
@@ -6,6 +7,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   NotImplementedException,
+  PreconditionFailedException,
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -72,10 +74,14 @@ export abstract class ApplicationError extends Error {
         return new NotFoundException(body);
       case 409:
         return new ConflictException(body);
+      case 412:
+        return new PreconditionFailedException(body);
       case 500:
         return new InternalServerErrorException(body);
       case 501:
         return new NotImplementedException(body);
+      case 502:
+        return new BadGatewayException(body);
       case 503:
         return new ServiceUnavailableException(body);
       case 504:
