@@ -93,19 +93,6 @@ export class RegisterUserUseCase {
         new CreateTrialCommand(org.id, trialMaxMessages),
       );
 
-      // Emit OrgCreatedEvent BEFORE creating the admin user so external
-      // receivers see `org.created` before the resulting `user.created`.
-      // This guarantees ordering for downstream consumers (e.g. CSM sync
-      // services) that need the org to exist before attaching users to it.
-      this.eventEmitter
-        .emitAsync(OrgCreatedEvent.EVENT_NAME, new OrgCreatedEvent(org.id, org))
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit OrgCreatedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            orgId: org.id,
-          });
-        });
-
       // Only send confirmation email if email config is available
       const shouldConfirmEmail =
         this.configService.get<boolean>('emails.hasConfig');
@@ -145,6 +132,17 @@ export class RegisterUserUseCase {
           new SendConfirmationEmailCommand(user),
         );
       }
+
+      // Emit OrgCreatedEvent after all critical operations succeed so that
+      // a transaction rollback cannot produce a phantom webhook.
+      await this.eventEmitter
+        .emitAsync(OrgCreatedEvent.EVENT_NAME, new OrgCreatedEvent(org.id, org))
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit OrgCreatedEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            orgId: org.id,
+          });
+        });
 
       this.logger.debug('Registration successful, logging in user', {
         userId: user.id,
