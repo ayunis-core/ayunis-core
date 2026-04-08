@@ -4,6 +4,7 @@ import { McpIntegrationKind } from '../../domain/value-objects/mcp-integration-k
 import { CustomMcpIntegration } from '../../domain/integrations/custom-mcp-integration.entity';
 import { PredefinedMcpIntegration } from '../../domain/integrations/predefined-mcp-integration.entity';
 import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
+import { SelfDefinedMcpIntegration } from '../../domain/integrations/self-defined-mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
 import { IntegrationConfigSchema } from '../../domain/value-objects/integration-config-schema';
 import { McpIntegrationAuth } from '../../domain/auth/mcp-integration-auth.entity';
@@ -64,6 +65,26 @@ export class McpIntegrationFactory {
     returnsPii?: boolean;
     description?: string;
   }): MarketplaceMcpIntegration;
+  createIntegration(params: {
+    kind: McpIntegrationKind.SELF_DEFINED;
+    orgId: UUID;
+    name: string;
+    serverUrl: string;
+    auth: McpIntegrationAuth;
+    configSchema: IntegrationConfigSchema;
+    orgConfigValues: Record<string, string>;
+    id?: UUID;
+    enabled?: boolean;
+    createdAt?: Date;
+    updatedAt?: Date;
+    connectionStatus?: string;
+    lastConnectionError?: string;
+    lastConnectionCheck?: Date;
+    returnsPii?: boolean;
+    description?: string;
+    oauthClientId?: string;
+    oauthClientSecretEncrypted?: string;
+  }): SelfDefinedMcpIntegration;
   createIntegration(params: CreateIntegrationParams): McpIntegration {
     const base = this.extractBaseParams(params);
 
@@ -75,12 +96,7 @@ export class McpIntegrationFactory {
       case McpIntegrationKind.CUSTOM:
         return new CustomMcpIntegration(base);
       case McpIntegrationKind.SELF_DEFINED:
-        // SELF_DEFINED factory branch is added in a later step (Step 2).
-        // Until then this branch is unreachable because no caller constructs
-        // a SELF_DEFINED kind via the factory.
-        throw new Error(
-          'SELF_DEFINED MCP integration factory branch not yet implemented (Step 2)',
-        );
+        return this.createSelfDefined(base, params);
       default: {
         // Exhaustiveness guard: if a new `McpIntegrationKind` is added, this
         // assignment fails to compile and points directly at this switch.
@@ -94,8 +110,6 @@ export class McpIntegrationFactory {
     }
   }
 
-  // OAuth client credentials are not threaded through this helper yet — they
-  // are set per-kind via `setOAuthClientCredentials()` in Steps 2 and 7.
   private extractBaseParams(params: CreateIntegrationParams) {
     return {
       id: params.id,
@@ -142,6 +156,22 @@ export class McpIntegrationFactory {
       logoUrl: params.logoUrl,
     });
   }
+
+  private createSelfDefined(
+    base: ReturnType<McpIntegrationFactory['extractBaseParams']>,
+    params: CreateIntegrationParams,
+  ): SelfDefinedMcpIntegration {
+    if (!params.configSchema) {
+      throw new Error('Self-defined integrations require a config schema');
+    }
+    return new SelfDefinedMcpIntegration({
+      ...base,
+      configSchema: params.configSchema,
+      orgConfigValues: params.orgConfigValues ?? {},
+      oauthClientId: params.oauthClientId,
+      oauthClientSecretEncrypted: params.oauthClientSecretEncrypted,
+    });
+  }
 }
 
 type CreateIntegrationParams = {
@@ -164,4 +194,6 @@ type CreateIntegrationParams = {
   lastConnectionCheck?: Date;
   returnsPii?: boolean;
   description?: string;
+  oauthClientId?: string;
+  oauthClientSecretEncrypted?: string;
 };
