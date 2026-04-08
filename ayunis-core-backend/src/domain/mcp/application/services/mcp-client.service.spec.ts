@@ -15,7 +15,21 @@ import { BearerMcpIntegrationAuth } from '../../domain/auth/bearer-mcp-integrati
 import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { OAuthMcpIntegrationAuth } from '../../domain/auth/oauth-mcp-integration-auth.entity';
 import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { McpAuthenticationError } from '../mcp.errors';
+import {
+  McpAuthenticationError,
+  McpOAuthAuthorizationRequiredError,
+} from '../mcp.errors';
+import { SelfDefinedMcpIntegration } from '../../domain/integrations/self-defined-mcp-integration.entity';
+import { OAuthFlowService } from './oauth-flow.service';
+
+class MockOAuthFlowService {
+  getValidAccessToken = jest.fn();
+  buildAuthorizationUrl = jest.fn();
+  handleCallback = jest.fn();
+  revoke = jest.fn();
+  getStatus = jest.fn();
+  resolveOAuthConfig = jest.fn();
+}
 
 class MockMcpClientPort extends McpClientPort {
   listTools = jest.fn();
@@ -56,10 +70,14 @@ describe('McpClientService', () => {
     connectionStatus: 'pending',
   } as const;
 
+  let oauthFlowService: MockOAuthFlowService;
+
   beforeAll(async () => {
     client = new MockMcpClientPort();
     encryption = new MockCredentialEncryptionPort();
     userConfigRepo = new MockUserConfigRepository();
+
+    oauthFlowService = new MockOAuthFlowService();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -70,6 +88,7 @@ describe('McpClientService', () => {
           provide: McpIntegrationUserConfigRepositoryPort,
           useValue: userConfigRepo,
         },
+        { provide: OAuthFlowService, useValue: oauthFlowService },
       ],
     }).compile();
 
@@ -461,6 +480,189 @@ describe('McpClientService', () => {
       const config = await service.buildConnectionConfig(integration);
 
       expect(config.headers).toEqual({});
+    });
+  });
+
+  describe('buildConnectionConfig — self-defined integrations', () => {
+    const buildSelfDefinedIntegration = (
+      configSchema: IntegrationConfigSchema,
+      orgConfigValues: Record<string, string>,
+      overrides?: {
+        oauthClientId?: string;
+        oauthClientSecretEncrypted?: string;
+      },
+    ) =>
+      new SelfDefinedMcpIntegration({
+        id: baseIntegrationParams.id,
+        orgId: baseIntegrationParams.orgId,
+        name: 'Self-Defined Integration',
+        serverUrl: 'https://mcp.example.com/self',
+        configSchema,
+        orgConfigValues,
+        auth: new NoAuthMcpIntegrationAuth(),
+        ...overrides,
+      });
+
+    it('maps org config fields to headers for self-defined integration', async () => {
+      const schema: IntegrationConfigSchema = {
+        authType: 'CUSTOM_HEADER',
+        orgFields: [
+          {
+            key: 'apiKey',
+            label: 'API Key',
+            type: 'secret',
+            headerName: 'X-API-Key',
+            required: true,
+          },
+        ],
+        userFields: [],
+      };
+      const integration = buildSelfDefinedIntegration(schema, {
+        apiKey: 'encrypted-key',
+      });
+
+      encryption.decrypt.mockResolvedValue('decrypted-api-key');
+
+      const config = await service.buildConnectionConfig(integration);
+
+      expect(config).toEqual({
+        serverUrl: 'https://mcp.example.com/self',
+        headers: { 'X-API-Key': 'decrypted-api-key' },
+      });
+    });
+
+    it('returns empty headers for self-defined NO_AUTH integration', async () => {
+      const schema: IntegrationConfigSchema = {
+        authType: 'NO_AUTH',
+        orgFields: [],
+        userFields: [],
+      };
+      const integration = buildSelfDefinedIntegration(schema, {});
+
+      const config = await service.buildConnectionConfig(integration);
+
+      expect(config.headers).toEqual({});
+    });
+  });
+
+  describe('buildConnectionConfig — OAuth token injection', () => {
+    const buildMarketplaceWithOAuth = (level: 'org' | 'user') =>
+      new MarketplaceMcpIntegration({
+        id: baseIntegrationParams.id,
+        orgId: baseIntegrationParams.orgId,
+        name: 'OAuth Integration',
+        serverUrl: 'https://mcp.example.com/oauth',
+        marketplaceIdentifier: 'oauth-mcp',
+        configSchema: {
+          authType: 'OAUTH',
+          orgFields: [],
+          userFields: [],
+          oauth: {
+            authorizationUrl: 'https://auth.example.com/authorize',
+            tokenUrl: 'https://auth.example.com/token',
+            scopes: ['read'],
+            level,
+          },
+        },
+        orgConfigValues: {},
+        auth: new NoAuthMcpIntegrationAuth(),
+        oauthClientId: 'client-id',
+        oauthClientSecretEncrypted: 'encrypted-secret',
+      });
+
+    it('injects Authorization Bearer header for org-level OAuth', async () => {
+      const integration = buildMarketplaceWithOAuth('org');
+      oauthFlowService.getValidAccessToken.mockResolvedValue(
+        'access-token-123',
+      );
+
+      const config = await service.buildConnectionConfig(integration);
+
+      expect(config.headers).toEqual({
+        Authorization: 'Bearer access-token-123',
+      });
+      expect(oauthFlowService.getValidAccessToken).toHaveBeenCalledWith(
+        integration,
+        null,
+      );
+    });
+
+    it('injects Authorization Bearer header for user-level OAuth', async () => {
+      const userId = randomUUID();
+      const integration = buildMarketplaceWithOAuth('user');
+      oauthFlowService.getValidAccessToken.mockResolvedValue('user-token-456');
+
+      const config = await service.buildConnectionConfig(integration, userId);
+
+      expect(config.headers).toEqual({
+        Authorization: 'Bearer user-token-456',
+      });
+      expect(oauthFlowService.getValidAccessToken).toHaveBeenCalledWith(
+        integration,
+        userId,
+      );
+    });
+
+    it('throws McpOAuthAuthorizationRequiredError when no token exists', async () => {
+      const integration = buildMarketplaceWithOAuth('org');
+      oauthFlowService.getValidAccessToken.mockRejectedValue(
+        new McpOAuthAuthorizationRequiredError(integration.id),
+      );
+
+      await expect(
+        service.buildConnectionConfig(integration),
+      ).rejects.toBeInstanceOf(McpOAuthAuthorizationRequiredError);
+    });
+
+    it('calls getValidAccessToken which triggers refresh for expired tokens', async () => {
+      const integration = buildMarketplaceWithOAuth('org');
+      oauthFlowService.getValidAccessToken.mockResolvedValue('refreshed-token');
+
+      const config = await service.buildConnectionConfig(integration);
+
+      expect(config.headers!['Authorization']).toBe('Bearer refreshed-token');
+      expect(oauthFlowService.getValidAccessToken).toHaveBeenCalledTimes(1);
+    });
+
+    it('injects OAuth token for self-defined integration with OAuth', async () => {
+      const integration = new SelfDefinedMcpIntegration({
+        id: baseIntegrationParams.id,
+        orgId: baseIntegrationParams.orgId,
+        name: 'Self OAuth',
+        serverUrl: 'https://mcp.example.com/self-oauth',
+        configSchema: {
+          authType: 'OAUTH',
+          orgFields: [],
+          userFields: [],
+          oauth: {
+            authorizationUrl: 'https://auth.example.com/authorize',
+            tokenUrl: 'https://auth.example.com/token',
+            scopes: ['read'],
+            level: 'org',
+          },
+        },
+        orgConfigValues: {},
+        auth: new NoAuthMcpIntegrationAuth(),
+        oauthClientId: 'client-id',
+        oauthClientSecretEncrypted: 'encrypted-secret',
+      });
+      oauthFlowService.getValidAccessToken.mockResolvedValue(
+        'self-defined-token',
+      );
+
+      const config = await service.buildConnectionConfig(integration);
+
+      expect(config.headers!['Authorization']).toBe(
+        'Bearer self-defined-token',
+      );
+    });
+
+    it('throws McpOAuthAuthorizationRequiredError for user-level OAuth when no userId provided', async () => {
+      const integration = buildMarketplaceWithOAuth('user');
+
+      await expect(service.buildConnectionConfig(integration)).rejects.toThrow(
+        McpOAuthAuthorizationRequiredError,
+      );
     });
   });
 });
