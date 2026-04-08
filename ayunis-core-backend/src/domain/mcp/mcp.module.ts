@@ -18,11 +18,13 @@ import {
   CustomMcpIntegrationRecord,
   MarketplaceMcpIntegrationRecord,
   McpIntegrationAuthRecord,
+  McpIntegrationOAuthTokenRecord,
   McpIntegrationRecord,
   McpIntegrationUserConfigRecord,
   NoAuthMcpIntegrationAuthRecord,
   OAuthMcpIntegrationAuthRecord,
   PredefinedMcpIntegrationRecord,
+  SelfDefinedMcpIntegrationRecord,
 } from './infrastructure/persistence/postgres/schema';
 import { McpIntegrationMapper } from './infrastructure/persistence/postgres/mappers/mcp-integration.mapper';
 import { McpIntegrationFactory } from './application/factories/mcp-integration.factory';
@@ -69,6 +71,8 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
       CustomHeaderMcpIntegrationAuthRecord,
       OAuthMcpIntegrationAuthRecord,
       McpIntegrationUserConfigRecord,
+      SelfDefinedMcpIntegrationRecord,
+      McpIntegrationOAuthTokenRecord,
     ]),
     SourcesModule, // Import sources module for CreateDataSourceUseCase
     MarketplaceModule,
