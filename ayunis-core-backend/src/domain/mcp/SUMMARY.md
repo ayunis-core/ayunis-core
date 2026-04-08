@@ -22,11 +22,16 @@ The MCP module manages connections to external Model Context Protocol servers at
 - `GetMcpPromptUseCase` — Fetches a prompt from a remote MCP server
 - `SetUserMcpConfigUseCase` — Saves per-user config values for a marketplace integration
 - `GetUserMcpConfigUseCase` — Retrieves per-user config values (with secret masking)
+- `StartMcpOAuthAuthorizationUseCase` — Initiates the OAuth 2.1 + PKCE authorization flow, returning an authorization URL
+- `CompleteMcpOAuthAuthorizationUseCase` — Handles the OAuth callback, exchanging the authorization code for tokens
+- `RevokeMcpOAuthAuthorizationUseCase` — Revokes an existing OAuth authorization for an integration
+- `GetMcpOAuthAuthorizationStatusUseCase` — Retrieves the current OAuth authorization status (level, authorized, expiry, scope)
 
 **Services:**
 - `McpClientService` — Handles actual server communication via the MCP SDK
 - `MarketplaceConfigService` — Resolves effective server URL and auth headers by merging org-level and user-level config values against the integration's config schema
 - `ConnectionValidationService` — Validates MCP server connectivity, used by `ValidateMcpIntegrationUseCase`
+- `OAuthFlowService` — Orchestrates the OAuth 2.1 + PKCE authorization flow for MCP integrations, handling URL generation, token exchange, token refresh, and revocation
 
 **Ports:**
 - `McpIntegrationsRepository` — Persistence port for MCP integrations
