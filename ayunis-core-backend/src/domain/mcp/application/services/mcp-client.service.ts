@@ -13,11 +13,13 @@ import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.
 import { McpIntegrationUserConfigRepositoryPort } from '../ports/mcp-integration-user-config.repository.port';
 import { McpIntegration } from '../../domain/mcp-integration.entity';
 import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
+import { SelfDefinedMcpIntegration } from '../../domain/integrations/self-defined-mcp-integration.entity';
 import { ConfigField } from '../../domain/value-objects/integration-config-schema';
 import { BearerMcpIntegrationAuth } from '../../domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { OAuthMcpIntegrationAuth } from '../../domain/auth/oauth-mcp-integration-auth.entity';
-import { McpAuthenticationError } from '../mcp.errors';
+import { McpAuthenticationError, McpError } from '../mcp.errors';
+import { OAuthFlowService } from './oauth-flow.service';
 
 /**
  * Service for executing MCP operations with authentication.
@@ -32,6 +34,7 @@ export class McpClientService {
     private readonly mcpClient: McpClientPort,
     private readonly credentialEncryption: McpCredentialEncryptionPort,
     private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
+    private readonly oauthFlowService: OAuthFlowService,
   ) {}
 
   /**
@@ -51,17 +54,22 @@ export class McpClientService {
     userId?: UUID,
   ): Promise<McpConnectionConfig> {
     if (integration instanceof MarketplaceMcpIntegration) {
-      return this.buildMarketplaceConnectionConfig(integration, userId);
+      return this.buildSchemaConnectionConfig(integration, userId);
+    }
+    if (integration instanceof SelfDefinedMcpIntegration) {
+      return this.buildSchemaConnectionConfig(integration, userId);
     }
     return this.buildLegacyConnectionConfig(integration);
   }
 
   /**
-   * Builds connection config for marketplace integrations by resolving
-   * config schema fields to HTTP headers, with optional user-level overrides.
+   * Builds connection config for schema-based integrations (marketplace and
+   * self-defined) by resolving config fields to HTTP headers, applying
+   * optional per-user overrides, and injecting OAuth Bearer tokens when the
+   * integration's configSchema declares OAuth.
    */
-  private async buildMarketplaceConnectionConfig(
-    integration: MarketplaceMcpIntegration,
+  private async buildSchemaConnectionConfig(
+    integration: MarketplaceMcpIntegration | SelfDefinedMcpIntegration,
     userId?: UUID,
   ): Promise<McpConnectionConfig> {
     try {
@@ -92,12 +100,23 @@ export class McpClientService {
         }
       }
 
+      // Inject OAuth Bearer token if the schema declares OAuth
+      if (configSchema.oauth) {
+        const userIdOrNull =
+          configSchema.oauth.level === 'user' ? (userId ?? null) : null;
+        const accessToken = await this.oauthFlowService.getValidAccessToken(
+          integration,
+          userIdOrNull,
+        );
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+
       return { serverUrl: integration.serverUrl, headers };
     } catch (error) {
-      if (error instanceof McpAuthenticationError) {
+      if (error instanceof McpError) {
         throw error;
       }
-      this.logger.error('Failed to build marketplace connection config', {
+      this.logger.error('Failed to build schema connection config', {
         error: error as Error,
         integrationId: integration.id,
       });

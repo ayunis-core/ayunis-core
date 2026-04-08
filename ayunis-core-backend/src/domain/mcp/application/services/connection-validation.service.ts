@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ValidateMcpIntegrationUseCase } from '../use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
 import { McpIntegrationsRepositoryPort } from '../ports/mcp-integrations.repository.port';
 import { McpIntegration } from '../../domain/mcp-integration.entity';
+import { McpOAuthAuthorizationRequiredError } from '../mcp.errors';
 
 /**
  * Validates an MCP integration's connection and persists the resulting status.
@@ -31,11 +32,15 @@ export class ConnectionValidationService {
         );
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? `Validation failed: ${error.message}`
-          : 'Validation failed: Unknown error';
-      integration.updateConnectionStatus('error', errorMessage);
+      if (error instanceof McpOAuthAuthorizationRequiredError) {
+        integration.updateConnectionStatus('pending_auth', undefined);
+      } else {
+        const errorMessage =
+          error instanceof Error
+            ? `Validation failed: ${error.message}`
+            : 'Validation failed: Unknown error';
+        integration.updateConnectionStatus('error', errorMessage);
+      }
     }
 
     return this.repository.save(integration);
