@@ -138,6 +138,32 @@ describe('SelfDefinedMcpIntegration', () => {
     expect(integration.orgConfigValues).toEqual({});
   });
 
+  it('should update config schema and refresh updatedAt', () => {
+    const integration = new SelfDefinedMcpIntegration({
+      orgId,
+      name: 'Internal Wiki MCP',
+      serverUrl: 'https://wiki.internal.example.org/mcp',
+      configSchema,
+      orgConfigValues: {},
+      auth: new NoAuthMcpIntegrationAuth(),
+    });
+
+    const previousUpdatedAt = integration.updatedAt;
+
+    const newSchema: IntegrationConfigSchema = {
+      authType: 'NO_AUTH',
+      orgFields: [],
+      userFields: [],
+    };
+
+    integration.updateConfigSchema(newSchema);
+
+    expect(integration.configSchema).toBe(newSchema);
+    expect(integration.updatedAt.getTime()).toBeGreaterThanOrEqual(
+      previousUpdatedAt.getTime(),
+    );
+  });
+
   it('should accept and expose OAuth client credentials when provided', () => {
     const integration = new SelfDefinedMcpIntegration({
       orgId,
