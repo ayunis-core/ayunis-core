@@ -18,6 +18,10 @@ export class McpIntegrationOAuthTokenRecord extends BaseRecord {
   @Column({ name: 'integration_id', type: 'varchar' })
   integrationId: UUID;
 
+  @ManyToOne(() => McpIntegrationRecord, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'integration_id' })
+  integration?: McpIntegrationRecord;
+
   @Column({ name: 'user_id', type: 'varchar', nullable: true })
   userId: UUID | null;
 
@@ -32,8 +36,4 @@ export class McpIntegrationOAuthTokenRecord extends BaseRecord {
 
   @Column({ type: 'text', nullable: true })
   scope: string | null;
-
-  @ManyToOne(() => McpIntegrationRecord, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'integration_id' })
-  integration?: McpIntegrationRecord;
 }
