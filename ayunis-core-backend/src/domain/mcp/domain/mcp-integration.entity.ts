@@ -208,5 +208,3 @@ export abstract class McpIntegration {
 
 export { CustomMcpIntegration } from './integrations/custom-mcp-integration.entity';
 export { PredefinedMcpIntegration } from './integrations/predefined-mcp-integration.entity';
-export { MarketplaceMcpIntegration } from './integrations/marketplace-mcp-integration.entity';
-export { SelfDefinedMcpIntegration } from './integrations/self-defined-mcp-integration.entity';

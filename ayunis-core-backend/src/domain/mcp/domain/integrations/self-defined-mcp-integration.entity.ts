@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import { McpIntegration } from '../mcp-integration.entity';
+import { ConfigSchemaMcpIntegration } from './config-schema-mcp-integration.entity';
 import type { McpIntegrationAuth } from '../auth/mcp-integration-auth.entity';
 import { McpIntegrationKind } from '../value-objects/mcp-integration-kind.enum';
 import type { IntegrationConfigSchema } from '../value-objects/integration-config-schema';
@@ -13,11 +13,7 @@ import type { IntegrationConfigSchema } from '../value-objects/integration-confi
  * by the dedicated OAuth token table) rather than the legacy auth entity
  * hierarchy. The auth entity is always `NoAuthMcpIntegrationAuth`.
  */
-export class SelfDefinedMcpIntegration extends McpIntegration {
-  public readonly configSchema: IntegrationConfigSchema;
-  private _orgConfigValues: Record<string, string>;
-  private readonly _serverUrl: string;
-
+export class SelfDefinedMcpIntegration extends ConfigSchemaMcpIntegration {
   constructor(params: {
     id?: UUID;
     orgId: UUID;
@@ -41,6 +37,9 @@ export class SelfDefinedMcpIntegration extends McpIntegration {
       id: params.id,
       orgId: params.orgId,
       name: params.name,
+      serverUrl: params.serverUrl,
+      configSchema: params.configSchema,
+      orgConfigValues: params.orgConfigValues,
       enabled: params.enabled,
       createdAt: params.createdAt,
       updatedAt: params.updatedAt,
@@ -53,26 +52,9 @@ export class SelfDefinedMcpIntegration extends McpIntegration {
       oauthClientId: params.oauthClientId,
       oauthClientSecretEncrypted: params.oauthClientSecretEncrypted,
     });
-
-    this.configSchema = params.configSchema;
-    this._orgConfigValues = { ...params.orgConfigValues };
-    this._serverUrl = params.serverUrl;
   }
 
   get kind(): McpIntegrationKind {
     return McpIntegrationKind.SELF_DEFINED;
-  }
-
-  get serverUrl(): string {
-    return this._serverUrl;
-  }
-
-  get orgConfigValues(): Record<string, string> {
-    return { ...this._orgConfigValues };
-  }
-
-  updateOrgConfigValues(values: Record<string, string>): void {
-    this._orgConfigValues = { ...values };
-    this.touch();
   }
 }

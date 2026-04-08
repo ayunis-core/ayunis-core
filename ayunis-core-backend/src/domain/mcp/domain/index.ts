@@ -2,6 +2,7 @@ export { McpIntegration } from './mcp-integration.entity';
 export { McpIntegrationKind } from './value-objects/mcp-integration-kind.enum';
 export { CustomMcpIntegration } from './integrations/custom-mcp-integration.entity';
 export { PredefinedMcpIntegration } from './integrations/predefined-mcp-integration.entity';
+export { ConfigSchemaMcpIntegration } from './integrations/config-schema-mcp-integration.entity';
 export { MarketplaceMcpIntegration } from './integrations/marketplace-mcp-integration.entity';
 export { SelfDefinedMcpIntegration } from './integrations/self-defined-mcp-integration.entity';
 export { McpIntegrationUserConfig } from './mcp-integration-user-config.entity';
