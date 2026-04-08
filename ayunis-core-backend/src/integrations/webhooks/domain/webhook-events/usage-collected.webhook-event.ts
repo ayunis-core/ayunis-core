@@ -6,7 +6,7 @@ import { WebhookEventType } from '../value-objects/webhook-event-type.enum';
 
 export interface UsageCollectedWebhookPayload {
   id: UUID;
-  userId: UUID;
+  userId: UUID | null;
   organizationId: UUID;
   modelId: UUID;
   modelName: string;
