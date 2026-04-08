@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Model } from '../../../../domain/model.entity';
 import { LanguageModel } from '../../../../domain/models/language.model';
 import { EmbeddingModel } from '../../../../domain/models/embedding.model';
+import { ModelTier } from '../../../../domain/value-objects/model-tier.enum';
 import {
   ModelRecord,
   LanguageModelRecord,
@@ -10,6 +11,28 @@ import {
 
 @Injectable()
 export class ModelMapper {
+  private readonly logger = new Logger(ModelMapper.name);
+
+  private parseTier(
+    value: string | null | undefined,
+    rowId: string,
+    rowName: string,
+  ): ModelTier | undefined {
+    if (value === null || value === undefined) {
+      return undefined;
+    }
+    const allowed = Object.values(ModelTier) as string[];
+    if (allowed.includes(value)) {
+      return value as ModelTier;
+    }
+    this.logger.warn('Encountered unknown model tier value, ignoring', {
+      value,
+      modelId: rowId,
+      modelName: rowName,
+    });
+    return undefined;
+  }
+
   toDomain(record: ModelRecord): Model {
     // TypeORM will provide the concrete record type based on the discriminator
     if (record instanceof LanguageModelRecord) {
@@ -27,6 +50,7 @@ export class ModelMapper {
         updatedAt: record.updatedAt,
         inputTokenCost: record.inputTokenCost,
         outputTokenCost: record.outputTokenCost,
+        tier: this.parseTier(record.tier, record.id, record.name),
       });
     }
 
@@ -64,6 +88,7 @@ export class ModelMapper {
       record.updatedAt = domain.updatedAt;
       record.inputTokenCost = domain.inputTokenCost;
       record.outputTokenCost = domain.outputTokenCost;
+      record.tier = domain.tier ?? null;
       return record;
     }
 

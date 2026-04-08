@@ -1,6 +1,7 @@
 import type { ModelProvider } from '../value-objects/model-provider.enum';
 import { Model } from '../model.entity';
 import { ModelType } from '../value-objects/model-type.enum';
+import type { ModelTier } from '../value-objects/model-tier.enum';
 import type { UUID } from 'crypto';
 
 export class LanguageModel extends Model {
@@ -12,6 +13,12 @@ export class LanguageModel extends Model {
   public readonly inputTokenCost?: number;
   /** Cost per million output tokens in EUR */
   public readonly outputTokenCost?: number;
+  /**
+   * Fair-use tier label assigned by super admins. Drives quota bucket
+   * selection. Optional today; runtime fallback for untiered models is
+   * tracked in AYC-109.
+   */
+  public readonly tier?: ModelTier;
 
   constructor(params: {
     id?: UUID;
@@ -27,6 +34,7 @@ export class LanguageModel extends Model {
     isArchived: boolean;
     inputTokenCost?: number;
     outputTokenCost?: number;
+    tier?: ModelTier;
   }) {
     super({ ...params, type: ModelType.LANGUAGE });
     this.canStream = params.canStream;
@@ -35,5 +43,6 @@ export class LanguageModel extends Model {
     this.canVision = params.canVision;
     this.inputTokenCost = params.inputTokenCost;
     this.outputTokenCost = params.outputTokenCost;
+    this.tier = params.tier;
   }
 }

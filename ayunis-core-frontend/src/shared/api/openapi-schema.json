@@ -8263,6 +8263,12 @@
             "type": "boolean",
             "description": "Whether this model enforces anonymous mode. Null if not permitted.",
             "nullable": true
+          },
+          "tier": {
+            "type": "string",
+            "enum": ["low", "medium", "high"],
+            "description": "Fair-use tier label assigned by super admins; drives quota bucket selection. Undefined for embedding models and untiered language models.",
+            "example": "medium"
           }
         },
         "required": [
@@ -8639,6 +8645,12 @@
             "description": "Cost per million output tokens in EUR",
             "example": 15,
             "minimum": 0
+          },
+          "tier": {
+            "type": "string",
+            "description": "Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
+            "enum": ["low", "medium", "high"],
+            "example": "medium"
           }
         },
         "required": [
@@ -8720,6 +8732,12 @@
             "description": "Cost per million output tokens in EUR",
             "example": 15,
             "minimum": 0
+          },
+          "tier": {
+            "type": "string",
+            "description": "Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
+            "enum": ["low", "medium", "high"],
+            "example": "medium"
           }
         },
         "required": [
@@ -8948,6 +8966,12 @@
             "type": "number",
             "description": "Cost per million output tokens in EUR",
             "example": 15
+          },
+          "tier": {
+            "type": "string",
+            "enum": ["low", "medium", "high"],
+            "description": "Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
+            "example": "medium"
           }
         },
         "required": [

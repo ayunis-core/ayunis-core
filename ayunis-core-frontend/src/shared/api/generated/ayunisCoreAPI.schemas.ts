@@ -47,6 +47,19 @@ export const ModelWithConfigResponseDtoProvider = {
   scaleway: 'scaleway',
 } as const;
 
+/**
+ * Fair-use tier label assigned by super admins; drives quota bucket selection. Undefined for embedding models and untiered language models.
+ */
+export type ModelWithConfigResponseDtoTier = typeof ModelWithConfigResponseDtoTier[keyof typeof ModelWithConfigResponseDtoTier];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelWithConfigResponseDtoTier = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
 export interface ModelWithConfigResponseDto {
   /** The id of the model */
   modelId: string;
@@ -80,6 +93,8 @@ export interface ModelWithConfigResponseDto {
    * @nullable
    */
   anonymousOnly: boolean | null;
+  /** Fair-use tier label assigned by super admins; drives quota bucket selection. Undefined for embedding models and untiered language models. */
+  tier?: ModelWithConfigResponseDtoTier;
 }
 
 /**
@@ -320,6 +335,19 @@ export const CreateLanguageModelRequestDtoProvider = {
   scaleway: 'scaleway',
 } as const;
 
+/**
+ * Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109.
+ */
+export type CreateLanguageModelRequestDtoTier = typeof CreateLanguageModelRequestDtoTier[keyof typeof CreateLanguageModelRequestDtoTier];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateLanguageModelRequestDtoTier = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
 export interface CreateLanguageModelRequestDto {
   /** The name of the model */
   name: string;
@@ -347,6 +375,8 @@ export interface CreateLanguageModelRequestDto {
    * @minimum 0
    */
   outputTokenCost?: number;
+  /** Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109. */
+  tier?: CreateLanguageModelRequestDtoTier;
 }
 
 /**
@@ -369,6 +399,19 @@ export const UpdateLanguageModelRequestDtoProvider = {
   gemini: 'gemini',
   stackit: 'stackit',
   scaleway: 'scaleway',
+} as const;
+
+/**
+ * Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109.
+ */
+export type UpdateLanguageModelRequestDtoTier = typeof UpdateLanguageModelRequestDtoTier[keyof typeof UpdateLanguageModelRequestDtoTier];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateLanguageModelRequestDtoTier = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
 } as const;
 
 export interface UpdateLanguageModelRequestDto {
@@ -398,6 +441,8 @@ export interface UpdateLanguageModelRequestDto {
    * @minimum 0
    */
   outputTokenCost?: number;
+  /** Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109. */
+  tier?: UpdateLanguageModelRequestDtoTier;
 }
 
 /**
@@ -549,6 +594,19 @@ export const LanguageModelResponseDtoType = {
   language: 'language',
 } as const;
 
+/**
+ * Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109.
+ */
+export type LanguageModelResponseDtoTier = typeof LanguageModelResponseDtoTier[keyof typeof LanguageModelResponseDtoTier];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const LanguageModelResponseDtoTier = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
 export interface LanguageModelResponseDto {
   /** The unique identifier of the model */
   id: string;
@@ -578,6 +636,8 @@ export interface LanguageModelResponseDto {
   inputTokenCost?: number;
   /** Cost per million output tokens in EUR */
   outputTokenCost?: number;
+  /** Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109. */
+  tier?: LanguageModelResponseDtoTier;
 }
 
 /**

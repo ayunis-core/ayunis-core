@@ -1,6 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 
 export class ModelWithConfigResponseDto {
   @ApiProperty({
@@ -84,4 +85,12 @@ export class ModelWithConfigResponseDto {
     nullable: true,
   })
   anonymousOnly?: boolean;
+
+  @ApiPropertyOptional({
+    enum: ModelTier,
+    description:
+      'Fair-use tier label assigned by super admins; drives quota bucket selection. Undefined for embedding models and untiered language models.',
+    example: ModelTier.MEDIUM,
+  })
+  tier?: ModelTier;
 }

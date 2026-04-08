@@ -69,6 +69,15 @@ export class LanguageModelRecord extends ModelRecord {
 
   @Column(tokenCostColumnOptions)
   outputTokenCost?: number;
+
+  // Stored as varchar (not a Postgres enum) on purpose: adding new tiers later
+  // should not require an `ALTER TYPE` migration. The allow-list in
+  // ModelMapper.parseTier defends against stray values when reading.
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  tier?: string | null;
 }
 
 @ChildEntity(ModelType.EMBEDDING)

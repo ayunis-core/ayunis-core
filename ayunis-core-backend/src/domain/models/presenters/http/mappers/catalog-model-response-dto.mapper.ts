@@ -25,6 +25,7 @@ export class CatalogModelResponseDtoMapper {
       updatedAt: model.updatedAt,
       inputTokenCost: model.inputTokenCost,
       outputTokenCost: model.outputTokenCost,
+      tier: model.tier,
     };
   }
 

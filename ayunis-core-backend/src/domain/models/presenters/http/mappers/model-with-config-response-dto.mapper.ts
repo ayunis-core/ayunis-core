@@ -32,6 +32,7 @@ export class ModelWithConfigResponseDtoMapper {
         isDefault,
         isEmbedding: model instanceof EmbeddingModel ? true : false,
         anonymousOnly: permittedModel?.anonymousOnly,
+        tier: model instanceof LanguageModel ? model.tier : undefined,
       };
     });
   }
