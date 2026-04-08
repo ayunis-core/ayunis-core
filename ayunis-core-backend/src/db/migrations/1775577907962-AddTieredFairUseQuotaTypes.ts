@@ -4,10 +4,10 @@ export class AddTieredFairUseQuotaTypes1775577907962 implements MigrationInterfa
   name = 'AddTieredFairUseQuotaTypes1775577907962';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // NOTE: legacy `FAIR_USE_MESSAGES` is intentionally retained in the DB
-    // enum so the AYC-109 step-11 migration can DELETE the legacy rows by
-    // literal comparison. Do not regenerate this — discard any auto-generated
-    // migration that drops `FAIR_USE_MESSAGES` from the enum.
+    // Historical note: legacy `FAIR_USE_MESSAGES` is retained in the DB enum
+    // here so the AYC-109 step-11 migration
+    // (1775583877301-RemoveLegacyFairUseMessagesQuotaType) can DELETE the
+    // legacy rows by literal comparison before dropping the enum value.
     // Drop the unique constraint and supporting index temporarily so we can
     // swap the column type to the new enum without dropping data.
     await queryRunner.query(
