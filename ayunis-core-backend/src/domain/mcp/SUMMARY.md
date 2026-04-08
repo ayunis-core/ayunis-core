@@ -22,17 +22,24 @@ The MCP module manages connections to external Model Context Protocol servers at
 - `GetMcpPromptUseCase` — Fetches a prompt from a remote MCP server
 - `SetUserMcpConfigUseCase` — Saves per-user config values for a marketplace integration
 - `GetUserMcpConfigUseCase` — Retrieves per-user config values (with secret masking)
+- `StartMcpOAuthAuthorizationUseCase` — Initiates OAuth authorization flow, returns authorization URL
+- `CompleteMcpOAuthAuthorizationUseCase` — Handles OAuth callback, exchanges code for tokens
+- `RevokeMcpOAuthAuthorizationUseCase` — Revokes stored OAuth tokens
+- `GetMcpOAuthAuthorizationStatusUseCase` — Returns authorization status for an integration
 
 **Services:**
 - `McpClientService` — Handles actual server communication via the MCP SDK
 - `MarketplaceConfigService` — Resolves effective server URL and auth headers by merging org-level and user-level config values against the integration's config schema
 - `ConnectionValidationService` — Validates MCP server connectivity, used by `ValidateMcpIntegrationUseCase`
+- `OAuthFlowService` — Orchestrates OAuth 2.1 + PKCE flows (authorization URL building, code exchange, lazy token refresh, revocation, status queries)
 
 **Ports:**
 - `McpIntegrationsRepository` — Persistence port for MCP integrations
 - `McpIntegrationUserConfigRepository` — Persistence port for per-user config values
 - `McpClientPort` — Abstract port for MCP server communication
 - `McpCredentialEncryptionPort` — Abstract port for credential encryption/decryption
+- `McpIntegrationOAuthTokenRepositoryPort` — Abstract repository for OAuth token persistence
+- `McpOAuthStatePort` — Abstract port for signing/verifying OAuth state JWTs
 
 **Presenters:**
 - `McpIntegrationsController` — REST controller exposing:
