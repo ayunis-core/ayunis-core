@@ -74,13 +74,28 @@ export class McpIntegrationFactory {
         return this.createMarketplace(base, params);
       case McpIntegrationKind.CUSTOM:
         return new CustomMcpIntegration(base);
-      default:
+      case McpIntegrationKind.SELF_DEFINED:
+        // SELF_DEFINED factory branch is added in a later step (Step 2).
+        // Until then this branch is unreachable because no caller constructs
+        // a SELF_DEFINED kind via the factory.
         throw new Error(
-          `Unknown MCP integration kind: ${params.kind as string}`,
+          'SELF_DEFINED MCP integration factory branch not yet implemented (Step 2)',
         );
+      default: {
+        // Exhaustiveness guard: if a new `McpIntegrationKind` is added, this
+        // assignment fails to compile and points directly at this switch.
+        // It also keeps a runtime safety net for unknown kinds slipping in
+        // via `as any`, stale DB rows, or JSON rehydration.
+        const _exhaustive: never = params.kind;
+        throw new Error(
+          `Unknown MCP integration kind: ${_exhaustive as string}`,
+        );
+      }
     }
   }
 
+  // OAuth client credentials are not threaded through this helper yet — they
+  // are set per-kind via `setOAuthClientCredentials()` in Steps 2 and 7.
   private extractBaseParams(params: CreateIntegrationParams) {
     return {
       id: params.id,
