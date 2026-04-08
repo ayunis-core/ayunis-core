@@ -53,10 +53,10 @@ export class McpClientService {
     integration: McpIntegration,
     userId?: UUID,
   ): Promise<McpConnectionConfig> {
-    if (integration instanceof MarketplaceMcpIntegration) {
-      return this.buildSchemaConnectionConfig(integration, userId);
-    }
-    if (integration instanceof SelfDefinedMcpIntegration) {
+    if (
+      integration instanceof MarketplaceMcpIntegration ||
+      integration instanceof SelfDefinedMcpIntegration
+    ) {
       return this.buildSchemaConnectionConfig(integration, userId);
     }
     return this.buildLegacyConnectionConfig(integration);
