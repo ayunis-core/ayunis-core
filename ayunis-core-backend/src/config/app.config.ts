@@ -27,5 +27,5 @@ export const appConfig = registerAs('app', () => ({
   webhookSigningSecret: process.env.WEBHOOK_SIGNING_SECRET,
   isDevelopment: process.env.NODE_ENV === 'development',
   isTest: process.env.NODE_ENV === 'test',
-  isProduction: process.env.APP_ENVIRONMENT === 'production',
+  isProduction: process.env.NODE_ENV === 'production',
 }));
