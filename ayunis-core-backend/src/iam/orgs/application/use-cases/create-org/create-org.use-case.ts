@@ -1,15 +1,20 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { CreateOrgCommand } from './create-org.command';
 import { Org } from '../../../domain/org.entity';
 import { OrgCreationFailedError } from '../../orgs.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { OrgCreatedEvent } from '../../events/org-created.event';
 
 @Injectable()
 export class CreateOrgUseCase {
   private readonly logger = new Logger(CreateOrgUseCase.name);
 
-  constructor(private readonly orgsRepository: OrgsRepository) {}
+  constructor(
+    private readonly orgsRepository: OrgsRepository,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async execute(command: CreateOrgCommand): Promise<Org> {
     this.logger.log('create', { name: command.name });
@@ -28,8 +33,17 @@ export class CreateOrgUseCase {
         name: createdOrg.name,
       });
 
-      // The webhook for org creationwill be sent in the register user use case
-      // So that we can send the registered user's email and name with it
+      this.eventEmitter
+        .emitAsync(
+          OrgCreatedEvent.EVENT_NAME,
+          new OrgCreatedEvent(createdOrg.id, createdOrg),
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit OrgCreatedEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            orgId: createdOrg.id,
+          });
+        });
 
       return createdOrg;
     } catch (error) {

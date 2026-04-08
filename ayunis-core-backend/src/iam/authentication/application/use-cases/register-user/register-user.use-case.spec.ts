@@ -24,9 +24,7 @@ import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/applicat
 import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
 import { CreateTrialUseCase } from 'src/iam/trials/application/use-cases/create-trial/create-trial.use-case';
 import { ConfigService } from '@nestjs/config';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { FindUserByEmailUseCase } from '../../../../users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
-import { OrgCreatedEvent } from '../../../../orgs/application/events/org-created.event';
 
 describe('RegisterUserUseCase', () => {
   let useCase: RegisterUserUseCase;
@@ -34,7 +32,6 @@ describe('RegisterUserUseCase', () => {
   let mockIsValidPasswordUseCase: Partial<IsValidPasswordUseCase>;
   let mockCreateOrgUseCase: Partial<CreateOrgUseCase>;
   let mockFindUserByEmailUseCase: Partial<FindUserByEmailUseCase>;
-  let eventEmitter: jest.Mocked<Pick<EventEmitter2, 'emitAsync'>>;
 
   beforeAll(async () => {
     mockCreateAdminUserUseCase = {
@@ -79,15 +76,10 @@ describe('RegisterUserUseCase', () => {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue(false) },
         },
-        {
-          provide: EventEmitter2,
-          useValue: { emitAsync: jest.fn().mockResolvedValue([]) },
-        },
       ],
     }).compile();
 
     useCase = module.get<RegisterUserUseCase>(RegisterUserUseCase);
-    eventEmitter = module.get(EventEmitter2);
   });
   beforeEach(() => {
     jest.clearAllMocks();
@@ -143,21 +135,6 @@ describe('RegisterUserUseCase', () => {
         orgId: 'org-id',
       }),
     );
-    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
-      OrgCreatedEvent.EVENT_NAME,
-      expect.objectContaining({
-        orgId: 'org-id',
-        org: mockOrg,
-      }),
-    );
-    // OrgCreatedEvent must no longer carry the user — that's what
-    // user.created is for.
-    const orgCreatedCall = (
-      eventEmitter.emitAsync as jest.Mock
-    ).mock.calls.find(
-      ([eventName]: [string]) => eventName === OrgCreatedEvent.EVENT_NAME,
-    );
-    expect(orgCreatedCall?.[1]).not.toHaveProperty('user');
   });
 
   it('should pass department to create-admin-user command', async () => {
@@ -208,7 +185,6 @@ describe('RegisterUserUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow(
       InvalidPasswordError,
     );
-    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 
   it('should throw AuthenticationFailedError for unexpected errors', async () => {
@@ -228,6 +204,5 @@ describe('RegisterUserUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow(
       UnexpectedAuthenticationError,
     );
-    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 });
