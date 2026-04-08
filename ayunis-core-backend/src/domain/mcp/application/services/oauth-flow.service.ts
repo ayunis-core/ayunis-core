@@ -358,26 +358,20 @@ export class OAuthFlowService {
 
     const configSchema = this.getOAuthConfigOrThrow(integration);
 
+    let newTokens;
     try {
       const decryptedRefreshToken = await this.credentialEncryption.decrypt(
         tokenRow.refreshTokenEncrypted,
       );
       const decryptedClientSecret = await this.decryptClientSecret(integration);
 
-      const newTokens = await refreshAuthorization(
-        configSchema.oauth!.tokenUrl,
-        {
-          clientInformation: {
-            client_id: integration.oauthClientId!,
-            client_secret: decryptedClientSecret,
-          },
-          refreshToken: decryptedRefreshToken,
+      newTokens = await refreshAuthorization(configSchema.oauth!.tokenUrl, {
+        clientInformation: {
+          client_id: integration.oauthClientId!,
+          client_secret: decryptedClientSecret,
         },
-      );
-
-      await this.upsertTokens(integration.id, tokenRow.userId, newTokens);
-
-      return newTokens.access_token;
+        refreshToken: decryptedRefreshToken,
+      });
     } catch (error) {
       this.logger.warn('OAuth refresh failed, requiring re-authorization', {
         integrationId: integration.id,
@@ -390,5 +384,9 @@ export class OAuthFlowService {
       );
       throw new McpOAuthAuthorizationRequiredError(integration.id);
     }
+
+    await this.upsertTokens(integration.id, tokenRow.userId, newTokens);
+
+    return newTokens.access_token;
   }
 }
