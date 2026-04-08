@@ -6,6 +6,7 @@ import { DeleteMcpIntegrationUseCase } from './delete-mcp-integration.use-case';
 import { DeleteMcpIntegrationCommand } from './delete-mcp-integration.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
+import { McpIntegrationOAuthTokenRepositoryPort } from '../../ports/mcp-integration-oauth-token.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
@@ -20,6 +21,7 @@ describe('DeleteMcpIntegrationUseCase', () => {
   let useCase: DeleteMcpIntegrationUseCase;
   let repository: McpIntegrationsRepositoryPort;
   let userConfigRepository: McpIntegrationUserConfigRepositoryPort;
+  let oauthTokenRepository: McpIntegrationOAuthTokenRepositoryPort;
   let contextService: ContextService;
   let loggerLogSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
@@ -65,6 +67,12 @@ describe('DeleteMcpIntegrationUseCase', () => {
           },
         },
         {
+          provide: McpIntegrationOAuthTokenRepositoryPort,
+          useValue: {
+            deleteAllByIntegration: jest.fn(),
+          },
+        },
+        {
           provide: ContextService,
           useValue: {
             get: jest.fn(),
@@ -81,6 +89,9 @@ describe('DeleteMcpIntegrationUseCase', () => {
     );
     userConfigRepository = module.get<McpIntegrationUserConfigRepositoryPort>(
       McpIntegrationUserConfigRepositoryPort,
+    );
+    oauthTokenRepository = module.get<McpIntegrationOAuthTokenRepositoryPort>(
+      McpIntegrationOAuthTokenRepositoryPort,
     );
     contextService = module.get<ContextService>(ContextService);
 
@@ -134,6 +145,25 @@ describe('DeleteMcpIntegrationUseCase', () => {
 
       // Assert
       expect(userConfigRepository.deleteByIntegrationId).toHaveBeenCalledWith(
+        mockIntegrationId,
+      );
+    });
+
+    it('should delete associated OAuth tokens when deleting an integration', async () => {
+      // Arrange
+      const mockIntegration = buildIntegration();
+
+      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
+      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
+      jest.spyOn(repository, 'delete').mockResolvedValue(undefined);
+
+      const command = new DeleteMcpIntegrationCommand(mockIntegrationId);
+
+      // Act
+      await useCase.execute(command);
+
+      // Assert
+      expect(oauthTokenRepository.deleteAllByIntegration).toHaveBeenCalledWith(
         mockIntegrationId,
       );
     });
