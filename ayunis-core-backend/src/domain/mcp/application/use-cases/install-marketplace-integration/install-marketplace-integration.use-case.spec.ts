@@ -13,7 +13,8 @@ import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketpl
 import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
 import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
 import {
-  McpOAuthNotSupportedError,
+  McpOAuthClientNotConfiguredError,
+  McpAuthorizationHeaderCollisionError,
   McpMissingRequiredConfigError,
   DuplicateMarketplaceMcpIntegrationError,
 } from '../../mcp.errors';
@@ -26,6 +27,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
   let getMarketplaceIntegrationUseCase: jest.Mocked<GetMarketplaceIntegrationUseCase>;
   let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
   let credentialEncryption: jest.Mocked<McpCredentialEncryptionPort>;
+  let credentialEncryptionForUseCase: jest.Mocked<McpCredentialEncryptionPort>;
   let marketplaceConfigService: MarketplaceConfigService;
   let factory: McpIntegrationFactory;
   let authFactory: McpIntegrationAuthFactory;
@@ -101,9 +103,9 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
       authType: 'OAUTH',
       orgFields: [
         {
-          key: 'clientId',
+          key: 'tenantId',
           type: 'text' as const,
-          label: 'Client ID',
+          label: 'Tenant ID',
           headerName: null,
           prefix: null,
           required: true,
@@ -112,6 +114,40 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
         },
       ],
       userFields: [],
+      oauth: {
+        authorizationUrl: 'https://auth.example.com/authorize',
+        tokenUrl: 'https://auth.example.com/token',
+        scopes: ['read', 'write'],
+        level: 'org',
+      },
+    },
+  };
+
+  const oauthWithCollisionResponse: IntegrationResponseDto = {
+    ...oparlMarketplaceResponse,
+    identifier: 'oauth-collision',
+    name: 'OAuth Collision Integration',
+    configSchema: {
+      authType: 'OAUTH',
+      orgFields: [
+        {
+          key: 'authHeader',
+          type: 'secret' as const,
+          label: 'Auth Header',
+          headerName: 'Authorization',
+          prefix: null,
+          required: true,
+          help: null,
+          value: null,
+        },
+      ],
+      userFields: [],
+      oauth: {
+        authorizationUrl: 'https://auth.example.com/authorize',
+        tokenUrl: 'https://auth.example.com/token',
+        scopes: ['read'],
+        level: 'org',
+      },
     },
   };
 
@@ -135,6 +171,11 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
       decrypt: jest.fn(),
     } as jest.Mocked<McpCredentialEncryptionPort>;
 
+    credentialEncryptionForUseCase = {
+      encrypt: jest.fn(),
+      decrypt: jest.fn(),
+    } as jest.Mocked<McpCredentialEncryptionPort>;
+
     factory = new McpIntegrationFactory();
     authFactory = new McpIntegrationAuthFactory();
 
@@ -150,6 +191,9 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
 
     repository.save.mockImplementation(async (integration) => integration);
     credentialEncryption.encrypt.mockImplementation(
+      async (plaintext) => `encrypted:${plaintext}`,
+    );
+    credentialEncryptionForUseCase.encrypt.mockImplementation(
       async (plaintext) => `encrypted:${plaintext}`,
     );
     validateUseCase.execute.mockResolvedValue({
@@ -175,6 +219,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
       authFactory,
       connectionValidationService,
       contextService,
+      credentialEncryptionForUseCase,
     );
   });
 
@@ -270,7 +315,32 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
     expect(credentialEncryption.encrypt).not.toHaveBeenCalled();
   });
 
-  it('should reject OAUTH auth type', async () => {
+  it('should install an OAuth integration when client credentials are provided', async () => {
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
+      oauthIntegrationResponse,
+    );
+
+    const result = await useCase.execute(
+      new InstallMarketplaceIntegrationCommand(
+        'oauth-integration',
+        { tenantId: 'my-tenant' },
+        undefined,
+        'my-client-id',
+        'my-client-secret',
+      ),
+    );
+
+    expect(result).toBeInstanceOf(MarketplaceMcpIntegration);
+    expect(result.oauthClientId).toBe('my-client-id');
+    expect(result.oauthClientSecretEncrypted).toBe(
+      'encrypted:my-client-secret',
+    );
+    expect(credentialEncryptionForUseCase.encrypt).toHaveBeenCalledWith(
+      'my-client-secret',
+    );
+  });
+
+  it('should throw McpOAuthClientNotConfiguredError when OAuth schema present but no client credentials', async () => {
     getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
       oauthIntegrationResponse,
     );
@@ -278,10 +348,28 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
     await expect(
       useCase.execute(
         new InstallMarketplaceIntegrationCommand('oauth-integration', {
-          clientId: 'my-client',
+          tenantId: 'my-tenant',
         }),
       ),
-    ).rejects.toThrow(McpOAuthNotSupportedError);
+    ).rejects.toThrow(McpOAuthClientNotConfiguredError);
+  });
+
+  it('should throw McpAuthorizationHeaderCollisionError when OAuth + Authorization headerName', async () => {
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
+      oauthWithCollisionResponse,
+    );
+
+    await expect(
+      useCase.execute(
+        new InstallMarketplaceIntegrationCommand(
+          'oauth-collision',
+          { authHeader: 'some-value' },
+          undefined,
+          'client-id',
+          'client-secret',
+        ),
+      ),
+    ).rejects.toThrow(McpAuthorizationHeaderCollisionError);
   });
 
   it('should throw when required org fields are missing', async () => {
