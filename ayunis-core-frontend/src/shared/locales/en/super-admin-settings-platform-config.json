@@ -13,5 +13,26 @@
     "validationError": "Please enter a positive number.",
     "hint": "Changing this value only affects future usage records. Historical records retain their original credit values.",
     "notConfigured": "No value has been configured yet. Please set an initial value."
+  },
+  "fairUseLimits": {
+    "title": "Fair Use Limits",
+    "description": "Per-tier sliding-window quotas applied to chat messages. Each tier has its own bucket so users can send more cheap-tier messages without exhausting expensive-tier capacity.",
+    "loading": "Loading…",
+    "loadError": "Failed to load fair-use limits.",
+    "tier": {
+      "low": "Low tier",
+      "medium": "Medium tier",
+      "high": "High tier"
+    },
+    "limit": "Messages",
+    "windowHours": "Window (hours)",
+    "save": "Save",
+    "cancel": "Cancel",
+    "updateSuccess": "Fair-use limit updated successfully.",
+    "updateError": "Failed to update fair-use limit.",
+    "validationError": {
+      "limit": "Messages must be a positive integer.",
+      "windowHours": "Window must be at least 0.01 hours."
+    }
   }
 }
