@@ -1,6 +1,13 @@
 import { registerAs } from '@nestjs/config';
 
 export const appConfig = registerAs('app', () => ({
+  backend: {
+    baseUrl: process.env.BACKEND_BASEURL ?? 'http://localhost:3000',
+  },
+  mcp: {
+    oauthStateSecret:
+      process.env.MCP_OAUTH_STATE_SECRET ?? 'dev-mcp-oauth-state-secret',
+  },
   port: process.env.PORT || 3000,
   disableRegistration: process.env.DISABLE_REGISTRATION === 'true',
   isSelfHosted: process.env.APP_ENVIRONMENT === 'self-hosted',
