@@ -5,6 +5,8 @@ import { PlatformConfigRepositoryPort } from './application/ports/platform-confi
 import { PlatformConfigRepository } from './infrastructure/persistence/postgres/platform-config.repository';
 import { GetCreditsPerEuroUseCase } from './application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
 import { SetCreditsPerEuroUseCase } from './application/use-cases/set-credits-per-euro/set-credits-per-euro.use-case';
+import { GetFairUseLimitsUseCase } from './application/use-cases/get-fair-use-limits/get-fair-use-limits.use-case';
+import { SetFairUseLimitUseCase } from './application/use-cases/set-fair-use-limit/set-fair-use-limit.use-case';
 import { SuperAdminPlatformConfigController } from './presenters/http/super-admin-platform-config.controller';
 
 @Module({
@@ -17,7 +19,9 @@ import { SuperAdminPlatformConfigController } from './presenters/http/super-admi
     },
     GetCreditsPerEuroUseCase,
     SetCreditsPerEuroUseCase,
+    GetFairUseLimitsUseCase,
+    SetFairUseLimitUseCase,
   ],
-  exports: [GetCreditsPerEuroUseCase],
+  exports: [GetCreditsPerEuroUseCase, GetFairUseLimitsUseCase],
 })
 export class PlatformConfigModule {}

@@ -69,6 +69,7 @@ import type {
   EmbeddingModelEnabledResponseDto,
   EmbeddingModelResponseDto,
   ErrorResponseDto,
+  FairUseLimitsResponseDto,
   FeatureTogglesResponseDto,
   ForgotPasswordDto,
   GeneratePersonalizedSystemPromptDto,
@@ -116,6 +117,7 @@ import type {
   RunsControllerSendMessage200,
   RunsControllerSendMessageBody,
   SetCreditsPerEuroRequestDto,
+  SetFairUseLimitRequestDto,
   SetOrgDefaultModelDto,
   SetTeamDefaultModelDto,
   SetUserConfigDto,
@@ -15134,6 +15136,165 @@ export const useSuperAdminPlatformConfigControllerSetCreditsPerEuro = <TError = 
       > => {
 
       const mutationOptions = getSuperAdminPlatformConfigControllerSetCreditsPerEuroMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Retrieve the configured messages-per-window limit for low, medium, and high model tiers. Missing keys fall back to baked-in defaults so this endpoint always returns 200. Super admin only.
+ * @summary Get the current fair-use limits for every model tier
+ */
+export const superAdminPlatformConfigControllerGetFairUseLimits = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<FairUseLimitsResponseDto>(
+      {url: `/super-admin/platform-config/fair-use-limits`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryKey = () => {
+    return [
+    `/super-admin/platform-config/fair-use-limits`
+    ] as const;
+    }
+
+    
+export const getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryOptions = <TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>> = ({ signal }) => superAdminPlatformConfigControllerGetFairUseLimits(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminPlatformConfigControllerGetFairUseLimitsQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>>
+export type SuperAdminPlatformConfigControllerGetFairUseLimitsQueryError = void
+
+
+export function useSuperAdminPlatformConfigControllerGetFairUseLimits<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminPlatformConfigControllerGetFairUseLimits<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminPlatformConfigControllerGetFairUseLimits<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the current fair-use limits for every model tier
+ */
+
+export function useSuperAdminPlatformConfigControllerGetFairUseLimits<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Update the messages-per-window limit for one model tier (low, medium, or high). Super admin only.
+ * @summary Set the fair-use limit for a single model tier
+ */
+export const superAdminPlatformConfigControllerSetFairUseLimit = (
+    setFairUseLimitRequestDto: SetFairUseLimitRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/platform-config/fair-use-limits`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setFairUseLimitRequestDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminPlatformConfigControllerSetFairUseLimitMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>, TError,{data: SetFairUseLimitRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>, TError,{data: SetFairUseLimitRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminPlatformConfigControllerSetFairUseLimit'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>, {data: SetFairUseLimitRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminPlatformConfigControllerSetFairUseLimit(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminPlatformConfigControllerSetFairUseLimitMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>>
+    export type SuperAdminPlatformConfigControllerSetFairUseLimitMutationBody = SetFairUseLimitRequestDto
+    export type SuperAdminPlatformConfigControllerSetFairUseLimitMutationError = void
+
+    /**
+ * @summary Set the fair-use limit for a single model tier
+ */
+export const useSuperAdminPlatformConfigControllerSetFairUseLimit = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>, TError,{data: SetFairUseLimitRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetFairUseLimit>>,
+        TError,
+        {data: SetFairUseLimitRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminPlatformConfigControllerSetFairUseLimitMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
