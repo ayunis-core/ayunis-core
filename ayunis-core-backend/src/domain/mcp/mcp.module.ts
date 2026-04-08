@@ -58,6 +58,11 @@ import { DiscoverMcpCapabilitiesUseCase } from './application/use-cases/discover
 import { ExecuteMcpToolUseCase } from './application/use-cases/execute-mcp-tool/execute-mcp-tool.use-case';
 import { GetMcpPromptUseCase } from './application/use-cases/get-mcp-prompt/get-mcp-prompt.use-case';
 import { ValidateIntegrationAccessService } from './application/services/validate-integration-access.service';
+import { OAuthFlowService } from './application/services/oauth-flow.service';
+import { StartMcpOAuthAuthorizationUseCase } from './application/use-cases/start-mcp-oauth-authorization/start-mcp-oauth-authorization.use-case';
+import { CompleteMcpOAuthAuthorizationUseCase } from './application/use-cases/complete-mcp-oauth-authorization/complete-mcp-oauth-authorization.use-case';
+import { RevokeMcpOAuthAuthorizationUseCase } from './application/use-cases/revoke-mcp-oauth-authorization/revoke-mcp-oauth-authorization.use-case';
+import { GetMcpOAuthAuthorizationStatusUseCase } from './application/use-cases/get-mcp-oauth-authorization-status/get-mcp-oauth-authorization-status.use-case';
 
 // Controller and Mappers
 import { McpIntegrationsController } from './presenters/http/mcp-integrations.controller';
@@ -124,6 +129,7 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     ConnectionValidationService,
     PredefinedMcpIntegrationRegistry,
     ValidateIntegrationAccessService,
+    OAuthFlowService,
     // Use Cases
     CreateMcpIntegrationUseCase,
     GetMcpIntegrationUseCase,
@@ -143,6 +149,10 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     InstallMarketplaceIntegrationUseCase,
     SetUserMcpConfigUseCase,
     GetUserMcpConfigUseCase,
+    StartMcpOAuthAuthorizationUseCase,
+    CompleteMcpOAuthAuthorizationUseCase,
+    RevokeMcpOAuthAuthorizationUseCase,
+    GetMcpOAuthAuthorizationStatusUseCase,
     // Mappers
     McpIntegrationDtoMapper,
     PredefinedConfigDtoMapper,
