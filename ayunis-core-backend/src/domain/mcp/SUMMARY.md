@@ -33,6 +33,8 @@ The MCP module manages connections to external Model Context Protocol servers at
 - `McpIntegrationUserConfigRepository` — Persistence port for per-user config values
 - `McpClientPort` — Abstract port for MCP server communication
 - `McpCredentialEncryptionPort` — Abstract port for credential encryption/decryption
+- `McpOAuthStatePort` — Abstract port for creating and verifying OAuth state tokens (implemented by `JwtOAuthStateAdapter`)
+- `McpIntegrationOAuthTokenRepositoryPort` — Persistence port for OAuth access/refresh tokens per integration
 
 **Presenters:**
 - `McpIntegrationsController` — REST controller exposing:
