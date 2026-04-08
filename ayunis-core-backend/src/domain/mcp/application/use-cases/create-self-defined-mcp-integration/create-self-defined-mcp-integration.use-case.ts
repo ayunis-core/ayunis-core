@@ -12,11 +12,9 @@ import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integ
 import { SelfDefinedMcpIntegration } from '../../../domain/integrations/self-defined-mcp-integration.entity';
 import {
   McpOAuthClientNotConfiguredError,
-  McpAuthorizationHeaderCollisionError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { ConfigField } from '../../../domain/value-objects/integration-config-schema';
 
 @Injectable()
 export class CreateSelfDefinedMcpIntegrationUseCase {
@@ -52,7 +50,7 @@ export class CreateSelfDefinedMcpIntegrationUseCase {
         if (!command.oauthClientId || !command.oauthClientSecret) {
           throw new McpOAuthClientNotConfiguredError();
         }
-        this.assertNoAuthorizationHeaderCollision(
+        this.marketplaceConfigService.assertNoAuthorizationHeaderCollision(
           configSchema.orgFields,
           configSchema.userFields,
         );
@@ -122,19 +120,6 @@ export class CreateSelfDefinedMcpIntegrationUseCase {
         { error: error as Error },
       );
       throw new UnexpectedMcpError('Unexpected error occurred');
-    }
-  }
-
-  private assertNoAuthorizationHeaderCollision(
-    orgFields: ConfigField[],
-    userFields: ConfigField[],
-  ): void {
-    const allFields = [...orgFields, ...userFields];
-    const hasCollision = allFields.some(
-      (f) => f.headerName?.toLowerCase() === 'authorization',
-    );
-    if (hasCollision) {
-      throw new McpAuthorizationHeaderCollisionError();
     }
   }
 }
