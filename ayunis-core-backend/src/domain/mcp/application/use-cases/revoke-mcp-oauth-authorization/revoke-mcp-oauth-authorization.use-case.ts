@@ -4,13 +4,8 @@ import { RevokeMcpOAuthAuthorizationCommand } from './revoke-mcp-oauth-authoriza
 import { OAuthFlowService } from '../../services/oauth-flow.service';
 import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
 import { ContextService } from 'src/common/context/services/context.service';
-import {
-  McpInvalidConfigSchemaError,
-  McpUnauthenticatedError,
-  UnexpectedMcpError,
-} from '../../mcp.errors';
+import { McpUnauthenticatedError, UnexpectedMcpError } from '../../mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import type { IntegrationConfigSchema } from '../../../domain/value-objects/integration-config-schema';
 
 @Injectable()
 export class RevokeMcpOAuthAuthorizationUseCase {
@@ -40,14 +35,10 @@ export class RevokeMcpOAuthAuthorizationUseCase {
         { requireEnabled: false },
       );
 
-      const configSchema = this.extractConfigSchema(integration);
-      if (!configSchema?.oauth) {
-        throw new McpInvalidConfigSchemaError(
-          'Integration does not have OAuth configured',
-        );
-      }
+      const configSchema =
+        this.oauthFlowService.getOAuthConfigOrThrow(integration);
 
-      const level = configSchema.oauth.level;
+      const level = configSchema.oauth!.level;
       const userIdOrNull: UUID | null =
         level === 'user' ? (userId ?? null) : null;
 
@@ -61,19 +52,5 @@ export class RevokeMcpOAuthAuthorizationUseCase {
       });
       throw new UnexpectedMcpError('Unexpected error occurred');
     }
-  }
-
-  private extractConfigSchema(
-    integration: unknown,
-  ): IntegrationConfigSchema | undefined {
-    if (
-      integration &&
-      typeof integration === 'object' &&
-      'configSchema' in integration
-    ) {
-      return (integration as { configSchema: IntegrationConfigSchema })
-        .configSchema;
-    }
-    return undefined;
   }
 }

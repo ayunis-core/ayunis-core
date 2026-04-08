@@ -217,9 +217,7 @@ export class OAuthFlowService {
 
   // ── Private helpers ──────────────────────────────────────────────
 
-  private getOAuthConfigOrThrow(
-    integration: McpIntegration,
-  ): IntegrationConfigSchema {
+  getOAuthConfigOrThrow(integration: McpIntegration): IntegrationConfigSchema {
     const configSchema = this.extractConfigSchema(integration);
     if (!configSchema?.oauth) {
       throw new McpInvalidConfigSchemaError(
@@ -229,7 +227,7 @@ export class OAuthFlowService {
     return configSchema;
   }
 
-  private extractConfigSchema(
+  extractConfigSchema(
     integration: McpIntegration,
   ): IntegrationConfigSchema | undefined {
     // Both MarketplaceMcpIntegration and SelfDefinedMcpIntegration expose
@@ -289,9 +287,9 @@ export class OAuthFlowService {
     if (existing) {
       existing.updateTokens({
         accessTokenEncrypted,
-        refreshTokenEncrypted: refreshTokenEncrypted ?? null,
-        tokenExpiresAt: tokenExpiresAt ?? null,
-        scope: tokens.scope ?? null,
+        refreshTokenEncrypted,
+        tokenExpiresAt,
+        scope: tokens.scope,
       });
       await this.tokenRepository.save(existing);
     } else {
