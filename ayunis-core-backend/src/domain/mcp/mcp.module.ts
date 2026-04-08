@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { McpCredentialEncryptionPort } from './application/ports/mcp-credential-encryption.port';
 import { McpCredentialEncryptionService } from './infrastructure/encryption/mcp-credential-encryption.service';
@@ -29,6 +31,10 @@ import {
 import { McpIntegrationMapper } from './infrastructure/persistence/postgres/mappers/mcp-integration.mapper';
 import { McpIntegrationFactory } from './application/factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from './application/factories/mcp-integration-auth.factory';
+import { McpIntegrationOAuthTokenRepositoryPort } from './application/ports/mcp-integration-oauth-token.repository.port';
+import { McpOAuthStatePort } from './application/ports/mcp-oauth-state.port';
+import { JwtOAuthStateAdapter } from './infrastructure/oauth/jwt-oauth-state.adapter';
+import { McpIntegrationOAuthTokenRepository } from './infrastructure/persistence/postgres/mcp-integration-oauth-token.repository';
 import { SourcesModule } from '../sources/sources.module';
 import { MarketplaceModule } from '../marketplace/marketplace.module';
 
@@ -74,6 +80,13 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
       SelfDefinedMcpIntegrationRecord,
       McpIntegrationOAuthTokenRecord,
     ]),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.getOrThrow<string>('app.mcp.oauthStateSecret'),
+      }),
+    }),
     SourcesModule, // Import sources module for CreateDataSourceUseCase
     MarketplaceModule,
   ],
@@ -94,6 +107,14 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     {
       provide: McpIntegrationUserConfigRepositoryPort,
       useClass: McpIntegrationUserConfigRepository,
+    },
+    {
+      provide: McpOAuthStatePort,
+      useClass: JwtOAuthStateAdapter,
+    },
+    {
+      provide: McpIntegrationOAuthTokenRepositoryPort,
+      useClass: McpIntegrationOAuthTokenRepository,
     },
     McpIntegrationMapper,
     McpIntegrationFactory,
