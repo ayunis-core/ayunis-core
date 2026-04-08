@@ -63,6 +63,7 @@ import { StartMcpOAuthAuthorizationUseCase } from './application/use-cases/start
 import { CompleteMcpOAuthAuthorizationUseCase } from './application/use-cases/complete-mcp-oauth-authorization/complete-mcp-oauth-authorization.use-case';
 import { RevokeMcpOAuthAuthorizationUseCase } from './application/use-cases/revoke-mcp-oauth-authorization/revoke-mcp-oauth-authorization.use-case';
 import { GetMcpOAuthAuthorizationStatusUseCase } from './application/use-cases/get-mcp-oauth-authorization-status/get-mcp-oauth-authorization-status.use-case';
+import { CreateSelfDefinedMcpIntegrationUseCase } from './application/use-cases/create-self-defined-mcp-integration/create-self-defined-mcp-integration.use-case';
 
 // Controller and Mappers
 import { McpIntegrationsController } from './presenters/http/mcp-integrations.controller';
@@ -153,6 +154,7 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     CompleteMcpOAuthAuthorizationUseCase,
     RevokeMcpOAuthAuthorizationUseCase,
     GetMcpOAuthAuthorizationStatusUseCase,
+    CreateSelfDefinedMcpIntegrationUseCase,
     // Mappers
     McpIntegrationDtoMapper,
     PredefinedConfigDtoMapper,
