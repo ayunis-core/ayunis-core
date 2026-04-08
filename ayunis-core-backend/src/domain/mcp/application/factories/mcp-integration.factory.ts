@@ -81,6 +81,8 @@ export class McpIntegrationFactory {
         throw new Error(
           'SELF_DEFINED MCP integration factory branch not yet implemented',
         );
+      default:
+        throw new Error(`Unknown MCP integration kind: ${params.kind}`);
     }
   }
 
