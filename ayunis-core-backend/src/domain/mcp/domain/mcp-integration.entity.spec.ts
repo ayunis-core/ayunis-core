@@ -197,4 +197,71 @@ describe('McpIntegration (Base Class)', () => {
       expect(integration.getAuthType()).toBe(McpAuthMethod.BEARER_TOKEN);
     });
   });
+
+  describe('OAuth client credentials', () => {
+    it('should default oauthClientId and oauthClientSecretEncrypted to undefined', () => {
+      const integration = new CustomMcpIntegration({
+        name: 'Custom Integration',
+        orgId: randomUUID(),
+        serverUrl: 'http://custom-server:3000',
+        auth: new NoAuthMcpIntegrationAuth(),
+      });
+
+      expect(integration.oauthClientId).toBeUndefined();
+      expect(integration.oauthClientSecretEncrypted).toBeUndefined();
+    });
+
+    it('should set OAuth client credentials and refresh updatedAt', async () => {
+      const integration = new CustomMcpIntegration({
+        name: 'Custom Integration',
+        orgId: randomUUID(),
+        serverUrl: 'http://custom-server:3000',
+        auth: new NoAuthMcpIntegrationAuth(),
+      });
+
+      const previousUpdatedAt = integration.updatedAt;
+      await new Promise((resolve) => setTimeout(resolve, 2));
+
+      integration.setOAuthClient('client-abc-123', 'enc-secret-xyz');
+
+      expect(integration.oauthClientId).toBe('client-abc-123');
+      expect(integration.oauthClientSecretEncrypted).toBe('enc-secret-xyz');
+      expect(integration.updatedAt.getTime()).toBeGreaterThan(
+        previousUpdatedAt.getTime(),
+      );
+    });
+
+    it('should clear previously set OAuth client credentials', async () => {
+      const integration = new CustomMcpIntegration({
+        name: 'Custom Integration',
+        orgId: randomUUID(),
+        serverUrl: 'http://custom-server:3000',
+        auth: new NoAuthMcpIntegrationAuth(),
+      });
+
+      integration.setOAuthClient('client-abc-123', 'enc-secret-xyz');
+
+      const previousUpdatedAt = integration.updatedAt;
+      await new Promise((resolve) => setTimeout(resolve, 2));
+
+      integration.clearOAuthClient();
+
+      expect(integration.oauthClientId).toBeUndefined();
+      expect(integration.oauthClientSecretEncrypted).toBeUndefined();
+      expect(integration.updatedAt.getTime()).toBeGreaterThan(
+        previousUpdatedAt.getTime(),
+      );
+    });
+
+    it('should report isSelfDefined() === false for non-self-defined integrations', () => {
+      const integration = new CustomMcpIntegration({
+        name: 'Custom Integration',
+        orgId: randomUUID(),
+        serverUrl: 'http://custom-server:3000',
+        auth: new NoAuthMcpIntegrationAuth(),
+      });
+
+      expect(integration.isSelfDefined()).toBe(false);
+    });
+  });
 });

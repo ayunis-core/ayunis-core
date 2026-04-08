@@ -3,7 +3,9 @@ export { McpIntegrationKind } from './value-objects/mcp-integration-kind.enum';
 export { CustomMcpIntegration } from './integrations/custom-mcp-integration.entity';
 export { PredefinedMcpIntegration } from './integrations/predefined-mcp-integration.entity';
 export { MarketplaceMcpIntegration } from './integrations/marketplace-mcp-integration.entity';
+export { SelfDefinedMcpIntegration } from './integrations/self-defined-mcp-integration.entity';
 export { McpIntegrationUserConfig } from './mcp-integration-user-config.entity';
+export { McpIntegrationOAuthToken } from './mcp-integration-oauth-token.entity';
 
 export { McpIntegrationAuth } from './auth/mcp-integration-auth.entity';
 export { NoAuthMcpIntegrationAuth } from './auth/no-auth-mcp-integration-auth.entity';

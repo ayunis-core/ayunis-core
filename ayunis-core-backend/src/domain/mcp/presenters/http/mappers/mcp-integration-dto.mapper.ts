@@ -84,6 +84,13 @@ export class McpIntegrationDtoMapper {
         return 'custom';
       case McpIntegrationKind.MARKETPLACE:
         return 'marketplace';
+      case McpIntegrationKind.SELF_DEFINED:
+        // SELF_DEFINED is wired into the response DTO type union in a later step.
+        // Until then this branch is unreachable because no use case constructs a
+        // SelfDefinedMcpIntegration yet.
+        throw new Error(
+          'SELF_DEFINED MCP integration response mapping not yet implemented',
+        );
     }
   }
 

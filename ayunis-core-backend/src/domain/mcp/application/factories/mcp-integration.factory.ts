@@ -74,9 +74,12 @@ export class McpIntegrationFactory {
         return this.createMarketplace(base, params);
       case McpIntegrationKind.CUSTOM:
         return new CustomMcpIntegration(base);
-      default:
+      case McpIntegrationKind.SELF_DEFINED:
+        // SELF_DEFINED factory branch is added in a later step (Step 2).
+        // Until then this branch is unreachable because no caller constructs
+        // a SELF_DEFINED kind via the factory.
         throw new Error(
-          `Unknown MCP integration kind: ${params.kind as string}`,
+          'SELF_DEFINED MCP integration factory branch not yet implemented',
         );
     }
   }

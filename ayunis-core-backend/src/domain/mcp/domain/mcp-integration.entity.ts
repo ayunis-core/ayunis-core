@@ -21,6 +21,8 @@ export abstract class McpIntegration {
   public lastConnectionCheck?: Date;
   public returnsPii: boolean;
   public description?: string;
+  public oauthClientId?: string;
+  public oauthClientSecretEncrypted?: string;
 
   private _auth: McpIntegrationAuth;
 
@@ -37,6 +39,8 @@ export abstract class McpIntegration {
     returnsPii?: boolean;
     description?: string;
     auth: McpIntegrationAuth;
+    oauthClientId?: string;
+    oauthClientSecretEncrypted?: string;
   }) {
     this.id = params.id ?? randomUUID();
     this.orgId = params.orgId;
@@ -50,6 +54,8 @@ export abstract class McpIntegration {
     this.returnsPii = params.returnsPii ?? true; // Default to true for safety
     this.description = params.description;
     this._auth = params.auth;
+    this.oauthClientId = params.oauthClientId;
+    this.oauthClientSecretEncrypted = params.oauthClientSecretEncrypted;
   }
 
   /**
@@ -115,8 +121,31 @@ export abstract class McpIntegration {
     return this.kind === McpIntegrationKind.MARKETPLACE;
   }
 
+  isSelfDefined(): boolean {
+    return this.kind === McpIntegrationKind.SELF_DEFINED;
+  }
+
   updateReturnsPii(value: boolean): void {
     this.returnsPii = value;
+    this.touch();
+  }
+
+  /**
+   * Sets the OAuth client credentials for this integration. The secret must
+   * already be encrypted by the caller via `McpCredentialEncryptionPort`.
+   */
+  setOAuthClient(clientId: string, encryptedSecret: string): void {
+    this.oauthClientId = clientId;
+    this.oauthClientSecretEncrypted = encryptedSecret;
+    this.touch();
+  }
+
+  /**
+   * Clears any OAuth client credentials previously set on this integration.
+   */
+  clearOAuthClient(): void {
+    this.oauthClientId = undefined;
+    this.oauthClientSecretEncrypted = undefined;
     this.touch();
   }
 
@@ -128,3 +157,4 @@ export abstract class McpIntegration {
 export { CustomMcpIntegration } from './integrations/custom-mcp-integration.entity';
 export { PredefinedMcpIntegration } from './integrations/predefined-mcp-integration.entity';
 export { MarketplaceMcpIntegration } from './integrations/marketplace-mcp-integration.entity';
+export { SelfDefinedMcpIntegration } from './integrations/self-defined-mcp-integration.entity';
