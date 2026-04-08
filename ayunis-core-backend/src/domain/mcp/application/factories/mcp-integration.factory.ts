@@ -64,6 +64,8 @@ export class McpIntegrationFactory {
     lastConnectionCheck?: Date;
     returnsPii?: boolean;
     description?: string;
+    oauthClientId?: string;
+    oauthClientSecretEncrypted?: string;
   }): MarketplaceMcpIntegration;
   createIntegration(params: {
     kind: McpIntegrationKind.SELF_DEFINED;
@@ -125,6 +127,8 @@ export class McpIntegrationFactory {
       lastConnectionCheck: params.lastConnectionCheck,
       returnsPii: params.returnsPii,
       description: params.description,
+      oauthClientId: params.oauthClientId,
+      oauthClientSecretEncrypted: params.oauthClientSecretEncrypted,
     } as const;
   }
 
