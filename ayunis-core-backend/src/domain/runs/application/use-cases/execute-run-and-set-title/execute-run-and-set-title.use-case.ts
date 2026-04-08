@@ -25,12 +25,6 @@ import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { ContextService } from 'src/common/context/services/context.service';
-import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
-import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
-import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
-import { CreditBudgetGuardService } from '../../services/credit-budget-guard.service';
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
@@ -42,17 +36,12 @@ export class ExecuteRunAndSetTitleUseCase {
     private readonly findOneAgentUseCase: FindOneAgentUseCase,
     private readonly generateAndSetThreadTitleUseCase: GenerateAndSetThreadTitleUseCase,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
-    private readonly contextService: ContextService,
-    private readonly checkQuotaUseCase: CheckQuotaUseCase,
-    private readonly creditBudgetGuardService: CreditBudgetGuardService,
   ) {}
 
   async *execute(
     command: ExecuteRunAndSetTitleCommand,
   ): AsyncGenerator<RunEvent> {
     try {
-      await this.enforceUsageLimits();
-
       const streamingStartEvent: RunSessionEvent = {
         type: 'session',
         streaming: true,
@@ -68,7 +57,9 @@ export class ExecuteRunAndSetTitleUseCase {
       // If thread has no messages, we should generate a title after the first message
       const shouldGenerateTitle = thread.messages.length === 0;
 
-      // Execute the run and stream messages
+      // Execute the run and stream messages. Tier-aware fair-use + credit
+      // budget gates are enforced inside `ExecuteRunUseCase` after the model
+      // is resolved — see the call to `checkQuotaUseCase.execute` there.
       const messageGenerator = await this.executeRunUseCase.execute(
         new ExecuteRunCommand({
           threadId: command.threadId,
@@ -96,7 +87,9 @@ export class ExecuteRunAndSetTitleUseCase {
     } catch (error) {
       this.logger.error('Error in executeRunAndSetTitle', error);
 
-      // Preserve error code from domain errors (e.g., RUN_NO_MODEL_FOUND)
+      // Preserve error code from domain errors (e.g., RUN_NO_MODEL_FOUND,
+      // QUOTA_EXCEEDED) so the SSE consumer can branch on it. The metadata
+      // spread below also forwards `retryAfterSeconds` for QuotaExceededError.
       const errorCode =
         error instanceof ApplicationError ? error.code : 'EXECUTION_ERROR';
 
@@ -128,26 +121,6 @@ export class ExecuteRunAndSetTitleUseCase {
       };
       yield streamingEndEvent;
     }
-  }
-
-  private async enforceUsageLimits(): Promise<void> {
-    // Fair use quota check - throws QuotaExceededError if limit exceeded
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError({ reason: 'User not in context' });
-    }
-    await this.checkQuotaUseCase.execute(
-      new CheckQuotaQuery(userId, QuotaType.FAIR_USE_MESSAGES),
-    );
-
-    // Credit budget check - throws CreditBudgetExceededError if limit exceeded
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedAccessError({
-        reason: 'Organization not in context',
-      });
-    }
-    await this.creditBudgetGuardService.ensureBudgetAvailable(orgId);
   }
 
   private async generateTitle(

@@ -14,8 +14,7 @@ export class CheckQuotaUseCase {
   ) {}
 
   async execute(query: CheckQuotaQuery): Promise<void> {
-    const { limit, windowMs } = this.limitResolver.resolve(
-      query.userId,
+    const { limit, windowMs } = await this.limitResolver.resolve(
       query.quotaType,
     );
 
@@ -46,9 +45,13 @@ export class CheckQuotaUseCase {
         retryAfterSeconds,
       });
 
-      throw new QuotaExceededError(query.quotaType, limit, retryAfterSeconds, {
-        currentCount: quota.count,
-      });
+      throw new QuotaExceededError(
+        query.quotaType,
+        limit,
+        windowMs,
+        retryAfterSeconds,
+        { currentCount: quota.count },
+      );
     }
 
     this.logger.debug('Quota check passed', {

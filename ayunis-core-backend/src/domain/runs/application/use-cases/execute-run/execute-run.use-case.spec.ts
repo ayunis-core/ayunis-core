@@ -10,6 +10,7 @@ import type { TrimMessagesForContextUseCase } from 'src/domain/messages/applicat
 
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import type { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
@@ -17,6 +18,11 @@ import { ExecuteRunUseCase } from './execute-run.use-case';
 import { ExecuteRunCommand } from './execute-run.command';
 import { RunUserInput } from '../../../domain/run-input.entity';
 import type { CollectUsageAsyncService } from '../../services/collect-usage-async.service';
+import type { CreditBudgetGuardService } from '../../services/credit-budget-guard.service';
+import type { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
+import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
+import { RunErrorCode } from '../../runs.errors';
+import type { Agent } from 'src/domain/agents/domain/agent.entity';
 import type { ToolAssemblyService } from '../../services/tool-assembly.service';
 import type { ToolResultCollectorService } from '../../services/tool-result-collector.service';
 import type { MessageCleanupService } from '../../services/message-cleanup.service';
@@ -33,9 +39,12 @@ describe('ExecuteRunUseCase', () => {
   let useCase: ExecuteRunUseCase;
   let anonymizeTextUseCase: jest.Mocked<AnonymizeTextUseCase>;
   let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
+  let findOneAgentUseCase: jest.Mocked<FindOneAgentUseCase>;
   let contextService: jest.Mocked<ContextService>;
   let toolAssemblyService: jest.Mocked<ToolAssemblyService>;
   let messageCleanupService: jest.Mocked<MessageCleanupService>;
+  let checkQuotaUseCase: jest.Mocked<CheckQuotaUseCase>;
+  let creditBudgetGuardService: jest.Mocked<CreditBudgetGuardService>;
 
   const userId = randomUUID();
   const orgId = randomUUID();
@@ -72,6 +81,18 @@ describe('ExecuteRunUseCase', () => {
       execute: jest.fn(),
     } as unknown as jest.Mocked<FindThreadUseCase>;
 
+    findOneAgentUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<FindOneAgentUseCase>;
+
+    checkQuotaUseCase = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<CheckQuotaUseCase>;
+
+    creditBudgetGuardService = {
+      ensureBudgetAvailable: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<CreditBudgetGuardService>;
+
     contextService = {
       get: jest.fn(),
     } as unknown as jest.Mocked<ContextService>;
@@ -101,11 +122,13 @@ describe('ExecuteRunUseCase', () => {
       { execute: jest.fn() } as unknown as CreateAssistantMessageUseCase,
       { execute: jest.fn() } as unknown as CreateToolResultMessageUseCase,
       findThreadUseCase,
-      { execute: jest.fn() } as unknown as FindOneAgentUseCase,
+      findOneAgentUseCase,
       { execute: jest.fn() } as unknown as AddMessageToThreadUseCase,
       contextService,
       anonymizeTextUseCase,
       { collect: jest.fn() } as unknown as CollectUsageAsyncService,
+      checkQuotaUseCase,
+      creditBudgetGuardService,
       { execute: jest.fn() } as unknown as TrimMessagesForContextUseCase,
       toolAssemblyService,
       {
@@ -372,6 +395,161 @@ describe('ExecuteRunUseCase', () => {
       await expect(generator.next()).rejects.toThrow(
         RunAnonymizationUnavailableError,
       );
+    });
+  });
+
+  describe('tier-aware fair-use quota selection', () => {
+    function makeTieredModel(
+      tier: ModelTier | undefined,
+    ): PermittedLanguageModel {
+      return {
+        model: {
+          name: 'gpt-tier',
+          canUseTools: false,
+          canVision: false,
+          tier,
+        } as unknown as LanguageModel,
+        anonymousOnly: false,
+      } as PermittedLanguageModel;
+    }
+
+    function stubInferenceWithEmptyResponse() {
+      const streamingInferenceService = (
+        useCase as unknown as {
+          streamingInferenceService: jest.Mocked<StreamingInferenceService>;
+        }
+      ).streamingInferenceService;
+      const assistantMessage = {
+        id: randomUUID(),
+        content: [{ type: 'text', text: 'ok' }],
+      } as unknown as AssistantMessage;
+      streamingInferenceService.executeStreamingInference.mockReturnValue(
+        (async function* () {
+          yield assistantMessage;
+        })(),
+      );
+    }
+
+    async function drainGenerator(
+      generator: AsyncGenerator<unknown, void, void>,
+    ): Promise<void> {
+      let result = await generator.next();
+      while (!result.done) {
+        result = await generator.next();
+      }
+    }
+
+    it.each([
+      [ModelTier.LOW, QuotaType.FAIR_USE_MESSAGES_LOW],
+      [ModelTier.MEDIUM, QuotaType.FAIR_USE_MESSAGES_MEDIUM],
+      [ModelTier.HIGH, QuotaType.FAIR_USE_MESSAGES_HIGH],
+    ])(
+      'routes a thread on a %s-tier model to %s',
+      async (tier, expectedQuotaType) => {
+        const thread = createMockThread({ model: makeTieredModel(tier) });
+        findThreadUseCase.execute.mockResolvedValue({
+          thread,
+          isLongChat: false,
+        });
+        stubInferenceWithEmptyResponse();
+
+        const command = new ExecuteRunCommand({
+          threadId,
+          input: new RunUserInput('hello', []),
+          streaming: true,
+        });
+        await drainGenerator(await useCase.execute(command));
+
+        expect(checkQuotaUseCase.execute).toHaveBeenCalledTimes(1);
+        const query = checkQuotaUseCase.execute.mock.calls[0][0];
+        expect(query.userId).toBe(userId);
+        expect(query.quotaType).toBe(expectedQuotaType);
+        expect(
+          creditBudgetGuardService.ensureBudgetAvailable,
+        ).toHaveBeenCalledWith(orgId);
+      },
+    );
+
+    it('falls back to FAIR_USE_MESSAGES_MEDIUM when the model has no tier', async () => {
+      const thread = createMockThread({ model: makeTieredModel(undefined) });
+      findThreadUseCase.execute.mockResolvedValue({
+        thread,
+        isLongChat: false,
+      });
+      stubInferenceWithEmptyResponse();
+
+      const command = new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('hello', []),
+        streaming: true,
+      });
+      await drainGenerator(await useCase.execute(command));
+
+      expect(checkQuotaUseCase.execute).toHaveBeenCalledTimes(1);
+      expect(checkQuotaUseCase.execute.mock.calls[0][0].quotaType).toBe(
+        QuotaType.FAIR_USE_MESSAGES_MEDIUM,
+      );
+    });
+
+    it('uses the agent model tier when the thread is agent-backed', async () => {
+      const agentId = randomUUID();
+      const thread = createMockThread({
+        agentId,
+        // Thread carries no model of its own — must fall through to the
+        // agent's model.
+        model: undefined as unknown as PermittedLanguageModel,
+      });
+      findThreadUseCase.execute.mockResolvedValue({
+        thread,
+        isLongChat: false,
+      });
+      findOneAgentUseCase.execute.mockResolvedValue({
+        agent: {
+          id: agentId,
+          model: makeTieredModel(ModelTier.HIGH),
+        } as unknown as Agent,
+        isShared: false,
+      });
+      stubInferenceWithEmptyResponse();
+
+      const command = new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('hello', []),
+        streaming: true,
+      });
+      await drainGenerator(await useCase.execute(command));
+
+      expect(findOneAgentUseCase.execute).toHaveBeenCalledTimes(1);
+      expect(checkQuotaUseCase.execute.mock.calls[0][0].quotaType).toBe(
+        QuotaType.FAIR_USE_MESSAGES_HIGH,
+      );
+    });
+
+    it('does NOT charge a quota when no model can be resolved', async () => {
+      const thread = createMockThread({
+        model: undefined as unknown as PermittedLanguageModel,
+      });
+      findThreadUseCase.execute.mockResolvedValue({
+        thread,
+        isLongChat: false,
+      });
+
+      const command = new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('hello', []),
+        streaming: true,
+      });
+
+      // `pickModel` throws synchronously — the outer try in `execute()`
+      // wraps it in `RunNoModelFoundError` (an `ApplicationError`) which is
+      // re-thrown unchanged. The wrapper turns it into a RunErrorEvent.
+      await expect(useCase.execute(command)).rejects.toMatchObject({
+        code: RunErrorCode.RUN_NO_MODEL_FOUND,
+      });
+      expect(checkQuotaUseCase.execute).not.toHaveBeenCalled();
+      expect(
+        creditBudgetGuardService.ensureBudgetAvailable,
+      ).not.toHaveBeenCalled();
     });
   });
 });

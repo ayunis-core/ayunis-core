@@ -1,20 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { UUID } from 'crypto';
+import { assertNever } from 'src/common/util/assert-never';
+import { GetFairUseLimitsUseCase } from 'src/iam/platform-config/application/use-cases/get-fair-use-limits/get-fair-use-limits.use-case';
+import { FairUseLimit } from 'src/iam/platform-config/domain/fair-use-limits';
 import { QuotaType } from '../../domain/quota-type.enum';
-
-export interface QuotaLimitConfig {
-  limit: number;
-  windowMs: number;
-}
 
 @Injectable()
 export class QuotaLimitResolverService {
-  resolve(_userId: UUID, quotaType: QuotaType): QuotaLimitConfig {
+  constructor(
+    private readonly getFairUseLimitsUseCase: GetFairUseLimitsUseCase,
+  ) {}
+
+  async resolve(quotaType: QuotaType): Promise<FairUseLimit> {
+    const limits = await this.getFairUseLimitsUseCase.execute();
+
     switch (quotaType) {
-      case QuotaType.FAIR_USE_MESSAGES:
-        return { limit: 200, windowMs: 3 * 60 * 60 * 1000 }; // 3 hours
+      case QuotaType.FAIR_USE_MESSAGES_LOW:
+        return limits.low;
+      case QuotaType.FAIR_USE_MESSAGES_MEDIUM:
+        return limits.medium;
+      case QuotaType.FAIR_USE_MESSAGES_HIGH:
+        return limits.high;
       default:
-        return { limit: 100, windowMs: 60 * 60 * 1000 }; // 1 hour
+        // Defensive: when `QuotaType` grows a non-fair-use value, this throws
+        // at the resolver instead of silently returning `undefined` and
+        // crashing the destructure in `CheckQuotaUseCase`.
+        return assertNever(quotaType);
     }
   }
 }
