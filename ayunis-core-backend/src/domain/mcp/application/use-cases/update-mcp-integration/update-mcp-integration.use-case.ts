@@ -180,6 +180,13 @@ export class UpdateMcpIntegrationUseCase {
     // orgConfigValues update in the same command).
     const validated = validateConfigSchema(rawSchema);
 
+    if (validated.oauth) {
+      this.marketplaceConfigService.assertNoAuthorizationHeaderCollision(
+        validated.orgFields,
+        validated.userFields,
+      );
+    }
+
     integration.updateConfigSchema(validated);
   }
 
