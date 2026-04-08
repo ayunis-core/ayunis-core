@@ -1,3 +1,4 @@
+import { assertNever } from 'src/common/util/assert-never';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import { QuotaType } from './quota-type.enum';
 
@@ -19,5 +20,7 @@ export function tierToFairUseQuotaType(tier: ModelTier | undefined): QuotaType {
     case ModelTier.MEDIUM:
     case undefined:
       return QuotaType.FAIR_USE_MESSAGES_MEDIUM;
+    default:
+      return assertNever(tier);
   }
 }
