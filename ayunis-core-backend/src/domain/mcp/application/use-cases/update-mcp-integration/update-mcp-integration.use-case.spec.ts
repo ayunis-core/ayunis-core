@@ -10,12 +10,14 @@ import { ConnectionValidationService } from '../../services/connection-validatio
 import type { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
 import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
+import { SelfDefinedMcpIntegration } from '../../../domain/integrations/self-defined-mcp-integration.entity';
 import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
 import {
   McpNotMarketplaceIntegrationError,
   McpMissingRequiredConfigError,
+  McpValidationFailedError,
 } from '../../mcp.errors';
 import type { IntegrationConfigSchema } from '../../../domain/value-objects/integration-config-schema';
 
@@ -368,6 +370,217 @@ describe('UpdateMcpIntegrationUseCase', () => {
       // Should not throw even though validation failed
       const result = await useCase.execute(command);
       expect(result).toBeInstanceOf(MarketplaceMcpIntegration);
+    });
+  });
+
+  describe('OAuth client credential rotation', () => {
+    const oauthConfigSchema: IntegrationConfigSchema = {
+      authType: 'OAUTH',
+      orgFields: [
+        {
+          key: 'tenantId',
+          label: 'Tenant ID',
+          type: 'text',
+          required: true,
+        },
+      ],
+      userFields: [],
+      oauth: {
+        authorizationUrl: 'https://auth.example.com/authorize',
+        tokenUrl: 'https://auth.example.com/token',
+        scopes: ['read'],
+        level: 'org',
+      },
+    };
+
+    it('rotates OAuth client credentials on a marketplace integration', async () => {
+      const integration = new MarketplaceMcpIntegration({
+        id: integrationId,
+        orgId,
+        name: 'OAuth Marketplace',
+        serverUrl: 'https://mcp.example.com',
+        marketplaceIdentifier: 'oauth-marketplace',
+        configSchema: oauthConfigSchema,
+        orgConfigValues: { tenantId: 'my-tenant' },
+        auth: new NoAuthMcpIntegrationAuth(),
+        oauthClientId: 'old-client-id',
+        oauthClientSecretEncrypted: 'encrypted:old-secret',
+      });
+      repository.findById.mockResolvedValue(integration);
+      encryption.encrypt.mockResolvedValue('encrypted:new-secret');
+
+      const command = new UpdateMcpIntegrationCommand({
+        integrationId,
+        oauthClientId: 'new-client-id',
+        oauthClientSecret: 'new-secret',
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.oauthClientId).toBe('new-client-id');
+      expect(result.oauthClientSecretEncrypted).toBe('encrypted:new-secret');
+      expect(encryption.encrypt).toHaveBeenCalledWith('new-secret');
+    });
+
+    it('rotates only client ID keeping existing encrypted secret', async () => {
+      const integration = new MarketplaceMcpIntegration({
+        id: integrationId,
+        orgId,
+        name: 'OAuth Marketplace',
+        serverUrl: 'https://mcp.example.com',
+        marketplaceIdentifier: 'oauth-marketplace',
+        configSchema: oauthConfigSchema,
+        orgConfigValues: { tenantId: 'my-tenant' },
+        auth: new NoAuthMcpIntegrationAuth(),
+        oauthClientId: 'old-client-id',
+        oauthClientSecretEncrypted: 'encrypted:existing-secret',
+      });
+      repository.findById.mockResolvedValue(integration);
+
+      const command = new UpdateMcpIntegrationCommand({
+        integrationId,
+        oauthClientId: 'new-client-id',
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.oauthClientId).toBe('new-client-id');
+      expect(result.oauthClientSecretEncrypted).toBe(
+        'encrypted:existing-secret',
+      );
+      expect(encryption.encrypt).not.toHaveBeenCalled();
+    });
+
+    it('rejects OAuth credential rotation on a custom integration', async () => {
+      const integration = new CustomMcpIntegration({
+        id: integrationId,
+        orgId,
+        name: 'Custom',
+        serverUrl: 'https://example.com/mcp',
+        auth: new NoAuthMcpIntegrationAuth(),
+      });
+      repository.findById.mockResolvedValue(integration);
+
+      const command = new UpdateMcpIntegrationCommand({
+        integrationId,
+        oauthClientId: 'new-client-id',
+        oauthClientSecret: 'new-secret',
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        McpValidationFailedError,
+      );
+    });
+  });
+
+  describe('self-defined configSchema and orgConfigValues', () => {
+    const selfDefinedConfigSchema: IntegrationConfigSchema = {
+      authType: 'NO_AUTH',
+      orgFields: [
+        {
+          key: 'endpointUrl',
+          label: 'Endpoint URL',
+          type: 'url',
+          headerName: 'X-Endpoint-Url',
+          required: true,
+        },
+      ],
+      userFields: [],
+    };
+
+    function createSelfDefinedIntegration(
+      overrides: Partial<{
+        orgConfigValues: Record<string, string>;
+        configSchema: IntegrationConfigSchema;
+      }> = {},
+    ): SelfDefinedMcpIntegration {
+      return new SelfDefinedMcpIntegration({
+        id: integrationId,
+        orgId,
+        name: 'Self Defined Integration',
+        serverUrl: 'https://mcp.example.com',
+        configSchema: overrides.configSchema ?? selfDefinedConfigSchema,
+        orgConfigValues: overrides.orgConfigValues ?? {
+          endpointUrl: 'https://old-endpoint.com',
+        },
+        auth: new NoAuthMcpIntegrationAuth(),
+      });
+    }
+
+    it('updates orgConfigValues for a self-defined integration', async () => {
+      const integration = createSelfDefinedIntegration();
+      repository.findById.mockResolvedValue(integration);
+
+      const command = new UpdateMcpIntegrationCommand({
+        integrationId,
+        orgConfigValues: { endpointUrl: 'https://new-endpoint.com' },
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(
+        (result as SelfDefinedMcpIntegration).orgConfigValues.endpointUrl,
+      ).toBe('https://new-endpoint.com');
+    });
+
+    it('updates configSchema for a self-defined integration', async () => {
+      const integration = createSelfDefinedIntegration();
+      repository.findById.mockResolvedValue(integration);
+
+      const newSchema: IntegrationConfigSchema = {
+        authType: 'BEARER_TOKEN',
+        orgFields: [
+          {
+            key: 'apiKey',
+            label: 'API Key',
+            type: 'secret',
+            headerName: 'Authorization',
+            prefix: 'Bearer ',
+            required: true,
+          },
+        ],
+        userFields: [],
+      };
+
+      const command = new UpdateMcpIntegrationCommand({
+        integrationId,
+        configSchema: newSchema,
+      });
+
+      const result = await useCase.execute(command);
+
+      expect((result as SelfDefinedMcpIntegration).configSchema.authType).toBe(
+        'BEARER_TOKEN',
+      );
+      expect(
+        (result as SelfDefinedMcpIntegration).configSchema.orgFields,
+      ).toHaveLength(1);
+      expect(
+        (result as SelfDefinedMcpIntegration).configSchema.orgFields[0].key,
+      ).toBe('apiKey');
+    });
+
+    it('rejects configSchema update on a marketplace integration', async () => {
+      const integration = new MarketplaceMcpIntegration({
+        id: integrationId,
+        orgId,
+        name: 'Marketplace',
+        serverUrl: 'https://mcp.example.com',
+        marketplaceIdentifier: 'some-marketplace',
+        configSchema: selfDefinedConfigSchema,
+        orgConfigValues: { endpointUrl: 'https://old.com' },
+        auth: new NoAuthMcpIntegrationAuth(),
+      });
+      repository.findById.mockResolvedValue(integration);
+
+      const command = new UpdateMcpIntegrationCommand({
+        integrationId,
+        configSchema: selfDefinedConfigSchema,
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        McpValidationFailedError,
+      );
     });
   });
 });

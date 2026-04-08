@@ -39,9 +39,7 @@ export abstract class McpIntegration {
    * under `domain/mcp/domain/auth/` is still used by the legacy
    * `CreateMcpIntegrationUseCase` OAuth branch (which currently throws
    * `McpAuthNotImplementedError`). New OAuth flows use these fields plus
-   * `McpIntegrationOAuthToken`; the legacy entity is untouched by this task
-   * (scheduled for removal in Step 7, which also deletes
-   * `McpOAuthNotSupportedError` and unblocks marketplace OAuth).
+   * `McpIntegrationOAuthToken`; the legacy entity is untouched by this task.
    */
   private _oauthClientId?: string;
   private _oauthClientSecretEncrypted?: string;

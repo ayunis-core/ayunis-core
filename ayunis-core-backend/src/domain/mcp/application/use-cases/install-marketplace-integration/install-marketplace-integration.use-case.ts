@@ -41,13 +41,20 @@ interface MarketplaceConfigSchemaDto {
     help: string | null;
     value: string | null;
   }>;
+  oauth?: {
+    authorizationUrl: string;
+    tokenUrl: string;
+    scopes: string[];
+    level: 'org' | 'user';
+  };
 }
 import {
-  McpOAuthNotSupportedError,
   DuplicateMarketplaceMcpIntegrationError,
+  McpOAuthClientNotConfiguredError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 
 @Injectable()
 export class InstallMarketplaceIntegrationUseCase {
@@ -63,6 +70,7 @@ export class InstallMarketplaceIntegrationUseCase {
     private readonly authFactory: McpIntegrationAuthFactory,
     private readonly connectionValidationService: ConnectionValidationService,
     private readonly contextService: ContextService,
+    private readonly credentialEncryption: McpCredentialEncryptionPort,
   ) {}
 
   async execute(
@@ -95,8 +103,18 @@ export class InstallMarketplaceIntegrationUseCase {
         marketplaceIntegration.configSchema,
       );
 
-      if (configSchema.authType === (McpAuthMethod.OAUTH as string)) {
-        throw new McpOAuthNotSupportedError();
+      let encryptedClientSecret: string | undefined;
+      if (configSchema.oauth) {
+        if (!command.oauthClientId || !command.oauthClientSecret) {
+          throw new McpOAuthClientNotConfiguredError();
+        }
+        this.marketplaceConfigService.assertNoAuthorizationHeaderCollision(
+          configSchema.orgFields,
+          configSchema.userFields,
+        );
+        encryptedClientSecret = await this.credentialEncryption.encrypt(
+          command.oauthClientSecret,
+        );
       }
 
       const mergedValues = this.marketplaceConfigService.mergeFixedValues(
@@ -132,6 +150,17 @@ export class InstallMarketplaceIntegrationUseCase {
         logoUrl: marketplaceIntegration.logoUrl ?? null,
       });
 
+      if (
+        configSchema.oauth &&
+        command.oauthClientId &&
+        encryptedClientSecret
+      ) {
+        integration.setOAuthClientCredentials(
+          command.oauthClientId,
+          encryptedClientSecret,
+        );
+      }
+
       const saved = await this.repository.save(integration);
 
       const validated =
@@ -157,11 +186,20 @@ export class InstallMarketplaceIntegrationUseCase {
     dto: Record<string, unknown>,
   ): IntegrationConfigSchema {
     const schema = dto as unknown as MarketplaceConfigSchemaDto;
-    return {
+    const result: IntegrationConfigSchema = {
       authType: schema.authType,
       orgFields: schema.orgFields.map((f) => this.parseConfigField(f)),
       userFields: schema.userFields.map((f) => this.parseConfigField(f)),
     };
+    if (schema.oauth) {
+      result.oauth = {
+        authorizationUrl: schema.oauth.authorizationUrl,
+        tokenUrl: schema.oauth.tokenUrl,
+        scopes: schema.oauth.scopes,
+        level: schema.oauth.level,
+      };
+    }
+    return result;
   }
 
   private parseConfigField(

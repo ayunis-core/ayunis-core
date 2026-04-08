@@ -19,9 +19,7 @@ import { randomUUID, type UUID } from 'crypto';
  * `CreateMcpIntegrationUseCase` OAuth branch (which currently throws
  * `McpAuthNotImplementedError`). New OAuth flows use this entity plus the
  * base-class `oauthClientId` / `oauthClientSecretEncrypted` fields on
- * `McpIntegration`; the legacy entity is untouched by this task (scheduled
- * for removal in Step 7, which also deletes `McpOAuthNotSupportedError` and
- * unblocks marketplace OAuth).
+ * `McpIntegration`; the legacy entity is untouched by this task.
  */
 export class McpIntegrationOAuthToken {
   public readonly id: UUID;

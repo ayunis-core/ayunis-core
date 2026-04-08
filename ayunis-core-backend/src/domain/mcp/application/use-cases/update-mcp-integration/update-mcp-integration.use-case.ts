@@ -17,8 +17,10 @@ import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integr
 import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { McpValidationFailedError } from '../../mcp.errors';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
+import { SelfDefinedMcpIntegration } from '../../../domain/integrations/self-defined-mcp-integration.entity';
 import { MarketplaceConfigService } from '../../services/marketplace-config.service';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
+import { validateConfigSchema } from '../../services/integration-config-schema.validator';
 
 @Injectable()
 export class UpdateMcpIntegrationUseCase {
@@ -72,13 +74,34 @@ export class UpdateMcpIntegrationUseCase {
         );
       }
 
+      if (
+        command.oauthClientId !== undefined ||
+        command.oauthClientSecret !== undefined
+      ) {
+        await this.rotateOAuthClientCredentials(
+          integration,
+          command.oauthClientId,
+          command.oauthClientSecret,
+        );
+      }
+
+      if (command.configSchema !== undefined) {
+        this.updateConfigSchema(integration, command.configSchema);
+      }
+
       if (command.orgConfigValues !== undefined) {
         await this.updateOrgConfigValues(integration, command.orgConfigValues);
       }
 
       let saved = await this.repository.save(integration);
 
-      if (command.orgConfigValues !== undefined) {
+      const needsRevalidation =
+        command.orgConfigValues !== undefined ||
+        command.configSchema !== undefined ||
+        command.oauthClientId !== undefined ||
+        command.oauthClientSecret !== undefined;
+
+      if (needsRevalidation) {
         saved =
           await this.connectionValidationService.validateAndUpdateStatus(saved);
       }
@@ -98,21 +121,84 @@ export class UpdateMcpIntegrationUseCase {
     }
   }
 
+  private async rotateOAuthClientCredentials(
+    integration: McpIntegration,
+    oauthClientId?: string,
+    oauthClientSecret?: string,
+  ): Promise<void> {
+    if (!integration.isMarketplace() && !integration.isSelfDefined()) {
+      throw new McpValidationFailedError(
+        integration.id,
+        integration.name,
+        'OAuth client credentials are only supported for MARKETPLACE and SELF_DEFINED integrations.',
+      );
+    }
+
+    const newClientId = oauthClientId ?? integration.oauthClientId;
+    if (!newClientId) {
+      throw new McpValidationFailedError(
+        integration.id,
+        integration.name,
+        'oauthClientId must be provided when setting OAuth client credentials.',
+      );
+    }
+
+    const newSecret = oauthClientSecret
+      ? await this.credentialEncryption.encrypt(oauthClientSecret)
+      : integration.oauthClientSecretEncrypted;
+    if (!newSecret) {
+      throw new McpValidationFailedError(
+        integration.id,
+        integration.name,
+        'oauthClientSecret must be provided when setting OAuth client credentials.',
+      );
+    }
+
+    integration.setOAuthClientCredentials(newClientId, newSecret);
+  }
+
+  private updateConfigSchema(
+    integration: McpIntegration,
+    rawSchema: unknown,
+  ): void {
+    if (!(integration instanceof SelfDefinedMcpIntegration)) {
+      throw new McpValidationFailedError(
+        integration.id,
+        integration.name,
+        'configSchema can only be updated on SELF_DEFINED integrations.',
+      );
+    }
+
+    // Validate and replace — a full re-validate of orgConfigValues against the
+    // new schema is the caller's responsibility (typically done alongside an
+    // orgConfigValues update in the same command).
+    const validated = validateConfigSchema(rawSchema);
+
+    // Replace the schema via a package-private-style cast — SelfDefinedMcpIntegration
+    // exposes configSchema as readonly; mutating it requires going through
+    // this controlled path.
+    (integration as { configSchema: typeof validated }).configSchema =
+      validated;
+  }
+
   private async updateOrgConfigValues(
     integration: McpIntegration,
     orgConfigValues: Record<string, string>,
   ): Promise<void> {
-    if (!(integration instanceof MarketplaceMcpIntegration)) {
-      throw new McpNotMarketplaceIntegrationError(integration.id);
+    if (
+      integration instanceof MarketplaceMcpIntegration ||
+      integration instanceof SelfDefinedMcpIntegration
+    ) {
+      const mergedValues = await this.marketplaceConfigService.mergeForUpdate(
+        integration.orgConfigValues,
+        orgConfigValues,
+        integration.configSchema.orgFields,
+      );
+      integration.updateOrgConfigValues(mergedValues);
+      return;
     }
 
-    const mergedValues = await this.marketplaceConfigService.mergeForUpdate(
-      integration.orgConfigValues,
-      orgConfigValues,
-      integration.configSchema.orgFields,
-    );
-
-    integration.updateOrgConfigValues(mergedValues);
+    throw new McpNotMarketplaceIntegrationError(integration.id);
   }
 
   private async rotateCredentials(
