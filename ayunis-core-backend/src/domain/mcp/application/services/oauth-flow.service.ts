@@ -165,6 +165,7 @@ export class OAuthFlowService {
     await this.upsertTokens(integration.id, state.userId, {
       ...tokens,
       refresh_token: tokens.refresh_token ?? null,
+      scope: tokens.scope ?? null,
     });
 
     return {
@@ -302,7 +303,7 @@ export class OAuthFlowService {
       access_token: string;
       refresh_token?: string | null;
       expires_in?: number;
-      scope?: string;
+      scope?: string | null;
     },
   ): Promise<void> {
     const accessTokenEncrypted = await this.credentialEncryption.encrypt(
@@ -339,7 +340,7 @@ export class OAuthFlowService {
         accessTokenEncrypted,
         refreshTokenEncrypted: refreshTokenEncrypted ?? undefined,
         tokenExpiresAt: tokenExpiresAt ?? undefined,
-        scope: tokens.scope,
+        scope: tokens.scope ?? undefined,
       });
       await this.tokenRepository.save(token);
     }
