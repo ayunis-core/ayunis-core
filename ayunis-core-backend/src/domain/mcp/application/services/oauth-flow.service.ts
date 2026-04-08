@@ -158,7 +158,7 @@ export class OAuthFlowService {
       throw new McpOAuthExchangeFailedError(reason);
     }
 
-    await this.upsertTokens(integration.id, state.userId, tokens);
+    await this.upsertTokens(integration.id, state.userId, tokens, true);
 
     return {
       integrationId: state.integrationId,
@@ -289,17 +289,21 @@ export class OAuthFlowService {
       expires_in?: number;
       scope?: string;
     },
+    isFreshGrant = false,
   ): Promise<void> {
     const accessTokenEncrypted = await this.credentialEncryption.encrypt(
       tokens.access_token,
     );
+    // For refresh: undefined means "preserve old value" (RFC 6749 §6).
+    // For fresh grants: null means "clear stale value from a prior grant".
+    const absentValue = isFreshGrant ? null : undefined;
     const refreshTokenEncrypted = tokens.refresh_token
       ? await this.credentialEncryption.encrypt(tokens.refresh_token)
-      : undefined;
+      : absentValue;
     const tokenExpiresAt: Date | null =
       tokens.expires_in !== undefined
         ? new Date(Date.now() + tokens.expires_in * 1000)
-        : null; // clear stale expiry — "no known expiry" = treat as never expires
+        : null;
 
     const existing = await this.tokenRepository.findByIntegrationAndUser(
       integrationId,
@@ -311,7 +315,7 @@ export class OAuthFlowService {
         accessTokenEncrypted,
         refreshTokenEncrypted,
         tokenExpiresAt,
-        scope: tokens.scope,
+        scope: tokens.scope ?? absentValue,
       });
       await this.tokenRepository.save(existing);
     } else {
@@ -319,7 +323,7 @@ export class OAuthFlowService {
         integrationId,
         userId: userIdOrNull,
         accessTokenEncrypted,
-        refreshTokenEncrypted,
+        refreshTokenEncrypted: refreshTokenEncrypted ?? undefined,
         tokenExpiresAt: tokenExpiresAt ?? undefined,
         scope: tokens.scope,
       });
