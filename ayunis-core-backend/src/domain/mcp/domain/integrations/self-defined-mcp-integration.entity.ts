@@ -5,14 +5,16 @@ import { McpIntegrationKind } from '../value-objects/mcp-integration-kind.enum';
 import type { IntegrationConfigSchema } from '../value-objects/integration-config-schema';
 
 /**
- * MCP integration installed from the Ayunis marketplace.
- * Auth is handled via config fields → headers rather than the legacy auth entity hierarchy.
- * The auth entity is always NoAuthMcpIntegrationAuth.
+ * MCP integration authored locally by an org admin via a raw configuration
+ * schema. Reuses the same `IntegrationConfigSchema` shape as marketplace
+ * integrations, but is not associated with a marketplace identifier or logo.
+ *
+ * Auth is handled via config fields → headers (and optionally OAuth managed
+ * by the dedicated OAuth token table) rather than the legacy auth entity
+ * hierarchy. The auth entity is always `NoAuthMcpIntegrationAuth`.
  */
-export class MarketplaceMcpIntegration extends McpIntegration {
-  public readonly marketplaceIdentifier: string;
+export class SelfDefinedMcpIntegration extends McpIntegration {
   public readonly configSchema: IntegrationConfigSchema;
-  public readonly logoUrl: string | null;
   private _orgConfigValues: Record<string, string>;
   private readonly _serverUrl: string;
 
@@ -21,11 +23,9 @@ export class MarketplaceMcpIntegration extends McpIntegration {
     orgId: UUID;
     name: string;
     serverUrl: string;
-    marketplaceIdentifier: string;
     configSchema: IntegrationConfigSchema;
     orgConfigValues: Record<string, string>;
     auth: McpIntegrationAuth;
-    logoUrl?: string | null;
     enabled?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
@@ -54,15 +54,13 @@ export class MarketplaceMcpIntegration extends McpIntegration {
       oauthClientSecretEncrypted: params.oauthClientSecretEncrypted,
     });
 
-    this.marketplaceIdentifier = params.marketplaceIdentifier;
     this.configSchema = params.configSchema;
-    this.logoUrl = params.logoUrl ?? null;
     this._orgConfigValues = { ...params.orgConfigValues };
     this._serverUrl = params.serverUrl;
   }
 
   get kind(): McpIntegrationKind {
-    return McpIntegrationKind.MARKETPLACE;
+    return McpIntegrationKind.SELF_DEFINED;
   }
 
   get serverUrl(): string {
