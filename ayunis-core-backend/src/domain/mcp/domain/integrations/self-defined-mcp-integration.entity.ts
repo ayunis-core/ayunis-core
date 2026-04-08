@@ -14,7 +14,7 @@ import type { IntegrationConfigSchema } from '../value-objects/integration-confi
  * hierarchy. The auth entity is always `NoAuthMcpIntegrationAuth`.
  */
 export class SelfDefinedMcpIntegration extends McpIntegration {
-  public readonly configSchema: IntegrationConfigSchema;
+  private _configSchema: IntegrationConfigSchema;
   private _orgConfigValues: Record<string, string>;
   private readonly _serverUrl: string;
 
@@ -54,7 +54,7 @@ export class SelfDefinedMcpIntegration extends McpIntegration {
       oauthClientSecretEncrypted: params.oauthClientSecretEncrypted,
     });
 
-    this.configSchema = params.configSchema;
+    this._configSchema = params.configSchema;
     this._orgConfigValues = { ...params.orgConfigValues };
     this._serverUrl = params.serverUrl;
   }
@@ -67,8 +67,17 @@ export class SelfDefinedMcpIntegration extends McpIntegration {
     return this._serverUrl;
   }
 
+  get configSchema(): IntegrationConfigSchema {
+    return this._configSchema;
+  }
+
   get orgConfigValues(): Record<string, string> {
     return { ...this._orgConfigValues };
+  }
+
+  updateConfigSchema(schema: IntegrationConfigSchema): void {
+    this._configSchema = schema;
+    this.touch();
   }
 
   updateOrgConfigValues(values: Record<string, string>): void {

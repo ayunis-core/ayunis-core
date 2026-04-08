@@ -34,8 +34,8 @@ export function useInstallIntegrationFromMarketplace() {
             case 'MARKETPLACE_UNAVAILABLE':
               showError(t('error.unavailable'));
               break;
-            case 'MCP_OAUTH_NOT_SUPPORTED':
-              showError(t('error.oauthNotSupported'));
+            case 'MCP_OAUTH_CLIENT_NOT_CONFIGURED':
+              showError(t('error.oauthClientNotConfigured'));
               break;
             case 'MCP_MISSING_REQUIRED_CONFIG':
               showError(t('error.missingRequiredConfig'));

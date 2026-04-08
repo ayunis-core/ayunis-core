@@ -32,6 +32,7 @@
     },
     "unavailable": "The marketplace is currently unavailable. Please try again later.",
     "oauthNotSupported": "OAuth integrations are not yet supported.",
+    "oauthClientNotConfigured": "OAuth client credentials are required for this integration. Please provide a client ID and secret.",
     "missingRequiredConfig": "Please fill in all required fields.",
     "adminRequired": {
       "title": "Admin Access Required",

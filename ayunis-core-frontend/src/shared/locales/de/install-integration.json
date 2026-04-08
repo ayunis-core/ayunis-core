@@ -32,6 +32,7 @@
     },
     "unavailable": "Der Marktplatz ist derzeit nicht verfügbar. Bitte versuchen Sie es später erneut.",
     "oauthNotSupported": "OAuth-Integrationen werden noch nicht unterstützt.",
+    "oauthClientNotConfigured": "Für diese Integration sind OAuth-Client-Anmeldedaten erforderlich. Bitte geben Sie eine Client-ID und ein Client-Secret an.",
     "missingRequiredConfig": "Bitte füllen Sie alle erforderlichen Felder aus.",
     "adminRequired": {
       "title": "Administratorzugriff erforderlich",

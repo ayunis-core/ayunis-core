@@ -169,16 +169,8 @@ export class UpdateMcpIntegrationUseCase {
       );
     }
 
-    // Validate and replace — a full re-validate of orgConfigValues against the
-    // new schema is the caller's responsibility (typically done alongside an
-    // orgConfigValues update in the same command).
     const validated = validateConfigSchema(rawSchema);
-
-    // Replace the schema via a package-private-style cast — SelfDefinedMcpIntegration
-    // exposes configSchema as readonly; mutating it requires going through
-    // this controlled path.
-    (integration as { configSchema: typeof validated }).configSchema =
-      validated;
+    integration.updateConfigSchema(validated);
   }
 
   private async updateOrgConfigValues(
