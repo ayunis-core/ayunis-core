@@ -22,6 +22,12 @@ export enum McpErrorCode {
   MCP_NOT_MARKETPLACE_INTEGRATION = 'MCP_NOT_MARKETPLACE_INTEGRATION',
   MCP_NO_USER_FIELDS = 'MCP_NO_USER_FIELDS',
   MCP_INVALID_CONFIG_KEYS = 'MCP_INVALID_CONFIG_KEYS',
+  MCP_OAUTH_AUTHORIZATION_REQUIRED = 'MCP_OAUTH_AUTHORIZATION_REQUIRED',
+  MCP_OAUTH_STATE_INVALID = 'MCP_OAUTH_STATE_INVALID',
+  MCP_OAUTH_EXCHANGE_FAILED = 'MCP_OAUTH_EXCHANGE_FAILED',
+  MCP_INVALID_CONFIG_SCHEMA = 'MCP_INVALID_CONFIG_SCHEMA',
+  MCP_OAUTH_CLIENT_NOT_CONFIGURED = 'MCP_OAUTH_CLIENT_NOT_CONFIGURED',
+  MCP_AUTHORIZATION_HEADER_COLLISION = 'MCP_AUTHORIZATION_HEADER_COLLISION',
 }
 
 export abstract class McpError extends ApplicationError {
@@ -308,6 +314,73 @@ export class McpInvalidConfigKeysError extends McpError {
     super(
       `Unknown config keys: ${invalidKeys.join(', ')}`,
       McpErrorCode.MCP_INVALID_CONFIG_KEYS,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class McpOAuthAuthorizationRequiredError extends McpError {
+  constructor(integrationId: string, metadata?: ErrorMetadata) {
+    super(
+      `OAuth authorization required for MCP integration ${integrationId}. The user must complete the OAuth authorization flow before using this integration.`,
+      McpErrorCode.MCP_OAUTH_AUTHORIZATION_REQUIRED,
+      412,
+      metadata,
+    );
+  }
+}
+
+export class McpOAuthStateInvalidError extends McpError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Invalid or expired OAuth state token. Please restart the authorization flow.',
+      McpErrorCode.MCP_OAUTH_STATE_INVALID,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class McpOAuthExchangeFailedError extends McpError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(
+      `OAuth token exchange failed: ${reason}`,
+      McpErrorCode.MCP_OAUTH_EXCHANGE_FAILED,
+      502,
+      metadata,
+    );
+  }
+}
+
+export class McpInvalidConfigSchemaError extends McpError {
+  constructor(reason: string, field?: string, metadata?: ErrorMetadata) {
+    const fieldMsg = field ? ` (field: ${field})` : '';
+    super(
+      `Invalid config schema${fieldMsg}: ${reason}`,
+      McpErrorCode.MCP_INVALID_CONFIG_SCHEMA,
+      400,
+      { ...metadata, ...(field && { field }) },
+    );
+  }
+}
+
+export class McpOAuthClientNotConfiguredError extends McpError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'OAuth client credentials (clientId and clientSecret) are required when the config schema declares OAuth.',
+      McpErrorCode.MCP_OAUTH_CLIENT_NOT_CONFIGURED,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class McpAuthorizationHeaderCollisionError extends McpError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Config schema declares a field with headerName "Authorization" while OAuth is also configured. OAuth sets the Authorization header automatically — remove the conflicting field or disable OAuth.',
+      McpErrorCode.MCP_AUTHORIZATION_HEADER_COLLISION,
       400,
       metadata,
     );
