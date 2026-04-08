@@ -2,6 +2,7 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { DeleteMcpIntegrationCommand } from './delete-mcp-integration.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
+import { McpIntegrationOAuthTokenRepositoryPort } from '../../ports/mcp-integration-oauth-token.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
@@ -20,6 +21,7 @@ export class DeleteMcpIntegrationUseCase {
   constructor(
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
+    private readonly oauthTokenRepository: McpIntegrationOAuthTokenRepositoryPort,
     private readonly contextService: ContextService,
   ) {}
 
@@ -53,6 +55,11 @@ export class DeleteMcpIntegrationUseCase {
 
       // Delete associated user configs before deleting the integration
       await this.userConfigRepository.deleteByIntegrationId(
+        command.integrationId,
+      );
+
+      // Delete associated OAuth tokens (defensive — FK cascade should handle it)
+      await this.oauthTokenRepository.deleteAllByIntegration(
         command.integrationId,
       );
 
