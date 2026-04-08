@@ -99,6 +99,7 @@ describe('CreateSelfDefinedMcpIntegrationUseCase', () => {
             mergeFixedValues: jest.fn(),
             validateRequiredFields: jest.fn(),
             encryptSecretFields: jest.fn(),
+            assertNoAuthorizationHeaderCollision: jest.fn(),
           },
         },
         {
@@ -331,6 +332,11 @@ describe('CreateSelfDefinedMcpIntegrationUseCase', () => {
   describe('error — Authorization header collision', () => {
     it('should throw McpAuthorizationHeaderCollisionError when orgField has Authorization header and OAuth', async () => {
       contextService.get.mockReturnValue(mockOrgId);
+      marketplaceConfigService.assertNoAuthorizationHeaderCollision.mockImplementation(
+        () => {
+          throw new McpAuthorizationHeaderCollisionError();
+        },
+      );
 
       const command = new CreateSelfDefinedMcpIntegrationCommand(
         'Collision',
@@ -349,6 +355,11 @@ describe('CreateSelfDefinedMcpIntegrationUseCase', () => {
 
     it('should throw when userField has Authorization header and OAuth', async () => {
       contextService.get.mockReturnValue(mockOrgId);
+      marketplaceConfigService.assertNoAuthorizationHeaderCollision.mockImplementation(
+        () => {
+          throw new McpAuthorizationHeaderCollisionError();
+        },
+      );
 
       const schemaWithUserCollision: IntegrationConfigSchema = {
         authType: 'OAUTH',
