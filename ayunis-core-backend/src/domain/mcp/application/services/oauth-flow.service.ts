@@ -310,7 +310,7 @@ export class OAuthFlowService {
       existing.updateTokens({
         accessTokenEncrypted,
         refreshTokenEncrypted,
-        tokenExpiresAt,
+        tokenExpiresAt: tokenExpiresAt ?? null,
         scope: tokens.scope,
       });
       await this.tokenRepository.save(existing);
