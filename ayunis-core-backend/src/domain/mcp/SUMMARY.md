@@ -33,6 +33,7 @@ The MCP module manages connections to external Model Context Protocol servers at
 - `MarketplaceConfigService` — Resolves effective server URL and auth headers by merging org-level and user-level config values against the integration's config schema
 - `ConnectionValidationService` — Validates MCP server connectivity, used by `ValidateMcpIntegrationUseCase`
 - `OAuthFlowService` — Orchestrates OAuth 2.1 + PKCE flows (authorization URL building, code exchange, lazy token refresh, revocation, status queries)
+- `IntegrationConfigSchemaValidator` — Runtime validator for self-defined integration config schemas, validates top-level shape, field structure, and optional OAuth block; used by `CreateSelfDefinedMcpIntegrationUseCase`
 
 **Ports:**
 - `McpIntegrationsRepository` — Persistence port for MCP integrations
