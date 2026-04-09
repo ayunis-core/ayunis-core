@@ -1,0 +1,51 @@
+{
+  "page": {
+    "title": "Integrationen",
+    "description": "Prüfen Sie, welche Integrationen für Sie verfügbar sind, und konfigurieren Sie bei Bedarf Ihre persönlichen Einstellungen.",
+    "emptyState": "Keine Integrationen verfügbar. Bitten Sie Ihre Organisationsadministration, Integrationen für Ihre Organisation zu aktivieren.",
+    "emptyStateLink": "Marktplatz durchsuchen",
+    "errorLoadingTitle": "Fehler beim Laden der Integrationen",
+    "errorLoadingMessage": "Beim Laden der Integrationen ist ein Fehler aufgetreten.",
+    "retry": "Erneut versuchen"
+  },
+  "row": {
+    "configureButton": "Konfigurieren",
+    "noConfigurable": "Keine persönlichen Einstellungen erforderlich",
+    "statusAuthorized": "Autorisiert",
+    "statusPending": "Autorisierung ausstehend",
+    "connectionConnected": "Verbunden",
+    "connectionDisconnected": "Getrennt",
+    "connectionError": "Handlungsbedarf",
+    "connectionPendingAuth": "Autorisierung erforderlich",
+    "connectionUnknown": "Nicht geprüft"
+  },
+  "dialog": {
+    "title": "Benutzerkonfiguration — {{name}}",
+    "description": "Legen Sie Ihre persönliche Konfiguration für diese Integration fest. Diese Werte überschreiben die Organisationsstandards.",
+    "authorizationTitle": "Autorisierung",
+    "authorizationDescription": "Autorisieren Sie Ihr persönliches Konto für diese Integration, bevor Sie sie in Agenten oder Fähigkeiten verwenden.",
+    "nothingToConfigure": "Für diese Integration sind keine persönlichen Einstellungen erforderlich.",
+    "save": "Speichern",
+    "saving": "Wird gespeichert…",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "success": "Benutzerkonfiguration erfolgreich gespeichert.",
+    "error": "Benutzerkonfiguration konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Integration nicht gefunden. Sie wurde möglicherweise gelöscht."
+  },
+  "oauth": {
+    "authorize": "Autorisieren",
+    "authorizing": "Autorisierung läuft...",
+    "reauthorize": "Erneut autorisieren",
+    "revoke": "Widerrufen",
+    "statusExpiresAt": "Token läuft ab am {{date}}",
+    "successToast": "OAuth-Autorisierung erfolgreich abgeschlossen.",
+    "errorToast": "OAuth-Autorisierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "errorState": "OAuth-Status ist ungültig oder abgelaufen. Bitte starten Sie den Vorgang erneut.",
+    "errorOauthExchange": "OAuth-Token-Austausch fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "errorClientNotConfigured": "OAuth-Client ist für diese Integration nicht konfiguriert.",
+    "errorIntegrationNotFound": "Integration nicht gefunden.",
+    "revokeSuccess": "OAuth-Autorisierung wurde widerrufen.",
+    "revokeError": "OAuth-Autorisierung konnte nicht widerrufen werden."
+  }
+}

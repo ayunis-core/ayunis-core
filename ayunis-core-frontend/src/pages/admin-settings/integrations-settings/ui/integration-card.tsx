@@ -18,6 +18,7 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
+import { OAuthAuthorizeButton } from '@/features/mcp-oauth';
 
 interface IntegrationCardProps {
   integration: McpIntegration;
@@ -43,6 +44,12 @@ export function IntegrationCard({
   const { t } = useTranslation('admin-settings-integrations');
   const isMarketplace = integration.type === 'marketplace';
   const hasUserFields = integration.hasUserFields === true;
+  const oauth = integration.oauth;
+  const showsOrgOAuthControls = oauth?.enabled && oauth.level === 'org';
+  const showsPendingOAuth =
+    showsOrgOAuthControls && integration.connectionStatus === 'pending_auth';
+  const showsAuthorizedOAuth =
+    showsOrgOAuthControls && oauth.authorized === true;
 
   return (
     <Item variant="outline">
@@ -60,6 +67,39 @@ export function IntegrationCard({
         </ItemDescription>
       </ItemContent>
       <ItemActions>
+        {showsOrgOAuthControls && (
+          <>
+            <OAuthAuthorizeButton
+              integrationId={integration.id}
+              isAuthorized={oauth.authorized}
+              messages={{
+                authorize: t('integrations.oauth.authorize'),
+                authorizing: t('integrations.oauth.authorizing'),
+                reauthorize: t('integrations.oauth.reauthorize'),
+                revoke: t('integrations.oauth.revoke'),
+                errorToast: t('integrations.oauth.errorToast'),
+                errorClientNotConfigured: t(
+                  'integrations.oauth.errorClientNotConfigured',
+                ),
+                errorIntegrationNotFound: t(
+                  'integrations.oauth.errorIntegrationNotFound',
+                ),
+                revokeSuccess: t('integrations.oauth.revokeSuccess'),
+                revokeError: t('integrations.oauth.revokeError'),
+              }}
+            />
+            {showsPendingOAuth && (
+              <Badge className="bg-amber-500 text-white hover:bg-amber-600">
+                {t('integrations.oauth.authorizationRequired')}
+              </Badge>
+            )}
+            {showsAuthorizedOAuth && (
+              <Badge className="bg-emerald-600 text-white hover:bg-emerald-700">
+                {t('integrations.oauth.statusAuthorized')}
+              </Badge>
+            )}
+          </>
+        )}
         {isMarketplace && hasUserFields && onUserConfig && (
           <Button
             variant="outline"
