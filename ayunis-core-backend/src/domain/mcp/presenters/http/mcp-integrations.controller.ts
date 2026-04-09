@@ -26,10 +26,6 @@ import {
 import { UUID } from 'crypto';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import {
-  CurrentUser,
-  UserProperty,
-} from 'src/iam/authentication/application/decorators/current-user.decorator';
 
 // DTOs
 import { CreatePredefinedIntegrationDto } from './dto/create-predefined-integration.dto';
@@ -85,7 +81,6 @@ import { StartMcpOAuthAuthorizationUseCase } from '../../application/use-cases/s
 import { CompleteMcpOAuthAuthorizationUseCase } from '../../application/use-cases/complete-mcp-oauth-authorization/complete-mcp-oauth-authorization.use-case';
 import { RevokeMcpOAuthAuthorizationUseCase } from '../../application/use-cases/revoke-mcp-oauth-authorization/revoke-mcp-oauth-authorization.use-case';
 import { GetMcpOAuthAuthorizationStatusUseCase } from '../../application/use-cases/get-mcp-oauth-authorization-status/get-mcp-oauth-authorization-status.use-case';
-import { McpIntegrationOAuthTokenRepositoryPort } from '../../application/ports/mcp-integration-oauth-token.repository.port';
 import { McpIntegration } from '../../domain/mcp-integration.entity';
 import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
 import { SelfDefinedMcpIntegration } from '../../domain/integrations/self-defined-mcp-integration.entity';
@@ -118,7 +113,6 @@ export class McpIntegrationsController {
     private readonly completeOAuthUseCase: CompleteMcpOAuthAuthorizationUseCase,
     private readonly revokeOAuthUseCase: RevokeMcpOAuthAuthorizationUseCase,
     private readonly getOAuthStatusUseCase: GetMcpOAuthAuthorizationStatusUseCase,
-    private readonly oauthTokenRepository: McpIntegrationOAuthTokenRepositoryPort,
     private readonly mcpIntegrationDtoMapper: McpIntegrationDtoMapper,
     private readonly predefinedConfigDtoMapper: PredefinedConfigDtoMapper,
     private readonly configService: ConfigService,
@@ -177,12 +171,10 @@ export class McpIntegrationsController {
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'List all MCP integrations for organization' })
   @ApiResponse({ status: 200, type: [McpIntegrationResponseDto] })
-  async list(
-    @CurrentUser(UserProperty.ID) userId: UUID | null,
-  ): Promise<McpIntegrationResponseDto[]> {
+  async list(): Promise<McpIntegrationResponseDto[]> {
     const integrations = await this.listOrgMcpIntegrationsUseCase.execute();
     const dtos = this.mcpIntegrationDtoMapper.toDtoArray(integrations);
-    return this.enrichWithOAuthStatus(dtos, integrations, userId);
+    return this.enrichWithOAuthStatus(dtos, integrations);
   }
 
   @Get('predefined/available')
@@ -199,13 +191,11 @@ export class McpIntegrationsController {
   @Get('available')
   @ApiOperation({ summary: 'List available (enabled) MCP integrations' })
   @ApiResponse({ status: 200, type: [McpIntegrationResponseDto] })
-  async listAvailable(
-    @CurrentUser(UserProperty.ID) userId: UUID | null,
-  ): Promise<McpIntegrationResponseDto[]> {
+  async listAvailable(): Promise<McpIntegrationResponseDto[]> {
     const integrations =
       await this.listAvailableMcpIntegrationsUseCase.execute();
     const dtos = this.mcpIntegrationDtoMapper.toDtoArray(integrations);
-    return this.enrichWithOAuthStatus(dtos, integrations, userId);
+    return this.enrichWithOAuthStatus(dtos, integrations);
   }
 
   @Get(':id')
@@ -215,17 +205,12 @@ export class McpIntegrationsController {
   @ApiResponse({ status: 200, type: McpIntegrationResponseDto })
   async getById(
     @Param('id', ParseUUIDPipe) id: UUID,
-    @CurrentUser(UserProperty.ID) userId: UUID | null,
   ): Promise<McpIntegrationResponseDto> {
     const integration = await this.getMcpIntegrationUseCase.execute(
       new GetMcpIntegrationQuery(id),
     );
     const dto = this.mcpIntegrationDtoMapper.toDto(integration);
-    const [enriched] = await this.enrichWithOAuthStatus(
-      [dto],
-      [integration],
-      userId,
-    );
+    const [enriched] = await this.enrichWithOAuthStatus([dto], [integration]);
     return enriched;
   }
 
@@ -470,7 +455,6 @@ export class McpIntegrationsController {
   private async enrichWithOAuthStatus(
     dtos: McpIntegrationResponseDto[],
     integrations: McpIntegration[],
-    userId: UUID | null,
   ): Promise<McpIntegrationResponseDto[]> {
     const oauthIntegrations = integrations.filter(
       (i): i is MarketplaceMcpIntegration | SelfDefinedMcpIntegration =>
@@ -485,14 +469,10 @@ export class McpIntegrationsController {
     const authorizedByIntegrationId = new Map<UUID, boolean>(
       await Promise.all(
         oauthEnabled.map(async (integration) => {
-          const oauthLevel = integration.configSchema.oauth!.level;
-          const tokenUserId = oauthLevel === 'user' ? userId : null;
-          const token =
-            await this.oauthTokenRepository.findByIntegrationAndUser(
-              integration.id,
-              tokenUserId,
-            );
-          return [integration.id, token !== null] as const;
+          const status = await this.getOAuthStatusUseCase.execute(
+            new GetMcpOAuthAuthorizationStatusQuery(integration.id),
+          );
+          return [integration.id, status.authorized] as const;
         }),
       ),
     );

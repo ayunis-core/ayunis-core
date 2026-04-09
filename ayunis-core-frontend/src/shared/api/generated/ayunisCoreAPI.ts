@@ -215,7 +215,7 @@ export const appControllerIsCloud = (
       
       
       return customAxiosInstance<IsCloudResponseDto>(
-      {url: `/api`, method: 'GET', signal
+      {url: `/`, method: 'GET', signal
     },
       );
     }
@@ -225,7 +225,7 @@ export const appControllerIsCloud = (
 
 export const getAppControllerIsCloudQueryKey = () => {
     return [
-    `/api`
+    `/`
     ] as const;
     }
 
@@ -308,7 +308,7 @@ export const appControllerHealth = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/health`, method: 'GET', signal
+      {url: `/health`, method: 'GET', signal
     },
       );
     }
@@ -318,7 +318,7 @@ export const appControllerHealth = (
 
 export const getAppControllerHealthQueryKey = () => {
     return [
-    `/api/health`
+    `/health`
     ] as const;
     }
 
@@ -401,7 +401,7 @@ export const appControllerFeatureToggles = (
       
       
       return customAxiosInstance<FeatureTogglesResponseDto>(
-      {url: `/api/feature-toggles`, method: 'GET', signal
+      {url: `/feature-toggles`, method: 'GET', signal
     },
       );
     }
@@ -411,7 +411,7 @@ export const appControllerFeatureToggles = (
 
 export const getAppControllerFeatureTogglesQueryKey = () => {
     return [
-    `/api/feature-toggles`
+    `/feature-toggles`
     ] as const;
     }
 
@@ -494,7 +494,7 @@ export const modelsControllerGetAvailableModelsWithConfig = (
       
       
       return customAxiosInstance<ModelWithConfigResponseDto[]>(
-      {url: `/api/models/available`, method: 'GET', signal
+      {url: `/models/available`, method: 'GET', signal
     },
       );
     }
@@ -504,7 +504,7 @@ export const modelsControllerGetAvailableModelsWithConfig = (
 
 export const getModelsControllerGetAvailableModelsWithConfigQueryKey = () => {
     return [
-    `/api/models/available`
+    `/models/available`
     ] as const;
     }
 
@@ -587,7 +587,7 @@ export const modelsControllerGetProviders = (
       
       
       return customAxiosInstance<ModelProviderInfoResponseDto[]>(
-      {url: `/api/models/providers`, method: 'GET', signal
+      {url: `/models/providers`, method: 'GET', signal
     },
       );
     }
@@ -597,7 +597,7 @@ export const modelsControllerGetProviders = (
 
 export const getModelsControllerGetProvidersQueryKey = () => {
     return [
-    `/api/models/providers`
+    `/models/providers`
     ] as const;
     }
 
@@ -680,7 +680,7 @@ export const modelsControllerCreatePermittedModel = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/models/permitted`, method: 'POST',
+      {url: `/models/permitted`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createPermittedModelDto, signal
     },
@@ -744,7 +744,7 @@ export const modelsControllerDeletePermittedModel = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/models/permitted/${id}`, method: 'DELETE'
+      {url: `/models/permitted/${id}`, method: 'DELETE'
     },
       );
     }
@@ -807,7 +807,7 @@ export const modelsControllerUpdatePermittedModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto>(
-      {url: `/api/models/permitted/${id}`, method: 'PATCH',
+      {url: `/models/permitted/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updatePermittedModelDto
     },
@@ -873,7 +873,7 @@ export const modelsControllerGetPermittedLanguageModels = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto[]>(
-      {url: `/api/models/permitted/language-models`, method: 'GET', signal
+      {url: `/models/permitted/language-models`, method: 'GET', signal
     },
       );
     }
@@ -883,7 +883,7 @@ export const modelsControllerGetPermittedLanguageModels = (
 
 export const getModelsControllerGetPermittedLanguageModelsQueryKey = () => {
     return [
-    `/api/models/permitted/language-models`
+    `/models/permitted/language-models`
     ] as const;
     }
 
@@ -967,7 +967,7 @@ export const modelsControllerGetOrgPermittedLanguageModels = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto[]>(
-      {url: `/api/models/permitted/language-models/org`, method: 'GET', signal
+      {url: `/models/permitted/language-models/org`, method: 'GET', signal
     },
       );
     }
@@ -977,7 +977,7 @@ export const modelsControllerGetOrgPermittedLanguageModels = (
 
 export const getModelsControllerGetOrgPermittedLanguageModelsQueryKey = () => {
     return [
-    `/api/models/permitted/language-models/org`
+    `/models/permitted/language-models/org`
     ] as const;
     }
 
@@ -1061,7 +1061,7 @@ export const modelsControllerGetEffectiveDefaultModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
-      {url: `/api/models/default`, method: 'GET', signal
+      {url: `/models/default`, method: 'GET', signal
     },
       );
     }
@@ -1071,7 +1071,7 @@ export const modelsControllerGetEffectiveDefaultModel = (
 
 export const getModelsControllerGetEffectiveDefaultModelQueryKey = () => {
     return [
-    `/api/models/default`
+    `/models/default`
     ] as const;
     }
 
@@ -1155,7 +1155,7 @@ export const modelsControllerGetOrgSpecificDefaultModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
-      {url: `/api/models/org/default`, method: 'GET', signal
+      {url: `/models/org/default`, method: 'GET', signal
     },
       );
     }
@@ -1165,7 +1165,7 @@ export const modelsControllerGetOrgSpecificDefaultModel = (
 
 export const getModelsControllerGetOrgSpecificDefaultModelQueryKey = () => {
     return [
-    `/api/models/org/default`
+    `/models/org/default`
     ] as const;
     }
 
@@ -1248,7 +1248,7 @@ export const modelsControllerManageOrgDefaultModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto>(
-      {url: `/api/models/org/default`, method: 'PUT',
+      {url: `/models/org/default`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: setOrgDefaultModelDto
     },
@@ -1314,7 +1314,7 @@ export const modelsControllerGetUserSpecificDefaultModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
-      {url: `/api/models/user/default`, method: 'GET', signal
+      {url: `/models/user/default`, method: 'GET', signal
     },
       );
     }
@@ -1324,7 +1324,7 @@ export const modelsControllerGetUserSpecificDefaultModel = (
 
 export const getModelsControllerGetUserSpecificDefaultModelQueryKey = () => {
     return [
-    `/api/models/user/default`
+    `/models/user/default`
     ] as const;
     }
 
@@ -1407,7 +1407,7 @@ export const modelsControllerManageUserDefaultModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto>(
-      {url: `/api/models/user/default`, method: 'PUT',
+      {url: `/models/user/default`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: setUserDefaultModelDto
     },
@@ -1471,7 +1471,7 @@ export const modelsControllerDeleteUserDefaultModel = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/models/user/default`, method: 'DELETE'
+      {url: `/models/user/default`, method: 'DELETE'
     },
       );
     }
@@ -1535,7 +1535,7 @@ export const modelsControllerGetModelProviderInfo = (
       
       
       return customAxiosInstance<ModelProviderInfoResponseDto>(
-      {url: `/api/models/provider/${provider}`, method: 'GET', signal
+      {url: `/models/provider/${provider}`, method: 'GET', signal
     },
       );
     }
@@ -1545,7 +1545,7 @@ export const modelsControllerGetModelProviderInfo = (
 
 export const getModelsControllerGetModelProviderInfoQueryKey = (provider?: string,) => {
     return [
-    `/api/models/provider/${provider}`
+    `/models/provider/${provider}`
     ] as const;
     }
 
@@ -1628,7 +1628,7 @@ export const modelsControllerIsEmbeddingModelEnabled = (
       
       
       return customAxiosInstance<EmbeddingModelEnabledResponseDto>(
-      {url: `/api/models/embedding/enabled`, method: 'GET', signal
+      {url: `/models/embedding/enabled`, method: 'GET', signal
     },
       );
     }
@@ -1638,7 +1638,7 @@ export const modelsControllerIsEmbeddingModelEnabled = (
 
 export const getModelsControllerIsEmbeddingModelEnabledQueryKey = () => {
     return [
-    `/api/models/embedding/enabled`
+    `/models/embedding/enabled`
     ] as const;
     }
 
@@ -1721,7 +1721,7 @@ export const teamPermittedModelsControllerListTeamPermittedModels = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto[]>(
-      {url: `/api/teams/${teamId}/permitted-models`, method: 'GET', signal
+      {url: `/teams/${teamId}/permitted-models`, method: 'GET', signal
     },
       );
     }
@@ -1731,7 +1731,7 @@ export const teamPermittedModelsControllerListTeamPermittedModels = (
 
 export const getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey = (teamId?: string,) => {
     return [
-    `/api/teams/${teamId}/permitted-models`
+    `/teams/${teamId}/permitted-models`
     ] as const;
     }
 
@@ -1816,7 +1816,7 @@ export const teamPermittedModelsControllerCreateTeamPermittedModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto>(
-      {url: `/api/teams/${teamId}/permitted-models`, method: 'POST',
+      {url: `/teams/${teamId}/permitted-models`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createTeamPermittedModelDto, signal
     },
@@ -1881,7 +1881,7 @@ export const teamPermittedModelsControllerDeleteTeamPermittedModel = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/teams/${teamId}/permitted-models/${id}`, method: 'DELETE'
+      {url: `/teams/${teamId}/permitted-models/${id}`, method: 'DELETE'
     },
       );
     }
@@ -1945,7 +1945,7 @@ export const teamPermittedModelsControllerSetTeamDefaultModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto>(
-      {url: `/api/teams/${teamId}/permitted-models/default`, method: 'PUT',
+      {url: `/teams/${teamId}/permitted-models/default`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: setTeamDefaultModelDto
     },
@@ -2011,7 +2011,7 @@ export const superAdminPermittedModelsControllerGetAvailableModels = (
       
       
       return customAxiosInstance<ModelWithConfigResponseDto[]>(
-      {url: `/api/super-admin/models/${orgId}/available`, method: 'GET', signal
+      {url: `/super-admin/models/${orgId}/available`, method: 'GET', signal
     },
       );
     }
@@ -2021,7 +2021,7 @@ export const superAdminPermittedModelsControllerGetAvailableModels = (
 
 export const getSuperAdminPermittedModelsControllerGetAvailableModelsQueryKey = (orgId?: string,) => {
     return [
-    `/api/super-admin/models/${orgId}/available`
+    `/super-admin/models/${orgId}/available`
     ] as const;
     }
 
@@ -2105,7 +2105,7 @@ export const superAdminPermittedModelsControllerManageOrgDefaultModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto>(
-      {url: `/api/super-admin/models/${orgId}/default-model`, method: 'PUT',
+      {url: `/super-admin/models/${orgId}/default-model`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: setOrgDefaultModelDto
     },
@@ -2171,7 +2171,7 @@ export const superAdminPermittedModelsControllerGetPermittedModels = (
       
       
       return customAxiosInstance<SuperAdminPermittedModelsControllerGetPermittedModels200Item[]>(
-      {url: `/api/super-admin/models/${orgId}/permitted-models`, method: 'GET', signal
+      {url: `/super-admin/models/${orgId}/permitted-models`, method: 'GET', signal
     },
       );
     }
@@ -2181,7 +2181,7 @@ export const superAdminPermittedModelsControllerGetPermittedModels = (
 
 export const getSuperAdminPermittedModelsControllerGetPermittedModelsQueryKey = (orgId?: string,) => {
     return [
-    `/api/super-admin/models/${orgId}/permitted-models`
+    `/super-admin/models/${orgId}/permitted-models`
     ] as const;
     }
 
@@ -2266,7 +2266,7 @@ export const superAdminPermittedModelsControllerCreatePermittedModel = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/super-admin/models/${orgId}/permitted-models`, method: 'POST',
+      {url: `/super-admin/models/${orgId}/permitted-models`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createPermittedModelDto, signal
     },
@@ -2332,7 +2332,7 @@ export const superAdminPermittedModelsControllerDeletePermittedModel = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/super-admin/models/${orgId}/permitted-models/${id}`, method: 'DELETE'
+      {url: `/super-admin/models/${orgId}/permitted-models/${id}`, method: 'DELETE'
     },
       );
     }
@@ -2397,7 +2397,7 @@ export const superAdminPermittedModelsControllerUpdatePermittedModel = (
       
       
       return customAxiosInstance<SuperAdminPermittedModelsControllerUpdatePermittedModel200>(
-      {url: `/api/super-admin/models/${orgId}/permitted-models/${id}`, method: 'PATCH',
+      {url: `/super-admin/models/${orgId}/permitted-models/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updatePermittedModelDto
     },
@@ -2463,7 +2463,7 @@ export const superAdminCatalogModelsControllerGetAllCatalogModels = (
       
       
       return customAxiosInstance<SuperAdminCatalogModelsControllerGetAllCatalogModels200Item[]>(
-      {url: `/api/super-admin/models/catalog`, method: 'GET', signal
+      {url: `/super-admin/models/catalog`, method: 'GET', signal
     },
       );
     }
@@ -2473,7 +2473,7 @@ export const superAdminCatalogModelsControllerGetAllCatalogModels = (
 
 export const getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey = () => {
     return [
-    `/api/super-admin/models/catalog`
+    `/super-admin/models/catalog`
     ] as const;
     }
 
@@ -2557,7 +2557,7 @@ export const superAdminCatalogModelsControllerGetCatalogModelById = (
       
       
       return customAxiosInstance<SuperAdminCatalogModelsControllerGetCatalogModelById200>(
-      {url: `/api/super-admin/models/catalog/${id}`, method: 'GET', signal
+      {url: `/super-admin/models/catalog/${id}`, method: 'GET', signal
     },
       );
     }
@@ -2567,7 +2567,7 @@ export const superAdminCatalogModelsControllerGetCatalogModelById = (
 
 export const getSuperAdminCatalogModelsControllerGetCatalogModelByIdQueryKey = (id?: string,) => {
     return [
-    `/api/super-admin/models/catalog/${id}`
+    `/super-admin/models/catalog/${id}`
     ] as const;
     }
 
@@ -2650,7 +2650,7 @@ export const superAdminCatalogModelsControllerDeleteCatalogModel = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/super-admin/models/catalog/${id}`, method: 'DELETE'
+      {url: `/super-admin/models/catalog/${id}`, method: 'DELETE'
     },
       );
     }
@@ -2714,7 +2714,7 @@ export const superAdminCatalogModelsControllerCreateLanguageModel = (
       
       
       return customAxiosInstance<LanguageModelResponseDto>(
-      {url: `/api/super-admin/models/catalog/language`, method: 'POST',
+      {url: `/super-admin/models/catalog/language`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createLanguageModelRequestDto, signal
     },
@@ -2780,7 +2780,7 @@ export const superAdminCatalogModelsControllerUpdateLanguageModel = (
       
       
       return customAxiosInstance<LanguageModelResponseDto>(
-      {url: `/api/super-admin/models/catalog/language/${id}`, method: 'PATCH',
+      {url: `/super-admin/models/catalog/language/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateLanguageModelRequestDto
     },
@@ -2846,7 +2846,7 @@ export const superAdminCatalogModelsControllerCreateEmbeddingModel = (
       
       
       return customAxiosInstance<EmbeddingModelResponseDto>(
-      {url: `/api/super-admin/models/catalog/embedding`, method: 'POST',
+      {url: `/super-admin/models/catalog/embedding`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createEmbeddingModelRequestDto, signal
     },
@@ -2912,7 +2912,7 @@ export const superAdminCatalogModelsControllerUpdateEmbeddingModel = (
       
       
       return customAxiosInstance<EmbeddingModelResponseDto>(
-      {url: `/api/super-admin/models/catalog/embedding/${id}`, method: 'PATCH',
+      {url: `/super-admin/models/catalog/embedding/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateEmbeddingModelRequestDto
     },
@@ -2978,7 +2978,7 @@ export const superAdminOrgsControllerCreateOrg = (
       
       
       return customAxiosInstance<SuperAdminOrgResponseDto>(
-      {url: `/api/super-admin/orgs`, method: 'POST',
+      {url: `/super-admin/orgs`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createOrgRequestDto, signal
     },
@@ -3044,7 +3044,7 @@ export const superAdminOrgsControllerGetAllOrgs = (
       
       
       return customAxiosInstance<SuperAdminOrgListResponseDto>(
-      {url: `/api/super-admin/orgs`, method: 'GET',
+      {url: `/super-admin/orgs`, method: 'GET',
         params, signal
     },
       );
@@ -3055,7 +3055,7 @@ export const superAdminOrgsControllerGetAllOrgs = (
 
 export const getSuperAdminOrgsControllerGetAllOrgsQueryKey = (params?: SuperAdminOrgsControllerGetAllOrgsParams,) => {
     return [
-    `/api/super-admin/orgs`, ...(params ? [params]: [])
+    `/super-admin/orgs`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -3139,7 +3139,7 @@ export const superAdminOrgsControllerGetOrgById = (
       
       
       return customAxiosInstance<SuperAdminOrgResponseDto>(
-      {url: `/api/super-admin/orgs/${id}`, method: 'GET', signal
+      {url: `/super-admin/orgs/${id}`, method: 'GET', signal
     },
       );
     }
@@ -3149,7 +3149,7 @@ export const superAdminOrgsControllerGetOrgById = (
 
 export const getSuperAdminOrgsControllerGetOrgByIdQueryKey = (id?: string,) => {
     return [
-    `/api/super-admin/orgs/${id}`
+    `/super-admin/orgs/${id}`
     ] as const;
     }
 
@@ -3233,7 +3233,7 @@ export const userControllerGetUsersInOrganization = (
       
       
       return customAxiosInstance<PaginatedUsersListResponseDto>(
-      {url: `/api/users`, method: 'GET',
+      {url: `/users`, method: 'GET',
         params, signal
     },
       );
@@ -3244,7 +3244,7 @@ export const userControllerGetUsersInOrganization = (
 
 export const getUserControllerGetUsersInOrganizationQueryKey = (params?: UserControllerGetUsersInOrganizationParams,) => {
     return [
-    `/api/users`, ...(params ? [params]: [])
+    `/users`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -3328,7 +3328,7 @@ export const userControllerUpdateUserRole = (
       
       
       return customAxiosInstance<UserResponseDto>(
-      {url: `/api/users/${id}/role`, method: 'PATCH',
+      {url: `/users/${id}/role`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateUserRoleDto
     },
@@ -3393,7 +3393,7 @@ export const userControllerUpdateUserName = (
       
       
       return customAxiosInstance<UserResponseDto>(
-      {url: `/api/users/name`, method: 'PATCH',
+      {url: `/users/name`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateUserNameDto
     },
@@ -3458,7 +3458,7 @@ export const userControllerUpdatePassword = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/users/password`, method: 'PATCH',
+      {url: `/users/password`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updatePasswordDto
     },
@@ -3524,7 +3524,7 @@ export const userControllerConfirmEmail = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/users/confirm-email`, method: 'POST',
+      {url: `/users/confirm-email`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: confirmEmailDto, signal
     },
@@ -3590,7 +3590,7 @@ export const userControllerResendEmailConfirmation = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/users/resend-confirmation`, method: 'POST',
+      {url: `/users/resend-confirmation`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: resendEmailConfirmationDto, signal
     },
@@ -3655,7 +3655,7 @@ export const userControllerDeleteUser = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/users/${id}`, method: 'DELETE'
+      {url: `/users/${id}`, method: 'DELETE'
     },
       );
     }
@@ -3719,7 +3719,7 @@ export const userControllerTriggerPasswordResetForUser = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/users/${id}/trigger-password-reset`, method: 'POST', signal
+      {url: `/users/${id}/trigger-password-reset`, method: 'POST', signal
     },
       );
     }
@@ -3783,7 +3783,7 @@ export const userControllerForgotPassword = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/users/forgot-password`, method: 'POST',
+      {url: `/users/forgot-password`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: forgotPasswordDto, signal
     },
@@ -3849,7 +3849,7 @@ export const userControllerResetPassword = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/users/reset-password`, method: 'POST',
+      {url: `/users/reset-password`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: resetPasswordDto, signal
     },
@@ -3915,7 +3915,7 @@ export const userControllerValidateResetToken = (
       
       
       return customAxiosInstance<UserControllerValidateResetToken200>(
-      {url: `/api/users/validate-reset-token`, method: 'GET',
+      {url: `/users/validate-reset-token`, method: 'GET',
         params, signal
     },
       );
@@ -3926,7 +3926,7 @@ export const userControllerValidateResetToken = (
 
 export const getUserControllerValidateResetTokenQueryKey = (params?: UserControllerValidateResetTokenParams,) => {
     return [
-    `/api/users/validate-reset-token`, ...(params ? [params]: [])
+    `/users/validate-reset-token`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -4011,7 +4011,7 @@ export const superAdminUsersControllerGetUsersByOrgId = (
       
       
       return customAxiosInstance<PaginatedUsersListResponseDto>(
-      {url: `/api/super-admin/users/${orgId}`, method: 'GET',
+      {url: `/super-admin/users/${orgId}`, method: 'GET',
         params, signal
     },
       );
@@ -4023,7 +4023,7 @@ export const superAdminUsersControllerGetUsersByOrgId = (
 export const getSuperAdminUsersControllerGetUsersByOrgIdQueryKey = (orgId?: string,
     params?: SuperAdminUsersControllerGetUsersByOrgIdParams,) => {
     return [
-    `/api/super-admin/users/${orgId}`, ...(params ? [params]: [])
+    `/super-admin/users/${orgId}`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -4111,7 +4111,7 @@ export const superAdminUsersControllerDeleteUser = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/super-admin/users/${userId}`, method: 'DELETE'
+      {url: `/super-admin/users/${userId}`, method: 'DELETE'
     },
       );
     }
@@ -4175,7 +4175,7 @@ export const superAdminUsersControllerTriggerPasswordReset = (
       
       
       return customAxiosInstance<TriggerPasswordResetResponseDto>(
-      {url: `/api/super-admin/users/${userId}/trigger-password-reset`, method: 'POST', signal
+      {url: `/super-admin/users/${userId}/trigger-password-reset`, method: 'POST', signal
     },
       );
     }
@@ -4240,7 +4240,7 @@ export const superAdminUsersControllerCreateUser = (
       
       
       return customAxiosInstance<UserResponseDto>(
-      {url: `/api/super-admin/users/${orgId}/create`, method: 'POST',
+      {url: `/super-admin/users/${orgId}/create`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createUserDto, signal
     },
@@ -4306,7 +4306,7 @@ export const superAdminManagementControllerListSuperAdmins = (
       
       
       return customAxiosInstance<SuperAdminUserResponseDto[]>(
-      {url: `/api/super-admin/super-admins`, method: 'GET', signal
+      {url: `/super-admin/super-admins`, method: 'GET', signal
     },
       );
     }
@@ -4316,7 +4316,7 @@ export const superAdminManagementControllerListSuperAdmins = (
 
 export const getSuperAdminManagementControllerListSuperAdminsQueryKey = () => {
     return [
-    `/api/super-admin/super-admins`
+    `/super-admin/super-admins`
     ] as const;
     }
 
@@ -4400,7 +4400,7 @@ export const superAdminManagementControllerPromoteToSuperAdmin = (
       
       
       return customAxiosInstance<SuperAdminUserResponseDto>(
-      {url: `/api/super-admin/super-admins`, method: 'POST',
+      {url: `/super-admin/super-admins`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: promoteToSuperAdminDto, signal
     },
@@ -4465,7 +4465,7 @@ export const superAdminManagementControllerDemoteFromSuperAdmin = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/super-admin/super-admins/${userId}`, method: 'DELETE'
+      {url: `/super-admin/super-admins/${userId}`, method: 'DELETE'
     },
       );
     }
@@ -4529,7 +4529,7 @@ export const invitesControllerCreate = (
       
       
       return customAxiosInstance<CreateInviteResponseDto>(
-      {url: `/api/invites`, method: 'POST',
+      {url: `/invites`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createInviteDto, signal
     },
@@ -4595,7 +4595,7 @@ export const invitesControllerGetInvites = (
       
       
       return customAxiosInstance<PaginatedInvitesListResponseDto>(
-      {url: `/api/invites`, method: 'GET',
+      {url: `/invites`, method: 'GET',
         params, signal
     },
       );
@@ -4606,7 +4606,7 @@ export const invitesControllerGetInvites = (
 
 export const getInvitesControllerGetInvitesQueryKey = (params?: InvitesControllerGetInvitesParams,) => {
     return [
-    `/api/invites`, ...(params ? [params]: [])
+    `/invites`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -4690,7 +4690,7 @@ export const invitesControllerCreateBulk = (
       
       
       return customAxiosInstance<CreateBulkInvitesResponseDto>(
-      {url: `/api/invites/bulk`, method: 'POST',
+      {url: `/invites/bulk`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createBulkInvitesDto, signal
     },
@@ -4756,7 +4756,7 @@ export const invitesControllerGetInviteByToken = (
       
       
       return customAxiosInstance<InviteDetailResponseDto>(
-      {url: `/api/invites/${token}`, method: 'GET', signal
+      {url: `/invites/${token}`, method: 'GET', signal
     },
       );
     }
@@ -4766,7 +4766,7 @@ export const invitesControllerGetInviteByToken = (
 
 export const getInvitesControllerGetInviteByTokenQueryKey = (token?: string,) => {
     return [
-    `/api/invites/${token}`
+    `/invites/${token}`
     ] as const;
     }
 
@@ -4850,7 +4850,7 @@ export const invitesControllerAcceptInvite = (
       
       
       return customAxiosInstance<AcceptInviteResponseDto>(
-      {url: `/api/invites/accept`, method: 'POST',
+      {url: `/invites/accept`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: acceptInviteDto, signal
     },
@@ -4916,7 +4916,7 @@ export const invitesControllerResendExpiredInvite = (
       
       
       return customAxiosInstance<CreateInviteResponseDto>(
-      {url: `/api/invites/${id}/resend`, method: 'POST', signal
+      {url: `/invites/${id}/resend`, method: 'POST', signal
     },
       );
     }
@@ -4979,7 +4979,7 @@ export const invitesControllerDeleteAllPending = (
       
       
       return customAxiosInstance<DeleteAllPendingInvitesResponseDto>(
-      {url: `/api/invites/all`, method: 'DELETE'
+      {url: `/invites/all`, method: 'DELETE'
     },
       );
     }
@@ -5042,7 +5042,7 @@ export const invitesControllerDeleteInvite = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/invites/${id}`, method: 'DELETE'
+      {url: `/invites/${id}`, method: 'DELETE'
     },
       );
     }
@@ -5105,7 +5105,7 @@ export const subscriptionsControllerHasActiveSubscription = (
       
       
       return customAxiosInstance<ActiveSubscriptionResponseDto>(
-      {url: `/api/subscriptions/active`, method: 'GET', signal
+      {url: `/subscriptions/active`, method: 'GET', signal
     },
       );
     }
@@ -5115,7 +5115,7 @@ export const subscriptionsControllerHasActiveSubscription = (
 
 export const getSubscriptionsControllerHasActiveSubscriptionQueryKey = () => {
     return [
-    `/api/subscriptions/active`
+    `/subscriptions/active`
     ] as const;
     }
 
@@ -5198,7 +5198,7 @@ export const subscriptionsControllerGetCurrentPrice = (
       
       
       return customAxiosInstance<PriceResponseDto>(
-      {url: `/api/subscriptions/price`, method: 'GET', signal
+      {url: `/subscriptions/price`, method: 'GET', signal
     },
       );
     }
@@ -5208,7 +5208,7 @@ export const subscriptionsControllerGetCurrentPrice = (
 
 export const getSubscriptionsControllerGetCurrentPriceQueryKey = () => {
     return [
-    `/api/subscriptions/price`
+    `/subscriptions/price`
     ] as const;
     }
 
@@ -5292,7 +5292,7 @@ export const superAdminSubscriptionsControllerGetSubscription = (
       
       
       return customAxiosInstance<SubscriptionResponseDtoNullable>(
-      {url: `/api/super-admin/subscriptions/${orgId}`, method: 'GET', signal
+      {url: `/super-admin/subscriptions/${orgId}`, method: 'GET', signal
     },
       );
     }
@@ -5302,7 +5302,7 @@ export const superAdminSubscriptionsControllerGetSubscription = (
 
 export const getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey = (orgId?: string,) => {
     return [
-    `/api/super-admin/subscriptions/${orgId}`
+    `/super-admin/subscriptions/${orgId}`
     ] as const;
     }
 
@@ -5387,7 +5387,7 @@ export const superAdminSubscriptionsControllerCreateSubscription = (
       
       
       return customAxiosInstance<SubscriptionResponseDto>(
-      {url: `/api/super-admin/subscriptions/${orgId}`, method: 'POST',
+      {url: `/super-admin/subscriptions/${orgId}`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createSubscriptionRequestDto, signal
     },
@@ -5452,7 +5452,7 @@ export const superAdminSubscriptionsControllerCancelSubscription = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/super-admin/subscriptions/${orgId}`, method: 'DELETE'
+      {url: `/super-admin/subscriptions/${orgId}`, method: 'DELETE'
     },
       );
     }
@@ -5516,7 +5516,7 @@ export const superAdminSubscriptionsControllerUpdateSeats = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/super-admin/subscriptions/${orgId}/seats`, method: 'PUT',
+      {url: `/super-admin/subscriptions/${orgId}/seats`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateSeatsDto
     },
@@ -5582,7 +5582,7 @@ export const superAdminSubscriptionsControllerUpdateBillingInfo = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/super-admin/subscriptions/${orgId}/billing-info`, method: 'PUT',
+      {url: `/super-admin/subscriptions/${orgId}/billing-info`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateBillingInfoDto
     },
@@ -5648,7 +5648,7 @@ export const superAdminSubscriptionsControllerUpdateStartDate = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/super-admin/subscriptions/${orgId}/start-date`, method: 'PUT',
+      {url: `/super-admin/subscriptions/${orgId}/start-date`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateStartDateDto
     },
@@ -5714,7 +5714,7 @@ export const superAdminSubscriptionsControllerUncancelSubscription = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/super-admin/subscriptions/${orgId}/uncancel`, method: 'POST', signal
+      {url: `/super-admin/subscriptions/${orgId}/uncancel`, method: 'POST', signal
     },
       );
     }
@@ -5777,7 +5777,7 @@ export const teamsControllerListTeams = (
       
       
       return customAxiosInstance<TeamResponseDto[]>(
-      {url: `/api/teams`, method: 'GET', signal
+      {url: `/teams`, method: 'GET', signal
     },
       );
     }
@@ -5787,7 +5787,7 @@ export const teamsControllerListTeams = (
 
 export const getTeamsControllerListTeamsQueryKey = () => {
     return [
-    `/api/teams`
+    `/teams`
     ] as const;
     }
 
@@ -5870,7 +5870,7 @@ export const teamsControllerCreateTeam = (
       
       
       return customAxiosInstance<TeamResponseDto>(
-      {url: `/api/teams`, method: 'POST',
+      {url: `/teams`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createTeamDto, signal
     },
@@ -5935,7 +5935,7 @@ export const teamsControllerListMyTeams = (
       
       
       return customAxiosInstance<TeamResponseDto[]>(
-      {url: `/api/teams/me`, method: 'GET', signal
+      {url: `/teams/me`, method: 'GET', signal
     },
       );
     }
@@ -5945,7 +5945,7 @@ export const teamsControllerListMyTeams = (
 
 export const getTeamsControllerListMyTeamsQueryKey = () => {
     return [
-    `/api/teams/me`
+    `/teams/me`
     ] as const;
     }
 
@@ -6028,7 +6028,7 @@ export const teamsControllerGetTeam = (
       
       
       return customAxiosInstance<TeamResponseDto>(
-      {url: `/api/teams/${id}`, method: 'GET', signal
+      {url: `/teams/${id}`, method: 'GET', signal
     },
       );
     }
@@ -6038,7 +6038,7 @@ export const teamsControllerGetTeam = (
 
 export const getTeamsControllerGetTeamQueryKey = (id?: string,) => {
     return [
-    `/api/teams/${id}`
+    `/teams/${id}`
     ] as const;
     }
 
@@ -6121,7 +6121,7 @@ export const teamsControllerUpdateTeam = (
       
       
       return customAxiosInstance<TeamResponseDto>(
-      {url: `/api/teams/${id}`, method: 'PATCH',
+      {url: `/teams/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateTeamDto
     },
@@ -6185,7 +6185,7 @@ export const teamsControllerDeleteTeam = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/teams/${id}`, method: 'DELETE'
+      {url: `/teams/${id}`, method: 'DELETE'
     },
       );
     }
@@ -6249,7 +6249,7 @@ export const teamsControllerListTeamMembers = (
       
       
       return customAxiosInstance<PaginatedTeamMembersResponseDto>(
-      {url: `/api/teams/${id}/members`, method: 'GET',
+      {url: `/teams/${id}/members`, method: 'GET',
         params, signal
     },
       );
@@ -6261,7 +6261,7 @@ export const teamsControllerListTeamMembers = (
 export const getTeamsControllerListTeamMembersQueryKey = (id?: string,
     params?: TeamsControllerListTeamMembersParams,) => {
     return [
-    `/api/teams/${id}/members`, ...(params ? [params]: [])
+    `/teams/${id}/members`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -6350,7 +6350,7 @@ export const teamsControllerAddTeamMember = (
       
       
       return customAxiosInstance<TeamMemberResponseDto>(
-      {url: `/api/teams/${id}/members`, method: 'POST',
+      {url: `/teams/${id}/members`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: addTeamMemberDto, signal
     },
@@ -6415,7 +6415,7 @@ export const teamsControllerRemoveTeamMember = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/teams/${id}/members/${userId}`, method: 'DELETE'
+      {url: `/teams/${id}/members/${userId}`, method: 'DELETE'
     },
       );
     }
@@ -6481,7 +6481,7 @@ export const storageControllerUploadFile = (
 formData.append(`file`, storageControllerUploadFileBody.file)
 
       return customAxiosInstance<UploadFileResponseDto>(
-      {url: `/api/storage/upload`, method: 'POST',
+      {url: `/storage/upload`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
     },
@@ -6543,7 +6543,7 @@ export const storageControllerGetFile = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/storage/${objectName}`, method: 'GET', signal
+      {url: `/storage/${objectName}`, method: 'GET', signal
     },
       );
     }
@@ -6553,7 +6553,7 @@ export const storageControllerGetFile = (
 
 export const getStorageControllerGetFileQueryKey = (objectName?: string,) => {
     return [
-    `/api/storage/${objectName}`
+    `/storage/${objectName}`
     ] as const;
     }
 
@@ -6629,7 +6629,7 @@ export const storageControllerDeleteFile = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/storage/${objectName}`, method: 'DELETE'
+      {url: `/storage/${objectName}`, method: 'DELETE'
     },
       );
     }
@@ -6686,7 +6686,7 @@ export const storageControllerGetPresignedUrl = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/storage/url/${objectName}`, method: 'GET', signal
+      {url: `/storage/url/${objectName}`, method: 'GET', signal
     },
       );
     }
@@ -6696,7 +6696,7 @@ export const storageControllerGetPresignedUrl = (
 
 export const getStorageControllerGetPresignedUrlQueryKey = (objectName?: string,) => {
     return [
-    `/api/storage/url/${objectName}`
+    `/storage/url/${objectName}`
     ] as const;
     }
 
@@ -6776,7 +6776,7 @@ export const urlRetrieverControllerRetrieveUrl = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/retrievers/url`, method: 'POST',
+      {url: `/retrievers/url`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: retrieveUrlDto, signal
     },
@@ -6841,7 +6841,7 @@ export const threadsControllerCreate = (
       
       
       return customAxiosInstance<GetThreadResponseDto>(
-      {url: `/api/threads`, method: 'POST',
+      {url: `/threads`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createThreadDto, signal
     },
@@ -6906,7 +6906,7 @@ export const threadsControllerFindAll = (
       
       
       return customAxiosInstance<GetThreadsResponseDto>(
-      {url: `/api/threads`, method: 'GET',
+      {url: `/threads`, method: 'GET',
         params, signal
     },
       );
@@ -6917,7 +6917,7 @@ export const threadsControllerFindAll = (
 
 export const getThreadsControllerFindAllQueryKey = (params?: ThreadsControllerFindAllParams,) => {
     return [
-    `/api/threads`, ...(params ? [params]: [])
+    `/threads`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -7000,7 +7000,7 @@ export const threadsControllerFindOne = (
       
       
       return customAxiosInstance<GetThreadResponseDto>(
-      {url: `/api/threads/${id}`, method: 'GET', signal
+      {url: `/threads/${id}`, method: 'GET', signal
     },
       );
     }
@@ -7010,7 +7010,7 @@ export const threadsControllerFindOne = (
 
 export const getThreadsControllerFindOneQueryKey = (id?: string,) => {
     return [
-    `/api/threads/${id}`
+    `/threads/${id}`
     ] as const;
     }
 
@@ -7092,7 +7092,7 @@ export const threadsControllerDelete = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/threads/${id}`, method: 'DELETE'
+      {url: `/threads/${id}`, method: 'DELETE'
     },
       );
     }
@@ -7155,7 +7155,7 @@ export const threadsControllerUpdateTitle = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/threads/${id}/title`, method: 'PATCH',
+      {url: `/threads/${id}/title`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateThreadTitleDto
     },
@@ -7220,7 +7220,7 @@ export const threadSourcesControllerGetThreadSources = (
       
       
       return customAxiosInstance<ThreadSourcesControllerGetThreadSources200Item[]>(
-      {url: `/api/threads/${id}/sources`, method: 'GET', signal
+      {url: `/threads/${id}/sources`, method: 'GET', signal
     },
       );
     }
@@ -7230,7 +7230,7 @@ export const threadSourcesControllerGetThreadSources = (
 
 export const getThreadSourcesControllerGetThreadSourcesQueryKey = (id?: string,) => {
     return [
-    `/api/threads/${id}/sources`
+    `/threads/${id}/sources`
     ] as const;
     }
 
@@ -7316,7 +7316,7 @@ export const threadSourcesControllerAddFileSource = (
 formData.append(`file`, threadSourcesControllerAddFileSourceBody.file)
 
       return customAxiosInstance<ThreadSourcesControllerAddFileSource201Item[]>(
-      {url: `/api/threads/${id}/sources/file`, method: 'POST',
+      {url: `/threads/${id}/sources/file`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
     },
@@ -7381,7 +7381,7 @@ export const threadSourcesControllerRemoveSource = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/threads/${id}/sources/${sourceId}`, method: 'DELETE'
+      {url: `/threads/${id}/sources/${sourceId}`, method: 'DELETE'
     },
       );
     }
@@ -7445,7 +7445,7 @@ export const threadSourcesControllerDownloadSource = (
       
       
       return customAxiosInstance<Blob>(
-      {url: `/api/threads/${id}/sources/${sourceId}/download`, method: 'GET',
+      {url: `/threads/${id}/sources/${sourceId}/download`, method: 'GET',
         responseType: 'blob', signal
     },
       );
@@ -7457,7 +7457,7 @@ export const threadSourcesControllerDownloadSource = (
 export const getThreadSourcesControllerDownloadSourceQueryKey = (id?: string,
     sourceId?: string,) => {
     return [
-    `/api/threads/${id}/sources/${sourceId}/download`
+    `/threads/${id}/sources/${sourceId}/download`
     ] as const;
     }
 
@@ -7546,7 +7546,7 @@ export const threadKnowledgeBasesControllerAddKnowledgeBase = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/threads/${id}/knowledge-bases/${knowledgeBaseId}`, method: 'POST', signal
+      {url: `/threads/${id}/knowledge-bases/${knowledgeBaseId}`, method: 'POST', signal
     },
       );
     }
@@ -7609,7 +7609,7 @@ export const threadKnowledgeBasesControllerRemoveKnowledgeBase = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/threads/${id}/knowledge-bases/${knowledgeBaseId}`, method: 'DELETE'
+      {url: `/threads/${id}/knowledge-bases/${knowledgeBaseId}`, method: 'DELETE'
     },
       );
     }
@@ -7672,7 +7672,7 @@ export const agentsControllerCreate = (
       
       
       return customAxiosInstance<AgentResponseDto>(
-      {url: `/api/agents`, method: 'POST',
+      {url: `/agents`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createAgentDto, signal
     },
@@ -7737,7 +7737,7 @@ export const agentsControllerFindAll = (
       
       
       return customAxiosInstance<AgentResponseDto[]>(
-      {url: `/api/agents`, method: 'GET', signal
+      {url: `/agents`, method: 'GET', signal
     },
       );
     }
@@ -7747,7 +7747,7 @@ export const agentsControllerFindAll = (
 
 export const getAgentsControllerFindAllQueryKey = () => {
     return [
-    `/api/agents`
+    `/agents`
     ] as const;
     }
 
@@ -7830,7 +7830,7 @@ export const agentsControllerFindOne = (
       
       
       return customAxiosInstance<AgentResponseDto>(
-      {url: `/api/agents/${id}`, method: 'GET', signal
+      {url: `/agents/${id}`, method: 'GET', signal
     },
       );
     }
@@ -7840,7 +7840,7 @@ export const agentsControllerFindOne = (
 
 export const getAgentsControllerFindOneQueryKey = (id?: string,) => {
     return [
-    `/api/agents/${id}`
+    `/agents/${id}`
     ] as const;
     }
 
@@ -7923,7 +7923,7 @@ export const agentsControllerUpdate = (
       
       
       return customAxiosInstance<AgentResponseDto>(
-      {url: `/api/agents/${id}`, method: 'PUT',
+      {url: `/agents/${id}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateAgentDto
     },
@@ -7987,7 +7987,7 @@ export const agentsControllerDelete = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/agents/${id}`, method: 'DELETE'
+      {url: `/agents/${id}`, method: 'DELETE'
     },
       );
     }
@@ -8050,7 +8050,7 @@ export const agentsControllerGetAgentSources = (
       
       
       return customAxiosInstance<AgentSourceResponseDto[]>(
-      {url: `/api/agents/${id}/sources`, method: 'GET', signal
+      {url: `/agents/${id}/sources`, method: 'GET', signal
     },
       );
     }
@@ -8060,7 +8060,7 @@ export const agentsControllerGetAgentSources = (
 
 export const getAgentsControllerGetAgentSourcesQueryKey = (id?: string,) => {
     return [
-    `/api/agents/${id}/sources`
+    `/agents/${id}/sources`
     ] as const;
     }
 
@@ -8146,7 +8146,7 @@ export const agentsControllerAddFileSource = (
 formData.append(`file`, agentsControllerAddFileSourceBody.file)
 
       return customAxiosInstance<void>(
-      {url: `/api/agents/${id}/sources/file`, method: 'POST',
+      {url: `/agents/${id}/sources/file`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
     },
@@ -8211,7 +8211,7 @@ export const agentsControllerRemoveSource = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/agents/${id}/sources/${sourceAssignmentId}`, method: 'DELETE'
+      {url: `/agents/${id}/sources/${sourceAssignmentId}`, method: 'DELETE'
     },
       );
     }
@@ -8275,7 +8275,7 @@ export const agentMcpIntegrationsControllerAssignMcpIntegration = (
       
       
       return customAxiosInstance<AgentResponseDto>(
-      {url: `/api/agents/${agentId}/mcp-integrations/${integrationId}`, method: 'POST', signal
+      {url: `/agents/${agentId}/mcp-integrations/${integrationId}`, method: 'POST', signal
     },
       );
     }
@@ -8338,7 +8338,7 @@ export const agentMcpIntegrationsControllerUnassignMcpIntegration = (
       
       
       return customAxiosInstance<AgentResponseDto>(
-      {url: `/api/agents/${agentId}/mcp-integrations/${integrationId}`, method: 'DELETE'
+      {url: `/agents/${agentId}/mcp-integrations/${integrationId}`, method: 'DELETE'
     },
       );
     }
@@ -8401,7 +8401,7 @@ export const agentMcpIntegrationsControllerListAgentMcpIntegrations = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto[]>(
-      {url: `/api/agents/${agentId}/mcp-integrations`, method: 'GET', signal
+      {url: `/agents/${agentId}/mcp-integrations`, method: 'GET', signal
     },
       );
     }
@@ -8411,7 +8411,7 @@ export const agentMcpIntegrationsControllerListAgentMcpIntegrations = (
 
 export const getAgentMcpIntegrationsControllerListAgentMcpIntegrationsQueryKey = (agentId?: string,) => {
     return [
-    `/api/agents/${agentId}/mcp-integrations`
+    `/agents/${agentId}/mcp-integrations`
     ] as const;
     }
 
@@ -8494,7 +8494,7 @@ export const sharesControllerCreateShare = (
       
       
       return customAxiosInstance<ShareResponseDto>(
-      {url: `/api/shares`, method: 'POST',
+      {url: `/shares`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createAgentShareDto, signal
     },
@@ -8559,7 +8559,7 @@ export const sharesControllerGetShares = (
       
       
       return customAxiosInstance<ShareResponseDto[]>(
-      {url: `/api/shares`, method: 'GET',
+      {url: `/shares`, method: 'GET',
         params, signal
     },
       );
@@ -8570,7 +8570,7 @@ export const sharesControllerGetShares = (
 
 export const getSharesControllerGetSharesQueryKey = (params?: SharesControllerGetSharesParams,) => {
     return [
-    `/api/shares`, ...(params ? [params]: [])
+    `/shares`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -8653,7 +8653,7 @@ export const sharesControllerCreateSkillShare = (
       
       
       return customAxiosInstance<ShareResponseDto>(
-      {url: `/api/shares/skills`, method: 'POST',
+      {url: `/shares/skills`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createSkillShareDto, signal
     },
@@ -8718,7 +8718,7 @@ export const sharesControllerCreateKnowledgeBaseShare = (
       
       
       return customAxiosInstance<ShareResponseDto>(
-      {url: `/api/shares/knowledge-bases`, method: 'POST',
+      {url: `/shares/knowledge-bases`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createKnowledgeBaseShareDto, signal
     },
@@ -8782,7 +8782,7 @@ export const sharesControllerDeleteShare = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/shares/${id}`, method: 'DELETE'
+      {url: `/shares/${id}`, method: 'DELETE'
     },
       );
     }
@@ -8845,7 +8845,7 @@ export const mcpIntegrationsControllerCreatePredefined = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto>(
-      {url: `/api/mcp-integrations/predefined`, method: 'POST',
+      {url: `/mcp-integrations/predefined`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createPredefinedIntegrationDto, signal
     },
@@ -8910,7 +8910,7 @@ export const mcpIntegrationsControllerCreateCustom = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto>(
-      {url: `/api/mcp-integrations/custom`, method: 'POST',
+      {url: `/mcp-integrations/custom`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createCustomIntegrationDto, signal
     },
@@ -8975,7 +8975,7 @@ export const mcpIntegrationsControllerList = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto[]>(
-      {url: `/api/mcp-integrations`, method: 'GET', signal
+      {url: `/mcp-integrations`, method: 'GET', signal
     },
       );
     }
@@ -8985,7 +8985,7 @@ export const mcpIntegrationsControllerList = (
 
 export const getMcpIntegrationsControllerListQueryKey = () => {
     return [
-    `/api/mcp-integrations`
+    `/mcp-integrations`
     ] as const;
     }
 
@@ -9068,7 +9068,7 @@ export const mcpIntegrationsControllerListPredefinedConfigs = (
       
       
       return customAxiosInstance<PredefinedConfigResponseDto[]>(
-      {url: `/api/mcp-integrations/predefined/available`, method: 'GET', signal
+      {url: `/mcp-integrations/predefined/available`, method: 'GET', signal
     },
       );
     }
@@ -9078,7 +9078,7 @@ export const mcpIntegrationsControllerListPredefinedConfigs = (
 
 export const getMcpIntegrationsControllerListPredefinedConfigsQueryKey = () => {
     return [
-    `/api/mcp-integrations/predefined/available`
+    `/mcp-integrations/predefined/available`
     ] as const;
     }
 
@@ -9161,7 +9161,7 @@ export const mcpIntegrationsControllerListAvailable = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto[]>(
-      {url: `/api/mcp-integrations/available`, method: 'GET', signal
+      {url: `/mcp-integrations/available`, method: 'GET', signal
     },
       );
     }
@@ -9171,7 +9171,7 @@ export const mcpIntegrationsControllerListAvailable = (
 
 export const getMcpIntegrationsControllerListAvailableQueryKey = () => {
     return [
-    `/api/mcp-integrations/available`
+    `/mcp-integrations/available`
     ] as const;
     }
 
@@ -9254,7 +9254,7 @@ export const mcpIntegrationsControllerGetById = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto>(
-      {url: `/api/mcp-integrations/${id}`, method: 'GET', signal
+      {url: `/mcp-integrations/${id}`, method: 'GET', signal
     },
       );
     }
@@ -9264,7 +9264,7 @@ export const mcpIntegrationsControllerGetById = (
 
 export const getMcpIntegrationsControllerGetByIdQueryKey = (id?: string,) => {
     return [
-    `/api/mcp-integrations/${id}`
+    `/mcp-integrations/${id}`
     ] as const;
     }
 
@@ -9347,7 +9347,7 @@ export const mcpIntegrationsControllerUpdate = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto>(
-      {url: `/api/mcp-integrations/${id}`, method: 'PATCH',
+      {url: `/mcp-integrations/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateMcpIntegrationDto
     },
@@ -9411,7 +9411,7 @@ export const mcpIntegrationsControllerDelete = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/mcp-integrations/${id}`, method: 'DELETE'
+      {url: `/mcp-integrations/${id}`, method: 'DELETE'
     },
       );
     }
@@ -9474,7 +9474,7 @@ export const mcpIntegrationsControllerEnable = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto>(
-      {url: `/api/mcp-integrations/${id}/enable`, method: 'POST', signal
+      {url: `/mcp-integrations/${id}/enable`, method: 'POST', signal
     },
       );
     }
@@ -9537,7 +9537,7 @@ export const mcpIntegrationsControllerDisable = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto>(
-      {url: `/api/mcp-integrations/${id}/disable`, method: 'POST', signal
+      {url: `/mcp-integrations/${id}/disable`, method: 'POST', signal
     },
       );
     }
@@ -9600,7 +9600,7 @@ export const mcpIntegrationsControllerInstallFromMarketplace = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto>(
-      {url: `/api/mcp-integrations/install-from-marketplace`, method: 'POST',
+      {url: `/mcp-integrations/install-from-marketplace`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: installMarketplaceIntegrationDto, signal
     },
@@ -9665,7 +9665,7 @@ export const mcpIntegrationsControllerGetUserConfig = (
       
       
       return customAxiosInstance<UserConfigResponseDto>(
-      {url: `/api/mcp-integrations/${id}/user-config`, method: 'GET', signal
+      {url: `/mcp-integrations/${id}/user-config`, method: 'GET', signal
     },
       );
     }
@@ -9675,7 +9675,7 @@ export const mcpIntegrationsControllerGetUserConfig = (
 
 export const getMcpIntegrationsControllerGetUserConfigQueryKey = (id?: string,) => {
     return [
-    `/api/mcp-integrations/${id}/user-config`
+    `/mcp-integrations/${id}/user-config`
     ] as const;
     }
 
@@ -9758,7 +9758,7 @@ export const mcpIntegrationsControllerSetUserConfig = (
       
       
       return customAxiosInstance<UserConfigResponseDto>(
-      {url: `/api/mcp-integrations/${id}/user-config`, method: 'PATCH',
+      {url: `/mcp-integrations/${id}/user-config`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: setUserConfigDto
     },
@@ -9823,7 +9823,7 @@ export const mcpIntegrationsControllerValidate = (
       
       
       return customAxiosInstance<ValidationResponseDto>(
-      {url: `/api/mcp-integrations/${id}/validate`, method: 'POST', signal
+      {url: `/mcp-integrations/${id}/validate`, method: 'POST', signal
     },
       );
     }
@@ -9886,7 +9886,7 @@ export const mcpIntegrationsControllerCreateSelfDefined = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto>(
-      {url: `/api/mcp-integrations/self-defined`, method: 'POST',
+      {url: `/mcp-integrations/self-defined`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createSelfDefinedIntegrationDto, signal
     },
@@ -9951,7 +9951,7 @@ export const mcpIntegrationsControllerStartOAuthAuthorize = (
       
       
       return customAxiosInstance<OAuthAuthorizeResponseDto>(
-      {url: `/api/mcp-integrations/${id}/oauth/authorize`, method: 'POST', signal
+      {url: `/mcp-integrations/${id}/oauth/authorize`, method: 'POST', signal
     },
       );
     }
@@ -10014,7 +10014,7 @@ export const mcpIntegrationsControllerRevokeOAuth = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/mcp-integrations/${id}/oauth/revoke`, method: 'POST', signal
+      {url: `/mcp-integrations/${id}/oauth/revoke`, method: 'POST', signal
     },
       );
     }
@@ -10077,7 +10077,7 @@ export const mcpIntegrationsControllerGetOAuthStatus = (
       
       
       return customAxiosInstance<OAuthStatusResponseDto>(
-      {url: `/api/mcp-integrations/${id}/oauth/status`, method: 'GET', signal
+      {url: `/mcp-integrations/${id}/oauth/status`, method: 'GET', signal
     },
       );
     }
@@ -10087,7 +10087,7 @@ export const mcpIntegrationsControllerGetOAuthStatus = (
 
 export const getMcpIntegrationsControllerGetOAuthStatusQueryKey = (id?: string,) => {
     return [
-    `/api/mcp-integrations/${id}/oauth/status`
+    `/mcp-integrations/${id}/oauth/status`
     ] as const;
     }
 
@@ -10170,7 +10170,7 @@ export const marketplaceControllerGetSkill = (
       
       
       return customAxiosInstance<MarketplaceSkillResponseDto>(
-      {url: `/api/marketplace/skills/${identifier}`, method: 'GET', signal
+      {url: `/marketplace/skills/${identifier}`, method: 'GET', signal
     },
       );
     }
@@ -10180,7 +10180,7 @@ export const marketplaceControllerGetSkill = (
 
 export const getMarketplaceControllerGetSkillQueryKey = (identifier?: string,) => {
     return [
-    `/api/marketplace/skills/${identifier}`
+    `/marketplace/skills/${identifier}`
     ] as const;
     }
 
@@ -10263,7 +10263,7 @@ export const marketplaceControllerGetIntegration = (
       
       
       return customAxiosInstance<MarketplaceIntegrationResponseDto>(
-      {url: `/api/marketplace/integrations/${identifier}`, method: 'GET', signal
+      {url: `/marketplace/integrations/${identifier}`, method: 'GET', signal
     },
       );
     }
@@ -10273,7 +10273,7 @@ export const marketplaceControllerGetIntegration = (
 
 export const getMarketplaceControllerGetIntegrationQueryKey = (identifier?: string,) => {
     return [
-    `/api/marketplace/integrations/${identifier}`
+    `/marketplace/integrations/${identifier}`
     ] as const;
     }
 
@@ -10356,7 +10356,7 @@ export const knowledgeBasesControllerCreate = (
       
       
       return customAxiosInstance<KnowledgeBaseResponseDto>(
-      {url: `/api/knowledge-bases`, method: 'POST',
+      {url: `/knowledge-bases`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createKnowledgeBaseDto, signal
     },
@@ -10421,7 +10421,7 @@ export const knowledgeBasesControllerFindAll = (
       
       
       return customAxiosInstance<KnowledgeBaseListResponseDto>(
-      {url: `/api/knowledge-bases`, method: 'GET', signal
+      {url: `/knowledge-bases`, method: 'GET', signal
     },
       );
     }
@@ -10431,7 +10431,7 @@ export const knowledgeBasesControllerFindAll = (
 
 export const getKnowledgeBasesControllerFindAllQueryKey = () => {
     return [
-    `/api/knowledge-bases`
+    `/knowledge-bases`
     ] as const;
     }
 
@@ -10514,7 +10514,7 @@ export const knowledgeBasesControllerFindOne = (
       
       
       return customAxiosInstance<KnowledgeBaseResponseDto>(
-      {url: `/api/knowledge-bases/${id}`, method: 'GET', signal
+      {url: `/knowledge-bases/${id}`, method: 'GET', signal
     },
       );
     }
@@ -10524,7 +10524,7 @@ export const knowledgeBasesControllerFindOne = (
 
 export const getKnowledgeBasesControllerFindOneQueryKey = (id?: string,) => {
     return [
-    `/api/knowledge-bases/${id}`
+    `/knowledge-bases/${id}`
     ] as const;
     }
 
@@ -10607,7 +10607,7 @@ export const knowledgeBasesControllerUpdate = (
       
       
       return customAxiosInstance<KnowledgeBaseResponseDto>(
-      {url: `/api/knowledge-bases/${id}`, method: 'PATCH',
+      {url: `/knowledge-bases/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateKnowledgeBaseDto
     },
@@ -10671,7 +10671,7 @@ export const knowledgeBasesControllerDelete = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/knowledge-bases/${id}`, method: 'DELETE'
+      {url: `/knowledge-bases/${id}`, method: 'DELETE'
     },
       );
     }
@@ -10734,7 +10734,7 @@ export const knowledgeBasesControllerListDocuments = (
       
       
       return customAxiosInstance<KnowledgeBaseDocumentListResponseDto>(
-      {url: `/api/knowledge-bases/${id}/documents`, method: 'GET', signal
+      {url: `/knowledge-bases/${id}/documents`, method: 'GET', signal
     },
       );
     }
@@ -10744,7 +10744,7 @@ export const knowledgeBasesControllerListDocuments = (
 
 export const getKnowledgeBasesControllerListDocumentsQueryKey = (id?: string,) => {
     return [
-    `/api/knowledge-bases/${id}/documents`
+    `/knowledge-bases/${id}/documents`
     ] as const;
     }
 
@@ -10830,7 +10830,7 @@ export const knowledgeBasesControllerAddDocument = (
 formData.append(`file`, knowledgeBasesControllerAddDocumentBody.file)
 
       return customAxiosInstance<KnowledgeBaseDocumentResponseDto>(
-      {url: `/api/knowledge-bases/${id}/documents`, method: 'POST',
+      {url: `/knowledge-bases/${id}/documents`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
     },
@@ -10896,7 +10896,7 @@ export const knowledgeBasesControllerAddUrl = (
       
       
       return customAxiosInstance<KnowledgeBaseDocumentResponseDto>(
-      {url: `/api/knowledge-bases/${id}/urls`, method: 'POST',
+      {url: `/knowledge-bases/${id}/urls`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: addUrlToKnowledgeBaseDto, signal
     },
@@ -10961,7 +10961,7 @@ export const knowledgeBasesControllerRemoveDocument = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/knowledge-bases/${id}/documents/${documentId}`, method: 'DELETE'
+      {url: `/knowledge-bases/${id}/documents/${documentId}`, method: 'DELETE'
     },
       );
     }
@@ -11024,7 +11024,7 @@ export const skillsControllerInstallFromMarketplace = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/api/skills/install-from-marketplace`, method: 'POST',
+      {url: `/skills/install-from-marketplace`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: installSkillFromMarketplaceDto, signal
     },
@@ -11089,7 +11089,7 @@ export const skillsControllerCreate = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/api/skills`, method: 'POST',
+      {url: `/skills`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createSkillDto, signal
     },
@@ -11154,7 +11154,7 @@ export const skillsControllerFindAll = (
       
       
       return customAxiosInstance<SkillResponseDto[]>(
-      {url: `/api/skills`, method: 'GET', signal
+      {url: `/skills`, method: 'GET', signal
     },
       );
     }
@@ -11164,7 +11164,7 @@ export const skillsControllerFindAll = (
 
 export const getSkillsControllerFindAllQueryKey = () => {
     return [
-    `/api/skills`
+    `/skills`
     ] as const;
     }
 
@@ -11247,7 +11247,7 @@ export const skillsControllerFindOne = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/api/skills/${id}`, method: 'GET', signal
+      {url: `/skills/${id}`, method: 'GET', signal
     },
       );
     }
@@ -11257,7 +11257,7 @@ export const skillsControllerFindOne = (
 
 export const getSkillsControllerFindOneQueryKey = (id?: string,) => {
     return [
-    `/api/skills/${id}`
+    `/skills/${id}`
     ] as const;
     }
 
@@ -11340,7 +11340,7 @@ export const skillsControllerUpdate = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/api/skills/${id}`, method: 'PUT',
+      {url: `/skills/${id}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateSkillDto
     },
@@ -11404,7 +11404,7 @@ export const skillsControllerDelete = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/skills/${id}`, method: 'DELETE'
+      {url: `/skills/${id}`, method: 'DELETE'
     },
       );
     }
@@ -11466,7 +11466,7 @@ export const skillsControllerToggleActive = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/api/skills/${id}/toggle-active`, method: 'PATCH'
+      {url: `/skills/${id}/toggle-active`, method: 'PATCH'
     },
       );
     }
@@ -11528,7 +11528,7 @@ export const skillsControllerTogglePinned = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/api/skills/${id}/toggle-pinned`, method: 'PATCH'
+      {url: `/skills/${id}/toggle-pinned`, method: 'PATCH'
     },
       );
     }
@@ -11591,7 +11591,7 @@ export const skillSourcesControllerGetSkillSources = (
       
       
       return customAxiosInstance<SkillSourceResponseDto[]>(
-      {url: `/api/skills/${id}/sources`, method: 'GET', signal
+      {url: `/skills/${id}/sources`, method: 'GET', signal
     },
       );
     }
@@ -11601,7 +11601,7 @@ export const skillSourcesControllerGetSkillSources = (
 
 export const getSkillSourcesControllerGetSkillSourcesQueryKey = (id?: string,) => {
     return [
-    `/api/skills/${id}/sources`
+    `/skills/${id}/sources`
     ] as const;
     }
 
@@ -11687,7 +11687,7 @@ export const skillSourcesControllerAddFileSource = (
 formData.append(`file`, skillSourcesControllerAddFileSourceBody.file)
 
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/api/skills/${id}/sources/file`, method: 'POST',
+      {url: `/skills/${id}/sources/file`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
     },
@@ -11752,7 +11752,7 @@ export const skillSourcesControllerRemoveSource = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/skills/${id}/sources/${sourceId}`, method: 'DELETE'
+      {url: `/skills/${id}/sources/${sourceId}`, method: 'DELETE'
     },
       );
     }
@@ -11816,7 +11816,7 @@ export const skillMcpIntegrationsControllerAssignMcpIntegration = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/api/skills/${skillId}/mcp-integrations/${integrationId}`, method: 'POST', signal
+      {url: `/skills/${skillId}/mcp-integrations/${integrationId}`, method: 'POST', signal
     },
       );
     }
@@ -11879,7 +11879,7 @@ export const skillMcpIntegrationsControllerUnassignMcpIntegration = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/api/skills/${skillId}/mcp-integrations/${integrationId}`, method: 'DELETE'
+      {url: `/skills/${skillId}/mcp-integrations/${integrationId}`, method: 'DELETE'
     },
       );
     }
@@ -11942,7 +11942,7 @@ export const skillMcpIntegrationsControllerListSkillMcpIntegrations = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto[]>(
-      {url: `/api/skills/${skillId}/mcp-integrations`, method: 'GET', signal
+      {url: `/skills/${skillId}/mcp-integrations`, method: 'GET', signal
     },
       );
     }
@@ -11952,7 +11952,7 @@ export const skillMcpIntegrationsControllerListSkillMcpIntegrations = (
 
 export const getSkillMcpIntegrationsControllerListSkillMcpIntegrationsQueryKey = (skillId?: string,) => {
     return [
-    `/api/skills/${skillId}/mcp-integrations`
+    `/skills/${skillId}/mcp-integrations`
     ] as const;
     }
 
@@ -12036,7 +12036,7 @@ export const skillKnowledgeBasesControllerAssignKnowledgeBase = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/api/skills/${skillId}/knowledge-bases/${knowledgeBaseId}`, method: 'POST', signal
+      {url: `/skills/${skillId}/knowledge-bases/${knowledgeBaseId}`, method: 'POST', signal
     },
       );
     }
@@ -12099,7 +12099,7 @@ export const skillKnowledgeBasesControllerUnassignKnowledgeBase = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/api/skills/${skillId}/knowledge-bases/${knowledgeBaseId}`, method: 'DELETE'
+      {url: `/skills/${skillId}/knowledge-bases/${knowledgeBaseId}`, method: 'DELETE'
     },
       );
     }
@@ -12162,7 +12162,7 @@ export const skillKnowledgeBasesControllerListSkillKnowledgeBases = (
       
       
       return customAxiosInstance<KnowledgeBaseResponseDto[]>(
-      {url: `/api/skills/${skillId}/knowledge-bases`, method: 'GET', signal
+      {url: `/skills/${skillId}/knowledge-bases`, method: 'GET', signal
     },
       );
     }
@@ -12172,7 +12172,7 @@ export const skillKnowledgeBasesControllerListSkillKnowledgeBases = (
 
 export const getSkillKnowledgeBasesControllerListSkillKnowledgeBasesQueryKey = (skillId?: string,) => {
     return [
-    `/api/skills/${skillId}/knowledge-bases`
+    `/skills/${skillId}/knowledge-bases`
     ] as const;
     }
 
@@ -12256,7 +12256,7 @@ export const superAdminSkillTemplatesControllerCreate = (
       
       
       return customAxiosInstance<SkillTemplateResponseDto>(
-      {url: `/api/super-admin/skill-templates`, method: 'POST',
+      {url: `/super-admin/skill-templates`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createSkillTemplateDto, signal
     },
@@ -12322,7 +12322,7 @@ export const superAdminSkillTemplatesControllerFindAll = (
       
       
       return customAxiosInstance<SkillTemplateResponseDto[]>(
-      {url: `/api/super-admin/skill-templates`, method: 'GET', signal
+      {url: `/super-admin/skill-templates`, method: 'GET', signal
     },
       );
     }
@@ -12332,7 +12332,7 @@ export const superAdminSkillTemplatesControllerFindAll = (
 
 export const getSuperAdminSkillTemplatesControllerFindAllQueryKey = () => {
     return [
-    `/api/super-admin/skill-templates`
+    `/super-admin/skill-templates`
     ] as const;
     }
 
@@ -12416,7 +12416,7 @@ export const superAdminSkillTemplatesControllerFindOne = (
       
       
       return customAxiosInstance<SkillTemplateResponseDto>(
-      {url: `/api/super-admin/skill-templates/${id}`, method: 'GET', signal
+      {url: `/super-admin/skill-templates/${id}`, method: 'GET', signal
     },
       );
     }
@@ -12426,7 +12426,7 @@ export const superAdminSkillTemplatesControllerFindOne = (
 
 export const getSuperAdminSkillTemplatesControllerFindOneQueryKey = (id?: string,) => {
     return [
-    `/api/super-admin/skill-templates/${id}`
+    `/super-admin/skill-templates/${id}`
     ] as const;
     }
 
@@ -12510,7 +12510,7 @@ export const superAdminSkillTemplatesControllerUpdate = (
       
       
       return customAxiosInstance<SkillTemplateResponseDto>(
-      {url: `/api/super-admin/skill-templates/${id}`, method: 'PATCH',
+      {url: `/super-admin/skill-templates/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateSkillTemplateDto
     },
@@ -12575,7 +12575,7 @@ export const superAdminSkillTemplatesControllerDelete = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/super-admin/skill-templates/${id}`, method: 'DELETE'
+      {url: `/super-admin/skill-templates/${id}`, method: 'DELETE'
     },
       );
     }
@@ -12638,7 +12638,7 @@ export const artifactsControllerCreate = (
       
       
       return customAxiosInstance<ArtifactResponseDto>(
-      {url: `/api/artifacts`, method: 'POST',
+      {url: `/artifacts`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createArtifactDto, signal
     },
@@ -12703,7 +12703,7 @@ export const artifactsControllerUpdate = (
       
       
       return customAxiosInstance<ArtifactVersionResponseDto | void>(
-      {url: `/api/artifacts/${id}`, method: 'PATCH',
+      {url: `/artifacts/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateArtifactDto
     },
@@ -12768,7 +12768,7 @@ export const artifactsControllerFindOne = (
       
       
       return customAxiosInstance<ArtifactResponseDto>(
-      {url: `/api/artifacts/${id}`, method: 'GET', signal
+      {url: `/artifacts/${id}`, method: 'GET', signal
     },
       );
     }
@@ -12778,7 +12778,7 @@ export const artifactsControllerFindOne = (
 
 export const getArtifactsControllerFindOneQueryKey = (id?: string,) => {
     return [
-    `/api/artifacts/${id}`
+    `/artifacts/${id}`
     ] as const;
     }
 
@@ -12861,7 +12861,7 @@ export const artifactsControllerFindByThread = (
       
       
       return customAxiosInstance<ArtifactResponseDto[]>(
-      {url: `/api/artifacts/thread/${threadId}`, method: 'GET', signal
+      {url: `/artifacts/thread/${threadId}`, method: 'GET', signal
     },
       );
     }
@@ -12871,7 +12871,7 @@ export const artifactsControllerFindByThread = (
 
 export const getArtifactsControllerFindByThreadQueryKey = (threadId?: string,) => {
     return [
-    `/api/artifacts/thread/${threadId}`
+    `/artifacts/thread/${threadId}`
     ] as const;
     }
 
@@ -12955,7 +12955,7 @@ export const artifactsControllerRevert = (
       
       
       return customAxiosInstance<ArtifactVersionResponseDto>(
-      {url: `/api/artifacts/${id}/revert`, method: 'POST',
+      {url: `/artifacts/${id}/revert`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: revertArtifactDto, signal
     },
@@ -13021,7 +13021,7 @@ export const artifactsControllerExport = (
       
       
       return customAxiosInstance<Blob>(
-      {url: `/api/artifacts/${id}/export`, method: 'GET',
+      {url: `/artifacts/${id}/export`, method: 'GET',
         params,
         responseType: 'blob', signal
     },
@@ -13034,7 +13034,7 @@ export const artifactsControllerExport = (
 export const getArtifactsControllerExportQueryKey = (id?: string,
     params?: ArtifactsControllerExportParams,) => {
     return [
-    `/api/artifacts/${id}/export`, ...(params ? [params]: [])
+    `/artifacts/${id}/export`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -13129,7 +13129,7 @@ formData.append(`firstPageMargins`, createLetterheadDto.firstPageMargins)
 formData.append(`continuationPageMargins`, createLetterheadDto.continuationPageMargins)
 
       return customAxiosInstance<LetterheadResponseDto>(
-      {url: `/api/letterheads`, method: 'POST',
+      {url: `/letterheads`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
     },
@@ -13194,7 +13194,7 @@ export const letterheadsControllerFindAll = (
       
       
       return customAxiosInstance<LetterheadResponseDto[]>(
-      {url: `/api/letterheads`, method: 'GET', signal
+      {url: `/letterheads`, method: 'GET', signal
     },
       );
     }
@@ -13204,7 +13204,7 @@ export const letterheadsControllerFindAll = (
 
 export const getLetterheadsControllerFindAllQueryKey = () => {
     return [
-    `/api/letterheads`
+    `/letterheads`
     ] as const;
     }
 
@@ -13287,7 +13287,7 @@ export const letterheadsControllerFindOne = (
       
       
       return customAxiosInstance<LetterheadResponseDto>(
-      {url: `/api/letterheads/${id}`, method: 'GET', signal
+      {url: `/letterheads/${id}`, method: 'GET', signal
     },
       );
     }
@@ -13297,7 +13297,7 @@ export const letterheadsControllerFindOne = (
 
 export const getLetterheadsControllerFindOneQueryKey = (id?: string,) => {
     return [
-    `/api/letterheads/${id}`
+    `/letterheads/${id}`
     ] as const;
     }
 
@@ -13396,7 +13396,7 @@ if(updateLetterheadDto.removeContinuationPage !== undefined) {
  }
 
       return customAxiosInstance<LetterheadResponseDto>(
-      {url: `/api/letterheads/${id}`, method: 'PATCH',
+      {url: `/letterheads/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData
     },
@@ -13460,7 +13460,7 @@ export const letterheadsControllerRemove = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/letterheads/${id}`, method: 'DELETE'
+      {url: `/letterheads/${id}`, method: 'DELETE'
     },
       );
     }
@@ -13523,7 +13523,7 @@ export const letterheadsControllerDownloadFirstPagePdf = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/letterheads/${id}/first-page-pdf`, method: 'GET', signal
+      {url: `/letterheads/${id}/first-page-pdf`, method: 'GET', signal
     },
       );
     }
@@ -13533,7 +13533,7 @@ export const letterheadsControllerDownloadFirstPagePdf = (
 
 export const getLetterheadsControllerDownloadFirstPagePdfQueryKey = (id?: string,) => {
     return [
-    `/api/letterheads/${id}/first-page-pdf`
+    `/letterheads/${id}/first-page-pdf`
     ] as const;
     }
 
@@ -13616,7 +13616,7 @@ export const letterheadsControllerDownloadContinuationPagePdf = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/letterheads/${id}/continuation-page-pdf`, method: 'GET', signal
+      {url: `/letterheads/${id}/continuation-page-pdf`, method: 'GET', signal
     },
       );
     }
@@ -13626,7 +13626,7 @@ export const letterheadsControllerDownloadContinuationPagePdf = (
 
 export const getLetterheadsControllerDownloadContinuationPagePdfQueryKey = (id?: string,) => {
     return [
-    `/api/letterheads/${id}/continuation-page-pdf`
+    `/letterheads/${id}/continuation-page-pdf`
     ] as const;
     }
 
@@ -13730,7 +13730,7 @@ if(runsControllerSendMessageBody.streaming !== undefined) {
  }
 
       return customAxiosInstance<RunsControllerSendMessage200>(
-      {url: `/api/runs/send-message`, method: 'POST',
+      {url: `/runs/send-message`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
     },
@@ -13796,7 +13796,7 @@ export const superAdminTrialsControllerCreateTrial = (
       
       
       return customAxiosInstance<SuperAdminTrialResponseDto>(
-      {url: `/api/super-admin/trials`, method: 'POST',
+      {url: `/super-admin/trials`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createTrialRequestDto, signal
     },
@@ -13862,7 +13862,7 @@ export const superAdminTrialsControllerGetTrialByOrgId = (
       
       
       return customAxiosInstance<SuperAdminTrialResponseDtoNullable>(
-      {url: `/api/super-admin/trials/${orgId}`, method: 'GET', signal
+      {url: `/super-admin/trials/${orgId}`, method: 'GET', signal
     },
       );
     }
@@ -13872,7 +13872,7 @@ export const superAdminTrialsControllerGetTrialByOrgId = (
 
 export const getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey = (orgId?: string,) => {
     return [
-    `/api/super-admin/trials/${orgId}`
+    `/super-admin/trials/${orgId}`
     ] as const;
     }
 
@@ -13956,7 +13956,7 @@ export const superAdminTrialsControllerUpdateTrial = (
       
       
       return customAxiosInstance<SuperAdminTrialResponseDto>(
-      {url: `/api/super-admin/trials/${orgId}`, method: 'PUT',
+      {url: `/super-admin/trials/${orgId}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateTrialRequestDto
     },
@@ -14022,7 +14022,7 @@ export const usageControllerGetUsageConfig = (
       
       
       return customAxiosInstance<UsageConfigResponseDto>(
-      {url: `/api/usage/config`, method: 'GET', signal
+      {url: `/usage/config`, method: 'GET', signal
     },
       );
     }
@@ -14032,7 +14032,7 @@ export const usageControllerGetUsageConfig = (
 
 export const getUsageControllerGetUsageConfigQueryKey = () => {
     return [
-    `/api/usage/config`
+    `/usage/config`
     ] as const;
     }
 
@@ -14116,7 +14116,7 @@ export const usageControllerGetCreditUsage = (
       
       
       return customAxiosInstance<CreditUsageResponseDto>(
-      {url: `/api/usage/credits`, method: 'GET', signal
+      {url: `/usage/credits`, method: 'GET', signal
     },
       );
     }
@@ -14126,7 +14126,7 @@ export const usageControllerGetCreditUsage = (
 
 export const getUsageControllerGetCreditUsageQueryKey = () => {
     return [
-    `/api/usage/credits`
+    `/usage/credits`
     ] as const;
     }
 
@@ -14210,7 +14210,7 @@ export const usageControllerGetUserUsage = (
       
       
       return customAxiosInstance<UserUsageResponseDto>(
-      {url: `/api/usage/users`, method: 'GET',
+      {url: `/usage/users`, method: 'GET',
         params, signal
     },
       );
@@ -14221,7 +14221,7 @@ export const usageControllerGetUserUsage = (
 
 export const getUsageControllerGetUserUsageQueryKey = (params?: UsageControllerGetUserUsageParams,) => {
     return [
-    `/api/usage/users`, ...(params ? [params]: [])
+    `/usage/users`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -14304,7 +14304,7 @@ export const superAdminUsageControllerGetUsageConfig = (
       
       
       return customAxiosInstance<UsageConfigResponseDto>(
-      {url: `/api/super-admin/usage/${orgId}/config`, method: 'GET', signal
+      {url: `/super-admin/usage/${orgId}/config`, method: 'GET', signal
     },
       );
     }
@@ -14314,7 +14314,7 @@ export const superAdminUsageControllerGetUsageConfig = (
 
 export const getSuperAdminUsageControllerGetUsageConfigQueryKey = (orgId?: unknown,) => {
     return [
-    `/api/super-admin/usage/${orgId}/config`
+    `/super-admin/usage/${orgId}/config`
     ] as const;
     }
 
@@ -14398,7 +14398,7 @@ export const superAdminUsageControllerGetCreditUsage = (
       
       
       return customAxiosInstance<CreditUsageResponseDto>(
-      {url: `/api/super-admin/usage/${orgId}/credits`, method: 'GET', signal
+      {url: `/super-admin/usage/${orgId}/credits`, method: 'GET', signal
     },
       );
     }
@@ -14408,7 +14408,7 @@ export const superAdminUsageControllerGetCreditUsage = (
 
 export const getSuperAdminUsageControllerGetCreditUsageQueryKey = (orgId?: string,) => {
     return [
-    `/api/super-admin/usage/${orgId}/credits`
+    `/super-admin/usage/${orgId}/credits`
     ] as const;
     }
 
@@ -14492,7 +14492,7 @@ export const superAdminUsageControllerGetUsageStats = (
       
       
       return customAxiosInstance<UsageStatsResponseDto>(
-      {url: `/api/super-admin/usage/${orgId}/stats`, method: 'GET',
+      {url: `/super-admin/usage/${orgId}/stats`, method: 'GET',
         params, signal
     },
       );
@@ -14504,7 +14504,7 @@ export const superAdminUsageControllerGetUsageStats = (
 export const getSuperAdminUsageControllerGetUsageStatsQueryKey = (orgId?: string,
     params?: SuperAdminUsageControllerGetUsageStatsParams,) => {
     return [
-    `/api/super-admin/usage/${orgId}/stats`, ...(params ? [params]: [])
+    `/super-admin/usage/${orgId}/stats`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -14593,7 +14593,7 @@ export const superAdminUsageControllerGetModelDistribution = (
       
       
       return customAxiosInstance<ModelDistributionResponseDto>(
-      {url: `/api/super-admin/usage/${orgId}/models`, method: 'GET',
+      {url: `/super-admin/usage/${orgId}/models`, method: 'GET',
         params, signal
     },
       );
@@ -14605,7 +14605,7 @@ export const superAdminUsageControllerGetModelDistribution = (
 export const getSuperAdminUsageControllerGetModelDistributionQueryKey = (orgId?: string,
     params?: SuperAdminUsageControllerGetModelDistributionParams,) => {
     return [
-    `/api/super-admin/usage/${orgId}/models`, ...(params ? [params]: [])
+    `/super-admin/usage/${orgId}/models`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -14694,7 +14694,7 @@ export const superAdminUsageDataControllerGetProviderUsage = (
       
       
       return customAxiosInstance<ProviderUsageResponseDto>(
-      {url: `/api/super-admin/usage/${orgId}/providers`, method: 'GET',
+      {url: `/super-admin/usage/${orgId}/providers`, method: 'GET',
         params, signal
     },
       );
@@ -14706,7 +14706,7 @@ export const superAdminUsageDataControllerGetProviderUsage = (
 export const getSuperAdminUsageDataControllerGetProviderUsageQueryKey = (orgId?: string,
     params?: SuperAdminUsageDataControllerGetProviderUsageParams,) => {
     return [
-    `/api/super-admin/usage/${orgId}/providers`, ...(params ? [params]: [])
+    `/super-admin/usage/${orgId}/providers`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -14795,7 +14795,7 @@ export const superAdminUsageDataControllerGetProviderUsageChart = (
       
       
       return customAxiosInstance<ProviderUsageChartResponseDto>(
-      {url: `/api/super-admin/usage/${orgId}/providers/chart`, method: 'GET',
+      {url: `/super-admin/usage/${orgId}/providers/chart`, method: 'GET',
         params, signal
     },
       );
@@ -14807,7 +14807,7 @@ export const superAdminUsageDataControllerGetProviderUsageChart = (
 export const getSuperAdminUsageDataControllerGetProviderUsageChartQueryKey = (orgId?: string,
     params?: SuperAdminUsageDataControllerGetProviderUsageChartParams,) => {
     return [
-    `/api/super-admin/usage/${orgId}/providers/chart`, ...(params ? [params]: [])
+    `/super-admin/usage/${orgId}/providers/chart`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -14896,7 +14896,7 @@ export const superAdminUsageDataControllerGetUserUsage = (
       
       
       return customAxiosInstance<UserUsageResponseDto>(
-      {url: `/api/super-admin/usage/${orgId}/users`, method: 'GET',
+      {url: `/super-admin/usage/${orgId}/users`, method: 'GET',
         params, signal
     },
       );
@@ -14908,7 +14908,7 @@ export const superAdminUsageDataControllerGetUserUsage = (
 export const getSuperAdminUsageDataControllerGetUserUsageQueryKey = (orgId?: string,
     params?: SuperAdminUsageDataControllerGetUserUsageParams,) => {
     return [
-    `/api/super-admin/usage/${orgId}/users`, ...(params ? [params]: [])
+    `/super-admin/usage/${orgId}/users`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -14996,7 +14996,7 @@ export const superAdminGlobalUsageControllerGetGlobalProviderUsageChart = (
       
       
       return customAxiosInstance<ProviderUsageChartResponseDto>(
-      {url: `/api/super-admin/global-usage/providers/chart`, method: 'GET',
+      {url: `/super-admin/global-usage/providers/chart`, method: 'GET',
         params, signal
     },
       );
@@ -15007,7 +15007,7 @@ export const superAdminGlobalUsageControllerGetGlobalProviderUsageChart = (
 
 export const getSuperAdminGlobalUsageControllerGetGlobalProviderUsageChartQueryKey = (params?: SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartParams,) => {
     return [
-    `/api/super-admin/global-usage/providers/chart`, ...(params ? [params]: [])
+    `/super-admin/global-usage/providers/chart`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -15090,7 +15090,7 @@ export const superAdminGlobalUsageControllerGetGlobalModelDistribution = (
       
       
       return customAxiosInstance<ModelDistributionResponseDto>(
-      {url: `/api/super-admin/global-usage/models`, method: 'GET',
+      {url: `/super-admin/global-usage/models`, method: 'GET',
         params, signal
     },
       );
@@ -15101,7 +15101,7 @@ export const superAdminGlobalUsageControllerGetGlobalModelDistribution = (
 
 export const getSuperAdminGlobalUsageControllerGetGlobalModelDistributionQueryKey = (params?: SuperAdminGlobalUsageControllerGetGlobalModelDistributionParams,) => {
     return [
-    `/api/super-admin/global-usage/models`, ...(params ? [params]: [])
+    `/super-admin/global-usage/models`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -15184,7 +15184,7 @@ export const superAdminGlobalUsageControllerGetGlobalUserUsage = (
       
       
       return customAxiosInstance<GlobalUserUsageResponseDto>(
-      {url: `/api/super-admin/global-usage/users`, method: 'GET',
+      {url: `/super-admin/global-usage/users`, method: 'GET',
         params, signal
     },
       );
@@ -15195,7 +15195,7 @@ export const superAdminGlobalUsageControllerGetGlobalUserUsage = (
 
 export const getSuperAdminGlobalUsageControllerGetGlobalUserUsageQueryKey = (params?: SuperAdminGlobalUsageControllerGetGlobalUserUsageParams,) => {
     return [
-    `/api/super-admin/global-usage/users`, ...(params ? [params]: [])
+    `/super-admin/global-usage/users`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -15279,7 +15279,7 @@ export const superAdminPlatformConfigControllerGetCreditsPerEuro = (
       
       
       return customAxiosInstance<CreditsPerEuroResponseDto>(
-      {url: `/api/super-admin/platform-config/credits-per-euro`, method: 'GET', signal
+      {url: `/super-admin/platform-config/credits-per-euro`, method: 'GET', signal
     },
       );
     }
@@ -15289,7 +15289,7 @@ export const superAdminPlatformConfigControllerGetCreditsPerEuro = (
 
 export const getSuperAdminPlatformConfigControllerGetCreditsPerEuroQueryKey = () => {
     return [
-    `/api/super-admin/platform-config/credits-per-euro`
+    `/super-admin/platform-config/credits-per-euro`
     ] as const;
     }
 
@@ -15372,7 +15372,7 @@ export const superAdminPlatformConfigControllerSetCreditsPerEuro = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/super-admin/platform-config/credits-per-euro`, method: 'PUT',
+      {url: `/super-admin/platform-config/credits-per-euro`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: setCreditsPerEuroRequestDto
     },
@@ -15438,7 +15438,7 @@ export const superAdminPlatformConfigControllerGetFairUseLimits = (
       
       
       return customAxiosInstance<FairUseLimitsResponseDto>(
-      {url: `/api/super-admin/platform-config/fair-use-limits`, method: 'GET', signal
+      {url: `/super-admin/platform-config/fair-use-limits`, method: 'GET', signal
     },
       );
     }
@@ -15448,7 +15448,7 @@ export const superAdminPlatformConfigControllerGetFairUseLimits = (
 
 export const getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryKey = () => {
     return [
-    `/api/super-admin/platform-config/fair-use-limits`
+    `/super-admin/platform-config/fair-use-limits`
     ] as const;
     }
 
@@ -15531,7 +15531,7 @@ export const superAdminPlatformConfigControllerSetFairUseLimit = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/super-admin/platform-config/fair-use-limits`, method: 'PUT',
+      {url: `/super-admin/platform-config/fair-use-limits`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: setFairUseLimitRequestDto
     },
@@ -15597,7 +15597,7 @@ export const chatSettingsControllerGetSystemPrompt = (
       
       
       return customAxiosInstance<UserSystemPromptResponseDto>(
-      {url: `/api/chat-settings/system-prompt`, method: 'GET', signal
+      {url: `/chat-settings/system-prompt`, method: 'GET', signal
     },
       );
     }
@@ -15607,7 +15607,7 @@ export const chatSettingsControllerGetSystemPrompt = (
 
 export const getChatSettingsControllerGetSystemPromptQueryKey = () => {
     return [
-    `/api/chat-settings/system-prompt`
+    `/chat-settings/system-prompt`
     ] as const;
     }
 
@@ -15690,7 +15690,7 @@ export const chatSettingsControllerUpsertSystemPrompt = (
       
       
       return customAxiosInstance<UserSystemPromptResponseDto>(
-      {url: `/api/chat-settings/system-prompt`, method: 'PUT',
+      {url: `/chat-settings/system-prompt`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: upsertUserSystemPromptDto
     },
@@ -15755,7 +15755,7 @@ export const chatSettingsControllerDeleteSystemPrompt = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/chat-settings/system-prompt`, method: 'DELETE'
+      {url: `/chat-settings/system-prompt`, method: 'DELETE'
     },
       );
     }
@@ -15819,7 +15819,7 @@ export const chatSettingsControllerGeneratePersonalizedSystemPrompt = (
       
       
       return customAxiosInstance<GeneratePersonalizedSystemPromptResponseDto>(
-      {url: `/api/chat-settings/generate-personalized-system-prompt`, method: 'POST',
+      {url: `/chat-settings/generate-personalized-system-prompt`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: generatePersonalizedSystemPromptDto, signal
     },
@@ -15884,7 +15884,7 @@ export const promptsControllerCreate = (
       
       
       return customAxiosInstance<PromptResponseDto>(
-      {url: `/api/prompts`, method: 'POST',
+      {url: `/prompts`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createPromptDto, signal
     },
@@ -15949,7 +15949,7 @@ export const promptsControllerFindAll = (
       
       
       return customAxiosInstance<PromptResponseDto[]>(
-      {url: `/api/prompts`, method: 'GET', signal
+      {url: `/prompts`, method: 'GET', signal
     },
       );
     }
@@ -15959,7 +15959,7 @@ export const promptsControllerFindAll = (
 
 export const getPromptsControllerFindAllQueryKey = () => {
     return [
-    `/api/prompts`
+    `/prompts`
     ] as const;
     }
 
@@ -16042,7 +16042,7 @@ export const promptsControllerFindOne = (
       
       
       return customAxiosInstance<PromptResponseDto>(
-      {url: `/api/prompts/${id}`, method: 'GET', signal
+      {url: `/prompts/${id}`, method: 'GET', signal
     },
       );
     }
@@ -16052,7 +16052,7 @@ export const promptsControllerFindOne = (
 
 export const getPromptsControllerFindOneQueryKey = (id?: string,) => {
     return [
-    `/api/prompts/${id}`
+    `/prompts/${id}`
     ] as const;
     }
 
@@ -16135,7 +16135,7 @@ export const promptsControllerUpdate = (
       
       
       return customAxiosInstance<PromptResponseDto>(
-      {url: `/api/prompts/${id}`, method: 'PUT',
+      {url: `/prompts/${id}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updatePromptDto
     },
@@ -16199,7 +16199,7 @@ export const promptsControllerDelete = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/prompts/${id}`, method: 'DELETE'
+      {url: `/prompts/${id}`, method: 'DELETE'
     },
       );
     }
@@ -16268,7 +16268,7 @@ if(transcriptionsControllerTranscribeBody.language !== undefined) {
  }
 
       return customAxiosInstance<TranscriptionResponseDto>(
-      {url: `/api/transcriptions`, method: 'POST',
+      {url: `/transcriptions`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
     },
@@ -16334,7 +16334,7 @@ export const authenticationControllerLogin = (
       
       
       return customAxiosInstance<SuccessResponseDto>(
-      {url: `/api/auth/login`, method: 'POST',
+      {url: `/auth/login`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: loginDto, signal
     },
@@ -16400,7 +16400,7 @@ export const authenticationControllerRegister = (
       
       
       return customAxiosInstance<SuccessResponseDto>(
-      {url: `/api/auth/register`, method: 'POST',
+      {url: `/auth/register`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: registerDto, signal
     },
@@ -16466,7 +16466,7 @@ export const authenticationControllerRefresh = (
       
       
       return customAxiosInstance<SuccessResponseDto>(
-      {url: `/api/auth/refresh`, method: 'POST', signal
+      {url: `/auth/refresh`, method: 'POST', signal
     },
       );
     }
@@ -16530,7 +16530,7 @@ export const authenticationControllerMe = (
       
       
       return customAxiosInstance<MeResponseDto>(
-      {url: `/api/auth/me`, method: 'GET', signal
+      {url: `/auth/me`, method: 'GET', signal
     },
       );
     }
@@ -16540,7 +16540,7 @@ export const authenticationControllerMe = (
 
 export const getAuthenticationControllerMeQueryKey = () => {
     return [
-    `/api/auth/me`
+    `/auth/me`
     ] as const;
     }
 
@@ -16624,7 +16624,7 @@ export const authenticationControllerLogout = (
       
       
       return customAxiosInstance<SuccessResponseDto>(
-      {url: `/api/auth/logout`, method: 'POST', signal
+      {url: `/auth/logout`, method: 'POST', signal
     },
       );
     }
@@ -16687,7 +16687,7 @@ export const ipAllowlistControllerGet = (
       
       
       return customAxiosInstance<IpAllowlistResponseDto>(
-      {url: `/api/ip-allowlist`, method: 'GET', signal
+      {url: `/ip-allowlist`, method: 'GET', signal
     },
       );
     }
@@ -16697,7 +16697,7 @@ export const ipAllowlistControllerGet = (
 
 export const getIpAllowlistControllerGetQueryKey = () => {
     return [
-    `/api/ip-allowlist`
+    `/ip-allowlist`
     ] as const;
     }
 
@@ -16779,7 +16779,7 @@ export const ipAllowlistControllerUpdate = (
       
       
       return customAxiosInstance<IpAllowlistResponseDto>(
-      {url: `/api/ip-allowlist`, method: 'PUT',
+      {url: `/ip-allowlist`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateIpAllowlistRequestDto
     },
@@ -16843,7 +16843,7 @@ export const ipAllowlistControllerRemove = (
       
       
       return customAxiosInstance<void>(
-      {url: `/api/ip-allowlist`, method: 'DELETE'
+      {url: `/ip-allowlist`, method: 'DELETE'
     },
       );
     }

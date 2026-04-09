@@ -25,20 +25,33 @@ export class McpIntegrationDtoMapper {
    * @returns The DTO representation
    */
   toDto(integration: McpIntegration): McpIntegrationResponseDto {
-    const type = this.resolveType(integration);
+    const baseDto = this.buildBaseDto(integration);
 
-    const auth = integration.auth;
-    const hasCredentials = auth.hasCredentials();
+    if (integration instanceof MarketplaceMcpIntegration) {
+      return this.enrichMarketplaceDto(baseDto, integration);
+    }
 
-    const baseDto: McpIntegrationResponseDto = {
+    if (integration instanceof SelfDefinedMcpIntegration) {
+      return this.enrichSelfDefinedDto(baseDto, integration);
+    }
+
+    if (integration instanceof PredefinedMcpIntegration) {
+      return this.enrichPredefinedDto(baseDto, integration);
+    }
+
+    return this.enrichCustomDto(baseDto, integration);
+  }
+
+  private buildBaseDto(integration: McpIntegration): McpIntegrationResponseDto {
+    return {
       id: integration.id,
       name: integration.name,
-      type,
+      type: this.resolveType(integration),
       enabled: integration.enabled,
       organizationId: integration.orgId,
       authMethod: integration.getAuthType(),
-      authHeaderName: this.getAuthHeaderName(auth),
-      hasCredentials: hasCredentials,
+      authHeaderName: this.getAuthHeaderName(integration.auth),
+      hasCredentials: integration.auth.hasCredentials(),
       connectionStatus: integration.connectionStatus,
       lastConnectionError: integration.lastConnectionError,
       lastConnectionCheck: integration.lastConnectionCheck,
@@ -47,48 +60,108 @@ export class McpIntegrationDtoMapper {
       returnsPii: integration.returnsPii,
       description: integration.description,
     };
+  }
 
-    // Add type-specific fields
-    if (integration instanceof MarketplaceMcpIntegration) {
-      baseDto.marketplaceIdentifier = integration.marketplaceIdentifier;
-      baseDto.configSchema = {
-        authType: integration.configSchema.authType,
-        orgFields: integration.configSchema.orgFields,
-        userFields: integration.configSchema.userFields,
-      };
-      baseDto.hasUserFields = integration.configSchema.userFields.length > 0;
-      baseDto.orgConfigValues = this.buildMaskedOrgConfigValues(
-        integration.configSchema.orgFields,
-        integration.orgConfigValues,
-      );
-      baseDto.logoUrl = integration.logoUrl;
-      baseDto.serverUrl = undefined; // Not exposed for marketplace
-      baseDto.slug = undefined;
-    } else if (integration instanceof SelfDefinedMcpIntegration) {
-      baseDto.configSchema = {
-        authType: integration.configSchema.authType,
-        orgFields: integration.configSchema.orgFields,
-        userFields: integration.configSchema.userFields,
-      };
-      baseDto.hasUserFields = integration.configSchema.userFields.length > 0;
-      baseDto.orgConfigValues = this.buildMaskedOrgConfigValues(
-        integration.configSchema.orgFields,
-        integration.orgConfigValues,
-      );
-      baseDto.serverUrl = integration.serverUrl;
-      baseDto.slug = undefined;
-    } else if (integration instanceof PredefinedMcpIntegration) {
-      baseDto.slug = integration.slug;
-      baseDto.serverUrl = undefined; // Not exposed for predefined
-    } else {
-      baseDto.slug = undefined;
-      baseDto.serverUrl = integration.serverUrl;
+  private enrichMarketplaceDto(
+    dto: McpIntegrationResponseDto,
+    integration: MarketplaceMcpIntegration,
+  ): McpIntegrationResponseDto {
+    dto.marketplaceIdentifier = integration.marketplaceIdentifier;
+    dto.configSchema = this.buildConfigSchemaDto(integration.configSchema);
+    dto.hasUserFields = integration.configSchema.userFields.length > 0;
+    dto.orgConfigValues = this.buildMaskedOrgConfigValues(
+      integration.configSchema.orgFields,
+      integration.orgConfigValues,
+    );
+    dto.logoUrl = integration.logoUrl;
+    dto.serverUrl = undefined;
+    dto.slug = undefined;
+    dto.oauth = this.buildOAuthBlock(integration);
+    return dto;
+  }
+
+  private enrichSelfDefinedDto(
+    dto: McpIntegrationResponseDto,
+    integration: SelfDefinedMcpIntegration,
+  ): McpIntegrationResponseDto {
+    dto.configSchema = this.buildConfigSchemaDto(integration.configSchema);
+    dto.hasUserFields = integration.configSchema.userFields.length > 0;
+    dto.orgConfigValues = this.buildMaskedOrgConfigValues(
+      integration.configSchema.orgFields,
+      integration.orgConfigValues,
+    );
+    dto.serverUrl = integration.serverUrl;
+    dto.slug = undefined;
+    dto.oauth = this.buildOAuthBlock(integration);
+    return dto;
+  }
+
+  private enrichPredefinedDto(
+    dto: McpIntegrationResponseDto,
+    integration: PredefinedMcpIntegration,
+  ): McpIntegrationResponseDto {
+    dto.slug = integration.slug;
+    dto.serverUrl = undefined;
+    dto.oauth = this.buildOAuthBlock(integration);
+    return dto;
+  }
+
+  private enrichCustomDto(
+    dto: McpIntegrationResponseDto,
+    integration: McpIntegration,
+  ): McpIntegrationResponseDto {
+    dto.slug = undefined;
+    dto.serverUrl = integration.serverUrl;
+    dto.oauth = this.buildOAuthBlock(integration);
+    return dto;
+  }
+
+  private buildConfigSchemaDto(
+    configSchema: MarketplaceMcpIntegration['configSchema'],
+  ): NonNullable<McpIntegrationResponseDto['configSchema']> {
+    return {
+      authType: configSchema.authType,
+      orgFields: configSchema.orgFields,
+      userFields: configSchema.userFields,
+    };
+  }
+
+  /**
+   * Builds the OAuth status block for the response DTO.
+   * Returns undefined for integrations without a configSchema oauth block.
+   */
+  private buildOAuthBlock(
+    integration: McpIntegration,
+  ): McpIntegrationResponseDto['oauth'] {
+    if (
+      integration instanceof MarketplaceMcpIntegration ||
+      integration instanceof SelfDefinedMcpIntegration
+    ) {
+      return this.buildSchemaOAuthBlock(integration);
     }
 
-    // Populate OAuth block for integrations with configSchema
-    baseDto.oauth = this.buildOAuthBlock(integration);
+    return undefined;
+  }
 
-    return baseDto;
+  private buildSchemaOAuthBlock(
+    integration: MarketplaceMcpIntegration | SelfDefinedMcpIntegration,
+  ): McpIntegrationResponseDto['oauth'] {
+    const oauthConfig = integration.configSchema.oauth;
+    if (!oauthConfig) {
+      return {
+        enabled: false,
+        level: null,
+        authorized: false,
+        hasClientCredentials: !!integration.oauthClientId,
+      };
+    }
+
+    return {
+      enabled: true,
+      level: oauthConfig.level,
+      authorized: false,
+      hasClientCredentials: !!integration.oauthClientId,
+    };
   }
 
   private resolveType(
@@ -104,38 +177,6 @@ export class McpIntegrationDtoMapper {
       case McpIntegrationKind.SELF_DEFINED:
         return 'self_defined';
     }
-  }
-
-  /**
-   * Builds the OAuth status block for the response DTO.
-   * Returns undefined for integrations without a configSchema oauth block.
-   */
-  private buildOAuthBlock(
-    integration: McpIntegration,
-  ): McpIntegrationResponseDto['oauth'] {
-    const hasSchema =
-      integration instanceof MarketplaceMcpIntegration ||
-      integration instanceof SelfDefinedMcpIntegration;
-    if (!hasSchema) {
-      return undefined;
-    }
-
-    const oauthConfig = integration.configSchema.oauth;
-    if (!oauthConfig) {
-      return {
-        enabled: false,
-        level: null,
-        authorized: false,
-        hasClientCredentials: !!integration.oauthClientId,
-      };
-    }
-
-    return {
-      enabled: true,
-      level: oauthConfig.level,
-      authorized: false, // Enriched by the controller with actual token status
-      hasClientCredentials: !!integration.oauthClientId,
-    };
   }
 
   /**
@@ -180,10 +221,10 @@ export class McpIntegrationDtoMapper {
         continue;
       }
 
-      const currentValue = orgConfigValues[field.key];
-      if (currentValue === undefined) {
+      if (!(field.key in orgConfigValues)) {
         continue;
       }
+      const currentValue = orgConfigValues[field.key];
 
       if (field.type === 'secret') {
         masked[field.key] = SECRET_MASK;

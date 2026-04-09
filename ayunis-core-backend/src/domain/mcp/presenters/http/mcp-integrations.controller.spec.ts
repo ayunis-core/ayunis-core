@@ -22,7 +22,6 @@ import { StartMcpOAuthAuthorizationUseCase } from '../../application/use-cases/s
 import { CompleteMcpOAuthAuthorizationUseCase } from '../../application/use-cases/complete-mcp-oauth-authorization/complete-mcp-oauth-authorization.use-case';
 import { RevokeMcpOAuthAuthorizationUseCase } from '../../application/use-cases/revoke-mcp-oauth-authorization/revoke-mcp-oauth-authorization.use-case';
 import { GetMcpOAuthAuthorizationStatusUseCase } from '../../application/use-cases/get-mcp-oauth-authorization-status/get-mcp-oauth-authorization-status.use-case';
-import { McpIntegrationOAuthTokenRepositoryPort } from '../../application/ports/mcp-integration-oauth-token.repository.port';
 import {
   PredefinedMcpIntegration,
   CustomMcpIntegration,
@@ -59,7 +58,6 @@ describe('McpIntegrationsController', () => {
   let completeOAuthUseCase: jest.Mocked<CompleteMcpOAuthAuthorizationUseCase>;
   let revokeOAuthUseCase: jest.Mocked<RevokeMcpOAuthAuthorizationUseCase>;
   let getOAuthStatusUseCase: jest.Mocked<GetMcpOAuthAuthorizationStatusUseCase>;
-  let oauthTokenRepository: jest.Mocked<McpIntegrationOAuthTokenRepositoryPort>;
   let configServiceMock: jest.Mocked<ConfigService>;
   beforeEach(async () => {
     const mockCreateUseCase = {
@@ -115,12 +113,6 @@ describe('McpIntegrationsController', () => {
     };
     const mockGetOAuthStatusUseCase = {
       execute: jest.fn(),
-    };
-    const mockOAuthTokenRepository = {
-      findByIntegrationAndUser: jest.fn(),
-      save: jest.fn(),
-      deleteByIntegrationAndUser: jest.fn(),
-      deleteAllByIntegration: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -201,10 +193,6 @@ describe('McpIntegrationsController', () => {
           useValue: mockGetOAuthStatusUseCase,
         },
         {
-          provide: McpIntegrationOAuthTokenRepositoryPort,
-          useValue: mockOAuthTokenRepository,
-        },
-        {
           provide: ConfigService,
           useValue: {
             get: jest.fn(),
@@ -233,7 +221,6 @@ describe('McpIntegrationsController', () => {
     completeOAuthUseCase = module.get(CompleteMcpOAuthAuthorizationUseCase);
     revokeOAuthUseCase = module.get(RevokeMcpOAuthAuthorizationUseCase);
     getOAuthStatusUseCase = module.get(GetMcpOAuthAuthorizationStatusUseCase);
-    oauthTokenRepository = module.get(McpIntegrationOAuthTokenRepositoryPort);
     configServiceMock = module.get(ConfigService);
   });
 
@@ -396,7 +383,7 @@ describe('McpIntegrationsController', () => {
 
       listOrgUseCase.execute.mockResolvedValue(mockIntegrations);
 
-      const result = await controller.list(randomUUID());
+      const result = await controller.list();
 
       expect(listOrgUseCase.execute).toHaveBeenCalledWith();
       expect(result).toHaveLength(2);
@@ -453,7 +440,6 @@ describe('McpIntegrationsController', () => {
 
       const result = await controller.getById(
         '123e4567-e89b-12d3-a456-426614174000' as any,
-        randomUUID(),
       );
 
       expect(getUseCase.execute).toHaveBeenCalledWith(
@@ -754,15 +740,18 @@ describe('McpIntegrationsController', () => {
         oauthClientSecretEncrypted: 'encrypted-secret',
       });
       listOrgUseCase.execute.mockResolvedValue([integration]);
-      oauthTokenRepository.findByIntegrationAndUser.mockResolvedValueOnce(
-        {} as never,
+      getOAuthStatusUseCase.execute.mockResolvedValueOnce({
+        level: 'org',
+        authorized: true,
+        expiresAt: null,
+        scope: null,
+      });
+
+      const result = await controller.list();
+
+      expect(getOAuthStatusUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ integrationId: integration.id }),
       );
-
-      const result = await controller.list(randomUUID());
-
-      expect(
-        oauthTokenRepository.findByIntegrationAndUser,
-      ).toHaveBeenCalledWith(integration.id, null);
       expect(result[0].oauth).toEqual({
         enabled: true,
         level: 'org',
@@ -772,7 +761,6 @@ describe('McpIntegrationsController', () => {
     });
 
     it('should enrich user-level OAuth status in available results for the current user', async () => {
-      const userId = randomUUID();
       const integration = new SelfDefinedMcpIntegration({
         id: randomUUID(),
         orgId: randomUUID(),
@@ -798,15 +786,18 @@ describe('McpIntegrationsController', () => {
         oauthClientSecretEncrypted: 'encrypted-secret',
       });
       listAvailableUseCase.execute.mockResolvedValue([integration]);
-      oauthTokenRepository.findByIntegrationAndUser.mockResolvedValueOnce(
-        {} as never,
+      getOAuthStatusUseCase.execute.mockResolvedValueOnce({
+        level: 'user',
+        authorized: true,
+        expiresAt: null,
+        scope: null,
+      });
+
+      const result = await controller.listAvailable();
+
+      expect(getOAuthStatusUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ integrationId: integration.id }),
       );
-
-      const result = await controller.listAvailable(userId);
-
-      expect(
-        oauthTokenRepository.findByIntegrationAndUser,
-      ).toHaveBeenCalledWith(integration.id, userId);
       expect(result[0].oauth?.authorized).toBe(true);
     });
   });
