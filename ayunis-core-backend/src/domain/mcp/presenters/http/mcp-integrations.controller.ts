@@ -91,6 +91,7 @@ import {
   buildFrontendRedirectUrl,
   sanitizeFrontendRedirectPath,
 } from './lib/mcp-oauth-redirect-url';
+import { OAuthFlowService } from '../../application/services/oauth-flow.service';
 
 @ApiTags('mcp-integrations')
 @Controller('mcp-integrations')
@@ -119,6 +120,7 @@ export class McpIntegrationsController {
     private readonly mcpIntegrationDtoMapper: McpIntegrationDtoMapper,
     private readonly predefinedConfigDtoMapper: PredefinedConfigDtoMapper,
     private readonly configService: ConfigService,
+    private readonly oauthFlowService: OAuthFlowService,
   ) {}
 
   @Post('predefined')
@@ -436,11 +438,14 @@ export class McpIntegrationsController {
   ): Promise<void> {
     if (error) {
       const reason = error === 'access_denied' ? 'User denied consent' : error;
+      const authorizationContext = state
+        ? this.oauthFlowService.resolveAuthorizationContext(state)
+        : null;
       res.redirect(
         buildFrontendRedirectUrl({
           configService: this.configService,
-          redirectPath: null,
-          level: null,
+          redirectPath: authorizationContext?.frontendRedirectPath ?? null,
+          level: authorizationContext?.level ?? null,
           params: {
             oauth: 'error',
             reason,

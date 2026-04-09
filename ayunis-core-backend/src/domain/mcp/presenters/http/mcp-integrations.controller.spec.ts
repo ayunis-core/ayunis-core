@@ -22,6 +22,7 @@ import { StartMcpOAuthAuthorizationUseCase } from '../../application/use-cases/s
 import { CompleteMcpOAuthAuthorizationUseCase } from '../../application/use-cases/complete-mcp-oauth-authorization/complete-mcp-oauth-authorization.use-case';
 import { RevokeMcpOAuthAuthorizationUseCase } from '../../application/use-cases/revoke-mcp-oauth-authorization/revoke-mcp-oauth-authorization.use-case';
 import { GetMcpOAuthAuthorizationStatusUseCase } from '../../application/use-cases/get-mcp-oauth-authorization-status/get-mcp-oauth-authorization-status.use-case';
+import { OAuthFlowService } from '../../application/services/oauth-flow.service';
 import {
   PredefinedMcpIntegration,
   CustomMcpIntegration,
@@ -58,6 +59,7 @@ describe('McpIntegrationsController', () => {
   let completeOAuthUseCase: jest.Mocked<CompleteMcpOAuthAuthorizationUseCase>;
   let revokeOAuthUseCase: jest.Mocked<RevokeMcpOAuthAuthorizationUseCase>;
   let getOAuthStatusUseCase: jest.Mocked<GetMcpOAuthAuthorizationStatusUseCase>;
+  let oauthFlowServiceMock: jest.Mocked<OAuthFlowService>;
   let configServiceMock: jest.Mocked<ConfigService>;
   beforeEach(async () => {
     const mockCreateUseCase = {
@@ -113,6 +115,9 @@ describe('McpIntegrationsController', () => {
     };
     const mockGetOAuthStatusUseCase = {
       execute: jest.fn(),
+    };
+    const mockOAuthFlowService = {
+      resolveAuthorizationContext: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -198,6 +203,10 @@ describe('McpIntegrationsController', () => {
             get: jest.fn(),
           },
         },
+        {
+          provide: OAuthFlowService,
+          useValue: mockOAuthFlowService,
+        },
       ],
     }).compile();
 
@@ -221,6 +230,7 @@ describe('McpIntegrationsController', () => {
     completeOAuthUseCase = module.get(CompleteMcpOAuthAuthorizationUseCase);
     revokeOAuthUseCase = module.get(RevokeMcpOAuthAuthorizationUseCase);
     getOAuthStatusUseCase = module.get(GetMcpOAuthAuthorizationStatusUseCase);
+    oauthFlowServiceMock = module.get(OAuthFlowService);
     configServiceMock = module.get(ConfigService);
   });
 
@@ -930,7 +940,12 @@ describe('McpIntegrationsController', () => {
       const res = {
         redirect: jest.fn(),
       } as unknown as Response;
-      await controller.oauthCallback('auth-code', 'bad-state', res);
+      await controller.oauthCallback(
+        'auth-code',
+        'bad-state',
+        undefined as unknown as string,
+        res,
+      );
 
       expect(res.redirect).toHaveBeenCalledWith(
         'http://localhost:3001/settings/integrations?oauth=error&reason=Invalid+state',
@@ -949,7 +964,12 @@ describe('McpIntegrationsController', () => {
       const res = {
         redirect: jest.fn(),
       } as unknown as Response;
-      await controller.oauthCallback('auth-code', 'bad-state', res);
+      await controller.oauthCallback(
+        'auth-code',
+        'bad-state',
+        undefined as unknown as string,
+        res,
+      );
 
       expect(res.redirect).toHaveBeenCalledWith(
         'http://localhost:3001/admin-settings/integrations?oauth=error&reason=Invalid+state',
@@ -971,7 +991,7 @@ describe('McpIntegrationsController', () => {
 
       expect(completeOAuthUseCase.execute).not.toHaveBeenCalled();
       expect(res.redirect).toHaveBeenCalledWith(
-        'http://localhost:3001/admin-settings/integrations?oauth=error&reason=User%20denied%20consent',
+        'http://localhost:3001/admin-settings/integrations?oauth=error&reason=User+denied+consent',
       );
     });
   });
