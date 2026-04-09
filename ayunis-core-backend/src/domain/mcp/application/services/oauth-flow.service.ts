@@ -188,11 +188,8 @@ export class OAuthFlowService {
         level: state.level,
         returnPath: state.returnPath,
       };
-    } catch (error) {
-      if (error instanceof McpOAuthStateInvalidError) {
-        return null;
-      }
-      throw error;
+    } catch {
+      return null;
     }
   }
 
