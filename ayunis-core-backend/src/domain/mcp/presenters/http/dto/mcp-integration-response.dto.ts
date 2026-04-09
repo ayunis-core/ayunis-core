@@ -21,10 +21,10 @@ export class McpIntegrationResponseDto {
 
   @ApiProperty({
     description: 'Type of integration',
-    enum: ['predefined', 'custom', 'marketplace'],
+    enum: ['predefined', 'custom', 'marketplace', 'self_defined'],
     example: 'predefined',
   })
-  type: 'predefined' | 'custom' | 'marketplace';
+  type: 'predefined' | 'custom' | 'marketplace' | 'self_defined';
 
   @ApiProperty({
     description:
@@ -78,7 +78,7 @@ export class McpIntegrationResponseDto {
   @ApiProperty({
     description: 'Connection status of the integration',
     required: false,
-    enum: ['connected', 'disconnected', 'error', 'unknown'],
+    enum: ['connected', 'disconnected', 'error', 'unknown', 'pending_auth'],
     example: 'connected',
   })
   connectionStatus?: string;
@@ -167,4 +167,14 @@ export class McpIntegrationResponseDto {
     example: 'Access municipal council data via OParl',
   })
   description?: string;
+
+  @ApiPropertyOptional({
+    description: 'OAuth configuration and status for this integration',
+  })
+  oauth?: {
+    enabled: boolean;
+    level: 'org' | 'user' | null;
+    authorized: boolean;
+    hasClientCredentials: boolean;
+  };
 }
