@@ -428,6 +428,63 @@ describe('AgentMcpIntegrationsCard', () => {
     expect((toggle as HTMLButtonElement).disabled).toBe(true);
   });
 
+  it('blocks toggling until user-level OAuth authorization is complete', () => {
+    const oauthIntegration: McpIntegrationResponseDto = {
+      ...mockIntegration1,
+      oauth: {
+        enabled: true,
+        level: 'user',
+        authorized: false,
+        hasClientCredentials: true,
+      } as unknown as McpIntegrationResponseDto['oauth'],
+    };
+
+    vi.spyOn(
+      apiHooks,
+      'useMcpIntegrationsControllerListAvailable',
+    ).mockReturnValue({
+      data: [oauthIntegration],
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    } as any);
+
+    vi.spyOn(
+      apiHooks,
+      'useAgentMcpIntegrationsControllerListAgentMcpIntegrations',
+    ).mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    } as any);
+
+    vi.spyOn(
+      apiHooks,
+      'useMcpIntegrationsControllerGetOAuthStatus',
+    ).mockReturnValue({
+      data: {
+        level: 'user',
+        authorized: false,
+        expiresAt: null,
+        scope: null,
+      },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    } as any);
+
+    render(<AgentMcpIntegrationsCard />, { wrapper: createWrapper() });
+
+    expect(
+      screen.getByText('mcpIntegrations.authorizationRequired'),
+    ).toBeTruthy();
+    expect(screen.getByText('mcpIntegrations.authorize')).toBeTruthy();
+
+    const toggle = screen.getByRole('switch');
+    expect((toggle as HTMLButtonElement).disabled).toBe(true);
+  });
+
   it('has correct ARIA labels for accessibility', () => {
     vi.spyOn(
       apiHooks,

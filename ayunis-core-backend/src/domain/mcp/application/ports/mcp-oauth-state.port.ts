@@ -14,6 +14,7 @@ export interface McpOAuthAuthorizationState {
   userId: UUID | null;
   codeVerifier: string;
   redirectUri: string;
+  returnPath: string | null;
   nonce: string;
 }
 

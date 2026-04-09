@@ -9,6 +9,7 @@ tsconfig.?????????*.json
 # Agent config (symlinked from ayunis-ai)
 .pi
 .pi/
+.agents/
 .claude/
 AGENTS.md
 .agentfiles
