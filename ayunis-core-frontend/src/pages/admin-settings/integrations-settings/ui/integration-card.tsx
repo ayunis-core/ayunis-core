@@ -74,12 +74,12 @@ export function IntegrationCard({
               isAuthorized={oauth.authorized}
             />
             {showsPendingOAuth && (
-              <Badge className="bg-amber-500 text-white hover:bg-amber-600">
+              <Badge variant="destructive">
                 {t('integrations.oauth.authorizationRequired')}
               </Badge>
             )}
             {showsAuthorizedOAuth && (
-              <Badge className="bg-emerald-600 text-white hover:bg-emerald-700">
+              <Badge variant="default">
                 {t('integrations.oauth.statusAuthorized')}
               </Badge>
             )}

@@ -75,9 +75,6 @@ export function CreateSelfDefinedDialog({
   const handleSubmit = (values: CreateSelfDefinedIntegrationFormFields) => {
     const parsedSchema = parseSchema(values.configSchema);
     if (!parsedSchema) {
-      form.setError('configSchema', {
-        message: t('integrations.createSelfDefinedDialog.errorInvalidJson'),
-      });
       return;
     }
 

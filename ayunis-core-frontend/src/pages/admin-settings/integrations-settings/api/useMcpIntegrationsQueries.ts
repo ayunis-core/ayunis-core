@@ -63,7 +63,12 @@ function toOAuthInfo(value: unknown): McpIntegrationOAuthInfo | undefined {
   if (typeof enabled !== 'boolean') {
     return undefined;
   }
-  if (level !== null && level !== 'org' && level !== 'user') {
+  const normalizedLevel = level === undefined ? null : level;
+  if (
+    normalizedLevel !== null &&
+    normalizedLevel !== 'org' &&
+    normalizedLevel !== 'user'
+  ) {
     return undefined;
   }
   if (typeof authorized !== 'boolean') {
@@ -75,7 +80,7 @@ function toOAuthInfo(value: unknown): McpIntegrationOAuthInfo | undefined {
 
   return {
     enabled,
-    level,
+    level: normalizedLevel,
     authorized,
     hasClientCredentials,
   };
