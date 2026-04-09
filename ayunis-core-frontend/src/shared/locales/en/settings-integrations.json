@@ -1,0 +1,51 @@
+{
+  "page": {
+    "title": "Integrations",
+    "description": "Review which integrations are available to you and configure your personal settings where needed.",
+    "emptyState": "No integrations available. Ask your organization admin to enable integrations for your organization.",
+    "emptyStateLink": "Browse Marketplace",
+    "errorLoadingTitle": "Error Loading Integrations",
+    "errorLoadingMessage": "An error occurred while loading integrations.",
+    "retry": "Retry"
+  },
+  "row": {
+    "configureButton": "Configure",
+    "noConfigurable": "No personal settings required",
+    "statusAuthorized": "Authorized",
+    "statusPending": "Pending authorization",
+    "connectionConnected": "Connected",
+    "connectionDisconnected": "Disconnected",
+    "connectionError": "Needs attention",
+    "connectionPendingAuth": "Authorization required",
+    "connectionUnknown": "Not checked"
+  },
+  "dialog": {
+    "title": "User Configuration — {{name}}",
+    "description": "Set your personal configuration for this integration. These values override organization defaults.",
+    "authorizationTitle": "Authorization",
+    "authorizationDescription": "Authorize your personal account for this integration before using it in agents or skills.",
+    "nothingToConfigure": "This integration does not require any personal configuration.",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "close": "Close",
+    "success": "User configuration saved successfully.",
+    "error": "Failed to save user configuration. Please try again.",
+    "notFound": "Integration not found. It may have been deleted."
+  },
+  "oauth": {
+    "authorize": "Authorize",
+    "authorizing": "Authorizing...",
+    "reauthorize": "Re-authorize",
+    "revoke": "Revoke",
+    "statusExpiresAt": "Token expires {{date}}",
+    "successToast": "OAuth authorization completed successfully.",
+    "errorToast": "OAuth authorization failed. Please try again.",
+    "errorState": "OAuth state is invalid or expired. Please start again.",
+    "errorOauthExchange": "OAuth token exchange failed. Please try again.",
+    "errorClientNotConfigured": "OAuth client is not configured for this integration.",
+    "errorIntegrationNotFound": "Integration not found.",
+    "revokeSuccess": "OAuth authorization revoked.",
+    "revokeError": "Failed to revoke OAuth authorization."
+  }
+}

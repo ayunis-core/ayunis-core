@@ -66,6 +66,7 @@ export class OAuthFlowService {
     level: 'org' | 'user',
     orgId: UUID,
     userIdOrNull: UUID | null,
+    frontendRedirectPath: string | null,
   ): { url: string } {
     const configSchema = this.getOAuthConfigOrThrow(integration);
 
@@ -91,6 +92,7 @@ export class OAuthFlowService {
         userId: userIdOrNull,
         codeVerifier,
         redirectUri,
+        frontendRedirectPath,
         nonce: randomBytes(16).toString('base64url'),
       },
       600,
@@ -120,6 +122,7 @@ export class OAuthFlowService {
     integrationId: UUID;
     level: 'org' | 'user';
     userId: UUID | null;
+    frontendRedirectPath: string | null;
   }> {
     const state = this.verifyStateOrThrow(stateToken);
 
@@ -172,7 +175,25 @@ export class OAuthFlowService {
       integrationId: state.integrationId,
       level: state.level,
       userId: state.userId,
+      frontendRedirectPath: state.frontendRedirectPath,
     };
+  }
+
+  resolveAuthorizationContext(
+    stateToken: string,
+  ): { level: 'org' | 'user'; frontendRedirectPath: string | null } | null {
+    try {
+      const state = this.verifyStateOrThrow(stateToken);
+      return {
+        level: state.level,
+        frontendRedirectPath: state.frontendRedirectPath,
+      };
+    } catch (error) {
+      if (error instanceof McpOAuthStateInvalidError) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   /**
@@ -309,12 +330,9 @@ export class OAuthFlowService {
     const accessTokenEncrypted = await this.credentialEncryption.encrypt(
       tokens.access_token,
     );
-    const refreshTokenEncrypted: string | null | undefined =
-      tokens.refresh_token
-        ? await this.credentialEncryption.encrypt(tokens.refresh_token)
-        : tokens.refresh_token === null
-          ? null
-          : undefined;
+    const refreshTokenEncrypted = await this.encryptRefreshToken(
+      tokens.refresh_token,
+    );
     const tokenExpiresAt: Date | null =
       tokens.expires_in !== undefined
         ? new Date(Date.now() + tokens.expires_in * 1000)
@@ -344,6 +362,20 @@ export class OAuthFlowService {
       });
       await this.tokenRepository.save(token);
     }
+  }
+
+  private async encryptRefreshToken(
+    refreshToken: string | null | undefined,
+  ): Promise<string | null | undefined> {
+    if (refreshToken === undefined) {
+      return undefined;
+    }
+
+    if (refreshToken === null) {
+      return null;
+    }
+
+    return this.credentialEncryption.encrypt(refreshToken);
   }
 
   private async refreshOrRequireAuth(
