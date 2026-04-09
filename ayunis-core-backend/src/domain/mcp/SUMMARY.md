@@ -58,6 +58,11 @@ The MCP module manages connections to external Model Context Protocol servers at
   - `POST /mcp-integrations/:id/validate` — Validate connection (admin)
   - `GET /mcp-integrations/:id/user-config` — Get user config (user, admin)
   - `PATCH /mcp-integrations/:id/user-config` — Set user config (user, admin)
+  - `POST /mcp-integrations/self-defined` — Create self-defined integration (admin)
+  - `POST /mcp-integrations/:id/oauth/authorize` — Start OAuth authorization (user, admin)
+  - `GET /mcp-integrations/oauth/callback` — OAuth callback (public)
+  - `POST /mcp-integrations/:id/oauth/revoke` — Revoke OAuth authorization (user, admin)
+  - `GET /mcp-integrations/:id/oauth/status` — Get OAuth authorization status (user, admin)
 
 **Module Dependencies:**
 - **marketplace** — `InstallMarketplaceIntegrationUseCase` uses `GetMarketplaceIntegrationUseCase` to fetch integration metadata from the marketplace

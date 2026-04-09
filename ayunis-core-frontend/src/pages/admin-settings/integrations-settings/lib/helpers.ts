@@ -44,7 +44,9 @@ export function getIntegrationTypeLabel(type: McpIntegration['type']): string {
         ns: 'admin-settings-integrations',
       });
     case 'self_defined':
-      return 'Self-defined';
+      return i18n.t('integrations.helpers.type.self_defined', {
+        ns: 'admin-settings-integrations',
+      });
   }
 }
 
