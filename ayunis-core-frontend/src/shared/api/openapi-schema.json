@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/": {
+    "/api": {
       "get": {
         "operationId": "AppController_isCloud",
         "parameters": [],
@@ -21,7 +21,7 @@
         "tags": ["app"]
       }
     },
-    "/health": {
+    "/api/health": {
       "get": {
         "operationId": "AppController_health",
         "parameters": [],
@@ -34,7 +34,7 @@
         "tags": ["app"]
       }
     },
-    "/feature-toggles": {
+    "/api/feature-toggles": {
       "get": {
         "operationId": "AppController_featureToggles",
         "parameters": [],
@@ -54,7 +54,7 @@
         "tags": ["app"]
       }
     },
-    "/models/available": {
+    "/api/models/available": {
       "get": {
         "operationId": "ModelsController_getAvailableModelsWithConfig",
         "parameters": [],
@@ -80,7 +80,7 @@
         "tags": ["models"]
       }
     },
-    "/models/providers": {
+    "/api/models/providers": {
       "get": {
         "operationId": "ModelsController_getProviders",
         "parameters": [],
@@ -103,7 +103,7 @@
         "tags": ["models"]
       }
     },
-    "/models/permitted": {
+    "/api/models/permitted": {
       "post": {
         "operationId": "ModelsController_createPermittedModel",
         "parameters": [],
@@ -132,7 +132,7 @@
         "tags": ["models"]
       }
     },
-    "/models/permitted/{id}": {
+    "/api/models/permitted/{id}": {
       "delete": {
         "operationId": "ModelsController_deletePermittedModel",
         "parameters": [
@@ -200,7 +200,7 @@
         "tags": ["models"]
       }
     },
-    "/models/permitted/language-models": {
+    "/api/models/permitted/language-models": {
       "get": {
         "description": "Returns the effective set of language models for the current user, considering team overrides. If the user is in any team with model override enabled, only those teams' models are returned (union). Otherwise, org-level models are returned.",
         "operationId": "ModelsController_getPermittedLanguageModels",
@@ -227,7 +227,7 @@
         "tags": ["models"]
       }
     },
-    "/models/permitted/language-models/org": {
+    "/api/models/permitted/language-models/org": {
       "get": {
         "description": "Returns only org-scoped permitted language models, ignoring team overrides. Used by the admin model settings page.",
         "operationId": "ModelsController_getOrgPermittedLanguageModels",
@@ -254,7 +254,7 @@
         "tags": ["models"]
       }
     },
-    "/models/default": {
+    "/api/models/default": {
       "get": {
         "description": "Returns the applicable default model with fallback hierarchy: User default → Org default → First available model",
         "operationId": "ModelsController_getEffectiveDefaultModel",
@@ -278,7 +278,7 @@
         "tags": ["models"]
       }
     },
-    "/models/org/default": {
+    "/api/models/org/default": {
       "get": {
         "description": "Returns only the organization's specific default model. Returns null if no org default is set.",
         "operationId": "ModelsController_getOrgSpecificDefaultModel",
@@ -337,7 +337,7 @@
         "tags": ["models"]
       }
     },
-    "/models/user/default": {
+    "/api/models/user/default": {
       "get": {
         "description": "Returns the user's personal default model only. Returns null if no user-specific default is set.",
         "operationId": "ModelsController_getUserSpecificDefaultModel",
@@ -410,7 +410,7 @@
         "tags": ["models"]
       }
     },
-    "/models/provider/{provider}": {
+    "/api/models/provider/{provider}": {
       "get": {
         "description": "Retrieves detailed information about a specific model provider",
         "operationId": "ModelsController_getModelProviderInfo",
@@ -446,7 +446,7 @@
         "tags": ["models"]
       }
     },
-    "/models/embedding/enabled": {
+    "/api/models/embedding/enabled": {
       "get": {
         "operationId": "ModelsController_isEmbeddingModelEnabled",
         "parameters": [],
@@ -469,7 +469,7 @@
         "tags": ["models"]
       }
     },
-    "/teams/{teamId}/permitted-models": {
+    "/api/teams/{teamId}/permitted-models": {
       "get": {
         "operationId": "TeamPermittedModelsController_listTeamPermittedModels",
         "parameters": [
@@ -551,7 +551,7 @@
         "tags": ["team-permitted-models"]
       }
     },
-    "/teams/{teamId}/permitted-models/{id}": {
+    "/api/teams/{teamId}/permitted-models/{id}": {
       "delete": {
         "operationId": "TeamPermittedModelsController_deleteTeamPermittedModel",
         "parameters": [
@@ -584,7 +584,7 @@
         "tags": ["team-permitted-models"]
       }
     },
-    "/teams/{teamId}/permitted-models/default": {
+    "/api/teams/{teamId}/permitted-models/default": {
       "put": {
         "description": "Sets the specified team-scoped permitted model as the default model for the team.",
         "operationId": "TeamPermittedModelsController_setTeamDefaultModel",
@@ -627,7 +627,7 @@
         "tags": ["team-permitted-models"]
       }
     },
-    "/super-admin/models/{orgId}/available": {
+    "/api/super-admin/models/{orgId}/available": {
       "get": {
         "description": "Retrieve all available models from the registry with their permitted status for the specified organization. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminPermittedModelsController_getAvailableModels",
@@ -669,7 +669,7 @@
         "tags": ["Super Admin Models"]
       }
     },
-    "/super-admin/models/{orgId}/default-model": {
+    "/api/super-admin/models/{orgId}/default-model": {
       "put": {
         "description": "Sets the specified permitted model as the organization default. If a default already exists, it will be updated to the new model. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminPermittedModelsController_manageOrgDefaultModel",
@@ -724,7 +724,7 @@
         "tags": ["Super Admin Models"]
       }
     },
-    "/super-admin/models/{orgId}/permitted-models": {
+    "/api/super-admin/models/{orgId}/permitted-models": {
       "get": {
         "description": "Retrieve all permitted models for the specified organization. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminPermittedModelsController_getPermittedModels",
@@ -819,7 +819,7 @@
         "tags": ["Super Admin Models"]
       }
     },
-    "/super-admin/models/{orgId}/permitted-models/{id}": {
+    "/api/super-admin/models/{orgId}/permitted-models/{id}": {
       "delete": {
         "description": "Delete a permitted model for the specified organization. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminPermittedModelsController_deletePermittedModel",
@@ -939,7 +939,7 @@
         "tags": ["Super Admin Models"]
       }
     },
-    "/super-admin/models/catalog": {
+    "/api/super-admin/models/catalog": {
       "get": {
         "description": "Retrieve all models (language and embedding) from the master catalog. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminCatalogModelsController_getAllCatalogModels",
@@ -976,7 +976,7 @@
         "tags": ["Super Admin Models"]
       }
     },
-    "/super-admin/models/catalog/{id}": {
+    "/api/super-admin/models/catalog/{id}": {
       "get": {
         "description": "Retrieve a specific model from the master catalog by its ID. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminCatalogModelsController_getCatalogModelById",
@@ -1058,7 +1058,7 @@
         "tags": ["Super Admin Models"]
       }
     },
-    "/super-admin/models/catalog/language": {
+    "/api/super-admin/models/catalog/language": {
       "post": {
         "description": "Create a new language model in the master catalog. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminCatalogModelsController_createLanguageModel",
@@ -1101,7 +1101,7 @@
         "tags": ["Super Admin Models"]
       }
     },
-    "/super-admin/models/catalog/language/{id}": {
+    "/api/super-admin/models/catalog/language/{id}": {
       "patch": {
         "description": "Update an existing language model in the master catalog. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminCatalogModelsController_updateLanguageModel",
@@ -1156,7 +1156,7 @@
         "tags": ["Super Admin Models"]
       }
     },
-    "/super-admin/models/catalog/embedding": {
+    "/api/super-admin/models/catalog/embedding": {
       "post": {
         "description": "Create a new embedding model in the master catalog. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminCatalogModelsController_createEmbeddingModel",
@@ -1199,7 +1199,7 @@
         "tags": ["Super Admin Models"]
       }
     },
-    "/super-admin/models/catalog/embedding/{id}": {
+    "/api/super-admin/models/catalog/embedding/{id}": {
       "patch": {
         "description": "Update an existing embedding model in the master catalog. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminCatalogModelsController_updateEmbeddingModel",
@@ -1254,7 +1254,7 @@
         "tags": ["Super Admin Models"]
       }
     },
-    "/super-admin/orgs": {
+    "/api/super-admin/orgs": {
       "post": {
         "description": "Create a new organization in the system. Only accessible to users with the super admin system role.",
         "operationId": "SuperAdminOrgsController_createOrg",
@@ -1347,7 +1347,7 @@
         "tags": ["Super Admin Orgs"]
       }
     },
-    "/super-admin/orgs/{id}": {
+    "/api/super-admin/orgs/{id}": {
       "get": {
         "description": "Retrieve an organization by its ID. Only accessible to users with the super admin system role.",
         "operationId": "SuperAdminOrgsController_getOrgById",
@@ -1381,7 +1381,7 @@
         "tags": ["Super Admin Orgs"]
       }
     },
-    "/users": {
+    "/api/users": {
       "get": {
         "description": "Retrieve paginated users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.",
         "operationId": "UserController_getUsersInOrganization",
@@ -1441,7 +1441,7 @@
         "tags": ["Users"]
       }
     },
-    "/users/{id}/role": {
+    "/api/users/{id}/role": {
       "patch": {
         "description": "Update the role of a user. You cannot update your own role.",
         "operationId": "UserController_updateUserRole",
@@ -1497,7 +1497,7 @@
         "tags": ["Users"]
       }
     },
-    "/users/name": {
+    "/api/users/name": {
       "patch": {
         "description": "Update the name of a user. Users can only update their own name.",
         "operationId": "UserController_updateUserName",
@@ -1541,7 +1541,7 @@
         "tags": ["Users"]
       }
     },
-    "/users/password": {
+    "/api/users/password": {
       "patch": {
         "description": "Update the password of the current authenticated user. Requires current password for verification.",
         "operationId": "UserController_updatePassword",
@@ -1575,7 +1575,7 @@
         "tags": ["Users"]
       }
     },
-    "/users/confirm-email": {
+    "/api/users/confirm-email": {
       "post": {
         "description": "Confirm a user's email address using a JWT token received via email",
         "operationId": "UserController_confirmEmail",
@@ -1609,7 +1609,7 @@
         "tags": ["Users"]
       }
     },
-    "/users/resend-confirmation": {
+    "/api/users/resend-confirmation": {
       "post": {
         "description": "Resend a confirmation email to the specified email address. Silently succeeds even if email is already verified or user does not exist for security reasons.",
         "operationId": "UserController_resendEmailConfirmation",
@@ -1640,7 +1640,7 @@
         "tags": ["Users"]
       }
     },
-    "/users/{id}": {
+    "/api/users/{id}": {
       "delete": {
         "description": "Delete a user by their ID. Only users within the same organization can be deleted.",
         "operationId": "UserController_deleteUser",
@@ -1675,7 +1675,7 @@
         "tags": ["Users"]
       }
     },
-    "/users/{id}/trigger-password-reset": {
+    "/api/users/{id}/trigger-password-reset": {
       "post": {
         "description": "Send a password reset email to a user in your organization. Only organization admins can use this endpoint.",
         "operationId": "UserController_triggerPasswordResetForUser",
@@ -1706,7 +1706,7 @@
         "tags": ["Users"]
       }
     },
-    "/users/forgot-password": {
+    "/api/users/forgot-password": {
       "post": {
         "description": "Send a password reset email to the provided email address. If the email exists in the system, a reset link will be sent.",
         "operationId": "UserController_forgotPassword",
@@ -1737,7 +1737,7 @@
         "tags": ["Users"]
       }
     },
-    "/users/reset-password": {
+    "/api/users/reset-password": {
       "post": {
         "description": "Reset user password using the token received via email. The token must be valid and not expired.",
         "operationId": "UserController_resetPassword",
@@ -1771,7 +1771,7 @@
         "tags": ["Users"]
       }
     },
-    "/users/validate-reset-token": {
+    "/api/users/validate-reset-token": {
       "get": {
         "description": "Validate a password reset token without performing the actual password reset. Used to check if a token is valid before showing the reset form.",
         "operationId": "UserController_validateResetToken",
@@ -1815,7 +1815,7 @@
         "tags": ["Users"]
       }
     },
-    "/super-admin/users/{orgId}": {
+    "/api/super-admin/users/{orgId}": {
       "get": {
         "description": "Retrieve paginated users that belong to the specified organization. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminUsersController_getUsersByOrgId",
@@ -1889,7 +1889,7 @@
         "tags": ["Super Admin Users"]
       }
     },
-    "/super-admin/users/{userId}": {
+    "/api/super-admin/users/{userId}": {
       "delete": {
         "description": "Delete a user by their ID. This endpoint is only accessible to super admins and allows deletion of users from any organization.",
         "operationId": "SuperAdminUsersController_deleteUser",
@@ -1924,7 +1924,7 @@
         "tags": ["Super Admin Users"]
       }
     },
-    "/super-admin/users/{userId}/trigger-password-reset": {
+    "/api/super-admin/users/{userId}/trigger-password-reset": {
       "post": {
         "description": "Send a password reset email to the specified user and return the reset URL. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminUsersController_triggerPasswordReset",
@@ -1966,7 +1966,7 @@
         "tags": ["Super Admin Users"]
       }
     },
-    "/super-admin/users/{orgId}/create": {
+    "/api/super-admin/users/{orgId}/create": {
       "post": {
         "description": "Create a new user in the specified organization with a randomly generated password. A password reset email will be sent to the user. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminUsersController_createUser",
@@ -2022,7 +2022,7 @@
         "tags": ["Super Admin Users"]
       }
     },
-    "/super-admin/super-admins": {
+    "/api/super-admin/super-admins": {
       "get": {
         "description": "Retrieve all users with super admin status. Only accessible to super admins.",
         "operationId": "SuperAdminManagementController_listSuperAdmins",
@@ -2085,7 +2085,7 @@
         "tags": ["Super Admin Management"]
       }
     },
-    "/super-admin/super-admins/{userId}": {
+    "/api/super-admin/super-admins/{userId}": {
       "delete": {
         "description": "Demote a user from super admin to customer. Cannot demote yourself.",
         "operationId": "SuperAdminManagementController_demoteFromSuperAdmin",
@@ -2126,7 +2126,7 @@
         "tags": ["Super Admin Management"]
       }
     },
-    "/invites": {
+    "/api/invites": {
       "post": {
         "description": "Send an invitation to a user to join an organization with a specific role",
         "operationId": "InvitesController_create",
@@ -2218,7 +2218,7 @@
         "tags": ["invites"]
       }
     },
-    "/invites/bulk": {
+    "/api/invites/bulk": {
       "post": {
         "description": "Send invitations to multiple users. All rows are validated before any are processed.",
         "operationId": "InvitesController_createBulk",
@@ -2255,7 +2255,7 @@
         "tags": ["invites"]
       }
     },
-    "/invites/{token}": {
+    "/api/invites/{token}": {
       "get": {
         "description": "Retrieve invite details including organization name by token",
         "operationId": "InvitesController_getInviteByToken",
@@ -2293,7 +2293,7 @@
         "tags": ["invites"]
       }
     },
-    "/invites/accept": {
+    "/api/invites/accept": {
       "post": {
         "description": "Accept an invitation using the JWT token",
         "operationId": "InvitesController_acceptInvite",
@@ -2333,7 +2333,7 @@
         "tags": ["invites"]
       }
     },
-    "/invites/{id}/resend": {
+    "/api/invites/{id}/resend": {
       "post": {
         "description": "Delete the expired invite and create a new one with the same details, then send the invitation email",
         "operationId": "InvitesController_resendExpiredInvite",
@@ -2374,7 +2374,7 @@
         "tags": ["invites"]
       }
     },
-    "/invites/all": {
+    "/api/invites/all": {
       "delete": {
         "description": "Delete all pending invitations for the organization (Admin only)",
         "operationId": "InvitesController_deleteAllPending",
@@ -2401,7 +2401,7 @@
         "tags": ["invites"]
       }
     },
-    "/invites/{id}": {
+    "/api/invites/{id}": {
       "delete": {
         "description": "Delete an invitation (only allowed by the user who created it)",
         "operationId": "InvitesController_deleteInvite",
@@ -2435,7 +2435,7 @@
         "tags": ["invites"]
       }
     },
-    "/subscriptions/active": {
+    "/api/subscriptions/active": {
       "get": {
         "operationId": "SubscriptionsController_hasActiveSubscription",
         "parameters": [],
@@ -2458,7 +2458,7 @@
         "tags": ["subscriptions"]
       }
     },
-    "/subscriptions/price": {
+    "/api/subscriptions/price": {
       "get": {
         "operationId": "SubscriptionsController_getCurrentPrice",
         "parameters": [],
@@ -2484,7 +2484,7 @@
         "tags": ["subscriptions"]
       }
     },
-    "/super-admin/subscriptions/{orgId}": {
+    "/api/super-admin/subscriptions/{orgId}": {
       "get": {
         "description": "Retrieve subscription details for the specified organization. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminSubscriptionsController_getSubscription",
@@ -2612,7 +2612,7 @@
         "tags": ["Super Admin Subscriptions"]
       }
     },
-    "/super-admin/subscriptions/{orgId}/seats": {
+    "/api/super-admin/subscriptions/{orgId}/seats": {
       "put": {
         "description": "Update the number of seats for the specified organization. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminSubscriptionsController_updateSeats",
@@ -2660,7 +2660,7 @@
         "tags": ["Super Admin Subscriptions"]
       }
     },
-    "/super-admin/subscriptions/{orgId}/billing-info": {
+    "/api/super-admin/subscriptions/{orgId}/billing-info": {
       "put": {
         "description": "Update the billing information for the specified organization. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminSubscriptionsController_updateBillingInfo",
@@ -2708,7 +2708,7 @@
         "tags": ["Super Admin Subscriptions"]
       }
     },
-    "/super-admin/subscriptions/{orgId}/start-date": {
+    "/api/super-admin/subscriptions/{orgId}/start-date": {
       "put": {
         "description": "Update the start date for the latest subscription of the specified organization. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminSubscriptionsController_updateStartDate",
@@ -2756,7 +2756,7 @@
         "tags": ["Super Admin Subscriptions"]
       }
     },
-    "/super-admin/subscriptions/{orgId}/uncancel": {
+    "/api/super-admin/subscriptions/{orgId}/uncancel": {
       "post": {
         "description": "Uncancel the subscription for the specified organization. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminSubscriptionsController_uncancelSubscription",
@@ -2794,7 +2794,7 @@
         "tags": ["Super Admin Subscriptions"]
       }
     },
-    "/teams": {
+    "/api/teams": {
       "get": {
         "operationId": "TeamsController_listTeams",
         "parameters": [],
@@ -2869,7 +2869,7 @@
         "tags": ["teams"]
       }
     },
-    "/teams/me": {
+    "/api/teams/me": {
       "get": {
         "operationId": "TeamsController_listMyTeams",
         "parameters": [],
@@ -2898,7 +2898,7 @@
         "tags": ["teams"]
       }
     },
-    "/teams/{id}": {
+    "/api/teams/{id}": {
       "get": {
         "operationId": "TeamsController_getTeam",
         "parameters": [
@@ -3026,7 +3026,7 @@
         "tags": ["teams"]
       }
     },
-    "/teams/{id}/members": {
+    "/api/teams/{id}/members": {
       "get": {
         "operationId": "TeamsController_listTeamMembers",
         "parameters": [
@@ -3144,7 +3144,7 @@
         "tags": ["teams"]
       }
     },
-    "/teams/{id}/members/{userId}": {
+    "/api/teams/{id}/members/{userId}": {
       "delete": {
         "operationId": "TeamsController_removeTeamMember",
         "parameters": [
@@ -3186,7 +3186,7 @@
         "tags": ["teams"]
       }
     },
-    "/storage/upload": {
+    "/api/storage/upload": {
       "post": {
         "description": "Generic file upload endpoint. Stores the file with optional metadata. Validation (file types, sizes) should be handled by consuming modules.",
         "operationId": "StorageController_uploadFile",
@@ -3228,7 +3228,7 @@
         "tags": ["storage"]
       }
     },
-    "/storage/{objectName}": {
+    "/api/storage/{objectName}": {
       "get": {
         "operationId": "StorageController_getFile",
         "parameters": [
@@ -3270,7 +3270,7 @@
         "tags": ["storage"]
       }
     },
-    "/storage/url/{objectName}": {
+    "/api/storage/url/{objectName}": {
       "get": {
         "operationId": "StorageController_getPresignedUrl",
         "parameters": [
@@ -3292,7 +3292,7 @@
         "tags": ["storage"]
       }
     },
-    "/retrievers/url": {
+    "/api/retrievers/url": {
       "post": {
         "operationId": "UrlRetrieverController_retrieveUrl",
         "parameters": [],
@@ -3315,7 +3315,7 @@
         "tags": ["retrievers"]
       }
     },
-    "/threads": {
+    "/api/threads": {
       "post": {
         "operationId": "ThreadsController_create",
         "parameters": [],
@@ -3410,7 +3410,7 @@
         "tags": ["threads"]
       }
     },
-    "/threads/{id}": {
+    "/api/threads/{id}": {
       "get": {
         "operationId": "ThreadsController_findOne",
         "parameters": [
@@ -3475,7 +3475,7 @@
         "tags": ["threads"]
       }
     },
-    "/threads/{id}/title": {
+    "/api/threads/{id}/title": {
       "patch": {
         "operationId": "ThreadsController_updateTitle",
         "parameters": [
@@ -3518,7 +3518,7 @@
         "tags": ["threads"]
       }
     },
-    "/threads/{id}/sources": {
+    "/api/threads/{id}/sources": {
       "get": {
         "operationId": "ThreadSourcesController_getThreadSources",
         "parameters": [
@@ -3568,7 +3568,7 @@
         "tags": ["threads"]
       }
     },
-    "/threads/{id}/sources/file": {
+    "/api/threads/{id}/sources/file": {
       "post": {
         "operationId": "ThreadSourcesController_addFileSource",
         "parameters": [
@@ -3630,7 +3630,7 @@
         "tags": ["threads"]
       }
     },
-    "/threads/{id}/sources/{sourceId}": {
+    "/api/threads/{id}/sources/{sourceId}": {
       "delete": {
         "operationId": "ThreadSourcesController_removeSource",
         "parameters": [
@@ -3667,7 +3667,7 @@
         "tags": ["threads"]
       }
     },
-    "/threads/{id}/sources/{sourceId}/download": {
+    "/api/threads/{id}/sources/{sourceId}/download": {
       "get": {
         "operationId": "ThreadSourcesController_downloadSource",
         "parameters": [
@@ -3715,7 +3715,7 @@
         "tags": ["threads"]
       }
     },
-    "/threads/{id}/knowledge-bases/{knowledgeBaseId}": {
+    "/api/threads/{id}/knowledge-bases/{knowledgeBaseId}": {
       "post": {
         "operationId": "ThreadKnowledgeBasesController_addKnowledgeBase",
         "parameters": [
@@ -3787,7 +3787,7 @@
         "tags": ["threads"]
       }
     },
-    "/agents": {
+    "/api/agents": {
       "post": {
         "operationId": "AgentsController_create",
         "parameters": [],
@@ -3847,7 +3847,7 @@
         "tags": ["agents"]
       }
     },
-    "/agents/{id}": {
+    "/api/agents/{id}": {
       "get": {
         "operationId": "AgentsController_findOne",
         "parameters": [
@@ -3960,7 +3960,7 @@
         "tags": ["agents"]
       }
     },
-    "/agents/{id}/sources": {
+    "/api/agents/{id}/sources": {
       "get": {
         "operationId": "AgentsController_getAgentSources",
         "parameters": [
@@ -4000,7 +4000,7 @@
         "tags": ["agents"]
       }
     },
-    "/agents/{id}/sources/file": {
+    "/api/agents/{id}/sources/file": {
       "post": {
         "operationId": "AgentsController_addFileSource",
         "parameters": [
@@ -4051,7 +4051,7 @@
         "tags": ["agents"]
       }
     },
-    "/agents/{id}/sources/{sourceAssignmentId}": {
+    "/api/agents/{id}/sources/{sourceAssignmentId}": {
       "delete": {
         "operationId": "AgentsController_removeSource",
         "parameters": [
@@ -4088,7 +4088,7 @@
         "tags": ["agents"]
       }
     },
-    "/agents/{agentId}/mcp-integrations/{integrationId}": {
+    "/api/agents/{agentId}/mcp-integrations/{integrationId}": {
       "post": {
         "operationId": "AgentMcpIntegrationsController_assignMcpIntegration",
         "parameters": [
@@ -4183,7 +4183,7 @@
         "tags": ["agents"]
       }
     },
-    "/agents/{agentId}/mcp-integrations": {
+    "/api/agents/{agentId}/mcp-integrations": {
       "get": {
         "operationId": "AgentMcpIntegrationsController_listAgentMcpIntegrations",
         "parameters": [
@@ -4220,7 +4220,7 @@
         "tags": ["agents"]
       }
     },
-    "/shares": {
+    "/api/shares": {
       "post": {
         "operationId": "SharesController_createShare",
         "parameters": [],
@@ -4314,7 +4314,7 @@
         "tags": ["shares"]
       }
     },
-    "/shares/skills": {
+    "/api/shares/skills": {
       "post": {
         "operationId": "SharesController_createSkillShare",
         "parameters": [],
@@ -4354,7 +4354,7 @@
         "tags": ["shares"]
       }
     },
-    "/shares/knowledge-bases": {
+    "/api/shares/knowledge-bases": {
       "post": {
         "operationId": "SharesController_createKnowledgeBaseShare",
         "parameters": [],
@@ -4394,7 +4394,7 @@
         "tags": ["shares"]
       }
     },
-    "/shares/{id}": {
+    "/api/shares/{id}": {
       "delete": {
         "operationId": "SharesController_deleteShare",
         "parameters": [
@@ -4427,7 +4427,7 @@
         "tags": ["shares"]
       }
     },
-    "/mcp-integrations/predefined": {
+    "/api/mcp-integrations/predefined": {
       "post": {
         "operationId": "McpIntegrationsController_createPredefined",
         "parameters": [],
@@ -4443,7 +4443,7 @@
         },
         "responses": {
           "201": {
-            "description": "Integration created successfully",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4451,19 +4451,13 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Invalid slug or missing required fields"
-          },
-          "404": {
-            "description": "Predefined integration slug not found"
           }
         },
         "summary": "Create a new predefined MCP integration",
         "tags": ["mcp-integrations"]
       }
     },
-    "/mcp-integrations/custom": {
+    "/api/mcp-integrations/custom": {
       "post": {
         "operationId": "McpIntegrationsController_createCustom",
         "parameters": [],
@@ -4479,7 +4473,7 @@
         },
         "responses": {
           "201": {
-            "description": "Integration created successfully",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4487,22 +4481,19 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Invalid data"
           }
         },
         "summary": "Create a new custom MCP integration",
         "tags": ["mcp-integrations"]
       }
     },
-    "/mcp-integrations": {
+    "/api/mcp-integrations": {
       "get": {
         "operationId": "McpIntegrationsController_list",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "List of integrations",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4519,13 +4510,13 @@
         "tags": ["mcp-integrations"]
       }
     },
-    "/mcp-integrations/predefined/available": {
+    "/api/mcp-integrations/predefined/available": {
       "get": {
         "operationId": "McpIntegrationsController_listPredefinedConfigs",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "List of available predefined integrations",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4542,13 +4533,13 @@
         "tags": ["mcp-integrations"]
       }
     },
-    "/mcp-integrations/available": {
+    "/api/mcp-integrations/available": {
       "get": {
         "operationId": "McpIntegrationsController_listAvailable",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "List of available enabled integrations",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4561,11 +4552,11 @@
             }
           }
         },
-        "summary": "List all available (enabled) MCP integrations for organization",
+        "summary": "List available (enabled) MCP integrations",
         "tags": ["mcp-integrations"]
       }
     },
-    "/mcp-integrations/{id}": {
+    "/api/mcp-integrations/{id}": {
       "get": {
         "operationId": "McpIntegrationsController_getById",
         "parameters": [
@@ -4581,7 +4572,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Integration found",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4589,9 +4580,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Integration not found"
           }
         },
         "summary": "Get MCP integration by ID",
@@ -4622,7 +4610,7 @@
         },
         "responses": {
           "200": {
-            "description": "Integration updated successfully",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4630,12 +4618,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Invalid data"
-          },
-          "404": {
-            "description": "Integration not found"
           }
         },
         "summary": "Update MCP integration",
@@ -4656,17 +4638,14 @@
         ],
         "responses": {
           "204": {
-            "description": "Integration deleted successfully"
-          },
-          "404": {
-            "description": "Integration not found"
+            "description": ""
           }
         },
         "summary": "Delete MCP integration",
         "tags": ["mcp-integrations"]
       }
     },
-    "/mcp-integrations/{id}/enable": {
+    "/api/mcp-integrations/{id}/enable": {
       "post": {
         "operationId": "McpIntegrationsController_enable",
         "parameters": [
@@ -4682,7 +4661,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Integration enabled successfully",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4690,16 +4669,13 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Integration not found"
           }
         },
         "summary": "Enable MCP integration",
         "tags": ["mcp-integrations"]
       }
     },
-    "/mcp-integrations/{id}/disable": {
+    "/api/mcp-integrations/{id}/disable": {
       "post": {
         "operationId": "McpIntegrationsController_disable",
         "parameters": [
@@ -4715,7 +4691,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Integration disabled successfully",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4723,16 +4699,13 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Integration not found"
           }
         },
         "summary": "Disable MCP integration",
         "tags": ["mcp-integrations"]
       }
     },
-    "/mcp-integrations/install-from-marketplace": {
+    "/api/mcp-integrations/install-from-marketplace": {
       "post": {
         "operationId": "McpIntegrationsController_installFromMarketplace",
         "parameters": [],
@@ -4748,7 +4721,7 @@
         },
         "responses": {
           "201": {
-            "description": "Integration installed successfully",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4756,19 +4729,13 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Missing required config fields or OAuth not supported"
-          },
-          "404": {
-            "description": "Marketplace integration not found"
           }
         },
         "summary": "Install an MCP integration from the marketplace",
         "tags": ["mcp-integrations"]
       }
     },
-    "/mcp-integrations/{id}/user-config": {
+    "/api/mcp-integrations/{id}/user-config": {
       "get": {
         "operationId": "McpIntegrationsController_getUserConfig",
         "parameters": [
@@ -4784,7 +4751,7 @@
         ],
         "responses": {
           "200": {
-            "description": "User configuration (secret values masked)",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4794,7 +4761,7 @@
             }
           }
         },
-        "summary": "Get current user config for a marketplace MCP integration",
+        "summary": "Get user config for an MCP integration",
         "tags": ["mcp-integrations"]
       },
       "patch": {
@@ -4822,7 +4789,7 @@
         },
         "responses": {
           "200": {
-            "description": "User configuration saved",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4830,19 +4797,13 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Integration has no user fields"
-          },
-          "404": {
-            "description": "Integration not found"
           }
         },
-        "summary": "Set current user config for a marketplace MCP integration",
+        "summary": "Set user config for an MCP integration",
         "tags": ["mcp-integrations"]
       }
     },
-    "/mcp-integrations/{id}/validate": {
+    "/api/mcp-integrations/{id}/validate": {
       "post": {
         "operationId": "McpIntegrationsController_validate",
         "parameters": [
@@ -4858,7 +4819,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Validation result",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4866,16 +4827,126 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Integration not found"
           }
         },
         "summary": "Validate MCP integration connection",
         "tags": ["mcp-integrations"]
       }
     },
-    "/marketplace/skills/{identifier}": {
+    "/api/mcp-integrations/self-defined": {
+      "post": {
+        "operationId": "McpIntegrationsController_createSelfDefined",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSelfDefinedIntegrationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a self-defined MCP integration",
+        "tags": ["mcp-integrations"]
+      }
+    },
+    "/api/mcp-integrations/{id}/oauth/authorize": {
+      "post": {
+        "operationId": "McpIntegrationsController_startOAuthAuthorize",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthAuthorizeResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Start OAuth authorization for an integration",
+        "tags": ["mcp-integrations"]
+      }
+    },
+    "/api/mcp-integrations/{id}/oauth/revoke": {
+      "post": {
+        "operationId": "McpIntegrationsController_revokeOAuth",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Revoke OAuth authorization for an integration",
+        "tags": ["mcp-integrations"]
+      }
+    },
+    "/api/mcp-integrations/{id}/oauth/status": {
+      "get": {
+        "operationId": "McpIntegrationsController_getOAuthStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthStatusResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get OAuth authorization status for an integration",
+        "tags": ["mcp-integrations"]
+      }
+    },
+    "/api/marketplace/skills/{identifier}": {
       "get": {
         "operationId": "MarketplaceController_getSkill",
         "parameters": [
@@ -4908,7 +4979,7 @@
         "tags": ["marketplace"]
       }
     },
-    "/marketplace/integrations/{identifier}": {
+    "/api/marketplace/integrations/{identifier}": {
       "get": {
         "operationId": "MarketplaceController_getIntegration",
         "parameters": [
@@ -4941,7 +5012,7 @@
         "tags": ["marketplace"]
       }
     },
-    "/knowledge-bases": {
+    "/api/knowledge-bases": {
       "post": {
         "operationId": "KnowledgeBasesController_create",
         "parameters": [],
@@ -4992,7 +5063,7 @@
         "tags": ["knowledge-bases"]
       }
     },
-    "/knowledge-bases/{id}": {
+    "/api/knowledge-bases/{id}": {
       "get": {
         "operationId": "KnowledgeBasesController_findOne",
         "parameters": [
@@ -5096,7 +5167,7 @@
         "tags": ["knowledge-bases"]
       }
     },
-    "/knowledge-bases/{id}/documents": {
+    "/api/knowledge-bases/{id}/documents": {
       "get": {
         "operationId": "KnowledgeBasesController_listDocuments",
         "parameters": [
@@ -5180,7 +5251,7 @@
         "tags": ["knowledge-bases"]
       }
     },
-    "/knowledge-bases/{id}/urls": {
+    "/api/knowledge-bases/{id}/urls": {
       "post": {
         "operationId": "KnowledgeBasesController_addUrl",
         "parameters": [
@@ -5224,7 +5295,7 @@
         "tags": ["knowledge-bases"]
       }
     },
-    "/knowledge-bases/{id}/documents/{documentId}": {
+    "/api/knowledge-bases/{id}/documents/{documentId}": {
       "delete": {
         "operationId": "KnowledgeBasesController_removeDocument",
         "parameters": [
@@ -5261,7 +5332,7 @@
         "tags": ["knowledge-bases"]
       }
     },
-    "/skills/install-from-marketplace": {
+    "/api/skills/install-from-marketplace": {
       "post": {
         "operationId": "SkillsController_installFromMarketplace",
         "parameters": [],
@@ -5294,7 +5365,7 @@
         "tags": ["skills"]
       }
     },
-    "/skills": {
+    "/api/skills": {
       "post": {
         "operationId": "SkillsController_create",
         "parameters": [],
@@ -5351,7 +5422,7 @@
         "tags": ["skills"]
       }
     },
-    "/skills/{id}": {
+    "/api/skills/{id}": {
       "get": {
         "operationId": "SkillsController_findOne",
         "parameters": [
@@ -5458,7 +5529,7 @@
         "tags": ["skills"]
       }
     },
-    "/skills/{id}/toggle-active": {
+    "/api/skills/{id}/toggle-active": {
       "patch": {
         "operationId": "SkillsController_toggleActive",
         "parameters": [
@@ -5492,7 +5563,7 @@
         "tags": ["skills"]
       }
     },
-    "/skills/{id}/toggle-pinned": {
+    "/api/skills/{id}/toggle-pinned": {
       "patch": {
         "operationId": "SkillsController_togglePinned",
         "parameters": [
@@ -5529,7 +5600,7 @@
         "tags": ["skills"]
       }
     },
-    "/skills/{id}/sources": {
+    "/api/skills/{id}/sources": {
       "get": {
         "operationId": "SkillSourcesController_getSkillSources",
         "parameters": [
@@ -5566,7 +5637,7 @@
         "tags": ["skills"]
       }
     },
-    "/skills/{id}/sources/file": {
+    "/api/skills/{id}/sources/file": {
       "post": {
         "operationId": "SkillSourcesController_addFileSource",
         "parameters": [
@@ -5621,7 +5692,7 @@
         "tags": ["skills"]
       }
     },
-    "/skills/{id}/sources/{sourceId}": {
+    "/api/skills/{id}/sources/{sourceId}": {
       "delete": {
         "operationId": "SkillSourcesController_removeSource",
         "parameters": [
@@ -5658,7 +5729,7 @@
         "tags": ["skills"]
       }
     },
-    "/skills/{skillId}/mcp-integrations/{integrationId}": {
+    "/api/skills/{skillId}/mcp-integrations/{integrationId}": {
       "post": {
         "operationId": "SkillMcpIntegrationsController_assignMcpIntegration",
         "parameters": [
@@ -5747,7 +5818,7 @@
         "tags": ["skills"]
       }
     },
-    "/skills/{skillId}/mcp-integrations": {
+    "/api/skills/{skillId}/mcp-integrations": {
       "get": {
         "operationId": "SkillMcpIntegrationsController_listSkillMcpIntegrations",
         "parameters": [
@@ -5784,7 +5855,7 @@
         "tags": ["skills"]
       }
     },
-    "/skills/{skillId}/knowledge-bases/{knowledgeBaseId}": {
+    "/api/skills/{skillId}/knowledge-bases/{knowledgeBaseId}": {
       "post": {
         "operationId": "SkillKnowledgeBasesController_assignKnowledgeBase",
         "parameters": [
@@ -5873,7 +5944,7 @@
         "tags": ["skills"]
       }
     },
-    "/skills/{skillId}/knowledge-bases": {
+    "/api/skills/{skillId}/knowledge-bases": {
       "get": {
         "operationId": "SkillKnowledgeBasesController_listSkillKnowledgeBases",
         "parameters": [
@@ -5910,7 +5981,7 @@
         "tags": ["skills"]
       }
     },
-    "/super-admin/skill-templates": {
+    "/api/super-admin/skill-templates": {
       "post": {
         "description": "Create a new skill template. Only accessible to super admins.",
         "operationId": "SuperAdminSkillTemplatesController_create",
@@ -5978,7 +6049,7 @@
         "tags": ["Super Admin Skill Templates"]
       }
     },
-    "/super-admin/skill-templates/{id}": {
+    "/api/super-admin/skill-templates/{id}": {
       "get": {
         "description": "Retrieve a specific skill template by its ID. Only accessible to super admins.",
         "operationId": "SuperAdminSkillTemplatesController_findOne",
@@ -6103,7 +6174,7 @@
         "tags": ["Super Admin Skill Templates"]
       }
     },
-    "/artifacts": {
+    "/api/artifacts": {
       "post": {
         "operationId": "ArtifactsController_create",
         "parameters": [],
@@ -6136,7 +6207,7 @@
         "tags": ["artifacts"]
       }
     },
-    "/artifacts/{id}": {
+    "/api/artifacts/{id}": {
       "patch": {
         "operationId": "ArtifactsController_update",
         "parameters": [
@@ -6215,7 +6286,7 @@
         "tags": ["artifacts"]
       }
     },
-    "/artifacts/thread/{threadId}": {
+    "/api/artifacts/thread/{threadId}": {
       "get": {
         "operationId": "ArtifactsController_findByThread",
         "parameters": [
@@ -6249,7 +6320,7 @@
         "tags": ["artifacts"]
       }
     },
-    "/artifacts/{id}/revert": {
+    "/api/artifacts/{id}/revert": {
       "post": {
         "operationId": "ArtifactsController_revert",
         "parameters": [
@@ -6293,7 +6364,7 @@
         "tags": ["artifacts"]
       }
     },
-    "/artifacts/{id}/export": {
+    "/api/artifacts/{id}/export": {
       "get": {
         "operationId": "ArtifactsController_export",
         "parameters": [
@@ -6338,7 +6409,7 @@
         "tags": ["artifacts"]
       }
     },
-    "/letterheads": {
+    "/api/letterheads": {
       "post": {
         "operationId": "LetterheadsController_create",
         "parameters": [],
@@ -6392,7 +6463,7 @@
         "tags": ["letterheads"]
       }
     },
-    "/letterheads/{id}": {
+    "/api/letterheads/{id}": {
       "get": {
         "operationId": "LetterheadsController_findOne",
         "parameters": [
@@ -6493,7 +6564,7 @@
         "tags": ["letterheads"]
       }
     },
-    "/letterheads/{id}/first-page-pdf": {
+    "/api/letterheads/{id}/first-page-pdf": {
       "get": {
         "operationId": "LetterheadsController_downloadFirstPagePdf",
         "parameters": [
@@ -6520,7 +6591,7 @@
         "tags": ["letterheads"]
       }
     },
-    "/letterheads/{id}/continuation-page-pdf": {
+    "/api/letterheads/{id}/continuation-page-pdf": {
       "get": {
         "operationId": "LetterheadsController_downloadContinuationPagePdf",
         "parameters": [
@@ -6547,7 +6618,7 @@
         "tags": ["letterheads"]
       }
     },
-    "/runs/send-message": {
+    "/api/runs/send-message": {
       "post": {
         "description": "Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.",
         "operationId": "RunsController_sendMessage",
@@ -6668,7 +6739,7 @@
         "tags": ["runs"]
       }
     },
-    "/super-admin/trials": {
+    "/api/super-admin/trials": {
       "post": {
         "description": "Create a new trial for an organization. Only accessible to users with the super admin system role.",
         "operationId": "SuperAdminTrialsController_createTrial",
@@ -6706,7 +6777,7 @@
         "tags": ["Super Admin Trials"]
       }
     },
-    "/super-admin/trials/{orgId}": {
+    "/api/super-admin/trials/{orgId}": {
       "get": {
         "description": "Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.",
         "operationId": "SuperAdminTrialsController_getTrialByOrgId",
@@ -6789,7 +6860,7 @@
         "tags": ["Super Admin Trials"]
       }
     },
-    "/usage/config": {
+    "/api/usage/config": {
       "get": {
         "description": "Returns configuration settings for the usage dashboard, including deployment mode. This endpoint helps the frontend determine which features to show based on the deployment type.",
         "operationId": "UsageController_getUsageConfig",
@@ -6810,7 +6881,7 @@
         "tags": ["Admin Usage"]
       }
     },
-    "/usage/credits": {
+    "/api/usage/credits": {
       "get": {
         "description": "Returns the monthly credit budget, credits consumed this month, and credits remaining. Fields are null if the organization does not have a usage-based subscription.",
         "operationId": "UsageController_getCreditUsage",
@@ -6831,7 +6902,7 @@
         "tags": ["Admin Usage"]
       }
     },
-    "/usage/users": {
+    "/api/usage/users": {
       "get": {
         "description": "Returns paginated user usage statistics with search, sorting, and filtering capabilities. Includes activity status. Dates are optional - if not provided, shows all usage.",
         "operationId": "UsageController_getUserUsage",
@@ -6923,7 +6994,7 @@
         "tags": ["Admin Usage"]
       }
     },
-    "/super-admin/usage/{orgId}/config": {
+    "/api/super-admin/usage/{orgId}/config": {
       "get": {
         "operationId": "SuperAdminUsageController_getUsageConfig",
         "parameters": [
@@ -6953,7 +7024,7 @@
         "tags": ["Super Admin Usage"]
       }
     },
-    "/super-admin/usage/{orgId}/credits": {
+    "/api/super-admin/usage/{orgId}/credits": {
       "get": {
         "description": "Returns the monthly credit budget, credits consumed this month, and credits remaining. Fields are null if the organization does not have a usage-based subscription.",
         "operationId": "SuperAdminUsageController_getCreditUsage",
@@ -6985,7 +7056,7 @@
         "tags": ["Super Admin Usage"]
       }
     },
-    "/super-admin/usage/{orgId}/stats": {
+    "/api/super-admin/usage/{orgId}/stats": {
       "get": {
         "operationId": "SuperAdminUsageController_getUsageStats",
         "parameters": [
@@ -7032,7 +7103,7 @@
         "tags": ["Super Admin Usage"]
       }
     },
-    "/super-admin/usage/{orgId}/models": {
+    "/api/super-admin/usage/{orgId}/models": {
       "get": {
         "operationId": "SuperAdminUsageController_getModelDistribution",
         "parameters": [
@@ -7095,7 +7166,7 @@
         "tags": ["Super Admin Usage"]
       }
     },
-    "/super-admin/usage/{orgId}/providers": {
+    "/api/super-admin/usage/{orgId}/providers": {
       "get": {
         "operationId": "SuperAdminUsageDataController_getProviderUsage",
         "parameters": [
@@ -7166,7 +7237,7 @@
         "tags": ["Super Admin Usage"]
       }
     },
-    "/super-admin/usage/{orgId}/providers/chart": {
+    "/api/super-admin/usage/{orgId}/providers/chart": {
       "get": {
         "operationId": "SuperAdminUsageDataController_getProviderUsageChart",
         "parameters": [
@@ -7229,7 +7300,7 @@
         "tags": ["Super Admin Usage"]
       }
     },
-    "/super-admin/usage/{orgId}/users": {
+    "/api/super-admin/usage/{orgId}/users": {
       "get": {
         "operationId": "SuperAdminUsageDataController_getUserUsage",
         "parameters": [
@@ -7318,7 +7389,7 @@
         "tags": ["Super Admin Usage"]
       }
     },
-    "/super-admin/global-usage/providers/chart": {
+    "/api/super-admin/global-usage/providers/chart": {
       "get": {
         "operationId": "SuperAdminGlobalUsageController_getGlobalProviderUsageChart",
         "parameters": [
@@ -7371,7 +7442,7 @@
         "tags": ["Super Admin Global Usage"]
       }
     },
-    "/super-admin/global-usage/models": {
+    "/api/super-admin/global-usage/models": {
       "get": {
         "operationId": "SuperAdminGlobalUsageController_getGlobalModelDistribution",
         "parameters": [
@@ -7416,7 +7487,7 @@
         "tags": ["Super Admin Global Usage"]
       }
     },
-    "/super-admin/global-usage/users": {
+    "/api/super-admin/global-usage/users": {
       "get": {
         "operationId": "SuperAdminGlobalUsageController_getGlobalUserUsage",
         "parameters": [
@@ -7453,7 +7524,7 @@
         "tags": ["Super Admin Global Usage"]
       }
     },
-    "/super-admin/platform-config/credits-per-euro": {
+    "/api/super-admin/platform-config/credits-per-euro": {
       "get": {
         "description": "Retrieve the global credits-per-euro value used for credit calculations. Super admin only.",
         "operationId": "SuperAdminPlatformConfigController_getCreditsPerEuro",
@@ -7514,7 +7585,7 @@
         "tags": ["Super Admin Platform Config"]
       }
     },
-    "/super-admin/platform-config/fair-use-limits": {
+    "/api/super-admin/platform-config/fair-use-limits": {
       "get": {
         "description": "Retrieve the configured messages-per-window limit for low, medium, and high model tiers. Missing keys fall back to baked-in defaults so this endpoint always returns 200. Super admin only.",
         "operationId": "SuperAdminPlatformConfigController_getFairUseLimits",
@@ -7572,7 +7643,7 @@
         "tags": ["Super Admin Platform Config"]
       }
     },
-    "/chat-settings/system-prompt": {
+    "/api/chat-settings/system-prompt": {
       "get": {
         "description": "Returns the custom system prompt for the authenticated user, or null if not set.",
         "operationId": "ChatSettingsController_getSystemPrompt",
@@ -7637,7 +7708,7 @@
         "tags": ["Chat Settings"]
       }
     },
-    "/chat-settings/generate-personalized-system-prompt": {
+    "/api/chat-settings/generate-personalized-system-prompt": {
       "post": {
         "description": "Generates a personalized system prompt and welcome message based on user preferences, then saves the system prompt.",
         "operationId": "ChatSettingsController_generatePersonalizedSystemPrompt",
@@ -7677,7 +7748,7 @@
         "tags": ["Chat Settings"]
       }
     },
-    "/prompts": {
+    "/api/prompts": {
       "post": {
         "operationId": "PromptsController_create",
         "parameters": [],
@@ -7737,7 +7808,7 @@
         "tags": ["prompts"]
       }
     },
-    "/prompts/{id}": {
+    "/api/prompts/{id}": {
       "get": {
         "operationId": "PromptsController_findOne",
         "parameters": [
@@ -7850,7 +7921,7 @@
         "tags": ["prompts"]
       }
     },
-    "/transcriptions": {
+    "/api/transcriptions": {
       "post": {
         "description": "Upload an audio file and receive the transcribed text. Supports webm, mp4, mp3, wav, and m4a formats.",
         "operationId": "TranscriptionsController_transcribe",
@@ -7908,7 +7979,7 @@
         "tags": ["transcriptions"]
       }
     },
-    "/auth/login": {
+    "/api/auth/login": {
       "post": {
         "description": "Authenticate user with email and password. Sets authentication cookies on successful login.",
         "operationId": "AuthenticationController_login",
@@ -7960,7 +8031,7 @@
         "tags": ["Authentication"]
       }
     },
-    "/auth/register": {
+    "/api/auth/register": {
       "post": {
         "description": "Register a new user account with email, password, and organization name. Automatically logs in the user and sets authentication cookies.",
         "operationId": "AuthenticationController_register",
@@ -8012,7 +8083,7 @@
         "tags": ["Authentication"]
       }
     },
-    "/auth/refresh": {
+    "/api/auth/refresh": {
       "post": {
         "description": "Refresh expired access tokens using the refresh token stored in cookies. Returns new authentication cookies.",
         "operationId": "AuthenticationController_refresh",
@@ -8058,7 +8129,7 @@
         "tags": ["Authentication"]
       }
     },
-    "/auth/me": {
+    "/api/auth/me": {
       "get": {
         "description": "Get the current authenticated user's email and role. If access token is expired but refresh token is valid, automatically refreshes tokens and sets new cookies.",
         "operationId": "AuthenticationController_me",
@@ -8099,7 +8170,7 @@
         "tags": ["Authentication"]
       }
     },
-    "/auth/logout": {
+    "/api/auth/logout": {
       "post": {
         "description": "Log out the current user by clearing authentication cookies.",
         "operationId": "AuthenticationController_logout",
@@ -8120,7 +8191,7 @@
         "tags": ["Authentication"]
       }
     },
-    "/ip-allowlist": {
+    "/api/ip-allowlist": {
       "get": {
         "operationId": "IpAllowlistController_get",
         "parameters": [],
@@ -11461,7 +11532,7 @@
           "type": {
             "type": "string",
             "description": "Type of integration",
-            "enum": ["predefined", "custom", "marketplace"],
+            "enum": ["predefined", "custom", "marketplace", "self_defined"],
             "example": "predefined"
           },
           "slug": {
@@ -11503,7 +11574,13 @@
           "connectionStatus": {
             "type": "string",
             "description": "Connection status of the integration",
-            "enum": ["connected", "disconnected", "error", "unknown"],
+            "enum": [
+              "connected",
+              "disconnected",
+              "error",
+              "unknown",
+              "pending_auth"
+            ],
             "example": "connected"
           },
           "lastConnectionError": {
@@ -11566,6 +11643,10 @@
             "type": "string",
             "description": "Human-readable description of the integration (populated from marketplace shortDescription or predefined config description)",
             "example": "Access municipal council data via OParl"
+          },
+          "oauth": {
+            "type": "object",
+            "description": "OAuth configuration and status for this integration"
           }
         },
         "required": [
@@ -11887,6 +11968,19 @@
             "example": {
               "endpointUrl": "https://example.com/api"
             }
+          },
+          "oauthClientId": {
+            "type": "string",
+            "description": "OAuth client ID for rotation",
+            "maxLength": 255
+          },
+          "oauthClientSecret": {
+            "type": "string",
+            "description": "OAuth client secret for rotation"
+          },
+          "configSchema": {
+            "type": "object",
+            "description": "Updated configuration schema (only for self-defined integrations)"
           }
         }
       },
@@ -11912,6 +12006,15 @@
             "type": "boolean",
             "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode",
             "example": false
+          },
+          "oauthClientId": {
+            "type": "string",
+            "description": "OAuth client ID (required when the marketplace integration schema includes oauth)",
+            "maxLength": 255
+          },
+          "oauthClientSecret": {
+            "type": "string",
+            "description": "OAuth client secret (required when the marketplace integration schema includes oauth)"
           }
         },
         "required": ["identifier", "orgConfigValues"]
@@ -11977,6 +12080,104 @@
           }
         },
         "required": ["valid", "capabilities"]
+      },
+      "CreateSelfDefinedIntegrationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the integration",
+            "example": "My Self-Defined MCP Server",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the integration",
+            "example": "Provides access to internal tooling",
+            "maxLength": 2000
+          },
+          "serverUrl": {
+            "type": "string",
+            "description": "URL of the MCP server",
+            "example": "https://my-mcp-server.example.com/mcp"
+          },
+          "configSchema": {
+            "type": "object",
+            "description": "Configuration schema defining fields, auth type, and optional OAuth config",
+            "example": {
+              "authType": "NO_AUTH",
+              "orgFields": [],
+              "userFields": []
+            }
+          },
+          "orgConfigValues": {
+            "type": "object",
+            "description": "Organization-level configuration values matching configSchema orgFields",
+            "example": {
+              "endpointUrl": "https://example.com/api"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "oauthClientId": {
+            "type": "string",
+            "description": "OAuth client ID (required when configSchema includes oauth)",
+            "maxLength": 255
+          },
+          "oauthClientSecret": {
+            "type": "string",
+            "description": "OAuth client secret (required when configSchema includes oauth)"
+          },
+          "returnsPii": {
+            "type": "boolean",
+            "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode",
+            "example": false
+          }
+        },
+        "required": ["name", "serverUrl", "configSchema", "orgConfigValues"]
+      },
+      "OAuthAuthorizeResponseDto": {
+        "type": "object",
+        "properties": {
+          "authorizationUrl": {
+            "type": "string",
+            "description": "Authorization URL to redirect the user to",
+            "example": "https://auth.example.com/authorize?response_type=code&client_id=abc&..."
+          }
+        },
+        "required": ["authorizationUrl"]
+      },
+      "OAuthStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "string",
+            "description": "Whether OAuth is configured at org level or user level for this integration",
+            "enum": ["org", "user"],
+            "example": "org"
+          },
+          "authorized": {
+            "type": "boolean",
+            "description": "Whether a valid OAuth token exists",
+            "example": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "When the access token expires (null if no expiry or not authorized)",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2025-12-31T23:59:59.000Z"
+          },
+          "scope": {
+            "type": "string",
+            "description": "OAuth scopes granted (null if not authorized)",
+            "nullable": true,
+            "example": "read write"
+          }
+        },
+        "required": ["level", "authorized"]
       },
       "MarketplaceSkillResponseDto": {
         "type": "object",

@@ -54,6 +54,7 @@ import type {
   CreatePermittedModelDto,
   CreatePredefinedIntegrationDto,
   CreatePromptDto,
+  CreateSelfDefinedIntegrationDto,
   CreateSkillDto,
   CreateSkillShareDto,
   CreateSkillTemplateDto,
@@ -98,6 +99,8 @@ import type {
   ModelDistributionResponseDto,
   ModelProviderInfoResponseDto,
   ModelWithConfigResponseDto,
+  OAuthAuthorizeResponseDto,
+  OAuthStatusResponseDto,
   PaginatedInvitesListResponseDto,
   PaginatedTeamMembersResponseDto,
   PaginatedUsersListResponseDto,
@@ -212,7 +215,7 @@ export const appControllerIsCloud = (
       
       
       return customAxiosInstance<IsCloudResponseDto>(
-      {url: `/`, method: 'GET', signal
+      {url: `/api`, method: 'GET', signal
     },
       );
     }
@@ -222,7 +225,7 @@ export const appControllerIsCloud = (
 
 export const getAppControllerIsCloudQueryKey = () => {
     return [
-    `/`
+    `/api`
     ] as const;
     }
 
@@ -305,7 +308,7 @@ export const appControllerHealth = (
       
       
       return customAxiosInstance<void>(
-      {url: `/health`, method: 'GET', signal
+      {url: `/api/health`, method: 'GET', signal
     },
       );
     }
@@ -315,7 +318,7 @@ export const appControllerHealth = (
 
 export const getAppControllerHealthQueryKey = () => {
     return [
-    `/health`
+    `/api/health`
     ] as const;
     }
 
@@ -398,7 +401,7 @@ export const appControllerFeatureToggles = (
       
       
       return customAxiosInstance<FeatureTogglesResponseDto>(
-      {url: `/feature-toggles`, method: 'GET', signal
+      {url: `/api/feature-toggles`, method: 'GET', signal
     },
       );
     }
@@ -408,7 +411,7 @@ export const appControllerFeatureToggles = (
 
 export const getAppControllerFeatureTogglesQueryKey = () => {
     return [
-    `/feature-toggles`
+    `/api/feature-toggles`
     ] as const;
     }
 
@@ -491,7 +494,7 @@ export const modelsControllerGetAvailableModelsWithConfig = (
       
       
       return customAxiosInstance<ModelWithConfigResponseDto[]>(
-      {url: `/models/available`, method: 'GET', signal
+      {url: `/api/models/available`, method: 'GET', signal
     },
       );
     }
@@ -501,7 +504,7 @@ export const modelsControllerGetAvailableModelsWithConfig = (
 
 export const getModelsControllerGetAvailableModelsWithConfigQueryKey = () => {
     return [
-    `/models/available`
+    `/api/models/available`
     ] as const;
     }
 
@@ -584,7 +587,7 @@ export const modelsControllerGetProviders = (
       
       
       return customAxiosInstance<ModelProviderInfoResponseDto[]>(
-      {url: `/models/providers`, method: 'GET', signal
+      {url: `/api/models/providers`, method: 'GET', signal
     },
       );
     }
@@ -594,7 +597,7 @@ export const modelsControllerGetProviders = (
 
 export const getModelsControllerGetProvidersQueryKey = () => {
     return [
-    `/models/providers`
+    `/api/models/providers`
     ] as const;
     }
 
@@ -677,7 +680,7 @@ export const modelsControllerCreatePermittedModel = (
       
       
       return customAxiosInstance<void>(
-      {url: `/models/permitted`, method: 'POST',
+      {url: `/api/models/permitted`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createPermittedModelDto, signal
     },
@@ -741,7 +744,7 @@ export const modelsControllerDeletePermittedModel = (
       
       
       return customAxiosInstance<void>(
-      {url: `/models/permitted/${id}`, method: 'DELETE'
+      {url: `/api/models/permitted/${id}`, method: 'DELETE'
     },
       );
     }
@@ -804,7 +807,7 @@ export const modelsControllerUpdatePermittedModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto>(
-      {url: `/models/permitted/${id}`, method: 'PATCH',
+      {url: `/api/models/permitted/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updatePermittedModelDto
     },
@@ -870,7 +873,7 @@ export const modelsControllerGetPermittedLanguageModels = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto[]>(
-      {url: `/models/permitted/language-models`, method: 'GET', signal
+      {url: `/api/models/permitted/language-models`, method: 'GET', signal
     },
       );
     }
@@ -880,7 +883,7 @@ export const modelsControllerGetPermittedLanguageModels = (
 
 export const getModelsControllerGetPermittedLanguageModelsQueryKey = () => {
     return [
-    `/models/permitted/language-models`
+    `/api/models/permitted/language-models`
     ] as const;
     }
 
@@ -964,7 +967,7 @@ export const modelsControllerGetOrgPermittedLanguageModels = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto[]>(
-      {url: `/models/permitted/language-models/org`, method: 'GET', signal
+      {url: `/api/models/permitted/language-models/org`, method: 'GET', signal
     },
       );
     }
@@ -974,7 +977,7 @@ export const modelsControllerGetOrgPermittedLanguageModels = (
 
 export const getModelsControllerGetOrgPermittedLanguageModelsQueryKey = () => {
     return [
-    `/models/permitted/language-models/org`
+    `/api/models/permitted/language-models/org`
     ] as const;
     }
 
@@ -1058,7 +1061,7 @@ export const modelsControllerGetEffectiveDefaultModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
-      {url: `/models/default`, method: 'GET', signal
+      {url: `/api/models/default`, method: 'GET', signal
     },
       );
     }
@@ -1068,7 +1071,7 @@ export const modelsControllerGetEffectiveDefaultModel = (
 
 export const getModelsControllerGetEffectiveDefaultModelQueryKey = () => {
     return [
-    `/models/default`
+    `/api/models/default`
     ] as const;
     }
 
@@ -1152,7 +1155,7 @@ export const modelsControllerGetOrgSpecificDefaultModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
-      {url: `/models/org/default`, method: 'GET', signal
+      {url: `/api/models/org/default`, method: 'GET', signal
     },
       );
     }
@@ -1162,7 +1165,7 @@ export const modelsControllerGetOrgSpecificDefaultModel = (
 
 export const getModelsControllerGetOrgSpecificDefaultModelQueryKey = () => {
     return [
-    `/models/org/default`
+    `/api/models/org/default`
     ] as const;
     }
 
@@ -1245,7 +1248,7 @@ export const modelsControllerManageOrgDefaultModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto>(
-      {url: `/models/org/default`, method: 'PUT',
+      {url: `/api/models/org/default`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: setOrgDefaultModelDto
     },
@@ -1311,7 +1314,7 @@ export const modelsControllerGetUserSpecificDefaultModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
-      {url: `/models/user/default`, method: 'GET', signal
+      {url: `/api/models/user/default`, method: 'GET', signal
     },
       );
     }
@@ -1321,7 +1324,7 @@ export const modelsControllerGetUserSpecificDefaultModel = (
 
 export const getModelsControllerGetUserSpecificDefaultModelQueryKey = () => {
     return [
-    `/models/user/default`
+    `/api/models/user/default`
     ] as const;
     }
 
@@ -1404,7 +1407,7 @@ export const modelsControllerManageUserDefaultModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto>(
-      {url: `/models/user/default`, method: 'PUT',
+      {url: `/api/models/user/default`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: setUserDefaultModelDto
     },
@@ -1468,7 +1471,7 @@ export const modelsControllerDeleteUserDefaultModel = (
       
       
       return customAxiosInstance<void>(
-      {url: `/models/user/default`, method: 'DELETE'
+      {url: `/api/models/user/default`, method: 'DELETE'
     },
       );
     }
@@ -1532,7 +1535,7 @@ export const modelsControllerGetModelProviderInfo = (
       
       
       return customAxiosInstance<ModelProviderInfoResponseDto>(
-      {url: `/models/provider/${provider}`, method: 'GET', signal
+      {url: `/api/models/provider/${provider}`, method: 'GET', signal
     },
       );
     }
@@ -1542,7 +1545,7 @@ export const modelsControllerGetModelProviderInfo = (
 
 export const getModelsControllerGetModelProviderInfoQueryKey = (provider?: string,) => {
     return [
-    `/models/provider/${provider}`
+    `/api/models/provider/${provider}`
     ] as const;
     }
 
@@ -1625,7 +1628,7 @@ export const modelsControllerIsEmbeddingModelEnabled = (
       
       
       return customAxiosInstance<EmbeddingModelEnabledResponseDto>(
-      {url: `/models/embedding/enabled`, method: 'GET', signal
+      {url: `/api/models/embedding/enabled`, method: 'GET', signal
     },
       );
     }
@@ -1635,7 +1638,7 @@ export const modelsControllerIsEmbeddingModelEnabled = (
 
 export const getModelsControllerIsEmbeddingModelEnabledQueryKey = () => {
     return [
-    `/models/embedding/enabled`
+    `/api/models/embedding/enabled`
     ] as const;
     }
 
@@ -1718,7 +1721,7 @@ export const teamPermittedModelsControllerListTeamPermittedModels = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto[]>(
-      {url: `/teams/${teamId}/permitted-models`, method: 'GET', signal
+      {url: `/api/teams/${teamId}/permitted-models`, method: 'GET', signal
     },
       );
     }
@@ -1728,7 +1731,7 @@ export const teamPermittedModelsControllerListTeamPermittedModels = (
 
 export const getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey = (teamId?: string,) => {
     return [
-    `/teams/${teamId}/permitted-models`
+    `/api/teams/${teamId}/permitted-models`
     ] as const;
     }
 
@@ -1813,7 +1816,7 @@ export const teamPermittedModelsControllerCreateTeamPermittedModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto>(
-      {url: `/teams/${teamId}/permitted-models`, method: 'POST',
+      {url: `/api/teams/${teamId}/permitted-models`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createTeamPermittedModelDto, signal
     },
@@ -1878,7 +1881,7 @@ export const teamPermittedModelsControllerDeleteTeamPermittedModel = (
       
       
       return customAxiosInstance<void>(
-      {url: `/teams/${teamId}/permitted-models/${id}`, method: 'DELETE'
+      {url: `/api/teams/${teamId}/permitted-models/${id}`, method: 'DELETE'
     },
       );
     }
@@ -1942,7 +1945,7 @@ export const teamPermittedModelsControllerSetTeamDefaultModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto>(
-      {url: `/teams/${teamId}/permitted-models/default`, method: 'PUT',
+      {url: `/api/teams/${teamId}/permitted-models/default`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: setTeamDefaultModelDto
     },
@@ -2008,7 +2011,7 @@ export const superAdminPermittedModelsControllerGetAvailableModels = (
       
       
       return customAxiosInstance<ModelWithConfigResponseDto[]>(
-      {url: `/super-admin/models/${orgId}/available`, method: 'GET', signal
+      {url: `/api/super-admin/models/${orgId}/available`, method: 'GET', signal
     },
       );
     }
@@ -2018,7 +2021,7 @@ export const superAdminPermittedModelsControllerGetAvailableModels = (
 
 export const getSuperAdminPermittedModelsControllerGetAvailableModelsQueryKey = (orgId?: string,) => {
     return [
-    `/super-admin/models/${orgId}/available`
+    `/api/super-admin/models/${orgId}/available`
     ] as const;
     }
 
@@ -2102,7 +2105,7 @@ export const superAdminPermittedModelsControllerManageOrgDefaultModel = (
       
       
       return customAxiosInstance<PermittedLanguageModelResponseDto>(
-      {url: `/super-admin/models/${orgId}/default-model`, method: 'PUT',
+      {url: `/api/super-admin/models/${orgId}/default-model`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: setOrgDefaultModelDto
     },
@@ -2168,7 +2171,7 @@ export const superAdminPermittedModelsControllerGetPermittedModels = (
       
       
       return customAxiosInstance<SuperAdminPermittedModelsControllerGetPermittedModels200Item[]>(
-      {url: `/super-admin/models/${orgId}/permitted-models`, method: 'GET', signal
+      {url: `/api/super-admin/models/${orgId}/permitted-models`, method: 'GET', signal
     },
       );
     }
@@ -2178,7 +2181,7 @@ export const superAdminPermittedModelsControllerGetPermittedModels = (
 
 export const getSuperAdminPermittedModelsControllerGetPermittedModelsQueryKey = (orgId?: string,) => {
     return [
-    `/super-admin/models/${orgId}/permitted-models`
+    `/api/super-admin/models/${orgId}/permitted-models`
     ] as const;
     }
 
@@ -2263,7 +2266,7 @@ export const superAdminPermittedModelsControllerCreatePermittedModel = (
       
       
       return customAxiosInstance<void>(
-      {url: `/super-admin/models/${orgId}/permitted-models`, method: 'POST',
+      {url: `/api/super-admin/models/${orgId}/permitted-models`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createPermittedModelDto, signal
     },
@@ -2329,7 +2332,7 @@ export const superAdminPermittedModelsControllerDeletePermittedModel = (
       
       
       return customAxiosInstance<void>(
-      {url: `/super-admin/models/${orgId}/permitted-models/${id}`, method: 'DELETE'
+      {url: `/api/super-admin/models/${orgId}/permitted-models/${id}`, method: 'DELETE'
     },
       );
     }
@@ -2394,7 +2397,7 @@ export const superAdminPermittedModelsControllerUpdatePermittedModel = (
       
       
       return customAxiosInstance<SuperAdminPermittedModelsControllerUpdatePermittedModel200>(
-      {url: `/super-admin/models/${orgId}/permitted-models/${id}`, method: 'PATCH',
+      {url: `/api/super-admin/models/${orgId}/permitted-models/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updatePermittedModelDto
     },
@@ -2460,7 +2463,7 @@ export const superAdminCatalogModelsControllerGetAllCatalogModels = (
       
       
       return customAxiosInstance<SuperAdminCatalogModelsControllerGetAllCatalogModels200Item[]>(
-      {url: `/super-admin/models/catalog`, method: 'GET', signal
+      {url: `/api/super-admin/models/catalog`, method: 'GET', signal
     },
       );
     }
@@ -2470,7 +2473,7 @@ export const superAdminCatalogModelsControllerGetAllCatalogModels = (
 
 export const getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey = () => {
     return [
-    `/super-admin/models/catalog`
+    `/api/super-admin/models/catalog`
     ] as const;
     }
 
@@ -2554,7 +2557,7 @@ export const superAdminCatalogModelsControllerGetCatalogModelById = (
       
       
       return customAxiosInstance<SuperAdminCatalogModelsControllerGetCatalogModelById200>(
-      {url: `/super-admin/models/catalog/${id}`, method: 'GET', signal
+      {url: `/api/super-admin/models/catalog/${id}`, method: 'GET', signal
     },
       );
     }
@@ -2564,7 +2567,7 @@ export const superAdminCatalogModelsControllerGetCatalogModelById = (
 
 export const getSuperAdminCatalogModelsControllerGetCatalogModelByIdQueryKey = (id?: string,) => {
     return [
-    `/super-admin/models/catalog/${id}`
+    `/api/super-admin/models/catalog/${id}`
     ] as const;
     }
 
@@ -2647,7 +2650,7 @@ export const superAdminCatalogModelsControllerDeleteCatalogModel = (
       
       
       return customAxiosInstance<void>(
-      {url: `/super-admin/models/catalog/${id}`, method: 'DELETE'
+      {url: `/api/super-admin/models/catalog/${id}`, method: 'DELETE'
     },
       );
     }
@@ -2711,7 +2714,7 @@ export const superAdminCatalogModelsControllerCreateLanguageModel = (
       
       
       return customAxiosInstance<LanguageModelResponseDto>(
-      {url: `/super-admin/models/catalog/language`, method: 'POST',
+      {url: `/api/super-admin/models/catalog/language`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createLanguageModelRequestDto, signal
     },
@@ -2777,7 +2780,7 @@ export const superAdminCatalogModelsControllerUpdateLanguageModel = (
       
       
       return customAxiosInstance<LanguageModelResponseDto>(
-      {url: `/super-admin/models/catalog/language/${id}`, method: 'PATCH',
+      {url: `/api/super-admin/models/catalog/language/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateLanguageModelRequestDto
     },
@@ -2843,7 +2846,7 @@ export const superAdminCatalogModelsControllerCreateEmbeddingModel = (
       
       
       return customAxiosInstance<EmbeddingModelResponseDto>(
-      {url: `/super-admin/models/catalog/embedding`, method: 'POST',
+      {url: `/api/super-admin/models/catalog/embedding`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createEmbeddingModelRequestDto, signal
     },
@@ -2909,7 +2912,7 @@ export const superAdminCatalogModelsControllerUpdateEmbeddingModel = (
       
       
       return customAxiosInstance<EmbeddingModelResponseDto>(
-      {url: `/super-admin/models/catalog/embedding/${id}`, method: 'PATCH',
+      {url: `/api/super-admin/models/catalog/embedding/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateEmbeddingModelRequestDto
     },
@@ -2975,7 +2978,7 @@ export const superAdminOrgsControllerCreateOrg = (
       
       
       return customAxiosInstance<SuperAdminOrgResponseDto>(
-      {url: `/super-admin/orgs`, method: 'POST',
+      {url: `/api/super-admin/orgs`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createOrgRequestDto, signal
     },
@@ -3041,7 +3044,7 @@ export const superAdminOrgsControllerGetAllOrgs = (
       
       
       return customAxiosInstance<SuperAdminOrgListResponseDto>(
-      {url: `/super-admin/orgs`, method: 'GET',
+      {url: `/api/super-admin/orgs`, method: 'GET',
         params, signal
     },
       );
@@ -3052,7 +3055,7 @@ export const superAdminOrgsControllerGetAllOrgs = (
 
 export const getSuperAdminOrgsControllerGetAllOrgsQueryKey = (params?: SuperAdminOrgsControllerGetAllOrgsParams,) => {
     return [
-    `/super-admin/orgs`, ...(params ? [params]: [])
+    `/api/super-admin/orgs`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -3136,7 +3139,7 @@ export const superAdminOrgsControllerGetOrgById = (
       
       
       return customAxiosInstance<SuperAdminOrgResponseDto>(
-      {url: `/super-admin/orgs/${id}`, method: 'GET', signal
+      {url: `/api/super-admin/orgs/${id}`, method: 'GET', signal
     },
       );
     }
@@ -3146,7 +3149,7 @@ export const superAdminOrgsControllerGetOrgById = (
 
 export const getSuperAdminOrgsControllerGetOrgByIdQueryKey = (id?: string,) => {
     return [
-    `/super-admin/orgs/${id}`
+    `/api/super-admin/orgs/${id}`
     ] as const;
     }
 
@@ -3230,7 +3233,7 @@ export const userControllerGetUsersInOrganization = (
       
       
       return customAxiosInstance<PaginatedUsersListResponseDto>(
-      {url: `/users`, method: 'GET',
+      {url: `/api/users`, method: 'GET',
         params, signal
     },
       );
@@ -3241,7 +3244,7 @@ export const userControllerGetUsersInOrganization = (
 
 export const getUserControllerGetUsersInOrganizationQueryKey = (params?: UserControllerGetUsersInOrganizationParams,) => {
     return [
-    `/users`, ...(params ? [params]: [])
+    `/api/users`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -3325,7 +3328,7 @@ export const userControllerUpdateUserRole = (
       
       
       return customAxiosInstance<UserResponseDto>(
-      {url: `/users/${id}/role`, method: 'PATCH',
+      {url: `/api/users/${id}/role`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateUserRoleDto
     },
@@ -3390,7 +3393,7 @@ export const userControllerUpdateUserName = (
       
       
       return customAxiosInstance<UserResponseDto>(
-      {url: `/users/name`, method: 'PATCH',
+      {url: `/api/users/name`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateUserNameDto
     },
@@ -3455,7 +3458,7 @@ export const userControllerUpdatePassword = (
       
       
       return customAxiosInstance<void>(
-      {url: `/users/password`, method: 'PATCH',
+      {url: `/api/users/password`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updatePasswordDto
     },
@@ -3521,7 +3524,7 @@ export const userControllerConfirmEmail = (
       
       
       return customAxiosInstance<void>(
-      {url: `/users/confirm-email`, method: 'POST',
+      {url: `/api/users/confirm-email`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: confirmEmailDto, signal
     },
@@ -3587,7 +3590,7 @@ export const userControllerResendEmailConfirmation = (
       
       
       return customAxiosInstance<void>(
-      {url: `/users/resend-confirmation`, method: 'POST',
+      {url: `/api/users/resend-confirmation`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: resendEmailConfirmationDto, signal
     },
@@ -3652,7 +3655,7 @@ export const userControllerDeleteUser = (
       
       
       return customAxiosInstance<void>(
-      {url: `/users/${id}`, method: 'DELETE'
+      {url: `/api/users/${id}`, method: 'DELETE'
     },
       );
     }
@@ -3716,7 +3719,7 @@ export const userControllerTriggerPasswordResetForUser = (
       
       
       return customAxiosInstance<void>(
-      {url: `/users/${id}/trigger-password-reset`, method: 'POST', signal
+      {url: `/api/users/${id}/trigger-password-reset`, method: 'POST', signal
     },
       );
     }
@@ -3780,7 +3783,7 @@ export const userControllerForgotPassword = (
       
       
       return customAxiosInstance<void>(
-      {url: `/users/forgot-password`, method: 'POST',
+      {url: `/api/users/forgot-password`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: forgotPasswordDto, signal
     },
@@ -3846,7 +3849,7 @@ export const userControllerResetPassword = (
       
       
       return customAxiosInstance<void>(
-      {url: `/users/reset-password`, method: 'POST',
+      {url: `/api/users/reset-password`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: resetPasswordDto, signal
     },
@@ -3912,7 +3915,7 @@ export const userControllerValidateResetToken = (
       
       
       return customAxiosInstance<UserControllerValidateResetToken200>(
-      {url: `/users/validate-reset-token`, method: 'GET',
+      {url: `/api/users/validate-reset-token`, method: 'GET',
         params, signal
     },
       );
@@ -3923,7 +3926,7 @@ export const userControllerValidateResetToken = (
 
 export const getUserControllerValidateResetTokenQueryKey = (params?: UserControllerValidateResetTokenParams,) => {
     return [
-    `/users/validate-reset-token`, ...(params ? [params]: [])
+    `/api/users/validate-reset-token`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -4008,7 +4011,7 @@ export const superAdminUsersControllerGetUsersByOrgId = (
       
       
       return customAxiosInstance<PaginatedUsersListResponseDto>(
-      {url: `/super-admin/users/${orgId}`, method: 'GET',
+      {url: `/api/super-admin/users/${orgId}`, method: 'GET',
         params, signal
     },
       );
@@ -4020,7 +4023,7 @@ export const superAdminUsersControllerGetUsersByOrgId = (
 export const getSuperAdminUsersControllerGetUsersByOrgIdQueryKey = (orgId?: string,
     params?: SuperAdminUsersControllerGetUsersByOrgIdParams,) => {
     return [
-    `/super-admin/users/${orgId}`, ...(params ? [params]: [])
+    `/api/super-admin/users/${orgId}`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -4108,7 +4111,7 @@ export const superAdminUsersControllerDeleteUser = (
       
       
       return customAxiosInstance<void>(
-      {url: `/super-admin/users/${userId}`, method: 'DELETE'
+      {url: `/api/super-admin/users/${userId}`, method: 'DELETE'
     },
       );
     }
@@ -4172,7 +4175,7 @@ export const superAdminUsersControllerTriggerPasswordReset = (
       
       
       return customAxiosInstance<TriggerPasswordResetResponseDto>(
-      {url: `/super-admin/users/${userId}/trigger-password-reset`, method: 'POST', signal
+      {url: `/api/super-admin/users/${userId}/trigger-password-reset`, method: 'POST', signal
     },
       );
     }
@@ -4237,7 +4240,7 @@ export const superAdminUsersControllerCreateUser = (
       
       
       return customAxiosInstance<UserResponseDto>(
-      {url: `/super-admin/users/${orgId}/create`, method: 'POST',
+      {url: `/api/super-admin/users/${orgId}/create`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createUserDto, signal
     },
@@ -4303,7 +4306,7 @@ export const superAdminManagementControllerListSuperAdmins = (
       
       
       return customAxiosInstance<SuperAdminUserResponseDto[]>(
-      {url: `/super-admin/super-admins`, method: 'GET', signal
+      {url: `/api/super-admin/super-admins`, method: 'GET', signal
     },
       );
     }
@@ -4313,7 +4316,7 @@ export const superAdminManagementControllerListSuperAdmins = (
 
 export const getSuperAdminManagementControllerListSuperAdminsQueryKey = () => {
     return [
-    `/super-admin/super-admins`
+    `/api/super-admin/super-admins`
     ] as const;
     }
 
@@ -4397,7 +4400,7 @@ export const superAdminManagementControllerPromoteToSuperAdmin = (
       
       
       return customAxiosInstance<SuperAdminUserResponseDto>(
-      {url: `/super-admin/super-admins`, method: 'POST',
+      {url: `/api/super-admin/super-admins`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: promoteToSuperAdminDto, signal
     },
@@ -4462,7 +4465,7 @@ export const superAdminManagementControllerDemoteFromSuperAdmin = (
       
       
       return customAxiosInstance<void>(
-      {url: `/super-admin/super-admins/${userId}`, method: 'DELETE'
+      {url: `/api/super-admin/super-admins/${userId}`, method: 'DELETE'
     },
       );
     }
@@ -4526,7 +4529,7 @@ export const invitesControllerCreate = (
       
       
       return customAxiosInstance<CreateInviteResponseDto>(
-      {url: `/invites`, method: 'POST',
+      {url: `/api/invites`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createInviteDto, signal
     },
@@ -4592,7 +4595,7 @@ export const invitesControllerGetInvites = (
       
       
       return customAxiosInstance<PaginatedInvitesListResponseDto>(
-      {url: `/invites`, method: 'GET',
+      {url: `/api/invites`, method: 'GET',
         params, signal
     },
       );
@@ -4603,7 +4606,7 @@ export const invitesControllerGetInvites = (
 
 export const getInvitesControllerGetInvitesQueryKey = (params?: InvitesControllerGetInvitesParams,) => {
     return [
-    `/invites`, ...(params ? [params]: [])
+    `/api/invites`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -4687,7 +4690,7 @@ export const invitesControllerCreateBulk = (
       
       
       return customAxiosInstance<CreateBulkInvitesResponseDto>(
-      {url: `/invites/bulk`, method: 'POST',
+      {url: `/api/invites/bulk`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createBulkInvitesDto, signal
     },
@@ -4753,7 +4756,7 @@ export const invitesControllerGetInviteByToken = (
       
       
       return customAxiosInstance<InviteDetailResponseDto>(
-      {url: `/invites/${token}`, method: 'GET', signal
+      {url: `/api/invites/${token}`, method: 'GET', signal
     },
       );
     }
@@ -4763,7 +4766,7 @@ export const invitesControllerGetInviteByToken = (
 
 export const getInvitesControllerGetInviteByTokenQueryKey = (token?: string,) => {
     return [
-    `/invites/${token}`
+    `/api/invites/${token}`
     ] as const;
     }
 
@@ -4847,7 +4850,7 @@ export const invitesControllerAcceptInvite = (
       
       
       return customAxiosInstance<AcceptInviteResponseDto>(
-      {url: `/invites/accept`, method: 'POST',
+      {url: `/api/invites/accept`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: acceptInviteDto, signal
     },
@@ -4913,7 +4916,7 @@ export const invitesControllerResendExpiredInvite = (
       
       
       return customAxiosInstance<CreateInviteResponseDto>(
-      {url: `/invites/${id}/resend`, method: 'POST', signal
+      {url: `/api/invites/${id}/resend`, method: 'POST', signal
     },
       );
     }
@@ -4976,7 +4979,7 @@ export const invitesControllerDeleteAllPending = (
       
       
       return customAxiosInstance<DeleteAllPendingInvitesResponseDto>(
-      {url: `/invites/all`, method: 'DELETE'
+      {url: `/api/invites/all`, method: 'DELETE'
     },
       );
     }
@@ -5039,7 +5042,7 @@ export const invitesControllerDeleteInvite = (
       
       
       return customAxiosInstance<void>(
-      {url: `/invites/${id}`, method: 'DELETE'
+      {url: `/api/invites/${id}`, method: 'DELETE'
     },
       );
     }
@@ -5102,7 +5105,7 @@ export const subscriptionsControllerHasActiveSubscription = (
       
       
       return customAxiosInstance<ActiveSubscriptionResponseDto>(
-      {url: `/subscriptions/active`, method: 'GET', signal
+      {url: `/api/subscriptions/active`, method: 'GET', signal
     },
       );
     }
@@ -5112,7 +5115,7 @@ export const subscriptionsControllerHasActiveSubscription = (
 
 export const getSubscriptionsControllerHasActiveSubscriptionQueryKey = () => {
     return [
-    `/subscriptions/active`
+    `/api/subscriptions/active`
     ] as const;
     }
 
@@ -5195,7 +5198,7 @@ export const subscriptionsControllerGetCurrentPrice = (
       
       
       return customAxiosInstance<PriceResponseDto>(
-      {url: `/subscriptions/price`, method: 'GET', signal
+      {url: `/api/subscriptions/price`, method: 'GET', signal
     },
       );
     }
@@ -5205,7 +5208,7 @@ export const subscriptionsControllerGetCurrentPrice = (
 
 export const getSubscriptionsControllerGetCurrentPriceQueryKey = () => {
     return [
-    `/subscriptions/price`
+    `/api/subscriptions/price`
     ] as const;
     }
 
@@ -5289,7 +5292,7 @@ export const superAdminSubscriptionsControllerGetSubscription = (
       
       
       return customAxiosInstance<SubscriptionResponseDtoNullable>(
-      {url: `/super-admin/subscriptions/${orgId}`, method: 'GET', signal
+      {url: `/api/super-admin/subscriptions/${orgId}`, method: 'GET', signal
     },
       );
     }
@@ -5299,7 +5302,7 @@ export const superAdminSubscriptionsControllerGetSubscription = (
 
 export const getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey = (orgId?: string,) => {
     return [
-    `/super-admin/subscriptions/${orgId}`
+    `/api/super-admin/subscriptions/${orgId}`
     ] as const;
     }
 
@@ -5384,7 +5387,7 @@ export const superAdminSubscriptionsControllerCreateSubscription = (
       
       
       return customAxiosInstance<SubscriptionResponseDto>(
-      {url: `/super-admin/subscriptions/${orgId}`, method: 'POST',
+      {url: `/api/super-admin/subscriptions/${orgId}`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createSubscriptionRequestDto, signal
     },
@@ -5449,7 +5452,7 @@ export const superAdminSubscriptionsControllerCancelSubscription = (
       
       
       return customAxiosInstance<void>(
-      {url: `/super-admin/subscriptions/${orgId}`, method: 'DELETE'
+      {url: `/api/super-admin/subscriptions/${orgId}`, method: 'DELETE'
     },
       );
     }
@@ -5513,7 +5516,7 @@ export const superAdminSubscriptionsControllerUpdateSeats = (
       
       
       return customAxiosInstance<void>(
-      {url: `/super-admin/subscriptions/${orgId}/seats`, method: 'PUT',
+      {url: `/api/super-admin/subscriptions/${orgId}/seats`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateSeatsDto
     },
@@ -5579,7 +5582,7 @@ export const superAdminSubscriptionsControllerUpdateBillingInfo = (
       
       
       return customAxiosInstance<void>(
-      {url: `/super-admin/subscriptions/${orgId}/billing-info`, method: 'PUT',
+      {url: `/api/super-admin/subscriptions/${orgId}/billing-info`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateBillingInfoDto
     },
@@ -5645,7 +5648,7 @@ export const superAdminSubscriptionsControllerUpdateStartDate = (
       
       
       return customAxiosInstance<void>(
-      {url: `/super-admin/subscriptions/${orgId}/start-date`, method: 'PUT',
+      {url: `/api/super-admin/subscriptions/${orgId}/start-date`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateStartDateDto
     },
@@ -5711,7 +5714,7 @@ export const superAdminSubscriptionsControllerUncancelSubscription = (
       
       
       return customAxiosInstance<void>(
-      {url: `/super-admin/subscriptions/${orgId}/uncancel`, method: 'POST', signal
+      {url: `/api/super-admin/subscriptions/${orgId}/uncancel`, method: 'POST', signal
     },
       );
     }
@@ -5774,7 +5777,7 @@ export const teamsControllerListTeams = (
       
       
       return customAxiosInstance<TeamResponseDto[]>(
-      {url: `/teams`, method: 'GET', signal
+      {url: `/api/teams`, method: 'GET', signal
     },
       );
     }
@@ -5784,7 +5787,7 @@ export const teamsControllerListTeams = (
 
 export const getTeamsControllerListTeamsQueryKey = () => {
     return [
-    `/teams`
+    `/api/teams`
     ] as const;
     }
 
@@ -5867,7 +5870,7 @@ export const teamsControllerCreateTeam = (
       
       
       return customAxiosInstance<TeamResponseDto>(
-      {url: `/teams`, method: 'POST',
+      {url: `/api/teams`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createTeamDto, signal
     },
@@ -5932,7 +5935,7 @@ export const teamsControllerListMyTeams = (
       
       
       return customAxiosInstance<TeamResponseDto[]>(
-      {url: `/teams/me`, method: 'GET', signal
+      {url: `/api/teams/me`, method: 'GET', signal
     },
       );
     }
@@ -5942,7 +5945,7 @@ export const teamsControllerListMyTeams = (
 
 export const getTeamsControllerListMyTeamsQueryKey = () => {
     return [
-    `/teams/me`
+    `/api/teams/me`
     ] as const;
     }
 
@@ -6025,7 +6028,7 @@ export const teamsControllerGetTeam = (
       
       
       return customAxiosInstance<TeamResponseDto>(
-      {url: `/teams/${id}`, method: 'GET', signal
+      {url: `/api/teams/${id}`, method: 'GET', signal
     },
       );
     }
@@ -6035,7 +6038,7 @@ export const teamsControllerGetTeam = (
 
 export const getTeamsControllerGetTeamQueryKey = (id?: string,) => {
     return [
-    `/teams/${id}`
+    `/api/teams/${id}`
     ] as const;
     }
 
@@ -6118,7 +6121,7 @@ export const teamsControllerUpdateTeam = (
       
       
       return customAxiosInstance<TeamResponseDto>(
-      {url: `/teams/${id}`, method: 'PATCH',
+      {url: `/api/teams/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateTeamDto
     },
@@ -6182,7 +6185,7 @@ export const teamsControllerDeleteTeam = (
       
       
       return customAxiosInstance<void>(
-      {url: `/teams/${id}`, method: 'DELETE'
+      {url: `/api/teams/${id}`, method: 'DELETE'
     },
       );
     }
@@ -6246,7 +6249,7 @@ export const teamsControllerListTeamMembers = (
       
       
       return customAxiosInstance<PaginatedTeamMembersResponseDto>(
-      {url: `/teams/${id}/members`, method: 'GET',
+      {url: `/api/teams/${id}/members`, method: 'GET',
         params, signal
     },
       );
@@ -6258,7 +6261,7 @@ export const teamsControllerListTeamMembers = (
 export const getTeamsControllerListTeamMembersQueryKey = (id?: string,
     params?: TeamsControllerListTeamMembersParams,) => {
     return [
-    `/teams/${id}/members`, ...(params ? [params]: [])
+    `/api/teams/${id}/members`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -6347,7 +6350,7 @@ export const teamsControllerAddTeamMember = (
       
       
       return customAxiosInstance<TeamMemberResponseDto>(
-      {url: `/teams/${id}/members`, method: 'POST',
+      {url: `/api/teams/${id}/members`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: addTeamMemberDto, signal
     },
@@ -6412,7 +6415,7 @@ export const teamsControllerRemoveTeamMember = (
       
       
       return customAxiosInstance<void>(
-      {url: `/teams/${id}/members/${userId}`, method: 'DELETE'
+      {url: `/api/teams/${id}/members/${userId}`, method: 'DELETE'
     },
       );
     }
@@ -6478,7 +6481,7 @@ export const storageControllerUploadFile = (
 formData.append(`file`, storageControllerUploadFileBody.file)
 
       return customAxiosInstance<UploadFileResponseDto>(
-      {url: `/storage/upload`, method: 'POST',
+      {url: `/api/storage/upload`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
     },
@@ -6540,7 +6543,7 @@ export const storageControllerGetFile = (
       
       
       return customAxiosInstance<void>(
-      {url: `/storage/${objectName}`, method: 'GET', signal
+      {url: `/api/storage/${objectName}`, method: 'GET', signal
     },
       );
     }
@@ -6550,7 +6553,7 @@ export const storageControllerGetFile = (
 
 export const getStorageControllerGetFileQueryKey = (objectName?: string,) => {
     return [
-    `/storage/${objectName}`
+    `/api/storage/${objectName}`
     ] as const;
     }
 
@@ -6626,7 +6629,7 @@ export const storageControllerDeleteFile = (
       
       
       return customAxiosInstance<void>(
-      {url: `/storage/${objectName}`, method: 'DELETE'
+      {url: `/api/storage/${objectName}`, method: 'DELETE'
     },
       );
     }
@@ -6683,7 +6686,7 @@ export const storageControllerGetPresignedUrl = (
       
       
       return customAxiosInstance<void>(
-      {url: `/storage/url/${objectName}`, method: 'GET', signal
+      {url: `/api/storage/url/${objectName}`, method: 'GET', signal
     },
       );
     }
@@ -6693,7 +6696,7 @@ export const storageControllerGetPresignedUrl = (
 
 export const getStorageControllerGetPresignedUrlQueryKey = (objectName?: string,) => {
     return [
-    `/storage/url/${objectName}`
+    `/api/storage/url/${objectName}`
     ] as const;
     }
 
@@ -6773,7 +6776,7 @@ export const urlRetrieverControllerRetrieveUrl = (
       
       
       return customAxiosInstance<void>(
-      {url: `/retrievers/url`, method: 'POST',
+      {url: `/api/retrievers/url`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: retrieveUrlDto, signal
     },
@@ -6838,7 +6841,7 @@ export const threadsControllerCreate = (
       
       
       return customAxiosInstance<GetThreadResponseDto>(
-      {url: `/threads`, method: 'POST',
+      {url: `/api/threads`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createThreadDto, signal
     },
@@ -6903,7 +6906,7 @@ export const threadsControllerFindAll = (
       
       
       return customAxiosInstance<GetThreadsResponseDto>(
-      {url: `/threads`, method: 'GET',
+      {url: `/api/threads`, method: 'GET',
         params, signal
     },
       );
@@ -6914,7 +6917,7 @@ export const threadsControllerFindAll = (
 
 export const getThreadsControllerFindAllQueryKey = (params?: ThreadsControllerFindAllParams,) => {
     return [
-    `/threads`, ...(params ? [params]: [])
+    `/api/threads`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -6997,7 +7000,7 @@ export const threadsControllerFindOne = (
       
       
       return customAxiosInstance<GetThreadResponseDto>(
-      {url: `/threads/${id}`, method: 'GET', signal
+      {url: `/api/threads/${id}`, method: 'GET', signal
     },
       );
     }
@@ -7007,7 +7010,7 @@ export const threadsControllerFindOne = (
 
 export const getThreadsControllerFindOneQueryKey = (id?: string,) => {
     return [
-    `/threads/${id}`
+    `/api/threads/${id}`
     ] as const;
     }
 
@@ -7089,7 +7092,7 @@ export const threadsControllerDelete = (
       
       
       return customAxiosInstance<void>(
-      {url: `/threads/${id}`, method: 'DELETE'
+      {url: `/api/threads/${id}`, method: 'DELETE'
     },
       );
     }
@@ -7152,7 +7155,7 @@ export const threadsControllerUpdateTitle = (
       
       
       return customAxiosInstance<void>(
-      {url: `/threads/${id}/title`, method: 'PATCH',
+      {url: `/api/threads/${id}/title`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateThreadTitleDto
     },
@@ -7217,7 +7220,7 @@ export const threadSourcesControllerGetThreadSources = (
       
       
       return customAxiosInstance<ThreadSourcesControllerGetThreadSources200Item[]>(
-      {url: `/threads/${id}/sources`, method: 'GET', signal
+      {url: `/api/threads/${id}/sources`, method: 'GET', signal
     },
       );
     }
@@ -7227,7 +7230,7 @@ export const threadSourcesControllerGetThreadSources = (
 
 export const getThreadSourcesControllerGetThreadSourcesQueryKey = (id?: string,) => {
     return [
-    `/threads/${id}/sources`
+    `/api/threads/${id}/sources`
     ] as const;
     }
 
@@ -7313,7 +7316,7 @@ export const threadSourcesControllerAddFileSource = (
 formData.append(`file`, threadSourcesControllerAddFileSourceBody.file)
 
       return customAxiosInstance<ThreadSourcesControllerAddFileSource201Item[]>(
-      {url: `/threads/${id}/sources/file`, method: 'POST',
+      {url: `/api/threads/${id}/sources/file`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
     },
@@ -7378,7 +7381,7 @@ export const threadSourcesControllerRemoveSource = (
       
       
       return customAxiosInstance<void>(
-      {url: `/threads/${id}/sources/${sourceId}`, method: 'DELETE'
+      {url: `/api/threads/${id}/sources/${sourceId}`, method: 'DELETE'
     },
       );
     }
@@ -7442,7 +7445,7 @@ export const threadSourcesControllerDownloadSource = (
       
       
       return customAxiosInstance<Blob>(
-      {url: `/threads/${id}/sources/${sourceId}/download`, method: 'GET',
+      {url: `/api/threads/${id}/sources/${sourceId}/download`, method: 'GET',
         responseType: 'blob', signal
     },
       );
@@ -7454,7 +7457,7 @@ export const threadSourcesControllerDownloadSource = (
 export const getThreadSourcesControllerDownloadSourceQueryKey = (id?: string,
     sourceId?: string,) => {
     return [
-    `/threads/${id}/sources/${sourceId}/download`
+    `/api/threads/${id}/sources/${sourceId}/download`
     ] as const;
     }
 
@@ -7543,7 +7546,7 @@ export const threadKnowledgeBasesControllerAddKnowledgeBase = (
       
       
       return customAxiosInstance<void>(
-      {url: `/threads/${id}/knowledge-bases/${knowledgeBaseId}`, method: 'POST', signal
+      {url: `/api/threads/${id}/knowledge-bases/${knowledgeBaseId}`, method: 'POST', signal
     },
       );
     }
@@ -7606,7 +7609,7 @@ export const threadKnowledgeBasesControllerRemoveKnowledgeBase = (
       
       
       return customAxiosInstance<void>(
-      {url: `/threads/${id}/knowledge-bases/${knowledgeBaseId}`, method: 'DELETE'
+      {url: `/api/threads/${id}/knowledge-bases/${knowledgeBaseId}`, method: 'DELETE'
     },
       );
     }
@@ -7669,7 +7672,7 @@ export const agentsControllerCreate = (
       
       
       return customAxiosInstance<AgentResponseDto>(
-      {url: `/agents`, method: 'POST',
+      {url: `/api/agents`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createAgentDto, signal
     },
@@ -7734,7 +7737,7 @@ export const agentsControllerFindAll = (
       
       
       return customAxiosInstance<AgentResponseDto[]>(
-      {url: `/agents`, method: 'GET', signal
+      {url: `/api/agents`, method: 'GET', signal
     },
       );
     }
@@ -7744,7 +7747,7 @@ export const agentsControllerFindAll = (
 
 export const getAgentsControllerFindAllQueryKey = () => {
     return [
-    `/agents`
+    `/api/agents`
     ] as const;
     }
 
@@ -7827,7 +7830,7 @@ export const agentsControllerFindOne = (
       
       
       return customAxiosInstance<AgentResponseDto>(
-      {url: `/agents/${id}`, method: 'GET', signal
+      {url: `/api/agents/${id}`, method: 'GET', signal
     },
       );
     }
@@ -7837,7 +7840,7 @@ export const agentsControllerFindOne = (
 
 export const getAgentsControllerFindOneQueryKey = (id?: string,) => {
     return [
-    `/agents/${id}`
+    `/api/agents/${id}`
     ] as const;
     }
 
@@ -7920,7 +7923,7 @@ export const agentsControllerUpdate = (
       
       
       return customAxiosInstance<AgentResponseDto>(
-      {url: `/agents/${id}`, method: 'PUT',
+      {url: `/api/agents/${id}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateAgentDto
     },
@@ -7984,7 +7987,7 @@ export const agentsControllerDelete = (
       
       
       return customAxiosInstance<void>(
-      {url: `/agents/${id}`, method: 'DELETE'
+      {url: `/api/agents/${id}`, method: 'DELETE'
     },
       );
     }
@@ -8047,7 +8050,7 @@ export const agentsControllerGetAgentSources = (
       
       
       return customAxiosInstance<AgentSourceResponseDto[]>(
-      {url: `/agents/${id}/sources`, method: 'GET', signal
+      {url: `/api/agents/${id}/sources`, method: 'GET', signal
     },
       );
     }
@@ -8057,7 +8060,7 @@ export const agentsControllerGetAgentSources = (
 
 export const getAgentsControllerGetAgentSourcesQueryKey = (id?: string,) => {
     return [
-    `/agents/${id}/sources`
+    `/api/agents/${id}/sources`
     ] as const;
     }
 
@@ -8143,7 +8146,7 @@ export const agentsControllerAddFileSource = (
 formData.append(`file`, agentsControllerAddFileSourceBody.file)
 
       return customAxiosInstance<void>(
-      {url: `/agents/${id}/sources/file`, method: 'POST',
+      {url: `/api/agents/${id}/sources/file`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
     },
@@ -8208,7 +8211,7 @@ export const agentsControllerRemoveSource = (
       
       
       return customAxiosInstance<void>(
-      {url: `/agents/${id}/sources/${sourceAssignmentId}`, method: 'DELETE'
+      {url: `/api/agents/${id}/sources/${sourceAssignmentId}`, method: 'DELETE'
     },
       );
     }
@@ -8272,7 +8275,7 @@ export const agentMcpIntegrationsControllerAssignMcpIntegration = (
       
       
       return customAxiosInstance<AgentResponseDto>(
-      {url: `/agents/${agentId}/mcp-integrations/${integrationId}`, method: 'POST', signal
+      {url: `/api/agents/${agentId}/mcp-integrations/${integrationId}`, method: 'POST', signal
     },
       );
     }
@@ -8335,7 +8338,7 @@ export const agentMcpIntegrationsControllerUnassignMcpIntegration = (
       
       
       return customAxiosInstance<AgentResponseDto>(
-      {url: `/agents/${agentId}/mcp-integrations/${integrationId}`, method: 'DELETE'
+      {url: `/api/agents/${agentId}/mcp-integrations/${integrationId}`, method: 'DELETE'
     },
       );
     }
@@ -8398,7 +8401,7 @@ export const agentMcpIntegrationsControllerListAgentMcpIntegrations = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto[]>(
-      {url: `/agents/${agentId}/mcp-integrations`, method: 'GET', signal
+      {url: `/api/agents/${agentId}/mcp-integrations`, method: 'GET', signal
     },
       );
     }
@@ -8408,7 +8411,7 @@ export const agentMcpIntegrationsControllerListAgentMcpIntegrations = (
 
 export const getAgentMcpIntegrationsControllerListAgentMcpIntegrationsQueryKey = (agentId?: string,) => {
     return [
-    `/agents/${agentId}/mcp-integrations`
+    `/api/agents/${agentId}/mcp-integrations`
     ] as const;
     }
 
@@ -8491,7 +8494,7 @@ export const sharesControllerCreateShare = (
       
       
       return customAxiosInstance<ShareResponseDto>(
-      {url: `/shares`, method: 'POST',
+      {url: `/api/shares`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createAgentShareDto, signal
     },
@@ -8556,7 +8559,7 @@ export const sharesControllerGetShares = (
       
       
       return customAxiosInstance<ShareResponseDto[]>(
-      {url: `/shares`, method: 'GET',
+      {url: `/api/shares`, method: 'GET',
         params, signal
     },
       );
@@ -8567,7 +8570,7 @@ export const sharesControllerGetShares = (
 
 export const getSharesControllerGetSharesQueryKey = (params?: SharesControllerGetSharesParams,) => {
     return [
-    `/shares`, ...(params ? [params]: [])
+    `/api/shares`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -8650,7 +8653,7 @@ export const sharesControllerCreateSkillShare = (
       
       
       return customAxiosInstance<ShareResponseDto>(
-      {url: `/shares/skills`, method: 'POST',
+      {url: `/api/shares/skills`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createSkillShareDto, signal
     },
@@ -8715,7 +8718,7 @@ export const sharesControllerCreateKnowledgeBaseShare = (
       
       
       return customAxiosInstance<ShareResponseDto>(
-      {url: `/shares/knowledge-bases`, method: 'POST',
+      {url: `/api/shares/knowledge-bases`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createKnowledgeBaseShareDto, signal
     },
@@ -8779,7 +8782,7 @@ export const sharesControllerDeleteShare = (
       
       
       return customAxiosInstance<void>(
-      {url: `/shares/${id}`, method: 'DELETE'
+      {url: `/api/shares/${id}`, method: 'DELETE'
     },
       );
     }
@@ -8842,7 +8845,7 @@ export const mcpIntegrationsControllerCreatePredefined = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto>(
-      {url: `/mcp-integrations/predefined`, method: 'POST',
+      {url: `/api/mcp-integrations/predefined`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createPredefinedIntegrationDto, signal
     },
@@ -8851,7 +8854,7 @@ export const mcpIntegrationsControllerCreatePredefined = (
   
 
 
-export const getMcpIntegrationsControllerCreatePredefinedMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerCreatePredefinedMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreatePredefined>>, TError,{data: CreatePredefinedIntegrationDto}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreatePredefined>>, TError,{data: CreatePredefinedIntegrationDto}, TContext> => {
 
@@ -8878,12 +8881,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerCreatePredefinedMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerCreatePredefined>>>
     export type McpIntegrationsControllerCreatePredefinedMutationBody = CreatePredefinedIntegrationDto
-    export type McpIntegrationsControllerCreatePredefinedMutationError = void
+    export type McpIntegrationsControllerCreatePredefinedMutationError = unknown
 
     /**
  * @summary Create a new predefined MCP integration
  */
-export const useMcpIntegrationsControllerCreatePredefined = <TError = void,
+export const useMcpIntegrationsControllerCreatePredefined = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreatePredefined>>, TError,{data: CreatePredefinedIntegrationDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerCreatePredefined>>,
@@ -8907,7 +8910,7 @@ export const mcpIntegrationsControllerCreateCustom = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto>(
-      {url: `/mcp-integrations/custom`, method: 'POST',
+      {url: `/api/mcp-integrations/custom`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createCustomIntegrationDto, signal
     },
@@ -8916,7 +8919,7 @@ export const mcpIntegrationsControllerCreateCustom = (
   
 
 
-export const getMcpIntegrationsControllerCreateCustomMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerCreateCustomMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateCustom>>, TError,{data: CreateCustomIntegrationDto}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateCustom>>, TError,{data: CreateCustomIntegrationDto}, TContext> => {
 
@@ -8943,12 +8946,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerCreateCustomMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateCustom>>>
     export type McpIntegrationsControllerCreateCustomMutationBody = CreateCustomIntegrationDto
-    export type McpIntegrationsControllerCreateCustomMutationError = void
+    export type McpIntegrationsControllerCreateCustomMutationError = unknown
 
     /**
  * @summary Create a new custom MCP integration
  */
-export const useMcpIntegrationsControllerCreateCustom = <TError = void,
+export const useMcpIntegrationsControllerCreateCustom = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateCustom>>, TError,{data: CreateCustomIntegrationDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerCreateCustom>>,
@@ -8972,7 +8975,7 @@ export const mcpIntegrationsControllerList = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto[]>(
-      {url: `/mcp-integrations`, method: 'GET', signal
+      {url: `/api/mcp-integrations`, method: 'GET', signal
     },
       );
     }
@@ -8982,7 +8985,7 @@ export const mcpIntegrationsControllerList = (
 
 export const getMcpIntegrationsControllerListQueryKey = () => {
     return [
-    `/mcp-integrations`
+    `/api/mcp-integrations`
     ] as const;
     }
 
@@ -9065,7 +9068,7 @@ export const mcpIntegrationsControllerListPredefinedConfigs = (
       
       
       return customAxiosInstance<PredefinedConfigResponseDto[]>(
-      {url: `/mcp-integrations/predefined/available`, method: 'GET', signal
+      {url: `/api/mcp-integrations/predefined/available`, method: 'GET', signal
     },
       );
     }
@@ -9075,7 +9078,7 @@ export const mcpIntegrationsControllerListPredefinedConfigs = (
 
 export const getMcpIntegrationsControllerListPredefinedConfigsQueryKey = () => {
     return [
-    `/mcp-integrations/predefined/available`
+    `/api/mcp-integrations/predefined/available`
     ] as const;
     }
 
@@ -9149,7 +9152,7 @@ export function useMcpIntegrationsControllerListPredefinedConfigs<TData = Awaite
 
 
 /**
- * @summary List all available (enabled) MCP integrations for organization
+ * @summary List available (enabled) MCP integrations
  */
 export const mcpIntegrationsControllerListAvailable = (
     
@@ -9158,7 +9161,7 @@ export const mcpIntegrationsControllerListAvailable = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto[]>(
-      {url: `/mcp-integrations/available`, method: 'GET', signal
+      {url: `/api/mcp-integrations/available`, method: 'GET', signal
     },
       );
     }
@@ -9168,7 +9171,7 @@ export const mcpIntegrationsControllerListAvailable = (
 
 export const getMcpIntegrationsControllerListAvailableQueryKey = () => {
     return [
-    `/mcp-integrations/available`
+    `/api/mcp-integrations/available`
     ] as const;
     }
 
@@ -9220,7 +9223,7 @@ export function useMcpIntegrationsControllerListAvailable<TData = Awaited<Return
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary List all available (enabled) MCP integrations for organization
+ * @summary List available (enabled) MCP integrations
  */
 
 export function useMcpIntegrationsControllerListAvailable<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>, TError = unknown>(
@@ -9251,7 +9254,7 @@ export const mcpIntegrationsControllerGetById = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto>(
-      {url: `/mcp-integrations/${id}`, method: 'GET', signal
+      {url: `/api/mcp-integrations/${id}`, method: 'GET', signal
     },
       );
     }
@@ -9261,12 +9264,12 @@ export const mcpIntegrationsControllerGetById = (
 
 export const getMcpIntegrationsControllerGetByIdQueryKey = (id?: string,) => {
     return [
-    `/mcp-integrations/${id}`
+    `/api/mcp-integrations/${id}`
     ] as const;
     }
 
     
-export const getMcpIntegrationsControllerGetByIdQueryOptions = <TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>>, }
+export const getMcpIntegrationsControllerGetByIdQueryOptions = <TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
@@ -9285,10 +9288,10 @@ const {query: queryOptions} = options ?? {};
 }
 
 export type McpIntegrationsControllerGetByIdQueryResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>>
-export type McpIntegrationsControllerGetByIdQueryError = void
+export type McpIntegrationsControllerGetByIdQueryError = unknown
 
 
-export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = void>(
+export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = unknown>(
  id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>,
@@ -9298,7 +9301,7 @@ export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<t
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = void>(
+export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = unknown>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>,
@@ -9308,7 +9311,7 @@ export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<t
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = void>(
+export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = unknown>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -9316,7 +9319,7 @@ export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<t
  * @summary Get MCP integration by ID
  */
 
-export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = void>(
+export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = unknown>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -9344,7 +9347,7 @@ export const mcpIntegrationsControllerUpdate = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto>(
-      {url: `/mcp-integrations/${id}`, method: 'PATCH',
+      {url: `/api/mcp-integrations/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateMcpIntegrationDto
     },
@@ -9353,7 +9356,7 @@ export const mcpIntegrationsControllerUpdate = (
   
 
 
-export const getMcpIntegrationsControllerUpdateMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerUpdateMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerUpdate>>, TError,{id: string;data: UpdateMcpIntegrationDto}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerUpdate>>, TError,{id: string;data: UpdateMcpIntegrationDto}, TContext> => {
 
@@ -9380,12 +9383,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerUpdate>>>
     export type McpIntegrationsControllerUpdateMutationBody = UpdateMcpIntegrationDto
-    export type McpIntegrationsControllerUpdateMutationError = void
+    export type McpIntegrationsControllerUpdateMutationError = unknown
 
     /**
  * @summary Update MCP integration
  */
-export const useMcpIntegrationsControllerUpdate = <TError = void,
+export const useMcpIntegrationsControllerUpdate = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerUpdate>>, TError,{id: string;data: UpdateMcpIntegrationDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerUpdate>>,
@@ -9408,14 +9411,14 @@ export const mcpIntegrationsControllerDelete = (
       
       
       return customAxiosInstance<void>(
-      {url: `/mcp-integrations/${id}`, method: 'DELETE'
+      {url: `/api/mcp-integrations/${id}`, method: 'DELETE'
     },
       );
     }
   
 
 
-export const getMcpIntegrationsControllerDeleteMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerDeleteMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDelete>>, TError,{id: string}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDelete>>, TError,{id: string}, TContext> => {
 
@@ -9442,12 +9445,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerDelete>>>
     
-    export type McpIntegrationsControllerDeleteMutationError = void
+    export type McpIntegrationsControllerDeleteMutationError = unknown
 
     /**
  * @summary Delete MCP integration
  */
-export const useMcpIntegrationsControllerDelete = <TError = void,
+export const useMcpIntegrationsControllerDelete = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDelete>>, TError,{id: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerDelete>>,
@@ -9471,14 +9474,14 @@ export const mcpIntegrationsControllerEnable = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto>(
-      {url: `/mcp-integrations/${id}/enable`, method: 'POST', signal
+      {url: `/api/mcp-integrations/${id}/enable`, method: 'POST', signal
     },
       );
     }
   
 
 
-export const getMcpIntegrationsControllerEnableMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerEnableMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerEnable>>, TError,{id: string}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerEnable>>, TError,{id: string}, TContext> => {
 
@@ -9505,12 +9508,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerEnableMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerEnable>>>
     
-    export type McpIntegrationsControllerEnableMutationError = void
+    export type McpIntegrationsControllerEnableMutationError = unknown
 
     /**
  * @summary Enable MCP integration
  */
-export const useMcpIntegrationsControllerEnable = <TError = void,
+export const useMcpIntegrationsControllerEnable = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerEnable>>, TError,{id: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerEnable>>,
@@ -9534,14 +9537,14 @@ export const mcpIntegrationsControllerDisable = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto>(
-      {url: `/mcp-integrations/${id}/disable`, method: 'POST', signal
+      {url: `/api/mcp-integrations/${id}/disable`, method: 'POST', signal
     },
       );
     }
   
 
 
-export const getMcpIntegrationsControllerDisableMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerDisableMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDisable>>, TError,{id: string}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDisable>>, TError,{id: string}, TContext> => {
 
@@ -9568,12 +9571,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerDisableMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerDisable>>>
     
-    export type McpIntegrationsControllerDisableMutationError = void
+    export type McpIntegrationsControllerDisableMutationError = unknown
 
     /**
  * @summary Disable MCP integration
  */
-export const useMcpIntegrationsControllerDisable = <TError = void,
+export const useMcpIntegrationsControllerDisable = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDisable>>, TError,{id: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerDisable>>,
@@ -9597,7 +9600,7 @@ export const mcpIntegrationsControllerInstallFromMarketplace = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto>(
-      {url: `/mcp-integrations/install-from-marketplace`, method: 'POST',
+      {url: `/api/mcp-integrations/install-from-marketplace`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: installMarketplaceIntegrationDto, signal
     },
@@ -9606,7 +9609,7 @@ export const mcpIntegrationsControllerInstallFromMarketplace = (
   
 
 
-export const getMcpIntegrationsControllerInstallFromMarketplaceMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerInstallFromMarketplaceMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerInstallFromMarketplace>>, TError,{data: InstallMarketplaceIntegrationDto}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerInstallFromMarketplace>>, TError,{data: InstallMarketplaceIntegrationDto}, TContext> => {
 
@@ -9633,12 +9636,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerInstallFromMarketplaceMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerInstallFromMarketplace>>>
     export type McpIntegrationsControllerInstallFromMarketplaceMutationBody = InstallMarketplaceIntegrationDto
-    export type McpIntegrationsControllerInstallFromMarketplaceMutationError = void
+    export type McpIntegrationsControllerInstallFromMarketplaceMutationError = unknown
 
     /**
  * @summary Install an MCP integration from the marketplace
  */
-export const useMcpIntegrationsControllerInstallFromMarketplace = <TError = void,
+export const useMcpIntegrationsControllerInstallFromMarketplace = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerInstallFromMarketplace>>, TError,{data: InstallMarketplaceIntegrationDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerInstallFromMarketplace>>,
@@ -9653,7 +9656,7 @@ export const useMcpIntegrationsControllerInstallFromMarketplace = <TError = void
     }
     
 /**
- * @summary Get current user config for a marketplace MCP integration
+ * @summary Get user config for an MCP integration
  */
 export const mcpIntegrationsControllerGetUserConfig = (
     id: string,
@@ -9662,7 +9665,7 @@ export const mcpIntegrationsControllerGetUserConfig = (
       
       
       return customAxiosInstance<UserConfigResponseDto>(
-      {url: `/mcp-integrations/${id}/user-config`, method: 'GET', signal
+      {url: `/api/mcp-integrations/${id}/user-config`, method: 'GET', signal
     },
       );
     }
@@ -9672,7 +9675,7 @@ export const mcpIntegrationsControllerGetUserConfig = (
 
 export const getMcpIntegrationsControllerGetUserConfigQueryKey = (id?: string,) => {
     return [
-    `/mcp-integrations/${id}/user-config`
+    `/api/mcp-integrations/${id}/user-config`
     ] as const;
     }
 
@@ -9724,7 +9727,7 @@ export function useMcpIntegrationsControllerGetUserConfig<TData = Awaited<Return
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get current user config for a marketplace MCP integration
+ * @summary Get user config for an MCP integration
  */
 
 export function useMcpIntegrationsControllerGetUserConfig<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>, TError = unknown>(
@@ -9746,7 +9749,7 @@ export function useMcpIntegrationsControllerGetUserConfig<TData = Awaited<Return
 
 
 /**
- * @summary Set current user config for a marketplace MCP integration
+ * @summary Set user config for an MCP integration
  */
 export const mcpIntegrationsControllerSetUserConfig = (
     id: string,
@@ -9755,7 +9758,7 @@ export const mcpIntegrationsControllerSetUserConfig = (
       
       
       return customAxiosInstance<UserConfigResponseDto>(
-      {url: `/mcp-integrations/${id}/user-config`, method: 'PATCH',
+      {url: `/api/mcp-integrations/${id}/user-config`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: setUserConfigDto
     },
@@ -9764,7 +9767,7 @@ export const mcpIntegrationsControllerSetUserConfig = (
   
 
 
-export const getMcpIntegrationsControllerSetUserConfigMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerSetUserConfigMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>, TError,{id: string;data: SetUserConfigDto}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>, TError,{id: string;data: SetUserConfigDto}, TContext> => {
 
@@ -9791,12 +9794,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerSetUserConfigMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>>
     export type McpIntegrationsControllerSetUserConfigMutationBody = SetUserConfigDto
-    export type McpIntegrationsControllerSetUserConfigMutationError = void
+    export type McpIntegrationsControllerSetUserConfigMutationError = unknown
 
     /**
- * @summary Set current user config for a marketplace MCP integration
+ * @summary Set user config for an MCP integration
  */
-export const useMcpIntegrationsControllerSetUserConfig = <TError = void,
+export const useMcpIntegrationsControllerSetUserConfig = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>, TError,{id: string;data: SetUserConfigDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>,
@@ -9820,14 +9823,14 @@ export const mcpIntegrationsControllerValidate = (
       
       
       return customAxiosInstance<ValidationResponseDto>(
-      {url: `/mcp-integrations/${id}/validate`, method: 'POST', signal
+      {url: `/api/mcp-integrations/${id}/validate`, method: 'POST', signal
     },
       );
     }
   
 
 
-export const getMcpIntegrationsControllerValidateMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerValidateMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerValidate>>, TError,{id: string}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerValidate>>, TError,{id: string}, TContext> => {
 
@@ -9854,12 +9857,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerValidateMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerValidate>>>
     
-    export type McpIntegrationsControllerValidateMutationError = void
+    export type McpIntegrationsControllerValidateMutationError = unknown
 
     /**
  * @summary Validate MCP integration connection
  */
-export const useMcpIntegrationsControllerValidate = <TError = void,
+export const useMcpIntegrationsControllerValidate = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerValidate>>, TError,{id: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerValidate>>,
@@ -9874,6 +9877,290 @@ export const useMcpIntegrationsControllerValidate = <TError = void,
     }
     
 /**
+ * @summary Create a self-defined MCP integration
+ */
+export const mcpIntegrationsControllerCreateSelfDefined = (
+    createSelfDefinedIntegrationDto: CreateSelfDefinedIntegrationDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<McpIntegrationResponseDto>(
+      {url: `/api/mcp-integrations/self-defined`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createSelfDefinedIntegrationDto, signal
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerCreateSelfDefinedMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateSelfDefined>>, TError,{data: CreateSelfDefinedIntegrationDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateSelfDefined>>, TError,{data: CreateSelfDefinedIntegrationDto}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerCreateSelfDefined'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateSelfDefined>>, {data: CreateSelfDefinedIntegrationDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  mcpIntegrationsControllerCreateSelfDefined(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerCreateSelfDefinedMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateSelfDefined>>>
+    export type McpIntegrationsControllerCreateSelfDefinedMutationBody = CreateSelfDefinedIntegrationDto
+    export type McpIntegrationsControllerCreateSelfDefinedMutationError = unknown
+
+    /**
+ * @summary Create a self-defined MCP integration
+ */
+export const useMcpIntegrationsControllerCreateSelfDefined = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateSelfDefined>>, TError,{data: CreateSelfDefinedIntegrationDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerCreateSelfDefined>>,
+        TError,
+        {data: CreateSelfDefinedIntegrationDto},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerCreateSelfDefinedMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Start OAuth authorization for an integration
+ */
+export const mcpIntegrationsControllerStartOAuthAuthorize = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<OAuthAuthorizeResponseDto>(
+      {url: `/api/mcp-integrations/${id}/oauth/authorize`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerStartOAuthAuthorizeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerStartOAuthAuthorize'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  mcpIntegrationsControllerStartOAuthAuthorize(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerStartOAuthAuthorizeMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>>
+    
+    export type McpIntegrationsControllerStartOAuthAuthorizeMutationError = unknown
+
+    /**
+ * @summary Start OAuth authorization for an integration
+ */
+export const useMcpIntegrationsControllerStartOAuthAuthorize = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerStartOAuthAuthorizeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Revoke OAuth authorization for an integration
+ */
+export const mcpIntegrationsControllerRevokeOAuth = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/api/mcp-integrations/${id}/oauth/revoke`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerRevokeOAuthMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerRevokeOAuth>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerRevokeOAuth>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerRevokeOAuth'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerRevokeOAuth>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  mcpIntegrationsControllerRevokeOAuth(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerRevokeOAuthMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerRevokeOAuth>>>
+    
+    export type McpIntegrationsControllerRevokeOAuthMutationError = unknown
+
+    /**
+ * @summary Revoke OAuth authorization for an integration
+ */
+export const useMcpIntegrationsControllerRevokeOAuth = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerRevokeOAuth>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerRevokeOAuth>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerRevokeOAuthMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Get OAuth authorization status for an integration
+ */
+export const mcpIntegrationsControllerGetOAuthStatus = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<OAuthStatusResponseDto>(
+      {url: `/api/mcp-integrations/${id}/oauth/status`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getMcpIntegrationsControllerGetOAuthStatusQueryKey = (id?: string,) => {
+    return [
+    `/api/mcp-integrations/${id}/oauth/status`
+    ] as const;
+    }
+
+    
+export const getMcpIntegrationsControllerGetOAuthStatusQueryOptions = <TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMcpIntegrationsControllerGetOAuthStatusQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>> = ({ signal }) => mcpIntegrationsControllerGetOAuthStatus(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type McpIntegrationsControllerGetOAuthStatusQueryResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>>
+export type McpIntegrationsControllerGetOAuthStatusQueryError = unknown
+
+
+export function useMcpIntegrationsControllerGetOAuthStatus<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>,
+          TError,
+          Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpIntegrationsControllerGetOAuthStatus<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>,
+          TError,
+          Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpIntegrationsControllerGetOAuthStatus<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get OAuth authorization status for an integration
+ */
+
+export function useMcpIntegrationsControllerGetOAuthStatus<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMcpIntegrationsControllerGetOAuthStatusQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
  * @summary Preview a marketplace skill before installation
  */
 export const marketplaceControllerGetSkill = (
@@ -9883,7 +10170,7 @@ export const marketplaceControllerGetSkill = (
       
       
       return customAxiosInstance<MarketplaceSkillResponseDto>(
-      {url: `/marketplace/skills/${identifier}`, method: 'GET', signal
+      {url: `/api/marketplace/skills/${identifier}`, method: 'GET', signal
     },
       );
     }
@@ -9893,7 +10180,7 @@ export const marketplaceControllerGetSkill = (
 
 export const getMarketplaceControllerGetSkillQueryKey = (identifier?: string,) => {
     return [
-    `/marketplace/skills/${identifier}`
+    `/api/marketplace/skills/${identifier}`
     ] as const;
     }
 
@@ -9976,7 +10263,7 @@ export const marketplaceControllerGetIntegration = (
       
       
       return customAxiosInstance<MarketplaceIntegrationResponseDto>(
-      {url: `/marketplace/integrations/${identifier}`, method: 'GET', signal
+      {url: `/api/marketplace/integrations/${identifier}`, method: 'GET', signal
     },
       );
     }
@@ -9986,7 +10273,7 @@ export const marketplaceControllerGetIntegration = (
 
 export const getMarketplaceControllerGetIntegrationQueryKey = (identifier?: string,) => {
     return [
-    `/marketplace/integrations/${identifier}`
+    `/api/marketplace/integrations/${identifier}`
     ] as const;
     }
 
@@ -10069,7 +10356,7 @@ export const knowledgeBasesControllerCreate = (
       
       
       return customAxiosInstance<KnowledgeBaseResponseDto>(
-      {url: `/knowledge-bases`, method: 'POST',
+      {url: `/api/knowledge-bases`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createKnowledgeBaseDto, signal
     },
@@ -10134,7 +10421,7 @@ export const knowledgeBasesControllerFindAll = (
       
       
       return customAxiosInstance<KnowledgeBaseListResponseDto>(
-      {url: `/knowledge-bases`, method: 'GET', signal
+      {url: `/api/knowledge-bases`, method: 'GET', signal
     },
       );
     }
@@ -10144,7 +10431,7 @@ export const knowledgeBasesControllerFindAll = (
 
 export const getKnowledgeBasesControllerFindAllQueryKey = () => {
     return [
-    `/knowledge-bases`
+    `/api/knowledge-bases`
     ] as const;
     }
 
@@ -10227,7 +10514,7 @@ export const knowledgeBasesControllerFindOne = (
       
       
       return customAxiosInstance<KnowledgeBaseResponseDto>(
-      {url: `/knowledge-bases/${id}`, method: 'GET', signal
+      {url: `/api/knowledge-bases/${id}`, method: 'GET', signal
     },
       );
     }
@@ -10237,7 +10524,7 @@ export const knowledgeBasesControllerFindOne = (
 
 export const getKnowledgeBasesControllerFindOneQueryKey = (id?: string,) => {
     return [
-    `/knowledge-bases/${id}`
+    `/api/knowledge-bases/${id}`
     ] as const;
     }
 
@@ -10320,7 +10607,7 @@ export const knowledgeBasesControllerUpdate = (
       
       
       return customAxiosInstance<KnowledgeBaseResponseDto>(
-      {url: `/knowledge-bases/${id}`, method: 'PATCH',
+      {url: `/api/knowledge-bases/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateKnowledgeBaseDto
     },
@@ -10384,7 +10671,7 @@ export const knowledgeBasesControllerDelete = (
       
       
       return customAxiosInstance<void>(
-      {url: `/knowledge-bases/${id}`, method: 'DELETE'
+      {url: `/api/knowledge-bases/${id}`, method: 'DELETE'
     },
       );
     }
@@ -10447,7 +10734,7 @@ export const knowledgeBasesControllerListDocuments = (
       
       
       return customAxiosInstance<KnowledgeBaseDocumentListResponseDto>(
-      {url: `/knowledge-bases/${id}/documents`, method: 'GET', signal
+      {url: `/api/knowledge-bases/${id}/documents`, method: 'GET', signal
     },
       );
     }
@@ -10457,7 +10744,7 @@ export const knowledgeBasesControllerListDocuments = (
 
 export const getKnowledgeBasesControllerListDocumentsQueryKey = (id?: string,) => {
     return [
-    `/knowledge-bases/${id}/documents`
+    `/api/knowledge-bases/${id}/documents`
     ] as const;
     }
 
@@ -10543,7 +10830,7 @@ export const knowledgeBasesControllerAddDocument = (
 formData.append(`file`, knowledgeBasesControllerAddDocumentBody.file)
 
       return customAxiosInstance<KnowledgeBaseDocumentResponseDto>(
-      {url: `/knowledge-bases/${id}/documents`, method: 'POST',
+      {url: `/api/knowledge-bases/${id}/documents`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
     },
@@ -10609,7 +10896,7 @@ export const knowledgeBasesControllerAddUrl = (
       
       
       return customAxiosInstance<KnowledgeBaseDocumentResponseDto>(
-      {url: `/knowledge-bases/${id}/urls`, method: 'POST',
+      {url: `/api/knowledge-bases/${id}/urls`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: addUrlToKnowledgeBaseDto, signal
     },
@@ -10674,7 +10961,7 @@ export const knowledgeBasesControllerRemoveDocument = (
       
       
       return customAxiosInstance<void>(
-      {url: `/knowledge-bases/${id}/documents/${documentId}`, method: 'DELETE'
+      {url: `/api/knowledge-bases/${id}/documents/${documentId}`, method: 'DELETE'
     },
       );
     }
@@ -10737,7 +11024,7 @@ export const skillsControllerInstallFromMarketplace = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/skills/install-from-marketplace`, method: 'POST',
+      {url: `/api/skills/install-from-marketplace`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: installSkillFromMarketplaceDto, signal
     },
@@ -10802,7 +11089,7 @@ export const skillsControllerCreate = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/skills`, method: 'POST',
+      {url: `/api/skills`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createSkillDto, signal
     },
@@ -10867,7 +11154,7 @@ export const skillsControllerFindAll = (
       
       
       return customAxiosInstance<SkillResponseDto[]>(
-      {url: `/skills`, method: 'GET', signal
+      {url: `/api/skills`, method: 'GET', signal
     },
       );
     }
@@ -10877,7 +11164,7 @@ export const skillsControllerFindAll = (
 
 export const getSkillsControllerFindAllQueryKey = () => {
     return [
-    `/skills`
+    `/api/skills`
     ] as const;
     }
 
@@ -10960,7 +11247,7 @@ export const skillsControllerFindOne = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/skills/${id}`, method: 'GET', signal
+      {url: `/api/skills/${id}`, method: 'GET', signal
     },
       );
     }
@@ -10970,7 +11257,7 @@ export const skillsControllerFindOne = (
 
 export const getSkillsControllerFindOneQueryKey = (id?: string,) => {
     return [
-    `/skills/${id}`
+    `/api/skills/${id}`
     ] as const;
     }
 
@@ -11053,7 +11340,7 @@ export const skillsControllerUpdate = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/skills/${id}`, method: 'PUT',
+      {url: `/api/skills/${id}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateSkillDto
     },
@@ -11117,7 +11404,7 @@ export const skillsControllerDelete = (
       
       
       return customAxiosInstance<void>(
-      {url: `/skills/${id}`, method: 'DELETE'
+      {url: `/api/skills/${id}`, method: 'DELETE'
     },
       );
     }
@@ -11179,7 +11466,7 @@ export const skillsControllerToggleActive = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/skills/${id}/toggle-active`, method: 'PATCH'
+      {url: `/api/skills/${id}/toggle-active`, method: 'PATCH'
     },
       );
     }
@@ -11241,7 +11528,7 @@ export const skillsControllerTogglePinned = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/skills/${id}/toggle-pinned`, method: 'PATCH'
+      {url: `/api/skills/${id}/toggle-pinned`, method: 'PATCH'
     },
       );
     }
@@ -11304,7 +11591,7 @@ export const skillSourcesControllerGetSkillSources = (
       
       
       return customAxiosInstance<SkillSourceResponseDto[]>(
-      {url: `/skills/${id}/sources`, method: 'GET', signal
+      {url: `/api/skills/${id}/sources`, method: 'GET', signal
     },
       );
     }
@@ -11314,7 +11601,7 @@ export const skillSourcesControllerGetSkillSources = (
 
 export const getSkillSourcesControllerGetSkillSourcesQueryKey = (id?: string,) => {
     return [
-    `/skills/${id}/sources`
+    `/api/skills/${id}/sources`
     ] as const;
     }
 
@@ -11400,7 +11687,7 @@ export const skillSourcesControllerAddFileSource = (
 formData.append(`file`, skillSourcesControllerAddFileSourceBody.file)
 
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/skills/${id}/sources/file`, method: 'POST',
+      {url: `/api/skills/${id}/sources/file`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
     },
@@ -11465,7 +11752,7 @@ export const skillSourcesControllerRemoveSource = (
       
       
       return customAxiosInstance<void>(
-      {url: `/skills/${id}/sources/${sourceId}`, method: 'DELETE'
+      {url: `/api/skills/${id}/sources/${sourceId}`, method: 'DELETE'
     },
       );
     }
@@ -11529,7 +11816,7 @@ export const skillMcpIntegrationsControllerAssignMcpIntegration = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/skills/${skillId}/mcp-integrations/${integrationId}`, method: 'POST', signal
+      {url: `/api/skills/${skillId}/mcp-integrations/${integrationId}`, method: 'POST', signal
     },
       );
     }
@@ -11592,7 +11879,7 @@ export const skillMcpIntegrationsControllerUnassignMcpIntegration = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/skills/${skillId}/mcp-integrations/${integrationId}`, method: 'DELETE'
+      {url: `/api/skills/${skillId}/mcp-integrations/${integrationId}`, method: 'DELETE'
     },
       );
     }
@@ -11655,7 +11942,7 @@ export const skillMcpIntegrationsControllerListSkillMcpIntegrations = (
       
       
       return customAxiosInstance<McpIntegrationResponseDto[]>(
-      {url: `/skills/${skillId}/mcp-integrations`, method: 'GET', signal
+      {url: `/api/skills/${skillId}/mcp-integrations`, method: 'GET', signal
     },
       );
     }
@@ -11665,7 +11952,7 @@ export const skillMcpIntegrationsControllerListSkillMcpIntegrations = (
 
 export const getSkillMcpIntegrationsControllerListSkillMcpIntegrationsQueryKey = (skillId?: string,) => {
     return [
-    `/skills/${skillId}/mcp-integrations`
+    `/api/skills/${skillId}/mcp-integrations`
     ] as const;
     }
 
@@ -11749,7 +12036,7 @@ export const skillKnowledgeBasesControllerAssignKnowledgeBase = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/skills/${skillId}/knowledge-bases/${knowledgeBaseId}`, method: 'POST', signal
+      {url: `/api/skills/${skillId}/knowledge-bases/${knowledgeBaseId}`, method: 'POST', signal
     },
       );
     }
@@ -11812,7 +12099,7 @@ export const skillKnowledgeBasesControllerUnassignKnowledgeBase = (
       
       
       return customAxiosInstance<SkillResponseDto>(
-      {url: `/skills/${skillId}/knowledge-bases/${knowledgeBaseId}`, method: 'DELETE'
+      {url: `/api/skills/${skillId}/knowledge-bases/${knowledgeBaseId}`, method: 'DELETE'
     },
       );
     }
@@ -11875,7 +12162,7 @@ export const skillKnowledgeBasesControllerListSkillKnowledgeBases = (
       
       
       return customAxiosInstance<KnowledgeBaseResponseDto[]>(
-      {url: `/skills/${skillId}/knowledge-bases`, method: 'GET', signal
+      {url: `/api/skills/${skillId}/knowledge-bases`, method: 'GET', signal
     },
       );
     }
@@ -11885,7 +12172,7 @@ export const skillKnowledgeBasesControllerListSkillKnowledgeBases = (
 
 export const getSkillKnowledgeBasesControllerListSkillKnowledgeBasesQueryKey = (skillId?: string,) => {
     return [
-    `/skills/${skillId}/knowledge-bases`
+    `/api/skills/${skillId}/knowledge-bases`
     ] as const;
     }
 
@@ -11969,7 +12256,7 @@ export const superAdminSkillTemplatesControllerCreate = (
       
       
       return customAxiosInstance<SkillTemplateResponseDto>(
-      {url: `/super-admin/skill-templates`, method: 'POST',
+      {url: `/api/super-admin/skill-templates`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createSkillTemplateDto, signal
     },
@@ -12035,7 +12322,7 @@ export const superAdminSkillTemplatesControllerFindAll = (
       
       
       return customAxiosInstance<SkillTemplateResponseDto[]>(
-      {url: `/super-admin/skill-templates`, method: 'GET', signal
+      {url: `/api/super-admin/skill-templates`, method: 'GET', signal
     },
       );
     }
@@ -12045,7 +12332,7 @@ export const superAdminSkillTemplatesControllerFindAll = (
 
 export const getSuperAdminSkillTemplatesControllerFindAllQueryKey = () => {
     return [
-    `/super-admin/skill-templates`
+    `/api/super-admin/skill-templates`
     ] as const;
     }
 
@@ -12129,7 +12416,7 @@ export const superAdminSkillTemplatesControllerFindOne = (
       
       
       return customAxiosInstance<SkillTemplateResponseDto>(
-      {url: `/super-admin/skill-templates/${id}`, method: 'GET', signal
+      {url: `/api/super-admin/skill-templates/${id}`, method: 'GET', signal
     },
       );
     }
@@ -12139,7 +12426,7 @@ export const superAdminSkillTemplatesControllerFindOne = (
 
 export const getSuperAdminSkillTemplatesControllerFindOneQueryKey = (id?: string,) => {
     return [
-    `/super-admin/skill-templates/${id}`
+    `/api/super-admin/skill-templates/${id}`
     ] as const;
     }
 
@@ -12223,7 +12510,7 @@ export const superAdminSkillTemplatesControllerUpdate = (
       
       
       return customAxiosInstance<SkillTemplateResponseDto>(
-      {url: `/super-admin/skill-templates/${id}`, method: 'PATCH',
+      {url: `/api/super-admin/skill-templates/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateSkillTemplateDto
     },
@@ -12288,7 +12575,7 @@ export const superAdminSkillTemplatesControllerDelete = (
       
       
       return customAxiosInstance<void>(
-      {url: `/super-admin/skill-templates/${id}`, method: 'DELETE'
+      {url: `/api/super-admin/skill-templates/${id}`, method: 'DELETE'
     },
       );
     }
@@ -12351,7 +12638,7 @@ export const artifactsControllerCreate = (
       
       
       return customAxiosInstance<ArtifactResponseDto>(
-      {url: `/artifacts`, method: 'POST',
+      {url: `/api/artifacts`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createArtifactDto, signal
     },
@@ -12416,7 +12703,7 @@ export const artifactsControllerUpdate = (
       
       
       return customAxiosInstance<ArtifactVersionResponseDto | void>(
-      {url: `/artifacts/${id}`, method: 'PATCH',
+      {url: `/api/artifacts/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateArtifactDto
     },
@@ -12481,7 +12768,7 @@ export const artifactsControllerFindOne = (
       
       
       return customAxiosInstance<ArtifactResponseDto>(
-      {url: `/artifacts/${id}`, method: 'GET', signal
+      {url: `/api/artifacts/${id}`, method: 'GET', signal
     },
       );
     }
@@ -12491,7 +12778,7 @@ export const artifactsControllerFindOne = (
 
 export const getArtifactsControllerFindOneQueryKey = (id?: string,) => {
     return [
-    `/artifacts/${id}`
+    `/api/artifacts/${id}`
     ] as const;
     }
 
@@ -12574,7 +12861,7 @@ export const artifactsControllerFindByThread = (
       
       
       return customAxiosInstance<ArtifactResponseDto[]>(
-      {url: `/artifacts/thread/${threadId}`, method: 'GET', signal
+      {url: `/api/artifacts/thread/${threadId}`, method: 'GET', signal
     },
       );
     }
@@ -12584,7 +12871,7 @@ export const artifactsControllerFindByThread = (
 
 export const getArtifactsControllerFindByThreadQueryKey = (threadId?: string,) => {
     return [
-    `/artifacts/thread/${threadId}`
+    `/api/artifacts/thread/${threadId}`
     ] as const;
     }
 
@@ -12668,7 +12955,7 @@ export const artifactsControllerRevert = (
       
       
       return customAxiosInstance<ArtifactVersionResponseDto>(
-      {url: `/artifacts/${id}/revert`, method: 'POST',
+      {url: `/api/artifacts/${id}/revert`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: revertArtifactDto, signal
     },
@@ -12734,7 +13021,7 @@ export const artifactsControllerExport = (
       
       
       return customAxiosInstance<Blob>(
-      {url: `/artifacts/${id}/export`, method: 'GET',
+      {url: `/api/artifacts/${id}/export`, method: 'GET',
         params,
         responseType: 'blob', signal
     },
@@ -12747,7 +13034,7 @@ export const artifactsControllerExport = (
 export const getArtifactsControllerExportQueryKey = (id?: string,
     params?: ArtifactsControllerExportParams,) => {
     return [
-    `/artifacts/${id}/export`, ...(params ? [params]: [])
+    `/api/artifacts/${id}/export`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -12842,7 +13129,7 @@ formData.append(`firstPageMargins`, createLetterheadDto.firstPageMargins)
 formData.append(`continuationPageMargins`, createLetterheadDto.continuationPageMargins)
 
       return customAxiosInstance<LetterheadResponseDto>(
-      {url: `/letterheads`, method: 'POST',
+      {url: `/api/letterheads`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
     },
@@ -12907,7 +13194,7 @@ export const letterheadsControllerFindAll = (
       
       
       return customAxiosInstance<LetterheadResponseDto[]>(
-      {url: `/letterheads`, method: 'GET', signal
+      {url: `/api/letterheads`, method: 'GET', signal
     },
       );
     }
@@ -12917,7 +13204,7 @@ export const letterheadsControllerFindAll = (
 
 export const getLetterheadsControllerFindAllQueryKey = () => {
     return [
-    `/letterheads`
+    `/api/letterheads`
     ] as const;
     }
 
@@ -13000,7 +13287,7 @@ export const letterheadsControllerFindOne = (
       
       
       return customAxiosInstance<LetterheadResponseDto>(
-      {url: `/letterheads/${id}`, method: 'GET', signal
+      {url: `/api/letterheads/${id}`, method: 'GET', signal
     },
       );
     }
@@ -13010,7 +13297,7 @@ export const letterheadsControllerFindOne = (
 
 export const getLetterheadsControllerFindOneQueryKey = (id?: string,) => {
     return [
-    `/letterheads/${id}`
+    `/api/letterheads/${id}`
     ] as const;
     }
 
@@ -13109,7 +13396,7 @@ if(updateLetterheadDto.removeContinuationPage !== undefined) {
  }
 
       return customAxiosInstance<LetterheadResponseDto>(
-      {url: `/letterheads/${id}`, method: 'PATCH',
+      {url: `/api/letterheads/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData
     },
@@ -13173,7 +13460,7 @@ export const letterheadsControllerRemove = (
       
       
       return customAxiosInstance<void>(
-      {url: `/letterheads/${id}`, method: 'DELETE'
+      {url: `/api/letterheads/${id}`, method: 'DELETE'
     },
       );
     }
@@ -13236,7 +13523,7 @@ export const letterheadsControllerDownloadFirstPagePdf = (
       
       
       return customAxiosInstance<void>(
-      {url: `/letterheads/${id}/first-page-pdf`, method: 'GET', signal
+      {url: `/api/letterheads/${id}/first-page-pdf`, method: 'GET', signal
     },
       );
     }
@@ -13246,7 +13533,7 @@ export const letterheadsControllerDownloadFirstPagePdf = (
 
 export const getLetterheadsControllerDownloadFirstPagePdfQueryKey = (id?: string,) => {
     return [
-    `/letterheads/${id}/first-page-pdf`
+    `/api/letterheads/${id}/first-page-pdf`
     ] as const;
     }
 
@@ -13329,7 +13616,7 @@ export const letterheadsControllerDownloadContinuationPagePdf = (
       
       
       return customAxiosInstance<void>(
-      {url: `/letterheads/${id}/continuation-page-pdf`, method: 'GET', signal
+      {url: `/api/letterheads/${id}/continuation-page-pdf`, method: 'GET', signal
     },
       );
     }
@@ -13339,7 +13626,7 @@ export const letterheadsControllerDownloadContinuationPagePdf = (
 
 export const getLetterheadsControllerDownloadContinuationPagePdfQueryKey = (id?: string,) => {
     return [
-    `/letterheads/${id}/continuation-page-pdf`
+    `/api/letterheads/${id}/continuation-page-pdf`
     ] as const;
     }
 
@@ -13443,7 +13730,7 @@ if(runsControllerSendMessageBody.streaming !== undefined) {
  }
 
       return customAxiosInstance<RunsControllerSendMessage200>(
-      {url: `/runs/send-message`, method: 'POST',
+      {url: `/api/runs/send-message`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
     },
@@ -13509,7 +13796,7 @@ export const superAdminTrialsControllerCreateTrial = (
       
       
       return customAxiosInstance<SuperAdminTrialResponseDto>(
-      {url: `/super-admin/trials`, method: 'POST',
+      {url: `/api/super-admin/trials`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createTrialRequestDto, signal
     },
@@ -13575,7 +13862,7 @@ export const superAdminTrialsControllerGetTrialByOrgId = (
       
       
       return customAxiosInstance<SuperAdminTrialResponseDtoNullable>(
-      {url: `/super-admin/trials/${orgId}`, method: 'GET', signal
+      {url: `/api/super-admin/trials/${orgId}`, method: 'GET', signal
     },
       );
     }
@@ -13585,7 +13872,7 @@ export const superAdminTrialsControllerGetTrialByOrgId = (
 
 export const getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey = (orgId?: string,) => {
     return [
-    `/super-admin/trials/${orgId}`
+    `/api/super-admin/trials/${orgId}`
     ] as const;
     }
 
@@ -13669,7 +13956,7 @@ export const superAdminTrialsControllerUpdateTrial = (
       
       
       return customAxiosInstance<SuperAdminTrialResponseDto>(
-      {url: `/super-admin/trials/${orgId}`, method: 'PUT',
+      {url: `/api/super-admin/trials/${orgId}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateTrialRequestDto
     },
@@ -13735,7 +14022,7 @@ export const usageControllerGetUsageConfig = (
       
       
       return customAxiosInstance<UsageConfigResponseDto>(
-      {url: `/usage/config`, method: 'GET', signal
+      {url: `/api/usage/config`, method: 'GET', signal
     },
       );
     }
@@ -13745,7 +14032,7 @@ export const usageControllerGetUsageConfig = (
 
 export const getUsageControllerGetUsageConfigQueryKey = () => {
     return [
-    `/usage/config`
+    `/api/usage/config`
     ] as const;
     }
 
@@ -13829,7 +14116,7 @@ export const usageControllerGetCreditUsage = (
       
       
       return customAxiosInstance<CreditUsageResponseDto>(
-      {url: `/usage/credits`, method: 'GET', signal
+      {url: `/api/usage/credits`, method: 'GET', signal
     },
       );
     }
@@ -13839,7 +14126,7 @@ export const usageControllerGetCreditUsage = (
 
 export const getUsageControllerGetCreditUsageQueryKey = () => {
     return [
-    `/usage/credits`
+    `/api/usage/credits`
     ] as const;
     }
 
@@ -13923,7 +14210,7 @@ export const usageControllerGetUserUsage = (
       
       
       return customAxiosInstance<UserUsageResponseDto>(
-      {url: `/usage/users`, method: 'GET',
+      {url: `/api/usage/users`, method: 'GET',
         params, signal
     },
       );
@@ -13934,7 +14221,7 @@ export const usageControllerGetUserUsage = (
 
 export const getUsageControllerGetUserUsageQueryKey = (params?: UsageControllerGetUserUsageParams,) => {
     return [
-    `/usage/users`, ...(params ? [params]: [])
+    `/api/usage/users`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -14017,7 +14304,7 @@ export const superAdminUsageControllerGetUsageConfig = (
       
       
       return customAxiosInstance<UsageConfigResponseDto>(
-      {url: `/super-admin/usage/${orgId}/config`, method: 'GET', signal
+      {url: `/api/super-admin/usage/${orgId}/config`, method: 'GET', signal
     },
       );
     }
@@ -14027,7 +14314,7 @@ export const superAdminUsageControllerGetUsageConfig = (
 
 export const getSuperAdminUsageControllerGetUsageConfigQueryKey = (orgId?: unknown,) => {
     return [
-    `/super-admin/usage/${orgId}/config`
+    `/api/super-admin/usage/${orgId}/config`
     ] as const;
     }
 
@@ -14111,7 +14398,7 @@ export const superAdminUsageControllerGetCreditUsage = (
       
       
       return customAxiosInstance<CreditUsageResponseDto>(
-      {url: `/super-admin/usage/${orgId}/credits`, method: 'GET', signal
+      {url: `/api/super-admin/usage/${orgId}/credits`, method: 'GET', signal
     },
       );
     }
@@ -14121,7 +14408,7 @@ export const superAdminUsageControllerGetCreditUsage = (
 
 export const getSuperAdminUsageControllerGetCreditUsageQueryKey = (orgId?: string,) => {
     return [
-    `/super-admin/usage/${orgId}/credits`
+    `/api/super-admin/usage/${orgId}/credits`
     ] as const;
     }
 
@@ -14205,7 +14492,7 @@ export const superAdminUsageControllerGetUsageStats = (
       
       
       return customAxiosInstance<UsageStatsResponseDto>(
-      {url: `/super-admin/usage/${orgId}/stats`, method: 'GET',
+      {url: `/api/super-admin/usage/${orgId}/stats`, method: 'GET',
         params, signal
     },
       );
@@ -14217,7 +14504,7 @@ export const superAdminUsageControllerGetUsageStats = (
 export const getSuperAdminUsageControllerGetUsageStatsQueryKey = (orgId?: string,
     params?: SuperAdminUsageControllerGetUsageStatsParams,) => {
     return [
-    `/super-admin/usage/${orgId}/stats`, ...(params ? [params]: [])
+    `/api/super-admin/usage/${orgId}/stats`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -14306,7 +14593,7 @@ export const superAdminUsageControllerGetModelDistribution = (
       
       
       return customAxiosInstance<ModelDistributionResponseDto>(
-      {url: `/super-admin/usage/${orgId}/models`, method: 'GET',
+      {url: `/api/super-admin/usage/${orgId}/models`, method: 'GET',
         params, signal
     },
       );
@@ -14318,7 +14605,7 @@ export const superAdminUsageControllerGetModelDistribution = (
 export const getSuperAdminUsageControllerGetModelDistributionQueryKey = (orgId?: string,
     params?: SuperAdminUsageControllerGetModelDistributionParams,) => {
     return [
-    `/super-admin/usage/${orgId}/models`, ...(params ? [params]: [])
+    `/api/super-admin/usage/${orgId}/models`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -14407,7 +14694,7 @@ export const superAdminUsageDataControllerGetProviderUsage = (
       
       
       return customAxiosInstance<ProviderUsageResponseDto>(
-      {url: `/super-admin/usage/${orgId}/providers`, method: 'GET',
+      {url: `/api/super-admin/usage/${orgId}/providers`, method: 'GET',
         params, signal
     },
       );
@@ -14419,7 +14706,7 @@ export const superAdminUsageDataControllerGetProviderUsage = (
 export const getSuperAdminUsageDataControllerGetProviderUsageQueryKey = (orgId?: string,
     params?: SuperAdminUsageDataControllerGetProviderUsageParams,) => {
     return [
-    `/super-admin/usage/${orgId}/providers`, ...(params ? [params]: [])
+    `/api/super-admin/usage/${orgId}/providers`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -14508,7 +14795,7 @@ export const superAdminUsageDataControllerGetProviderUsageChart = (
       
       
       return customAxiosInstance<ProviderUsageChartResponseDto>(
-      {url: `/super-admin/usage/${orgId}/providers/chart`, method: 'GET',
+      {url: `/api/super-admin/usage/${orgId}/providers/chart`, method: 'GET',
         params, signal
     },
       );
@@ -14520,7 +14807,7 @@ export const superAdminUsageDataControllerGetProviderUsageChart = (
 export const getSuperAdminUsageDataControllerGetProviderUsageChartQueryKey = (orgId?: string,
     params?: SuperAdminUsageDataControllerGetProviderUsageChartParams,) => {
     return [
-    `/super-admin/usage/${orgId}/providers/chart`, ...(params ? [params]: [])
+    `/api/super-admin/usage/${orgId}/providers/chart`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -14609,7 +14896,7 @@ export const superAdminUsageDataControllerGetUserUsage = (
       
       
       return customAxiosInstance<UserUsageResponseDto>(
-      {url: `/super-admin/usage/${orgId}/users`, method: 'GET',
+      {url: `/api/super-admin/usage/${orgId}/users`, method: 'GET',
         params, signal
     },
       );
@@ -14621,7 +14908,7 @@ export const superAdminUsageDataControllerGetUserUsage = (
 export const getSuperAdminUsageDataControllerGetUserUsageQueryKey = (orgId?: string,
     params?: SuperAdminUsageDataControllerGetUserUsageParams,) => {
     return [
-    `/super-admin/usage/${orgId}/users`, ...(params ? [params]: [])
+    `/api/super-admin/usage/${orgId}/users`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -14709,7 +14996,7 @@ export const superAdminGlobalUsageControllerGetGlobalProviderUsageChart = (
       
       
       return customAxiosInstance<ProviderUsageChartResponseDto>(
-      {url: `/super-admin/global-usage/providers/chart`, method: 'GET',
+      {url: `/api/super-admin/global-usage/providers/chart`, method: 'GET',
         params, signal
     },
       );
@@ -14720,7 +15007,7 @@ export const superAdminGlobalUsageControllerGetGlobalProviderUsageChart = (
 
 export const getSuperAdminGlobalUsageControllerGetGlobalProviderUsageChartQueryKey = (params?: SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartParams,) => {
     return [
-    `/super-admin/global-usage/providers/chart`, ...(params ? [params]: [])
+    `/api/super-admin/global-usage/providers/chart`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -14803,7 +15090,7 @@ export const superAdminGlobalUsageControllerGetGlobalModelDistribution = (
       
       
       return customAxiosInstance<ModelDistributionResponseDto>(
-      {url: `/super-admin/global-usage/models`, method: 'GET',
+      {url: `/api/super-admin/global-usage/models`, method: 'GET',
         params, signal
     },
       );
@@ -14814,7 +15101,7 @@ export const superAdminGlobalUsageControllerGetGlobalModelDistribution = (
 
 export const getSuperAdminGlobalUsageControllerGetGlobalModelDistributionQueryKey = (params?: SuperAdminGlobalUsageControllerGetGlobalModelDistributionParams,) => {
     return [
-    `/super-admin/global-usage/models`, ...(params ? [params]: [])
+    `/api/super-admin/global-usage/models`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -14897,7 +15184,7 @@ export const superAdminGlobalUsageControllerGetGlobalUserUsage = (
       
       
       return customAxiosInstance<GlobalUserUsageResponseDto>(
-      {url: `/super-admin/global-usage/users`, method: 'GET',
+      {url: `/api/super-admin/global-usage/users`, method: 'GET',
         params, signal
     },
       );
@@ -14908,7 +15195,7 @@ export const superAdminGlobalUsageControllerGetGlobalUserUsage = (
 
 export const getSuperAdminGlobalUsageControllerGetGlobalUserUsageQueryKey = (params?: SuperAdminGlobalUsageControllerGetGlobalUserUsageParams,) => {
     return [
-    `/super-admin/global-usage/users`, ...(params ? [params]: [])
+    `/api/super-admin/global-usage/users`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -14992,7 +15279,7 @@ export const superAdminPlatformConfigControllerGetCreditsPerEuro = (
       
       
       return customAxiosInstance<CreditsPerEuroResponseDto>(
-      {url: `/super-admin/platform-config/credits-per-euro`, method: 'GET', signal
+      {url: `/api/super-admin/platform-config/credits-per-euro`, method: 'GET', signal
     },
       );
     }
@@ -15002,7 +15289,7 @@ export const superAdminPlatformConfigControllerGetCreditsPerEuro = (
 
 export const getSuperAdminPlatformConfigControllerGetCreditsPerEuroQueryKey = () => {
     return [
-    `/super-admin/platform-config/credits-per-euro`
+    `/api/super-admin/platform-config/credits-per-euro`
     ] as const;
     }
 
@@ -15085,7 +15372,7 @@ export const superAdminPlatformConfigControllerSetCreditsPerEuro = (
       
       
       return customAxiosInstance<void>(
-      {url: `/super-admin/platform-config/credits-per-euro`, method: 'PUT',
+      {url: `/api/super-admin/platform-config/credits-per-euro`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: setCreditsPerEuroRequestDto
     },
@@ -15151,7 +15438,7 @@ export const superAdminPlatformConfigControllerGetFairUseLimits = (
       
       
       return customAxiosInstance<FairUseLimitsResponseDto>(
-      {url: `/super-admin/platform-config/fair-use-limits`, method: 'GET', signal
+      {url: `/api/super-admin/platform-config/fair-use-limits`, method: 'GET', signal
     },
       );
     }
@@ -15161,7 +15448,7 @@ export const superAdminPlatformConfigControllerGetFairUseLimits = (
 
 export const getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryKey = () => {
     return [
-    `/super-admin/platform-config/fair-use-limits`
+    `/api/super-admin/platform-config/fair-use-limits`
     ] as const;
     }
 
@@ -15244,7 +15531,7 @@ export const superAdminPlatformConfigControllerSetFairUseLimit = (
       
       
       return customAxiosInstance<void>(
-      {url: `/super-admin/platform-config/fair-use-limits`, method: 'PUT',
+      {url: `/api/super-admin/platform-config/fair-use-limits`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: setFairUseLimitRequestDto
     },
@@ -15310,7 +15597,7 @@ export const chatSettingsControllerGetSystemPrompt = (
       
       
       return customAxiosInstance<UserSystemPromptResponseDto>(
-      {url: `/chat-settings/system-prompt`, method: 'GET', signal
+      {url: `/api/chat-settings/system-prompt`, method: 'GET', signal
     },
       );
     }
@@ -15320,7 +15607,7 @@ export const chatSettingsControllerGetSystemPrompt = (
 
 export const getChatSettingsControllerGetSystemPromptQueryKey = () => {
     return [
-    `/chat-settings/system-prompt`
+    `/api/chat-settings/system-prompt`
     ] as const;
     }
 
@@ -15403,7 +15690,7 @@ export const chatSettingsControllerUpsertSystemPrompt = (
       
       
       return customAxiosInstance<UserSystemPromptResponseDto>(
-      {url: `/chat-settings/system-prompt`, method: 'PUT',
+      {url: `/api/chat-settings/system-prompt`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: upsertUserSystemPromptDto
     },
@@ -15468,7 +15755,7 @@ export const chatSettingsControllerDeleteSystemPrompt = (
       
       
       return customAxiosInstance<void>(
-      {url: `/chat-settings/system-prompt`, method: 'DELETE'
+      {url: `/api/chat-settings/system-prompt`, method: 'DELETE'
     },
       );
     }
@@ -15532,7 +15819,7 @@ export const chatSettingsControllerGeneratePersonalizedSystemPrompt = (
       
       
       return customAxiosInstance<GeneratePersonalizedSystemPromptResponseDto>(
-      {url: `/chat-settings/generate-personalized-system-prompt`, method: 'POST',
+      {url: `/api/chat-settings/generate-personalized-system-prompt`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: generatePersonalizedSystemPromptDto, signal
     },
@@ -15597,7 +15884,7 @@ export const promptsControllerCreate = (
       
       
       return customAxiosInstance<PromptResponseDto>(
-      {url: `/prompts`, method: 'POST',
+      {url: `/api/prompts`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createPromptDto, signal
     },
@@ -15662,7 +15949,7 @@ export const promptsControllerFindAll = (
       
       
       return customAxiosInstance<PromptResponseDto[]>(
-      {url: `/prompts`, method: 'GET', signal
+      {url: `/api/prompts`, method: 'GET', signal
     },
       );
     }
@@ -15672,7 +15959,7 @@ export const promptsControllerFindAll = (
 
 export const getPromptsControllerFindAllQueryKey = () => {
     return [
-    `/prompts`
+    `/api/prompts`
     ] as const;
     }
 
@@ -15755,7 +16042,7 @@ export const promptsControllerFindOne = (
       
       
       return customAxiosInstance<PromptResponseDto>(
-      {url: `/prompts/${id}`, method: 'GET', signal
+      {url: `/api/prompts/${id}`, method: 'GET', signal
     },
       );
     }
@@ -15765,7 +16052,7 @@ export const promptsControllerFindOne = (
 
 export const getPromptsControllerFindOneQueryKey = (id?: string,) => {
     return [
-    `/prompts/${id}`
+    `/api/prompts/${id}`
     ] as const;
     }
 
@@ -15848,7 +16135,7 @@ export const promptsControllerUpdate = (
       
       
       return customAxiosInstance<PromptResponseDto>(
-      {url: `/prompts/${id}`, method: 'PUT',
+      {url: `/api/prompts/${id}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updatePromptDto
     },
@@ -15912,7 +16199,7 @@ export const promptsControllerDelete = (
       
       
       return customAxiosInstance<void>(
-      {url: `/prompts/${id}`, method: 'DELETE'
+      {url: `/api/prompts/${id}`, method: 'DELETE'
     },
       );
     }
@@ -15981,7 +16268,7 @@ if(transcriptionsControllerTranscribeBody.language !== undefined) {
  }
 
       return customAxiosInstance<TranscriptionResponseDto>(
-      {url: `/transcriptions`, method: 'POST',
+      {url: `/api/transcriptions`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
     },
@@ -16047,7 +16334,7 @@ export const authenticationControllerLogin = (
       
       
       return customAxiosInstance<SuccessResponseDto>(
-      {url: `/auth/login`, method: 'POST',
+      {url: `/api/auth/login`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: loginDto, signal
     },
@@ -16113,7 +16400,7 @@ export const authenticationControllerRegister = (
       
       
       return customAxiosInstance<SuccessResponseDto>(
-      {url: `/auth/register`, method: 'POST',
+      {url: `/api/auth/register`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: registerDto, signal
     },
@@ -16179,7 +16466,7 @@ export const authenticationControllerRefresh = (
       
       
       return customAxiosInstance<SuccessResponseDto>(
-      {url: `/auth/refresh`, method: 'POST', signal
+      {url: `/api/auth/refresh`, method: 'POST', signal
     },
       );
     }
@@ -16243,7 +16530,7 @@ export const authenticationControllerMe = (
       
       
       return customAxiosInstance<MeResponseDto>(
-      {url: `/auth/me`, method: 'GET', signal
+      {url: `/api/auth/me`, method: 'GET', signal
     },
       );
     }
@@ -16253,7 +16540,7 @@ export const authenticationControllerMe = (
 
 export const getAuthenticationControllerMeQueryKey = () => {
     return [
-    `/auth/me`
+    `/api/auth/me`
     ] as const;
     }
 
@@ -16337,7 +16624,7 @@ export const authenticationControllerLogout = (
       
       
       return customAxiosInstance<SuccessResponseDto>(
-      {url: `/auth/logout`, method: 'POST', signal
+      {url: `/api/auth/logout`, method: 'POST', signal
     },
       );
     }
@@ -16400,7 +16687,7 @@ export const ipAllowlistControllerGet = (
       
       
       return customAxiosInstance<IpAllowlistResponseDto>(
-      {url: `/ip-allowlist`, method: 'GET', signal
+      {url: `/api/ip-allowlist`, method: 'GET', signal
     },
       );
     }
@@ -16410,7 +16697,7 @@ export const ipAllowlistControllerGet = (
 
 export const getIpAllowlistControllerGetQueryKey = () => {
     return [
-    `/ip-allowlist`
+    `/api/ip-allowlist`
     ] as const;
     }
 
@@ -16492,7 +16779,7 @@ export const ipAllowlistControllerUpdate = (
       
       
       return customAxiosInstance<IpAllowlistResponseDto>(
-      {url: `/ip-allowlist`, method: 'PUT',
+      {url: `/api/ip-allowlist`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateIpAllowlistRequestDto
     },
@@ -16556,7 +16843,7 @@ export const ipAllowlistControllerRemove = (
       
       
       return customAxiosInstance<void>(
-      {url: `/ip-allowlist`, method: 'DELETE'
+      {url: `/api/ip-allowlist`, method: 'DELETE'
     },
       );
     }
