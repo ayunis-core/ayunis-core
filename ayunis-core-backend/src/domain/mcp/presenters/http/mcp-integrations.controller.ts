@@ -416,16 +416,26 @@ export class McpIntegrationsController {
       return;
     }
 
-    const result = await this.completeOAuthUseCase.execute(
-      new CompleteMcpOAuthAuthorizationCommand(code, state),
-    );
-    if (result.success) {
-      res.redirect(
-        `${frontendBaseUrl}/admin-settings/integrations?oauth=success&id=${result.integrationId}`,
+    try {
+      const result = await this.completeOAuthUseCase.execute(
+        new CompleteMcpOAuthAuthorizationCommand(code, state),
       );
-    } else {
+      if (result.success) {
+        res.redirect(
+          `${frontendBaseUrl}/admin-settings/integrations?oauth=success&id=${result.integrationId}`,
+        );
+      } else {
+        res.redirect(
+          `${frontendBaseUrl}/admin-settings/integrations?oauth=error&reason=${encodeURIComponent(result.reason)}`,
+        );
+      }
+    } catch (err) {
+      this.logger.error(
+        'OAuth callback failed unexpectedly',
+        err instanceof Error ? err.stack : String(err),
+      );
       res.redirect(
-        `${frontendBaseUrl}/admin-settings/integrations?oauth=error&reason=${encodeURIComponent(result.reason)}`,
+        `${frontendBaseUrl}/admin-settings/integrations?oauth=error&reason=${encodeURIComponent('An unexpected error occurred during OAuth authorization')}`,
       );
     }
   }
