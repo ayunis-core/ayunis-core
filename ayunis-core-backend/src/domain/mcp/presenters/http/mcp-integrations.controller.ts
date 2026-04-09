@@ -479,10 +479,18 @@ export class McpIntegrationsController {
     const authorizedByIntegrationId = new Map<UUID, boolean>(
       await Promise.all(
         oauthEnabled.map(async (integration) => {
-          const status = await this.getOAuthStatusUseCase.execute(
-            new GetMcpOAuthAuthorizationStatusQuery(integration.id),
-          );
-          return [integration.id, status.authorized] as const;
+          try {
+            const status = await this.getOAuthStatusUseCase.execute(
+              new GetMcpOAuthAuthorizationStatusQuery(integration.id),
+            );
+            return [integration.id, status.authorized] as const;
+          } catch (error) {
+            this.logger.warn(
+              `Failed to fetch OAuth status for integration ${integration.id}`,
+              error instanceof Error ? error.message : String(error),
+            );
+            return [integration.id, false] as const;
+          }
         }),
       ),
     );
