@@ -404,7 +404,7 @@ export class McpIntegrationsController {
     @Query('error') error: string,
     @Res({ passthrough: false }) res: Response,
   ): Promise<void> {
-    const frontendBaseUrl = this.configService.get<string>(
+    const frontendBaseUrl = this.configService.getOrThrow<string>(
       'app.frontend.baseUrl',
     );
 
