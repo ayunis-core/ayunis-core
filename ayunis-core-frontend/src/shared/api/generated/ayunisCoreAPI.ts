@@ -99,6 +99,7 @@ import type {
   ModelDistributionResponseDto,
   ModelProviderInfoResponseDto,
   ModelWithConfigResponseDto,
+  OAuthAuthorizeRequestDto,
   OAuthAuthorizeResponseDto,
   OAuthStatusResponseDto,
   PaginatedInvitesListResponseDto,
@@ -9946,12 +9947,15 @@ export const useMcpIntegrationsControllerCreateSelfDefined = <TError = unknown,
  */
 export const mcpIntegrationsControllerStartOAuthAuthorize = (
     id: string,
+    oAuthAuthorizeRequestDto?: OAuthAuthorizeRequestDto,
  signal?: AbortSignal
 ) => {
       
       
       return customAxiosInstance<OAuthAuthorizeResponseDto>(
-      {url: `/mcp-integrations/${id}/oauth/authorize`, method: 'POST', signal
+      {url: `/mcp-integrations/${id}/oauth/authorize`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: oAuthAuthorizeRequestDto, signal
     },
       );
     }
@@ -9959,8 +9963,8 @@ export const mcpIntegrationsControllerStartOAuthAuthorize = (
 
 
 export const getMcpIntegrationsControllerStartOAuthAuthorizeMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>, TError,{id: string}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>, TError,{id: string;data: OAuthAuthorizeRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>, TError,{id: string;data: OAuthAuthorizeRequestDto}, TContext> => {
 
 const mutationKey = ['mcpIntegrationsControllerStartOAuthAuthorize'];
 const {mutation: mutationOptions} = options ?
@@ -9972,10 +9976,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>, {id: string;data: OAuthAuthorizeRequestDto}> = (props) => {
+          const {id,data} = props ?? {};
 
-          return  mcpIntegrationsControllerStartOAuthAuthorize(id,)
+          return  mcpIntegrationsControllerStartOAuthAuthorize(id,data,)
         }
 
         
@@ -9984,18 +9988,18 @@ const {mutation: mutationOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type McpIntegrationsControllerStartOAuthAuthorizeMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>>
-    
+    export type McpIntegrationsControllerStartOAuthAuthorizeMutationBody = OAuthAuthorizeRequestDto
     export type McpIntegrationsControllerStartOAuthAuthorizeMutationError = unknown
 
     /**
  * @summary Start OAuth authorization for an integration
  */
 export const useMcpIntegrationsControllerStartOAuthAuthorize = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>, TError,{id: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>, TError,{id: string;data: OAuthAuthorizeRequestDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>,
         TError,
-        {id: string},
+        {id: string;data: OAuthAuthorizeRequestDto},
         TContext
       > => {
 

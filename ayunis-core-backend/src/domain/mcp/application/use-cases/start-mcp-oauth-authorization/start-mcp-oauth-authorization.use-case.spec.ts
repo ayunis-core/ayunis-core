@@ -100,7 +100,10 @@ describe('StartMcpOAuthAuthorizationUseCase', () => {
       .mockReturnValue({ url: 'https://auth.example.com/authorize?...' });
 
     const result = await useCase.execute(
-      new StartMcpOAuthAuthorizationCommand(integration.id),
+      new StartMcpOAuthAuthorizationCommand(
+        integration.id,
+        '/settings/integrations?tab=mcp',
+      ),
     );
 
     expect(result.authorizationUrl).toBe(
@@ -111,6 +114,7 @@ describe('StartMcpOAuthAuthorizationUseCase', () => {
       'org',
       mockOrgId,
       null, // org-level → null userId
+      '/settings/integrations?tab=mcp',
     );
   });
 
@@ -133,7 +137,10 @@ describe('StartMcpOAuthAuthorizationUseCase', () => {
       .mockReturnValue({ url: 'https://auth.example.com/auth' });
 
     await useCase.execute(
-      new StartMcpOAuthAuthorizationCommand(integration.id),
+      new StartMcpOAuthAuthorizationCommand(
+        integration.id,
+        '/agents/agent-123',
+      ),
     );
 
     expect(oauthFlowService.buildAuthorizationUrl).toHaveBeenCalledWith(
@@ -141,6 +148,7 @@ describe('StartMcpOAuthAuthorizationUseCase', () => {
       'user',
       mockOrgId,
       mockUserId,
+      '/agents/agent-123',
     );
   });
 
@@ -160,7 +168,12 @@ describe('StartMcpOAuthAuthorizationUseCase', () => {
       .mockReturnValue({ config: userLevelSchema.oauth!, level: 'user' });
 
     await expect(
-      useCase.execute(new StartMcpOAuthAuthorizationCommand(integration.id)),
+      useCase.execute(
+        new StartMcpOAuthAuthorizationCommand(
+          integration.id,
+          '/skills/skill-123',
+        ),
+      ),
     ).rejects.toThrow(McpUnauthenticatedError);
   });
 
@@ -168,7 +181,12 @@ describe('StartMcpOAuthAuthorizationUseCase', () => {
     jest.spyOn(contextService, 'get').mockReturnValue(undefined);
 
     await expect(
-      useCase.execute(new StartMcpOAuthAuthorizationCommand(randomUUID())),
+      useCase.execute(
+        new StartMcpOAuthAuthorizationCommand(
+          randomUUID(),
+          '/settings/integrations',
+        ),
+      ),
     ).rejects.toThrow(McpUnauthenticatedError);
   });
 
@@ -193,7 +211,12 @@ describe('StartMcpOAuthAuthorizationUseCase', () => {
       });
 
     await expect(
-      useCase.execute(new StartMcpOAuthAuthorizationCommand(integration.id)),
+      useCase.execute(
+        new StartMcpOAuthAuthorizationCommand(
+          integration.id,
+          '/settings/integrations',
+        ),
+      ),
     ).rejects.toThrow(McpInvalidConfigSchemaError);
   });
 });

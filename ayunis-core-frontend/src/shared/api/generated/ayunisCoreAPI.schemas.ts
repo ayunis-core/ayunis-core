@@ -2712,6 +2712,14 @@ export interface CreateSelfDefinedIntegrationDto {
   returnsPii?: boolean;
 }
 
+export interface OAuthAuthorizeRequestDto {
+  /**
+   * Optional relative in-app path to return to after OAuth completes
+   * @maxLength 2048
+   */
+  returnTo?: string;
+}
+
 export interface OAuthAuthorizeResponseDto {
   /** Authorization URL to redirect the user to */
   authorizationUrl: string;

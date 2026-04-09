@@ -704,10 +704,33 @@ describe('McpIntegrationsController', () => {
         authorizationUrl: 'https://auth.example.com/authorize?state=abc',
       });
 
-      const result = await controller.startOAuthAuthorize(randomUUID());
+      const result = await controller.startOAuthAuthorize(randomUUID(), {
+        returnTo: '/settings/integrations?tab=mcp',
+      });
 
       expect(result.authorizationUrl).toBe(
         'https://auth.example.com/authorize?state=abc',
+      );
+      expect(startOAuthUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          returnPath: '/settings/integrations?tab=mcp',
+        }),
+      );
+    });
+
+    it('should drop invalid returnTo values instead of trusting external URLs', async () => {
+      startOAuthUseCase.execute.mockResolvedValue({
+        authorizationUrl: 'https://auth.example.com/authorize?state=abc',
+      });
+
+      await controller.startOAuthAuthorize(randomUUID(), {
+        returnTo: 'https://evil.example.com/settings/integrations',
+      });
+
+      expect(startOAuthUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          returnPath: null,
+        }),
       );
     });
   });
@@ -852,6 +875,8 @@ describe('McpIntegrationsController', () => {
       completeOAuthUseCase.execute.mockResolvedValue({
         success: true,
         integrationId,
+        returnPath: '/settings/integrations?tab=mcp',
+        level: 'user',
       });
 
       const res = {
@@ -865,7 +890,7 @@ describe('McpIntegrationsController', () => {
       );
 
       expect(res.redirect).toHaveBeenCalledWith(
-        `http://localhost:3001/admin-settings/integrations?oauth=success&id=${integrationId}`,
+        `http://localhost:3001/settings/integrations?tab=mcp&oauth=success&id=${integrationId}`,
       );
     });
 
@@ -874,6 +899,8 @@ describe('McpIntegrationsController', () => {
       completeOAuthUseCase.execute.mockResolvedValue({
         success: false,
         reason: 'Token exchange failed',
+        returnPath: '/agents/agent-123',
+        level: 'org',
       });
 
       const res = {
@@ -887,7 +914,55 @@ describe('McpIntegrationsController', () => {
       );
 
       expect(res.redirect).toHaveBeenCalledWith(
-        expect.stringContaining('oauth=error&reason=Token%20exchange%20failed'),
+        'http://localhost:3001/agents/agent-123?oauth=error&reason=Token+exchange+failed',
+      );
+    });
+
+    it('should fall back to the user settings page when callback path is missing for user-level OAuth', async () => {
+      configServiceMock.get.mockReturnValue('http://localhost:3001');
+      completeOAuthUseCase.execute.mockResolvedValue({
+        success: false,
+        reason: 'Invalid state',
+        returnPath: null,
+        level: 'user',
+      });
+
+      const res = {
+        redirect: jest.fn(),
+      } as unknown as Response;
+      await controller.oauthCallback(
+        'auth-code',
+        'bad-state',
+        undefined as unknown as string,
+        res,
+      );
+
+      expect(res.redirect).toHaveBeenCalledWith(
+        'http://localhost:3001/settings/integrations?oauth=error&reason=Invalid+state',
+      );
+    });
+
+    it('should fall back to the admin settings page when callback path is unsafe for org-level OAuth', async () => {
+      configServiceMock.get.mockReturnValue('http://localhost:3001');
+      completeOAuthUseCase.execute.mockResolvedValue({
+        success: false,
+        reason: 'Invalid state',
+        returnPath: 'https://evil.example.com/steal',
+        level: 'org',
+      });
+
+      const res = {
+        redirect: jest.fn(),
+      } as unknown as Response;
+      await controller.oauthCallback(
+        'auth-code',
+        'bad-state',
+        undefined as unknown as string,
+        res,
+      );
+
+      expect(res.redirect).toHaveBeenCalledWith(
+        'http://localhost:3001/admin-settings/integrations?oauth=error&reason=Invalid+state',
       );
     });
 
@@ -906,7 +981,7 @@ describe('McpIntegrationsController', () => {
 
       expect(completeOAuthUseCase.execute).not.toHaveBeenCalled();
       expect(res.redirect).toHaveBeenCalledWith(
-        'http://localhost:3001/admin-settings/integrations?oauth=error&reason=User%20denied%20consent',
+        'http://localhost:3001/admin-settings/integrations?oauth=error&reason=User+denied+consent',
       );
     });
   });
