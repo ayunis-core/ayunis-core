@@ -23,6 +23,8 @@ export enum ModelErrorCode {
   MODEL_CREATION_FAILED = 'MODEL_CREATION_FAILED',
   MODEL_PROVIDER_INFO_NOT_FOUND = 'MODEL_PROVIDER_INFO_NOT_FOUND',
   MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED = 'MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED',
+  MULTIPLE_IMAGE_GENERATION_MODELS_NOT_ALLOWED = 'MULTIPLE_IMAGE_GENERATION_MODELS_NOT_ALLOWED',
+  IMAGE_GENERATION_MODEL_PROVIDER_NOT_SUPPORTED = 'IMAGE_GENERATION_MODEL_PROVIDER_NOT_SUPPORTED',
   UNEXPECTED_MODEL_ERROR = 'UNEXPECTED_MODEL_ERROR',
   DUPLICATE_TEAM_PERMITTED_MODEL = 'DUPLICATE_TEAM_PERMITTED_MODEL',
   TEAM_NOT_FOUND_IN_ORG = 'TEAM_NOT_FOUND_IN_ORG',
@@ -98,6 +100,28 @@ export class PermittedModelNotFoundError extends ModelError {
   constructor(id: UUID, metadata?: ErrorMetadata) {
     super(
       `Permitted model '${id}' not found`,
+      ModelErrorCode.MODEL_NOT_FOUND,
+      404,
+      metadata,
+    );
+  }
+}
+
+export class PermittedEmbeddingModelNotFoundForOrgError extends ModelError {
+  constructor(orgId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Permitted embedding model not found for org '${orgId}'`,
+      ModelErrorCode.MODEL_NOT_FOUND,
+      404,
+      metadata,
+    );
+  }
+}
+
+export class PermittedImageGenerationModelNotFoundForOrgError extends ModelError {
+  constructor(orgId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Permitted image generation model not found for org '${orgId}'`,
       ModelErrorCode.MODEL_NOT_FOUND,
       404,
       metadata,
@@ -317,6 +341,34 @@ export class MultipleEmbeddingModelsNotAllowedError extends ModelError {
     super(
       'Multiple embedding models are not allowed',
       ModelErrorCode.MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when multiple image-generation models are not allowed.
+ */
+export class MultipleImageGenerationModelsNotAllowedError extends ModelError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Multiple image-generation models are not allowed',
+      ModelErrorCode.MULTIPLE_IMAGE_GENERATION_MODELS_NOT_ALLOWED,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when an image-generation model uses an unsupported provider.
+ */
+export class ImageGenerationModelProviderNotSupportedError extends ModelError {
+  constructor(provider: ModelProvider, metadata?: ErrorMetadata) {
+    super(
+      `Image-generation models must use provider 'azure', received '${provider}'`,
+      ModelErrorCode.IMAGE_GENERATION_MODEL_PROVIDER_NOT_SUPPORTED,
       400,
       metadata,
     );

@@ -73,11 +73,39 @@ FRONTEND_PORT=$((3001 + OFFSET))
 
 PROJECT_NAME="ayunis-dev-${SLOT}"
 STATE_DIR="$REPO_DIR/.dev/slot-${SLOT}"
+BACKEND_SESSION="${PROJECT_NAME}-backend"
+FRONTEND_SESSION="${PROJECT_NAME}-frontend"
 
 # ── Docker compose wrapper ─────────────────────────────────────────────────
 
 dc() {
   docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" "$@"
+}
+
+_tmux_session_alive() {
+  local session="$1"
+  command -v tmux >/dev/null 2>&1 || return 1
+  tmux has-session -t "$session" 2>/dev/null
+}
+
+_start_detached() {
+  local pidfile="$1"
+  local logfile="$2"
+  local session="$3"
+  local command="$4"
+
+  if command -v tmux >/dev/null 2>&1; then
+    tmux kill-session -t "$session" 2>/dev/null || true
+    tmux new-session -d -s "$session" \
+      "bash -lc $(printf '%q' "$command >> '$logfile' 2>&1")"
+    tmux list-panes -t "$session" -F '#{pane_pid}' | head -n 1 > "$pidfile"
+    return
+  fi
+
+  nohup bash -lc "$command" >> "$logfile" 2>&1 < /dev/null &
+  local pid=$!
+  disown "$pid" 2>/dev/null || true
+  echo "$pid" > "$pidfile"
 }
 
 # ── Ensure state dir exists ───────────────────────────────────────────────
@@ -133,12 +161,11 @@ EOF
     _kill_port "$BACKEND_PORT" "Backend (stale)"
     info "Starting backend on port $BACKEND_PORT …"
     : > "$STATE_DIR/backend.log"
-    (
-      cd "$REPO_DIR/ayunis-core-backend"
-      exec npm run start:dev \
-        >> "$STATE_DIR/backend.log" 2>&1
-    ) &
-    echo $! > "$STATE_DIR/backend.pid"
+    _start_detached \
+      "$STATE_DIR/backend.pid" \
+      "$STATE_DIR/backend.log" \
+      "$BACKEND_SESSION" \
+      "cd '$REPO_DIR/ayunis-core-backend' && exec npm run start:dev"
   fi
 
   # -- 5. Frontend (native) -----------------------------------------------
@@ -148,13 +175,11 @@ EOF
     _kill_port "$FRONTEND_PORT" "Frontend (stale)"
     info "Starting frontend on port $FRONTEND_PORT …"
     : > "$STATE_DIR/frontend.log"
-    (
-      cd "$REPO_DIR/ayunis-core-frontend"
-      export VITE_API_BASE_URL="http://localhost:$BACKEND_PORT/api"
-      exec npx vite --port "$FRONTEND_PORT" \
-        >> "$STATE_DIR/frontend.log" 2>&1
-    ) &
-    echo $! > "$STATE_DIR/frontend.pid"
+    _start_detached \
+      "$STATE_DIR/frontend.pid" \
+      "$STATE_DIR/frontend.log" \
+      "$FRONTEND_SESSION" \
+      "cd '$REPO_DIR/ayunis-core-frontend' && export VITE_API_BASE_URL='http://localhost:$BACKEND_PORT/api' && exec npx vite --port '$FRONTEND_PORT'"
   fi
 
   # -- 6. Wait for backend health -----------------------------------------
@@ -195,8 +220,8 @@ cmd_down() {
   info "Stopping slot $SLOT …"
 
   # Stop native processes (pass ports to kill orphaned grandchild processes)
-  _kill_pid "$STATE_DIR/frontend.pid" "Frontend" "$FRONTEND_PORT"
-  _kill_pid "$STATE_DIR/backend.pid"  "Backend"  "$BACKEND_PORT"
+  _kill_pid "$STATE_DIR/frontend.pid" "Frontend" "$FRONTEND_PORT" "$FRONTEND_SESSION"
+  _kill_pid "$STATE_DIR/backend.pid"  "Backend"  "$BACKEND_PORT" "$BACKEND_SESSION"
 
   # Stop Docker infrastructure
   dc down
@@ -219,14 +244,14 @@ cmd_status() {
   echo ""
 
   # Backend
-  if _pid_alive "$STATE_DIR/backend.pid"; then
+  if _pid_alive "$STATE_DIR/backend.pid" "$BACKEND_SESSION"; then
     echo "  Backend:   running  PID $(cat "$STATE_DIR/backend.pid")  http://localhost:$BACKEND_PORT"
   else
     echo "  Backend:   stopped"
   fi
 
   # Frontend
-  if _pid_alive "$STATE_DIR/frontend.pid"; then
+  if _pid_alive "$STATE_DIR/frontend.pid" "$FRONTEND_SESSION"; then
     echo "  Frontend:  running  PID $(cat "$STATE_DIR/frontend.pid")  http://localhost:$FRONTEND_PORT"
   else
     echo "  Frontend:  stopped"
@@ -271,14 +296,19 @@ cmd_logs() {
 
 _pid_alive() {
   local pidfile="$1"
-  [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null
+  local session="${2:-}"
+  if [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null; then
+    return 0
+  fi
+  [ -n "$session" ] && _tmux_session_alive "$session"
 }
 
 _kill_pid() {
   local pidfile="$1"
   local label="${2:-process}"
   local port="${3:-}"
-  if _pid_alive "$pidfile"; then
+  local session="${4:-}"
+  if _pid_alive "$pidfile" "$session"; then
     local pid
     pid=$(cat "$pidfile")
     info "Stopping $label (PID $pid) …"
@@ -293,6 +323,11 @@ _kill_pid() {
     pkill -9 -P "$pid" 2>/dev/null || true
     kill -9 "$pid" 2>/dev/null || true
     rm -f "$pidfile"
+  fi
+  if [ -n "$session" ]; then
+    if command -v tmux >/dev/null 2>&1; then
+      tmux kill-session -t "$session" 2>/dev/null || true
+    fi
   fi
   # Safety net: kill any process still listening on the port.
   # Handles orphaned grandchild processes (e.g., node spawned by npm).

@@ -1,6 +1,10 @@
 import { Logger } from '@nestjs/common';
 import { ModelMapper } from './model.mapper';
-import { LanguageModelRecord } from '../schema/model.record';
+import {
+  ImageGenerationModelRecord,
+  LanguageModelRecord,
+} from '../schema/model.record';
+import { ImageGenerationModel } from '../../../../domain/models/image-generation.model';
 import { LanguageModel } from '../../../../domain/models/language.model';
 import { ModelProvider } from '../../../../domain/value-objects/model-provider.enum';
 import { ModelTier } from '../../../../domain/value-objects/model-tier.enum';
@@ -111,6 +115,30 @@ describe('ModelMapper', () => {
       const record = mapper.toRecord(domain);
 
       expect((record as LanguageModelRecord).tier).toBeNull();
+    });
+  });
+
+  describe('image-generation model mapping', () => {
+    it('maps an image-generation record to the domain model and back', () => {
+      const record = new ImageGenerationModelRecord();
+      record.id = mockId;
+      record.name = 'gpt-image-1';
+      record.provider = ModelProvider.AZURE;
+      record.displayName = 'GPT Image 1';
+      record.isArchived = false;
+      record.createdAt = new Date('2025-01-01T00:00:00Z');
+      record.updatedAt = new Date('2025-01-02T00:00:00Z');
+
+      const domain = mapper.toDomain(record);
+      expect(domain).toBeInstanceOf(ImageGenerationModel);
+      expect((domain as ImageGenerationModel).type).toBe('image-generation');
+
+      const roundTripped = mapper.toRecord(
+        domain,
+      ) as ImageGenerationModelRecord;
+      expect(roundTripped).toBeInstanceOf(ImageGenerationModelRecord);
+      expect(roundTripped.provider).toBe(ModelProvider.AZURE);
+      expect(roundTripped.name).toBe('gpt-image-1');
     });
   });
 

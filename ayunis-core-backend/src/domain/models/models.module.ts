@@ -1,7 +1,10 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { ModelsController } from './presenters/http/models.controller';
+import { ModelsDefaultsController } from './presenters/http/models-defaults.controller';
 import { SuperAdminPermittedModelsController } from './presenters/http/super-admin-permitted-models.controller';
 import { SuperAdminCatalogModelsController } from './presenters/http/super-admin-catalog-models.controller';
+import { SuperAdminImageGenerationCatalogModelsController } from './presenters/http/super-admin-image-generation-catalog-models.controller';
+import { SuperAdminImageGenerationModelAvailabilityController } from './presenters/http/super-admin-image-generation-model-availability.controller';
 import { MistralInferenceHandler } from './infrastructure/inference/mistral.inference';
 import { InferenceHandlerRegistry } from './application/registry/inference-handler.registry';
 import { ModelProvider } from './domain/value-objects/model-provider.enum';
@@ -11,12 +14,14 @@ import { MockInferenceHandler } from './infrastructure/inference/mock.inference'
 import { MockStreamInferenceHandler } from './infrastructure/stream-inference/mock.stream-inference';
 import { GetInferenceUseCase } from './application/use-cases/get-inference/get-inference.use-case';
 import { GetAvailableModelsUseCase } from './application/use-cases/get-available-models/get-available-models.use-case';
+import { GetAvailableImageGenerationModelsUseCase } from './application/use-cases/get-available-image-generation-models/get-available-image-generation-models.use-case';
 import { GetDefaultModelUseCase } from './application/use-cases/get-default-model/get-default-model.use-case';
 import { GetPermittedModelUseCase } from './application/use-cases/get-permitted-model/get-permitted-model.use-case';
 import { GetPermittedModelsUseCase } from './application/use-cases/get-permitted-models/get-permitted-models.use-case';
 import { IsModelPermittedUseCase } from './application/use-cases/is-model-permitted/is-model-permitted.use-case';
 import { ModelResponseDtoMapper } from './presenters/http/mappers/model-response-dto.mapper';
 import { ModelWithConfigResponseDtoMapper } from './presenters/http/mappers/model-with-config-response-dto.mapper';
+import { AvailableImageGenerationModelResponseDtoMapper } from './presenters/http/mappers/available-image-generation-model-response-dto.mapper';
 import { CatalogModelResponseDtoMapper } from './presenters/http/mappers/catalog-model-response-dto.mapper';
 import { LocalPermittedModelsRepositoryModule } from './infrastructure/persistence/local-permitted-models/local-permitted-models-repository.module';
 import { LocalUserDefaultModelsRepositoryModule } from './infrastructure/persistence/local-user-default-models/local-user-default-models-repository.module';
@@ -39,6 +44,8 @@ import { CreateLanguageModelUseCase } from './application/use-cases/create-langu
 import { CreateEmbeddingModelUseCase } from './application/use-cases/create-embedding-model/create-embedding-model.use-case';
 import { UpdateLanguageModelUseCase } from './application/use-cases/update-language-model/update-language-model.use-case';
 import { UpdateEmbeddingModelUseCase } from './application/use-cases/update-embedding-model/update-embedding-model.use-case';
+import { CreateImageGenerationModelUseCase } from './application/use-cases/create-image-generation-model/create-image-generation-model.use-case';
+import { UpdateImageGenerationModelUseCase } from './application/use-cases/update-image-generation-model/update-image-generation-model.use-case';
 import { GetModelUseCase } from './application/use-cases/get-model/get-model.use-case';
 import { GetModelByIdUseCase } from './application/use-cases/get-model-by-id/get-model-by-id.use-case';
 import { GetAllModelsUseCase } from './application/use-cases/get-all-models/get-all-models.use-case';
@@ -59,6 +66,7 @@ import { SynaforceStreamInferenceHandler } from './infrastructure/stream-inferen
 import { GetPermittedLanguageModelsUseCase } from './application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
 import { GetPermittedLanguageModelUseCase } from './application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
 import { GetPermittedEmbeddingModelUseCase } from './application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
+import { GetPermittedImageGenerationModelUseCase } from './application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { UsersModule } from 'src/iam/users/users.module';
 import { SourcesModule } from '../sources/sources.module';
 import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.use-case';
@@ -107,9 +115,12 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
   ],
   controllers: [
     ModelsController,
+    ModelsDefaultsController,
     TeamPermittedModelsController,
     SuperAdminPermittedModelsController,
+    SuperAdminImageGenerationModelAvailabilityController,
     SuperAdminCatalogModelsController,
+    SuperAdminImageGenerationCatalogModelsController,
   ],
   providers: [
     ModelProviderInfoRegistry,
@@ -118,6 +129,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     MistralMessageConverter,
     ModelResponseDtoMapper,
     ModelWithConfigResponseDtoMapper,
+    AvailableImageGenerationModelResponseDtoMapper,
     CatalogModelResponseDtoMapper,
     ModelProviderInfoResponseDtoMapper,
     MessageRequestDtoMapper,
@@ -264,12 +276,14 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     GetPermittedModelUseCase,
     GetPermittedLanguageModelUseCase,
     GetPermittedEmbeddingModelUseCase,
+    GetPermittedImageGenerationModelUseCase,
     GetPermittedModelsUseCase,
     IsModelPermittedUseCase,
     GetDefaultModelUseCase,
     GetInferenceUseCase,
     StreamInferenceUseCase,
     GetAvailableModelsUseCase,
+    GetAvailableImageGenerationModelsUseCase,
     GetModelProviderInfoUseCase,
     GetPermittedLanguageModelsUseCase,
     IsEmbeddingModelEnabledUseCase,
@@ -286,8 +300,10 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     // Model Management Use Cases
     CreateLanguageModelUseCase,
     CreateEmbeddingModelUseCase,
+    CreateImageGenerationModelUseCase,
     UpdateLanguageModelUseCase,
     UpdateEmbeddingModelUseCase,
+    UpdateImageGenerationModelUseCase,
     GetModelUseCase,
     GetModelByIdUseCase,
     GetAllModelsUseCase,
@@ -301,6 +317,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     GetPermittedModelUseCase,
     GetPermittedLanguageModelUseCase,
     GetPermittedEmbeddingModelUseCase,
+    GetPermittedImageGenerationModelUseCase,
     GetPermittedModelsUseCase,
     IsModelPermittedUseCase,
     GetDefaultModelUseCase,
@@ -309,6 +326,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     GetInferenceUseCase,
     StreamInferenceUseCase,
     GetAvailableModelsUseCase,
+    GetAvailableImageGenerationModelsUseCase,
     IsEmbeddingModelEnabledUseCase,
     // User Default Model Use Cases
     ManageUserDefaultModelUseCase,
@@ -321,8 +339,10 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     // Model Management Use Cases
     CreateLanguageModelUseCase,
     CreateEmbeddingModelUseCase,
+    CreateImageGenerationModelUseCase,
     UpdateLanguageModelUseCase,
     UpdateEmbeddingModelUseCase,
+    UpdateImageGenerationModelUseCase,
     GetModelUseCase,
     GetModelByIdUseCase,
     GetAllModelsUseCase,

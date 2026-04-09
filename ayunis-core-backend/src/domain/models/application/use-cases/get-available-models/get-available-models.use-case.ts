@@ -8,6 +8,7 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import { ModelsRepository } from '../../ports/models.repository';
 import { ConfigService } from '@nestjs/config';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
 import { ModelProviderInfoRegistry } from '../../registry/model-provider-info.registry';
 
 @Injectable()
@@ -31,6 +32,9 @@ export class GetAvailableModelsUseCase {
     const allModels = await this.modelsRepository.findAll();
     const availableModels = allModels.filter((model) => {
       if (model.isArchived) {
+        return false;
+      }
+      if (model.type === ModelType.IMAGE_GENERATION) {
         return false;
       }
       return this.hasApiKeyForProvider(model.provider);
