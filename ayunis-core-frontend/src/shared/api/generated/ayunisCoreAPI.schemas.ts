@@ -2223,6 +2223,33 @@ export interface UpdateAgentDto {
 }
 
 /**
+ * OAuth level — org-wide or per-user (null when OAuth is disabled)
+ * @nullable
+ */
+export type McpIntegrationOAuthDtoLevel = typeof McpIntegrationOAuthDtoLevel[keyof typeof McpIntegrationOAuthDtoLevel] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const McpIntegrationOAuthDtoLevel = {
+  org: 'org',
+  user: 'user',
+} as const;
+
+export interface McpIntegrationOAuthDto {
+  /** Whether OAuth is enabled for this integration */
+  enabled: boolean;
+  /**
+   * OAuth level — org-wide or per-user (null when OAuth is disabled)
+   * @nullable
+   */
+  level: McpIntegrationOAuthDtoLevel;
+  /** Whether a valid OAuth token exists */
+  authorized: boolean;
+  /** Whether OAuth client credentials (id/secret) are configured */
+  hasClientCredentials: boolean;
+}
+
+/**
  * Type of integration
  */
 export type McpIntegrationResponseDtoType = typeof McpIntegrationResponseDtoType[keyof typeof McpIntegrationResponseDtoType];
@@ -2275,11 +2302,6 @@ export type McpIntegrationResponseDtoConfigSchema = { [key: string]: unknown };
  */
 export type McpIntegrationResponseDtoOrgConfigValues = { [key: string]: unknown };
 
-/**
- * OAuth configuration and status for this integration
- */
-export type McpIntegrationResponseDtoOauth = { [key: string]: unknown };
-
 export interface McpIntegrationResponseDto {
   /** Unique identifier of the integration */
   id: string;
@@ -2329,7 +2351,7 @@ export interface McpIntegrationResponseDto {
   /** Human-readable description of the integration (populated from marketplace shortDescription or predefined config description) */
   description?: string;
   /** OAuth configuration and status for this integration */
-  oauth?: McpIntegrationResponseDtoOauth;
+  oauth?: McpIntegrationOAuthDto;
 }
 
 /**

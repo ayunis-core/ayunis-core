@@ -8,6 +8,7 @@ import {
   MinLength,
   MaxLength,
 } from 'class-validator';
+import { IsIntegrationConfigSchema } from 'src/common/validators/is-integration-config-schema.validator';
 import { IsStringRecord } from 'src/common/validators/is-string-record.validator';
 
 /**
@@ -100,5 +101,9 @@ export class UpdateMcpIntegrationDto {
   })
   @IsOptional()
   @IsObject()
+  @IsIntegrationConfigSchema({
+    message:
+      'configSchema must be a valid IntegrationConfigSchema with authType (string), orgFields (ConfigField[]), and userFields (ConfigField[])',
+  })
   configSchema?: object;
 }

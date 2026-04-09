@@ -11516,6 +11516,34 @@
         },
         "required": ["name", "instructions", "modelId"]
       },
+      "McpIntegrationOAuthDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether OAuth is enabled for this integration",
+            "example": true
+          },
+          "level": {
+            "type": "string",
+            "description": "OAuth level — org-wide or per-user (null when OAuth is disabled)",
+            "enum": ["org", "user"],
+            "nullable": true,
+            "example": "org"
+          },
+          "authorized": {
+            "type": "boolean",
+            "description": "Whether a valid OAuth token exists",
+            "example": false
+          },
+          "hasClientCredentials": {
+            "type": "boolean",
+            "description": "Whether OAuth client credentials (id/secret) are configured",
+            "example": true
+          }
+        },
+        "required": ["enabled", "level", "authorized", "hasClientCredentials"]
+      },
       "McpIntegrationResponseDto": {
         "type": "object",
         "properties": {
@@ -11645,8 +11673,12 @@
             "example": "Access municipal council data via OParl"
           },
           "oauth": {
-            "type": "object",
-            "description": "OAuth configuration and status for this integration"
+            "description": "OAuth configuration and status for this integration",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/McpIntegrationOAuthDto"
+              }
+            ]
           }
         },
         "required": [
