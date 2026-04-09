@@ -43,6 +43,10 @@ export function getIntegrationTypeLabel(type: McpIntegration['type']): string {
       return i18n.t('integrations.helpers.type.custom', {
         ns: 'admin-settings-integrations',
       });
+    case 'self_defined':
+      return i18n.t('integrations.helpers.type.self_defined', {
+        ns: 'admin-settings-integrations',
+      });
   }
 }
 

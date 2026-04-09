@@ -54,6 +54,7 @@ import type {
   CreatePermittedModelDto,
   CreatePredefinedIntegrationDto,
   CreatePromptDto,
+  CreateSelfDefinedIntegrationDto,
   CreateSkillDto,
   CreateSkillShareDto,
   CreateSkillTemplateDto,
@@ -98,6 +99,8 @@ import type {
   ModelDistributionResponseDto,
   ModelProviderInfoResponseDto,
   ModelWithConfigResponseDto,
+  OAuthAuthorizeResponseDto,
+  OAuthStatusResponseDto,
   PaginatedInvitesListResponseDto,
   PaginatedTeamMembersResponseDto,
   PaginatedUsersListResponseDto,
@@ -8851,7 +8854,7 @@ export const mcpIntegrationsControllerCreatePredefined = (
   
 
 
-export const getMcpIntegrationsControllerCreatePredefinedMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerCreatePredefinedMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreatePredefined>>, TError,{data: CreatePredefinedIntegrationDto}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreatePredefined>>, TError,{data: CreatePredefinedIntegrationDto}, TContext> => {
 
@@ -8878,12 +8881,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerCreatePredefinedMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerCreatePredefined>>>
     export type McpIntegrationsControllerCreatePredefinedMutationBody = CreatePredefinedIntegrationDto
-    export type McpIntegrationsControllerCreatePredefinedMutationError = void
+    export type McpIntegrationsControllerCreatePredefinedMutationError = unknown
 
     /**
  * @summary Create a new predefined MCP integration
  */
-export const useMcpIntegrationsControllerCreatePredefined = <TError = void,
+export const useMcpIntegrationsControllerCreatePredefined = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreatePredefined>>, TError,{data: CreatePredefinedIntegrationDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerCreatePredefined>>,
@@ -8916,7 +8919,7 @@ export const mcpIntegrationsControllerCreateCustom = (
   
 
 
-export const getMcpIntegrationsControllerCreateCustomMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerCreateCustomMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateCustom>>, TError,{data: CreateCustomIntegrationDto}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateCustom>>, TError,{data: CreateCustomIntegrationDto}, TContext> => {
 
@@ -8943,12 +8946,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerCreateCustomMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateCustom>>>
     export type McpIntegrationsControllerCreateCustomMutationBody = CreateCustomIntegrationDto
-    export type McpIntegrationsControllerCreateCustomMutationError = void
+    export type McpIntegrationsControllerCreateCustomMutationError = unknown
 
     /**
  * @summary Create a new custom MCP integration
  */
-export const useMcpIntegrationsControllerCreateCustom = <TError = void,
+export const useMcpIntegrationsControllerCreateCustom = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateCustom>>, TError,{data: CreateCustomIntegrationDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerCreateCustom>>,
@@ -9149,7 +9152,7 @@ export function useMcpIntegrationsControllerListPredefinedConfigs<TData = Awaite
 
 
 /**
- * @summary List all available (enabled) MCP integrations for organization
+ * @summary List available (enabled) MCP integrations
  */
 export const mcpIntegrationsControllerListAvailable = (
     
@@ -9220,7 +9223,7 @@ export function useMcpIntegrationsControllerListAvailable<TData = Awaited<Return
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary List all available (enabled) MCP integrations for organization
+ * @summary List available (enabled) MCP integrations
  */
 
 export function useMcpIntegrationsControllerListAvailable<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>, TError = unknown>(
@@ -9266,7 +9269,7 @@ export const getMcpIntegrationsControllerGetByIdQueryKey = (id?: string,) => {
     }
 
     
-export const getMcpIntegrationsControllerGetByIdQueryOptions = <TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>>, }
+export const getMcpIntegrationsControllerGetByIdQueryOptions = <TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
@@ -9285,10 +9288,10 @@ const {query: queryOptions} = options ?? {};
 }
 
 export type McpIntegrationsControllerGetByIdQueryResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>>
-export type McpIntegrationsControllerGetByIdQueryError = void
+export type McpIntegrationsControllerGetByIdQueryError = unknown
 
 
-export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = void>(
+export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = unknown>(
  id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>,
@@ -9298,7 +9301,7 @@ export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<t
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = void>(
+export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = unknown>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>,
@@ -9308,7 +9311,7 @@ export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<t
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = void>(
+export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = unknown>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -9316,7 +9319,7 @@ export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<t
  * @summary Get MCP integration by ID
  */
 
-export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = void>(
+export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = unknown>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -9353,7 +9356,7 @@ export const mcpIntegrationsControllerUpdate = (
   
 
 
-export const getMcpIntegrationsControllerUpdateMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerUpdateMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerUpdate>>, TError,{id: string;data: UpdateMcpIntegrationDto}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerUpdate>>, TError,{id: string;data: UpdateMcpIntegrationDto}, TContext> => {
 
@@ -9380,12 +9383,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerUpdate>>>
     export type McpIntegrationsControllerUpdateMutationBody = UpdateMcpIntegrationDto
-    export type McpIntegrationsControllerUpdateMutationError = void
+    export type McpIntegrationsControllerUpdateMutationError = unknown
 
     /**
  * @summary Update MCP integration
  */
-export const useMcpIntegrationsControllerUpdate = <TError = void,
+export const useMcpIntegrationsControllerUpdate = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerUpdate>>, TError,{id: string;data: UpdateMcpIntegrationDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerUpdate>>,
@@ -9415,7 +9418,7 @@ export const mcpIntegrationsControllerDelete = (
   
 
 
-export const getMcpIntegrationsControllerDeleteMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerDeleteMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDelete>>, TError,{id: string}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDelete>>, TError,{id: string}, TContext> => {
 
@@ -9442,12 +9445,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerDelete>>>
     
-    export type McpIntegrationsControllerDeleteMutationError = void
+    export type McpIntegrationsControllerDeleteMutationError = unknown
 
     /**
  * @summary Delete MCP integration
  */
-export const useMcpIntegrationsControllerDelete = <TError = void,
+export const useMcpIntegrationsControllerDelete = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDelete>>, TError,{id: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerDelete>>,
@@ -9478,7 +9481,7 @@ export const mcpIntegrationsControllerEnable = (
   
 
 
-export const getMcpIntegrationsControllerEnableMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerEnableMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerEnable>>, TError,{id: string}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerEnable>>, TError,{id: string}, TContext> => {
 
@@ -9505,12 +9508,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerEnableMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerEnable>>>
     
-    export type McpIntegrationsControllerEnableMutationError = void
+    export type McpIntegrationsControllerEnableMutationError = unknown
 
     /**
  * @summary Enable MCP integration
  */
-export const useMcpIntegrationsControllerEnable = <TError = void,
+export const useMcpIntegrationsControllerEnable = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerEnable>>, TError,{id: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerEnable>>,
@@ -9541,7 +9544,7 @@ export const mcpIntegrationsControllerDisable = (
   
 
 
-export const getMcpIntegrationsControllerDisableMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerDisableMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDisable>>, TError,{id: string}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDisable>>, TError,{id: string}, TContext> => {
 
@@ -9568,12 +9571,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerDisableMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerDisable>>>
     
-    export type McpIntegrationsControllerDisableMutationError = void
+    export type McpIntegrationsControllerDisableMutationError = unknown
 
     /**
  * @summary Disable MCP integration
  */
-export const useMcpIntegrationsControllerDisable = <TError = void,
+export const useMcpIntegrationsControllerDisable = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDisable>>, TError,{id: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerDisable>>,
@@ -9606,7 +9609,7 @@ export const mcpIntegrationsControllerInstallFromMarketplace = (
   
 
 
-export const getMcpIntegrationsControllerInstallFromMarketplaceMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerInstallFromMarketplaceMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerInstallFromMarketplace>>, TError,{data: InstallMarketplaceIntegrationDto}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerInstallFromMarketplace>>, TError,{data: InstallMarketplaceIntegrationDto}, TContext> => {
 
@@ -9633,12 +9636,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerInstallFromMarketplaceMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerInstallFromMarketplace>>>
     export type McpIntegrationsControllerInstallFromMarketplaceMutationBody = InstallMarketplaceIntegrationDto
-    export type McpIntegrationsControllerInstallFromMarketplaceMutationError = void
+    export type McpIntegrationsControllerInstallFromMarketplaceMutationError = unknown
 
     /**
  * @summary Install an MCP integration from the marketplace
  */
-export const useMcpIntegrationsControllerInstallFromMarketplace = <TError = void,
+export const useMcpIntegrationsControllerInstallFromMarketplace = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerInstallFromMarketplace>>, TError,{data: InstallMarketplaceIntegrationDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerInstallFromMarketplace>>,
@@ -9653,7 +9656,7 @@ export const useMcpIntegrationsControllerInstallFromMarketplace = <TError = void
     }
     
 /**
- * @summary Get current user config for a marketplace MCP integration
+ * @summary Get user config for an MCP integration
  */
 export const mcpIntegrationsControllerGetUserConfig = (
     id: string,
@@ -9724,7 +9727,7 @@ export function useMcpIntegrationsControllerGetUserConfig<TData = Awaited<Return
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get current user config for a marketplace MCP integration
+ * @summary Get user config for an MCP integration
  */
 
 export function useMcpIntegrationsControllerGetUserConfig<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>, TError = unknown>(
@@ -9746,7 +9749,7 @@ export function useMcpIntegrationsControllerGetUserConfig<TData = Awaited<Return
 
 
 /**
- * @summary Set current user config for a marketplace MCP integration
+ * @summary Set user config for an MCP integration
  */
 export const mcpIntegrationsControllerSetUserConfig = (
     id: string,
@@ -9764,7 +9767,7 @@ export const mcpIntegrationsControllerSetUserConfig = (
   
 
 
-export const getMcpIntegrationsControllerSetUserConfigMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerSetUserConfigMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>, TError,{id: string;data: SetUserConfigDto}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>, TError,{id: string;data: SetUserConfigDto}, TContext> => {
 
@@ -9791,12 +9794,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerSetUserConfigMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>>
     export type McpIntegrationsControllerSetUserConfigMutationBody = SetUserConfigDto
-    export type McpIntegrationsControllerSetUserConfigMutationError = void
+    export type McpIntegrationsControllerSetUserConfigMutationError = unknown
 
     /**
- * @summary Set current user config for a marketplace MCP integration
+ * @summary Set user config for an MCP integration
  */
-export const useMcpIntegrationsControllerSetUserConfig = <TError = void,
+export const useMcpIntegrationsControllerSetUserConfig = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>, TError,{id: string;data: SetUserConfigDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>,
@@ -9827,7 +9830,7 @@ export const mcpIntegrationsControllerValidate = (
   
 
 
-export const getMcpIntegrationsControllerValidateMutationOptions = <TError = void,
+export const getMcpIntegrationsControllerValidateMutationOptions = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerValidate>>, TError,{id: string}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerValidate>>, TError,{id: string}, TContext> => {
 
@@ -9854,12 +9857,12 @@ const {mutation: mutationOptions} = options ?
 
     export type McpIntegrationsControllerValidateMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerValidate>>>
     
-    export type McpIntegrationsControllerValidateMutationError = void
+    export type McpIntegrationsControllerValidateMutationError = unknown
 
     /**
  * @summary Validate MCP integration connection
  */
-export const useMcpIntegrationsControllerValidate = <TError = void,
+export const useMcpIntegrationsControllerValidate = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerValidate>>, TError,{id: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mcpIntegrationsControllerValidate>>,
@@ -9873,6 +9876,290 @@ export const useMcpIntegrationsControllerValidate = <TError = void,
       return useMutation(mutationOptions, queryClient);
     }
     
+/**
+ * @summary Create a self-defined MCP integration
+ */
+export const mcpIntegrationsControllerCreateSelfDefined = (
+    createSelfDefinedIntegrationDto: CreateSelfDefinedIntegrationDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<McpIntegrationResponseDto>(
+      {url: `/mcp-integrations/self-defined`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createSelfDefinedIntegrationDto, signal
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerCreateSelfDefinedMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateSelfDefined>>, TError,{data: CreateSelfDefinedIntegrationDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateSelfDefined>>, TError,{data: CreateSelfDefinedIntegrationDto}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerCreateSelfDefined'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateSelfDefined>>, {data: CreateSelfDefinedIntegrationDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  mcpIntegrationsControllerCreateSelfDefined(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerCreateSelfDefinedMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateSelfDefined>>>
+    export type McpIntegrationsControllerCreateSelfDefinedMutationBody = CreateSelfDefinedIntegrationDto
+    export type McpIntegrationsControllerCreateSelfDefinedMutationError = unknown
+
+    /**
+ * @summary Create a self-defined MCP integration
+ */
+export const useMcpIntegrationsControllerCreateSelfDefined = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateSelfDefined>>, TError,{data: CreateSelfDefinedIntegrationDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerCreateSelfDefined>>,
+        TError,
+        {data: CreateSelfDefinedIntegrationDto},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerCreateSelfDefinedMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Start OAuth authorization for an integration
+ */
+export const mcpIntegrationsControllerStartOAuthAuthorize = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<OAuthAuthorizeResponseDto>(
+      {url: `/mcp-integrations/${id}/oauth/authorize`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerStartOAuthAuthorizeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerStartOAuthAuthorize'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  mcpIntegrationsControllerStartOAuthAuthorize(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerStartOAuthAuthorizeMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>>
+    
+    export type McpIntegrationsControllerStartOAuthAuthorizeMutationError = unknown
+
+    /**
+ * @summary Start OAuth authorization for an integration
+ */
+export const useMcpIntegrationsControllerStartOAuthAuthorize = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerStartOAuthAuthorize>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerStartOAuthAuthorizeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Revoke OAuth authorization for an integration
+ */
+export const mcpIntegrationsControllerRevokeOAuth = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/mcp-integrations/${id}/oauth/revoke`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerRevokeOAuthMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerRevokeOAuth>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerRevokeOAuth>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerRevokeOAuth'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerRevokeOAuth>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  mcpIntegrationsControllerRevokeOAuth(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerRevokeOAuthMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerRevokeOAuth>>>
+    
+    export type McpIntegrationsControllerRevokeOAuthMutationError = unknown
+
+    /**
+ * @summary Revoke OAuth authorization for an integration
+ */
+export const useMcpIntegrationsControllerRevokeOAuth = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerRevokeOAuth>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerRevokeOAuth>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerRevokeOAuthMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Get OAuth authorization status for an integration
+ */
+export const mcpIntegrationsControllerGetOAuthStatus = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<OAuthStatusResponseDto>(
+      {url: `/mcp-integrations/${id}/oauth/status`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getMcpIntegrationsControllerGetOAuthStatusQueryKey = (id?: string,) => {
+    return [
+    `/mcp-integrations/${id}/oauth/status`
+    ] as const;
+    }
+
+    
+export const getMcpIntegrationsControllerGetOAuthStatusQueryOptions = <TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMcpIntegrationsControllerGetOAuthStatusQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>> = ({ signal }) => mcpIntegrationsControllerGetOAuthStatus(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type McpIntegrationsControllerGetOAuthStatusQueryResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>>
+export type McpIntegrationsControllerGetOAuthStatusQueryError = unknown
+
+
+export function useMcpIntegrationsControllerGetOAuthStatus<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>,
+          TError,
+          Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpIntegrationsControllerGetOAuthStatus<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>,
+          TError,
+          Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpIntegrationsControllerGetOAuthStatus<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get OAuth authorization status for an integration
+ */
+
+export function useMcpIntegrationsControllerGetOAuthStatus<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetOAuthStatus>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMcpIntegrationsControllerGetOAuthStatusQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
 /**
  * @summary Preview a marketplace skill before installation
  */
