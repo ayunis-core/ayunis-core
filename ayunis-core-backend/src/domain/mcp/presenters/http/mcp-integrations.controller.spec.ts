@@ -857,7 +857,12 @@ describe('McpIntegrationsController', () => {
       const res = {
         redirect: jest.fn(),
       } as unknown as Response;
-      await controller.oauthCallback('auth-code', 'state-token', res);
+      await controller.oauthCallback(
+        'auth-code',
+        'state-token',
+        undefined as unknown as string,
+        res,
+      );
 
       expect(res.redirect).toHaveBeenCalledWith(
         `http://localhost:3001/admin-settings/integrations?oauth=success&id=${integrationId}`,
@@ -874,10 +879,34 @@ describe('McpIntegrationsController', () => {
       const res = {
         redirect: jest.fn(),
       } as unknown as Response;
-      await controller.oauthCallback('auth-code', 'bad-state', res);
+      await controller.oauthCallback(
+        'auth-code',
+        'bad-state',
+        undefined as unknown as string,
+        res,
+      );
 
       expect(res.redirect).toHaveBeenCalledWith(
         expect.stringContaining('oauth=error&reason=Token%20exchange%20failed'),
+      );
+    });
+
+    it('should redirect to error URL when provider returns error parameter', async () => {
+      configServiceMock.get.mockReturnValue('http://localhost:3001');
+
+      const res = {
+        redirect: jest.fn(),
+      } as unknown as Response;
+      await controller.oauthCallback(
+        undefined as unknown as string,
+        undefined as unknown as string,
+        'access_denied',
+        res,
+      );
+
+      expect(completeOAuthUseCase.execute).not.toHaveBeenCalled();
+      expect(res.redirect).toHaveBeenCalledWith(
+        'http://localhost:3001/admin-settings/integrations?oauth=error&reason=User%20denied%20consent',
       );
     });
   });

@@ -401,11 +401,21 @@ export class McpIntegrationsController {
   async oauthCallback(
     @Query('code') code: string,
     @Query('state') state: string,
+    @Query('error') error: string,
     @Res({ passthrough: false }) res: Response,
   ): Promise<void> {
     const frontendBaseUrl = this.configService.get<string>(
       'app.frontend.baseUrl',
     );
+
+    if (error) {
+      const reason = error === 'access_denied' ? 'User denied consent' : error;
+      res.redirect(
+        `${frontendBaseUrl}/admin-settings/integrations?oauth=error&reason=${encodeURIComponent(reason)}`,
+      );
+      return;
+    }
+
     const result = await this.completeOAuthUseCase.execute(
       new CompleteMcpOAuthAuthorizationCommand(code, state),
     );
