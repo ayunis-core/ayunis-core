@@ -196,6 +196,7 @@ describe('McpIntegrationsController', () => {
           provide: ConfigService,
           useValue: {
             get: jest.fn(),
+            getOrThrow: jest.fn(),
           },
         },
       ],
@@ -848,7 +849,7 @@ describe('McpIntegrationsController', () => {
   describe('oauthCallback', () => {
     it('should redirect to success URL on successful callback', async () => {
       const integrationId = randomUUID();
-      configServiceMock.get.mockReturnValue('http://localhost:3001');
+      configServiceMock.getOrThrow.mockReturnValue('http://localhost:3001');
       completeOAuthUseCase.execute.mockResolvedValue({
         success: true,
         integrationId,
@@ -870,7 +871,7 @@ describe('McpIntegrationsController', () => {
     });
 
     it('should redirect to error URL on failed callback', async () => {
-      configServiceMock.get.mockReturnValue('http://localhost:3001');
+      configServiceMock.getOrThrow.mockReturnValue('http://localhost:3001');
       completeOAuthUseCase.execute.mockResolvedValue({
         success: false,
         reason: 'Token exchange failed',
@@ -892,7 +893,7 @@ describe('McpIntegrationsController', () => {
     });
 
     it('should redirect to error URL when provider returns error parameter', async () => {
-      configServiceMock.get.mockReturnValue('http://localhost:3001');
+      configServiceMock.getOrThrow.mockReturnValue('http://localhost:3001');
 
       const res = {
         redirect: jest.fn(),
