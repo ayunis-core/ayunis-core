@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
 import type {
   PermittedEmbeddingModel,
+  PermittedImageGenerationModel,
   PermittedLanguageModel,
   PermittedModel,
 } from '../../domain/permitted-model.entity';
@@ -39,6 +40,9 @@ export abstract class PermittedModelsRepository {
   abstract findOneEmbedding(
     orgId: UUID,
   ): Promise<PermittedEmbeddingModel | null>;
+  abstract findOneImageGeneration(
+    orgId: UUID,
+  ): Promise<PermittedImageGenerationModel | null>;
   abstract findManyLanguage(orgId: UUID): Promise<PermittedLanguageModel[]>;
   abstract findManyLanguageByTeam(
     teamId: UUID,

@@ -9,6 +9,7 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ModelNotFoundError } from '../../models.errors';
+import { assertSupportedImageGenerationModel } from '../../services/image-generation-model-policy';
 
 @Injectable()
 export class CreatePermittedModelUseCase {
@@ -39,6 +40,7 @@ export class CreatePermittedModelUseCase {
       if (!model) {
         throw new ModelNotFoundError(command.modelId);
       }
+      assertSupportedImageGenerationModel(model);
       const permittedModel = new PermittedModel({
         model: model,
         orgId: command.orgId,

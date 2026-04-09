@@ -6,21 +6,32 @@ import {
 } from 'src/domain/models/application/ports/permitted-models.repository';
 import {
   PermittedEmbeddingModel,
+  PermittedImageGenerationModel,
   PermittedLanguageModel,
   PermittedModel,
 } from 'src/domain/models/domain/permitted-model.entity';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { PermittedModelRecord } from './schema/permitted-model.record';
 import { UUID } from 'crypto';
 import { PermittedModelMapper } from './mappers/permitted-model.mapper';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
-import {
-  EmbeddingModelRecord,
-  LanguageModelRecord,
-} from '../local-models/schema/model.record';
+import { LanguageModelRecord } from '../local-models/schema/model.record';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
-import { MultipleEmbeddingModelsNotAllowedError } from 'src/domain/models/application/models.errors';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import {
+  MultipleEmbeddingModelsNotAllowedError,
+  MultipleImageGenerationModelsNotAllowedError,
+} from 'src/domain/models/application/models.errors';
+import {
+  buildSetDefaultWhere,
+  buildUnsetDefaultWhere,
+  findExistingPermittedImageGenerationModels,
+  findManyLanguageModels,
+  findManyLanguageModelsByTeam,
+  findOneEmbeddingModel,
+  findOneImageGenerationModel,
+} from './local-permitted-models.repository.helpers';
 
 @Injectable()
 export class LocalPermittedModelsRepository extends PermittedModelsRepository {
@@ -31,6 +42,14 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     private readonly permittedModelMapper: PermittedModelMapper,
   ) {
     super();
+  }
+
+  private get helperDeps() {
+    return {
+      logger: this.logger,
+      permittedModelMapper: this.permittedModelMapper,
+      permittedModelRepository: this.permittedModelRepository,
+    };
   }
 
   async findAll(
@@ -172,80 +191,24 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   }
 
   async findOneEmbedding(orgId: UUID): Promise<PermittedEmbeddingModel | null> {
-    this.logger.debug('findOneEmbedding', { orgId });
-    const permittedModels = await this.permittedModelRepository.find({
-      where: {
-        orgId,
-        scope: PermittedModelScope.ORG,
-        model: { isArchived: false },
-      },
-      relations: {
-        model: true,
-      },
-    });
-    const permittedEmbeddingModels = permittedModels.filter(
-      (permittedModel) => permittedModel.model instanceof EmbeddingModelRecord,
-    );
-    if (permittedEmbeddingModels.length === 0) {
-      return null;
-    }
-    if (permittedEmbeddingModels.length > 1) {
-      this.logger.error('Multiple embedding models found', {
-        orgId,
-        permittedEmbeddingModels,
-      });
-      throw new Error(
-        `Multiple embedding models found for orgId ${orgId}. This should not happen.`,
-      );
-    }
-    const permittedModel = permittedEmbeddingModels[0];
-    return this.permittedModelMapper.toDomain(
-      permittedModel,
-    ) as PermittedEmbeddingModel;
+    return findOneEmbeddingModel(this.helperDeps, orgId);
+  }
+
+  async findOneImageGeneration(
+    orgId: UUID,
+  ): Promise<PermittedImageGenerationModel | null> {
+    return findOneImageGenerationModel(this.helperDeps, orgId);
   }
 
   async findManyLanguage(orgId: UUID): Promise<PermittedLanguageModel[]> {
-    const permittedModels = await this.permittedModelRepository.find({
-      where: {
-        orgId,
-        scope: PermittedModelScope.ORG,
-        model: { isArchived: false },
-      },
-      relations: {
-        model: true,
-      },
-    });
-    return permittedModels
-      .filter(
-        (permittedModel) => permittedModel.model instanceof LanguageModelRecord,
-      )
-      .map((permittedModel) =>
-        this.permittedModelMapper.toDomain(permittedModel),
-      ) as PermittedLanguageModel[];
+    return findManyLanguageModels(this.helperDeps, orgId);
   }
 
   async findManyLanguageByTeam(
     teamId: UUID,
     orgId: UUID,
   ): Promise<PermittedLanguageModel[]> {
-    const permittedModels = await this.permittedModelRepository.find({
-      where: {
-        scopeId: teamId,
-        orgId,
-        scope: PermittedModelScope.TEAM,
-        model: { isArchived: false },
-      },
-      relations: {
-        model: true,
-      },
-    });
-    return permittedModels
-      .filter(
-        (permittedModel) => permittedModel.model instanceof LanguageModelRecord,
-      )
-      .map((permittedModel) =>
-        this.permittedModelMapper.toDomain(permittedModel),
-      ) as PermittedLanguageModel[];
+    return findManyLanguageModelsByTeam(this.helperDeps, teamId, orgId);
   }
 
   async findByTeamAndModelId(
@@ -286,6 +249,32 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
         throw new MultipleEmbeddingModelsNotAllowedError({
           orgId: permittedModel.orgId,
           existingPermittedEmbeddingModelId: existingEmbedding.id,
+          newModelId: permittedModel.model.id,
+        });
+      }
+    }
+
+    if (permittedModel.model instanceof ImageGenerationModel) {
+      const existingImageGenerationModels =
+        await findExistingPermittedImageGenerationModels(
+          this.helperDeps,
+          permittedModel.orgId,
+        );
+      if (existingImageGenerationModels.length > 0) {
+        const existingImageGenerationModel = existingImageGenerationModels[0];
+        this.logger.error(
+          'Attempt to create a second permitted image-generation model for org',
+          {
+            orgId: permittedModel.orgId,
+            existingPermittedImageGenerationModelId:
+              existingImageGenerationModel.id,
+            newModelId: permittedModel.model.id,
+          },
+        );
+        throw new MultipleImageGenerationModelsNotAllowedError({
+          orgId: permittedModel.orgId,
+          existingPermittedImageGenerationModelId:
+            existingImageGenerationModel.id,
           newModelId: permittedModel.model.id,
         });
       }
@@ -342,8 +331,23 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
       teamId: params.teamId,
     });
 
-    const unsetWhere = this.buildUnsetDefaultWhere(params);
-    const setWhere = this.buildSetDefaultWhere(params);
+    const unsetWhere = buildUnsetDefaultWhere(params);
+    const setWhere = buildSetDefaultWhere(params);
+    const targetModel = await this.permittedModelRepository.findOne({
+      where: {
+        ...setWhere,
+        model: { isArchived: false },
+      },
+      relations: {
+        model: true,
+      },
+    });
+
+    if (!targetModel || !(targetModel.model instanceof LanguageModelRecord)) {
+      throw new Error(
+        `Permitted language model with id ${params.id} and orgId ${params.orgId} not found`,
+      );
+    }
 
     // Start a transaction to ensure consistency
     return await this.permittedModelRepository.manager.transaction(
@@ -432,43 +436,6 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     });
 
     return permittedModels.map((pm) => this.permittedModelMapper.toDomain(pm));
-  }
-
-  private buildUnsetDefaultWhere(params: {
-    orgId: UUID;
-    teamId?: UUID;
-  }): FindOptionsWhere<PermittedModelRecord> {
-    return params.teamId
-      ? {
-          orgId: params.orgId,
-          scopeId: params.teamId,
-          scope: PermittedModelScope.TEAM,
-          isDefault: true,
-        }
-      : {
-          orgId: params.orgId,
-          scope: PermittedModelScope.ORG,
-          isDefault: true,
-        };
-  }
-
-  private buildSetDefaultWhere(params: {
-    id: UUID;
-    orgId: UUID;
-    teamId?: UUID;
-  }): FindOptionsWhere<PermittedModelRecord> {
-    return params.teamId
-      ? {
-          id: params.id,
-          orgId: params.orgId,
-          scopeId: params.teamId,
-          scope: PermittedModelScope.TEAM,
-        }
-      : {
-          id: params.id,
-          orgId: params.orgId,
-          scope: PermittedModelScope.ORG,
-        };
   }
 
   async unsetDefaultsByCatalogModelId(catalogModelId: UUID): Promise<void> {

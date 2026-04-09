@@ -4,6 +4,7 @@ import { Logger } from '@nestjs/common';
 import { GetAvailableModelsUseCase } from './get-available-models.use-case';
 import { GetAvailableModelsQuery } from './get-available-models.query';
 import { ModelsRepository } from '../../ports/models.repository';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { UUID } from 'crypto';
@@ -26,6 +27,7 @@ describe('GetAvailableModelsUseCase', () => {
       findOne: jest.fn(),
       findOneLanguage: jest.fn(),
       findOneEmbedding: jest.fn(),
+      findOneImageGeneration: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
     };
@@ -266,6 +268,43 @@ describe('GetAvailableModelsUseCase', () => {
       const result = await useCase.execute(query);
 
       expect(result).toEqual([activeModel]);
+    });
+
+    it('should exclude image-generation models from legacy available-model responses', async () => {
+      const query = new GetAvailableModelsQuery(mockOrgId);
+      const languageModel = new LanguageModel({
+        id: '123e4567-e89b-12d3-a456-426614174006' as UUID,
+        name: 'gpt-4o',
+        displayName: 'gpt-4o',
+        provider: ModelProvider.OPENAI,
+        canStream: true,
+        isReasoning: false,
+        isArchived: false,
+        canUseTools: true,
+        canVision: false,
+      });
+      const imageModel = new ImageGenerationModel({
+        id: '123e4567-e89b-12d3-a456-426614174007' as UUID,
+        name: 'gpt-image-1',
+        displayName: 'GPT Image 1',
+        provider: ModelProvider.AZURE,
+        isArchived: false,
+      });
+
+      modelsRepository.findAll.mockResolvedValue([languageModel, imageModel]);
+      configService.get.mockImplementation((configKey: string) => {
+        if (
+          configKey === 'models.openai.apiKey' ||
+          configKey === 'models.azure.apiKey'
+        ) {
+          return 'fake-key';
+        }
+        return undefined;
+      });
+
+      const result = await useCase.execute(query);
+
+      expect(result).toEqual([languageModel]);
     });
   });
 });

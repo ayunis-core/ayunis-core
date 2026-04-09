@@ -24,6 +24,7 @@ export class ModelWithConfigResponseDtoMapper {
         name: model.name,
         provider: model.provider,
         displayName: model.displayName,
+        type: model.type,
         canStream: model instanceof LanguageModel ? model.canStream : false,
         isReasoning: model instanceof LanguageModel ? model.isReasoning : false,
         canUseTools: model instanceof LanguageModel ? model.canUseTools : false,

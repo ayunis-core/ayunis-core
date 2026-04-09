@@ -25,19 +25,21 @@ export class ManageOrgDefaultModelUseCase {
     });
 
     try {
-      // First, verify that the permitted model exists and belongs to the organization
-      const permittedModel = await this.permittedModelsRepository.findOne({
-        id: command.permittedModelId,
-      });
-
       // Check if the user is authorized to manage the organization default model
       const orgId = this.contextService.get('orgId');
       const systemRole = this.contextService.get('systemRole');
-      const isFromOrg = orgId === permittedModel?.orgId;
+      const isFromOrg = orgId === command.orgId;
       const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
       if (!isFromOrg && !isSuperAdmin) {
         throw new UnauthorizedAccessError();
       }
+
+      // Only language models may participate in org-default flows.
+      const permittedModel =
+        await this.permittedModelsRepository.findOneLanguage({
+          id: command.permittedModelId,
+          orgId: command.orgId,
+        });
 
       if (!permittedModel) {
         this.logger.error('Permitted model not found', {

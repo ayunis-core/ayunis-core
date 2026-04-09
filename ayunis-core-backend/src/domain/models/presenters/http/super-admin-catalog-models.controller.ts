@@ -11,17 +11,17 @@ import {
   Post,
 } from '@nestjs/common';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiExtraModels,
-  getSchemaPath,
-  ApiParam,
-  ApiUnauthorizedResponse,
-  ApiInternalServerErrorResponse,
   ApiBody,
   ApiCreatedResponse,
+  ApiExtraModels,
+  ApiInternalServerErrorResponse,
   ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import {
@@ -30,26 +30,27 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { GetAllModelsUseCase } from '../../application/use-cases/get-all-models/get-all-models.use-case';
-import { GetModelByIdUseCase } from '../../application/use-cases/get-model-by-id/get-model-by-id.use-case';
-import { GetModelByIdQuery } from '../../application/use-cases/get-model-by-id/get-model-by-id.query';
-import { CreateLanguageModelUseCase } from '../../application/use-cases/create-language-model/create-language-model.use-case';
-import { CreateLanguageModelCommand } from '../../application/use-cases/create-language-model/create-language-model.command';
-import { UpdateLanguageModelUseCase } from '../../application/use-cases/update-language-model/update-language-model.use-case';
-import { UpdateLanguageModelCommand } from '../../application/use-cases/update-language-model/update-language-model.command';
-import { CreateEmbeddingModelUseCase } from '../../application/use-cases/create-embedding-model/create-embedding-model.use-case';
 import { CreateEmbeddingModelCommand } from '../../application/use-cases/create-embedding-model/create-embedding-model.command';
-import { UpdateEmbeddingModelUseCase } from '../../application/use-cases/update-embedding-model/update-embedding-model.use-case';
-import { UpdateEmbeddingModelCommand } from '../../application/use-cases/update-embedding-model/update-embedding-model.command';
-import { DeleteModelUseCase } from '../../application/use-cases/delete-model/delete-model.use-case';
+import { CreateEmbeddingModelUseCase } from '../../application/use-cases/create-embedding-model/create-embedding-model.use-case';
+import { CreateLanguageModelCommand } from '../../application/use-cases/create-language-model/create-language-model.command';
+import { CreateLanguageModelUseCase } from '../../application/use-cases/create-language-model/create-language-model.use-case';
 import { DeleteModelCommand } from '../../application/use-cases/delete-model/delete-model.command';
-import { CreateLanguageModelRequestDto } from './dto/create-language-model-request.dto';
-import { UpdateLanguageModelRequestDto } from './dto/update-language-model-request.dto';
+import { DeleteModelUseCase } from '../../application/use-cases/delete-model/delete-model.use-case';
+import { GetAllModelsUseCase } from '../../application/use-cases/get-all-models/get-all-models.use-case';
+import { GetModelByIdQuery } from '../../application/use-cases/get-model-by-id/get-model-by-id.query';
+import { GetModelByIdUseCase } from '../../application/use-cases/get-model-by-id/get-model-by-id.use-case';
+import { UpdateEmbeddingModelCommand } from '../../application/use-cases/update-embedding-model/update-embedding-model.command';
+import { UpdateEmbeddingModelUseCase } from '../../application/use-cases/update-embedding-model/update-embedding-model.use-case';
+import { UpdateLanguageModelCommand } from '../../application/use-cases/update-language-model/update-language-model.command';
+import { UpdateLanguageModelUseCase } from '../../application/use-cases/update-language-model/update-language-model.use-case';
 import { CreateEmbeddingModelRequestDto } from './dto/create-embedding-model-request.dto';
-import { UpdateEmbeddingModelRequestDto } from './dto/update-embedding-model-request.dto';
-import { LanguageModelResponseDto } from './dto/language-model-response.dto';
+import { CreateLanguageModelRequestDto } from './dto/create-language-model-request.dto';
 import { EmbeddingModelResponseDto } from './dto/embedding-model-response.dto';
+import { ImageGenerationModelResponseDto } from './dto/image-generation-model-response.dto';
+import { LanguageModelResponseDto } from './dto/language-model-response.dto';
 import { ModelResponseDto } from './dto/model-response.dto';
+import { UpdateEmbeddingModelRequestDto } from './dto/update-embedding-model-request.dto';
+import { UpdateLanguageModelRequestDto } from './dto/update-language-model-request.dto';
 import { CatalogModelResponseDtoMapper } from './mappers/catalog-model-response-dto.mapper';
 
 @ApiTags('Super Admin Models')
@@ -62,6 +63,7 @@ import { CatalogModelResponseDtoMapper } from './mappers/catalog-model-response-
   UpdateEmbeddingModelRequestDto,
   LanguageModelResponseDto,
   EmbeddingModelResponseDto,
+  ImageGenerationModelResponseDto,
 )
 export class SuperAdminCatalogModelsController {
   private readonly logger = new Logger(SuperAdminCatalogModelsController.name);
@@ -82,7 +84,7 @@ export class SuperAdminCatalogModelsController {
   @ApiOperation({
     summary: 'Get all models in the catalog',
     description:
-      'Retrieve all models (language and embedding) from the master catalog. This endpoint is only accessible to super admins.',
+      'Retrieve all models (language, embedding, and image-generation) from the master catalog. This endpoint is only accessible to super admins.',
   })
   @ApiOkResponse({
     description: 'Successfully retrieved all models',
@@ -92,6 +94,7 @@ export class SuperAdminCatalogModelsController {
         oneOf: [
           { $ref: getSchemaPath(LanguageModelResponseDto) },
           { $ref: getSchemaPath(EmbeddingModelResponseDto) },
+          { $ref: getSchemaPath(ImageGenerationModelResponseDto) },
         ],
       },
     },
@@ -106,12 +109,9 @@ export class SuperAdminCatalogModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<ModelResponseDto[]> {
     this.logger.log(`Getting all catalog models by super admin ${userId}`);
-
     const models = await this.getAllModelsUseCase.execute();
     const responseDtos = this.catalogModelResponseDtoMapper.toDtoArray(models);
-
     this.logger.log(`Successfully retrieved ${models.length} catalog models`);
-
     return responseDtos;
   }
 
@@ -134,6 +134,7 @@ export class SuperAdminCatalogModelsController {
       oneOf: [
         { $ref: getSchemaPath(LanguageModelResponseDto) },
         { $ref: getSchemaPath(EmbeddingModelResponseDto) },
+        { $ref: getSchemaPath(ImageGenerationModelResponseDto) },
       ],
     },
   })
@@ -152,13 +153,10 @@ export class SuperAdminCatalogModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<ModelResponseDto> {
     this.logger.log(`Getting catalog model ${id} by super admin ${userId}`);
-
     const query = new GetModelByIdQuery(id);
     const model = await this.getModelByIdUseCase.execute(query);
     const responseDto = this.catalogModelResponseDtoMapper.toDto(model);
-
     this.logger.log(`Successfully retrieved catalog model ${id}`);
-
     return responseDto;
   }
 
@@ -167,7 +165,7 @@ export class SuperAdminCatalogModelsController {
   @ApiOperation({
     summary: 'Delete a model from the catalog',
     description:
-      'Remove a model (language or embedding) from the master catalog. This endpoint is only accessible to super admins.',
+      'Remove a model (language, embedding, or image-generation) from the master catalog. This endpoint is only accessible to super admins.',
   })
   @ApiParam({
     name: 'id',
@@ -194,10 +192,8 @@ export class SuperAdminCatalogModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<void> {
     this.logger.log(`Deleting catalog model ${id} by super admin ${userId}`);
-
     const command = new DeleteModelCommand(id);
     await this.deleteModelUseCase.execute(command);
-
     this.logger.log(`Successfully deleted catalog model ${id}`);
   }
 
@@ -234,7 +230,6 @@ export class SuperAdminCatalogModelsController {
     this.logger.log(
       `Creating language model ${dto.name} by super admin ${userId}`,
     );
-
     const command = new CreateLanguageModelCommand({
       name: dto.name,
       provider: dto.provider,
@@ -248,13 +243,10 @@ export class SuperAdminCatalogModelsController {
       outputTokenCost: dto.outputTokenCost,
       tier: dto.tier,
     });
-
     const model = await this.createLanguageModelUseCase.execute(command);
     const responseDto =
       this.catalogModelResponseDtoMapper.toLanguageModelDto(model);
-
     this.logger.log(`Successfully created language model ${model.id}`);
-
     return responseDto;
   }
 
@@ -296,7 +288,6 @@ export class SuperAdminCatalogModelsController {
     @Body() dto: UpdateLanguageModelRequestDto,
   ): Promise<LanguageModelResponseDto> {
     this.logger.log(`Updating language model ${id} by super admin ${userId}`);
-
     const command = new UpdateLanguageModelCommand({
       id,
       name: dto.name,
@@ -311,13 +302,10 @@ export class SuperAdminCatalogModelsController {
       outputTokenCost: dto.outputTokenCost,
       tier: dto.tier,
     });
-
     const model = await this.updateLanguageModelUseCase.execute(command);
     const responseDto =
       this.catalogModelResponseDtoMapper.toLanguageModelDto(model);
-
     this.logger.log(`Successfully updated language model ${id}`);
-
     return responseDto;
   }
 
@@ -354,7 +342,6 @@ export class SuperAdminCatalogModelsController {
     this.logger.log(
       `Creating embedding model ${dto.name} by super admin ${userId}`,
     );
-
     const command = new CreateEmbeddingModelCommand({
       name: dto.name,
       provider: dto.provider,
@@ -364,13 +351,10 @@ export class SuperAdminCatalogModelsController {
       inputTokenCost: dto.inputTokenCost,
       outputTokenCost: dto.outputTokenCost,
     });
-
     const model = await this.createEmbeddingModelUseCase.execute(command);
     const responseDto =
       this.catalogModelResponseDtoMapper.toEmbeddingModelDto(model);
-
     this.logger.log(`Successfully created embedding model ${model.id}`);
-
     return responseDto;
   }
 
@@ -412,7 +396,6 @@ export class SuperAdminCatalogModelsController {
     @Body() dto: UpdateEmbeddingModelRequestDto,
   ): Promise<EmbeddingModelResponseDto> {
     this.logger.log(`Updating embedding model ${id} by super admin ${userId}`);
-
     const command = new UpdateEmbeddingModelCommand({
       id,
       name: dto.name,
@@ -423,13 +406,10 @@ export class SuperAdminCatalogModelsController {
       inputTokenCost: dto.inputTokenCost,
       outputTokenCost: dto.outputTokenCost,
     });
-
     const model = await this.updateEmbeddingModelUseCase.execute(command);
     const responseDto =
       this.catalogModelResponseDtoMapper.toEmbeddingModelDto(model);
-
     this.logger.log(`Successfully updated embedding model ${id}`);
-
     return responseDto;
   }
 }
