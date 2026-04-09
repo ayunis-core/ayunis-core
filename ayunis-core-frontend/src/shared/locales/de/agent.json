@@ -50,7 +50,22 @@
     "description": "Verbinden Sie externe MCP-Server, um die Fähigkeiten des Agenten zu erweitern",
     "connectedCount": "{{count}} verbunden",
     "toggleAriaLabel": "{{name}}-Integration umschalten",
+    "authorizationRequired": "Autorisierung erforderlich",
+    "authorize": "Autorisieren",
+    "authorizing": "Autorisierung läuft...",
     "retryButton": "Erneut versuchen",
+    "oauth": {
+      "reauthorize": "Erneut autorisieren",
+      "revoke": "Widerrufen",
+      "successToast": "OAuth-Autorisierung erfolgreich abgeschlossen.",
+      "errorToast": "OAuth-Autorisierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "errorState": "OAuth-Status ist ungültig oder abgelaufen. Bitte starten Sie den Vorgang erneut.",
+      "errorOauthExchange": "OAuth-Token-Austausch fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "errorClientNotConfigured": "OAuth-Client ist für diese Integration nicht konfiguriert.",
+      "errorIntegrationNotFound": "Integration nicht gefunden.",
+      "revokeSuccess": "OAuth-Autorisierung wurde widerrufen.",
+      "revokeError": "OAuth-Autorisierung konnte nicht widerrufen werden."
+    },
     "success": {
       "connected": "Integration verbunden",
       "disconnected": "Integration getrennt"

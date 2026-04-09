@@ -49,6 +49,7 @@ export class StartMcpOAuthAuthorizationUseCase {
         level,
         orgId,
         userIdOrNull,
+        command.returnPath,
       );
 
       return { authorizationUrl: url };

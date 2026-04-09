@@ -3,7 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { useSkillMcpIntegrationsQueries } from '../api/useSkillMcpIntegrationsQueries';
 import { useAssignMcpIntegration } from '../api/useAssignMcpIntegration';
 import { useUnassignMcpIntegration } from '../api/useUnassignMcpIntegration';
-import { McpIntegrationsCard } from '@/widgets/mcp-integrations-card';
+import {
+  getMcpIntegrationsCardTranslations,
+  McpIntegrationsCard,
+  useHandleMcpOAuthCallback,
+} from '@/widgets/mcp-integrations-card';
 
 export default function SkillMcpIntegrationsCard({
   disabled = false,
@@ -16,6 +20,8 @@ export default function SkillMcpIntegrationsCard({
   const data = useSkillMcpIntegrationsQueries(skillId);
   const assignMutation = useAssignMcpIntegration(data.availableIntegrations);
   const unassignMutation = useUnassignMcpIntegration();
+
+  useHandleMcpOAuthCallback(t, data.refetch);
 
   const handleToggle = async (integrationId: string) => {
     const isCurrentlyAssigned =
@@ -30,14 +36,7 @@ export default function SkillMcpIntegrationsCard({
   return (
     <McpIntegrationsCard
       disabled={disabled}
-      translations={{
-        title: t('mcpIntegrations.title'),
-        description: t('mcpIntegrations.description'),
-        failedToLoad: t('mcpIntegrations.errors.failedToLoad'),
-        retryButton: t('mcpIntegrations.retryButton'),
-        toggleAriaLabel: (name: string) =>
-          t('mcpIntegrations.toggleAriaLabel', { name }),
-      }}
+      translations={getMcpIntegrationsCardTranslations(t)}
       hook={{
         ...data,
         handleToggle,

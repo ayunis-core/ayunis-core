@@ -155,6 +155,7 @@ describe('OAuthFlowService', () => {
         'org',
         integration.orgId,
         null,
+        '/settings/integrations?tab=mcp',
       );
 
       const url = new URL(result.url);
@@ -179,6 +180,7 @@ describe('OAuthFlowService', () => {
           userId: null,
           codeVerifier: expect.any(String),
           redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+          returnPath: '/settings/integrations?tab=mcp',
           nonce: expect.any(String),
         }),
         600,
@@ -202,6 +204,7 @@ describe('OAuthFlowService', () => {
           'org',
           integration.orgId,
           null,
+          '/admin-settings/integrations',
         ),
       ).toThrow(McpOAuthClientNotConfiguredError);
     });
@@ -222,6 +225,7 @@ describe('OAuthFlowService', () => {
           'org',
           integration.orgId,
           null,
+          '/admin-settings/integrations',
         ),
       ).toThrow(McpInvalidConfigSchemaError);
     });
@@ -239,6 +243,7 @@ describe('OAuthFlowService', () => {
         userId: null,
         codeVerifier: 'test-verifier',
         redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        returnPath: '/settings/integrations?tab=mcp',
         nonce: 'test-nonce',
       };
 
@@ -263,6 +268,7 @@ describe('OAuthFlowService', () => {
       expect(result.integrationId).toBe(integration.id);
       expect(result.level).toBe('org');
       expect(result.userId).toBeNull();
+      expect(result.returnPath).toBe('/settings/integrations?tab=mcp');
 
       expect(mockExchangeAuthorization).toHaveBeenCalledWith(
         'https://auth.example.com/token',
@@ -296,6 +302,7 @@ describe('OAuthFlowService', () => {
         userId: null,
         codeVerifier: 'test-verifier',
         redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        returnPath: '/settings/integrations',
         nonce: 'test-nonce',
       };
 
@@ -341,6 +348,7 @@ describe('OAuthFlowService', () => {
         userId: null,
         codeVerifier: 'test-verifier',
         redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        returnPath: '/settings/integrations',
         nonce: 'test-nonce',
       };
 
@@ -396,6 +404,7 @@ describe('OAuthFlowService', () => {
         userId: null,
         codeVerifier: 'v',
         redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        returnPath: '/settings/integrations',
         nonce: 'n',
       };
 
@@ -421,6 +430,7 @@ describe('OAuthFlowService', () => {
         userId: null,
         codeVerifier: 'v',
         redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        returnPath: '/settings/integrations',
         nonce: 'n',
       };
 
@@ -441,6 +451,7 @@ describe('OAuthFlowService', () => {
         userId: null,
         codeVerifier: 'v',
         redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        returnPath: '/settings/integrations',
         nonce: 'n',
       };
 
@@ -758,6 +769,38 @@ describe('OAuthFlowService', () => {
       const result = await service.getStatus(token.integrationId, null);
 
       expect(result.authorized).toBe(true);
+    });
+  });
+
+  describe('resolveAuthorizationContext', () => {
+    it('should return the return path and level from a valid state token', () => {
+      stateAdapter.verify.mockReturnValue({
+        integrationId: randomUUID(),
+        level: 'user',
+        orgId: randomUUID(),
+        userId: null,
+        codeVerifier: 'code-verifier',
+        redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        returnPath: '/skills/skill-123',
+        nonce: 'nonce',
+      });
+
+      const result = service.resolveAuthorizationContext('state-jwt');
+
+      expect(result).toEqual({
+        level: 'user',
+        returnPath: '/skills/skill-123',
+      });
+    });
+
+    it('should return null when the state token is invalid', () => {
+      stateAdapter.verify.mockImplementation(() => {
+        throw new McpOAuthStateInvalidError();
+      });
+
+      const result = service.resolveAuthorizationContext('bad-state');
+
+      expect(result).toBeNull();
     });
   });
 });

@@ -1,27 +1,22 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import {
-  useMcpIntegrationsControllerGetUserConfig,
-  useMcpIntegrationsControllerSetUserConfig,
   getMcpIntegrationsControllerGetUserConfigQueryKey,
+  useMcpIntegrationsControllerSetUserConfig,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
-export function useGetUserConfig(integrationId: string) {
-  const { data, isLoading } =
-    useMcpIntegrationsControllerGetUserConfig(integrationId);
-
-  return {
-    userConfig: data,
-    isLoadingUserConfig: isLoading,
-  };
+interface SetUserConfigMessages {
+  success: string;
+  error: string;
+  notFound: string;
 }
 
 export function useSetUserConfig(
   integrationId: string,
+  messages: SetUserConfigMessages,
   onSuccess?: () => void,
 ) {
-  const { t } = useTranslation('admin-settings-integrations');
   const queryClient = useQueryClient();
 
   const mutation = useMcpIntegrationsControllerSetUserConfig({
@@ -31,11 +26,20 @@ export function useSetUserConfig(
           queryKey:
             getMcpIntegrationsControllerGetUserConfigQueryKey(integrationId),
         });
-        showSuccess(t('integrations.userConfig.success'));
+        showSuccess(messages.success);
         onSuccess?.();
       },
-      onError: () => {
-        showError(t('integrations.userConfig.error'));
+      onError: (error: unknown) => {
+        try {
+          const { code } = extractErrorData(error);
+          if (code === 'MCP_INTEGRATION_NOT_FOUND') {
+            showError(messages.notFound);
+          } else {
+            showError(messages.error);
+          }
+        } catch {
+          showError(messages.error);
+        }
       },
     },
   });

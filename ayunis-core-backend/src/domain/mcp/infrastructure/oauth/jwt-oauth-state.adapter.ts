@@ -46,6 +46,7 @@ export class JwtOAuthStateAdapter extends McpOAuthStatePort {
         userId: decoded.userId,
         codeVerifier: decoded.codeVerifier,
         redirectUri: decoded.redirectUri,
+        returnPath: decoded.returnPath,
         nonce: decoded.nonce,
       };
     } catch (error: unknown) {
