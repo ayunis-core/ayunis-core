@@ -11,8 +11,9 @@ export function buildFrontendRedirectUrl(args: {
   params: Record<string, string>;
 }): string {
   const { configService, returnPath, level, params } = args;
-  const frontendBaseUrl =
-    configService.get<string>('app.frontend.baseUrl') ?? '';
+  const frontendBaseUrl = configService.getOrThrow<string>(
+    'app.frontend.baseUrl',
+  );
   const frontendUrl = new URL(frontendBaseUrl);
   const safePath =
     sanitizeFrontendRedirectPath(returnPath) ??
