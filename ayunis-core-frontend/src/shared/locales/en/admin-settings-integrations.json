@@ -155,7 +155,8 @@
       "type": {
         "predefined": "Predefined",
         "custom": "Custom",
-        "marketplace": "Marketplace"
+        "marketplace": "Marketplace",
+        "self_defined": "Self-defined"
       },
       "authMethod": {
         "none": "None",

@@ -3,6 +3,7 @@ import { McpIntegrationDtoMapper } from './mcp-integration-dto.mapper';
 import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
 import { PredefinedMcpIntegration } from '../../../domain/integrations/predefined-mcp-integration.entity';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
+import { SelfDefinedMcpIntegration } from '../../../domain/integrations/self-defined-mcp-integration.entity';
 import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
@@ -230,6 +231,109 @@ describe('McpIntegrationDtoMapper', () => {
       apiToken: SECRET_MASK,
       description: 'Municipal council data',
     });
+  });
+
+  it('maps self-defined integration', () => {
+    const configSchema: IntegrationConfigSchema = {
+      authType: 'NO_AUTH',
+      orgFields: [
+        {
+          key: 'endpointUrl',
+          label: 'Endpoint URL',
+          type: 'url',
+          required: true,
+        },
+      ],
+      userFields: [],
+    };
+    const integration = new SelfDefinedMcpIntegration({
+      ...baseParams,
+      configSchema,
+      orgConfigValues: { endpointUrl: 'https://example.com/api' },
+      auth: new NoAuthMcpIntegrationAuth(),
+    });
+
+    const dto = mapper.toDto(integration);
+
+    expect(dto.type).toBe('self_defined');
+    expect(dto.serverUrl).toBe(baseParams.serverUrl);
+    expect(dto.configSchema).toEqual({
+      authType: 'NO_AUTH',
+      orgFields: configSchema.orgFields,
+      userFields: configSchema.userFields,
+    });
+    expect(dto.hasUserFields).toBe(false);
+    expect(dto.orgConfigValues).toEqual({
+      endpointUrl: 'https://example.com/api',
+    });
+    expect(dto.slug).toBeUndefined();
+    expect(dto.marketplaceIdentifier).toBeUndefined();
+  });
+
+  it('maps self-defined integration with OAuth config', () => {
+    const configSchema: IntegrationConfigSchema = {
+      authType: 'OAUTH',
+      orgFields: [],
+      userFields: [],
+      oauth: {
+        authorizationUrl: 'https://auth.example.com/authorize',
+        tokenUrl: 'https://auth.example.com/token',
+        scopes: ['read'],
+        level: 'org',
+      },
+    };
+    const integration = new SelfDefinedMcpIntegration({
+      ...baseParams,
+      configSchema,
+      orgConfigValues: {},
+      auth: new NoAuthMcpIntegrationAuth(),
+      oauthClientId: 'client-123',
+      oauthClientSecretEncrypted: 'encrypted-secret',
+    });
+
+    const dto = mapper.toDto(integration);
+
+    expect(dto.oauth).toEqual({
+      enabled: true,
+      level: 'org',
+      authorized: false, // enrichment happens at controller level
+      hasClientCredentials: true,
+    });
+  });
+
+  it('maps marketplace integration without OAuth to oauth.enabled=false', () => {
+    const configSchema: IntegrationConfigSchema = {
+      authType: 'NO_AUTH',
+      orgFields: [],
+      userFields: [],
+    };
+    const integration = new MarketplaceMcpIntegration({
+      ...baseParams,
+      marketplaceIdentifier: 'no-oauth',
+      configSchema,
+      orgConfigValues: {},
+      auth: new NoAuthMcpIntegrationAuth(),
+    });
+
+    const dto = mapper.toDto(integration);
+
+    expect(dto.oauth).toEqual({
+      enabled: false,
+      level: null,
+      authorized: false,
+      hasClientCredentials: false,
+    });
+  });
+
+  it('returns undefined oauth for custom integrations', () => {
+    const integration = new CustomMcpIntegration({
+      ...baseParams,
+      auth: new NoAuthMcpIntegrationAuth(),
+    });
+
+    const dto = mapper.toDto(integration);
+
+    expect(dto.oauth).toBeUndefined();
   });
 
   it('excludes fixed-value fields from orgConfigValues', () => {
