@@ -20,6 +20,7 @@ import {
 } from '@/shared/ui/shadcn/item';
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { getOAuthErrorMessage, parseOAuthInfo } from '@/shared/lib/mcp-oauth';
 import { SettingsLayout } from '../../settings-layout';
 import { useAvailableIntegrations } from '../api/useAvailableIntegrations';
 
@@ -47,7 +48,7 @@ export default function IntegrationsSettingsPage() {
       showSuccess(t('oauth.successToast'));
     } else if (oauthStatus === 'error') {
       const reason = searchParams.get('reason');
-      showError(getOAuthErrorMessage(t, reason));
+      showError(getOAuthErrorMessage(t, reason, 'oauth.'));
     }
 
     searchParams.delete('oauth');
@@ -266,29 +267,6 @@ function hasUserLevelOAuth(
   return oauthInfo?.enabled === true && oauthInfo.level === 'user';
 }
 
-function parseOAuthInfo(value: unknown) {
-  if (!value || typeof value !== 'object') {
-    return null;
-  }
-
-  const oauth = value as Record<string, unknown>;
-  if (oauth.enabled !== true && oauth.enabled !== false) {
-    return null;
-  }
-  if (oauth.level !== null && oauth.level !== 'org' && oauth.level !== 'user') {
-    return null;
-  }
-  if (oauth.authorized !== true && oauth.authorized !== false) {
-    return null;
-  }
-
-  return {
-    enabled: oauth.enabled,
-    level: oauth.level,
-    authorized: oauth.authorized,
-  };
-}
-
 function getConnectionStatusLabel(
   t: (key: string) => string,
   connectionStatus?: McpIntegrationResponseDto['connectionStatus'],
@@ -305,26 +283,4 @@ function getConnectionStatusLabel(
     case 'unknown':
       return t('row.connectionUnknown');
   }
-}
-
-function getOAuthErrorMessage(
-  t: (key: string) => string,
-  reason: string | null,
-): string {
-  if (!reason) {
-    return t('oauth.errorToast');
-  }
-
-  const normalizedReason = reason.toLowerCase();
-  if (normalizedReason.includes('state')) {
-    return t('oauth.errorState');
-  }
-  if (normalizedReason.includes('exchange')) {
-    return t('oauth.errorOauthExchange');
-  }
-  if (normalizedReason.includes('client credentials')) {
-    return t('oauth.errorClientNotConfigured');
-  }
-
-  return t('oauth.errorToast');
 }

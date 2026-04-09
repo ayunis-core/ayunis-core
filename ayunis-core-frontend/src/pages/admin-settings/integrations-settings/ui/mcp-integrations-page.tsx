@@ -28,6 +28,7 @@ import {
 import { ComingSoonDialog } from './coming-soon-dialog';
 import { CreateSelfDefinedDialog } from './create-self-defined-dialog';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { getOAuthErrorMessage } from '@/shared/lib/mcp-oauth';
 
 export function McpIntegrationsPage({
   isCloud,
@@ -68,7 +69,7 @@ export function McpIntegrationsPage({
       showSuccess(t('integrations.oauth.successToast'));
     } else if (oauthStatus === 'error') {
       const reason = searchParams.get('reason');
-      showError(getOAuthErrorMessage(t, reason));
+      showError(getOAuthErrorMessage(t, reason, 'integrations.oauth.'));
     }
 
     searchParams.delete('oauth');
@@ -293,26 +294,4 @@ function HeaderActions({
       )}
     </div>
   );
-}
-
-function getOAuthErrorMessage(
-  t: (key: string) => string,
-  reason: string | null,
-): string {
-  if (!reason) {
-    return t('integrations.oauth.errorToast');
-  }
-
-  const normalizedReason = reason.toLowerCase();
-  if (normalizedReason.includes('state')) {
-    return t('integrations.oauth.errorState');
-  }
-  if (normalizedReason.includes('exchange')) {
-    return t('integrations.oauth.errorOauthExchange');
-  }
-  if (normalizedReason.includes('client credentials')) {
-    return t('integrations.oauth.errorClientNotConfigured');
-  }
-
-  return t('integrations.oauth.errorToast');
 }

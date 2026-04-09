@@ -3,8 +3,6 @@ import type {
   CreatePredefinedIntegrationDto,
   CreateSelfDefinedIntegrationDto,
   McpIntegrationResponseDto,
-  OAuthAuthorizeResponseDto,
-  OAuthStatusResponseDto,
   PredefinedConfigResponseDto,
   UpdateMcpIntegrationDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -27,8 +25,6 @@ export type CreateCustomIntegrationFormData = CreateCustomIntegrationDto;
 export type CreateSelfDefinedIntegrationPayload =
   CreateSelfDefinedIntegrationDto;
 export type UpdateIntegrationFormData = UpdateMcpIntegrationDto;
-export type OAuthAuthorizeResponse = OAuthAuthorizeResponseDto;
-export type OAuthStatusResponse = OAuthStatusResponseDto;
 
 export interface CreateSelfDefinedIntegrationFormFields {
   name: string;

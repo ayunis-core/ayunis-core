@@ -5,6 +5,7 @@ import {
   getMcpIntegrationsControllerListPredefinedConfigsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { parseOAuthInfo } from '@/shared/lib/mcp-oauth';
 import type { McpIntegration, McpIntegrationOAuthInfo } from '../model/types';
 
 export function useMcpIntegrationsQueries() {
@@ -50,33 +51,18 @@ function toMcpIntegration(
 }
 
 function toOAuthInfo(value: unknown): McpIntegrationOAuthInfo | undefined {
-  if (!value || typeof value !== 'object') {
+  const base = parseOAuthInfo(value);
+  if (!base) {
     return undefined;
   }
 
   const oauth = value as Record<string, unknown>;
-  const enabled = oauth.enabled;
-  const level = oauth.level;
-  const authorized = oauth.authorized;
-  const hasClientCredentials = oauth.hasClientCredentials;
-
-  if (typeof enabled !== 'boolean') {
-    return undefined;
-  }
-  if (level !== null && level !== 'org' && level !== 'user') {
-    return undefined;
-  }
-  if (typeof authorized !== 'boolean') {
-    return undefined;
-  }
-  if (typeof hasClientCredentials !== 'boolean') {
+  if (typeof oauth.hasClientCredentials !== 'boolean') {
     return undefined;
   }
 
   return {
-    enabled,
-    level,
-    authorized,
-    hasClientCredentials,
+    ...base,
+    hasClientCredentials: oauth.hasClientCredentials,
   };
 }
