@@ -21,6 +21,8 @@ import type { CollectUsageAsyncService } from '../../services/collect-usage-asyn
 import type { CreditBudgetGuardService } from '../../services/credit-budget-guard.service';
 import type { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
+import type { HasActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.use-case';
+import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 import { RunErrorCode } from '../../runs.errors';
 import type { Agent } from 'src/domain/agents/domain/agent.entity';
 import type { ToolAssemblyService } from '../../services/tool-assembly.service';
@@ -45,6 +47,7 @@ describe('ExecuteRunUseCase', () => {
   let messageCleanupService: jest.Mocked<MessageCleanupService>;
   let checkQuotaUseCase: jest.Mocked<CheckQuotaUseCase>;
   let creditBudgetGuardService: jest.Mocked<CreditBudgetGuardService>;
+  let hasActiveSubscriptionUseCase: jest.Mocked<HasActiveSubscriptionUseCase>;
 
   const userId = randomUUID();
   const orgId = randomUUID();
@@ -93,6 +96,13 @@ describe('ExecuteRunUseCase', () => {
       ensureBudgetAvailable: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<CreditBudgetGuardService>;
 
+    hasActiveSubscriptionUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        hasActiveSubscription: true,
+        subscriptionType: SubscriptionType.SEAT_BASED,
+      }),
+    } as unknown as jest.Mocked<HasActiveSubscriptionUseCase>;
+
     contextService = {
       get: jest.fn(),
     } as unknown as jest.Mocked<ContextService>;
@@ -127,6 +137,7 @@ describe('ExecuteRunUseCase', () => {
       contextService,
       anonymizeTextUseCase,
       { collect: jest.fn() } as unknown as CollectUsageAsyncService,
+      hasActiveSubscriptionUseCase,
       checkQuotaUseCase,
       creditBudgetGuardService,
       { execute: jest.fn() } as unknown as TrimMessagesForContextUseCase,
@@ -491,6 +502,88 @@ describe('ExecuteRunUseCase', () => {
       );
     });
 
+    it('skips fair-use quota checks for usage-based subscriptions', async () => {
+      const thread = createMockThread({
+        model: makeTieredModel(ModelTier.HIGH),
+      });
+      findThreadUseCase.execute.mockResolvedValue({
+        thread,
+        isLongChat: false,
+      });
+      hasActiveSubscriptionUseCase.execute.mockResolvedValue({
+        hasActiveSubscription: true,
+        subscriptionType: SubscriptionType.USAGE_BASED,
+      });
+      stubInferenceWithEmptyResponse();
+
+      const command = new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('hello', []),
+        streaming: true,
+      });
+      await drainGenerator(await useCase.execute(command));
+
+      expect(hasActiveSubscriptionUseCase.execute).toHaveBeenCalledTimes(1);
+      expect(checkQuotaUseCase.execute).not.toHaveBeenCalled();
+      expect(
+        creditBudgetGuardService.ensureBudgetAvailable,
+      ).toHaveBeenCalledWith(orgId);
+    });
+
+    it('keeps fair-use quota checks when there is no active subscription', async () => {
+      const thread = createMockThread({
+        model: makeTieredModel(ModelTier.LOW),
+      });
+      findThreadUseCase.execute.mockResolvedValue({
+        thread,
+        isLongChat: false,
+      });
+      hasActiveSubscriptionUseCase.execute.mockResolvedValue({
+        hasActiveSubscription: false,
+        subscriptionType: null,
+      });
+      stubInferenceWithEmptyResponse();
+
+      const command = new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('hello', []),
+        streaming: true,
+      });
+      await drainGenerator(await useCase.execute(command));
+
+      expect(checkQuotaUseCase.execute).toHaveBeenCalledTimes(1);
+      expect(checkQuotaUseCase.execute.mock.calls[0][0].quotaType).toBe(
+        QuotaType.FAIR_USE_MESSAGES_LOW,
+      );
+    });
+
+    it('skips fair-use quota checks for self-hosted instances', async () => {
+      const thread = createMockThread({
+        model: makeTieredModel(ModelTier.MEDIUM),
+      });
+      findThreadUseCase.execute.mockResolvedValue({
+        thread,
+        isLongChat: false,
+      });
+      hasActiveSubscriptionUseCase.execute.mockResolvedValue({
+        hasActiveSubscription: true,
+        subscriptionType: null,
+      });
+      stubInferenceWithEmptyResponse();
+
+      const command = new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('hello', []),
+        streaming: true,
+      });
+      await drainGenerator(await useCase.execute(command));
+
+      expect(checkQuotaUseCase.execute).not.toHaveBeenCalled();
+      expect(
+        creditBudgetGuardService.ensureBudgetAvailable,
+      ).toHaveBeenCalledWith(orgId);
+    });
+
     it('uses the agent model tier when the thread is agent-backed', async () => {
       const agentId = randomUUID();
       const thread = createMockThread({
@@ -523,6 +616,42 @@ describe('ExecuteRunUseCase', () => {
       expect(checkQuotaUseCase.execute.mock.calls[0][0].quotaType).toBe(
         QuotaType.FAIR_USE_MESSAGES_HIGH,
       );
+    });
+
+    it('skips fair-use quota checks for usage-based subscriptions on agent-backed threads', async () => {
+      const agentId = randomUUID();
+      const thread = createMockThread({
+        agentId,
+        model: undefined as unknown as PermittedLanguageModel,
+      });
+      findThreadUseCase.execute.mockResolvedValue({
+        thread,
+        isLongChat: false,
+      });
+      findOneAgentUseCase.execute.mockResolvedValue({
+        agent: {
+          id: agentId,
+          model: makeTieredModel(ModelTier.HIGH),
+        } as unknown as Agent,
+        isShared: false,
+      });
+      hasActiveSubscriptionUseCase.execute.mockResolvedValue({
+        hasActiveSubscription: true,
+        subscriptionType: SubscriptionType.USAGE_BASED,
+      });
+      stubInferenceWithEmptyResponse();
+
+      const command = new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('hello', []),
+        streaming: true,
+      });
+      await drainGenerator(await useCase.execute(command));
+
+      expect(checkQuotaUseCase.execute).not.toHaveBeenCalled();
+      expect(
+        creditBudgetGuardService.ensureBudgetAvailable,
+      ).toHaveBeenCalledWith(orgId);
     });
 
     it('does NOT charge a quota when no model can be resolved', async () => {
