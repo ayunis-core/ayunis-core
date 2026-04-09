@@ -27,7 +27,6 @@ import { UUID } from 'crypto';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
-// DTOs
 import { CreatePredefinedIntegrationDto } from './dto/create-predefined-integration.dto';
 import { CreateCustomIntegrationDto } from './dto/create-custom-integration.dto';
 import { CreateSelfDefinedIntegrationDto } from './dto/create-self-defined-integration.dto';
@@ -39,12 +38,8 @@ import { OAuthAuthorizeResponseDto } from './dto/oauth-authorize-response.dto';
 import { OAuthStatusResponseDto } from './dto/oauth-status-response.dto';
 import { ValidationResponseDto } from './dto/validation-response.dto';
 import { PredefinedConfigResponseDto } from './dto/predefined-config-response.dto';
-
-// Mappers
 import { McpIntegrationDtoMapper } from './mappers/mcp-integration-dto.mapper';
 import { PredefinedConfigDtoMapper } from './mappers/predefined-config-dto.mapper';
-
-// Use Cases
 import { CreateMcpIntegrationUseCase } from '../../application/use-cases/create-mcp-integration/create-mcp-integration.use-case';
 import { GetMcpIntegrationUseCase } from '../../application/use-cases/get-mcp-integration/get-mcp-integration.use-case';
 import { ListOrgMcpIntegrationsUseCase } from '../../application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.use-case';
@@ -58,8 +53,6 @@ import { ListPredefinedMcpIntegrationConfigsUseCase } from '../../application/us
 import { InstallMarketplaceIntegrationUseCase } from '../../application/use-cases/install-marketplace-integration/install-marketplace-integration.use-case';
 import { SetUserMcpConfigUseCase } from '../../application/use-cases/set-user-mcp-config/set-user-mcp-config.use-case';
 import { GetUserMcpConfigUseCase } from '../../application/use-cases/get-user-mcp-config/get-user-mcp-config.use-case';
-
-// Commands and Queries
 import { CreatePredefinedMcpIntegrationCommand } from '../../application/use-cases/create-mcp-integration/create-predefined-mcp-integration.command';
 import { CreateCustomMcpIntegrationCommand } from '../../application/use-cases/create-mcp-integration/create-custom-mcp-integration.command';
 import { GetMcpIntegrationQuery } from '../../application/use-cases/get-mcp-integration/get-mcp-integration.query';
@@ -136,7 +129,7 @@ export class McpIntegrationsController {
       dto.returnsPii,
     );
     const integration = await this.createMcpIntegrationUseCase.execute(command);
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    return this.toEnrichedDto(integration);
   }
 
   @Post('custom')
@@ -148,9 +141,7 @@ export class McpIntegrationsController {
     @Body() dto: CreateCustomIntegrationDto,
   ): Promise<McpIntegrationResponseDto> {
     this.logger.log('createCustom', { name: dto.name });
-    const isCloud =
-      this.configService.get<boolean>('app.isCloudHosted') ?? false;
-    if (isCloud) {
+    if (this.configService.get<boolean>('app.isCloudHosted') ?? false) {
       throw new ForbiddenException(
         'Custom MCP integrations are not allowed on cloud',
       );
@@ -164,7 +155,7 @@ export class McpIntegrationsController {
       dto.returnsPii,
     );
     const integration = await this.createMcpIntegrationUseCase.execute(command);
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    return this.toEnrichedDto(integration);
   }
 
   @Get()
@@ -179,9 +170,7 @@ export class McpIntegrationsController {
 
   @Get('predefined/available')
   @Roles(UserRole.ADMIN)
-  @ApiOperation({
-    summary: 'List available predefined MCP integration configurations',
-  })
+  @ApiOperation({ summary: 'List available predefined MCP configs' })
   @ApiResponse({ status: 200, type: [PredefinedConfigResponseDto] })
   listPredefinedConfigs(): PredefinedConfigResponseDto[] {
     const configs = this.listPredefinedConfigsUseCase.execute();
@@ -198,6 +187,51 @@ export class McpIntegrationsController {
     return this.enrichWithOAuthStatus(dtos, integrations);
   }
 
+  @Get('oauth/callback')
+  @Public()
+  @ApiExcludeEndpoint()
+  async oauthCallback(
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @Query('error') error: string,
+    @Res({ passthrough: false }) res: Response,
+  ): Promise<void> {
+    const frontendBaseUrl = this.configService.getOrThrow<string>(
+      'app.frontend.baseUrl',
+    );
+
+    if (error) {
+      const reason = error === 'access_denied' ? 'User denied consent' : error;
+      res.redirect(
+        `${frontendBaseUrl}/admin-settings/integrations?oauth=error&reason=${encodeURIComponent(reason)}`,
+      );
+      return;
+    }
+
+    try {
+      const result = await this.completeOAuthUseCase.execute(
+        new CompleteMcpOAuthAuthorizationCommand(code, state),
+      );
+      if (result.success) {
+        res.redirect(
+          `${frontendBaseUrl}/admin-settings/integrations?oauth=success&id=${result.integrationId}`,
+        );
+      } else {
+        res.redirect(
+          `${frontendBaseUrl}/admin-settings/integrations?oauth=error&reason=${encodeURIComponent(result.reason)}`,
+        );
+      }
+    } catch (err) {
+      this.logger.error(
+        'OAuth callback failed unexpectedly',
+        err instanceof Error ? err.stack : String(err),
+      );
+      res.redirect(
+        `${frontendBaseUrl}/admin-settings/integrations?oauth=error&reason=${encodeURIComponent('An unexpected error occurred during OAuth authorization')}`,
+      );
+    }
+  }
+
   @Get(':id')
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Get MCP integration by ID' })
@@ -209,9 +243,7 @@ export class McpIntegrationsController {
     const integration = await this.getMcpIntegrationUseCase.execute(
       new GetMcpIntegrationQuery(id),
     );
-    const dto = this.mcpIntegrationDtoMapper.toDto(integration);
-    const [enriched] = await this.enrichWithOAuthStatus([dto], [integration]);
-    return enriched;
+    return this.toEnrichedDto(integration);
   }
 
   @Patch(':id')
@@ -236,7 +268,7 @@ export class McpIntegrationsController {
       configSchema: dto.configSchema as IntegrationConfigSchema | undefined,
     });
     const integration = await this.updateMcpIntegrationUseCase.execute(command);
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    return this.toEnrichedDto(integration);
   }
 
   @Delete(':id')
@@ -262,7 +294,7 @@ export class McpIntegrationsController {
     const integration = await this.enableMcpIntegrationUseCase.execute(
       new EnableMcpIntegrationCommand(id),
     );
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    return this.toEnrichedDto(integration);
   }
 
   @Post(':id/disable')
@@ -276,7 +308,7 @@ export class McpIntegrationsController {
     const integration = await this.disableMcpIntegrationUseCase.execute(
       new DisableMcpIntegrationCommand(id),
     );
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    return this.toEnrichedDto(integration);
   }
 
   @Post('install-from-marketplace')
@@ -296,7 +328,7 @@ export class McpIntegrationsController {
     );
     const integration =
       await this.installMarketplaceIntegrationUseCase.execute(command);
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    return this.toEnrichedDto(integration);
   }
 
   @Get(':id/user-config')
@@ -359,9 +391,7 @@ export class McpIntegrationsController {
     @Body() dto: CreateSelfDefinedIntegrationDto,
   ): Promise<McpIntegrationResponseDto> {
     this.logger.log('createSelfDefined', { name: dto.name });
-    const isCloud =
-      this.configService.get<boolean>('app.isCloudHosted') ?? false;
-    if (isCloud) {
+    if (this.configService.get<boolean>('app.isCloudHosted') ?? false) {
       throw new ForbiddenException(
         'Self-defined MCP integrations are not allowed on cloud',
       );
@@ -377,7 +407,7 @@ export class McpIntegrationsController {
       dto.returnsPii,
     );
     const integration = await this.createSelfDefinedUseCase.execute(command);
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    return this.toEnrichedDto(integration);
   }
 
   @Post(':id/oauth/authorize')
@@ -395,41 +425,6 @@ export class McpIntegrationsController {
     return { authorizationUrl: result.authorizationUrl };
   }
 
-  @Get('oauth/callback')
-  @Public()
-  @ApiExcludeEndpoint()
-  async oauthCallback(
-    @Query('code') code: string,
-    @Query('state') state: string,
-    @Query('error') error: string,
-    @Res({ passthrough: false }) res: Response,
-  ): Promise<void> {
-    const frontendBaseUrl = this.configService.getOrThrow<string>(
-      'app.frontend.baseUrl',
-    );
-
-    if (error) {
-      const reason = error === 'access_denied' ? 'User denied consent' : error;
-      res.redirect(
-        `${frontendBaseUrl}/admin-settings/integrations?oauth=error&reason=${encodeURIComponent(reason)}`,
-      );
-      return;
-    }
-
-    const result = await this.completeOAuthUseCase.execute(
-      new CompleteMcpOAuthAuthorizationCommand(code, state),
-    );
-    if (result.success) {
-      res.redirect(
-        `${frontendBaseUrl}/admin-settings/integrations?oauth=success&id=${result.integrationId}`,
-      );
-    } else {
-      res.redirect(
-        `${frontendBaseUrl}/admin-settings/integrations?oauth=error&reason=${encodeURIComponent(result.reason)}`,
-      );
-    }
-  }
-
   @Post(':id/oauth/revoke')
   @Roles(UserRole.USER, UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -444,9 +439,7 @@ export class McpIntegrationsController {
 
   @Get(':id/oauth/status')
   @Roles(UserRole.USER, UserRole.ADMIN)
-  @ApiOperation({
-    summary: 'Get OAuth authorization status for an integration',
-  })
+  @ApiOperation({ summary: 'Get OAuth authorization status' })
   @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
   @ApiResponse({ status: 200, type: OAuthStatusResponseDto })
   async getOAuthStatus(
@@ -457,25 +450,25 @@ export class McpIntegrationsController {
     );
   }
 
-  /**
-   * Enriches DTO array with OAuth authorized status by batch-loading tokens.
-   * The mapper sets `oauth.authorized = false` by default; this method
-   * updates it to `true` when a token row exists for the integration.
-   */
+  private async toEnrichedDto(
+    integration: McpIntegration,
+  ): Promise<McpIntegrationResponseDto> {
+    const dto = this.mcpIntegrationDtoMapper.toDto(integration);
+    const [enriched] = await this.enrichWithOAuthStatus([dto], [integration]);
+    return enriched;
+  }
+
   private async enrichWithOAuthStatus(
     dtos: McpIntegrationResponseDto[],
     integrations: McpIntegration[],
   ): Promise<McpIntegrationResponseDto[]> {
-    const oauthIntegrations = integrations.filter(
+    const oauthEnabled = integrations.filter(
       (i): i is MarketplaceMcpIntegration | SelfDefinedMcpIntegration =>
-        i instanceof MarketplaceMcpIntegration ||
-        i instanceof SelfDefinedMcpIntegration,
+        (i instanceof MarketplaceMcpIntegration ||
+          i instanceof SelfDefinedMcpIntegration) &&
+        !!i.configSchema.oauth,
     );
-
-    const oauthEnabled = oauthIntegrations.filter((i) => i.configSchema.oauth);
-
     if (oauthEnabled.length === 0) return dtos;
-
     const authorizedByIntegrationId = new Map<UUID, boolean>(
       await Promise.all(
         oauthEnabled.map(async (integration) => {
@@ -495,15 +488,13 @@ export class McpIntegrationsController {
       ),
     );
 
-    integrations.forEach((integration, index) => {
+    for (const [index, integration] of integrations.entries()) {
       const dto = dtos[index];
-      if (!dto.oauth?.enabled) {
-        return;
+      if (dto.oauth?.enabled) {
+        dto.oauth.authorized =
+          authorizedByIntegrationId.get(integration.id) ?? false;
       }
-      dto.oauth.authorized =
-        authorizedByIntegrationId.get(integration.id) ?? false;
-    });
-
+    }
     return dtos;
   }
 }

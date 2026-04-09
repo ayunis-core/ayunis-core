@@ -3,7 +3,7 @@ import { registerDecorator } from 'class-validator';
 
 const VALID_FIELD_TYPES = new Set(['text', 'url', 'secret']);
 
-function isConfigField(value: unknown): boolean {
+const isConfigField = (value: unknown): boolean => {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false;
   }
@@ -15,13 +15,51 @@ function isConfigField(value: unknown): boolean {
     VALID_FIELD_TYPES.has(obj.type) &&
     typeof obj.required === 'boolean'
   );
-}
+};
+
+const isNonEmptyString = (v: unknown): boolean =>
+  typeof v === 'string' && v.length > 0;
+
+const isStringArray = (v: unknown): boolean =>
+  Array.isArray(v) && v.every((s: unknown) => typeof s === 'string');
+
+const isValidOAuthConfig = (value: unknown): boolean => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const oauth = value as Record<string, unknown>;
+  if (!isNonEmptyString(oauth.authorizationUrl)) return false;
+  if (!isNonEmptyString(oauth.tokenUrl)) return false;
+  if (!isStringArray(oauth.scopes)) return false;
+  return oauth.level === 'org' || oauth.level === 'user';
+};
+
+const isValidFieldArray = (value: unknown): boolean =>
+  Array.isArray(value) && value.every(isConfigField);
+
+const isValidConfigSchema = (value: unknown): boolean => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const obj = value as Record<string, unknown>;
+  if (typeof obj.authType !== 'string' || obj.authType.length === 0) {
+    return false;
+  }
+  if (!isValidFieldArray(obj.orgFields) || !isValidFieldArray(obj.userFields)) {
+    return false;
+  }
+  if (obj.oauth !== undefined && !isValidOAuthConfig(obj.oauth)) {
+    return false;
+  }
+  return true;
+};
 
 /**
  * Validates that a value conforms to the IntegrationConfigSchema shape:
  * - `authType` must be a non-empty string
  * - `orgFields` must be an array of valid ConfigField objects
  * - `userFields` must be an array of valid ConfigField objects
+ * - `oauth` (optional) must conform to OAuthConfig
  */
 export function IsIntegrationConfigSchema(
   validationOptions?: ValidationOptions,
@@ -33,38 +71,9 @@ export function IsIntegrationConfigSchema(
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        validate(value: unknown) {
-          if (
-            typeof value !== 'object' ||
-            value === null ||
-            Array.isArray(value)
-          ) {
-            return false;
-          }
-          const obj = value as Record<string, unknown>;
-
-          if (typeof obj.authType !== 'string' || obj.authType.length === 0) {
-            return false;
-          }
-
-          if (!Array.isArray(obj.orgFields)) {
-            return false;
-          }
-          if (!obj.orgFields.every(isConfigField)) {
-            return false;
-          }
-
-          if (!Array.isArray(obj.userFields)) {
-            return false;
-          }
-          if (!obj.userFields.every(isConfigField)) {
-            return false;
-          }
-
-          return true;
-        },
+        validate: isValidConfigSchema,
         defaultMessage(args: ValidationArguments) {
-          return `${args.property} must be a valid IntegrationConfigSchema with authType (string), orgFields (ConfigField[]), and userFields (ConfigField[])`;
+          return `${args.property} must be a valid IntegrationConfigSchema with authType (string), orgFields (ConfigField[]), userFields (ConfigField[]), and optional oauth (OAuthConfig)`;
         },
       },
     });

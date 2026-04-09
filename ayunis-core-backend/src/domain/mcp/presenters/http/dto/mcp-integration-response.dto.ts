@@ -1,6 +1,35 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
 
+export class McpIntegrationOAuthDto {
+  @ApiProperty({
+    description: 'Whether OAuth is enabled for this integration',
+    example: true,
+  })
+  enabled: boolean;
+
+  @ApiProperty({
+    description:
+      'OAuth level — org-wide or per-user (null when OAuth is disabled)',
+    enum: ['org', 'user'],
+    nullable: true,
+    example: 'org',
+  })
+  level: 'org' | 'user' | null;
+
+  @ApiProperty({
+    description: 'Whether a valid OAuth token exists',
+    example: false,
+  })
+  authorized: boolean;
+
+  @ApiProperty({
+    description: 'Whether OAuth client credentials (id/secret) are configured',
+    example: true,
+  })
+  hasClientCredentials: boolean;
+}
+
 /**
  * Response DTO for MCP integration data.
  * Used in API responses to return MCP integration information.
@@ -170,11 +199,7 @@ export class McpIntegrationResponseDto {
 
   @ApiPropertyOptional({
     description: 'OAuth configuration and status for this integration',
+    type: McpIntegrationOAuthDto,
   })
-  oauth?: {
-    enabled: boolean;
-    level: 'org' | 'user' | null;
-    authorized: boolean;
-    hasClientCredentials: boolean;
-  };
+  oauth?: McpIntegrationOAuthDto;
 }
