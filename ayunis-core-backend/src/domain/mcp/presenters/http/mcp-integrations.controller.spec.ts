@@ -920,7 +920,7 @@ describe('McpIntegrationsController', () => {
     });
 
     it('should fall back to the user settings page when callback path is missing for user-level OAuth', async () => {
-      configServiceMock.get.mockReturnValue('http://localhost:3001');
+      configServiceMock.getOrThrow.mockReturnValue('http://localhost:3001');
       completeOAuthUseCase.execute.mockResolvedValue({
         success: false,
         reason: 'Invalid state',
@@ -944,7 +944,7 @@ describe('McpIntegrationsController', () => {
     });
 
     it('should fall back to the admin settings page when callback path is unsafe for org-level OAuth', async () => {
-      configServiceMock.get.mockReturnValue('http://localhost:3001');
+      configServiceMock.getOrThrow.mockReturnValue('http://localhost:3001');
       completeOAuthUseCase.execute.mockResolvedValue({
         success: false,
         reason: 'Invalid state',
