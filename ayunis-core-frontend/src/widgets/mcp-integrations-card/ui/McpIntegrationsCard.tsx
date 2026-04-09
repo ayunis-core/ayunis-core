@@ -17,6 +17,7 @@ import {
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
 import { cn } from '@/shared/lib/shadcn/utils';
+import { parseOAuthInfo } from '@/shared/lib/oauth-utils';
 import { OAuthAuthorizeButton, useOAuthStatus } from '@/features/mcp-oauth';
 import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
@@ -287,27 +288,4 @@ function OAuthGatedIntegrationRow({
       </ItemActions>
     </Item>
   );
-}
-
-function parseOAuthInfo(value: unknown) {
-  if (!value || typeof value !== 'object') {
-    return null;
-  }
-
-  const oauth = value as Record<string, unknown>;
-  if (oauth.enabled !== true && oauth.enabled !== false) {
-    return null;
-  }
-  if (oauth.level !== null && oauth.level !== 'org' && oauth.level !== 'user') {
-    return null;
-  }
-  if (oauth.authorized !== true && oauth.authorized !== false) {
-    return null;
-  }
-
-  return {
-    enabled: oauth.enabled,
-    level: oauth.level,
-    authorized: oauth.authorized,
-  };
 }

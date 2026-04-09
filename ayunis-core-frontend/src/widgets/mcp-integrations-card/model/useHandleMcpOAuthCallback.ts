@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { TFunction } from 'i18next';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { getOAuthErrorMessage } from '@/shared/lib/oauth-utils';
 
 export function useHandleMcpOAuthCallback(
   t: TFunction,
@@ -17,7 +18,13 @@ export function useHandleMcpOAuthCallback(
       showSuccess(t('mcpIntegrations.oauth.successToast'));
       refetch();
     } else if (oauthStatus === 'error') {
-      showError(getOAuthErrorMessage(t, searchParams.get('reason')));
+      showError(
+        getOAuthErrorMessage(
+          t,
+          searchParams.get('reason'),
+          'mcpIntegrations.oauth',
+        ),
+      );
     }
 
     searchParams.delete('oauth');
@@ -30,23 +37,4 @@ export function useHandleMcpOAuthCallback(
       window.location.pathname + searchSuffix + window.location.hash;
     window.history.replaceState({}, '', cleanedUrl);
   }, [refetch, t]);
-}
-
-function getOAuthErrorMessage(t: TFunction, reason: string | null): string {
-  if (!reason) {
-    return t('mcpIntegrations.oauth.errorToast');
-  }
-
-  const normalizedReason = reason.toLowerCase();
-  if (normalizedReason.includes('state')) {
-    return t('mcpIntegrations.oauth.errorState');
-  }
-  if (normalizedReason.includes('exchange')) {
-    return t('mcpIntegrations.oauth.errorOauthExchange');
-  }
-  if (normalizedReason.includes('client credentials')) {
-    return t('mcpIntegrations.oauth.errorClientNotConfigured');
-  }
-
-  return t('mcpIntegrations.oauth.errorToast');
 }
