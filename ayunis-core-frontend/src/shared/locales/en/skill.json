@@ -123,7 +123,22 @@
     "title": "Integrations",
     "description": "Connect external MCP servers to extend skill capabilities",
     "toggleAriaLabel": "Toggle {{name}} integration",
+    "authorizationRequired": "Authorization required",
+    "authorize": "Authorize",
+    "authorizing": "Authorizing...",
     "retryButton": "Retry",
+    "oauth": {
+      "reauthorize": "Re-authorize",
+      "revoke": "Revoke",
+      "successToast": "OAuth authorization completed successfully.",
+      "errorToast": "OAuth authorization failed. Please try again.",
+      "errorState": "OAuth state is invalid or expired. Please start again.",
+      "errorOauthExchange": "OAuth token exchange failed. Please try again.",
+      "errorClientNotConfigured": "OAuth client is not configured for this integration.",
+      "errorIntegrationNotFound": "Integration not found.",
+      "revokeSuccess": "OAuth authorization revoked.",
+      "revokeError": "Failed to revoke OAuth authorization."
+    },
     "success": {
       "connected": "Integration connected",
       "disconnected": "Integration disconnected"
