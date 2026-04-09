@@ -50,6 +50,7 @@
       "retry": "Erneut versuchen",
       "addPredefined": "Vordefinierte hinzufügen",
       "addCustom": "Benutzerdefinierte hinzufügen",
+      "addSelfDefined": "Selbstdefinierte hinzufügen",
       "add": "Integration hinzufügen",
       "browseMarketplace": "Marktplatz durchsuchen"
     },
@@ -95,6 +96,65 @@
       "cancel": "Abbrechen",
       "creating": "Wird erstellt...",
       "create": "Erstellen"
+    },
+    "createSelfDefinedDialog": {
+      "title": "Selbstdefinierte Integration hinzufügen",
+      "description": "Erstellen Sie eine Integration mit der MCP-Server-URL und einem Konfigurationsschema als JSON.",
+      "name": "Name",
+      "namePlaceholder": "Meine selbstdefinierte Integration",
+      "nameDescription": "Ein sprechender Name für diese Integration",
+      "nameRequired": "Bitte geben Sie einen Namen ein.",
+      "descriptionLabel": "Beschreibung",
+      "descriptionPlaceholder": "Optionale Beschreibung für diese Integration",
+      "serverUrl": "Server-URL",
+      "serverUrlPlaceholder": "https://example.com/mcp",
+      "serverUrlRequired": "Bitte geben Sie eine Server-URL ein.",
+      "returnsPii": "Tools können PII zurückgeben",
+      "configSchema": "Konfigurationsschema (JSON)",
+      "configSchemaPlaceholder": "{\n  \"authType\": \"NO_AUTH\",\n  \"orgFields\": [],\n  \"userFields\": []\n}",
+      "configSchemaHelp": "Fügen Sie das rohe Schema-JSON ein. OAuth-Felder erscheinen automatisch, wenn authType auf OAUTH steht.",
+      "configSchemaRequired": "Bitte geben Sie ein Konfigurationsschema ein.",
+      "formatJson": "JSON formatieren",
+      "oauthClientId": "OAuth-Client-ID",
+      "oauthClientIdPlaceholder": "client-id",
+      "oauthClientSecret": "OAuth-Client-Secret",
+      "oauthClientSecretPlaceholder": "OAuth-Client-Secret eingeben",
+      "oauthClientHelp": "Erforderlich, wenn das Konfigurationsschema OAuth aktiviert.",
+      "create": "Erstellen",
+      "creating": "Wird erstellt...",
+      "cancel": "Abbrechen",
+      "success": "Selbstdefinierte Integration erfolgreich erstellt.",
+      "error": "Selbstdefinierte Integration konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+      "errorInvalidJson": "Das Konfigurationsschema muss gültiges JSON sein.",
+      "errorInvalidSchema": "Das Konfigurationsschema ist ungültig.",
+      "errorInvalidSchemaWithField": "Das Konfigurationsschema ist bei {{field}} ungültig.",
+      "errorMissingClient": "OAuth-Client-ID und Secret sind erforderlich, wenn OAuth aktiviert ist.",
+      "errorHeaderCollision": "Das Konfigurationsschema kollidiert mit dem OAuth-Authorization-Header.",
+      "errorInvalidServerUrl": "Ungültige Server-URL. Bitte überprüfen Sie das URL-Format.",
+      "errorDuplicate": "Eine Integration mit dieser URL existiert bereits.",
+      "validation": {
+        "name": {
+          "isNotEmpty": "Name ist erforderlich.",
+          "maxLength": "Der Name darf maximal 255 Zeichen haben.",
+          "invalid": "Ungültiger Name."
+        },
+        "description": {
+          "maxLength": "Die Beschreibung darf maximal 2000 Zeichen haben.",
+          "invalid": "Ungültige Beschreibung."
+        },
+        "serverUrl": {
+          "isUrl": "Die Server-URL muss eine gültige URL sein.",
+          "invalid": "Ungültige Server-URL."
+        },
+        "oauthClientId": {
+          "maxLength": "Die OAuth-Client-ID darf maximal 255 Zeichen haben.",
+          "invalid": "Ungültige OAuth-Client-ID."
+        },
+        "oauthClientSecret": {
+          "invalid": "Ungültiges OAuth-Client-Secret."
+        },
+        "invalid": "Ungültige Eingabe."
+      }
     },
     "createPredefinedDialog": {
       "title": "Vordefinierte Integration hinzufügen",
@@ -151,6 +211,22 @@
       "cancel": "Abbrechen",
       "success": "Benutzerkonfiguration erfolgreich gespeichert",
       "error": "Benutzerkonfiguration konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
+    },
+    "oauth": {
+      "authorize": "Autorisieren",
+      "reauthorize": "Erneut autorisieren",
+      "revoke": "Widerrufen",
+      "authorizationRequired": "Autorisierung erforderlich",
+      "statusAuthorized": "Autorisiert",
+      "statusPending": "Autorisierung ausstehend",
+      "successToast": "OAuth-Autorisierung erfolgreich abgeschlossen.",
+      "errorToast": "OAuth-Autorisierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "errorState": "OAuth-Status ist ungültig oder abgelaufen. Bitte starten Sie den Vorgang erneut.",
+      "errorOauthExchange": "OAuth-Token-Austausch fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "errorClientNotConfigured": "OAuth-Client ist für diese Integration nicht konfiguriert.",
+      "errorIntegrationNotFound": "Integration nicht gefunden.",
+      "revokeSuccess": "OAuth-Autorisierung wurde widerrufen.",
+      "revokeError": "OAuth-Autorisierung konnte nicht widerrufen werden."
     },
     "helpers": {
       "type": {

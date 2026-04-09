@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
@@ -26,6 +26,8 @@ import {
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
 import { ComingSoonDialog } from './coming-soon-dialog';
+import { CreateSelfDefinedDialog } from './create-self-defined-dialog';
+import { showError, showSuccess } from '@/shared/lib/toast';
 
 export function McpIntegrationsPage({
   isCloud,
@@ -36,6 +38,7 @@ export function McpIntegrationsPage({
   // Dialog states
   const [createPredefinedOpen, setCreatePredefinedOpen] = useState(false);
   const [createCustomOpen, setCreateCustomOpen] = useState(false);
+  const [createSelfDefinedOpen, setCreateSelfDefinedOpen] = useState(false);
   const [editIntegration, setEditIntegration] = useState<McpIntegration | null>(
     null,
   );
@@ -53,6 +56,31 @@ export function McpIntegrationsPage({
     refetchIntegrations,
     predefinedConfigs,
   } = useMcpIntegrationsQueries();
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const oauthStatus = searchParams.get('oauth');
+    if (!oauthStatus) {
+      return;
+    }
+
+    if (oauthStatus === 'success') {
+      showSuccess(t('integrations.oauth.successToast'));
+    } else if (oauthStatus === 'error') {
+      const reason = searchParams.get('reason');
+      showError(getOAuthErrorMessage(t, reason));
+    }
+
+    searchParams.delete('oauth');
+    searchParams.delete('id');
+    searchParams.delete('reason');
+
+    const cleanedSearch = searchParams.toString();
+    const searchSuffix = cleanedSearch ? `?${cleanedSearch}` : '';
+    const cleanedUrl =
+      window.location.pathname + searchSuffix + window.location.hash;
+    window.history.replaceState({}, '', cleanedUrl);
+  }, [t]);
 
   const handleOpenCreatePredefined = () => {
     if (!predefinedConfigs.length) {
@@ -117,6 +145,7 @@ export function McpIntegrationsPage({
           isCloud={isCloud}
           onCreatePredefined={handleOpenCreatePredefined}
           onCreateCustom={() => setCreateCustomOpen(true)}
+          onCreateSelfDefined={() => setCreateSelfDefinedOpen(true)}
           t={t}
         />
       }
@@ -140,6 +169,11 @@ export function McpIntegrationsPage({
         <CreateCustomDialog
           open={createCustomOpen}
           onOpenChange={setCreateCustomOpen}
+        />
+
+        <CreateSelfDefinedDialog
+          open={createSelfDefinedOpen}
+          onOpenChange={setCreateSelfDefinedOpen}
         />
 
         <EditIntegrationDialog
@@ -173,11 +207,13 @@ function HeaderActions({
   isCloud,
   onCreatePredefined,
   onCreateCustom,
+  onCreateSelfDefined,
   t,
 }: Readonly<{
   isCloud: boolean;
   onCreatePredefined: () => void;
   onCreateCustom: () => void;
+  onCreateSelfDefined: () => void;
   t: (key: string) => string;
 }>) {
   return (
@@ -213,9 +249,34 @@ function HeaderActions({
             <DropdownMenuItem onClick={onCreateCustom}>
               {t('integrations.page.addCustom')}
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={onCreateSelfDefined}>
+              {t('integrations.page.addSelfDefined')}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )}
     </div>
   );
+}
+
+function getOAuthErrorMessage(
+  t: (key: string) => string,
+  reason: string | null,
+): string {
+  if (!reason) {
+    return t('integrations.oauth.errorToast');
+  }
+
+  const normalizedReason = reason.toLowerCase();
+  if (normalizedReason.includes('state')) {
+    return t('integrations.oauth.errorState');
+  }
+  if (normalizedReason.includes('exchange')) {
+    return t('integrations.oauth.errorOauthExchange');
+  }
+  if (normalizedReason.includes('client credentials')) {
+    return t('integrations.oauth.errorClientNotConfigured');
+  }
+
+  return t('integrations.oauth.errorToast');
 }
