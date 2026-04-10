@@ -17,7 +17,7 @@ function getMcpOAuthStateSecret(): string {
 
 export const appConfig = registerAs('app', () => ({
   backend: {
-    baseUrl: process.env.BACKEND_BASEURL ?? 'http://localhost:3000',
+    baseUrl: process.env.BACKEND_BASEURL || 'http://localhost:3000',
   },
   mcp: {
     oauthStateSecret: getMcpOAuthStateSecret(),
