@@ -3,22 +3,14 @@
  * Path format: <orgId>/<threadId>/<messageId>/<index>.<ext>
  */
 
-const CONTENT_TYPE_TO_EXTENSION: Record<string, string> = {
-  'image/jpeg': '.jpg',
-  'image/png': '.png',
-  'image/gif': '.gif',
-  'image/webp': '.webp',
-};
+import { contentTypeToExtension } from 'src/common/util/content-type.util';
 
-const ALLOWED_CONTENT_TYPES = Object.keys(CONTENT_TYPE_TO_EXTENSION);
-
-export function contentTypeToExtension(contentType: string): string {
-  const ext = CONTENT_TYPE_TO_EXTENSION[contentType.toLowerCase()];
-  if (!ext) {
-    throw new Error(`Unsupported image content type: ${contentType}`);
-  }
-  return ext;
-}
+const ALLOWED_CONTENT_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+];
 
 export function isAllowedImageContentType(contentType: string): boolean {
   return ALLOWED_CONTENT_TYPES.includes(contentType.toLowerCase());

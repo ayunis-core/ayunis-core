@@ -25,6 +25,7 @@ export enum ModelErrorCode {
   MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED = 'MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED',
   MULTIPLE_IMAGE_GENERATION_MODELS_NOT_ALLOWED = 'MULTIPLE_IMAGE_GENERATION_MODELS_NOT_ALLOWED',
   IMAGE_GENERATION_MODEL_PROVIDER_NOT_SUPPORTED = 'IMAGE_GENERATION_MODEL_PROVIDER_NOT_SUPPORTED',
+  IMAGE_GENERATION_FAILED = 'IMAGE_GENERATION_FAILED',
   UNEXPECTED_MODEL_ERROR = 'UNEXPECTED_MODEL_ERROR',
   DUPLICATE_TEAM_PERMITTED_MODEL = 'DUPLICATE_TEAM_PERMITTED_MODEL',
   TEAM_NOT_FOUND_IN_ORG = 'TEAM_NOT_FOUND_IN_ORG',
@@ -413,6 +414,20 @@ export class PermittedModelNotInTeamError extends ModelError {
       `Permitted model '${permittedModelId}' does not belong to team '${teamId}'`,
       ModelErrorCode.MODEL_INVALID,
       400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when image generation fails.
+ */
+export class ImageGenerationFailedError extends ModelError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(
+      `Image generation failed: ${reason}`,
+      ModelErrorCode.IMAGE_GENERATION_FAILED,
+      500,
       metadata,
     );
   }

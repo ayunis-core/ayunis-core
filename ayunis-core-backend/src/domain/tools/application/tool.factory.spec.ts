@@ -15,6 +15,7 @@ import { KnowledgeQueryTool } from '../domain/tools/knowledge-query-tool.entity'
 import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.entity';
 import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
 import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
+import { GenerateImageTool } from '../domain/tools/generate-image-tool.entity';
 import { randomUUID } from 'crypto';
 
 describe('ToolFactory', () => {
@@ -105,6 +106,12 @@ describe('ToolFactory', () => {
       expect(tool.name).toBe(ToolType.UPDATE_DOCUMENT);
     });
 
+    it('should create a GenerateImageTool', () => {
+      const tool = factory.createTool({ type: ToolType.GENERATE_IMAGE });
+      expect(tool).toBeInstanceOf(GenerateImageTool);
+      expect(tool.name).toBe(ToolType.GENERATE_IMAGE);
+    });
+
     it('should throw error for unsupported tool type', () => {
       expect(() =>
         factory.createTool({ type: 'UNSUPPORTED' as unknown as ToolType }),
@@ -159,8 +166,9 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.UPDATE_DOCUMENT);
       expect(types).toContain(ToolType.EDIT_DOCUMENT);
       expect(types).toContain(ToolType.READ_DOCUMENT);
+      expect(types).toContain(ToolType.GENERATE_IMAGE);
 
-      expect(types.length).toBe(23);
+      expect(types.length).toBe(24);
     });
   });
 });

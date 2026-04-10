@@ -33,6 +33,7 @@ import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity'
 import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
 import { EditDocumentTool } from '../domain/tools/edit-document-tool.entity';
 import { ReadDocumentTool } from '../domain/tools/read-document-tool.entity';
+import { GenerateImageTool } from '../domain/tools/generate-image-tool.entity';
 
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
@@ -49,6 +50,7 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.UPDATE_DOCUMENT]: () => new UpdateDocumentTool(),
   [ToolType.EDIT_DOCUMENT]: () => new EditDocumentTool(),
   [ToolType.READ_DOCUMENT]: () => new ReadDocumentTool(),
+  [ToolType.GENERATE_IMAGE]: () => new GenerateImageTool(),
 };
 
 @Injectable()

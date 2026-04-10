@@ -232,6 +232,7 @@ export class ToolResultCollectorService {
     const context = {
       orgId,
       threadId,
+      isAnonymous,
     };
     let succeeded = true;
     let result = await this.executeToolUseCase

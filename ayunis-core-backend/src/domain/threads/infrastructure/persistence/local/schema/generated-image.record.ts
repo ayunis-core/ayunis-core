@@ -1,14 +1,13 @@
 import { UUID } from 'crypto';
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
+import { OrgRecord } from '../../../../../../iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
 import { ThreadRecord } from './thread.record';
 
 /**
  * Generated images live in the threads module because they are thread-owned
- * and cascade-deleted with the thread. When the image-generation execution
- * pipeline is built (step 4), consider whether a dedicated module or the
- * storage module would be a better home for this record and its repository.
+ * and cascade-deleted with the thread.
  */
 @Entity({ name: 'generated_images' })
 @Index(['storageKey'], { unique: true })
@@ -16,6 +15,10 @@ export class GeneratedImageRecord extends BaseRecord {
   @Column()
   @Index()
   orgId: UUID;
+
+  @ManyToOne(() => OrgRecord, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'orgId' })
+  org: OrgRecord;
 
   @Column()
   @Index()

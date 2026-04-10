@@ -31,11 +31,14 @@ import { SkillsModule } from '../skills/skills.module';
 import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
 import { SkillTemplatesModule } from '../skill-templates/skill-templates.module';
 import { ArtifactsModule } from '../artifacts/artifacts.module';
+import { GenerateImageToolHandler } from './application/handlers/generate-image-tool.handler';
+import { ModelsModule } from '../models/models.module';
 
 @Module({
   imports: [
     SourcesModule,
     forwardRef(() => ThreadsModule),
+    forwardRef(() => ModelsModule),
     LocalToolConfigRepositoryModule,
     RetrieverModule,
     McpModule,
@@ -66,6 +69,7 @@ import { ArtifactsModule } from '../artifacts/artifacts.module';
     UpdateDocumentToolHandler,
     EditDocumentToolHandler,
     ReadDocumentToolHandler,
+    GenerateImageToolHandler,
     // Repositories and factories
     {
       provide: ToolConfigRepository,
