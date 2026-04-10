@@ -133,11 +133,10 @@ export class RegisterUserUseCase {
         );
       }
 
-      this.eventEmitter
-        .emitAsync(
-          OrgCreatedEvent.EVENT_NAME,
-          new OrgCreatedEvent(org.id, org, user),
-        )
+      // Emit OrgCreatedEvent after all critical operations succeed so that
+      // a transaction rollback cannot produce a phantom webhook.
+      await this.eventEmitter
+        .emitAsync(OrgCreatedEvent.EVENT_NAME, new OrgCreatedEvent(org.id, org))
         .catch((err: unknown) => {
           this.logger.error('Failed to emit OrgCreatedEvent', {
             error: err instanceof Error ? err.message : 'Unknown error',
