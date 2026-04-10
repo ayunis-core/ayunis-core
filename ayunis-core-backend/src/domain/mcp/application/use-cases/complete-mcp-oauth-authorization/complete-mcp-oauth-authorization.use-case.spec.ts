@@ -41,12 +41,6 @@ describe('CompleteMcpOAuthAuthorizationUseCase', () => {
 
   it('should return success when callback completes', async () => {
     const integrationId = randomUUID();
-    jest
-      .spyOn(oauthFlowService, 'resolveAuthorizationContext')
-      .mockReturnValue({
-        level: 'user',
-        returnPath: '/settings/integrations',
-      });
     jest.spyOn(oauthFlowService, 'handleCallback').mockResolvedValue({
       integrationId,
       level: 'user',
@@ -64,6 +58,7 @@ describe('CompleteMcpOAuthAuthorizationUseCase', () => {
       returnPath: '/settings/integrations',
       level: 'user',
     });
+    expect(oauthFlowService.resolveAuthorizationContext).not.toHaveBeenCalled();
   });
 
   it('should return failure on exchange error', async () => {
