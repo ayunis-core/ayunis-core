@@ -286,6 +286,30 @@
       "archived": "Archiviert"
     },
     "emptyArchived": "Keine archivierten Modelle",
-    "emptyArchivedDescription": "Archivierte Modelle werden hier angezeigt."
+    "emptyArchivedDescription": "Archivierte Modelle werden hier angezeigt.",
+    "catalog": {
+      "createButton": "Modell erstellen",
+      "createLanguageModel": "Sprachmodell",
+      "createEmbeddingModel": "Embedding-Modell",
+      "createImageGenerationModel": "Bilderzeugungsmodell",
+      "languageModels": "Sprachmodelle",
+      "embeddingModels": "Embedding-Modelle",
+      "imageGenerationModels": "Bilderzeugungsmodelle",
+      "languageModelsDescription": "Modelle für Textgenerierung und Konversation.",
+      "embeddingModelsDescription": "Modelle für Text-Embeddings und semantische Suche.",
+      "imageGenerationModelsDescription": "Modelle für Bilderzeugung.",
+      "languageModelType": "Sprache",
+      "embeddingModelType": "Embedding",
+      "imageGenerationModelType": "Bilderzeugung",
+      "noLanguageModels": "Keine Sprachmodelle",
+      "noLanguageModelsEmpty": "Es wurden noch keine Sprachmodelle zum Katalog hinzugefügt.",
+      "noLanguageModelsArchived": "Keine Sprachmodelle wurden archiviert.",
+      "noEmbeddingModels": "Keine Embedding-Modelle",
+      "noEmbeddingModelsEmpty": "Es wurden noch keine Embedding-Modelle zum Katalog hinzugefügt.",
+      "noEmbeddingModelsArchived": "Keine Embedding-Modelle wurden archiviert.",
+      "noImageGenerationModels": "Keine Bilderzeugungsmodelle",
+      "noImageGenerationModelsEmpty": "Es wurden noch keine Bilderzeugungsmodelle zum Katalog hinzugefügt.",
+      "noImageGenerationModelsArchived": "Keine Bilderzeugungsmodelle wurden archiviert."
+    }
   }
 }

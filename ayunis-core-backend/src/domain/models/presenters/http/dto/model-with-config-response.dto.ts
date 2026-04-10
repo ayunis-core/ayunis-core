@@ -82,12 +82,6 @@ export class ModelWithConfigResponseDto {
 
   @ApiProperty({
     type: 'boolean',
-    description: 'Whether the model is an embedding model',
-  })
-  isEmbedding: boolean;
-
-  @ApiProperty({
-    type: 'boolean',
     description:
       'Whether this model enforces anonymous mode. Null if not permitted.',
     nullable: true,

@@ -16,7 +16,7 @@ import { PermittedModelNotFoundError } from '../../models.errors';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
-import { assertSupportedImageGenerationModel } from '../../services/image-generation-model-policy';
+import { ModelPolicyService } from '../../services/model-policy.service';
 
 @Injectable()
 export class UpdatePermittedModelUseCase {
@@ -25,6 +25,7 @@ export class UpdatePermittedModelUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly contextService: ContextService,
+    private readonly modelPolicy: ModelPolicyService,
   ) {}
 
   async execute(command: UpdatePermittedModelCommand): Promise<PermittedModel> {
@@ -58,7 +59,7 @@ export class UpdatePermittedModelUseCase {
         throw new UnauthorizedAccessError();
       }
 
-      assertSupportedImageGenerationModel(existingModel.model);
+      this.modelPolicy.assertSupported(existingModel.model);
 
       // Create updated model with new anonymousOnly value, preserving the correct type
       let updatedModel: PermittedModel;
@@ -67,6 +68,8 @@ export class UpdatePermittedModelUseCase {
           id: existingModel.id,
           model: existingModel.model,
           orgId: existingModel.orgId,
+          scope: existingModel.scope,
+          scopeId: existingModel.scopeId,
           isDefault: existingModel.isDefault,
           anonymousOnly: command.anonymousOnly,
           createdAt: existingModel.createdAt,
@@ -77,6 +80,8 @@ export class UpdatePermittedModelUseCase {
           id: existingModel.id,
           model: existingModel.model,
           orgId: existingModel.orgId,
+          scope: existingModel.scope,
+          scopeId: existingModel.scopeId,
           isDefault: existingModel.isDefault,
           anonymousOnly: command.anonymousOnly,
           createdAt: existingModel.createdAt,
@@ -87,6 +92,8 @@ export class UpdatePermittedModelUseCase {
           id: existingModel.id,
           model: existingModel.model,
           orgId: existingModel.orgId,
+          scope: existingModel.scope,
+          scopeId: existingModel.scopeId,
           isDefault: existingModel.isDefault,
           anonymousOnly: command.anonymousOnly,
           createdAt: existingModel.createdAt,

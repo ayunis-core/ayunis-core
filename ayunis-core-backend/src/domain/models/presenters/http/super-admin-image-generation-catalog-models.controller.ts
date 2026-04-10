@@ -1,3 +1,4 @@
+import type { UUID } from 'crypto';
 import {
   Body,
   Controller,
@@ -20,7 +21,6 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import type { UUID } from 'crypto';
 import {
   CurrentUser,
   UserProperty,

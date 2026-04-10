@@ -54,13 +54,13 @@
         "tags": ["app"]
       }
     },
-    "/models/available": {
+    "/models/available/language": {
       "get": {
-        "operationId": "ModelsController_getAvailableModelsWithConfig",
+        "operationId": "ModelsController_getAvailableLanguageModels",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Successfully retrieved all available models",
+            "description": "Successfully retrieved all available language models",
             "content": {
               "application/json": {
                 "schema": {
@@ -76,7 +76,59 @@
             "description": "Internal server error"
           }
         },
-        "summary": "Get all available models",
+        "summary": "Get all available language models",
+        "tags": ["models"]
+      }
+    },
+    "/models/available/embedding": {
+      "get": {
+        "operationId": "ModelsController_getAvailableEmbeddingModels",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved all available embedding models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModelWithConfigResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all available embedding models",
+        "tags": ["models"]
+      }
+    },
+    "/models/available/image-generation": {
+      "get": {
+        "operationId": "ModelsController_getAvailableImageGenerationModels",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved all available image-generation models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModelWithConfigResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all available image-generation models",
         "tags": ["models"]
       }
     },
@@ -118,7 +170,7 @@
           }
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successfully created a permitted model"
           },
           "400": {
@@ -146,7 +198,7 @@
           }
         ],
         "responses": {
-          "200": {
+          "204": {
             "description": "Successfully deleted a permitted model"
           },
           "401": {
@@ -184,7 +236,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PermittedEmbeddingModelResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PermittedImageGenerationModelResponseDto"
+                    }
+                  ]
                 }
               }
             }
@@ -254,162 +316,6 @@
         "tags": ["models"]
       }
     },
-    "/models/default": {
-      "get": {
-        "description": "Returns the applicable default model with fallback hierarchy: User default → Org default → First available model",
-        "operationId": "ModelsController_getEffectiveDefaultModel",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved the effective default model",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDtoNullable"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get the effective default model for the user",
-        "tags": ["models"]
-      }
-    },
-    "/models/org/default": {
-      "get": {
-        "description": "Returns only the organization's specific default model. Returns null if no org default is set.",
-        "operationId": "ModelsController_getOrgSpecificDefaultModel",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved the organization default model",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDtoNullable"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get the organization default model",
-        "tags": ["models"]
-      },
-      "put": {
-        "description": "Sets the specified permitted model as the organization default. If a default already exists, it will be updated to the new model.",
-        "operationId": "ModelsController_manageOrgDefaultModel",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetOrgDefaultModelDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully set or updated the organization default model",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request payload"
-          },
-          "404": {
-            "description": "Permitted model not found"
-          }
-        },
-        "summary": "Set or update the organization default model",
-        "tags": ["models"]
-      }
-    },
-    "/models/user/default": {
-      "get": {
-        "description": "Returns the user's personal default model only. Returns null if no user-specific default is set.",
-        "operationId": "ModelsController_getUserSpecificDefaultModel",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved the user-specific default model",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDtoNullable"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get the user-specific default model",
-        "tags": ["models"]
-      },
-      "put": {
-        "description": "Sets the specified permitted model as the user default. If a default already exists, it will be updated to the new model.",
-        "operationId": "ModelsController_manageUserDefaultModel",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetUserDefaultModelDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully set or updated the user default model",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request payload"
-          },
-          "404": {
-            "description": "Permitted model not found"
-          }
-        },
-        "summary": "Set or update the user default model",
-        "tags": ["models"]
-      },
-      "delete": {
-        "operationId": "ModelsController_deleteUserDefaultModel",
-        "parameters": [],
-        "responses": {
-          "204": {
-            "description": "Successfully deleted the user default model"
-          },
-          "404": {
-            "description": "User default model not found"
-          }
-        },
-        "summary": "Delete the user default model",
-        "tags": ["models"]
-      }
-    },
     "/models/provider/{provider}": {
       "get": {
         "description": "Retrieves detailed information about a specific model provider",
@@ -466,6 +372,162 @@
           }
         },
         "summary": "Check if an embedding model is enabled for this org",
+        "tags": ["models"]
+      }
+    },
+    "/models/default": {
+      "get": {
+        "description": "Returns the applicable default model with fallback hierarchy: User default → Org default → First available model",
+        "operationId": "ModelsDefaultsController_getEffectiveDefaultModel",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the effective default model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDtoNullable"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get the effective default model for the user",
+        "tags": ["models"]
+      }
+    },
+    "/models/org/default": {
+      "get": {
+        "description": "Returns only the organization's specific default model. Returns null if no org default is set.",
+        "operationId": "ModelsDefaultsController_getOrgSpecificDefaultModel",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the organization default model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDtoNullable"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get the organization default model",
+        "tags": ["models"]
+      },
+      "put": {
+        "description": "Sets the specified permitted model as the organization default. If a default already exists, it will be updated to the new model.",
+        "operationId": "ModelsDefaultsController_manageOrgDefaultModel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetOrgDefaultModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully set or updated the organization default model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "404": {
+            "description": "Permitted model not found"
+          }
+        },
+        "summary": "Set or update the organization default model",
+        "tags": ["models"]
+      }
+    },
+    "/models/user/default": {
+      "get": {
+        "description": "Returns the user's personal default model only. Returns null if no user-specific default is set.",
+        "operationId": "ModelsDefaultsController_getUserSpecificDefaultModel",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the user-specific default model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDtoNullable"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get the user-specific default model",
+        "tags": ["models"]
+      },
+      "put": {
+        "description": "Sets the specified permitted model as the user default. If a default already exists, it will be updated to the new model.",
+        "operationId": "ModelsDefaultsController_manageUserDefaultModel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetUserDefaultModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully set or updated the user default model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "404": {
+            "description": "Permitted model not found"
+          }
+        },
+        "summary": "Set or update the user default model",
+        "tags": ["models"]
+      },
+      "delete": {
+        "operationId": "ModelsDefaultsController_deleteUserDefaultModel",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted the user default model"
+          },
+          "404": {
+            "description": "User default model not found"
+          }
+        },
+        "summary": "Delete the user default model",
         "tags": ["models"]
       }
     },
@@ -627,26 +689,23 @@
         "tags": ["team-permitted-models"]
       }
     },
-    "/super-admin/models/{orgId}/available": {
+    "/super-admin/models/{orgId}/available/language": {
       "get": {
-        "description": "Retrieve all available models from the registry with their permitted status for the specified organization. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminPermittedModelsController_getAvailableModels",
+        "operationId": "SuperAdminPermittedModelsController_getAvailableLanguageModels",
         "parameters": [
           {
             "name": "orgId",
             "required": true,
             "in": "path",
-            "description": "Organization ID to check permitted status for",
             "schema": {
               "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved available models",
+            "description": "Successfully retrieved available language models",
             "content": {
               "application/json": {
                 "schema": {
@@ -659,13 +718,91 @@
             }
           },
           "401": {
-            "description": "User not authenticated or not authorized as super admin"
+            "description": "Not authorized as super admin"
           },
           "500": {
             "description": "Internal server error"
           }
         },
-        "summary": "Get all available models",
+        "summary": "Get all available language models",
+        "tags": ["Super Admin Models"]
+      }
+    },
+    "/super-admin/models/{orgId}/available/embedding": {
+      "get": {
+        "operationId": "SuperAdminPermittedModelsController_getAvailableEmbeddingModels",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved available embedding models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModelWithConfigResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all available embedding models",
+        "tags": ["Super Admin Models"]
+      }
+    },
+    "/super-admin/models/{orgId}/available/image-generation": {
+      "get": {
+        "operationId": "SuperAdminPermittedModelsController_getAvailableImageGenerationModels",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved available image-generation models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModelWithConfigResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all available image-generation models",
         "tags": ["Super Admin Models"]
       }
     },
@@ -698,7 +835,7 @@
         },
         "responses": {
           "200": {
-            "description": "Successfully set or updated the organization default model",
+            "description": "Successfully set or updated organization default model",
             "content": {
               "application/json": {
                 "schema": {
@@ -708,7 +845,7 @@
             }
           },
           "400": {
-            "description": "Invalid model data provided"
+            "description": "Invalid request payload"
           },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
@@ -726,14 +863,14 @@
     },
     "/super-admin/models/{orgId}/permitted-models": {
       "get": {
-        "description": "Retrieve all permitted models for the specified organization. This endpoint is only accessible to super admins.",
+        "description": "Retrieve all permitted models configured for the specified organization. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminPermittedModelsController_getPermittedModels",
         "parameters": [
           {
             "name": "orgId",
             "required": true,
             "in": "path",
-            "description": "Organization ID to get permitted models for",
+            "description": "Organization ID to retrieve permitted models for",
             "schema": {
               "format": "uuid",
               "example": "123e4567-e89b-12d3-a456-426614174000",
@@ -755,6 +892,9 @@
                       },
                       {
                         "$ref": "#/components/schemas/PermittedEmbeddingModelResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/PermittedImageGenerationModelResponseDto"
                       }
                     ]
                   }
@@ -803,7 +943,7 @@
             "description": "Successfully created permitted model"
           },
           "400": {
-            "description": "Invalid model data provided"
+            "description": "Invalid model input"
           },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
@@ -821,14 +961,14 @@
     },
     "/super-admin/models/{orgId}/permitted-models/{id}": {
       "delete": {
-        "description": "Delete a permitted model for the specified organization. This endpoint is only accessible to super admins.",
+        "description": "Delete a permitted model configured for the specified organization. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminPermittedModelsController_deletePermittedModel",
         "parameters": [
           {
             "name": "orgId",
             "required": true,
             "in": "path",
-            "description": "Organization ID to delete permitted model for",
+            "description": "Organization ID that owns the permitted model",
             "schema": {
               "format": "uuid",
               "example": "123e4567-e89b-12d3-a456-426614174000",
@@ -868,14 +1008,14 @@
         "tags": ["Super Admin Models"]
       },
       "patch": {
-        "description": "Update the settings of a permitted model for the specified organization. This endpoint is only accessible to super admins.",
+        "description": "Update a permitted model configured for the specified organization. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminPermittedModelsController_updatePermittedModel",
         "parameters": [
           {
             "name": "orgId",
             "required": true,
             "in": "path",
-            "description": "Organization ID to update permitted model for",
+            "description": "Organization ID that owns the permitted model",
             "schema": {
               "format": "uuid",
               "example": "123e4567-e89b-12d3-a456-426614174000",
@@ -916,6 +1056,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/PermittedEmbeddingModelResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PermittedImageGenerationModelResponseDto"
                     }
                   ]
                 }
@@ -941,7 +1084,7 @@
     },
     "/super-admin/models/catalog": {
       "get": {
-        "description": "Retrieve all models (language and embedding) from the master catalog. This endpoint is only accessible to super admins.",
+        "description": "Retrieve all models (language, embedding, and image-generation) from the master catalog. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminCatalogModelsController_getAllCatalogModels",
         "parameters": [],
         "responses": {
@@ -958,6 +1101,9 @@
                       },
                       {
                         "$ref": "#/components/schemas/EmbeddingModelResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/ImageGenerationModelResponseDto"
                       }
                     ]
                   }
@@ -1005,6 +1151,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/EmbeddingModelResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ImageGenerationModelResponseDto"
                     }
                   ]
                 }
@@ -1025,7 +1174,7 @@
         "tags": ["Super Admin Models"]
       },
       "delete": {
-        "description": "Remove a model (language or embedding) from the master catalog. This endpoint is only accessible to super admins.",
+        "description": "Remove a model (language, embedding, or image-generation) from the master catalog. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminCatalogModelsController_deleteCatalogModel",
         "parameters": [
           {
@@ -1061,7 +1210,7 @@
     "/super-admin/models/catalog/language": {
       "post": {
         "description": "Create a new language model in the master catalog. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminCatalogModelsController_createLanguageModel",
+        "operationId": "SuperAdminLanguageCatalogModelsController_createLanguageModel",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -1104,7 +1253,7 @@
     "/super-admin/models/catalog/language/{id}": {
       "patch": {
         "description": "Update an existing language model in the master catalog. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminCatalogModelsController_updateLanguageModel",
+        "operationId": "SuperAdminLanguageCatalogModelsController_updateLanguageModel",
         "parameters": [
           {
             "name": "id",
@@ -1159,7 +1308,7 @@
     "/super-admin/models/catalog/embedding": {
       "post": {
         "description": "Create a new embedding model in the master catalog. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminCatalogModelsController_createEmbeddingModel",
+        "operationId": "SuperAdminEmbeddingCatalogModelsController_createEmbeddingModel",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -1202,7 +1351,7 @@
     "/super-admin/models/catalog/embedding/{id}": {
       "patch": {
         "description": "Update an existing embedding model in the master catalog. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminCatalogModelsController_updateEmbeddingModel",
+        "operationId": "SuperAdminEmbeddingCatalogModelsController_updateEmbeddingModel",
         "parameters": [
           {
             "name": "id",
@@ -1251,6 +1400,104 @@
           }
         },
         "summary": "Update an embedding model in the catalog",
+        "tags": ["Super Admin Models"]
+      }
+    },
+    "/super-admin/models/catalog/image-generation": {
+      "post": {
+        "description": "Create a new image-generation model in the master catalog. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminImageGenerationCatalogModelsController_createImageGenerationModel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateImageGenerationModelRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created image-generation model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageGenerationModelResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid model data provided"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "409": {
+            "description": "Model already exists"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a new image-generation model in the catalog",
+        "tags": ["Super Admin Models"]
+      }
+    },
+    "/super-admin/models/catalog/image-generation/{id}": {
+      "patch": {
+        "description": "Update an existing image-generation model in the master catalog. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminImageGenerationCatalogModelsController_updateImageGenerationModel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Model ID to update",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateImageGenerationModelRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated image-generation model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageGenerationModelResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid model data provided"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Model not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update an image-generation model in the catalog",
         "tags": ["Super Admin Models"]
       }
     },
@@ -8309,6 +8556,11 @@
             "type": "string",
             "description": "The display name of the model"
           },
+          "type": {
+            "type": "string",
+            "enum": ["language", "embedding", "image-generation"],
+            "description": "The type of the model"
+          },
           "canStream": {
             "type": "boolean",
             "description": "Whether the model can stream"
@@ -8333,10 +8585,6 @@
             "type": "boolean",
             "description": "Whether the model is the default model"
           },
-          "isEmbedding": {
-            "type": "boolean",
-            "description": "Whether the model is an embedding model"
-          },
           "anonymousOnly": {
             "type": "boolean",
             "description": "Whether this model enforces anonymous mode. Null if not permitted.",
@@ -8355,13 +8603,13 @@
           "name",
           "provider",
           "displayName",
+          "type",
           "canStream",
           "isReasoning",
           "canUseTools",
           "canVision",
           "isPermitted",
           "isDefault",
-          "isEmbedding",
           "anonymousOnly"
         ]
       },
@@ -8516,82 +8764,6 @@
           "anonymousOnly"
         ]
       },
-      "PermittedLanguageModelResponseDtoNullable": {
-        "type": "object",
-        "properties": {
-          "permittedLanguageModel": {
-            "description": "The permitted language model",
-            "nullable": true,
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
-              }
-            ]
-          }
-        },
-        "required": ["permittedLanguageModel"]
-      },
-      "SetUserDefaultModelDto": {
-        "type": "object",
-        "properties": {
-          "permittedModelId": {
-            "type": "string",
-            "description": "The ID of the permitted model to set as default",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          }
-        },
-        "required": ["permittedModelId"]
-      },
-      "SetOrgDefaultModelDto": {
-        "type": "object",
-        "properties": {
-          "permittedModelId": {
-            "type": "string",
-            "description": "The ID of the permitted model to set as organization default",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          }
-        },
-        "required": ["permittedModelId"]
-      },
-      "EmbeddingModelEnabledResponseDto": {
-        "type": "object",
-        "properties": {
-          "isEmbeddingModelEnabled": {
-            "type": "boolean",
-            "description": "Whether the organization has an embedding model enabled",
-            "example": true
-          }
-        },
-        "required": ["isEmbeddingModelEnabled"]
-      },
-      "CreateTeamPermittedModelDto": {
-        "type": "object",
-        "properties": {
-          "modelId": {
-            "type": "string",
-            "description": "The ID of the catalog model to permit for the team",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "anonymousOnly": {
-            "type": "boolean",
-            "description": "Whether this model should enforce anonymous mode",
-            "example": false,
-            "default": false
-          }
-        },
-        "required": ["modelId"]
-      },
-      "SetTeamDefaultModelDto": {
-        "type": "object",
-        "properties": {
-          "permittedModelId": {
-            "type": "string",
-            "description": "The ID of the team-scoped permitted model to set as the team default",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          }
-        },
-        "required": ["permittedModelId"]
-      },
       "PermittedEmbeddingModelResponseDto": {
         "type": "object",
         "properties": {
@@ -8633,6 +8805,10 @@
             "type": "boolean",
             "description": "Whether the model is archived"
           },
+          "modelId": {
+            "type": "string",
+            "description": "The catalog model UUID"
+          },
           "type": {
             "type": "string",
             "enum": ["embedding"],
@@ -8642,6 +8818,10 @@
             "type": "number",
             "description": "The number of dimensions for embeddings",
             "nullable": true
+          },
+          "anonymousOnly": {
+            "type": "boolean",
+            "description": "Whether this model enforces anonymous mode"
           }
         },
         "required": [
@@ -8651,8 +8831,414 @@
           "providerDisplayName",
           "displayName",
           "isArchived",
+          "modelId",
           "type",
-          "dimensions"
+          "dimensions",
+          "anonymousOnly"
+        ]
+      },
+      "PermittedImageGenerationModelResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the permitted model"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the model"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "bedrock",
+              "mistral",
+              "ollama",
+              "synaforce",
+              "ayunis",
+              "otc",
+              "azure",
+              "gemini",
+              "stackit",
+              "scaleway"
+            ],
+            "description": "The provider of the model"
+          },
+          "providerDisplayName": {
+            "type": "string",
+            "description": "The display name of the provider"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "The display name of the model"
+          },
+          "isArchived": {
+            "type": "boolean",
+            "description": "Whether the model is archived"
+          },
+          "modelId": {
+            "type": "string",
+            "description": "The catalog model UUID"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["image-generation"],
+            "description": "The type of the model (always image-generation)"
+          },
+          "anonymousOnly": {
+            "type": "boolean",
+            "description": "Whether this model enforces anonymous mode"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "providerDisplayName",
+          "displayName",
+          "isArchived",
+          "modelId",
+          "type",
+          "anonymousOnly"
+        ]
+      },
+      "EmbeddingModelEnabledResponseDto": {
+        "type": "object",
+        "properties": {
+          "isEmbeddingModelEnabled": {
+            "type": "boolean",
+            "description": "Whether the organization has an embedding model enabled",
+            "example": true
+          }
+        },
+        "required": ["isEmbeddingModelEnabled"]
+      },
+      "PermittedLanguageModelResponseDtoNullable": {
+        "type": "object",
+        "properties": {
+          "permittedLanguageModel": {
+            "description": "The permitted language model",
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+              }
+            ]
+          }
+        },
+        "required": ["permittedLanguageModel"]
+      },
+      "SetUserDefaultModelDto": {
+        "type": "object",
+        "properties": {
+          "permittedModelId": {
+            "type": "string",
+            "description": "The ID of the permitted model to set as default",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        },
+        "required": ["permittedModelId"]
+      },
+      "SetOrgDefaultModelDto": {
+        "type": "object",
+        "properties": {
+          "permittedModelId": {
+            "type": "string",
+            "description": "The ID of the permitted model to set as organization default",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        },
+        "required": ["permittedModelId"]
+      },
+      "CreateTeamPermittedModelDto": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "description": "The ID of the catalog model to permit for the team",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "anonymousOnly": {
+            "type": "boolean",
+            "description": "Whether this model should enforce anonymous mode",
+            "example": false,
+            "default": false
+          }
+        },
+        "required": ["modelId"]
+      },
+      "SetTeamDefaultModelDto": {
+        "type": "object",
+        "properties": {
+          "permittedModelId": {
+            "type": "string",
+            "description": "The ID of the team-scoped permitted model to set as the team default",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        },
+        "required": ["permittedModelId"]
+      },
+      "LanguageModelResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The unique identifier of the model",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the model",
+            "example": "gpt-4"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "bedrock",
+              "mistral",
+              "ollama",
+              "synaforce",
+              "ayunis",
+              "otc",
+              "azure",
+              "gemini",
+              "stackit",
+              "scaleway"
+            ],
+            "description": "The provider of the model",
+            "example": "openai"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "The display name of the model",
+            "example": "GPT-4"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["language"],
+            "description": "The type of the model (always language)"
+          },
+          "isArchived": {
+            "type": "boolean",
+            "description": "Whether the model is archived",
+            "example": false
+          },
+          "canStream": {
+            "type": "boolean",
+            "description": "Whether the model supports streaming",
+            "example": true
+          },
+          "canUseTools": {
+            "type": "boolean",
+            "description": "Whether the model supports tool use",
+            "example": true
+          },
+          "isReasoning": {
+            "type": "boolean",
+            "description": "Whether the model has reasoning capabilities",
+            "example": false
+          },
+          "canVision": {
+            "type": "boolean",
+            "description": "Whether the model supports vision (image processing)",
+            "example": false
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the model was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the model was last updated"
+          },
+          "inputTokenCost": {
+            "type": "number",
+            "description": "Cost per million input tokens in EUR",
+            "example": 3
+          },
+          "outputTokenCost": {
+            "type": "number",
+            "description": "Cost per million output tokens in EUR",
+            "example": 15
+          },
+          "tier": {
+            "type": "string",
+            "enum": ["low", "medium", "high"],
+            "description": "Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
+            "example": "medium"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "displayName",
+          "type",
+          "isArchived",
+          "canStream",
+          "canUseTools",
+          "isReasoning",
+          "canVision",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "EmbeddingModelResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The unique identifier of the model",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the model",
+            "example": "text-embedding-3-small"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "bedrock",
+              "mistral",
+              "ollama",
+              "synaforce",
+              "ayunis",
+              "otc",
+              "azure",
+              "gemini",
+              "stackit",
+              "scaleway"
+            ],
+            "description": "The provider of the model",
+            "example": "openai"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "The display name of the model",
+            "example": "Text Embedding 3 Small"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["embedding"],
+            "description": "The type of the model (always embedding)"
+          },
+          "isArchived": {
+            "type": "boolean",
+            "description": "Whether the model is archived",
+            "example": false
+          },
+          "dimensions": {
+            "type": "string",
+            "enum": [
+              "DIMENSION_1024",
+              "DIMENSION_1536",
+              "DIMENSION_2560",
+              1024,
+              1536,
+              2560
+            ],
+            "description": "The dimensions of the embedding",
+            "example": 1536
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the model was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the model was last updated"
+          },
+          "inputTokenCost": {
+            "type": "number",
+            "description": "Cost per million input tokens in EUR",
+            "example": 0.13
+          },
+          "outputTokenCost": {
+            "type": "number",
+            "description": "Cost per million output tokens in EUR",
+            "example": 0
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "displayName",
+          "type",
+          "isArchived",
+          "dimensions",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ImageGenerationModelResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The unique identifier of the model",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the model",
+            "example": "gpt-image-1"
+          },
+          "provider": {
+            "type": "string",
+            "enum": ["azure"],
+            "description": "The provider of the model",
+            "example": "azure"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "The display name of the model",
+            "example": "GPT Image 1"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["image-generation"],
+            "description": "The type of the model (always image-generation)"
+          },
+          "isArchived": {
+            "type": "boolean",
+            "description": "Whether the model is archived",
+            "example": false
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the model was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the model was last updated"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "displayName",
+          "type",
+          "isArchived",
+          "createdAt",
+          "updatedAt"
         ]
       },
       "CreateLanguageModelRequestDto": {
@@ -8957,209 +9543,59 @@
           "isArchived"
         ]
       },
-      "LanguageModelResponseDto": {
+      "CreateImageGenerationModelRequestDto": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The unique identifier of the model",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
           "name": {
             "type": "string",
             "description": "The name of the model",
-            "example": "gpt-4"
+            "example": "gpt-image-1"
           },
           "provider": {
             "type": "string",
-            "enum": [
-              "openai",
-              "anthropic",
-              "bedrock",
-              "mistral",
-              "ollama",
-              "synaforce",
-              "ayunis",
-              "otc",
-              "azure",
-              "gemini",
-              "stackit",
-              "scaleway"
-            ],
-            "description": "The provider of the model",
-            "example": "openai"
+            "description": "The provider of the model. Image-generation models are Azure-only in v1.",
+            "enum": ["azure"],
+            "example": "azure"
           },
           "displayName": {
             "type": "string",
             "description": "The display name of the model",
-            "example": "GPT-4"
-          },
-          "type": {
-            "type": "string",
-            "enum": ["language"],
-            "description": "The type of the model (always language)"
+            "example": "GPT Image 1"
           },
           "isArchived": {
             "type": "boolean",
             "description": "Whether the model is archived",
             "example": false
-          },
-          "canStream": {
-            "type": "boolean",
-            "description": "Whether the model supports streaming",
-            "example": true
-          },
-          "canUseTools": {
-            "type": "boolean",
-            "description": "Whether the model supports tool use",
-            "example": true
-          },
-          "isReasoning": {
-            "type": "boolean",
-            "description": "Whether the model has reasoning capabilities",
-            "example": false
-          },
-          "canVision": {
-            "type": "boolean",
-            "description": "Whether the model supports vision (image processing)",
-            "example": false
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date the model was created"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date the model was last updated"
-          },
-          "inputTokenCost": {
-            "type": "number",
-            "description": "Cost per million input tokens in EUR",
-            "example": 3
-          },
-          "outputTokenCost": {
-            "type": "number",
-            "description": "Cost per million output tokens in EUR",
-            "example": 15
-          },
-          "tier": {
-            "type": "string",
-            "enum": ["low", "medium", "high"],
-            "description": "Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
-            "example": "medium"
           }
         },
-        "required": [
-          "id",
-          "name",
-          "provider",
-          "displayName",
-          "type",
-          "isArchived",
-          "canStream",
-          "canUseTools",
-          "isReasoning",
-          "canVision",
-          "createdAt",
-          "updatedAt"
-        ]
+        "required": ["name", "provider", "displayName", "isArchived"]
       },
-      "EmbeddingModelResponseDto": {
+      "UpdateImageGenerationModelRequestDto": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The unique identifier of the model",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
           "name": {
             "type": "string",
             "description": "The name of the model",
-            "example": "text-embedding-3-small"
+            "example": "gpt-image-1"
           },
           "provider": {
             "type": "string",
-            "enum": [
-              "openai",
-              "anthropic",
-              "bedrock",
-              "mistral",
-              "ollama",
-              "synaforce",
-              "ayunis",
-              "otc",
-              "azure",
-              "gemini",
-              "stackit",
-              "scaleway"
-            ],
-            "description": "The provider of the model",
-            "example": "openai"
+            "description": "The provider of the model. Image-generation models are Azure-only in v1.",
+            "enum": ["azure"],
+            "example": "azure"
           },
           "displayName": {
             "type": "string",
             "description": "The display name of the model",
-            "example": "Text Embedding 3 Small"
-          },
-          "type": {
-            "type": "string",
-            "enum": ["embedding"],
-            "description": "The type of the model (always embedding)"
+            "example": "GPT Image 1"
           },
           "isArchived": {
             "type": "boolean",
             "description": "Whether the model is archived",
             "example": false
-          },
-          "dimensions": {
-            "type": "string",
-            "enum": [
-              "DIMENSION_1024",
-              "DIMENSION_1536",
-              "DIMENSION_2560",
-              1024,
-              1536,
-              2560
-            ],
-            "description": "The dimensions of the embedding",
-            "example": 1536
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date the model was created"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date the model was last updated"
-          },
-          "inputTokenCost": {
-            "type": "number",
-            "description": "Cost per million input tokens in EUR",
-            "example": 0.13
-          },
-          "outputTokenCost": {
-            "type": "number",
-            "description": "Cost per million output tokens in EUR",
-            "example": 0
           }
         },
-        "required": [
-          "id",
-          "name",
-          "provider",
-          "displayName",
-          "type",
-          "isArchived",
-          "dimensions",
-          "createdAt",
-          "updatedAt"
-        ]
+        "required": ["name", "provider", "displayName", "isArchived"]
       },
       "CreateOrgRequestDto": {
         "type": "object",

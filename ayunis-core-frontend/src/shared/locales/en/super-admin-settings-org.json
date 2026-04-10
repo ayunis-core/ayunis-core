@@ -286,6 +286,30 @@
       "archived": "Archived"
     },
     "emptyArchived": "No archived models",
-    "emptyArchivedDescription": "Models you archive will appear here."
+    "emptyArchivedDescription": "Models you archive will appear here.",
+    "catalog": {
+      "createButton": "Create Model",
+      "createLanguageModel": "Language Model",
+      "createEmbeddingModel": "Embedding Model",
+      "createImageGenerationModel": "Image Generation Model",
+      "languageModels": "Language Models",
+      "embeddingModels": "Embedding Models",
+      "imageGenerationModels": "Image Generation Models",
+      "languageModelsDescription": "Models available for text generation and conversation.",
+      "embeddingModelsDescription": "Models available for text embeddings and semantic search.",
+      "imageGenerationModelsDescription": "Models available for image generation.",
+      "languageModelType": "Language",
+      "embeddingModelType": "Embedding",
+      "imageGenerationModelType": "Image Generation",
+      "noLanguageModels": "No language models",
+      "noLanguageModelsEmpty": "No language models have been added to the catalog yet.",
+      "noLanguageModelsArchived": "No language models have been archived.",
+      "noEmbeddingModels": "No embedding models",
+      "noEmbeddingModelsEmpty": "No embedding models have been added to the catalog yet.",
+      "noEmbeddingModelsArchived": "No embedding models have been archived.",
+      "noImageGenerationModels": "No image generation models",
+      "noImageGenerationModelsEmpty": "No image generation models have been added to the catalog yet.",
+      "noImageGenerationModelsArchived": "No image generation models have been archived."
+    }
   }
 }

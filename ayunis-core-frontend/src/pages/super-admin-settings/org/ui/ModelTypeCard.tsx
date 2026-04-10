@@ -5,7 +5,7 @@ import { useSuperAdminUpdatePermittedModel } from '../api/useSuperAdminUpdatePer
 import { useSuperAdminEnableModel } from '../api/useSuperAdminEnableModel';
 
 interface ModelTypeCardProps {
-  readonly type: 'language' | 'embedding';
+  readonly type: 'language' | 'embedding' | 'image-generation';
   readonly models: ModelWithConfigResponseDto[];
   readonly orgId: string;
 }

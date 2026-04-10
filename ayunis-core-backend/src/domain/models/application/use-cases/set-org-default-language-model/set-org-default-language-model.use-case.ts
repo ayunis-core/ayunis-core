@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ManageOrgDefaultModelCommand } from './manage-org-default-model.command';
+import { SetOrgDefaultLanguageModelCommand } from './set-org-default-language-model.command';
 import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { ModelError, PermittedModelNotFoundError } from '../../models.errors';
@@ -8,8 +8,8 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
-export class ManageOrgDefaultModelUseCase {
-  private readonly logger = new Logger(ManageOrgDefaultModelUseCase.name);
+export class SetOrgDefaultLanguageModelUseCase {
+  private readonly logger = new Logger(SetOrgDefaultLanguageModelUseCase.name);
 
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
@@ -17,7 +17,7 @@ export class ManageOrgDefaultModelUseCase {
   ) {}
 
   async execute(
-    command: ManageOrgDefaultModelCommand,
+    command: SetOrgDefaultLanguageModelCommand,
   ): Promise<PermittedLanguageModel> {
     this.logger.log('execute', {
       permittedModelId: command.permittedModelId,
@@ -25,7 +25,7 @@ export class ManageOrgDefaultModelUseCase {
     });
 
     try {
-      // Check if the user is authorized to manage the organization default model
+      // Check if the user is authorized to set the organization default model
       const orgId = this.contextService.get('orgId');
       const systemRole = this.contextService.get('systemRole');
       const isFromOrg = orgId === command.orgId;
@@ -86,7 +86,7 @@ export class ManageOrgDefaultModelUseCase {
       if (error instanceof ModelError) {
         throw error;
       }
-      this.logger.error('Failed to manage organization default model', {
+      this.logger.error('Failed to set organization default model', {
         permittedModelId: command.permittedModelId,
         orgId: command.orgId,
         error: error instanceof Error ? error : new Error('Unknown error'),

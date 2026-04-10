@@ -1,8 +1,5 @@
-import type {
-  EmbeddingModelResponseDto,
-  LanguageModelResponseDto,
-  SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
-} from '@/shared/api';
+import type { SuperAdminCatalogModelsControllerGetAllCatalogModels200Item } from '@/shared/api';
+import { isLanguageModel, isEmbeddingModel } from '@/features/models';
 import {
   Item,
   ItemContent,
@@ -13,18 +10,7 @@ import {
 import { Badge } from '@/shared/ui/shadcn/badge';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Pencil, Trash2 } from 'lucide-react';
-
-function isLanguageModel(
-  model: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
-): model is LanguageModelResponseDto {
-  return model.type === 'language';
-}
-
-function isEmbeddingModel(
-  model: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
-): model is EmbeddingModelResponseDto {
-  return model.type === 'embedding';
-}
+import { useTranslation } from 'react-i18next';
 
 interface ModelItemProps {
   model: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item;
@@ -39,8 +25,14 @@ export function ModelItem({
   onDelete,
   isDeleting,
 }: Readonly<ModelItemProps>) {
+  const { t } = useTranslation('super-admin-settings-org');
   const isLanguage = isLanguageModel(model);
   const isEmbedding = isEmbeddingModel(model);
+  const typeLabels = {
+    language: t('models.catalog.languageModelType'),
+    embedding: t('models.catalog.embeddingModelType'),
+    'image-generation': t('models.catalog.imageGenerationModelType'),
+  } as const;
 
   return (
     <Item>
@@ -59,7 +51,7 @@ export function ModelItem({
       </ItemContent>
       <ItemContent>
         <div className="flex flex-wrap gap-1.5">
-          <Badge variant="outline">{model.type}</Badge>
+          <Badge variant="outline">{typeLabels[model.type]}</Badge>
           {isLanguage && (
             <>
               {model.canStream && <Badge variant="outline">Streaming</Badge>}

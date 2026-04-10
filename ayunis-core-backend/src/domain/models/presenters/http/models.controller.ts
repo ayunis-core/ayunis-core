@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Logger,
   Param,
   Patch,
@@ -23,10 +25,8 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { GetAvailableImageGenerationModelsQuery } from '../../application/use-cases/get-available-image-generation-models/get-available-image-generation-models.query';
-import { GetAvailableImageGenerationModelsUseCase } from '../../application/use-cases/get-available-image-generation-models/get-available-image-generation-models.use-case';
-import { GetAvailableModelsQuery } from '../../application/use-cases/get-available-models/get-available-models.query';
-import { GetAvailableModelsUseCase } from '../../application/use-cases/get-available-models/get-available-models.use-case';
+import { GetConfiguredModelsByTypeQuery } from '../../application/use-cases/get-configured-models-by-type/get-configured-models-by-type.query';
+import { GetConfiguredModelsByTypeUseCase } from '../../application/use-cases/get-configured-models-by-type/get-configured-models-by-type.use-case';
 import { CreatePermittedModelCommand } from '../../application/use-cases/create-permitted-model/create-permitted-model.command';
 import { CreatePermittedModelUseCase } from '../../application/use-cases/create-permitted-model/create-permitted-model.use-case';
 import { DeletePermittedModelCommand } from '../../application/use-cases/delete-permitted-model/delete-permitted-model.command';
@@ -45,12 +45,12 @@ import { UpdatePermittedModelCommand } from '../../application/use-cases/update-
 import { UpdatePermittedModelUseCase } from '../../application/use-cases/update-permitted-model/update-permitted-model.use-case';
 import { ModelProviderInfoRegistry } from '../../application/registry/model-provider-info.registry';
 import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
+import { ModelType } from '../../domain/value-objects/model-type.enum';
 import {
   PermittedEmbeddingModel,
   PermittedImageGenerationModel,
   PermittedLanguageModel,
 } from '../../domain/permitted-model.entity';
-import { AvailableImageGenerationModelResponseDto } from './dto/available-image-generation-model-response.dto';
 import { CreatePermittedModelDto } from './dto/create-permitted-model.dto';
 import { EmbeddingModelEnabledResponseDto } from './dto/embedding-model-enabled-response.dto';
 import { ModelProviderInfoResponseDto } from './dto/model-provider-info-response.dto';
@@ -59,7 +59,6 @@ import { PermittedEmbeddingModelResponseDto } from './dto/permitted-embedding-mo
 import { PermittedImageGenerationModelResponseDto } from './dto/permitted-image-generation-model-response.dto';
 import { PermittedLanguageModelResponseDto } from './dto/permitted-language-model-response.dto';
 import { UpdatePermittedModelDto } from './dto/update-permitted-model.dto';
-import { AvailableImageGenerationModelResponseDtoMapper } from './mappers/available-image-generation-model-response-dto.mapper';
 import { ModelProviderInfoResponseDtoMapper } from './mappers/model-provider-info-response-dto.mapper';
 import { ModelResponseDtoMapper } from './mappers/model-response-dto.mapper';
 import { ModelWithConfigResponseDtoMapper } from './mappers/model-with-config-response-dto.mapper';
@@ -71,8 +70,7 @@ export class ModelsController {
 
   constructor(
     private readonly createPermittedModelUseCase: CreatePermittedModelUseCase,
-    private readonly getAvailableModelsUseCase: GetAvailableModelsUseCase,
-    private readonly getAvailableImageGenerationModelsUseCase: GetAvailableImageGenerationModelsUseCase,
+    private readonly getConfiguredModelsByTypeUseCase: GetConfiguredModelsByTypeUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
     private readonly deletePermittedModelUseCase: DeletePermittedModelUseCase,
     private readonly updatePermittedModelUseCase: UpdatePermittedModelUseCase,
@@ -80,19 +78,18 @@ export class ModelsController {
     private readonly modelProviderInfoRegistry: ModelProviderInfoRegistry,
     private readonly modelResponseDtoMapper: ModelResponseDtoMapper,
     private readonly modelWithConfigResponseDtoMapper: ModelWithConfigResponseDtoMapper,
-    private readonly availableImageGenerationModelResponseDtoMapper: AvailableImageGenerationModelResponseDtoMapper,
     private readonly modelProviderInfoResponseDtoMapper: ModelProviderInfoResponseDtoMapper,
     private readonly getPermittedLanguageModelsUseCase: GetPermittedLanguageModelsUseCase,
     private readonly getEffectiveLanguageModelsUseCase: GetEffectiveLanguageModelsUseCase,
     private readonly isEmbeddingModelEnabledUseCase: IsEmbeddingModelEnabledUseCase,
   ) {}
 
-  @Get('available')
+  @Get('available/language')
   @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Get all available models' })
+  @ApiOperation({ summary: 'Get all available language models' })
   @ApiResponse({
     status: 200,
-    description: 'Successfully retrieved all available models',
+    description: 'Successfully retrieved all available language models',
     schema: {
       type: 'array',
       items: {
@@ -102,18 +99,49 @@ export class ModelsController {
   })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @ApiExtraModels(ModelWithConfigResponseDto)
-  async getAvailableModelsWithConfig(
+  async getAvailableLanguageModels(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<ModelWithConfigResponseDto[]> {
-    this.logger.log('getAvailableModels');
-    const query = new GetAvailableModelsQuery(orgId);
-    const allAvailableModelsWithConfig =
-      await this.getAvailableModelsUseCase.execute(query);
+    this.logger.log('getAvailableLanguageModels');
+    const availableModels = await this.getConfiguredModelsByTypeUseCase.execute(
+      new GetConfiguredModelsByTypeQuery(orgId, ModelType.LANGUAGE),
+    );
     const permittedModels = await this.getPermittedModelsUseCase.execute(
       new GetPermittedModelsQuery(orgId),
     );
     return this.modelWithConfigResponseDtoMapper.toDto(
-      allAvailableModelsWithConfig,
+      availableModels,
+      permittedModels,
+    );
+  }
+
+  @Get('available/embedding')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Get all available embedding models' })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully retrieved all available embedding models',
+    schema: {
+      type: 'array',
+      items: {
+        $ref: getSchemaPath(ModelWithConfigResponseDto),
+      },
+    },
+  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiExtraModels(ModelWithConfigResponseDto)
+  async getAvailableEmbeddingModels(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  ): Promise<ModelWithConfigResponseDto[]> {
+    this.logger.log('getAvailableEmbeddingModels');
+    const availableModels = await this.getConfiguredModelsByTypeUseCase.execute(
+      new GetConfiguredModelsByTypeQuery(orgId, ModelType.EMBEDDING),
+    );
+    const permittedModels = await this.getPermittedModelsUseCase.execute(
+      new GetPermittedModelsQuery(orgId),
+    );
+    return this.modelWithConfigResponseDtoMapper.toDto(
+      availableModels,
       permittedModels,
     );
   }
@@ -127,28 +155,24 @@ export class ModelsController {
     schema: {
       type: 'array',
       items: {
-        $ref: getSchemaPath(AvailableImageGenerationModelResponseDto),
+        $ref: getSchemaPath(ModelWithConfigResponseDto),
       },
     },
   })
   @ApiResponse({ status: 500, description: 'Internal server error' })
-  @ApiExtraModels(AvailableImageGenerationModelResponseDto)
   async getAvailableImageGenerationModels(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-  ): Promise<AvailableImageGenerationModelResponseDto[]> {
+  ): Promise<ModelWithConfigResponseDto[]> {
     this.logger.log('getAvailableImageGenerationModels');
-    const query = new GetAvailableImageGenerationModelsQuery(orgId);
-    const availableModels =
-      await this.getAvailableImageGenerationModelsUseCase.execute(query);
+    const availableModels = await this.getConfiguredModelsByTypeUseCase.execute(
+      new GetConfiguredModelsByTypeQuery(orgId, ModelType.IMAGE_GENERATION),
+    );
     const permittedModels = await this.getPermittedModelsUseCase.execute(
       new GetPermittedModelsQuery(orgId),
     );
-    return this.availableImageGenerationModelResponseDtoMapper.toDto(
+    return this.modelWithConfigResponseDtoMapper.toDto(
       availableModels,
-      permittedModels.filter(
-        (model): model is PermittedImageGenerationModel =>
-          model instanceof PermittedImageGenerationModel,
-      ),
+      permittedModels,
     );
   }
 
@@ -170,11 +194,12 @@ export class ModelsController {
   }
 
   @Post('permitted')
+  @HttpCode(HttpStatus.CREATED)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Create a permitted model' })
   @ApiBody({ type: CreatePermittedModelDto })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.CREATED,
     description: 'Successfully created a permitted model',
   })
   @ApiResponse({ status: 400, description: 'Invalid model input' })
@@ -193,10 +218,11 @@ export class ModelsController {
   }
 
   @Delete('permitted/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Delete a permitted model' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.NO_CONTENT,
     description: 'Successfully deleted a permitted model',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

@@ -15,7 +15,6 @@ import { AgentRecord } from '../../../../../agents/infrastructure/persistence/lo
 import { ThreadSourceAssignmentRecord } from './thread-source-assignment.record';
 import { ThreadKnowledgeBaseAssignmentRecord } from './thread-knowledge-base-assignment.record';
 import { McpIntegrationRecord } from '../../../../../mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
-import { GeneratedImageRecord } from './generated-image.record';
 
 @Entity({ name: 'threads' })
 export class ThreadRecord extends BaseRecord {
@@ -45,12 +44,6 @@ export class ThreadRecord extends BaseRecord {
 
   @OneToMany(() => MessageRecord, (message) => message.thread)
   messages?: MessageRecord[];
-
-  @OneToMany(
-    () => GeneratedImageRecord,
-    (generatedImage) => generatedImage.thread,
-  )
-  generatedImages?: GeneratedImageRecord[];
 
   @OneToMany(
     () => ThreadSourceAssignmentRecord,

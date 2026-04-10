@@ -52,6 +52,7 @@ export class ModelResponseDtoMapper {
 
     return {
       id: permittedModel.id,
+      modelId: permittedModel.model.id,
       name: permittedModel.model.name,
       provider: permittedModel.model.provider,
       providerDisplayName: providerInfo.displayName,
@@ -59,6 +60,7 @@ export class ModelResponseDtoMapper {
       type: ModelType.EMBEDDING,
       isArchived: permittedModel.model.isArchived,
       dimensions: permittedModel.model.dimensions,
+      anonymousOnly: permittedModel.anonymousOnly,
       // Note: Cost fields (inputTokenCost, outputTokenCost) are intentionally
       // not exposed to users. They are tracked internally for usage analytics only.
     };

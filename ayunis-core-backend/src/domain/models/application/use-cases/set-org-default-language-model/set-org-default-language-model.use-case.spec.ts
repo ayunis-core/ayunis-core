@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { ManageOrgDefaultModelUseCase } from './manage-org-default-model.use-case';
-import { ManageOrgDefaultModelCommand } from './manage-org-default-model.command';
+import { SetOrgDefaultLanguageModelUseCase } from './set-org-default-language-model.use-case';
+import { SetOrgDefaultLanguageModelCommand } from './set-org-default-language-model.command';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
@@ -12,8 +12,8 @@ import { PermittedModelNotFoundError } from '../../models.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 
-describe('ManageOrgDefaultModelUseCase', () => {
-  let useCase: ManageOrgDefaultModelUseCase;
+describe('SetOrgDefaultLanguageModelUseCase', () => {
+  let useCase: SetOrgDefaultLanguageModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let contextService: jest.Mocked<ContextService>;
 
@@ -34,7 +34,7 @@ describe('ManageOrgDefaultModelUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ManageOrgDefaultModelUseCase,
+        SetOrgDefaultLanguageModelUseCase,
         {
           provide: PermittedModelsRepository,
           useValue: permittedModelsRepository,
@@ -43,7 +43,7 @@ describe('ManageOrgDefaultModelUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get(ManageOrgDefaultModelUseCase);
+    useCase = module.get(SetOrgDefaultLanguageModelUseCase);
   });
 
   function setAdminContext(): void {
@@ -85,7 +85,7 @@ describe('ManageOrgDefaultModelUseCase', () => {
     );
 
     const result = await useCase.execute(
-      new ManageOrgDefaultModelCommand(permittedModelId, orgId),
+      new SetOrgDefaultLanguageModelCommand(permittedModelId, orgId),
     );
 
     expect(permittedModelsRepository.findOneLanguage).toHaveBeenCalledWith({
@@ -105,7 +105,7 @@ describe('ManageOrgDefaultModelUseCase', () => {
 
     await expect(
       useCase.execute(
-        new ManageOrgDefaultModelCommand(permittedModelId, orgId),
+        new SetOrgDefaultLanguageModelCommand(permittedModelId, orgId),
       ),
     ).rejects.toThrow(PermittedModelNotFoundError);
 
@@ -121,7 +121,7 @@ describe('ManageOrgDefaultModelUseCase', () => {
 
     await expect(
       useCase.execute(
-        new ManageOrgDefaultModelCommand(permittedModelId, orgId),
+        new SetOrgDefaultLanguageModelCommand(permittedModelId, orgId),
       ),
     ).rejects.toThrow(UnauthorizedAccessError);
 

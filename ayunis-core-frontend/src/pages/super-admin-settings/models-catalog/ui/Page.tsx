@@ -7,6 +7,8 @@ import { CreateLanguageModelDialog } from './CreateLanguageModelDialog';
 import { EditLanguageModelDialog } from './EditLanguageModelDialog';
 import { CreateEmbeddingModelDialog } from './CreateEmbeddingModelDialog';
 import { EditEmbeddingModelDialog } from './EditEmbeddingModelDialog';
+import { CreateImageGenerationModelDialog } from './CreateImageGenerationModelDialog';
+import { EditImageGenerationModelDialog } from './EditImageGenerationModelDialog';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
   DropdownMenu,
@@ -18,6 +20,7 @@ import type {
   SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
   LanguageModelResponseDto,
   EmbeddingModelResponseDto,
+  ImageGenerationModelResponseDto,
 } from '@/shared/api';
 import { useDeleteModel } from '../api/useDeleteModel';
 import { useConfirmation } from '@/widgets/confirmation-modal';
@@ -27,15 +30,20 @@ export default function ModelsCatalogPage({
 }: Readonly<{
   models: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item[];
 }>) {
-  const { t } = useTranslation('super-admin-settings-layout');
+  const { t: tLayout } = useTranslation('super-admin-settings-layout');
+  const { t } = useTranslation('super-admin-settings-org');
   const [createLanguageDialogOpen, setCreateLanguageDialogOpen] =
     useState(false);
   const [createEmbeddingDialogOpen, setCreateEmbeddingDialogOpen] =
+    useState(false);
+  const [createImageGenerationDialogOpen, setCreateImageGenerationDialogOpen] =
     useState(false);
   const [editLanguageModel, setEditLanguageModel] =
     useState<LanguageModelResponseDto | null>(null);
   const [editEmbeddingModel, setEditEmbeddingModel] =
     useState<EmbeddingModelResponseDto | null>(null);
+  const [editImageGenerationModel, setEditImageGenerationModel] =
+    useState<ImageGenerationModelResponseDto | null>(null);
   const { deleteModel, isDeleting } = useDeleteModel();
   const { confirm } = useConfirmation();
 
@@ -59,20 +67,25 @@ export default function ModelsCatalogPage({
 
   return (
     <SuperAdminSettingsLayout
-      pageTitle={t('layout.modelsCatalog')}
+      pageTitle={tLayout('layout.modelsCatalog')}
       action={
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm">Create Model</Button>
+            <Button size="sm">{t('models.catalog.createButton')}</Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setCreateLanguageDialogOpen(true)}>
-              Language Model
+              {t('models.catalog.createLanguageModel')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setCreateEmbeddingDialogOpen(true)}
             >
-              Embedding Model
+              {t('models.catalog.createEmbeddingModel')}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setCreateImageGenerationDialogOpen(true)}
+            >
+              {t('models.catalog.createImageGenerationModel')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -86,6 +99,7 @@ export default function ModelsCatalogPage({
             models={activeModels}
             onEditLanguageModel={setEditLanguageModel}
             onEditEmbeddingModel={setEditEmbeddingModel}
+            onEditImageGenerationModel={setEditImageGenerationModel}
             onDeleteModel={handleDeleteModel}
             isDeleting={isDeleting}
           />
@@ -95,6 +109,7 @@ export default function ModelsCatalogPage({
             models={archivedModels}
             onEditLanguageModel={setEditLanguageModel}
             onEditEmbeddingModel={setEditEmbeddingModel}
+            onEditImageGenerationModel={setEditImageGenerationModel}
             onDeleteModel={handleDeleteModel}
             isDeleting={isDeleting}
             isArchivedView
@@ -111,6 +126,10 @@ export default function ModelsCatalogPage({
         open={createEmbeddingDialogOpen}
         onOpenChange={setCreateEmbeddingDialogOpen}
       />
+      <CreateImageGenerationModelDialog
+        open={createImageGenerationDialogOpen}
+        onOpenChange={setCreateImageGenerationDialogOpen}
+      />
       <EditLanguageModelDialog
         model={editLanguageModel}
         open={!!editLanguageModel}
@@ -120,6 +139,11 @@ export default function ModelsCatalogPage({
         model={editEmbeddingModel}
         open={!!editEmbeddingModel}
         onOpenChange={(open) => !open && setEditEmbeddingModel(null)}
+      />
+      <EditImageGenerationModelDialog
+        model={editImageGenerationModel}
+        open={!!editImageGenerationModel}
+        onOpenChange={(open) => !open && setEditImageGenerationModel(null)}
       />
     </SuperAdminSettingsLayout>
   );

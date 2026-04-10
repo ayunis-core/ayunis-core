@@ -9,7 +9,7 @@ import {
   UnexpectedModelError,
 } from '../../models.errors';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { assertSupportedImageGenerationModel } from '../../services/image-generation-model-policy';
+import { ModelPolicyService } from '../../services/model-policy.service';
 import { GetPermittedImageGenerationModelQuery } from './get-permitted-image-generation-model.query';
 
 @Injectable()
@@ -21,6 +21,7 @@ export class GetPermittedImageGenerationModelUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly contextService: ContextService,
+    private readonly modelPolicy: ModelPolicyService,
   ) {}
 
   async execute(
@@ -46,7 +47,7 @@ export class GetPermittedImageGenerationModelUseCase {
         throw new PermittedImageGenerationModelNotFoundForOrgError(query.orgId);
       }
 
-      assertSupportedImageGenerationModel(model.model);
+      this.modelPolicy.assertSupported(model.model);
       return model;
     } catch (error) {
       if (error instanceof ApplicationError) {

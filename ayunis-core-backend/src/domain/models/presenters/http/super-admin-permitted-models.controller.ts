@@ -34,10 +34,11 @@ import { CreatePermittedModelCommand } from '../../application/use-cases/create-
 import { CreatePermittedModelUseCase } from '../../application/use-cases/create-permitted-model/create-permitted-model.use-case';
 import { DeletePermittedModelCommand } from '../../application/use-cases/delete-permitted-model/delete-permitted-model.command';
 import { DeletePermittedModelUseCase } from '../../application/use-cases/delete-permitted-model/delete-permitted-model.use-case';
-import { GetAvailableModelsQuery } from '../../application/use-cases/get-available-models/get-available-models.query';
-import { GetAvailableModelsUseCase } from '../../application/use-cases/get-available-models/get-available-models.use-case';
-import { ManageOrgDefaultModelCommand } from '../../application/use-cases/manage-org-default-model/manage-org-default-model.command';
-import { ManageOrgDefaultModelUseCase } from '../../application/use-cases/manage-org-default-model/manage-org-default-model.use-case';
+import { GetConfiguredModelsByTypeQuery } from '../../application/use-cases/get-configured-models-by-type/get-configured-models-by-type.query';
+import { GetConfiguredModelsByTypeUseCase } from '../../application/use-cases/get-configured-models-by-type/get-configured-models-by-type.use-case';
+import { ModelType } from '../../domain/value-objects/model-type.enum';
+import { SetOrgDefaultLanguageModelCommand } from '../../application/use-cases/set-org-default-language-model/set-org-default-language-model.command';
+import { SetOrgDefaultLanguageModelUseCase } from '../../application/use-cases/set-org-default-language-model/set-org-default-language-model.use-case';
 import { GetPermittedModelsQuery } from '../../application/use-cases/get-permitted-models/get-permitted-models.query';
 import { GetPermittedModelsUseCase } from '../../application/use-cases/get-permitted-models/get-permitted-models.use-case';
 import { UpdatePermittedModelCommand } from '../../application/use-cases/update-permitted-model/update-permitted-model.command';
@@ -76,63 +77,107 @@ export class SuperAdminPermittedModelsController {
     private readonly createPermittedModelUseCase: CreatePermittedModelUseCase,
     private readonly deletePermittedModelUseCase: DeletePermittedModelUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
-    private readonly getAvailableModelsUseCase: GetAvailableModelsUseCase,
+    private readonly getConfiguredModelsByTypeUseCase: GetConfiguredModelsByTypeUseCase,
     private readonly modelResponseDtoMapper: ModelResponseDtoMapper,
     private readonly modelWithConfigResponseDtoMapper: ModelWithConfigResponseDtoMapper,
-    private readonly manageOrgDefaultModelUseCase: ManageOrgDefaultModelUseCase,
+    private readonly setOrgDefaultLanguageModelUseCase: SetOrgDefaultLanguageModelUseCase,
     private readonly updatePermittedModelUseCase: UpdatePermittedModelUseCase,
   ) {}
 
-  @Get(':orgId/available')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Get all available models',
-    description:
-      'Retrieve all available models from the registry with their permitted status for the specified organization. This endpoint is only accessible to super admins.',
-  })
-  @ApiParam({
-    name: 'orgId',
-    description: 'Organization ID to check permitted status for',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  @Get(':orgId/available/language')
+  @ApiOperation({ summary: 'Get all available language models' })
+  @ApiParam({ name: 'orgId', format: 'uuid' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Successfully retrieved available models',
+    description: 'Successfully retrieved available language models',
     schema: {
       type: 'array',
-      items: {
-        $ref: getSchemaPath(ModelWithConfigResponseDto),
-      },
+      items: { $ref: getSchemaPath(ModelWithConfigResponseDto) },
     },
   })
-  @ApiUnauthorizedResponse({
-    description: 'User not authenticated or not authorized as super admin',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
-  async getAvailableModels(
+  @ApiUnauthorizedResponse({ description: 'Not authorized as super admin' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
+  async getAvailableLanguageModels(
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<ModelWithConfigResponseDto[]> {
     this.logger.log(
-      `Getting available models for org ${orgId} by super admin ${userId}`,
+      `Getting available language models for org ${orgId} by super admin ${userId}`,
     );
-    const query = new GetAvailableModelsQuery(orgId);
-    const allAvailableModels =
-      await this.getAvailableModelsUseCase.execute(query);
+    const availableModels = await this.getConfiguredModelsByTypeUseCase.execute(
+      new GetConfiguredModelsByTypeQuery(orgId, ModelType.LANGUAGE),
+    );
     const permittedModels = await this.getPermittedModelsUseCase.execute(
       new GetPermittedModelsQuery(orgId),
     );
-    const responseDtos = this.modelWithConfigResponseDtoMapper.toDto(
-      allAvailableModels,
+    return this.modelWithConfigResponseDtoMapper.toDto(
+      availableModels,
       permittedModels,
     );
+  }
+
+  @Get(':orgId/available/embedding')
+  @ApiOperation({ summary: 'Get all available embedding models' })
+  @ApiParam({ name: 'orgId', format: 'uuid' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Successfully retrieved available embedding models',
+    schema: {
+      type: 'array',
+      items: { $ref: getSchemaPath(ModelWithConfigResponseDto) },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Not authorized as super admin' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
+  async getAvailableEmbeddingModels(
+    @Param('orgId') orgId: UUID,
+    @CurrentUser(UserProperty.ID) userId: UUID,
+  ): Promise<ModelWithConfigResponseDto[]> {
     this.logger.log(
-      `Successfully retrieved ${allAvailableModels.length} available models for org ${orgId}`,
+      `Getting available embedding models for org ${orgId} by super admin ${userId}`,
     );
-    return responseDtos;
+    const availableModels = await this.getConfiguredModelsByTypeUseCase.execute(
+      new GetConfiguredModelsByTypeQuery(orgId, ModelType.EMBEDDING),
+    );
+    const permittedModels = await this.getPermittedModelsUseCase.execute(
+      new GetPermittedModelsQuery(orgId),
+    );
+    return this.modelWithConfigResponseDtoMapper.toDto(
+      availableModels,
+      permittedModels,
+    );
+  }
+
+  @Get(':orgId/available/image-generation')
+  @ApiOperation({ summary: 'Get all available image-generation models' })
+  @ApiParam({ name: 'orgId', format: 'uuid' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Successfully retrieved available image-generation models',
+    schema: {
+      type: 'array',
+      items: { $ref: getSchemaPath(ModelWithConfigResponseDto) },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Not authorized as super admin' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
+  async getAvailableImageGenerationModels(
+    @Param('orgId') orgId: UUID,
+    @CurrentUser(UserProperty.ID) userId: UUID,
+  ): Promise<ModelWithConfigResponseDto[]> {
+    this.logger.log(
+      `Getting available image-generation models for org ${orgId} by super admin ${userId}`,
+    );
+    const availableModels = await this.getConfiguredModelsByTypeUseCase.execute(
+      new GetConfiguredModelsByTypeQuery(orgId, ModelType.IMAGE_GENERATION),
+    );
+    const permittedModels = await this.getPermittedModelsUseCase.execute(
+      new GetPermittedModelsQuery(orgId),
+    );
+    return this.modelWithConfigResponseDtoMapper.toDto(
+      availableModels,
+      permittedModels,
+    );
   }
 
   @Put(':orgId/default-model')
@@ -175,11 +220,11 @@ export class SuperAdminPermittedModelsController {
     this.logger.log(
       `Managing org default model for org ${orgId} by super admin ${userId}`,
     );
-    const command = new ManageOrgDefaultModelCommand(
+    const command = new SetOrgDefaultLanguageModelCommand(
       setOrgDefaultModelDto.permittedModelId,
       orgId,
     );
-    const model = await this.manageOrgDefaultModelUseCase.execute(command);
+    const model = await this.setOrgDefaultLanguageModelUseCase.execute(command);
     return this.modelResponseDtoMapper.toLanguageModelDto(model);
   }
 
@@ -264,6 +309,10 @@ export class SuperAdminPermittedModelsController {
   @ApiUnauthorizedResponse({
     description: 'User not authenticated or not authorized as super admin',
   })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description: 'Model already permitted for this organization',
+  })
   @ApiInternalServerErrorResponse({
     description: 'Internal server error',
   })
@@ -305,6 +354,15 @@ export class SuperAdminPermittedModelsController {
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
     description: 'Successfully deleted permitted model',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Permitted model not found',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Cannot delete the last permitted language model or default model',
   })
   @ApiUnauthorizedResponse({
     description: 'User not authenticated or not authorized as super admin',
@@ -356,6 +414,14 @@ export class SuperAdminPermittedModelsController {
         { $ref: getSchemaPath(PermittedImageGenerationModelResponseDto) },
       ],
     },
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Permitted model not found',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid update data provided',
   })
   @ApiUnauthorizedResponse({
     description: 'User not authenticated or not authorized as super admin',

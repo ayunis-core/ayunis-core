@@ -1,4 +1,6 @@
 import { Body, Controller, Delete, Get, Logger, Put } from '@nestjs/common';
+import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
   ApiBody,
   ApiExtraModels,
@@ -20,10 +22,10 @@ import { GetOrgDefaultModelUseCase } from '../../application/use-cases/get-org-d
 import { GetOrgDefaultModelQuery } from '../../application/use-cases/get-org-default-model/get-org-default-model.query';
 import { GetUserDefaultModelUseCase } from '../../application/use-cases/get-user-default-model/get-user-default-model.use-case';
 import { GetUserDefaultModelQuery } from '../../application/use-cases/get-user-default-model/get-user-default-model.query';
-import { ManageOrgDefaultModelUseCase } from '../../application/use-cases/manage-org-default-model/manage-org-default-model.use-case';
-import { ManageOrgDefaultModelCommand } from '../../application/use-cases/manage-org-default-model/manage-org-default-model.command';
-import { ManageUserDefaultModelUseCase } from '../../application/use-cases/manage-user-default-model/manage-user-default-model.use-case';
-import { ManageUserDefaultModelCommand } from '../../application/use-cases/manage-user-default-model/manage-user-default-model.command';
+import { SetOrgDefaultLanguageModelUseCase } from '../../application/use-cases/set-org-default-language-model/set-org-default-language-model.use-case';
+import { SetOrgDefaultLanguageModelCommand } from '../../application/use-cases/set-org-default-language-model/set-org-default-language-model.command';
+import { SetUserDefaultLanguageModelUseCase } from '../../application/use-cases/set-user-default-language-model/set-user-default-language-model.use-case';
+import { SetUserDefaultLanguageModelCommand } from '../../application/use-cases/set-user-default-language-model/set-user-default-language-model.command';
 import { ModelNotFoundError } from '../../application/models.errors';
 import {
   PermittedLanguageModelResponseDto,
@@ -40,11 +42,11 @@ export class ModelsDefaultsController {
 
   constructor(
     private readonly getDefaultModelUseCase: GetDefaultModelUseCase,
-    private readonly manageUserDefaultModelUseCase: ManageUserDefaultModelUseCase,
+    private readonly setUserDefaultLanguageModelUseCase: SetUserDefaultLanguageModelUseCase,
     private readonly deleteUserDefaultModelUseCase: DeleteUserDefaultModelUseCase,
     private readonly getUserDefaultModelUseCase: GetUserDefaultModelUseCase,
     private readonly getOrgDefaultModelUseCase: GetOrgDefaultModelUseCase,
-    private readonly manageOrgDefaultModelUseCase: ManageOrgDefaultModelUseCase,
+    private readonly setOrgDefaultLanguageModelUseCase: SetOrgDefaultLanguageModelUseCase,
     private readonly modelResponseDtoMapper: ModelResponseDtoMapper,
   ) {}
 
@@ -167,12 +169,13 @@ export class ModelsDefaultsController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<PermittedLanguageModelResponseDto> {
-    const command = new ManageUserDefaultModelCommand(
+    const command = new SetUserDefaultLanguageModelCommand(
       userId,
       setUserDefaultModelDto.permittedModelId,
       orgId,
     );
-    const model = await this.manageUserDefaultModelUseCase.execute(command);
+    const model =
+      await this.setUserDefaultLanguageModelUseCase.execute(command);
     return this.modelResponseDtoMapper.toLanguageModelDto(model);
   }
 
@@ -191,6 +194,7 @@ export class ModelsDefaultsController {
   }
 
   @Put('org/default')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: 'Set or update the organization default model',
     description:
@@ -211,11 +215,11 @@ export class ModelsDefaultsController {
     @Body() setOrgDefaultModelDto: SetOrgDefaultModelDto,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<PermittedLanguageModelResponseDto> {
-    const command = new ManageOrgDefaultModelCommand(
+    const command = new SetOrgDefaultLanguageModelCommand(
       setOrgDefaultModelDto.permittedModelId,
       orgId,
     );
-    const model = await this.manageOrgDefaultModelUseCase.execute(command);
+    const model = await this.setOrgDefaultLanguageModelUseCase.execute(command);
     return this.modelResponseDtoMapper.toLanguageModelDto(model);
   }
 }

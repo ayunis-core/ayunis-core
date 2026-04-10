@@ -1,24 +1,33 @@
 import {
-  getModelsControllerGetAvailableModelsWithConfigQueryKey,
+  getModelsControllerGetAvailableLanguageModelsQueryKey,
+  getModelsControllerGetAvailableEmbeddingModelsQueryKey,
+  getModelsControllerGetAvailableImageGenerationModelsQueryKey,
   getModelsControllerGetPermittedLanguageModelsQueryKey,
   type ModelWithConfigResponseDto,
-  useModelsControllerManageOrgDefaultModel,
+  useModelsDefaultsControllerManageOrgDefaultModel,
 } from '@/shared/api';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '@tanstack/react-router';
 
+interface ManageOrgDefaultModelContext {
+  previousModels?: ModelWithConfigResponseDto[];
+  queryKey: ReturnType<
+    typeof getModelsControllerGetAvailableLanguageModelsQueryKey
+  >;
+}
+
 export function useManageOrgDefaultModel() {
   const queryClient = useQueryClient();
   const { t } = useTranslation('admin-settings-models');
   const router = useRouter();
   const manageOrgDefaultModelMutation =
-    useModelsControllerManageOrgDefaultModel({
+    useModelsDefaultsControllerManageOrgDefaultModel({
       mutation: {
         onMutate: async ({ data }) => {
           const queryKey =
-            getModelsControllerGetAvailableModelsWithConfigQueryKey();
+            getModelsControllerGetAvailableLanguageModelsQueryKey();
           await queryClient.cancelQueries({ queryKey });
 
           const previousModels =
@@ -51,7 +60,11 @@ export function useManageOrgDefaultModel() {
         onSuccess: () => {
           showSuccess(t('models.defaultModel.success'));
         },
-        onError: (error, _, context) => {
+        onError: (
+          error: unknown,
+          _: unknown,
+          context: ManageOrgDefaultModelContext | undefined,
+        ) => {
           console.error('Failed to set organization default model', error);
           showError(t('models.defaultModel.error'));
 
@@ -61,7 +74,9 @@ export function useManageOrgDefaultModel() {
         },
         onSettled: async () => {
           const queryKeys = [
-            getModelsControllerGetAvailableModelsWithConfigQueryKey(),
+            getModelsControllerGetAvailableLanguageModelsQueryKey(),
+            getModelsControllerGetAvailableEmbeddingModelsQueryKey(),
+            getModelsControllerGetAvailableImageGenerationModelsQueryKey(),
             getModelsControllerGetPermittedLanguageModelsQueryKey(),
           ];
 

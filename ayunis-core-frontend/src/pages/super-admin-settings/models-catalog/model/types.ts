@@ -1,6 +1,7 @@
 import type {
   CreateEmbeddingModelRequestDtoDimensions,
   CreateEmbeddingModelRequestDtoProvider,
+  CreateImageGenerationModelRequestDtoProvider,
   CreateLanguageModelRequestDtoProvider,
   CreateLanguageModelRequestDtoTier,
 } from '@/shared/api';
@@ -27,5 +28,12 @@ export interface EmbeddingModelFormData extends ModelPricingFormData {
   provider: CreateEmbeddingModelRequestDtoProvider;
   displayName: string;
   dimensions: CreateEmbeddingModelRequestDtoDimensions;
+  isArchived: boolean;
+}
+
+export interface ImageGenerationModelFormData {
+  name: string;
+  provider: CreateImageGenerationModelRequestDtoProvider;
+  displayName: string;
   isArchived: boolean;
 }

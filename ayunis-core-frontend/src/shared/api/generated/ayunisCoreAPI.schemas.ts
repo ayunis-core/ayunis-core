@@ -48,6 +48,19 @@ export const ModelWithConfigResponseDtoProvider = {
 } as const;
 
 /**
+ * The type of the model
+ */
+export type ModelWithConfigResponseDtoType = typeof ModelWithConfigResponseDtoType[keyof typeof ModelWithConfigResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelWithConfigResponseDtoType = {
+  language: 'language',
+  embedding: 'embedding',
+  'image-generation': 'image-generation',
+} as const;
+
+/**
  * Fair-use tier label assigned by super admins; drives quota bucket selection. Undefined for embedding models and untiered language models.
  */
 export type ModelWithConfigResponseDtoTier = typeof ModelWithConfigResponseDtoTier[keyof typeof ModelWithConfigResponseDtoTier];
@@ -74,6 +87,8 @@ export interface ModelWithConfigResponseDto {
   provider: ModelWithConfigResponseDtoProvider;
   /** The display name of the model */
   displayName: string;
+  /** The type of the model */
+  type: ModelWithConfigResponseDtoType;
   /** Whether the model can stream */
   canStream: boolean;
   /** Whether the model can reason */
@@ -86,8 +101,6 @@ export interface ModelWithConfigResponseDto {
   isPermitted: boolean;
   /** Whether the model is the default model */
   isDefault: boolean;
-  /** Whether the model is an embedding model */
-  isEmbedding: boolean;
   /**
    * Whether this model enforces anonymous mode. Null if not permitted.
    * @nullable
@@ -218,47 +231,6 @@ export interface PermittedLanguageModelResponseDto {
 }
 
 /**
- * The permitted language model
- * @nullable
- */
-export type PermittedLanguageModelResponseDtoNullablePermittedLanguageModel = PermittedLanguageModelResponseDto | null;
-
-export interface PermittedLanguageModelResponseDtoNullable {
-  /**
-   * The permitted language model
-   * @nullable
-   */
-  permittedLanguageModel: PermittedLanguageModelResponseDtoNullablePermittedLanguageModel;
-}
-
-export interface SetUserDefaultModelDto {
-  /** The ID of the permitted model to set as default */
-  permittedModelId: string;
-}
-
-export interface SetOrgDefaultModelDto {
-  /** The ID of the permitted model to set as organization default */
-  permittedModelId: string;
-}
-
-export interface EmbeddingModelEnabledResponseDto {
-  /** Whether the organization has an embedding model enabled */
-  isEmbeddingModelEnabled: boolean;
-}
-
-export interface CreateTeamPermittedModelDto {
-  /** The ID of the catalog model to permit for the team */
-  modelId: string;
-  /** Whether this model should enforce anonymous mode */
-  anonymousOnly?: boolean;
-}
-
-export interface SetTeamDefaultModelDto {
-  /** The ID of the team-scoped permitted model to set as the team default */
-  permittedModelId: string;
-}
-
-/**
  * The provider of the model
  */
 export type PermittedEmbeddingModelResponseDtoProvider = typeof PermittedEmbeddingModelResponseDtoProvider[keyof typeof PermittedEmbeddingModelResponseDtoProvider];
@@ -304,6 +276,8 @@ export interface PermittedEmbeddingModelResponseDto {
   displayName: string;
   /** Whether the model is archived */
   isArchived: boolean;
+  /** The catalog model UUID */
+  modelId: string;
   /** The type of the model (always embedding) */
   type: PermittedEmbeddingModelResponseDtoType;
   /**
@@ -311,6 +285,297 @@ export interface PermittedEmbeddingModelResponseDto {
    * @nullable
    */
   dimensions: number | null;
+  /** Whether this model enforces anonymous mode */
+  anonymousOnly: boolean;
+}
+
+/**
+ * The provider of the model
+ */
+export type PermittedImageGenerationModelResponseDtoProvider = typeof PermittedImageGenerationModelResponseDtoProvider[keyof typeof PermittedImageGenerationModelResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PermittedImageGenerationModelResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+/**
+ * The type of the model (always image-generation)
+ */
+export type PermittedImageGenerationModelResponseDtoType = typeof PermittedImageGenerationModelResponseDtoType[keyof typeof PermittedImageGenerationModelResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PermittedImageGenerationModelResponseDtoType = {
+  'image-generation': 'image-generation',
+} as const;
+
+export interface PermittedImageGenerationModelResponseDto {
+  /** The id of the permitted model */
+  id: string;
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: PermittedImageGenerationModelResponseDtoProvider;
+  /** The display name of the provider */
+  providerDisplayName: string;
+  /** The display name of the model */
+  displayName: string;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /** The catalog model UUID */
+  modelId: string;
+  /** The type of the model (always image-generation) */
+  type: PermittedImageGenerationModelResponseDtoType;
+  /** Whether this model enforces anonymous mode */
+  anonymousOnly: boolean;
+}
+
+export interface EmbeddingModelEnabledResponseDto {
+  /** Whether the organization has an embedding model enabled */
+  isEmbeddingModelEnabled: boolean;
+}
+
+/**
+ * The permitted language model
+ * @nullable
+ */
+export type PermittedLanguageModelResponseDtoNullablePermittedLanguageModel = PermittedLanguageModelResponseDto | null;
+
+export interface PermittedLanguageModelResponseDtoNullable {
+  /**
+   * The permitted language model
+   * @nullable
+   */
+  permittedLanguageModel: PermittedLanguageModelResponseDtoNullablePermittedLanguageModel;
+}
+
+export interface SetUserDefaultModelDto {
+  /** The ID of the permitted model to set as default */
+  permittedModelId: string;
+}
+
+export interface SetOrgDefaultModelDto {
+  /** The ID of the permitted model to set as organization default */
+  permittedModelId: string;
+}
+
+export interface CreateTeamPermittedModelDto {
+  /** The ID of the catalog model to permit for the team */
+  modelId: string;
+  /** Whether this model should enforce anonymous mode */
+  anonymousOnly?: boolean;
+}
+
+export interface SetTeamDefaultModelDto {
+  /** The ID of the team-scoped permitted model to set as the team default */
+  permittedModelId: string;
+}
+
+/**
+ * The provider of the model
+ */
+export type LanguageModelResponseDtoProvider = typeof LanguageModelResponseDtoProvider[keyof typeof LanguageModelResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const LanguageModelResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+/**
+ * The type of the model (always language)
+ */
+export type LanguageModelResponseDtoType = typeof LanguageModelResponseDtoType[keyof typeof LanguageModelResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const LanguageModelResponseDtoType = {
+  language: 'language',
+} as const;
+
+/**
+ * Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109.
+ */
+export type LanguageModelResponseDtoTier = typeof LanguageModelResponseDtoTier[keyof typeof LanguageModelResponseDtoTier];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const LanguageModelResponseDtoTier = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface LanguageModelResponseDto {
+  /** The unique identifier of the model */
+  id: string;
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: LanguageModelResponseDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** The type of the model (always language) */
+  type: LanguageModelResponseDtoType;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /** Whether the model supports streaming */
+  canStream: boolean;
+  /** Whether the model supports tool use */
+  canUseTools: boolean;
+  /** Whether the model has reasoning capabilities */
+  isReasoning: boolean;
+  /** Whether the model supports vision (image processing) */
+  canVision: boolean;
+  /** The date the model was created */
+  createdAt: string;
+  /** The date the model was last updated */
+  updatedAt: string;
+  /** Cost per million input tokens in EUR */
+  inputTokenCost?: number;
+  /** Cost per million output tokens in EUR */
+  outputTokenCost?: number;
+  /** Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109. */
+  tier?: LanguageModelResponseDtoTier;
+}
+
+/**
+ * The provider of the model
+ */
+export type EmbeddingModelResponseDtoProvider = typeof EmbeddingModelResponseDtoProvider[keyof typeof EmbeddingModelResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EmbeddingModelResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+/**
+ * The type of the model (always embedding)
+ */
+export type EmbeddingModelResponseDtoType = typeof EmbeddingModelResponseDtoType[keyof typeof EmbeddingModelResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EmbeddingModelResponseDtoType = {
+  embedding: 'embedding',
+} as const;
+
+/**
+ * The dimensions of the embedding
+ */
+export type EmbeddingModelResponseDtoDimensions = typeof EmbeddingModelResponseDtoDimensions[keyof typeof EmbeddingModelResponseDtoDimensions];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EmbeddingModelResponseDtoDimensions = {
+  DIMENSION_1024: 'DIMENSION_1024',
+  DIMENSION_1536: 'DIMENSION_1536',
+  DIMENSION_2560: 'DIMENSION_2560',
+  NUMBER_1024: 1024,
+  NUMBER_1536: 1536,
+  NUMBER_2560: 2560,
+} as const;
+
+export interface EmbeddingModelResponseDto {
+  /** The unique identifier of the model */
+  id: string;
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: EmbeddingModelResponseDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** The type of the model (always embedding) */
+  type: EmbeddingModelResponseDtoType;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /** The dimensions of the embedding */
+  dimensions: EmbeddingModelResponseDtoDimensions;
+  /** The date the model was created */
+  createdAt: string;
+  /** The date the model was last updated */
+  updatedAt: string;
+  /** Cost per million input tokens in EUR */
+  inputTokenCost?: number;
+  /** Cost per million output tokens in EUR */
+  outputTokenCost?: number;
+}
+
+/**
+ * The provider of the model
+ */
+export type ImageGenerationModelResponseDtoProvider = typeof ImageGenerationModelResponseDtoProvider[keyof typeof ImageGenerationModelResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ImageGenerationModelResponseDtoProvider = {
+  azure: 'azure',
+} as const;
+
+/**
+ * The type of the model (always image-generation)
+ */
+export type ImageGenerationModelResponseDtoType = typeof ImageGenerationModelResponseDtoType[keyof typeof ImageGenerationModelResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ImageGenerationModelResponseDtoType = {
+  'image-generation': 'image-generation',
+} as const;
+
+export interface ImageGenerationModelResponseDto {
+  /** The unique identifier of the model */
+  id: string;
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: ImageGenerationModelResponseDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** The type of the model (always image-generation) */
+  type: ImageGenerationModelResponseDtoType;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /** The date the model was created */
+  createdAt: string;
+  /** The date the model was last updated */
+  updatedAt: string;
 }
 
 /**
@@ -562,156 +827,47 @@ export interface UpdateEmbeddingModelRequestDto {
 }
 
 /**
- * The provider of the model
+ * The provider of the model. Image-generation models are Azure-only in v1.
  */
-export type LanguageModelResponseDtoProvider = typeof LanguageModelResponseDtoProvider[keyof typeof LanguageModelResponseDtoProvider];
+export type CreateImageGenerationModelRequestDtoProvider = typeof CreateImageGenerationModelRequestDtoProvider[keyof typeof CreateImageGenerationModelRequestDtoProvider];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const LanguageModelResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
+export const CreateImageGenerationModelRequestDtoProvider = {
   azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
 } as const;
 
-/**
- * The type of the model (always language)
- */
-export type LanguageModelResponseDtoType = typeof LanguageModelResponseDtoType[keyof typeof LanguageModelResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const LanguageModelResponseDtoType = {
-  language: 'language',
-} as const;
-
-/**
- * Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109.
- */
-export type LanguageModelResponseDtoTier = typeof LanguageModelResponseDtoTier[keyof typeof LanguageModelResponseDtoTier];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const LanguageModelResponseDtoTier = {
-  low: 'low',
-  medium: 'medium',
-  high: 'high',
-} as const;
-
-export interface LanguageModelResponseDto {
-  /** The unique identifier of the model */
-  id: string;
+export interface CreateImageGenerationModelRequestDto {
   /** The name of the model */
   name: string;
-  /** The provider of the model */
-  provider: LanguageModelResponseDtoProvider;
+  /** The provider of the model. Image-generation models are Azure-only in v1. */
+  provider: CreateImageGenerationModelRequestDtoProvider;
   /** The display name of the model */
   displayName: string;
-  /** The type of the model (always language) */
-  type: LanguageModelResponseDtoType;
   /** Whether the model is archived */
   isArchived: boolean;
-  /** Whether the model supports streaming */
-  canStream: boolean;
-  /** Whether the model supports tool use */
-  canUseTools: boolean;
-  /** Whether the model has reasoning capabilities */
-  isReasoning: boolean;
-  /** Whether the model supports vision (image processing) */
-  canVision: boolean;
-  /** The date the model was created */
-  createdAt: string;
-  /** The date the model was last updated */
-  updatedAt: string;
-  /** Cost per million input tokens in EUR */
-  inputTokenCost?: number;
-  /** Cost per million output tokens in EUR */
-  outputTokenCost?: number;
-  /** Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109. */
-  tier?: LanguageModelResponseDtoTier;
 }
 
 /**
- * The provider of the model
+ * The provider of the model. Image-generation models are Azure-only in v1.
  */
-export type EmbeddingModelResponseDtoProvider = typeof EmbeddingModelResponseDtoProvider[keyof typeof EmbeddingModelResponseDtoProvider];
+export type UpdateImageGenerationModelRequestDtoProvider = typeof UpdateImageGenerationModelRequestDtoProvider[keyof typeof UpdateImageGenerationModelRequestDtoProvider];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const EmbeddingModelResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
+export const UpdateImageGenerationModelRequestDtoProvider = {
   azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
 } as const;
 
-/**
- * The type of the model (always embedding)
- */
-export type EmbeddingModelResponseDtoType = typeof EmbeddingModelResponseDtoType[keyof typeof EmbeddingModelResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const EmbeddingModelResponseDtoType = {
-  embedding: 'embedding',
-} as const;
-
-/**
- * The dimensions of the embedding
- */
-export type EmbeddingModelResponseDtoDimensions = typeof EmbeddingModelResponseDtoDimensions[keyof typeof EmbeddingModelResponseDtoDimensions];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const EmbeddingModelResponseDtoDimensions = {
-  DIMENSION_1024: 'DIMENSION_1024',
-  DIMENSION_1536: 'DIMENSION_1536',
-  DIMENSION_2560: 'DIMENSION_2560',
-  NUMBER_1024: 1024,
-  NUMBER_1536: 1536,
-  NUMBER_2560: 2560,
-} as const;
-
-export interface EmbeddingModelResponseDto {
-  /** The unique identifier of the model */
-  id: string;
+export interface UpdateImageGenerationModelRequestDto {
   /** The name of the model */
   name: string;
-  /** The provider of the model */
-  provider: EmbeddingModelResponseDtoProvider;
+  /** The provider of the model. Image-generation models are Azure-only in v1. */
+  provider: UpdateImageGenerationModelRequestDtoProvider;
   /** The display name of the model */
   displayName: string;
-  /** The type of the model (always embedding) */
-  type: EmbeddingModelResponseDtoType;
   /** Whether the model is archived */
   isArchived: boolean;
-  /** The dimensions of the embedding */
-  dimensions: EmbeddingModelResponseDtoDimensions;
-  /** The date the model was created */
-  createdAt: string;
-  /** The date the model was last updated */
-  updatedAt: string;
-  /** Cost per million input tokens in EUR */
-  inputTokenCost?: number;
-  /** Cost per million output tokens in EUR */
-  outputTokenCost?: number;
 }
 
 export interface CreateOrgRequestDto {
@@ -3959,13 +4115,15 @@ export interface UpdateIpAllowlistRequestDto {
   cidrs: string[];
 }
 
-export type SuperAdminPermittedModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
+export type ModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto | PermittedImageGenerationModelResponseDto;
 
-export type SuperAdminPermittedModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
+export type SuperAdminPermittedModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto | PermittedImageGenerationModelResponseDto;
 
-export type SuperAdminCatalogModelsControllerGetAllCatalogModels200Item = LanguageModelResponseDto | EmbeddingModelResponseDto;
+export type SuperAdminPermittedModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto | PermittedImageGenerationModelResponseDto;
 
-export type SuperAdminCatalogModelsControllerGetCatalogModelById200 = LanguageModelResponseDto | EmbeddingModelResponseDto;
+export type SuperAdminCatalogModelsControllerGetAllCatalogModels200Item = LanguageModelResponseDto | EmbeddingModelResponseDto | ImageGenerationModelResponseDto;
+
+export type SuperAdminCatalogModelsControllerGetCatalogModelById200 = LanguageModelResponseDto | EmbeddingModelResponseDto | ImageGenerationModelResponseDto;
 
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
 /**

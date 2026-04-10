@@ -1,9 +1,9 @@
 import {
-  useModelsControllerGetUserSpecificDefaultModel,
-  useModelsControllerManageUserDefaultModel,
-  useModelsControllerDeleteUserDefaultModel,
-  getModelsControllerGetUserSpecificDefaultModelQueryKey,
-  getModelsControllerGetEffectiveDefaultModelQueryKey,
+  useModelsDefaultsControllerGetUserSpecificDefaultModel,
+  useModelsDefaultsControllerManageUserDefaultModel,
+  useModelsDefaultsControllerDeleteUserDefaultModel,
+  getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey,
+  getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type {
   PermittedLanguageModelResponseDtoNullable,
@@ -23,8 +23,8 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const queryKeys = [
-    getModelsControllerGetUserSpecificDefaultModelQueryKey(),
-    getModelsControllerGetEffectiveDefaultModelQueryKey(),
+    getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
+    getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey(),
   ];
 
   // Get user default model
@@ -32,11 +32,11 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
     data: userDefaultModelResponse,
     error,
     refetch,
-  } = useModelsControllerGetUserSpecificDefaultModel();
+  } = useModelsDefaultsControllerGetUserSpecificDefaultModel();
 
   // Manage user default model (handles both creating and updating)
   const manageUserDefaultModelMutation =
-    useModelsControllerManageUserDefaultModel({
+    useModelsDefaultsControllerManageUserDefaultModel({
       mutation: {
         onMutate: async ({ data }: { data: SetUserDefaultModelDto }) => {
           await Promise.all(
@@ -46,7 +46,7 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
           );
           const previousData =
             queryClient.getQueryData<PermittedLanguageModelResponseDtoNullable>(
-              getModelsControllerGetUserSpecificDefaultModelQueryKey(),
+              getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
             );
 
           // Find the actual model from the provided models
@@ -56,7 +56,7 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
 
           if (selectedModel) {
             queryClient.setQueryData(
-              getModelsControllerGetUserSpecificDefaultModelQueryKey(),
+              getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
               {
                 permittedLanguageModel: selectedModel,
               },
@@ -83,7 +83,7 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
           console.error('Error managing user default model', err);
           showError(t('chat.defaultModelError'));
           queryClient.setQueryData(
-            getModelsControllerGetUserSpecificDefaultModelQueryKey(),
+            getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
             context?.previousData,
           );
         },
@@ -92,7 +92,7 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
 
   // Delete user default model
   const deleteUserDefaultModelMutation =
-    useModelsControllerDeleteUserDefaultModel({
+    useModelsDefaultsControllerDeleteUserDefaultModel({
       mutation: {
         onMutate: async () => {
           await Promise.all(
@@ -102,12 +102,12 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
           );
           const previousData =
             queryClient.getQueryData<PermittedLanguageModelResponseDtoNullable>(
-              getModelsControllerGetUserSpecificDefaultModelQueryKey(),
+              getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
             );
 
           // Optimistically set to null (no default model)
           queryClient.setQueryData(
-            getModelsControllerGetUserSpecificDefaultModelQueryKey(),
+            getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
             { permittedLanguageModel: null },
           );
           return { previousData };
@@ -130,7 +130,7 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
           console.error('Error deleting user default model', err);
           showError(t('chat.defaultModelError'));
           queryClient.setQueryData(
-            getModelsControllerGetUserSpecificDefaultModelQueryKey(),
+            getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
             context?.previousData,
           );
         },
