@@ -46,7 +46,7 @@ export function validateConfigSchema(schema: unknown): IntegrationConfigSchema {
   return result;
 }
 
-export function validateTopLevelShape(schema: unknown): TopLevelSchema {
+function validateTopLevelShape(schema: unknown): TopLevelSchema {
   if (!schema || typeof schema !== 'object' || Array.isArray(schema)) {
     throw new McpInvalidConfigSchemaError('Schema must be a non-null object');
   }
@@ -77,7 +77,7 @@ export function validateTopLevelShape(schema: unknown): TopLevelSchema {
   return s as TopLevelSchema;
 }
 
-export function validateConfigField(field: unknown, path: string): ConfigField {
+function validateConfigField(field: unknown, path: string): ConfigField {
   if (!field || typeof field !== 'object' || Array.isArray(field)) {
     throw new McpInvalidConfigSchemaError(
       'Field must be a non-null object',
@@ -102,7 +102,7 @@ export function validateConfigField(field: unknown, path: string): ConfigField {
   };
 }
 
-export function validateRequiredFieldProps(
+function validateRequiredFieldProps(
   f: Record<string, unknown>,
   path: string,
 ): void {
@@ -135,7 +135,7 @@ export function validateRequiredFieldProps(
   }
 }
 
-export function validateOptionalFieldProps(
+function validateOptionalFieldProps(
   f: Record<string, unknown>,
   path: string,
 ): void {
@@ -170,7 +170,7 @@ export function validateOptionalFieldProps(
   }
 }
 
-export function assertNoDuplicateKeys(
+function assertNoDuplicateKeys(
   orgFields: ConfigField[],
   userFields: ConfigField[],
 ): void {
@@ -190,7 +190,7 @@ export function assertNoDuplicateKeys(
   }
 }
 
-export function validateOAuthConfig(oauth: unknown): OAuthConfig {
+function validateOAuthConfig(oauth: unknown): OAuthConfig {
   if (!oauth || typeof oauth !== 'object' || Array.isArray(oauth)) {
     throw new McpInvalidConfigSchemaError(
       'oauth must be a non-null object',
@@ -211,7 +211,7 @@ export function validateOAuthConfig(oauth: unknown): OAuthConfig {
   };
 }
 
-export function validateOAuthUrls(o: Record<string, unknown>): void {
+function validateOAuthUrls(o: Record<string, unknown>): void {
   if (
     typeof o.authorizationUrl !== 'string' ||
     o.authorizationUrl.length === 0
@@ -230,7 +230,7 @@ export function validateOAuthUrls(o: Record<string, unknown>): void {
   }
 }
 
-export function validateOAuthScopesAndLevel(o: Record<string, unknown>): void {
+function validateOAuthScopesAndLevel(o: Record<string, unknown>): void {
   if (
     !Array.isArray(o.scopes) ||
     !o.scopes.every((s: unknown) => typeof s === 'string')
