@@ -12154,8 +12154,7 @@
           "returnTo": {
             "type": "string",
             "description": "Optional relative in-app path to return to after OAuth completes",
-            "example": "/settings/integrations?tab=mcp",
-            "maxLength": 2048
+            "example": "/settings/integrations?tab=mcp"
           }
         }
       },

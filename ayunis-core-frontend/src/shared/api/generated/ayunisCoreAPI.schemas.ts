@@ -2713,10 +2713,7 @@ export interface CreateSelfDefinedIntegrationDto {
 }
 
 export interface OAuthAuthorizeRequestDto {
-  /**
-   * Optional relative in-app path to return to after OAuth completes
-   * @maxLength 2048
-   */
+  /** Optional relative in-app path to return to after OAuth completes */
   returnTo?: string;
 }
 

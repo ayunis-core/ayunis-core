@@ -164,7 +164,7 @@ describe('OAuthFlowService', () => {
       expect(url.searchParams.get('response_type')).toBe('code');
       expect(url.searchParams.get('client_id')).toBe('client-id');
       expect(url.searchParams.get('redirect_uri')).toBe(
-        'http://localhost:3000/mcp-integrations/oauth/callback',
+        'http://localhost:3000/api/mcp-integrations/oauth/callback',
       );
       expect(url.searchParams.get('scope')).toBe('read write');
       expect(url.searchParams.get('state')).toBe('signed-state-jwt');
@@ -179,7 +179,8 @@ describe('OAuthFlowService', () => {
           orgId: integration.orgId,
           userId: null,
           codeVerifier: expect.any(String),
-          redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+          redirectUri:
+            'http://localhost:3000/api/mcp-integrations/oauth/callback',
           returnPath: '/settings/integrations?tab=mcp',
           nonce: expect.any(String),
         }),
@@ -242,7 +243,8 @@ describe('OAuthFlowService', () => {
         orgId: integration.orgId,
         userId: null,
         codeVerifier: 'test-verifier',
-        redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        redirectUri:
+          'http://localhost:3000/api/mcp-integrations/oauth/callback',
         returnPath: '/settings/integrations?tab=mcp',
         nonce: 'test-nonce',
       };
@@ -279,7 +281,8 @@ describe('OAuthFlowService', () => {
           },
           authorizationCode: 'auth-code',
           codeVerifier: 'test-verifier',
-          redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+          redirectUri:
+            'http://localhost:3000/api/mcp-integrations/oauth/callback',
         }),
       );
 
@@ -301,7 +304,8 @@ describe('OAuthFlowService', () => {
         orgId: integration.orgId,
         userId: null,
         codeVerifier: 'test-verifier',
-        redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        redirectUri:
+          'http://localhost:3000/api/mcp-integrations/oauth/callback',
         returnPath: '/settings/integrations',
         nonce: 'test-nonce',
       };
@@ -347,7 +351,8 @@ describe('OAuthFlowService', () => {
         orgId: integration.orgId,
         userId: null,
         codeVerifier: 'test-verifier',
-        redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        redirectUri:
+          'http://localhost:3000/api/mcp-integrations/oauth/callback',
         returnPath: '/settings/integrations',
         nonce: 'test-nonce',
       };
@@ -403,7 +408,8 @@ describe('OAuthFlowService', () => {
         orgId: integration.orgId,
         userId: null,
         codeVerifier: 'v',
-        redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        redirectUri:
+          'http://localhost:3000/api/mcp-integrations/oauth/callback',
         returnPath: '/settings/integrations',
         nonce: 'n',
       };
@@ -429,7 +435,8 @@ describe('OAuthFlowService', () => {
         orgId,
         userId: null,
         codeVerifier: 'v',
-        redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        redirectUri:
+          'http://localhost:3000/api/mcp-integrations/oauth/callback',
         returnPath: '/settings/integrations',
         nonce: 'n',
       };
@@ -450,7 +457,8 @@ describe('OAuthFlowService', () => {
         orgId: randomUUID(), // different orgId
         userId: null,
         codeVerifier: 'v',
-        redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        redirectUri:
+          'http://localhost:3000/api/mcp-integrations/oauth/callback',
         returnPath: '/settings/integrations',
         nonce: 'n',
       };
@@ -780,7 +788,8 @@ describe('OAuthFlowService', () => {
         orgId: randomUUID(),
         userId: null,
         codeVerifier: 'code-verifier',
-        redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        redirectUri:
+          'http://localhost:3000/api/mcp-integrations/oauth/callback',
         returnPath: '/skills/skill-123',
         nonce: 'nonce',
       });
