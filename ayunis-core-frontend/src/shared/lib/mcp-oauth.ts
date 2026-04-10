@@ -37,6 +37,11 @@ export function parseMcpOAuthInfo(value: unknown): ParsedMcpOAuthInfo | null {
   };
 }
 
+export function hasUserLevelOAuth(integration: { oauth?: unknown }): boolean {
+  const oauthInfo = parseMcpOAuthInfo(integration.oauth);
+  return oauthInfo?.enabled === true && oauthInfo.level === 'user';
+}
+
 export function getMcpOAuthErrorKey(reason: string | null): McpOAuthErrorKey {
   if (!reason) {
     return 'errorToast';

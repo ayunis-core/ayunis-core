@@ -20,7 +20,8 @@ import {
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
-import { parseMcpOAuthInfo } from '@/shared/lib/mcp-oauth';
+import { parseMcpOAuthInfo, hasUserLevelOAuth } from '@/shared/lib/mcp-oauth';
+import { getUserFields } from '@/shared/lib/mcp-config-schema';
 import { useHandleMcpOAuthCallback } from '@/widgets/mcp-integrations-card';
 import { SettingsLayout } from '../../settings-layout';
 import { useAvailableIntegrations } from '../api/useAvailableIntegrations';
@@ -216,27 +217,6 @@ function hasConfigurableOptions(
     getUserFields(integration).length > 0 ||
     hasUserLevelOAuth(integration)
   );
-}
-
-function getUserFields(
-  integration: Pick<McpIntegrationResponseDto, 'configSchema'>,
-): unknown[] {
-  if (
-    !integration.configSchema ||
-    typeof integration.configSchema !== 'object'
-  ) {
-    return [];
-  }
-
-  const schema = integration.configSchema as { userFields?: unknown[] };
-  return Array.isArray(schema.userFields) ? schema.userFields : [];
-}
-
-function hasUserLevelOAuth(
-  integration: Pick<McpIntegrationResponseDto, 'oauth'>,
-): boolean {
-  const oauthInfo = parseMcpOAuthInfo(integration.oauth);
-  return oauthInfo?.enabled === true && oauthInfo.level === 'user';
 }
 
 function getConnectionStatusLabel(

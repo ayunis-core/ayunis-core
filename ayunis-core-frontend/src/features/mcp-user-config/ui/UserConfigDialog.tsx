@@ -6,7 +6,8 @@ import {
   OAuthStatusBadge,
   useOAuthStatus,
 } from '@/features/mcp-oauth';
-import { parseMcpOAuthInfo } from '@/shared/lib/mcp-oauth';
+import { hasUserLevelOAuth } from '@/shared/lib/mcp-oauth';
+import { getUserFields } from '@/shared/lib/mcp-config-schema';
 import { SECRET_MASK } from '@/shared/constants/secret-mask';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
@@ -221,30 +222,6 @@ function UserOAuthAuthorizationSection({
       />
     </section>
   );
-}
-
-function getUserFields(
-  integration: Pick<UserConfigurableIntegration, 'configSchema'>,
-): MarketplaceIntegrationConfigFieldDto[] {
-  if (
-    !integration.configSchema ||
-    typeof integration.configSchema !== 'object'
-  ) {
-    return [];
-  }
-
-  const schema = integration.configSchema as {
-    userFields?: MarketplaceIntegrationConfigFieldDto[];
-  };
-
-  return Array.isArray(schema.userFields) ? schema.userFields : [];
-}
-
-function hasUserLevelOAuth(
-  integration: Pick<UserConfigurableIntegration, 'oauth'>,
-): boolean {
-  const oauthInfo = parseMcpOAuthInfo(integration.oauth);
-  return oauthInfo?.enabled === true && oauthInfo.level === 'user';
 }
 
 function buildInitialFormValues(
