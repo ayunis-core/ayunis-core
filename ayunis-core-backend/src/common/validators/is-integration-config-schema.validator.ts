@@ -61,10 +61,42 @@ export function IsIntegrationConfigSchema(
             return false;
           }
 
+          if (obj.oauth !== undefined) {
+            if (
+              typeof obj.oauth !== 'object' ||
+              obj.oauth === null ||
+              Array.isArray(obj.oauth)
+            ) {
+              return false;
+            }
+            const oauth = obj.oauth as Record<string, unknown>;
+            if (
+              typeof oauth.authorizationUrl !== 'string' ||
+              oauth.authorizationUrl.length === 0
+            ) {
+              return false;
+            }
+            if (
+              typeof oauth.tokenUrl !== 'string' ||
+              oauth.tokenUrl.length === 0
+            ) {
+              return false;
+            }
+            if (
+              !Array.isArray(oauth.scopes) ||
+              !oauth.scopes.every((s: unknown) => typeof s === 'string')
+            ) {
+              return false;
+            }
+            if (oauth.level !== 'org' && oauth.level !== 'user') {
+              return false;
+            }
+          }
+
           return true;
         },
         defaultMessage(args: ValidationArguments) {
-          return `${args.property} must be a valid IntegrationConfigSchema with authType (string), orgFields (ConfigField[]), and userFields (ConfigField[])`;
+          return `${args.property} must be a valid IntegrationConfigSchema with authType (string), orgFields (ConfigField[]), userFields (ConfigField[]), and optionally oauth (OAuthConfig with authorizationUrl, tokenUrl, scopes, level)`;
         },
       },
     });

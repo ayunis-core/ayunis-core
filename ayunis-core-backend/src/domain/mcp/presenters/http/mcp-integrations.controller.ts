@@ -236,7 +236,12 @@ export class McpIntegrationsController {
       configSchema: dto.configSchema as IntegrationConfigSchema | undefined,
     });
     const integration = await this.updateMcpIntegrationUseCase.execute(command);
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    const responseDto = this.mcpIntegrationDtoMapper.toDto(integration);
+    const [enriched] = await this.enrichWithOAuthStatus(
+      [responseDto],
+      [integration],
+    );
+    return enriched;
   }
 
   @Delete(':id')
@@ -262,7 +267,9 @@ export class McpIntegrationsController {
     const integration = await this.enableMcpIntegrationUseCase.execute(
       new EnableMcpIntegrationCommand(id),
     );
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    const dto = this.mcpIntegrationDtoMapper.toDto(integration);
+    const [enriched] = await this.enrichWithOAuthStatus([dto], [integration]);
+    return enriched;
   }
 
   @Post(':id/disable')
@@ -276,7 +283,9 @@ export class McpIntegrationsController {
     const integration = await this.disableMcpIntegrationUseCase.execute(
       new DisableMcpIntegrationCommand(id),
     );
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    const dto = this.mcpIntegrationDtoMapper.toDto(integration);
+    const [enriched] = await this.enrichWithOAuthStatus([dto], [integration]);
+    return enriched;
   }
 
   @Post('install-from-marketplace')
@@ -296,7 +305,12 @@ export class McpIntegrationsController {
     );
     const integration =
       await this.installMarketplaceIntegrationUseCase.execute(command);
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    const responseDto = this.mcpIntegrationDtoMapper.toDto(integration);
+    const [enriched] = await this.enrichWithOAuthStatus(
+      [responseDto],
+      [integration],
+    );
+    return enriched;
   }
 
   @Get(':id/user-config')
@@ -377,7 +391,9 @@ export class McpIntegrationsController {
       dto.returnsPii,
     );
     const integration = await this.createSelfDefinedUseCase.execute(command);
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    const dto = this.mcpIntegrationDtoMapper.toDto(integration);
+    const [enriched] = await this.enrichWithOAuthStatus([dto], [integration]);
+    return enriched;
   }
 
   @Post(':id/oauth/authorize')
