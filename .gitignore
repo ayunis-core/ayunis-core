@@ -6,10 +6,11 @@ node_modules
 
 # Auto-generated type-checking tsconfig files (tool-generated with hash names)
 tsconfig.?????????*.json
-# Agent config (symlinked from ayunis-ai)
 .pi
+.agents/
 .pi/
 .claude/
 AGENTS.md
+CLAUDE.md
 .agentfiles
 .agentfiles.lock
