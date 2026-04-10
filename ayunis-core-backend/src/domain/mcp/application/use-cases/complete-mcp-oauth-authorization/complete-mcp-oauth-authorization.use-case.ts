@@ -35,8 +35,6 @@ export class CompleteMcpOAuthAuthorizationUseCase {
     command: CompleteMcpOAuthAuthorizationCommand,
   ): Promise<CompleteMcpOAuthResult> {
     this.logger.log('completeMcpOAuthAuthorization');
-    const authorizationContext =
-      this.oauthFlowService.resolveAuthorizationContext(command.state);
 
     try {
       const result = await this.oauthFlowService.handleCallback(
@@ -55,6 +53,8 @@ export class CompleteMcpOAuthAuthorizationUseCase {
         error instanceof McpOAuthExchangeFailedError ||
         error instanceof McpOAuthStateInvalidError
       ) {
+        const authorizationContext =
+          this.oauthFlowService.resolveAuthorizationContext(command.state);
         return {
           success: false,
           reason: error.message,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, ExternalLink } from 'lucide-react';
 import {
@@ -20,8 +20,8 @@ import {
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
-import { getMcpOAuthErrorKey, parseMcpOAuthInfo } from '@/shared/lib/mcp-oauth';
-import { showError, showSuccess } from '@/shared/lib/toast';
+import { parseMcpOAuthInfo } from '@/shared/lib/mcp-oauth';
+import { useHandleMcpOAuthCallback } from '@/widgets/mcp-integrations-card';
 import { SettingsLayout } from '../../settings-layout';
 import { useAvailableIntegrations } from '../api/useAvailableIntegrations';
 
@@ -38,30 +38,7 @@ export default function IntegrationsSettingsPage() {
     },
   });
 
-  useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const oauthStatus = searchParams.get('oauth');
-    if (!oauthStatus) {
-      return;
-    }
-
-    if (oauthStatus === 'success') {
-      showSuccess(t('oauth.successToast'));
-    } else if (oauthStatus === 'error') {
-      const reason = searchParams.get('reason');
-      showError(t(`oauth.${getMcpOAuthErrorKey(reason)}`));
-    }
-
-    searchParams.delete('oauth');
-    searchParams.delete('id');
-    searchParams.delete('reason');
-
-    const cleanedSearch = searchParams.toString();
-    const searchSuffix = cleanedSearch ? `?${cleanedSearch}` : '';
-    const cleanedUrl =
-      window.location.pathname + searchSuffix + window.location.hash;
-    window.history.replaceState({}, '', cleanedUrl);
-  }, [t]);
+  useHandleMcpOAuthCallback(t, refetch, 'oauth');
 
   if (isLoading) {
     return (
