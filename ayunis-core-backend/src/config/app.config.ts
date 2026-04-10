@@ -4,7 +4,7 @@ function getMcpOAuthStateSecret(): string {
   const secret = process.env.MCP_OAUTH_STATE_SECRET;
   if (secret) return secret;
 
-  const env = process.env.NODE_ENV ?? 'development';
+  const env = process.env.NODE_ENV;
   if (env === 'development' || env === 'test') {
     return 'dev-mcp-oauth-state-secret';
   }
