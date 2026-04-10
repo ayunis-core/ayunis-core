@@ -14,7 +14,7 @@ describe('JwtOAuthStateAdapter', () => {
     orgId: randomUUID(),
     userId: null,
     codeVerifier: 'test-code-verifier-abc123',
-    redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+    redirectUri: 'http://localhost:3000/api/mcp-integrations/oauth/callback',
     returnPath: '/settings/integrations?tab=mcp',
     nonce: 'test-nonce-xyz',
   });
