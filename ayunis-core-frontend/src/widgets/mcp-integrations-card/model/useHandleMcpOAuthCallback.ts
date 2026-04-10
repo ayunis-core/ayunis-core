@@ -5,7 +5,8 @@ import { showError, showSuccess } from '@/shared/lib/toast';
 
 export function useHandleMcpOAuthCallback(
   t: TFunction,
-  refetch: () => void,
+  refetch: () => unknown,
+  keyPrefix = 'mcpIntegrations.oauth',
 ): void {
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -15,14 +16,11 @@ export function useHandleMcpOAuthCallback(
     }
 
     if (oauthStatus === 'success') {
-      showSuccess(t('mcpIntegrations.oauth.successToast'));
+      showSuccess(t(`${keyPrefix}.successToast`));
       refetch();
     } else if (oauthStatus === 'error') {
-      showError(
-        t(
-          `mcpIntegrations.oauth.${getMcpOAuthErrorKey(searchParams.get('reason'))}`,
-        ),
-      );
+      const errorKey = getMcpOAuthErrorKey(searchParams.get('reason'));
+      showError(t(`${keyPrefix}.${errorKey}`));
     }
 
     searchParams.delete('oauth');
@@ -34,5 +32,5 @@ export function useHandleMcpOAuthCallback(
     const cleanedUrl =
       window.location.pathname + searchSuffix + window.location.hash;
     window.history.replaceState({}, '', cleanedUrl);
-  }, [refetch, t]);
+  }, [refetch, t, keyPrefix]);
 }

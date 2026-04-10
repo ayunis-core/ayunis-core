@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
@@ -27,8 +27,7 @@ import {
 } from '@/shared/ui/shadcn/item';
 import { ComingSoonDialog } from './coming-soon-dialog';
 import { CreateSelfDefinedDialog } from './create-self-defined-dialog';
-import { getMcpOAuthErrorKey } from '@/shared/lib/mcp-oauth';
-import { showError, showSuccess } from '@/shared/lib/toast';
+import { useHandleMcpOAuthCallback } from '@/widgets/mcp-integrations-card';
 
 export function McpIntegrationsPage({
   isCloud,
@@ -58,30 +57,7 @@ export function McpIntegrationsPage({
     predefinedConfigs,
   } = useMcpIntegrationsQueries();
 
-  useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const oauthStatus = searchParams.get('oauth');
-    if (!oauthStatus) {
-      return;
-    }
-
-    if (oauthStatus === 'success') {
-      showSuccess(t('integrations.oauth.successToast'));
-    } else if (oauthStatus === 'error') {
-      const reason = searchParams.get('reason');
-      showError(t(`integrations.oauth.${getMcpOAuthErrorKey(reason)}`));
-    }
-
-    searchParams.delete('oauth');
-    searchParams.delete('id');
-    searchParams.delete('reason');
-
-    const cleanedSearch = searchParams.toString();
-    const searchSuffix = cleanedSearch ? `?${cleanedSearch}` : '';
-    const cleanedUrl =
-      window.location.pathname + searchSuffix + window.location.hash;
-    window.history.replaceState({}, '', cleanedUrl);
-  }, [t]);
+  useHandleMcpOAuthCallback(t, refetchIntegrations, 'integrations.oauth');
 
   const handleOpenCreatePredefined = () => {
     if (!predefinedConfigs.length) {

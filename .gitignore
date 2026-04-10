@@ -9,7 +9,6 @@ tsconfig.?????????*.json
 .pi
 .agents/
 .pi/
-.agents/
 .claude/
 AGENTS.md
 CLAUDE.md
