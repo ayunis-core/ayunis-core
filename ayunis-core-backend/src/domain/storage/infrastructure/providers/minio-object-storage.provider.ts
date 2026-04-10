@@ -2,7 +2,10 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import * as Minio from 'minio';
 import { Readable } from 'stream';
-import { ObjectStoragePort } from '../../application/ports/object-storage.port';
+import {
+  ObjectStoragePort,
+  type PresignedUrlResponseOverrides,
+} from '../../application/ports/object-storage.port';
 import storageConfig from '../../../../config/storage.config';
 import { StorageObjectUpload } from '../../domain/storage-object-upload.entity';
 import { StorageObject } from '../../domain/storage-object.entity';
@@ -73,7 +76,7 @@ export class MinioObjectStorageProvider
     uploadObject: StorageObjectUpload,
     bucket?: string,
   ): Promise<StorageObject> {
-    const bucketName = bucket || this.defaultBucket;
+    const bucketName = bucket ?? this.defaultBucket;
     const metaData = uploadObject.metadata.toRawMetadata();
 
     if (uploadObject.metadata.contentType) {
@@ -166,13 +169,31 @@ export class MinioObjectStorageProvider
   async getPresignedUrl(
     storageUrl: StorageUrl,
     expiresIn = 60 * 60,
+    responseOverrides?: PresignedUrlResponseOverrides,
   ): Promise<PresignedUrl> {
     const bucketName = storageUrl.bucket || this.defaultBucket;
-    const url = await this.client.presignedGetObject(
-      bucketName,
-      storageUrl.objectName,
-      expiresIn,
-    );
+    const respHeaders: Record<string, string> = {};
+    if (responseOverrides?.contentType) {
+      respHeaders['response-content-type'] = responseOverrides.contentType;
+    }
+    if (responseOverrides?.contentDisposition) {
+      respHeaders['response-content-disposition'] =
+        responseOverrides.contentDisposition;
+    }
+    const hasOverrides = Object.keys(respHeaders).length > 0;
+
+    const url = hasOverrides
+      ? await this.client.presignedGetObject(
+          bucketName,
+          storageUrl.objectName,
+          expiresIn,
+          respHeaders,
+        )
+      : await this.client.presignedGetObject(
+          bucketName,
+          storageUrl.objectName,
+          expiresIn,
+        );
 
     return new PresignedUrl(url, expiresIn, storageUrl);
   }
@@ -196,7 +217,7 @@ export class MinioObjectStorageProvider
   }
 
   async listObjects(prefix?: string, bucket?: string): Promise<string[]> {
-    const bucketName = bucket || this.defaultBucket;
+    const bucketName = bucket ?? this.defaultBucket;
     const objectNames: string[] = [];
 
     return new Promise((resolve, reject) => {

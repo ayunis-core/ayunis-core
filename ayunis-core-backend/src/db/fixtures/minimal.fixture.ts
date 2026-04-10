@@ -71,6 +71,12 @@ export const minimalFixture = {
     dimensions: EmbeddingDimensions.DIMENSION_1024,
   },
 
+  imageGenerationModel: {
+    name: 'gpt-image-1',
+    displayName: 'GPT Image 1 (Azure)',
+    provider: ModelProvider.AZURE,
+  },
+
   subscription: {
     noOfSeats: 5,
     pricePerSeat: 10,
@@ -119,10 +125,19 @@ export const minimalFixture = {
       isDefault: true,
       anonymousOnly: false,
     },
+    {
+      // Image-generation model (always single-per-org, default-by-construction)
+      modelKey: 'imageGenerationModel',
+      isDefault: true,
+      anonymousOnly: false,
+    },
   ],
 } as const;
 
 export type ModelKey = keyof Pick<
   typeof minimalFixture,
-  'languageModel' | 'azureLanguageModel' | 'embeddingModel'
+  | 'languageModel'
+  | 'azureLanguageModel'
+  | 'embeddingModel'
+  | 'imageGenerationModel'
 >;

@@ -36,6 +36,7 @@ import SkillInstructionWidget from './chat-widgets/SkillInstructionWidget';
 import CreateDocumentWidget from './chat-widgets/CreateDocumentWidget';
 import UpdateDocumentWidget from './chat-widgets/UpdateDocumentWidget';
 import EditDocumentWidget from './chat-widgets/EditDocumentWidget';
+import GenerateImageWidget from './chat-widgets/GenerateImageWidget';
 import {
   BarChartWidget,
   LineChartWidget,
@@ -52,6 +53,7 @@ interface ChatMessageProps {
   readonly isStreaming?: boolean;
   readonly threadId?: string;
   readonly onOpenArtifact?: (artifactId: string) => void;
+  readonly toolResultsByToolId?: Readonly<Record<string, string>>;
 }
 
 function CopyMessageButton({
@@ -128,6 +130,7 @@ export default function ChatMessage({
   isStreaming = false,
   threadId,
   onOpenArtifact,
+  toolResultsByToolId,
 }: ChatMessageProps) {
   const { theme } = useTheme();
   const messageContentRef = useRef<HTMLDivElement>(null);
@@ -178,6 +181,7 @@ export default function ChatMessage({
               isStreaming,
               threadId,
               onOpenArtifact,
+              toolResultsByToolId,
             )}
           </div>
           {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content may be undefined during streaming */}
@@ -239,6 +243,7 @@ function renderMessageContent(
   isStreaming?: boolean,
   threadId?: string,
   onOpenArtifact?: (artifactId: string) => void,
+  toolResultsByToolId?: Readonly<Record<string, string>>,
 ) {
   switch (message.role) {
     case 'user':
@@ -444,7 +449,20 @@ function renderMessageContent(
                 />
               );
             }
-
+            if (
+              toolUseMessageContent.name ===
+              ToolAssignmentDtoType.generate_image
+            ) {
+              return (
+                <GenerateImageWidget
+                  key={`generate-image-${index}-${toolUseMessageContent.id}`}
+                  content={toolUseMessageContent}
+                  imageId={toolResultsByToolId?.[toolUseMessageContent.id]}
+                  threadId={threadId}
+                  isStreaming={isStreaming}
+                />
+              );
+            }
             if (toolUseMessageContent.integration) {
               return (
                 <IntegrationToolWidget

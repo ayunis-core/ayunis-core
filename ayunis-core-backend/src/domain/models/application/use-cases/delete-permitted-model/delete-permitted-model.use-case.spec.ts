@@ -25,6 +25,7 @@ import { ReplaceModelWithUserDefaultUseCase } from 'src/domain/threads/applicati
 import { ReplaceModelWithUserDefaultUseCase as ReplaceModelWithUserDefaultUseCaseAgents } from 'src/domain/agents/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { FindAllThreadsByOrgWithSourcesUseCase } from 'src/domain/threads/application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.use-case';
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 describe('DeletePermittedModelUseCase', () => {
   let useCase: DeletePermittedModelUseCase;
@@ -165,6 +166,33 @@ describe('DeletePermittedModelUseCase', () => {
         id: mockPermittedModelId,
         orgId: mockOrgId,
       });
+    });
+
+    it('should throw UnauthorizedAccessError when the model belongs to a different org', async () => {
+      const otherOrgId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
+      const modelFromOtherOrg = new PermittedLanguageModel({
+        id: mockPermittedModelId,
+        model: mockLanguageModel,
+        orgId: otherOrgId,
+        isDefault: false,
+        scope: PermittedModelScope.ORG,
+      });
+
+      permittedModelsRepository.findOne.mockResolvedValue(modelFromOtherOrg);
+
+      const command = new DeletePermittedModelCommand({
+        orgId: mockOrgId,
+        permittedModelId: mockPermittedModelId,
+      });
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        UnauthorizedAccessError,
+      );
+
+      expect(permittedModelsRepository.delete).not.toHaveBeenCalled();
+      expect(
+        permittedModelsRepository.deleteTeamScopedByOrgAndModelId,
+      ).not.toHaveBeenCalled();
     });
 
     it('should call team cascade before deleting the org model', async () => {

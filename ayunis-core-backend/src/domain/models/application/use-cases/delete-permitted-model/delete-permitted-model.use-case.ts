@@ -75,6 +75,11 @@ export class DeletePermittedModelUseCase {
         });
       }
 
+      // Verify the model belongs to the specified org
+      if (model.orgId !== command.orgId) {
+        throw new UnauthorizedAccessError();
+      }
+
       if (model instanceof PermittedLanguageModel) {
         return this.deletePermittedLanguageModel(command.orgId, model);
       } else if (model instanceof PermittedEmbeddingModel) {

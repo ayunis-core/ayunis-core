@@ -309,7 +309,17 @@
       "noEmbeddingModelsArchived": "No embedding models have been archived.",
       "noImageGenerationModels": "No image generation models",
       "noImageGenerationModelsEmpty": "No image generation models have been added to the catalog yet.",
-      "noImageGenerationModelsArchived": "No image generation models have been archived."
+      "noImageGenerationModelsArchived": "No image generation models have been archived.",
+      "archivedBadge": "Archived",
+      "streamingBadge": "Streaming",
+      "toolsBadge": "Tools",
+      "reasoningBadge": "Reasoning",
+      "deleteModel": {
+        "title": "Delete model",
+        "description": "Are you sure you want to delete {{displayName}}? This action cannot be undone.",
+        "confirmText": "Delete",
+        "cancelText": "Cancel"
+      }
     }
   }
 }

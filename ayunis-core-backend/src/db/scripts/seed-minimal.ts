@@ -11,6 +11,7 @@ import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/sche
 import {
   LanguageModelRecord,
   EmbeddingModelRecord,
+  ImageGenerationModelRecord,
 } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
 import {
   SeatBasedSubscriptionRecord,
@@ -95,6 +96,26 @@ async function seedEmbeddingModel(): Promise<EmbeddingModelRecord> {
   return record;
 }
 
+async function seedImageGenerationModel(): Promise<ImageGenerationModelRecord> {
+  const repo = dataSource.getRepository(ImageGenerationModelRecord);
+  const { name, displayName, provider } = fixture.imageGenerationModel;
+  const existing = await repo.findOne({ where: { name, provider } });
+  if (existing) {
+    log('Image generation model', existing.name, false);
+    return existing;
+  }
+
+  const record = repo.create({
+    id: randomUUID(),
+    name,
+    displayName,
+    provider,
+  });
+  await repo.save(record);
+  log('Image generation model', record.name, true);
+  return record;
+}
+
 // Manual find-or-create because password must be hashed before insert.
 async function seedUser(
   orgId: string,
@@ -156,6 +177,7 @@ async function seedSubscription(
     pricePerSeat: fixture.subscription.pricePerSeat,
     renewalCycle: fixture.subscription.renewalCycle,
     renewalCycleAnchor: new Date(),
+    startsAt: new Date(),
     cancelledAt: null,
   } as Partial<SeatBasedSubscriptionRecord>);
   await subRepo.save(record);
@@ -197,6 +219,7 @@ async function seedUsageSubscription(
     id: subscriptionId,
     orgId,
     monthlyCredits: fixture.usageSubscription.monthlyCredits,
+    startsAt: new Date(),
     cancelledAt: null,
   } as Partial<UsageBasedSubscriptionRecord>);
   await subRepo.save(record);
@@ -297,16 +320,28 @@ async function seedMinimal(): Promise<void> {
     console.log('🌱 Starting minimal seed…\n'); // eslint-disable-line no-console
 
     // Seed independent entities first
-    const [org, usageOrg, languageModel, azureLanguageModel, embeddingModel] =
-      await Promise.all([
-        seedOrgByName(fixture.org.name),
-        seedOrgByName(fixture.usageOrg.name),
-        seedLanguageModelFromFixture(fixture.languageModel),
-        seedLanguageModelFromFixture(fixture.azureLanguageModel),
-        seedEmbeddingModel(),
-      ]);
+    const [
+      org,
+      usageOrg,
+      languageModel,
+      azureLanguageModel,
+      embeddingModel,
+      imageGenerationModel,
+    ] = await Promise.all([
+      seedOrgByName(fixture.org.name),
+      seedOrgByName(fixture.usageOrg.name),
+      seedLanguageModelFromFixture(fixture.languageModel),
+      seedLanguageModelFromFixture(fixture.azureLanguageModel),
+      seedEmbeddingModel(),
+      seedImageGenerationModel(),
+    ]);
 
-    const models = { languageModel, azureLanguageModel, embeddingModel };
+    const models = {
+      languageModel,
+      azureLanguageModel,
+      embeddingModel,
+      imageGenerationModel,
+    };
 
     // Seed seat-based org
     await seedUser(org.id, runner, fixture.user);

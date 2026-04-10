@@ -39,7 +39,10 @@ import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/applicatio
 import { FindArtifactWithVersionsQuery } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.query';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { FindAllLetterheadsUseCase } from 'src/domain/letterheads/application/use-cases/find-all-letterheads/find-all-letterheads.use-case';
-import type { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
+import { buildLetterheadSuffix } from './letterhead-suffix.helper';
+import { assembleImageGenerationTools } from './image-generation-tool-assembly.helper';
+import { ContextService } from 'src/common/context/services/context.service';
+import { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -59,6 +62,8 @@ export class ToolAssemblyService {
     private readonly findArtifactsByThreadUseCase: FindArtifactsByThreadUseCase,
     private readonly findArtifactWithVersionsUseCase: FindArtifactWithVersionsUseCase,
     private readonly findAllLetterheadsUseCase: FindAllLetterheadsUseCase,
+    private readonly contextService: ContextService,
+    private readonly getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase,
   ) {}
 
   async findActiveSkills(): Promise<Skill[]> {
@@ -175,7 +180,7 @@ export class ToolAssemblyService {
   async assembleTools(
     thread: Thread,
     agent: Agent | undefined,
-    activeSkills: Skill[],
+    _activeSkills: Skill[],
     slugMap: Map<string, string>,
   ): Promise<Tool[]> {
     const skillsEnabled = this.features.skillsEnabled;
@@ -237,7 +242,7 @@ export class ToolAssemblyService {
 
     // Fetch org letterheads for document tool descriptions
     const letterheads = await this.fetchLetterheadsSafe();
-    const letterheadSuffix = this.buildLetterheadSuffix(letterheads);
+    const letterheadSuffix = buildLetterheadSuffix(letterheads);
 
     // Document tools are always available
     const createDocTool = await this.assembleToolsUseCase.execute(
@@ -255,13 +260,10 @@ export class ToolAssemblyService {
     );
     tools.push(...documentEditTools);
 
-    // Create skill tool is available when skills feature is enabled
     if (skillsEnabled) {
       tools.push(
         await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({
-            type: ToolType.CREATE_SKILL,
-          }),
+          new AssembleToolCommand({ type: ToolType.CREATE_SKILL }),
         ),
       );
       const userSlugs = [...slugMap.keys()].filter((s) =>
@@ -279,26 +281,32 @@ export class ToolAssemblyService {
       }
     }
 
-    // Internet search tool is available when Brave Search credentials are configured
     if (this.configService.get<boolean>('internetSearch.isAvailable')) {
       tools.push(
         await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({
-            type: ToolType.INTERNET_SEARCH,
-          }),
+          new AssembleToolCommand({ type: ToolType.INTERNET_SEARCH }),
         ),
       );
     }
+
+    // Image generation tool — available when org has a permitted image model
+    tools.push(
+      ...(await assembleImageGenerationTools({
+        orgId: this.contextService.get('orgId'),
+        getPermittedImageGenerationModelUseCase:
+          this.getPermittedImageGenerationModelUseCase,
+        assembleToolsUseCase: this.assembleToolsUseCase,
+        logger: this.logger,
+      })),
+    );
 
     // Collect text sources from both thread and agent
     const threadTextSources = (thread.sourceAssignments ?? [])
       .map((assignment) => assignment.source)
       .filter((source): source is TextSource => source instanceof TextSource);
-
     const agentTextSources = (agent?.sourceAssignments ?? [])
       .map((assignment) => assignment.source)
       .filter((source): source is TextSource => source instanceof TextSource);
-
     const allTextSources = [...threadTextSources, ...agentTextSources];
 
     // Source query/get tools — available when there are text sources
@@ -327,7 +335,7 @@ export class ToolAssemblyService {
       }
     }
 
-    // Activate skill tool is available if there are activatable skills (user or system) and skills feature is enabled
+    // Activate skill tool is available if there are activatable skills and skills feature is enabled
     if (skillsEnabled && slugMap.size > 0) {
       tools.push(
         await this.assembleToolsUseCase.execute(
@@ -473,7 +481,7 @@ export class ToolAssemblyService {
     return tools;
   }
 
-  private async fetchLetterheadsSafe(): Promise<Letterhead[]> {
+  private async fetchLetterheadsSafe() {
     try {
       return await this.findAllLetterheadsUseCase.execute();
     } catch (error) {
@@ -482,18 +490,5 @@ export class ToolAssemblyService {
       });
       return [];
     }
-  }
-
-  private buildLetterheadSuffix(letterheads: Letterhead[]): string {
-    if (letterheads.length === 0) return '';
-    const lines = letterheads.map((l) => {
-      const desc = l.description ? ` — ${l.description}` : '';
-      return `- ${l.id}: "${l.name}"${desc}`;
-    });
-    return (
-      '\n\nAvailable letterheads (Briefpapier) for this organization:\n' +
-      `${lines.join('\n')}\n` +
-      'When the user asks for an official letter or document that should use a specific letterhead, include the letterhead_id parameter.'
-    );
   }
 }

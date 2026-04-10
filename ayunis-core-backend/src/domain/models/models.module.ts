@@ -84,6 +84,10 @@ import { StackitStreamInferenceHandler } from './infrastructure/stream-inference
 import { ScalewayInferenceHandler } from './infrastructure/inference/scaleway.inference';
 import { ScalewayStreamInferenceHandler } from './infrastructure/stream-inference/scaleway.stream-inference';
 import { ConfigService } from '@nestjs/config';
+import { ImageGenerationHandlerRegistry } from './application/registry/image-generation-handler.registry';
+import { AzureImageGenerationHandler } from './infrastructure/image-generation/azure.image-generation';
+import { MockImageGenerationHandler } from './infrastructure/image-generation/mock.image-generation';
+import { GenerateImageUseCase } from './application/use-cases/generate-image/generate-image.use-case';
 import { TeamsModule } from 'src/iam/teams/teams.module';
 import { GetEffectiveLanguageModelsUseCase } from './application/use-cases/get-effective-language-models/get-effective-language-models.use-case';
 import { CreateTeamPermittedModelUseCase } from './application/use-cases/create-team-permitted-model/create-team-permitted-model.use-case';
@@ -160,6 +164,8 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     ScalewayStreamInferenceHandler,
     MockStreamInferenceHandler,
     MockInferenceHandler,
+    AzureImageGenerationHandler,
+    MockImageGenerationHandler,
     {
       provide: StreamInferenceHandlerRegistry,
       useFactory: (
@@ -262,6 +268,24 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
         ConfigService,
       ],
     },
+    {
+      provide: ImageGenerationHandlerRegistry,
+      useFactory: (
+        azureHandler: AzureImageGenerationHandler,
+        mockHandler: MockImageGenerationHandler,
+        configService: ConfigService,
+      ) => {
+        const registry = new ImageGenerationHandlerRegistry(configService);
+        registry.register(ModelProvider.AZURE, azureHandler);
+        registry.registerMockHandler(mockHandler);
+        return registry;
+      },
+      inject: [
+        AzureImageGenerationHandler,
+        MockImageGenerationHandler,
+        ConfigService,
+      ],
+    },
     // Services
     ModelPolicyService,
     TeamPermittedModelValidator,
@@ -282,6 +306,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     IsModelPermittedUseCase,
     GetDefaultModelUseCase,
     GetInferenceUseCase,
+    GenerateImageUseCase,
     StreamInferenceUseCase,
     GetConfiguredModelsByTypeUseCase,
     GetModelProviderInfoUseCase,
@@ -324,6 +349,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     GetEffectiveLanguageModelsUseCase,
     // Use Cases
     GetInferenceUseCase,
+    GenerateImageUseCase,
     StreamInferenceUseCase,
     GetConfiguredModelsByTypeUseCase,
     IsEmbeddingModelEnabledUseCase,

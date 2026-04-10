@@ -115,6 +115,7 @@ describe('GetPresignedUrlUseCase', () => {
       expect(mockObjectStorage.getPresignedUrl).toHaveBeenCalledWith(
         expect.objectContaining({ bucket: 'test-bucket' }),
         3600,
+        undefined,
       );
     });
 
@@ -149,6 +150,7 @@ describe('GetPresignedUrlUseCase', () => {
       expect(mockObjectStorage.getPresignedUrl).toHaveBeenCalledWith(
         expect.objectContaining({ bucket: customBucket }),
         3600,
+        undefined,
       );
     });
 
@@ -225,6 +227,43 @@ describe('GetPresignedUrlUseCase', () => {
       expect(mockObjectStorage.getPresignedUrl).toHaveBeenCalledWith(
         expect.anything(),
         expiresIn,
+        undefined,
+      );
+    });
+
+    it('should pass response override headers when provided', async () => {
+      // Arrange
+      const objectName = 'image.png';
+      const command = new GetPresignedUrlCommand(
+        objectName,
+        3600,
+        undefined,
+        'image/png',
+        'inline; filename="image.png"',
+      );
+
+      const mockUrl = new PresignedUrl(
+        'https://example.com/presigned-url',
+        3600,
+        new StorageUrl(objectName, 'test-bucket'),
+      );
+
+      jest.spyOn(mockObjectStorage, 'exists').mockResolvedValue(true);
+      jest
+        .spyOn(mockObjectStorage, 'getPresignedUrl')
+        .mockResolvedValue(mockUrl);
+
+      // Act
+      await useCase.execute(command);
+
+      // Assert
+      expect(mockObjectStorage.getPresignedUrl).toHaveBeenCalledWith(
+        expect.anything(),
+        3600,
+        {
+          contentType: 'image/png',
+          contentDisposition: 'inline; filename="image.png"',
+        },
       );
     });
   });

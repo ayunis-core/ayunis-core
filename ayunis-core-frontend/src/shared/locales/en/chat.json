@@ -116,6 +116,13 @@
         "downloadIcs": "Download .ics",
         "invalidRange": "End must be after start",
         "selectDate": "Select date"
+      },
+      "generate_image": {
+        "generating": "Generating image…",
+        "loading": "Loading image…",
+        "error": "Could not load generated image",
+        "altFallback": "Generated image",
+        "openPreview": "Open image preview"
       }
     },
     "charts": {

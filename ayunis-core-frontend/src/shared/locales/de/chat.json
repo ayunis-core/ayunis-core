@@ -116,6 +116,13 @@
         "downloadIcs": "Kalendereintrag herunterladen (.ics)",
         "invalidRange": "Ende muss nach dem Beginn liegen",
         "selectDate": "Datum wählen"
+      },
+      "generate_image": {
+        "generating": "Bild wird generiert…",
+        "loading": "Bild wird geladen…",
+        "error": "Generiertes Bild konnte nicht geladen werden",
+        "altFallback": "Generiertes Bild",
+        "openPreview": "Bildvorschau öffnen"
       }
     },
     "charts": {

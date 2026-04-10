@@ -1,17 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ImageMessageContent } from '../../domain/message-contents/image-message-content.entity';
 import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
-
-const ALLOWED_CONTENT_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-] as const;
-
-type AllowedImageContentType = (typeof ALLOWED_CONTENT_TYPES)[number];
+import {
+  AllowedImageContentType,
+  isAllowedImageContentType,
+} from 'src/common/util/content-type.util';
 
 export interface ValidatedImageData {
   base64: string;
@@ -26,8 +21,6 @@ export interface ImageContext {
 
 @Injectable()
 export class ImageContentService {
-  private readonly logger = new Logger(ImageContentService.name);
-
   private readonly MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB - matches upload limit
 
   constructor(private readonly downloadObjectUseCase: DownloadObjectUseCase) {}
@@ -72,15 +65,13 @@ export class ImageContentService {
     // Normalize: remove charset/parameters and lowercase
     const normalized = this.normalizeContentType(contentType).toLowerCase();
 
-    if (
-      !ALLOWED_CONTENT_TYPES.includes(normalized as AllowedImageContentType)
-    ) {
+    if (!isAllowedImageContentType(normalized)) {
       throw new InferenceFailedError(
         `Unsupported image content type: ${contentType}`,
       );
     }
 
-    return normalized as AllowedImageContentType;
+    return normalized;
   }
 
   private async downloadImageBuffer(storagePath: string): Promise<Buffer> {
