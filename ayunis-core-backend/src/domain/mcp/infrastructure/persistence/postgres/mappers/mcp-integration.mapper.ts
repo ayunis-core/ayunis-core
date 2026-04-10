@@ -99,8 +99,9 @@ export class McpIntegrationMapper {
       lastConnectionCheck: record.lastConnectionCheck,
       returnsPii: record.returnsPii,
       description: record.description,
-      oauthClientId: record.oauthClientId,
-      oauthClientSecretEncrypted: record.oauthClientSecretEncrypted,
+      oauthClientId: record.oauthClientId ?? undefined,
+      oauthClientSecretEncrypted:
+        record.oauthClientSecretEncrypted ?? undefined,
     } as const;
   }
 
