@@ -5,14 +5,23 @@
       "description": "You can restrict which models are available to specific teams in the <teamsLink>Teams settings</teamsLink>."
     },
     "loading": "Loading models...",
+    "loadErrorTitle": "Unable to load model data",
+    "loadErrorDescription": "Model data could not be loaded right now. Please refresh and try again.",
     "noModelsAvailable": "No models available. Please check your configuration.",
     "noModelsForProvider": "No models available for this provider.",
     "languageModels": "Language Models",
     "embeddingModels": "Embedding Models",
+    "imageGenerationModels": "Image Generation Models",
     "languageModelsDescription": "Models for text generation and conversation.",
     "embeddingModelsDescription": "Models for document analysis and search.",
+    "imageGenerationModelsDescription": "Models for image generation and visual creation.",
     "noLanguageModels": "No language models available.",
     "noEmbeddingModels": "No embedding models available.",
+    "noImageGenerationModels": "No image generation models available.",
+    "partialData": {
+      "title": "Some model data is unavailable",
+      "someUnavailable": "Some model data could not be loaded. Showing only the data that is currently available."
+    },
     "streaming": "Streaming",
     "streamingTooltip": "The model sends answers as a stream. This way, the answer is delivered step by step",
     "reasoning": "Reasoning",

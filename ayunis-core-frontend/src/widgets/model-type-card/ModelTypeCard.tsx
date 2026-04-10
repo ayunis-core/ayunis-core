@@ -82,10 +82,31 @@ export interface ModelActions {
 }
 
 interface ModelTypeCardProps {
-  readonly type: 'language' | 'embedding';
+  readonly type: 'language' | 'embedding' | 'image-generation';
   readonly models: ModelWithConfigResponseDto[];
   readonly actions: ModelActions;
 }
+
+const MODEL_TYPE_CONFIG = {
+  language: {
+    titleKey: 'models.languageModels',
+    descriptionKey: 'models.languageModelsDescription',
+    emptyKey: 'models.noLanguageModels',
+    defaultDescription: 'Models for text generation and conversation.',
+  },
+  embedding: {
+    titleKey: 'models.embeddingModels',
+    descriptionKey: 'models.embeddingModelsDescription',
+    emptyKey: 'models.noEmbeddingModels',
+    defaultDescription: 'Models for document analysis and search.',
+  },
+  'image-generation': {
+    titleKey: 'models.imageGenerationModels',
+    descriptionKey: 'models.imageGenerationModelsDescription',
+    emptyKey: 'models.noImageGenerationModels',
+    defaultDescription: 'Models for image generation and visual creation.',
+  },
+} as const;
 
 // Priority order: DE (0) -> EU (1) -> US (2) -> Unknown (3)
 function getHostingPriority(
@@ -126,15 +147,9 @@ export default function ModelTypeCard({
     isDisabling,
   } = actions;
 
-  const title =
-    type === 'language'
-      ? t('models.languageModels')
-      : t('models.embeddingModels');
-
-  const emptyMessage =
-    type === 'language'
-      ? t('models.noLanguageModels')
-      : t('models.noEmbeddingModels');
+  const config = MODEL_TYPE_CONFIG[type];
+  const title = t(config.titleKey);
+  const emptyMessage = t(config.emptyKey);
 
   function handleModelToggle(
     model: ModelWithConfigResponseDto,
@@ -188,13 +203,9 @@ export default function ModelTypeCard({
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>
-          {type === 'language'
-            ? t('models.languageModelsDescription', {
-                defaultValue: 'Models for text generation and conversation.',
-              })
-            : t('models.embeddingModelsDescription', {
-                defaultValue: 'Models for document analysis and search.',
-              })}
+          {t(config.descriptionKey, {
+            defaultValue: config.defaultDescription,
+          })}
         </CardDescription>
       </CardHeader>
       <CardContent>

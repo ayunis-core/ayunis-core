@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsBoolean, IsIn, IsNotEmpty, IsString } from 'class-validator';
+import { SUPPORTED_IMAGE_GENERATION_PROVIDERS } from 'src/domain/models/application/services/model-policy.service';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 export abstract class BaseImageGenerationModelRequestDto {
@@ -14,10 +15,10 @@ export abstract class BaseImageGenerationModelRequestDto {
   @ApiProperty({
     description:
       'The provider of the model. Image-generation models are Azure-only in v1.',
-    enum: [ModelProvider.AZURE],
+    enum: SUPPORTED_IMAGE_GENERATION_PROVIDERS,
     example: ModelProvider.AZURE,
   })
-  @IsEnum(ModelProvider)
+  @IsIn(SUPPORTED_IMAGE_GENERATION_PROVIDERS)
   provider: ModelProvider;
 
   @ApiProperty({

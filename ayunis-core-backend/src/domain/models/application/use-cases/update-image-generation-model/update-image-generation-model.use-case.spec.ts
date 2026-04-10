@@ -4,12 +4,12 @@ import { UpdateImageGenerationModelUseCase } from './update-image-generation-mod
 import { UpdateImageGenerationModelCommand } from './update-image-generation-model.command';
 import { ModelsRepository } from '../../ports/models.repository';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
-import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import {
   ImageGenerationModelProviderNotSupportedError,
   ModelNotFoundByIdError,
 } from '../../models.errors';
+import { ModelPolicyService } from '../../services/model-policy.service';
 import type { UUID } from 'crypto';
 
 describe('UpdateImageGenerationModelUseCase', () => {
@@ -32,6 +32,7 @@ describe('UpdateImageGenerationModelUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateImageGenerationModelUseCase,
+        ModelPolicyService,
         { provide: ModelsRepository, useValue: mockModelsRepository },
       ],
     }).compile();
@@ -95,39 +96,6 @@ describe('UpdateImageGenerationModelUseCase', () => {
 
     await expect(useCase.execute(command)).rejects.toThrow(
       ModelNotFoundByIdError,
-    );
-    expect(modelsRepository.save).not.toHaveBeenCalled();
-  });
-
-  it('rejects ids that belong to non-image catalog rows', async () => {
-    const command = new UpdateImageGenerationModelCommand({
-      id: modelId,
-      name: 'gpt-image-1',
-      provider: ModelProvider.AZURE,
-      displayName: 'GPT Image 1',
-      isArchived: false,
-    });
-
-    modelsRepository.findOne.mockResolvedValue(
-      new LanguageModel({
-        id: modelId,
-        name: 'gpt-4o',
-        displayName: 'GPT-4o',
-        provider: ModelProvider.OPENAI,
-        canStream: true,
-        isReasoning: false,
-        isArchived: false,
-        canUseTools: true,
-        canVision: true,
-      }),
-    );
-    modelsRepository.findOneImageGeneration.mockResolvedValue(undefined);
-
-    await expect(useCase.execute(command)).rejects.toThrow(
-      ModelNotFoundByIdError,
-    );
-    expect(modelsRepository.findOneImageGeneration).toHaveBeenCalledWith(
-      modelId,
     );
     expect(modelsRepository.save).not.toHaveBeenCalled();
   });

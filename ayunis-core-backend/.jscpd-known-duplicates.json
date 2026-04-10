@@ -1,0 +1,16 @@
+[
+  {
+    "comment": "Per-model-type catalog controllers share the same decorator imports from the barrel file — intentional structural similarity",
+    "files": [
+      "src/domain/models/presenters/http/super-admin-image-generation-catalog-models.controller.ts",
+      "src/domain/models/presenters/http/super-admin-language-catalog-models.controller.ts"
+    ]
+  },
+  {
+    "comment": "Per-model-type catalog controllers share the same decorator imports from the barrel file — intentional structural similarity",
+    "files": [
+      "src/domain/models/presenters/http/super-admin-embedding-catalog-models.controller.ts",
+      "src/domain/models/presenters/http/super-admin-language-catalog-models.controller.ts"
+    ]
+  }
+]

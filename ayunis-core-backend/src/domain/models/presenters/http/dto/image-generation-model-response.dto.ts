@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
+import { SUPPORTED_IMAGE_GENERATION_PROVIDERS } from 'src/domain/models/application/services/model-policy.service';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
 
@@ -21,7 +22,7 @@ export class ImageGenerationModelResponseDto {
 
   @ApiProperty({
     type: 'string',
-    enum: [ModelProvider.AZURE],
+    enum: SUPPORTED_IMAGE_GENERATION_PROVIDERS,
     description: 'The provider of the model',
     example: ModelProvider.AZURE,
   })

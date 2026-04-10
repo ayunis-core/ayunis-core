@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
 
-export class ManageUserDefaultModelCommand {
+export class SetUserDefaultLanguageModelCommand {
   constructor(
     public readonly userId: UUID,
     public readonly permittedModelId: UUID,

@@ -6,20 +6,23 @@ import {
   UnexpectedModelError,
 } from '../../models.errors';
 import { ModelsRepository } from '../../ports/models.repository';
-import { assertAzureProviderForImageGenerationModel } from '../../services/image-generation-model-policy';
+import { ModelPolicyService } from '../../services/model-policy.service';
 import { UpdateImageGenerationModelCommand } from './update-image-generation-model.command';
 
 @Injectable()
 export class UpdateImageGenerationModelUseCase {
   private readonly logger = new Logger(UpdateImageGenerationModelUseCase.name);
 
-  constructor(private readonly modelsRepository: ModelsRepository) {}
+  constructor(
+    private readonly modelsRepository: ModelsRepository,
+    private readonly modelPolicy: ModelPolicyService,
+  ) {}
 
   async execute(
     command: UpdateImageGenerationModelCommand,
   ): Promise<ImageGenerationModel> {
     try {
-      assertAzureProviderForImageGenerationModel(command.provider);
+      this.modelPolicy.assertSupportedImageGenerationProvider(command.provider);
 
       const existingModel = await this.modelsRepository.findOneImageGeneration(
         command.id,

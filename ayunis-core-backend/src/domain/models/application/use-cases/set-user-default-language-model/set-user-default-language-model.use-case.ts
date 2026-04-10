@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ManageUserDefaultModelCommand } from './manage-user-default-model.command';
+import { SetUserDefaultLanguageModelCommand } from './set-user-default-language-model.command';
 import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
@@ -8,8 +8,8 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
-export class ManageUserDefaultModelUseCase {
-  private readonly logger = new Logger(ManageUserDefaultModelUseCase.name);
+export class SetUserDefaultLanguageModelUseCase {
+  private readonly logger = new Logger(SetUserDefaultLanguageModelUseCase.name);
 
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
@@ -18,7 +18,7 @@ export class ManageUserDefaultModelUseCase {
   ) {}
 
   async execute(
-    command: ManageUserDefaultModelCommand,
+    command: SetUserDefaultLanguageModelCommand,
   ): Promise<PermittedLanguageModel> {
     this.logger.log('execute', {
       userId: command.userId,
@@ -74,7 +74,7 @@ export class ManageUserDefaultModelUseCase {
       if (error instanceof ModelError) {
         throw error;
       }
-      this.logger.error('Failed to manage user default model', {
+      this.logger.error('Failed to set user default model', {
         userId: command.userId,
         permittedModelId: command.permittedModelId,
         orgId: command.orgId,

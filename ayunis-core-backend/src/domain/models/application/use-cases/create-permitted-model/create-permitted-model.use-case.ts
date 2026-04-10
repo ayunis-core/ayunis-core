@@ -8,8 +8,8 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { ModelNotFoundError } from '../../models.errors';
-import { assertSupportedImageGenerationModel } from '../../services/image-generation-model-policy';
+import { ModelNotFoundError, UnexpectedModelError } from '../../models.errors';
+import { ModelPolicyService } from '../../services/model-policy.service';
 
 @Injectable()
 export class CreatePermittedModelUseCase {
@@ -18,6 +18,7 @@ export class CreatePermittedModelUseCase {
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly modelsRepository: ModelsRepository,
     private readonly contextService: ContextService,
+    private readonly modelPolicy: ModelPolicyService,
   ) {}
 
   async execute(command: CreatePermittedModelCommand): Promise<PermittedModel> {
@@ -40,7 +41,7 @@ export class CreatePermittedModelUseCase {
       if (!model) {
         throw new ModelNotFoundError(command.modelId);
       }
-      assertSupportedImageGenerationModel(model);
+      this.modelPolicy.assertSupported(model);
       const permittedModel = new PermittedModel({
         model: model,
         orgId: command.orgId,
@@ -53,9 +54,10 @@ export class CreatePermittedModelUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error creating permitted model', error);
-      // eslint-disable-next-line sonarjs/todo-tag -- pre-existing, out of scope
-      throw error; // TODO: Handle this error
+      this.logger.error('Error creating permitted model', {
+        error: error as Error,
+      });
+      throw new UnexpectedModelError(error as Error);
     }
   }
 }

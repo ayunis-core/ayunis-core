@@ -44,6 +44,7 @@ import type {
   CreateBulkInvitesResponseDto,
   CreateCustomIntegrationDto,
   CreateEmbeddingModelRequestDto,
+  CreateImageGenerationModelRequestDto,
   CreateInviteDto,
   CreateInviteResponseDto,
   CreateKnowledgeBaseDto,
@@ -76,6 +77,7 @@ import type {
   GetThreadResponseDto,
   GetThreadsResponseDto,
   GlobalUserUsageResponseDto,
+  ImageGenerationModelResponseDto,
   InstallMarketplaceIntegrationDto,
   InstallSkillFromMarketplaceDto,
   InviteDetailResponseDto,
@@ -98,6 +100,7 @@ import type {
   ModelDistributionResponseDto,
   ModelProviderInfoResponseDto,
   ModelWithConfigResponseDto,
+  ModelsControllerUpdatePermittedModel200,
   PaginatedInvitesListResponseDto,
   PaginatedTeamMembersResponseDto,
   PaginatedUsersListResponseDto,
@@ -164,6 +167,7 @@ import type {
   UpdateArtifactDto,
   UpdateBillingInfoDto,
   UpdateEmbeddingModelRequestDto,
+  UpdateImageGenerationModelRequestDto,
   UpdateIpAllowlistRequestDto,
   UpdateKnowledgeBaseDto,
   UpdateLanguageModelRequestDto,
@@ -480,16 +484,16 @@ export function useAppControllerFeatureToggles<TData = Awaited<ReturnType<typeof
 
 
 /**
- * @summary Get all available models
+ * @summary Get all available language models
  */
-export const modelsControllerGetAvailableModelsWithConfig = (
+export const modelsControllerGetAvailableLanguageModels = (
     
  signal?: AbortSignal
 ) => {
       
       
       return customAxiosInstance<ModelWithConfigResponseDto[]>(
-      {url: `/models/available`, method: 'GET', signal
+      {url: `/models/available/language`, method: 'GET', signal
     },
       );
     }
@@ -497,69 +501,255 @@ export const modelsControllerGetAvailableModelsWithConfig = (
 
 
 
-export const getModelsControllerGetAvailableModelsWithConfigQueryKey = () => {
+export const getModelsControllerGetAvailableLanguageModelsQueryKey = () => {
     return [
-    `/models/available`
+    `/models/available/language`
     ] as const;
     }
 
     
-export const getModelsControllerGetAvailableModelsWithConfigQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>, TError, TData>>, }
+export const getModelsControllerGetAvailableLanguageModelsQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getModelsControllerGetAvailableModelsWithConfigQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getModelsControllerGetAvailableLanguageModelsQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>> = ({ signal }) => modelsControllerGetAvailableModelsWithConfig(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>> = ({ signal }) => modelsControllerGetAvailableLanguageModels(signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type ModelsControllerGetAvailableModelsWithConfigQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>>
-export type ModelsControllerGetAvailableModelsWithConfigQueryError = void
+export type ModelsControllerGetAvailableLanguageModelsQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>>
+export type ModelsControllerGetAvailableLanguageModelsQueryError = void
 
 
-export function useModelsControllerGetAvailableModelsWithConfig<TData = Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>, TError, TData>> & Pick<
+export function useModelsControllerGetAvailableLanguageModels<TData = Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>,
+          Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>,
           TError,
-          Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>
+          Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useModelsControllerGetAvailableModelsWithConfig<TData = Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>, TError, TData>> & Pick<
+export function useModelsControllerGetAvailableLanguageModels<TData = Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>,
+          Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>,
           TError,
-          Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>
+          Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useModelsControllerGetAvailableModelsWithConfig<TData = Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>, TError, TData>>, }
+export function useModelsControllerGetAvailableLanguageModels<TData = Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get all available models
+ * @summary Get all available language models
  */
 
-export function useModelsControllerGetAvailableModelsWithConfig<TData = Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableModelsWithConfig>>, TError, TData>>, }
+export function useModelsControllerGetAvailableLanguageModels<TData = Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableLanguageModels>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getModelsControllerGetAvailableModelsWithConfigQueryOptions(options)
+  const queryOptions = getModelsControllerGetAvailableLanguageModelsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Get all available embedding models
+ */
+export const modelsControllerGetAvailableEmbeddingModels = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ModelWithConfigResponseDto[]>(
+      {url: `/models/available/embedding`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getModelsControllerGetAvailableEmbeddingModelsQueryKey = () => {
+    return [
+    `/models/available/embedding`
+    ] as const;
+    }
+
+    
+export const getModelsControllerGetAvailableEmbeddingModelsQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelsControllerGetAvailableEmbeddingModelsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>> = ({ signal }) => modelsControllerGetAvailableEmbeddingModels(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelsControllerGetAvailableEmbeddingModelsQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>>
+export type ModelsControllerGetAvailableEmbeddingModelsQueryError = void
+
+
+export function useModelsControllerGetAvailableEmbeddingModels<TData = Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerGetAvailableEmbeddingModels<TData = Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerGetAvailableEmbeddingModels<TData = Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all available embedding models
+ */
+
+export function useModelsControllerGetAvailableEmbeddingModels<TData = Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableEmbeddingModels>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelsControllerGetAvailableEmbeddingModelsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Get all available image-generation models
+ */
+export const modelsControllerGetAvailableImageGenerationModels = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ModelWithConfigResponseDto[]>(
+      {url: `/models/available/image-generation`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getModelsControllerGetAvailableImageGenerationModelsQueryKey = () => {
+    return [
+    `/models/available/image-generation`
+    ] as const;
+    }
+
+    
+export const getModelsControllerGetAvailableImageGenerationModelsQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelsControllerGetAvailableImageGenerationModelsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>> = ({ signal }) => modelsControllerGetAvailableImageGenerationModels(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelsControllerGetAvailableImageGenerationModelsQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>>
+export type ModelsControllerGetAvailableImageGenerationModelsQueryError = void
+
+
+export function useModelsControllerGetAvailableImageGenerationModels<TData = Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerGetAvailableImageGenerationModels<TData = Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerGetAvailableImageGenerationModels<TData = Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all available image-generation models
+ */
+
+export function useModelsControllerGetAvailableImageGenerationModels<TData = Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAvailableImageGenerationModels>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelsControllerGetAvailableImageGenerationModelsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -801,7 +991,7 @@ export const modelsControllerUpdatePermittedModel = (
  ) => {
       
       
-      return customAxiosInstance<PermittedLanguageModelResponseDto>(
+      return customAxiosInstance<ModelsControllerUpdatePermittedModel200>(
       {url: `/models/permitted/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updatePermittedModelDto
@@ -1046,480 +1236,6 @@ export function useModelsControllerGetOrgPermittedLanguageModels<TData = Awaited
 
 
 /**
- * Returns the applicable default model with fallback hierarchy: User default → Org default → First available model
- * @summary Get the effective default model for the user
- */
-export const modelsControllerGetEffectiveDefaultModel = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
-      {url: `/models/default`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-
-
-export const getModelsControllerGetEffectiveDefaultModelQueryKey = () => {
-    return [
-    `/models/default`
-    ] as const;
-    }
-
-    
-export const getModelsControllerGetEffectiveDefaultModelQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getModelsControllerGetEffectiveDefaultModelQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>> = ({ signal }) => modelsControllerGetEffectiveDefaultModel(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ModelsControllerGetEffectiveDefaultModelQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>>
-export type ModelsControllerGetEffectiveDefaultModelQueryError = void
-
-
-export function useModelsControllerGetEffectiveDefaultModel<TData = Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>,
-          TError,
-          Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useModelsControllerGetEffectiveDefaultModel<TData = Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>,
-          TError,
-          Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useModelsControllerGetEffectiveDefaultModel<TData = Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get the effective default model for the user
- */
-
-export function useModelsControllerGetEffectiveDefaultModel<TData = Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetEffectiveDefaultModel>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getModelsControllerGetEffectiveDefaultModelQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-
-/**
- * Returns only the organization's specific default model. Returns null if no org default is set.
- * @summary Get the organization default model
- */
-export const modelsControllerGetOrgSpecificDefaultModel = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
-      {url: `/models/org/default`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-
-
-export const getModelsControllerGetOrgSpecificDefaultModelQueryKey = () => {
-    return [
-    `/models/org/default`
-    ] as const;
-    }
-
-    
-export const getModelsControllerGetOrgSpecificDefaultModelQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getModelsControllerGetOrgSpecificDefaultModelQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>> = ({ signal }) => modelsControllerGetOrgSpecificDefaultModel(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ModelsControllerGetOrgSpecificDefaultModelQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>>
-export type ModelsControllerGetOrgSpecificDefaultModelQueryError = void
-
-
-export function useModelsControllerGetOrgSpecificDefaultModel<TData = Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>,
-          TError,
-          Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useModelsControllerGetOrgSpecificDefaultModel<TData = Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>,
-          TError,
-          Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useModelsControllerGetOrgSpecificDefaultModel<TData = Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get the organization default model
- */
-
-export function useModelsControllerGetOrgSpecificDefaultModel<TData = Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetOrgSpecificDefaultModel>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getModelsControllerGetOrgSpecificDefaultModelQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-
-/**
- * Sets the specified permitted model as the organization default. If a default already exists, it will be updated to the new model.
- * @summary Set or update the organization default model
- */
-export const modelsControllerManageOrgDefaultModel = (
-    setOrgDefaultModelDto: SetOrgDefaultModelDto,
- ) => {
-      
-      
-      return customAxiosInstance<PermittedLanguageModelResponseDto>(
-      {url: `/models/org/default`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setOrgDefaultModelDto
-    },
-      );
-    }
-  
-
-
-export const getModelsControllerManageOrgDefaultModelMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsControllerManageOrgDefaultModel>>, TError,{data: SetOrgDefaultModelDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof modelsControllerManageOrgDefaultModel>>, TError,{data: SetOrgDefaultModelDto}, TContext> => {
-
-const mutationKey = ['modelsControllerManageOrgDefaultModel'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof modelsControllerManageOrgDefaultModel>>, {data: SetOrgDefaultModelDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  modelsControllerManageOrgDefaultModel(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ModelsControllerManageOrgDefaultModelMutationResult = NonNullable<Awaited<ReturnType<typeof modelsControllerManageOrgDefaultModel>>>
-    export type ModelsControllerManageOrgDefaultModelMutationBody = SetOrgDefaultModelDto
-    export type ModelsControllerManageOrgDefaultModelMutationError = void
-
-    /**
- * @summary Set or update the organization default model
- */
-export const useModelsControllerManageOrgDefaultModel = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsControllerManageOrgDefaultModel>>, TError,{data: SetOrgDefaultModelDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof modelsControllerManageOrgDefaultModel>>,
-        TError,
-        {data: SetOrgDefaultModelDto},
-        TContext
-      > => {
-
-      const mutationOptions = getModelsControllerManageOrgDefaultModelMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * Returns the user's personal default model only. Returns null if no user-specific default is set.
- * @summary Get the user-specific default model
- */
-export const modelsControllerGetUserSpecificDefaultModel = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
-      {url: `/models/user/default`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-
-
-export const getModelsControllerGetUserSpecificDefaultModelQueryKey = () => {
-    return [
-    `/models/user/default`
-    ] as const;
-    }
-
-    
-export const getModelsControllerGetUserSpecificDefaultModelQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getModelsControllerGetUserSpecificDefaultModelQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>> = ({ signal }) => modelsControllerGetUserSpecificDefaultModel(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ModelsControllerGetUserSpecificDefaultModelQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>>
-export type ModelsControllerGetUserSpecificDefaultModelQueryError = void
-
-
-export function useModelsControllerGetUserSpecificDefaultModel<TData = Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>,
-          TError,
-          Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useModelsControllerGetUserSpecificDefaultModel<TData = Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>,
-          TError,
-          Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useModelsControllerGetUserSpecificDefaultModel<TData = Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get the user-specific default model
- */
-
-export function useModelsControllerGetUserSpecificDefaultModel<TData = Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetUserSpecificDefaultModel>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getModelsControllerGetUserSpecificDefaultModelQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-
-/**
- * Sets the specified permitted model as the user default. If a default already exists, it will be updated to the new model.
- * @summary Set or update the user default model
- */
-export const modelsControllerManageUserDefaultModel = (
-    setUserDefaultModelDto: SetUserDefaultModelDto,
- ) => {
-      
-      
-      return customAxiosInstance<PermittedLanguageModelResponseDto>(
-      {url: `/models/user/default`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setUserDefaultModelDto
-    },
-      );
-    }
-  
-
-
-export const getModelsControllerManageUserDefaultModelMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsControllerManageUserDefaultModel>>, TError,{data: SetUserDefaultModelDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof modelsControllerManageUserDefaultModel>>, TError,{data: SetUserDefaultModelDto}, TContext> => {
-
-const mutationKey = ['modelsControllerManageUserDefaultModel'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof modelsControllerManageUserDefaultModel>>, {data: SetUserDefaultModelDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  modelsControllerManageUserDefaultModel(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ModelsControllerManageUserDefaultModelMutationResult = NonNullable<Awaited<ReturnType<typeof modelsControllerManageUserDefaultModel>>>
-    export type ModelsControllerManageUserDefaultModelMutationBody = SetUserDefaultModelDto
-    export type ModelsControllerManageUserDefaultModelMutationError = void
-
-    /**
- * @summary Set or update the user default model
- */
-export const useModelsControllerManageUserDefaultModel = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsControllerManageUserDefaultModel>>, TError,{data: SetUserDefaultModelDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof modelsControllerManageUserDefaultModel>>,
-        TError,
-        {data: SetUserDefaultModelDto},
-        TContext
-      > => {
-
-      const mutationOptions = getModelsControllerManageUserDefaultModelMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * @summary Delete the user default model
- */
-export const modelsControllerDeleteUserDefaultModel = (
-    
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/models/user/default`, method: 'DELETE'
-    },
-      );
-    }
-  
-
-
-export const getModelsControllerDeleteUserDefaultModelMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsControllerDeleteUserDefaultModel>>, TError,void, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof modelsControllerDeleteUserDefaultModel>>, TError,void, TContext> => {
-
-const mutationKey = ['modelsControllerDeleteUserDefaultModel'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof modelsControllerDeleteUserDefaultModel>>, void> = () => {
-          
-
-          return  modelsControllerDeleteUserDefaultModel()
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ModelsControllerDeleteUserDefaultModelMutationResult = NonNullable<Awaited<ReturnType<typeof modelsControllerDeleteUserDefaultModel>>>
-    
-    export type ModelsControllerDeleteUserDefaultModelMutationError = void
-
-    /**
- * @summary Delete the user default model
- */
-export const useModelsControllerDeleteUserDefaultModel = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsControllerDeleteUserDefaultModel>>, TError,void, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof modelsControllerDeleteUserDefaultModel>>,
-        TError,
-        void,
-        TContext
-      > => {
-
-      const mutationOptions = getModelsControllerDeleteUserDefaultModelMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
  * Retrieves detailed information about a specific model provider
  * @summary Get model provider information
  */
@@ -1706,6 +1422,480 @@ export function useModelsControllerIsEmbeddingModelEnabled<TData = Awaited<Retur
 
 
 
+/**
+ * Returns the applicable default model with fallback hierarchy: User default → Org default → First available model
+ * @summary Get the effective default model for the user
+ */
+export const modelsDefaultsControllerGetEffectiveDefaultModel = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
+      {url: `/models/default`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey = () => {
+    return [
+    `/models/default`
+    ] as const;
+    }
+
+    
+export const getModelsDefaultsControllerGetEffectiveDefaultModelQueryOptions = <TData = Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>> = ({ signal }) => modelsDefaultsControllerGetEffectiveDefaultModel(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelsDefaultsControllerGetEffectiveDefaultModelQueryResult = NonNullable<Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>>
+export type ModelsDefaultsControllerGetEffectiveDefaultModelQueryError = void
+
+
+export function useModelsDefaultsControllerGetEffectiveDefaultModel<TData = Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>,
+          TError,
+          Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsDefaultsControllerGetEffectiveDefaultModel<TData = Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>,
+          TError,
+          Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsDefaultsControllerGetEffectiveDefaultModel<TData = Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the effective default model for the user
+ */
+
+export function useModelsDefaultsControllerGetEffectiveDefaultModel<TData = Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetEffectiveDefaultModel>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelsDefaultsControllerGetEffectiveDefaultModelQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Returns only the organization's specific default model. Returns null if no org default is set.
+ * @summary Get the organization default model
+ */
+export const modelsDefaultsControllerGetOrgSpecificDefaultModel = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
+      {url: `/models/org/default`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getModelsDefaultsControllerGetOrgSpecificDefaultModelQueryKey = () => {
+    return [
+    `/models/org/default`
+    ] as const;
+    }
+
+    
+export const getModelsDefaultsControllerGetOrgSpecificDefaultModelQueryOptions = <TData = Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelsDefaultsControllerGetOrgSpecificDefaultModelQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>> = ({ signal }) => modelsDefaultsControllerGetOrgSpecificDefaultModel(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelsDefaultsControllerGetOrgSpecificDefaultModelQueryResult = NonNullable<Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>>
+export type ModelsDefaultsControllerGetOrgSpecificDefaultModelQueryError = void
+
+
+export function useModelsDefaultsControllerGetOrgSpecificDefaultModel<TData = Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>,
+          TError,
+          Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsDefaultsControllerGetOrgSpecificDefaultModel<TData = Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>,
+          TError,
+          Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsDefaultsControllerGetOrgSpecificDefaultModel<TData = Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the organization default model
+ */
+
+export function useModelsDefaultsControllerGetOrgSpecificDefaultModel<TData = Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetOrgSpecificDefaultModel>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelsDefaultsControllerGetOrgSpecificDefaultModelQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Sets the specified permitted model as the organization default. If a default already exists, it will be updated to the new model.
+ * @summary Set or update the organization default model
+ */
+export const modelsDefaultsControllerManageOrgDefaultModel = (
+    setOrgDefaultModelDto: SetOrgDefaultModelDto,
+ ) => {
+      
+      
+      return customAxiosInstance<PermittedLanguageModelResponseDto>(
+      {url: `/models/org/default`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setOrgDefaultModelDto
+    },
+      );
+    }
+  
+
+
+export const getModelsDefaultsControllerManageOrgDefaultModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsDefaultsControllerManageOrgDefaultModel>>, TError,{data: SetOrgDefaultModelDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof modelsDefaultsControllerManageOrgDefaultModel>>, TError,{data: SetOrgDefaultModelDto}, TContext> => {
+
+const mutationKey = ['modelsDefaultsControllerManageOrgDefaultModel'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof modelsDefaultsControllerManageOrgDefaultModel>>, {data: SetOrgDefaultModelDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  modelsDefaultsControllerManageOrgDefaultModel(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ModelsDefaultsControllerManageOrgDefaultModelMutationResult = NonNullable<Awaited<ReturnType<typeof modelsDefaultsControllerManageOrgDefaultModel>>>
+    export type ModelsDefaultsControllerManageOrgDefaultModelMutationBody = SetOrgDefaultModelDto
+    export type ModelsDefaultsControllerManageOrgDefaultModelMutationError = void
+
+    /**
+ * @summary Set or update the organization default model
+ */
+export const useModelsDefaultsControllerManageOrgDefaultModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsDefaultsControllerManageOrgDefaultModel>>, TError,{data: SetOrgDefaultModelDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof modelsDefaultsControllerManageOrgDefaultModel>>,
+        TError,
+        {data: SetOrgDefaultModelDto},
+        TContext
+      > => {
+
+      const mutationOptions = getModelsDefaultsControllerManageOrgDefaultModelMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Returns the user's personal default model only. Returns null if no user-specific default is set.
+ * @summary Get the user-specific default model
+ */
+export const modelsDefaultsControllerGetUserSpecificDefaultModel = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
+      {url: `/models/user/default`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey = () => {
+    return [
+    `/models/user/default`
+    ] as const;
+    }
+
+    
+export const getModelsDefaultsControllerGetUserSpecificDefaultModelQueryOptions = <TData = Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>> = ({ signal }) => modelsDefaultsControllerGetUserSpecificDefaultModel(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelsDefaultsControllerGetUserSpecificDefaultModelQueryResult = NonNullable<Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>>
+export type ModelsDefaultsControllerGetUserSpecificDefaultModelQueryError = void
+
+
+export function useModelsDefaultsControllerGetUserSpecificDefaultModel<TData = Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>,
+          TError,
+          Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsDefaultsControllerGetUserSpecificDefaultModel<TData = Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>,
+          TError,
+          Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsDefaultsControllerGetUserSpecificDefaultModel<TData = Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the user-specific default model
+ */
+
+export function useModelsDefaultsControllerGetUserSpecificDefaultModel<TData = Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsDefaultsControllerGetUserSpecificDefaultModel>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelsDefaultsControllerGetUserSpecificDefaultModelQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Sets the specified permitted model as the user default. If a default already exists, it will be updated to the new model.
+ * @summary Set or update the user default model
+ */
+export const modelsDefaultsControllerManageUserDefaultModel = (
+    setUserDefaultModelDto: SetUserDefaultModelDto,
+ ) => {
+      
+      
+      return customAxiosInstance<PermittedLanguageModelResponseDto>(
+      {url: `/models/user/default`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setUserDefaultModelDto
+    },
+      );
+    }
+  
+
+
+export const getModelsDefaultsControllerManageUserDefaultModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsDefaultsControllerManageUserDefaultModel>>, TError,{data: SetUserDefaultModelDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof modelsDefaultsControllerManageUserDefaultModel>>, TError,{data: SetUserDefaultModelDto}, TContext> => {
+
+const mutationKey = ['modelsDefaultsControllerManageUserDefaultModel'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof modelsDefaultsControllerManageUserDefaultModel>>, {data: SetUserDefaultModelDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  modelsDefaultsControllerManageUserDefaultModel(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ModelsDefaultsControllerManageUserDefaultModelMutationResult = NonNullable<Awaited<ReturnType<typeof modelsDefaultsControllerManageUserDefaultModel>>>
+    export type ModelsDefaultsControllerManageUserDefaultModelMutationBody = SetUserDefaultModelDto
+    export type ModelsDefaultsControllerManageUserDefaultModelMutationError = void
+
+    /**
+ * @summary Set or update the user default model
+ */
+export const useModelsDefaultsControllerManageUserDefaultModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsDefaultsControllerManageUserDefaultModel>>, TError,{data: SetUserDefaultModelDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof modelsDefaultsControllerManageUserDefaultModel>>,
+        TError,
+        {data: SetUserDefaultModelDto},
+        TContext
+      > => {
+
+      const mutationOptions = getModelsDefaultsControllerManageUserDefaultModelMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Delete the user default model
+ */
+export const modelsDefaultsControllerDeleteUserDefaultModel = (
+    
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/models/user/default`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getModelsDefaultsControllerDeleteUserDefaultModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsDefaultsControllerDeleteUserDefaultModel>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof modelsDefaultsControllerDeleteUserDefaultModel>>, TError,void, TContext> => {
+
+const mutationKey = ['modelsDefaultsControllerDeleteUserDefaultModel'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof modelsDefaultsControllerDeleteUserDefaultModel>>, void> = () => {
+          
+
+          return  modelsDefaultsControllerDeleteUserDefaultModel()
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ModelsDefaultsControllerDeleteUserDefaultModelMutationResult = NonNullable<Awaited<ReturnType<typeof modelsDefaultsControllerDeleteUserDefaultModel>>>
+    
+    export type ModelsDefaultsControllerDeleteUserDefaultModelMutationError = void
+
+    /**
+ * @summary Delete the user default model
+ */
+export const useModelsDefaultsControllerDeleteUserDefaultModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsDefaultsControllerDeleteUserDefaultModel>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof modelsDefaultsControllerDeleteUserDefaultModel>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getModelsDefaultsControllerDeleteUserDefaultModelMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
 /**
  * @summary List a team's permitted language models
  */
@@ -1996,17 +2186,16 @@ export const useTeamPermittedModelsControllerSetTeamDefaultModel = <TError = voi
     }
     
 /**
- * Retrieve all available models from the registry with their permitted status for the specified organization. This endpoint is only accessible to super admins.
- * @summary Get all available models
+ * @summary Get all available language models
  */
-export const superAdminPermittedModelsControllerGetAvailableModels = (
+export const superAdminPermittedModelsControllerGetAvailableLanguageModels = (
     orgId: string,
  signal?: AbortSignal
 ) => {
       
       
       return customAxiosInstance<ModelWithConfigResponseDto[]>(
-      {url: `/super-admin/models/${orgId}/available`, method: 'GET', signal
+      {url: `/super-admin/models/${orgId}/available/language`, method: 'GET', signal
     },
       );
     }
@@ -2014,69 +2203,255 @@ export const superAdminPermittedModelsControllerGetAvailableModels = (
 
 
 
-export const getSuperAdminPermittedModelsControllerGetAvailableModelsQueryKey = (orgId?: string,) => {
+export const getSuperAdminPermittedModelsControllerGetAvailableLanguageModelsQueryKey = (orgId?: string,) => {
     return [
-    `/super-admin/models/${orgId}/available`
+    `/super-admin/models/${orgId}/available/language`
     ] as const;
     }
 
     
-export const getSuperAdminPermittedModelsControllerGetAvailableModelsQueryOptions = <TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>, TError, TData>>, }
+export const getSuperAdminPermittedModelsControllerGetAvailableLanguageModelsQueryOptions = <TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminPermittedModelsControllerGetAvailableModelsQueryKey(orgId);
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminPermittedModelsControllerGetAvailableLanguageModelsQueryKey(orgId);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>> = ({ signal }) => superAdminPermittedModelsControllerGetAvailableModels(orgId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>> = ({ signal }) => superAdminPermittedModelsControllerGetAvailableLanguageModels(orgId, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type SuperAdminPermittedModelsControllerGetAvailableModelsQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>>
-export type SuperAdminPermittedModelsControllerGetAvailableModelsQueryError = void
+export type SuperAdminPermittedModelsControllerGetAvailableLanguageModelsQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>>
+export type SuperAdminPermittedModelsControllerGetAvailableLanguageModelsQueryError = void
 
 
-export function useSuperAdminPermittedModelsControllerGetAvailableModels<TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>, TError = void>(
- orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>, TError, TData>> & Pick<
+export function useSuperAdminPermittedModelsControllerGetAvailableLanguageModels<TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>, TError = void>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>,
+          Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>,
           TError,
-          Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>
+          Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminPermittedModelsControllerGetAvailableModels<TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>, TError, TData>> & Pick<
+export function useSuperAdminPermittedModelsControllerGetAvailableLanguageModels<TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>,
+          Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>,
           TError,
-          Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>
+          Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminPermittedModelsControllerGetAvailableModels<TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>, TError, TData>>, }
+export function useSuperAdminPermittedModelsControllerGetAvailableLanguageModels<TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get all available models
+ * @summary Get all available language models
  */
 
-export function useSuperAdminPermittedModelsControllerGetAvailableModels<TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableModels>>, TError, TData>>, }
+export function useSuperAdminPermittedModelsControllerGetAvailableLanguageModels<TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableLanguageModels>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getSuperAdminPermittedModelsControllerGetAvailableModelsQueryOptions(orgId,options)
+  const queryOptions = getSuperAdminPermittedModelsControllerGetAvailableLanguageModelsQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Get all available embedding models
+ */
+export const superAdminPermittedModelsControllerGetAvailableEmbeddingModels = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ModelWithConfigResponseDto[]>(
+      {url: `/super-admin/models/${orgId}/available/embedding`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminPermittedModelsControllerGetAvailableEmbeddingModelsQueryKey = (orgId?: string,) => {
+    return [
+    `/super-admin/models/${orgId}/available/embedding`
+    ] as const;
+    }
+
+    
+export const getSuperAdminPermittedModelsControllerGetAvailableEmbeddingModelsQueryOptions = <TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminPermittedModelsControllerGetAvailableEmbeddingModelsQueryKey(orgId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>> = ({ signal }) => superAdminPermittedModelsControllerGetAvailableEmbeddingModels(orgId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminPermittedModelsControllerGetAvailableEmbeddingModelsQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>>
+export type SuperAdminPermittedModelsControllerGetAvailableEmbeddingModelsQueryError = void
+
+
+export function useSuperAdminPermittedModelsControllerGetAvailableEmbeddingModels<TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>, TError = void>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminPermittedModelsControllerGetAvailableEmbeddingModels<TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminPermittedModelsControllerGetAvailableEmbeddingModels<TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all available embedding models
+ */
+
+export function useSuperAdminPermittedModelsControllerGetAvailableEmbeddingModels<TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableEmbeddingModels>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminPermittedModelsControllerGetAvailableEmbeddingModelsQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Get all available image-generation models
+ */
+export const superAdminPermittedModelsControllerGetAvailableImageGenerationModels = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ModelWithConfigResponseDto[]>(
+      {url: `/super-admin/models/${orgId}/available/image-generation`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminPermittedModelsControllerGetAvailableImageGenerationModelsQueryKey = (orgId?: string,) => {
+    return [
+    `/super-admin/models/${orgId}/available/image-generation`
+    ] as const;
+    }
+
+    
+export const getSuperAdminPermittedModelsControllerGetAvailableImageGenerationModelsQueryOptions = <TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminPermittedModelsControllerGetAvailableImageGenerationModelsQueryKey(orgId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>> = ({ signal }) => superAdminPermittedModelsControllerGetAvailableImageGenerationModels(orgId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminPermittedModelsControllerGetAvailableImageGenerationModelsQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>>
+export type SuperAdminPermittedModelsControllerGetAvailableImageGenerationModelsQueryError = void
+
+
+export function useSuperAdminPermittedModelsControllerGetAvailableImageGenerationModels<TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>, TError = void>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminPermittedModelsControllerGetAvailableImageGenerationModels<TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminPermittedModelsControllerGetAvailableImageGenerationModels<TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all available image-generation models
+ */
+
+export function useSuperAdminPermittedModelsControllerGetAvailableImageGenerationModels<TData = Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminPermittedModelsControllerGetAvailableImageGenerationModels>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminPermittedModelsControllerGetAvailableImageGenerationModelsQueryOptions(orgId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -2156,7 +2531,7 @@ export const useSuperAdminPermittedModelsControllerManageOrgDefaultModel = <TErr
     }
     
 /**
- * Retrieve all permitted models for the specified organization. This endpoint is only accessible to super admins.
+ * Retrieve all permitted models configured for the specified organization. This endpoint is only accessible to super admins.
  * @summary Get all permitted models for a specific organization
  */
 export const superAdminPermittedModelsControllerGetPermittedModels = (
@@ -2317,7 +2692,7 @@ export const useSuperAdminPermittedModelsControllerCreatePermittedModel = <TErro
     }
     
 /**
- * Delete a permitted model for the specified organization. This endpoint is only accessible to super admins.
+ * Delete a permitted model configured for the specified organization. This endpoint is only accessible to super admins.
  * @summary Delete a permitted model for a specific organization
  */
 export const superAdminPermittedModelsControllerDeletePermittedModel = (
@@ -2381,7 +2756,7 @@ export const useSuperAdminPermittedModelsControllerDeletePermittedModel = <TErro
     }
     
 /**
- * Update the settings of a permitted model for the specified organization. This endpoint is only accessible to super admins.
+ * Update a permitted model configured for the specified organization. This endpoint is only accessible to super admins.
  * @summary Update a permitted model for a specific organization
  */
 export const superAdminPermittedModelsControllerUpdatePermittedModel = (
@@ -2448,7 +2823,7 @@ export const useSuperAdminPermittedModelsControllerUpdatePermittedModel = <TErro
     }
     
 /**
- * Retrieve all models (language and embedding) from the master catalog. This endpoint is only accessible to super admins.
+ * Retrieve all models (language, embedding, and image-generation) from the master catalog. This endpoint is only accessible to super admins.
  * @summary Get all models in the catalog
  */
 export const superAdminCatalogModelsControllerGetAllCatalogModels = (
@@ -2636,7 +3011,7 @@ export function useSuperAdminCatalogModelsControllerGetCatalogModelById<TData = 
 
 
 /**
- * Remove a model (language or embedding) from the master catalog. This endpoint is only accessible to super admins.
+ * Remove a model (language, embedding, or image-generation) from the master catalog. This endpoint is only accessible to super admins.
  * @summary Delete a model from the catalog
  */
 export const superAdminCatalogModelsControllerDeleteCatalogModel = (
@@ -2702,7 +3077,7 @@ export const useSuperAdminCatalogModelsControllerDeleteCatalogModel = <TError = 
  * Create a new language model in the master catalog. This endpoint is only accessible to super admins.
  * @summary Create a new language model in the catalog
  */
-export const superAdminCatalogModelsControllerCreateLanguageModel = (
+export const superAdminLanguageCatalogModelsControllerCreateLanguageModel = (
     createLanguageModelRequestDto: CreateLanguageModelRequestDto,
  signal?: AbortSignal
 ) => {
@@ -2718,11 +3093,11 @@ export const superAdminCatalogModelsControllerCreateLanguageModel = (
   
 
 
-export const getSuperAdminCatalogModelsControllerCreateLanguageModelMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminCatalogModelsControllerCreateLanguageModel>>, TError,{data: CreateLanguageModelRequestDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminCatalogModelsControllerCreateLanguageModel>>, TError,{data: CreateLanguageModelRequestDto}, TContext> => {
+export const getSuperAdminLanguageCatalogModelsControllerCreateLanguageModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminLanguageCatalogModelsControllerCreateLanguageModel>>, TError,{data: CreateLanguageModelRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminLanguageCatalogModelsControllerCreateLanguageModel>>, TError,{data: CreateLanguageModelRequestDto}, TContext> => {
 
-const mutationKey = ['superAdminCatalogModelsControllerCreateLanguageModel'];
+const mutationKey = ['superAdminLanguageCatalogModelsControllerCreateLanguageModel'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2732,10 +3107,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminCatalogModelsControllerCreateLanguageModel>>, {data: CreateLanguageModelRequestDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminLanguageCatalogModelsControllerCreateLanguageModel>>, {data: CreateLanguageModelRequestDto}> = (props) => {
           const {data} = props ?? {};
 
-          return  superAdminCatalogModelsControllerCreateLanguageModel(data,)
+          return  superAdminLanguageCatalogModelsControllerCreateLanguageModel(data,)
         }
 
         
@@ -2743,23 +3118,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SuperAdminCatalogModelsControllerCreateLanguageModelMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminCatalogModelsControllerCreateLanguageModel>>>
-    export type SuperAdminCatalogModelsControllerCreateLanguageModelMutationBody = CreateLanguageModelRequestDto
-    export type SuperAdminCatalogModelsControllerCreateLanguageModelMutationError = void
+    export type SuperAdminLanguageCatalogModelsControllerCreateLanguageModelMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminLanguageCatalogModelsControllerCreateLanguageModel>>>
+    export type SuperAdminLanguageCatalogModelsControllerCreateLanguageModelMutationBody = CreateLanguageModelRequestDto
+    export type SuperAdminLanguageCatalogModelsControllerCreateLanguageModelMutationError = void
 
     /**
  * @summary Create a new language model in the catalog
  */
-export const useSuperAdminCatalogModelsControllerCreateLanguageModel = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminCatalogModelsControllerCreateLanguageModel>>, TError,{data: CreateLanguageModelRequestDto}, TContext>, }
+export const useSuperAdminLanguageCatalogModelsControllerCreateLanguageModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminLanguageCatalogModelsControllerCreateLanguageModel>>, TError,{data: CreateLanguageModelRequestDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminCatalogModelsControllerCreateLanguageModel>>,
+        Awaited<ReturnType<typeof superAdminLanguageCatalogModelsControllerCreateLanguageModel>>,
         TError,
         {data: CreateLanguageModelRequestDto},
         TContext
       > => {
 
-      const mutationOptions = getSuperAdminCatalogModelsControllerCreateLanguageModelMutationOptions(options);
+      const mutationOptions = getSuperAdminLanguageCatalogModelsControllerCreateLanguageModelMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -2768,7 +3143,7 @@ export const useSuperAdminCatalogModelsControllerCreateLanguageModel = <TError =
  * Update an existing language model in the master catalog. This endpoint is only accessible to super admins.
  * @summary Update a language model in the catalog
  */
-export const superAdminCatalogModelsControllerUpdateLanguageModel = (
+export const superAdminLanguageCatalogModelsControllerUpdateLanguageModel = (
     id: string,
     updateLanguageModelRequestDto: UpdateLanguageModelRequestDto,
  ) => {
@@ -2784,11 +3159,11 @@ export const superAdminCatalogModelsControllerUpdateLanguageModel = (
   
 
 
-export const getSuperAdminCatalogModelsControllerUpdateLanguageModelMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminCatalogModelsControllerUpdateLanguageModel>>, TError,{id: string;data: UpdateLanguageModelRequestDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminCatalogModelsControllerUpdateLanguageModel>>, TError,{id: string;data: UpdateLanguageModelRequestDto}, TContext> => {
+export const getSuperAdminLanguageCatalogModelsControllerUpdateLanguageModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminLanguageCatalogModelsControllerUpdateLanguageModel>>, TError,{id: string;data: UpdateLanguageModelRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminLanguageCatalogModelsControllerUpdateLanguageModel>>, TError,{id: string;data: UpdateLanguageModelRequestDto}, TContext> => {
 
-const mutationKey = ['superAdminCatalogModelsControllerUpdateLanguageModel'];
+const mutationKey = ['superAdminLanguageCatalogModelsControllerUpdateLanguageModel'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2798,10 +3173,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminCatalogModelsControllerUpdateLanguageModel>>, {id: string;data: UpdateLanguageModelRequestDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminLanguageCatalogModelsControllerUpdateLanguageModel>>, {id: string;data: UpdateLanguageModelRequestDto}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  superAdminCatalogModelsControllerUpdateLanguageModel(id,data,)
+          return  superAdminLanguageCatalogModelsControllerUpdateLanguageModel(id,data,)
         }
 
         
@@ -2809,23 +3184,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SuperAdminCatalogModelsControllerUpdateLanguageModelMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminCatalogModelsControllerUpdateLanguageModel>>>
-    export type SuperAdminCatalogModelsControllerUpdateLanguageModelMutationBody = UpdateLanguageModelRequestDto
-    export type SuperAdminCatalogModelsControllerUpdateLanguageModelMutationError = void
+    export type SuperAdminLanguageCatalogModelsControllerUpdateLanguageModelMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminLanguageCatalogModelsControllerUpdateLanguageModel>>>
+    export type SuperAdminLanguageCatalogModelsControllerUpdateLanguageModelMutationBody = UpdateLanguageModelRequestDto
+    export type SuperAdminLanguageCatalogModelsControllerUpdateLanguageModelMutationError = void
 
     /**
  * @summary Update a language model in the catalog
  */
-export const useSuperAdminCatalogModelsControllerUpdateLanguageModel = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminCatalogModelsControllerUpdateLanguageModel>>, TError,{id: string;data: UpdateLanguageModelRequestDto}, TContext>, }
+export const useSuperAdminLanguageCatalogModelsControllerUpdateLanguageModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminLanguageCatalogModelsControllerUpdateLanguageModel>>, TError,{id: string;data: UpdateLanguageModelRequestDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminCatalogModelsControllerUpdateLanguageModel>>,
+        Awaited<ReturnType<typeof superAdminLanguageCatalogModelsControllerUpdateLanguageModel>>,
         TError,
         {id: string;data: UpdateLanguageModelRequestDto},
         TContext
       > => {
 
-      const mutationOptions = getSuperAdminCatalogModelsControllerUpdateLanguageModelMutationOptions(options);
+      const mutationOptions = getSuperAdminLanguageCatalogModelsControllerUpdateLanguageModelMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -2834,7 +3209,7 @@ export const useSuperAdminCatalogModelsControllerUpdateLanguageModel = <TError =
  * Create a new embedding model in the master catalog. This endpoint is only accessible to super admins.
  * @summary Create a new embedding model in the catalog
  */
-export const superAdminCatalogModelsControllerCreateEmbeddingModel = (
+export const superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel = (
     createEmbeddingModelRequestDto: CreateEmbeddingModelRequestDto,
  signal?: AbortSignal
 ) => {
@@ -2850,11 +3225,11 @@ export const superAdminCatalogModelsControllerCreateEmbeddingModel = (
   
 
 
-export const getSuperAdminCatalogModelsControllerCreateEmbeddingModelMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminCatalogModelsControllerCreateEmbeddingModel>>, TError,{data: CreateEmbeddingModelRequestDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminCatalogModelsControllerCreateEmbeddingModel>>, TError,{data: CreateEmbeddingModelRequestDto}, TContext> => {
+export const getSuperAdminEmbeddingCatalogModelsControllerCreateEmbeddingModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel>>, TError,{data: CreateEmbeddingModelRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel>>, TError,{data: CreateEmbeddingModelRequestDto}, TContext> => {
 
-const mutationKey = ['superAdminCatalogModelsControllerCreateEmbeddingModel'];
+const mutationKey = ['superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2864,10 +3239,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminCatalogModelsControllerCreateEmbeddingModel>>, {data: CreateEmbeddingModelRequestDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel>>, {data: CreateEmbeddingModelRequestDto}> = (props) => {
           const {data} = props ?? {};
 
-          return  superAdminCatalogModelsControllerCreateEmbeddingModel(data,)
+          return  superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel(data,)
         }
 
         
@@ -2875,23 +3250,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SuperAdminCatalogModelsControllerCreateEmbeddingModelMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminCatalogModelsControllerCreateEmbeddingModel>>>
-    export type SuperAdminCatalogModelsControllerCreateEmbeddingModelMutationBody = CreateEmbeddingModelRequestDto
-    export type SuperAdminCatalogModelsControllerCreateEmbeddingModelMutationError = void
+    export type SuperAdminEmbeddingCatalogModelsControllerCreateEmbeddingModelMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel>>>
+    export type SuperAdminEmbeddingCatalogModelsControllerCreateEmbeddingModelMutationBody = CreateEmbeddingModelRequestDto
+    export type SuperAdminEmbeddingCatalogModelsControllerCreateEmbeddingModelMutationError = void
 
     /**
  * @summary Create a new embedding model in the catalog
  */
-export const useSuperAdminCatalogModelsControllerCreateEmbeddingModel = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminCatalogModelsControllerCreateEmbeddingModel>>, TError,{data: CreateEmbeddingModelRequestDto}, TContext>, }
+export const useSuperAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel>>, TError,{data: CreateEmbeddingModelRequestDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminCatalogModelsControllerCreateEmbeddingModel>>,
+        Awaited<ReturnType<typeof superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel>>,
         TError,
         {data: CreateEmbeddingModelRequestDto},
         TContext
       > => {
 
-      const mutationOptions = getSuperAdminCatalogModelsControllerCreateEmbeddingModelMutationOptions(options);
+      const mutationOptions = getSuperAdminEmbeddingCatalogModelsControllerCreateEmbeddingModelMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -2900,7 +3275,7 @@ export const useSuperAdminCatalogModelsControllerCreateEmbeddingModel = <TError 
  * Update an existing embedding model in the master catalog. This endpoint is only accessible to super admins.
  * @summary Update an embedding model in the catalog
  */
-export const superAdminCatalogModelsControllerUpdateEmbeddingModel = (
+export const superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel = (
     id: string,
     updateEmbeddingModelRequestDto: UpdateEmbeddingModelRequestDto,
  ) => {
@@ -2916,11 +3291,11 @@ export const superAdminCatalogModelsControllerUpdateEmbeddingModel = (
   
 
 
-export const getSuperAdminCatalogModelsControllerUpdateEmbeddingModelMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminCatalogModelsControllerUpdateEmbeddingModel>>, TError,{id: string;data: UpdateEmbeddingModelRequestDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminCatalogModelsControllerUpdateEmbeddingModel>>, TError,{id: string;data: UpdateEmbeddingModelRequestDto}, TContext> => {
+export const getSuperAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel>>, TError,{id: string;data: UpdateEmbeddingModelRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel>>, TError,{id: string;data: UpdateEmbeddingModelRequestDto}, TContext> => {
 
-const mutationKey = ['superAdminCatalogModelsControllerUpdateEmbeddingModel'];
+const mutationKey = ['superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2930,10 +3305,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminCatalogModelsControllerUpdateEmbeddingModel>>, {id: string;data: UpdateEmbeddingModelRequestDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel>>, {id: string;data: UpdateEmbeddingModelRequestDto}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  superAdminCatalogModelsControllerUpdateEmbeddingModel(id,data,)
+          return  superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel(id,data,)
         }
 
         
@@ -2941,23 +3316,155 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SuperAdminCatalogModelsControllerUpdateEmbeddingModelMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminCatalogModelsControllerUpdateEmbeddingModel>>>
-    export type SuperAdminCatalogModelsControllerUpdateEmbeddingModelMutationBody = UpdateEmbeddingModelRequestDto
-    export type SuperAdminCatalogModelsControllerUpdateEmbeddingModelMutationError = void
+    export type SuperAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel>>>
+    export type SuperAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelMutationBody = UpdateEmbeddingModelRequestDto
+    export type SuperAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelMutationError = void
 
     /**
  * @summary Update an embedding model in the catalog
  */
-export const useSuperAdminCatalogModelsControllerUpdateEmbeddingModel = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminCatalogModelsControllerUpdateEmbeddingModel>>, TError,{id: string;data: UpdateEmbeddingModelRequestDto}, TContext>, }
+export const useSuperAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel>>, TError,{id: string;data: UpdateEmbeddingModelRequestDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminCatalogModelsControllerUpdateEmbeddingModel>>,
+        Awaited<ReturnType<typeof superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel>>,
         TError,
         {id: string;data: UpdateEmbeddingModelRequestDto},
         TContext
       > => {
 
-      const mutationOptions = getSuperAdminCatalogModelsControllerUpdateEmbeddingModelMutationOptions(options);
+      const mutationOptions = getSuperAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Create a new image-generation model in the master catalog. This endpoint is only accessible to super admins.
+ * @summary Create a new image-generation model in the catalog
+ */
+export const superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel = (
+    createImageGenerationModelRequestDto: CreateImageGenerationModelRequestDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ImageGenerationModelResponseDto>(
+      {url: `/super-admin/models/catalog/image-generation`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createImageGenerationModelRequestDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminImageGenerationCatalogModelsControllerCreateImageGenerationModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel>>, TError,{data: CreateImageGenerationModelRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel>>, TError,{data: CreateImageGenerationModelRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel>>, {data: CreateImageGenerationModelRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminImageGenerationCatalogModelsControllerCreateImageGenerationModelMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel>>>
+    export type SuperAdminImageGenerationCatalogModelsControllerCreateImageGenerationModelMutationBody = CreateImageGenerationModelRequestDto
+    export type SuperAdminImageGenerationCatalogModelsControllerCreateImageGenerationModelMutationError = void
+
+    /**
+ * @summary Create a new image-generation model in the catalog
+ */
+export const useSuperAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel>>, TError,{data: CreateImageGenerationModelRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel>>,
+        TError,
+        {data: CreateImageGenerationModelRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminImageGenerationCatalogModelsControllerCreateImageGenerationModelMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Update an existing image-generation model in the master catalog. This endpoint is only accessible to super admins.
+ * @summary Update an image-generation model in the catalog
+ */
+export const superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel = (
+    id: string,
+    updateImageGenerationModelRequestDto: UpdateImageGenerationModelRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<ImageGenerationModelResponseDto>(
+      {url: `/super-admin/models/catalog/image-generation/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateImageGenerationModelRequestDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel>>, TError,{id: string;data: UpdateImageGenerationModelRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel>>, TError,{id: string;data: UpdateImageGenerationModelRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel>>, {id: string;data: UpdateImageGenerationModelRequestDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModelMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel>>>
+    export type SuperAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModelMutationBody = UpdateImageGenerationModelRequestDto
+    export type SuperAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModelMutationError = void
+
+    /**
+ * @summary Update an image-generation model in the catalog
+ */
+export const useSuperAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel>>, TError,{id: string;data: UpdateImageGenerationModelRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel>>,
+        TError,
+        {id: string;data: UpdateImageGenerationModelRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModelMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

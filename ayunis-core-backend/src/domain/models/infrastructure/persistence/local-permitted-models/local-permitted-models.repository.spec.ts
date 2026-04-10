@@ -10,6 +10,7 @@ import {
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { MultipleImageGenerationModelsNotAllowedError } from 'src/domain/models/application/models.errors';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
+import { PermittedModelQueryService } from './permitted-model-query.service';
 import type { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 
@@ -17,6 +18,7 @@ describe('LocalPermittedModelsRepository', () => {
   let repository: LocalPermittedModelsRepository;
   let permittedModelRepository: jest.Mocked<Repository<PermittedModelRecord>>;
   let permittedModelMapper: jest.Mocked<PermittedModelMapper>;
+  let queryService: PermittedModelQueryService;
 
   const orgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const catalogModelId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
@@ -40,9 +42,15 @@ describe('LocalPermittedModelsRepository', () => {
       toRecord: jest.fn(),
     } as unknown as jest.Mocked<PermittedModelMapper>;
 
+    queryService = new PermittedModelQueryService(
+      permittedModelRepository,
+      permittedModelMapper as unknown as PermittedModelMapper,
+    );
+
     repository = new LocalPermittedModelsRepository(
       permittedModelRepository,
       permittedModelMapper,
+      queryService,
     );
   });
 
@@ -170,7 +178,7 @@ describe('LocalPermittedModelsRepository', () => {
       expect(options?.where).toEqual({
         orgId,
         scope: PermittedModelScope.ORG,
-        model: { isArchived: false },
+        model: { isArchived: false, type: 'image-generation' },
       });
       return [];
     });

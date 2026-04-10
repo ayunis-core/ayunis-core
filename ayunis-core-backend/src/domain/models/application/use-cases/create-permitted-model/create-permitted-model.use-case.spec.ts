@@ -12,7 +12,9 @@ import { ModelProvider } from 'src/domain/models/domain/value-objects/model-prov
 import {
   ImageGenerationModelProviderNotSupportedError,
   ModelNotFoundError,
+  UnexpectedModelError,
 } from '../../models.errors';
+import { ModelPolicyService } from '../../services/model-policy.service';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -51,6 +53,7 @@ describe('CreatePermittedModelUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreatePermittedModelUseCase,
+        ModelPolicyService,
         {
           provide: PermittedModelsRepository,
           useValue: mockPermittedModelsRepository,
@@ -148,7 +151,7 @@ describe('CreatePermittedModelUseCase', () => {
       expect(permittedModelsRepository.create).not.toHaveBeenCalled();
     });
 
-    it('should handle repository creation errors', async () => {
+    it('wraps non-ApplicationError repository failures in UnexpectedModelError', async () => {
       // Arrange
       const command = new CreatePermittedModelCommand(mockModelId, mockOrgId);
 
@@ -173,14 +176,13 @@ describe('CreatePermittedModelUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
-        'Database constraint violation',
+        UnexpectedModelError,
       );
 
       expect(permittedModelsRepository.create).toHaveBeenCalled();
-      expect(errorSpy).toHaveBeenCalledWith(
-        'Error creating permitted model',
-        repositoryError,
-      );
+      expect(errorSpy).toHaveBeenCalledWith('Error creating permitted model', {
+        error: repositoryError,
+      });
     });
 
     it('should reject non-Azure image-generation models explicitly', async () => {

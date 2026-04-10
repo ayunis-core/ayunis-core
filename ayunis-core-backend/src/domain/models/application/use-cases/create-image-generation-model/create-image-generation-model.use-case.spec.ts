@@ -9,6 +9,7 @@ import {
   ImageGenerationModelProviderNotSupportedError,
   ModelAlreadyExistsError,
 } from '../../models.errors';
+import { ModelPolicyService } from '../../services/model-policy.service';
 
 describe('CreateImageGenerationModelUseCase', () => {
   let useCase: CreateImageGenerationModelUseCase;
@@ -28,6 +29,7 @@ describe('CreateImageGenerationModelUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateImageGenerationModelUseCase,
+        ModelPolicyService,
         { provide: ModelsRepository, useValue: mockModelsRepository },
       ],
     }).compile();
