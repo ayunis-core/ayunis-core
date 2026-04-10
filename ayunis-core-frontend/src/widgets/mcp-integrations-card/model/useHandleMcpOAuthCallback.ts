@@ -3,10 +3,17 @@ import type { TFunction } from 'i18next';
 import { getMcpOAuthErrorKey } from '@/shared/lib/mcp-oauth';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
+interface OAuthCallbackOptions {
+  refetch?: () => void;
+  keyPrefix?: string;
+}
+
 export function useHandleMcpOAuthCallback(
   t: TFunction,
-  refetch: () => void,
+  options: OAuthCallbackOptions = {},
 ): void {
+  const { refetch, keyPrefix = 'mcpIntegrations.oauth' } = options;
+
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const oauthStatus = searchParams.get('oauth');
@@ -15,13 +22,11 @@ export function useHandleMcpOAuthCallback(
     }
 
     if (oauthStatus === 'success') {
-      showSuccess(t('mcpIntegrations.oauth.successToast'));
-      refetch();
+      showSuccess(t(`${keyPrefix}.successToast`));
+      refetch?.();
     } else if (oauthStatus === 'error') {
       showError(
-        t(
-          `mcpIntegrations.oauth.${getMcpOAuthErrorKey(searchParams.get('reason'))}`,
-        ),
+        t(`${keyPrefix}.${getMcpOAuthErrorKey(searchParams.get('reason'))}`),
       );
     }
 
@@ -34,5 +39,5 @@ export function useHandleMcpOAuthCallback(
     const cleanedUrl =
       window.location.pathname + searchSuffix + window.location.hash;
     window.history.replaceState({}, '', cleanedUrl);
-  }, [refetch, t]);
+  }, [refetch, t, keyPrefix]);
 }

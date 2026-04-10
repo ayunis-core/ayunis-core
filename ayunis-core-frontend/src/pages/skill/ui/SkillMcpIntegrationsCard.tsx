@@ -21,7 +21,7 @@ export default function SkillMcpIntegrationsCard({
   const assignMutation = useAssignMcpIntegration(data.availableIntegrations);
   const unassignMutation = useUnassignMcpIntegration();
 
-  useHandleMcpOAuthCallback(t, data.refetch);
+  useHandleMcpOAuthCallback(t, { refetch: data.refetch });
 
   const handleToggle = async (integrationId: string) => {
     const isCurrentlyAssigned =
