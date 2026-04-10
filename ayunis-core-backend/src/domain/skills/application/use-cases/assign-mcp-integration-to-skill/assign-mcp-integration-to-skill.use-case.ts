@@ -2,7 +2,8 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { AssignMcpIntegrationToSkillCommand } from './assign-mcp-integration-to-skill.command';
 import { SkillRepository } from '../../ports/skill.repository';
-import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { GetMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integration/get-mcp-integration.use-case';
+import { GetMcpIntegrationQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integration/get-mcp-integration.query';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Skill } from '../../../domain/skill.entity';
 import {
@@ -23,8 +24,7 @@ export class AssignMcpIntegrationToSkillUseCase {
   constructor(
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
-    @Inject(McpIntegrationsRepositoryPort)
-    private readonly mcpIntegrationsRepository: McpIntegrationsRepositoryPort,
+    private readonly getMcpIntegrationUseCase: GetMcpIntegrationUseCase,
     private readonly contextService: ContextService,
   ) {}
 
@@ -47,10 +47,12 @@ export class AssignMcpIntegrationToSkillUseCase {
         throw new SkillNotFoundError(command.skillId);
       }
 
-      const integration = await this.mcpIntegrationsRepository.findById(
-        command.integrationId,
-      );
-      if (!integration) {
+      let integration;
+      try {
+        integration = await this.getMcpIntegrationUseCase.execute(
+          new GetMcpIntegrationQuery(command.integrationId),
+        );
+      } catch {
         throw new SkillMcpIntegrationNotFoundError(command.integrationId);
       }
 

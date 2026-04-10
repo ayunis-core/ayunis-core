@@ -7,7 +7,6 @@ node_modules
 # Auto-generated type-checking tsconfig files (tool-generated with hash names)
 tsconfig.?????????*.json
 .pi
-.agents/
 .pi/
 .agents/
 .claude/

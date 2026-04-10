@@ -13,7 +13,7 @@ import { AssignMcpIntegrationToAgentUseCase } from './assign-mcp-integration-to-
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { AssignMcpIntegrationToAgentCommand } from './assign-mcp-integration-to-agent.command';
 import { AgentRepository } from '../../ports/agent.repository';
-import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { GetMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integration/get-mcp-integration.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   AgentNotFoundError,
@@ -35,7 +35,7 @@ import type { UUID } from 'crypto';
 describe('AssignMcpIntegrationToAgentUseCase', () => {
   let useCase: AssignMcpIntegrationToAgentUseCase;
   let agentRepository: jest.Mocked<AgentRepository>;
-  let mcpIntegrationsRepository: jest.Mocked<McpIntegrationsRepositoryPort>;
+  let getMcpIntegrationUseCase: jest.Mocked<GetMcpIntegrationUseCase>;
   let contextService: jest.Mocked<ContextService>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -62,14 +62,8 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
       updateModel: jest.fn(),
     };
 
-    const mockMcpIntegrationsRepository = {
-      findById: jest.fn(),
-      save: jest.fn(),
-      findByIds: jest.fn(),
-      findByOrganizationId: jest.fn(),
-      findByOrganizationIdAndEnabled: jest.fn(),
-      findByOrgIdAndSlug: jest.fn(),
-      delete: jest.fn(),
+    const mockGetMcpIntegrationUseCase = {
+      execute: jest.fn(),
     };
 
     const mockContextService = {
@@ -81,8 +75,8 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
         AssignMcpIntegrationToAgentUseCase,
         { provide: AgentRepository, useValue: mockAgentRepository },
         {
-          provide: McpIntegrationsRepositoryPort,
-          useValue: mockMcpIntegrationsRepository,
+          provide: GetMcpIntegrationUseCase,
+          useValue: mockGetMcpIntegrationUseCase,
         },
         { provide: ContextService, useValue: mockContextService },
       ],
@@ -92,7 +86,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
       AssignMcpIntegrationToAgentUseCase,
     );
     agentRepository = module.get(AgentRepository);
-    mcpIntegrationsRepository = module.get(McpIntegrationsRepositoryPort);
+    getMcpIntegrationUseCase = module.get(GetMcpIntegrationUseCase);
     contextService = module.get(ContextService);
 
     // Mock logger methods
@@ -158,7 +152,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
         return null;
       });
       agentRepository.findOne.mockResolvedValue(mockAgent);
-      mcpIntegrationsRepository.findById.mockResolvedValue(mockIntegration);
+      getMcpIntegrationUseCase.execute.mockResolvedValue(mockIntegration);
       agentRepository.update.mockResolvedValue(updatedMockAgent);
 
       // Act
@@ -175,9 +169,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
         mockUserId,
       );
 
-      expect(mcpIntegrationsRepository.findById).toHaveBeenCalledWith(
-        mockIntegrationId,
-      );
+      expect(getMcpIntegrationUseCase.execute).toHaveBeenCalled();
 
       expect(agentRepository.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -225,7 +217,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
         return null;
       });
       agentRepository.findOne.mockResolvedValue(mockAgent);
-      mcpIntegrationsRepository.findById.mockResolvedValue(mockIntegration);
+      getMcpIntegrationUseCase.execute.mockResolvedValue(mockIntegration);
       agentRepository.update.mockResolvedValue(updatedMockAgent);
 
       // Act
@@ -287,7 +279,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
         mockUserId,
       );
 
-      expect(mcpIntegrationsRepository.findById).not.toHaveBeenCalled();
+      expect(getMcpIntegrationUseCase.execute).not.toHaveBeenCalled();
     });
 
     it('should throw AgentNotFoundError when agent exists but user does not own it', async () => {
@@ -310,7 +302,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
         AgentNotFoundError,
       );
 
-      expect(mcpIntegrationsRepository.findById).not.toHaveBeenCalled();
+      expect(getMcpIntegrationUseCase.execute).not.toHaveBeenCalled();
     });
 
     it('should throw McpIntegrationNotFoundError when integration does not exist', async () => {
@@ -335,7 +327,9 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
         return null;
       });
       agentRepository.findOne.mockResolvedValue(mockAgent);
-      mcpIntegrationsRepository.findById.mockResolvedValue(null); // Integration not found
+      getMcpIntegrationUseCase.execute.mockRejectedValue(
+        new Error('Not found'),
+      );
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -377,7 +371,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
         return null;
       });
       agentRepository.findOne.mockResolvedValue(mockAgent);
-      mcpIntegrationsRepository.findById.mockResolvedValue(disabledIntegration);
+      getMcpIntegrationUseCase.execute.mockResolvedValue(disabledIntegration);
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -419,7 +413,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
         return null;
       });
       agentRepository.findOne.mockResolvedValue(mockAgent);
-      mcpIntegrationsRepository.findById.mockResolvedValue(otherOrgIntegration);
+      getMcpIntegrationUseCase.execute.mockResolvedValue(otherOrgIntegration);
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -451,7 +445,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
         return null;
       });
       agentRepository.findOne.mockResolvedValue(mockAgent);
-      mcpIntegrationsRepository.findById.mockResolvedValue(mockIntegration);
+      getMcpIntegrationUseCase.execute.mockResolvedValue(mockIntegration);
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -485,7 +479,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
         return null;
       });
       agentRepository.findOne.mockResolvedValue(mockAgent);
-      mcpIntegrationsRepository.findById.mockResolvedValue(mockIntegration);
+      getMcpIntegrationUseCase.execute.mockResolvedValue(mockIntegration);
       agentRepository.update.mockRejectedValue(repositoryError);
 
       // Act & Assert
@@ -545,7 +539,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
         return null;
       });
       agentRepository.findOne.mockResolvedValue(mockAgent);
-      mcpIntegrationsRepository.findById.mockResolvedValue(mockIntegration);
+      getMcpIntegrationUseCase.execute.mockResolvedValue(mockIntegration);
       agentRepository.update.mockImplementation((agent: Agent) =>
         Promise.resolve(agent),
       );

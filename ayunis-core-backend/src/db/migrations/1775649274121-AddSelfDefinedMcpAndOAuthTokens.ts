@@ -4,15 +4,12 @@ export class AddSelfDefinedMcpAndOAuthTokens1775649274121 implements MigrationIn
   name = 'AddSelfDefinedMcpAndOAuthTokens1775649274121';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // 1. Add OAuth client credential columns to the base mcp_integrations table
     await queryRunner.query(
       `ALTER TABLE "mcp_integrations" ADD "oauth_client_id" character varying(255)`,
     );
     await queryRunner.query(
       `ALTER TABLE "mcp_integrations" ADD "oauth_client_secret_encrypted" text`,
     );
-
-    // 2. Create the OAuth token table
     await queryRunner.query(
       `CREATE TABLE "mcp_integration_oauth_tokens" (
         "id" character varying NOT NULL,
@@ -27,25 +24,18 @@ export class AddSelfDefinedMcpAndOAuthTokens1775649274121 implements MigrationIn
         CONSTRAINT "PK_6cb5e52dee49b8e98018fdfd045" PRIMARY KEY ("id")
       )`,
     );
-
-    // 3. Standard indexes
     await queryRunner.query(
       `CREATE INDEX "idx_mcp_oauth_token_integration" ON "mcp_integration_oauth_tokens" ("integration_id")`,
     );
     await queryRunner.query(
       `CREATE INDEX "idx_mcp_oauth_token_user" ON "mcp_integration_oauth_tokens" ("user_id")`,
     );
-
-    // 4. Partial unique indexes — enforce (integration_id, user_id) uniqueness
-    //    with distinct handling for NULL user_id (org-level) vs non-NULL (per-user)
     await queryRunner.query(
       `CREATE UNIQUE INDEX "uq_mcp_oauth_token_user" ON "mcp_integration_oauth_tokens" ("integration_id", "user_id") WHERE "user_id" IS NOT NULL`,
     );
     await queryRunner.query(
       `CREATE UNIQUE INDEX "uq_mcp_oauth_token_org" ON "mcp_integration_oauth_tokens" ("integration_id") WHERE "user_id" IS NULL`,
     );
-
-    // 5. Foreign keys
     await queryRunner.query(
       `ALTER TABLE "mcp_integration_oauth_tokens" ADD CONSTRAINT "FK_mcp_oauth_token_integration" FOREIGN KEY ("integration_id") REFERENCES "mcp_integrations"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );

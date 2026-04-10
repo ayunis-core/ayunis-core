@@ -160,15 +160,12 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     PredefinedConfigDtoMapper,
   ],
   exports: [
-    McpCredentialEncryptionPort,
-    McpClientPort,
-    McpIntegrationsRepositoryPort,
-    McpIntegrationUserConfigRepositoryPort,
     PredefinedMcpIntegrationRegistry,
     RetrieveMcpResourceUseCase,
     DiscoverMcpCapabilitiesUseCase,
     ExecuteMcpToolUseCase,
     GetMcpPromptUseCase,
+    GetMcpIntegrationUseCase,
     GetMcpIntegrationsByIdsUseCase,
   ],
 })

@@ -77,7 +77,7 @@ export class OAuthFlowService {
     const backendBaseUrl = this.configService.getOrThrow<string>(
       'app.backend.baseUrl',
     );
-    const redirectUri = `${backendBaseUrl}/mcp-integrations/oauth/callback`;
+    const redirectUri = `${backendBaseUrl}/api/mcp-integrations/oauth/callback`;
 
     const codeVerifier = randomBytes(32).toString('base64url');
     const codeChallenge = createHash('sha256')
