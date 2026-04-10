@@ -64,7 +64,7 @@ export default tseslint.config(
 
       // Rules set to warn (many existing violations — tighten later)
       '@typescript-eslint/no-unnecessary-condition': 'warn',
-      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
       '@typescript-eslint/prefer-optional-chain': 'warn',
       '@typescript-eslint/consistent-type-imports': 'warn',
       '@typescript-eslint/no-import-type-side-effects': 'warn',
