@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
 import { Avatar, AvatarFallback } from '@/shared/ui/shadcn/avatar';
-import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/shadcn/dialog';
 import { Copy, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
@@ -36,6 +35,8 @@ import SkillInstructionWidget from './chat-widgets/SkillInstructionWidget';
 import CreateDocumentWidget from './chat-widgets/CreateDocumentWidget';
 import UpdateDocumentWidget from './chat-widgets/UpdateDocumentWidget';
 import EditDocumentWidget from './chat-widgets/EditDocumentWidget';
+import GenerateImageWidget from './chat-widgets/GenerateImageWidget';
+import ImagePreview from './chat-widgets/ImagePreview';
 import {
   BarChartWidget,
   LineChartWidget,
@@ -51,6 +52,7 @@ interface ChatMessageProps {
   readonly hideAvatar?: boolean;
   readonly isStreaming?: boolean;
   readonly threadId?: string;
+  readonly toolResultsMap?: Map<string, string>;
   readonly onOpenArtifact?: (artifactId: string) => void;
 }
 
@@ -127,6 +129,7 @@ export default function ChatMessage({
   message,
   isStreaming = false,
   threadId,
+  toolResultsMap,
   onOpenArtifact,
 }: ChatMessageProps) {
   const { theme } = useTheme();
@@ -173,12 +176,12 @@ export default function ChatMessage({
             className="space-y-2 overflow-hidden w-full"
             data-testid="assistant-message"
           >
-            {renderMessageContent(
-              message,
+            {renderMessageContent(message, {
               isStreaming,
               threadId,
               onOpenArtifact,
-            )}
+              toolResultsMap,
+            })}
           </div>
           {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content may be undefined during streaming */}
           {message.content?.some((c) => c.type === 'text') && (
@@ -192,54 +195,16 @@ export default function ChatMessage({
   return null;
 }
 
-function ImageThumbnail({
-  imageContent,
-}: {
-  readonly imageContent: ImageMessageContentResponseDto;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const encodedObjectName = encodeURIComponent(imageContent.imageUrl);
-  const imageUrl = `${config.api.baseUrl}/storage/${encodedObjectName}`;
-
-  return (
-    <>
-      <div
-        className="rounded-lg h-14.5 w-14.5 my-2 overflow-hidden border border-border cursor-pointer hover:opacity-80 transition-opacity"
-        onClick={() => setIsOpen(true)}
-      >
-        <img
-          src={imageUrl}
-          alt={imageContent.altText}
-          className="w-full h-full object-cover"
-        />
-      </div>
-
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent
-          className="max-w-[90vw] max-h-[90vh] p-0"
-          aria-describedby={undefined}
-        >
-          <DialogTitle className="sr-only">
-            {imageContent.altText ?? 'Image preview'}
-          </DialogTitle>
-          <img
-            src={imageUrl}
-            alt={imageContent.altText}
-            className="w-full h-full max-h-[90vh] object-contain rounded-lg"
-          />
-        </DialogContent>
-      </Dialog>
-    </>
-  );
+interface RenderOptions {
+  isStreaming?: boolean;
+  threadId?: string;
+  onOpenArtifact?: (artifactId: string) => void;
+  toolResultsMap?: Map<string, string>;
 }
 
 // eslint-disable-next-line sonarjs/function-return-type
-function renderMessageContent(
-  message: Message,
-  isStreaming?: boolean,
-  threadId?: string,
-  onOpenArtifact?: (artifactId: string) => void,
-) {
+function renderMessageContent(message: Message, options: RenderOptions = {}) {
+  const { isStreaming, threadId, onOpenArtifact, toolResultsMap } = options;
   switch (message.role) {
     case 'user':
     case 'system': {
@@ -255,9 +220,11 @@ function renderMessageContent(
           {images.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {images.map((imageContent, index) => (
-                <ImageThumbnail
+                <ImagePreview
                   key={`image-${index}-${imageContent.imageUrl}`}
-                  imageContent={imageContent}
+                  src={`${config.api.baseUrl}/storage/${encodeURIComponent(imageContent.imageUrl)}`}
+                  alt={imageContent.altText}
+                  compact
                 />
               ))}
             </div>
@@ -441,6 +408,21 @@ function renderMessageContent(
                   content={toolUseMessageContent}
                   isStreaming={isStreaming}
                   onOpenArtifact={onOpenArtifact}
+                />
+              );
+            }
+
+            if (
+              toolUseMessageContent.name ===
+              ToolAssignmentDtoType.generate_image
+            ) {
+              return (
+                <GenerateImageWidget
+                  key={`generate-image-${index}-${toolUseMessageContent.id}`}
+                  content={toolUseMessageContent}
+                  isStreaming={isStreaming}
+                  threadId={threadId ?? ''}
+                  imageId={toolResultsMap?.get(toolUseMessageContent.id)}
                 />
               );
             }

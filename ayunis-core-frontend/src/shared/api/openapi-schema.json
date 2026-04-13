@@ -4034,6 +4034,48 @@
         "tags": ["threads"]
       }
     },
+    "/threads/{threadId}/generated-images/{imageId}": {
+      "get": {
+        "operationId": "GeneratedImagesController_resolve",
+        "parameters": [
+          {
+            "name": "threadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Presigned URL for the generated image",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedImageUrlResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Thread or image not found"
+          }
+        },
+        "summary": "Get presigned URL for a generated image",
+        "tags": ["threads"]
+      }
+    },
     "/agents": {
       "post": {
         "operationId": "AgentsController_create",
@@ -11651,6 +11693,21 @@
         },
         "required": ["title"]
       },
+      "GeneratedImageUrlResponseDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Presigned URL to access the generated image"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "ISO 8601 timestamp when the URL expires",
+            "example": "2026-04-10T12:00:00.000Z"
+          }
+        },
+        "required": ["url", "expiresAt"]
+      },
       "ToolAssignmentDto": {
         "type": "object",
         "properties": {
@@ -11681,7 +11738,8 @@
               "create_document",
               "update_document",
               "edit_document",
-              "read_document"
+              "read_document",
+              "generate_image"
             ]
           },
           "toolConfigId": {
@@ -11754,7 +11812,8 @@
               "create_document",
               "update_document",
               "edit_document",
-              "read_document"
+              "read_document",
+              "generate_image"
             ]
           }
         },

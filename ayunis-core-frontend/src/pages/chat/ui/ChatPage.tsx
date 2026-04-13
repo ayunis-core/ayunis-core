@@ -143,6 +143,19 @@ export default function ChatPage({
     return [...messages].sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
   }, [messages]);
 
+  const toolResultsMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const msg of sortedMessages) {
+      if (msg.role !== 'tool') continue;
+      for (const content of msg.content) {
+        if (content.type === 'tool_result') {
+          map.set(content.toolId, content.result);
+        }
+      }
+    }
+    return map;
+  }, [sortedMessages]);
+
   const { deleteChat } = useDeleteThread({
     onSuccess: () => {
       void navigate({ to: '/chat' });
@@ -354,6 +367,7 @@ export default function ChatPage({
           key={message.id}
           message={message}
           hideAvatar={i > 0 && sortedMessages[i - 1].role !== 'user'}
+          toolResultsMap={toolResultsMap}
           isStreaming={
             isStreaming &&
             i === sortedMessages.length - 1 &&

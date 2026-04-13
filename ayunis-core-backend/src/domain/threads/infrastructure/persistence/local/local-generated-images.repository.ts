@@ -35,4 +35,9 @@ export class LocalGeneratedImagesRepository extends GeneratedImagesRepository {
     const record = await this.repo.findOne({ where: { id, threadId } });
     return record ? this.mapper.toDomain(record) : null;
   }
+
+  async findByThreadId(threadId: UUID): Promise<GeneratedImage[]> {
+    const records = await this.repo.find({ where: { threadId } });
+    return records.map((r) => this.mapper.toDomain(r));
+  }
 }

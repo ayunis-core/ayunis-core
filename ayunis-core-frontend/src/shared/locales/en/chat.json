@@ -43,6 +43,11 @@
       "knowledge_query": "Search knowledge base",
       "knowledge_get_text": "Read knowledge base document",
       "read_document": "Read document",
+      "generate_image": {
+        "generating": "Generating image\u2026",
+        "title": "Generated Image",
+        "error": "Failed to load generated image"
+      },
       "send_email": {
         "subject": "Subject",
         "body": "Body",

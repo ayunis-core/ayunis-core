@@ -2226,6 +2226,13 @@ export interface UpdateThreadTitleDto {
   title: string;
 }
 
+export interface GeneratedImageUrlResponseDto {
+  /** Presigned URL to access the generated image */
+  url: string;
+  /** ISO 8601 timestamp when the URL expires */
+  expiresAt: string;
+}
+
 /**
  * The type of tool to assign
  */
@@ -2257,6 +2264,7 @@ export const ToolAssignmentDtoType = {
   update_document: 'update_document',
   edit_document: 'edit_document',
   read_document: 'read_document',
+  generate_image: 'generate_image',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -2312,6 +2320,7 @@ export const ToolResponseDtoType = {
   update_document: 'update_document',
   edit_document: 'edit_document',
   read_document: 'read_document',
+  generate_image: 'generate_image',
 } as const;
 
 export interface ToolResponseDto {

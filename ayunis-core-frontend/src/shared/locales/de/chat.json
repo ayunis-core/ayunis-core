@@ -43,6 +43,11 @@
       "knowledge_query": "Wissen abrufen",
       "knowledge_get_text": "Wissen abrufen",
       "read_document": "Dokument lesen",
+      "generate_image": {
+        "generating": "Bild wird erstellt\u2026",
+        "title": "Generiertes Bild",
+        "error": "Generiertes Bild konnte nicht geladen werden"
+      },
       "send_email": {
         "subject": "Betreff",
         "body": "Nachricht",

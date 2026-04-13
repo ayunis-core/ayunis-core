@@ -75,6 +75,7 @@ import type {
   ForgotPasswordDto,
   GeneratePersonalizedSystemPromptDto,
   GeneratePersonalizedSystemPromptResponseDto,
+  GeneratedImageUrlResponseDto,
   GetThreadResponseDto,
   GetThreadsResponseDto,
   GlobalUserUsageResponseDto,
@@ -8167,6 +8168,106 @@ export const useThreadKnowledgeBasesControllerRemoveKnowledgeBase = <TError = vo
       return useMutation(mutationOptions, queryClient);
     }
     
+/**
+ * @summary Get presigned URL for a generated image
+ */
+export const generatedImagesControllerResolve = (
+    threadId: string,
+    imageId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<GeneratedImageUrlResponseDto>(
+      {url: `/threads/${threadId}/generated-images/${imageId}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getGeneratedImagesControllerResolveQueryKey = (threadId?: string,
+    imageId?: string,) => {
+    return [
+    `/threads/${threadId}/generated-images/${imageId}`
+    ] as const;
+    }
+
+    
+export const getGeneratedImagesControllerResolveQueryOptions = <TData = Awaited<ReturnType<typeof generatedImagesControllerResolve>>, TError = void>(threadId: string,
+    imageId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof generatedImagesControllerResolve>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGeneratedImagesControllerResolveQueryKey(threadId,imageId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof generatedImagesControllerResolve>>> = ({ signal }) => generatedImagesControllerResolve(threadId,imageId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(threadId && imageId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof generatedImagesControllerResolve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GeneratedImagesControllerResolveQueryResult = NonNullable<Awaited<ReturnType<typeof generatedImagesControllerResolve>>>
+export type GeneratedImagesControllerResolveQueryError = void
+
+
+export function useGeneratedImagesControllerResolve<TData = Awaited<ReturnType<typeof generatedImagesControllerResolve>>, TError = void>(
+ threadId: string,
+    imageId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof generatedImagesControllerResolve>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof generatedImagesControllerResolve>>,
+          TError,
+          Awaited<ReturnType<typeof generatedImagesControllerResolve>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGeneratedImagesControllerResolve<TData = Awaited<ReturnType<typeof generatedImagesControllerResolve>>, TError = void>(
+ threadId: string,
+    imageId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof generatedImagesControllerResolve>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof generatedImagesControllerResolve>>,
+          TError,
+          Awaited<ReturnType<typeof generatedImagesControllerResolve>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGeneratedImagesControllerResolve<TData = Awaited<ReturnType<typeof generatedImagesControllerResolve>>, TError = void>(
+ threadId: string,
+    imageId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof generatedImagesControllerResolve>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get presigned URL for a generated image
+ */
+
+export function useGeneratedImagesControllerResolve<TData = Awaited<ReturnType<typeof generatedImagesControllerResolve>>, TError = void>(
+ threadId: string,
+    imageId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof generatedImagesControllerResolve>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGeneratedImagesControllerResolveQueryOptions(threadId,imageId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
 /**
  * @summary Create a new agent
  */

@@ -8,4 +8,5 @@ export abstract class GeneratedImagesRepository {
     id: UUID,
     threadId: UUID,
   ): Promise<GeneratedImage | null>;
+  abstract findByThreadId(threadId: UUID): Promise<GeneratedImage[]>;
 }
