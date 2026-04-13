@@ -3,6 +3,7 @@ import { McpIntegrationMapper } from './mcp-integration.mapper';
 import { CustomMcpIntegration } from '../../../../domain/integrations/custom-mcp-integration.entity';
 import { PredefinedMcpIntegration } from '../../../../domain/integrations/predefined-mcp-integration.entity';
 import { MarketplaceMcpIntegration } from '../../../../domain/integrations/marketplace-mcp-integration.entity';
+import { SelfDefinedMcpIntegration } from '../../../../domain/integrations/self-defined-mcp-integration.entity';
 import { McpIntegrationKind } from '../../../../domain/value-objects/mcp-integration-kind.enum';
 import { PredefinedMcpIntegrationSlug } from '../../../../domain/value-objects/predefined-mcp-integration-slug.enum';
 import type { IntegrationConfigSchema } from '../../../../domain/value-objects/integration-config-schema';
@@ -17,6 +18,7 @@ import {
   CustomHeaderMcpIntegrationAuthRecord,
   CustomMcpIntegrationRecord,
   MarketplaceMcpIntegrationRecord,
+  SelfDefinedMcpIntegrationRecord,
   NoAuthMcpIntegrationAuthRecord,
   OAuthMcpIntegrationAuthRecord,
   PredefinedMcpIntegrationRecord,
@@ -359,5 +361,160 @@ describe('McpIntegrationMapper', () => {
     expect(marketplace.logoUrl).toBe(
       'https://marketplace.ayunis.de/logos/oparl.png',
     );
+  });
+
+  const selfDefinedConfigSchema: IntegrationConfigSchema = {
+    authType: 'NO_AUTH',
+    orgFields: [
+      {
+        key: 'apiUrl',
+        type: 'url',
+        label: 'API URL',
+        headerName: 'X-Api-Url',
+        required: true,
+      },
+    ],
+    userFields: [],
+  };
+
+  describe('toRecord — self-defined', () => {
+    it('maps self-defined integration with config schema and org config values', () => {
+      const auth = new NoAuthMcpIntegrationAuth();
+      const integration = new SelfDefinedMcpIntegration({
+        ...baseParams,
+        auth,
+        configSchema: selfDefinedConfigSchema,
+        orgConfigValues: { apiUrl: 'https://api.example.com' },
+      });
+
+      const record = mapper.toRecord(integration);
+
+      expect(record).toBeInstanceOf(SelfDefinedMcpIntegrationRecord);
+      const sdRecord = record as SelfDefinedMcpIntegrationRecord;
+      expect(sdRecord.configSchema).toEqual(selfDefinedConfigSchema);
+      expect(sdRecord.orgConfigValues).toEqual({
+        apiUrl: 'https://api.example.com',
+      });
+      expect(record.auth).toBeInstanceOf(NoAuthMcpIntegrationAuthRecord);
+    });
+  });
+
+  describe('toDomain — self-defined', () => {
+    it('maps self-defined integration record to domain entity', () => {
+      const record = new SelfDefinedMcpIntegrationRecord();
+      record.id = randomUUID();
+      record.orgId = baseParams.orgId;
+      record.name = 'Self Defined Integration';
+      record.serverUrl = 'https://mcp.example.com';
+      record.configSchema = selfDefinedConfigSchema;
+      record.orgConfigValues = { apiUrl: 'https://api.example.com' };
+      record.enabled = true;
+      record.connectionStatus = 'pending';
+      record.createdAt = baseParams.createdAt;
+      record.updatedAt = baseParams.updatedAt;
+
+      const authRecord = new NoAuthMcpIntegrationAuthRecord();
+      authRecord.id = randomUUID();
+      authRecord.integrationId = record.id;
+      authRecord.createdAt = baseParams.createdAt;
+      authRecord.updatedAt = baseParams.updatedAt;
+      authRecord.integration = record;
+      record.auth = authRecord;
+
+      const domain = mapper.toDomain(record);
+
+      expect(domain).toBeInstanceOf(SelfDefinedMcpIntegration);
+      expect(domain.kind).toBe(McpIntegrationKind.SELF_DEFINED);
+      const sd = domain as SelfDefinedMcpIntegration;
+      expect(sd.configSchema).toEqual(selfDefinedConfigSchema);
+      expect(sd.orgConfigValues).toEqual({
+        apiUrl: 'https://api.example.com',
+      });
+      expect(domain.auth).toBeInstanceOf(NoAuthMcpIntegrationAuth);
+    });
+  });
+
+  it('round-trips a self-defined integration through record mapping', () => {
+    const auth = new NoAuthMcpIntegrationAuth();
+    const original = new SelfDefinedMcpIntegration({
+      ...baseParams,
+      auth,
+      configSchema: selfDefinedConfigSchema,
+      orgConfigValues: { apiUrl: 'https://api.example.com' },
+    });
+
+    const record = mapper.toRecord(original);
+    const reconstructed = mapper.toDomain(record);
+
+    expect(reconstructed.kind).toBe(McpIntegrationKind.SELF_DEFINED);
+    const sd = reconstructed as SelfDefinedMcpIntegration;
+    expect(sd.configSchema).toEqual(selfDefinedConfigSchema);
+    expect(sd.orgConfigValues).toEqual({
+      apiUrl: 'https://api.example.com',
+    });
+  });
+
+  describe('OAuth base columns', () => {
+    it('round-trips OAuth client credentials on a marketplace integration', () => {
+      const auth = new NoAuthMcpIntegrationAuth();
+      const original = new MarketplaceMcpIntegration({
+        ...baseParams,
+        auth,
+        marketplaceIdentifier: 'oauth-mcp',
+        configSchema: oparlConfigSchema,
+        orgConfigValues: {},
+        oauthClientId: 'my-client-id',
+        oauthClientSecretEncrypted: 'encrypted-secret',
+      });
+
+      const record = mapper.toRecord(original);
+      expect(record.oauthClientId).toBe('my-client-id');
+      expect(record.oauthClientSecretEncrypted).toBe('encrypted-secret');
+
+      const reconstructed = mapper.toDomain(record);
+      expect(reconstructed.oauthClientId).toBe('my-client-id');
+      expect(reconstructed.oauthClientSecretEncrypted).toBe('encrypted-secret');
+    });
+
+    it('round-trips OAuth client credentials on a self-defined integration', () => {
+      const auth = new NoAuthMcpIntegrationAuth();
+      const original = new SelfDefinedMcpIntegration({
+        ...baseParams,
+        auth,
+        configSchema: selfDefinedConfigSchema,
+        orgConfigValues: {},
+        oauthClientId: 'sd-client-id',
+        oauthClientSecretEncrypted: 'sd-encrypted-secret',
+      });
+
+      const record = mapper.toRecord(original);
+      expect(record.oauthClientId).toBe('sd-client-id');
+      expect(record.oauthClientSecretEncrypted).toBe('sd-encrypted-secret');
+
+      const reconstructed = mapper.toDomain(record);
+      expect(reconstructed.oauthClientId).toBe('sd-client-id');
+      expect(reconstructed.oauthClientSecretEncrypted).toBe(
+        'sd-encrypted-secret',
+      );
+    });
+
+    it('preserves undefined OAuth client credentials', () => {
+      const auth = new NoAuthMcpIntegrationAuth();
+      const original = new MarketplaceMcpIntegration({
+        ...baseParams,
+        auth,
+        marketplaceIdentifier: 'no-oauth-mcp',
+        configSchema: oparlConfigSchema,
+        orgConfigValues: {},
+      });
+
+      const record = mapper.toRecord(original);
+      expect(record.oauthClientId).toBeUndefined();
+      expect(record.oauthClientSecretEncrypted).toBeUndefined();
+
+      const reconstructed = mapper.toDomain(record);
+      expect(reconstructed.oauthClientId).toBeUndefined();
+      expect(reconstructed.oauthClientSecretEncrypted).toBeUndefined();
+    });
   });
 });
