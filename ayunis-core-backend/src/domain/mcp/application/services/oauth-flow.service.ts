@@ -10,6 +10,8 @@ import { McpOAuthStatePort } from '../ports/mcp-oauth-state.port';
 import { McpIntegrationOAuthTokenRepositoryPort } from '../ports/mcp-integration-oauth-token.repository.port';
 import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
 import { McpIntegrationsRepositoryPort } from '../ports/mcp-integrations.repository.port';
+import { ValidateIntegrationAccessService } from './validate-integration-access.service';
+import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegration } from '../../domain/mcp-integration.entity';
 import { McpIntegrationOAuthToken } from '../../domain/mcp-integration-oauth-token.entity';
 import {
@@ -19,11 +21,19 @@ import {
   McpOAuthStateInvalidError,
   McpOAuthExchangeFailedError,
   McpIntegrationNotFoundError,
+  McpUnauthenticatedError,
 } from '../mcp.errors';
 import type {
   IntegrationConfigSchema,
   OAuthConfig,
 } from '../../domain/value-objects/integration-config-schema';
+
+export interface OAuthActorContext {
+  integration: McpIntegration;
+  level: 'org' | 'user';
+  orgId: UUID;
+  userIdOrNull: UUID | null;
+}
 
 /**
  * Orchestrates the OAuth 2.1 + PKCE authorization flow for MCP integrations.
@@ -41,6 +51,8 @@ export class OAuthFlowService {
     private readonly credentialEncryption: McpCredentialEncryptionPort,
     private readonly integrationRepository: McpIntegrationsRepositoryPort,
     private readonly configService: ConfigService,
+    private readonly validateAccess: ValidateIntegrationAccessService,
+    private readonly contextService: ContextService,
   ) {}
 
   /**
@@ -53,6 +65,32 @@ export class OAuthFlowService {
   } {
     const configSchema = this.getOAuthConfigOrThrow(integration);
     return { config: configSchema.oauth!, level: configSchema.oauth!.level };
+  }
+
+  /**
+   * Validates access, resolves OAuth config, and computes the actor context
+   * (integration, level, orgId, userIdOrNull) shared by all OAuth use cases.
+   */
+  async resolveOAuthActor(integrationId: string): Promise<OAuthActorContext> {
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new McpUnauthenticatedError();
+    }
+
+    const userId = this.contextService.get('userId');
+
+    const integration = await this.validateAccess.validate(integrationId, {
+      requireEnabled: false,
+    });
+
+    const { level } = this.resolveOAuthConfig(integration);
+
+    if (level === 'user' && !userId) {
+      throw new McpUnauthenticatedError();
+    }
+    const userIdOrNull: UUID | null = level === 'user' ? userId! : null;
+
+    return { integration, level, orgId, userIdOrNull };
   }
 
   /**
