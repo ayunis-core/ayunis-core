@@ -5,6 +5,8 @@ import {
   IsObject,
   IsOptional,
   IsBoolean,
+  MaxLength,
+  MinLength,
 } from 'class-validator';
 import { IsStringRecord } from 'src/common/validators/is-string-record.validator';
 
@@ -44,4 +46,23 @@ export class InstallMarketplaceIntegrationDto {
   @IsOptional()
   @IsBoolean()
   returnsPii?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'OAuth client ID (required when the marketplace integration schema includes oauth)',
+    maxLength: 255,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  oauthClientId?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'OAuth client secret (required when the marketplace integration schema includes oauth)',
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  oauthClientSecret?: string;
 }

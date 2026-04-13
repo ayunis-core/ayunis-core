@@ -2223,6 +2223,33 @@ export interface UpdateAgentDto {
 }
 
 /**
+ * OAuth level — org-wide or per-user (null when OAuth is disabled)
+ * @nullable
+ */
+export type McpIntegrationOAuthDtoLevel = typeof McpIntegrationOAuthDtoLevel[keyof typeof McpIntegrationOAuthDtoLevel] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const McpIntegrationOAuthDtoLevel = {
+  org: 'org',
+  user: 'user',
+} as const;
+
+export interface McpIntegrationOAuthDto {
+  /** Whether OAuth is enabled for this integration */
+  enabled: boolean;
+  /**
+   * OAuth level — org-wide or per-user (null when OAuth is disabled)
+   * @nullable
+   */
+  level: McpIntegrationOAuthDtoLevel;
+  /** Whether a valid OAuth token exists */
+  authorized: boolean;
+  /** Whether OAuth client credentials (id/secret) are configured */
+  hasClientCredentials: boolean;
+}
+
+/**
  * Type of integration
  */
 export type McpIntegrationResponseDtoType = typeof McpIntegrationResponseDtoType[keyof typeof McpIntegrationResponseDtoType];
@@ -2233,6 +2260,7 @@ export const McpIntegrationResponseDtoType = {
   predefined: 'predefined',
   custom: 'custom',
   marketplace: 'marketplace',
+  self_defined: 'self_defined',
 } as const;
 
 /**
@@ -2261,6 +2289,7 @@ export const McpIntegrationResponseDtoConnectionStatus = {
   disconnected: 'disconnected',
   error: 'error',
   unknown: 'unknown',
+  pending_auth: 'pending_auth',
 } as const;
 
 /**
@@ -2321,6 +2350,8 @@ export interface McpIntegrationResponseDto {
   logoUrl?: string | null;
   /** Human-readable description of the integration (populated from marketplace shortDescription or predefined config description) */
   description?: string;
+  /** OAuth configuration and status for this integration */
+  oauth?: McpIntegrationOAuthDto;
 }
 
 /**
@@ -2576,6 +2607,11 @@ export interface PredefinedConfigResponseDto {
  */
 export type UpdateMcpIntegrationDtoOrgConfigValues = { [key: string]: unknown };
 
+/**
+ * Updated configuration schema (only for self-defined integrations)
+ */
+export type UpdateMcpIntegrationDtoConfigSchema = { [key: string]: unknown };
+
 export interface UpdateMcpIntegrationDto {
   /**
    * The new name for the integration
@@ -2591,6 +2627,15 @@ export interface UpdateMcpIntegrationDto {
   returnsPii?: boolean;
   /** Org-level config values for marketplace integrations. For secret fields, omit or send empty string to keep the existing value. */
   orgConfigValues?: UpdateMcpIntegrationDtoOrgConfigValues;
+  /**
+   * OAuth client ID for rotation
+   * @maxLength 255
+   */
+  oauthClientId?: string;
+  /** OAuth client secret for rotation */
+  oauthClientSecret?: string;
+  /** Updated configuration schema (only for self-defined integrations) */
+  configSchema?: UpdateMcpIntegrationDtoConfigSchema;
 }
 
 /**
@@ -2605,6 +2650,13 @@ export interface InstallMarketplaceIntegrationDto {
   orgConfigValues: InstallMarketplaceIntegrationDtoOrgConfigValues;
   /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode */
   returnsPii?: boolean;
+  /**
+   * OAuth client ID (required when the marketplace integration schema includes oauth)
+   * @maxLength 255
+   */
+  oauthClientId?: string;
+  /** OAuth client secret (required when the marketplace integration schema includes oauth) */
+  oauthClientSecret?: string;
 }
 
 /**
@@ -2641,6 +2693,79 @@ export interface ValidationResponseDto {
   capabilities: ValidationResponseDtoCapabilities;
   /** Error message if validation failed */
   error?: string;
+}
+
+/**
+ * Configuration schema defining fields, auth type, and optional OAuth config
+ */
+export type CreateSelfDefinedIntegrationDtoConfigSchema = { [key: string]: unknown };
+
+/**
+ * Organization-level configuration values matching configSchema orgFields
+ */
+export type CreateSelfDefinedIntegrationDtoOrgConfigValues = {[key: string]: string};
+
+export interface CreateSelfDefinedIntegrationDto {
+  /**
+   * Name of the integration
+   * @minLength 1
+   * @maxLength 255
+   */
+  name: string;
+  /**
+   * Description of the integration
+   * @maxLength 2000
+   */
+  description?: string;
+  /** URL of the MCP server */
+  serverUrl: string;
+  /** Configuration schema defining fields, auth type, and optional OAuth config */
+  configSchema: CreateSelfDefinedIntegrationDtoConfigSchema;
+  /** Organization-level configuration values matching configSchema orgFields */
+  orgConfigValues: CreateSelfDefinedIntegrationDtoOrgConfigValues;
+  /**
+   * OAuth client ID (required when configSchema includes oauth)
+   * @maxLength 255
+   */
+  oauthClientId?: string;
+  /** OAuth client secret (required when configSchema includes oauth) */
+  oauthClientSecret?: string;
+  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode */
+  returnsPii?: boolean;
+}
+
+export interface OAuthAuthorizeResponseDto {
+  /** Authorization URL to redirect the user to */
+  authorizationUrl: string;
+}
+
+/**
+ * Whether OAuth is configured at org level or user level for this integration
+ */
+export type OAuthStatusResponseDtoLevel = typeof OAuthStatusResponseDtoLevel[keyof typeof OAuthStatusResponseDtoLevel];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const OAuthStatusResponseDtoLevel = {
+  org: 'org',
+  user: 'user',
+} as const;
+
+export interface OAuthStatusResponseDto {
+  /** Whether OAuth is configured at org level or user level for this integration */
+  level: OAuthStatusResponseDtoLevel;
+  /** Whether a valid OAuth token exists */
+  authorized: boolean;
+  /**
+   * When the access token expires (null if no expiry or not authorized)
+   * @nullable
+   */
+  expiresAt?: string | null;
+  /**
+   * OAuth scopes granted (null if not authorized)
+   * @nullable
+   */
+  scope?: string | null;
 }
 
 export interface MarketplaceSkillResponseDto {

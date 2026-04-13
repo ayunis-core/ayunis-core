@@ -1,6 +1,35 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
 
+export class McpIntegrationOAuthDto {
+  @ApiProperty({
+    description: 'Whether OAuth is enabled for this integration',
+    example: true,
+  })
+  enabled: boolean;
+
+  @ApiProperty({
+    description:
+      'OAuth level — org-wide or per-user (null when OAuth is disabled)',
+    enum: ['org', 'user'],
+    nullable: true,
+    example: 'org',
+  })
+  level: 'org' | 'user' | null;
+
+  @ApiProperty({
+    description: 'Whether a valid OAuth token exists',
+    example: false,
+  })
+  authorized: boolean;
+
+  @ApiProperty({
+    description: 'Whether OAuth client credentials (id/secret) are configured',
+    example: true,
+  })
+  hasClientCredentials: boolean;
+}
+
 /**
  * Response DTO for MCP integration data.
  * Used in API responses to return MCP integration information.
@@ -21,10 +50,10 @@ export class McpIntegrationResponseDto {
 
   @ApiProperty({
     description: 'Type of integration',
-    enum: ['predefined', 'custom', 'marketplace'],
+    enum: ['predefined', 'custom', 'marketplace', 'self_defined'],
     example: 'predefined',
   })
-  type: 'predefined' | 'custom' | 'marketplace';
+  type: 'predefined' | 'custom' | 'marketplace' | 'self_defined';
 
   @ApiProperty({
     description:
@@ -78,7 +107,7 @@ export class McpIntegrationResponseDto {
   @ApiProperty({
     description: 'Connection status of the integration',
     required: false,
-    enum: ['connected', 'disconnected', 'error', 'unknown'],
+    enum: ['connected', 'disconnected', 'error', 'unknown', 'pending_auth'],
     example: 'connected',
   })
   connectionStatus?: string;
@@ -167,4 +196,10 @@ export class McpIntegrationResponseDto {
     example: 'Access municipal council data via OParl',
   })
   description?: string;
+
+  @ApiPropertyOptional({
+    description: 'OAuth configuration and status for this integration',
+    type: McpIntegrationOAuthDto,
+  })
+  oauth?: McpIntegrationOAuthDto;
 }

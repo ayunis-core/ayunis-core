@@ -6,7 +6,9 @@ import {
   IsObject,
   Length,
   MinLength,
+  MaxLength,
 } from 'class-validator';
+import { IsIntegrationConfigSchema } from 'src/common/validators/is-integration-config-schema.validator';
 import { IsStringRecord } from 'src/common/validators/is-string-record.validator';
 
 /**
@@ -75,4 +77,33 @@ export class UpdateMcpIntegrationDto {
   @IsObject()
   @IsStringRecord({ message: 'all values in orgConfigValues must be strings' })
   orgConfigValues?: Record<string, string>;
+
+  @ApiPropertyOptional({
+    description: 'OAuth client ID for rotation',
+    maxLength: 255,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  oauthClientId?: string;
+
+  @ApiPropertyOptional({
+    description: 'OAuth client secret for rotation',
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  oauthClientSecret?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Updated configuration schema (only for self-defined integrations)',
+  })
+  @IsOptional()
+  @IsObject()
+  @IsIntegrationConfigSchema({
+    message:
+      'configSchema must be a valid IntegrationConfigSchema with authType (string), orgFields (ConfigField[]), and userFields (ConfigField[])',
+  })
+  configSchema?: object;
 }

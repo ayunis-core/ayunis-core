@@ -4443,7 +4443,7 @@
         },
         "responses": {
           "201": {
-            "description": "Integration created successfully",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4451,12 +4451,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Invalid slug or missing required fields"
-          },
-          "404": {
-            "description": "Predefined integration slug not found"
           }
         },
         "summary": "Create a new predefined MCP integration",
@@ -4479,7 +4473,7 @@
         },
         "responses": {
           "201": {
-            "description": "Integration created successfully",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4487,9 +4481,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Invalid data"
           }
         },
         "summary": "Create a new custom MCP integration",
@@ -4502,7 +4493,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "List of integrations",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4525,7 +4516,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "List of available predefined integrations",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4548,7 +4539,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "List of available enabled integrations",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4561,7 +4552,7 @@
             }
           }
         },
-        "summary": "List all available (enabled) MCP integrations for organization",
+        "summary": "List available (enabled) MCP integrations",
         "tags": ["mcp-integrations"]
       }
     },
@@ -4581,7 +4572,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Integration found",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4589,9 +4580,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Integration not found"
           }
         },
         "summary": "Get MCP integration by ID",
@@ -4622,7 +4610,7 @@
         },
         "responses": {
           "200": {
-            "description": "Integration updated successfully",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4630,12 +4618,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Invalid data"
-          },
-          "404": {
-            "description": "Integration not found"
           }
         },
         "summary": "Update MCP integration",
@@ -4656,10 +4638,7 @@
         ],
         "responses": {
           "204": {
-            "description": "Integration deleted successfully"
-          },
-          "404": {
-            "description": "Integration not found"
+            "description": ""
           }
         },
         "summary": "Delete MCP integration",
@@ -4682,7 +4661,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Integration enabled successfully",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4690,9 +4669,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Integration not found"
           }
         },
         "summary": "Enable MCP integration",
@@ -4715,7 +4691,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Integration disabled successfully",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4723,9 +4699,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Integration not found"
           }
         },
         "summary": "Disable MCP integration",
@@ -4748,7 +4721,7 @@
         },
         "responses": {
           "201": {
-            "description": "Integration installed successfully",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4756,12 +4729,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Missing required config fields or OAuth not supported"
-          },
-          "404": {
-            "description": "Marketplace integration not found"
           }
         },
         "summary": "Install an MCP integration from the marketplace",
@@ -4784,7 +4751,7 @@
         ],
         "responses": {
           "200": {
-            "description": "User configuration (secret values masked)",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4794,7 +4761,7 @@
             }
           }
         },
-        "summary": "Get current user config for a marketplace MCP integration",
+        "summary": "Get user config for an MCP integration",
         "tags": ["mcp-integrations"]
       },
       "patch": {
@@ -4822,7 +4789,7 @@
         },
         "responses": {
           "200": {
-            "description": "User configuration saved",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4830,15 +4797,9 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Integration has no user fields"
-          },
-          "404": {
-            "description": "Integration not found"
           }
         },
-        "summary": "Set current user config for a marketplace MCP integration",
+        "summary": "Set user config for an MCP integration",
         "tags": ["mcp-integrations"]
       }
     },
@@ -4858,7 +4819,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Validation result",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -4866,12 +4827,122 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Integration not found"
           }
         },
         "summary": "Validate MCP integration connection",
+        "tags": ["mcp-integrations"]
+      }
+    },
+    "/mcp-integrations/self-defined": {
+      "post": {
+        "operationId": "McpIntegrationsController_createSelfDefined",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSelfDefinedIntegrationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a self-defined MCP integration",
+        "tags": ["mcp-integrations"]
+      }
+    },
+    "/mcp-integrations/{id}/oauth/authorize": {
+      "post": {
+        "operationId": "McpIntegrationsController_startOAuthAuthorize",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthAuthorizeResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Start OAuth authorization for an integration",
+        "tags": ["mcp-integrations"]
+      }
+    },
+    "/mcp-integrations/{id}/oauth/revoke": {
+      "post": {
+        "operationId": "McpIntegrationsController_revokeOAuth",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Revoke OAuth authorization for an integration",
+        "tags": ["mcp-integrations"]
+      }
+    },
+    "/mcp-integrations/{id}/oauth/status": {
+      "get": {
+        "operationId": "McpIntegrationsController_getOAuthStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthStatusResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get OAuth authorization status for an integration",
         "tags": ["mcp-integrations"]
       }
     },
@@ -11445,6 +11516,34 @@
         },
         "required": ["name", "instructions", "modelId"]
       },
+      "McpIntegrationOAuthDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether OAuth is enabled for this integration",
+            "example": true
+          },
+          "level": {
+            "type": "string",
+            "description": "OAuth level — org-wide or per-user (null when OAuth is disabled)",
+            "enum": ["org", "user"],
+            "nullable": true,
+            "example": "org"
+          },
+          "authorized": {
+            "type": "boolean",
+            "description": "Whether a valid OAuth token exists",
+            "example": false
+          },
+          "hasClientCredentials": {
+            "type": "boolean",
+            "description": "Whether OAuth client credentials (id/secret) are configured",
+            "example": true
+          }
+        },
+        "required": ["enabled", "level", "authorized", "hasClientCredentials"]
+      },
       "McpIntegrationResponseDto": {
         "type": "object",
         "properties": {
@@ -11461,7 +11560,7 @@
           "type": {
             "type": "string",
             "description": "Type of integration",
-            "enum": ["predefined", "custom", "marketplace"],
+            "enum": ["predefined", "custom", "marketplace", "self_defined"],
             "example": "predefined"
           },
           "slug": {
@@ -11503,7 +11602,13 @@
           "connectionStatus": {
             "type": "string",
             "description": "Connection status of the integration",
-            "enum": ["connected", "disconnected", "error", "unknown"],
+            "enum": [
+              "connected",
+              "disconnected",
+              "error",
+              "unknown",
+              "pending_auth"
+            ],
             "example": "connected"
           },
           "lastConnectionError": {
@@ -11566,6 +11671,14 @@
             "type": "string",
             "description": "Human-readable description of the integration (populated from marketplace shortDescription or predefined config description)",
             "example": "Access municipal council data via OParl"
+          },
+          "oauth": {
+            "description": "OAuth configuration and status for this integration",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/McpIntegrationOAuthDto"
+              }
+            ]
           }
         },
         "required": [
@@ -11887,6 +12000,19 @@
             "example": {
               "endpointUrl": "https://example.com/api"
             }
+          },
+          "oauthClientId": {
+            "type": "string",
+            "description": "OAuth client ID for rotation",
+            "maxLength": 255
+          },
+          "oauthClientSecret": {
+            "type": "string",
+            "description": "OAuth client secret for rotation"
+          },
+          "configSchema": {
+            "type": "object",
+            "description": "Updated configuration schema (only for self-defined integrations)"
           }
         }
       },
@@ -11912,6 +12038,15 @@
             "type": "boolean",
             "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode",
             "example": false
+          },
+          "oauthClientId": {
+            "type": "string",
+            "description": "OAuth client ID (required when the marketplace integration schema includes oauth)",
+            "maxLength": 255
+          },
+          "oauthClientSecret": {
+            "type": "string",
+            "description": "OAuth client secret (required when the marketplace integration schema includes oauth)"
           }
         },
         "required": ["identifier", "orgConfigValues"]
@@ -11977,6 +12112,104 @@
           }
         },
         "required": ["valid", "capabilities"]
+      },
+      "CreateSelfDefinedIntegrationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the integration",
+            "example": "My Self-Defined MCP Server",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the integration",
+            "example": "Provides access to internal tooling",
+            "maxLength": 2000
+          },
+          "serverUrl": {
+            "type": "string",
+            "description": "URL of the MCP server",
+            "example": "https://my-mcp-server.example.com/mcp"
+          },
+          "configSchema": {
+            "type": "object",
+            "description": "Configuration schema defining fields, auth type, and optional OAuth config",
+            "example": {
+              "authType": "NO_AUTH",
+              "orgFields": [],
+              "userFields": []
+            }
+          },
+          "orgConfigValues": {
+            "type": "object",
+            "description": "Organization-level configuration values matching configSchema orgFields",
+            "example": {
+              "endpointUrl": "https://example.com/api"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "oauthClientId": {
+            "type": "string",
+            "description": "OAuth client ID (required when configSchema includes oauth)",
+            "maxLength": 255
+          },
+          "oauthClientSecret": {
+            "type": "string",
+            "description": "OAuth client secret (required when configSchema includes oauth)"
+          },
+          "returnsPii": {
+            "type": "boolean",
+            "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode",
+            "example": false
+          }
+        },
+        "required": ["name", "serverUrl", "configSchema", "orgConfigValues"]
+      },
+      "OAuthAuthorizeResponseDto": {
+        "type": "object",
+        "properties": {
+          "authorizationUrl": {
+            "type": "string",
+            "description": "Authorization URL to redirect the user to",
+            "example": "https://auth.example.com/authorize?response_type=code&client_id=abc&..."
+          }
+        },
+        "required": ["authorizationUrl"]
+      },
+      "OAuthStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "string",
+            "description": "Whether OAuth is configured at org level or user level for this integration",
+            "enum": ["org", "user"],
+            "example": "org"
+          },
+          "authorized": {
+            "type": "boolean",
+            "description": "Whether a valid OAuth token exists",
+            "example": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "When the access token expires (null if no expiry or not authorized)",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2025-12-31T23:59:59.000Z"
+          },
+          "scope": {
+            "type": "string",
+            "description": "OAuth scopes granted (null if not authorized)",
+            "nullable": true,
+            "example": "read write"
+          }
+        },
+        "required": ["level", "authorized"]
       },
       "MarketplaceSkillResponseDto": {
         "type": "object",
