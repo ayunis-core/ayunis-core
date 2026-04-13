@@ -23,8 +23,12 @@ export async function enrichMcpIntegrationsWithOAuthStatus(args: {
   const authorizedByIntegrationId = new Map<UUID, boolean>(
     await Promise.all(
       oauthEnabled.map(async (integration) => {
-        const status = await getOAuthStatus(integration.id);
-        return [integration.id, status.authorized] as const;
+        try {
+          const status = await getOAuthStatus(integration.id);
+          return [integration.id, status.authorized] as const;
+        } catch {
+          return [integration.id, false] as const;
+        }
       }),
     ),
   );
