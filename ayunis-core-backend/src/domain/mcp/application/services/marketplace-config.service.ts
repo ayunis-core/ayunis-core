@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
 import { ConfigField } from '../../domain/value-objects/integration-config-schema';
-import { McpMissingRequiredConfigError } from '../mcp.errors';
+import {
+  McpMissingRequiredConfigError,
+  McpAuthorizationHeaderCollisionError,
+} from '../mcp.errors';
 
 /**
  * Shared service for marketplace integration config processing.
@@ -13,6 +16,27 @@ export class MarketplaceConfigService {
   constructor(
     private readonly credentialEncryption: McpCredentialEncryptionPort,
   ) {}
+
+  /**
+   * Asserts that no config field declares `headerName: 'Authorization'` when
+   * OAuth is also configured. OAuth sets `Authorization: Bearer …` automatically,
+   * so a config field mapping to the same header would cause a collision.
+   *
+   * Call this after parsing the config schema and only when `configSchema.oauth`
+   * is defined.
+   */
+  assertNoAuthorizationHeaderCollision(
+    orgFields: ConfigField[],
+    userFields: ConfigField[],
+  ): void {
+    const allFields = [...orgFields, ...userFields];
+    const hasCollision = allFields.some(
+      (f) => f.headerName?.toLowerCase() === 'authorization',
+    );
+    if (hasCollision) {
+      throw new McpAuthorizationHeaderCollisionError();
+    }
+  }
 
   /**
    * Merges fixed (system-controlled) values from the config schema into user-provided values.

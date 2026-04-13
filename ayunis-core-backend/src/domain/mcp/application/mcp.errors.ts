@@ -16,7 +16,6 @@ export enum McpErrorCode {
   UNEXPECTED_MCP_ERROR = 'UNEXPECTED_MCP_ERROR',
   MCP_AUTH_NOT_IMPLEMENTED = 'MCP_AUTH_NOT_IMPLEMENTED',
   DUPLICATE_MCP_INTEGRATION = 'DUPLICATE_MCP_INTEGRATION',
-  MCP_OAUTH_NOT_SUPPORTED = 'MCP_OAUTH_NOT_SUPPORTED',
   MCP_MISSING_REQUIRED_CONFIG = 'MCP_MISSING_REQUIRED_CONFIG',
   MCP_MARKETPLACE_INTEGRATION_NOT_FOUND = 'MCP_MARKETPLACE_INTEGRATION_NOT_FOUND',
   MCP_NOT_MARKETPLACE_INTEGRATION = 'MCP_NOT_MARKETPLACE_INTEGRATION',
@@ -249,17 +248,6 @@ export class DuplicateMarketplaceMcpIntegrationError extends McpError {
       `Marketplace integration '${identifier}' is already installed for this organization.`,
       McpErrorCode.DUPLICATE_MCP_INTEGRATION,
       409,
-      metadata,
-    );
-  }
-}
-
-export class McpOAuthNotSupportedError extends McpError {
-  constructor(metadata?: ErrorMetadata) {
-    super(
-      'OAuth authentication is not yet supported for marketplace integrations. Please use a different authentication method.',
-      McpErrorCode.MCP_OAUTH_NOT_SUPPORTED,
-      400,
       metadata,
     );
   }
