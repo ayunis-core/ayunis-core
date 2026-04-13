@@ -5,8 +5,6 @@ import { randomUUID } from 'crypto';
 import { GetMcpOAuthAuthorizationStatusUseCase } from './get-mcp-oauth-authorization-status.use-case';
 import { GetMcpOAuthAuthorizationStatusQuery } from './get-mcp-oauth-authorization-status.query';
 import { OAuthFlowService } from '../../services/oauth-flow.service';
-import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
-import { ContextService } from 'src/common/context/services/context.service';
 import { SelfDefinedMcpIntegration } from '../../../domain/integrations/self-defined-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
 import type { IntegrationConfigSchema } from '../../../domain/value-objects/integration-config-schema';
@@ -15,8 +13,6 @@ import { McpUnauthenticatedError } from '../../mcp.errors';
 describe('GetMcpOAuthAuthorizationStatusUseCase', () => {
   let useCase: GetMcpOAuthAuthorizationStatusUseCase;
   let oauthFlowService: OAuthFlowService;
-  let validateAccess: ValidateIntegrationAccessService;
-  let contextService: ContextService;
 
   const mockOrgId = randomUUID();
   const mockUserId = randomUUID();
@@ -39,23 +35,16 @@ describe('GetMcpOAuthAuthorizationStatusUseCase', () => {
         GetMcpOAuthAuthorizationStatusUseCase,
         {
           provide: OAuthFlowService,
-          useValue: { getStatus: jest.fn(), resolveOAuthConfig: jest.fn() },
-        },
-        {
-          provide: ValidateIntegrationAccessService,
-          useValue: { validate: jest.fn() },
-        },
-        {
-          provide: ContextService,
-          useValue: { get: jest.fn() },
+          useValue: {
+            getStatus: jest.fn(),
+            resolveOAuthActor: jest.fn(),
+          },
         },
       ],
     }).compile();
 
     useCase = module.get(GetMcpOAuthAuthorizationStatusUseCase);
     oauthFlowService = module.get(OAuthFlowService);
-    validateAccess = module.get(ValidateIntegrationAccessService);
-    contextService = module.get(ContextService);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'error').mockImplementation();
@@ -77,13 +66,12 @@ describe('GetMcpOAuthAuthorizationStatusUseCase', () => {
       oauthClientSecretEncrypted: 'enc',
     });
 
-    jest
-      .spyOn(contextService, 'get')
-      .mockImplementation((key) => (key === 'orgId' ? mockOrgId : mockUserId));
-    jest.spyOn(validateAccess, 'validate').mockResolvedValue(integration);
-    jest
-      .spyOn(oauthFlowService, 'resolveOAuthConfig')
-      .mockReturnValue({ config: oauthConfigSchema.oauth!, level: 'org' });
+    jest.spyOn(oauthFlowService, 'resolveOAuthActor').mockResolvedValue({
+      integration,
+      level: 'org',
+      orgId: mockOrgId,
+      userIdOrNull: null,
+    });
     jest.spyOn(oauthFlowService, 'getStatus').mockResolvedValue({
       authorized: true,
       expiresAt: new Date('2026-01-01'),
@@ -103,7 +91,7 @@ describe('GetMcpOAuthAuthorizationStatusUseCase', () => {
 
     expect(oauthFlowService.getStatus).toHaveBeenCalledWith(
       integration.id,
-      null, // org-level
+      null,
     );
   });
 
@@ -123,13 +111,12 @@ describe('GetMcpOAuthAuthorizationStatusUseCase', () => {
       oauthClientSecretEncrypted: 'enc',
     });
 
-    jest
-      .spyOn(contextService, 'get')
-      .mockImplementation((key) => (key === 'orgId' ? mockOrgId : mockUserId));
-    jest.spyOn(validateAccess, 'validate').mockResolvedValue(integration);
-    jest
-      .spyOn(oauthFlowService, 'resolveOAuthConfig')
-      .mockReturnValue({ config: userLevelSchema.oauth!, level: 'user' });
+    jest.spyOn(oauthFlowService, 'resolveOAuthActor').mockResolvedValue({
+      integration,
+      level: 'user',
+      orgId: mockOrgId,
+      userIdOrNull: mockUserId,
+    });
     jest.spyOn(oauthFlowService, 'getStatus').mockResolvedValue({
       authorized: false,
       expiresAt: null,
@@ -148,7 +135,9 @@ describe('GetMcpOAuthAuthorizationStatusUseCase', () => {
   });
 
   it('should throw McpUnauthenticatedError when orgId missing', async () => {
-    jest.spyOn(contextService, 'get').mockReturnValue(undefined);
+    jest
+      .spyOn(oauthFlowService, 'resolveOAuthActor')
+      .mockRejectedValue(new McpUnauthenticatedError());
 
     await expect(
       useCase.execute(new GetMcpOAuthAuthorizationStatusQuery(randomUUID())),

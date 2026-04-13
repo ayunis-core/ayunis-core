@@ -12,6 +12,8 @@ import { SelfDefinedMcpIntegration } from '../../domain/integrations/self-define
 import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
 import type { IntegrationConfigSchema } from '../../domain/value-objects/integration-config-schema';
 import type { McpOAuthAuthorizationState } from '../ports/mcp-oauth-state.port';
+import { ValidateIntegrationAccessService } from './validate-integration-access.service';
+import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpOAuthClientNotConfiguredError,
   McpOAuthAuthorizationRequiredError,
@@ -19,6 +21,7 @@ import {
   McpOAuthExchangeFailedError,
   McpInvalidConfigSchemaError,
   McpIntegrationNotFoundError,
+  McpUnauthenticatedError,
 } from '../mcp.errors';
 
 // ── SDK mocks ─────────────────────────────────────────────────────
@@ -108,6 +111,8 @@ describe('OAuthFlowService', () => {
   let tokenRepository: MockTokenRepository;
   let encryption: MockEncryption;
   let integrationsRepository: MockIntegrationsRepository;
+  let validateAccess: ValidateIntegrationAccessService;
+  let contextService: ContextService;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -129,6 +134,14 @@ describe('OAuthFlowService', () => {
             getOrThrow: jest.fn().mockReturnValue('http://localhost:3000'),
           },
         },
+        {
+          provide: ValidateIntegrationAccessService,
+          useValue: { validate: jest.fn() },
+        },
+        {
+          provide: ContextService,
+          useValue: { get: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -137,6 +150,8 @@ describe('OAuthFlowService', () => {
     tokenRepository = module.get(McpIntegrationOAuthTokenRepositoryPort);
     encryption = module.get(McpCredentialEncryptionPort);
     integrationsRepository = module.get(McpIntegrationsRepositoryPort);
+    validateAccess = module.get(ValidateIntegrationAccessService);
+    contextService = module.get(ContextService);
   });
 
   afterEach(() => {
@@ -758,6 +773,75 @@ describe('OAuthFlowService', () => {
       const result = await service.getStatus(token.integrationId, null);
 
       expect(result.authorized).toBe(true);
+    });
+  });
+
+  // ── resolveOAuthActor ────────────────────────────────────────────
+
+  describe('resolveOAuthActor', () => {
+    it('should return actor context for org-level OAuth', async () => {
+      const integration = buildIntegration();
+      const orgId = integration.orgId;
+      const userId = randomUUID();
+
+      jest
+        .spyOn(contextService, 'get')
+        .mockImplementation((key) => (key === 'orgId' ? orgId : userId));
+      jest.spyOn(validateAccess, 'validate').mockResolvedValue(integration);
+
+      const result = await service.resolveOAuthActor(integration.id);
+
+      expect(result.integration).toBe(integration);
+      expect(result.level).toBe('org');
+      expect(result.orgId).toBe(orgId);
+      expect(result.userIdOrNull).toBeNull();
+    });
+
+    it('should return actor context with userId for user-level OAuth', async () => {
+      const userLevelSchema: IntegrationConfigSchema = {
+        ...OAUTH_CONFIG_SCHEMA,
+        oauth: { ...OAUTH_CONFIG_SCHEMA.oauth!, level: 'user' },
+      };
+      const integration = buildIntegration({ configSchema: userLevelSchema });
+      const orgId = integration.orgId;
+      const userId = randomUUID();
+
+      jest
+        .spyOn(contextService, 'get')
+        .mockImplementation((key) => (key === 'orgId' ? orgId : userId));
+      jest.spyOn(validateAccess, 'validate').mockResolvedValue(integration);
+
+      const result = await service.resolveOAuthActor(integration.id);
+
+      expect(result.level).toBe('user');
+      expect(result.userIdOrNull).toBe(userId);
+    });
+
+    it('should throw McpUnauthenticatedError when orgId is missing', async () => {
+      jest.spyOn(contextService, 'get').mockReturnValue(undefined);
+
+      await expect(service.resolveOAuthActor(randomUUID())).rejects.toThrow(
+        McpUnauthenticatedError,
+      );
+    });
+
+    it('should throw McpUnauthenticatedError for user-level OAuth when userId is missing', async () => {
+      const userLevelSchema: IntegrationConfigSchema = {
+        ...OAUTH_CONFIG_SCHEMA,
+        oauth: { ...OAUTH_CONFIG_SCHEMA.oauth!, level: 'user' },
+      };
+      const integration = buildIntegration({ configSchema: userLevelSchema });
+
+      jest
+        .spyOn(contextService, 'get')
+        .mockImplementation((key) =>
+          key === 'orgId' ? integration.orgId : undefined,
+        );
+      jest.spyOn(validateAccess, 'validate').mockResolvedValue(integration);
+
+      await expect(service.resolveOAuthActor(integration.id)).rejects.toThrow(
+        McpUnauthenticatedError,
+      );
     });
   });
 });
