@@ -44,4 +44,20 @@ export class InstallMarketplaceIntegrationDto {
   @IsOptional()
   @IsBoolean()
   returnsPii?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'OAuth client ID for marketplace integrations that require OAuth',
+  })
+  @IsOptional()
+  @IsString()
+  oauthClientId?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'OAuth client secret for marketplace integrations that require OAuth',
+  })
+  @IsOptional()
+  @IsString()
+  oauthClientSecret?: string;
 }
