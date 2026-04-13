@@ -4,7 +4,7 @@
   },
   "devDependencies": {
     "husky": "^9.1.7",
-    "knip": "^5.86.0",
+    "knip": "^6.4.1",
     "madge": "^8.0.0",
     "markdownlint-cli2": "^0.17.2"
   }
