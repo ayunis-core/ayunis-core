@@ -377,6 +377,7 @@ export default function ChatPage({
       </p>
       {thread.isLongChat && <LongChatWarning />}
       <ChatInput
+        key={thread.id}
         ref={chatInputRef}
         modelId={
           thread.agentId ? selectedAgent?.model.id : thread.permittedModelId
