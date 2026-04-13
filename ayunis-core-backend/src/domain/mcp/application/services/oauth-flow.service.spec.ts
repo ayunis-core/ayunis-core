@@ -155,6 +155,7 @@ describe('OAuthFlowService', () => {
         'org',
         integration.orgId,
         null,
+        '/settings/integrations?tab=mcp',
       );
 
       const url = new URL(result.url);
@@ -163,7 +164,7 @@ describe('OAuthFlowService', () => {
       expect(url.searchParams.get('response_type')).toBe('code');
       expect(url.searchParams.get('client_id')).toBe('client-id');
       expect(url.searchParams.get('redirect_uri')).toBe(
-        'http://localhost:3000/mcp-integrations/oauth/callback',
+        'http://localhost:3000/api/mcp-integrations/oauth/callback',
       );
       expect(url.searchParams.get('scope')).toBe('read write');
       expect(url.searchParams.get('state')).toBe('signed-state-jwt');
@@ -178,7 +179,9 @@ describe('OAuthFlowService', () => {
           orgId: integration.orgId,
           userId: null,
           codeVerifier: expect.any(String),
-          redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+          redirectUri:
+            'http://localhost:3000/api/mcp-integrations/oauth/callback',
+          returnPath: '/settings/integrations?tab=mcp',
           nonce: expect.any(String),
         }),
         600,
@@ -202,6 +205,7 @@ describe('OAuthFlowService', () => {
           'org',
           integration.orgId,
           null,
+          '/admin-settings/integrations',
         ),
       ).toThrow(McpOAuthClientNotConfiguredError);
     });
@@ -222,6 +226,7 @@ describe('OAuthFlowService', () => {
           'org',
           integration.orgId,
           null,
+          '/admin-settings/integrations',
         ),
       ).toThrow(McpInvalidConfigSchemaError);
     });
@@ -238,7 +243,9 @@ describe('OAuthFlowService', () => {
         orgId: integration.orgId,
         userId: null,
         codeVerifier: 'test-verifier',
-        redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        redirectUri:
+          'http://localhost:3000/api/mcp-integrations/oauth/callback',
+        returnPath: '/settings/integrations?tab=mcp',
         nonce: 'test-nonce',
       };
 
@@ -263,6 +270,7 @@ describe('OAuthFlowService', () => {
       expect(result.integrationId).toBe(integration.id);
       expect(result.level).toBe('org');
       expect(result.userId).toBeNull();
+      expect(result.returnPath).toBe('/settings/integrations?tab=mcp');
 
       expect(mockExchangeAuthorization).toHaveBeenCalledWith(
         'https://auth.example.com/token',
@@ -273,7 +281,8 @@ describe('OAuthFlowService', () => {
           },
           authorizationCode: 'auth-code',
           codeVerifier: 'test-verifier',
-          redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+          redirectUri:
+            'http://localhost:3000/api/mcp-integrations/oauth/callback',
         }),
       );
 
@@ -295,7 +304,9 @@ describe('OAuthFlowService', () => {
         orgId: integration.orgId,
         userId: null,
         codeVerifier: 'test-verifier',
-        redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        redirectUri:
+          'http://localhost:3000/api/mcp-integrations/oauth/callback',
+        returnPath: '/settings/integrations',
         nonce: 'test-nonce',
       };
 
@@ -340,7 +351,9 @@ describe('OAuthFlowService', () => {
         orgId: integration.orgId,
         userId: null,
         codeVerifier: 'test-verifier',
-        redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        redirectUri:
+          'http://localhost:3000/api/mcp-integrations/oauth/callback',
+        returnPath: '/settings/integrations',
         nonce: 'test-nonce',
       };
 
@@ -395,7 +408,9 @@ describe('OAuthFlowService', () => {
         orgId: integration.orgId,
         userId: null,
         codeVerifier: 'v',
-        redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        redirectUri:
+          'http://localhost:3000/api/mcp-integrations/oauth/callback',
+        returnPath: '/settings/integrations',
         nonce: 'n',
       };
 
@@ -420,7 +435,9 @@ describe('OAuthFlowService', () => {
         orgId,
         userId: null,
         codeVerifier: 'v',
-        redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        redirectUri:
+          'http://localhost:3000/api/mcp-integrations/oauth/callback',
+        returnPath: '/settings/integrations',
         nonce: 'n',
       };
 
@@ -440,7 +457,9 @@ describe('OAuthFlowService', () => {
         orgId: randomUUID(), // different orgId
         userId: null,
         codeVerifier: 'v',
-        redirectUri: 'http://localhost:3000/mcp-integrations/oauth/callback',
+        redirectUri:
+          'http://localhost:3000/api/mcp-integrations/oauth/callback',
+        returnPath: '/settings/integrations',
         nonce: 'n',
       };
 
@@ -758,6 +777,39 @@ describe('OAuthFlowService', () => {
       const result = await service.getStatus(token.integrationId, null);
 
       expect(result.authorized).toBe(true);
+    });
+  });
+
+  describe('resolveAuthorizationContext', () => {
+    it('should return the return path and level from a valid state token', () => {
+      stateAdapter.verify.mockReturnValue({
+        integrationId: randomUUID(),
+        level: 'user',
+        orgId: randomUUID(),
+        userId: null,
+        codeVerifier: 'code-verifier',
+        redirectUri:
+          'http://localhost:3000/api/mcp-integrations/oauth/callback',
+        returnPath: '/skills/skill-123',
+        nonce: 'nonce',
+      });
+
+      const result = service.resolveAuthorizationContext('state-jwt');
+
+      expect(result).toEqual({
+        level: 'user',
+        returnPath: '/skills/skill-123',
+      });
+    });
+
+    it('should return null when the state token is invalid', () => {
+      stateAdapter.verify.mockImplementation(() => {
+        throw new McpOAuthStateInvalidError();
+      });
+
+      const result = service.resolveAuthorizationContext('bad-state');
+
+      expect(result).toBeNull();
     });
   });
 });

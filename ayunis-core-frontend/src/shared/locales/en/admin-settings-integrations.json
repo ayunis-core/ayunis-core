@@ -50,6 +50,7 @@
       "retry": "Retry",
       "addPredefined": "Add Predefined",
       "addCustom": "Add Custom",
+      "addSelfDefined": "Add Self-defined",
       "add": "Add Integration",
       "browseMarketplace": "Browse Marketplace"
     },
@@ -95,6 +96,65 @@
       "cancel": "Cancel",
       "creating": "Creating...",
       "create": "Create"
+    },
+    "createSelfDefinedDialog": {
+      "title": "Add Self-defined Integration",
+      "description": "Create an integration by providing your MCP server URL and configuration schema JSON.",
+      "name": "Name",
+      "namePlaceholder": "My Self-defined Integration",
+      "nameDescription": "A friendly name for this integration",
+      "nameRequired": "Please enter a name.",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Optional description for this integration",
+      "serverUrl": "Server URL",
+      "serverUrlPlaceholder": "https://example.com/mcp",
+      "serverUrlRequired": "Please enter a server URL.",
+      "returnsPii": "Tools may return PII",
+      "configSchema": "Config Schema (JSON)",
+      "configSchemaPlaceholder": "{\n  \"authType\": \"NO_AUTH\",\n  \"orgFields\": [],\n  \"userFields\": []\n}",
+      "configSchemaHelp": "Paste the raw schema JSON. OAuth fields appear automatically when authType is OAUTH.",
+      "configSchemaRequired": "Please enter a config schema.",
+      "formatJson": "Format JSON",
+      "oauthClientId": "OAuth Client ID",
+      "oauthClientIdPlaceholder": "client-id",
+      "oauthClientSecret": "OAuth Client Secret",
+      "oauthClientSecretPlaceholder": "Enter OAuth client secret",
+      "oauthClientHelp": "Required when the config schema enables OAuth.",
+      "create": "Create",
+      "creating": "Creating...",
+      "cancel": "Cancel",
+      "success": "Self-defined integration created successfully.",
+      "error": "Failed to create self-defined integration. Please try again.",
+      "errorInvalidJson": "Config schema must be valid JSON.",
+      "errorInvalidSchema": "Config schema is invalid.",
+      "errorInvalidSchemaWithField": "Config schema is invalid at {{field}}.",
+      "errorMissingClient": "OAuth client ID and secret are required when OAuth is enabled.",
+      "errorHeaderCollision": "Config schema collides with OAuth Authorization header handling.",
+      "errorInvalidServerUrl": "Invalid server URL. Please check the URL format.",
+      "errorDuplicate": "An integration with this URL already exists.",
+      "validation": {
+        "name": {
+          "isNotEmpty": "Name is required.",
+          "maxLength": "Name must be 255 characters or less.",
+          "invalid": "Invalid name."
+        },
+        "description": {
+          "maxLength": "Description must be 2000 characters or less.",
+          "invalid": "Invalid description."
+        },
+        "serverUrl": {
+          "isUrl": "Server URL must be a valid URL.",
+          "invalid": "Invalid server URL."
+        },
+        "oauthClientId": {
+          "maxLength": "OAuth client ID must be 255 characters or less.",
+          "invalid": "Invalid OAuth client ID."
+        },
+        "oauthClientSecret": {
+          "invalid": "Invalid OAuth client secret."
+        },
+        "invalid": "Invalid input."
+      }
     },
     "createPredefinedDialog": {
       "title": "Add Predefined Integration",
@@ -145,11 +205,34 @@
     "userConfig": {
       "title": "User Configuration — {{name}}",
       "description": "Set your personal configuration for this integration. These values override organization defaults.",
+      "authorizationTitle": "Authorization",
+      "authorizationDescription": "Authorize your personal account for this integration before using it in agents or skills.",
+      "nothingToConfigure": "This integration does not require any personal configuration.",
       "save": "Save",
       "saving": "Saving…",
       "cancel": "Cancel",
+      "close": "Close",
       "success": "User configuration saved successfully",
-      "error": "Failed to save user configuration. Please try again."
+      "error": "Failed to save user configuration. Please try again.",
+      "notFound": "Integration not found. It may have been deleted."
+    },
+    "oauth": {
+      "authorize": "Authorize",
+      "authorizing": "Authorizing...",
+      "reauthorize": "Re-authorize",
+      "revoke": "Revoke",
+      "authorizationRequired": "Authorization required",
+      "statusAuthorized": "Authorized",
+      "statusPending": "Pending authorization",
+      "statusExpiresAt": "Token expires {{date}}",
+      "successToast": "OAuth authorization completed successfully.",
+      "errorToast": "OAuth authorization failed. Please try again.",
+      "errorState": "OAuth state is invalid or expired. Please start again.",
+      "errorOauthExchange": "OAuth token exchange failed. Please try again.",
+      "errorClientNotConfigured": "OAuth client is not configured for this integration.",
+      "errorIntegrationNotFound": "Integration not found.",
+      "revokeSuccess": "OAuth authorization revoked.",
+      "revokeError": "Failed to revoke OAuth authorization."
     },
     "helpers": {
       "type": {

@@ -26,7 +26,6 @@ import {
 import { UUID } from 'crypto';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-
 import { CreatePredefinedIntegrationDto } from './dto/create-predefined-integration.dto';
 import { CreateCustomIntegrationDto } from './dto/create-custom-integration.dto';
 import { CreateSelfDefinedIntegrationDto } from './dto/create-self-defined-integration.dto';
@@ -34,6 +33,7 @@ import { UpdateMcpIntegrationDto } from './dto/update-mcp-integration.dto';
 import { InstallMarketplaceIntegrationDto } from './dto/install-marketplace-integration.dto';
 import { SetUserConfigDto, UserConfigResponseDto } from './dto/user-config.dto';
 import { McpIntegrationResponseDto } from './dto/mcp-integration-response.dto';
+import { OAuthAuthorizeRequestDto } from './dto/oauth-authorize-request.dto';
 import { OAuthAuthorizeResponseDto } from './dto/oauth-authorize-response.dto';
 import { OAuthStatusResponseDto } from './dto/oauth-status-response.dto';
 import { ValidationResponseDto } from './dto/validation-response.dto';
@@ -74,13 +74,16 @@ import { StartMcpOAuthAuthorizationUseCase } from '../../application/use-cases/s
 import { CompleteMcpOAuthAuthorizationUseCase } from '../../application/use-cases/complete-mcp-oauth-authorization/complete-mcp-oauth-authorization.use-case';
 import { RevokeMcpOAuthAuthorizationUseCase } from '../../application/use-cases/revoke-mcp-oauth-authorization/revoke-mcp-oauth-authorization.use-case';
 import { GetMcpOAuthAuthorizationStatusUseCase } from '../../application/use-cases/get-mcp-oauth-authorization-status/get-mcp-oauth-authorization-status.use-case';
-import { McpIntegration } from '../../domain/mcp-integration.entity';
-import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
-import { SelfDefinedMcpIntegration } from '../../domain/integrations/self-defined-mcp-integration.entity';
 import { CredentialFieldValue } from '../../domain/predefined-mcp-integration-config';
 import { ConfigService } from '@nestjs/config';
 import { Public } from 'src/common/guards/public.guard';
 import type { IntegrationConfigSchema } from '../../domain/value-objects/integration-config-schema';
+import type { McpIntegration } from '../../domain/mcp-integration.entity';
+import { enrichMcpIntegrationsWithOAuthStatus } from './lib/mcp-integration-oauth-status';
+import {
+  buildFrontendRedirectUrl,
+  sanitizeFrontendRedirectPath,
+} from './lib/mcp-oauth-redirect-url';
 
 @ApiTags('mcp-integrations')
 @Controller('mcp-integrations')
@@ -165,7 +168,13 @@ export class McpIntegrationsController {
   async list(): Promise<McpIntegrationResponseDto[]> {
     const integrations = await this.listOrgMcpIntegrationsUseCase.execute();
     const dtos = this.mcpIntegrationDtoMapper.toDtoArray(integrations);
-    return this.enrichWithOAuthStatus(dtos, integrations);
+    await enrichMcpIntegrationsWithOAuthStatus({
+      dtos,
+      integrations,
+      getOAuthStatus: (integrationId) =>
+        this.getOAuthStatusForEnrichment(integrationId),
+    });
+    return dtos;
   }
 
   @Get('predefined/available')
@@ -184,7 +193,13 @@ export class McpIntegrationsController {
     const integrations =
       await this.listAvailableMcpIntegrationsUseCase.execute();
     const dtos = this.mcpIntegrationDtoMapper.toDtoArray(integrations);
-    return this.enrichWithOAuthStatus(dtos, integrations);
+    await enrichMcpIntegrationsWithOAuthStatus({
+      dtos,
+      integrations,
+      getOAuthStatus: (integrationId) =>
+        this.getOAuthStatusForEnrichment(integrationId),
+    });
+    return dtos;
   }
 
   @Get('oauth/callback')
@@ -196,14 +211,15 @@ export class McpIntegrationsController {
     @Query('error') error: string,
     @Res({ passthrough: false }) res: Response,
   ): Promise<void> {
-    const frontendBaseUrl = this.configService.getOrThrow<string>(
-      'app.frontend.baseUrl',
-    );
-
     if (error) {
       const reason = error === 'access_denied' ? 'User denied consent' : error;
       res.redirect(
-        `${frontendBaseUrl}/admin-settings/integrations?oauth=error&reason=${encodeURIComponent(reason)}`,
+        buildFrontendRedirectUrl({
+          configService: this.configService,
+          returnPath: null,
+          level: null,
+          params: { oauth: 'error', reason },
+        }),
       );
       return;
     }
@@ -212,22 +228,35 @@ export class McpIntegrationsController {
       const result = await this.completeOAuthUseCase.execute(
         new CompleteMcpOAuthAuthorizationCommand(code, state),
       );
-      if (result.success) {
-        res.redirect(
-          `${frontendBaseUrl}/admin-settings/integrations?oauth=success&id=${result.integrationId}`,
-        );
-      } else {
-        res.redirect(
-          `${frontendBaseUrl}/admin-settings/integrations?oauth=error&reason=${encodeURIComponent(result.reason)}`,
-        );
-      }
+      const redirectTarget = result.success
+        ? buildFrontendRedirectUrl({
+            configService: this.configService,
+            returnPath: result.returnPath,
+            level: result.level,
+            params: { oauth: 'success', id: result.integrationId },
+          })
+        : buildFrontendRedirectUrl({
+            configService: this.configService,
+            returnPath: result.returnPath,
+            level: result.level,
+            params: { oauth: 'error', reason: result.reason },
+          });
+      res.redirect(redirectTarget);
     } catch (err) {
       this.logger.error(
         'OAuth callback failed unexpectedly',
         err instanceof Error ? err.stack : String(err),
       );
       res.redirect(
-        `${frontendBaseUrl}/admin-settings/integrations?oauth=error&reason=${encodeURIComponent('An unexpected error occurred during OAuth authorization')}`,
+        buildFrontendRedirectUrl({
+          configService: this.configService,
+          returnPath: null,
+          level: null,
+          params: {
+            oauth: 'error',
+            reason: 'An unexpected error occurred during OAuth authorization',
+          },
+        }),
       );
     }
   }
@@ -415,12 +444,15 @@ export class McpIntegrationsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Start OAuth authorization for an integration' })
   @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
+  @ApiBody({ type: OAuthAuthorizeRequestDto, required: false })
   @ApiResponse({ status: 200, type: OAuthAuthorizeResponseDto })
   async startOAuthAuthorize(
     @Param('id', ParseUUIDPipe) id: UUID,
+    @Body() dto: OAuthAuthorizeRequestDto = {},
   ): Promise<OAuthAuthorizeResponseDto> {
+    const returnPath = sanitizeFrontendRedirectPath(dto.returnTo);
     const result = await this.startOAuthUseCase.execute(
-      new StartMcpOAuthAuthorizationCommand(id),
+      new StartMcpOAuthAuthorizationCommand(id, returnPath),
     );
     return { authorizationUrl: result.authorizationUrl };
   }
@@ -454,47 +486,29 @@ export class McpIntegrationsController {
     integration: McpIntegration,
   ): Promise<McpIntegrationResponseDto> {
     const dto = this.mcpIntegrationDtoMapper.toDto(integration);
-    const [enriched] = await this.enrichWithOAuthStatus([dto], [integration]);
-    return enriched;
+    const dtos = [dto];
+    await enrichMcpIntegrationsWithOAuthStatus({
+      dtos,
+      integrations: [integration],
+      getOAuthStatus: (integrationId) =>
+        this.getOAuthStatusForEnrichment(integrationId),
+    });
+    return dtos[0];
   }
 
-  private async enrichWithOAuthStatus(
-    dtos: McpIntegrationResponseDto[],
-    integrations: McpIntegration[],
-  ): Promise<McpIntegrationResponseDto[]> {
-    const oauthEnabled = integrations.filter(
-      (i): i is MarketplaceMcpIntegration | SelfDefinedMcpIntegration =>
-        (i instanceof MarketplaceMcpIntegration ||
-          i instanceof SelfDefinedMcpIntegration) &&
-        !!i.configSchema.oauth,
-    );
-    if (oauthEnabled.length === 0) return dtos;
-    const authorizedByIntegrationId = new Map<UUID, boolean>(
-      await Promise.all(
-        oauthEnabled.map(async (integration) => {
-          try {
-            const status = await this.getOAuthStatusUseCase.execute(
-              new GetMcpOAuthAuthorizationStatusQuery(integration.id),
-            );
-            return [integration.id, status.authorized] as const;
-          } catch (error) {
-            this.logger.warn(
-              `Failed to fetch OAuth status for integration ${integration.id}`,
-              error instanceof Error ? error.message : String(error),
-            );
-            return [integration.id, false] as const;
-          }
-        }),
-      ),
-    );
-
-    for (const [index, integration] of integrations.entries()) {
-      const dto = dtos[index];
-      if (dto.oauth?.enabled) {
-        dto.oauth.authorized =
-          authorizedByIntegrationId.get(integration.id) ?? false;
-      }
+  private async getOAuthStatusForEnrichment(
+    integrationId: UUID,
+  ): Promise<{ authorized: boolean }> {
+    try {
+      return await this.getOAuthStatusUseCase.execute(
+        new GetMcpOAuthAuthorizationStatusQuery(integrationId),
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to fetch OAuth status for integration ${integrationId}`,
+        error instanceof Error ? error.message : String(error),
+      );
+      return { authorized: false };
     }
-    return dtos;
   }
 }

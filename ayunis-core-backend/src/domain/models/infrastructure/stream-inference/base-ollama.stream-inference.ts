@@ -105,7 +105,6 @@ export class BaseOllamaStreamInferenceHandler implements StreamInferenceHandler 
   ): StreamInferenceResponseChunk => {
     const delta = chunk.message;
     const { thinkingDelta, textContentDelta } = this.parseChunkContent(delta);
-    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- thinking may be empty string at runtime
     const thinkingContent = delta.thinking || null;
 
     return new StreamInferenceResponseChunk({

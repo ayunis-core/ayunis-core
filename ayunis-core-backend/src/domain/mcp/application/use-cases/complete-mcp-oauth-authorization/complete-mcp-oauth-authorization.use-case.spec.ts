@@ -20,7 +20,10 @@ describe('CompleteMcpOAuthAuthorizationUseCase', () => {
         CompleteMcpOAuthAuthorizationUseCase,
         {
           provide: OAuthFlowService,
-          useValue: { handleCallback: jest.fn() },
+          useValue: {
+            handleCallback: jest.fn(),
+            resolveAuthorizationContext: jest.fn(),
+          },
         },
       ],
     }).compile();
@@ -40,18 +43,31 @@ describe('CompleteMcpOAuthAuthorizationUseCase', () => {
     const integrationId = randomUUID();
     jest.spyOn(oauthFlowService, 'handleCallback').mockResolvedValue({
       integrationId,
-      level: 'org',
+      level: 'user',
       userId: null,
+      returnPath: '/settings/integrations',
     });
 
     const result = await useCase.execute(
       new CompleteMcpOAuthAuthorizationCommand('auth-code', 'state-jwt'),
     );
 
-    expect(result).toEqual({ success: true, integrationId });
+    expect(result).toEqual({
+      success: true,
+      integrationId,
+      returnPath: '/settings/integrations',
+      level: 'user',
+    });
+    expect(oauthFlowService.resolveAuthorizationContext).not.toHaveBeenCalled();
   });
 
   it('should return failure on exchange error', async () => {
+    jest
+      .spyOn(oauthFlowService, 'resolveAuthorizationContext')
+      .mockReturnValue({
+        level: 'org',
+        returnPath: '/agents/agent-123',
+      });
     jest
       .spyOn(oauthFlowService, 'handleCallback')
       .mockRejectedValue(
@@ -65,10 +81,15 @@ describe('CompleteMcpOAuthAuthorizationUseCase', () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.reason).toContain('token endpoint error');
+      expect(result.returnPath).toBe('/agents/agent-123');
+      expect(result.level).toBe('org');
     }
   });
 
   it('should return failure on invalid state', async () => {
+    jest
+      .spyOn(oauthFlowService, 'resolveAuthorizationContext')
+      .mockReturnValue(null);
     jest
       .spyOn(oauthFlowService, 'handleCallback')
       .mockRejectedValue(new McpOAuthStateInvalidError());
@@ -80,6 +101,8 @@ describe('CompleteMcpOAuthAuthorizationUseCase', () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.reason).toBeDefined();
+      expect(result.returnPath).toBeNull();
+      expect(result.level).toBeNull();
     }
   });
 });

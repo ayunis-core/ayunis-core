@@ -10,8 +10,18 @@ import {
 import { ApplicationError } from 'src/common/errors/base.error';
 
 export type CompleteMcpOAuthResult =
-  | { success: true; integrationId: UUID }
-  | { success: false; reason: string };
+  | {
+      success: true;
+      integrationId: UUID;
+      returnPath: string | null;
+      level: 'org' | 'user';
+    }
+  | {
+      success: false;
+      reason: string;
+      returnPath: string | null;
+      level: 'org' | 'user' | null;
+    };
 
 @Injectable()
 export class CompleteMcpOAuthAuthorizationUseCase {
@@ -35,15 +45,21 @@ export class CompleteMcpOAuthAuthorizationUseCase {
       return {
         success: true,
         integrationId: result.integrationId,
+        returnPath: result.returnPath,
+        level: result.level,
       };
     } catch (error) {
       if (
         error instanceof McpOAuthExchangeFailedError ||
         error instanceof McpOAuthStateInvalidError
       ) {
+        const authorizationContext =
+          this.oauthFlowService.resolveAuthorizationContext(command.state);
         return {
           success: false,
           reason: error.message,
+          returnPath: authorizationContext?.returnPath ?? null,
+          level: authorizationContext?.level ?? null,
         };
       }
       if (error instanceof ApplicationError) {

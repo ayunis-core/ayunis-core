@@ -9,10 +9,10 @@ import { CreatePredefinedDialog } from './create-predefined-dialog';
 import { CreateCustomDialog } from './create-custom-dialog';
 import { EditIntegrationDialog } from './edit-integration-dialog';
 import { DeleteConfirmationDialog } from './delete-confirmation-dialog';
-import { UserConfigDialog } from './user-config-dialog';
 import SettingsLayout from '../../admin-settings-layout';
 import { useMcpIntegrationsQueries } from '../api/useMcpIntegrationsQueries';
 import type { McpIntegration } from '../model/types';
+import { UserConfigDialog } from '@/features/mcp-user-config';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +26,8 @@ import {
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
 import { ComingSoonDialog } from './coming-soon-dialog';
+import { CreateSelfDefinedDialog } from './create-self-defined-dialog';
+import { useHandleMcpOAuthCallback } from '@/widgets/mcp-integrations-card';
 
 export function McpIntegrationsPage({
   isCloud,
@@ -36,6 +38,7 @@ export function McpIntegrationsPage({
   // Dialog states
   const [createPredefinedOpen, setCreatePredefinedOpen] = useState(false);
   const [createCustomOpen, setCreateCustomOpen] = useState(false);
+  const [createSelfDefinedOpen, setCreateSelfDefinedOpen] = useState(false);
   const [editIntegration, setEditIntegration] = useState<McpIntegration | null>(
     null,
   );
@@ -53,6 +56,8 @@ export function McpIntegrationsPage({
     refetchIntegrations,
     predefinedConfigs,
   } = useMcpIntegrationsQueries();
+
+  useHandleMcpOAuthCallback(t, refetchIntegrations, 'integrations.oauth');
 
   const handleOpenCreatePredefined = () => {
     if (!predefinedConfigs.length) {
@@ -117,6 +122,7 @@ export function McpIntegrationsPage({
           isCloud={isCloud}
           onCreatePredefined={handleOpenCreatePredefined}
           onCreateCustom={() => setCreateCustomOpen(true)}
+          onCreateSelfDefined={() => setCreateSelfDefinedOpen(true)}
           t={t}
         />
       }
@@ -142,6 +148,11 @@ export function McpIntegrationsPage({
           onOpenChange={setCreateCustomOpen}
         />
 
+        <CreateSelfDefinedDialog
+          open={createSelfDefinedOpen}
+          onOpenChange={setCreateSelfDefinedOpen}
+        />
+
         <EditIntegrationDialog
           integration={editIntegration}
           open={!!editIntegration}
@@ -158,6 +169,42 @@ export function McpIntegrationsPage({
           integration={userConfigIntegration}
           open={!!userConfigIntegration}
           onOpenChange={(open) => !open && setUserConfigIntegration(null)}
+          messages={{
+            title: (name: string) =>
+              t('integrations.userConfig.title', { name }),
+            description: t('integrations.userConfig.description'),
+            save: t('integrations.userConfig.save'),
+            saving: t('integrations.userConfig.saving'),
+            cancel: t('integrations.userConfig.cancel'),
+            close: t('integrations.userConfig.close'),
+            success: t('integrations.userConfig.success'),
+            error: t('integrations.userConfig.error'),
+            notFound: t('integrations.userConfig.notFound'),
+            nothingToConfigure: t('integrations.userConfig.nothingToConfigure'),
+            authorizationTitle: t('integrations.userConfig.authorizationTitle'),
+            authorizationDescription: t(
+              'integrations.userConfig.authorizationDescription',
+            ),
+            statusAuthorized: t('integrations.oauth.statusAuthorized'),
+            statusPending: t('integrations.oauth.statusPending'),
+            statusExpiresAt: (date: string) =>
+              t('integrations.oauth.statusExpiresAt', { date }),
+            oauthButton: {
+              authorize: t('integrations.oauth.authorize'),
+              authorizing: t('integrations.oauth.authorizing'),
+              reauthorize: t('integrations.oauth.reauthorize'),
+              revoke: t('integrations.oauth.revoke'),
+              errorToast: t('integrations.oauth.errorToast'),
+              errorClientNotConfigured: t(
+                'integrations.oauth.errorClientNotConfigured',
+              ),
+              errorIntegrationNotFound: t(
+                'integrations.oauth.errorIntegrationNotFound',
+              ),
+              revokeSuccess: t('integrations.oauth.revokeSuccess'),
+              revokeError: t('integrations.oauth.revokeError'),
+            },
+          }}
         />
 
         <ComingSoonDialog
@@ -173,11 +220,13 @@ function HeaderActions({
   isCloud,
   onCreatePredefined,
   onCreateCustom,
+  onCreateSelfDefined,
   t,
 }: Readonly<{
   isCloud: boolean;
   onCreatePredefined: () => void;
   onCreateCustom: () => void;
+  onCreateSelfDefined: () => void;
   t: (key: string) => string;
 }>) {
   return (
@@ -212,6 +261,9 @@ function HeaderActions({
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onCreateCustom}>
               {t('integrations.page.addCustom')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onCreateSelfDefined}>
+              {t('integrations.page.addSelfDefined')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

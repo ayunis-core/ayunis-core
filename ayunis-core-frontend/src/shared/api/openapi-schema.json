@@ -4877,6 +4877,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuthAuthorizeRequestDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "",
@@ -12169,6 +12179,16 @@
           }
         },
         "required": ["name", "serverUrl", "configSchema", "orgConfigValues"]
+      },
+      "OAuthAuthorizeRequestDto": {
+        "type": "object",
+        "properties": {
+          "returnTo": {
+            "type": "string",
+            "description": "Optional relative in-app path to return to after OAuth completes",
+            "example": "/settings/integrations?tab=mcp"
+          }
+        }
       },
       "OAuthAuthorizeResponseDto": {
         "type": "object",

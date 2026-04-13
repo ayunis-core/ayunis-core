@@ -16,7 +16,13 @@ import {
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
 import { cn } from '@/shared/lib/shadcn/utils';
+import {
+  OAuthAuthorizeButton,
+  OAuthStatusBadge,
+  useOAuthStatus,
+} from '@/features/mcp-oauth';
 import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { parseMcpOAuthInfo } from '@/shared/lib/mcp-oauth';
 
 export interface McpIntegrationsHook {
   availableIntegrations: McpIntegrationResponseDto[] | undefined;
@@ -36,6 +42,16 @@ interface McpIntegrationsCardProps {
     failedToLoad: string;
     retryButton: string;
     toggleAriaLabel: (name: string) => string;
+    authorizationRequired: string;
+    authorize: string;
+    authorizing: string;
+    reauthorize: string;
+    revoke: string;
+    oauthErrorToast: string;
+    oauthErrorClientNotConfigured: string;
+    oauthErrorIntegrationNotFound: string;
+    oauthRevokeSuccess: string;
+    oauthRevokeError: string;
   };
   hook: McpIntegrationsHook;
 }
@@ -117,41 +133,164 @@ export default function McpIntegrationsCard({
         <div className="space-y-4">
           {sortedIntegrations.map((integration, index) => {
             const assigned = isAssigned(integration.id);
+            const oauthInfo = parseMcpOAuthInfo(integration.oauth);
 
             return (
               <div key={integration.id}>
                 {index > 0 && <Separator className="my-4" />}
-                <Item
-                  className={cn(
-                    index === 0 && 'pt-0',
-                    index === sortedIntegrations.length - 1 && 'pb-0',
-                    'px-0',
-                  )}
-                >
-                  <ItemContent>
-                    <ItemTitle>{integration.name}</ItemTitle>
-                    {integration.description && (
-                      <ItemDescription>
-                        {integration.description}
-                      </ItemDescription>
-                    )}
-                  </ItemContent>
-                  <ItemActions>
-                    <Switch
-                      checked={assigned}
-                      onCheckedChange={() => void handleToggle(integration.id)}
-                      disabled={disabled || isPending}
-                      aria-label={translations.toggleAriaLabel(
-                        integration.name,
-                      )}
-                    />
-                  </ItemActions>
-                </Item>
+                {oauthInfo?.enabled === true && oauthInfo.level === 'user' ? (
+                  <OAuthGatedIntegrationRow
+                    assigned={assigned}
+                    disabled={disabled}
+                    index={index}
+                    integration={integration}
+                    isPending={isPending}
+                    onToggle={handleToggle}
+                    total={sortedIntegrations.length}
+                    translations={translations}
+                  />
+                ) : (
+                  <StandardIntegrationRow
+                    assigned={assigned}
+                    disabled={disabled}
+                    index={index}
+                    integration={integration}
+                    isPending={isPending}
+                    onToggle={handleToggle}
+                    total={sortedIntegrations.length}
+                    translations={translations}
+                  />
+                )}
               </div>
             );
           })}
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function StandardIntegrationRow({
+  assigned,
+  disabled,
+  index,
+  integration,
+  isPending,
+  onToggle,
+  total,
+  translations,
+}: Readonly<{
+  assigned: boolean;
+  disabled: boolean;
+  index: number;
+  integration: McpIntegrationResponseDto;
+  isPending: boolean;
+  onToggle: (integrationId: string) => Promise<void>;
+  total: number;
+  translations: McpIntegrationsCardProps['translations'];
+}>) {
+  return (
+    <Item
+      className={cn(
+        index === 0 && 'pt-0',
+        index === total - 1 && 'pb-0',
+        'px-0',
+      )}
+    >
+      <ItemContent>
+        <ItemTitle>{integration.name}</ItemTitle>
+        {integration.description && (
+          <ItemDescription>{integration.description}</ItemDescription>
+        )}
+      </ItemContent>
+      <ItemActions>
+        <Switch
+          checked={assigned}
+          onCheckedChange={() => void onToggle(integration.id)}
+          disabled={disabled || isPending}
+          aria-label={translations.toggleAriaLabel(integration.name)}
+        />
+      </ItemActions>
+    </Item>
+  );
+}
+
+function OAuthGatedIntegrationRow({
+  assigned,
+  disabled,
+  index,
+  integration,
+  isPending,
+  onToggle,
+  total,
+  translations,
+}: Readonly<{
+  assigned: boolean;
+  disabled: boolean;
+  index: number;
+  integration: McpIntegrationResponseDto;
+  isPending: boolean;
+  onToggle: (integrationId: string) => Promise<void>;
+  total: number;
+  translations: McpIntegrationsCardProps['translations'];
+}>) {
+  const oauthInfo = parseMcpOAuthInfo(integration.oauth);
+  const { oauthStatus } = useOAuthStatus(integration.id);
+  const isAuthorized =
+    oauthStatus?.authorized ?? oauthInfo?.authorized ?? false;
+  const requiresUserAuth =
+    oauthInfo?.enabled === true && oauthInfo.level === 'user' && !isAuthorized;
+
+  return (
+    <Item
+      className={cn(
+        index === 0 && 'pt-0',
+        index === total - 1 && 'pb-0',
+        'px-0',
+      )}
+    >
+      <ItemContent>
+        <ItemTitle>
+          {integration.name}
+          {requiresUserAuth && (
+            <OAuthStatusBadge
+              status="pending"
+              authorizedLabel={translations.reauthorize}
+              pendingLabel={translations.authorizationRequired}
+            />
+          )}
+        </ItemTitle>
+        {integration.description && (
+          <ItemDescription>{integration.description}</ItemDescription>
+        )}
+      </ItemContent>
+      <ItemActions className="flex-wrap justify-end">
+        {requiresUserAuth && (
+          <OAuthAuthorizeButton
+            integrationId={integration.id}
+            isAuthorized={false}
+            messages={{
+              authorize: translations.authorize,
+              authorizing: translations.authorizing,
+              reauthorize: translations.reauthorize,
+              revoke: translations.revoke,
+              errorToast: translations.oauthErrorToast,
+              errorClientNotConfigured:
+                translations.oauthErrorClientNotConfigured,
+              errorIntegrationNotFound:
+                translations.oauthErrorIntegrationNotFound,
+              revokeSuccess: translations.oauthRevokeSuccess,
+              revokeError: translations.oauthRevokeError,
+            }}
+          />
+        )}
+        <Switch
+          checked={assigned}
+          onCheckedChange={() => void onToggle(integration.id)}
+          disabled={(requiresUserAuth && !assigned) || disabled || isPending}
+          aria-label={translations.toggleAriaLabel(integration.name)}
+        />
+      </ItemActions>
+    </Item>
   );
 }
