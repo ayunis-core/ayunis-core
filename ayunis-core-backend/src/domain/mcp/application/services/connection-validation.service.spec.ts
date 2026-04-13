@@ -3,6 +3,7 @@ import type { ValidateMcpIntegrationUseCase } from '../use-cases/validate-mcp-in
 import type { McpIntegrationsRepositoryPort } from '../ports/mcp-integrations.repository.port';
 import { CustomMcpIntegration } from '../../domain/integrations/custom-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
+import { McpOAuthAuthorizationRequiredError } from '../mcp.errors';
 import { randomUUID } from 'crypto';
 
 describe('ConnectionValidationService', () => {
@@ -121,5 +122,18 @@ describe('ConnectionValidationService', () => {
     await expect(
       service.validateAndUpdateStatus(integration),
     ).resolves.not.toThrow();
+  });
+
+  it('sets status to pending_auth when validation throws McpOAuthAuthorizationRequiredError', async () => {
+    const integration = createIntegration();
+    validateUseCase.execute.mockRejectedValue(
+      new McpOAuthAuthorizationRequiredError(integrationId),
+    );
+
+    await service.validateAndUpdateStatus(integration);
+
+    expect(integration.connectionStatus).toBe('pending_auth');
+    expect(integration.lastConnectionError).toBeUndefined();
+    expect(repository.save).toHaveBeenCalledWith(integration);
   });
 });
