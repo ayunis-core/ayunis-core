@@ -9,6 +9,7 @@ import { OAuthMcpIntegrationAuth } from '../../domain/auth/oauth-mcp-integration
 import { CustomMcpIntegration } from '../../domain/integrations/custom-mcp-integration.entity';
 import { PredefinedMcpIntegration } from '../../domain/integrations/predefined-mcp-integration.entity';
 import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
+import { SelfDefinedMcpIntegration } from '../../domain/integrations/self-defined-mcp-integration.entity';
 import type { IntegrationConfigSchema } from '../../domain/value-objects/integration-config-schema';
 
 describe('McpIntegrationFactory', () => {
@@ -199,6 +200,89 @@ describe('McpIntegrationFactory', () => {
           orgConfigValues: {},
         }),
       ).toThrow('Marketplace integrations require a config schema');
+    });
+
+    it('creates self-defined integrations with config schema and org config values', () => {
+      const configSchema: IntegrationConfigSchema = {
+        authType: 'NO_AUTH',
+        orgFields: [
+          {
+            key: 'baseUrl',
+            label: 'Base URL',
+            type: 'url',
+            required: true,
+          },
+        ],
+        userFields: [],
+      };
+      const auth = new NoAuthMcpIntegrationAuth();
+
+      const integration = factory.createIntegration({
+        kind: McpIntegrationKind.SELF_DEFINED,
+        orgId,
+        name,
+        serverUrl,
+        auth,
+        configSchema,
+        orgConfigValues: { baseUrl: 'http://example.com' },
+      });
+
+      expect(integration).toBeInstanceOf(SelfDefinedMcpIntegration);
+      expect(integration.kind).toBe(McpIntegrationKind.SELF_DEFINED);
+      expect(integration.configSchema).toBe(configSchema);
+      expect(integration.orgConfigValues).toEqual({
+        baseUrl: 'http://example.com',
+      });
+      expect(integration.serverUrl).toBe(serverUrl);
+      expect(integration.isSelfDefined()).toBe(true);
+      expect(integration.isMarketplace()).toBe(false);
+    });
+
+    it('creates self-defined integrations with OAuth client credentials', () => {
+      const configSchema: IntegrationConfigSchema = {
+        authType: 'OAUTH',
+        orgFields: [],
+        userFields: [],
+        oauth: {
+          authorizationUrl: 'https://auth.example.com/authorize',
+          tokenUrl: 'https://auth.example.com/token',
+          scopes: ['read', 'write'],
+          level: 'org',
+        },
+      };
+      const auth = new NoAuthMcpIntegrationAuth();
+
+      const integration = factory.createIntegration({
+        kind: McpIntegrationKind.SELF_DEFINED,
+        orgId,
+        name,
+        serverUrl,
+        auth,
+        configSchema,
+        orgConfigValues: {},
+        oauthClientId: 'client-123',
+        oauthClientSecretEncrypted: 'encrypted-secret',
+      });
+
+      expect(integration).toBeInstanceOf(SelfDefinedMcpIntegration);
+      expect(integration.oauthClientId).toBe('client-123');
+      expect(integration.oauthClientSecretEncrypted).toBe('encrypted-secret');
+    });
+
+    it('throws when self-defined integration is missing config schema', () => {
+      const auth = new NoAuthMcpIntegrationAuth();
+
+      expect(() =>
+        factory.createIntegration({
+          kind: McpIntegrationKind.SELF_DEFINED,
+          orgId,
+          name,
+          serverUrl,
+          auth,
+          configSchema: undefined as any,
+          orgConfigValues: {},
+        }),
+      ).toThrow('Self-defined integrations require a config schema');
     });
   });
 });
