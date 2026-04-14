@@ -56,6 +56,27 @@ describe('GetMonthlyCreditUsageUseCase', () => {
     expect(monthStart.getUTCMinutes()).toBe(0);
   });
 
+  it('should use since date when it is later than month start', async () => {
+    const since = new Date('2026-04-10T00:00:00.000Z');
+    await useCase.execute(new GetMonthlyCreditUsageQuery(orgId, since));
+
+    const startDate = mockUsageRepository.getMonthlyCreditUsage.mock
+      .calls[0][1] as Date;
+    expect(startDate).toEqual(since);
+  });
+
+  it('should use month start when since date is earlier', async () => {
+    const since = new Date('2025-12-15T00:00:00.000Z');
+    await useCase.execute(new GetMonthlyCreditUsageQuery(orgId, since));
+
+    const startDate = mockUsageRepository.getMonthlyCreditUsage.mock
+      .calls[0][1] as Date;
+    const now = new Date();
+    expect(startDate.getUTCFullYear()).toBe(now.getUTCFullYear());
+    expect(startDate.getUTCMonth()).toBe(now.getUTCMonth());
+    expect(startDate.getUTCDate()).toBe(1);
+  });
+
   it('should handle zero usage (new month)', async () => {
     mockUsageRepository.getMonthlyCreditUsage.mockResolvedValue(0);
 

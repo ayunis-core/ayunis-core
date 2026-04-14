@@ -55,7 +55,7 @@ describe('GetMonthlyCreditLimitUseCase', () => {
 
     const result = await useCase.execute(new GetMonthlyCreditLimitQuery(orgId));
 
-    expect(result).toEqual({ monthlyCredits: null });
+    expect(result).toEqual({ monthlyCredits: null, startsAt: null });
   });
 
   it('should return null for seat-based subscription only', async () => {
@@ -72,7 +72,7 @@ describe('GetMonthlyCreditLimitUseCase', () => {
 
     const result = await useCase.execute(new GetMonthlyCreditLimitQuery(orgId));
 
-    expect(result).toEqual({ monthlyCredits: null });
+    expect(result).toEqual({ monthlyCredits: null, startsAt: null });
   });
 
   it('should return monthlyCredits for active usage-based subscription', async () => {
@@ -87,7 +87,7 @@ describe('GetMonthlyCreditLimitUseCase', () => {
 
     const result = await useCase.execute(new GetMonthlyCreditLimitQuery(orgId));
 
-    expect(result).toEqual({ monthlyCredits: 5000 });
+    expect(result).toEqual({ monthlyCredits: 5000, startsAt: expect.any(Date) });
   });
 
   it('should return null for cancelled usage-based subscription', async () => {
@@ -102,7 +102,7 @@ describe('GetMonthlyCreditLimitUseCase', () => {
 
     const result = await useCase.execute(new GetMonthlyCreditLimitQuery(orgId));
 
-    expect(result).toEqual({ monthlyCredits: null });
+    expect(result).toEqual({ monthlyCredits: null, startsAt: null });
   });
 
   it('should find usage-based subscription among mixed types', async () => {
@@ -125,6 +125,6 @@ describe('GetMonthlyCreditLimitUseCase', () => {
 
     const result = await useCase.execute(new GetMonthlyCreditLimitQuery(orgId));
 
-    expect(result).toEqual({ monthlyCredits: 3000 });
+    expect(result).toEqual({ monthlyCredits: 3000, startsAt: expect.any(Date) });
   });
 });

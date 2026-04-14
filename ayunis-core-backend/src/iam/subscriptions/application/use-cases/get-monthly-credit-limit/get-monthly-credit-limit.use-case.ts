@@ -20,7 +20,7 @@ export class GetMonthlyCreditLimitUseCase {
 
   async execute(
     query: GetMonthlyCreditLimitQuery,
-  ): Promise<{ monthlyCredits: number | null }> {
+  ): Promise<{ monthlyCredits: number | null; startsAt: Date | null }> {
     try {
       const subscriptions = await this.subscriptionRepository.findByOrgId(
         query.orgId,
@@ -33,10 +33,13 @@ export class GetMonthlyCreditLimitUseCase {
         this.logger.debug('No active usage-based subscription found', {
           orgId: query.orgId,
         });
-        return { monthlyCredits: null };
+        return { monthlyCredits: null, startsAt: null };
       }
 
-      return { monthlyCredits: usageSubscription.monthlyCredits };
+      return {
+        monthlyCredits: usageSubscription.monthlyCredits,
+        startsAt: usageSubscription.startsAt,
+      };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Failed to get monthly credit limit', error);
