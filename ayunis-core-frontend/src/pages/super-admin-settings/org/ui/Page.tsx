@@ -58,6 +58,7 @@ export default function SuperAdminSettingsOrgPage({
   initialTab = 'org',
 }: Readonly<SuperAdminSettingsOrgPageProps>) {
   const { t } = useTranslation('super-admin-settings-org');
+  const { t: tLayout } = useTranslation('super-admin-settings-layout');
   const navigate = useNavigate();
   const { id } = useParams({
     from: '/_authenticated/super-admin-settings/orgs/$id',
@@ -83,7 +84,12 @@ export default function SuperAdminSettingsOrgPage({
   );
 
   return (
-    <SuperAdminSettingsLayout pageTitle={org.name}>
+    <SuperAdminSettingsLayout
+      breadcrumbs={[
+        { label: tLayout('layout.orgs'), href: '/super-admin-settings/orgs' },
+        { label: org.name },
+      ]}
+    >
       <Tabs
         value={initialTab}
         onValueChange={handleTabChange}
