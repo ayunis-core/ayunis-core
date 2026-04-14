@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.26.1](https://github.com/ayunis-core/ayunis-core/compare/v1.26.0...v1.26.1) (2026-04-14)
+
+
+### Bug Fixes
+
+* **chat:** reset ChatInput state when navigating between chats ([#564](https://github.com/ayunis-core/ayunis-core/issues/564)) ([a11aa6c](https://github.com/ayunis-core/ayunis-core/commit/a11aa6cda607dc94e1e2f510a02f767bc16bd080))
+* **db:** align entities with migrations and add schema drift CI check (AYC-000) ([#567](https://github.com/ayunis-core/ayunis-core/issues/567)) ([50b973e](https://github.com/ayunis-core/ayunis-core/commit/50b973e8736df2e25e4b3e3bedd4cc89157df777))
+* **models:** update model tier tooltip wording from 'Tier'/'Stufe' to 'Performance & Credit Consumption'/'Leistung & Credit Verbrauch' (AYC-000) ([#566](https://github.com/ayunis-core/ayunis-core/issues/566))  ([098a81d](https://github.com/ayunis-core/ayunis-core/commit/098a81d282d7b3a123d74f342d6c246a462d4907))
+* **subscriptions:** exclude trial-period usage from subscription credit budget (AYC-000) ([#568](https://github.com/ayunis-core/ayunis-core/issues/568)) ([b2efdea](https://github.com/ayunis-core/ayunis-core/commit/b2efdea1347c15a32c8488f5f847989c92d04931))
+* **super-admin:** add breadcrumbs to org detail page (AYC-9) ([#569](https://github.com/ayunis-core/ayunis-core/issues/569)) ([ab54505](https://github.com/ayunis-core/ayunis-core/commit/ab5450505360705371b93d4b92ac54ffbd059cdf))
+
+
+### Miscellaneous
+
+* ignore CLAUDE.md (AYC-000) ([#553](https://github.com/ayunis-core/ayunis-core/issues/553)) ([2996c51](https://github.com/ayunis-core/ayunis-core/commit/2996c513be667f8600816ae4b73ebbf38025e281))
+
 ## [1.26.0](https://github.com/ayunis-core/ayunis-core/compare/v1.25.0...v1.26.0) (2026-04-08)
 
 
