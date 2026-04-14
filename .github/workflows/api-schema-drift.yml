@@ -1,4 +1,4 @@
-name: API Schema Drift
+name: Schema Drift
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   check:
-    name: Check API client is up to date
+    name: Check database and API client are up to date
     runs-on: ubuntu-latest
 
     services:
@@ -101,6 +101,22 @@ jobs:
         run: npm run typeorm migration:run -- -d src/db/datasource.ts
         env:
           NODE_ENV: test
+
+      - name: Check for database schema drift
+        working-directory: ayunis-core-backend
+        run: |
+          npm run typeorm -- migration:generate -d src/db/datasource.ts src/db/migrations/__DriftCheck 2>&1 | tee /tmp/drift-output.txt
+          if grep -q "has been generated successfully" /tmp/drift-output.txt; then
+            echo ""
+            echo "❌ Database schema drift detected."
+            echo "Entities and migrations are out of sync. Run:"
+            echo "  npm run migration:generate:dev -- src/db/migrations/DescriptiveName"
+            echo ""
+            echo "Generated drift:"
+            cat src/db/migrations/*__DriftCheck.ts
+            exit 1
+          fi
+          echo "✅ No database schema drift"
 
       - name: Start backend
         working-directory: ayunis-core-backend
