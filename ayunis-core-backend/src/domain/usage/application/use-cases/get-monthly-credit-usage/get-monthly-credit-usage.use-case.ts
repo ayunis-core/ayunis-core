@@ -17,16 +17,19 @@ export class GetMonthlyCreditUsageUseCase {
     const monthStart = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
     );
+    const effectiveStart =
+      query.since && query.since > monthStart ? query.since : monthStart;
 
     this.logger.log('Getting monthly credit usage', {
       orgId: query.orgId,
       monthStart: monthStart.toISOString(),
+      effectiveStart: effectiveStart.toISOString(),
     });
 
     try {
       const creditsUsed = await this.usageRepository.getMonthlyCreditUsage(
         query.orgId,
-        monthStart,
+        effectiveStart,
       );
 
       return { creditsUsed };
