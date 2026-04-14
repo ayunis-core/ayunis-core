@@ -56,7 +56,7 @@
       "low": "Low",
       "medium": "Medium",
       "high": "High",
-      "tooltip": "Tier: {{label}}"
+      "tooltip": "Performance & Credit Consumption: {{label}}"
     },
     "defaultModel": {
       "title": "Organization default model",

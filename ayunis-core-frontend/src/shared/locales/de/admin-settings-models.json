@@ -56,7 +56,7 @@
       "low": "Niedrig",
       "medium": "Mittel",
       "high": "Hoch",
-      "tooltip": "Stufe: {{label}}"
+      "tooltip": "Leistung & Credit Verbrauch: {{label}}"
     },
     "defaultModel": {
       "title": "Standardmodell der Organisation",
