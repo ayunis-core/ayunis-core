@@ -105,7 +105,9 @@ jobs:
       - name: Check for database schema drift
         working-directory: ayunis-core-backend
         run: |
-          npm run typeorm -- migration:generate -d src/db/datasource.ts src/db/migrations/__DriftCheck 2>&1 | tee /tmp/drift-output.txt
+          set -o pipefail
+          TYPEORM_EXIT=0
+          npm run typeorm -- migration:generate -d src/db/datasource.ts src/db/migrations/__DriftCheck 2>&1 | tee /tmp/drift-output.txt || TYPEORM_EXIT=$?
           if grep -q "has been generated successfully" /tmp/drift-output.txt; then
             echo ""
             echo "❌ Database schema drift detected."
@@ -114,6 +116,12 @@ jobs:
             echo ""
             echo "Generated drift:"
             cat src/db/migrations/*__DriftCheck.ts
+            exit 1
+          fi
+          if [ "$TYPEORM_EXIT" -ne 0 ] && ! grep -q "No changes in database schema were found" /tmp/drift-output.txt; then
+            echo ""
+            echo "❌ migration:generate failed unexpectedly (exit code $TYPEORM_EXIT):"
+            cat /tmp/drift-output.txt
             exit 1
           fi
           echo "✅ No database schema drift"
