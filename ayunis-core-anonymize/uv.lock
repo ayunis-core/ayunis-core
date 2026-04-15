@@ -657,9 +657,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "de-core-news-sm" },
     { name = "fastapi" },
-    { name = "gliner" },
-    { name = "onnxruntime" },
-    { name = "presidio-analyzer" },
+    { name = "presidio-analyzer", extra = ["gliner"] },
     { name = "pydantic" },
     { name = "pyyaml" },
     { name = "uvicorn", extra = ["standard"] },
@@ -669,9 +667,7 @@ dependencies = [
 requires-dist = [
     { name = "de-core-news-sm", url = "https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.8.0/de_core_news_sm-3.8.0-py3-none-any.whl" },
     { name = "fastapi", specifier = ">=0.121.3" },
-    { name = "gliner", specifier = ">=0.2.5" },
-    { name = "onnxruntime", specifier = ">=1.17.0" },
-    { name = "presidio-analyzer", specifier = ">=2.2.360" },
+    { name = "presidio-analyzer", extras = ["gliner"], specifier = ">=2.2.360" },
     { name = "pydantic", specifier = ">=2.12.4" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.38.0" },
@@ -1094,6 +1090,14 @@ dependencies = [
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2f/8a/d6cf4bddbb11d9c78f5c9342bbbcde4f90fe4e3c7de114a836ec4ed8a6cf/presidio_analyzer-2.2.362-py3-none-any.whl", hash = "sha256:4c36438924b1fcb4df92ea5cf2d8dc57508808e116b10923c983b8732aa07d90", size = 201084, upload-time = "2026-03-15T12:40:43.801Z" },
+]
+
+[package.optional-dependencies]
+gliner = [
+    { name = "gliner" },
+    { name = "huggingface-hub" },
+    { name = "onnxruntime" },
+    { name = "transformers" },
 ]
 
 [[package]]
