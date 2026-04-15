@@ -25,6 +25,7 @@ import { PieChartTool } from '../domain/tools/pie-chart-tool.entity';
 import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { ActivateSkillTool } from '../domain/tools/activate-skill-tool.entity';
 import { CreateSkillTool } from '../domain/tools/create-skill-tool.entity';
+import { EditSkillTool } from '../domain/tools/edit-skill-tool.entity';
 import { KnowledgeQueryTool } from '../domain/tools/knowledge-query-tool.entity';
 import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
@@ -73,6 +74,10 @@ export class ToolFactory {
       [ToolType.ACTIVATE_SKILL]: (p) =>
         new ActivateSkillTool(
           requireMapContext(p.context, ToolType.ACTIVATE_SKILL),
+        ),
+      [ToolType.EDIT_SKILL]: (p) =>
+        new EditSkillTool(
+          requireStringArrayContext(p.context, ToolType.EDIT_SKILL),
         ),
       [ToolType.KNOWLEDGE_QUERY]: (p) =>
         new KnowledgeQueryTool(
@@ -174,6 +179,22 @@ function requireMapContext(
 ): Map<string, string> {
   if (context instanceof Map) {
     return context as Map<string, string>;
+  }
+  throw new ToolInvalidContextError({
+    toolType,
+    metadata: { contextType: contextTypeName(context) },
+  });
+}
+
+function requireStringArrayContext(
+  context: unknown,
+  toolType: ToolType,
+): string[] {
+  if (
+    context instanceof Array &&
+    context.every((item: unknown) => typeof item === 'string')
+  ) {
+    return context as string[];
   }
   throw new ToolInvalidContextError({
     toolType,

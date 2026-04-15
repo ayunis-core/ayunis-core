@@ -10,6 +10,7 @@ import { InternetSearchTool } from '../domain/tools/internet-search-tool.entity'
 import { SourceQueryTool } from '../domain/tools/source-query-tool.entity';
 import { WebsiteContentTool } from '../domain/tools/website-content-tool.entity';
 import { CreateSkillTool } from '../domain/tools/create-skill-tool.entity';
+import { EditSkillTool } from '../domain/tools/edit-skill-tool.entity';
 import { KnowledgeQueryTool } from '../domain/tools/knowledge-query-tool.entity';
 import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.entity';
 import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
@@ -64,6 +65,14 @@ describe('ToolFactory', () => {
     it('should create a CreateSkillTool', () => {
       const tool = factory.createTool({ type: ToolType.CREATE_SKILL });
       expect(tool).toBeInstanceOf(CreateSkillTool);
+    });
+
+    it('should create an EditSkillTool', () => {
+      const tool = factory.createTool({
+        type: ToolType.EDIT_SKILL,
+        context: ['user__my-skill'],
+      });
+      expect(tool).toBeInstanceOf(EditSkillTool);
     });
 
     it('should create a KnowledgeQueryTool', () => {
@@ -143,6 +152,7 @@ describe('ToolFactory', () => {
 
       expect(types).toContain(ToolType.ACTIVATE_SKILL);
       expect(types).toContain(ToolType.CREATE_SKILL);
+      expect(types).toContain(ToolType.EDIT_SKILL);
       expect(types).toContain(ToolType.KNOWLEDGE_QUERY);
       expect(types).toContain(ToolType.KNOWLEDGE_GET_TEXT);
       expect(types).toContain(ToolType.CREATE_DOCUMENT);
@@ -150,7 +160,7 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.EDIT_DOCUMENT);
       expect(types).toContain(ToolType.READ_DOCUMENT);
 
-      expect(types.length).toBe(22);
+      expect(types.length).toBe(23);
     });
   });
 });

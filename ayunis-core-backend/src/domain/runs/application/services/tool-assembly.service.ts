@@ -264,6 +264,16 @@ export class ToolAssemblyService {
           }),
         ),
       );
+      if (slugMap.size > 0) {
+        tools.push(
+          await this.assembleToolsUseCase.execute(
+            new AssembleToolCommand({
+              type: ToolType.EDIT_SKILL,
+              context: [...slugMap.keys()],
+            }),
+          ),
+        );
+      }
     }
 
     // Internet search tool is available when Brave Search credentials are configured

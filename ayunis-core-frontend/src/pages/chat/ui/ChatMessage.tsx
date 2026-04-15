@@ -30,6 +30,7 @@ import IntegrationToolWidget from './chat-widgets/IntegrationToolWidget';
 import ThinkingBlockWidget from './chat-widgets/ThinkingBlockWidget';
 import CreateCalendarEventWidget from './chat-widgets/CreateCalendarEventWidget';
 import CreateSkillWidget from './chat-widgets/CreateSkillWidget';
+import EditSkillWidget from './chat-widgets/EditSkillWidget';
 import ActivateSkillWidget from './chat-widgets/ActivateSkillWidget';
 import SkillInstructionWidget from './chat-widgets/SkillInstructionWidget';
 import CreateDocumentWidget from './chat-widgets/CreateDocumentWidget';
@@ -342,6 +343,17 @@ function renderMessageContent(
               return (
                 <CreateSkillWidget
                   key={`create-skill-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
+                  content={toolUseMessageContent}
+                  isStreaming={isStreaming}
+                />
+              );
+            }
+            if (
+              toolUseMessageContent.name === ToolAssignmentDtoType.edit_skill
+            ) {
+              return (
+                <EditSkillWidget
+                  key={`edit-skill-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
                   content={toolUseMessageContent}
                   isStreaming={isStreaming}
                 />
