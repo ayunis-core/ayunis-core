@@ -262,7 +262,7 @@ export class ToolResultCollectorService {
   private async anonymizeText(text: string): Promise<string> {
     try {
       const result = await this.anonymizeTextUseCase.execute(
-        new AnonymizeTextCommand(text, 'de'),
+        new AnonymizeTextCommand(text),
       );
       return result.anonymizedText;
     } catch (error) {

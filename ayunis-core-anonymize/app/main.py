@@ -4,7 +4,7 @@ from app.models import (
     AnalyzeRequest,
     AnalyzeResponse,
     RecognizerResult,
-    HealthResponse
+    HealthResponse,
 )
 from app.presidio_service import get_presidio_service
 
@@ -32,11 +32,8 @@ async def health_check():
 
     Returns service status and supported languages
     """
-    service = get_presidio_service()
-    return HealthResponse(
-        status="healthy",
-        supported_languages=service.get_supported_languages()
-    )
+    get_presidio_service()
+    return HealthResponse(status="healthy")
 
 
 @app.post("/analyze", response_model=AnalyzeResponse)
@@ -57,14 +54,11 @@ async def analyze_text(request: AnalyzeRequest):
         HTTPException: If analysis fails
     """
     try:
-        # Get Presidio service
         service = get_presidio_service()
 
-        # Perform analysis
         results = service.analyze(
             text=request.text,
-            language=request.language.value,
-            entities=request.entities
+            entities=request.entities,
         )
 
         # Convert to response model

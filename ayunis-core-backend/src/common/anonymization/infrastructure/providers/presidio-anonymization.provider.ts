@@ -2,15 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import {
   AnonymizationPort,
   AnonymizationResult,
-  AnonymizationLanguage,
   AnonymizationReplacement,
 } from '../../application/ports/anonymization.port';
 import { AnonymizationFailedError } from '../../application/anonymization.errors';
 import { getMSPresidioPIIDetectionAPI } from 'src/common/clients/anonymize/generated/mSPresidioPIIDetectionAPI';
-import type {
-  Language,
-  RecognizerResult,
-} from 'src/common/clients/anonymize/generated/mSPresidioPIIDetectionAPI.schemas';
+import type { RecognizerResult } from 'src/common/clients/anonymize/generated/mSPresidioPIIDetectionAPI.schemas';
 
 @Injectable()
 export class PresidioAnonymizationProvider extends AnonymizationPort {
@@ -18,12 +14,10 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
 
   async anonymize(
     text: string,
-    language: AnonymizationLanguage,
     entities?: string[],
   ): Promise<AnonymizationResult> {
     this.logger.debug('Anonymizing text', {
       textLength: text.length,
-      language,
       entities,
     });
 
@@ -32,7 +26,6 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
 
       const response = await client.analyzeTextAnalyzePost({
         text,
-        language: language as Language,
         entities: entities ?? null,
       });
 

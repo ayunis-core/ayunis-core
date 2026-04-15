@@ -7,9 +7,6 @@ import { CreateUserMessageUseCase } from '../../../../messages/application/use-c
 import { CreateUserMessageCommand } from '../../../../messages/application/use-cases/create-user-message/create-user-message.command';
 import { CreateToolResultMessageUseCase } from '../../../../messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import { CreateToolResultMessageCommand } from '../../../../messages/application/use-cases/create-tool-result-message/create-tool-result-message.command';
-import { AssistantMessage } from '../../../../messages/domain/messages/assistant-message.entity';
-import { CreateAssistantMessageUseCase } from '../../../../messages/application/use-cases/create-assistant-message/create-assistant-message.use-case';
-import { CreateAssistantMessageCommand } from '../../../../messages/application/use-cases/create-assistant-message/create-assistant-message.command';
 import {
   RunAnonymizationUnavailableError,
   RunExecutionFailedError,
@@ -37,24 +34,17 @@ import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-
 import { AgentNotFoundError } from 'src/domain/agents/application/agents.errors';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
-import { CollectUsageAsyncService } from '../../services/collect-usage-async.service';
 import { CreditBudgetGuardService } from '../../services/credit-budget-guard.service';
 import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
 import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
 import { tierToFairUseQuotaType } from 'src/iam/quotas/domain/tier-to-quota-type';
-import { TrimMessagesForContextUseCase } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.use-case';
-import { TrimMessagesForContextCommand } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.command';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { ToolAssemblyService } from '../../services/tool-assembly.service';
 import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
 import { MessageCleanupService } from '../../services/message-cleanup.service';
-import { StreamingInferenceService } from '../../services/streaming-inference.service';
-import { NonStreamingInferenceService } from '../../services/non-streaming-inference.service';
-import { enrichContentWithIntegration } from '../../helpers/resolve-integration.helper';
+import { InferenceOrchestratorService } from '../../services/inference-orchestrator.service';
 import type { RunParams } from './run-params.interface';
 import { RunExecutedEvent } from '../../events/run-executed.event';
-
-const MAX_CONTEXT_TOKENS = 80000;
 
 @Injectable()
 export class ExecuteRunUseCase {
@@ -62,22 +52,18 @@ export class ExecuteRunUseCase {
 
   constructor(
     private readonly createUserMessageUseCase: CreateUserMessageUseCase,
-    private readonly createAssistantMessageUseCase: CreateAssistantMessageUseCase,
     private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly findOneAgentUseCase: FindOneAgentUseCase,
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
     private readonly contextService: ContextService,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
-    private readonly collectUsageAsyncService: CollectUsageAsyncService,
     private readonly checkQuotaUseCase: CheckQuotaUseCase,
     private readonly creditBudgetGuardService: CreditBudgetGuardService,
-    private readonly trimMessagesForContextUseCase: TrimMessagesForContextUseCase,
     private readonly toolAssemblyService: ToolAssemblyService,
     private readonly toolResultCollectorService: ToolResultCollectorService,
     private readonly messageCleanupService: MessageCleanupService,
-    private readonly streamingInferenceService: StreamingInferenceService,
-    private readonly nonStreamingInferenceService: NonStreamingInferenceService,
+    private readonly inferenceOrchestratorService: InferenceOrchestratorService,
     private readonly skillActivationService: SkillActivationService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -212,7 +198,8 @@ export class ExecuteRunUseCase {
           yield* this.handleFirstIteration(params, userInput);
         }
 
-        const assistantMessage = yield* this.runInference(params);
+        const assistantMessage =
+          yield* this.inferenceOrchestratorService.runInference(params);
 
         if (
           this.toolResultCollectorService.exitLoopAfterAgentResponse(
@@ -392,110 +379,10 @@ Skill "${skillName}" has already been activated on this thread. Do not call acti
     return newUserMessage;
   }
 
-  private async *runInference(
-    params: RunParams,
-  ): AsyncGenerator<Message, AssistantMessage, void> {
-    const trimmedMessages = this.trimMessagesForContextUseCase.execute(
-      new TrimMessagesForContextCommand(
-        params.thread.messages,
-        MAX_CONTEXT_TOKENS,
-      ),
-    );
-
-    try {
-      if (params.streaming) {
-        return yield* this.runStreamingInference(params, trimmedMessages);
-      }
-      return yield* this.runNonStreamingInference(params, trimmedMessages);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Inference failed', error);
-      throw new RunExecutionFailedError(
-        error instanceof Error ? error.message : 'Inference error',
-        { originalError: error as Error },
-      );
-    }
-  }
-
-  private async *runStreamingInference(
-    params: RunParams,
-    trimmedMessages: Message[],
-  ): AsyncGenerator<Message, AssistantMessage, void> {
-    let finalMessage: AssistantMessage | undefined;
-
-    for await (const partialMessage of this.streamingInferenceService.executeStreamingInference(
-      {
-        model: params.model,
-        messages: trimmedMessages,
-        tools: params.tools,
-        instructions: params.instructions,
-        threadId: params.thread.id,
-        orgId: params.orgId,
-      },
-    )) {
-      finalMessage = partialMessage;
-      yield partialMessage;
-    }
-
-    if (!finalMessage) {
-      throw new RunExecutionFailedError(
-        'No final message received from streaming inference',
-      );
-    }
-
-    this.addMessageToThreadUseCase.execute(
-      new AddMessageCommand(params.thread, finalMessage),
-    );
-    return finalMessage;
-  }
-
-  private async *runNonStreamingInference(
-    params: RunParams,
-    trimmedMessages: Message[],
-  ): AsyncGenerator<Message, AssistantMessage, void> {
-    const inferenceResponse = await this.nonStreamingInferenceService.execute({
-      model: params.model,
-      messages: trimmedMessages,
-      tools: params.tools,
-      instructions: params.instructions,
-    });
-
-    const enrichedContent = enrichContentWithIntegration(
-      inferenceResponse.content,
-      params.tools,
-    );
-
-    const assistantMessage = await this.createAssistantMessageUseCase.execute(
-      new CreateAssistantMessageCommand(params.thread.id, enrichedContent),
-    );
-
-    if (
-      inferenceResponse.meta.inputTokens !== undefined &&
-      inferenceResponse.meta.outputTokens !== undefined
-    ) {
-      this.collectUsageAsyncService.collect(
-        params.model,
-        inferenceResponse.meta.inputTokens,
-        inferenceResponse.meta.outputTokens,
-        assistantMessage.id,
-      );
-    }
-
-    this.addMessageToThreadUseCase.execute(
-      new AddMessageCommand(params.thread, assistantMessage),
-    );
-    yield assistantMessage;
-    return assistantMessage;
-  }
-
-  /**
-   * Anonymizes text by removing PII if the thread is in anonymous mode.
-   * Uses German language for anonymization (default for German public administration).
-   */
   private async anonymizeText(text: string): Promise<string> {
     try {
       const result = await this.anonymizeTextUseCase.execute(
-        new AnonymizeTextCommand(text, 'de'),
+        new AnonymizeTextCommand(text),
       );
       if (result.replacements.length > 0) {
         this.logger.log('Anonymized text', {

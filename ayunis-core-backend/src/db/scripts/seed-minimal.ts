@@ -153,6 +153,7 @@ async function seedSubscription(
     noOfSeats: fixture.subscription.noOfSeats,
     pricePerSeat: fixture.subscription.pricePerSeat,
     renewalCycle: fixture.subscription.renewalCycle,
+    startsAt: new Date(),
     renewalCycleAnchor: new Date(),
     cancelledAt: null,
   } as Partial<SeatBasedSubscriptionRecord>);
@@ -195,6 +196,7 @@ async function seedUsageSubscription(
     id: subscriptionId,
     orgId,
     monthlyCredits: fixture.usageSubscription.monthlyCredits,
+    startsAt: new Date(),
     cancelledAt: null,
   } as Partial<UsageBasedSubscriptionRecord>);
   await subRepo.save(record);

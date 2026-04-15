@@ -1,18 +1,10 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from enum import Enum
-
-
-class Language(str, Enum):
-    """Supported languages"""
-    ENGLISH = "en"
-    GERMAN = "de"
 
 
 class AnalyzeRequest(BaseModel):
     """Request model for PII analysis"""
     text: str = Field(..., description="Text to analyze for PII")
-    language: Language = Field(..., description="Language of the text (en or de)")
     entities: Optional[List[str]] = Field(
         None,
         description="Optional list of specific entity types to detect (e.g., ['PERSON', 'EMAIL'])"
@@ -22,9 +14,8 @@ class AnalyzeRequest(BaseModel):
         "json_schema_extra": {
             "examples": [
                 {
-                    "text": "My name is John Doe and my email is john.doe@example.com",
-                    "language": "en",
-                    "entities": ["PERSON", "EMAIL"]
+                    "text": "Mein Name ist Hans Mueller und meine E-Mail ist hans@mueller.de",
+                    "entities": ["PERSON", "EMAIL_ADDRESS"]
                 }
             ]
         }
@@ -83,4 +74,3 @@ class AnalyzeResponse(BaseModel):
 class HealthResponse(BaseModel):
     """Health check response"""
     status: str
-    supported_languages: List[str]

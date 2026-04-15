@@ -15,6 +15,7 @@ import { StreamingInferenceService } from './application/services/streaming-infe
 import { NonStreamingInferenceService } from './application/services/non-streaming-inference.service';
 import { CollectUsageAsyncService } from './application/services/collect-usage-async.service';
 import { CreditBudgetGuardService } from './application/services/credit-budget-guard.service';
+import { InferenceOrchestratorService } from './application/services/inference-orchestrator.service';
 
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 import { TrialsModule } from 'src/iam/trials/trials.module';
@@ -61,6 +62,7 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
     NonStreamingInferenceService,
     CollectUsageAsyncService,
     CreditBudgetGuardService,
+    InferenceOrchestratorService,
   ],
   exports: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],
 })

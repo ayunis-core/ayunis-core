@@ -14,14 +14,9 @@ export class AnonymizeTextUseCase {
   async execute(command: AnonymizeTextCommand): Promise<AnonymizationResult> {
     this.logger.log('Executing anonymize text', {
       textLength: command.text.length,
-      language: command.language,
       entities: command.entities,
     });
 
-    return this.anonymizationPort.anonymize(
-      command.text,
-      command.language,
-      command.entities,
-    );
+    return this.anonymizationPort.anonymize(command.text, command.entities);
   }
 }
