@@ -4,6 +4,7 @@
     "installNote": "Diese Integration wird Ihrer Organisation hinzugefügt. Konfigurieren Sie die erforderlichen Felder unten.",
     "zeroConfigNote": "Diese Integration erfordert keine zusätzliche Konfiguration und wird sofort installiert.",
     "legalText": "Ich habe die <legalLink>Nutzungsbedingungen</legalLink> gelesen und akzeptiere diese.",
+    "termsOfServiceText": "Ich habe die <termsLink>Nutzungsbedingungen</termsLink> gelesen und akzeptiere diese.",
     "adminOnly": "Nur Organisationsadministratoren können Integrationen installieren."
   },
   "field": {
