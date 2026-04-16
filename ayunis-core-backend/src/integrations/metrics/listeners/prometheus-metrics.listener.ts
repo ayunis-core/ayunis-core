@@ -10,6 +10,8 @@ import { InferenceCompletedEvent } from 'src/domain/runs/application/events/infe
 import { TokensConsumedEvent } from 'src/domain/runs/application/events/tokens-consumed.event';
 import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
 import { ThreadMessageAddedEvent } from 'src/domain/threads/application/events/thread-message-added.event';
+import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
+import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application/events/marketplace-integration-installed.event';
 import {
   AYUNIS_USER_CREATIONS_TOTAL,
   AYUNIS_MESSAGES_TOTAL,
@@ -19,6 +21,7 @@ import {
   AYUNIS_TOKENS_TOTAL,
   AYUNIS_TOOL_USES_TOTAL,
   AYUNIS_THREAD_MESSAGE_COUNT,
+  AYUNIS_MARKETPLACE_INSTALLS_TOTAL,
 } from '../metrics.constants';
 import { safeMetric } from '../metrics.utils';
 import { classifyInferenceError } from '../classify-inference-error.helper';
@@ -49,6 +52,8 @@ export class PrometheusMetricsListener {
     private readonly toolUsesCounter: Counter<string>,
     @InjectMetric(AYUNIS_THREAD_MESSAGE_COUNT)
     private readonly threadMessageHistogram: Histogram<string>,
+    @InjectMetric(AYUNIS_MARKETPLACE_INSTALLS_TOTAL)
+    private readonly marketplaceInstallsCounter: Counter<string>,
   ) {}
 
   @OnEvent(UserCreatedEvent.EVENT_NAME)
@@ -169,6 +174,32 @@ export class PrometheusMetricsListener {
         { user_id: event.userId, org_id: event.orgId },
         event.messageCount,
       );
+    });
+  }
+
+  @OnEvent(MarketplaceSkillInstalledEvent.EVENT_NAME)
+  handleMarketplaceSkillInstalled(event: MarketplaceSkillInstalledEvent): void {
+    safeMetric(this.logger, () => {
+      this.marketplaceInstallsCounter.inc({
+        user_id: event.userId,
+        org_id: event.orgId,
+        marketplace_type: 'skill',
+        marketplace_slug: event.identifier,
+      });
+    });
+  }
+
+  @OnEvent(MarketplaceIntegrationInstalledEvent.EVENT_NAME)
+  handleMarketplaceIntegrationInstalled(
+    event: MarketplaceIntegrationInstalledEvent,
+  ): void {
+    safeMetric(this.logger, () => {
+      this.marketplaceInstallsCounter.inc({
+        user_id: event.userId,
+        org_id: event.orgId,
+        marketplace_type: 'integration',
+        marketplace_slug: event.identifier,
+      });
     });
   }
 }
