@@ -264,12 +264,15 @@ export class ToolAssemblyService {
           }),
         ),
       );
-      if (slugMap.size > 0) {
+      const userSlugs = [...slugMap.keys()].filter((s) =>
+        s.startsWith(`${USER_PREFIX}__`),
+      );
+      if (userSlugs.length > 0) {
         tools.push(
           await this.assembleToolsUseCase.execute(
             new AssembleToolCommand({
               type: ToolType.EDIT_SKILL,
-              context: [...slugMap.keys()],
+              context: userSlugs,
             }),
           ),
         );
