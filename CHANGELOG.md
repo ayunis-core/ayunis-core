@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.27.0](https://github.com/ayunis-core/ayunis-core/compare/v1.26.1...v1.27.0) (2026-04-16)
+
+
+### Features
+
+* **marketplace:** add sidebar entry and skills promo linking to marketplace (AYC-000) ([#573](https://github.com/ayunis-core/ayunis-core/issues/573)) ([05960a5](https://github.com/ayunis-core/ayunis-core/commit/05960a5b5b98cf0260f0409d77624c9bbbfb71fe))
+* **marketplace:** require terms acceptance before installing a skill (AYC-000) ([#575](https://github.com/ayunis-core/ayunis-core/issues/575)) ([de6fd13](https://github.com/ayunis-core/ayunis-core/commit/de6fd13993e34c02c0b418dc05d8dad1bd0b84ad))
+* **marketplace:** require terms acceptance before installing an integration (AYC-000) ([#576](https://github.com/ayunis-core/ayunis-core/issues/576)) ([16a608e](https://github.com/ayunis-core/ayunis-core/commit/16a608e65823d12edd20fadb6e76b38ad452802c))
+* **metrics:** track marketplace installs as prometheus counter (AYC-000) ([#574](https://github.com/ayunis-core/ayunis-core/issues/574)) ([3f5e2b8](https://github.com/ayunis-core/ayunis-core/commit/3f5e2b82ec15095bb5876f2af0ba3dc8105fe8f3))
+* **skills:** add edit skill tool for modifying existing skills (AYC-000) ([#571](https://github.com/ayunis-core/ayunis-core/issues/571)) ([9bb990a](https://github.com/ayunis-core/ayunis-core/commit/9bb990a613a3e7a0a9d0a1435a9bff4c2e5e0a29))
+
 ## [1.26.1](https://github.com/ayunis-core/ayunis-core/compare/v1.26.0...v1.26.1) (2026-04-14)
 
 
