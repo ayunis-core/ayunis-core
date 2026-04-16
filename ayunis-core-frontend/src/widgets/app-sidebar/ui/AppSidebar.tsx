@@ -9,6 +9,7 @@ import {
   Bot,
   Brain,
   Sparkles,
+  Store,
 } from 'lucide-react';
 
 import {
@@ -42,6 +43,7 @@ import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.sc
 import config from '@/shared/config';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { useFeatureToggles } from '@/features/feature-toggles';
+import { useMarketplaceConfig } from '@/features/marketplace';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
@@ -51,6 +53,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navigate = useNavigate();
   const { closeMobileWithCleanup } = useSidebar();
   const featureToggles = useFeatureToggles();
+  const marketplace = useMarketplaceConfig();
   const location = useLocation();
   useKeyboardShortcut(['j', 'Meta'], () => {
     void navigate({ to: '/chat' });
@@ -142,6 +145,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
+            {marketplace.enabled && marketplace.url && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a
+                    href={marketplace.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Store />
+                    <span>{t('sidebar.marketplace')}</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
           </SidebarMenu>
         </SidebarGroup>
 

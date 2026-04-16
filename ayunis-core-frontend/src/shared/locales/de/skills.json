@@ -9,6 +9,10 @@
     "personal": "Eigene Fähigkeiten",
     "shared": "Geteilte Fähigkeiten"
   },
+  "marketplaceBanner": {
+    "title": "Weitere Fähigkeiten im Ayunis Core Marketplace entdecken",
+    "description": "Durchsuchen Sie kuratierte Fähigkeiten und installieren Sie neue direkt aus dem Ayunis Core Marketplace."
+  },
   "emptyState": {
     "title": "Noch keine Fähigkeiten",
     "description": "Erstellen Sie Ihre erste Fähigkeit. Fähigkeiten sind wiederverwendbare Wissens- und Integrationsbündel, die bei Bedarf während Gesprächen aktiviert werden können.",
@@ -19,7 +23,8 @@
     "shared": {
       "title": "Noch keine geteilten Fähigkeiten",
       "description": "Fähigkeiten, die von anderen Mitgliedern Ihrer Organisation mit Ihnen geteilt werden, erscheinen hier."
-    }
+    },
+    "browseMarketplace": "Oder durchsuchen Sie den Ayunis Core Marketplace"
   },
   "badge": {
     "active": "Aktiv",

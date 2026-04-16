@@ -9,6 +9,10 @@
     "personal": "Own Skills",
     "shared": "Shared Skills"
   },
+  "marketplaceBanner": {
+    "title": "Discover more skills in the Ayunis Core Marketplace",
+    "description": "Browse curated skills and install new ones directly from the Ayunis Core Marketplace."
+  },
   "emptyState": {
     "title": "No skills yet",
     "description": "Get started by creating your first skill. Skills are reusable knowledge and integration bundles that can be activated on-demand during conversations.",
@@ -19,7 +23,8 @@
     "shared": {
       "title": "No shared skills yet",
       "description": "Skills shared with you by other members of your organization will appear here."
-    }
+    },
+    "browseMarketplace": "Or browse the Ayunis Core Marketplace"
   },
   "badge": {
     "active": "Active",
