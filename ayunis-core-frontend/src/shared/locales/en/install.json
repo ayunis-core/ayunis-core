@@ -1,6 +1,7 @@
 {
   "detail": {
-    "installNote": "This skill will be added to your account. You can customize the skill's settings after installation."
+    "installNote": "This skill will be added to your account. You can customize the skill's settings after installation.",
+    "termsOfServiceText": "I have read and accept the <termsLink>terms of service</termsLink>."
   },
   "action": {
     "install": "Install Skill",

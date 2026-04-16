@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
   Card,
@@ -7,9 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/ui/shadcn/card';
+import { Checkbox } from '@/shared/ui/shadcn/checkbox';
 import { Bot } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
+import { useMarketplaceConfig } from '@/features/marketplace';
 import type { MarketplaceSkillResponseDto } from '../api/useFetchMarketplaceSkill';
 
 interface InstallSkillCardProps {
@@ -24,6 +27,12 @@ export function InstallSkillCard({
   isInstalling,
 }: Readonly<InstallSkillCardProps>) {
   const { t } = useTranslation('install');
+  const marketplace = useMarketplaceConfig();
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
+  const termsOfServiceUrl = marketplace.url
+    ? `${marketplace.url.replace(/\/$/, '')}/nutzungsbedingungen`
+    : null;
 
   return (
     <Card className="w-full max-w-lg">
@@ -49,13 +58,52 @@ export function InstallSkillCard({
             {t('detail.installNote')}
           </p>
         </div>
+
+        <div className="flex items-start gap-2">
+          <Checkbox
+            id="terms-accept"
+            className="mt-0.5"
+            checked={termsAccepted}
+            onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+            disabled={isInstalling}
+          />
+          <span
+            className="text-sm leading-normal cursor-pointer select-none"
+            onClick={(e) => {
+              if (!isInstalling && !(e.target as HTMLElement).closest('a')) {
+                setTermsAccepted(!termsAccepted);
+              }
+            }}
+          >
+            <Trans
+              ns="install"
+              i18nKey="detail.termsOfServiceText"
+              components={{
+                termsLink: (
+                  <a
+                    href={termsOfServiceUrl ?? '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline text-primary hover:text-primary/80"
+                  >
+                    placeholder
+                  </a>
+                ),
+              }}
+            />
+          </span>
+        </div>
       </CardContent>
 
       <CardFooter className="flex gap-3">
         <Button variant="outline" className="flex-1" asChild>
           <Link to="/skills">{t('action.cancel')}</Link>
         </Button>
-        <Button className="flex-1" onClick={onInstall} disabled={isInstalling}>
+        <Button
+          className="flex-1"
+          onClick={onInstall}
+          disabled={isInstalling || !termsAccepted}
+        >
           {isInstalling ? t('action.installing') : t('action.install')}
         </Button>
       </CardFooter>

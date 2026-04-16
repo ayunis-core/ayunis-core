@@ -1,6 +1,7 @@
 {
   "detail": {
-    "installNote": "Diese Fähigkeit wird Ihrem Konto hinzugefügt. Sie können die Einstellungen der Fähigkeit nach der Installation anpassen."
+    "installNote": "Diese Fähigkeit wird Ihrem Konto hinzugefügt. Sie können die Einstellungen der Fähigkeit nach der Installation anpassen.",
+    "termsOfServiceText": "Ich habe die <termsLink>Nutzungsbedingungen</termsLink> gelesen und akzeptiere diese."
   },
   "action": {
     "install": "Fähigkeit installieren",
