@@ -14,6 +14,7 @@ import {
   AYUNIS_THREAD_MESSAGE_COUNT,
   AYUNIS_TOOL_USES_TOTAL,
   AYUNIS_USER_CREATIONS_TOTAL,
+  AYUNIS_MARKETPLACE_INSTALLS_TOTAL,
   LABEL_USER_ID,
   LABEL_ORG_ID,
   LABEL_MODEL,
@@ -24,6 +25,8 @@ import {
   LABEL_STREAMING,
   LABEL_TOOL_NAME,
   LABEL_DEPARTMENT,
+  LABEL_MARKETPLACE_TYPE,
+  LABEL_MARKETPLACE_SLUG,
 } from './metrics.constants';
 import { MetricsAuthMiddleware } from './metrics-auth.middleware';
 import { MetricsController } from './metrics.controller';
@@ -85,6 +88,17 @@ const userCreationsCounter = makeCounterProvider({
   labelNames: [LABEL_ORG_ID, LABEL_DEPARTMENT],
 });
 
+const marketplaceInstallsCounter = makeCounterProvider({
+  name: AYUNIS_MARKETPLACE_INSTALLS_TOTAL,
+  help: 'Total number of marketplace installs (skill or integration)',
+  labelNames: [
+    LABEL_USER_ID,
+    LABEL_ORG_ID,
+    LABEL_MARKETPLACE_TYPE,
+    LABEL_MARKETPLACE_SLUG,
+  ],
+});
+
 const metricProviders = [
   tokensCounter,
   inferenceDurationHistogram,
@@ -94,6 +108,7 @@ const metricProviders = [
   threadMessageCountHistogram,
   toolUsesCounter,
   userCreationsCounter,
+  marketplaceInstallsCounter,
 ];
 
 @Module({

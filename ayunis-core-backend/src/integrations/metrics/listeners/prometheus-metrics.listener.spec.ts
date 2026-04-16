@@ -8,6 +8,8 @@ import { InferenceCompletedEvent } from 'src/domain/runs/application/events/infe
 import { TokensConsumedEvent } from 'src/domain/runs/application/events/tokens-consumed.event';
 import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
 import { ThreadMessageAddedEvent } from 'src/domain/threads/application/events/thread-message-added.event';
+import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
+import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application/events/marketplace-integration-installed.event';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
@@ -48,6 +50,7 @@ describe('PrometheusMetricsListener', () => {
   let tokensCounter: ReturnType<typeof mockCounter>;
   let toolUsesCounter: ReturnType<typeof mockCounter>;
   let threadMessageHistogram: ReturnType<typeof mockHistogram>;
+  let marketplaceInstallsCounter: ReturnType<typeof mockCounter>;
 
   beforeEach(() => {
     userCreationsCounter = mockCounter();
@@ -58,6 +61,7 @@ describe('PrometheusMetricsListener', () => {
     tokensCounter = mockCounter();
     toolUsesCounter = mockCounter();
     threadMessageHistogram = mockHistogram();
+    marketplaceInstallsCounter = mockCounter();
 
     listener = new PrometheusMetricsListener(
       userCreationsCounter as never,
@@ -68,6 +72,7 @@ describe('PrometheusMetricsListener', () => {
       tokensCounter as never,
       toolUsesCounter as never,
       threadMessageHistogram as never,
+      marketplaceInstallsCounter as never,
     );
   });
 
@@ -358,6 +363,44 @@ describe('PrometheusMetricsListener', () => {
           new UserCreatedEvent(USER_ID, ORG_ID, makeUser()),
         ),
       ).not.toThrow();
+    });
+  });
+
+  describe('handleMarketplaceSkillInstalled', () => {
+    it('should increment marketplace installs counter with type "skill" and slug', () => {
+      listener.handleMarketplaceSkillInstalled(
+        new MarketplaceSkillInstalledEvent(
+          USER_ID,
+          ORG_ID,
+          'meeting-summarizer',
+        ),
+      );
+
+      expect(marketplaceInstallsCounter.inc).toHaveBeenCalledWith({
+        user_id: USER_ID,
+        org_id: ORG_ID,
+        marketplace_type: 'skill',
+        marketplace_slug: 'meeting-summarizer',
+      });
+    });
+  });
+
+  describe('handleMarketplaceIntegrationInstalled', () => {
+    it('should increment marketplace installs counter with type "integration" and slug', () => {
+      listener.handleMarketplaceIntegrationInstalled(
+        new MarketplaceIntegrationInstalledEvent(
+          USER_ID,
+          ORG_ID,
+          'oparl-council-data',
+        ),
+      );
+
+      expect(marketplaceInstallsCounter.inc).toHaveBeenCalledWith({
+        user_id: USER_ID,
+        org_id: ORG_ID,
+        marketplace_type: 'integration',
+        marketplace_slug: 'oparl-council-data',
+      });
     });
   });
 });

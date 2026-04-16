@@ -9,6 +9,8 @@ import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.
 import type { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
 import type { ContextService } from 'src/common/context/services/context.service';
+import type { EventEmitter2 } from '@nestjs/event-emitter';
+import { MarketplaceIntegrationInstalledEvent } from '../../events/marketplace-integration-installed.event';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
 import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
@@ -32,8 +34,10 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
   let validateUseCase: jest.Mocked<ValidateMcpIntegrationUseCase>;
   let connectionValidationService: ConnectionValidationService;
   let contextService: jest.Mocked<ContextService>;
+  let eventEmitter: jest.Mocked<EventEmitter2>;
 
   const orgId = '660e8400-e29b-41d4-a716-446655440001' as UUID;
+  const userId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
 
   const oparlMarketplaceResponse: IntegrationResponseDto = {
     id: '550e8400-e29b-41d4-a716-446655440000',
@@ -146,7 +150,15 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
       get: jest.fn(),
     } as unknown as jest.Mocked<ContextService>;
 
-    contextService.get.mockReturnValue(orgId);
+    contextService.get.mockImplementation((key) => {
+      if (key === 'userId') return userId;
+      if (key === 'orgId') return orgId;
+      return undefined;
+    });
+
+    eventEmitter = {
+      emitAsync: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<EventEmitter2>;
 
     repository.save.mockImplementation(async (integration) => integration);
     credentialEncryption.encrypt.mockImplementation(
@@ -175,6 +187,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
       authFactory,
       connectionValidationService,
       contextService,
+      eventEmitter,
     );
   });
 
@@ -437,5 +450,45 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
     expect(result.orgConfigValues).toEqual({
       authToken: 'encrypted:sk-fixed-token-we-control',
     });
+  });
+
+  it('should emit MarketplaceIntegrationInstalledEvent with the canonical identifier on success', async () => {
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
+      oparlMarketplaceResponse,
+    );
+
+    await useCase.execute(
+      new InstallMarketplaceIntegrationCommand('oparl-council-data', {
+        oparlEndpointUrl: 'https://rim.ekom21.de/oparl/v1',
+      }),
+    );
+
+    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+      MarketplaceIntegrationInstalledEvent.EVENT_NAME,
+      expect.objectContaining({
+        userId,
+        orgId,
+        identifier: 'oparl-council-data',
+      }),
+    );
+  });
+
+  it('should not emit an event when install fails (duplicate)', async () => {
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
+      oparlMarketplaceResponse,
+    );
+    repository.findByOrgIdAndMarketplaceIdentifier.mockResolvedValue(
+      {} as never,
+    );
+
+    await expect(
+      useCase.execute(
+        new InstallMarketplaceIntegrationCommand('oparl-council-data', {
+          oparlEndpointUrl: 'https://rim.ekom21.de/oparl/v1',
+        }),
+      ),
+    ).rejects.toThrow(DuplicateMarketplaceMcpIntegrationError);
+
+    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 });

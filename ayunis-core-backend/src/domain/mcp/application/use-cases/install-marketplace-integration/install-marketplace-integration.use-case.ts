@@ -1,4 +1,5 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InstallMarketplaceIntegrationCommand } from './install-marketplace-integration.command';
 import { GetMarketplaceIntegrationUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
 import { GetMarketplaceIntegrationQuery } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.query';
@@ -15,6 +16,7 @@ import {
   IntegrationConfigSchema,
   ConfigField,
 } from '../../../domain/value-objects/integration-config-schema';
+import { MarketplaceIntegrationInstalledEvent } from '../../events/marketplace-integration-installed.event';
 /**
  * Runtime shape of the configSchema returned by the marketplace API.
  * The OpenAPI spec declares this as a generic object, so we cast at the boundary.
@@ -63,6 +65,7 @@ export class InstallMarketplaceIntegrationUseCase {
     private readonly authFactory: McpIntegrationAuthFactory,
     private readonly connectionValidationService: ConnectionValidationService,
     private readonly contextService: ContextService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(
@@ -71,7 +74,8 @@ export class InstallMarketplaceIntegrationUseCase {
     this.logger.log('execute', { identifier: command.identifier });
 
     const orgId = this.contextService.get('orgId');
-    if (!orgId) {
+    const userId = this.contextService.get('userId');
+    if (!orgId || !userId) {
       throw new UnauthorizedException('User not authenticated');
     }
 
@@ -136,6 +140,26 @@ export class InstallMarketplaceIntegrationUseCase {
 
       const validated =
         await this.connectionValidationService.validateAndUpdateStatus(saved);
+
+      this.eventEmitter
+        .emitAsync(
+          MarketplaceIntegrationInstalledEvent.EVENT_NAME,
+          new MarketplaceIntegrationInstalledEvent(
+            userId,
+            orgId,
+            marketplaceIntegration.identifier,
+          ),
+        )
+        .catch((err: unknown) => {
+          this.logger.error(
+            'Failed to emit MarketplaceIntegrationInstalledEvent',
+            {
+              error: err instanceof Error ? err.message : 'Unknown error',
+              identifier: marketplaceIntegration.identifier,
+              orgId,
+            },
+          );
+        });
 
       return validated as MarketplaceMcpIntegration;
     } catch (error) {

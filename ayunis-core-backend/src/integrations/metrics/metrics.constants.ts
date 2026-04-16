@@ -11,6 +11,8 @@ export const AYUNIS_USER_ACTIVITY_TOTAL = 'ayunis_user_activity_total';
 export const AYUNIS_THREAD_MESSAGE_COUNT = 'ayunis_thread_message_count';
 export const AYUNIS_TOOL_USES_TOTAL = 'ayunis_tool_uses_total';
 export const AYUNIS_USER_CREATIONS_TOTAL = 'ayunis_user_creations_total';
+export const AYUNIS_MARKETPLACE_INSTALLS_TOTAL =
+  'ayunis_marketplace_installs_total';
 
 // Shared label names
 //
@@ -30,3 +32,5 @@ export const LABEL_ERROR_TYPE = 'error_type';
 export const LABEL_STREAMING = 'streaming';
 export const LABEL_TOOL_NAME = 'tool_name';
 export const LABEL_DEPARTMENT = 'department';
+export const LABEL_MARKETPLACE_TYPE = 'marketplace_type';
+export const LABEL_MARKETPLACE_SLUG = 'marketplace_slug';
