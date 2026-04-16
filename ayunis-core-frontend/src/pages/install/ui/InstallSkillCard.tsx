@@ -79,15 +79,17 @@ export function InstallSkillCard({
               ns="install"
               i18nKey="detail.termsOfServiceText"
               components={{
-                termsLink: (
+                termsLink: termsOfServiceUrl ? (
                   <a
-                    href={termsOfServiceUrl ?? '#'}
+                    href={termsOfServiceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="underline text-primary hover:text-primary/80"
                   >
                     placeholder
                   </a>
+                ) : (
+                  <span className="underline text-primary">placeholder</span>
                 ),
               }}
             />
