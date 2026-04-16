@@ -68,6 +68,21 @@
         "error": "Failed to create skill",
         "errorDuplicate": "A skill with this name already exists"
       },
+      "edit_skill": {
+        "changeSummary": "Changes",
+        "name": "Name",
+        "namePlaceholder": "Enter skill name",
+        "shortDescription": "Trigger",
+        "shortDescriptionPlaceholder": "Describe when the AI should activate this skill...",
+        "instructions": "Instructions",
+        "instructionsPlaceholder": "Detailed instructions for the skill",
+        "update": "Update Skill",
+        "updated": "Skill Updated",
+        "success": "Skill updated successfully",
+        "error": "Failed to update skill",
+        "errorDuplicate": "A skill with this name already exists",
+        "skillNotFound": "Could not find this skill. It may have been deleted."
+      },
       "create_document": {
         "title": "Document",
         "created": "Document created",

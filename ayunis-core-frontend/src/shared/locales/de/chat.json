@@ -68,6 +68,21 @@
         "error": "Fähigkeit konnte nicht erstellt werden",
         "errorDuplicate": "Eine Fähigkeit mit diesem Namen existiert bereits"
       },
+      "edit_skill": {
+        "changeSummary": "Änderungen",
+        "name": "Name",
+        "namePlaceholder": "Name der Fähigkeit eingeben",
+        "shortDescription": "Auslöser",
+        "shortDescriptionPlaceholder": "Beschreiben Sie, wann die KI diese Fähigkeit aktivieren soll...",
+        "instructions": "Anweisungen",
+        "instructionsPlaceholder": "Detaillierte Anweisungen für die Fähigkeit",
+        "update": "Fähigkeit aktualisieren",
+        "updated": "Fähigkeit aktualisiert",
+        "success": "Fähigkeit erfolgreich aktualisiert",
+        "error": "Fähigkeit konnte nicht aktualisiert werden",
+        "errorDuplicate": "Eine Fähigkeit mit diesem Namen existiert bereits",
+        "skillNotFound": "Fähigkeit konnte nicht gefunden werden. Sie wurde möglicherweise gelöscht."
+      },
       "create_document": {
         "title": "Dokument",
         "created": "Dokument erstellt",
