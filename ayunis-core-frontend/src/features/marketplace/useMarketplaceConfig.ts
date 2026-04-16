@@ -1,11 +1,20 @@
 import { useMarketplaceControllerGetConfig } from '@/shared/api/generated/ayunisCoreAPI';
 import type { MarketplaceConfigResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
-export function useMarketplaceConfig(): MarketplaceConfigResponseDto {
+interface MarketplaceConfig extends MarketplaceConfigResponseDto {
+  termsOfServiceUrl: string | null;
+}
+
+export function useMarketplaceConfig(): MarketplaceConfig {
   const { data } = useMarketplaceControllerGetConfig();
+
+  const url = data?.url ?? null;
 
   return {
     enabled: data?.enabled ?? false,
-    url: data?.url ?? null,
+    url,
+    termsOfServiceUrl: url
+      ? `${url.replace(/\/$/, '')}/nutzungsbedingungen`
+      : null,
   };
 }

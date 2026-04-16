@@ -30,9 +30,7 @@ export function InstallSkillCard({
   const marketplace = useMarketplaceConfig();
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  const termsOfServiceUrl = marketplace.url
-    ? `${marketplace.url.replace(/\/$/, '')}/nutzungsbedingungen`
-    : null;
+  const { termsOfServiceUrl } = marketplace;
 
   return (
     <Card className="w-full max-w-lg">

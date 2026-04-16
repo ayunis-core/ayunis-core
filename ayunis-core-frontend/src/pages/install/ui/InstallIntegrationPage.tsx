@@ -147,9 +147,7 @@ function InstallIntegrationCard({
     editableFields,
     formValues,
   );
-  const termsOfServiceUrl = marketplace.url
-    ? `${marketplace.url.replace(/\/$/, '')}/nutzungsbedingungen`
-    : null;
+  const { termsOfServiceUrl } = marketplace;
 
   return (
     <InstallIntegrationCardView
