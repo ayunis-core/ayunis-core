@@ -2645,6 +2645,16 @@ export interface ValidationResponseDto {
   error?: string;
 }
 
+export interface MarketplaceConfigResponseDto {
+  /** Whether the marketplace feature is enabled */
+  enabled: boolean;
+  /**
+   * URL of the marketplace service, exposed so the frontend can link to it. Null when the feature is disabled.
+   * @nullable
+   */
+  url?: string | null;
+}
+
 export interface MarketplaceSkillResponseDto {
   /** Skill UUID */
   id: string;

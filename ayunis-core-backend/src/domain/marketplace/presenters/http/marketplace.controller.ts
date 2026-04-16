@@ -1,11 +1,14 @@
-import { Controller, Get, Logger, Param } from '@nestjs/common';
+import { Controller, Get, Inject, Logger, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ConfigType } from '@nestjs/config';
+import { marketplaceConfig } from 'src/config/marketplace.config';
 import { GetMarketplaceSkillUseCase } from '../../application/use-cases/get-marketplace-skill/get-marketplace-skill.use-case';
 import { GetMarketplaceSkillQuery } from '../../application/use-cases/get-marketplace-skill/get-marketplace-skill.query';
 import { MarketplaceSkillResponseDto } from './dto/marketplace-skill-response.dto';
 import { GetMarketplaceIntegrationUseCase } from '../../application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
 import { GetMarketplaceIntegrationQuery } from '../../application/use-cases/get-marketplace-integration/get-marketplace-integration.query';
 import { MarketplaceIntegrationResponseDto } from './dto/marketplace-integration-response.dto';
+import { MarketplaceConfigResponseDto } from './dto/marketplace-config-response.dto';
 
 @ApiTags('marketplace')
 @Controller('marketplace')
@@ -15,7 +18,23 @@ export class MarketplaceController {
   constructor(
     private readonly getMarketplaceSkillUseCase: GetMarketplaceSkillUseCase,
     private readonly getMarketplaceIntegrationUseCase: GetMarketplaceIntegrationUseCase,
+    @Inject(marketplaceConfig.KEY)
+    private readonly marketplace: ConfigType<typeof marketplaceConfig>,
   ) {}
+
+  @Get('config')
+  @ApiOperation({ summary: 'Get marketplace availability and URL' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns whether the marketplace is enabled and its URL',
+    type: MarketplaceConfigResponseDto,
+  })
+  getConfig(): MarketplaceConfigResponseDto {
+    return {
+      enabled: this.marketplace.enabled,
+      url: this.marketplace.serviceUrl ?? null,
+    };
+  }
 
   @Get('skills/:identifier')
   @ApiOperation({ summary: 'Preview a marketplace skill before installation' })

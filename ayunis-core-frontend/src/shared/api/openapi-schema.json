@@ -4875,6 +4875,26 @@
         "tags": ["mcp-integrations"]
       }
     },
+    "/marketplace/config": {
+      "get": {
+        "operationId": "MarketplaceController_getConfig",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Returns whether the marketplace is enabled and its URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceConfigResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get marketplace availability and URL",
+        "tags": ["marketplace"]
+      }
+    },
     "/marketplace/skills/{identifier}": {
       "get": {
         "operationId": "MarketplaceController_getSkill",
@@ -11979,6 +11999,23 @@
           }
         },
         "required": ["valid", "capabilities"]
+      },
+      "MarketplaceConfigResponseDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the marketplace feature is enabled",
+            "example": true
+          },
+          "url": {
+            "type": "string",
+            "description": "URL of the marketplace service, exposed so the frontend can link to it. Null when the feature is disabled.",
+            "nullable": true,
+            "example": "https://marketplace.example.com"
+          }
+        },
+        "required": ["enabled"]
       },
       "MarketplaceSkillResponseDto": {
         "type": "object",

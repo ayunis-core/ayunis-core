@@ -1,0 +1,1 @@
+export { useMarketplaceConfig } from './useMarketplaceConfig';

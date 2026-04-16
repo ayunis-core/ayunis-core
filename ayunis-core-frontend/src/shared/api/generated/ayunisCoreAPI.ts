@@ -91,6 +91,7 @@ import type {
   LanguageModelResponseDto,
   LetterheadResponseDto,
   LoginDto,
+  MarketplaceConfigResponseDto,
   MarketplaceIntegrationResponseDto,
   MarketplaceSkillResponseDto,
   McpIntegrationResponseDto,
@@ -9873,6 +9874,99 @@ export const useMcpIntegrationsControllerValidate = <TError = void,
       return useMutation(mutationOptions, queryClient);
     }
     
+/**
+ * @summary Get marketplace availability and URL
+ */
+export const marketplaceControllerGetConfig = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<MarketplaceConfigResponseDto>(
+      {url: `/marketplace/config`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getMarketplaceControllerGetConfigQueryKey = () => {
+    return [
+    `/marketplace/config`
+    ] as const;
+    }
+
+    
+export const getMarketplaceControllerGetConfigQueryOptions = <TData = Awaited<ReturnType<typeof marketplaceControllerGetConfig>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetConfig>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMarketplaceControllerGetConfigQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof marketplaceControllerGetConfig>>> = ({ signal }) => marketplaceControllerGetConfig(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MarketplaceControllerGetConfigQueryResult = NonNullable<Awaited<ReturnType<typeof marketplaceControllerGetConfig>>>
+export type MarketplaceControllerGetConfigQueryError = unknown
+
+
+export function useMarketplaceControllerGetConfig<TData = Awaited<ReturnType<typeof marketplaceControllerGetConfig>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetConfig>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof marketplaceControllerGetConfig>>,
+          TError,
+          Awaited<ReturnType<typeof marketplaceControllerGetConfig>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMarketplaceControllerGetConfig<TData = Awaited<ReturnType<typeof marketplaceControllerGetConfig>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetConfig>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof marketplaceControllerGetConfig>>,
+          TError,
+          Awaited<ReturnType<typeof marketplaceControllerGetConfig>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMarketplaceControllerGetConfig<TData = Awaited<ReturnType<typeof marketplaceControllerGetConfig>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetConfig>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get marketplace availability and URL
+ */
+
+export function useMarketplaceControllerGetConfig<TData = Awaited<ReturnType<typeof marketplaceControllerGetConfig>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetConfig>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMarketplaceControllerGetConfigQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
 /**
  * @summary Preview a marketplace skill before installation
  */
