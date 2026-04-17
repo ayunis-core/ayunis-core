@@ -70,7 +70,11 @@ export class PermittedModelQueryService {
 
   async findManyEmbedding(orgId: UUID): Promise<PermittedEmbeddingModel[]> {
     const permittedModels = await this.permittedModelRepository.find(
-      this.buildActiveOrgScopedQuery(orgId, ModelType.EMBEDDING),
+      this.buildActiveScopedQuery({
+        orgId,
+        scope: PermittedModelScope.ORG,
+        modelType: ModelType.EMBEDDING,
+      }),
     );
     return permittedModels
       .filter(
@@ -86,7 +90,11 @@ export class PermittedModelQueryService {
     orgId: UUID,
   ): Promise<PermittedImageGenerationModel[]> {
     const permittedModels = await this.permittedModelRepository.find(
-      this.buildActiveOrgScopedQuery(orgId, ModelType.IMAGE_GENERATION),
+      this.buildActiveScopedQuery({
+        orgId,
+        scope: PermittedModelScope.ORG,
+        modelType: ModelType.IMAGE_GENERATION,
+      }),
     );
     return permittedModels
       .filter(
@@ -100,7 +108,11 @@ export class PermittedModelQueryService {
 
   async findManyLanguage(orgId: UUID): Promise<PermittedLanguageModel[]> {
     const permittedModels = await this.permittedModelRepository.find(
-      this.buildActiveOrgScopedQuery(orgId, ModelType.LANGUAGE),
+      this.buildActiveScopedQuery({
+        orgId,
+        scope: PermittedModelScope.ORG,
+        modelType: ModelType.LANGUAGE,
+      }),
     );
     return permittedModels
       .filter(
@@ -115,17 +127,14 @@ export class PermittedModelQueryService {
     teamId: UUID,
     orgId: UUID,
   ): Promise<PermittedLanguageModel[]> {
-    const permittedModels = await this.permittedModelRepository.find({
-      where: {
-        scopeId: teamId,
+    const permittedModels = await this.permittedModelRepository.find(
+      this.buildActiveScopedQuery({
         orgId,
         scope: PermittedModelScope.TEAM,
-        model: { isArchived: false, type: ModelType.LANGUAGE },
-      },
-      relations: {
-        model: true,
-      },
-    });
+        scopeId: teamId,
+        modelType: ModelType.LANGUAGE,
+      }),
+    );
     return permittedModels
       .filter(
         (permittedModel) => permittedModel.model instanceof LanguageModelRecord,
@@ -135,14 +144,18 @@ export class PermittedModelQueryService {
       ) as PermittedLanguageModel[];
   }
 
-  private buildActiveOrgScopedQuery(
-    orgId: UUID,
-    modelType?: ModelType,
-  ): FindManyOptions<PermittedModelRecord> {
+  private buildActiveScopedQuery(params: {
+    orgId: UUID;
+    scope: PermittedModelScope;
+    modelType?: ModelType;
+    scopeId?: UUID;
+  }): FindManyOptions<PermittedModelRecord> {
+    const { orgId, scope, modelType, scopeId } = params;
     return {
       where: {
         orgId,
-        scope: PermittedModelScope.ORG,
+        scope,
+        ...(scopeId && { scopeId }),
         model: {
           isArchived: false,
           ...(modelType && { type: modelType }),
