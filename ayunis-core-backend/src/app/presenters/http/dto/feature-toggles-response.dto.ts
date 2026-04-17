@@ -20,12 +20,6 @@ export class FeatureTogglesResponseDto {
   letterheadsEnabled: boolean;
 
   @ApiProperty({
-    description: 'Whether the prompts feature is enabled',
-    example: true,
-  })
-  promptsEnabled: boolean;
-
-  @ApiProperty({
     description: 'Whether the skills feature is enabled',
     example: false,
   })

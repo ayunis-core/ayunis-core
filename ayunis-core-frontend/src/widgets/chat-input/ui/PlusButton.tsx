@@ -15,20 +15,16 @@ import {
   TooltipContent,
 } from '@/shared/ui/shadcn/tooltip';
 import { Badge } from '@/shared/ui/shadcn/badge';
-import { BookOpen, Brain, FileText, Image, Loader2, Plus } from 'lucide-react';
+import { Brain, FileText, Image, Loader2, Plus } from 'lucide-react';
 import { Input } from '@/shared/ui/shadcn/input';
 import { useRef } from 'react';
-import { usePrompts } from '../api/usePrompts';
 import { useKnowledgeBases } from '../api/useKnowledgeBases';
 import { useTranslation } from 'react-i18next';
 import { showError } from '@/shared/lib/toast';
 import { useNavigate } from '@tanstack/react-router';
 import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
-import {
-  useIsKnowledgeBasesEnabled,
-  useIsPromptsEnabled,
-} from '@/features/feature-toggles';
+import { useIsKnowledgeBasesEnabled } from '@/features/feature-toggles';
 
 interface PlusButtonProps {
   onFileUpload: (file: File) => void;
@@ -36,7 +32,6 @@ interface PlusButtonProps {
   isCreatingFileSource?: boolean;
   isUploadingFile?: boolean;
   isFileSourceDisabled?: boolean;
-  onPromptSelect: (content: string) => void;
   isImageUploadDisabled?: boolean;
   onKnowledgeBaseSelect?: (knowledgeBase: KnowledgeBaseSummary) => void;
   attachedKnowledgeBaseIds?: string[];
@@ -48,7 +43,6 @@ export default function PlusButton({
   isFileSourceDisabled,
   isUploadingFile,
   isCreatingFileSource,
-  onPromptSelect,
   isImageUploadDisabled = false,
   onKnowledgeBaseSelect,
   attachedKnowledgeBaseIds = [],
@@ -57,13 +51,7 @@ export default function PlusButton({
   const imageInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { t } = useTranslation('common');
-  const promptsEnabled = useIsPromptsEnabled();
   const knowledgeBasesEnabled = useIsKnowledgeBasesEnabled();
-  const {
-    prompts,
-    isLoading: isLoadingPrompts,
-    error: promptsError,
-  } = usePrompts({ enabled: promptsEnabled });
   const {
     knowledgeBases,
     isLoading: isLoadingKBs,
@@ -153,51 +141,6 @@ export default function PlusButton({
               <span>{t('chatInput.uploadImage')}</span>
             </DropdownMenuItem>
           </DropdownMenuGroup>
-          {promptsEnabled && (
-            <DropdownMenuGroup>
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <BookOpen className="h-4 w-4" />
-                  {t('chatInput.addPrompt')}
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  {isLoadingPrompts && (
-                    <DropdownMenuItem disabled>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      {t('common.loading')}
-                    </DropdownMenuItem>
-                  )}
-                  {!isLoadingPrompts && !!promptsError && (
-                    <DropdownMenuItem disabled className="text-destructive">
-                      {t('chatInput.promptsLoadError')}
-                    </DropdownMenuItem>
-                  )}
-                  {!isLoadingPrompts &&
-                    !promptsError &&
-                    prompts.length === 0 && (
-                      <DropdownMenuItem disabled>
-                        {t('chatInput.promptsEmptyState')}
-                      </DropdownMenuItem>
-                    )}
-                  {!isLoadingPrompts && !promptsError && prompts.length > 0
-                    ? prompts.map((prompt) => (
-                        <DropdownMenuItem
-                          key={prompt.id}
-                          onClick={() => onPromptSelect(prompt.content)}
-                        >
-                          {prompt.title}
-                        </DropdownMenuItem>
-                      ))
-                    : null}
-                  <DropdownMenuItem
-                    onClick={() => void navigate({ to: '/prompts' })}
-                  >
-                    <Plus /> {t('chatInput.createFirstPrompt')}
-                  </DropdownMenuItem>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            </DropdownMenuGroup>
-          )}
           {onKnowledgeBaseSelect && knowledgeBasesEnabled && (
             <DropdownMenuGroup>
               <DropdownMenuSub>

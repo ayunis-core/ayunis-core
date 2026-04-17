@@ -19,8 +19,6 @@ export interface FeatureTogglesResponseDto {
   knowledgeBasesEnabled: boolean;
   /** Whether the letterheads feature is enabled */
   letterheadsEnabled: boolean;
-  /** Whether the prompts feature is enabled */
-  promptsEnabled: boolean;
   /** Whether the skills feature is enabled */
   skillsEnabled: boolean;
 }
@@ -3838,43 +3836,6 @@ export interface GeneratePersonalizedSystemPromptResponseDto {
   systemPrompt: string;
   /** A personalized welcome message for the user */
   welcomeMessage: string;
-}
-
-export interface CreatePromptDto {
-  /**
-   * The title of the prompt
-   * @minLength 1
-   * @maxLength 255
-   */
-  title: string;
-  /** The content of the prompt */
-  content: string;
-}
-
-export interface PromptResponseDto {
-  /** The unique identifier of the prompt */
-  id: string;
-  /** The title of the prompt */
-  title: string;
-  /** The content of the prompt */
-  content: string;
-  /** The unique identifier of the user who owns this prompt */
-  userId: string;
-  /** The date and time when the prompt was created */
-  createdAt: string;
-  /** The date and time when the prompt was last updated */
-  updatedAt: string;
-}
-
-export interface UpdatePromptDto {
-  /**
-   * The title of the prompt
-   * @minLength 1
-   * @maxLength 255
-   */
-  title: string;
-  /** The content of the prompt */
-  content: string;
 }
 
 export interface TranscriptionResponseDto {

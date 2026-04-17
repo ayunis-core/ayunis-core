@@ -63,7 +63,7 @@ export class EditSkillTool extends DisplayableTool {
     super({
       name: ToolType.EDIT_SKILL,
       description:
-        'Display a skill edit widget. Use this when the user asks you to edit or modify an existing skill, or when the user complains about a skill not being used, being used too often, or being misused — proactively suggest editing the skill\'s trigger or instructions. Provide the skill_slug and the updated fields. For fields that are not changing, pass an empty string. Include a brief change_summary describing what was modified. The user reviews and confirms the update.',
+        "Display a skill edit widget. Use this when the user asks you to edit or modify an existing skill, or when the user complains about a skill not being used, being used too often, or being misused — proactively suggest editing the skill's trigger or instructions. Provide the skill_slug and the updated fields. For fields that are not changing, pass an empty string. Include a brief change_summary describing what was modified. The user reviews and confirms the update.",
       parameters: buildParameters(slugs),
       type: ToolType.EDIT_SKILL,
     });
