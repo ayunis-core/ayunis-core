@@ -120,7 +120,7 @@ export class PermittedModelQueryService {
         scopeId: teamId,
         orgId,
         scope: PermittedModelScope.TEAM,
-        model: { isArchived: false },
+        model: { isArchived: false, type: ModelType.LANGUAGE },
       },
       relations: {
         model: true,
