@@ -325,6 +325,14 @@ export class LocalThreadsRepository extends ThreadsRepository {
     return this.assignments.removeDirectKnowledgeBaseAssignments(params);
   }
 
+  async findSourceIdsWithOnlyStaleDirectAssignments(
+    olderThan: Date,
+  ): Promise<UUID[]> {
+    return this.assignments.findSourceIdsWithOnlyStaleDirectAssignments(
+      olderThan,
+    );
+  }
+
   async findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]> {
     this.logger.log('findAllByOrgIdWithSources', { orgId });
     const threadEntities = await this.threadRepository

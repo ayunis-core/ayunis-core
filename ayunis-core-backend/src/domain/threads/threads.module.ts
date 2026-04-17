@@ -38,6 +38,8 @@ import { SaveGeneratedImageUseCase } from './application/use-cases/save-generate
 import { ResolveGeneratedImageUseCase } from './application/use-cases/resolve-generated-image/resolve-generated-image.use-case';
 import { GeneratedImagesController } from './presenters/http/generated-images.controller';
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
+import { CleanupStaleThreadSourcesUseCase } from './application/use-cases/cleanup-stale-thread-sources/cleanup-stale-thread-sources.use-case';
+import { StaleThreadSourcesCleanupTask } from './infrastructure/tasks/stale-thread-sources-cleanup.task';
 import { AgentsModule } from '../agents/agents.module';
 import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
 import { StorageModule } from '../storage/storage.module';
@@ -91,8 +93,11 @@ import { SharesModule } from '../shares/shares.module';
     RemoveDirectKnowledgeBaseFromThreadsUseCase,
     SaveGeneratedImageUseCase,
     ResolveGeneratedImageUseCase,
+    CleanupStaleThreadSourcesUseCase,
     // Listeners
     ShareDeletedListener,
+    // Tasks
+    StaleThreadSourcesCleanupTask,
     // Mappers
     SourceDtoMapper,
     GetThreadDtoMapper,

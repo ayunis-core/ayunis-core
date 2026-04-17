@@ -24,6 +24,7 @@ import { MarkSourceFailedUseCase } from './application/use-cases/mark-source-fai
 import { EnqueueDocumentProcessingUseCase } from './application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
 import { SourceProcessingCleanupService } from './application/services/source-processing-cleanup.service';
 import { StartDocumentProcessingUseCase } from './application/use-cases/start-document-processing/start-document-processing.use-case';
+import { FindUnreferencedSourceIdsUseCase } from './application/use-cases/find-unreferenced-source-ids/find-unreferenced-source-ids.use-case';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { StartDocumentProcessingUseCase } from './application/use-cases/start-do
     MarkSourceFailedUseCase,
     EnqueueDocumentProcessingUseCase,
     StartDocumentProcessingUseCase,
+    FindUnreferencedSourceIdsUseCase,
   ],
   exports: [
     LocalSourceRepositoryModule,
@@ -72,6 +74,7 @@ import { StartDocumentProcessingUseCase } from './application/use-cases/start-do
     MarkSourceFailedUseCase,
     EnqueueDocumentProcessingUseCase,
     StartDocumentProcessingUseCase,
+    FindUnreferencedSourceIdsUseCase,
   ],
 })
 export class SourcesModule {}
