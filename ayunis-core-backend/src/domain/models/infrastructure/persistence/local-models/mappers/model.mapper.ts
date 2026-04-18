@@ -80,6 +80,8 @@ export class ModelMapper {
         isArchived: record.isArchived,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
+        inputTokenCost: record.inputTokenCost,
+        outputTokenCost: record.outputTokenCost,
       });
     }
 
@@ -130,6 +132,8 @@ export class ModelMapper {
       record.isArchived = domain.isArchived;
       record.createdAt = domain.createdAt;
       record.updatedAt = domain.updatedAt;
+      record.inputTokenCost = domain.inputTokenCost;
+      record.outputTokenCost = domain.outputTokenCost;
       return record;
     }
 

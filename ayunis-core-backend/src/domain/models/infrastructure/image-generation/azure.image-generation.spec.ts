@@ -180,5 +180,37 @@ describe('AzureImageGenerationHandler', () => {
         ImageGenerationFailedError,
       );
     });
+
+    it('should surface token usage from the Azure response when present', async () => {
+      const fakeB64 = Buffer.from('fake-image-data').toString('base64');
+      mockImagesGenerate.mockResolvedValue({
+        data: [{ b64_json: fakeB64 }],
+        usage: {
+          input_tokens: 120,
+          output_tokens: 4096,
+          total_tokens: 4216,
+          input_tokens_details: { text_tokens: 100, image_tokens: 20 },
+        },
+      });
+
+      const result = await handler.generate(createInput());
+
+      expect(result.usage).toEqual({
+        inputTokens: 120,
+        outputTokens: 4096,
+        totalTokens: 4216,
+      });
+    });
+
+    it('should leave usage undefined when Azure omits it (e.g. DALL-E)', async () => {
+      const fakeB64 = Buffer.from('fake-image-data').toString('base64');
+      mockImagesGenerate.mockResolvedValue({
+        data: [{ b64_json: fakeB64 }],
+      });
+
+      const result = await handler.generate(createInput());
+
+      expect(result.usage).toBeUndefined();
+    });
   });
 });

@@ -39,6 +39,8 @@ export class UpdateImageGenerationModelUseCase {
         displayName: command.displayName,
         isArchived: command.isArchived,
         createdAt: existingModel.createdAt,
+        inputTokenCost: command.inputTokenCost,
+        outputTokenCost: command.outputTokenCost,
       });
       await this.modelsRepository.save(model);
 

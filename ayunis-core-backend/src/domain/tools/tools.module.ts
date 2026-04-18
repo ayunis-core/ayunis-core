@@ -33,6 +33,7 @@ import { SkillTemplatesModule } from '../skill-templates/skill-templates.module'
 import { ArtifactsModule } from '../artifacts/artifacts.module';
 import { GenerateImageToolHandler } from './application/handlers/generate-image-tool.handler';
 import { ModelsModule } from '../models/models.module';
+import { UsageModule } from '../usage/usage.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { ModelsModule } from '../models/models.module';
     KnowledgeBasesModule,
     SkillTemplatesModule,
     ArtifactsModule,
+    UsageModule,
   ],
   providers: [
     // Use cases

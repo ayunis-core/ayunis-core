@@ -4,6 +4,7 @@ import type { ImageGenerationModelFormData } from '../model/types';
 import type { CreateImageGenerationModelRequestDtoProvider } from '@/shared/api';
 import { IMAGE_GENERATION_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
+import { ModelPricingFields } from './ModelPricingFields';
 
 interface CreateImageGenerationModelDialogProps {
   open: boolean;
@@ -42,6 +43,8 @@ export function CreateImageGenerationModelDialog({
       providers={IMAGE_GENERATION_MODEL_PROVIDERS}
       namePlaceholder="e.g., gpt-image-1"
       displayNamePlaceholder="e.g., GPT Image 1"
-    />
+    >
+      <ModelPricingFields form={form} disabled={isCreating} />
+    </ModelFormDialog>
   );
 }

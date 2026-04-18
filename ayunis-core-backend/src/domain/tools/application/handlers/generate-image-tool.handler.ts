@@ -11,6 +11,7 @@ import { GenerateImageUseCase } from 'src/domain/models/application/use-cases/ge
 import { GenerateImageCommand } from 'src/domain/models/application/use-cases/generate-image/generate-image.command';
 import { SaveGeneratedImageUseCase } from 'src/domain/threads/application/use-cases/save-generated-image/save-generated-image.use-case';
 import { SaveGeneratedImageCommand } from 'src/domain/threads/application/use-cases/save-generated-image/save-generated-image.command';
+import { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 
@@ -22,6 +23,7 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
     private readonly getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase,
     private readonly generateImageUseCase: GenerateImageUseCase,
     private readonly saveGeneratedImageUseCase: SaveGeneratedImageUseCase,
+    private readonly collectUsageAsyncService: CollectUsageAsyncService,
     private readonly contextService: ContextService,
   ) {
     super();
@@ -71,6 +73,22 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
           isAnonymous: context.isAnonymous ?? false,
         }),
       );
+
+      // Collect usage only after the image is persisted, so a save failure
+      // surfaces as a tool-execution failure without recording (and billing)
+      // a run that the user never sees. Mirrors execute-run.use-case.ts.
+      const usage = result.usage;
+      if (
+        usage !== undefined &&
+        usage.inputTokens !== undefined &&
+        usage.outputTokens !== undefined
+      ) {
+        this.collectUsageAsyncService.collect(
+          permittedModel.model,
+          usage.inputTokens,
+          usage.outputTokens,
+        );
+      }
 
       return id;
     } catch (error) {

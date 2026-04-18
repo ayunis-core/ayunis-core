@@ -6865,248 +6865,6 @@
         "tags": ["letterheads"]
       }
     },
-    "/runs/send-message": {
-      "post": {
-        "description": "Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.",
-        "operationId": "RunsController_sendMessage",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": ["threadId"],
-                "properties": {
-                  "threadId": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "text": {
-                    "type": "string",
-                    "description": "Message text (optional if images provided)"
-                  },
-                  "images": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "format": "binary"
-                    },
-                    "description": "Image files to attach (max 10, max 10MB each, 50MB total)"
-                  },
-                  "imageAltTexts": {
-                    "type": "string",
-                    "description": "JSON array of alt texts matching image order"
-                  },
-                  "toolResult": {
-                    "type": "string",
-                    "description": "JSON object for tool result input"
-                  },
-                  "skillId": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "Skill ID to activate for this message"
-                  },
-                  "streaming": {
-                    "type": "boolean",
-                    "default": true
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Server-sent events stream with discriminated response types",
-            "content": {
-              "text/event-stream": {
-                "schema": {
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/RunSessionResponseDto"
-                    },
-                    {
-                      "$ref": "#/components/schemas/RunMessageResponseDto"
-                    },
-                    {
-                      "$ref": "#/components/schemas/RunErrorResponseDto"
-                    },
-                    {
-                      "$ref": "#/components/schemas/RunThreadResponseDto"
-                    }
-                  ],
-                  "discriminator": {
-                    "propertyName": "type",
-                    "mapping": {
-                      "session": "#/components/schemas/RunSessionResponseDto",
-                      "message": "#/components/schemas/RunMessageResponseDto",
-                      "error": "#/components/schemas/RunErrorResponseDto",
-                      "thread": "#/components/schemas/RunThreadResponseDto"
-                    }
-                  }
-                }
-              }
-            },
-            "headers": {
-              "Content-Type": {
-                "description": "Content type for server-sent events",
-                "schema": {
-                  "type": "string",
-                  "example": "text/event-stream"
-                }
-              },
-              "Cache-Control": {
-                "description": "Cache control header",
-                "schema": {
-                  "type": "string",
-                  "example": "no-cache"
-                }
-              },
-              "Connection": {
-                "description": "Connection type",
-                "schema": {
-                  "type": "string",
-                  "example": "keep-alive"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request payload"
-          },
-          "403": {
-            "description": "Subscription required"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Send a message with optional images and receive streaming response",
-        "tags": ["runs"]
-      }
-    },
-    "/super-admin/trials": {
-      "post": {
-        "description": "Create a new trial for an organization. Only accessible to users with the super admin system role.",
-        "operationId": "SuperAdminTrialsController_createTrial",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Trial information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTrialRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created trial for the super admin.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request format or validation errors."
-          },
-          "403": {
-            "description": "The requester is not a super admin."
-          }
-        },
-        "summary": "Create a new trial",
-        "tags": ["Super Admin Trials"]
-      }
-    },
-    "/super-admin/trials/{orgId}": {
-      "get": {
-        "description": "Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.",
-        "operationId": "SuperAdminTrialsController_getTrialByOrgId",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "The organization ID of the trial to retrieve.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved trial for the super admin.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminTrialResponseDtoNullable"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Trial not found for the organization."
-          },
-          "403": {
-            "description": "The requester is not a super admin."
-          }
-        },
-        "summary": "Get a trial by organization ID",
-        "tags": ["Super Admin Trials"]
-      },
-      "put": {
-        "description": "Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.",
-        "operationId": "SuperAdminTrialsController_updateTrial",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "The organization ID of the trial to update.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "Trial update information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTrialRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully updated trial for the super admin.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request format or validation errors."
-          },
-          "403": {
-            "description": "The requester is not a super admin."
-          }
-        },
-        "summary": "Update a trial",
-        "tags": ["Super Admin Trials"]
-      }
-    },
     "/usage/config": {
       "get": {
         "description": "Returns configuration settings for the usage dashboard, including deployment mode. This endpoint helps the frontend determine which features to show based on the deployment type.",
@@ -7888,6 +7646,248 @@
         },
         "summary": "Set the fair-use limit for a single model tier",
         "tags": ["Super Admin Platform Config"]
+      }
+    },
+    "/runs/send-message": {
+      "post": {
+        "description": "Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.",
+        "operationId": "RunsController_sendMessage",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["threadId"],
+                "properties": {
+                  "threadId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "Message text (optional if images provided)"
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "Image files to attach (max 10, max 10MB each, 50MB total)"
+                  },
+                  "imageAltTexts": {
+                    "type": "string",
+                    "description": "JSON array of alt texts matching image order"
+                  },
+                  "toolResult": {
+                    "type": "string",
+                    "description": "JSON object for tool result input"
+                  },
+                  "skillId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Skill ID to activate for this message"
+                  },
+                  "streaming": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-sent events stream with discriminated response types",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/RunSessionResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunMessageResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunErrorResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunThreadResponseDto"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "type",
+                    "mapping": {
+                      "session": "#/components/schemas/RunSessionResponseDto",
+                      "message": "#/components/schemas/RunMessageResponseDto",
+                      "error": "#/components/schemas/RunErrorResponseDto",
+                      "thread": "#/components/schemas/RunThreadResponseDto"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Content-Type": {
+                "description": "Content type for server-sent events",
+                "schema": {
+                  "type": "string",
+                  "example": "text/event-stream"
+                }
+              },
+              "Cache-Control": {
+                "description": "Cache control header",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache"
+                }
+              },
+              "Connection": {
+                "description": "Connection type",
+                "schema": {
+                  "type": "string",
+                  "example": "keep-alive"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "403": {
+            "description": "Subscription required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Send a message with optional images and receive streaming response",
+        "tags": ["runs"]
+      }
+    },
+    "/super-admin/trials": {
+      "post": {
+        "description": "Create a new trial for an organization. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminTrialsController_createTrial",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Trial information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrialRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created trial for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Create a new trial",
+        "tags": ["Super Admin Trials"]
+      }
+    },
+    "/super-admin/trials/{orgId}": {
+      "get": {
+        "description": "Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminTrialsController_getTrialByOrgId",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "The organization ID of the trial to retrieve.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved trial for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminTrialResponseDtoNullable"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Trial not found for the organization."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Get a trial by organization ID",
+        "tags": ["Super Admin Trials"]
+      },
+      "put": {
+        "description": "Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminTrialsController_updateTrial",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "The organization ID of the trial to update.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Trial update information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrialRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated trial for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Update a trial",
+        "tags": ["Super Admin Trials"]
       }
     },
     "/chat-settings/system-prompt": {
@@ -9100,6 +9100,16 @@
             "type": "string",
             "format": "date-time",
             "description": "The date the model was last updated"
+          },
+          "inputTokenCost": {
+            "type": "number",
+            "description": "Cost per million input tokens in EUR",
+            "example": 5
+          },
+          "outputTokenCost": {
+            "type": "number",
+            "description": "Cost per million output tokens in EUR",
+            "example": 40
           }
         },
         "required": [
@@ -9438,6 +9448,18 @@
             "type": "boolean",
             "description": "Whether the model is archived",
             "example": false
+          },
+          "inputTokenCost": {
+            "type": "number",
+            "description": "Cost per million input tokens in EUR",
+            "example": 5,
+            "minimum": 0
+          },
+          "outputTokenCost": {
+            "type": "number",
+            "description": "Cost per million output tokens in EUR",
+            "example": 40,
+            "minimum": 0
           }
         },
         "required": ["name", "provider", "displayName", "isArchived"]
@@ -9465,6 +9487,18 @@
             "type": "boolean",
             "description": "Whether the model is archived",
             "example": false
+          },
+          "inputTokenCost": {
+            "type": "number",
+            "description": "Cost per million input tokens in EUR",
+            "example": 5,
+            "minimum": 0
+          },
+          "outputTokenCost": {
+            "type": "number",
+            "description": "Cost per million output tokens in EUR",
+            "example": 40,
+            "minimum": 0
           }
         },
         "required": ["name", "provider", "displayName", "isArchived"]
@@ -13421,349 +13455,6 @@
           }
         }
       },
-      "MessageContentResponseDto": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "description": "Type of the message content",
-            "example": "text",
-            "enum": ["text", "tool_use", "tool_result", "thinking", "image"]
-          }
-        },
-        "required": ["type"]
-      },
-      "RunSessionResponseDto": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "description": "Response type identifier",
-            "example": "session",
-            "enum": ["session"]
-          },
-          "success": {
-            "type": "boolean",
-            "description": "Indicates successful session establishment",
-            "example": true
-          },
-          "streaming": {
-            "type": "boolean",
-            "description": "Indicates if the session is streaming",
-            "example": true
-          },
-          "threadId": {
-            "type": "string",
-            "description": "Thread ID for the session",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "timestamp": {
-            "type": "string",
-            "description": "Session establishment timestamp",
-            "example": "2024-01-01T12:00:00.000Z"
-          }
-        },
-        "required": ["type", "threadId", "timestamp"]
-      },
-      "RunMessageResponseDto": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "description": "Response type identifier",
-            "example": "message",
-            "enum": ["message"]
-          },
-          "message": {
-            "description": "The message data",
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/UserMessageResponseDto"
-              },
-              {
-                "$ref": "#/components/schemas/AssistantMessageResponseDto"
-              },
-              {
-                "$ref": "#/components/schemas/ToolResultMessageResponseDto"
-              },
-              {
-                "$ref": "#/components/schemas/SystemMessageResponseDto"
-              }
-            ]
-          },
-          "threadId": {
-            "type": "string",
-            "description": "Thread ID for the message",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "timestamp": {
-            "type": "string",
-            "description": "Message timestamp",
-            "example": "2024-01-01T12:00:00.000Z"
-          }
-        },
-        "required": ["type", "message", "threadId", "timestamp"]
-      },
-      "RunErrorResponseDto": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "description": "Response type identifier",
-            "example": "error",
-            "enum": ["error"]
-          },
-          "message": {
-            "type": "string",
-            "description": "Error message",
-            "example": "An error occurred while processing your request"
-          },
-          "threadId": {
-            "type": "string",
-            "description": "Thread ID where the error occurred",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "timestamp": {
-            "type": "string",
-            "description": "Error timestamp",
-            "example": "2024-01-01T12:00:00.000Z"
-          },
-          "code": {
-            "type": "string",
-            "description": "Optional error code for categorization",
-            "example": "EXECUTION_ERROR"
-          },
-          "details": {
-            "type": "object",
-            "description": "Optional additional error details",
-            "example": {
-              "originalError": "Network timeout"
-            }
-          }
-        },
-        "required": ["type", "message", "threadId", "timestamp"]
-      },
-      "RunThreadResponseDto": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "description": "Response type identifier",
-            "example": "thread",
-            "enum": ["thread"]
-          },
-          "threadId": {
-            "type": "string",
-            "description": "Thread ID that was updated",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "updateType": {
-            "type": "string",
-            "description": "Type of thread update",
-            "example": "title_updated",
-            "enum": ["title_updated"]
-          },
-          "title": {
-            "type": "string",
-            "description": "Updated thread title",
-            "example": "Discussion about AI and machine learning"
-          },
-          "timestamp": {
-            "type": "string",
-            "description": "Thread update timestamp",
-            "example": "2024-01-01T12:00:00.000Z"
-          }
-        },
-        "required": ["type", "threadId", "updateType", "title", "timestamp"]
-      },
-      "TextInput": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "description": "The type of input",
-            "enum": ["text"],
-            "example": "text"
-          },
-          "text": {
-            "type": "string",
-            "description": "The text content for the inference",
-            "example": "What is the weather forecast for New York tomorrow?"
-          }
-        },
-        "required": ["type", "text"]
-      },
-      "ToolResultInput": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "description": "The type of input",
-            "enum": ["tool_result"],
-            "example": "tool_result"
-          },
-          "toolId": {
-            "type": "string",
-            "description": "The ID of the tool that produced this result",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "toolName": {
-            "type": "string",
-            "description": "The name of the tool that produced this result",
-            "example": "weather_tool"
-          },
-          "result": {
-            "type": "string",
-            "description": "The result data from the tool execution",
-            "example": "{\"location\":\"New York\",\"forecast\":\"Partly cloudy with a high of 75°F and a low of 60°F\",\"precipitation\":\"20%\"}"
-          }
-        },
-        "required": ["type", "toolId", "toolName", "result"]
-      },
-      "SendMessageDto": {
-        "type": "object",
-        "properties": {
-          "threadId": {
-            "type": "string",
-            "description": "The thread to use for the inference.",
-            "example": "550e8400-e29b-12d3-a456-426614174000"
-          },
-          "text": {
-            "type": "string",
-            "description": "Text content of the user message (for user input)",
-            "example": "What do you see in this image?"
-          },
-          "imageAltTexts": {
-            "type": "array",
-            "description": "JSON array of alt texts matching the order of uploaded images",
-            "items": {
-              "type": "string"
-            }
-          },
-          "toolResult": {
-            "description": "Tool result input (for tool_result type only)",
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/ToolResultInput"
-              }
-            ],
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ToolResultInput"
-              }
-            ]
-          },
-          "skillId": {
-            "type": "string",
-            "description": "Skill ID to activate for this message — injects skill instructions and resources into the thread",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "streaming": {
-            "type": "boolean",
-            "description": "Enable streaming mode for real-time response updates",
-            "example": true,
-            "default": true
-          }
-        },
-        "required": ["threadId"]
-      },
-      "SuperAdminTrialResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Trial unique identifier",
-            "format": "uuid",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "orgId": {
-            "type": "string",
-            "description": "Organization ID associated with this trial",
-            "format": "uuid",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "messagesSent": {
-            "type": "number",
-            "description": "Number of messages sent in this trial",
-            "example": 150,
-            "minimum": 0
-          },
-          "maxMessages": {
-            "type": "number",
-            "description": "Maximum number of messages allowed in this trial",
-            "example": 1000,
-            "minimum": 1
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the trial was created",
-            "example": "2024-01-15T10:30:00Z"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the trial was last updated",
-            "example": "2024-01-15T10:30:00Z"
-          }
-        },
-        "required": [
-          "id",
-          "orgId",
-          "messagesSent",
-          "maxMessages",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "SuperAdminTrialResponseDtoNullable": {
-        "type": "object",
-        "properties": {
-          "trial": {
-            "description": "Trial",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
-              }
-            ]
-          }
-        }
-      },
-      "CreateTrialRequestDto": {
-        "type": "object",
-        "properties": {
-          "orgId": {
-            "type": "string",
-            "description": "Organization ID for which to create the trial",
-            "format": "uuid",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "maxMessages": {
-            "type": "number",
-            "description": "Maximum number of messages allowed in the trial",
-            "example": 1000,
-            "minimum": 1
-          }
-        },
-        "required": ["orgId", "maxMessages"]
-      },
-      "UpdateTrialRequestDto": {
-        "type": "object",
-        "properties": {
-          "maxMessages": {
-            "type": "number",
-            "description": "Maximum number of messages allowed in the trial",
-            "example": 2000,
-            "minimum": 1
-          },
-          "messagesSent": {
-            "type": "number",
-            "description": "Number of messages already sent (can be used to reset or adjust)",
-            "example": 0,
-            "minimum": 0
-          }
-        }
-      },
       "UsageConfigResponseDto": {
         "type": "object",
         "properties": {
@@ -14271,6 +13962,349 @@
           }
         },
         "required": ["tier", "limit", "windowMs"]
+      },
+      "MessageContentResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of the message content",
+            "example": "text",
+            "enum": ["text", "tool_use", "tool_result", "thinking", "image"]
+          }
+        },
+        "required": ["type"]
+      },
+      "RunSessionResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Response type identifier",
+            "example": "session",
+            "enum": ["session"]
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Indicates successful session establishment",
+            "example": true
+          },
+          "streaming": {
+            "type": "boolean",
+            "description": "Indicates if the session is streaming",
+            "example": true
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID for the session",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Session establishment timestamp",
+            "example": "2024-01-01T12:00:00.000Z"
+          }
+        },
+        "required": ["type", "threadId", "timestamp"]
+      },
+      "RunMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Response type identifier",
+            "example": "message",
+            "enum": ["message"]
+          },
+          "message": {
+            "description": "The message data",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UserMessageResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/AssistantMessageResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/ToolResultMessageResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/SystemMessageResponseDto"
+              }
+            ]
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID for the message",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Message timestamp",
+            "example": "2024-01-01T12:00:00.000Z"
+          }
+        },
+        "required": ["type", "message", "threadId", "timestamp"]
+      },
+      "RunErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Response type identifier",
+            "example": "error",
+            "enum": ["error"]
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "An error occurred while processing your request"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID where the error occurred",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Error timestamp",
+            "example": "2024-01-01T12:00:00.000Z"
+          },
+          "code": {
+            "type": "string",
+            "description": "Optional error code for categorization",
+            "example": "EXECUTION_ERROR"
+          },
+          "details": {
+            "type": "object",
+            "description": "Optional additional error details",
+            "example": {
+              "originalError": "Network timeout"
+            }
+          }
+        },
+        "required": ["type", "message", "threadId", "timestamp"]
+      },
+      "RunThreadResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Response type identifier",
+            "example": "thread",
+            "enum": ["thread"]
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID that was updated",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "updateType": {
+            "type": "string",
+            "description": "Type of thread update",
+            "example": "title_updated",
+            "enum": ["title_updated"]
+          },
+          "title": {
+            "type": "string",
+            "description": "Updated thread title",
+            "example": "Discussion about AI and machine learning"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Thread update timestamp",
+            "example": "2024-01-01T12:00:00.000Z"
+          }
+        },
+        "required": ["type", "threadId", "updateType", "title", "timestamp"]
+      },
+      "TextInput": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of input",
+            "enum": ["text"],
+            "example": "text"
+          },
+          "text": {
+            "type": "string",
+            "description": "The text content for the inference",
+            "example": "What is the weather forecast for New York tomorrow?"
+          }
+        },
+        "required": ["type", "text"]
+      },
+      "ToolResultInput": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of input",
+            "enum": ["tool_result"],
+            "example": "tool_result"
+          },
+          "toolId": {
+            "type": "string",
+            "description": "The ID of the tool that produced this result",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "toolName": {
+            "type": "string",
+            "description": "The name of the tool that produced this result",
+            "example": "weather_tool"
+          },
+          "result": {
+            "type": "string",
+            "description": "The result data from the tool execution",
+            "example": "{\"location\":\"New York\",\"forecast\":\"Partly cloudy with a high of 75°F and a low of 60°F\",\"precipitation\":\"20%\"}"
+          }
+        },
+        "required": ["type", "toolId", "toolName", "result"]
+      },
+      "SendMessageDto": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "string",
+            "description": "The thread to use for the inference.",
+            "example": "550e8400-e29b-12d3-a456-426614174000"
+          },
+          "text": {
+            "type": "string",
+            "description": "Text content of the user message (for user input)",
+            "example": "What do you see in this image?"
+          },
+          "imageAltTexts": {
+            "type": "array",
+            "description": "JSON array of alt texts matching the order of uploaded images",
+            "items": {
+              "type": "string"
+            }
+          },
+          "toolResult": {
+            "description": "Tool result input (for tool_result type only)",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ToolResultInput"
+              }
+            ],
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ToolResultInput"
+              }
+            ]
+          },
+          "skillId": {
+            "type": "string",
+            "description": "Skill ID to activate for this message — injects skill instructions and resources into the thread",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "streaming": {
+            "type": "boolean",
+            "description": "Enable streaming mode for real-time response updates",
+            "example": true,
+            "default": true
+          }
+        },
+        "required": ["threadId"]
+      },
+      "SuperAdminTrialResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Trial unique identifier",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID associated with this trial",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "messagesSent": {
+            "type": "number",
+            "description": "Number of messages sent in this trial",
+            "example": 150,
+            "minimum": 0
+          },
+          "maxMessages": {
+            "type": "number",
+            "description": "Maximum number of messages allowed in this trial",
+            "example": 1000,
+            "minimum": 1
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the trial was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the trial was last updated",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "orgId",
+          "messagesSent",
+          "maxMessages",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "SuperAdminTrialResponseDtoNullable": {
+        "type": "object",
+        "properties": {
+          "trial": {
+            "description": "Trial",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+              }
+            ]
+          }
+        }
+      },
+      "CreateTrialRequestDto": {
+        "type": "object",
+        "properties": {
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID for which to create the trial",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "maxMessages": {
+            "type": "number",
+            "description": "Maximum number of messages allowed in the trial",
+            "example": 1000,
+            "minimum": 1
+          }
+        },
+        "required": ["orgId", "maxMessages"]
+      },
+      "UpdateTrialRequestDto": {
+        "type": "object",
+        "properties": {
+          "maxMessages": {
+            "type": "number",
+            "description": "Maximum number of messages allowed in the trial",
+            "example": 2000,
+            "minimum": 1
+          },
+          "messagesSent": {
+            "type": "number",
+            "description": "Number of messages already sent (can be used to reset or adjust)",
+            "example": 0,
+            "minimum": 0
+          }
+        }
       },
       "UserSystemPromptResponseDto": {
         "type": "object",

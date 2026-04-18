@@ -59,6 +59,8 @@ export class CatalogModelResponseDtoMapper {
       isArchived: model.isArchived,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+      inputTokenCost: model.inputTokenCost,
+      outputTokenCost: model.outputTokenCost,
     };
   }
 

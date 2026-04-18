@@ -574,6 +574,10 @@ export interface ImageGenerationModelResponseDto {
   createdAt: string;
   /** The date the model was last updated */
   updatedAt: string;
+  /** Cost per million input tokens in EUR */
+  inputTokenCost?: number;
+  /** Cost per million output tokens in EUR */
+  outputTokenCost?: number;
 }
 
 /**
@@ -844,6 +848,16 @@ export interface CreateImageGenerationModelRequestDto {
   displayName: string;
   /** Whether the model is archived */
   isArchived: boolean;
+  /**
+   * Cost per million input tokens in EUR
+   * @minimum 0
+   */
+  inputTokenCost?: number;
+  /**
+   * Cost per million output tokens in EUR
+   * @minimum 0
+   */
+  outputTokenCost?: number;
 }
 
 /**
@@ -866,6 +880,16 @@ export interface UpdateImageGenerationModelRequestDto {
   displayName: string;
   /** Whether the model is archived */
   isArchived: boolean;
+  /**
+   * Cost per million input tokens in EUR
+   * @minimum 0
+   */
+  inputTokenCost?: number;
+  /**
+   * Cost per million output tokens in EUR
+   * @minimum 0
+   */
+  outputTokenCost?: number;
 }
 
 export interface CreateOrgRequestDto {
@@ -3458,247 +3482,6 @@ export interface UpdateLetterheadDto {
   removeContinuationPage?: string;
 }
 
-/**
- * Type of the message content
- */
-export type MessageContentResponseDtoType = typeof MessageContentResponseDtoType[keyof typeof MessageContentResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const MessageContentResponseDtoType = {
-  text: 'text',
-  tool_use: 'tool_use',
-  tool_result: 'tool_result',
-  thinking: 'thinking',
-  image: 'image',
-} as const;
-
-export interface MessageContentResponseDto {
-  /** Type of the message content */
-  type: MessageContentResponseDtoType;
-}
-
-/**
- * Response type identifier
- */
-export type RunSessionResponseDtoType = typeof RunSessionResponseDtoType[keyof typeof RunSessionResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const RunSessionResponseDtoType = {
-  session: 'session',
-} as const;
-
-export interface RunSessionResponseDto {
-  /** Response type identifier */
-  type: RunSessionResponseDtoType;
-  /** Indicates successful session establishment */
-  success?: boolean;
-  /** Indicates if the session is streaming */
-  streaming?: boolean;
-  /** Thread ID for the session */
-  threadId: string;
-  /** Session establishment timestamp */
-  timestamp: string;
-}
-
-/**
- * Response type identifier
- */
-export type RunMessageResponseDtoType = typeof RunMessageResponseDtoType[keyof typeof RunMessageResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const RunMessageResponseDtoType = {
-  message: 'message',
-} as const;
-
-/**
- * The message data
- */
-export type RunMessageResponseDtoMessage = UserMessageResponseDto | AssistantMessageResponseDto | ToolResultMessageResponseDto | SystemMessageResponseDto;
-
-export interface RunMessageResponseDto {
-  /** Response type identifier */
-  type: RunMessageResponseDtoType;
-  /** The message data */
-  message: RunMessageResponseDtoMessage;
-  /** Thread ID for the message */
-  threadId: string;
-  /** Message timestamp */
-  timestamp: string;
-}
-
-/**
- * Response type identifier
- */
-export type RunErrorResponseDtoType = typeof RunErrorResponseDtoType[keyof typeof RunErrorResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const RunErrorResponseDtoType = {
-  error: 'error',
-} as const;
-
-/**
- * Optional additional error details
- */
-export type RunErrorResponseDtoDetails = { [key: string]: unknown };
-
-export interface RunErrorResponseDto {
-  /** Response type identifier */
-  type: RunErrorResponseDtoType;
-  /** Error message */
-  message: string;
-  /** Thread ID where the error occurred */
-  threadId: string;
-  /** Error timestamp */
-  timestamp: string;
-  /** Optional error code for categorization */
-  code?: string;
-  /** Optional additional error details */
-  details?: RunErrorResponseDtoDetails;
-}
-
-/**
- * Response type identifier
- */
-export type RunThreadResponseDtoType = typeof RunThreadResponseDtoType[keyof typeof RunThreadResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const RunThreadResponseDtoType = {
-  thread: 'thread',
-} as const;
-
-/**
- * Type of thread update
- */
-export type RunThreadResponseDtoUpdateType = typeof RunThreadResponseDtoUpdateType[keyof typeof RunThreadResponseDtoUpdateType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const RunThreadResponseDtoUpdateType = {
-  title_updated: 'title_updated',
-} as const;
-
-export interface RunThreadResponseDto {
-  /** Response type identifier */
-  type: RunThreadResponseDtoType;
-  /** Thread ID that was updated */
-  threadId: string;
-  /** Type of thread update */
-  updateType: RunThreadResponseDtoUpdateType;
-  /** Updated thread title */
-  title: string;
-  /** Thread update timestamp */
-  timestamp: string;
-}
-
-/**
- * The type of input
- */
-export type TextInputType = typeof TextInputType[keyof typeof TextInputType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const TextInputType = {
-  text: 'text',
-} as const;
-
-export interface TextInput {
-  /** The type of input */
-  type: TextInputType;
-  /** The text content for the inference */
-  text: string;
-}
-
-/**
- * The type of input
- */
-export type ToolResultInputType = typeof ToolResultInputType[keyof typeof ToolResultInputType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ToolResultInputType = {
-  tool_result: 'tool_result',
-} as const;
-
-export interface ToolResultInput {
-  /** The type of input */
-  type: ToolResultInputType;
-  /** The ID of the tool that produced this result */
-  toolId: string;
-  /** The name of the tool that produced this result */
-  toolName: string;
-  /** The result data from the tool execution */
-  result: string;
-}
-
-export interface SendMessageDto {
-  /** The thread to use for the inference. */
-  threadId: string;
-  /** Text content of the user message (for user input) */
-  text?: string;
-  /** JSON array of alt texts matching the order of uploaded images */
-  imageAltTexts?: string[];
-  /** Tool result input (for tool_result type only) */
-  toolResult?: ToolResultInput;
-  /** Skill ID to activate for this message — injects skill instructions and resources into the thread */
-  skillId?: string;
-  /** Enable streaming mode for real-time response updates */
-  streaming?: boolean;
-}
-
-export interface SuperAdminTrialResponseDto {
-  /** Trial unique identifier */
-  id: string;
-  /** Organization ID associated with this trial */
-  orgId: string;
-  /**
-   * Number of messages sent in this trial
-   * @minimum 0
-   */
-  messagesSent: number;
-  /**
-   * Maximum number of messages allowed in this trial
-   * @minimum 1
-   */
-  maxMessages: number;
-  /** Date when the trial was created */
-  createdAt: string;
-  /** Date when the trial was last updated */
-  updatedAt: string;
-}
-
-export interface SuperAdminTrialResponseDtoNullable {
-  /** Trial */
-  trial?: SuperAdminTrialResponseDto;
-}
-
-export interface CreateTrialRequestDto {
-  /** Organization ID for which to create the trial */
-  orgId: string;
-  /**
-   * Maximum number of messages allowed in the trial
-   * @minimum 1
-   */
-  maxMessages: number;
-}
-
-export interface UpdateTrialRequestDto {
-  /**
-   * Maximum number of messages allowed in the trial
-   * @minimum 1
-   */
-  maxMessages?: number;
-  /**
-   * Number of messages already sent (can be used to reset or adjust)
-   * @minimum 0
-   */
-  messagesSent?: number;
-}
-
 export interface UsageConfigResponseDto {
   /** Whether the deployment is self-hosted. Determines feature availability. */
   isSelfHosted: boolean;
@@ -3960,6 +3743,247 @@ export interface SetFairUseLimitRequestDto {
    * @minimum 1
    */
   windowMs: number;
+}
+
+/**
+ * Type of the message content
+ */
+export type MessageContentResponseDtoType = typeof MessageContentResponseDtoType[keyof typeof MessageContentResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageContentResponseDtoType = {
+  text: 'text',
+  tool_use: 'tool_use',
+  tool_result: 'tool_result',
+  thinking: 'thinking',
+  image: 'image',
+} as const;
+
+export interface MessageContentResponseDto {
+  /** Type of the message content */
+  type: MessageContentResponseDtoType;
+}
+
+/**
+ * Response type identifier
+ */
+export type RunSessionResponseDtoType = typeof RunSessionResponseDtoType[keyof typeof RunSessionResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RunSessionResponseDtoType = {
+  session: 'session',
+} as const;
+
+export interface RunSessionResponseDto {
+  /** Response type identifier */
+  type: RunSessionResponseDtoType;
+  /** Indicates successful session establishment */
+  success?: boolean;
+  /** Indicates if the session is streaming */
+  streaming?: boolean;
+  /** Thread ID for the session */
+  threadId: string;
+  /** Session establishment timestamp */
+  timestamp: string;
+}
+
+/**
+ * Response type identifier
+ */
+export type RunMessageResponseDtoType = typeof RunMessageResponseDtoType[keyof typeof RunMessageResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RunMessageResponseDtoType = {
+  message: 'message',
+} as const;
+
+/**
+ * The message data
+ */
+export type RunMessageResponseDtoMessage = UserMessageResponseDto | AssistantMessageResponseDto | ToolResultMessageResponseDto | SystemMessageResponseDto;
+
+export interface RunMessageResponseDto {
+  /** Response type identifier */
+  type: RunMessageResponseDtoType;
+  /** The message data */
+  message: RunMessageResponseDtoMessage;
+  /** Thread ID for the message */
+  threadId: string;
+  /** Message timestamp */
+  timestamp: string;
+}
+
+/**
+ * Response type identifier
+ */
+export type RunErrorResponseDtoType = typeof RunErrorResponseDtoType[keyof typeof RunErrorResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RunErrorResponseDtoType = {
+  error: 'error',
+} as const;
+
+/**
+ * Optional additional error details
+ */
+export type RunErrorResponseDtoDetails = { [key: string]: unknown };
+
+export interface RunErrorResponseDto {
+  /** Response type identifier */
+  type: RunErrorResponseDtoType;
+  /** Error message */
+  message: string;
+  /** Thread ID where the error occurred */
+  threadId: string;
+  /** Error timestamp */
+  timestamp: string;
+  /** Optional error code for categorization */
+  code?: string;
+  /** Optional additional error details */
+  details?: RunErrorResponseDtoDetails;
+}
+
+/**
+ * Response type identifier
+ */
+export type RunThreadResponseDtoType = typeof RunThreadResponseDtoType[keyof typeof RunThreadResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RunThreadResponseDtoType = {
+  thread: 'thread',
+} as const;
+
+/**
+ * Type of thread update
+ */
+export type RunThreadResponseDtoUpdateType = typeof RunThreadResponseDtoUpdateType[keyof typeof RunThreadResponseDtoUpdateType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RunThreadResponseDtoUpdateType = {
+  title_updated: 'title_updated',
+} as const;
+
+export interface RunThreadResponseDto {
+  /** Response type identifier */
+  type: RunThreadResponseDtoType;
+  /** Thread ID that was updated */
+  threadId: string;
+  /** Type of thread update */
+  updateType: RunThreadResponseDtoUpdateType;
+  /** Updated thread title */
+  title: string;
+  /** Thread update timestamp */
+  timestamp: string;
+}
+
+/**
+ * The type of input
+ */
+export type TextInputType = typeof TextInputType[keyof typeof TextInputType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TextInputType = {
+  text: 'text',
+} as const;
+
+export interface TextInput {
+  /** The type of input */
+  type: TextInputType;
+  /** The text content for the inference */
+  text: string;
+}
+
+/**
+ * The type of input
+ */
+export type ToolResultInputType = typeof ToolResultInputType[keyof typeof ToolResultInputType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ToolResultInputType = {
+  tool_result: 'tool_result',
+} as const;
+
+export interface ToolResultInput {
+  /** The type of input */
+  type: ToolResultInputType;
+  /** The ID of the tool that produced this result */
+  toolId: string;
+  /** The name of the tool that produced this result */
+  toolName: string;
+  /** The result data from the tool execution */
+  result: string;
+}
+
+export interface SendMessageDto {
+  /** The thread to use for the inference. */
+  threadId: string;
+  /** Text content of the user message (for user input) */
+  text?: string;
+  /** JSON array of alt texts matching the order of uploaded images */
+  imageAltTexts?: string[];
+  /** Tool result input (for tool_result type only) */
+  toolResult?: ToolResultInput;
+  /** Skill ID to activate for this message — injects skill instructions and resources into the thread */
+  skillId?: string;
+  /** Enable streaming mode for real-time response updates */
+  streaming?: boolean;
+}
+
+export interface SuperAdminTrialResponseDto {
+  /** Trial unique identifier */
+  id: string;
+  /** Organization ID associated with this trial */
+  orgId: string;
+  /**
+   * Number of messages sent in this trial
+   * @minimum 0
+   */
+  messagesSent: number;
+  /**
+   * Maximum number of messages allowed in this trial
+   * @minimum 1
+   */
+  maxMessages: number;
+  /** Date when the trial was created */
+  createdAt: string;
+  /** Date when the trial was last updated */
+  updatedAt: string;
+}
+
+export interface SuperAdminTrialResponseDtoNullable {
+  /** Trial */
+  trial?: SuperAdminTrialResponseDto;
+}
+
+export interface CreateTrialRequestDto {
+  /** Organization ID for which to create the trial */
+  orgId: string;
+  /**
+   * Maximum number of messages allowed in the trial
+   * @minimum 1
+   */
+  maxMessages: number;
+}
+
+export interface UpdateTrialRequestDto {
+  /**
+   * Maximum number of messages allowed in the trial
+   * @minimum 1
+   */
+  maxMessages?: number;
+  /**
+   * Number of messages already sent (can be used to reset or adjust)
+   * @minimum 0
+   */
+  messagesSent?: number;
 }
 
 export interface UserSystemPromptResponseDto {
@@ -4263,23 +4287,6 @@ export const ArtifactsControllerExportFormat = {
   pdf: 'pdf',
 } as const;
 
-export type RunsControllerSendMessageBody = {
-  threadId: string;
-  /** Message text (optional if images provided) */
-  text?: string;
-  /** Image files to attach (max 10, max 10MB each, 50MB total) */
-  images?: Blob[];
-  /** JSON array of alt texts matching image order */
-  imageAltTexts?: string;
-  /** JSON object for tool result input */
-  toolResult?: string;
-  /** Skill ID to activate for this message */
-  skillId?: string;
-  streaming?: boolean;
-};
-
-export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;
-
 export type UsageControllerGetUserUsageParams = {
 /**
  * Start date in ISO format
@@ -4405,6 +4412,23 @@ export type SuperAdminGlobalUsageControllerGetGlobalUserUsageParams = {
 startDate?: string;
 endDate?: string;
 };
+
+export type RunsControllerSendMessageBody = {
+  threadId: string;
+  /** Message text (optional if images provided) */
+  text?: string;
+  /** Image files to attach (max 10, max 10MB each, 50MB total) */
+  images?: Blob[];
+  /** JSON array of alt texts matching image order */
+  imageAltTexts?: string;
+  /** JSON object for tool result input */
+  toolResult?: string;
+  /** Skill ID to activate for this message */
+  skillId?: string;
+  streaming?: boolean;
+};
+
+export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;
 
 export type TranscriptionsControllerTranscribeBody = {
   /** The audio file to transcribe */

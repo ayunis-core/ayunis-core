@@ -90,15 +90,27 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
 
       const imageBuffer = Buffer.from(imageData.b64_json, 'base64');
 
+      const usage = response.usage
+        ? {
+            inputTokens: response.usage.input_tokens,
+            outputTokens: response.usage.output_tokens,
+            totalTokens: response.usage.total_tokens,
+          }
+        : undefined;
+
       this.logger.log('Image generated successfully', {
         model: input.model.name,
         sizeBytes: imageBuffer.length,
+        inputTokens: usage?.inputTokens,
+        outputTokens: usage?.outputTokens,
+        totalTokens: usage?.totalTokens,
       });
 
       return new ImageGenerationResult(
         imageBuffer,
         'image/png',
         imageData.revised_prompt,
+        usage,
       );
     } catch (error) {
       if (error instanceof ImageGenerationFailedError) {

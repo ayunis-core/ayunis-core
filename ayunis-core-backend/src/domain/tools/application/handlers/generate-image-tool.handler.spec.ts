@@ -8,6 +8,7 @@ import { ToolExecutionFailedError } from '../tools.errors';
 import { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { GenerateImageUseCase } from 'src/domain/models/application/use-cases/generate-image/generate-image.use-case';
 import { SaveGeneratedImageUseCase } from 'src/domain/threads/application/use-cases/save-generated-image/save-generated-image.use-case';
+import { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { PermittedImageGenerationModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
@@ -19,6 +20,7 @@ describe('GenerateImageToolHandler', () => {
   let mockGetPermittedModel: jest.Mocked<GetPermittedImageGenerationModelUseCase>;
   let mockGenerateImage: jest.Mocked<GenerateImageUseCase>;
   let mockSaveGeneratedImage: jest.Mocked<SaveGeneratedImageUseCase>;
+  let mockCollectUsage: jest.Mocked<CollectUsageAsyncService>;
   let mockContextService: jest.Mocked<ContextService>;
 
   const mockOrgId = randomUUID();
@@ -30,6 +32,7 @@ describe('GenerateImageToolHandler', () => {
     mockGetPermittedModel = { execute: jest.fn() } as any;
     mockGenerateImage = { execute: jest.fn() } as any;
     mockSaveGeneratedImage = { execute: jest.fn() } as any;
+    mockCollectUsage = { collect: jest.fn() } as any;
     mockContextService = { get: jest.fn() } as any;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -46,6 +49,10 @@ describe('GenerateImageToolHandler', () => {
         {
           provide: SaveGeneratedImageUseCase,
           useValue: mockSaveGeneratedImage,
+        },
+        {
+          provide: CollectUsageAsyncService,
+          useValue: mockCollectUsage,
         },
         {
           provide: ContextService,
@@ -213,5 +220,89 @@ describe('GenerateImageToolHandler', () => {
         context: { orgId: mockOrgId, threadId: mockThreadId },
       }),
     ).rejects.toThrow(ToolExecutionFailedError);
+  });
+
+  it('should collect token usage when the handler returns it', async () => {
+    const model = new ImageGenerationModel({
+      id: randomUUID(),
+      name: 'gpt-image-1',
+      provider: ModelProvider.AZURE,
+      displayName: 'GPT Image 1',
+      isArchived: false,
+      inputTokenCost: 5,
+      outputTokenCost: 40,
+    });
+
+    mockGetPermittedModel.execute.mockResolvedValue(
+      new PermittedImageGenerationModel({ model, orgId: mockOrgId }),
+    );
+    mockGenerateImage.execute.mockResolvedValue(
+      new ImageGenerationResult(
+        Buffer.from('fake-image-data'),
+        'image/png',
+        undefined,
+        { inputTokens: 120, outputTokens: 4096, totalTokens: 4216 },
+      ),
+    );
+    mockSaveGeneratedImage.execute.mockResolvedValue({ id: mockImageId });
+    mockContextService.get.mockReturnValue(mockUserId);
+
+    await handler.execute({
+      tool: new GenerateImageTool(),
+      input: { prompt: 'A cyberpunk skyline' },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    expect(mockCollectUsage.collect).toHaveBeenCalledWith(model, 120, 4096);
+  });
+
+  it('should not collect usage when the handler returns no token counts', async () => {
+    setupHappyPath();
+
+    await handler.execute({
+      tool: new GenerateImageTool(),
+      input: { prompt: 'A sunset' },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    expect(mockCollectUsage.collect).not.toHaveBeenCalled();
+  });
+
+  it('should not collect usage when saving the generated image fails', async () => {
+    const model = new ImageGenerationModel({
+      id: randomUUID(),
+      name: 'gpt-image-1',
+      provider: ModelProvider.AZURE,
+      displayName: 'GPT Image 1',
+      isArchived: false,
+      inputTokenCost: 5,
+      outputTokenCost: 40,
+    });
+
+    mockGetPermittedModel.execute.mockResolvedValue(
+      new PermittedImageGenerationModel({ model, orgId: mockOrgId }),
+    );
+    mockGenerateImage.execute.mockResolvedValue(
+      new ImageGenerationResult(
+        Buffer.from('fake-image-data'),
+        'image/png',
+        undefined,
+        { inputTokens: 120, outputTokens: 4096, totalTokens: 4216 },
+      ),
+    );
+    mockSaveGeneratedImage.execute.mockRejectedValue(
+      new Error('Storage unavailable'),
+    );
+    mockContextService.get.mockReturnValue(mockUserId);
+
+    await expect(
+      handler.execute({
+        tool: new GenerateImageTool(),
+        input: { prompt: 'A cyberpunk skyline' },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      }),
+    ).rejects.toThrow(ToolExecutionFailedError);
+
+    expect(mockCollectUsage.collect).not.toHaveBeenCalled();
   });
 });

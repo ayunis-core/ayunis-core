@@ -13,7 +13,6 @@ import { ToolResultCollectorService } from './application/services/tool-result-c
 import { MessageCleanupService } from './application/services/message-cleanup.service';
 import { StreamingInferenceService } from './application/services/streaming-inference.service';
 import { NonStreamingInferenceService } from './application/services/non-streaming-inference.service';
-import { CollectUsageAsyncService } from './application/services/collect-usage-async.service';
 import { CreditBudgetGuardService } from './application/services/credit-budget-guard.service';
 import { InferenceOrchestratorService } from './application/services/inference-orchestrator.service';
 
@@ -60,7 +59,6 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
     MessageCleanupService,
     StreamingInferenceService,
     NonStreamingInferenceService,
-    CollectUsageAsyncService,
     CreditBudgetGuardService,
     InferenceOrchestratorService,
   ],

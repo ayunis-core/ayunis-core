@@ -98,10 +98,25 @@ async function seedEmbeddingModel(): Promise<EmbeddingModelRecord> {
 
 async function seedImageGenerationModel(): Promise<ImageGenerationModelRecord> {
   const repo = dataSource.getRepository(ImageGenerationModelRecord);
-  const { name, displayName, provider } = fixture.imageGenerationModel;
+  const { name, displayName, provider, inputTokenCost, outputTokenCost } =
+    fixture.imageGenerationModel;
   const existing = await repo.findOne({ where: { name, provider } });
   if (existing) {
-    log('Image generation model', existing.name, false);
+    // Backfill pricing on envs seeded before image-gen cost fields existed,
+    // so credit accounting produces non-zero credits for gpt-image-1.
+    let dirty = false;
+    if (existing.inputTokenCost === undefined) {
+      existing.inputTokenCost = inputTokenCost;
+      dirty = true;
+    }
+    if (existing.outputTokenCost === undefined) {
+      existing.outputTokenCost = outputTokenCost;
+      dirty = true;
+    }
+    if (dirty) {
+      await repo.save(existing);
+    }
+    log('Image generation model', existing.name, dirty);
     return existing;
   }
 
@@ -110,6 +125,8 @@ async function seedImageGenerationModel(): Promise<ImageGenerationModelRecord> {
     name,
     displayName,
     provider,
+    inputTokenCost,
+    outputTokenCost,
   });
   await repo.save(record);
   log('Image generation model', record.name, true);
@@ -305,6 +322,45 @@ async function seedPlatformConfig(): Promise<void> {
 // Main
 // ---------------------------------------------------------------------------
 
+async function seedAllFixtures(runner: SeedRunner): Promise<void> {
+  console.log('🌱 Starting minimal seed…\n'); // eslint-disable-line no-console
+
+  const [
+    org,
+    usageOrg,
+    languageModel,
+    azureLanguageModel,
+    embeddingModel,
+    imageGenerationModel,
+  ] = await Promise.all([
+    seedOrgByName(fixture.org.name),
+    seedOrgByName(fixture.usageOrg.name),
+    seedLanguageModelFromFixture(fixture.languageModel),
+    seedLanguageModelFromFixture(fixture.azureLanguageModel),
+    seedEmbeddingModel(),
+    seedImageGenerationModel(),
+  ]);
+
+  const models = {
+    languageModel,
+    azureLanguageModel,
+    embeddingModel,
+    imageGenerationModel,
+  };
+
+  await seedUser(org.id, runner, fixture.user);
+  await seedSubscription(org.id);
+  await seedPermittedModels(org.id, models);
+
+  await seedUser(usageOrg.id, runner, fixture.usageUser);
+  await seedUsageSubscription(usageOrg.id);
+  await seedPermittedModels(usageOrg.id, models);
+
+  await seedPlatformConfig();
+
+  console.log('\n🎉 Minimal seed completed successfully!'); // eslint-disable-line no-console
+}
+
 async function seedMinimal(): Promise<void> {
   const runner = new SeedRunner();
   const shouldClean = process.argv.includes('--clean');
@@ -318,46 +374,7 @@ async function seedMinimal(): Promise<void> {
       await runner.truncateAll();
     }
 
-    console.log('🌱 Starting minimal seed…\n'); // eslint-disable-line no-console
-
-    // Seed independent entities first
-    const [
-      org,
-      usageOrg,
-      languageModel,
-      azureLanguageModel,
-      embeddingModel,
-      imageGenerationModel,
-    ] = await Promise.all([
-      seedOrgByName(fixture.org.name),
-      seedOrgByName(fixture.usageOrg.name),
-      seedLanguageModelFromFixture(fixture.languageModel),
-      seedLanguageModelFromFixture(fixture.azureLanguageModel),
-      seedEmbeddingModel(),
-      seedImageGenerationModel(),
-    ]);
-
-    const models = {
-      languageModel,
-      azureLanguageModel,
-      embeddingModel,
-      imageGenerationModel,
-    };
-
-    // Seed seat-based org
-    await seedUser(org.id, runner, fixture.user);
-    await seedSubscription(org.id);
-    await seedPermittedModels(org.id, models);
-
-    // Seed usage-based org
-    await seedUser(usageOrg.id, runner, fixture.usageUser);
-    await seedUsageSubscription(usageOrg.id);
-    await seedPermittedModels(usageOrg.id, models);
-
-    // Seed platform config
-    await seedPlatformConfig();
-
-    console.log('\n🎉 Minimal seed completed successfully!'); // eslint-disable-line no-console
+    await seedAllFixtures(runner);
   } catch (error) {
     console.error('\n❌ Seed failed:', error);
     exitCode = 1;
