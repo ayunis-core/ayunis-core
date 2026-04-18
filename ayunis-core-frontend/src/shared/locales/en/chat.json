@@ -103,6 +103,20 @@
         "generating": "Applying edits…",
         "openInEditor": "Open in Editor"
       },
+      "create_diagram": {
+        "title": "Diagram",
+        "created": "Diagram created",
+        "creating": "Creating diagram…",
+        "generating": "Generating diagram…",
+        "openInEditor": "Open diagram"
+      },
+      "update_diagram": {
+        "title": "Diagram updated",
+        "updated": "Diagram updated",
+        "updating": "Updating diagram…",
+        "generating": "Generating update…",
+        "openInEditor": "Open diagram"
+      },
       "create_calendar_event": {
         "title": "Title",
         "titlePlaceholder": "Event title",

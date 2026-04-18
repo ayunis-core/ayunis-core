@@ -58,6 +58,12 @@ const LazyArtifactEditor = lazy(() =>
   })),
 );
 
+const LazyDiagramViewer = lazy(() =>
+  import('@/widgets/diagram-viewer').then((m) => ({
+    default: m.DiagramViewer,
+  })),
+);
+
 const PROCESSING_POLL_INTERVAL = 5000;
 
 interface ChatPageProps {
@@ -430,15 +436,22 @@ export default function ChatPage({
         sidePanel={
           openArtifact ? (
             <Suspense fallback={null}>
-              <LazyArtifactEditor
-                artifact={openArtifact}
-                onSave={handleSaveArtifact}
-                onRevert={handleRevertArtifact}
-                onExport={handleExportArtifact}
-                onClose={handleCloseArtifact}
-                onLetterheadChange={handleLetterheadChange}
-                isExporting={isExporting}
-              />
+              {openArtifact.type === 'diagram' ? (
+                <LazyDiagramViewer
+                  artifact={openArtifact}
+                  onClose={handleCloseArtifact}
+                />
+              ) : (
+                <LazyArtifactEditor
+                  artifact={openArtifact}
+                  onSave={handleSaveArtifact}
+                  onRevert={handleRevertArtifact}
+                  onExport={handleExportArtifact}
+                  onClose={handleCloseArtifact}
+                  onLetterheadChange={handleLetterheadChange}
+                  isExporting={isExporting}
+                />
+              )}
             </Suspense>
           ) : undefined
         }

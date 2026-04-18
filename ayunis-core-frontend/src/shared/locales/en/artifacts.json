@@ -37,5 +37,12 @@
     "current": "(current)",
     "revertTo": "Revert to v{{version}}",
     "revert": "Revert"
+  },
+  "diagram": {
+    "export": {
+      "svg": "SVG",
+      "png": "PNG",
+      "failed": "Failed to export diagram"
+    }
   }
 }

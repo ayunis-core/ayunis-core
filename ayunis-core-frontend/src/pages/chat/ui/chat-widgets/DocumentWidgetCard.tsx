@@ -1,6 +1,6 @@
 import { Button } from '@/shared/ui/shadcn/button';
 import { cn } from '@/shared/lib/shadcn/utils';
-import { FileText, ExternalLink } from 'lucide-react';
+import { FileText, ExternalLink, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 interface DocumentWidgetCardProps {
@@ -12,6 +12,7 @@ interface DocumentWidgetCardProps {
   readonly buttonLabel: string;
   readonly artifactId: string | null;
   readonly onOpen: () => void;
+  readonly icon?: LucideIcon;
 }
 
 export function DocumentWidgetCard({
@@ -23,6 +24,7 @@ export function DocumentWidgetCard({
   buttonLabel,
   artifactId,
   onOpen,
+  icon: Icon = FileText,
 }: DocumentWidgetCardProps) {
   return (
     <div
@@ -36,7 +38,7 @@ export function DocumentWidgetCard({
             isStreaming && 'animate-pulse',
           )}
         >
-          <FileText className="size-5 text-primary" />
+          <Icon className="size-5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
           <p

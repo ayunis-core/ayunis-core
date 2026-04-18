@@ -110,6 +110,14 @@
     "winston-transport": "^4.9.0",
     "xlsx": "^0.18.5"
   },
+  "overrides": {
+    "basic-ftp": ">=5.2.0 <6",
+    "protobufjs": ">=7.5.5 <8"
+  },
+  "overridesNotes": {
+    "basic-ftp": "Patches GHSA-5rq4-664w-9x2c (path traversal). Transitive via puppeteer-core → @puppeteer/browsers → proxy-agent → pac-proxy-agent → get-uri. Not reachable in our code (html-document-export.service.ts uses system Chromium via executablePath, never downloads browsers, no proxy config), but blocks the CI security audit. Remove when @puppeteer/browsers bumps get-uri past the vulnerable range — verify with `npm ls basic-ftp` after any puppeteer-core upgrade.",
+    "protobufjs": "Patches GHSA-xq3m-2v4x-88gg (arbitrary code execution, fixed in 7.5.5). Transitive via @google/genai. @google/genai declares `^7.5.4`, so this floor stays within its range. Remove when @google/genai's declared range moves past 7.5.5 — verify with `npm ls protobufjs` after any @google/genai upgrade."
+  },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",

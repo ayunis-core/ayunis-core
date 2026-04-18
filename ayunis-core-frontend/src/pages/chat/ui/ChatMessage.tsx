@@ -33,10 +33,8 @@ import CreateSkillWidget from './chat-widgets/CreateSkillWidget';
 import EditSkillWidget from './chat-widgets/EditSkillWidget';
 import ActivateSkillWidget from './chat-widgets/ActivateSkillWidget';
 import SkillInstructionWidget from './chat-widgets/SkillInstructionWidget';
-import CreateDocumentWidget from './chat-widgets/CreateDocumentWidget';
-import UpdateDocumentWidget from './chat-widgets/UpdateDocumentWidget';
-import EditDocumentWidget from './chat-widgets/EditDocumentWidget';
 import GenerateImageWidget from './chat-widgets/GenerateImageWidget';
+import { renderArtifactToolWidget } from './chat-widgets/renderArtifactToolWidget';
 import {
   BarChartWidget,
   LineChartWidget,
@@ -290,7 +288,7 @@ function renderMessageContent(
         return null;
       }
 
-      // eslint-disable-next-line sonarjs/cognitive-complexity
+      // eslint-disable-next-line sonarjs/cognitive-complexity, sonarjs/function-return-type -- tool-use switch returns many distinct JSX widget types
       return message.content.map((content: AssistantMessageContent, index) => {
         if (content.type === 'thinking') {
           const thinkingMessageContent = content as ThinkingMessageContent;
@@ -410,44 +408,15 @@ function renderMessageContent(
               );
             }
 
-            if (
-              toolUseMessageContent.name ===
-              ToolAssignmentDtoType.create_document
-            ) {
-              return (
-                <CreateDocumentWidget
-                  key={`create-document-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
-                  content={toolUseMessageContent}
-                  isStreaming={isStreaming}
-                  threadId={threadId ?? ''}
-                  onOpenArtifact={onOpenArtifact}
-                />
-              );
-            }
-            if (
-              toolUseMessageContent.name ===
-              ToolAssignmentDtoType.update_document
-            ) {
-              return (
-                <UpdateDocumentWidget
-                  key={`update-document-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
-                  content={toolUseMessageContent}
-                  isStreaming={isStreaming}
-                  onOpenArtifact={onOpenArtifact}
-                />
-              );
-            }
-            if (
-              toolUseMessageContent.name === ToolAssignmentDtoType.edit_document
-            ) {
-              return (
-                <EditDocumentWidget
-                  key={`edit-document-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
-                  content={toolUseMessageContent}
-                  isStreaming={isStreaming}
-                  onOpenArtifact={onOpenArtifact}
-                />
-              );
+            const artifactWidget = renderArtifactToolWidget({
+              content: toolUseMessageContent,
+              index,
+              isStreaming,
+              threadId: threadId ?? '',
+              onOpenArtifact,
+            });
+            if (artifactWidget) {
+              return artifactWidget;
             }
             if (
               toolUseMessageContent.name ===
