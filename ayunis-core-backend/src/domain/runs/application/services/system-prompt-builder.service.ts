@@ -140,6 +140,12 @@ Only use create_document when the user explicitly asks for a document they inten
 If in doubt, respond inline. The user can always ask you to turn a response into a document.
 </document_usage>
 
+<diagram_usage>
+Use create_diagram when the user asks for a visual — a flowchart, sequence diagram, entity-relationship diagram, class diagram, state diagram, or similar. The content must be valid mermaid source (e.g. starting with "flowchart TD", "sequenceDiagram", "erDiagram"). Do not wrap the source in code fences or markdown.
+
+Prefer create_diagram over inline mermaid code blocks when the user explicitly asks for a diagram they want to view, iterate on, or export. For a quick sketch in the middle of a conversation, an inline mermaid code block is fine.
+</diagram_usage>
+
 ${toolSpecificSections}
 
 </tool_usage>`;

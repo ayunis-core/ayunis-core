@@ -2287,6 +2287,8 @@ export const ToolAssignmentDtoType = {
   edit_document: 'edit_document',
   read_document: 'read_document',
   generate_image: 'generate_image',
+  create_diagram: 'create_diagram',
+  update_diagram: 'update_diagram',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -2343,6 +2345,8 @@ export const ToolResponseDtoType = {
   edit_document: 'edit_document',
   read_document: 'read_document',
   generate_image: 'generate_image',
+  create_diagram: 'create_diagram',
+  update_diagram: 'update_diagram',
 } as const;
 
 export interface ToolResponseDto {

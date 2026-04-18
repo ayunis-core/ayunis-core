@@ -11603,7 +11603,9 @@
               "update_document",
               "edit_document",
               "read_document",
-              "generate_image"
+              "generate_image",
+              "create_diagram",
+              "update_diagram"
             ]
           },
           "toolConfigId": {
@@ -11677,7 +11679,9 @@
               "update_document",
               "edit_document",
               "read_document",
-              "generate_image"
+              "generate_image",
+              "create_diagram",
+              "update_diagram"
             ]
           }
         },

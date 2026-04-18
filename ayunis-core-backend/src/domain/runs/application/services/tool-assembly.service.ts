@@ -33,16 +33,10 @@ import {
   type SkillPrefix,
 } from 'src/common/util/skill-slug';
 import type { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
-import { FindArtifactsByThreadUseCase } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.use-case';
-import { FindArtifactsByThreadQuery } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.query';
-import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
-import { FindArtifactWithVersionsQuery } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.query';
-import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
-import { FindAllLetterheadsUseCase } from 'src/domain/letterheads/application/use-cases/find-all-letterheads/find-all-letterheads.use-case';
-import { buildLetterheadSuffix } from './letterhead-suffix.helper';
 import { assembleImageGenerationTools } from './image-generation-tool-assembly.helper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
+import { ArtifactToolAssemblerService } from './artifact-tool-assembler.service';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -59,11 +53,9 @@ export class ToolAssemblyService {
     private readonly findActiveAlwaysOnTemplatesUseCase: FindActiveAlwaysOnTemplatesUseCase,
     @Inject(featuresConfig.KEY)
     private readonly features: ConfigType<typeof featuresConfig>,
-    private readonly findArtifactsByThreadUseCase: FindArtifactsByThreadUseCase,
-    private readonly findArtifactWithVersionsUseCase: FindArtifactWithVersionsUseCase,
-    private readonly findAllLetterheadsUseCase: FindAllLetterheadsUseCase,
     private readonly contextService: ContextService,
     private readonly getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase,
+    private readonly artifactToolAssembler: ArtifactToolAssemblerService,
   ) {}
 
   async findActiveSkills(): Promise<Skill[]> {
@@ -240,25 +232,14 @@ export class ToolAssemblyService {
       );
     }
 
-    // Fetch org letterheads for document tool descriptions
-    const letterheads = await this.fetchLetterheadsSafe();
-    const letterheadSuffix = buildLetterheadSuffix(letterheads);
-
-    // Document tools are always available
-    const createDocTool = await this.assembleToolsUseCase.execute(
-      new AssembleToolCommand({ type: ToolType.CREATE_DOCUMENT }),
+    // Artifact-related always-on tools (document create/update/edit/read +
+    // diagram create/update). Handles letterhead suffix + artifact context
+    // injection internally.
+    tools.push(
+      ...(await this.artifactToolAssembler.assembleDocumentAndDiagramTools(
+        thread,
+      )),
     );
-    if (letterheadSuffix) {
-      createDocTool.descriptionLong = `${createDocTool.descriptionLong ?? createDocTool.description}${letterheadSuffix}`;
-    }
-    tools.push(createDocTool);
-
-    // Document editing tools with artifact context + letterhead info
-    const documentEditTools = await this.assembleDocumentEditTools(
-      thread,
-      letterheadSuffix,
-    );
-    tools.push(...documentEditTools);
 
     if (skillsEnabled) {
       tools.push(
@@ -429,66 +410,5 @@ export class ToolAssemblyService {
         ),
       ),
     ];
-  }
-
-  private async assembleDocumentEditTools(
-    thread: Thread,
-    letterheadSuffix: string,
-  ): Promise<Tool[]> {
-    const threadArtifacts = await this.findArtifactsByThreadUseCase.execute(
-      new FindArtifactsByThreadQuery({ threadId: thread.id }),
-    );
-
-    const artifactLines: string[] = [];
-    for (const a of threadArtifacts) {
-      const full = await this.findArtifactWithVersionsUseCase.execute(
-        new FindArtifactWithVersionsQuery({ artifactId: a.id }),
-      );
-      const cur = full.versions.find(
-        (v) => v.versionNumber === full.currentVersionNumber,
-      );
-      const warn =
-        cur?.authorType === AuthorType.USER
-          ? ' (⚠ user-edited — use read_document before editing)'
-          : '';
-      artifactLines.push(`- ${a.id}: "${a.title}"${warn}`);
-    }
-
-    const suffix =
-      artifactLines.length > 0
-        ? `\n\nAvailable documents in this conversation:\n${artifactLines.join('\n')}`
-        : '';
-
-    const toolTypes = [
-      ToolType.UPDATE_DOCUMENT,
-      ToolType.EDIT_DOCUMENT,
-      ToolType.READ_DOCUMENT,
-    ];
-    const tools: Tool[] = [];
-    for (const type of toolTypes) {
-      const tool = await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({ type }),
-      );
-      const extra =
-        type === ToolType.UPDATE_DOCUMENT
-          ? `${suffix}${letterheadSuffix}`
-          : suffix;
-      if (extra) {
-        tool.descriptionLong = `${tool.descriptionLong ?? tool.description}${extra}`;
-      }
-      tools.push(tool);
-    }
-    return tools;
-  }
-
-  private async fetchLetterheadsSafe() {
-    try {
-      return await this.findAllLetterheadsUseCase.execute();
-    } catch (error) {
-      this.logger.warn('Failed to fetch letterheads, continuing without them', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      return [];
-    }
   }
 }

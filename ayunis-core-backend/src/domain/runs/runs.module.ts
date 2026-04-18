@@ -9,6 +9,7 @@ import { ExecuteRunUseCase } from './application/use-cases/execute-run/execute-r
 import { ExecuteRunAndSetTitleUseCase } from './application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
 import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
 import { ToolAssemblyService } from './application/services/tool-assembly.service';
+import { ArtifactToolAssemblerService } from './application/services/artifact-tool-assembler.service';
 import { ToolResultCollectorService } from './application/services/tool-result-collector.service';
 import { MessageCleanupService } from './application/services/message-cleanup.service';
 import { StreamingInferenceService } from './application/services/streaming-inference.service';
@@ -55,6 +56,7 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
     ExecuteRunAndSetTitleUseCase,
     SystemPromptBuilderService,
     ToolAssemblyService,
+    ArtifactToolAssemblerService,
     ToolResultCollectorService,
     MessageCleanupService,
     StreamingInferenceService,
