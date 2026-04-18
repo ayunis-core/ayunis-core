@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/shadcn/dialog';
-import { cn } from '@/shared/lib/shadcn/utils';
 import { useResolveGeneratedImage } from '../../api/useResolveGeneratedImage';
 import type { ToolUseMessageContent } from '../../model/openapi';
+import ImageGenerationLoader from './ImageGenerationLoader';
 
 interface GenerateImageWidgetProps {
   readonly content: ToolUseMessageContent;
@@ -34,28 +34,7 @@ export default function GenerateImageWidget({
   const isGenerating = isStreaming || !hasIds;
 
   if (isGenerating) {
-    return (
-      <div className="my-2 w-full rounded-lg border bg-card p-4">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              'flex size-10 items-center justify-center rounded-lg bg-primary/10 animate-pulse',
-            )}
-          >
-            <ImageIcon className="size-5 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate animate-pulse">
-              {t('chat.tools.generate_image.generating')}
-            </p>
-            {prompt && (
-              <p className="text-xs text-muted-foreground truncate">{prompt}</p>
-            )}
-          </div>
-          <Loader2 className="size-4 animate-spin text-muted-foreground" />
-        </div>
-      </div>
-    );
+    return <ImageGenerationLoader prompt={prompt} />;
   }
 
   if (isLoading) {
