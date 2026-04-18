@@ -8,6 +8,7 @@ import {
 } from '../../artifacts.errors';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
+import { DocumentArtifact } from '../../../domain/artifact.entity';
 import { sanitizeHtmlContent } from '../../helpers/sanitize-html-content';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -58,12 +59,17 @@ export class RevertArtifactUseCase {
             );
           }
 
+          const content =
+            artifact instanceof DocumentArtifact
+              ? sanitizeHtmlContent(targetVersion.content)
+              : targetVersion.content;
+
           return {
             expectedCurrentVersionNumber: artifact.currentVersionNumber,
             version: new ArtifactVersion({
               artifactId: artifact.id,
               versionNumber: artifact.currentVersionNumber + 1,
-              content: sanitizeHtmlContent(targetVersion.content),
+              content,
               authorType: AuthorType.USER,
               authorId: userId,
             }),

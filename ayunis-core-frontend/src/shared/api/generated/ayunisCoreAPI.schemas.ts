@@ -3185,9 +3185,23 @@ export interface ArtifactVersionResponseDto {
   createdAt: string;
 }
 
+/**
+ * The kind of artifact — document (HTML) or diagram (mermaid)
+ */
+export type ArtifactResponseDtoType = typeof ArtifactResponseDtoType[keyof typeof ArtifactResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ArtifactResponseDtoType = {
+  document: 'document',
+  diagram: 'diagram',
+} as const;
+
 export interface ArtifactResponseDto {
   /** Unique identifier of the artifact */
   id: string;
+  /** The kind of artifact — document (HTML) or diagram (mermaid) */
+  type: ArtifactResponseDtoType;
   /** The thread this artifact belongs to */
   threadId: string;
   /** The user who owns this artifact */

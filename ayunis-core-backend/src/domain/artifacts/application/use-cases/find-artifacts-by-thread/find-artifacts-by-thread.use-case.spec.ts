@@ -5,7 +5,7 @@ import type { UUID } from 'crypto';
 import { FindArtifactsByThreadUseCase } from './find-artifacts-by-thread.use-case';
 import { FindArtifactsByThreadQuery } from './find-artifacts-by-thread.query';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
-import { Artifact } from '../../../domain/artifact.entity';
+import { DocumentArtifact } from '../../../domain/artifact.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 
 describe('FindArtifactsByThreadUseCase', () => {
@@ -53,13 +53,13 @@ describe('FindArtifactsByThreadUseCase', () => {
 
   it('should return all artifacts for a given thread scoped by userId', async () => {
     const artifacts = [
-      new Artifact({
+      new DocumentArtifact({
         threadId: mockThreadId,
         userId: mockUserId,
         title: 'Budget Report 2026',
         currentVersionNumber: 3,
       }),
-      new Artifact({
+      new DocumentArtifact({
         threadId: mockThreadId,
         userId: mockUserId,
         title: 'Meeting Minutes - February',

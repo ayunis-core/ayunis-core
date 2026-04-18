@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
+import { ArtifactType } from '../../../domain/value-objects/artifact-type.enum';
 
 export class ArtifactVersionResponseDto {
   @ApiProperty({
@@ -53,6 +54,13 @@ export class ArtifactResponseDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   id: string;
+
+  @ApiProperty({
+    description: 'The kind of artifact — document (HTML) or diagram (mermaid)',
+    enum: ArtifactType,
+    example: ArtifactType.DOCUMENT,
+  })
+  type: ArtifactType;
 
   @ApiProperty({
     description: 'The thread this artifact belongs to',

@@ -12870,6 +12870,12 @@
             "description": "Unique identifier of the artifact",
             "example": "123e4567-e89b-12d3-a456-426614174000"
           },
+          "type": {
+            "type": "string",
+            "description": "The kind of artifact — document (HTML) or diagram (mermaid)",
+            "enum": ["document", "diagram"],
+            "example": "document"
+          },
           "threadId": {
             "type": "string",
             "description": "The thread this artifact belongs to",
@@ -12917,6 +12923,7 @@
         },
         "required": [
           "id",
+          "type",
           "threadId",
           "userId",
           "title",
