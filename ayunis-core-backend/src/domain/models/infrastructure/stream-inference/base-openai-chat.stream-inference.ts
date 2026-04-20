@@ -9,6 +9,7 @@ import { Observable, Subscriber } from 'rxjs';
 import OpenAI from 'openai';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { ThinkingContentParser } from 'src/common/util/thinking-content-parser';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { OpenAIChatMessageConverter } from '../converters/openai-chat-message.converter';
 
 @Injectable()
@@ -18,7 +19,11 @@ export class BaseOpenAIChatStreamInferenceHandler implements StreamInferenceHand
   );
   private readonly thinkingParser = new ThinkingContentParser();
   protected client: OpenAI;
-  protected readonly chatConverter = new OpenAIChatMessageConverter();
+  protected readonly chatConverter: OpenAIChatMessageConverter;
+
+  constructor(protected readonly imageContentService: ImageContentService) {
+    this.chatConverter = new OpenAIChatMessageConverter(imageContentService);
+  }
 
   answer(
     input: StreamInferenceInput,
@@ -36,14 +41,17 @@ export class BaseOpenAIChatStreamInferenceHandler implements StreamInferenceHand
       // Reset thinking parser for new stream
       this.thinkingParser.reset();
 
-      const { messages, tools, toolChoice } = input;
+      const { messages, tools, toolChoice, orgId } = input;
       const openAiTools = tools
         .map((t) => this.chatConverter.convertTool(t))
         .map((tool) => ({
           ...tool,
           function: { ...tool.function, strict: true },
         }));
-      const openAiMessages = this.chatConverter.convertMessages(messages);
+      const openAiMessages = await this.chatConverter.convertMessages(
+        messages,
+        orgId,
+      );
       const systemPrompt = input.systemPrompt
         ? this.chatConverter.convertSystemPrompt(input.systemPrompt)
         : undefined;

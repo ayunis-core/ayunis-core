@@ -11,6 +11,7 @@ import { ThinkingMessageContent } from 'src/domain/messages/domain/message-conte
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { InferenceFailedError } from '../../application/models.errors';
 import { ThinkingContentParser } from 'src/common/util/thinking-content-parser';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { OpenAIChatMessageConverter } from '../converters/openai-chat-message.converter';
 
 @Injectable()
@@ -18,7 +19,12 @@ export abstract class BaseOpenAIChatInferenceHandler extends InferenceHandler {
   private readonly logger = new Logger(BaseOpenAIChatInferenceHandler.name);
   private readonly thinkingParser = new ThinkingContentParser();
   protected client: OpenAI;
-  protected readonly chatConverter = new OpenAIChatMessageConverter();
+  protected readonly chatConverter: OpenAIChatMessageConverter;
+
+  constructor(protected readonly imageContentService: ImageContentService) {
+    super();
+    this.chatConverter = new OpenAIChatMessageConverter(imageContentService);
+  }
 
   async answer(input: InferenceInput): Promise<InferenceResponse> {
     this.logger.log('answer', {
@@ -28,14 +34,17 @@ export abstract class BaseOpenAIChatInferenceHandler extends InferenceHandler {
       toolChoice: input.toolChoice,
     });
     try {
-      const { messages, tools, toolChoice } = input;
+      const { messages, tools, toolChoice, orgId } = input;
       const openAiTools = tools
         .map((t) => this.chatConverter.convertTool(t))
         .map((tool) => ({
           ...tool,
           function: { ...tool.function, strict: true },
         }));
-      const openAiMessages = this.chatConverter.convertMessages(messages);
+      const openAiMessages = await this.chatConverter.convertMessages(
+        messages,
+        orgId,
+      );
       const systemPrompt = input.systemPrompt
         ? this.chatConverter.convertSystemPrompt(input.systemPrompt)
         : undefined;

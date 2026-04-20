@@ -51,9 +51,11 @@ async function seedOrgByName(name: string): Promise<OrgRecord> {
   return record;
 }
 
-async function seedLanguageModel(): Promise<LanguageModelRecord> {
+async function seedLanguageModelFromFixture(
+  entry: typeof fixture.languageModel | typeof fixture.azureLanguageModel,
+): Promise<LanguageModelRecord> {
   const repo = dataSource.getRepository(LanguageModelRecord);
-  const { name, displayName, provider, ...flags } = fixture.languageModel;
+  const { name, displayName, provider, ...flags } = entry;
   const existing = await repo.findOne({ where: { name, provider } });
   if (existing) {
     log('Language model', existing.name, false);
@@ -295,14 +297,16 @@ async function seedMinimal(): Promise<void> {
     console.log('🌱 Starting minimal seed…\n'); // eslint-disable-line no-console
 
     // Seed independent entities first
-    const [org, usageOrg, languageModel, embeddingModel] = await Promise.all([
-      seedOrgByName(fixture.org.name),
-      seedOrgByName(fixture.usageOrg.name),
-      seedLanguageModel(),
-      seedEmbeddingModel(),
-    ]);
+    const [org, usageOrg, languageModel, azureLanguageModel, embeddingModel] =
+      await Promise.all([
+        seedOrgByName(fixture.org.name),
+        seedOrgByName(fixture.usageOrg.name),
+        seedLanguageModelFromFixture(fixture.languageModel),
+        seedLanguageModelFromFixture(fixture.azureLanguageModel),
+        seedEmbeddingModel(),
+      ]);
 
-    const models = { languageModel, embeddingModel };
+    const models = { languageModel, azureLanguageModel, embeddingModel };
 
     // Seed seat-based org
     await seedUser(org.id, runner, fixture.user);

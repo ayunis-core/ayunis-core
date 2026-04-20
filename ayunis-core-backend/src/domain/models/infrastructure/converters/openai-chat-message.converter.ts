@@ -3,8 +3,10 @@ import type { FunctionParameters } from 'openai/resources/shared';
 import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
+import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.enum';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { normalizeSchemaForOpenAI } from '../util/normalize-schema-for-openai';
@@ -14,6 +16,8 @@ import { normalizeSchemaForOpenAI } from '../util/normalize-schema-for-openai';
  * used by both BaseOpenAIChatInferenceHandler and BaseOpenAIChatStreamInferenceHandler.
  */
 export class OpenAIChatMessageConverter {
+  constructor(private readonly imageContentService: ImageContentService) {}
+
   convertTool(tool: Tool): OpenAI.ChatCompletionTool {
     return {
       type: 'function' as const,
@@ -31,10 +35,13 @@ export class OpenAIChatMessageConverter {
     return { role: 'system' as const, content: systemPrompt };
   }
 
-  convertMessages(messages: Message[]): OpenAI.ChatCompletionMessageParam[] {
+  async convertMessages(
+    messages: Message[],
+    orgId: string,
+  ): Promise<OpenAI.ChatCompletionMessageParam[]> {
     const converted: OpenAI.ChatCompletionMessageParam[] = [];
     for (const message of messages) {
-      converted.push(...this.convertMessage(message));
+      converted.push(...(await this.convertMessage(message, orgId)));
     }
     return converted;
   }
@@ -49,11 +56,12 @@ export class OpenAIChatMessageConverter {
     return { type: 'function', function: { name: toolChoice } };
   }
 
-  private convertMessage(
+  private async convertMessage(
     message: Message,
-  ): OpenAI.ChatCompletionMessageParam[] {
+    orgId: string,
+  ): Promise<OpenAI.ChatCompletionMessageParam[]> {
     if (message.role === MessageRole.USER)
-      return this.convertUserMessage(message);
+      return this.convertUserMessage(message, orgId);
     if (message.role === MessageRole.ASSISTANT)
       return [this.convertAssistantMessage(message)];
     if (message.role === MessageRole.SYSTEM)
@@ -64,16 +72,44 @@ export class OpenAIChatMessageConverter {
     return [];
   }
 
-  private convertUserMessage(
+  private async convertUserMessage(
     message: Message,
-  ): OpenAI.ChatCompletionMessageParam[] {
-    const contentParts: OpenAI.ChatCompletionContentPart[] = message.content
-      .filter((c) => c instanceof TextMessageContent)
-      .map((c) => ({ type: 'text' as const, text: c.text }));
+    orgId: string,
+  ): Promise<OpenAI.ChatCompletionMessageParam[]> {
+    const contentParts: OpenAI.ChatCompletionContentPart[] = [];
+    for (const content of message.content) {
+      if (content instanceof TextMessageContent) {
+        contentParts.push({ type: 'text' as const, text: content.text });
+      } else if (content instanceof ImageMessageContent) {
+        contentParts.push(
+          await this.convertImageContent(content, {
+            orgId,
+            threadId: message.threadId,
+            messageId: message.id,
+          }),
+        );
+      }
+    }
 
     if (contentParts.length === 0) return [];
 
     return [{ role: 'user' as const, content: contentParts }];
+  }
+
+  private async convertImageContent(
+    content: ImageMessageContent,
+    context: { orgId: string; threadId: string; messageId: string },
+  ): Promise<OpenAI.ChatCompletionContentPartImage> {
+    const imageData = await this.imageContentService.convertImageToBase64(
+      content,
+      context,
+    );
+    return {
+      type: 'image_url' as const,
+      image_url: {
+        url: `data:${imageData.contentType};base64,${imageData.base64}`,
+      },
+    };
   }
 
   private convertAssistantMessage(
