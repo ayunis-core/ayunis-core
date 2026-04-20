@@ -3,7 +3,7 @@ import { Form } from '@/shared/ui/shadcn/form';
 import { type CreateAgentData, useCreateAgent } from '../api/useCreateAgent';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { ToolAssignmentDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { useModelsControllerGetEffectiveDefaultModel } from '@/shared/api/generated/ayunisCoreAPI';
+import { useModelsDefaultsControllerGetEffectiveDefaultModel } from '@/shared/api/generated/ayunisCoreAPI';
 import {
   CreateEntityDialog,
   useCreateDialogTranslations,
@@ -40,7 +40,7 @@ export default function CreateAgentDialog({
   } = useCreateAgent();
 
   const { data: defaultModelData } =
-    useModelsControllerGetEffectiveDefaultModel();
+    useModelsDefaultsControllerGetEffectiveDefaultModel();
 
   useEffect(() => {
     if (isOpen && defaultModelData?.permittedLanguageModel?.id) {

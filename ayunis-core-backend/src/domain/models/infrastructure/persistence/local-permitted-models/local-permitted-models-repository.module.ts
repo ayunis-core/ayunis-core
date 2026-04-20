@@ -5,6 +5,7 @@ import { PermittedModelMapper } from './mappers/permitted-model.mapper';
 import { LocalPermittedModelsRepository } from './local-permitted-models.repository';
 import { PermittedModelsRepository } from '../../../application/ports/permitted-models.repository';
 import { LocalModelsRepositoryModule } from '../local-models/local-models-repository.module';
+import { PermittedModelQueryService } from './permitted-model-query.service';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { LocalModelsRepositoryModule } from '../local-models/local-models-reposi
     LocalModelsRepositoryModule,
   ],
   providers: [
+    PermittedModelQueryService,
     LocalPermittedModelsRepository,
     PermittedModelMapper,
     {

@@ -5,14 +5,23 @@
       "description": "Sie können in den <teamsLink>Team-Einstellungen</teamsLink> einschränken, welche Modelle für bestimmte Teams verfügbar sind."
     },
     "loading": "Modelle werden geladen...",
+    "loadErrorTitle": "Modelldaten konnten nicht geladen werden",
+    "loadErrorDescription": "Die Modelldaten konnten derzeit nicht geladen werden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
     "noModelsAvailable": "Keine Modelle verfügbar. Bitte überprüfen Sie Ihre Konfiguration.",
     "noModelsForProvider": "Keine Modelle für diesen Provider verfügbar.",
     "languageModels": "Sprachmodelle",
     "embeddingModels": "Embedding-Modelle",
+    "imageGenerationModels": "Bilderzeugungsmodelle",
     "languageModelsDescription": "Modelle für Textgenerierung und Konversation.",
     "embeddingModelsDescription": "Modelle für Dokumentenanalyse und Suche.",
+    "imageGenerationModelsDescription": "Modelle für Bilderzeugung und visuelle Erstellung.",
     "noLanguageModels": "Keine Sprachmodelle verfügbar.",
     "noEmbeddingModels": "Keine Embedding-Modelle verfügbar.",
+    "noImageGenerationModels": "Keine Bilderzeugungsmodelle verfügbar.",
+    "partialData": {
+      "title": "Einige Modelldaten sind nicht verfügbar",
+      "someUnavailable": "Einige Modelldaten konnten nicht geladen werden. Es werden nur die derzeit verfügbaren Daten angezeigt."
+    },
     "streaming": "Streaming",
     "streamingTooltip": "Das Modell sendet Antworten als Stream. Dadurch wird die Antwort Schritt für Schritt geliefert",
     "reasoning": "Reasoning",

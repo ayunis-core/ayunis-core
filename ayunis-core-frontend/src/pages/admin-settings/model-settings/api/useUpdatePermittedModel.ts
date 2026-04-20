@@ -1,13 +1,19 @@
 import {
   useModelsControllerUpdatePermittedModel,
-  getModelsControllerGetAvailableModelsWithConfigQueryKey,
+  getModelsControllerGetAvailableImageGenerationModelsQueryKey,
+  getModelsControllerGetAvailableLanguageModelsQueryKey,
+  getModelsControllerGetAvailableEmbeddingModelsQueryKey,
   getModelsControllerGetPermittedLanguageModelsQueryKey,
+  getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey,
+  type ModelWithConfigResponseDto,
 } from '@/shared/api';
+import extractErrorData from '@/shared/api/extract-error-data';
+import { showError } from '@/shared/lib/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   prepareOptimisticUpdate,
-  handleMutationError,
+  rollbackOptimisticUpdate,
 } from '@/widgets/permitted-model-mutations/lib/createPermittedModelMutation';
 
 interface UpdatePermittedModelParams {
@@ -22,32 +28,43 @@ const UPDATE_ERROR_MAP: Record<string, string> = {
 export function useUpdatePermittedModel() {
   const queryClient = useQueryClient();
   const { t } = useTranslation('admin-settings-models');
-  const queryKey = getModelsControllerGetAvailableModelsWithConfigQueryKey();
+  const availabilityQueryKeys = [
+    getModelsControllerGetAvailableLanguageModelsQueryKey(),
+    getModelsControllerGetAvailableEmbeddingModelsQueryKey(),
+    getModelsControllerGetAvailableImageGenerationModelsQueryKey(),
+  ];
 
   const updatePermittedModelMutation = useModelsControllerUpdatePermittedModel({
     mutation: {
-      onMutate: async ({ id, data }) =>
-        prepareOptimisticUpdate(queryClient, queryKey, (models) =>
+      onMutate: async ({ id, data }) => {
+        const updater = (models: ModelWithConfigResponseDto[]) =>
           models.map((model) =>
             model.permittedModelId === id
               ? { ...model, anonymousOnly: data.anonymousOnly }
               : model,
+          );
+        return Promise.all(
+          availabilityQueryKeys.map((key) =>
+            prepareOptimisticUpdate(queryClient, key, updater),
           ),
-        ),
-      onError: (err, _, context) => {
-        handleMutationError(
-          err,
-          queryClient,
-          context,
-          t,
-          UPDATE_ERROR_MAP,
-          'models.updatePermittedModel.error',
         );
+      },
+      onError: (err, _, contexts) => {
+        contexts?.forEach((ctx) => rollbackOptimisticUpdate(queryClient, ctx));
+        try {
+          const { code } = extractErrorData(err);
+          const key =
+            UPDATE_ERROR_MAP[code] ?? 'models.updatePermittedModel.error';
+          showError(t(key));
+        } catch {
+          showError(t('models.updatePermittedModel.error'));
+        }
       },
       onSettled: async () => {
         const queryKeys = [
-          queryKey,
+          ...availabilityQueryKeys,
           getModelsControllerGetPermittedLanguageModelsQueryKey(),
+          getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
         ];
         await Promise.all(
           queryKeys.map((qk) =>

@@ -9,12 +9,14 @@ import {
 import { Model } from '../../../domain/model.entity';
 import {
   EmbeddingModelRecord,
+  ImageGenerationModelRecord,
   LanguageModelRecord,
   ModelRecord,
 } from './schema/model.record';
 import { ModelMapper } from './mappers/model.mapper';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 
 @Injectable()
 export class LocalModelsRepository extends ModelsRepository {
@@ -69,6 +71,18 @@ export class LocalModelsRepository extends ModelsRepository {
       return undefined;
     }
     return this.localModelMapper.toDomain(model) as EmbeddingModel;
+  }
+
+  async findOneImageGeneration(
+    id: UUID,
+  ): Promise<ImageGenerationModel | undefined> {
+    const model = await this.localModelRepository.findOneBy({
+      id,
+    });
+    if (!model || !(model instanceof ImageGenerationModelRecord)) {
+      return undefined;
+    }
+    return this.localModelMapper.toDomain(model) as ImageGenerationModel;
   }
 
   async save(model: Model): Promise<void> {

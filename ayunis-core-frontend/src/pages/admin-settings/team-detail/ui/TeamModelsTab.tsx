@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/shadcn/alert';
 import { Switch } from '@/shared/ui/shadcn/switch';
 import { Label } from '@/shared/ui/shadcn/label';
 import {
@@ -9,9 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/ui/shadcn/card';
-import { useModelsWithConfig } from '@/features/models';
+import { useLanguageModels } from '@/features/models';
 import { ModelTypeCard } from '@/widgets/model-type-card';
 import type { ModelActions } from '@/widgets/model-type-card';
+import { TriangleAlert } from 'lucide-react';
 import type {
   ModelWithConfigResponseDto,
   TeamResponseDto,
@@ -41,11 +43,13 @@ export function TeamModelsTab({
   const effectiveOverrideEnabled =
     cachedTeam?.modelOverrideEnabled ?? modelOverrideEnabled;
   const { t } = useTranslation('admin-settings-teams');
+  const { t: tModels } = useTranslation('admin-settings-models');
   const { toggleModelOverride, isToggling } = useToggleModelOverride(
     teamId,
     teamName,
   );
-  const { models: orgModels } = useModelsWithConfig();
+  const { models: languageModels, isError: hasLanguageError } =
+    useLanguageModels();
   const { models: teamPermittedModels, isLoading: isLoadingTeamModels } =
     useTeamPermittedModels(teamId);
   const { createTeamPermittedModel, isCreating } =
@@ -58,9 +62,7 @@ export function TeamModelsTab({
     teamPermittedModels.map((m) => [m.modelId, m]),
   );
 
-  const orgLanguageModels = orgModels.filter(
-    (m) => !m.isEmbedding && m.isPermitted,
-  );
+  const orgLanguageModels = languageModels.filter((m) => m.isPermitted);
 
   const modelsForCard: ModelWithConfigResponseDto[] = orgLanguageModels.map(
     (model) => {
@@ -113,16 +115,28 @@ export function TeamModelsTab({
 
       {effectiveOverrideEnabled ? (
         <>
-          <ModelTypeCard
-            type="language"
-            models={modelsForCard}
-            actions={actions}
-          />
-          <TeamDefaultModelCard
-            teamId={teamId}
-            models={modelsForCard}
-            isLoading={isLoadingTeamModels}
-          />
+          {hasLanguageError ? (
+            <Alert variant="destructive">
+              <TriangleAlert className="h-4 w-4" />
+              <AlertTitle>{tModels('models.loadErrorTitle')}</AlertTitle>
+              <AlertDescription>
+                {tModels('models.loadErrorDescription')}
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <>
+              <ModelTypeCard
+                type="language"
+                models={modelsForCard}
+                actions={actions}
+              />
+              <TeamDefaultModelCard
+                teamId={teamId}
+                models={modelsForCard}
+                isLoading={isLoadingTeamModels}
+              />
+            </>
+          )}
         </>
       ) : (
         <Card>

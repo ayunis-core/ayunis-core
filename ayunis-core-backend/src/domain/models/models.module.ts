@@ -1,7 +1,11 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { ModelsController } from './presenters/http/models.controller';
+import { ModelsDefaultsController } from './presenters/http/models-defaults.controller';
 import { SuperAdminPermittedModelsController } from './presenters/http/super-admin-permitted-models.controller';
 import { SuperAdminCatalogModelsController } from './presenters/http/super-admin-catalog-models.controller';
+import { SuperAdminLanguageCatalogModelsController } from './presenters/http/super-admin-language-catalog-models.controller';
+import { SuperAdminEmbeddingCatalogModelsController } from './presenters/http/super-admin-embedding-catalog-models.controller';
+import { SuperAdminImageGenerationCatalogModelsController } from './presenters/http/super-admin-image-generation-catalog-models.controller';
 import { MistralInferenceHandler } from './infrastructure/inference/mistral.inference';
 import { InferenceHandlerRegistry } from './application/registry/inference-handler.registry';
 import { ModelProvider } from './domain/value-objects/model-provider.enum';
@@ -10,7 +14,7 @@ import { AnthropicInferenceHandler } from './infrastructure/inference/anthropic.
 import { MockInferenceHandler } from './infrastructure/inference/mock.inference';
 import { MockStreamInferenceHandler } from './infrastructure/stream-inference/mock.stream-inference';
 import { GetInferenceUseCase } from './application/use-cases/get-inference/get-inference.use-case';
-import { GetAvailableModelsUseCase } from './application/use-cases/get-available-models/get-available-models.use-case';
+import { GetConfiguredModelsByTypeUseCase } from './application/use-cases/get-configured-models-by-type/get-configured-models-by-type.use-case';
 import { GetDefaultModelUseCase } from './application/use-cases/get-default-model/get-default-model.use-case';
 import { GetPermittedModelUseCase } from './application/use-cases/get-permitted-model/get-permitted-model.use-case';
 import { GetPermittedModelsUseCase } from './application/use-cases/get-permitted-models/get-permitted-models.use-case';
@@ -28,17 +32,19 @@ import { StreamInferenceUseCase } from './application/use-cases/stream-inference
 import { StreamInferenceHandlerRegistry } from './application/registry/stream-inference-handler.registry';
 import { AnthropicStreamInferenceHandler } from './infrastructure/stream-inference/anthropic.stream-inference';
 import { OpenAIStreamInferenceHandler } from './infrastructure/stream-inference/openai.stream-inference';
-import { ManageUserDefaultModelUseCase } from './application/use-cases/manage-user-default-model/manage-user-default-model.use-case';
+import { SetUserDefaultLanguageModelUseCase } from './application/use-cases/set-user-default-language-model/set-user-default-language-model.use-case';
 import { DeleteUserDefaultModelUseCase } from './application/use-cases/delete-user-default-model/delete-user-default-model.use-case';
 import { GetUserDefaultModelUseCase } from './application/use-cases/get-user-default-model/get-user-default-model.use-case';
 import { GetOrgDefaultModelUseCase } from './application/use-cases/get-org-default-model/get-org-default-model.use-case';
-import { ManageOrgDefaultModelUseCase } from './application/use-cases/manage-org-default-model/manage-org-default-model.use-case';
+import { SetOrgDefaultLanguageModelUseCase } from './application/use-cases/set-org-default-language-model/set-org-default-language-model.use-case';
 import { MessageRequestDtoMapper } from './presenters/http/mappers/message-request-dto.mapper';
 import { MistralStreamInferenceHandler } from './infrastructure/stream-inference/mistral.stream-inference';
 import { CreateLanguageModelUseCase } from './application/use-cases/create-language-model/create-language-model.use-case';
 import { CreateEmbeddingModelUseCase } from './application/use-cases/create-embedding-model/create-embedding-model.use-case';
 import { UpdateLanguageModelUseCase } from './application/use-cases/update-language-model/update-language-model.use-case';
 import { UpdateEmbeddingModelUseCase } from './application/use-cases/update-embedding-model/update-embedding-model.use-case';
+import { CreateImageGenerationModelUseCase } from './application/use-cases/create-image-generation-model/create-image-generation-model.use-case';
+import { UpdateImageGenerationModelUseCase } from './application/use-cases/update-image-generation-model/update-image-generation-model.use-case';
 import { GetModelUseCase } from './application/use-cases/get-model/get-model.use-case';
 import { GetModelByIdUseCase } from './application/use-cases/get-model-by-id/get-model-by-id.use-case';
 import { GetAllModelsUseCase } from './application/use-cases/get-all-models/get-all-models.use-case';
@@ -59,6 +65,7 @@ import { SynaforceStreamInferenceHandler } from './infrastructure/stream-inferen
 import { GetPermittedLanguageModelsUseCase } from './application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
 import { GetPermittedLanguageModelUseCase } from './application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
 import { GetPermittedEmbeddingModelUseCase } from './application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
+import { GetPermittedImageGenerationModelUseCase } from './application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { UsersModule } from 'src/iam/users/users.module';
 import { SourcesModule } from '../sources/sources.module';
 import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.use-case';
@@ -85,6 +92,7 @@ import { GetTeamPermittedModelsUseCase } from './application/use-cases/get-team-
 import { SetTeamDefaultModelUseCase } from './application/use-cases/set-team-default-model/set-team-default-model.use-case';
 import { TeamPermittedModelsController } from './presenters/http/team-permitted-models.controller';
 import { TeamPermittedModelValidator } from './application/services/team-permitted-model-validator.service';
+import { ModelPolicyService } from './application/services/model-policy.service';
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
 import { OpenAIResponsesMessageConverter } from './infrastructure/converters/openai-responses-message.converter';
@@ -107,9 +115,13 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
   ],
   controllers: [
     ModelsController,
+    ModelsDefaultsController,
     TeamPermittedModelsController,
     SuperAdminPermittedModelsController,
     SuperAdminCatalogModelsController,
+    SuperAdminLanguageCatalogModelsController,
+    SuperAdminEmbeddingCatalogModelsController,
+    SuperAdminImageGenerationCatalogModelsController,
   ],
   providers: [
     ModelProviderInfoRegistry,
@@ -251,6 +263,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
       ],
     },
     // Services
+    ModelPolicyService,
     TeamPermittedModelValidator,
     // Use Cases
     GetEffectiveLanguageModelsUseCase,
@@ -264,30 +277,33 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     GetPermittedModelUseCase,
     GetPermittedLanguageModelUseCase,
     GetPermittedEmbeddingModelUseCase,
+    GetPermittedImageGenerationModelUseCase,
     GetPermittedModelsUseCase,
     IsModelPermittedUseCase,
     GetDefaultModelUseCase,
     GetInferenceUseCase,
     StreamInferenceUseCase,
-    GetAvailableModelsUseCase,
+    GetConfiguredModelsByTypeUseCase,
     GetModelProviderInfoUseCase,
     GetPermittedLanguageModelsUseCase,
     IsEmbeddingModelEnabledUseCase,
     // User Default Model Use Cases
-    ManageUserDefaultModelUseCase,
+    SetUserDefaultLanguageModelUseCase,
     DeleteUserDefaultModelUseCase,
     DeleteUserDefaultModelsByModelIdUseCase,
     GetUserDefaultModelUseCase,
     GetOrgDefaultModelUseCase,
     // Org Default Model Use Cases
-    ManageOrgDefaultModelUseCase,
+    SetOrgDefaultLanguageModelUseCase,
     // Catalog Model Archival Use Cases
     ClearDefaultsByCatalogModelIdUseCase,
     // Model Management Use Cases
     CreateLanguageModelUseCase,
     CreateEmbeddingModelUseCase,
+    CreateImageGenerationModelUseCase,
     UpdateLanguageModelUseCase,
     UpdateEmbeddingModelUseCase,
+    UpdateImageGenerationModelUseCase,
     GetModelUseCase,
     GetModelByIdUseCase,
     GetAllModelsUseCase,
@@ -301,6 +317,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     GetPermittedModelUseCase,
     GetPermittedLanguageModelUseCase,
     GetPermittedEmbeddingModelUseCase,
+    GetPermittedImageGenerationModelUseCase,
     GetPermittedModelsUseCase,
     IsModelPermittedUseCase,
     GetDefaultModelUseCase,
@@ -308,21 +325,23 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     // Use Cases
     GetInferenceUseCase,
     StreamInferenceUseCase,
-    GetAvailableModelsUseCase,
+    GetConfiguredModelsByTypeUseCase,
     IsEmbeddingModelEnabledUseCase,
     // User Default Model Use Cases
-    ManageUserDefaultModelUseCase,
+    SetUserDefaultLanguageModelUseCase,
     DeleteUserDefaultModelUseCase,
     DeleteUserDefaultModelsByModelIdUseCase,
     GetUserDefaultModelUseCase,
     GetOrgDefaultModelUseCase,
     // Org Default Model Use Cases
-    ManageOrgDefaultModelUseCase,
+    SetOrgDefaultLanguageModelUseCase,
     // Model Management Use Cases
     CreateLanguageModelUseCase,
     CreateEmbeddingModelUseCase,
+    CreateImageGenerationModelUseCase,
     UpdateLanguageModelUseCase,
     UpdateEmbeddingModelUseCase,
+    UpdateImageGenerationModelUseCase,
     GetModelUseCase,
     GetModelByIdUseCase,
     GetAllModelsUseCase,

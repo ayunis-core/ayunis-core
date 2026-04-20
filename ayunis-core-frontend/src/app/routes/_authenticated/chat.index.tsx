@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { NewChatPage, NewChatPageNoModelError } from '@/pages/new-chat';
 import {
-  modelsControllerGetEffectiveDefaultModel,
+  modelsDefaultsControllerGetEffectiveDefaultModel,
   getSubscriptionsControllerHasActiveSubscriptionQueryKey,
   subscriptionsControllerHasActiveSubscription,
-  getModelsControllerGetEffectiveDefaultModelQueryKey,
+  getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey,
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
   modelsControllerIsEmbeddingModelEnabled,
   getAgentsControllerFindAllQueryKey,
@@ -18,8 +18,8 @@ import extractErrorData from '@/shared/api/extract-error-data';
 import { z } from 'zod';
 
 const queryDefaultModelOptions = () => ({
-  queryKey: getModelsControllerGetEffectiveDefaultModelQueryKey(),
-  queryFn: () => modelsControllerGetEffectiveDefaultModel(),
+  queryKey: getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey(),
+  queryFn: () => modelsDefaultsControllerGetEffectiveDefaultModel(),
 });
 
 const queryHasActiveSubscriptionOptions = () => ({

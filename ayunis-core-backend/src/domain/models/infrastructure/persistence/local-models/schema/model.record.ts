@@ -93,3 +93,6 @@ export class EmbeddingModelRecord extends ModelRecord {
   @Column(tokenCostColumnOptions)
   outputTokenCost?: number;
 }
+
+@ChildEntity(ModelType.IMAGE_GENERATION)
+export class ImageGenerationModelRecord extends ModelRecord {}

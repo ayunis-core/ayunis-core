@@ -1,17 +1,22 @@
 import {
   useModelsControllerDeletePermittedModel,
-  getModelsControllerGetAvailableModelsWithConfigQueryKey,
-  getModelsControllerGetUserSpecificDefaultModelQueryKey,
+  getModelsControllerGetAvailableImageGenerationModelsQueryKey,
+  getModelsControllerGetAvailableLanguageModelsQueryKey,
+  getModelsControllerGetAvailableEmbeddingModelsQueryKey,
+  getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey,
   getModelsControllerGetPermittedLanguageModelsQueryKey,
   getAgentsControllerFindAllQueryKey,
   getThreadsControllerFindAllQueryKey,
+  type ModelWithConfigResponseDto,
 } from '@/shared/api';
+import extractErrorData from '@/shared/api/extract-error-data';
+import { showError } from '@/shared/lib/toast';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   prepareOptimisticUpdate,
-  handleMutationError,
+  rollbackOptimisticUpdate,
 } from '@/widgets/permitted-model-mutations/lib/createPermittedModelMutation';
 
 const ERROR_MAP: Record<string, string> = {
@@ -23,33 +28,42 @@ export function useDeletePermittedModel() {
   const { t } = useTranslation('admin-settings-models');
   const queryClient = useQueryClient();
   const { confirm } = useConfirmation();
-  const queryKey = getModelsControllerGetAvailableModelsWithConfigQueryKey();
+  const availabilityQueryKeys = [
+    getModelsControllerGetAvailableLanguageModelsQueryKey(),
+    getModelsControllerGetAvailableEmbeddingModelsQueryKey(),
+    getModelsControllerGetAvailableImageGenerationModelsQueryKey(),
+  ];
 
   const deletePermittedModelMutation = useModelsControllerDeletePermittedModel({
     mutation: {
-      onMutate: async ({ id }) =>
-        prepareOptimisticUpdate(queryClient, queryKey, (old) =>
-          old.map((item) =>
+      onMutate: async ({ id }) => {
+        const updater = (models: ModelWithConfigResponseDto[]) =>
+          models.map((item) =>
             item.permittedModelId === id
-              ? { ...item, isPermitted: false }
+              ? { ...item, isPermitted: false, permittedModelId: null }
               : item,
+          );
+        return Promise.all(
+          availabilityQueryKeys.map((key) =>
+            prepareOptimisticUpdate(queryClient, key, updater),
           ),
-        ),
-      onError: (error, _, context) => {
-        handleMutationError(
-          error,
-          queryClient,
-          context,
-          t,
-          ERROR_MAP,
-          'models.deletePermittedModel.error',
         );
+      },
+      onError: (error, _, contexts) => {
+        contexts?.forEach((ctx) => rollbackOptimisticUpdate(queryClient, ctx));
+        try {
+          const { code } = extractErrorData(error);
+          const key = ERROR_MAP[code] ?? 'models.deletePermittedModel.error';
+          showError(t(key));
+        } catch {
+          showError(t('models.deletePermittedModel.error'));
+        }
       },
       onSettled: () => {
         const queryKeys = [
-          queryKey,
+          ...availabilityQueryKeys,
           getModelsControllerGetPermittedLanguageModelsQueryKey(),
-          getModelsControllerGetUserSpecificDefaultModelQueryKey(),
+          getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
           getAgentsControllerFindAllQueryKey(),
           getThreadsControllerFindAllQueryKey(),
         ];

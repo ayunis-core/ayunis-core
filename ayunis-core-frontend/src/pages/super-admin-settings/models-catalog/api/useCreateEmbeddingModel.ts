@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import {
-  useSuperAdminCatalogModelsControllerCreateEmbeddingModel,
+  useSuperAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel,
   getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey,
   type CreateEmbeddingModelRequestDto,
 } from '@/shared/api';
@@ -13,35 +13,36 @@ export function useCreateEmbeddingModel(onSuccess?: () => void) {
   const { t } = useTranslation('super-admin-settings-org');
   const queryClient = useQueryClient();
   const router = useRouter();
-  const mutation = useSuperAdminCatalogModelsControllerCreateEmbeddingModel({
-    mutation: {
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey:
-            getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey(),
-        });
-        showSuccess(t('models.createSuccess'));
-        onSuccess?.();
-      },
-      onError: (error: unknown) => {
-        console.error('Create embedding model failed:', error);
-        try {
-          const { code } = extractErrorData(error);
-          if (code === 'MODEL_ALREADY_EXISTS') {
-            showError(t('models.alreadyExists'));
-          } else {
+  const mutation =
+    useSuperAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel({
+      mutation: {
+        onSuccess: async () => {
+          await queryClient.invalidateQueries({
+            queryKey:
+              getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey(),
+          });
+          showSuccess(t('models.createSuccess'));
+          onSuccess?.();
+        },
+        onError: (error: unknown) => {
+          console.error('Create embedding model failed:', error);
+          try {
+            const { code } = extractErrorData(error);
+            if (code === 'MODEL_ALREADY_EXISTS') {
+              showError(t('models.alreadyExists'));
+            } else {
+              showError(t('models.createError'));
+            }
+          } catch {
+            // Non-AxiosError (network failure, request cancellation, etc.)
             showError(t('models.createError'));
           }
-        } catch {
-          // Non-AxiosError (network failure, request cancellation, etc.)
-          showError(t('models.createError'));
-        }
+        },
+        onSettled: async () => {
+          await router.invalidate();
+        },
       },
-      onSettled: async () => {
-        await router.invalidate();
-      },
-    },
-  });
+    });
 
   function createEmbeddingModel(data: CreateEmbeddingModelRequestDto) {
     mutation.mutate({ data });

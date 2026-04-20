@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import type { Model } from './model.entity';
 import type { LanguageModel } from './models/language.model';
 import type { EmbeddingModel } from './models/embedding.model';
+import type { ImageGenerationModel } from './models/image-generation.model';
 import { PermittedModelScope } from './value-objects/permitted-model-scope.enum';
 
 export class PermittedModel {
@@ -70,6 +71,24 @@ export class PermittedEmbeddingModel extends PermittedModel {
   constructor(params: {
     id?: UUID;
     model: EmbeddingModel;
+    orgId: UUID;
+    isDefault?: boolean;
+    anonymousOnly?: boolean;
+    scope?: PermittedModelScope;
+    scopeId?: UUID | null;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }) {
+    super(params);
+    this.model = params.model;
+  }
+}
+
+export class PermittedImageGenerationModel extends PermittedModel {
+  public readonly model: ImageGenerationModel;
+  constructor(params: {
+    id?: UUID;
+    model: ImageGenerationModel;
     orgId: UUID;
     isDefault?: boolean;
     anonymousOnly?: boolean;
