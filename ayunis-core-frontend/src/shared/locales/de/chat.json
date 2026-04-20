@@ -103,6 +103,20 @@
         "generating": "Änderungen werden angewendet…",
         "openInEditor": "Im Editor öffnen"
       },
+      "create_diagram": {
+        "title": "Diagramm",
+        "created": "Diagramm erstellt",
+        "creating": "Diagramm wird erstellt…",
+        "generating": "Diagramm wird generiert…",
+        "openInEditor": "Diagramm öffnen"
+      },
+      "update_diagram": {
+        "title": "Diagramm aktualisiert",
+        "updated": "Diagramm aktualisiert",
+        "updating": "Diagramm wird aktualisiert…",
+        "generating": "Aktualisierung wird generiert…",
+        "openInEditor": "Diagramm öffnen"
+      },
       "create_calendar_event": {
         "title": "Titel",
         "titlePlaceholder": "Ereignistitel",

@@ -3,11 +3,22 @@ import { Button } from '@/shared/ui/shadcn/button';
 import { ChevronDown, ChevronRight, History, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { cn } from '@/shared/lib/shadcn/utils';
 
 interface VersionHistoryProps {
   readonly versions: ArtifactVersionResponseDto[];
   readonly currentVersionNumber: number;
-  readonly onRevert: (versionNumber: number) => void;
+  /**
+   * Shows a "Revert" button next to non-current versions. When omitted, no
+   * revert action is offered (used by the read-only diagram viewer).
+   */
+  readonly onRevert?: (versionNumber: number) => void;
+  /**
+   * When provided, each row is clickable and calls this with the selected
+   * version number (used by the diagram viewer for navigation). The row
+   * matching `currentVersionNumber` is highlighted.
+   */
+  readonly onSelect?: (versionNumber: number) => void;
 }
 
 function formatTimestamp(iso: string): string {
@@ -24,6 +35,7 @@ export function VersionHistory({
   versions,
   currentVersionNumber,
   onRevert,
+  onSelect,
 }: VersionHistoryProps) {
   const { t } = useTranslation('artifacts');
   const [isOpen, setIsOpen] = useState(false);
@@ -50,40 +62,68 @@ export function VersionHistory({
 
       {isOpen && (
         <div className="max-h-48 overflow-y-auto px-3 pb-2">
-          {sortedVersions.map((version) => (
-            <div
-              key={version.id}
-              className="flex items-center justify-between rounded px-2 py-1.5 text-sm"
-            >
-              <div className="flex flex-col">
-                <span className="font-medium">
-                  v{version.versionNumber}
-                  {version.versionNumber === currentVersionNumber && (
-                    <span className="text-muted-foreground ml-1">
-                      {t('versionHistory.current')}
-                    </span>
+          {sortedVersions.map((version) => {
+            const isCurrent = version.versionNumber === currentVersionNumber;
+            const rowBody = (
+              <>
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-medium">
+                    v{version.versionNumber}
+                    {isCurrent && (
+                      <span className="text-muted-foreground ml-1">
+                        {t('versionHistory.current')}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-muted-foreground text-xs">
+                    {version.authorType} · {formatTimestamp(version.createdAt)}
+                  </span>
+                </div>
+                {onRevert && !isCurrent && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRevert(version.versionNumber);
+                    }}
+                    title={t('versionHistory.revertTo', {
+                      version: version.versionNumber,
+                    })}
+                  >
+                    <RotateCcw className="mr-1 size-3" />
+                    {t('versionHistory.revert')}
+                  </Button>
+                )}
+              </>
+            );
+
+            if (onSelect) {
+              return (
+                <button
+                  key={version.id}
+                  type="button"
+                  className={cn(
+                    'hover:bg-muted flex w-full items-center justify-between rounded px-2 py-1.5 text-sm',
+                    isCurrent && 'bg-muted',
                   )}
-                </span>
-                <span className="text-muted-foreground text-xs">
-                  {version.authorType} · {formatTimestamp(version.createdAt)}
-                </span>
-              </div>
-              {version.versionNumber !== currentVersionNumber && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2"
-                  onClick={() => onRevert(version.versionNumber)}
-                  title={t('versionHistory.revertTo', {
-                    version: version.versionNumber,
-                  })}
+                  onClick={() => onSelect(version.versionNumber)}
                 >
-                  <RotateCcw className="mr-1 size-3" />
-                  {t('versionHistory.revert')}
-                </Button>
-              )}
-            </div>
-          ))}
+                  {rowBody}
+                </button>
+              );
+            }
+
+            return (
+              <div
+                key={version.id}
+                className="flex items-center justify-between rounded px-2 py-1.5 text-sm"
+              >
+                {rowBody}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
