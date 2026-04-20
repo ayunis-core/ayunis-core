@@ -29,8 +29,14 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
         entities: entities ?? null,
       });
 
-      const replacements = this.buildReplacements(text, response.results);
-      const anonymizedText = this.applyReplacements(text, response.results);
+      const nonOverlappingResults = this.dropOverlappingResults(
+        response.results,
+      );
+      const replacements = this.buildReplacements(text, nonOverlappingResults);
+      const anonymizedText = this.applyReplacements(
+        text,
+        nonOverlappingResults,
+      );
 
       this.logger.debug('Anonymization complete', {
         originalLength: text.length,
@@ -84,5 +90,31 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
     }
 
     return anonymizedText;
+  }
+
+  // GLiNER runs with flat_ner=False and can return nested/overlapping spans
+  // for the same text (e.g. "Dani" and "der Dani" both as PERSON). Applying
+  // them both with naive offset-based substitution corrupts the output
+  // (e.g. "[PERSON]SON]"), so keep only the outermost of each overlap chain.
+  private dropOverlappingResults(
+    results: RecognizerResult[],
+  ): RecognizerResult[] {
+    if (results.length < 2) {
+      return results;
+    }
+
+    const sorted = [...results].sort(
+      (a, b) => a.start - b.start || b.end - a.end,
+    );
+
+    const kept: RecognizerResult[] = [];
+    let lastEnd = -1;
+    for (const result of sorted) {
+      if (result.start >= lastEnd) {
+        kept.push(result);
+        lastEnd = result.end;
+      }
+    }
+    return kept;
   }
 }
