@@ -29,8 +29,6 @@ export class LocalThreadAssignmentsRepository {
     userId: UUID;
     sourceAssignments: SourceAssignment[];
   }): Promise<void> {
-    this.logger.log('updateSourceAssignments', { params });
-
     const threadEntity = await this.threadRepository.findOne({
       where: { id: params.threadId, userId: params.userId },
       relations: ['sourceAssignments'],
@@ -40,23 +38,39 @@ export class LocalThreadAssignmentsRepository {
       throw new ThreadNotFoundError(params.threadId, params.userId);
     }
 
-    const sourceAssignmentsToDelete =
-      threadEntity.sourceAssignments?.filter(
-        (assignment) =>
-          !params.sourceAssignments.some(
-            (s) => s.source.id === assignment.source.id,
-          ),
-      ) ?? [];
+    // Diff against DB state so we only INSERT genuinely new rows and only
+    // DELETE dropped ones; touching unchanged rows would both waste writes
+    // and race with cascade deletes on the source FK.
+    const existing = threadEntity.sourceAssignments ?? [];
+    const targetSourceIds = new Set(
+      params.sourceAssignments.map((a) => a.source.id),
+    );
+    const existingSourceIds = new Set(existing.map((a) => a.sourceId));
 
-    await this.threadSourceAssignmentRepository.remove(
-      sourceAssignmentsToDelete,
+    const toDelete = existing.filter(
+      (assignment) => !targetSourceIds.has(assignment.sourceId),
+    );
+    const toInsert = params.sourceAssignments.filter(
+      (assignment) => !existingSourceIds.has(assignment.source.id),
     );
 
-    const sourceAssignmentRecords = params.sourceAssignments.map((assignment) =>
-      this.sourceAssignmentMapper.toRecord(assignment, params.threadId),
-    );
+    this.logger.log('updateSourceAssignments', {
+      threadId: params.threadId,
+      userId: params.userId,
+      addCount: toInsert.length,
+      removeCount: toDelete.length,
+    });
 
-    await this.threadSourceAssignmentRepository.save(sourceAssignmentRecords);
+    if (toDelete.length > 0) {
+      await this.threadSourceAssignmentRepository.remove(toDelete);
+    }
+
+    if (toInsert.length > 0) {
+      const records = toInsert.map((assignment) =>
+        this.sourceAssignmentMapper.toRecord(assignment, params.threadId),
+      );
+      await this.threadSourceAssignmentRepository.save(records);
+    }
   }
 
   async updateMcpIntegrations(params: {
