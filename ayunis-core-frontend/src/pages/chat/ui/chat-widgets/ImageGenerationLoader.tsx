@@ -1,12 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { cn } from '@/shared/lib/shadcn/utils';
 
-interface Snippet {
-  de: string;
-  en: string;
-}
+import { useSnippetRotation } from '../../hooks/useSnippetRotation';
 
-const snippets: Snippet[] = [
+const snippets = [
   { de: 'Farben mischen', en: 'Mixing colors' },
   { de: 'Leinwand aufspannen', en: 'Stretching the canvas' },
   { de: 'Skizze anfertigen', en: 'Sketching the outline' },
@@ -25,15 +21,7 @@ const snippets: Snippet[] = [
   { de: 'Perspektive prüfen', en: 'Checking perspective' },
   { de: 'Proportionen justieren', en: 'Adjusting proportions' },
   { de: 'Firnis auftragen', en: 'Applying the varnish' },
-];
-
-function getRandomSnippetIndex(exclude?: number): number {
-  const indices = Array.from({ length: snippets.length }, (_, i) => i);
-  const available =
-    exclude !== undefined ? indices.filter((i) => i !== exclude) : indices;
-  // eslint-disable-next-line sonarjs/pseudo-random -- UI variety, not security-sensitive
-  return available[Math.floor(Math.random() * available.length)];
-}
+] as const;
 
 interface ImageGenerationLoaderProps {
   readonly prompt?: string;
@@ -42,33 +30,11 @@ interface ImageGenerationLoaderProps {
 export default function ImageGenerationLoader({
   prompt,
 }: ImageGenerationLoaderProps) {
-  const { i18n } = useTranslation();
-  const [snippetIndex, setSnippetIndex] = useState(() =>
-    getRandomSnippetIndex(),
-  );
-  const [isVisible, setIsVisible] = useState(true);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const changeSnippet = () => {
-      setSnippetIndex((prev) => getRandomSnippetIndex(prev));
-      setIsVisible(true);
-    };
-
-    const interval = setInterval(() => {
-      setIsVisible(false);
-      timeoutRef.current = setTimeout(changeSnippet, 180);
-    }, 3500);
-    return () => {
-      clearInterval(interval);
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  const snippet = snippets[snippetIndex];
-  const displayText = i18n.language === 'en' ? snippet.en : snippet.de;
+  const { displayText, isVisible } = useSnippetRotation({
+    snippets,
+    intervalMs: 3500,
+    fadeMs: 180,
+  });
 
   return (
     <div className="my-2 w-full max-w-md rounded-lg border bg-card p-3">
@@ -160,7 +126,10 @@ export default function ImageGenerationLoader({
 
       <div className="mt-3 px-1">
         <p
-          className={`text-sm font-medium transition-opacity duration-200 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+          className={cn(
+            'text-sm font-medium transition-opacity duration-200',
+            isVisible ? 'opacity-100' : 'opacity-0',
+          )}
         >
           {displayText}…
         </p>

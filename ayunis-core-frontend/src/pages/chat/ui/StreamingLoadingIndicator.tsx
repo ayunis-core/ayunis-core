@@ -1,14 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 
-interface LoadingSnippet {
-  de: string;
-  en: string;
-}
+import { cn } from '@/shared/lib/shadcn/utils';
 
-// Funny German bureaucratic loading snippets with English translations
-const loadingSnippets: LoadingSnippet[] = [
+import { useSnippetRotation } from '../hooks/useSnippetRotation';
+
+const loadingSnippets = [
   { de: 'Akten durchforsten', en: 'Sifting through files' },
   { de: 'Faxe schicken', en: 'Sending faxes' },
   { de: 'Stempel suchen', en: 'Looking for the stamp' },
@@ -39,51 +35,23 @@ const loadingSnippets: LoadingSnippet[] = [
   { de: 'Eingangsstempel setzen', en: 'Stamping the receipt date' },
   { de: 'Aktendeckel beschriften', en: 'Labeling the file cover' },
   { de: 'Hauspost verteilen', en: 'Distributing internal mail' },
-];
-
-function getRandomSnippetIndex(exclude?: number): number {
-  const indices = Array.from({ length: loadingSnippets.length }, (_, i) => i);
-  const available =
-    exclude !== undefined ? indices.filter((i) => i !== exclude) : indices;
-  // eslint-disable-next-line sonarjs/pseudo-random -- Random selection for UI variety, not security-sensitive
-  return available[Math.floor(Math.random() * available.length)];
-}
+] as const;
 
 export default function StreamingLoadingIndicator() {
-  const { i18n } = useTranslation();
-  const [snippetIndex, setSnippetIndex] = useState(() =>
-    getRandomSnippetIndex(),
-  );
-  const [isVisible, setIsVisible] = useState(true);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const changeSnippet = () => {
-      setSnippetIndex((prev) => getRandomSnippetIndex(prev));
-      setIsVisible(true);
-    };
-
-    const interval = setInterval(() => {
-      // Fade out, then change snippet and fade in
-      setIsVisible(false);
-      timeoutRef.current = setTimeout(changeSnippet, 150);
-    }, 4000);
-    return () => {
-      clearInterval(interval);
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  const snippet = loadingSnippets[snippetIndex];
-  const displayText = i18n.language === 'en' ? snippet.en : snippet.de;
+  const { displayText, isVisible } = useSnippetRotation({
+    snippets: loadingSnippets,
+    intervalMs: 4000,
+    fadeMs: 150,
+  });
 
   return (
     <div className="flex items-center gap-2 mt-4">
       <Loader2 className="h-4 w-4 animate-spin" />
       <span
-        className={`text-sm text-muted-foreground transition-opacity duration-150 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+        className={cn(
+          'text-sm text-muted-foreground transition-opacity duration-150',
+          isVisible ? 'opacity-100' : 'opacity-0',
+        )}
       >
         {displayText}...
       </span>
