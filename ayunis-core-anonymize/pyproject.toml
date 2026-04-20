@@ -8,7 +8,7 @@ dependencies = [
     "de-core-news-sm",
     "fastapi>=0.121.3",
     "presidio-analyzer[gliner]>=2.2.360",
-    "pydantic>=2.12.4",
+    "pydantic>=2.13.3",
     "pyyaml>=6.0.3",
     "uvicorn[standard]>=0.38.0",
 ]
