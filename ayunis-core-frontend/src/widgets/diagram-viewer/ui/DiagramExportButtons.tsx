@@ -42,8 +42,15 @@ export function DiagramExportButtons({
   const handlePngExport = useCallback(() => {
     const svg = containerRef.current?.querySelector('svg');
     if (!svg) return;
+
+    const clone = svg.cloneNode(true) as SVGSVGElement;
+    const computedFont = window.getComputedStyle(svg).fontFamily;
+    if (computedFont) {
+      clone.style.fontFamily = computedFont;
+    }
+
     const serializer = new XMLSerializer();
-    const svgString = serializer.serializeToString(svg);
+    const svgString = serializer.serializeToString(clone);
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
 
