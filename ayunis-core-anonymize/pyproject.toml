@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "de-core-news-sm",
-    "fastapi>=0.121.3",
+    "fastapi>=0.136.0",
     "presidio-analyzer[gliner]>=2.2.360",
     "pydantic>=2.12.4",
     "pyyaml>=6.0.3",
