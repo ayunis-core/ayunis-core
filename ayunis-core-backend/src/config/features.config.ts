@@ -4,7 +4,6 @@ export enum FeatureFlag {
   Agents = 'agentsEnabled',
   KnowledgeBases = 'knowledgeBasesEnabled',
   Letterheads = 'letterheadsEnabled',
-  Prompts = 'promptsEnabled',
   Skills = 'skillsEnabled',
 }
 
@@ -32,10 +31,6 @@ export const featuresConfig = registerAs(
     letterheadsEnabled: parseBooleanWithDefault(
       process.env.FEATURE_LETTERHEADS_ENABLED,
       false,
-    ),
-    promptsEnabled: parseBooleanWithDefault(
-      process.env.FEATURE_PROMPTS_ENABLED,
-      true,
     ),
     skillsEnabled: parseBooleanWithDefault(
       process.env.FEATURE_SKILLS_ENABLED,

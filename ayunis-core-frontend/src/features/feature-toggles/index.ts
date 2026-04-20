@@ -4,6 +4,5 @@ export {
   useIsAgentsEnabled,
   useIsKnowledgeBasesEnabled,
   useIsLetterheadsEnabled,
-  useIsPromptsEnabled,
   useIsSkillsEnabled,
 } from './useIsFeatureEnabled';

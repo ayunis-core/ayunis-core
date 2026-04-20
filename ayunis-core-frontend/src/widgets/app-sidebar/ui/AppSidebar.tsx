@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   User2,
-  BookOpen,
   ChevronUp,
   Settings2,
   LogOut,
@@ -66,15 +65,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: '/chat',
       icon: Plus,
     },
-    ...(featureToggles.promptsEnabled
-      ? [
-          {
-            title: t('sidebar.prompts'),
-            url: '/prompts',
-            icon: BookOpen,
-          },
-        ]
-      : []),
     ...(featureToggles.agentsEnabled
       ? [
           {

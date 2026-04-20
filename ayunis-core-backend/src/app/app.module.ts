@@ -17,7 +17,6 @@ import { EmbeddingsModule } from '../domain/rag/embeddings/embeddings.module';
 import { RetrieverModule } from '../domain/retrievers/retriever.module';
 import { SourcesModule } from '../domain/sources/sources.module';
 import { StorageModule } from '../domain/storage/storage.module';
-import { PromptsModule } from '../domain/prompts/prompts.module';
 import { SharesModule } from '../domain/shares/shares.module';
 import { McpModule } from '../domain/mcp/mcp.module';
 import { MarketplaceModule } from '../domain/marketplace/marketplace.module';
@@ -157,7 +156,6 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     RetrieverModule,
     SourcesModule,
     StorageModule,
-    PromptsModule,
     SharesModule,
     McpModule,
     MarketplaceModule,

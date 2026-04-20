@@ -22,7 +22,6 @@ import { getChatSettingsControllerGetSystemPromptQueryKey } from '@/shared/api/g
 import { useRouter } from '@tanstack/react-router';
 
 interface NewChatPageProps {
-  prefilledPrompt?: string;
   selectedModelId?: string;
   selectedAgentId?: string;
   agents: AgentResponseDto[];
@@ -32,7 +31,6 @@ interface NewChatPageProps {
 export default function NewChatPage({
   selectedModelId,
   selectedAgentId,
-  prefilledPrompt,
   isEmbeddingModelEnabled,
   agents,
 }: Readonly<NewChatPageProps>) {
@@ -205,7 +203,6 @@ export default function NewChatPage({
           onAgentRemove={handleAgentRemove}
           onSend={handleSend}
           onSendCancelled={() => null}
-          prefilledPrompt={prefilledPrompt}
           onFileUpload={handleFileUpload}
           onRemoveSource={handleRemoveSource}
           onDownloadSource={() => null}

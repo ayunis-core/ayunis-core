@@ -87,7 +87,10 @@ describe('GetMonthlyCreditLimitUseCase', () => {
 
     const result = await useCase.execute(new GetMonthlyCreditLimitQuery(orgId));
 
-    expect(result).toEqual({ monthlyCredits: 5000, startsAt: expect.any(Date) });
+    expect(result).toEqual({
+      monthlyCredits: 5000,
+      startsAt: expect.any(Date),
+    });
   });
 
   it('should return null for cancelled usage-based subscription', async () => {
@@ -125,6 +128,9 @@ describe('GetMonthlyCreditLimitUseCase', () => {
 
     const result = await useCase.execute(new GetMonthlyCreditLimitQuery(orgId));
 
-    expect(result).toEqual({ monthlyCredits: 3000, startsAt: expect.any(Date) });
+    expect(result).toEqual({
+      monthlyCredits: 3000,
+      startsAt: expect.any(Date),
+    });
   });
 });

@@ -66,7 +66,6 @@ interface ChatInputProps {
   selectedSkillId?: string;
   selectedSkillName?: string;
   onSkillRemove?: () => void;
-  prefilledPrompt?: string;
   isEmbeddingModelEnabled: boolean;
   /** Whether anonymous mode is enabled (PII redaction). Only shown for new chats. */
   isAnonymous: boolean;
@@ -105,7 +104,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onRemoveKnowledgeBase,
       onSend,
       onSendCancelled,
-      prefilledPrompt,
       isEmbeddingModelEnabled,
       isAnonymous,
       onAnonymousChange,
@@ -118,7 +116,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     ref,
   ) => {
     const [isFocused, setIsFocused] = useState<boolean>(false);
-    const [message, setMessage] = useState(prefilledPrompt ?? '');
+    const [message, setMessage] = useState('');
     const { t } = useTranslation('common');
     const isAgentsEnabled = useIsAgentsEnabled();
     const { agents } = useAgents({ enabled: isAgentsEnabled });
@@ -206,10 +204,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         exclusive: true,
       },
     );
-
-    const handlePromptSelect = (promptContent: string) => {
-      setMessage((prev) => (prev ? `${prev} ${promptContent}` : promptContent));
-    };
 
     const handleImageSelect = (files: FileList | null) => {
       if (!files) return;
@@ -315,7 +309,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     onImageSelect={handleImageSelect}
                     isFileSourceDisabled={!isEmbeddingModelEnabled}
                     isCreatingFileSource={isCreatingFileSource}
-                    onPromptSelect={handlePromptSelect}
                     isImageUploadDisabled={!isVisionEnabled}
                     onKnowledgeBaseSelect={onAddKnowledgeBase}
                     attachedKnowledgeBaseIds={knowledgeBases?.map(

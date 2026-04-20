@@ -194,7 +194,7 @@ function requireStringArrayContext(
     context instanceof Array &&
     context.every((item: unknown) => typeof item === 'string')
   ) {
-    return context as string[];
+    return context;
   }
   throw new ToolInvalidContextError({
     toolType,
