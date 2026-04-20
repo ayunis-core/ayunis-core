@@ -4,11 +4,6 @@ export class CreateGeneratedImages1776430327559 implements MigrationInterface {
   name = 'CreateGeneratedImages1776430327559';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Some environments ran the superseded migration 1776175376578 (same class
-    // name, earlier timestamp) which created the table and the userId/threadId
-    // FKs but not the orgId FK or the agent_tools enum update. Drop its
-    // tracking row and make the DDL idempotent so this migration applies
-    // cleanly whether the table already exists or not.
     await queryRunner.query(
       `DELETE FROM "migrations" WHERE "name" = 'CreateGeneratedImages1776175376578'`,
     );
@@ -60,9 +55,6 @@ export class CreateGeneratedImages1776430327559 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "generated_images" DROP CONSTRAINT "FK_49410e261d41ec5eafb02a44010"`,
     );
-    // Destructive: remove any agent_tools rows referencing the new enum value
-    // so the enum down-cast below does not fail. Rolling back the feature
-    // makes these tool configurations meaningless.
     await queryRunner.query(
       `DELETE FROM "agent_tools" WHERE "toolType" = 'generate_image'`,
     );
