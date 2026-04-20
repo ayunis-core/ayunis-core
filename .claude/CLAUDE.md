@@ -39,7 +39,7 @@ Do NOT trust your own assessment of code correctness. Verify through observable 
 ### 3. Respect Boundaries
 
 - Read the target module's SUMMARY.md before making changes
-- Never import across module boundaries — use ports/adapters
+- Respect module boundaries — the `ayunis-core-backend` skill documents how cross-module work is done (application-layer code uses exported use cases from the target module, not ports/adapters; TypeORM schema records may reference records in other modules to declare foreign-key relations — see the `typeorm-migrations` skill)
 - Never edit generated code (e.g., the frontend API client)
 
 ---

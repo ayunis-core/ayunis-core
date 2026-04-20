@@ -24,7 +24,11 @@ The backend enforces strict bounded contexts:
 - **`src/common/*`** — Shared infrastructure only (base classes, utilities)
 - **`src/admin/*`** — Super admin routes
 
-Cross-module communication uses **exported use cases**, not ports/adapters. When module A needs functionality from module B, module A imports B's module and injects B's use case directly — do NOT create a port in A with an adapter that wraps B. Ports (abstract interfaces) are only for **infrastructure boundaries within a module** (e.g., a repository port implemented by a persistence adapter). Before modifying any module, read its `SUMMARY.md`. See [ARCHITECTURE.md](../../ARCHITECTURE.md) for the complete module index.
+Cross-module communication uses **exported use cases**, not ports/adapters. When module A needs functionality from module B, module A imports B's module and injects B's use case directly — do NOT create a port in A with an adapter that wraps B. Ports (abstract interfaces) are only for **infrastructure boundaries within a module** (e.g., a repository port implemented by a persistence adapter).
+
+**Persistence records are an exception to the cross-module rule.** TypeORM schema records (`*.record.ts`) may reference records from other modules via `@ManyToOne` / `@OneToOne` + `@JoinColumn` to declare foreign-key relationships — this is required for referential integrity (see the `typeorm-migrations` skill). The "don't cross modules" guidance applies to application-layer code (use cases, services), not to schema records, which are infrastructure that must mirror the DB.
+
+Before modifying any module, read its `SUMMARY.md`. See [ARCHITECTURE.md](../../ARCHITECTURE.md) for the complete module index.
 
 ## User Context
 

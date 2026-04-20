@@ -67,17 +67,10 @@ For anything the CLI doesn't cover: `linear api '<query>' [--variable key=value]
 | MGM  | Management  |
 | SAL  | Sales       |
 
-## Project mapping
-
-| Team | Project slug | Use for                     |
-|------|--------------|-----------------------------|
-| AYC  | AYC          | Ayunis Core development     |
-
-When creating issues for a mapped team, always set `--project <slug>` so issues land in the right project.
-
 ## Guidelines
 
 - **Always use `--no-interactive`** on `issue create` when running non-interactively (avoids prompts).
 - **Use `--json`** on `issue view` when you need structured data to process.
 - **Issue IDs** look like `AYC-4` (team key + number).
 - **Ask before creating/updating/deleting** — treat writes with care.
+- **Subtasks** should always be created with `--state Backlog`, not `Triage` — the parent has already been triaged.
