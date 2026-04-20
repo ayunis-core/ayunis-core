@@ -1,0 +1,23 @@
+[pre-start]
+env = '''
+set -e
+for f in ayunis-core-backend/.env \
+         ayunis-core-backend/.env.dev \
+         ayunis-core-frontend/.env; do
+  src="{{ primary_worktree_path }}/$f"
+  if [ -f "$src" ] && [ ! -f "$f" ]; then
+    mkdir -p "$(dirname "$f")"
+    cp "$src" "$f"
+  fi
+done
+'''
+
+[post-start]
+install-node = '''
+(cd ayunis-core-backend && npm ci) &
+pid1=$!
+(cd ayunis-core-frontend && npm ci) &
+pid2=$!
+wait $pid1 && wait $pid2
+'''
+# install-python = "cd ayunis-core-anonymize && uv sync"  # uncomment if you work on anonymize
