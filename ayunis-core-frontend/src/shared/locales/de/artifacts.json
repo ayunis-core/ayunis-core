@@ -43,6 +43,11 @@
       "svg": "SVG",
       "png": "PNG",
       "failed": "Diagramm-Export fehlgeschlagen"
+    },
+    "zoom": {
+      "in": "Vergrößern",
+      "out": "Verkleinern",
+      "reset": "Ansicht zurücksetzen"
     }
   }
 }
