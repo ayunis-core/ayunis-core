@@ -60,6 +60,7 @@ RUN mkdir -p uploads
 
 # Set environment variables
 ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=3072"
 # PORT is set via environment variable at runtime, defaults to 3000 in app code
 # Port exposure is handled by docker-compose port mapping
 

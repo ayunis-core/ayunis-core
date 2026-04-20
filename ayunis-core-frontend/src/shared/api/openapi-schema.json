@@ -3593,7 +3593,7 @@
                   "file": {
                     "type": "string",
                     "format": "binary",
-                    "description": "The file to upload"
+                    "description": "The file to upload (max 25 MB)"
                   }
                 },
                 "required": ["file"]
@@ -3624,6 +3624,9 @@
                 }
               }
             }
+          },
+          "413": {
+            "description": "File exceeds the 25 MB upload limit"
           }
         },
         "summary": "Add a file source to a thread",
@@ -4025,7 +4028,7 @@
                   "file": {
                     "type": "string",
                     "format": "binary",
-                    "description": "The file to upload"
+                    "description": "The file to upload (max 25 MB)"
                   }
                 },
                 "required": ["file"]
@@ -4042,6 +4045,9 @@
           },
           "404": {
             "description": "Agent not found"
+          },
+          "413": {
+            "description": "File exceeds the 25 MB upload limit"
           },
           "500": {
             "description": "Internal server error"
@@ -5611,7 +5617,7 @@
                   "file": {
                     "type": "string",
                     "format": "binary",
-                    "description": "The file to upload"
+                    "description": "The file to upload (max 25 MB)"
                   }
                 },
                 "required": ["file"]
@@ -5635,6 +5641,9 @@
           },
           "404": {
             "description": "Skill not found"
+          },
+          "413": {
+            "description": "File exceeds the 25 MB upload limit"
           }
         },
         "summary": "Add a file source to a skill",

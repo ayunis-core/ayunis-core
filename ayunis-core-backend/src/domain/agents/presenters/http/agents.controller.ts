@@ -292,7 +292,7 @@ export class AgentsController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'The file to upload',
+          description: 'The file to upload (max 25 MB)',
         },
       },
       required: ['file'],
@@ -308,9 +308,13 @@ export class AgentsController {
     description:
       'Invalid or unsupported file type. Supported types: PDF, DOCX, PPTX, TXT, CSV, XLSX, XLS',
   })
+  @ApiResponse({
+    status: 413,
+    description: 'File exceeds the 25 MB upload limit',
+  })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @UseInterceptors(
-    /* eslint-disable sonarjs/content-length -- file size validated downstream */
+    /* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP Content-Length */
     FileInterceptor('file', {
       storage: diskStorage({
         // eslint-disable-next-line sonarjs/todo-tag -- pre-existing, tracked separately
@@ -321,6 +325,7 @@ export class AgentsController {
           cb(null, `${randomName}${extname(file.originalname)}`);
         },
       }),
+      limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB
     }),
     /* eslint-enable sonarjs/content-length */
   )

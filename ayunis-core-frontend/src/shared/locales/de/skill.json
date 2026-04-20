@@ -114,7 +114,7 @@
     "failedToAdd": "Quelle konnte nicht hinzugefügt werden",
     "invalidFileTypeError": "Dieser Dateityp wird derzeit nicht unterstützt.",
     "fileSourceEmptyDataError": "Die hochgeladene Datei enthält keine verarbeitbaren Daten.",
-    "fileSourceTooLargeError": "Datei ist zu groß. Maximale Dateigröße beträgt 50 MB.",
+    "fileSourceTooLargeError": "Datei ist zu groß. Maximale Dateigröße beträgt 25 MB.",
     "fileSourceTooManyPagesError": "Dokument hat zu viele Seiten zur Verarbeitung.",
     "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist ausgelastet. Bitte versuchen Sie es später erneut.",
     "fileSourceTimeoutError": "Die Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex."

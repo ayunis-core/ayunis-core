@@ -4037,14 +4037,14 @@ offset?: number;
 export type ThreadSourcesControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 
 export type ThreadSourcesControllerAddFileSourceBody = {
-  /** The file to upload */
+  /** The file to upload (max 25 MB) */
   file: Blob;
 };
 
 export type ThreadSourcesControllerAddFileSource201Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 
 export type AgentsControllerAddFileSourceBody = {
-  /** The file to upload */
+  /** The file to upload (max 25 MB) */
   file: Blob;
 };
 
@@ -4076,7 +4076,7 @@ export type KnowledgeBasesControllerAddDocumentBody = {
 };
 
 export type SkillSourcesControllerAddFileSourceBody = {
-  /** The file to upload */
+  /** The file to upload (max 25 MB) */
   file: Blob;
 };
 
