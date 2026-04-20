@@ -15,7 +15,9 @@ done
 [post-start]
 install-node = '''
 (cd ayunis-core-backend && npm ci) &
+pid1=$!
 (cd ayunis-core-frontend && npm ci) &
-wait
+pid2=$!
+wait $pid1 && wait $pid2
 '''
 # install-python = "cd ayunis-core-anonymize && uv sync"  # uncomment if you work on anonymize
