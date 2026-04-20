@@ -19,11 +19,18 @@ export class ImageGenerationInput {
   }
 }
 
+export interface ImageGenerationUsage {
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+}
+
 export class ImageGenerationResult {
   constructor(
     public readonly imageData: Buffer,
     public readonly contentType: string,
     public readonly revisedPrompt?: string,
+    public readonly usage?: ImageGenerationUsage,
   ) {}
 }
 

@@ -93,6 +93,8 @@ export class SuperAdminImageGenerationCatalogModelsController {
       provider: dto.provider,
       displayName: dto.displayName,
       isArchived: dto.isArchived,
+      inputTokenCost: dto.inputTokenCost,
+      outputTokenCost: dto.outputTokenCost,
     });
     const model = await this.createImageGenerationModelUseCase.execute(command);
     return this.catalogModelResponseDtoMapper.toImageGenerationModelDto(model);
@@ -144,6 +146,8 @@ export class SuperAdminImageGenerationCatalogModelsController {
       provider: dto.provider,
       displayName: dto.displayName,
       isArchived: dto.isArchived,
+      inputTokenCost: dto.inputTokenCost,
+      outputTokenCost: dto.outputTokenCost,
     });
     const model = await this.updateImageGenerationModelUseCase.execute(command);
     return this.catalogModelResponseDtoMapper.toImageGenerationModelDto(model);

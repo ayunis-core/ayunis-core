@@ -75,6 +75,8 @@ export const minimalFixture = {
     name: 'gpt-image-1',
     displayName: 'GPT Image 1 (Azure)',
     provider: ModelProvider.AZURE,
+    inputTokenCost: 5,
+    outputTokenCost: 40,
   },
 
   subscription: {

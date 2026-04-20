@@ -1,14 +1,4 @@
-import type { UUID } from 'crypto';
-
-export class TokensConsumedEvent {
-  static readonly EVENT_NAME = 'run.tokens-consumed';
-
-  constructor(
-    public readonly userId: UUID,
-    public readonly orgId: UUID,
-    public readonly model: string,
-    public readonly provider: string,
-    public readonly inputTokens: number,
-    public readonly outputTokens: number,
-  ) {}
-}
+// Re-export from the usage module, which is the new owner of this event.
+// Retained here so existing importers (prometheus metrics listener, etc.)
+// do not need to change.
+export { TokensConsumedEvent } from 'src/domain/usage/application/events/tokens-consumed.event';

@@ -4,6 +4,11 @@ import { Model } from '../model.entity';
 import { ModelType } from '../value-objects/model-type.enum';
 
 export class ImageGenerationModel extends Model {
+  /** Cost per million input tokens in EUR */
+  public readonly inputTokenCost?: number;
+  /** Cost per million output tokens in EUR */
+  public readonly outputTokenCost?: number;
+
   constructor(params: {
     id?: UUID;
     name: string;
@@ -12,7 +17,11 @@ export class ImageGenerationModel extends Model {
     updatedAt?: Date;
     displayName: string;
     isArchived: boolean;
+    inputTokenCost?: number;
+    outputTokenCost?: number;
   }) {
     super({ ...params, type: ModelType.IMAGE_GENERATION });
+    this.inputTokenCost = params.inputTokenCost;
+    this.outputTokenCost = params.outputTokenCost;
   }
 }

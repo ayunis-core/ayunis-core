@@ -8,6 +8,7 @@ import type {
 } from '@/shared/api';
 import { IMAGE_GENERATION_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
+import { ModelPricingFields } from './ModelPricingFields';
 
 interface EditImageGenerationModelDialogProps {
   model: ImageGenerationModelResponseDto | null;
@@ -41,6 +42,8 @@ export function EditImageGenerationModelDialog({
         provider: model.provider,
         displayName: model.displayName,
         isArchived: model.isArchived,
+        inputTokenCost: model.inputTokenCost,
+        outputTokenCost: model.outputTokenCost,
       });
     }
   }, [model, open, form]);
@@ -64,6 +67,8 @@ export function EditImageGenerationModelDialog({
       namePlaceholder="e.g., gpt-image-1"
       displayNamePlaceholder="e.g., GPT Image 1"
       hasContent={!!model}
-    />
+    >
+      <ModelPricingFields form={form} disabled={isUpdating} />
+    </ModelFormDialog>
   );
 }

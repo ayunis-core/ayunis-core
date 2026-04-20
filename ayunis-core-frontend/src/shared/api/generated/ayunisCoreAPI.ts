@@ -14112,318 +14112,6 @@ export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awai
 
 
 /**
- * Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.
- * @summary Send a message with optional images and receive streaming response
- */
-export const runsControllerSendMessage = (
-    runsControllerSendMessageBody: RunsControllerSendMessageBody,
- signal?: AbortSignal
-) => {
-      
-      const formData = new FormData();
-formData.append(`threadId`, runsControllerSendMessageBody.threadId)
-if(runsControllerSendMessageBody.text !== undefined) {
- formData.append(`text`, runsControllerSendMessageBody.text)
- }
-if(runsControllerSendMessageBody.images !== undefined) {
- runsControllerSendMessageBody.images.forEach(value => formData.append(`images`, value));
- }
-if(runsControllerSendMessageBody.imageAltTexts !== undefined) {
- formData.append(`imageAltTexts`, runsControllerSendMessageBody.imageAltTexts)
- }
-if(runsControllerSendMessageBody.toolResult !== undefined) {
- formData.append(`toolResult`, runsControllerSendMessageBody.toolResult)
- }
-if(runsControllerSendMessageBody.skillId !== undefined) {
- formData.append(`skillId`, runsControllerSendMessageBody.skillId)
- }
-if(runsControllerSendMessageBody.streaming !== undefined) {
- formData.append(`streaming`, runsControllerSendMessageBody.streaming.toString())
- }
-
-      return customAxiosInstance<RunsControllerSendMessage200>(
-      {url: `/runs/send-message`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData, signal
-    },
-      );
-    }
-  
-
-
-export const getRunsControllerSendMessageMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,{data: RunsControllerSendMessageBody}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,{data: RunsControllerSendMessageBody}, TContext> => {
-
-const mutationKey = ['runsControllerSendMessage'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runsControllerSendMessage>>, {data: RunsControllerSendMessageBody}> = (props) => {
-          const {data} = props ?? {};
-
-          return  runsControllerSendMessage(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RunsControllerSendMessageMutationResult = NonNullable<Awaited<ReturnType<typeof runsControllerSendMessage>>>
-    export type RunsControllerSendMessageMutationBody = RunsControllerSendMessageBody
-    export type RunsControllerSendMessageMutationError = void
-
-    /**
- * @summary Send a message with optional images and receive streaming response
- */
-export const useRunsControllerSendMessage = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,{data: RunsControllerSendMessageBody}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof runsControllerSendMessage>>,
-        TError,
-        {data: RunsControllerSendMessageBody},
-        TContext
-      > => {
-
-      const mutationOptions = getRunsControllerSendMessageMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * Create a new trial for an organization. Only accessible to users with the super admin system role.
- * @summary Create a new trial
- */
-export const superAdminTrialsControllerCreateTrial = (
-    createTrialRequestDto: CreateTrialRequestDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<SuperAdminTrialResponseDto>(
-      {url: `/super-admin/trials`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createTrialRequestDto, signal
-    },
-      );
-    }
-  
-
-
-export const getSuperAdminTrialsControllerCreateTrialMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,{data: CreateTrialRequestDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,{data: CreateTrialRequestDto}, TContext> => {
-
-const mutationKey = ['superAdminTrialsControllerCreateTrial'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, {data: CreateTrialRequestDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  superAdminTrialsControllerCreateTrial(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminTrialsControllerCreateTrialMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>>
-    export type SuperAdminTrialsControllerCreateTrialMutationBody = CreateTrialRequestDto
-    export type SuperAdminTrialsControllerCreateTrialMutationError = void
-
-    /**
- * @summary Create a new trial
- */
-export const useSuperAdminTrialsControllerCreateTrial = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,{data: CreateTrialRequestDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>,
-        TError,
-        {data: CreateTrialRequestDto},
-        TContext
-      > => {
-
-      const mutationOptions = getSuperAdminTrialsControllerCreateTrialMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.
- * @summary Get a trial by organization ID
- */
-export const superAdminTrialsControllerGetTrialByOrgId = (
-    orgId: string,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<SuperAdminTrialResponseDtoNullable>(
-      {url: `/super-admin/trials/${orgId}`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-
-
-export const getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey = (orgId?: string,) => {
-    return [
-    `/super-admin/trials/${orgId}`
-    ] as const;
-    }
-
-    
-export const getSuperAdminTrialsControllerGetTrialByOrgIdQueryOptions = <TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey(orgId);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>> = ({ signal }) => superAdminTrialsControllerGetTrialByOrgId(orgId, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminTrialsControllerGetTrialByOrgIdQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>>
-export type SuperAdminTrialsControllerGetTrialByOrgIdQueryError = void
-
-
-export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
- orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get a trial by organization ID
- */
-
-export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminTrialsControllerGetTrialByOrgIdQueryOptions(orgId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-
-/**
- * Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.
- * @summary Update a trial
- */
-export const superAdminTrialsControllerUpdateTrial = (
-    orgId: string,
-    updateTrialRequestDto: UpdateTrialRequestDto,
- ) => {
-      
-      
-      return customAxiosInstance<SuperAdminTrialResponseDto>(
-      {url: `/super-admin/trials/${orgId}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateTrialRequestDto
-    },
-      );
-    }
-  
-
-
-export const getSuperAdminTrialsControllerUpdateTrialMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,{orgId: string;data: UpdateTrialRequestDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,{orgId: string;data: UpdateTrialRequestDto}, TContext> => {
-
-const mutationKey = ['superAdminTrialsControllerUpdateTrial'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, {orgId: string;data: UpdateTrialRequestDto}> = (props) => {
-          const {orgId,data} = props ?? {};
-
-          return  superAdminTrialsControllerUpdateTrial(orgId,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminTrialsControllerUpdateTrialMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>>
-    export type SuperAdminTrialsControllerUpdateTrialMutationBody = UpdateTrialRequestDto
-    export type SuperAdminTrialsControllerUpdateTrialMutationError = void
-
-    /**
- * @summary Update a trial
- */
-export const useSuperAdminTrialsControllerUpdateTrial = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,{orgId: string;data: UpdateTrialRequestDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>,
-        TError,
-        {orgId: string;data: UpdateTrialRequestDto},
-        TContext
-      > => {
-
-      const mutationOptions = getSuperAdminTrialsControllerUpdateTrialMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
  * Returns configuration settings for the usage dashboard, including deployment mode. This endpoint helps the frontend determine which features to show based on the deployment type.
  * @summary Get usage dashboard configuration
  */
@@ -15994,6 +15682,318 @@ export const useSuperAdminPlatformConfigControllerSetFairUseLimit = <TError = vo
       > => {
 
       const mutationOptions = getSuperAdminPlatformConfigControllerSetFairUseLimitMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.
+ * @summary Send a message with optional images and receive streaming response
+ */
+export const runsControllerSendMessage = (
+    runsControllerSendMessageBody: RunsControllerSendMessageBody,
+ signal?: AbortSignal
+) => {
+      
+      const formData = new FormData();
+formData.append(`threadId`, runsControllerSendMessageBody.threadId)
+if(runsControllerSendMessageBody.text !== undefined) {
+ formData.append(`text`, runsControllerSendMessageBody.text)
+ }
+if(runsControllerSendMessageBody.images !== undefined) {
+ runsControllerSendMessageBody.images.forEach(value => formData.append(`images`, value));
+ }
+if(runsControllerSendMessageBody.imageAltTexts !== undefined) {
+ formData.append(`imageAltTexts`, runsControllerSendMessageBody.imageAltTexts)
+ }
+if(runsControllerSendMessageBody.toolResult !== undefined) {
+ formData.append(`toolResult`, runsControllerSendMessageBody.toolResult)
+ }
+if(runsControllerSendMessageBody.skillId !== undefined) {
+ formData.append(`skillId`, runsControllerSendMessageBody.skillId)
+ }
+if(runsControllerSendMessageBody.streaming !== undefined) {
+ formData.append(`streaming`, runsControllerSendMessageBody.streaming.toString())
+ }
+
+      return customAxiosInstance<RunsControllerSendMessage200>(
+      {url: `/runs/send-message`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      );
+    }
+  
+
+
+export const getRunsControllerSendMessageMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,{data: RunsControllerSendMessageBody}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,{data: RunsControllerSendMessageBody}, TContext> => {
+
+const mutationKey = ['runsControllerSendMessage'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runsControllerSendMessage>>, {data: RunsControllerSendMessageBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  runsControllerSendMessage(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunsControllerSendMessageMutationResult = NonNullable<Awaited<ReturnType<typeof runsControllerSendMessage>>>
+    export type RunsControllerSendMessageMutationBody = RunsControllerSendMessageBody
+    export type RunsControllerSendMessageMutationError = void
+
+    /**
+ * @summary Send a message with optional images and receive streaming response
+ */
+export const useRunsControllerSendMessage = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,{data: RunsControllerSendMessageBody}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof runsControllerSendMessage>>,
+        TError,
+        {data: RunsControllerSendMessageBody},
+        TContext
+      > => {
+
+      const mutationOptions = getRunsControllerSendMessageMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Create a new trial for an organization. Only accessible to users with the super admin system role.
+ * @summary Create a new trial
+ */
+export const superAdminTrialsControllerCreateTrial = (
+    createTrialRequestDto: CreateTrialRequestDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SuperAdminTrialResponseDto>(
+      {url: `/super-admin/trials`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createTrialRequestDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminTrialsControllerCreateTrialMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,{data: CreateTrialRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,{data: CreateTrialRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminTrialsControllerCreateTrial'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, {data: CreateTrialRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminTrialsControllerCreateTrial(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminTrialsControllerCreateTrialMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>>
+    export type SuperAdminTrialsControllerCreateTrialMutationBody = CreateTrialRequestDto
+    export type SuperAdminTrialsControllerCreateTrialMutationError = void
+
+    /**
+ * @summary Create a new trial
+ */
+export const useSuperAdminTrialsControllerCreateTrial = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>, TError,{data: CreateTrialRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminTrialsControllerCreateTrial>>,
+        TError,
+        {data: CreateTrialRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminTrialsControllerCreateTrialMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.
+ * @summary Get a trial by organization ID
+ */
+export const superAdminTrialsControllerGetTrialByOrgId = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SuperAdminTrialResponseDtoNullable>(
+      {url: `/super-admin/trials/${orgId}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey = (orgId?: string,) => {
+    return [
+    `/super-admin/trials/${orgId}`
+    ] as const;
+    }
+
+    
+export const getSuperAdminTrialsControllerGetTrialByOrgIdQueryOptions = <TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey(orgId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>> = ({ signal }) => superAdminTrialsControllerGetTrialByOrgId(orgId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminTrialsControllerGetTrialByOrgIdQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>>
+export type SuperAdminTrialsControllerGetTrialByOrgIdQueryError = void
+
+
+export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a trial by organization ID
+ */
+
+export function useSuperAdminTrialsControllerGetTrialByOrgId<TData = Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminTrialsControllerGetTrialByOrgId>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminTrialsControllerGetTrialByOrgIdQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.
+ * @summary Update a trial
+ */
+export const superAdminTrialsControllerUpdateTrial = (
+    orgId: string,
+    updateTrialRequestDto: UpdateTrialRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<SuperAdminTrialResponseDto>(
+      {url: `/super-admin/trials/${orgId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateTrialRequestDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminTrialsControllerUpdateTrialMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,{orgId: string;data: UpdateTrialRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,{orgId: string;data: UpdateTrialRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminTrialsControllerUpdateTrial'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, {orgId: string;data: UpdateTrialRequestDto}> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminTrialsControllerUpdateTrial(orgId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminTrialsControllerUpdateTrialMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>>
+    export type SuperAdminTrialsControllerUpdateTrialMutationBody = UpdateTrialRequestDto
+    export type SuperAdminTrialsControllerUpdateTrialMutationError = void
+
+    /**
+ * @summary Update a trial
+ */
+export const useSuperAdminTrialsControllerUpdateTrial = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>, TError,{orgId: string;data: UpdateTrialRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminTrialsControllerUpdateTrial>>,
+        TError,
+        {orgId: string;data: UpdateTrialRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminTrialsControllerUpdateTrialMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

@@ -141,22 +141,21 @@ export class CollectUsageUseCase {
   private calculateCost(command: CollectUsageCommand): number | undefined {
     const model = command.model;
 
-    if (
-      model.inputTokenCost === undefined ||
-      model.outputTokenCost === undefined
-    ) {
+    const inputTokenCost = model.inputTokenCost;
+    const outputTokenCost = model.outputTokenCost;
+
+    if (inputTokenCost === undefined || outputTokenCost === undefined) {
       this.logger.debug('No cost information available for model', {
         modelId: model.id,
-        hasInputCost: model.inputTokenCost !== undefined,
-        hasOutputCost: model.outputTokenCost !== undefined,
+        hasInputCost: inputTokenCost !== undefined,
+        hasOutputCost: outputTokenCost !== undefined,
       });
 
       return undefined;
     }
 
-    const inputCost = (command.inputTokens / 1_000_000) * model.inputTokenCost;
-    const outputCost =
-      (command.outputTokens / 1_000_000) * model.outputTokenCost;
+    const inputCost = (command.inputTokens / 1_000_000) * inputTokenCost;
+    const outputCost = (command.outputTokens / 1_000_000) * outputTokenCost;
     const totalCost = inputCost + outputCost;
 
     this.logger.debug('Cost calculated for usage (EUR)', {

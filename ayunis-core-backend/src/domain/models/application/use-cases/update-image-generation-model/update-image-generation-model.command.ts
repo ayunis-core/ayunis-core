@@ -7,6 +7,8 @@ export class UpdateImageGenerationModelCommand {
   provider: ModelProvider;
   displayName: string;
   isArchived: boolean;
+  inputTokenCost?: number;
+  outputTokenCost?: number;
 
   constructor(params: {
     id: UUID;
@@ -14,11 +16,15 @@ export class UpdateImageGenerationModelCommand {
     provider: ModelProvider;
     displayName: string;
     isArchived: boolean;
+    inputTokenCost?: number;
+    outputTokenCost?: number;
   }) {
     this.id = params.id;
     this.name = params.name;
     this.provider = params.provider;
     this.displayName = params.displayName;
     this.isArchived = params.isArchived;
+    this.inputTokenCost = params.inputTokenCost;
+    this.outputTokenCost = params.outputTokenCost;
   }
 }

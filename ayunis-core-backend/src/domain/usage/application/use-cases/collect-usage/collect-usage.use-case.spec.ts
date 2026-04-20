@@ -10,6 +10,7 @@ import {
 } from '../../usage.errors';
 import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
 import type { UUID } from 'crypto';
+import { ImageGenerationModel } from '../../../../models/domain/models/image-generation.model';
 import { LanguageModel } from '../../../../models/domain/models/language.model';
 import type { Usage } from '../../../domain/usage.entity';
 import { ContextService } from '../../../../../common/context/services/context.service';
@@ -177,6 +178,41 @@ describe('CollectUsageUseCase', () => {
       expect(saveCall.cost).toBeCloseTo(0.004, 6);
     });
 
+    it('should calculate cost for an image-generation model using the same per-million-token formula', async () => {
+      const model = new ImageGenerationModel({
+        id: modelId,
+        name: 'gpt-image-1',
+        provider: ModelProvider.AZURE,
+        displayName: 'GPT Image 1',
+        isArchived: false,
+        inputTokenCost: 5,
+        outputTokenCost: 40,
+      });
+
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 200,
+        outputTokens: 4096,
+        requestId,
+      });
+
+      await useCase.execute(command);
+
+      const saveMock = mockUsageRepository.save as jest.Mock<
+        Promise<void>,
+        [Usage]
+      >;
+      const saveCall = saveMock.mock.calls[0]?.[0];
+      if (!saveCall) {
+        throw new Error('save was not called');
+      }
+      // inputCost = (200 / 1_000_000) * 5 = 0.001
+      // outputCost = (4096 / 1_000_000) * 40 = 0.16384
+      // totalCost = 0.16484
+      expect(saveCall.cost).toBeCloseTo(0.16484, 6);
+      expect(saveCall.provider).toBe(ModelProvider.AZURE);
+    });
+
     it('should calculate and store small costs correctly', async () => {
       const model = createMockModel({
         inputTokenCost: 0.0001,
@@ -231,6 +267,7 @@ describe('CollectUsageUseCase', () => {
       }
       expect(saveCall.cost).toBeUndefined();
     });
+
 
     it('should return undefined cost if only input cost is set', async () => {
       const model = createMockModel({

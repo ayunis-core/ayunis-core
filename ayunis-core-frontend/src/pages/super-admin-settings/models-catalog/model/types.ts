@@ -31,7 +31,7 @@ export interface EmbeddingModelFormData extends ModelPricingFormData {
   isArchived: boolean;
 }
 
-export interface ImageGenerationModelFormData {
+export interface ImageGenerationModelFormData extends ModelPricingFormData {
   name: string;
   provider: CreateImageGenerationModelRequestDtoProvider;
   displayName: string;

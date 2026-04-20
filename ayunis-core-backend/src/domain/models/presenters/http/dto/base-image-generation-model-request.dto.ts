@@ -1,7 +1,21 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsIn, IsNotEmpty, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
+import {
+  IsBoolean,
+  IsIn,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  Min,
+  ValidateIf,
+} from 'class-validator';
+import { nullToUndefined } from 'src/common/util/null-to-undefined';
 import { SUPPORTED_IMAGE_GENERATION_PROVIDERS } from 'src/domain/models/application/services/model-policy.service';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+
+function hasAnyCostField(o: BaseImageGenerationModelRequestDto): boolean {
+  return o.inputTokenCost !== undefined || o.outputTokenCost !== undefined;
+}
 
 export abstract class BaseImageGenerationModelRequestDto {
   @ApiProperty({
@@ -35,4 +49,26 @@ export abstract class BaseImageGenerationModelRequestDto {
   })
   @IsBoolean()
   isArchived: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Cost per million input tokens in EUR',
+    example: 5,
+    minimum: 0,
+  })
+  @Transform(nullToUndefined)
+  @ValidateIf((o: BaseImageGenerationModelRequestDto) => hasAnyCostField(o))
+  @IsNumber()
+  @Min(0)
+  inputTokenCost?: number;
+
+  @ApiPropertyOptional({
+    description: 'Cost per million output tokens in EUR',
+    example: 40,
+    minimum: 0,
+  })
+  @Transform(nullToUndefined)
+  @ValidateIf((o: BaseImageGenerationModelRequestDto) => hasAnyCostField(o))
+  @IsNumber()
+  @Min(0)
+  outputTokenCost?: number;
 }

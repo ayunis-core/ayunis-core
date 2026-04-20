@@ -38,6 +38,8 @@ export class CreateImageGenerationModelUseCase {
         provider: command.provider,
         displayName: command.displayName,
         isArchived: command.isArchived,
+        inputTokenCost: command.inputTokenCost,
+        outputTokenCost: command.outputTokenCost,
       });
       await this.modelsRepository.save(model);
       return model;

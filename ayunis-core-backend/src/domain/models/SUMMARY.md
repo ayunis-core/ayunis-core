@@ -61,7 +61,7 @@ The models module is the central registry for AI model configuration. The abstra
 - **IsEmbeddingModelEnabledUseCase** (`application/use-cases/is-embedding-model-enabled`): Checks whether an embedding model is enabled for an org.
 - **GetInferenceUseCase** (`application/use-cases/get-inference`): Retrieves inference configuration for a model.
 - **StreamInferenceUseCase** (`application/use-cases/stream-inference`): Routes and streams inference requests to the appropriate provider.
-- **GenerateImageUseCase** (`application/use-cases/generate-image/generate-image.use-case.ts`): Resolves the correct image-generation handler via `ImageGenerationHandlerRegistry` and executes the generation request.
+- **GenerateImageUseCase** (`application/use-cases/generate-image/generate-image.use-case.ts`): Resolves the correct image-generation handler via `ImageGenerationHandlerRegistry` and executes the generation request. The returned `ImageGenerationResult` carries an optional `usage: { inputTokens, outputTokens, totalTokens }` block populated by the Azure handler when the model reports token usage (e.g. `gpt-image-1`); callers forward it to `CollectUsageAsyncService` for credit accounting. `ImageGenerationModel` carries the same `inputTokenCost` / `outputTokenCost` (EUR per million tokens) fields as `LanguageModel`, so cost calculation reuses the language-model formula in `CollectUsageUseCase`.
 
 ## Infrastructure Services
 

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { SUPPORTED_IMAGE_GENERATION_PROVIDERS } from 'src/domain/models/application/services/model-policy.service';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
@@ -62,4 +62,18 @@ export class ImageGenerationModelResponseDto {
     description: 'The date the model was last updated',
   })
   updatedAt: Date;
+
+  @ApiPropertyOptional({
+    type: 'number',
+    description: 'Cost per million input tokens in EUR',
+    example: 5,
+  })
+  inputTokenCost?: number;
+
+  @ApiPropertyOptional({
+    type: 'number',
+    description: 'Cost per million output tokens in EUR',
+    example: 40,
+  })
+  outputTokenCost?: number;
 }

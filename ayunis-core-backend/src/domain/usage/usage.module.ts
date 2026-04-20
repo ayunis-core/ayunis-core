@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CollectUsageAsyncService } from './application/services/collect-usage-async.service';
 import { CollectUsageUseCase } from './application/use-cases/collect-usage/collect-usage.use-case';
 import { GetProviderUsageUseCase } from './application/use-cases/get-provider-usage/get-provider-usage.use-case';
 import { GetModelDistributionUseCase } from './application/use-cases/get-model-distribution/get-model-distribution.use-case';
@@ -39,6 +40,8 @@ import { SubscriptionsModule } from '../../iam/subscriptions/subscriptions.modul
     SuperAdminGlobalUsageController,
   ],
   providers: [
+    // Services
+    CollectUsageAsyncService,
     // Use Cases
     CollectUsageUseCase,
     GetProviderUsageUseCase,
@@ -63,6 +66,7 @@ import { SubscriptionsModule } from '../../iam/subscriptions/subscriptions.modul
     UsageUseCasesFacade,
   ],
   exports: [
+    CollectUsageAsyncService,
     CollectUsageUseCase,
     GetProviderUsageUseCase,
     GetModelDistributionUseCase,

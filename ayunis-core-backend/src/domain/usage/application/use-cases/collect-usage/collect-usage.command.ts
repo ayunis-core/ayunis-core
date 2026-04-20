@@ -1,14 +1,17 @@
 import type { UUID } from 'crypto';
+import type { ImageGenerationModel } from '../../../../models/domain/models/image-generation.model';
 import type { LanguageModel } from '../../../../models/domain/models/language.model';
 
+export type CollectableUsageModel = LanguageModel | ImageGenerationModel;
+
 export class CollectUsageCommand {
-  public readonly model: LanguageModel;
+  public readonly model: CollectableUsageModel;
   public readonly inputTokens: number;
   public readonly outputTokens: number;
   public readonly requestId?: UUID;
 
   constructor(params: {
-    model: LanguageModel;
+    model: CollectableUsageModel;
     inputTokens: number;
     outputTokens: number;
     requestId?: UUID;
