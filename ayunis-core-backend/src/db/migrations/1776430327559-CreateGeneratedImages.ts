@@ -4,20 +4,28 @@ export class CreateGeneratedImages1776430327559 implements MigrationInterface {
   name = 'CreateGeneratedImages1776430327559';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Some environments ran the superseded migration 1776175376578 (same class
+    // name, earlier timestamp) which created the table and the userId/threadId
+    // FKs but not the orgId FK or the agent_tools enum update. Drop its
+    // tracking row and make the DDL idempotent so this migration applies
+    // cleanly whether the table already exists or not.
     await queryRunner.query(
-      `CREATE TABLE "generated_images" ("id" character varying NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "orgId" character varying NOT NULL, "userId" character varying NOT NULL, "threadId" character varying NOT NULL, "contentType" character varying NOT NULL, "isAnonymous" boolean NOT NULL DEFAULT false, "storageKey" text NOT NULL, CONSTRAINT "PK_1ee659109b9a66d386ba8be0319" PRIMARY KEY ("id"))`,
+      `DELETE FROM "migrations" WHERE "name" = 'CreateGeneratedImages1776175376578'`,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_49410e261d41ec5eafb02a4401" ON "generated_images" ("orgId") `,
+      `CREATE TABLE IF NOT EXISTS "generated_images" ("id" character varying NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "orgId" character varying NOT NULL, "userId" character varying NOT NULL, "threadId" character varying NOT NULL, "contentType" character varying NOT NULL, "isAnonymous" boolean NOT NULL DEFAULT false, "storageKey" text NOT NULL, CONSTRAINT "PK_1ee659109b9a66d386ba8be0319" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_895e52de1edb47b104a25cbb38" ON "generated_images" ("userId") `,
+      `CREATE INDEX IF NOT EXISTS "IDX_49410e261d41ec5eafb02a4401" ON "generated_images" ("orgId") `,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_eb89025b3d27ec15c52096769a" ON "generated_images" ("threadId") `,
+      `CREATE INDEX IF NOT EXISTS "IDX_895e52de1edb47b104a25cbb38" ON "generated_images" ("userId") `,
     );
     await queryRunner.query(
-      `CREATE UNIQUE INDEX "IDX_db211d54bc3fb2a317bca870be" ON "generated_images" ("storageKey") `,
+      `CREATE INDEX IF NOT EXISTS "IDX_eb89025b3d27ec15c52096769a" ON "generated_images" ("threadId") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS "IDX_db211d54bc3fb2a317bca870be" ON "generated_images" ("storageKey") `,
     );
     await queryRunner.query(
       `ALTER TYPE "public"."agent_tools_tooltype_enum" RENAME TO "agent_tools_tooltype_enum_old"`,
@@ -32,13 +40,13 @@ export class CreateGeneratedImages1776430327559 implements MigrationInterface {
       `DROP TYPE "public"."agent_tools_tooltype_enum_old"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "generated_images" ADD CONSTRAINT "FK_49410e261d41ec5eafb02a44010" FOREIGN KEY ("orgId") REFERENCES "orgs"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_49410e261d41ec5eafb02a44010') THEN ALTER TABLE "generated_images" ADD CONSTRAINT "FK_49410e261d41ec5eafb02a44010" FOREIGN KEY ("orgId") REFERENCES "orgs"("id") ON DELETE CASCADE ON UPDATE NO ACTION; END IF; END $$`,
     );
     await queryRunner.query(
-      `ALTER TABLE "generated_images" ADD CONSTRAINT "FK_895e52de1edb47b104a25cbb389" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_895e52de1edb47b104a25cbb389') THEN ALTER TABLE "generated_images" ADD CONSTRAINT "FK_895e52de1edb47b104a25cbb389" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION; END IF; END $$`,
     );
     await queryRunner.query(
-      `ALTER TABLE "generated_images" ADD CONSTRAINT "FK_eb89025b3d27ec15c52096769ab" FOREIGN KEY ("threadId") REFERENCES "threads"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_eb89025b3d27ec15c52096769ab') THEN ALTER TABLE "generated_images" ADD CONSTRAINT "FK_eb89025b3d27ec15c52096769ab" FOREIGN KEY ("threadId") REFERENCES "threads"("id") ON DELETE CASCADE ON UPDATE NO ACTION; END IF; END $$`,
     );
   }
 
