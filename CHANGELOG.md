@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.28.0](https://github.com/ayunis-core/ayunis-core/compare/v1.27.0...v1.28.0) (2026-04-20)
+
+
+### Features
+
+* **prompts:** remove prompts feature and feature flag (AYC-28) ([#579](https://github.com/ayunis-core/ayunis-core/issues/579)) ([e1206f6](https://github.com/ayunis-core/ayunis-core/commit/e1206f6c72be4e90aa4f5d8aebb94ceabd80d482))
+* **sentry:** send logs to sentry (AYC-000) ([#489](https://github.com/ayunis-core/ayunis-core/issues/489)) ([49e9f47](https://github.com/ayunis-core/ayunis-core/commit/49e9f47ab6602239e831f80dfe1accab9c8bc6a4))
+
+
+### Bug Fixes
+
+* **models:** forward images through openai-compatible chat providers (AYC-000) ([#593](https://github.com/ayunis-core/ayunis-core/issues/593)) ([b13a936](https://github.com/ayunis-core/ayunis-core/commit/b13a9365dde275f3d3440f394516e0341d83c8d7))
+* **sources:** prevent OOM restarts from large CSV uploads (AYC-000) ([#594](https://github.com/ayunis-core/ayunis-core/issues/594)) ([9096972](https://github.com/ayunis-core/ayunis-core/commit/9096972d1e955eff9dd9a00d283334d7cea55292))
+
+
+### Miscellaneous
+
+* **tooling:** add wt project hooks for env copy and npm install (AYC-000) ([#592](https://github.com/ayunis-core/ayunis-core/issues/592)) ([5a59089](https://github.com/ayunis-core/ayunis-core/commit/5a59089fe2f66431a5eb8910dca8de0abd563f93))
+* **tooling:** clarify module-boundary rule and sync .claude skills (AYC-000) ([#584](https://github.com/ayunis-core/ayunis-core/issues/584)) ([c97dded](https://github.com/ayunis-core/ayunis-core/commit/c97dded224b7f237886a176082df8d086246f683))
+* **tooling:** track .claude skills and CLAUDE.md (AYC-000) ([#577](https://github.com/ayunis-core/ayunis-core/issues/577)) ([ba9edb4](https://github.com/ayunis-core/ayunis-core/commit/ba9edb460712273ed32f14e32917a378acefcd51))
+
 ## [1.27.0](https://github.com/ayunis-core/ayunis-core/compare/v1.26.1...v1.27.0) (2026-04-16)
 
 
