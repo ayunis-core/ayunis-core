@@ -18,6 +18,7 @@ export const minimalFixture = {
 
   user: {
     email: 'admin@demo.local',
+    // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- dev-only seed credential
     password: 'admin',
     name: 'Admin',
     role: UserRole.ADMIN,
@@ -28,6 +29,7 @@ export const minimalFixture = {
 
   usageUser: {
     email: 'admin@usage.local',
+    // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- dev-only seed credential
     password: 'admin',
     name: 'Usage Admin',
     role: UserRole.ADMIN,
@@ -40,6 +42,19 @@ export const minimalFixture = {
     name: 'eu.anthropic.claude-sonnet-4-6',
     displayName: 'Claude Sonnet 4 (Bedrock)',
     provider: ModelProvider.BEDROCK,
+    canStream: true,
+    isReasoning: false,
+    isArchived: false,
+    canUseTools: true,
+    canVision: true,
+    inputTokenCost: 3,
+    outputTokenCost: 15,
+  },
+
+  azureLanguageModel: {
+    name: 'gpt-5.4',
+    displayName: 'GPT-5.4 (Azure)',
+    provider: ModelProvider.AZURE,
     canStream: true,
     isReasoning: false,
     isArchived: false,
@@ -94,6 +109,11 @@ export const minimalFixture = {
       anonymousOnly: false,
     },
     {
+      modelKey: 'azureLanguageModel',
+      isDefault: false,
+      anonymousOnly: false,
+    },
+    {
       // Embedding model as default
       modelKey: 'embeddingModel',
       isDefault: true,
@@ -104,5 +124,5 @@ export const minimalFixture = {
 
 export type ModelKey = keyof Pick<
   typeof minimalFixture,
-  'languageModel' | 'embeddingModel'
+  'languageModel' | 'azureLanguageModel' | 'embeddingModel'
 >;
