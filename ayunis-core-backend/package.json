@@ -70,7 +70,7 @@
     "@willsoto/nestjs-prometheus": "^6.0.2",
     "ajv": "^8.18.0",
     "ajv-formats": "^3.0.1",
-    "axios": "^1.12.2",
+    "axios": "^1.14.0",
     "bcrypt": "^5.1.1",
     "bullmq": "^5.71.0",
     "cheerio": "^1.0.0",
