@@ -126,7 +126,7 @@ cmd_up() {
   # Preserve an existing MCP_ENCRYPTION_KEY across restarts so locally-stored
   # MCP credentials remain decryptable; generate a new one on first run.
   local mcp_key
-  mcp_key="$(grep -E '^MCP_ENCRYPTION_KEY=' "$env_dev" 2>/dev/null | cut -d= -f2-)"
+  mcp_key="$(grep -E '^MCP_ENCRYPTION_KEY=' "$env_dev" 2>/dev/null | cut -d= -f2- || true)"
   if [[ -z "$mcp_key" ]]; then
     mcp_key="$(openssl rand -hex 32)"
   fi
