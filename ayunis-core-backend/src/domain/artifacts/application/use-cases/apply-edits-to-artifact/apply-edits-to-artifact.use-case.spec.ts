@@ -13,7 +13,7 @@ import {
   ArtifactNotFoundError,
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from '../../artifacts.errors';
-import { Artifact } from '../../../domain/artifact.entity';
+import { DocumentArtifact } from '../../../domain/artifact.entity';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -69,7 +69,9 @@ describe('ApplyEditsToArtifactUseCase', () => {
     updateArtifactUseCase = module.get(UpdateArtifactUseCase);
   });
 
-  function createArtifactWithVersions(currentContent: string): Artifact {
+  function createArtifactWithVersions(
+    currentContent: string,
+  ): DocumentArtifact {
     const currentVersion = new ArtifactVersion({
       artifactId: mockArtifactId,
       versionNumber: 1,
@@ -78,7 +80,7 @@ describe('ApplyEditsToArtifactUseCase', () => {
       authorId: mockUserId,
     });
 
-    return new Artifact({
+    return new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -217,7 +219,7 @@ describe('ApplyEditsToArtifactUseCase', () => {
     });
 
     it('should throw ArtifactExpectedVersionMismatchError when expected version does not match', async () => {
-      const advancedArtifact = new Artifact({
+      const advancedArtifact = new DocumentArtifact({
         id: mockArtifactId,
         threadId: mockThreadId,
         userId: mockUserId,

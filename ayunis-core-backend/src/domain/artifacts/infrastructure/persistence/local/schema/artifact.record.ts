@@ -1,12 +1,22 @@
-import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  ManyToOne,
+  OneToMany,
+  TableInheritance,
+} from 'typeorm';
 import { UUID } from 'crypto';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { ArtifactVersionRecord } from './artifact-version.record';
 import { ThreadRecord } from '../../../../../threads/infrastructure/persistence/local/schema/thread.record';
-import { LetterheadRecord } from '../../../../../letterheads/infrastructure/persistence/local/schema/letterhead.record';
+import { ArtifactType } from '../../../../domain/value-objects/artifact-type.enum';
 
 @Entity({ name: 'artifacts' })
-export class ArtifactRecord extends BaseRecord {
+@TableInheritance({
+  column: { type: 'varchar', name: 'type', default: ArtifactType.DOCUMENT },
+})
+export abstract class ArtifactRecord extends BaseRecord {
   @Column()
   @Index()
   threadId: UUID;
@@ -20,13 +30,6 @@ export class ArtifactRecord extends BaseRecord {
 
   @Column()
   title: string;
-
-  @Column({ nullable: true })
-  @Index()
-  letterheadId: UUID | null;
-
-  @ManyToOne(() => LetterheadRecord, { onDelete: 'SET NULL', nullable: true })
-  letterhead: LetterheadRecord | null;
 
   @Column({ default: 1 })
   currentVersionNumber: number;

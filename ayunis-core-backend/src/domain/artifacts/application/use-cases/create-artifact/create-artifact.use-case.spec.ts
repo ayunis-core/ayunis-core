@@ -22,6 +22,7 @@ import {
   ArtifactContentTooLargeError,
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from '../../artifacts.errors';
+import { DocumentArtifact } from '../../../domain/artifact.entity';
 
 describe('CreateArtifactUseCase', () => {
   let useCase: CreateArtifactUseCase;
@@ -101,7 +102,8 @@ describe('CreateArtifactUseCase', () => {
     expect(result.title).toBe('Quarterly Budget Report');
     expect(result.threadId).toBe(mockThreadId);
     expect(result.userId).toBe(mockUserId);
-    expect(result.letterheadId).toBeNull();
+    expect(result).toBeInstanceOf(DocumentArtifact);
+    expect((result as DocumentArtifact).letterheadId).toBeNull();
     expect(result.currentVersionNumber).toBe(1);
     expect(result.versions).toHaveLength(1);
     expect(result.versions[0].versionNumber).toBe(1);
@@ -129,7 +131,8 @@ describe('CreateArtifactUseCase', () => {
 
     const result = await useCase.execute(command);
 
-    expect(result.letterheadId).toBe(mockLetterheadId);
+    expect(result).toBeInstanceOf(DocumentArtifact);
+    expect((result as DocumentArtifact).letterheadId).toBe(mockLetterheadId);
   });
 
   it('should set authorId to userId when author type is USER', async () => {
@@ -231,7 +234,7 @@ describe('CreateArtifactUseCase', () => {
 
     const command = new CreateArtifactCommand({
       threadId: otherUserThreadId,
-      title: 'Malicious Artifact',
+      title: 'Malicious DocumentArtifact',
       content: '<p>Should not be created</p>',
       authorType: AuthorType.USER,
     });

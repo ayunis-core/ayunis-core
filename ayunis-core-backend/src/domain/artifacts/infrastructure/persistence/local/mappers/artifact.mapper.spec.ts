@@ -1,9 +1,9 @@
 import { randomUUID } from 'crypto';
 import { ArtifactMapper } from './artifact.mapper';
 import { ArtifactVersionMapper } from './artifact-version.mapper';
-import { Artifact } from '../../../../domain/artifact.entity';
+import { DocumentArtifact } from '../../../../domain/artifact.entity';
 import { ArtifactVersion } from '../../../../domain/artifact-version.entity';
-import { ArtifactRecord } from '../schema/artifact.record';
+import { DocumentArtifactRecord } from '../schema/document-artifact.record';
 import { ArtifactVersionRecord } from '../schema/artifact-version.record';
 import { AuthorType } from '../../../../domain/value-objects/author-type.enum';
 
@@ -24,7 +24,7 @@ describe('ArtifactMapper', () => {
 
   describe('toDomain', () => {
     it('should map a record without versions to a domain entity', () => {
-      const record = new ArtifactRecord();
+      const record = new DocumentArtifactRecord();
       record.id = artifactId;
       record.threadId = threadId;
       record.userId = userId;
@@ -36,7 +36,7 @@ describe('ArtifactMapper', () => {
 
       const domain = mapper.toDomain(record);
 
-      expect(domain).toBeInstanceOf(Artifact);
+      expect(domain).toBeInstanceOf(DocumentArtifact);
       expect(domain.id).toBe(artifactId);
       expect(domain.threadId).toBe(threadId);
       expect(domain.userId).toBe(userId);
@@ -48,7 +48,7 @@ describe('ArtifactMapper', () => {
     });
 
     it('should map a record with letterheadId to a domain entity', () => {
-      const record = new ArtifactRecord();
+      const record = new DocumentArtifactRecord();
       record.id = artifactId;
       record.threadId = threadId;
       record.userId = userId;
@@ -73,7 +73,7 @@ describe('ArtifactMapper', () => {
       versionRecord.authorId = null;
       versionRecord.createdAt = now;
 
-      const record = new ArtifactRecord();
+      const record = new DocumentArtifactRecord();
       record.id = artifactId;
       record.threadId = threadId;
       record.userId = userId;
@@ -94,7 +94,7 @@ describe('ArtifactMapper', () => {
 
   describe('toRecord', () => {
     it('should map a domain entity to a record', () => {
-      const domain = new Artifact({
+      const domain = new DocumentArtifact({
         id: artifactId,
         threadId,
         userId,
@@ -106,7 +106,7 @@ describe('ArtifactMapper', () => {
 
       const record = mapper.toRecord(domain);
 
-      expect(record).toBeInstanceOf(ArtifactRecord);
+      expect(record).toBeInstanceOf(DocumentArtifactRecord);
       expect(record.id).toBe(artifactId);
       expect(record.threadId).toBe(threadId);
       expect(record.userId).toBe(userId);
@@ -116,7 +116,7 @@ describe('ArtifactMapper', () => {
     });
 
     it('should map a domain entity with letterheadId to a record', () => {
-      const domain = new Artifact({
+      const domain = new DocumentArtifact({
         id: artifactId,
         threadId,
         userId,
@@ -144,7 +144,7 @@ describe('ArtifactMapper', () => {
         createdAt: now,
       });
 
-      const original = new Artifact({
+      const original = new DocumentArtifact({
         id: artifactId,
         threadId,
         userId,

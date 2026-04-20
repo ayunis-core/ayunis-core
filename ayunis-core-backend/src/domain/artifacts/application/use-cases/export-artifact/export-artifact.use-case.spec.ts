@@ -9,7 +9,7 @@ import { ExportArtifactCommand } from './export-artifact.command';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { DocumentExportPort } from '../../ports/document-export.port';
 import { ArtifactNotFoundError } from '../../artifacts.errors';
-import { Artifact } from '../../../domain/artifact.entity';
+import { DocumentArtifact } from '../../../domain/artifact.entity';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -99,8 +99,8 @@ describe('ExportArtifactUseCase', () => {
   function createArtifact(overrides?: {
     title?: string;
     letterheadId?: UUID | null;
-  }): Artifact {
-    return new Artifact({
+  }): DocumentArtifact {
+    return new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -131,7 +131,7 @@ describe('ExportArtifactUseCase', () => {
   }
 
   it('should export the current version as DOCX', async () => {
-    const artifact = new Artifact({
+    const artifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,

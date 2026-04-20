@@ -8,9 +8,11 @@ import {
 import { ExportArtifactCommand } from './export-artifact.command';
 import {
   ArtifactNotFoundError,
+  ArtifactNotExportableError,
   ArtifactVersionNotFoundError,
   UnexpectedArtifactError,
 } from '../../artifacts.errors';
+import { DocumentArtifact } from '../../../domain/artifact.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -50,62 +52,18 @@ export class ExportArtifactUseCase {
         throw new UnauthorizedAccessError();
       }
 
-      const artifact = await this.artifactsRepository.findByIdWithVersions(
+      const artifact = await this.loadExportableArtifact(
         command.artifactId,
         userId,
       );
-      if (!artifact) {
-        throw new ArtifactNotFoundError(command.artifactId);
-      }
-
-      const currentVersion = artifact.versions.find(
-        (v) => v.versionNumber === artifact.currentVersionNumber,
-      );
-      if (!currentVersion) {
-        throw new ArtifactVersionNotFoundError(
-          command.artifactId,
-          artifact.currentVersionNumber,
-        );
-      }
-
-      const safeTitle =
-        artifact.title.replace(/[^a-zA-Z0-9-_ ]/g, '').trim() || 'artifact';
+      const currentVersion = this.requireCurrentVersion(artifact);
+      const safeTitle = this.buildSafeTitle(artifact.title);
 
       if (command.format === 'docx') {
-        const buffer = await this.documentExportPort.exportToDocx(
-          currentVersion.content,
-        );
-        return {
-          buffer,
-          fileName: `${safeTitle}.docx`,
-          mimeType:
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        };
+        return await this.exportDocx(currentVersion.content, safeTitle);
       }
 
-      const letterheadConfig = await this.resolveLetterhead(artifact);
-
-      let buffer: Buffer;
-      try {
-        buffer = await this.documentExportPort.exportToPdf(
-          currentVersion.content,
-          letterheadConfig,
-        );
-      } catch (error) {
-        if (!letterheadConfig) throw error;
-        const reason = error instanceof Error ? error.message : 'Unknown error';
-        this.logger.warn(
-          `Letterhead compositing failed, exporting without letterhead: ${reason}`,
-        );
-        buffer = await this.documentExportPort.exportToPdf(
-          currentVersion.content,
-        );
-      }
-      return {
-        buffer,
-        fileName: `${safeTitle}.pdf`,
-        mimeType: 'application/pdf',
-      };
+      return await this.exportPdf(artifact, currentVersion.content, safeTitle);
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
@@ -119,6 +77,81 @@ export class ExportArtifactUseCase {
         error instanceof Error ? error.message : 'Unknown error',
       );
     }
+  }
+
+  private async loadExportableArtifact(
+    artifactId: UUID,
+    userId: UUID,
+  ): Promise<DocumentArtifact> {
+    const artifact = await this.artifactsRepository.findByIdWithVersions(
+      artifactId,
+      userId,
+    );
+    if (!artifact) {
+      throw new ArtifactNotFoundError(artifactId);
+    }
+    if (!(artifact instanceof DocumentArtifact)) {
+      throw new ArtifactNotExportableError(artifact.type);
+    }
+    return artifact;
+  }
+
+  private requireCurrentVersion(artifact: DocumentArtifact) {
+    const currentVersion = artifact.versions.find(
+      (v) => v.versionNumber === artifact.currentVersionNumber,
+    );
+    if (!currentVersion) {
+      throw new ArtifactVersionNotFoundError(
+        artifact.id,
+        artifact.currentVersionNumber,
+      );
+    }
+    return currentVersion;
+  }
+
+  private buildSafeTitle(title: string): string {
+    return title.replace(/[^a-zA-Z0-9-_ ]/g, '').trim() || 'artifact';
+  }
+
+  private async exportDocx(
+    content: string,
+    safeTitle: string,
+  ): Promise<ExportResult> {
+    const buffer = await this.documentExportPort.exportToDocx(content);
+    return {
+      buffer,
+      fileName: `${safeTitle}.docx`,
+      mimeType:
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    };
+  }
+
+  private async exportPdf(
+    artifact: DocumentArtifact,
+    content: string,
+    safeTitle: string,
+  ): Promise<ExportResult> {
+    const letterheadConfig = await this.resolveLetterhead(artifact);
+
+    let buffer: Buffer;
+    try {
+      buffer = await this.documentExportPort.exportToPdf(
+        content,
+        letterheadConfig,
+      );
+    } catch (error) {
+      if (!letterheadConfig) throw error;
+      const reason = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(
+        `Letterhead compositing failed, exporting without letterhead: ${reason}`,
+      );
+      buffer = await this.documentExportPort.exportToPdf(content);
+    }
+    return {
+      buffer,
+      fileName: `${safeTitle}.pdf`,
+      mimeType: 'application/pdf',
+    };
   }
 
   private async resolveLetterhead(artifact: {

@@ -13,7 +13,7 @@ import {
   ArtifactVersionConflictError,
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from '../../artifacts.errors';
-import { Artifact } from '../../../domain/artifact.entity';
+import { DocumentArtifact } from '../../../domain/artifact.entity';
 import type { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -78,7 +78,7 @@ describe('UpdateArtifactUseCase', () => {
   });
 
   it('should add a new version with incremented version number', async () => {
-    const existingArtifact = new Artifact({
+    const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -111,7 +111,7 @@ describe('UpdateArtifactUseCase', () => {
   });
 
   it('should call addVersionAndUpdateArtifact with the new version', async () => {
-    const existingArtifact = new Artifact({
+    const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -158,7 +158,7 @@ describe('UpdateArtifactUseCase', () => {
   });
 
   it('should set authorId to null for ASSISTANT-authored versions', async () => {
-    const existingArtifact = new Artifact({
+    const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -182,7 +182,7 @@ describe('UpdateArtifactUseCase', () => {
   });
 
   it('should sanitize HTML content by stripping script tags', async () => {
-    const existingArtifact = new Artifact({
+    const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -207,7 +207,7 @@ describe('UpdateArtifactUseCase', () => {
   });
 
   it('should sanitize HTML content by stripping event handlers', async () => {
-    const existingArtifact = new Artifact({
+    const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -232,7 +232,7 @@ describe('UpdateArtifactUseCase', () => {
   });
 
   it('should preserve safe Tiptap HTML during update sanitization', async () => {
-    const existingArtifact = new Artifact({
+    const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -277,7 +277,7 @@ describe('UpdateArtifactUseCase', () => {
   it('should accept content at exactly the maximum allowed length', async () => {
     const maxContent = 'A'.repeat(ARTIFACT_MAX_CONTENT_LENGTH);
 
-    const existingArtifact = new Artifact({
+    const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -303,7 +303,7 @@ describe('UpdateArtifactUseCase', () => {
   it('should pass letterheadId to the atomic artifact update when provided in command', async () => {
     const mockLetterheadId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
 
-    const existingArtifact = new Artifact({
+    const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -340,7 +340,7 @@ describe('UpdateArtifactUseCase', () => {
   });
 
   it('should leave letterheadId unchanged when not provided in command', async () => {
-    const existingArtifact = new Artifact({
+    const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -372,7 +372,7 @@ describe('UpdateArtifactUseCase', () => {
   });
 
   it('should pass letterheadId as null to remove letterhead atomically', async () => {
-    const existingArtifact = new Artifact({
+    const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -439,7 +439,7 @@ describe('UpdateArtifactUseCase', () => {
 
   describe('expected version check', () => {
     it('should throw ArtifactExpectedVersionMismatchError when expected version does not match', async () => {
-      const existingArtifact = new Artifact({
+      const existingArtifact = new DocumentArtifact({
         id: mockArtifactId,
         threadId: mockThreadId,
         userId: mockUserId,
@@ -462,7 +462,7 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     it('should succeed when expected version matches current version', async () => {
-      const existingArtifact = new Artifact({
+      const existingArtifact = new DocumentArtifact({
         id: mockArtifactId,
         threadId: mockThreadId,
         userId: mockUserId,
@@ -488,7 +488,7 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     it('should skip version check when expectedVersionNumber is not provided', async () => {
-      const existingArtifact = new Artifact({
+      const existingArtifact = new DocumentArtifact({
         id: mockArtifactId,
         threadId: mockThreadId,
         userId: mockUserId,
@@ -516,7 +516,7 @@ describe('UpdateArtifactUseCase', () => {
   it('should update only letterheadId without creating a new version when no content is provided', async () => {
     const mockLetterheadId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
 
-    const existingArtifact = new Artifact({
+    const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -593,7 +593,7 @@ describe('UpdateArtifactUseCase', () => {
   it('should validate letterheadId belongs to org before updating', async () => {
     const mockLetterheadId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
 
-    const existingArtifact = new Artifact({
+    const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -622,7 +622,7 @@ describe('UpdateArtifactUseCase', () => {
 
   describe('retry on version conflict', () => {
     it('should retry and succeed when addVersionAndUpdateArtifact fails once with conflict', async () => {
-      const artifactV2 = new Artifact({
+      const artifactV2 = new DocumentArtifact({
         id: mockArtifactId,
         threadId: mockThreadId,
         userId: mockUserId,
@@ -630,7 +630,7 @@ describe('UpdateArtifactUseCase', () => {
         currentVersionNumber: 2,
       });
 
-      const artifactV3 = new Artifact({
+      const artifactV3 = new DocumentArtifact({
         id: mockArtifactId,
         threadId: mockThreadId,
         userId: mockUserId,
@@ -664,7 +664,7 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     it('should throw ArtifactVersionConflictError after exhausting all retries', async () => {
-      const artifact = new Artifact({
+      const artifact = new DocumentArtifact({
         id: mockArtifactId,
         threadId: mockThreadId,
         userId: mockUserId,
@@ -695,7 +695,7 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     it('should rethrow non-conflict errors without retrying', async () => {
-      const artifact = new Artifact({
+      const artifact = new DocumentArtifact({
         id: mockArtifactId,
         threadId: mockThreadId,
         userId: mockUserId,
