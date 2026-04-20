@@ -27,6 +27,8 @@ import { CreateDocumentToolHandler } from './application/handlers/create-documen
 import { UpdateDocumentToolHandler } from './application/handlers/update-document-tool.handler';
 import { EditDocumentToolHandler } from './application/handlers/edit-document-tool.handler';
 import { ReadDocumentToolHandler } from './application/handlers/read-document-tool.handler';
+import { CreateDiagramToolHandler } from './application/handlers/create-diagram-tool.handler';
+import { UpdateDiagramToolHandler } from './application/handlers/update-diagram-tool.handler';
 import { SkillsModule } from '../skills/skills.module';
 import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
 import { SkillTemplatesModule } from '../skill-templates/skill-templates.module';
@@ -72,6 +74,8 @@ import { UsageModule } from '../usage/usage.module';
     EditDocumentToolHandler,
     ReadDocumentToolHandler,
     GenerateImageToolHandler,
+    CreateDiagramToolHandler,
+    UpdateDiagramToolHandler,
     // Repositories and factories
     {
       provide: ToolConfigRepository,

@@ -167,8 +167,10 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.EDIT_DOCUMENT);
       expect(types).toContain(ToolType.READ_DOCUMENT);
       expect(types).toContain(ToolType.GENERATE_IMAGE);
+      expect(types).toContain(ToolType.CREATE_DIAGRAM);
+      expect(types).toContain(ToolType.UPDATE_DIAGRAM);
 
-      expect(types.length).toBe(24);
+      expect(types.length).toBe(26);
     });
   });
 });

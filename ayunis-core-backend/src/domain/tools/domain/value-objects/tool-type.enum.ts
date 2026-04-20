@@ -24,4 +24,6 @@ export enum ToolType {
   EDIT_DOCUMENT = 'edit_document',
   READ_DOCUMENT = 'read_document',
   GENERATE_IMAGE = 'generate_image',
+  CREATE_DIAGRAM = 'create_diagram',
+  UPDATE_DIAGRAM = 'update_diagram',
 }
