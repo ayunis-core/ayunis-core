@@ -195,7 +195,6 @@ async function seedSubscription(
     renewalCycle: fixture.subscription.renewalCycle,
     startsAt: new Date(),
     renewalCycleAnchor: new Date(),
-    startsAt: new Date(),
     cancelledAt: null,
   } as Partial<SeatBasedSubscriptionRecord>);
   await subRepo.save(record);
