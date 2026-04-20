@@ -69,7 +69,7 @@ function buildAttributes(
   // Attach tenant context from CLS so logs fired outside a Sentry request
   // scope (background jobs, schedulers, queue workers) still carry user/org.
   const cls = ClsServiceManager.getClsService<MyClsStore>();
-  if (cls.isActive()) {
+  if (cls?.isActive()) {
     const userId = cls.get('userId');
     const orgId = cls.get('orgId');
     if (userId) attrs['user.id'] = userId;
