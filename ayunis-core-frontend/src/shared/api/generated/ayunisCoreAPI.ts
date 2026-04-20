@@ -7323,7 +7323,7 @@ formData.append(`file`, threadSourcesControllerAddFileSourceBody.file)
   
 
 
-export const getThreadSourcesControllerAddFileSourceMutationOptions = <TError = unknown,
+export const getThreadSourcesControllerAddFileSourceMutationOptions = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerAddFileSource>>, TError,{id: string;data: ThreadSourcesControllerAddFileSourceBody}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerAddFileSource>>, TError,{id: string;data: ThreadSourcesControllerAddFileSourceBody}, TContext> => {
 
@@ -7350,12 +7350,12 @@ const {mutation: mutationOptions} = options ?
 
     export type ThreadSourcesControllerAddFileSourceMutationResult = NonNullable<Awaited<ReturnType<typeof threadSourcesControllerAddFileSource>>>
     export type ThreadSourcesControllerAddFileSourceMutationBody = ThreadSourcesControllerAddFileSourceBody
-    export type ThreadSourcesControllerAddFileSourceMutationError = unknown
+    export type ThreadSourcesControllerAddFileSourceMutationError = void
 
     /**
  * @summary Add a file source to a thread
  */
-export const useThreadSourcesControllerAddFileSource = <TError = unknown,
+export const useThreadSourcesControllerAddFileSource = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerAddFileSource>>, TError,{id: string;data: ThreadSourcesControllerAddFileSourceBody}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof threadSourcesControllerAddFileSource>>,

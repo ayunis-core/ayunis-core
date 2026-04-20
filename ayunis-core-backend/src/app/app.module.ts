@@ -66,6 +66,7 @@ import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-t
 import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { ApplicationErrorFilter } from 'src/common/filters/application-error.filter';
+import { PayloadTooLargeExceptionFilter } from 'src/common/filters/payload-too-large.filter';
 import { IntegrationsModule } from '../integrations/integrations.module';
 
 @Module({
@@ -181,6 +182,10 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     // - Everything else   → NestJS BaseExceptionFilter defaults
     // @SentryExceptionCaptured() on catch() reports unexpected errors to Sentry.
     // 4xx errors are dropped by the beforeSend hook in instrument.ts.
+    {
+      provide: APP_FILTER,
+      useClass: PayloadTooLargeExceptionFilter,
+    },
     {
       provide: APP_FILTER,
       useClass: ApplicationErrorFilter,

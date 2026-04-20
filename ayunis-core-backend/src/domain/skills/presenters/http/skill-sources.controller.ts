@@ -131,7 +131,7 @@ export class SkillSourcesController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'The file to upload',
+          description: 'The file to upload (max 25 MB)',
         },
       },
       required: ['file'],
@@ -147,9 +147,13 @@ export class SkillSourcesController {
     status: 400,
     description: 'Invalid or unsupported file type',
   })
+  @ApiResponse({
+    status: 413,
+    description: 'File exceeds the 25 MB upload limit',
+  })
   @UseInterceptors(
+    /* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP Content-Length */
     FileInterceptor('file', {
-      // eslint-disable-next-line sonarjs/content-length -- false positive: diskStorage config, not a Content-Length header
       storage: diskStorage({
         destination: './uploads',
         filename: (req, file, cb) => {
@@ -157,7 +161,9 @@ export class SkillSourcesController {
           cb(null, `${randomName}${extname(file.originalname)}`);
         },
       }),
+      limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB
     }),
+    /* eslint-enable sonarjs/content-length */
   )
   async addFileSource(
     @CurrentUser(UserProperty.ID) userId: UUID,
