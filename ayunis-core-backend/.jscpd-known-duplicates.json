@@ -12,5 +12,19 @@
       "src/domain/models/presenters/http/super-admin-embedding-catalog-models.controller.ts",
       "src/domain/models/presenters/http/super-admin-language-catalog-models.controller.ts"
     ]
+  },
+  {
+    "comment": "Storage use cases share the same try/catch error-handling shape and private objectExists/getDefaultBucket helpers — intentional per-use-case repetition",
+    "files": [
+      "src/domain/storage/application/use-cases/download-object/download-object.use-case.ts",
+      "src/domain/storage/application/use-cases/get-presigned-url/get-presigned-url.use-case.ts"
+    ]
+  },
+  {
+    "comment": "Storage use cases share the same try/catch error-handling shape and private objectExists/getDefaultBucket helpers — intentional per-use-case repetition",
+    "files": [
+      "src/domain/storage/application/use-cases/delete-object/delete-object.use-case.ts",
+      "src/domain/storage/application/use-cases/get-presigned-url/get-presigned-url.use-case.ts"
+    ]
   }
 ]

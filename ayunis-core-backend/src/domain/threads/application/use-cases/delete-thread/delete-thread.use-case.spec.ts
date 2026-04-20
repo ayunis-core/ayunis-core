@@ -7,10 +7,14 @@ import { ThreadsRepository } from '../../ports/threads.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { MESSAGES_REPOSITORY } from 'src/domain/messages/application/ports/messages.repository';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
+import { GeneratedImagesRepository } from '../../ports/generated-images.repository';
+import { GeneratedImage } from '../../../domain/generated-image.entity';
 
 describe('DeleteThreadUseCase', () => {
   let useCase: DeleteThreadUseCase;
   let threadsRepository: jest.Mocked<ThreadsRepository>;
+  let generatedImagesRepository: jest.Mocked<GeneratedImagesRepository>;
+  let deleteObjectUseCase: jest.Mocked<DeleteObjectUseCase>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174002' as any;
@@ -40,6 +44,12 @@ describe('DeleteThreadUseCase', () => {
       execute: jest.fn().mockResolvedValue(undefined),
     };
 
+    const mockGeneratedImagesRepository = {
+      save: jest.fn(),
+      findByIdAndThreadId: jest.fn(),
+      findManyByThreadId: jest.fn().mockResolvedValue([]),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteThreadUseCase,
@@ -47,11 +57,17 @@ describe('DeleteThreadUseCase', () => {
         { provide: ContextService, useValue: mockContextService },
         { provide: MESSAGES_REPOSITORY, useValue: mockMessagesRepository },
         { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
+        {
+          provide: GeneratedImagesRepository,
+          useValue: mockGeneratedImagesRepository,
+        },
       ],
     }).compile();
 
     useCase = module.get<DeleteThreadUseCase>(DeleteThreadUseCase);
     threadsRepository = module.get(ThreadsRepository);
+    generatedImagesRepository = module.get(GeneratedImagesRepository);
+    deleteObjectUseCase = module.get(DeleteObjectUseCase);
 
     // Mock logger
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
@@ -231,6 +247,161 @@ describe('DeleteThreadUseCase', () => {
       expect(logSpy).toHaveBeenCalledWith('delete', {
         threadId: mockThreadId,
       });
+    });
+
+    it('should delete blobs for generated images associated with the thread', async () => {
+      // Arrange
+      const command = new DeleteThreadCommand(mockThreadId);
+
+      const mockThread = {
+        id: mockThreadId,
+        userId: mockUserId,
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const generatedImages = [
+        new GeneratedImage(
+          '00000000-0000-0000-0000-000000000001' as any,
+          mockOrgId,
+          mockUserId,
+          mockThreadId,
+          'image/png',
+          false,
+          'generated-images/org/thread/image-1.png',
+        ),
+        new GeneratedImage(
+          '00000000-0000-0000-0000-000000000002' as any,
+          mockOrgId,
+          mockUserId,
+          mockThreadId,
+          'image/png',
+          false,
+          'generated-images/org/thread/image-2.png',
+        ),
+      ];
+
+      threadsRepository.findOne.mockResolvedValue(mockThread as any);
+      threadsRepository.delete.mockResolvedValue(undefined);
+      generatedImagesRepository.findManyByThreadId.mockResolvedValue(
+        generatedImages,
+      );
+
+      // Act
+      await useCase.execute(command);
+
+      // Assert
+      expect(generatedImagesRepository.findManyByThreadId).toHaveBeenCalledWith(
+        mockThreadId,
+      );
+      expect(deleteObjectUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          objectName: 'generated-images/org/thread/image-1.png',
+        }),
+      );
+      expect(deleteObjectUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          objectName: 'generated-images/org/thread/image-2.png',
+        }),
+      );
+      expect(threadsRepository.delete).toHaveBeenCalledWith(
+        mockThreadId,
+        mockUserId,
+      );
+    });
+
+    it('should skip blob deletion when thread has no generated images', async () => {
+      // Arrange
+      const command = new DeleteThreadCommand(mockThreadId);
+
+      const mockThread = {
+        id: mockThreadId,
+        userId: mockUserId,
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      threadsRepository.findOne.mockResolvedValue(mockThread as any);
+      threadsRepository.delete.mockResolvedValue(undefined);
+      generatedImagesRepository.findManyByThreadId.mockResolvedValue([]);
+
+      // Act
+      await useCase.execute(command);
+
+      // Assert
+      expect(generatedImagesRepository.findManyByThreadId).toHaveBeenCalledWith(
+        mockThreadId,
+      );
+      expect(deleteObjectUseCase.execute).not.toHaveBeenCalled();
+      expect(threadsRepository.delete).toHaveBeenCalledWith(
+        mockThreadId,
+        mockUserId,
+      );
+    });
+
+    it('should continue thread deletion when a generated image blob delete fails', async () => {
+      // Arrange
+      const command = new DeleteThreadCommand(mockThreadId);
+
+      const mockThread = {
+        id: mockThreadId,
+        userId: mockUserId,
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const generatedImages = [
+        new GeneratedImage(
+          '00000000-0000-0000-0000-000000000001' as any,
+          mockOrgId,
+          mockUserId,
+          mockThreadId,
+          'image/png',
+          false,
+          'generated-images/org/thread/image-1.png',
+        ),
+        new GeneratedImage(
+          '00000000-0000-0000-0000-000000000002' as any,
+          mockOrgId,
+          mockUserId,
+          mockThreadId,
+          'image/png',
+          false,
+          'generated-images/org/thread/image-2.png',
+        ),
+      ];
+
+      threadsRepository.findOne.mockResolvedValue(mockThread as any);
+      threadsRepository.delete.mockResolvedValue(undefined);
+      generatedImagesRepository.findManyByThreadId.mockResolvedValue(
+        generatedImages,
+      );
+      deleteObjectUseCase.execute.mockImplementationOnce(() => {
+        return Promise.reject(new Error('storage unavailable'));
+      });
+
+      const warnSpy = jest.spyOn(Logger.prototype, 'warn');
+
+      // Act
+      await useCase.execute(command);
+
+      // Assert
+      expect(deleteObjectUseCase.execute).toHaveBeenCalledTimes(2);
+      expect(threadsRepository.delete).toHaveBeenCalledWith(
+        mockThreadId,
+        mockUserId,
+      );
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Failed to delete generated image from storage',
+        expect.objectContaining({
+          threadId: mockThreadId,
+          storageKey: 'generated-images/org/thread/image-1.png',
+          error: 'storage unavailable',
+        }),
+      );
     });
   });
 });

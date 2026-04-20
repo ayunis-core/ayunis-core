@@ -20,6 +20,8 @@ import { showError } from '@/shared/lib/toast';
 const CREATE_ERROR_MAP: Record<string, string> = {
   MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED:
     'models.createPermittedModel.multipleEmbeddingModelsNotAllowed',
+  MULTIPLE_IMAGE_GENERATION_MODELS_NOT_ALLOWED:
+    'models.createPermittedModel.multipleImageGenerationModelsNotAllowed',
   MODEL_NOT_FOUND: 'models.createPermittedModel.modelNotFound',
 };
 

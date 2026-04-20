@@ -13,6 +13,9 @@ export enum ThreadErrorCode {
   THREAD_UPDATE_FAILED = 'THREAD_UPDATE_FAILED',
   MODEL_REPLACEMENT_FAILED = 'MODEL_REPLACEMENT_FAILED',
   NO_MODEL_OR_AGENT_PROVIDED = 'NO_MODEL_OR_AGENT_PROVIDED',
+  GENERATED_IMAGE_NOT_FOUND = 'GENERATED_IMAGE_NOT_FOUND',
+  GENERATED_IMAGE_SAVE_FAILED = 'GENERATED_IMAGE_SAVE_FAILED',
+  UNSUPPORTED_IMAGE_CONTENT_TYPE = 'UNSUPPORTED_IMAGE_CONTENT_TYPE',
   UNEXPECTED_THREAD_ERROR = 'UNEXPECTED_THREAD_ERROR',
 }
 
@@ -175,8 +178,48 @@ export class NoModelOrAgentProvidedError extends ThreadError {
   }
 }
 
-export class UnexpecteThreadError extends ThreadError {
+export class GeneratedImageNotFoundError extends ThreadError {
+  constructor(imageId: string, metadata?: ErrorMetadata) {
+    super(
+      `Generated image '${imageId}' not found`,
+      ThreadErrorCode.GENERATED_IMAGE_NOT_FOUND,
+      404,
+      { imageId, ...metadata },
+    );
+  }
+}
+
+export class GeneratedImageSaveFailedError extends ThreadError {
+  /** Original cause — available for logging but not serialized to the client. */
+  public readonly cause: Error;
+
   constructor(error: Error, metadata?: ErrorMetadata) {
+    super(
+      'Failed to save generated image',
+      ThreadErrorCode.GENERATED_IMAGE_SAVE_FAILED,
+      500,
+      metadata,
+    );
+    this.cause = error;
+  }
+}
+
+export class UnsupportedImageContentTypeError extends ThreadError {
+  constructor(contentType: string, metadata?: ErrorMetadata) {
+    super(
+      `Unsupported image content type: ${contentType}`,
+      ThreadErrorCode.UNSUPPORTED_IMAGE_CONTENT_TYPE,
+      400,
+      {
+        contentType,
+        ...metadata,
+      },
+    );
+  }
+}
+
+export class UnexpecteThreadError extends ThreadError {
+  constructor(_error: Error, metadata?: ErrorMetadata) {
     super(
       'Unexpected thread error',
       ThreadErrorCode.UNEXPECTED_THREAD_ERROR,

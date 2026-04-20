@@ -309,7 +309,17 @@
       "noEmbeddingModelsArchived": "Keine Embedding-Modelle wurden archiviert.",
       "noImageGenerationModels": "Keine Bilderzeugungsmodelle",
       "noImageGenerationModelsEmpty": "Es wurden noch keine Bilderzeugungsmodelle zum Katalog hinzugefügt.",
-      "noImageGenerationModelsArchived": "Keine Bilderzeugungsmodelle wurden archiviert."
+      "noImageGenerationModelsArchived": "Keine Bilderzeugungsmodelle wurden archiviert.",
+      "archivedBadge": "Archiviert",
+      "streamingBadge": "Streaming",
+      "toolsBadge": "Tools",
+      "reasoningBadge": "Reasoning",
+      "deleteModel": {
+        "title": "Modell löschen",
+        "description": "Sind Sie sicher, dass Sie {{displayName}} löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+        "confirmText": "Löschen",
+        "cancelText": "Abbrechen"
+      }
     }
   }
 }

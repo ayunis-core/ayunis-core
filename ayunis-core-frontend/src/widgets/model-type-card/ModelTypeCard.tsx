@@ -27,6 +27,7 @@ import {
 import { Star } from 'lucide-react';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { getFlagByProvider } from '@/shared/lib/getFlagByProvider';
+import { getHostingPriority } from '@/features/models';
 
 const TIER_FILLED_COUNT: Record<ModelWithConfigResponseDtoTier, number> = {
   [ModelWithConfigResponseDtoTier.low]: 1,
@@ -107,31 +108,6 @@ const MODEL_TYPE_CONFIG = {
     defaultDescription: 'Models for image generation and visual creation.',
   },
 } as const;
-
-// Priority order: DE (0) -> EU (1) -> US (2) -> Unknown (3)
-function getHostingPriority(
-  provider: ModelWithConfigResponseDto['provider'],
-): number {
-  switch (provider) {
-    case 'otc':
-    case 'ayunis':
-    case 'synaforce':
-    case 'ollama':
-    case 'stackit':
-      return 0; // DE
-    case 'mistral':
-    case 'bedrock':
-    case 'azure':
-    case 'scaleway':
-      return 1; // EU
-    case 'openai':
-    case 'anthropic':
-    case 'gemini':
-      return 2; // US
-    default:
-      return 3;
-  }
-}
 
 export default function ModelTypeCard({
   type,

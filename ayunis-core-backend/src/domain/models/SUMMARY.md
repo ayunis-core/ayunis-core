@@ -61,7 +61,12 @@ The models module is the central registry for AI model configuration. The abstra
 - **IsEmbeddingModelEnabledUseCase** (`application/use-cases/is-embedding-model-enabled`): Checks whether an embedding model is enabled for an org.
 - **GetInferenceUseCase** (`application/use-cases/get-inference`): Retrieves inference configuration for a model.
 - **StreamInferenceUseCase** (`application/use-cases/stream-inference`): Routes and streams inference requests to the appropriate provider.
+- **GenerateImageUseCase** (`application/use-cases/generate-image/generate-image.use-case.ts`): Resolves the correct image-generation handler via `ImageGenerationHandlerRegistry` and executes the generation request.
 
 ## Infrastructure Services
 
 - **PermittedModelQueryService** (`infrastructure/persistence/local-permitted-models/permitted-model-query.service.ts`): Centralizes permitted model queries with type-safe filtering by model type (language, embedding, image-generation) and scope (org, team). Handles both org-scoped and team-scoped lookups.
+
+## Image Generation
+
+The module supports image generation via a provider-abstracted handler system. The abstract `ImageGenerationHandler` port (`application/ports/image-generation.handler.ts`) defines the contract for generating images given a model, prompt, size, and quality. `ImageGenerationHandlerRegistry` (`application/registry/image-generation-handler.registry.ts`) maps model providers to their handler implementations, following the same pattern as `InferenceHandlerRegistry`. Infrastructure implementations include `AzureImageGenerationHandler` (`infrastructure/image-generation/azure.image-generation.ts`) for Azure-hosted generation and `MockImageGenerationHandler` (`infrastructure/image-generation/mock.image-generation.ts`) for test environments. `GenerateImageUseCase` (`application/use-cases/generate-image/generate-image.use-case.ts`) is the facade that resolves the correct handler via the registry and executes the generation request with proper error handling. `ImageGenerationFailedError` (`application/models.errors.ts`) is thrown when image generation encounters an unexpected failure.

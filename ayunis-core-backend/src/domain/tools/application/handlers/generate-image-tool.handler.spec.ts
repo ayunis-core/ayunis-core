@@ -1,0 +1,217 @@
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import { Logger } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import { GenerateImageToolHandler } from './generate-image-tool.handler';
+import { GenerateImageTool } from '../../domain/tools/generate-image-tool.entity';
+import { ToolExecutionFailedError } from '../tools.errors';
+import { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
+import { GenerateImageUseCase } from 'src/domain/models/application/use-cases/generate-image/generate-image.use-case';
+import { SaveGeneratedImageUseCase } from 'src/domain/threads/application/use-cases/save-generated-image/save-generated-image.use-case';
+import { ContextService } from 'src/common/context/services/context.service';
+import { PermittedImageGenerationModel } from 'src/domain/models/domain/permitted-model.entity';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { ImageGenerationResult } from 'src/domain/models/application/ports/image-generation.handler';
+
+describe('GenerateImageToolHandler', () => {
+  let handler: GenerateImageToolHandler;
+  let mockGetPermittedModel: jest.Mocked<GetPermittedImageGenerationModelUseCase>;
+  let mockGenerateImage: jest.Mocked<GenerateImageUseCase>;
+  let mockSaveGeneratedImage: jest.Mocked<SaveGeneratedImageUseCase>;
+  let mockContextService: jest.Mocked<ContextService>;
+
+  const mockOrgId = randomUUID();
+  const mockThreadId = randomUUID();
+  const mockUserId = randomUUID();
+  const mockImageId = randomUUID();
+
+  beforeEach(async () => {
+    mockGetPermittedModel = { execute: jest.fn() } as any;
+    mockGenerateImage = { execute: jest.fn() } as any;
+    mockSaveGeneratedImage = { execute: jest.fn() } as any;
+    mockContextService = { get: jest.fn() } as any;
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        GenerateImageToolHandler,
+        {
+          provide: GetPermittedImageGenerationModelUseCase,
+          useValue: mockGetPermittedModel,
+        },
+        {
+          provide: GenerateImageUseCase,
+          useValue: mockGenerateImage,
+        },
+        {
+          provide: SaveGeneratedImageUseCase,
+          useValue: mockSaveGeneratedImage,
+        },
+        {
+          provide: ContextService,
+          useValue: mockContextService,
+        },
+      ],
+    }).compile();
+
+    handler = module.get<GenerateImageToolHandler>(GenerateImageToolHandler);
+
+    jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  function setupHappyPath(): void {
+    const model = new ImageGenerationModel({
+      id: randomUUID(),
+      name: 'dall-e-3',
+      provider: ModelProvider.AZURE,
+      displayName: 'DALL-E 3',
+      isArchived: false,
+    });
+
+    mockGetPermittedModel.execute.mockResolvedValue(
+      new PermittedImageGenerationModel({
+        model,
+        orgId: mockOrgId,
+      }),
+    );
+
+    mockGenerateImage.execute.mockResolvedValue(
+      new ImageGenerationResult(Buffer.from('fake-image-data'), 'image/png'),
+    );
+
+    mockSaveGeneratedImage.execute.mockResolvedValue({ id: mockImageId });
+    mockContextService.get.mockReturnValue(mockUserId);
+  }
+
+  it('should return the generated image ID as a plain string', async () => {
+    setupHappyPath();
+
+    const result = await handler.execute({
+      tool: new GenerateImageTool(),
+      input: { prompt: 'A sunset over the Alps' },
+      context: { orgId: mockOrgId, threadId: mockThreadId, isAnonymous: false },
+    });
+
+    expect(result).toBe(mockImageId);
+  });
+
+  it('should pass the prompt to GenerateImageUseCase', async () => {
+    setupHappyPath();
+
+    await handler.execute({
+      tool: new GenerateImageTool(),
+      input: { prompt: 'A cat wearing a hat' },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    const command = mockGenerateImage.execute.mock.calls[0][0];
+    expect(command.prompt).toBe('A cat wearing a hat');
+  });
+
+  it('should pass correct params to SaveGeneratedImageUseCase', async () => {
+    setupHappyPath();
+
+    await handler.execute({
+      tool: new GenerateImageTool(),
+      input: { prompt: 'A mountain landscape' },
+      context: {
+        orgId: mockOrgId,
+        threadId: mockThreadId,
+        isAnonymous: true,
+      },
+    });
+
+    const command = mockSaveGeneratedImage.execute.mock.calls[0][0];
+    expect(command.orgId).toBe(mockOrgId);
+    expect(command.userId).toBe(mockUserId);
+    expect(command.threadId).toBe(mockThreadId);
+    expect(command.imageData).toEqual(Buffer.from('fake-image-data'));
+    expect(command.contentType).toBe('image/png');
+    expect(command.isAnonymous).toBe(true);
+  });
+
+  it('should default isAnonymous to false when not provided in context', async () => {
+    setupHappyPath();
+
+    await handler.execute({
+      tool: new GenerateImageTool(),
+      input: { prompt: 'A tree' },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    const command = mockSaveGeneratedImage.execute.mock.calls[0][0];
+    expect(command.isAnonymous).toBe(false);
+  });
+
+  it('should throw ToolExecutionFailedError when permitted model not found', async () => {
+    mockGetPermittedModel.execute.mockRejectedValue(
+      new Error('No permitted image generation model found'),
+    );
+
+    await expect(
+      handler.execute({
+        tool: new GenerateImageTool(),
+        input: { prompt: 'A sunset' },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      }),
+    ).rejects.toThrow(ToolExecutionFailedError);
+  });
+
+  it('should throw ToolExecutionFailedError when image generation fails', async () => {
+    setupHappyPath();
+    mockGenerateImage.execute.mockRejectedValue(
+      new Error('Content policy violation'),
+    );
+
+    await expect(
+      handler.execute({
+        tool: new GenerateImageTool(),
+        input: { prompt: 'Invalid content' },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      }),
+    ).rejects.toThrow(ToolExecutionFailedError);
+  });
+
+  it('should throw ToolExecutionFailedError when save fails', async () => {
+    setupHappyPath();
+    mockSaveGeneratedImage.execute.mockRejectedValue(
+      new Error('Storage unavailable'),
+    );
+
+    await expect(
+      handler.execute({
+        tool: new GenerateImageTool(),
+        input: { prompt: 'A valid image' },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      }),
+    ).rejects.toThrow(ToolExecutionFailedError);
+  });
+
+  it('should throw ToolExecutionFailedError when userId is not in context', async () => {
+    setupHappyPath();
+    mockContextService.get.mockReturnValue(undefined);
+
+    await expect(
+      handler.execute({
+        tool: new GenerateImageTool(),
+        input: { prompt: 'A sunset' },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      }),
+    ).rejects.toThrow(ToolExecutionFailedError);
+  });
+
+  it('should throw ToolExecutionFailedError when input validation fails', async () => {
+    await expect(
+      handler.execute({
+        tool: new GenerateImageTool(),
+        input: {},
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      }),
+    ).rejects.toThrow(ToolExecutionFailedError);
+  });
+});

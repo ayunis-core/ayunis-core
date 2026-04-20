@@ -20,6 +20,8 @@ import { invalidatePermittedModelQueries } from './invalidatePermittedModelQueri
 const CREATE_ERROR_MAP: Record<string, string> = {
   MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED:
     'models.createPermittedModel.multipleEmbeddingModelsNotAllowed',
+  MULTIPLE_IMAGE_GENERATION_MODELS_NOT_ALLOWED:
+    'models.createPermittedModel.multipleImageGenerationModelsNotAllowed',
   MODEL_PROVIDER_NOT_PERMITTED:
     'models.createPermittedModel.modelProviderNotPermitted',
   MODEL_NOT_FOUND: 'models.createPermittedModel.modelNotFound',

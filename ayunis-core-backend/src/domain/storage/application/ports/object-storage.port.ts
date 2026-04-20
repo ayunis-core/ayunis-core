@@ -4,6 +4,13 @@ import type { StorageBucket } from '../../domain/storage-bucket.entity';
 import type { StorageUrl } from '../../domain/storage-url.entity';
 import type { PresignedUrl } from '../../domain/presigned-url.entity';
 
+export interface PresignedUrlResponseOverrides {
+  /** Forces the `Content-Type` response header when the URL is used. */
+  contentType?: string;
+  /** Forces the `Content-Disposition` response header when the URL is used. */
+  contentDisposition?: string;
+}
+
 export abstract class ObjectStoragePort {
   /**
    * Upload a file to the storage
@@ -49,11 +56,17 @@ export abstract class ObjectStoragePort {
    *
    * @param storageUrl Reference to the object
    * @param expiresIn Expiration time in seconds
+   * @param responseOverrides Optional response header overrides. When set,
+   *   the pre-signed URL will force these response headers regardless of
+   *   what was stored with the object. Used to harden downloads against
+   *   active-content MIME types (e.g. SVG returning image/svg+xml that
+   *   would otherwise be rendered inline by the storage origin).
    * @returns A presigned URL with expiration information
    */
   abstract getPresignedUrl(
     storageUrl: StorageUrl,
     expiresIn?: number,
+    responseOverrides?: PresignedUrlResponseOverrides,
   ): Promise<PresignedUrl>;
 
   /**

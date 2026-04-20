@@ -41,7 +41,7 @@ export function ModelItem({
           {model.displayName}
           {model.isArchived && (
             <Badge variant="secondary" className="ml-2">
-              Archived
+              {t('models.catalog.archivedBadge')}
             </Badge>
           )}
         </ItemTitle>
@@ -54,9 +54,21 @@ export function ModelItem({
           <Badge variant="outline">{typeLabels[model.type]}</Badge>
           {isLanguage && (
             <>
-              {model.canStream && <Badge variant="outline">Streaming</Badge>}
-              {model.canUseTools && <Badge variant="outline">Tools</Badge>}
-              {model.isReasoning && <Badge variant="outline">Reasoning</Badge>}
+              {model.canStream && (
+                <Badge variant="outline">
+                  {t('models.catalog.streamingBadge')}
+                </Badge>
+              )}
+              {model.canUseTools && (
+                <Badge variant="outline">
+                  {t('models.catalog.toolsBadge')}
+                </Badge>
+              )}
+              {model.isReasoning && (
+                <Badge variant="outline">
+                  {t('models.catalog.reasoningBadge')}
+                </Badge>
+              )}
             </>
           )}
           {isEmbedding && <Badge variant="outline">{model.dimensions}d</Badge>}

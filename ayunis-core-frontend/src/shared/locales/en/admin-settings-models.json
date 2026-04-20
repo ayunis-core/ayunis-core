@@ -50,6 +50,7 @@
     },
     "createPermittedModel": {
       "multipleEmbeddingModelsNotAllowed": "Only one embedding model can be created per organization.",
+      "multipleImageGenerationModelsNotAllowed": "Only one image-generation model per organization is allowed.",
       "modelNotFound": "The model not found.",
       "error": "An error occurred while creating the permitted model."
     },

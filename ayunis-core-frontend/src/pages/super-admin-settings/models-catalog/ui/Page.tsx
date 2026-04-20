@@ -54,10 +54,12 @@ export default function ModelsCatalogPage({
     model: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
   ) {
     confirm({
-      title: 'Delete model',
-      description: `Are you sure you want to delete ${model.displayName}? This action cannot be undone.`,
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
+      title: t('models.catalog.deleteModel.title'),
+      description: t('models.catalog.deleteModel.description', {
+        displayName: model.displayName,
+      }),
+      confirmText: t('models.catalog.deleteModel.confirmText'),
+      cancelText: t('models.catalog.deleteModel.cancelText'),
       variant: 'destructive',
       onConfirm: () => {
         deleteModel(model.id);

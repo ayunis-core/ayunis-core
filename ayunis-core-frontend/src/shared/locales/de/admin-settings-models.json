@@ -50,6 +50,7 @@
     },
     "createPermittedModel": {
       "multipleEmbeddingModelsNotAllowed": "Es kann nur ein Embedding-Modell pro Organisation erstellt werden.",
+      "multipleImageGenerationModelsNotAllowed": "Es kann nur ein Bilderzeugungsmodell pro Organisation erstellt werden.",
       "modelNotFound": "Das Modell wurde nicht gefunden.",
       "error": "Ein Fehler ist aufgetreten, während das Modell freigeschaltet wurde."
     },
