@@ -154,6 +154,9 @@ services:
     restart: unless-stopped
     networks:
       - ayunis-network
+    environment:
+      OMP_NUM_THREADS: "4"
+      MKL_NUM_THREADS: "4"
     healthcheck:
       test:
         [
@@ -172,10 +175,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2G
-          cpus: "2"
+          memory: 3G
+          cpus: "4"
         reservations:
-          memory: 1G
+          memory: 1500M
 
   app:
     build:
