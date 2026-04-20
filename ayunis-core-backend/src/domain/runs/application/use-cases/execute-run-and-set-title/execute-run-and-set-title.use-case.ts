@@ -200,7 +200,7 @@ export class ExecuteRunAndSetTitleUseCase {
   private async anonymizeText(text: string): Promise<string> {
     try {
       const result = await this.anonymizeTextUseCase.execute(
-        new AnonymizeTextCommand(text, 'de'),
+        new AnonymizeTextCommand(text),
       );
       if (result.replacements.length > 0) {
         this.logger.log('Anonymized text for title generation', {

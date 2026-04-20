@@ -3,10 +3,9 @@ import type { AnonymizeTextUseCase } from 'src/common/anonymization/application/
 import { RunAnonymizationUnavailableError } from '../../runs.errors';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
-import type { CreateAssistantMessageUseCase } from 'src/domain/messages/application/use-cases/create-assistant-message/create-assistant-message.use-case';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
+import type { Message } from 'src/domain/messages/domain/message.entity';
 import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
-import type { TrimMessagesForContextUseCase } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.use-case';
 
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
@@ -17,7 +16,6 @@ import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ExecuteRunUseCase } from './execute-run.use-case';
 import { ExecuteRunCommand } from './execute-run.command';
 import { RunUserInput } from '../../../domain/run-input.entity';
-import type { CollectUsageAsyncService } from '../../services/collect-usage-async.service';
 import type { CreditBudgetGuardService } from '../../services/credit-budget-guard.service';
 import type { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
@@ -26,8 +24,7 @@ import type { Agent } from 'src/domain/agents/domain/agent.entity';
 import type { ToolAssemblyService } from '../../services/tool-assembly.service';
 import type { ToolResultCollectorService } from '../../services/tool-result-collector.service';
 import type { MessageCleanupService } from '../../services/message-cleanup.service';
-import type { StreamingInferenceService } from '../../services/streaming-inference.service';
-import type { NonStreamingInferenceService } from '../../services/non-streaming-inference.service';
+import type { InferenceOrchestratorService } from '../../services/inference-orchestrator.service';
 import type { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
@@ -119,17 +116,14 @@ describe('ExecuteRunUseCase', () => {
 
     useCase = new ExecuteRunUseCase(
       { execute: jest.fn() } as unknown as CreateUserMessageUseCase,
-      { execute: jest.fn() } as unknown as CreateAssistantMessageUseCase,
       { execute: jest.fn() } as unknown as CreateToolResultMessageUseCase,
       findThreadUseCase,
       findOneAgentUseCase,
       { execute: jest.fn() } as unknown as AddMessageToThreadUseCase,
       contextService,
       anonymizeTextUseCase,
-      { collect: jest.fn() } as unknown as CollectUsageAsyncService,
       checkQuotaUseCase,
       creditBudgetGuardService,
-      { execute: jest.fn() } as unknown as TrimMessagesForContextUseCase,
       toolAssemblyService,
       {
         collectToolResults: jest.fn().mockResolvedValue([]),
@@ -137,9 +131,8 @@ describe('ExecuteRunUseCase', () => {
       } as unknown as ToolResultCollectorService,
       messageCleanupService,
       {
-        executeStreamingInference: jest.fn(),
-      } as unknown as StreamingInferenceService,
-      { execute: jest.fn() } as unknown as NonStreamingInferenceService,
+        runInference: jest.fn(),
+      } as unknown as InferenceOrchestratorService,
       {
         activateOnThread: jest.fn(),
       } as unknown as jest.Mocked<SkillActivationService>,
@@ -168,20 +161,21 @@ describe('ExecuteRunUseCase', () => {
         skillName: 'Legal Research',
       });
 
-      const streamingInferenceService = (
+      const inferenceOrchestratorService = (
         useCase as unknown as {
-          streamingInferenceService: jest.Mocked<StreamingInferenceService>;
+          inferenceOrchestratorService: jest.Mocked<InferenceOrchestratorService>;
         }
-      ).streamingInferenceService;
+      ).inferenceOrchestratorService;
       const assistantMessage = {
         id: randomUUID(),
         content: [{ type: 'text', text: 'Response' }],
       } as unknown as AssistantMessage;
 
-      streamingInferenceService.executeStreamingInference.mockReturnValue(
+      inferenceOrchestratorService.runInference.mockReturnValue(
         (async function* () {
           yield assistantMessage;
-        })(),
+          return assistantMessage;
+        })() as AsyncGenerator<Message, AssistantMessage, void>,
       );
 
       const toolResultCollectorService = (
@@ -208,9 +202,7 @@ describe('ExecuteRunUseCase', () => {
       }
 
       // Verify the streaming inference was called with instructions containing the note
-      expect(
-        streamingInferenceService.executeStreamingInference,
-      ).toHaveBeenCalledWith(
+      expect(inferenceOrchestratorService.runInference).toHaveBeenCalledWith(
         expect.objectContaining({
           instructions: expect.stringContaining(
             'Skill "Legal Research" has already been activated on this thread. Do not call activate_skill for this skill.',
@@ -237,11 +229,11 @@ describe('ExecuteRunUseCase', () => {
         skillName: 'Legal Research',
       });
 
-      const streamingInferenceService = (
+      const inferenceOrchestratorService = (
         useCase as unknown as {
-          streamingInferenceService: jest.Mocked<StreamingInferenceService>;
+          inferenceOrchestratorService: jest.Mocked<InferenceOrchestratorService>;
         }
-      ).streamingInferenceService;
+      ).inferenceOrchestratorService;
 
       // First inference: assistant calls activate_skill tool
       const toolCallMessage = {
@@ -263,19 +255,19 @@ describe('ExecuteRunUseCase', () => {
       } as unknown as AssistantMessage;
 
       let inferenceCallCount = 0;
-      streamingInferenceService.executeStreamingInference.mockImplementation(
-        () => {
-          inferenceCallCount++;
-          if (inferenceCallCount === 1) {
-            return (async function* () {
-              yield toolCallMessage;
-            })();
-          }
+      inferenceOrchestratorService.runInference.mockImplementation(() => {
+        inferenceCallCount++;
+        if (inferenceCallCount === 1) {
           return (async function* () {
-            yield finalMessage;
-          })();
-        },
-      );
+            yield toolCallMessage;
+            return toolCallMessage;
+          })() as AsyncGenerator<Message, AssistantMessage, void>;
+        }
+        return (async function* () {
+          yield finalMessage;
+          return finalMessage;
+        })() as AsyncGenerator<Message, AssistantMessage, void>;
+      });
 
       const toolResultCollectorService = (
         useCase as unknown as {
@@ -327,7 +319,7 @@ describe('ExecuteRunUseCase', () => {
       // The second inference call must still contain the note
       // (after refreshRunContext was called again in processToolResults)
       const secondCall =
-        streamingInferenceService.executeStreamingInference.mock.calls[1];
+        inferenceOrchestratorService.runInference.mock.calls[1];
       expect(secondCall).toBeDefined();
       const secondCallParams = secondCall[0] as { instructions?: string };
       expect(secondCallParams.instructions).toContain(
@@ -414,19 +406,20 @@ describe('ExecuteRunUseCase', () => {
     }
 
     function stubInferenceWithEmptyResponse() {
-      const streamingInferenceService = (
+      const inferenceOrchestratorService = (
         useCase as unknown as {
-          streamingInferenceService: jest.Mocked<StreamingInferenceService>;
+          inferenceOrchestratorService: jest.Mocked<InferenceOrchestratorService>;
         }
-      ).streamingInferenceService;
+      ).inferenceOrchestratorService;
       const assistantMessage = {
         id: randomUUID(),
         content: [{ type: 'text', text: 'ok' }],
       } as unknown as AssistantMessage;
-      streamingInferenceService.executeStreamingInference.mockReturnValue(
+      inferenceOrchestratorService.runInference.mockReturnValue(
         (async function* () {
           yield assistantMessage;
-        })(),
+          return assistantMessage;
+        })() as AsyncGenerator<Message, AssistantMessage, void>,
       );
     }
 

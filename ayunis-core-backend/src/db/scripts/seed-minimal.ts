@@ -176,6 +176,7 @@ async function seedSubscription(
     noOfSeats: fixture.subscription.noOfSeats,
     pricePerSeat: fixture.subscription.pricePerSeat,
     renewalCycle: fixture.subscription.renewalCycle,
+    startsAt: new Date(),
     renewalCycleAnchor: new Date(),
     startsAt: new Date(),
     cancelledAt: null,
