@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.29.0](https://github.com/ayunis-core/ayunis-core/compare/v1.28.0...v1.29.0) (2026-04-20)
+
+
+### Features
+
+* **anonymize:** replace spaCy NER with GLiNER for multilingual PII detection (AYC-000) ([#570](https://github.com/ayunis-core/ayunis-core/issues/570)) ([2d4ab48](https://github.com/ayunis-core/ayunis-core/commit/2d4ab48a9313e7b4d48808011939ae16822a6395))
+* **chat:** add zoom and pan to diagram viewer (AYC-31) ([#588](https://github.com/ayunis-core/ayunis-core/issues/588)) ([6bf029b](https://github.com/ayunis-core/ayunis-core/commit/6bf029b46aefda4c41114740c2d51241da764618))
+* **chat:** render mermaid diagram artifacts in the side panel (AYC-31) ([#587](https://github.com/ayunis-core/ayunis-core/issues/587)) ([8795794](https://github.com/ayunis-core/ayunis-core/commit/87957949e3cf8dff0b71da562aecdd1f8a0621bf))
+
+
+### Bug Fixes
+
+* **anonymize:** drop overlapping GLiNER spans before applying replacements (AYC-000) ([#600](https://github.com/ayunis-core/ayunis-core/issues/600)) ([f4edbd0](https://github.com/ayunis-core/ayunis-core/commit/f4edbd062f06349dd53a1f902184f284d360fb75))
+* **db:** make generated_images migration idempotent (AYC-000) ([#596](https://github.com/ayunis-core/ayunis-core/issues/596)) ([b930110](https://github.com/ayunis-core/ayunis-core/commit/b930110e50ad767bd8841392cdb00d699a29a409))
+* **db:** remove duplicate startsAt in subscription seed (AYC-000) ([#597](https://github.com/ayunis-core/ayunis-core/issues/597)) ([d0fd7c0](https://github.com/ayunis-core/ayunis-core/commit/d0fd7c0fbfdcc3dfd0793a10d36be754a6234c33))
+* **dev:** prevent ./dev up from aborting when .env.dev is missing or stale (AYC-000) ([#599](https://github.com/ayunis-core/ayunis-core/issues/599)) ([83d1433](https://github.com/ayunis-core/ayunis-core/commit/83d1433ddd56866c9ad095b880a09d7b06b1d1d4))
+* **threads:** prevent FK violation when adding thread sources (AYC-000) ([#591](https://github.com/ayunis-core/ayunis-core/issues/591)) ([45cc5c9](https://github.com/ayunis-core/ayunis-core/commit/45cc5c90030f3ef186dbe858cbdb2310eb06c899))
+
+
+### Performance Improvements
+
+* **anonymize:** raise CPU and memory limits for PII detection (AYC-000) ([#598](https://github.com/ayunis-core/ayunis-core/issues/598)) ([294134f](https://github.com/ayunis-core/ayunis-core/commit/294134f181f1cafd19f100a7d33aee4bab9476f2))
+
+
+### Miscellaneous
+
+* **deps-backend:** bump axios from 1.13.5 to 1.14.0 in /ayunis-core-backend ([#518](https://github.com/ayunis-core/ayunis-core/issues/518)) ([44a81c0](https://github.com/ayunis-core/ayunis-core/commit/44a81c0689513e2996d7b58c6ee91c4231118f83))
+
 ## [1.28.0](https://github.com/ayunis-core/ayunis-core/compare/v1.27.0...v1.28.0) (2026-04-20)
 
 
