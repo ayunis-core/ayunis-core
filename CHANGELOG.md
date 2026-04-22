@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.1](https://github.com/ayunis-core/ayunis-core/compare/v1.29.0...v1.29.1) (2026-04-22)
+
+
+### Miscellaneous
+
+* **docker:** bind minio s3 api to host loopback (AYC-000) ([#601](https://github.com/ayunis-core/ayunis-core/issues/601)) ([1eeeb16](https://github.com/ayunis-core/ayunis-core/commit/1eeeb16dbec69956f9ddafcc08e19342c8331693))
+
 ## [1.29.0](https://github.com/ayunis-core/ayunis-core/compare/v1.28.0...v1.29.0) (2026-04-20)
 
 
