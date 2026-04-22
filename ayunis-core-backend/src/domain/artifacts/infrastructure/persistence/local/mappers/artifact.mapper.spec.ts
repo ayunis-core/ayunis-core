@@ -1,9 +1,13 @@
 import { randomUUID } from 'crypto';
 import { ArtifactMapper } from './artifact.mapper';
 import { ArtifactVersionMapper } from './artifact-version.mapper';
-import { DocumentArtifact } from '../../../../domain/artifact.entity';
+import {
+  DocumentArtifact,
+  JsxArtifact,
+} from '../../../../domain/artifact.entity';
 import { ArtifactVersion } from '../../../../domain/artifact-version.entity';
 import { DocumentArtifactRecord } from '../schema/document-artifact.record';
+import { JsxArtifactRecord } from '../schema/jsx-artifact.record';
 import { ArtifactVersionRecord } from '../schema/artifact-version.record';
 import { AuthorType } from '../../../../domain/value-objects/author-type.enum';
 
@@ -130,6 +134,45 @@ describe('ArtifactMapper', () => {
       const record = mapper.toRecord(domain);
 
       expect(record.letterheadId).toBe(letterheadId);
+    });
+  });
+
+  describe('JsxArtifact round-trip', () => {
+    it('should map JsxArtifactRecord to JsxArtifact and back', () => {
+      const version = new ArtifactVersion({
+        artifactId,
+        versionNumber: 1,
+        content: 'function App() { return <div>hi</div>; }',
+        authorType: AuthorType.ASSISTANT,
+        authorId: null,
+        createdAt: now,
+      });
+
+      const original = new JsxArtifact({
+        id: artifactId,
+        threadId,
+        userId,
+        title: 'Landing Page',
+        currentVersionNumber: 1,
+        versions: [version],
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      const record = mapper.toRecord(original);
+      expect(record).toBeInstanceOf(JsxArtifactRecord);
+
+      record.createdAt = now;
+      record.updatedAt = now;
+      if (record.versions?.[0]) {
+        record.versions[0].createdAt = now;
+      }
+      const reconstructed = mapper.toDomain(record);
+
+      expect(reconstructed).toBeInstanceOf(JsxArtifact);
+      expect(reconstructed.id).toBe(original.id);
+      expect(reconstructed.title).toBe(original.title);
+      expect(reconstructed.versions[0].content).toBe(version.content);
     });
   });
 

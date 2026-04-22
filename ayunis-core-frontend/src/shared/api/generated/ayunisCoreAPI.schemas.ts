@@ -2289,6 +2289,8 @@ export const ToolAssignmentDtoType = {
   generate_image: 'generate_image',
   create_diagram: 'create_diagram',
   update_diagram: 'update_diagram',
+  create_jsx: 'create_jsx',
+  update_jsx: 'update_jsx',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -2347,6 +2349,8 @@ export const ToolResponseDtoType = {
   generate_image: 'generate_image',
   create_diagram: 'create_diagram',
   update_diagram: 'update_diagram',
+  create_jsx: 'create_jsx',
+  update_jsx: 'update_jsx',
 } as const;
 
 export interface ToolResponseDto {
@@ -3377,7 +3381,7 @@ export interface ArtifactVersionResponseDto {
 }
 
 /**
- * The kind of artifact — document (HTML) or diagram (mermaid)
+ * The kind of artifact — document (HTML), diagram (mermaid), or jsx (sandboxed React component)
  */
 export type ArtifactResponseDtoType = typeof ArtifactResponseDtoType[keyof typeof ArtifactResponseDtoType];
 
@@ -3386,12 +3390,13 @@ export type ArtifactResponseDtoType = typeof ArtifactResponseDtoType[keyof typeo
 export const ArtifactResponseDtoType = {
   document: 'document',
   diagram: 'diagram',
+  jsx: 'jsx',
 } as const;
 
 export interface ArtifactResponseDto {
   /** Unique identifier of the artifact */
   id: string;
-  /** The kind of artifact — document (HTML) or diagram (mermaid) */
+  /** The kind of artifact — document (HTML), diagram (mermaid), or jsx (sandboxed React component) */
   type: ArtifactResponseDtoType;
   /** The thread this artifact belongs to */
   threadId: string;

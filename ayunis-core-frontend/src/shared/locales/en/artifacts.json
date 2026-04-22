@@ -49,5 +49,12 @@
       "out": "Zoom out",
       "reset": "Reset view"
     }
+  },
+  "jsx": {
+    "sandboxTitle": "JSX sandbox preview",
+    "export": {
+      "png": "PNG",
+      "failed": "Failed to export preview"
+    }
   }
 }

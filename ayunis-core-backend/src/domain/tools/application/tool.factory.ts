@@ -10,11 +10,13 @@ import { InternetSearchTool } from '../domain/tools/internet-search-tool.entity'
 import { WebsiteContentTool } from '../domain/tools/website-content-tool.entity';
 import { SourceQueryTool } from '../domain/tools/source-query-tool.entity';
 import { SourceGetTextTool } from '../domain/tools/source-get-text-tool.entity';
+import { ToolInvalidConfigError, ToolInvalidTypeError } from './tools.errors';
 import {
-  ToolInvalidConfigError,
-  ToolInvalidContextError,
-  ToolInvalidTypeError,
-} from './tools.errors';
+  requireArrayContext,
+  requireKnowledgeBaseContext,
+  requireMapContext,
+  requireStringArrayContext,
+} from './tool-context.validators';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SendEmailTool } from '../domain/tools/send-email-tool.entity';
 import { CreateCalendarEventTool } from '../domain/tools/create-calendar-event-tool.entity';
@@ -28,7 +30,6 @@ import { CreateSkillTool } from '../domain/tools/create-skill-tool.entity';
 import { EditSkillTool } from '../domain/tools/edit-skill-tool.entity';
 import { KnowledgeQueryTool } from '../domain/tools/knowledge-query-tool.entity';
 import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.entity';
-import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
 import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
 import { EditDocumentTool } from '../domain/tools/edit-document-tool.entity';
@@ -36,6 +37,8 @@ import { ReadDocumentTool } from '../domain/tools/read-document-tool.entity';
 import { GenerateImageTool } from '../domain/tools/generate-image-tool.entity';
 import { CreateDiagramTool } from '../domain/tools/create-diagram-tool.entity';
 import { UpdateDiagramTool } from '../domain/tools/update-diagram-tool.entity';
+import { CreateJsxTool } from '../domain/tools/create-jsx-tool.entity';
+import { UpdateJsxTool } from '../domain/tools/update-jsx-tool.entity';
 
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
@@ -55,6 +58,8 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.GENERATE_IMAGE]: () => new GenerateImageTool(),
   [ToolType.CREATE_DIAGRAM]: () => new CreateDiagramTool(),
   [ToolType.UPDATE_DIAGRAM]: () => new UpdateDiagramTool(),
+  [ToolType.CREATE_JSX]: () => new CreateJsxTool(),
+  [ToolType.UPDATE_JSX]: () => new UpdateJsxTool(),
 };
 
 @Injectable()
@@ -124,86 +129,4 @@ export class ToolFactory {
       },
     });
   }
-}
-
-function contextTypeName(context: unknown): string {
-  if (context === null || context === undefined) return 'null';
-  return (
-    (context as { constructor?: { name?: string } }).constructor?.name ?? 'null'
-  );
-}
-
-function requireArrayContext<T>(
-  context: unknown,
-  itemType: abstract new (...args: never[]) => T,
-  toolType: ToolType,
-): T[] {
-  if (
-    context &&
-    context instanceof Array &&
-    context.every((item: unknown) => item instanceof itemType)
-  ) {
-    return context as T[];
-  }
-  throw new ToolInvalidContextError({
-    toolType,
-    metadata: { contextType: contextTypeName(context) },
-  });
-}
-
-function isKnowledgeBaseSummary(item: unknown): item is KnowledgeBaseSummary {
-  return (
-    typeof item === 'object' &&
-    item !== null &&
-    'id' in item &&
-    typeof (item as Record<string, unknown>).id === 'string' &&
-    'name' in item &&
-    typeof (item as Record<string, unknown>).name === 'string'
-  );
-}
-
-function requireKnowledgeBaseContext(
-  context: unknown,
-  toolType: ToolType,
-): KnowledgeBaseSummary[] {
-  if (
-    context &&
-    context instanceof Array &&
-    context.every(isKnowledgeBaseSummary)
-  ) {
-    return context;
-  }
-  throw new ToolInvalidContextError({
-    toolType,
-    metadata: { contextType: contextTypeName(context) },
-  });
-}
-
-function requireMapContext(
-  context: unknown,
-  toolType: ToolType,
-): Map<string, string> {
-  if (context instanceof Map) {
-    return context as Map<string, string>;
-  }
-  throw new ToolInvalidContextError({
-    toolType,
-    metadata: { contextType: contextTypeName(context) },
-  });
-}
-
-function requireStringArrayContext(
-  context: unknown,
-  toolType: ToolType,
-): string[] {
-  if (
-    context instanceof Array &&
-    context.every((item: unknown) => typeof item === 'string')
-  ) {
-    return context;
-  }
-  throw new ToolInvalidContextError({
-    toolType,
-    metadata: { contextType: contextTypeName(context) },
-  });
 }

@@ -11605,7 +11605,9 @@
               "read_document",
               "generate_image",
               "create_diagram",
-              "update_diagram"
+              "update_diagram",
+              "create_jsx",
+              "update_jsx"
             ]
           },
           "toolConfigId": {
@@ -11681,7 +11683,9 @@
               "read_document",
               "generate_image",
               "create_diagram",
-              "update_diagram"
+              "update_diagram",
+              "create_jsx",
+              "update_jsx"
             ]
           }
         },
@@ -13235,8 +13239,8 @@
           },
           "type": {
             "type": "string",
-            "description": "The kind of artifact — document (HTML) or diagram (mermaid)",
-            "enum": ["document", "diagram"],
+            "description": "The kind of artifact — document (HTML), diagram (mermaid), or jsx (sandboxed React component)",
+            "enum": ["document", "diagram", "jsx"],
             "example": "document"
           },
           "threadId": {

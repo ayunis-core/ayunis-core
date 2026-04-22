@@ -56,7 +56,8 @@ export class ArtifactResponseDto {
   id: string;
 
   @ApiProperty({
-    description: 'The kind of artifact — document (HTML) or diagram (mermaid)',
+    description:
+      'The kind of artifact — document (HTML), diagram (mermaid), or jsx (sandboxed React component)',
     enum: ArtifactType,
     example: ArtifactType.DOCUMENT,
   })

@@ -9,13 +9,16 @@ import { FindArtifactsByThreadQuery } from 'src/domain/artifacts/application/use
 import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
 import { FindArtifactWithVersionsQuery } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.query';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
-import { DiagramArtifact } from 'src/domain/artifacts/domain/artifact.entity';
+import {
+  DiagramArtifact,
+  JsxArtifact,
+} from 'src/domain/artifacts/domain/artifact.entity';
 import { FindAllLetterheadsUseCase } from 'src/domain/letterheads/application/use-cases/find-all-letterheads/find-all-letterheads.use-case';
 import type { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 import { buildLetterheadSuffix } from './letterhead-suffix.helper';
 
 /**
- * Assembles artifact-related always-on tools (document + diagram) for a
+ * Assembles artifact-related always-on tools (document, diagram, jsx) for a
  * thread. Lives outside ToolAssemblyService to keep that file under the
  * 500-line cap and to keep artifact-specific logic in one place.
  */
@@ -30,7 +33,7 @@ export class ArtifactToolAssemblerService {
     private readonly findAllLetterheadsUseCase: FindAllLetterheadsUseCase,
   ) {}
 
-  async assembleDocumentAndDiagramTools(thread: Thread): Promise<Tool[]> {
+  async assembleArtifactTools(thread: Thread): Promise<Tool[]> {
     const letterheads = await this.fetchLetterheadsSafe();
     const letterheadSuffix = buildLetterheadSuffix(letterheads);
 
@@ -55,6 +58,14 @@ export class ArtifactToolAssemblerService {
     );
 
     tools.push(...(await this.assembleDiagramEditTools(thread)));
+
+    tools.push(
+      await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({ type: ToolType.CREATE_JSX }),
+      ),
+    );
+
+    tools.push(...(await this.assembleJsxEditTools(thread)));
 
     return tools;
   }
@@ -126,6 +137,28 @@ export class ArtifactToolAssemblerService {
 
     const tool = await this.assembleToolsUseCase.execute(
       new AssembleToolCommand({ type: ToolType.UPDATE_DIAGRAM }),
+    );
+    tool.descriptionLong = `${tool.descriptionLong ?? tool.description}${suffix}`;
+    return [tool];
+  }
+
+  private async assembleJsxEditTools(thread: Thread): Promise<Tool[]> {
+    const threadArtifacts = await this.findArtifactsByThreadUseCase.execute(
+      new FindArtifactsByThreadQuery({ threadId: thread.id }),
+    );
+
+    const jsxArtifacts = threadArtifacts.filter(
+      (a) => a instanceof JsxArtifact,
+    );
+    if (jsxArtifacts.length === 0) {
+      return [];
+    }
+
+    const artifactLines = jsxArtifacts.map((a) => `- ${a.id}: "${a.title}"`);
+    const suffix = `\n\nAvailable JSX artifacts in this conversation:\n${artifactLines.join('\n')}`;
+
+    const tool = await this.assembleToolsUseCase.execute(
+      new AssembleToolCommand({ type: ToolType.UPDATE_JSX }),
     );
     tool.descriptionLong = `${tool.descriptionLong ?? tool.description}${suffix}`;
     return [tool];
