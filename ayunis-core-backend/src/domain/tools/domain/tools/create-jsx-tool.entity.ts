@@ -13,7 +13,7 @@ const createJsxToolParameters = {
     content: {
       type: 'string' as const,
       description:
-        'The full JSX source of a self-contained React component. It runs in a sandboxed iframe with React, ReactDOM, and Tailwind CSS preloaded as globals. Constraints: (1) Do not use import/export — use globals directly. (2) No network access — fetch and external URLs are blocked by CSP. (3) Must define a component named App — it will be mounted automatically with ReactDOM.createRoot. (4) Use Tailwind utility classes via className for styling. Do not wrap in code fences.',
+        'The full JSX source of a self-contained React component. Constraints: (1) Define exactly one top-level component named App — the sandbox mounts it automatically. (2) React (default export and hooks) is available as a global named React; do not mount it yourself. (3) Use Tailwind CSS utility classes via className for styling. (4) No import or require statements. (5) No other libraries. (6) No network calls and no access to the parent window. (7) Do not wrap the source in code fences.',
     },
   },
   required: ['title', 'content'],
@@ -29,7 +29,7 @@ export class CreateJsxTool extends DisplayableTool {
     super({
       name: ToolType.CREATE_JSX,
       description:
-        'Create a new interactive React component that the user can view in a sandboxed preview. Use this when the user asks for a landing page, interactive widget, form mockup, custom visualisation, or anything richer than a static document or diagram. The component renders in an isolated iframe with React and Tailwind available as globals — no imports, no network calls. Do not use this for regular conversational answers, for text documents (use create_document), or for mermaid-based diagrams (use create_diagram).',
+        'Create a new interactive React component that the user can view in a sandboxed preview. Use this when the user asks for a landing page, interactive widget, form mockup, custom visualisation, or anything richer than a static document or diagram. The component renders in an isolated iframe; React (global React with hooks) and Tailwind CSS utility classes are the only allowed tools — no imports, no other libraries, no network calls. Define exactly one top-level component named App. Do not use this for regular conversational answers, for text documents (use create_document), or for mermaid-based diagrams (use create_diagram).',
       parameters: createJsxToolParameters,
       type: ToolType.CREATE_JSX,
     });

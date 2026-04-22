@@ -52,6 +52,7 @@
   },
   "jsx": {
     "sandboxTitle": "JSX sandbox preview",
+    "close": "Close",
     "export": {
       "png": "PNG",
       "failed": "Failed to export preview"

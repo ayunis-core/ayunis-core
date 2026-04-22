@@ -7,7 +7,10 @@ import { showError } from '@/shared/lib/toast';
 interface JsxExportButtonProps {
   readonly iframeRef: RefObject<HTMLIFrameElement | null>;
   readonly fileName: string;
+  readonly source: string;
 }
+
+const EXPORT_TIMEOUT_MS = 5000;
 
 function triggerDownload(dataUrl: string, fileName: string) {
   const a = document.createElement('a');
@@ -22,9 +25,30 @@ function safeTitle(input: string): string {
   return input.replace(/[^a-zA-Z0-9-_ ]/g, '').trim() || 'jsx-artifact';
 }
 
-export function JsxExportButton({ iframeRef, fileName }: JsxExportButtonProps) {
+export function JsxExportButton({
+  iframeRef,
+  fileName,
+  source,
+}: JsxExportButtonProps) {
   const { t } = useTranslation('artifacts');
   const pendingRef = useRef(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearPending = useCallback(() => {
+    pendingRef.current = false;
+    if (timeoutRef.current !== null) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+
+  // When the JSX source changes the iframe is swapped (keyed on `source` in
+  // JsxRenderer) — any pending export targeting the old iframe will never
+  // receive its 'export-png-result' reply. Reset the pending flag so the next
+  // export works and doesn't silently no-op.
+  useEffect(() => {
+    clearPending();
+  }, [source, clearPending]);
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -37,7 +61,7 @@ export function JsxExportButton({ iframeRef, fileName }: JsxExportButtonProps) {
       };
       if (data.type !== 'export-png-result') return;
       if (!pendingRef.current) return;
-      pendingRef.current = false;
+      clearPending();
       if (data.dataUrl) {
         triggerDownload(data.dataUrl, `${safeTitle(fileName)}.png`);
       } else {
@@ -46,7 +70,13 @@ export function JsxExportButton({ iframeRef, fileName }: JsxExportButtonProps) {
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, [iframeRef, fileName, t]);
+  }, [iframeRef, fileName, t, clearPending]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current !== null) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const handleExport = useCallback(() => {
     const iframe = iframeRef.current;
@@ -55,10 +85,17 @@ export function JsxExportButton({ iframeRef, fileName }: JsxExportButtonProps) {
       return;
     }
     pendingRef.current = true;
+    if (timeoutRef.current !== null) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      if (pendingRef.current) {
+        clearPending();
+        showError(t('jsx.export.failed'));
+      }
+    }, EXPORT_TIMEOUT_MS);
     // Sandboxed srcdoc iframes have a null origin, so '*' is the only usable target.
     // eslint-disable-next-line sonarjs/post-message -- srcdoc sandbox has null origin; no specific target origin exists
     iframe.contentWindow.postMessage({ type: 'export-png' }, '*');
-  }, [iframeRef, t]);
+  }, [iframeRef, t, clearPending]);
 
   return (
     <Button variant="outline" size="sm" className="h-8" onClick={handleExport}>

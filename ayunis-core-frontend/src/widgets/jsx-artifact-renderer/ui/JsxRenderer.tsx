@@ -19,6 +19,17 @@ export function JsxRenderer({
   const iframeRef = externalRef ?? internalRef;
   const [error, setError] = useState<string | null>(null);
 
+  // Reset stale errors during render when the source changes (e.g. switching
+  // artifact versions) so the previous version's error doesn't flash on the
+  // new iframe while it boots. Using React's recommended "state-from-props"
+  // pattern rather than a setState-in-effect, which would trigger an extra
+  // render pass.
+  const [lastSource, setLastSource] = useState(source);
+  if (lastSource !== source) {
+    setLastSource(source);
+    setError(null);
+  }
+
   const srcdoc = useMemo(() => buildSandboxSrcdoc(source), [source]);
 
   useEffect(() => {
@@ -45,7 +56,7 @@ export function JsxRenderer({
         title={t('jsx.sandboxTitle')}
         sandbox="allow-scripts"
         srcDoc={srcdoc}
-        className="flex-1 w-full border-0 bg-white"
+        className="flex-1 w-full border-0 bg-background"
       />
       {error && (
         <div className="border-t border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive max-h-40 overflow-auto whitespace-pre-wrap font-mono">

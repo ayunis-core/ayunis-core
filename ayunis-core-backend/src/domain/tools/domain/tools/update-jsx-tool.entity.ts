@@ -8,6 +8,7 @@ const updateJsxToolParameters = {
   properties: {
     artifact_id: {
       type: 'string' as const,
+      format: 'uuid' as const,
       description: 'The UUID of the existing JSX artifact to update',
     },
     content: {

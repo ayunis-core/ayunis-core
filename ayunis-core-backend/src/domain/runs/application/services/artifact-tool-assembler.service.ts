@@ -10,12 +10,18 @@ import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/applicatio
 import { FindArtifactWithVersionsQuery } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.query';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import {
+  Artifact,
   DiagramArtifact,
   JsxArtifact,
 } from 'src/domain/artifacts/domain/artifact.entity';
 import { FindAllLetterheadsUseCase } from 'src/domain/letterheads/application/use-cases/find-all-letterheads/find-all-letterheads.use-case';
 import type { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 import { buildLetterheadSuffix } from './letterhead-suffix.helper';
+
+type ArtifactSubclass<T extends Artifact> = abstract new (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- constructor type parameters vary across Artifact subclasses; used only for instanceof filtering
+  ...args: any[]
+) => T;
 
 /**
  * Assembles artifact-related always-on tools (document, diagram, jsx) for a
@@ -37,6 +43,10 @@ export class ArtifactToolAssemblerService {
     const letterheads = await this.fetchLetterheadsSafe();
     const letterheadSuffix = buildLetterheadSuffix(letterheads);
 
+    const threadArtifacts = await this.findArtifactsByThreadUseCase.execute(
+      new FindArtifactsByThreadQuery({ threadId: thread.id }),
+    );
+
     const tools: Tool[] = [];
 
     const createDocTool = await this.assembleToolsUseCase.execute(
@@ -48,7 +58,10 @@ export class ArtifactToolAssemblerService {
     tools.push(createDocTool);
 
     tools.push(
-      ...(await this.assembleDocumentEditTools(thread, letterheadSuffix)),
+      ...(await this.assembleDocumentEditTools(
+        threadArtifacts,
+        letterheadSuffix,
+      )),
     );
 
     tools.push(
@@ -57,7 +70,14 @@ export class ArtifactToolAssemblerService {
       ),
     );
 
-    tools.push(...(await this.assembleDiagramEditTools(thread)));
+    tools.push(
+      ...(await this.assembleEditToolsForType({
+        threadArtifacts,
+        artifactClass: DiagramArtifact,
+        updateToolType: ToolType.UPDATE_DIAGRAM,
+        label: 'diagrams',
+      })),
+    );
 
     tools.push(
       await this.assembleToolsUseCase.execute(
@@ -65,19 +85,22 @@ export class ArtifactToolAssemblerService {
       ),
     );
 
-    tools.push(...(await this.assembleJsxEditTools(thread)));
+    tools.push(
+      ...(await this.assembleEditToolsForType({
+        threadArtifacts,
+        artifactClass: JsxArtifact,
+        updateToolType: ToolType.UPDATE_JSX,
+        label: 'JSX artifacts',
+      })),
+    );
 
     return tools;
   }
 
   private async assembleDocumentEditTools(
-    thread: Thread,
+    threadArtifacts: Artifact[],
     letterheadSuffix: string,
   ): Promise<Tool[]> {
-    const threadArtifacts = await this.findArtifactsByThreadUseCase.execute(
-      new FindArtifactsByThreadQuery({ threadId: thread.id }),
-    );
-
     const artifactLines: string[] = [];
     for (const a of threadArtifacts) {
       const full = await this.findArtifactWithVersionsUseCase.execute(
@@ -120,45 +143,26 @@ export class ArtifactToolAssemblerService {
     return tools;
   }
 
-  private async assembleDiagramEditTools(thread: Thread): Promise<Tool[]> {
-    const threadArtifacts = await this.findArtifactsByThreadUseCase.execute(
-      new FindArtifactsByThreadQuery({ threadId: thread.id }),
-    );
+  private async assembleEditToolsForType<T extends Artifact>(params: {
+    threadArtifacts: Artifact[];
+    artifactClass: ArtifactSubclass<T>;
+    updateToolType: ToolType;
+    label: string;
+  }): Promise<Tool[]> {
+    const { threadArtifacts, artifactClass, updateToolType, label } = params;
 
-    const diagrams = threadArtifacts.filter(
-      (a) => a instanceof DiagramArtifact,
+    const matching = threadArtifacts.filter(
+      (a): a is T => a instanceof artifactClass,
     );
-    if (diagrams.length === 0) {
+    if (matching.length === 0) {
       return [];
     }
 
-    const artifactLines = diagrams.map((a) => `- ${a.id}: "${a.title}"`);
-    const suffix = `\n\nAvailable diagrams in this conversation:\n${artifactLines.join('\n')}`;
+    const artifactLines = matching.map((a) => `- ${a.id}: "${a.title}"`);
+    const suffix = `\n\nAvailable ${label} in this conversation:\n${artifactLines.join('\n')}`;
 
     const tool = await this.assembleToolsUseCase.execute(
-      new AssembleToolCommand({ type: ToolType.UPDATE_DIAGRAM }),
-    );
-    tool.descriptionLong = `${tool.descriptionLong ?? tool.description}${suffix}`;
-    return [tool];
-  }
-
-  private async assembleJsxEditTools(thread: Thread): Promise<Tool[]> {
-    const threadArtifacts = await this.findArtifactsByThreadUseCase.execute(
-      new FindArtifactsByThreadQuery({ threadId: thread.id }),
-    );
-
-    const jsxArtifacts = threadArtifacts.filter(
-      (a) => a instanceof JsxArtifact,
-    );
-    if (jsxArtifacts.length === 0) {
-      return [];
-    }
-
-    const artifactLines = jsxArtifacts.map((a) => `- ${a.id}: "${a.title}"`);
-    const suffix = `\n\nAvailable JSX artifacts in this conversation:\n${artifactLines.join('\n')}`;
-
-    const tool = await this.assembleToolsUseCase.execute(
-      new AssembleToolCommand({ type: ToolType.UPDATE_JSX }),
+      new AssembleToolCommand({ type: updateToolType }),
     );
     tool.descriptionLong = `${tool.descriptionLong ?? tool.description}${suffix}`;
     return [tool];

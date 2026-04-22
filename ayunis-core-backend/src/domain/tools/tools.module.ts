@@ -3,7 +3,7 @@ import { ToolHandlerRegistry } from './application/tool-handler.registry';
 import {
   TOOL_HANDLER_ENTRIES_PROVIDER,
   TOOL_HANDLER_PROVIDERS,
-} from './application/tool-handlers.registration';
+} from './application/tool-handlers.providers';
 import { ToolConfigRepository } from './application/ports/tool-config.repository';
 import { LocalToolConfigRepository } from './infrastructure/persistence/local/local-tool-config.repository';
 import { ToolFactory } from './application/tool.factory';
