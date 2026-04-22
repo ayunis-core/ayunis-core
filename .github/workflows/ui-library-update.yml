@@ -26,6 +26,10 @@ permissions:
   contents: write
   pull-requests: write
 
+concurrency:
+  group: ui-library-update
+  cancel-in-progress: true
+
 jobs:
   sync-ui-library:
     runs-on: ubuntu-latest
