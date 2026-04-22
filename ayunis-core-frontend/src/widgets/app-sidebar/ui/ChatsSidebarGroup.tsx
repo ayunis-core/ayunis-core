@@ -7,7 +7,7 @@ import {
   Search,
   Pencil,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Link, useParams, useNavigate } from '@tanstack/react-router';
 
 import {
@@ -37,6 +37,14 @@ import { useTranslation } from 'react-i18next';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
 
+const CHATS_SIDEBAR_OPEN_KEY = 'sidebar_chats_open';
+
+function readChatsSidebarOpen(): boolean {
+  if (typeof window === 'undefined') return true;
+  const stored = window.localStorage.getItem(CHATS_SIDEBAR_OPEN_KEY);
+  return stored === null ? true : stored === 'true';
+}
+
 export function ChatsSidebarGroup() {
   const { t } = useTranslation('common');
   const { threads, isLoading, hasMore } = useThreads();
@@ -44,6 +52,15 @@ export function ChatsSidebarGroup() {
   const { deleteChat } = useDeleteThread({});
   const params = useParams({ strict: false });
   const navigate = useNavigate();
+
+  const [isOpen, setIsOpen] = useState<boolean>(() => readChatsSidebarOpen());
+
+  const handleOpenChange = useCallback((next: boolean) => {
+    setIsOpen(next);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(CHATS_SIDEBAR_OPEN_KEY, String(next));
+    }
+  }, []);
 
   // Rename dialog state
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -82,7 +99,11 @@ export function ChatsSidebarGroup() {
 
   if (isLoading) {
     return (
-      <Collapsible defaultOpen className="group/collapsible">
+      <Collapsible
+        open={isOpen}
+        onOpenChange={handleOpenChange}
+        className="group/collapsible"
+      >
         <SidebarGroup>
           <SidebarGroupLabel asChild>
             <CollapsibleTrigger className="flex items-center w-full">
@@ -116,7 +137,11 @@ export function ChatsSidebarGroup() {
 
   if (threads.length === 0) {
     return (
-      <Collapsible defaultOpen className="group/collapsible">
+      <Collapsible
+        open={isOpen}
+        onOpenChange={handleOpenChange}
+        className="group/collapsible"
+      >
         <SidebarGroup>
           <SidebarGroupLabel asChild>
             <CollapsibleTrigger className="flex items-center w-full">
@@ -158,7 +183,11 @@ export function ChatsSidebarGroup() {
 
   return (
     <>
-      <Collapsible defaultOpen className="group/collapsible">
+      <Collapsible
+        open={isOpen}
+        onOpenChange={handleOpenChange}
+        className="group/collapsible"
+      >
         <SidebarGroup>
           <SidebarGroupLabel asChild>
             <CollapsibleTrigger className="flex items-center justify-between w-full">
