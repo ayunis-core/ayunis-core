@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.2](https://github.com/ayunis-core/ayunis-core/compare/v1.29.1...v1.29.2) (2026-04-22)
+
+
+### Bug Fixes
+
+* **artifacts:** render tables in editor and size word export columns (AYC-56) ([#603](https://github.com/ayunis-core/ayunis-core/issues/603)) ([5dc7e71](https://github.com/ayunis-core/ayunis-core/commit/5dc7e719452190b5d58bd7189816b603b883381c))
+
 ## [1.29.1](https://github.com/ayunis-core/ayunis-core/compare/v1.29.0...v1.29.1) (2026-04-22)
 
 
