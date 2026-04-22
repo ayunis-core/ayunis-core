@@ -9,6 +9,7 @@ import {
   AlignmentType,
   BorderStyle,
   WidthType,
+  TableLayoutType,
   UnderlineType,
   convertMillimetersToTwip,
   Packer,
@@ -297,12 +298,14 @@ function convertTable(node: HTMLElement): Table {
         }),
       ],
       columnWidths,
+      layout: TableLayoutType.FIXED,
     });
   }
 
   return new Table({
     rows,
     columnWidths,
+    layout: TableLayoutType.FIXED,
     width: { size: 100, type: WidthType.PERCENTAGE },
   });
 }
