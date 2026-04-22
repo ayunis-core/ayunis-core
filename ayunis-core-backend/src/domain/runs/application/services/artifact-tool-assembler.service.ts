@@ -12,6 +12,7 @@ import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-typ
 import {
   Artifact,
   DiagramArtifact,
+  DocumentArtifact,
   JsxArtifact,
 } from 'src/domain/artifacts/domain/artifact.entity';
 import { FindAllLetterheadsUseCase } from 'src/domain/letterheads/application/use-cases/find-all-letterheads/find-all-letterheads.use-case';
@@ -101,8 +102,11 @@ export class ArtifactToolAssemblerService {
     threadArtifacts: Artifact[],
     letterheadSuffix: string,
   ): Promise<Tool[]> {
+    const documents = threadArtifacts.filter(
+      (a): a is DocumentArtifact => a instanceof DocumentArtifact,
+    );
     const artifactLines: string[] = [];
-    for (const a of threadArtifacts) {
+    for (const a of documents) {
       const full = await this.findArtifactWithVersionsUseCase.execute(
         new FindArtifactWithVersionsQuery({ artifactId: a.id }),
       );

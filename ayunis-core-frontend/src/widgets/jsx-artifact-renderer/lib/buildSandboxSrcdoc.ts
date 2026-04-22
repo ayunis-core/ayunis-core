@@ -21,22 +21,14 @@ const CSP =
   "connect-src 'none';";
 
 /**
- * Escapes a string for safe embedding inside a <script> element's text body.
- *
- * The browser HTML parser ends a <script> block as soon as it sees
- * `</script` (case-insensitive), regardless of the script's type. LLM-
- * controlled content containing that sequence would otherwise break out of
- * the data island. We also defensively escape `<!--`, which also has
- * special handling inside script bodies.
- *
- * U+2028/U+2029 do not need to be escaped here because this data island has
- * type="application/json" (non-executing) and the payload is read back via
- * `textContent`. The backslash-escaped forms produced below are processed
- * by the HTML tokenizer (which treats `<\/script` as plain text) — textContent
- * returns the original literal text minus the escape.
+ * Encodes a string for safe embedding inside a `<script type="application/json">`
+ * data island. `JSON.stringify` produces a JSON string literal, then we escape
+ * every `</` → `<\/` to prevent the HTML parser from seeing the end-tag
+ * sequence `</script`. `\/` is a valid JSON escape for `/` (RFC 8259 §7), so
+ * `JSON.parse` on the read side transparently reverses the substitution.
  */
-function safeForScriptTag(input: string): string {
-  return input.replace(/<\/(script)/gi, '<\\/$1').replace(/<!--/g, '<\\!--');
+function jsonEncodeForDataIsland(input: string): string {
+  return JSON.stringify(input).replace(/<\//g, '<\\/');
 }
 
 /**
@@ -53,7 +45,7 @@ function safeForScriptTag(input: string): string {
  * U+2028, and U+2029 from breaking out of the script tag.
  */
 export function buildSandboxSrcdoc(jsxSource: string): string {
-  const safeSource = safeForScriptTag(jsxSource);
+  const encodedSource = jsonEncodeForDataIsland(jsxSource);
   return `<!doctype html>
 <html>
 <head>
@@ -83,11 +75,11 @@ export function buildSandboxSrcdoc(jsxSource: string): string {
 <body>
 <div id="root"></div>
 <pre id="__jsx-error"></pre>
-<script type="application/json" id="__jsx-source">${safeSource}</script>
+<script type="application/json" id="__jsx-source">${encodedSource}</script>
 <script>
 (function() {
   const srcEl = document.getElementById('__jsx-source');
-  const src = srcEl ? srcEl.textContent : '';
+  const src = srcEl ? JSON.parse(srcEl.textContent) : '';
   function reportError(message) {
     const el = document.getElementById('__jsx-error');
     if (el) {
