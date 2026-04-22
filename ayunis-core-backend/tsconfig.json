@@ -14,7 +14,6 @@
     "target": "ES2023",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
     "strict": true,
@@ -23,7 +22,8 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@modelcontextprotocol/sdk/client/*": ["node_modules/@modelcontextprotocol/sdk/dist/cjs/client/*"]
+      "src/*": ["./src/*"],
+      "@modelcontextprotocol/sdk/client/*": ["./node_modules/@modelcontextprotocol/sdk/dist/cjs/client/*"]
     }
   }
 }
