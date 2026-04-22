@@ -6,6 +6,7 @@ import LinkExtension from '@tiptap/extension-link';
 import UnderlineExtension from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
+import { TableKit } from '@tiptap/extension-table';
 import { Save, X } from 'lucide-react';
 import { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -48,6 +49,7 @@ export function ArtifactEditor({
       UnderlineExtension,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Placeholder.configure({ placeholder: t('editor.placeholder') }),
+      TableKit.configure({ table: { resizable: false } }),
     ],
     content: currentVersion?.content ?? '',
     editorProps: {

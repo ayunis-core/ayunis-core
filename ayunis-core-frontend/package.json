@@ -50,6 +50,7 @@
     "@tanstack/router-plugin": "^1.166.13",
     "@tiptap/extension-link": "^3.20.0",
     "@tiptap/extension-placeholder": "^3.20.0",
+    "@tiptap/extension-table": "^3.22.4",
     "@tiptap/extension-text-align": "^3.20.0",
     "@tiptap/extension-underline": "^3.20.0",
     "@tiptap/pm": "^3.20.0",
