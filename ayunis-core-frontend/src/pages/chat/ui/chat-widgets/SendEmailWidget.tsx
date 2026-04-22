@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import type { ToolUseMessageContent } from '../../model/openapi';
 import { useTranslation } from 'react-i18next';
 import { Label } from '@/shared/ui/shadcn/label';
@@ -7,6 +7,7 @@ import { Textarea } from '@/shared/ui/shadcn/textarea';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Mail } from 'lucide-react';
 import { cn } from '@/shared/lib/shadcn/utils';
+import { Markdown } from '@/widgets/markdown';
 
 export default function SendEmailWidget({
   content,
@@ -32,6 +33,7 @@ export default function SendEmailWidget({
   const [body, setBody] = useState<string>(initialBody);
   const [to, setTo] = useState<string>(initialTo);
   const [copied, setCopied] = useState<boolean>(false);
+  const markdownRef = useRef<HTMLDivElement>(null);
 
   // Update state when params change (for streaming updates)
   useEffect(() => {
@@ -42,6 +44,39 @@ export default function SendEmailWidget({
     };
     updateWidget();
   }, [params.subject, params.body, params.to, content.id]);
+
+  const writeBodyToClipboard = async (
+    html: string,
+    plain: string,
+  ): Promise<void> => {
+    if (html && typeof ClipboardItem !== 'undefined') {
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'text/html': new Blob([html], { type: 'text/html' }),
+            'text/plain': new Blob([plain], { type: 'text/plain' }),
+          }),
+        ]);
+        return;
+      } catch {
+        // fall through to plain-text fallback
+      }
+    }
+    await navigator.clipboard.writeText(plain);
+  };
+
+  const handleCopyBody = () => {
+    void (async () => {
+      const html = markdownRef.current?.innerHTML ?? '';
+      try {
+        await writeBodyToClipboard(html, body);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1200);
+      } catch {
+        // noop
+      }
+    })();
+  };
 
   const mailtoHref = useMemo(() => {
     const mailtoPath = to ? encodeURIComponent(to) : '';
@@ -123,22 +158,15 @@ export default function SendEmailWidget({
           className={cn(isStreaming && 'animate-pulse')}
           type="button"
           variant="secondary"
-          onClick={() => {
-            void (async () => {
-              try {
-                await navigator.clipboard.writeText(body);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 1200);
-              } catch {
-                // noop
-              }
-            })();
-          }}
+          onClick={handleCopyBody}
         >
           {copied
             ? t('chat.tools.send_email.copied')
             : t('chat.tools.send_email.copyBody')}
         </Button>
+      </div>
+      <div ref={markdownRef} aria-hidden="true" className="sr-only">
+        <Markdown>{body}</Markdown>
       </div>
     </div>
   );
