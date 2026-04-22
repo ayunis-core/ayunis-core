@@ -27,6 +27,7 @@ import {
 } from '@/shared/ui/shadcn/dropdown-menu';
 import { useThreads } from '../api';
 import { useDeleteThread } from '@/features/useDeleteThread';
+import { useChatsSidebarOpen } from '@/features/useChatsSidebarOpen';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
   Collapsible,
@@ -44,6 +45,8 @@ export function ChatsSidebarGroup() {
   const { deleteChat } = useDeleteThread({});
   const params = useParams({ strict: false });
   const navigate = useNavigate();
+
+  const [isOpen, setOpen] = useChatsSidebarOpen();
 
   // Rename dialog state
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -82,7 +85,11 @@ export function ChatsSidebarGroup() {
 
   if (isLoading) {
     return (
-      <Collapsible defaultOpen className="group/collapsible">
+      <Collapsible
+        open={isOpen}
+        onOpenChange={setOpen}
+        className="group/collapsible"
+      >
         <SidebarGroup>
           <SidebarGroupLabel asChild>
             <CollapsibleTrigger className="flex items-center w-full">
@@ -116,7 +123,11 @@ export function ChatsSidebarGroup() {
 
   if (threads.length === 0) {
     return (
-      <Collapsible defaultOpen className="group/collapsible">
+      <Collapsible
+        open={isOpen}
+        onOpenChange={setOpen}
+        className="group/collapsible"
+      >
         <SidebarGroup>
           <SidebarGroupLabel asChild>
             <CollapsibleTrigger className="flex items-center w-full">
@@ -158,7 +169,11 @@ export function ChatsSidebarGroup() {
 
   return (
     <>
-      <Collapsible defaultOpen className="group/collapsible">
+      <Collapsible
+        open={isOpen}
+        onOpenChange={setOpen}
+        className="group/collapsible"
+      >
         <SidebarGroup>
           <SidebarGroupLabel asChild>
             <CollapsibleTrigger className="flex items-center justify-between w-full">
