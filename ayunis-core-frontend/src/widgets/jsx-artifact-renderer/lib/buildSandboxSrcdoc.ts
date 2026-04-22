@@ -26,7 +26,7 @@ const CSP =
  * the CDNs that ship React, Babel, and Tailwind.
  */
 export function buildSandboxSrcdoc(jsxSource: string): string {
-  const safeSource = JSON.stringify(jsxSource);
+  const safeSource = JSON.stringify(jsxSource).replace(/</g, '\\u003c');
   return `<!doctype html>
 <html>
 <head>
