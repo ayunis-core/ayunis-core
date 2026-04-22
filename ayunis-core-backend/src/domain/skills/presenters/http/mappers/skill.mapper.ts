@@ -24,7 +24,9 @@ export class SkillDtoMapper {
     skill: Skill,
     context: SkillUserContext,
   ): Promise<SkillResponseDto> {
-    const creatorName = await this.resolveCreatorName(skill.userId);
+    const creatorName = context.isShared
+      ? await this.resolveCreatorName(skill.userId)
+      : null;
     return this.buildDto(skill, context, creatorName);
   }
 
@@ -34,21 +36,24 @@ export class SkillDtoMapper {
     sharedSkillIds: Set<string> = new Set(),
     pinnedSkillIds: Set<string> = new Set(),
   ): Promise<SkillResponseDto[]> {
-    const creatorNamesByUserId = await this.resolveCreatorNames(
-      skills.map((s) => s.userId),
-    );
+    const sharedSkillUserIds = skills
+      .filter((skill) => sharedSkillIds.has(skill.id))
+      .map((skill) => skill.userId);
+    const creatorNamesByUserId =
+      await this.resolveCreatorNames(sharedSkillUserIds);
 
-    return skills.map((skill) =>
-      this.buildDto(
+    return skills.map((skill) => {
+      const isShared = sharedSkillIds.has(skill.id);
+      return this.buildDto(
         skill,
         {
           isActive: activeSkillIds.has(skill.id),
-          isShared: sharedSkillIds.has(skill.id),
+          isShared,
           isPinned: pinnedSkillIds.has(skill.id),
         },
-        creatorNamesByUserId.get(skill.userId) ?? null,
-      ),
-    );
+        isShared ? (creatorNamesByUserId.get(skill.userId) ?? null) : null,
+      );
+    });
   }
 
   sourceToDto(source: Source): SkillSourceResponseDto {
