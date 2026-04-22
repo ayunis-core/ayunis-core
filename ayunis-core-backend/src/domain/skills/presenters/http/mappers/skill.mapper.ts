@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import { Skill } from '../../../domain/skill.entity';
 import {
   SkillResponseDto,
@@ -6,37 +7,47 @@ import {
 } from '../dto/skill-response.dto';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SkillUserContext } from '../../../application/services/skill-access.service';
+import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
+import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
+import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
+import { FindUsersByIdsQuery } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.query';
+import { UserNotFoundError } from 'src/iam/users/application/users.errors';
 
 @Injectable()
 export class SkillDtoMapper {
-  toDto(skill: Skill, context: SkillUserContext): SkillResponseDto {
-    return {
-      id: skill.id,
-      name: skill.name,
-      shortDescription: skill.shortDescription,
-      instructions: skill.instructions,
-      marketplaceIdentifier: skill.marketplaceIdentifier,
-      isActive: context.isActive,
-      isShared: context.isShared,
-      isPinned: context.isPinned,
-      userId: skill.userId,
-      createdAt: skill.createdAt,
-      updatedAt: skill.updatedAt,
-    };
+  constructor(
+    private readonly findUserByIdUseCase: FindUserByIdUseCase,
+    private readonly findUsersByIdsUseCase: FindUsersByIdsUseCase,
+  ) {}
+
+  async toDto(
+    skill: Skill,
+    context: SkillUserContext,
+  ): Promise<SkillResponseDto> {
+    const creatorName = await this.resolveCreatorName(skill.userId);
+    return this.buildDto(skill, context, creatorName);
   }
 
-  toDtoArray(
+  async toDtoArray(
     skills: Skill[],
     activeSkillIds: Set<string>,
     sharedSkillIds: Set<string> = new Set(),
     pinnedSkillIds: Set<string> = new Set(),
-  ): SkillResponseDto[] {
+  ): Promise<SkillResponseDto[]> {
+    const creatorNamesByUserId = await this.resolveCreatorNames(
+      skills.map((s) => s.userId),
+    );
+
     return skills.map((skill) =>
-      this.toDto(skill, {
-        isActive: activeSkillIds.has(skill.id),
-        isShared: sharedSkillIds.has(skill.id),
-        isPinned: pinnedSkillIds.has(skill.id),
-      }),
+      this.buildDto(
+        skill,
+        {
+          isActive: activeSkillIds.has(skill.id),
+          isShared: sharedSkillIds.has(skill.id),
+          isPinned: pinnedSkillIds.has(skill.id),
+        },
+        creatorNamesByUserId.get(skill.userId) ?? null,
+      ),
     );
   }
 
@@ -53,5 +64,53 @@ export class SkillDtoMapper {
 
   sourcesToDtoArray(sources: Source[]): SkillSourceResponseDto[] {
     return sources.map((source) => this.sourceToDto(source));
+  }
+
+  private buildDto(
+    skill: Skill,
+    context: SkillUserContext,
+    creatorName: string | null,
+  ): SkillResponseDto {
+    return {
+      id: skill.id,
+      name: skill.name,
+      shortDescription: skill.shortDescription,
+      instructions: skill.instructions,
+      marketplaceIdentifier: skill.marketplaceIdentifier,
+      isActive: context.isActive,
+      isShared: context.isShared,
+      isPinned: context.isPinned,
+      userId: skill.userId,
+      creatorName,
+      createdAt: skill.createdAt,
+      updatedAt: skill.updatedAt,
+    };
+  }
+
+  private async resolveCreatorName(userId: UUID): Promise<string | null> {
+    try {
+      const user = await this.findUserByIdUseCase.execute(
+        new FindUserByIdQuery(userId),
+      );
+      return user.name;
+    } catch (error) {
+      if (error instanceof UserNotFoundError) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  private async resolveCreatorNames(
+    userIds: UUID[],
+  ): Promise<Map<string, string>> {
+    const uniqueIds = Array.from(new Set(userIds));
+    if (uniqueIds.length === 0) {
+      return new Map();
+    }
+    const users = await this.findUsersByIdsUseCase.execute(
+      new FindUsersByIdsQuery(uniqueIds),
+    );
+    return new Map(users.map((u) => [u.id, u.name]));
   }
 }

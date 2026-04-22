@@ -77,6 +77,13 @@ export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
           )}
         </ItemTitle>
         <ItemDescription>{skill.shortDescription}</ItemDescription>
+        {skill.isShared && (
+          <ItemDescription className="text-xs">
+            {skill.creatorName
+              ? t('shared.sharedBy', { name: skill.creatorName })
+              : t('shared.sharedByUnknown')}
+          </ItemDescription>
+        )}
       </ItemContent>
       <ItemActions>
         <div className="flex items-center gap-2">

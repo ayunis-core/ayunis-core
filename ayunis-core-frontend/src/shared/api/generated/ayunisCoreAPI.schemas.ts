@@ -3140,6 +3140,11 @@ export interface SkillResponseDto {
   isActive: boolean;
   /** The unique identifier of the user who owns this skill */
   userId: string;
+  /**
+   * The display name of the user who created this skill. Null if the creator has been deleted.
+   * @nullable
+   */
+  creatorName: string | null;
   /** The date and time when the skill was created */
   createdAt: string;
   /** The date and time when the skill was last updated */

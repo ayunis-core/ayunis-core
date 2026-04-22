@@ -55,6 +55,15 @@ export class SkillResponseDto {
   userId: UUID;
 
   @ApiProperty({
+    description:
+      'The display name of the user who created this skill. Null if the creator has been deleted.',
+    example: 'Jane Doe',
+    type: 'string',
+    nullable: true,
+  })
+  creatorName: string | null;
+
+  @ApiProperty({
     description: 'The date and time when the skill was created',
     example: '2023-12-01T10:00:00.000Z',
     type: 'string',

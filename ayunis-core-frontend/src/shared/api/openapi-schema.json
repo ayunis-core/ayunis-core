@@ -12851,6 +12851,12 @@
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "format": "uuid"
           },
+          "creatorName": {
+            "type": "string",
+            "description": "The display name of the user who created this skill. Null if the creator has been deleted.",
+            "example": "Jane Doe",
+            "nullable": true
+          },
           "createdAt": {
             "type": "string",
             "description": "The date and time when the skill was created",
@@ -12882,6 +12888,7 @@
           "marketplaceIdentifier",
           "isActive",
           "userId",
+          "creatorName",
           "createdAt",
           "updatedAt",
           "isShared",
