@@ -2,12 +2,16 @@
 
 ## Purpose
 
-Manages versioned documents (artifacts) attached to threads. Artifacts are created and updated by AI tools (`create_document`, `update_document`, `edit_document`) or by users via the WYSIWYG editor. Each modification creates a new version, enabling full version history with revert capability. Artifacts can also be linked to an optional organization letterhead that is applied during PDF export.
+Manages versioned artifacts attached to threads. Artifacts come in multiple types — documents (HTML), diagrams (Mermaid), and JSX (sandboxed React components) — and are created and updated by AI tools (`create_document`, `update_document`, `edit_document`, `create_jsx`, `update_jsx`) or by users via the WYSIWYG editor. Each modification creates a new version, enabling full version history with revert capability. Document artifacts can also be linked to an optional organization letterhead that is applied during PDF export.
 
 ## Domain Concepts
 
-- **Artifact** — A named document belonging to a thread and user. Tracks the current version number and an optional `letterheadId` used for PDF export.
-- **ArtifactVersion** — An immutable snapshot of an artifact's content (HTML string) at a specific version number. Tracks who authored it (user or assistant).
+- **Artifact** — Abstract base for a named artifact belonging to a thread and user. Tracks the current version number. Specialized into `DocumentArtifact`, `DiagramArtifact`, and `JsxArtifact`.
+- **DocumentArtifact** — An HTML document artifact with an optional `letterheadId` used for PDF export.
+- **DiagramArtifact** — A Mermaid diagram artifact.
+- **JsxArtifact** — A sandboxed React (JSX) component artifact rendered in an isolated iframe.
+- **ArtifactType** — Enum: `DOCUMENT`, `DIAGRAM`, `JSX`.
+- **ArtifactVersion** — An immutable snapshot of an artifact's content at a specific version number. Tracks who authored it (user or assistant).
 - **AuthorType** — Enum distinguishing whether a version was created by a `USER` or `ASSISTANT`.
 
 ## Architecture
@@ -15,9 +19,10 @@ Manages versioned documents (artifacts) attached to threads. Artifacts are creat
 ```text
 artifacts/
 ├── domain/
-│   ├── artifact.entity.ts
+│   ├── artifact.entity.ts          # Artifact, DocumentArtifact, DiagramArtifact, JsxArtifact
 │   ├── artifact-version.entity.ts
 │   └── value-objects/
+│       ├── artifact-type.enum.ts
 │       └── author-type.enum.ts
 ├── application/
 │   ├── artifacts.errors.ts
@@ -67,8 +72,8 @@ artifacts/
 
 ## Key Behaviors
 
-- Creating an artifact also creates version 1
-- Creating an artifact can optionally attach a validated `letterheadId`
+- Creating an artifact also creates version 1; the artifact type (`DOCUMENT`, `DIAGRAM`, or `JSX`) is set at creation
+- Creating a document artifact can optionally attach a validated `letterheadId`
 - Updating an artifact adds a new version and increments `currentVersionNumber`
 - Updating can also change or clear the letterhead without creating a new version when only the letterhead assignment changes
 - Applying edits performs search-and-replace patches on the current content, creating a new version (errors on ambiguous or missing matches)
