@@ -33,19 +33,20 @@ export class GetDefaultModelUseCase {
         effectiveModelIds.has(model.model.id) &&
         !query.blacklistedModelIds?.includes(model.model.id);
 
-      // Step 1: User default
-      if (query.userId) {
-        const userDefault = await this.userDefaultModelsRepository.findByUserId(
-          query.userId,
-        );
-
-        if (userDefault && isInEffectiveSet(userDefault)) {
-          this.logger.debug('Using user default model', {
-            userId: query.userId,
-            modelId: userDefault.id,
-          });
-          return userDefault;
-        }
+      // Step 1: User default. The stored preference is a catalog model id;
+      // resolve to the matching permitted-model in the effective set. If the
+      // catalog model is no longer available to the user, fall through.
+      const userDefault = await this.resolveUserDefault(
+        query.userId,
+        effectiveModels,
+        query.blacklistedModelIds,
+      );
+      if (userDefault) {
+        this.logger.debug('Using user default model', {
+          userId: query.userId,
+          modelId: userDefault.id,
+        });
+        return userDefault;
       }
 
       // Step 2: Team defaults (from override teams)
@@ -103,6 +104,24 @@ export class GetDefaultModelUseCase {
       });
       throw error;
     }
+  }
+
+  private async resolveUserDefault(
+    userId: UUID | undefined,
+    effectiveModels: PermittedLanguageModel[],
+    blacklistedModelIds: UUID[] | undefined,
+  ): Promise<PermittedLanguageModel | null> {
+    if (!userId) return null;
+    const preferred =
+      await this.userDefaultModelsRepository.findByUserId(userId);
+    if (!preferred) return null;
+    return (
+      effectiveModels.find(
+        (m) =>
+          m.model.id === preferred.id &&
+          !blacklistedModelIds?.includes(m.model.id),
+      ) ?? null
+    );
   }
 
   private async resolveTeamDefault(

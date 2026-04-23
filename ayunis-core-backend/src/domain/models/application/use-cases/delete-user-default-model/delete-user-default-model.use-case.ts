@@ -17,34 +17,10 @@ export class DeleteUserDefaultModelUseCase {
     });
 
     try {
-      // First, find the user's current default model
-      const userDefaultModel =
-        await this.userDefaultModelsRepository.findByUserId(command.userId);
+      await this.userDefaultModelsRepository.deleteByUserId(command.userId);
 
-      if (!userDefaultModel) {
-        this.logger.debug('No user default model found to delete', {
-          userId: command.userId,
-        });
-        // Not throwing an error here as it's idempotent - no default model to delete
-        return;
-      }
-
-      this.logger.debug('User default model found, deleting', {
+      this.logger.debug('User default model deleted (idempotent)', {
         userId: command.userId,
-        modelId: userDefaultModel.id,
-        modelName: userDefaultModel.model.name,
-        modelProvider: userDefaultModel.model.provider,
-      });
-
-      // Delete the user's default model
-      await this.userDefaultModelsRepository.delete(
-        userDefaultModel,
-        command.userId,
-      );
-
-      this.logger.debug('User default model deleted successfully', {
-        userId: command.userId,
-        modelId: userDefaultModel.id,
       });
     } catch (error) {
       if (error instanceof ModelError) {

@@ -11,8 +11,6 @@ import { ReplaceModelWithUserDefaultUseCase } from 'src/domain/threads/applicati
 import { ReplaceModelWithUserDefaultCommand } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.command';
 import { ReplaceModelWithUserDefaultUseCase as ReplaceModelWithUserDefaultUseCaseAgents } from 'src/domain/agents/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { ReplaceModelWithUserDefaultCommand as ReplaceModelWithUserDefaultCommandAgents } from 'src/domain/agents/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.command';
-import { DeleteUserDefaultModelsByModelIdUseCase } from '../delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
-import { DeleteUserDefaultModelsByModelIdCommand } from '../delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.command';
 import { GetPermittedModelsUseCase } from '../get-permitted-models/get-permitted-models.use-case';
 import { GetPermittedModelsQuery } from '../get-permitted-models/get-permitted-models.query';
 import {
@@ -38,7 +36,6 @@ export class DeletePermittedModelUseCase {
 
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
-    private readonly deleteUserDefaultModelByModelIdUseCase: DeleteUserDefaultModelsByModelIdUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
     private readonly replaceModelWithUserDefaultUseCase: ReplaceModelWithUserDefaultUseCase,
     private readonly replaceModelWithUserDefaultUseCaseAgents: ReplaceModelWithUserDefaultUseCaseAgents,
@@ -136,17 +133,9 @@ export class DeletePermittedModelUseCase {
     if (modelToDelete.isDefault) {
       throw new CannotDeleteDefaultModelError(model.id);
     }
-    this.logger.debug(
-      'Deleting user default models that reference this model',
-      {
-        modelId: model.id,
-      },
-    );
-
-    // Delete all user default models that reference this model
-    await this.deleteUserDefaultModelByModelIdUseCase.execute(
-      new DeleteUserDefaultModelsByModelIdCommand(model.id),
-    );
+    // User defaults now reference the catalog model (see migration 1776869182118),
+    // so deleting this permitted-model row doesn't orphan or lose them — when an
+    // admin re-permits the same catalog model, the preference resolves again.
 
     this.logger.debug('Replacing model in all threads that use it', {
       modelId: model.id,

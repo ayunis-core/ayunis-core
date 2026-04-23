@@ -19,7 +19,6 @@ import { PermittedModelScope } from 'src/domain/models/domain/value-objects/perm
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { DeleteUserDefaultModelsByModelIdUseCase } from '../delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
 import { GetPermittedModelsUseCase } from '../get-permitted-models/get-permitted-models.use-case';
 import { ReplaceModelWithUserDefaultUseCase } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { ReplaceModelWithUserDefaultUseCase as ReplaceModelWithUserDefaultUseCaseAgents } from 'src/domain/agents/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
@@ -73,10 +72,6 @@ describe('DeletePermittedModelUseCase', () => {
             delete: jest.fn(),
             deleteTeamScopedByOrgAndModelId: jest.fn(),
           },
-        },
-        {
-          provide: DeleteUserDefaultModelsByModelIdUseCase,
-          useValue: { execute: jest.fn() },
         },
         {
           provide: GetPermittedModelsUseCase,

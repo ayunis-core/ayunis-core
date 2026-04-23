@@ -55,8 +55,7 @@ The models module is the central registry for AI model configuration. The abstra
 - **GetUserDefaultModelUseCase** (`application/use-cases/get-user-default-model`): Retrieves a user's default model.
 - **GetDefaultModelUseCase** (`application/use-cases/get-default-model`): Resolves the effective default model for a user (user → org → system fallback).
 - **DeleteUserDefaultModelUseCase** (`application/use-cases/delete-user-default-model`): Removes a user's default model preference.
-- **DeleteUserDefaultModelsByModelIdUseCase** (`application/use-cases/delete-user-default-models-by-model-id`): Removes all user defaults referencing a specific model.
-- **ClearDefaultsByCatalogModelIdUseCase** (`application/use-cases/clear-defaults-by-catalog-model-id`): Clears all default references for a catalog model being deleted.
+- **ClearDefaultsByCatalogModelIdUseCase** (`application/use-cases/clear-defaults-by-catalog-model-id`): Unsets the `isDefault` flag on permitted_models referencing an archived catalog model. User defaults reference the catalog model directly and are preserved across permitted-model churn (see migration 1776869182118).
 - **IsModelPermittedUseCase** (`application/use-cases/is-model-permitted`): Checks whether a model is permitted for an org.
 - **IsEmbeddingModelEnabledUseCase** (`application/use-cases/is-embedding-model-enabled`): Checks whether an embedding model is enabled for an org.
 - **GetInferenceUseCase** (`application/use-cases/get-inference`): Retrieves inference configuration for a model.

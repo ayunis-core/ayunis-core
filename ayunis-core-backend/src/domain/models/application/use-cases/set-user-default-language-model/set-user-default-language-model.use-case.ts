@@ -53,23 +53,23 @@ export class SetUserDefaultLanguageModelUseCase {
       this.logger.debug(`Permitted model found, ${action} user default`, {
         modelName: permittedModel.model.name,
         modelProvider: permittedModel.model.provider,
-        existingDefaultId: existingUserDefault?.id,
+        existingCatalogModelId: existingUserDefault?.id,
       });
 
-      // Set the model as the user's default (handles both create and update)
-      const userDefaultModel =
-        await this.userDefaultModelsRepository.setAsDefault(
-          permittedModel,
-          command.userId,
-        );
+      // Persist the catalog model reference, not the permitted-model row id,
+      // so the preference survives admins removing/re-adding the permitted model.
+      await this.userDefaultModelsRepository.setAsDefault(
+        permittedModel.model,
+        command.userId,
+      );
 
       this.logger.debug(`User default model ${action} successfully`, {
         userId: command.userId,
-        modelId: userDefaultModel.id,
+        catalogModelId: permittedModel.model.id,
         action,
       });
 
-      return userDefaultModel;
+      return permittedModel;
     } catch (error) {
       if (error instanceof ModelError) {
         throw error;

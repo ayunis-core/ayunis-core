@@ -55,7 +55,6 @@ import { GetModelProviderInfoUseCase } from './application/use-cases/get-model-p
 import { ModelProviderInfoResponseDtoMapper } from './presenters/http/mappers/model-provider-info-response-dto.mapper';
 import { ThreadsModule } from '../threads/threads.module';
 import { AgentsModule } from '../agents/agents.module';
-import { DeleteUserDefaultModelsByModelIdUseCase } from './application/use-cases/delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
 import { ClearDefaultsByCatalogModelIdUseCase } from './application/use-cases/clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { LocalOllamaInferenceHandler } from './infrastructure/inference/local-ollama.inference';
@@ -315,7 +314,6 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     // User Default Model Use Cases
     SetUserDefaultLanguageModelUseCase,
     DeleteUserDefaultModelUseCase,
-    DeleteUserDefaultModelsByModelIdUseCase,
     GetUserDefaultModelUseCase,
     GetOrgDefaultModelUseCase,
     // Org Default Model Use Cases
@@ -356,7 +354,6 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     // User Default Model Use Cases
     SetUserDefaultLanguageModelUseCase,
     DeleteUserDefaultModelUseCase,
-    DeleteUserDefaultModelsByModelIdUseCase,
     GetUserDefaultModelUseCase,
     GetOrgDefaultModelUseCase,
     // Org Default Model Use Cases

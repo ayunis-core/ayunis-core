@@ -94,7 +94,7 @@ describe('GetDefaultModelUseCase', () => {
     permittedModelsRepository.findOrgDefaultLanguage.mockResolvedValue(null);
   });
 
-  it('should return user default when it is in the effective set', async () => {
+  it('should return user default when catalog preference is in the effective set', async () => {
     const gpt4 = makeLanguageModel('gpt-4');
     const userDefault = makePermittedLanguageModel(gpt4);
     const effectiveModels = [userDefault];
@@ -103,7 +103,7 @@ describe('GetDefaultModelUseCase', () => {
       models: effectiveModels,
       overrideTeamIds: [],
     });
-    userDefaultModelsRepository.findByUserId.mockResolvedValue(userDefault);
+    userDefaultModelsRepository.findByUserId.mockResolvedValue(gpt4);
 
     const result = await useCase.execute(
       new GetDefaultModelQuery({ orgId, userId }),
@@ -112,18 +112,17 @@ describe('GetDefaultModelUseCase', () => {
     expect(result).toBe(userDefault);
   });
 
-  it('should skip user default when it is NOT in the effective set', async () => {
+  it('should skip user default when catalog preference is NOT in the effective set', async () => {
     const gpt4 = makeLanguageModel('gpt-4');
     const claude = makeLanguageModel('claude-3-sonnet');
 
-    const userDefault = makePermittedLanguageModel(gpt4);
     const effectiveModels = [makePermittedLanguageModel(claude)];
 
     getEffectiveLanguageModelsUseCase.execute.mockResolvedValue({
       models: effectiveModels,
       overrideTeamIds: [],
     });
-    userDefaultModelsRepository.findByUserId.mockResolvedValue(userDefault);
+    userDefaultModelsRepository.findByUserId.mockResolvedValue(gpt4);
 
     const result = await useCase.execute(
       new GetDefaultModelQuery({ orgId, userId }),

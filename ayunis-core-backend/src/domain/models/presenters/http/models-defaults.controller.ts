@@ -135,8 +135,9 @@ export class ModelsDefaultsController {
   @ApiExtraModels(PermittedLanguageModelResponseDtoNullable)
   async getUserSpecificDefaultModel(
     @CurrentUser(UserProperty.ID) userId: UUID,
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<PermittedLanguageModelResponseDtoNullable> {
-    const query = new GetUserDefaultModelQuery(userId);
+    const query = new GetUserDefaultModelQuery(userId, orgId);
     const model = await this.getUserDefaultModelUseCase.execute(query);
     if (!model) {
       return { permittedLanguageModel: undefined };

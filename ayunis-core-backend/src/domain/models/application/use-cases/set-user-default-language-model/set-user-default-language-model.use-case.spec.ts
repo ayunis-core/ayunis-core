@@ -82,11 +82,13 @@ describe('SetUserDefaultLanguageModelUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('sets the permitted model as the user default when no previous default exists', async () => {
+  it('sets the catalog model as the user default when no previous default exists', async () => {
     const permittedModel = buildPermittedLanguageModel();
     permittedModelsRepository.findOneLanguage.mockResolvedValue(permittedModel);
     userDefaultModelsRepository.findByUserId.mockResolvedValue(null);
-    userDefaultModelsRepository.setAsDefault.mockResolvedValue(permittedModel);
+    userDefaultModelsRepository.setAsDefault.mockResolvedValue(
+      permittedModel.model,
+    );
 
     const result = await useCase.execute(
       new SetUserDefaultLanguageModelCommand(userId, permittedModelId, orgId),
@@ -97,17 +99,19 @@ describe('SetUserDefaultLanguageModelUseCase', () => {
       id: permittedModelId,
     });
     expect(userDefaultModelsRepository.setAsDefault).toHaveBeenCalledWith(
-      permittedModel,
+      permittedModel.model,
       userId,
     );
   });
 
   it('updates the existing default when one is already set', async () => {
     const permittedModel = buildPermittedLanguageModel();
-    const existingDefault = buildPermittedLanguageModel();
+    const existingDefault = buildPermittedLanguageModel().model;
     permittedModelsRepository.findOneLanguage.mockResolvedValue(permittedModel);
     userDefaultModelsRepository.findByUserId.mockResolvedValue(existingDefault);
-    userDefaultModelsRepository.setAsDefault.mockResolvedValue(permittedModel);
+    userDefaultModelsRepository.setAsDefault.mockResolvedValue(
+      permittedModel.model,
+    );
 
     const result = await useCase.execute(
       new SetUserDefaultLanguageModelCommand(userId, permittedModelId, orgId),
@@ -115,7 +119,7 @@ describe('SetUserDefaultLanguageModelUseCase', () => {
 
     expect(result).toBe(permittedModel);
     expect(userDefaultModelsRepository.setAsDefault).toHaveBeenCalledWith(
-      permittedModel,
+      permittedModel.model,
       userId,
     );
   });

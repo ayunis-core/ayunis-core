@@ -1,27 +1,26 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UserDefaultModelRecord } from '../schema/user-default-model.record';
-import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { UUID } from 'crypto';
-import { PermittedModelMapper } from '../../local-permitted-models/mappers/permitted-model.mapper';
+import { ModelMapper } from '../../local-models/mappers/model.mapper';
+import { LanguageModelRecord } from '../../local-models/schema/model.record';
 
 @Injectable()
 export class UserDefaultModelMapper {
   private readonly logger = new Logger(UserDefaultModelMapper.name);
 
-  constructor(private readonly permittedModelMapper: PermittedModelMapper) {}
+  constructor(private readonly modelMapper: ModelMapper) {}
 
-  toDomain(entity: UserDefaultModelRecord): PermittedModel {
+  toDomain(entity: UserDefaultModelRecord): LanguageModel {
     this.logger.log('toDomain', { entity });
-    return this.permittedModelMapper.toDomain(entity.model);
+    return this.modelMapper.toDomain(entity.model) as LanguageModel;
   }
 
-  toRecord(domain: PermittedModel, userId: UUID): UserDefaultModelRecord {
+  toRecord(model: LanguageModel, userId: UUID): UserDefaultModelRecord {
     const entity = new UserDefaultModelRecord();
-    entity.id = domain.id;
-    entity.model = this.permittedModelMapper.toRecord(domain);
+    entity.model = this.modelMapper.toRecord(model) as LanguageModelRecord;
+    entity.modelId = model.id;
     entity.userId = userId;
-    entity.createdAt = domain.createdAt;
-    entity.updatedAt = domain.updatedAt;
     return entity;
   }
 }

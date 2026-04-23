@@ -1,24 +1,14 @@
 import type { UUID } from 'crypto';
-import type { PermittedLanguageModel } from '../../domain/permitted-model.entity';
+import type { LanguageModel } from '../../domain/models/language.model';
 
+// User defaults reference catalog LanguageModels (not org-scoped permitted_models)
+// so a user's preference survives admins removing/re-adding a permitted model.
+// Resolution to a concrete PermittedLanguageModel happens at the use-case layer.
 export abstract class UserDefaultModelsRepository {
-  abstract findByUserId(userId: UUID): Promise<PermittedLanguageModel | null>;
-  abstract create(
-    permittedModel: PermittedLanguageModel,
-    userId: UUID,
-  ): Promise<PermittedLanguageModel>;
-  abstract update(
-    permittedModel: PermittedLanguageModel,
-    userId: UUID,
-  ): Promise<PermittedLanguageModel>;
+  abstract findByUserId(userId: UUID): Promise<LanguageModel | null>;
   abstract setAsDefault(
-    permittedModel: PermittedLanguageModel,
+    model: LanguageModel,
     userId: UUID,
-  ): Promise<PermittedLanguageModel>;
-  abstract delete(
-    permittedModel: PermittedLanguageModel,
-    userId: UUID,
-  ): Promise<void>;
-  abstract deleteByModelId(modelId: UUID): Promise<void>;
-  abstract deleteByPermittedModelIds(permittedModelIds: UUID[]): Promise<void>;
+  ): Promise<LanguageModel>;
+  abstract deleteByUserId(userId: UUID): Promise<void>;
 }
