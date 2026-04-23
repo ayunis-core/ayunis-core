@@ -245,6 +245,10 @@
     "models": "Modelle",
     "usage": "Nutzung"
   },
+  "orgDetails": {
+    "name": "Name",
+    "id": "ID"
+  },
   "trial": {
     "title": "Trial-Informationen",
     "messagesSent": "Gesendete Nachrichten",
