@@ -1545,7 +1545,7 @@ export interface TeamResponseDto {
   updatedAt: string;
   /** Whether model access override is enabled for this team */
   modelOverrideEnabled: boolean;
-  /** The number of members in the team. Only populated by list endpoints. */
+  /** The number of members in the team. Only populated by the admin list endpoint (GET /teams). */
   memberCount?: number;
 }
 

@@ -37,7 +37,7 @@ export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
             className="flex-1 cursor-pointer"
           >
             <ItemContent>
-              <ItemTitle className="flex items-center gap-2">
+              <ItemTitle>
                 {team.name}
                 {team.memberCount !== undefined && (
                   <Badge variant="secondary">

@@ -40,7 +40,7 @@ export class TeamResponseDto {
 
   @ApiProperty({
     description:
-      'The number of members in the team. Only populated by list endpoints.',
+      'The number of members in the team. Only populated by the admin list endpoint (GET /teams).',
     example: 5,
     required: false,
   })

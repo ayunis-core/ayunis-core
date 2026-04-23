@@ -2,7 +2,7 @@ import { Team } from 'src/iam/teams/domain/team.entity';
 import { TeamRecord } from '../schema/team.record';
 
 export class TeamMapper {
-  static toDomain(record: TeamRecord, memberCount?: number): Team {
+  static toDomain(record: TeamRecord): Team {
     return new Team({
       id: record.id,
       name: record.name,
@@ -10,7 +10,6 @@ export class TeamMapper {
       modelOverrideEnabled: record.modelOverrideEnabled,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
-      memberCount,
     });
   }
 

@@ -39,19 +39,13 @@ export class LocalTeamsRepository extends TeamsRepository {
   async findByOrgId(orgId: UUID): Promise<Team[]> {
     this.logger.log('findByOrgId', { orgId });
 
-    const { entities, raw } = await this.teamRepository
-      .createQueryBuilder('team')
-      .leftJoin(TeamMemberRecord, 'tm', 'tm.team_id = team.id')
-      .where('team.org_id = :orgId', { orgId })
-      .groupBy('team.id')
-      .addSelect('COUNT(tm.id)', 'member_count')
-      .orderBy('team.createdAt', 'DESC')
-      .getRawAndEntities<{ member_count: string }>();
+    const teamRecords = await this.teamRepository.find({
+      where: { orgId },
+      order: { createdAt: 'DESC' },
+    });
 
-    this.logger.debug('Teams found', { orgId, count: entities.length });
-    return entities.map((record, idx) =>
-      TeamMapper.toDomain(record, Number(raw[idx].member_count)),
-    );
+    this.logger.debug('Teams found', { orgId, count: teamRecords.length });
+    return teamRecords.map((record) => TeamMapper.toDomain(record));
   }
 
   async findByNameAndOrgId(name: string, orgId: UUID): Promise<Team | null> {

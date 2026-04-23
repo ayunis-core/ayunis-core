@@ -5,6 +5,7 @@ import {
   useTeamsControllerAddTeamMember,
   getTeamsControllerListTeamMembersQueryKey,
   getTeamsControllerGetTeamQueryKey,
+  getTeamsControllerListTeamsQueryKey,
   getAgentsControllerFindAllQueryKey,
   getTeamsControllerListMyTeamsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
@@ -41,6 +42,9 @@ export function useAddTeamMember(teamId: string, onSuccess?: () => void) {
         });
         void queryClient.invalidateQueries({
           queryKey: getTeamsControllerGetTeamQueryKey(teamId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getTeamsControllerListTeamsQueryKey(),
         });
         // Invalidate agents cache since team membership affects access to shared agents
         void queryClient.invalidateQueries({
