@@ -12,6 +12,7 @@ export class TeamDtoMapper {
       createdAt: team.createdAt,
       updatedAt: team.updatedAt,
       modelOverrideEnabled: team.modelOverrideEnabled,
+      memberCount: team.memberCount,
     };
   }
 

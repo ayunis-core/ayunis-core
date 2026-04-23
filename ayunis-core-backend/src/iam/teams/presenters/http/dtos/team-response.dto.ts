@@ -37,4 +37,12 @@ export class TeamResponseDto {
     example: false,
   })
   modelOverrideEnabled: boolean;
+
+  @ApiProperty({
+    description:
+      'The number of members in the team. Only populated by list endpoints.',
+    example: 5,
+    required: false,
+  })
+  memberCount?: number;
 }

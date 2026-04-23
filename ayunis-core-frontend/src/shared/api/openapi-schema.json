@@ -10593,6 +10593,11 @@
             "type": "boolean",
             "description": "Whether model access override is enabled for this team",
             "example": false
+          },
+          "memberCount": {
+            "type": "number",
+            "description": "The number of members in the team. Only populated by list endpoints.",
+            "example": 5
           }
         },
         "required": [

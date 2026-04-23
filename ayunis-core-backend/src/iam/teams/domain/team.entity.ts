@@ -8,6 +8,7 @@ export class Team {
   public modelOverrideEnabled: boolean;
   public createdAt: Date;
   public updatedAt: Date;
+  public memberCount?: number;
 
   constructor(params: {
     id?: UUID;
@@ -16,6 +17,7 @@ export class Team {
     modelOverrideEnabled?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
+    memberCount?: number;
   }) {
     this.id = params.id ?? randomUUID();
     this.name = params.name;
@@ -23,5 +25,6 @@ export class Team {
     this.modelOverrideEnabled = params.modelOverrideEnabled ?? false;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
+    this.memberCount = params.memberCount;
   }
 }
