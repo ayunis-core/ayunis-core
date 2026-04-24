@@ -117,6 +117,20 @@
         "generating": "Aktualisierung wird generiert…",
         "openInEditor": "Diagramm öffnen"
       },
+      "create_jsx": {
+        "title": "Interaktive Vorschau",
+        "created": "Vorschau erstellt",
+        "creating": "Vorschau wird erstellt…",
+        "generating": "Vorschau wird generiert…",
+        "openInEditor": "Vorschau öffnen"
+      },
+      "update_jsx": {
+        "title": "Vorschau aktualisiert",
+        "updated": "Vorschau aktualisiert",
+        "updating": "Vorschau wird aktualisiert…",
+        "generating": "Aktualisierung wird generiert…",
+        "openInEditor": "Vorschau öffnen"
+      },
       "create_calendar_event": {
         "title": "Titel",
         "titlePlaceholder": "Ereignistitel",

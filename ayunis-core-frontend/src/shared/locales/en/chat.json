@@ -117,6 +117,20 @@
         "generating": "Generating update…",
         "openInEditor": "Open diagram"
       },
+      "create_jsx": {
+        "title": "Interactive preview",
+        "created": "Preview created",
+        "creating": "Creating preview…",
+        "generating": "Generating preview…",
+        "openInEditor": "Open preview"
+      },
+      "update_jsx": {
+        "title": "Preview updated",
+        "updated": "Preview updated",
+        "updating": "Updating preview…",
+        "generating": "Generating update…",
+        "openInEditor": "Open preview"
+      },
       "create_calendar_event": {
         "title": "Title",
         "titlePlaceholder": "Event title",

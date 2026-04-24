@@ -64,6 +64,12 @@ const LazyDiagramViewer = lazy(() =>
   })),
 );
 
+const LazyJsxViewer = lazy(() =>
+  import('@/widgets/jsx-artifact-renderer').then((m) => ({
+    default: m.JsxViewer,
+  })),
+);
+
 const PROCESSING_POLL_INTERVAL = 5000;
 
 interface ChatPageProps {
@@ -436,12 +442,19 @@ export default function ChatPage({
         sidePanel={
           openArtifact ? (
             <Suspense fallback={null}>
-              {openArtifact.type === 'diagram' ? (
+              {openArtifact.type === 'diagram' && (
                 <LazyDiagramViewer
                   artifact={openArtifact}
                   onClose={handleCloseArtifact}
                 />
-              ) : (
+              )}
+              {openArtifact.type === 'jsx' && (
+                <LazyJsxViewer
+                  artifact={openArtifact}
+                  onClose={handleCloseArtifact}
+                />
+              )}
+              {openArtifact.type === 'document' && (
                 <LazyArtifactEditor
                   artifact={openArtifact}
                   onSave={handleSaveArtifact}

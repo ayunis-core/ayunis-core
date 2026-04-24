@@ -70,3 +70,18 @@ export class DiagramArtifact extends Artifact {
     super({ ...params, type: ArtifactType.DIAGRAM });
   }
 }
+
+export class JsxArtifact extends Artifact {
+  constructor(params: {
+    id?: UUID;
+    threadId: UUID;
+    userId: UUID;
+    title: string;
+    currentVersionNumber?: number;
+    versions?: ArtifactVersion[];
+    createdAt?: Date;
+    updatedAt?: Date;
+  }) {
+    super({ ...params, type: ArtifactType.JSX });
+  }
+}

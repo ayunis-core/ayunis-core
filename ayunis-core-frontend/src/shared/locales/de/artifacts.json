@@ -49,5 +49,13 @@
       "out": "Verkleinern",
       "reset": "Ansicht zurücksetzen"
     }
+  },
+  "jsx": {
+    "sandboxTitle": "JSX-Sandbox-Vorschau",
+    "close": "Schließen",
+    "export": {
+      "png": "PNG",
+      "failed": "Vorschau-Export fehlgeschlagen"
+    }
   }
 }

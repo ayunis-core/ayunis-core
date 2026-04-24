@@ -6,11 +6,13 @@ import UpdateDocumentWidget from './UpdateDocumentWidget';
 import EditDocumentWidget from './EditDocumentWidget';
 import CreateDiagramWidget from './CreateDiagramWidget';
 import UpdateDiagramWidget from './UpdateDiagramWidget';
+import CreateJsxWidget from './CreateJsxWidget';
+import UpdateJsxWidget from './UpdateJsxWidget';
 
 /**
- * Renders the chat widget for any document- or diagram-related tool call.
- * Returns null when the tool call is not an artifact tool, so the caller can
- * continue its switch with other widget types.
+ * Renders the chat widget for any document-, diagram-, or jsx-related tool
+ * call. Returns null when the tool call is not an artifact tool, so the
+ * caller can continue its switch with other widget types.
  */
 // eslint-disable-next-line sonarjs/function-return-type -- returns JSX or null based on tool type
 export function renderArtifactToolWidget(params: {
@@ -72,6 +74,25 @@ export function renderArtifactToolWidget(params: {
       return (
         <UpdateDiagramWidget
           key={`update-diagram-${keySuffix}`}
+          content={content}
+          isStreaming={isStreaming}
+          onOpenArtifact={onOpenArtifact}
+        />
+      );
+    case ToolAssignmentDtoType.create_jsx:
+      return (
+        <CreateJsxWidget
+          key={`create-jsx-${keySuffix}`}
+          content={content}
+          isStreaming={isStreaming}
+          threadId={threadId}
+          onOpenArtifact={onOpenArtifact}
+        />
+      );
+    case ToolAssignmentDtoType.update_jsx:
+      return (
+        <UpdateJsxWidget
+          key={`update-jsx-${keySuffix}`}
           content={content}
           isStreaming={isStreaming}
           onOpenArtifact={onOpenArtifact}
