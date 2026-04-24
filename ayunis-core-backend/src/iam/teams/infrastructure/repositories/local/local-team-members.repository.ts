@@ -130,10 +130,10 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
 
     const rows = await this.teamMemberRepository
       .createQueryBuilder('tm')
-      .select('tm.team_id', 'teamId')
+      .select('tm.teamId', 'teamId')
       .addSelect('COUNT(*)', 'count')
-      .where('tm.team_id IN (:...teamIds)', { teamIds })
-      .groupBy('tm.team_id')
+      .where('tm.teamId IN (:...teamIds)', { teamIds })
+      .groupBy('tm.teamId')
       .getRawMany<{ teamId: UUID; count: string }>();
 
     for (const row of rows) {
