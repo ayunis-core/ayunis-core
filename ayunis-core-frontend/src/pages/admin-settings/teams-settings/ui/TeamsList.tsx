@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
-import { Pencil, Trash2, ChevronRight } from 'lucide-react';
+import { Pencil, Trash2, ChevronRight, Users } from 'lucide-react';
+import { Badge } from '@/shared/ui/shadcn/badge';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
   Item,
@@ -36,7 +37,17 @@ export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
             className="flex-1 cursor-pointer"
           >
             <ItemContent>
-              <ItemTitle>{team.name}</ItemTitle>
+              <ItemTitle>
+                {team.name}
+                {team.memberCount !== undefined && (
+                  <Badge variant="secondary">
+                    <Users />
+                    {t('teams.list.memberCount', {
+                      count: team.memberCount,
+                    })}
+                  </Badge>
+                )}
+              </ItemTitle>
               <ItemDescription>
                 {t('teams.list.createdAt', {
                   date: new Date(team.createdAt).toLocaleDateString(),

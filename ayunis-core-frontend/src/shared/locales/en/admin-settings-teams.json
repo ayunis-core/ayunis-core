@@ -6,7 +6,9 @@
     "list": {
       "emptyTitle": "No teams yet",
       "emptyDescription": "Create your first team to organize your users.",
-      "createdAt": "Created {{date}}"
+      "createdAt": "Created {{date}}",
+      "memberCount_one": "{{count}} member",
+      "memberCount_other": "{{count}} members"
     },
     "createDialog": {
       "title": "Create Team",

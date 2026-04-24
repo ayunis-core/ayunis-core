@@ -119,4 +119,27 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
 
     return records.map((record) => record.userId);
   }
+
+  async countByTeamIds(teamIds: UUID[]): Promise<Map<UUID, number>> {
+    this.logger.log('countByTeamIds', { count: teamIds.length });
+
+    const counts = new Map<UUID, number>(teamIds.map((id) => [id, 0]));
+    if (teamIds.length === 0) {
+      return counts;
+    }
+
+    const rows = await this.teamMemberRepository
+      .createQueryBuilder('tm')
+      .select('tm.team_id', 'teamId')
+      .addSelect('COUNT(*)', 'count')
+      .where('tm.team_id IN (:...teamIds)', { teamIds })
+      .groupBy('tm.team_id')
+      .getRawMany<{ teamId: UUID; count: string }>();
+
+    for (const row of rows) {
+      counts.set(row.teamId, Number(row.count));
+    }
+
+    return counts;
+  }
 }
