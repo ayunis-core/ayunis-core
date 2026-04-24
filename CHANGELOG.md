@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.30.0](https://github.com/ayunis-core/ayunis-core/compare/v1.29.2...v1.30.0) (2026-04-24)
+
+
+### Features
+
+* **super-admin:** show organization ID on org detail page (AYC-000) ([#615](https://github.com/ayunis-core/ayunis-core/issues/615)) ([fd1a87a](https://github.com/ayunis-core/ayunis-core/commit/fd1a87aa438b4f15aa025747c5ce601066f7327e))
+* **teams:** show member count badge on team list and detail (AYC-000) ([#616](https://github.com/ayunis-core/ayunis-core/issues/616)) ([a824816](https://github.com/ayunis-core/ayunis-core/commit/a824816ddc2009d555e18e75fae1af5379d2c6af))
+
+
+### Bug Fixes
+
+* **artifacts:** png download for diagrams (AYC-68) ([#617](https://github.com/ayunis-core/ayunis-core/issues/617)) ([9a18778](https://github.com/ayunis-core/ayunis-core/commit/9a187784e495efe600d23749f23b15f1fd8af75d))
+* **rag:** bulk delete parent chunks when removing a source (AYC-3) ([#609](https://github.com/ayunis-core/ayunis-core/issues/609)) ([6def4a8](https://github.com/ayunis-core/ayunis-core/commit/6def4a8be9ec1ec6acebe22001408fd93ce4e7fd))
+* **sidebar:** persist chats collapsible state in localStorage (AYC-64) ([#612](https://github.com/ayunis-core/ayunis-core/issues/612)) ([bb0696d](https://github.com/ayunis-core/ayunis-core/commit/bb0696d3494cc2b563bbfcb569fcf5a9fdb49aaa))
+* **tools:** instruct LLM to use plain text in email widget (AYC-20) ([#614](https://github.com/ayunis-core/ayunis-core/issues/614)) ([20796dc](https://github.com/ayunis-core/ayunis-core/commit/20796dc18b1e0acf7fb7c043d73b043bcf1a032a))
+
+
+### Miscellaneous
+
+* **frontend:** drop redundant tsconfig baseUrl (AYC-000) ([#607](https://github.com/ayunis-core/ayunis-core/issues/607)) ([6e43839](https://github.com/ayunis-core/ayunis-core/commit/6e438397cbdef1fff415012c869e7a8469fb3547))
+
 ## [1.29.2](https://github.com/ayunis-core/ayunis-core/compare/v1.29.1...v1.29.2) (2026-04-22)
 
 
