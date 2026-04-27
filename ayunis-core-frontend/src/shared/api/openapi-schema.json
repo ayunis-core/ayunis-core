@@ -8359,6 +8359,103 @@
         "summary": "Remove the IP allow list (disable IP restriction)",
         "tags": ["ip-allowlist"]
       }
+    },
+    "/api-keys": {
+      "get": {
+        "operationId": "ApiKeysController_listApiKeys",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved API keys",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApiKeyResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to view API keys"
+          }
+        },
+        "summary": "List API keys for the current organization",
+        "tags": ["api-keys"]
+      },
+      "post": {
+        "operationId": "ApiKeysController_createApiKey",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApiKeyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateApiKeyResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to create API keys"
+          }
+        },
+        "summary": "Create a new API key. The full plaintext secret is returned ONLY in this response.",
+        "tags": ["api-keys"]
+      }
+    },
+    "/api-keys/{id}": {
+      "delete": {
+        "operationId": "ApiKeysController_revokeApiKey",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "API key successfully revoked"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to revoke this API key"
+          },
+          "404": {
+            "description": "API key not found"
+          }
+        },
+        "summary": "Revoke an API key",
+        "tags": ["api-keys"]
+      }
     }
   },
   "info": {
@@ -14599,6 +14696,128 @@
           }
         },
         "required": ["cidrs"]
+      },
+      "CreateApiKeyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the API key",
+            "example": "CI bot",
+            "maxLength": 100
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Optional expiration date for the API key (ISO 8601). If omitted, the key never expires.",
+            "example": "2026-12-31T23:59:59.000Z",
+            "format": "date-time"
+          }
+        },
+        "required": ["name"]
+      },
+      "ApiKeyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the API key",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the API key",
+            "example": "CI bot"
+          },
+          "prefixPreview": {
+            "type": "string",
+            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
+            "example": "ayk_live_abc123def456..."
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Expiration date of the API key, or null if it never expires",
+            "example": "2026-12-31T23:59:59.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdByUserId": {
+            "type": "string",
+            "description": "ID of the user who created the key. May be null if that user has been deleted.",
+            "example": "550e8400-e29b-41d4-a716-446655440001",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When the key was created",
+            "example": "2026-04-27T10:30:00.000Z",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefixPreview",
+          "expiresAt",
+          "createdByUserId",
+          "createdAt"
+        ]
+      },
+      "CreateApiKeyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the API key",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the API key",
+            "example": "CI bot"
+          },
+          "prefixPreview": {
+            "type": "string",
+            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
+            "example": "ayk_live_abc123def456..."
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Expiration date of the API key, or null if it never expires",
+            "example": "2026-12-31T23:59:59.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdByUserId": {
+            "type": "string",
+            "description": "ID of the user who created the key. May be null if that user has been deleted.",
+            "example": "550e8400-e29b-41d4-a716-446655440001",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When the key was created",
+            "example": "2026-04-27T10:30:00.000Z",
+            "format": "date-time"
+          },
+          "secret": {
+            "type": "string",
+            "description": "The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later.",
+            "example": "ayk_live_abc123def456ghi789..."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefixPreview",
+          "expiresAt",
+          "createdByUserId",
+          "createdAt",
+          "secret"
+        ]
       }
     }
   }
