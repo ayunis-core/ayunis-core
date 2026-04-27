@@ -18,10 +18,12 @@ import useFairUseLimits, {
 } from '../api/useFairUseLimits';
 import useSetFairUseLimit from '../api/useSetFairUseLimit';
 
-const TIERS: Tier[] = [Tier.low, Tier.medium, Tier.high];
+// `zero` tier is exempt from fair-use enforcement and has no configurable limit.
+type ConfigurableTier = Exclude<Tier, typeof Tier.zero>;
+const TIERS: ConfigurableTier[] = [Tier.low, Tier.medium, Tier.high];
 
 interface TierRowProps {
-  readonly tier: Tier;
+  readonly tier: ConfigurableTier;
   readonly current: FairUseTierLimit | undefined;
 }
 
@@ -104,7 +106,7 @@ export default function FairUseLimitsSection() {
   const { t } = useTranslation('super-admin-settings-platform-config');
   const { low, medium, high, isLoading, isError } = useFairUseLimits();
 
-  const tierData: Record<Tier, FairUseTierLimit | undefined> = {
+  const tierData: Record<ConfigurableTier, FairUseTierLimit | undefined> = {
     low,
     medium,
     high,

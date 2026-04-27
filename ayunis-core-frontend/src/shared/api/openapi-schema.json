@@ -8497,7 +8497,7 @@
           },
           "tier": {
             "type": "string",
-            "enum": ["low", "medium", "high"],
+            "enum": ["zero", "low", "medium", "high"],
             "description": "Fair-use tier label assigned by super admins; drives quota bucket selection. Undefined for embedding models and untiered language models.",
             "example": "medium"
           }
@@ -8975,7 +8975,7 @@
           },
           "tier": {
             "type": "string",
-            "enum": ["low", "medium", "high"],
+            "enum": ["zero", "low", "medium", "high"],
             "description": "Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
             "example": "medium"
           }
@@ -9228,7 +9228,7 @@
           "tier": {
             "type": "string",
             "description": "Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
-            "enum": ["low", "medium", "high"],
+            "enum": ["zero", "low", "medium", "high"],
             "example": "medium"
           }
         },
@@ -9315,7 +9315,7 @@
           "tier": {
             "type": "string",
             "description": "Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
-            "enum": ["low", "medium", "high"],
+            "enum": ["zero", "low", "medium", "high"],
             "example": "medium"
           }
         },
@@ -14002,7 +14002,7 @@
           "tier": {
             "type": "string",
             "description": "Model tier whose fair-use limit is being updated",
-            "enum": ["low", "medium", "high"],
+            "enum": ["zero", "low", "medium", "high"],
             "example": "medium"
           },
           "limit": {

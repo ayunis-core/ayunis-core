@@ -191,6 +191,28 @@ describe('SetFairUseLimitUseCase', () => {
     expect(repository.setMany).not.toHaveBeenCalled();
   });
 
+  it('should reject the ZERO tier — it has no fair-use limit to configure', async () => {
+    let caught: PlatformConfigInvalidValueError | null = null;
+    try {
+      await useCase.execute(
+        new SetFairUseLimitCommand({
+          tier: ModelTier.ZERO,
+          limit: 100,
+          windowMs: 3600000,
+        }),
+      );
+    } catch (error) {
+      caught = error as PlatformConfigInvalidValueError;
+    }
+
+    expect(caught).toBeInstanceOf(PlatformConfigInvalidValueError);
+    expect(caught?.metadata).toEqual({
+      key: null,
+      reason: "unknown model tier 'zero'",
+    });
+    expect(repository.setMany).not.toHaveBeenCalled();
+  });
+
   it('should reject an unknown tier before touching the repository', async () => {
     let caught: PlatformConfigInvalidValueError | null = null;
     try {
