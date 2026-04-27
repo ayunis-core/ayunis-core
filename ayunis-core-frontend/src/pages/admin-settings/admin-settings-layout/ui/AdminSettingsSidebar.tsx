@@ -6,6 +6,7 @@ import {
   BarChart3,
   Shield,
   FileText,
+  KeyRound,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -52,6 +53,11 @@ export function AdminSettingsSidebar() {
       to: '/admin-settings/security',
       icon: <Shield />,
       label: t('layout.security'),
+    },
+    {
+      to: '/admin-settings/api-keys',
+      icon: <KeyRound />,
+      label: t('layout.apiKeys'),
     },
     ...(isLetterheadsEnabled
       ? [

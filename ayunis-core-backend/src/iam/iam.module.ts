@@ -17,6 +17,7 @@ import { QuotasModule } from './quotas/quotas.module';
 import { TeamsModule } from './teams/teams.module';
 import { PlatformConfigModule } from './platform-config/platform-config.module';
 import { IpAllowlistModule } from './ip-allowlist/ip-allowlist.module';
+import { ApiKeysModule } from './api-keys/api-keys.module';
 
 @Module({})
 export class IamModule {
@@ -40,6 +41,7 @@ export class IamModule {
         TeamsModule,
         PlatformConfigModule,
         IpAllowlistModule,
+        ApiKeysModule,
       ],
       exports: [
         AuthenticationModule,
@@ -55,6 +57,7 @@ export class IamModule {
         TeamsModule,
         PlatformConfigModule,
         IpAllowlistModule,
+        ApiKeysModule,
       ],
     };
   }
