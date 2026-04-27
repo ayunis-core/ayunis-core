@@ -10,6 +10,7 @@
     "integrations": "Integrationen",
     "usage": "Nutzung",
     "security": "Sicherheit",
-    "letterheads": "Briefpapier"
+    "letterheads": "Briefpapier",
+    "apiKeys": "API-Schlüssel"
   }
 }
