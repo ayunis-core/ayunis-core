@@ -268,7 +268,6 @@ describe('CollectUsageUseCase', () => {
       expect(saveCall.cost).toBeUndefined();
     });
 
-
     it('should return undefined cost if only input cost is set', async () => {
       const model = createMockModel({
         inputTokenCost: 1,
