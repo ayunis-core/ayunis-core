@@ -4144,6 +4144,60 @@ export interface UpdateIpAllowlistRequestDto {
   cidrs: string[];
 }
 
+export interface CreateApiKeyDto {
+  /**
+   * Human-readable name for the API key
+   * @maxLength 100
+   */
+  name: string;
+  /** Optional expiration date for the API key (ISO 8601). If omitted, the key never expires. */
+  expiresAt?: string;
+}
+
+export interface ApiKeyResponseDto {
+  /** Unique identifier of the API key */
+  id: string;
+  /** Human-readable name for the API key */
+  name: string;
+  /** Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time. */
+  prefixPreview: string;
+  /**
+   * Expiration date of the API key, or null if it never expires
+   * @nullable
+   */
+  expiresAt: string | null;
+  /**
+   * ID of the user who created the key. May be null if that user has been deleted.
+   * @nullable
+   */
+  createdByUserId: string | null;
+  /** When the key was created */
+  createdAt: string;
+}
+
+export interface CreateApiKeyResponseDto {
+  /** Unique identifier of the API key */
+  id: string;
+  /** Human-readable name for the API key */
+  name: string;
+  /** Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time. */
+  prefixPreview: string;
+  /**
+   * Expiration date of the API key, or null if it never expires
+   * @nullable
+   */
+  expiresAt: string | null;
+  /**
+   * ID of the user who created the key. May be null if that user has been deleted.
+   * @nullable
+   */
+  createdByUserId: string | null;
+  /** When the key was created */
+  createdAt: string;
+  /** The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later. */
+  secret: string;
+}
+
 export type ModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto | PermittedImageGenerationModelResponseDto;
 
 export type SuperAdminPermittedModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto | PermittedImageGenerationModelResponseDto;

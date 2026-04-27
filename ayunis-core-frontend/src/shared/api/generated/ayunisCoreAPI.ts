@@ -33,12 +33,15 @@ import type {
   AgentResponseDto,
   AgentSourceResponseDto,
   AgentsControllerAddFileSourceBody,
+  ApiKeyResponseDto,
   ArtifactResponseDto,
   ArtifactVersionResponseDto,
   ArtifactsControllerExportParams,
   ConfirmEmailDto,
   CreateAgentDto,
   CreateAgentShareDto,
+  CreateApiKeyDto,
+  CreateApiKeyResponseDto,
   CreateArtifactDto,
   CreateBulkInvitesDto,
   CreateBulkInvitesResponseDto,
@@ -16992,6 +16995,226 @@ export const useIpAllowlistControllerRemove = <TError = unknown,
       > => {
 
       const mutationOptions = getIpAllowlistControllerRemoveMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary List API keys for the current organization
+ */
+export const apiKeysControllerListApiKeys = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ApiKeyResponseDto[]>(
+      {url: `/api-keys`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getApiKeysControllerListApiKeysQueryKey = () => {
+    return [
+    `/api-keys`
+    ] as const;
+    }
+
+    
+export const getApiKeysControllerListApiKeysQueryOptions = <TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getApiKeysControllerListApiKeysQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>> = ({ signal }) => apiKeysControllerListApiKeys(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ApiKeysControllerListApiKeysQueryResult = NonNullable<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>>
+export type ApiKeysControllerListApiKeysQueryError = void
+
+
+export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>,
+          TError,
+          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>,
+          TError,
+          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List API keys for the current organization
+ */
+
+export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getApiKeysControllerListApiKeysQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Create a new API key. The full plaintext secret is returned ONLY in this response.
+ */
+export const apiKeysControllerCreateApiKey = (
+    createApiKeyDto: CreateApiKeyDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<CreateApiKeyResponseDto>(
+      {url: `/api-keys`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createApiKeyDto, signal
+    },
+      );
+    }
+  
+
+
+export const getApiKeysControllerCreateApiKeyMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, TError,{data: CreateApiKeyDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, TError,{data: CreateApiKeyDto}, TContext> => {
+
+const mutationKey = ['apiKeysControllerCreateApiKey'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, {data: CreateApiKeyDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  apiKeysControllerCreateApiKey(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApiKeysControllerCreateApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>>
+    export type ApiKeysControllerCreateApiKeyMutationBody = CreateApiKeyDto
+    export type ApiKeysControllerCreateApiKeyMutationError = void
+
+    /**
+ * @summary Create a new API key. The full plaintext secret is returned ONLY in this response.
+ */
+export const useApiKeysControllerCreateApiKey = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, TError,{data: CreateApiKeyDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>,
+        TError,
+        {data: CreateApiKeyDto},
+        TContext
+      > => {
+
+      const mutationOptions = getApiKeysControllerCreateApiKeyMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Revoke an API key
+ */
+export const apiKeysControllerRevokeApiKey = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/api-keys/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getApiKeysControllerRevokeApiKeyMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['apiKeysControllerRevokeApiKey'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  apiKeysControllerRevokeApiKey(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApiKeysControllerRevokeApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>>
+    
+    export type ApiKeysControllerRevokeApiKeyMutationError = void
+
+    /**
+ * @summary Revoke an API key
+ */
+export const useApiKeysControllerRevokeApiKey = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getApiKeysControllerRevokeApiKeyMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

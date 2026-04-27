@@ -10,7 +10,7 @@
 
 ## Repository Structure
 
-```
+```text
 ayunis-core/
 ├── ayunis-core-backend/       # NestJS API server
 ├── ayunis-core-frontend/      # React SPA (Feature-Sliced Design)
@@ -64,6 +64,7 @@ ayunis-core/
 | [legal-acceptances](ayunis-core-backend/src/iam/legal-acceptances/SUMMARY.md) | Compliance | Terms acceptance tracking |
 | [hashing](ayunis-core-backend/src/iam/hashing/SUMMARY.md) | Security | Password hashing |
 | [ip-allowlist](ayunis-core-backend/src/iam/ip-allowlist/SUMMARY.md) | Network Security | Per-organization IP allowlist enforcement |
+| [api-keys](ayunis-core-backend/src/iam/api-keys/SUMMARY.md) | API Access | Org-scoped API keys for programmatic access |
 
 ### Infrastructure & Support
 
@@ -96,7 +97,7 @@ ayunis-core/
 
 ### Hexagonal Architecture (Backend)
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────┐
 │                        Presenters                            │
 │                   (HTTP Controllers)                         │
@@ -119,7 +120,7 @@ ayunis-core/
 
 ### Feature-Sliced Design (Frontend)
 
-```
+```text
 pages → widgets → features → shared
   ↓        ↓         ↓          ↓
 Routes  Composites  Logic    Primitives
