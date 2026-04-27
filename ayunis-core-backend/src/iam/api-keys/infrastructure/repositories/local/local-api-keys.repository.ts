@@ -28,6 +28,16 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
     return ApiKeyMapper.toDomain(record);
   }
 
+  async findByPrefix(prefix: string): Promise<ApiKey | null> {
+    this.logger.log('findByPrefix');
+
+    const record = await this.apiKeyRepository.findOne({ where: { prefix } });
+    if (!record) {
+      return null;
+    }
+    return ApiKeyMapper.toDomain(record);
+  }
+
   async findByOrgId(orgId: UUID): Promise<ApiKey[]> {
     this.logger.log('findByOrgId', { orgId });
 
