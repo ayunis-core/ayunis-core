@@ -8,7 +8,7 @@ import { Request } from 'express';
 import * as Sentry from '@sentry/nestjs';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ActiveUser } from '../../domain/active-user.entity';
-import { ActiveApiKey } from '../../domain/active-api-key.entity';
+import '../types/request.augmentation';
 
 /**
  * Reads the authenticated principal from the request (`req.user` for users
@@ -57,11 +57,5 @@ export class UserContextInterceptor implements NestInterceptor {
     }
 
     return next.handle();
-  }
-}
-
-declare module 'express-serve-static-core' {
-  interface Request {
-    apiKey?: ActiveApiKey;
   }
 }
