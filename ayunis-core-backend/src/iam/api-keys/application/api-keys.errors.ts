@@ -5,6 +5,8 @@ export enum ApiKeyErrorCode {
   API_KEY_NOT_FOUND = 'API_KEY_NOT_FOUND',
   API_KEY_INVALID_INPUT = 'API_KEY_INVALID_INPUT',
   API_KEY_EXPIRATION_IN_PAST = 'API_KEY_EXPIRATION_IN_PAST',
+  API_KEY_INVALID = 'API_KEY_INVALID',
+  API_KEY_EXPIRED = 'API_KEY_EXPIRED',
   UNEXPECTED_API_KEY_ERROR = 'UNEXPECTED_API_KEY_ERROR',
 }
 
@@ -47,6 +49,23 @@ export class ApiKeyExpirationInPastError extends ApiKeyError {
       'API key expiration date must be in the future',
       ApiKeyErrorCode.API_KEY_EXPIRATION_IN_PAST,
       400,
+      metadata,
+    );
+  }
+}
+
+export class ApiKeyInvalidError extends ApiKeyError {
+  constructor(metadata?: ErrorMetadata) {
+    super('Invalid API key', ApiKeyErrorCode.API_KEY_INVALID, 401, metadata);
+  }
+}
+
+export class ApiKeyExpiredError extends ApiKeyError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'API key has expired',
+      ApiKeyErrorCode.API_KEY_EXPIRED,
+      401,
       metadata,
     );
   }
