@@ -265,4 +265,34 @@ export class LocalSourceRepository extends SourceRepository {
       .where('id IN (:...ids)', { ids: sourceIds })
       .execute();
   }
+
+  async findUnreferencedIds(
+    candidateIds: UUID[],
+    olderThan: Date,
+  ): Promise<UUID[]> {
+    this.logger.log('findUnreferencedIds', {
+      candidateCount: candidateIds.length,
+      olderThan,
+    });
+
+    if (candidateIds.length === 0) {
+      return [];
+    }
+
+    const rows = await this.sourceRepository
+      .createQueryBuilder('s')
+      .select('s.id', 'id')
+      .where('s.id IN (:...candidateIds)', { candidateIds })
+      .andWhere('s."knowledgeBaseId" IS NULL')
+      .andWhere('s."createdAt" < :olderThan', { olderThan })
+      .andWhere(
+        `NOT EXISTS (SELECT 1 FROM skill_sources ss WHERE ss."sourcesId" = s.id)`,
+      )
+      .andWhere(
+        `NOT EXISTS (SELECT 1 FROM agent_source_assignments asa WHERE asa."sourceId" = s.id)`,
+      )
+      .getRawMany<{ id: UUID }>();
+
+    return rows.map((row) => row.id);
+  }
 }
