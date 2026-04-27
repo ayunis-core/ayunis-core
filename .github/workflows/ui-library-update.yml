@@ -1,0 +1,173 @@
+# Listens for UI library releases published from ayunis-core/ayunis-ui.
+# When one is received, a Cursor agent syncs the changed components via the
+# shadcn registry, scans the codebase for usages that might break, and opens
+# a PR with findings.
+#
+# Required secrets:
+#   CURSOR_API_KEY          Cursor agent key
+#   AYUNIS_REGISTRY_TOKEN   Bearer token for https://registry.ayunis.de
+#   UI_REPO_READ_TOKEN      GitHub PAT with `repo` scope (checks out ayunis-ui for CHANGELOG reading)
+
+name: UI Library Update
+
+on:
+  repository_dispatch:
+    types: [ui-library-released]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'UI library version tag (e.g. v1.2.3)'
+        required: true
+      release_url:
+        description: 'URL of the release notes'
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ui-library-update
+  cancel-in-progress: true
+
+jobs:
+  sync-ui-library:
+    runs-on: ubuntu-latest
+    env:
+      TAG_NAME: ${{ github.event.client_payload.tag_name || github.event.inputs.tag_name }}
+      RELEASE_URL: ${{ github.event.client_payload.release_url || github.event.inputs.release_url }}
+    steps:
+      - name: Checkout consumer repository
+        uses: actions/checkout@v4
+        with:
+          path: app
+          fetch-depth: 0
+
+      - name: Checkout ayunis-ui (read-only reference)
+        uses: actions/checkout@v4
+        with:
+          repository: ayunis-core/ayunis-ui
+          path: ui
+          fetch-depth: 0
+          token: ${{ secrets.UI_REPO_READ_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Cursor CLI
+        run: |
+          curl https://cursor.com/install -fsS | bash
+          echo "$HOME/.cursor/bin" >> $GITHUB_PATH
+
+      - name: Write agent instructions
+        run: |
+          cat << 'INSTRUCTIONS_EOF' > /tmp/agent-instructions.txt
+          Sync the @ayunis UI library to version ${TAG_NAME} in this repo and flag
+          any code that might break as a result.
+
+          REPOSITORY LAYOUT
+          - ./app/   — the consumer application (make changes here)
+          - ./ui/    — the ayunis-ui source repo, read-only reference
+
+          RELEASE CONTEXT
+          - New tag:       ${TAG_NAME}
+          - Release notes: ${RELEASE_URL}
+
+          STEP 1 — UNDERSTAND WHAT CHANGED
+          1. cd ./ui/ and run: git tag --sort=-version:refname | head -5
+          2. Identify the previous release tag (just before ${TAG_NAME}).
+          3. List commits: git log <prev>..${TAG_NAME} --oneline
+          4. Read ./ui/CHANGELOG.md — find the section for ${TAG_NAME}.
+          5. Find changed components:
+             git diff <prev>..${TAG_NAME} -- packages/kit/src/components/ --name-only
+             Extract the component folder names (e.g. button, card, etc.).
+          6. For each changed component, scan the diff for BREAKING CHANGES:
+             - Removed exports / renamed prop names
+             - Changed prop types / defaults
+             - Removed CSS classes / theme variables
+             Record a list: component name → summary of change → breaking? y/n.
+
+          STEP 2 — LOCATE ALL FRONTENDS IN THE CONSUMER REPO
+          Find every folder in ./app/ that contains a components.json (shadcn config).
+          For example, in ayunis-core this is ./app/ayunis-core-frontend/.
+          In ayunis-locaboo it is ./app/locaboo-4.0-frontend/ (and possibly
+          ./app/booking-platform-frontend/).
+
+          STEP 3 — UPDATE CHANGED COMPONENTS VIA SHADCN
+          The AYUNIS_REGISTRY_TOKEN env var is already available; shadcn reads it
+          automatically from each components.json config. For every changed component:
+            npx shadcn@latest add "@ayunis/<component-name>" --overwrite --yes
+          Example: npx shadcn@latest add "@ayunis/button" --overwrite --yes
+          If shadcn fails for a component, record the error and move on.
+
+          STEP 4 — SCAN FOR BREAKAGE
+          For every breaking change identified in step 1:
+          1. Search the consumer codebase for usages (ripgrep across *.ts *.tsx *.js *.jsx *.css).
+          2. For each match, decide: compatible / needs manual review / safe to auto-fix.
+          3. Record findings as: file:line — what changed — status.
+
+          STEP 5 — ATTEMPT TRIVIAL AUTO-FIXES
+          Safe to auto-fix:
+          - Renamed exports (update import paths)
+          - Renamed props with clearly unambiguous mapping
+          Do NOT auto-fix anything ambiguous — flag it for human review instead.
+
+          STEP 6 — VERIFY BUILDS
+          For each frontend folder, run its type-check if available
+          (tsc --noEmit, or npm run typecheck, or the project's build --dry-run).
+          Record whether it passes.
+
+          STEP 7 — OPEN PR
+          cd ./app/
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          BRANCH="chore/sync-ayunis-kit-${TAG_NAME}"
+          git checkout -b "$BRANCH"
+          git add -A
+          git commit -m "chore: sync @ayunis/kit to ${TAG_NAME}"
+          git push -u origin "$BRANCH"
+
+          PR BODY (use this exact structure):
+
+            ## Ayunis UI Library sync: ${TAG_NAME}
+            Release notes: ${RELEASE_URL}
+
+            ### Components updated
+            <list each component name that was re-pulled, with a one-line summary of what changed>
+
+            ### Breaking changes detected
+            <each item: file:line — what broke — status (auto-fixed / manual review)>
+            (If none: "No breaking changes detected — safe to merge.")
+
+            ### Auto-fixes applied
+            <list of files modified, with short description>
+
+            ### Manual action required
+            <list of spots flagged for human review>
+
+            ### Build status per frontend
+            <folder: pass/fail of type-check>
+
+          Create with: gh pr create --title "chore: sync @ayunis/kit to ${TAG_NAME}" --body "<body>"
+
+          IMPORTANT
+          - Never merge automatically.
+          - If you detect risk, highlight it at the TOP of the PR body.
+          - If nothing in the release affects this repo's code, still open the PR so the
+            component sources stay in sync, but state that manual merging is safe.
+          INSTRUCTIONS_EOF
+
+          # Only substitute TAG_NAME and RELEASE_URL; leave all other $VAR references
+          # (like $BRANCH, which the agent creates at runtime) untouched.
+          envsubst '$TAG_NAME $RELEASE_URL' < /tmp/agent-instructions.txt > /tmp/agent-instructions.final.txt
+          mv /tmp/agent-instructions.final.txt /tmp/agent-instructions.txt
+
+      - name: Run Cursor Agent
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          AYUNIS_REGISTRY_TOKEN: ${{ secrets.AYUNIS_REGISTRY_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          agent -p "$(cat /tmp/agent-instructions.txt)" --force --model claude-4.6-opus-high-thinking
