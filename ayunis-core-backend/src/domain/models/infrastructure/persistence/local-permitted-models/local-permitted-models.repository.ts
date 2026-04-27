@@ -181,6 +181,13 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     ) as PermittedLanguageModel;
   }
 
+  async findLanguageByName(params: {
+    name: string;
+    orgId: UUID;
+  }): Promise<PermittedLanguageModel[]> {
+    return this.queryService.findLanguageByName(params);
+  }
+
   async findOneEmbedding(orgId: UUID): Promise<PermittedEmbeddingModel | null> {
     return this.queryService.findOneEmbedding(orgId);
   }
