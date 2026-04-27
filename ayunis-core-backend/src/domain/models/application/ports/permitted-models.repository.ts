@@ -37,6 +37,10 @@ export abstract class PermittedModelsRepository {
   abstract findOneLanguage(
     params: FindOneParams,
   ): Promise<PermittedLanguageModel | null>;
+  abstract findLanguageByName(params: {
+    name: string;
+    orgId: UUID;
+  }): Promise<PermittedLanguageModel[]>;
   abstract findOneEmbedding(
     orgId: UUID,
   ): Promise<PermittedEmbeddingModel | null>;

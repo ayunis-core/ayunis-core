@@ -29,6 +29,7 @@ export enum ModelErrorCode {
   UNEXPECTED_MODEL_ERROR = 'UNEXPECTED_MODEL_ERROR',
   DUPLICATE_TEAM_PERMITTED_MODEL = 'DUPLICATE_TEAM_PERMITTED_MODEL',
   TEAM_NOT_FOUND_IN_ORG = 'TEAM_NOT_FOUND_IN_ORG',
+  MODEL_NAME_AMBIGUOUS = 'MODEL_NAME_AMBIGUOUS',
 }
 
 /**
@@ -302,6 +303,35 @@ export class ModelNotFoundByNameAndProviderError extends ModelError {
       ModelErrorCode.MODEL_NOT_FOUND,
       404,
       metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when a permitted language model name lookup returns no results.
+ */
+export class ModelNotFoundByNameError extends ModelError {
+  constructor(name: string, metadata?: ErrorMetadata) {
+    super(
+      `Model '${name}' not found`,
+      ModelErrorCode.MODEL_NOT_FOUND,
+      404,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when a permitted language model name matches more than one
+ * permitted model — the caller must disambiguate by passing a UUID.
+ */
+export class AmbiguousModelNameError extends ModelError {
+  constructor(name: string, candidateIds: UUID[], metadata?: ErrorMetadata) {
+    super(
+      `Multiple permitted models named '${name}'. Pass one of these UUIDs as the model id to disambiguate: ${candidateIds.join(', ')}`,
+      ModelErrorCode.MODEL_NAME_AMBIGUOUS,
+      400,
+      { ...metadata, candidateIds },
     );
   }
 }

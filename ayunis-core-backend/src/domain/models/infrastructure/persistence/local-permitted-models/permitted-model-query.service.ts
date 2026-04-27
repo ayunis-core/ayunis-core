@@ -27,6 +27,31 @@ export class PermittedModelQueryService {
     private readonly permittedModelMapper: PermittedModelMapper,
   ) {}
 
+  async findLanguageByName(params: {
+    name: string;
+    orgId: UUID;
+  }): Promise<PermittedLanguageModel[]> {
+    this.logger.debug('findLanguageByName', { orgId: params.orgId });
+    const records = await this.permittedModelRepository.find({
+      where: {
+        orgId: params.orgId,
+        scope: PermittedModelScope.ORG,
+        model: {
+          name: params.name,
+          isArchived: false,
+          type: ModelType.LANGUAGE,
+        },
+      } as FindManyOptions<PermittedModelRecord>['where'],
+      relations: { model: true },
+    });
+    return records
+      .filter((record) => record.model instanceof LanguageModelRecord)
+      .map(
+        (record) =>
+          this.permittedModelMapper.toDomain(record) as PermittedLanguageModel,
+      );
+  }
+
   async findOneEmbedding(orgId: UUID): Promise<PermittedEmbeddingModel | null> {
     this.logger.debug('findOneEmbedding', { orgId });
     const permittedEmbeddingModels = await this.findManyEmbedding(orgId);
