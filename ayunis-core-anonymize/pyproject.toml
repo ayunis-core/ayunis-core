@@ -10,7 +10,7 @@ dependencies = [
     "presidio-analyzer[gliner]>=2.2.360",
     "pydantic>=2.12.4",
     "pyyaml>=6.0.3",
-    "uvicorn[standard]>=0.38.0",
+    "uvicorn[standard]>=0.46.0",
 ]
 
 [tool.uv.sources]
