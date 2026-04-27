@@ -56,6 +56,8 @@ import enAdminSettingsSecurity from './shared/locales/en/admin-settings-security
 import deAdminSettingsSecurity from './shared/locales/de/admin-settings-security.json';
 import enAdminSettingsLetterheads from './shared/locales/en/admin-settings-letterheads.json';
 import deAdminSettingsLetterheads from './shared/locales/de/admin-settings-letterheads.json';
+import enAdminSettingsApiKeys from './shared/locales/en/admin-settings-api-keys.json';
+import deAdminSettingsApiKeys from './shared/locales/de/admin-settings-api-keys.json';
 
 const resources = {
   en: {
@@ -86,6 +88,7 @@ const resources = {
     'super-admin-settings-platform-config': enSuperAdminSettingsPlatformConfig,
     'admin-settings-security': enAdminSettingsSecurity,
     'admin-settings-letterheads': enAdminSettingsLetterheads,
+    'admin-settings-api-keys': enAdminSettingsApiKeys,
   },
   de: {
     auth: deAuth,
@@ -115,6 +118,7 @@ const resources = {
     'super-admin-settings-platform-config': deSuperAdminSettingsPlatformConfig,
     'admin-settings-security': deAdminSettingsSecurity,
     'admin-settings-letterheads': deAdminSettingsLetterheads,
+    'admin-settings-api-keys': deAdminSettingsApiKeys,
   },
 };
 

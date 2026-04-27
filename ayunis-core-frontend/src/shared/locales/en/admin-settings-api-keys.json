@@ -1,0 +1,53 @@
+{
+  "apiKeys": {
+    "page": {
+      "add": "Create API Key"
+    },
+    "list": {
+      "emptyTitle": "No API keys yet",
+      "emptyDescription": "Create an API key to authenticate programmatic access to the Ayunis API.",
+      "createdAt": "Created {{date}}",
+      "expiresAt": "Expires {{date}}",
+      "neverExpires": "Never expires"
+    },
+    "createDialog": {
+      "title": "Create API Key",
+      "description": "Generate a new API key for programmatic access. The full key will only be shown once.",
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g., CI bot, Production server",
+      "nameRequired": "Name is required",
+      "nameTooLong": "Name must be less than 100 characters",
+      "expiresAtLabel": "Expiration date",
+      "expiresAtPlaceholder": "Pick a date",
+      "expiresAtClear": "Clear expiration date",
+      "expiresAtHelper": "Leave empty for a key that never expires.",
+      "expiresInPast": "Expiration date must be in the future",
+      "cancel": "Cancel",
+      "create": "Create Key",
+      "creating": "Creating..."
+    },
+    "revealDialog": {
+      "title": "Your new API key",
+      "description": "Copy this key now and store it somewhere secure. For your protection, this is the only time it will be shown.",
+      "warning": "After closing this dialog, the full key cannot be retrieved.",
+      "copy": "Copy",
+      "copied": "Copied to clipboard",
+      "copyError": "Failed to copy to clipboard",
+      "done": "I've saved my key"
+    },
+    "createApiKey": {
+      "success": "API key created",
+      "error": "Failed to create API key",
+      "expirationInPast": "Expiration date must be in the future"
+    },
+    "revokeApiKey": {
+      "title": "Revoke API key",
+      "description": "Are you sure you want to revoke \"{{name}}\"? Any tools using this key will stop working immediately. This cannot be undone.",
+      "confirmText": "Revoke",
+      "cancelText": "Cancel",
+      "success": "API key revoked",
+      "error": "Failed to revoke API key",
+      "notFound": "API key not found"
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "apiKeys": {
+    "page": {
+      "add": "API-Schlüssel erstellen"
+    },
+    "list": {
+      "emptyTitle": "Noch keine API-Schlüssel",
+      "emptyDescription": "Erstellen Sie einen API-Schlüssel, um programmatischen Zugriff auf die Ayunis-API zu authentifizieren.",
+      "createdAt": "Erstellt {{date}}",
+      "expiresAt": "Läuft ab am {{date}}",
+      "neverExpires": "Läuft nie ab"
+    },
+    "createDialog": {
+      "title": "API-Schlüssel erstellen",
+      "description": "Generieren Sie einen neuen API-Schlüssel für programmatischen Zugriff. Der vollständige Schlüssel wird nur einmal angezeigt.",
+      "nameLabel": "Name",
+      "namePlaceholder": "z. B. CI-Bot, Produktionsserver",
+      "nameRequired": "Name ist erforderlich",
+      "nameTooLong": "Name muss weniger als 100 Zeichen haben",
+      "expiresAtLabel": "Ablaufdatum",
+      "expiresAtPlaceholder": "Datum wählen",
+      "expiresAtClear": "Ablaufdatum löschen",
+      "expiresAtHelper": "Leer lassen für einen Schlüssel, der nie abläuft.",
+      "expiresInPast": "Das Ablaufdatum muss in der Zukunft liegen",
+      "cancel": "Abbrechen",
+      "create": "Schlüssel erstellen",
+      "creating": "Wird erstellt..."
+    },
+    "revealDialog": {
+      "title": "Ihr neuer API-Schlüssel",
+      "description": "Kopieren Sie diesen Schlüssel jetzt und speichern Sie ihn an einem sicheren Ort. Aus Sicherheitsgründen wird er nur einmal angezeigt.",
+      "warning": "Nach dem Schließen dieses Dialogs kann der vollständige Schlüssel nicht mehr abgerufen werden.",
+      "copy": "Kopieren",
+      "copied": "In die Zwischenablage kopiert",
+      "copyError": "Kopieren in die Zwischenablage fehlgeschlagen",
+      "done": "Ich habe meinen Schlüssel gespeichert"
+    },
+    "createApiKey": {
+      "success": "API-Schlüssel erstellt",
+      "error": "API-Schlüssel konnte nicht erstellt werden",
+      "expirationInPast": "Das Ablaufdatum muss in der Zukunft liegen"
+    },
+    "revokeApiKey": {
+      "title": "API-Schlüssel widerrufen",
+      "description": "Möchten Sie „{{name}}\" wirklich widerrufen? Alle Tools, die diesen Schlüssel verwenden, funktionieren sofort nicht mehr. Dies kann nicht rückgängig gemacht werden.",
+      "confirmText": "Widerrufen",
+      "cancelText": "Abbrechen",
+      "success": "API-Schlüssel widerrufen",
+      "error": "API-Schlüssel konnte nicht widerrufen werden",
+      "notFound": "API-Schlüssel nicht gefunden"
+    }
+  }
+}
