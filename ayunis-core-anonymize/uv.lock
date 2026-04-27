@@ -667,7 +667,7 @@ dependencies = [
 requires-dist = [
     { name = "de-core-news-sm", url = "https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.8.0/de_core_news_sm-3.8.0-py3-none-any.whl" },
     { name = "fastapi", specifier = ">=0.121.3" },
-    { name = "presidio-analyzer", extras = ["gliner"], specifier = ">=2.2.360" },
+    { name = "presidio-analyzer", extras = ["gliner"], specifier = ">=2.2.362" },
     { name = "pydantic", specifier = ">=2.12.4" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.38.0" },
