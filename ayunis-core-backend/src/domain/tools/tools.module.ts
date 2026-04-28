@@ -36,6 +36,7 @@ import { ArtifactsModule } from '../artifacts/artifacts.module';
 import { GenerateImageToolHandler } from './application/handlers/generate-image-tool.handler';
 import { ModelsModule } from '../models/models.module';
 import { UsageModule } from '../usage/usage.module';
+import { QuotasModule } from 'src/iam/quotas/quotas.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { UsageModule } from '../usage/usage.module';
     SkillTemplatesModule,
     ArtifactsModule,
     UsageModule,
+    QuotasModule,
   ],
   providers: [
     // Use cases
