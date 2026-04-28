@@ -40,6 +40,7 @@ import {
   SkillSourceResponseDto,
 } from './dto/skill-response.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
+import { SkillCreatorNameResolver } from './services/skill-creator-name.resolver';
 
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -83,6 +84,7 @@ export class SkillSourcesController {
     private readonly removeSourceFromSkillUseCase: RemoveSourceFromSkillUseCase,
     private readonly listSkillSourcesUseCase: ListSkillSourcesUseCase,
     private readonly skillDtoMapper: SkillDtoMapper,
+    private readonly skillCreatorNameResolver: SkillCreatorNameResolver,
     private readonly startDocumentProcessingUseCase: StartDocumentProcessingUseCase,
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
     private readonly skillAccessService: SkillAccessService,
@@ -195,7 +197,10 @@ export class SkillSourcesController {
 
       fs.unlinkSync(file.path);
       const context = await this.skillAccessService.resolveUserContext(skillId);
-      return this.skillDtoMapper.toDto(updatedSkill, context);
+      const creatorName = context.isShared
+        ? await this.skillCreatorNameResolver.resolveOne(updatedSkill.userId)
+        : null;
+      return this.skillDtoMapper.toDto(updatedSkill, context, creatorName);
     } catch (error: unknown) {
       this.logger.error('addFileSource', { error: error as Error });
       fs.unlinkSync(file.path);

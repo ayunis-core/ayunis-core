@@ -52,6 +52,7 @@ import { SharedEntityType } from '../shares/domain/value-objects/shared-entity-t
 import { SharesModule } from '../shares/shares.module';
 
 import { ThreadsModule } from '../threads/threads.module';
+import { UsersModule } from 'src/iam/users/users.module';
 
 // Presenters
 import { SkillsController } from './presenters/http/skills.controller';
@@ -59,6 +60,7 @@ import { SkillSourcesController } from './presenters/http/skill-sources.controll
 import { SkillMcpIntegrationsController } from './presenters/http/skill-mcp-integrations.controller';
 import { SkillKnowledgeBasesController } from './presenters/http/skill-knowledge-bases.controller';
 import { SkillDtoMapper } from './presenters/http/mappers/skill.mapper';
+import { SkillCreatorNameResolver } from './presenters/http/services/skill-creator-name.resolver';
 import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-integration-dto.mapper';
 import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappers/knowledge-base-dto.mapper';
 
@@ -75,6 +77,7 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
     McpModule,
     KnowledgeBasesModule,
     MarketplaceModule,
+    UsersModule,
     forwardRef(() => SharesModule),
     forwardRef(() => ThreadsModule),
   ],
@@ -125,6 +128,7 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
 
     // Presenters
     SkillDtoMapper,
+    SkillCreatorNameResolver,
     McpIntegrationDtoMapper,
     KnowledgeBaseDtoMapper,
   ],

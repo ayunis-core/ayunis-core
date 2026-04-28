@@ -28,6 +28,7 @@ import { SkillAccessService } from '../../application/services/skill-access.serv
 
 import { SkillResponseDto } from './dto/skill-response.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
+import { SkillCreatorNameResolver } from './services/skill-creator-name.resolver';
 import { McpIntegrationResponseDto } from 'src/domain/mcp/presenters/http/dto/mcp-integration-response.dto';
 import { McpIntegrationDtoMapper } from 'src/domain/mcp/presenters/http/mappers/mcp-integration-dto.mapper';
 import { RequireFeature } from 'src/common/guards/feature.guard';
@@ -44,6 +45,7 @@ export class SkillMcpIntegrationsController {
     private readonly unassignMcpIntegrationFromSkillUseCase: UnassignMcpIntegrationFromSkillUseCase,
     private readonly listSkillMcpIntegrationsUseCase: ListSkillMcpIntegrationsUseCase,
     private readonly skillDtoMapper: SkillDtoMapper,
+    private readonly skillCreatorNameResolver: SkillCreatorNameResolver,
     private readonly mcpIntegrationDtoMapper: McpIntegrationDtoMapper,
     private readonly skillAccessService: SkillAccessService,
   ) {}
@@ -82,8 +84,11 @@ export class SkillMcpIntegrationsController {
     );
 
     const context = await this.skillAccessService.resolveUserContext(skillId);
+    const creatorName = context.isShared
+      ? await this.skillCreatorNameResolver.resolveOne(skill.userId)
+      : null;
 
-    return this.skillDtoMapper.toDto(skill, context);
+    return this.skillDtoMapper.toDto(skill, context, creatorName);
   }
 
   @Delete(':skillId/mcp-integrations/:integrationId')
@@ -121,8 +126,11 @@ export class SkillMcpIntegrationsController {
     );
 
     const context = await this.skillAccessService.resolveUserContext(skillId);
+    const creatorName = context.isShared
+      ? await this.skillCreatorNameResolver.resolveOne(skill.userId)
+      : null;
 
-    return this.skillDtoMapper.toDto(skill, context);
+    return this.skillDtoMapper.toDto(skill, context, creatorName);
   }
 
   @Get(':skillId/mcp-integrations')

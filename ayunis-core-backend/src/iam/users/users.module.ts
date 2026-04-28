@@ -14,6 +14,7 @@ import { EmailTemplatesModule } from 'src/common/email-templates/email-templates
 
 // Import use cases
 import { FindUserByIdUseCase } from './application/use-cases/find-user-by-id/find-user-by-id.use-case';
+import { FindUsersByIdsUseCase } from './application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
 import { FindUsersByOrgIdUseCase } from './application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { DeleteUserUseCase } from './application/use-cases/delete-user/delete-user.use-case';
 import { UpdateUserRoleUseCase } from './application/use-cases/update-user-role/update-user-role.use-case';
@@ -89,6 +90,7 @@ import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from
     },
     // Use cases
     FindUserByIdUseCase,
+    FindUsersByIdsUseCase,
     FindUsersByOrgIdUseCase,
     DeleteUserUseCase,
     UpdateUserRoleUseCase,
@@ -126,6 +128,7 @@ import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from
     SendConfirmationEmailUseCase,
     ValidateUserUseCase,
     FindUserByIdUseCase,
+    FindUsersByIdsUseCase,
     FindUsersByOrgIdUseCase,
     IsValidPasswordUseCase,
     EmailConfirmationJwtService,

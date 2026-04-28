@@ -75,6 +75,21 @@ export class LocalUsersRepository extends UsersRepository {
     return userRecords.map((record) => UserMapper.toDomain(record));
   }
 
+  async findManyByIds(ids: UUID[]): Promise<User[]> {
+    this.logger.log('findManyByIds', { idCount: ids.length });
+
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const userRecords = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.id IN (:...ids)', { ids })
+      .getMany();
+
+    return userRecords.map((record) => UserMapper.toDomain(record));
+  }
+
   async findManyBySystemRole(role: SystemRole): Promise<User[]> {
     this.logger.log('findManyBySystemRole', { role });
 
