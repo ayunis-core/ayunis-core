@@ -8,6 +8,7 @@ export class UsageMapper {
     const record = new UsageRecord();
     record.id = usage.id;
     record.userId = usage.userId;
+    record.apiKeyId = usage.apiKeyId;
     record.organizationId = usage.organizationId;
     record.modelId = usage.modelId;
     record.provider = usage.provider;
@@ -22,9 +23,10 @@ export class UsageMapper {
   }
 
   toDomain(record: UsageRecord): Usage {
-    return new Usage({
+    return Usage.fromPersistence({
       id: record.id,
       userId: record.userId,
+      apiKeyId: record.apiKeyId,
       organizationId: record.organizationId,
       modelId: record.modelId,
       provider: record.provider,
