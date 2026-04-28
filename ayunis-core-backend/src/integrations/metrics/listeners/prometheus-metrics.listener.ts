@@ -130,8 +130,12 @@ export class PrometheusMetricsListener {
 
   @OnEvent(TokensConsumedEvent.EVENT_NAME)
   handleTokensConsumed(event: TokensConsumedEvent): void {
+    // For api-key principals, write the api-key UUID into the existing
+    // `user_id` label slot — keeps the label set stable for dashboards while
+    // still uniquely identifying the caller.
+    const principalId = event.userId ?? event.apiKeyId ?? '';
     const baseLabels = {
-      user_id: event.userId,
+      user_id: principalId,
       org_id: event.orgId,
       model: event.model,
       provider: event.provider,

@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
-import { ContextService } from 'src/common/context/services/context.service';
+import {
+  ContextService,
+  ResolvedPrincipal,
+} from 'src/common/context/services/context.service';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { CollectUsageCommand } from '../use-cases/collect-usage/collect-usage.command';
@@ -36,15 +39,41 @@ export class CollectUsageAsyncService {
       messageId,
     });
 
-    const userId = this.contextService.get('userId');
-    const orgId = this.contextService.get('orgId');
+    const principal = this.resolvePrincipalSafely(model.id);
+    if (!principal) return;
 
+    this.emitTokensConsumed(principal, model, inputTokens, outputTokens);
+    this.persistUsage(model, inputTokens, outputTokens, messageId);
+  }
+
+  private resolvePrincipalSafely(modelId: UUID): ResolvedPrincipal | null {
+    try {
+      return this.contextService.requirePrincipal();
+    } catch {
+      this.logger.warn(
+        'Cannot collect usage: no authenticated principal in context',
+        { modelId },
+      );
+      return null;
+    }
+  }
+
+  private emitTokensConsumed(
+    principal: ResolvedPrincipal,
+    model: LanguageModel | ImageGenerationModel,
+    inputTokens: number,
+    outputTokens: number,
+  ): void {
+    const userId = principal.kind === 'user' ? principal.userId : null;
+    const apiKeyId = principal.kind === 'apiKey' ? principal.apiKeyId : null;
     this.eventEmitter
       .emitAsync(
         TokensConsumedEvent.EVENT_NAME,
         new TokensConsumedEvent(
-          userId ?? ('unknown' as UUID),
-          orgId ?? ('unknown' as UUID),
+          principal.kind,
+          userId,
+          apiKeyId,
+          principal.orgId,
           model.name,
           model.provider,
           inputTokens,
@@ -56,7 +85,14 @@ export class CollectUsageAsyncService {
           error: err instanceof Error ? err.message : 'Unknown error',
         });
       });
+  }
 
+  private persistUsage(
+    model: LanguageModel | ImageGenerationModel,
+    inputTokens: number,
+    outputTokens: number,
+    messageId?: UUID,
+  ): void {
     this.collectUsageUseCase
       .execute(
         new CollectUsageCommand({

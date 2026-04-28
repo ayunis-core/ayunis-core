@@ -4,7 +4,15 @@ import type { ModelProvider } from '../../models/domain/value-objects/model-prov
 
 export class Usage {
   public readonly id: UUID;
-  public readonly userId: UUID;
+  /**
+   * The user who generated this usage. `null` when the call was authenticated
+   * via an API key — in that case `apiKeyId` is set instead. On insert, exactly
+   * one of `userId` / `apiKeyId` is populated (enforced in the constructor below).
+   * After the referenced principal is deleted, the FK is set to NULL — so existing
+   * rows may have both columns null.
+   */
+  public readonly userId: UUID | null;
+  public readonly apiKeyId: UUID | null;
   public readonly organizationId: UUID;
   /**
    * The base model ID (not the permitted model ID).
@@ -25,7 +33,8 @@ export class Usage {
 
   constructor(params: {
     id?: UUID;
-    userId: UUID;
+    userId: UUID | null;
+    apiKeyId: UUID | null;
     organizationId: UUID;
     modelId: UUID;
     provider: ModelProvider;
@@ -37,8 +46,19 @@ export class Usage {
     requestId: UUID;
     createdAt?: Date;
   }) {
+    if (!params.userId && !params.apiKeyId) {
+      throw new Error(
+        'Usage row must have either userId or apiKeyId — both are null',
+      );
+    }
+    if (params.userId && params.apiKeyId) {
+      throw new Error(
+        'Usage row must have exactly one principal — userId and apiKeyId are both set',
+      );
+    }
     this.id = params.id ?? randomUUID();
     this.userId = params.userId;
+    this.apiKeyId = params.apiKeyId;
     this.organizationId = params.organizationId;
     this.modelId = params.modelId;
     this.provider = params.provider;

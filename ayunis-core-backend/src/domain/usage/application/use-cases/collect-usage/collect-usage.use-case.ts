@@ -9,7 +9,10 @@ import {
   UnexpectedUsageError,
 } from '../../usage.errors';
 import { ApplicationError } from '../../../../../common/errors/base.error';
-import { ContextService } from '../../../../../common/context/services/context.service';
+import {
+  ContextService,
+  ResolvedPrincipal,
+} from '../../../../../common/context/services/context.service';
 import { GetCreditsPerEuroUseCase } from '../../../../../iam/platform-config/application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
 import { PlatformConfigNotFoundError } from '../../../../../iam/platform-config/application/platform-config.errors';
 
@@ -24,62 +27,24 @@ export class CollectUsageUseCase {
   ) {}
 
   async execute(command: CollectUsageCommand): Promise<void> {
-    const userId = this.contextService.get('userId');
-    const organizationId = this.contextService.get('orgId');
-
-    if (!userId || !organizationId) {
-      throw new UsageCollectionFailedError(
-        'User ID or Organization ID not available in context',
-        {
-          userId: userId ?? undefined,
-          organizationId: organizationId ?? undefined,
-          modelId: command.modelId,
-        },
-      );
-    }
-
-    this.logger.log('CollectUsageUseCase.execute called', {
-      userId,
-      organizationId,
-      modelId: command.modelId,
-      provider: command.provider,
-      totalTokens: command.totalTokens,
-    });
+    const principal = this.resolvePrincipal(command);
+    const userId = principal.kind === 'user' ? principal.userId : null;
+    const apiKeyId = principal.kind === 'apiKey' ? principal.apiKeyId : null;
 
     try {
       this.validateCommand(command);
-
-      const cost = this.calculateCost(command);
-      const creditsConsumed = await this.calculateCredits(cost);
-
-      const usage = new Usage({
-        userId,
-        organizationId,
-        modelId: command.modelId,
-        provider: command.provider,
-        inputTokens: command.inputTokens,
-        outputTokens: command.outputTokens,
-        totalTokens: command.totalTokens,
-        cost,
-        creditsConsumed,
-        requestId: command.requestId ?? randomUUID(),
-      });
-
+      const usage = await this.buildUsage(command, principal);
       await this.usageRepository.save(usage);
-
       this.logger.log('Usage collected successfully', {
-        userId,
-        organizationId,
+        principalKind: principal.kind,
+        organizationId: principal.orgId,
         modelId: command.modelId,
-        provider: command.provider,
         totalTokens: command.totalTokens,
-        cost,
+        cost: usage.cost,
         requestId: command.requestId,
       });
     } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
+      if (error instanceof ApplicationError) throw error;
       this.logger.error('Failed to collect usage', {
         error: error as Error,
         command,
@@ -87,12 +52,45 @@ export class CollectUsageUseCase {
       throw new UnexpectedUsageError(
         error instanceof Error ? error : new Error('Unknown error'),
         {
-          userId,
-          organizationId,
+          userId: userId ?? undefined,
+          apiKeyId: apiKeyId ?? undefined,
+          organizationId: principal.orgId,
           modelId: command.modelId,
         },
       );
     }
+  }
+
+  private resolvePrincipal(command: CollectUsageCommand): ResolvedPrincipal {
+    try {
+      return this.contextService.requirePrincipal();
+    } catch {
+      throw new UsageCollectionFailedError(
+        'No authenticated principal in context for usage collection',
+        { modelId: command.modelId },
+      );
+    }
+  }
+
+  private async buildUsage(
+    command: CollectUsageCommand,
+    principal: ResolvedPrincipal,
+  ): Promise<Usage> {
+    const cost = this.calculateCost(command);
+    const creditsConsumed = await this.calculateCredits(cost);
+    return new Usage({
+      userId: principal.kind === 'user' ? principal.userId : null,
+      apiKeyId: principal.kind === 'apiKey' ? principal.apiKeyId : null,
+      organizationId: principal.orgId,
+      modelId: command.modelId,
+      provider: command.provider,
+      inputTokens: command.inputTokens,
+      outputTokens: command.outputTokens,
+      totalTokens: command.totalTokens,
+      cost,
+      creditsConsumed,
+      requestId: command.requestId ?? randomUUID(),
+    });
   }
 
   private validateCommand(command: CollectUsageCommand): void {

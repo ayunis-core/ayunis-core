@@ -14,6 +14,8 @@ import { ImageGenerationModel } from '../../../../models/domain/models/image-gen
 import { LanguageModel } from '../../../../models/domain/models/language.model';
 import type { Usage } from '../../../domain/usage.entity';
 import { ContextService } from '../../../../../common/context/services/context.service';
+import { UserRole } from '../../../../../iam/users/domain/value-objects/role.object';
+import { SystemRole } from '../../../../../iam/users/domain/value-objects/system-role.enum';
 import { GetCreditsPerEuroUseCase } from '../../../../../iam/platform-config/application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
 import { PlatformConfigNotFoundError } from '../../../../../iam/platform-config/application/platform-config.errors';
 import { PlatformConfigKey } from '../../../../../iam/platform-config/domain/platform-config-keys.enum';
@@ -57,6 +59,13 @@ describe('CollectUsageUseCase', () => {
         if (key === 'orgId') return orgId;
         return undefined;
       }) as any,
+      requirePrincipal: jest.fn(() => ({
+        kind: 'user' as const,
+        userId,
+        orgId,
+        role: UserRole.USER,
+        systemRole: SystemRole.CUSTOMER,
+      })),
     };
 
     mockGetCreditsPerEuroUseCase = {
@@ -85,6 +94,15 @@ describe('CollectUsageUseCase', () => {
         if (key === 'orgId') return orgId;
         return undefined;
       },
+    );
+    (mockContextService.requirePrincipal as jest.Mock).mockImplementation(
+      () => ({
+        kind: 'user' as const,
+        userId,
+        orgId,
+        role: UserRole.USER,
+        systemRole: SystemRole.CUSTOMER,
+      }),
     );
     (mockUsageRepository.save as jest.Mock).mockResolvedValue(undefined);
     mockGetCreditsPerEuroUseCase.execute.mockResolvedValue(100);
@@ -343,14 +361,12 @@ describe('CollectUsageUseCase', () => {
   });
 
   describe('error handling', () => {
-    it('should throw UsageCollectionFailedError when userId is missing from context', async () => {
-      jest.spyOn(mockContextService, 'get').mockImplementation(((
-        key?: 'userId' | 'orgId',
-      ) => {
-        if (key === 'userId') return undefined;
-        if (key === 'orgId') return orgId;
-        return undefined;
-      }) as any);
+    it('should throw UsageCollectionFailedError when no principal is in context', async () => {
+      (mockContextService.requirePrincipal as jest.Mock).mockImplementation(
+        () => {
+          throw new Error('No principal');
+        },
+      );
 
       const model = createMockModel();
       const command = new CollectUsageCommand({
@@ -366,14 +382,17 @@ describe('CollectUsageUseCase', () => {
       expect(mockUsageRepository.save).not.toHaveBeenCalled();
     });
 
-    it('should throw UsageCollectionFailedError when orgId is missing from context', async () => {
-      jest.spyOn(mockContextService, 'get').mockImplementation(((
-        key?: 'userId' | 'orgId',
-      ) => {
-        if (key === 'userId') return userId;
-        if (key === 'orgId') return undefined;
-        return undefined;
-      }) as any);
+    it('records api-key principal usage with apiKeyId, userId null', async () => {
+      const apiKeyId = 'api-key-id' as UUID;
+      (mockContextService.requirePrincipal as jest.Mock).mockImplementation(
+        () => ({
+          kind: 'apiKey' as const,
+          apiKeyId,
+          orgId,
+          role: UserRole.USER,
+          systemRole: SystemRole.CUSTOMER,
+        }),
+      );
 
       const model = createMockModel();
       const command = new CollectUsageCommand({
@@ -383,10 +402,15 @@ describe('CollectUsageUseCase', () => {
         requestId,
       });
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        UsageCollectionFailedError,
+      await useCase.execute(command);
+
+      expect(mockUsageRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: null,
+          apiKeyId,
+          organizationId: orgId,
+        }),
       );
-      expect(mockUsageRepository.save).not.toHaveBeenCalled();
     });
 
     it('should wrap repository errors in UnexpectedUsageError', async () => {
