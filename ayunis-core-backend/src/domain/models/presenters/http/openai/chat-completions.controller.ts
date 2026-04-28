@@ -147,6 +147,8 @@ export class ChatCompletionsController {
         next: (chunk) => {
           if (disconnected) {
             subscriptionRef.current?.unsubscribe();
+            this.cleanup(response, request, onClose, heartbeat);
+            resolve();
             return;
           }
           const dtoChunk = this.mappers.stream.toChunkDto(chunk, ctx);

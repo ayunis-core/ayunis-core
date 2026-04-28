@@ -68,8 +68,9 @@ export class OpenAIRequestMapper {
     const { systemPrompt, conversation } = this.splitSystemMessages(
       dto.messages,
     );
+    const toolCallIdToName = this.buildToolCallIdToNameMap(conversation);
     const messages = conversation.map((msg) =>
-      this.toDomainMessage(msg, threadId),
+      this.toDomainMessage(msg, threadId, toolCallIdToName),
     );
     const tools = (dto.tools ?? []).map((tool) => this.toDomainTool(tool));
     const toolChoice =
@@ -83,6 +84,20 @@ export class OpenAIRequestMapper {
       toolChoice,
       instructions: systemPrompt,
     };
+  }
+
+  private buildToolCallIdToNameMap(
+    messages: ChatCompletionMessageDto[],
+  ): Map<string, string> {
+    const map = new Map<string, string>();
+    for (const msg of messages) {
+      if (msg.role === 'assistant' && msg.tool_calls) {
+        for (const tc of msg.tool_calls) {
+          map.set(tc.id, tc.function.name);
+        }
+      }
+    }
+    return map;
   }
 
   private splitSystemMessages(messages: ChatCompletionMessageDto[]): {
@@ -110,6 +125,7 @@ export class OpenAIRequestMapper {
   private toDomainMessage(
     dto: ChatCompletionMessageDto,
     threadId: UUID,
+    toolCallIdToName: Map<string, string>,
   ): Message {
     switch (dto.role) {
       case 'user':
@@ -117,7 +133,7 @@ export class OpenAIRequestMapper {
       case 'assistant':
         return this.toAssistantMessage(dto, threadId);
       case 'tool':
-        return this.toToolResultMessage(dto, threadId);
+        return this.toToolResultMessage(dto, threadId, toolCallIdToName);
       case 'system':
         // Plain system messages are folded into instructions earlier; this
         // branch only fires for stragglers (we still construct a real
@@ -167,16 +183,23 @@ export class OpenAIRequestMapper {
   private toToolResultMessage(
     dto: ChatCompletionMessageDto,
     threadId: UUID,
+    toolCallIdToName: Map<string, string>,
   ): ToolResultMessage {
     if (!dto.tool_call_id) {
       throw new BadRequestException('Tool message must include tool_call_id');
+    }
+    const toolName = toolCallIdToName.get(dto.tool_call_id);
+    if (!toolName) {
+      throw new BadRequestException(
+        `No matching tool_call found for tool_call_id "${dto.tool_call_id}" in any preceding assistant message`,
+      );
     }
     return new ToolResultMessage({
       threadId,
       content: [
         new ToolResultMessageContent(
           dto.tool_call_id,
-          dto.tool_call_id,
+          toolName,
           this.requireString(dto, 'content'),
         ),
       ],
