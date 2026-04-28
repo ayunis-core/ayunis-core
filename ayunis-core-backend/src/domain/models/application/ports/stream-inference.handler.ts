@@ -1,5 +1,5 @@
 import type { Message } from 'src/domain/messages/domain/message.entity';
-import type { Tool } from 'src/domain/tools/domain/tool.entity';
+import type { ToolSchema } from 'src/domain/tools/domain/tool.entity';
 import type { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import type { Model } from '../../domain/model.entity';
 import type { Observable } from 'rxjs';
@@ -9,7 +9,12 @@ export class StreamInferenceInput {
   public readonly model: Model;
   public readonly messages: Message[];
   public readonly systemPrompt: string;
-  public readonly tools: Tool[];
+  /**
+   * Tools the LLM can call. Persisted `Tool` entities and inline definitions
+   * supplied by transport-layer callers both satisfy `ToolSchema`; handlers
+   * don't need to distinguish.
+   */
+  public readonly tools: ToolSchema[];
   public readonly toolChoice?: ModelToolChoice;
   public readonly orgId: string;
 
@@ -17,7 +22,7 @@ export class StreamInferenceInput {
     model: Model;
     messages: Message[];
     systemPrompt: string;
-    tools?: Tool[];
+    tools?: ToolSchema[];
     toolChoice?: ModelToolChoice;
     orgId: string;
   }) {
@@ -25,9 +30,7 @@ export class StreamInferenceInput {
     this.messages = params.messages;
     this.systemPrompt = params.systemPrompt;
     this.tools = params.tools ?? [];
-    // only set toolChoice if tools are provided
-    this.toolChoice =
-      params.tools && params.tools.length > 0 ? params.toolChoice : undefined;
+    this.toolChoice = this.tools.length > 0 ? params.toolChoice : undefined;
     this.orgId = params.orgId;
   }
 }

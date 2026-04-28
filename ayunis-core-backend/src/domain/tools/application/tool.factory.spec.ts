@@ -169,9 +169,8 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.GENERATE_IMAGE);
       expect(types).toContain(ToolType.CREATE_DIAGRAM);
       expect(types).toContain(ToolType.UPDATE_DIAGRAM);
-      expect(types).toContain(ToolType.OPENAI_COMPAT);
 
-      expect(types.length).toBe(27);
+      expect(types.length).toBe(26);
     });
   });
 });

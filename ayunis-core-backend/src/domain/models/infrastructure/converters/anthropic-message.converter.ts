@@ -1,6 +1,6 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import type { Message } from 'src/domain/messages/domain/message.entity';
-import type { Tool } from 'src/domain/tools/domain/tool.entity';
+import type { ToolSchema } from 'src/domain/tools/domain/tool.entity';
 import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
@@ -28,7 +28,7 @@ type AnthropicToolChoice = ToolChoiceAny | ToolChoiceAuto | ToolChoiceTool;
 export class AnthropicMessageConverter {
   constructor(private readonly imageContentService: ImageContentService) {}
 
-  convertTool(tool: Tool): Anthropic.Tool {
+  convertTool(tool: ToolSchema): Anthropic.Tool {
     return {
       name: tool.name,
       description: tool.description,

@@ -26,5 +26,4 @@ export enum ToolType {
   GENERATE_IMAGE = 'generate_image',
   CREATE_DIAGRAM = 'create_diagram',
   UPDATE_DIAGRAM = 'update_diagram',
-  OPENAI_COMPAT = 'openai_compat',
 }
