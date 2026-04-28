@@ -68,11 +68,7 @@ export class SubscriptionGuard implements CanActivate {
 
   private async checkSubscription(
     request: RequestWithSubscriptionContext,
-    orgId: ReturnType<typeof principalFromRequest> extends infer P
-      ? P extends ActivePrincipal
-        ? P['orgId']
-        : never
-      : never,
+    orgId: ActivePrincipal['orgId'],
   ): Promise<boolean> {
     const { hasActiveSubscription } =
       await this.hasActiveSubscriptionUseCase.execute(
