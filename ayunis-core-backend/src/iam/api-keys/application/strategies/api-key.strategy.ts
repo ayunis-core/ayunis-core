@@ -1,7 +1,6 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy } from 'passport-strategy';
-import type { Request } from 'express';
+import { Strategy as BearerStrategy } from 'passport-http-bearer';
 
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
@@ -13,27 +12,27 @@ import { ValidateApiKeyUseCase } from '../use-cases/validate-api-key/validate-ap
 import { ValidateApiKeyCommand } from '../use-cases/validate-api-key/validate-api-key.command';
 
 export const API_KEY_STRATEGY_NAME = 'api-key';
-const BEARER_PREFIX = 'Bearer ';
 
 /**
- * Bearer-token Passport strategy for Ayunis API keys.
+ * RFC 6750 Bearer-token Passport strategy for Ayunis API keys.
  *
  * Composed alongside the JWT strategy in the global auth guard via
- * `AuthGuard(['jwt', 'api-key'])`. On success, Passport assigns the returned
- * `ActiveApiKey` to `request.user`, so downstream guards consume a single
- * unified `ActivePrincipal` regardless of credential type.
+ * `AuthGuard(['jwt', 'api-key'])`. Passport assigns the `ActiveApiKey`
+ * returned from `validate()` to `request.user`, so downstream guards consume
+ * a single unified `ActivePrincipal` regardless of credential type.
  *
- * Failure modes:
- * - No `Authorization: Bearer <ayu_...>` header: `fail()` with no challenge,
- *   letting Passport try the next strategy in the chain (JWT cookie auth).
- * - Bearer token present but invalid/expired: `fail()` with a 401 challenge,
- *   so the final response carries the API-key error message.
- * - Unexpected error (e.g. DB outage): `error()` so the request rejects with
- *   a 500-like Unauthorized rather than masquerading as a credential mismatch.
+ * `validate()` return semantics (per `passport-http-bearer`):
+ * - Throwing → strategy errors (500-class), Passport surfaces it.
+ * - Returning `false` → strategy fails (401), the next strategy in the chain
+ *   gets a turn, then `WWW-Authenticate: Bearer ...` is sent.
+ * - Returning the principal → strategy succeeds.
+ *
+ * Tokens that don't carry the Ayunis API-key prefix yield `false` so that
+ * non-Ayunis bearer tokens fall through cleanly to the JWT strategy.
  */
 @Injectable()
 export class ApiKeyStrategy extends PassportStrategy(
-  Strategy,
+  BearerStrategy,
   API_KEY_STRATEGY_NAME,
 ) {
   private readonly logger = new Logger(ApiKeyStrategy.name);
@@ -42,53 +41,27 @@ export class ApiKeyStrategy extends PassportStrategy(
     super();
   }
 
-  authenticate(request: Request): void {
-    const token = this.extractBearerToken(request);
-    if (token === null) {
-      this.fail(401);
-      return;
-    }
-
-    void this.validate(token)
-      .then((principal) => this.success(principal))
-      .catch((error: unknown) => this.handleError(error));
-  }
-
-  private extractBearerToken(request: Request): string | null {
-    const header = request.headers.authorization;
-    if (!header?.startsWith(BEARER_PREFIX)) {
-      return null;
-    }
-    const token = header.slice(BEARER_PREFIX.length).trim();
+  async validate(token: string): Promise<ActiveApiKey | false> {
     if (!token.startsWith(ApiKey.KEY_PREFIX)) {
-      return null;
+      return false;
     }
-    return token;
-  }
-
-  // Implements the abstract `validate()` contract from the @nestjs/passport
-  // mixin. Not invoked via the standard verify-callback flow (we call it from
-  // `authenticate()` ourselves), but exposing it here keeps the strategy
-  // testable in isolation and satisfies the mixin's type requirement.
-  async validate(token: string): Promise<ActiveApiKey> {
-    const apiKey = await this.validateApiKeyUseCase.execute(
-      new ValidateApiKeyCommand(token),
-    );
-    return new ActiveApiKey({
-      apiKeyId: apiKey.id,
-      label: apiKey.name,
-      orgId: apiKey.orgId,
-      role: UserRole.USER,
-      systemRole: SystemRole.CUSTOMER,
-    });
-  }
-
-  private handleError(error: unknown): void {
-    if (error instanceof ApiKeyError) {
-      this.fail(error.message, 401);
-      return;
+    try {
+      const apiKey = await this.validateApiKeyUseCase.execute(
+        new ValidateApiKeyCommand(token),
+      );
+      return new ActiveApiKey({
+        apiKeyId: apiKey.id,
+        label: apiKey.name,
+        orgId: apiKey.orgId,
+        role: UserRole.USER,
+        systemRole: SystemRole.CUSTOMER,
+      });
+    } catch (err) {
+      if (err instanceof ApiKeyError && err.statusCode < 500) {
+        return false;
+      }
+      this.logger.error('Unexpected error during API key validation', err);
+      throw err;
     }
-    this.logger.error('Unexpected error during API key validation', error);
-    this.error(new UnauthorizedException('API key authentication failed'));
   }
 }

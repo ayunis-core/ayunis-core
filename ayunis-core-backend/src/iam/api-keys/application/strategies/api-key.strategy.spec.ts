@@ -1,8 +1,7 @@
 import type { UUID } from 'crypto';
-import type { Request } from 'express';
 
 import { ApiKey } from '../../domain/api-key.entity';
-import { ApiKeyInvalidError } from '../api-keys.errors';
+import { ApiKeyInvalidError, UnexpectedApiKeyError } from '../api-keys.errors';
 import { ValidateApiKeyCommand } from '../use-cases/validate-api-key/validate-api-key.command';
 import type { ValidateApiKeyUseCase } from '../use-cases/validate-api-key/validate-api-key.use-case';
 import { ApiKeyStrategy } from './api-key.strategy';
@@ -22,94 +21,64 @@ function createValidApiKey(): ApiKey {
   });
 }
 
-function createMockRequest(authorization?: string): Request {
-  return {
-    headers: authorization ? { authorization } : {},
-  } as Request;
-}
-
 describe('ApiKeyStrategy', () => {
   let validateApiKeyUseCase: jest.Mocked<ValidateApiKeyUseCase>;
   let strategy: ApiKeyStrategy;
-  let success: jest.Mock;
-  let fail: jest.Mock;
-  let error: jest.Mock;
 
   beforeEach(() => {
     validateApiKeyUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<ValidateApiKeyUseCase>;
     strategy = new ApiKeyStrategy(validateApiKeyUseCase);
-    success = jest.fn();
-    fail = jest.fn();
-    error = jest.fn();
-    Object.assign(strategy, { success, fail, error });
   });
 
-  it('fails (passing the chain) when no Authorization header is present', () => {
-    strategy.authenticate(createMockRequest());
-    expect(fail).toHaveBeenCalledWith(401);
-    expect(success).not.toHaveBeenCalled();
+  it('returns false (passing the chain) when the bearer token does not carry the Ayunis API-key prefix', async () => {
+    const result = await strategy.validate('eyJhbGciOiJIUzI1NiJ9.foo.bar');
+    expect(result).toBe(false);
     expect(validateApiKeyUseCase.execute).not.toHaveBeenCalled();
   });
 
-  it('fails (passing the chain) when the bearer token does not carry the Ayunis API-key prefix', () => {
-    strategy.authenticate(createMockRequest('Bearer eyJhbGciOiJIUzI1NiJ9.foo'));
-    expect(fail).toHaveBeenCalledWith(401);
-    expect(success).not.toHaveBeenCalled();
-    expect(validateApiKeyUseCase.execute).not.toHaveBeenCalled();
-  });
-
-  // Authenticate dispatches an async chain via Promise; flush enough
-  // microtasks for both the resolved/rejected case to propagate to the
-  // synchronous side effect (success/fail/error).
-  const flushPromises = () => new Promise(setImmediate);
-
-  it('succeeds with an ActiveApiKey when the use case validates the token', async () => {
+  it('returns an ActiveApiKey when the use case validates the token', async () => {
     validateApiKeyUseCase.execute.mockResolvedValue(createValidApiKey());
 
-    strategy.authenticate(
-      createMockRequest(`Bearer ${ApiKey.KEY_PREFIX}deadbeef00000000`),
+    const principal = await strategy.validate(
+      `${ApiKey.KEY_PREFIX}deadbeef00000000`,
     );
-
-    await flushPromises();
 
     expect(validateApiKeyUseCase.execute).toHaveBeenCalledWith(
       expect.any(ValidateApiKeyCommand),
     );
-    expect(success).toHaveBeenCalledTimes(1);
-    const principal = success.mock.calls[0][0];
+    if (principal === false) throw new Error('expected ActiveApiKey');
     expect(principal.kind).toBe('apiKey');
     expect(principal.apiKeyId).toBe(KEY_ID);
     expect(principal.orgId).toBe(ORG_ID);
   });
 
-  it('fails with a 401 challenge when the use case rejects the token as invalid', async () => {
+  it('returns false when the use case rejects the token as a domain-level invalid key', async () => {
     validateApiKeyUseCase.execute.mockRejectedValue(new ApiKeyInvalidError());
 
-    strategy.authenticate(
-      createMockRequest(`Bearer ${ApiKey.KEY_PREFIX}deadbeef00000000`),
+    const result = await strategy.validate(
+      `${ApiKey.KEY_PREFIX}deadbeef00000000`,
     );
 
-    await flushPromises();
-
-    expect(fail).toHaveBeenCalledWith(expect.any(String), 401);
-    expect(success).not.toHaveBeenCalled();
+    expect(result).toBe(false);
   });
 
-  it('surfaces an internal error when validation fails for non-domain reasons', async () => {
-    validateApiKeyUseCase.execute.mockRejectedValue(
-      new Error('database is unreachable'),
-    );
+  it('rethrows non-domain failures so Passport surfaces them as strategy errors', async () => {
+    const fault = new Error('database is unreachable');
+    validateApiKeyUseCase.execute.mockRejectedValue(fault);
 
-    strategy.authenticate(
-      createMockRequest(`Bearer ${ApiKey.KEY_PREFIX}deadbeef00000000`),
-    );
+    await expect(
+      strategy.validate(`${ApiKey.KEY_PREFIX}deadbeef00000000`),
+    ).rejects.toBe(fault);
+  });
 
-    await flushPromises();
+  it('rethrows server-class ApiKeyError (5xx) instead of masking it as 401', async () => {
+    const fault = new UnexpectedApiKeyError();
+    validateApiKeyUseCase.execute.mockRejectedValue(fault);
 
-    expect(error).toHaveBeenCalledTimes(1);
-    expect(success).not.toHaveBeenCalled();
-    expect(fail).not.toHaveBeenCalled();
+    await expect(
+      strategy.validate(`${ApiKey.KEY_PREFIX}deadbeef00000000`),
+    ).rejects.toBe(fault);
   });
 });
