@@ -34,5 +34,21 @@
       "limit": "Nachrichten müssen eine positive Ganzzahl sein.",
       "windowHours": "Zeitfenster muss mindestens 0,01 Stunden betragen."
     }
+  },
+  "imageFairUseLimit": {
+    "title": "Fair-Use-Limit für Bildgenerierung",
+    "description": "Globales gleitendes Zeitfenster-Kontingent für die Bildgenerierung über alle Nutzer hinweg.",
+    "loading": "Wird geladen…",
+    "loadError": "Fair-Use-Limit für Bildgenerierung konnte nicht geladen werden.",
+    "limit": "Bilder",
+    "windowHours": "Zeitfenster (Stunden)",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "updateSuccess": "Fair-Use-Limit für Bildgenerierung erfolgreich aktualisiert.",
+    "updateError": "Fair-Use-Limit für Bildgenerierung konnte nicht aktualisiert werden.",
+    "validationError": {
+      "limit": "Bilder müssen eine positive Ganzzahl sein.",
+      "windowHours": "Zeitfenster muss mindestens 0,01 Stunden betragen."
+    }
   }
 }

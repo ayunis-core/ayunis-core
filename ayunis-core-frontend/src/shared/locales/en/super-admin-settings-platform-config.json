@@ -34,5 +34,21 @@
       "limit": "Messages must be a positive integer.",
       "windowHours": "Window must be at least 0.01 hours."
     }
+  },
+  "imageFairUseLimit": {
+    "title": "Image Generation Fair Use Limit",
+    "description": "Single global sliding-window quota applied to image generation across all users.",
+    "loading": "Loading…",
+    "loadError": "Failed to load image-generation fair-use limit.",
+    "limit": "Images",
+    "windowHours": "Window (hours)",
+    "save": "Save",
+    "cancel": "Cancel",
+    "updateSuccess": "Image-generation fair-use limit updated successfully.",
+    "updateError": "Failed to update image-generation fair-use limit.",
+    "validationError": {
+      "limit": "Images must be a positive integer.",
+      "windowHours": "Window must be at least 0.01 hours."
+    }
   }
 }
