@@ -15,6 +15,7 @@ The models module is the central registry for AI model configuration. The abstra
 - **SuperAdminEmbeddingCatalogModelsController** (`presenters/http/super-admin-embedding-catalog-models.controller.ts`): Super admin endpoints for creating and updating embedding models in the catalog.
 - **SuperAdminImageGenerationCatalogModelsController** (`presenters/http/super-admin-image-generation-catalog-models.controller.ts`): Super admin endpoints for creating and updating image-generation models in the catalog.
 - **TeamPermittedModelsController** (`presenters/http/team-permitted-models.controller.ts`): Admin endpoints for managing team-scoped permitted models — listing, creating, deleting, and setting team defaults. All operations go through use-case layer with team ownership and org-scoping validation.
+- **ChatCompletionsController** (`presenters/http/openai/chat-completions.controller.ts`): OpenAI-compatible `POST /openai/v1/chat/completions` endpoint. Authenticates via `ApiKeyAuthGuard`, resolves the requested model by name within the caller's org, and routes the request to `GetInferenceUseCase` or `StreamInferenceUseCase` depending on the `stream` flag.
 
 ## Application Services
 
@@ -37,6 +38,7 @@ The models module is the central registry for AI model configuration. The abstra
 - **GetPermittedModelUseCase** (`application/use-cases/get-permitted-model`): Retrieves a single permitted model by ID.
 - **GetPermittedLanguageModelsUseCase** (`application/use-cases/get-permitted-language-models`): Retrieves permitted language models for an org.
 - **GetPermittedLanguageModelUseCase** (`application/use-cases/get-permitted-language-model`): Retrieves the single permitted language model by model ID.
+- **GetPermittedLanguageModelByNameUseCase** (`application/use-cases/get-permitted-language-model-by-name`): Resolves a permitted language model by its name within the caller's org, used by the OpenAI-compatible endpoint. Throws `ModelNotFoundByNameError` or `AmbiguousModelNameError` when the name does not resolve to exactly one model.
 - **GetPermittedEmbeddingModelUseCase** (`application/use-cases/get-permitted-embedding-model`): Retrieves the single permitted embedding model for an org.
 - **GetPermittedImageGenerationModelUseCase** (`application/use-cases/get-permitted-image-generation-model`): Retrieves the single permitted image-generation model for an org.
 - **GetConfiguredModelsByTypeUseCase** (`application/use-cases/get-configured-models-by-type`): Retrieves all catalog models of a given type, used for populating model selection dropdowns.
