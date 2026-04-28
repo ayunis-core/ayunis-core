@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Logger,
-  Post,
-  Req,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Logger, Post, Req, Res } from '@nestjs/common';
 import {
   ApiBody,
   ApiExcludeController,
@@ -19,8 +11,7 @@ import type { Subscription } from 'rxjs';
 import { isUUID } from 'class-validator';
 import type { UUID } from 'crypto';
 
-import { Public } from 'src/common/guards/public.guard';
-import { ApiKeyAuthGuard } from 'src/iam/api-keys/application/guards/api-key-auth.guard';
+import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
 
 import { GetInferenceUseCase } from '../../../application/use-cases/get-inference/get-inference.use-case';
 import { StreamInferenceUseCase } from '../../../application/use-cases/stream-inference/stream-inference.use-case';
@@ -39,8 +30,7 @@ const HEARTBEAT_INTERVAL_MS = 15_000;
 @ApiTags('openai-compat')
 @ApiExcludeController()
 @Controller('openai/v1/chat/completions')
-@Public()
-@UseGuards(ApiKeyAuthGuard)
+@RequireSubscription()
 export class ChatCompletionsController {
   private readonly logger = new Logger(ChatCompletionsController.name);
 
@@ -131,26 +121,36 @@ export class ChatCompletionsController {
       `data: ${JSON.stringify(this.mappers.stream.initialChunk(ctx))}\n\n`,
     );
 
-    let disconnected = false;
-    const onClose = () => {
-      disconnected = true;
-    };
-    request.on('close', onClose);
-
-    const heartbeat = setInterval(() => {
-      if (!disconnected) response.write(': heartbeat\n\n');
-    }, HEARTBEAT_INTERVAL_MS);
-
     const subscriptionRef: { current?: Subscription } = {};
+    let disconnected = false;
+    let settled = false;
+
     await new Promise<void>((resolve) => {
+      const settle = () => {
+        if (settled) return;
+        settled = true;
+        clearInterval(heartbeat);
+        request.off('close', onClose);
+        subscriptionRef.current?.unsubscribe();
+        if (!response.writableEnded) response.end();
+        resolve();
+      };
+
+      const onClose = () => {
+        disconnected = true;
+        settle();
+      };
+      request.on('close', onClose);
+
+      const heartbeat = setInterval(() => {
+        if (!disconnected && !response.writableEnded) {
+          response.write(': heartbeat\n\n');
+        }
+      }, HEARTBEAT_INTERVAL_MS);
+
       subscriptionRef.current = stream$.subscribe({
         next: (chunk) => {
-          if (disconnected) {
-            subscriptionRef.current?.unsubscribe();
-            this.cleanup(response, request, onClose, heartbeat);
-            resolve();
-            return;
-          }
+          if (disconnected) return;
           const dtoChunk = this.mappers.stream.toChunkDto(chunk, ctx);
           if (dtoChunk) {
             response.write(`data: ${JSON.stringify(dtoChunk)}\n\n`);
@@ -161,28 +161,18 @@ export class ChatCompletionsController {
           if (!disconnected) {
             const envelope = this.mappers.error.toEnvelope(err).body;
             response.write(`data: ${JSON.stringify(envelope)}\n\n`);
+            // Always emit [DONE] so OpenAI SDK clients close cleanly even
+            // on the error path.
+            response.write('data: [DONE]\n\n');
           }
-          this.cleanup(response, request, onClose, heartbeat);
-          resolve();
+          settle();
         },
         complete: () => {
           if (!disconnected) response.write('data: [DONE]\n\n');
-          this.cleanup(response, request, onClose, heartbeat);
-          resolve();
+          settle();
         },
       });
     });
-  }
-
-  private cleanup(
-    response: Response,
-    request: Request,
-    onClose: () => void,
-    heartbeat: NodeJS.Timeout,
-  ): void {
-    clearInterval(heartbeat);
-    request.off('close', onClose);
-    response.end();
   }
 
   private sendError(response: Response, error: unknown): void {

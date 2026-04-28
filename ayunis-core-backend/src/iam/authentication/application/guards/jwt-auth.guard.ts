@@ -1,4 +1,9 @@
-import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import {
+  ExecutionContext,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
@@ -7,6 +12,15 @@ import { RefreshTokenUseCase } from '../use-cases/refresh-token/refresh-token.us
 import { RefreshTokenCommand } from '../use-cases/refresh-token/refresh-token.command';
 import { ConfigService } from '@nestjs/config';
 import { setCookies } from 'src/common/util/cookie.util';
+import { ValidateApiKeyUseCase } from 'src/iam/api-keys/application/use-cases/validate-api-key/validate-api-key.use-case';
+import { ValidateApiKeyCommand } from 'src/iam/api-keys/application/use-cases/validate-api-key/validate-api-key.command';
+import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
+import { ApiKeyError } from 'src/iam/api-keys/application/api-keys.errors';
+import { ActiveApiKey } from '../../domain/active-api-key.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+
+const BEARER_PREFIX = 'Bearer ';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -16,6 +30,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     private reflector: Reflector,
     private refreshTokenUseCase: RefreshTokenUseCase,
     private configService: ConfigService,
+    private validateApiKeyUseCase: ValidateApiKeyUseCase,
   ) {
     super();
   }
@@ -30,17 +45,33 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       return true;
     }
 
-    // Try normal JWT validation first
-    try {
-      const result = await super.canActivate(context);
-      if (result) {
-        return true;
-      }
-    } catch {
-      // Access token validation failed, try refresh token
+    // API-key authentication path: if the Authorization header carries an
+    // Ayunis API key, validate it here and populate `req.apiKey`. This keeps
+    // every other global guard (subscription, IP allowlist, rate limit, etc.)
+    // applicable to API-key callers — they don't get a `@Public()` bypass.
+    if (await this.tryAuthenticateApiKey(context)) {
+      return true;
     }
 
-    // Access token validation failed, try refresh token
+    // JWT path: try the access token first, then the refresh token.
+    if (await this.tryAccessToken(context)) {
+      return true;
+    }
+    return this.tryRefreshAndValidate(context);
+  }
+
+  private async tryAccessToken(context: ExecutionContext): Promise<boolean> {
+    try {
+      const result = await super.canActivate(context);
+      return result === true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async tryRefreshAndValidate(
+    context: ExecutionContext,
+  ): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
 
@@ -48,43 +79,61 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       'auth.cookie.refreshTokenName',
       'refresh_token',
     );
-
     const refreshToken = request.cookies[refreshTokenName] as string;
-
     if (!refreshToken) {
       return false;
     }
 
     try {
-      // Try to refresh the tokens
       const newTokens = await this.refreshTokenUseCase.execute(
         new RefreshTokenCommand(refreshToken),
       );
-
-      // Set new cookies with refreshed tokens
       setCookies(response, newTokens, this.configService, true);
-
-      // Manually set the new access token in the request for this request
       const accessTokenName = this.configService.get<string>(
         'auth.cookie.accessTokenName',
         'access_token',
       );
       request.cookies[accessTokenName] = newTokens.access_token;
-
-      // Try JWT validation again with the new token
       const result = await super.canActivate(context);
-      if (result) {
-        return true;
-      }
+      return result === true;
     } catch (error) {
       this.logger.debug('JwtAuthGuard canActivate: token refresh failed', {
         error: error instanceof Error ? error.message : String(error),
       });
+      return false;
     }
+  }
 
-    this.logger.debug(
-      'JwtAuthGuard canActivate: all authentication attempts failed',
-    );
-    return false;
+  private async tryAuthenticateApiKey(
+    context: ExecutionContext,
+  ): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<Request>();
+    const header = request.headers.authorization;
+    if (!header?.startsWith(BEARER_PREFIX)) {
+      return false;
+    }
+    const token = header.slice(BEARER_PREFIX.length).trim();
+    if (!token.startsWith(ApiKey.KEY_PREFIX)) {
+      return false;
+    }
+    try {
+      const apiKey = await this.validateApiKeyUseCase.execute(
+        new ValidateApiKeyCommand(token),
+      );
+      request.apiKey = new ActiveApiKey({
+        apiKeyId: apiKey.id,
+        label: apiKey.name,
+        orgId: apiKey.orgId,
+        role: UserRole.USER,
+        systemRole: SystemRole.CUSTOMER,
+      });
+      return true;
+    } catch (error) {
+      if (error instanceof ApiKeyError) {
+        throw new UnauthorizedException(error.message);
+      }
+      this.logger.error('Unexpected error during API key validation', error);
+      throw new UnauthorizedException('API key authentication failed');
+    }
   }
 }

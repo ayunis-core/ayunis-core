@@ -7,6 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
+import { ActivePrincipal } from 'src/iam/authentication/domain/active-principal.entity';
 import { HasActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import { HasActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.query';
 import { GetTrialUseCase } from 'src/iam/trials/application/use-cases/get-trial/get-trial.use-case';
@@ -21,6 +22,10 @@ export interface SubscriptionContext {
 export interface RequestWithSubscriptionContext extends Request {
   user: ActiveUser;
   subscriptionContext?: SubscriptionContext;
+}
+
+function principalFromRequest(request: Request): ActivePrincipal | undefined {
+  return (request.user as ActiveUser | undefined) ?? request.apiKey;
 }
 
 @Injectable()
@@ -38,102 +43,73 @@ export class SubscriptionGuard implements CanActivate {
       REQUIRE_SUBSCRIPTION_KEY,
       [context.getHandler(), context.getClass()],
     );
-
-    if (!requiresSubscription) {
-      return true;
-    }
+    if (!requiresSubscription) return true;
 
     const request = context
       .switchToHttp()
       .getRequest<RequestWithSubscriptionContext>();
-    const user = request.user;
-
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive guard for runtime safety
-    if (!user) {
-      this.logger.warn('User not found in request context');
+    const principal = principalFromRequest(request);
+    if (!principal) {
+      this.logger.warn('No authenticated principal in request context');
       return false;
     }
 
-    this.logger.debug('Checking subscription for organization', {
-      orgId: user.orgId,
-      userId: user.id,
-    });
-
+    const orgId = principal.orgId;
     try {
-      const { hasActiveSubscription } =
-        await this.hasActiveSubscriptionUseCase.execute(
-          new HasActiveSubscriptionQuery(user.orgId),
-        );
-
-      if (hasActiveSubscription) {
-        this.logger.debug('Access granted: active subscription found', {
-          orgId: user.orgId,
-          userId: user.id,
-        });
-
-        request.subscriptionContext = {
-          hasActiveSubscription: true,
-          hasRemainingTrialMessages: false,
-        };
-
-        return true;
-      }
-
-      this.logger.debug('No active subscription, checking trial capacity', {
-        orgId: user.orgId,
-        userId: user.id,
-      });
-
-      const trial = await this.getTrialUseCase.execute(
-        new GetTrialQuery(user.orgId),
-      );
-
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive guard for runtime safety
-      if (!trial) {
-        this.logger.warn('Access denied: no trial found', {
-          orgId: user.orgId,
-          userId: user.id,
-        });
-
-        return false;
-      }
-
-      const hasRemainingMessages = trial.messagesSent < trial.maxMessages;
-      const remainingMessages = trial.maxMessages - trial.messagesSent;
-
-      if (hasRemainingMessages) {
-        this.logger.debug('Access granted: trial has remaining messages', {
-          orgId: user.orgId,
-          userId: user.id,
-          messagesSent: trial.messagesSent,
-          maxMessages: trial.maxMessages,
-          remainingMessages,
-        });
-
-        request.subscriptionContext = {
-          hasActiveSubscription: false,
-          hasRemainingTrialMessages: true,
-        };
-
-        return true;
-      }
-
-      this.logger.warn('Access denied: trial exhausted', {
-        orgId: user.orgId,
-        userId: user.id,
-        messagesSent: trial.messagesSent,
-        maxMessages: trial.maxMessages,
-      });
-
-      return false;
+      return await this.checkSubscription(request, orgId);
     } catch (error) {
       this.logger.error('Error checking subscription/trial', {
         error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: user.orgId,
-        userId: user.id,
+        orgId,
       });
-
       return false;
     }
+  }
+
+  private async checkSubscription(
+    request: RequestWithSubscriptionContext,
+    orgId: ReturnType<typeof principalFromRequest> extends infer P
+      ? P extends ActivePrincipal
+        ? P['orgId']
+        : never
+      : never,
+  ): Promise<boolean> {
+    const { hasActiveSubscription } =
+      await this.hasActiveSubscriptionUseCase.execute(
+        new HasActiveSubscriptionQuery(orgId),
+      );
+    if (hasActiveSubscription) {
+      request.subscriptionContext = {
+        hasActiveSubscription: true,
+        hasRemainingTrialMessages: false,
+      };
+      return true;
+    }
+    return this.checkTrialCapacity(request, orgId);
+  }
+
+  private async checkTrialCapacity(
+    request: RequestWithSubscriptionContext,
+    orgId: ActivePrincipal['orgId'],
+  ): Promise<boolean> {
+    const trial = await this.getTrialUseCase.execute(new GetTrialQuery(orgId));
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive guard for runtime safety
+    if (!trial) {
+      this.logger.warn('Access denied: no trial found', { orgId });
+      return false;
+    }
+    if (trial.messagesSent < trial.maxMessages) {
+      request.subscriptionContext = {
+        hasActiveSubscription: false,
+        hasRemainingTrialMessages: true,
+      };
+      return true;
+    }
+    this.logger.warn('Access denied: trial exhausted', {
+      orgId,
+      messagesSent: trial.messagesSent,
+      maxMessages: trial.maxMessages,
+    });
+    return false;
   }
 }
