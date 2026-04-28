@@ -2,6 +2,7 @@ import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { lastValueFrom, of } from 'rxjs';
 import { ActiveUser } from '../../domain/active-user.entity';
 import { ActiveApiKey } from '../../domain/active-api-key.entity';
+import type { ActivePrincipal } from '../../domain/active-principal.entity';
 import { UserRole } from '../../../users/domain/value-objects/role.object';
 import { SystemRole } from '../../../users/domain/value-objects/system-role.enum';
 import { UserContextInterceptor } from './user-context.interceptor';
@@ -10,8 +11,7 @@ import type { UUID } from 'crypto';
 
 describe('UserContextInterceptor', () => {
   const createExecutionContext = (params: {
-    user?: Partial<ActiveUser>;
-    apiKey?: Partial<ActiveApiKey>;
+    user?: ActivePrincipal;
   }): ExecutionContext =>
     ({
       switchToHttp: () => ({
@@ -23,7 +23,7 @@ describe('UserContextInterceptor', () => {
     handle: jest.fn(() => of(null)),
   });
 
-  it('sets user-principal identifiers when user is present', async () => {
+  it('sets user-principal identifiers when an ActiveUser is present', async () => {
     const setMock = jest.fn();
     const contextService = { set: setMock } as unknown as ContextService;
     const interceptor = new UserContextInterceptor(contextService);
@@ -53,7 +53,7 @@ describe('UserContextInterceptor', () => {
     expect(callHandler.handle).toHaveBeenCalled();
   });
 
-  it('sets api-key-principal identifiers when apiKey is present', async () => {
+  it('sets api-key-principal identifiers when an ActiveApiKey is present', async () => {
     const setMock = jest.fn();
     const contextService = { set: setMock } as unknown as ContextService;
     const interceptor = new UserContextInterceptor(contextService);
@@ -68,7 +68,7 @@ describe('UserContextInterceptor', () => {
 
     await lastValueFrom(
       interceptor.intercept(
-        createExecutionContext({ apiKey: activeApiKey }),
+        createExecutionContext({ user: activeApiKey }),
         callHandler,
       ),
     );
@@ -80,7 +80,7 @@ describe('UserContextInterceptor', () => {
     expect(callHandler.handle).toHaveBeenCalled();
   });
 
-  it('skips setting context when neither principal is present', async () => {
+  it('skips setting context when no principal is present', async () => {
     const setMock = jest.fn();
     const contextService = { set: setMock } as unknown as ContextService;
     const interceptor = new UserContextInterceptor(contextService);

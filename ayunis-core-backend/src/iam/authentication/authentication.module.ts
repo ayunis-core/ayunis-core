@@ -10,11 +10,10 @@ import { AuthenticationController } from './presenters/http/authentication.contr
 import { AuthProvider } from '../../config/authentication.config';
 import { LocalAuthenticationRepository } from './infrastructure/repositories/local/local-authentication.repository';
 import { AUTHENTICATION_REPOSITORY } from './application/tokens/authentication-repository.token';
-import { JwtAuthGuard } from './application/guards/jwt-auth.guard';
+import { GlobalAuthGuard } from './application/guards/global-auth.guard';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { UsersModule } from '../users/users.module';
 import { OrgsModule } from '../orgs/orgs.module';
-import { ApiKeysModule } from '../api-keys/api-keys.module';
 import { UnauthorizedExceptionFilter } from './application/filters/unauthorized-exception.filter';
 
 // Import use cases
@@ -51,7 +50,6 @@ export class AuthenticationModule {
         HashingModule,
         SubscriptionsModule,
         TrialsModule,
-        ApiKeysModule,
         JwtModule.registerAsync({
           imports: [ConfigModule],
           inject: [ConfigService],
@@ -108,7 +106,7 @@ export class AuthenticationModule {
         JwtStrategy,
         {
           provide: APP_GUARD,
-          useClass: JwtAuthGuard,
+          useClass: GlobalAuthGuard,
         },
         {
           provide: APP_FILTER,

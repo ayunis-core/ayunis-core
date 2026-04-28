@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { Request } from 'express';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
+import { getPrincipal } from 'src/iam/authentication/domain/get-principal';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
@@ -22,8 +22,7 @@ export class RolesGuard implements CanActivate {
       return true;
     }
     const request = context.switchToHttp().getRequest<Request>();
-    const principal =
-      (request.user as ActiveUser | undefined) ?? request.apiKey;
+    const principal = getPrincipal(request);
     if (!principal) {
       return false;
     }

@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
+import { getPrincipal } from 'src/iam/authentication/domain/get-principal';
 import { EmailNotVerifiedError } from '../authorization.errors';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import { Reflector } from '@nestjs/core';
@@ -17,7 +17,6 @@ export class EmailConfirmGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    // Check if route is public
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -27,19 +26,19 @@ export class EmailConfirmGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<Request>();
-    // API-key principals don't carry an email — the email-verified gate
-    // doesn't apply to them. Allow through.
-    if (request.apiKey) {
-      return true;
-    }
-
-    const user = request.user as ActiveUser | undefined;
-    if (!user) {
-      this.logger.warn('User not found in request context');
+    const principal = getPrincipal(request);
+    if (!principal) {
+      this.logger.warn('No authenticated principal in request context');
       return false;
     }
 
-    if (!user.emailVerified) {
+    // API-key principals don't carry an email — the email-verified gate
+    // doesn't apply to them. Allow through.
+    if (principal.kind !== 'user') {
+      return true;
+    }
+
+    if (!principal.emailVerified) {
       this.logger.warn('User email not verified');
       throw new EmailNotVerifiedError();
     }

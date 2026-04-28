@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
-import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import { ActivePrincipal } from 'src/iam/authentication/domain/active-principal.entity';
+import { getPrincipal } from 'src/iam/authentication/domain/get-principal';
 import { HasActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import { HasActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.query';
 import { GetTrialUseCase } from 'src/iam/trials/application/use-cases/get-trial/get-trial.use-case';
@@ -20,12 +20,7 @@ export interface SubscriptionContext {
 }
 
 export interface RequestWithSubscriptionContext extends Request {
-  user: ActiveUser;
   subscriptionContext?: SubscriptionContext;
-}
-
-function principalFromRequest(request: Request): ActivePrincipal | undefined {
-  return (request.user as ActiveUser | undefined) ?? request.apiKey;
 }
 
 @Injectable()
@@ -48,7 +43,7 @@ export class SubscriptionGuard implements CanActivate {
     const request = context
       .switchToHttp()
       .getRequest<RequestWithSubscriptionContext>();
-    const principal = principalFromRequest(request);
+    const principal = getPrincipal(request);
     if (!principal) {
       this.logger.warn('No authenticated principal in request context');
       return false;

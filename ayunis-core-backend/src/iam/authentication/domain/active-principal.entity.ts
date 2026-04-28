@@ -1,22 +1,11 @@
-import type { UUID } from 'crypto';
-import type { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import type { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import type { ActiveUser } from './active-user.entity';
+import type { ActiveApiKey } from './active-api-key.entity';
 
 export type PrincipalKind = 'user' | 'apiKey';
 
 /**
- * Authenticated caller of a request — either a logged-in user or an API key.
- * Subclasses (`ActiveUser`, `ActiveApiKey`) carry the principal-specific fields.
+ * Authenticated caller of a request — either a logged-in user (`ActiveUser`)
+ * or an API key (`ActiveApiKey`). Modelled as a discriminated union on `kind`
+ * so consumers can narrow with a single check.
  */
-export abstract class ActivePrincipal {
-  abstract readonly kind: PrincipalKind;
-  readonly orgId: UUID;
-  readonly role: UserRole;
-  readonly systemRole: SystemRole;
-
-  constructor(params: { orgId: UUID; role: UserRole; systemRole: SystemRole }) {
-    this.orgId = params.orgId;
-    this.role = params.role;
-    this.systemRole = params.systemRole;
-  }
-}
+export type ActivePrincipal = ActiveUser | ActiveApiKey;
