@@ -60,6 +60,7 @@ import { SkillSourcesController } from './presenters/http/skill-sources.controll
 import { SkillMcpIntegrationsController } from './presenters/http/skill-mcp-integrations.controller';
 import { SkillKnowledgeBasesController } from './presenters/http/skill-knowledge-bases.controller';
 import { SkillDtoMapper } from './presenters/http/mappers/skill.mapper';
+import { SkillCreatorNameResolver } from './presenters/http/services/skill-creator-name.resolver';
 import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-integration-dto.mapper';
 import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappers/knowledge-base-dto.mapper';
 
@@ -127,6 +128,7 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
 
     // Presenters
     SkillDtoMapper,
+    SkillCreatorNameResolver,
     McpIntegrationDtoMapper,
     KnowledgeBaseDtoMapper,
   ],

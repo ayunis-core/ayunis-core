@@ -78,7 +78,7 @@ export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
         </ItemTitle>
         <ItemDescription>{skill.shortDescription}</ItemDescription>
         {skill.isShared && (
-          <ItemDescription className="text-xs">
+          <ItemDescription>
             {skill.creatorName
               ? t('shared.sharedBy', { name: skill.creatorName })
               : t('shared.sharedByUnknown')}
