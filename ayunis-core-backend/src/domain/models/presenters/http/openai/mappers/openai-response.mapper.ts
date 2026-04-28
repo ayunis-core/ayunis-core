@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import type OpenAI from 'openai';
 
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
@@ -40,7 +41,7 @@ export class OpenAIResponseMapper {
       toolCalls.length > 0 ? 'tool_calls' : 'stop';
     const content = textParts.length > 0 ? textParts.join('') : null;
 
-    return {
+    const dto = {
       id: `chatcmpl-${randomUUID()}`,
       object: 'chat.completion',
       created: Math.floor(Date.now() / 1000),
@@ -51,8 +52,10 @@ export class OpenAIResponseMapper {
           message: {
             role: 'assistant',
             content,
+            refusal: null,
             ...(toolCalls.length > 0 ? { tool_calls: toolCalls } : {}),
           },
+          logprobs: null,
           finish_reason: finishReason,
         },
       ],
@@ -63,6 +66,8 @@ export class OpenAIResponseMapper {
           response.meta.totalTokens ??
           (response.meta.inputTokens ?? 0) + (response.meta.outputTokens ?? 0),
       },
-    };
+    } satisfies OpenAI.Chat.ChatCompletion;
+
+    return dto;
   }
 }
