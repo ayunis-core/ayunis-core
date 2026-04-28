@@ -64,6 +64,7 @@ import { SynaforceInferenceHandler } from './infrastructure/inference/synaforce.
 import { SynaforceStreamInferenceHandler } from './infrastructure/stream-inference/synaforce.stream-inference';
 import { GetPermittedLanguageModelsUseCase } from './application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
 import { GetPermittedLanguageModelUseCase } from './application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
+import { GetPermittedLanguageModelByNameUseCase } from './application/use-cases/get-permitted-language-model-by-name/get-permitted-language-model-by-name.use-case';
 import { GetPermittedEmbeddingModelUseCase } from './application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
 import { GetPermittedImageGenerationModelUseCase } from './application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { UsersModule } from 'src/iam/users/users.module';
@@ -300,6 +301,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     UpdatePermittedModelUseCase,
     GetPermittedModelUseCase,
     GetPermittedLanguageModelUseCase,
+    GetPermittedLanguageModelByNameUseCase,
     GetPermittedEmbeddingModelUseCase,
     GetPermittedImageGenerationModelUseCase,
     GetPermittedModelsUseCase,
@@ -341,6 +343,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     UpdatePermittedModelUseCase,
     GetPermittedModelUseCase,
     GetPermittedLanguageModelUseCase,
+    GetPermittedLanguageModelByNameUseCase,
     GetPermittedEmbeddingModelUseCase,
     GetPermittedImageGenerationModelUseCase,
     GetPermittedModelsUseCase,
