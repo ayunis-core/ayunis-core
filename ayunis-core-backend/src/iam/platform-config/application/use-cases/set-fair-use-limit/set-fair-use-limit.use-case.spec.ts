@@ -191,25 +191,40 @@ describe('SetFairUseLimitUseCase', () => {
     expect(repository.setMany).not.toHaveBeenCalled();
   });
 
-  it('should reject the ZERO tier — it has no fair-use limit to configure', async () => {
-    let caught: PlatformConfigInvalidValueError | null = null;
-    try {
-      await useCase.execute(
+  it('should silently no-op for the ZERO tier — it is exempt from fair-use enforcement', async () => {
+    // ZERO is a first-class `ModelTier` value but has no quota bucket
+    // (`tierToFairUseQuotaType` returns null) and no deduction at runtime.
+    // Setting a "limit" for it is therefore a vacuous no-op: the use case
+    // succeeds without writing any platform-config row, and no error is
+    // thrown. This keeps super-admin tooling that bulk-applies limits
+    // across `ModelTier` values from having to special-case ZERO.
+    await expect(
+      useCase.execute(
         new SetFairUseLimitCommand({
           tier: ModelTier.ZERO,
           limit: 100,
           windowMs: 3600000,
         }),
-      );
-    } catch (error) {
-      caught = error as PlatformConfigInvalidValueError;
-    }
+      ),
+    ).resolves.toBeUndefined();
+    expect(repository.setMany).not.toHaveBeenCalled();
+    expect(repository.set).not.toHaveBeenCalled();
+  });
 
-    expect(caught).toBeInstanceOf(PlatformConfigInvalidValueError);
-    expect(caught?.metadata).toEqual({
-      key: null,
-      reason: "unknown model tier 'zero'",
-    });
+  it('should silently no-op for the ZERO tier even with invalid limit/window values', async () => {
+    // Validation of `limit`/`windowMs` only runs for tiers that actually
+    // map to platform-config keys. Skipping it for ZERO keeps the no-op
+    // semantics uniform — callers don't need to provide valid numbers
+    // for a tier whose values are never persisted.
+    await expect(
+      useCase.execute(
+        new SetFairUseLimitCommand({
+          tier: ModelTier.ZERO,
+          limit: -1,
+          windowMs: NaN,
+        }),
+      ),
+    ).resolves.toBeUndefined();
     expect(repository.setMany).not.toHaveBeenCalled();
   });
 
