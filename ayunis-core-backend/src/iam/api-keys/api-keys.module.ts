@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
+import { PassportModule } from '@nestjs/passport';
 import { Repository } from 'typeorm';
 
 import { ApiKeysRepository } from './application/ports/api-keys.repository';
@@ -13,12 +14,16 @@ import { ValidateApiKeyUseCase } from './application/use-cases/validate-api-key/
 
 import { ApiKeysController } from './presenters/http/api-keys.controller';
 import { ApiKeyDtoMapper } from './presenters/http/mappers/api-key-dto.mapper';
-import { ApiKeyAuthGuard } from './application/guards/api-key-auth.guard';
+import { ApiKeyStrategy } from './application/strategies/api-key.strategy';
 
 import { HashingModule } from '../hashing/hashing.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ApiKeyRecord]), HashingModule],
+  imports: [
+    TypeOrmModule.forFeature([ApiKeyRecord]),
+    HashingModule,
+    PassportModule,
+  ],
   controllers: [ApiKeysController],
   providers: [
     {
@@ -33,14 +38,13 @@ import { HashingModule } from '../hashing/hashing.module';
     RevokeApiKeyUseCase,
     ValidateApiKeyUseCase,
     ApiKeyDtoMapper,
-    ApiKeyAuthGuard,
+    ApiKeyStrategy,
   ],
   exports: [
     CreateApiKeyUseCase,
     ListApiKeysByOrgUseCase,
     RevokeApiKeyUseCase,
     ValidateApiKeyUseCase,
-    ApiKeyAuthGuard,
   ],
 })
 export class ApiKeysModule {}

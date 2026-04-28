@@ -4,16 +4,15 @@ import {
   ExecutionContext,
   CallHandler,
 } from '@nestjs/common';
-import { Request } from 'express';
+import type { Request } from 'express';
 import * as Sentry from '@sentry/nestjs';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ActiveUser } from '../../domain/active-user.entity';
-import { ActiveApiKey } from '../../domain/active-api-key.entity';
+import { getPrincipal } from '../../domain/get-principal';
 
 /**
- * Reads the authenticated principal from the request (`req.user` for users
- * authenticated via JWT, or `req.apiKey` for API-key callers) and writes
- * principal-aware values to `ContextService` so use cases can read them.
+ * Reads the authenticated principal from `request.user` (populated by either
+ * the JWT or API-key Passport strategy) and writes principal-aware values to
+ * `ContextService` so downstream use cases can consume them.
  *
  * For user principals, `userId` is set and `apiKeyId` is left unset (and vice
  * versa) — this preserves existing FK semantics for code that joins
@@ -24,44 +23,41 @@ export class UserContextInterceptor implements NestInterceptor {
   constructor(private readonly contextService: ContextService) {}
 
   intercept(context: ExecutionContext, next: CallHandler) {
-    const req = context.switchToHttp().getRequest<Request>();
-    const user = req.user as ActiveUser | undefined;
-    const apiKey = req.apiKey;
+    const request = context.switchToHttp().getRequest<Request>();
+    const principal = getPrincipal(request);
 
-    if (user) {
+    if (!principal) {
+      return next.handle();
+    }
+
+    if (principal.kind === 'user') {
       this.contextService.set('principalKind', 'user');
-      this.contextService.set('userId', user.id);
-      this.contextService.set('orgId', user.orgId);
-      this.contextService.set('role', user.role);
-      this.contextService.set('systemRole', user.systemRole);
+      this.contextService.set('userId', principal.id);
+      this.contextService.set('orgId', principal.orgId);
+      this.contextService.set('role', principal.role);
+      this.contextService.set('systemRole', principal.systemRole);
 
       Sentry.getCurrentScope().setUser({
-        id: user.id,
-        orgId: user.orgId,
-        role: user.role,
+        id: principal.id,
+        orgId: principal.orgId,
+        role: principal.role,
         principalKind: 'user',
       });
-    } else if (apiKey) {
+    } else {
       this.contextService.set('principalKind', 'apiKey');
-      this.contextService.set('apiKeyId', apiKey.apiKeyId);
-      this.contextService.set('orgId', apiKey.orgId);
-      this.contextService.set('role', apiKey.role);
-      this.contextService.set('systemRole', apiKey.systemRole);
+      this.contextService.set('apiKeyId', principal.apiKeyId);
+      this.contextService.set('orgId', principal.orgId);
+      this.contextService.set('role', principal.role);
+      this.contextService.set('systemRole', principal.systemRole);
 
       Sentry.getCurrentScope().setUser({
-        id: apiKey.apiKeyId,
-        orgId: apiKey.orgId,
-        role: apiKey.role,
+        id: principal.apiKeyId,
+        orgId: principal.orgId,
+        role: principal.role,
         principalKind: 'apiKey',
       });
     }
 
     return next.handle();
-  }
-}
-
-declare module 'express-serve-static-core' {
-  interface Request {
-    apiKey?: ActiveApiKey;
   }
 }

@@ -14,7 +14,7 @@ import { isIpInCidrs } from '../../domain/cidr.util';
 import { IpAllowlistRepository } from '../ports/ip-allowlist.repository';
 import { IpNotAllowedError } from '../ip-allowlist.errors';
 import { IpAllowlistCachePort } from '../ports/ip-allowlist-cache.port';
-import type { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
+import { getPrincipal } from 'src/iam/authentication/domain/get-principal';
 
 interface CacheEntry {
   cidrs: string[] | null;
@@ -49,8 +49,7 @@ export class IpAllowlistGuard
     }
 
     const request = context.switchToHttp().getRequest<Request>();
-    const principal =
-      (request.user as ActiveUser | undefined) ?? request.apiKey;
+    const principal = getPrincipal(request);
 
     if (!principal) {
       return true;

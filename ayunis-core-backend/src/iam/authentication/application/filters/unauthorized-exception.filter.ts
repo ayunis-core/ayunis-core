@@ -17,6 +17,7 @@ import { UUID } from 'crypto';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
 import { ActiveUser } from '../../domain/active-user.entity';
+import { getPrincipal } from '../../domain/get-principal';
 
 @Injectable()
 @Catch(UnauthorizedException)
@@ -76,10 +77,12 @@ export class UnauthorizedExceptionFilter implements ExceptionFilter {
   }
 
   private extractUserId(request: Request): string | undefined {
-    const user = request.user;
-    if (user && typeof user === 'object' && 'id' in user) {
-      return user.id as string;
+    const principal = getPrincipal(request);
+    if (principal?.kind === 'user') {
+      return principal.id;
     }
+    // API-key principals don't have a refreshable identity — fall through to
+    // the cookie path so the filter only ever attempts to refresh JWT users.
 
     const cookieName = this.configService.get<string>(
       'auth.cookie.refreshTokenName',

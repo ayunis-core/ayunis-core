@@ -1,12 +1,14 @@
 import type { UUID } from 'crypto';
 import type { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { ActivePrincipal } from './active-principal.entity';
 
-export class ActiveApiKey extends ActivePrincipal {
+export class ActiveApiKey {
   readonly kind = 'apiKey' as const;
   readonly apiKeyId: UUID;
   readonly label: string;
+  readonly orgId: UUID;
+  readonly role: UserRole;
+  readonly systemRole: SystemRole;
 
   constructor(params: {
     apiKeyId: UUID;
@@ -15,12 +17,10 @@ export class ActiveApiKey extends ActivePrincipal {
     role: UserRole;
     systemRole: SystemRole;
   }) {
-    super({
-      orgId: params.orgId,
-      role: params.role,
-      systemRole: params.systemRole,
-    });
     this.apiKeyId = params.apiKeyId;
     this.label = params.label;
+    this.orgId = params.orgId;
+    this.role = params.role;
+    this.systemRole = params.systemRole;
   }
 }
