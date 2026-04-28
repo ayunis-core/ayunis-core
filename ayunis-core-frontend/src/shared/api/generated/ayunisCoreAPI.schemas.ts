@@ -2295,7 +2295,6 @@ export const ToolAssignmentDtoType = {
   generate_image: 'generate_image',
   create_diagram: 'create_diagram',
   update_diagram: 'update_diagram',
-  openai_compat: 'openai_compat',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -2354,7 +2353,6 @@ export const ToolResponseDtoType = {
   generate_image: 'generate_image',
   create_diagram: 'create_diagram',
   update_diagram: 'update_diagram',
-  openai_compat: 'openai_compat',
 } as const;
 
 export interface ToolResponseDto {

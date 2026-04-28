@@ -27,56 +27,50 @@ export class GetInferenceUseCase {
     }
 
     try {
-      // Get the appropriate handler for the model provider
       const inferenceHandler = this.inferenceHandlerRegistry.getHandler(
         command.model.provider,
       );
-
-      // Execute inference
       return await inferenceHandler
-        .answer(
-          new InferenceInput({
-            model: command.model,
-            messages: command.messages,
-            systemPrompt: command.instructions,
-            tools: command.tools,
-            toolChoice: command.toolChoice,
-            orgId,
-          }),
-        )
+        .answer(this.toInferenceInput(command, orgId))
         .catch((error) => {
-          if (error instanceof ModelError) {
-            throw error;
-          }
-          this.logger.error('Inference failed', {
-            model: command.model,
-            messages: command.messages,
-            tools: command.tools,
-            toolChoice: command.toolChoice,
-            error: error instanceof Error ? error : new Error('Unknown error'),
-          });
-          throw new InferenceFailedError(
-            error instanceof Error
-              ? error.message
-              : 'Unknown error while triggering inference',
-          );
+          this.wrapHandlerError(error, command);
         });
     } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Inference failed', {
-        model: command.model,
-        messages: command.messages,
-        tools: command.tools,
-        toolChoice: command.toolChoice,
-        error: error instanceof Error ? error : new Error('Unknown error'),
-      });
-      throw new InferenceFailedError(
-        error instanceof Error
-          ? error.message
-          : 'Unknown error while triggering inference',
-      );
+      if (error instanceof ApplicationError) throw error;
+      this.wrapHandlerError(error, command);
     }
+  }
+
+  private toInferenceInput(
+    command: GetInferenceCommand,
+    orgId: string,
+  ): InferenceInput {
+    return new InferenceInput({
+      model: command.model,
+      messages: command.messages,
+      systemPrompt: command.instructions,
+      tools: command.tools,
+      toolChoice: command.toolChoice,
+      orgId,
+    });
+  }
+
+  private wrapHandlerError(
+    error: unknown,
+    command: GetInferenceCommand,
+  ): never {
+    if (error instanceof ModelError) throw error;
+    this.logger.error('Inference failed', {
+      model: command.model,
+      messages: command.messages,
+      tools: command.tools,
+      toolChoice: command.toolChoice,
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    });
+    throw new InferenceFailedError(
+      error instanceof Error
+        ? error.message
+        : 'Unknown error while triggering inference',
+    );
   }
 }

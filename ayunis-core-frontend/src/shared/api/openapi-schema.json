@@ -11743,8 +11743,7 @@
               "read_document",
               "generate_image",
               "create_diagram",
-              "update_diagram",
-              "openai_compat"
+              "update_diagram"
             ]
           },
           "toolConfigId": {
@@ -11820,8 +11819,7 @@
               "read_document",
               "generate_image",
               "create_diagram",
-              "update_diagram",
-              "openai_compat"
+              "update_diagram"
             ]
           }
         },

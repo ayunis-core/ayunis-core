@@ -1,6 +1,6 @@
 import type OpenAI from 'openai';
 import type { FunctionParameters } from 'openai/resources/shared';
-import type { Tool } from 'src/domain/tools/domain/tool.entity';
+import type { ToolSchema } from 'src/domain/tools/domain/tool.entity';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
@@ -18,7 +18,7 @@ import { normalizeSchemaForOpenAI } from '../util/normalize-schema-for-openai';
 export class OpenAIChatMessageConverter {
   constructor(private readonly imageContentService: ImageContentService) {}
 
-  convertTool(tool: Tool): OpenAI.ChatCompletionTool {
+  convertTool(tool: ToolSchema): OpenAI.ChatCompletionTool {
     return {
       type: 'function' as const,
       function: {

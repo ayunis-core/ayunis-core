@@ -8,8 +8,7 @@ import type { PermittedLanguageModel } from '../../../../domain/permitted-model.
 
 import { ModelToolChoice } from '../../../../domain/value-objects/model-tool-choice.enum';
 import type { Message } from 'src/domain/messages/domain/message.entity';
-import type { Tool } from 'src/domain/tools/domain/tool.entity';
-import { OpenAICompatibilityTool } from 'src/domain/tools/domain/tools/openai-compatibility-tool.entity';
+import type { ToolSchema } from 'src/domain/tools/domain/tool.entity';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
@@ -26,7 +25,12 @@ import {
 
 interface MappedRequest {
   messages: Message[];
-  tools: Tool[];
+  /**
+   * Inline tool definitions from the request body. Carried separately from
+   * persisted `Tool` entities (which the OpenAI-compat endpoint never has)
+   * to make the transport-layer origin explicit.
+   */
+  inlineTools: ToolSchema[];
   toolChoice: ModelToolChoice;
   instructions?: string;
 }
@@ -41,7 +45,7 @@ export class OpenAIRequestMapper {
     return new GetInferenceCommand({
       model: model.model,
       messages: mapped.messages,
-      tools: mapped.tools,
+      tools: mapped.inlineTools,
       toolChoice: mapped.toolChoice,
       instructions: mapped.instructions,
     });
@@ -57,7 +61,7 @@ export class OpenAIRequestMapper {
       model: model.model,
       messages: mapped.messages,
       systemPrompt: mapped.instructions ?? '',
-      tools: mapped.tools,
+      tools: mapped.inlineTools,
       toolChoice: mapped.toolChoice,
       orgId,
     });
@@ -78,7 +82,9 @@ export class OpenAIRequestMapper {
     const messages = conversation.map((msg) =>
       this.toDomainMessage(msg, threadId, toolCallIdToName),
     );
-    const tools = (dto.tools ?? []).map((tool) => this.toDomainTool(tool));
+    const inlineTools = (dto.tools ?? []).map((tool) =>
+      this.toInlineTool(tool),
+    );
     const toolChoice =
       dto.tool_choice === 'required'
         ? ModelToolChoice.REQUIRED
@@ -86,7 +92,7 @@ export class OpenAIRequestMapper {
 
     return {
       messages,
-      tools,
+      inlineTools,
       toolChoice,
       instructions: systemPrompt,
     };
@@ -212,15 +218,15 @@ export class OpenAIRequestMapper {
     });
   }
 
-  private toDomainTool(tool: ChatCompletionToolDto): Tool {
-    return new OpenAICompatibilityTool({
+  private toInlineTool(tool: ChatCompletionToolDto): ToolSchema {
+    return {
       name: tool.function.name,
       description: tool.function.description ?? '',
       parameters: (tool.function.parameters ?? {
         type: 'object',
         properties: {},
       }) as JSONSchema,
-    });
+    };
   }
 
   private parseToolArguments(args: string): Record<string, unknown> {

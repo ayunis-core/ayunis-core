@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Tool } from 'src/domain/tools/domain/tool.entity';
+import type { ToolSchema } from 'src/domain/tools/domain/tool.entity';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
@@ -35,7 +35,7 @@ export interface GeminiPart extends Part {
 export class GeminiMessageConverter {
   constructor(private readonly imageContentService: ImageContentService) {}
 
-  convertTool(tool: Tool): FunctionDeclaration {
+  convertTool(tool: ToolSchema): FunctionDeclaration {
     return {
       name: tool.name,
       description: tool.description,
@@ -59,7 +59,7 @@ export class GeminiMessageConverter {
 
   buildConfig(input: {
     systemPrompt?: string;
-    tools: Tool[];
+    tools: ToolSchema[];
     toolChoice?: ModelToolChoice;
   }): GenerateContentConfig {
     const { tools, toolChoice, systemPrompt } = input;

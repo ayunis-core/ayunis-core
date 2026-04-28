@@ -1,5 +1,5 @@
 import type { Message } from 'src/domain/messages/domain/message.entity';
-import type { Tool } from 'src/domain/tools/domain/tool.entity';
+import type { ToolSchema } from 'src/domain/tools/domain/tool.entity';
 import type { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import type { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import type { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
@@ -10,7 +10,14 @@ export class InferenceInput {
   public readonly model: Model;
   public readonly messages: Message[];
   public readonly systemPrompt?: string;
-  public readonly tools: Tool[];
+  /**
+   * Tools the LLM can call. Combines persisted `Tool` entities (from agents,
+   * skills, MCP integrations) with ad-hoc inline tool definitions supplied
+   * by transport-layer callers (the OpenAI-compat endpoint). Both satisfy
+   * `ToolSchema`; handlers don't need to distinguish — they just serialize
+   * each one to the provider's wire format.
+   */
+  public readonly tools: ToolSchema[];
   public readonly toolChoice?: ModelToolChoice;
   public readonly orgId: string;
 
@@ -18,7 +25,7 @@ export class InferenceInput {
     model: Model;
     messages: Message[];
     systemPrompt?: string;
-    tools: Tool[];
+    tools: ToolSchema[];
     toolChoice: ModelToolChoice;
     orgId: string;
   }) {

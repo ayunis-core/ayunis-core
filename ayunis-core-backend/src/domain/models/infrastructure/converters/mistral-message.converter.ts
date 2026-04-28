@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Tool } from 'src/domain/tools/domain/tool.entity';
+import type { ToolSchema } from 'src/domain/tools/domain/tool.entity';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
@@ -26,7 +26,7 @@ import {
 export class MistralMessageConverter {
   constructor(private readonly imageContentService: ImageContentService) {}
 
-  convertTool(tool: Tool): MistralTool {
+  convertTool(tool: ToolSchema): MistralTool {
     return {
       type: 'function' as const,
       function: {

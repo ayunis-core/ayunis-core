@@ -3,7 +3,7 @@ import type {
   Message as OllamaMessage,
   ToolCall as OllamaToolCall,
 } from 'ollama';
-import type { Tool } from 'src/domain/tools/domain/tool.entity';
+import type { ToolSchema } from 'src/domain/tools/domain/tool.entity';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
@@ -21,7 +21,7 @@ import { ThinkingMessageContent } from 'src/domain/messages/domain/message-conte
 export class OllamaMessageConverter {
   constructor(private readonly imageContentService?: ImageContentService) {}
 
-  convertTool(tool: Tool): OllamaTool {
+  convertTool(tool: ToolSchema): OllamaTool {
     return {
       type: 'function' as const,
       function: {
