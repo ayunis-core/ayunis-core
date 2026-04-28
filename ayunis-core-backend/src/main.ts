@@ -37,12 +37,7 @@ class Bootstrap {
     this.setupSwagger(app);
     app.setGlobalPrefix('api', {
       // strip leading '/' — setGlobalPrefix exclude expects bare paths
-      exclude: [
-        METRICS_PATH.slice(1),
-        // OpenAI-compat surface mounts at the documented /openai/v1/... path
-        // so SDKs can use baseURL='https://.../openai/v1' verbatim.
-        'openai/(.*)',
-      ],
+      exclude: [METRICS_PATH.slice(1)],
     });
     app.useGlobalPipes(
       new ValidationPipe({
