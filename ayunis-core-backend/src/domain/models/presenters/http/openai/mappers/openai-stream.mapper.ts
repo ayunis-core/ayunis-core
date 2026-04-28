@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import type OpenAI from 'openai';
 import type { StreamInferenceResponseChunk } from '../../../../application/ports/stream-inference.handler';
 
 import {
@@ -28,7 +29,7 @@ export class OpenAIStreamMapper {
    * Mirrors what the OpenAI SDK expects clients to see first.
    */
   initialChunk(ctx: StreamContext): ChatCompletionChunkDto {
-    return {
+    const chunk = {
       id: ctx.id,
       object: 'chat.completion.chunk',
       created: ctx.created,
@@ -40,7 +41,8 @@ export class OpenAIStreamMapper {
           finish_reason: null,
         },
       ],
-    };
+    } satisfies OpenAI.Chat.ChatCompletionChunk;
+    return chunk;
   }
 
   toChunkDto(
@@ -76,22 +78,22 @@ export class OpenAIStreamMapper {
     if (hasContent) delta.content = chunk.textContentDelta;
     if (hasToolCalls) delta.tool_calls = toolCalls;
 
-    const result: ChatCompletionChunkDto = {
+    const usageBlock = usage
+      ? {
+          prompt_tokens: usage.inputTokens ?? 0,
+          completion_tokens: usage.outputTokens ?? 0,
+          total_tokens: (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0),
+        }
+      : undefined;
+
+    const result = {
       id: ctx.id,
       object: 'chat.completion.chunk',
       created: ctx.created,
       model: ctx.model,
       choices: [{ index: 0, delta, finish_reason: finishReason }],
-    };
-    if (usage) {
-      const inputTokens = usage.inputTokens ?? 0;
-      const outputTokens = usage.outputTokens ?? 0;
-      result.usage = {
-        prompt_tokens: inputTokens,
-        completion_tokens: outputTokens,
-        total_tokens: inputTokens + outputTokens,
-      };
-    }
+      ...(usageBlock ? { usage: usageBlock } : {}),
+    } satisfies OpenAI.Chat.ChatCompletionChunk;
     return result;
   }
 
