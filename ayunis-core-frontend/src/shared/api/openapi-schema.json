@@ -7592,7 +7592,7 @@
     },
     "/super-admin/platform-config/fair-use-limits": {
       "get": {
-        "description": "Retrieve the configured messages-per-window limit for low, medium, and high model tiers. Missing keys fall back to baked-in defaults so this endpoint always returns 200. Super admin only.",
+        "description": "Retrieve the configured fair-use limits: per-tier message limits (low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. Super admin only.",
         "operationId": "SuperAdminPlatformConfigController_getFairUseLimits",
         "parameters": [],
         "responses": {
@@ -7613,7 +7613,7 @@
             "description": "Internal server error"
           }
         },
-        "summary": "Get the current fair-use limits for every model tier",
+        "summary": "Get the current fair-use limits",
         "tags": ["Super Admin Platform Config"]
       },
       "put": {
@@ -7645,6 +7645,39 @@
           }
         },
         "summary": "Set the fair-use limit for a single model tier",
+        "tags": ["Super Admin Platform Config"]
+      }
+    },
+    "/super-admin/platform-config/image-fair-use-limit": {
+      "put": {
+        "description": "Update the images-per-window fair-use limit. Image generation has a single global bucket (no tiering), so this endpoint takes only limit + windowMs. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_setImageFairUseLimit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetImageFairUseLimitRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated image fair-use limit"
+          },
+          "400": {
+            "description": "Invalid value provided (limit and windowMs must be positive)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Set the fair-use limit for image generation",
         "tags": ["Super Admin Platform Config"]
       }
     },
@@ -13951,9 +13984,17 @@
                 "$ref": "#/components/schemas/FairUseTierLimitDto"
               }
             ]
+          },
+          "images": {
+            "description": "Fair-use limit for image generation. Single global bucket (no tiering).",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
           }
         },
-        "required": ["low", "medium", "high"]
+        "required": ["low", "medium", "high", "images"]
       },
       "SetFairUseLimitRequestDto": {
         "type": "object",
@@ -13978,6 +14019,24 @@
           }
         },
         "required": ["tier", "limit", "windowMs"]
+      },
+      "SetImageFairUseLimitRequestDto": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of images allowed within the sliding window. Must be a positive integer.",
+            "example": 50,
+            "minimum": 1
+          },
+          "windowMs": {
+            "type": "number",
+            "description": "Sliding window duration in milliseconds. Must be a positive integer.",
+            "example": 86400000,
+            "minimum": 1
+          }
+        },
+        "required": ["limit", "windowMs"]
       },
       "MessageContentResponseDto": {
         "type": "object",

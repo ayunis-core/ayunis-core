@@ -22,10 +22,13 @@ import { SetCreditsPerEuroCommand } from '../../application/use-cases/set-credit
 import { GetFairUseLimitsUseCase } from '../../application/use-cases/get-fair-use-limits/get-fair-use-limits.use-case';
 import { SetFairUseLimitUseCase } from '../../application/use-cases/set-fair-use-limit/set-fair-use-limit.use-case';
 import { SetFairUseLimitCommand } from '../../application/use-cases/set-fair-use-limit/set-fair-use-limit.command';
+import { SetImageFairUseLimitUseCase } from '../../application/use-cases/set-image-fair-use-limit/set-image-fair-use-limit.use-case';
+import { SetImageFairUseLimitCommand } from '../../application/use-cases/set-image-fair-use-limit/set-image-fair-use-limit.command';
 import { CreditsPerEuroResponseDto } from './dto/credits-per-euro-response.dto';
 import { SetCreditsPerEuroRequestDto } from './dto/set-credits-per-euro-request.dto';
 import { FairUseLimitsResponseDto } from './dto/fair-use-limits-response.dto';
 import { SetFairUseLimitRequestDto } from './dto/set-fair-use-limit-request.dto';
+import { SetImageFairUseLimitRequestDto } from './dto/set-image-fair-use-limit-request.dto';
 
 @ApiTags('Super Admin Platform Config')
 @Controller('super-admin/platform-config')
@@ -38,6 +41,7 @@ export class SuperAdminPlatformConfigController {
     private readonly setCreditsPerEuroUseCase: SetCreditsPerEuroUseCase,
     private readonly getFairUseLimitsUseCase: GetFairUseLimitsUseCase,
     private readonly setFairUseLimitUseCase: SetFairUseLimitUseCase,
+    private readonly setImageFairUseLimitUseCase: SetImageFairUseLimitUseCase,
   ) {}
 
   @Get('credits-per-euro')
@@ -103,9 +107,9 @@ export class SuperAdminPlatformConfigController {
   @Get('fair-use-limits')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Get the current fair-use limits for every model tier',
+    summary: 'Get the current fair-use limits',
     description:
-      'Retrieve the configured messages-per-window limit for low, medium, and high model tiers. Missing keys fall back to baked-in defaults so this endpoint always returns 200. Super admin only.',
+      'Retrieve the configured fair-use limits: per-tier message limits (low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. Super admin only.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -156,5 +160,40 @@ export class SuperAdminPlatformConfigController {
     });
     await this.setFairUseLimitUseCase.execute(command);
     this.logger.log('Successfully updated fair-use limit');
+  }
+
+  @Put('image-fair-use-limit')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Set the fair-use limit for image generation',
+    description:
+      'Update the images-per-window fair-use limit. Image generation has a single global bucket (no tiering), so this endpoint takes only limit + windowMs. Super admin only.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Successfully updated image fair-use limit',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid value provided (limit and windowMs must be positive)',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User not authenticated or not authorized as super admin',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error',
+  })
+  async setImageFairUseLimit(
+    @Body() dto: SetImageFairUseLimitRequestDto,
+  ): Promise<void> {
+    this.logger.log(
+      `Setting image fair-use limit to ${dto.limit}/${dto.windowMs}ms`,
+    );
+    const command = new SetImageFairUseLimitCommand({
+      limit: dto.limit,
+      windowMs: dto.windowMs,
+    });
+    await this.setImageFairUseLimitUseCase.execute(command);
+    this.logger.log('Successfully updated image fair-use limit');
   }
 }

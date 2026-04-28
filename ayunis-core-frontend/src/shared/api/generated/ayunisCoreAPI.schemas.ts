@@ -3735,6 +3735,8 @@ export interface FairUseLimitsResponseDto {
   medium: FairUseTierLimitDto;
   /** Fair-use limit for high-tier (expensive) language models */
   high: FairUseTierLimitDto;
+  /** Fair-use limit for image generation. Single global bucket (no tiering). */
+  images: FairUseTierLimitDto;
 }
 
 /**
@@ -3755,6 +3757,19 @@ export interface SetFairUseLimitRequestDto {
   tier: SetFairUseLimitRequestDtoTier;
   /**
    * Maximum number of messages allowed within the sliding window. Must be a positive integer.
+   * @minimum 1
+   */
+  limit: number;
+  /**
+   * Sliding window duration in milliseconds. Must be a positive integer.
+   * @minimum 1
+   */
+  windowMs: number;
+}
+
+export interface SetImageFairUseLimitRequestDto {
+  /**
+   * Maximum number of images allowed within the sliding window. Must be a positive integer.
    * @minimum 1
    */
   limit: number;

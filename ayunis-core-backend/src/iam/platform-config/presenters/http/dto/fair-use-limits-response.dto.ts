@@ -34,4 +34,11 @@ export class FairUseLimitsResponseDto {
     type: FairUseTierLimitDto,
   })
   high: FairUseTierLimitDto;
+
+  @ApiProperty({
+    description:
+      'Fair-use limit for image generation. Single global bucket (no tiering).',
+    type: FairUseTierLimitDto,
+  })
+  images: FairUseTierLimitDto;
 }
