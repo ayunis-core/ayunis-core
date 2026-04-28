@@ -49,13 +49,14 @@ export class IpAllowlistGuard
     }
 
     const request = context.switchToHttp().getRequest<Request>();
-    const user = request.user as ActiveUser | undefined;
+    const principal =
+      (request.user as ActiveUser | undefined) ?? request.apiKey;
 
-    if (!user) {
+    if (!principal) {
       return true;
     }
 
-    const orgId = user.orgId;
+    const orgId = principal.orgId;
     const cidrs = await this.getCidrs(orgId);
 
     if (!cidrs || cidrs.length === 0) {
@@ -66,7 +67,7 @@ export class IpAllowlistGuard
 
     if (!clientIp) {
       this.logger.warn(
-        `Could not determine client IP for user ${user.id} in org ${orgId}`,
+        `Could not determine client IP for ${principal.kind} principal in org ${orgId}`,
       );
       throw new IpNotAllowedError();
     }

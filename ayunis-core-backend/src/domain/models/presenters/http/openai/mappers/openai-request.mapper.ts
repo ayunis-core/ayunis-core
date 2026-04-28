@@ -68,6 +68,12 @@ export class OpenAIRequestMapper {
     const { systemPrompt, conversation } = this.splitSystemMessages(
       dto.messages,
     );
+    // Build a tool_call_id → function.name map. Tool result messages carry
+    // only `tool_call_id` on the wire, so the name must be recovered from
+    // the prior assistant message that emitted the call. Without this,
+    // downstream provider converters that round-trip the name (Gemini, e.g.)
+    // would send the call id where the function name should be and the model
+    // would reject the request.
     const toolCallIdToName = this.buildToolCallIdToNameMap(conversation);
     const messages = conversation.map((msg) =>
       this.toDomainMessage(msg, threadId, toolCallIdToName),

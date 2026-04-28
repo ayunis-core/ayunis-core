@@ -14,6 +14,7 @@ import { JwtAuthGuard } from './application/guards/jwt-auth.guard';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { UsersModule } from '../users/users.module';
 import { OrgsModule } from '../orgs/orgs.module';
+import { ApiKeysModule } from '../api-keys/api-keys.module';
 import { UnauthorizedExceptionFilter } from './application/filters/unauthorized-exception.filter';
 
 // Import use cases
@@ -50,6 +51,7 @@ export class AuthenticationModule {
         HashingModule,
         SubscriptionsModule,
         TrialsModule,
+        ApiKeysModule,
         JwtModule.registerAsync({
           imports: [ConfigModule],
           inject: [ConfigService],

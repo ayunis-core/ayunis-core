@@ -4,6 +4,7 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import { EmailNotVerifiedError } from '../authorization.errors';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
@@ -25,8 +26,14 @@ export class EmailConfirmGuard implements CanActivate {
       return true;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const user: ActiveUser = context.switchToHttp().getRequest().user;
+    const request = context.switchToHttp().getRequest<Request>();
+    // API-key principals don't carry an email — the email-verified gate
+    // doesn't apply to them. Allow through.
+    if (request.apiKey) {
+      return true;
+    }
+
+    const user = request.user as ActiveUser | undefined;
     if (!user) {
       this.logger.warn('User not found in request context');
       return false;
