@@ -59,6 +59,8 @@ skills/
 │   ├── skills.controller.ts                # Core CRUD + toggle-active + toggle-pinned
 │   ├── skill-sources.controller.ts         # Source management endpoints
 │   ├── skill-mcp-integrations.controller.ts # MCP integration endpoints
+│   ├── services/
+│   │   └── skill-creator-name.resolver.ts  # Org-scoped creator display-name lookup
 │   ├── dto/
 │   │   ├── base-skill.dto.ts
 │   │   ├── create-skill.dto.ts
@@ -86,7 +88,7 @@ When a skill share is deleted, the `ShareDeletedListener` handles cleanup of act
 - **McpModule** — for MCP integration validation and batch fetch
 - **ThreadsModule** — for adding sources and MCP integrations to threads during skill activation
 - **SharesModule** — for share authorization strategy registration
-- **UsersModule** — for resolving org-scoped share members (`FindAllUserIdsByOrgIdUseCase`)
+- **UsersModule** — for resolving org-scoped share members (`FindAllUserIdsByOrgIdUseCase`) and skill creator display names (`FindUsersByIdsUseCase`)
 - **TeamsModule** — for resolving team-scoped share members (`FindAllUserIdsByTeamIdUseCase`)
 - **MarketplaceModule** — for fetching marketplace skill definitions (`GetMarketplaceSkillUseCase`)
 - **ContextService** — for user context (userId, orgId)
