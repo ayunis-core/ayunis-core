@@ -1,6 +1,7 @@
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { lastValueFrom, of } from 'rxjs';
 import { ActiveUser } from '../../domain/active-user.entity';
+import { ActiveApiKey } from '../../domain/active-api-key.entity';
 import { UserRole } from '../../../users/domain/value-objects/role.object';
 import { SystemRole } from '../../../users/domain/value-objects/system-role.enum';
 import { UserContextInterceptor } from './user-context.interceptor';
@@ -8,14 +9,13 @@ import type { ContextService } from 'src/common/context/services/context.service
 import type { UUID } from 'crypto';
 
 describe('UserContextInterceptor', () => {
-  const createExecutionContext = (
-    user?: Partial<ActiveUser>,
-  ): ExecutionContext =>
+  const createExecutionContext = (params: {
+    user?: Partial<ActiveUser>;
+    apiKey?: Partial<ActiveApiKey>;
+  }): ExecutionContext =>
     ({
       switchToHttp: () => ({
-        getRequest: () => ({
-          user,
-        }),
+        getRequest: () => params,
       }),
     }) as unknown as ExecutionContext;
 
@@ -23,11 +23,11 @@ describe('UserContextInterceptor', () => {
     handle: jest.fn(() => of(null)),
   });
 
-  it('sets user identifiers into the context store when user is present', async () => {
+  it('sets user-principal identifiers when user is present', async () => {
     const setMock = jest.fn();
     const contextService = { set: setMock } as unknown as ContextService;
     const interceptor = new UserContextInterceptor(contextService);
-    const activeUser: ActiveUser = new ActiveUser({
+    const activeUser = new ActiveUser({
       id: 'user-id' as UUID,
       email: 'super.admin@example.com',
       emailVerified: true,
@@ -39,23 +39,55 @@ describe('UserContextInterceptor', () => {
     const callHandler = createCallHandler();
 
     await lastValueFrom(
-      interceptor.intercept(createExecutionContext(activeUser), callHandler),
+      interceptor.intercept(
+        createExecutionContext({ user: activeUser }),
+        callHandler,
+      ),
     );
 
+    expect(setMock).toHaveBeenCalledWith('principalKind', 'user');
     expect(setMock).toHaveBeenCalledWith('userId', activeUser.id);
     expect(setMock).toHaveBeenCalledWith('orgId', activeUser.orgId);
     expect(setMock).toHaveBeenCalledWith('systemRole', activeUser.systemRole);
+    expect(setMock).not.toHaveBeenCalledWith('apiKeyId', expect.anything());
     expect(callHandler.handle).toHaveBeenCalled();
   });
 
-  it('skips setting context when user is undefined', async () => {
+  it('sets api-key-principal identifiers when apiKey is present', async () => {
+    const setMock = jest.fn();
+    const contextService = { set: setMock } as unknown as ContextService;
+    const interceptor = new UserContextInterceptor(contextService);
+    const activeApiKey = new ActiveApiKey({
+      apiKeyId: 'key-id' as UUID,
+      label: 'ci-bot',
+      orgId: 'org-id' as UUID,
+      role: UserRole.USER,
+      systemRole: SystemRole.CUSTOMER,
+    });
+    const callHandler = createCallHandler();
+
+    await lastValueFrom(
+      interceptor.intercept(
+        createExecutionContext({ apiKey: activeApiKey }),
+        callHandler,
+      ),
+    );
+
+    expect(setMock).toHaveBeenCalledWith('principalKind', 'apiKey');
+    expect(setMock).toHaveBeenCalledWith('apiKeyId', activeApiKey.apiKeyId);
+    expect(setMock).toHaveBeenCalledWith('orgId', activeApiKey.orgId);
+    expect(setMock).not.toHaveBeenCalledWith('userId', expect.anything());
+    expect(callHandler.handle).toHaveBeenCalled();
+  });
+
+  it('skips setting context when neither principal is present', async () => {
     const setMock = jest.fn();
     const contextService = { set: setMock } as unknown as ContextService;
     const interceptor = new UserContextInterceptor(contextService);
     const callHandler = createCallHandler();
 
     await lastValueFrom(
-      interceptor.intercept(createExecutionContext(undefined), callHandler),
+      interceptor.intercept(createExecutionContext({}), callHandler),
     );
 
     expect(setMock).not.toHaveBeenCalled();

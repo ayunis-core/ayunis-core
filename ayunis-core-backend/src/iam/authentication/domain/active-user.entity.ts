@@ -1,14 +1,13 @@
 import type { UUID } from 'crypto';
 import type { UserRole } from '../../users/domain/value-objects/role.object';
 import type { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { ActivePrincipal } from './active-principal.entity';
 
-export class ActiveUser {
+export class ActiveUser extends ActivePrincipal {
+  readonly kind = 'user' as const;
   readonly id: UUID;
   readonly email: string;
   readonly emailVerified: boolean;
-  readonly role: UserRole;
-  readonly systemRole: SystemRole;
-  readonly orgId: UUID;
   readonly name: string;
 
   constructor(params: {
@@ -20,12 +19,14 @@ export class ActiveUser {
     orgId: UUID;
     name: string;
   }) {
+    super({
+      orgId: params.orgId,
+      role: params.role,
+      systemRole: params.systemRole,
+    });
     this.id = params.id;
     this.email = params.email;
     this.emailVerified = params.emailVerified;
-    this.role = params.role;
-    this.systemRole = params.systemRole;
-    this.orgId = params.orgId;
     this.name = params.name;
   }
 }
