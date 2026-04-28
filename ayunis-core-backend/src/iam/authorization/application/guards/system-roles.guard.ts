@@ -1,12 +1,9 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { Request } from 'express';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { SYSTEM_ROLES_KEY } from '../decorators/system-roles.decorator';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
-
-interface RequestWithUser {
-  user?: ActiveUser;
-}
 
 @Injectable()
 export class SystemRolesGuard implements CanActivate {
@@ -17,14 +14,16 @@ export class SystemRolesGuard implements CanActivate {
       SYSTEM_ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Reflector returns T but is undefined at runtime when no metadata is set
     if (!requiredRoles) {
       return true;
     }
-    const request = context.switchToHttp().getRequest<RequestWithUser>();
-    const user = request.user;
-    if (!user) {
+    const request = context.switchToHttp().getRequest<Request>();
+    const principal =
+      (request.user as ActiveUser | undefined) ?? request.apiKey;
+    if (!principal) {
       return false;
     }
-    return requiredRoles.some((role) => user.systemRole === role);
+    return requiredRoles.some((role) => principal.systemRole === role);
   }
 }
