@@ -287,9 +287,18 @@ describe('PrometheusMetricsListener', () => {
   });
 
   describe('handleTokensConsumed', () => {
-    it('should increment tokens counter for input and output', () => {
+    it('should increment tokens counter for input and output (user principal)', () => {
       listener.handleTokensConsumed(
-        new TokensConsumedEvent(USER_ID, ORG_ID, 'gpt-4', 'openai', 100, 50),
+        new TokensConsumedEvent(
+          'user',
+          USER_ID,
+          null,
+          ORG_ID,
+          'gpt-4',
+          'openai',
+          100,
+          50,
+        ),
       );
 
       expect(tokensCounter.inc).toHaveBeenCalledWith(
@@ -316,12 +325,46 @@ describe('PrometheusMetricsListener', () => {
 
     it('should skip zero-value token counts', () => {
       listener.handleTokensConsumed(
-        new TokensConsumedEvent(USER_ID, ORG_ID, 'gpt-4', 'openai', 100, 0),
+        new TokensConsumedEvent(
+          'user',
+          USER_ID,
+          null,
+          ORG_ID,
+          'gpt-4',
+          'openai',
+          100,
+          0,
+        ),
       );
 
       expect(tokensCounter.inc).toHaveBeenCalledTimes(1);
       expect(tokensCounter.inc).toHaveBeenCalledWith(
         expect.objectContaining({ direction: 'input' }),
+        100,
+      );
+    });
+
+    it('uses apiKeyId in the user_id label slot for api-key principals', () => {
+      const API_KEY_ID =
+        '11111111-1111-1111-1111-111111111111' as typeof USER_ID;
+      listener.handleTokensConsumed(
+        new TokensConsumedEvent(
+          'apiKey',
+          null,
+          API_KEY_ID,
+          ORG_ID,
+          'gpt-4',
+          'openai',
+          100,
+          50,
+        ),
+      );
+
+      expect(tokensCounter.inc).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: API_KEY_ID,
+          direction: 'input',
+        }),
         100,
       );
     });

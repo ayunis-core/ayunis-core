@@ -49,7 +49,6 @@ export class ContextService {
   // is preferred for new code.
   get<T>(key: keyof MyClsStore): T | undefined;
   get(key: keyof MyClsStore): unknown {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return -- ClsService.get returns any
     return this.cls.get(key);
   }
 
