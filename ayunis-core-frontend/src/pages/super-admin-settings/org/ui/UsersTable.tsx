@@ -171,15 +171,15 @@ export default function UsersTable({
                             onClick={() => handleTriggerPasswordReset(user)}
                             disabled={isLoading}
                           >
-                            <Mail className="mr-2 h-4 w-4" />
+                            <Mail />
                             {t('table.sendPasswordReset')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            className="text-destructive"
+                            variant="destructive"
                             onClick={() => handleDeleteUser(user)}
                             disabled={isLoading}
                           >
-                            <Trash2 className="mr-2 h-4 w-4" />
+                            <Trash2 />
                             {t('table.delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>

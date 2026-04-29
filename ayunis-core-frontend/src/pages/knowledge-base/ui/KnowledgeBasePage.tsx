@@ -113,11 +113,12 @@ export function KnowledgeBasePage({
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="text-destructive hover:text-destructive"
                       onClick={handleDelete}
                       disabled={deleteKnowledgeBase.isPending}
                       aria-label={t('detail.deleteLabel')}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>{t('detail.deleteLabel')}</TooltipContent>

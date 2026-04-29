@@ -20,7 +20,7 @@ export default function SharesEmptyState({
       description={t('shares.empty.description')}
       action={
         <Button onClick={onCreateClick}>
-          <Share2 className="mr-2 h-4 w-4" />
+          <Share2 />
           {t('shares.empty.button')}
         </Button>
       }

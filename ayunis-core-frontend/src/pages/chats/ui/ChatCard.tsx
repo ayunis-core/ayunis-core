@@ -71,10 +71,11 @@ export default function ChatCard({ chat }: Readonly<ChatCardProps>) {
         <Button
           variant="ghost"
           size="icon"
+          className="text-destructive hover:text-destructive"
           onClick={handleDelete}
           disabled={isDeleting}
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 />
         </Button>
       </ItemActions>
     </Item>

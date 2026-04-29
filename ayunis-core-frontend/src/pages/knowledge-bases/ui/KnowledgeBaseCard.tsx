@@ -72,13 +72,14 @@ export default function KnowledgeBaseCard({
           <Button
             variant="ghost"
             size="icon"
+            className="text-destructive hover:text-destructive"
             onClick={(e) => {
               e.stopPropagation();
               handleDelete();
             }}
             disabled={deleteKnowledgeBase.isPending}
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 />
           </Button>
         </ItemActions>
       )}

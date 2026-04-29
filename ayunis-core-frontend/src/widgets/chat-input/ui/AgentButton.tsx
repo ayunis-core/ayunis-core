@@ -121,7 +121,7 @@ export default function AgentButton({
           <DropdownMenuSeparator />
           <DropdownMenuLabel>{t('chatInput.tools.title')}</DropdownMenuLabel>
           <DropdownMenuGroup>
-            <DropdownMenuItem className="flex items-center justify-between">
+            <DropdownMenuItem className="justify-between">
               {t('chatInput.tools.internet_search')}
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -134,7 +134,7 @@ export default function AgentButton({
                 </TooltipContent>
               </Tooltip>
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center justify-between">
+            <DropdownMenuItem className="justify-between">
               {t('chatInput.tools.send_email')}
               <Tooltip>
                 <TooltipTrigger asChild>

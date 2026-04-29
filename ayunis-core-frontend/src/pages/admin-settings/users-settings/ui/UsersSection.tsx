@@ -169,14 +169,14 @@ export default function UsersSection({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem disabled>
-                        <Edit className="mr-2 h-4 w-4" />
+                        <Edit />
                         {t('users.edit')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleRoleToggle(user)}
                         disabled={isUserLoading(user.id)}
                       >
-                        <UserCheck className="mr-2 h-4 w-4" />
+                        <UserCheck />
                         {t('users.changeRole', {
                           role:
                             user.role === 'admin'
@@ -188,15 +188,15 @@ export default function UsersSection({
                         onClick={() => handleTriggerPasswordReset(user)}
                         disabled={isUserLoading(user.id)}
                       >
-                        <Mail className="mr-2 h-4 w-4" />
+                        <Mail />
                         {t('users.sendPasswordReset')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="text-red-600"
+                        variant="destructive"
                         onClick={() => handleDeleteUser(user)}
                         disabled={isUserLoading(user.id)}
                       >
-                        <Trash2 className="mr-2 h-4 w-4" />
+                        <Trash2 />
                         {t('users.delete')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
