@@ -14,6 +14,9 @@ import { SaveGeneratedImageCommand } from 'src/domain/threads/application/use-ca
 import { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
+import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
+import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
 
 @Injectable()
 export class GenerateImageToolHandler extends ToolExecutionHandler {
@@ -25,6 +28,7 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
     private readonly saveGeneratedImageUseCase: SaveGeneratedImageUseCase,
     private readonly collectUsageAsyncService: CollectUsageAsyncService,
     private readonly contextService: ContextService,
+    private readonly checkQuotaUseCase: CheckQuotaUseCase,
   ) {
     super();
   }
@@ -56,6 +60,12 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
           }),
         );
 
+      // After model resolution (org access errors trump quota) but before the
+      // provider call (a quota miss must not spend tokens).
+      await this.checkQuotaUseCase.execute(
+        new CheckQuotaQuery(userId, QuotaType.FAIR_USE_IMAGES),
+      );
+
       const result = await this.generateImageUseCase.execute(
         new GenerateImageCommand({
           model: permittedModel.model,
@@ -79,8 +89,7 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
       // a run that the user never sees. Mirrors execute-run.use-case.ts.
       const usage = result.usage;
       if (
-        usage !== undefined &&
-        usage.inputTokens !== undefined &&
+        usage?.inputTokens !== undefined &&
         usage.outputTokens !== undefined
       ) {
         this.collectUsageAsyncService.collect(

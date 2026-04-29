@@ -14,6 +14,9 @@ import { PermittedImageGenerationModel } from 'src/domain/models/domain/permitte
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ImageGenerationResult } from 'src/domain/models/application/ports/image-generation.handler';
+import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
+import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
+import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
 
 describe('GenerateImageToolHandler', () => {
   let handler: GenerateImageToolHandler;
@@ -22,6 +25,7 @@ describe('GenerateImageToolHandler', () => {
   let mockSaveGeneratedImage: jest.Mocked<SaveGeneratedImageUseCase>;
   let mockCollectUsage: jest.Mocked<CollectUsageAsyncService>;
   let mockContextService: jest.Mocked<ContextService>;
+  let mockCheckQuota: jest.Mocked<CheckQuotaUseCase>;
 
   const mockOrgId = randomUUID();
   const mockThreadId = randomUUID();
@@ -34,6 +38,7 @@ describe('GenerateImageToolHandler', () => {
     mockSaveGeneratedImage = { execute: jest.fn() } as any;
     mockCollectUsage = { collect: jest.fn() } as any;
     mockContextService = { get: jest.fn() } as any;
+    mockCheckQuota = { execute: jest.fn().mockResolvedValue(undefined) } as any;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -57,6 +62,10 @@ describe('GenerateImageToolHandler', () => {
         {
           provide: ContextService,
           useValue: mockContextService,
+        },
+        {
+          provide: CheckQuotaUseCase,
+          useValue: mockCheckQuota,
         },
       ],
     }).compile();
@@ -304,5 +313,57 @@ describe('GenerateImageToolHandler', () => {
     ).rejects.toThrow(ToolExecutionFailedError);
 
     expect(mockCollectUsage.collect).not.toHaveBeenCalled();
+  });
+
+  it('should check the FAIR_USE_IMAGES quota for the current user', async () => {
+    setupHappyPath();
+
+    await handler.execute({
+      tool: new GenerateImageTool(),
+      input: { prompt: 'A castle' },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    expect(mockCheckQuota.execute).toHaveBeenCalledTimes(1);
+    const query = mockCheckQuota.execute.mock.calls[0][0];
+    expect(query.userId).toBe(mockUserId);
+    expect(query.quotaType).toBe(QuotaType.FAIR_USE_IMAGES);
+  });
+
+  it('should propagate QuotaExceededError without calling the image provider or save', async () => {
+    setupHappyPath();
+    mockCheckQuota.execute.mockRejectedValue(
+      new QuotaExceededError(QuotaType.FAIR_USE_IMAGES, 50, 86_400_000, 3600),
+    );
+
+    await expect(
+      handler.execute({
+        tool: new GenerateImageTool(),
+        input: { prompt: 'A castle' },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      }),
+    ).rejects.toThrow(QuotaExceededError);
+
+    expect(mockGenerateImage.execute).not.toHaveBeenCalled();
+    expect(mockSaveGeneratedImage.execute).not.toHaveBeenCalled();
+    expect(mockCollectUsage.collect).not.toHaveBeenCalled();
+  });
+
+  it('should resolve the permitted model before checking the quota', async () => {
+    setupHappyPath();
+
+    await handler.execute({
+      tool: new GenerateImageTool(),
+      input: { prompt: 'A castle' },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    const permittedOrder =
+      mockGetPermittedModel.execute.mock.invocationCallOrder[0];
+    const quotaOrder = mockCheckQuota.execute.mock.invocationCallOrder[0];
+    const generateOrder = mockGenerateImage.execute.mock.invocationCallOrder[0];
+
+    expect(permittedOrder).toBeLessThan(quotaOrder);
+    expect(quotaOrder).toBeLessThan(generateOrder);
   });
 });
