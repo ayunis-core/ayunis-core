@@ -28,6 +28,7 @@ export class AddFairUseImagesQuotaType1777448937554 implements MigrationInterfac
         await queryRunner.query(`ALTER TYPE "public"."usage_quotas_quotatype_enum_old" RENAME TO "usage_quotas_quotatype_enum"`);
         await queryRunner.query(`ALTER TABLE "usage_quotas" ADD CONSTRAINT "UQ_394fe814ce4a600f6a083111998" UNIQUE ("userId", "quotaType")`);
         await queryRunner.query(`CREATE INDEX "IDX_394fe814ce4a600f6a08311199" ON "usage_quotas" ("userId", "quotaType") `);
+        await queryRunner.query(`DELETE FROM "agent_tools" WHERE "toolType" IN ('create_diagram', 'update_diagram')`);
         await queryRunner.query(`CREATE TYPE "public"."agent_tools_tooltype_enum_old" AS ENUM('http', 'source_query', 'source_get_text', 'internet_search', 'website_content', 'send_email', 'create_calendar_event', 'code_execution', 'bar_chart', 'line_chart', 'pie_chart', 'mcp_tool', 'mcp_resource', 'mcp_prompt', 'activate_skill', 'create_skill', 'edit_skill', 'knowledge_query', 'knowledge_get_text', 'create_document', 'update_document', 'edit_document', 'read_document', 'generate_image')`);
         await queryRunner.query(`ALTER TABLE "agent_tools" ALTER COLUMN "toolType" TYPE "public"."agent_tools_tooltype_enum_old" USING "toolType"::"text"::"public"."agent_tools_tooltype_enum_old"`);
         await queryRunner.query(`DROP TYPE "public"."agent_tools_tooltype_enum"`);
