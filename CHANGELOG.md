@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.31.0](https://github.com/ayunis-core/ayunis-core/compare/v1.30.0...v1.31.0) (2026-04-29)
+
+
+### Features
+
+* **models:** add zero-tier for unrestricted models (AYC-70) ([#630](https://github.com/ayunis-core/ayunis-core/issues/630)) ([10f381f](https://github.com/ayunis-core/ayunis-core/commit/10f381ff09963e9aebbcf5793b54f5455fd26942))
+* **rag:** add parent-chunks source FK and delete orphans nightly (AYC-29) ([#583](https://github.com/ayunis-core/ayunis-core/issues/583)) ([5fc5048](https://github.com/ayunis-core/ayunis-core/commit/5fc5048eb481707e286252be644a7026782ab514))
+* **super-admin:** add image-generation fair-use limit section (AYC-71) ([#640](https://github.com/ayunis-core/ayunis-core/issues/640)) ([d741b0c](https://github.com/ayunis-core/ayunis-core/commit/d741b0c48d315bfd42d509034d6b3303f5343d76))
+* **threads:** delete stale thread sources via nightly cron (AYC-29) ([#580](https://github.com/ayunis-core/ayunis-core/issues/580)) ([0efaf5e](https://github.com/ayunis-core/ayunis-core/commit/0efaf5ee80a35de6ee3981f9fdc844180557ba68))
+* **tools:** enforce FAIR_USE_IMAGES quota in generate-image tool (AYC-71) ([#639](https://github.com/ayunis-core/ayunis-core/issues/639)) ([6084299](https://github.com/ayunis-core/ayunis-core/commit/60842990eec32ec09b775c80e71e88d3b8b6d333))
+
+
+### Bug Fixes
+
+* **tools:** surface fair-use quota error to LLM in generate_image (AYC-71) ([#642](https://github.com/ayunis-core/ayunis-core/issues/642)) ([4121f9a](https://github.com/ayunis-core/ayunis-core/commit/4121f9acc31092b3bd6a745ca7c42071d1715e4d))
+
+
+### Miscellaneous
+
+* **worktrees:** copy local env files and Claude settings into new worktrees (AYC-000) ([#641](https://github.com/ayunis-core/ayunis-core/issues/641)) ([0881d32](https://github.com/ayunis-core/ayunis-core/commit/0881d3213224bc070ce1c675a7abff2c4e53f92c))
+
 ## [1.30.0](https://github.com/ayunis-core/ayunis-core/compare/v1.29.2...v1.30.0) (2026-04-24)
 
 
