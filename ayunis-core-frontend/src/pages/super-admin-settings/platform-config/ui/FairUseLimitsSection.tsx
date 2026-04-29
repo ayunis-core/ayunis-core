@@ -18,41 +18,23 @@ import useFairUseLimits, {
   type FairUseTierLimit,
 } from '../api/useFairUseLimits';
 import useSetFairUseLimit from '../api/useSetFairUseLimit';
+import {
+  type FairUseLimitEditState,
+  isValidLimit,
+  isValidWindowHours,
+  toEditState,
+} from '../lib/fair-use-limit-edit-state';
 
 const TIERS: Tier[] = [Tier.low, Tier.medium, Tier.high];
-
-const MIN_WINDOW_HOURS = 0.01;
-
-interface RowEditState {
-  limit: string;
-  windowHours: string;
-}
 
 interface TierRowProps {
   readonly tier: Tier;
   readonly current: FairUseTierLimit | undefined;
 }
 
-function isValidLimit(value: string): boolean {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && Number.isInteger(parsed) && parsed > 0;
-}
-
-function isValidWindowHours(value: string): boolean {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed >= MIN_WINDOW_HOURS;
-}
-
-function toEditState(current: FairUseTierLimit | undefined): RowEditState {
-  return {
-    limit: String(current?.limit ?? ''),
-    windowHours: String(current?.windowHours ?? ''),
-  };
-}
-
 function TierRow({ tier, current }: TierRowProps) {
   const { t } = useTranslation('super-admin-settings-platform-config');
-  const [edit, setEdit] = useState<RowEditState | null>(null);
+  const [edit, setEdit] = useState<FairUseLimitEditState | null>(null);
   const { mutate, isPending } = useSetFairUseLimit({
     onSuccessCallback: () => setEdit(null),
   });

@@ -16,30 +16,12 @@ import { showError } from '@/shared/lib/toast';
 import type { FairUseTierLimit } from '../api/useFairUseLimits';
 import useImageFairUseLimit from '../api/useImageFairUseLimit';
 import useSetImageFairUseLimit from '../api/useSetImageFairUseLimit';
-
-const MIN_WINDOW_HOURS = 0.01;
-
-interface EditState {
-  limit: string;
-  windowHours: string;
-}
-
-function isValidLimit(value: string): boolean {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && Number.isInteger(parsed) && parsed > 0;
-}
-
-function isValidWindowHours(value: string): boolean {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed >= MIN_WINDOW_HOURS;
-}
-
-function toEditState(current: FairUseTierLimit | undefined): EditState {
-  return {
-    limit: String(current?.limit ?? ''),
-    windowHours: String(current?.windowHours ?? ''),
-  };
-}
+import {
+  type FairUseLimitEditState,
+  isValidLimit,
+  isValidWindowHours,
+  toEditState,
+} from '../lib/fair-use-limit-edit-state';
 
 interface EditorProps {
   readonly current: FairUseTierLimit | undefined;
@@ -47,7 +29,7 @@ interface EditorProps {
 
 function Editor({ current }: EditorProps) {
   const { t } = useTranslation('super-admin-settings-platform-config');
-  const [edit, setEdit] = useState<EditState | null>(null);
+  const [edit, setEdit] = useState<FairUseLimitEditState | null>(null);
   const { mutate, isPending } = useSetImageFairUseLimit({
     onSuccessCallback: () => setEdit(null),
   });
