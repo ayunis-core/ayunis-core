@@ -66,7 +66,7 @@ describe('GetFairUseLimitsUseCase', () => {
       low: { limit: 1000, windowMs: THREE_HOURS_MS },
       medium: { limit: 200, windowMs: THREE_HOURS_MS },
       high: { limit: 50, windowMs: THREE_HOURS_MS },
-      images: { limit: 50, windowMs: TWENTY_FOUR_HOURS_MS },
+      images: { limit: 10, windowMs: TWENTY_FOUR_HOURS_MS },
     });
     expect(warnSpy).toHaveBeenCalledTimes(8);
 
@@ -150,7 +150,7 @@ describe('GetFairUseLimitsUseCase', () => {
   it('should expose the configured images limit when set and fall back independently of message tiers', async () => {
     // Only the per-tier message keys are configured; the images keys remain
     // missing. The images bucket should fall back to its baked-in default
-    // (50 / 24h) without affecting the configured message tiers.
+    // (10 / 24h) without affecting the configured message tiers.
     stubConfig({
       [PlatformConfigKey.FAIR_USE_LOW_LIMIT]: '1500',
       [PlatformConfigKey.FAIR_USE_LOW_WINDOW_MS]: '3600000',
@@ -163,7 +163,7 @@ describe('GetFairUseLimitsUseCase', () => {
     const result = await useCase.execute();
 
     expect(result.images).toEqual({
-      limit: 50,
+      limit: 10,
       windowMs: TWENTY_FOUR_HOURS_MS,
     });
     expect(result.low).toEqual({ limit: 1500, windowMs: 3600000 });

@@ -11,7 +11,7 @@ const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
  * an invalid value. These match the legacy hardcoded fair-use quota for the
  * medium tier (200 / 3h) and pick sensible bookends for low and high.
  *
- * The image-generation default (50 / 24h) is conservative on purpose — image
+ * The image-generation default (10 / 24h) is conservative on purpose — image
  * calls are the most expensive single tool action we expose, and operators
  * can raise the cap via the super-admin UI without a deploy.
  */
@@ -19,7 +19,7 @@ const DEFAULT_FAIR_USE_LIMITS: FairUseLimitsByTier = {
   low: { limit: 1000, windowMs: THREE_HOURS_MS },
   medium: { limit: 200, windowMs: THREE_HOURS_MS },
   high: { limit: 50, windowMs: THREE_HOURS_MS },
-  images: { limit: 50, windowMs: TWENTY_FOUR_HOURS_MS },
+  images: { limit: 10, windowMs: TWENTY_FOUR_HOURS_MS },
 };
 
 @Injectable()
