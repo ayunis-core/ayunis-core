@@ -18,6 +18,15 @@ export class FairUseTierLimitDto {
 
 export class FairUseLimitsResponseDto {
   @ApiProperty({
+    description:
+      'Fair-use limit configured for zero-tier (unrestricted) models. ' +
+      'Stored for UI symmetry only — runtime quota enforcement skips ' +
+      'ZERO-tier models entirely, so this value is never consulted.',
+    type: FairUseTierLimitDto,
+  })
+  zero: FairUseTierLimitDto;
+
+  @ApiProperty({
     description: 'Fair-use limit for low-tier (cheap) language models',
     type: FairUseTierLimitDto,
   })

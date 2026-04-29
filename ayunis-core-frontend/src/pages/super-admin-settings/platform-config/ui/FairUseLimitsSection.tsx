@@ -18,8 +18,6 @@ import useFairUseLimits, {
 } from '../api/useFairUseLimits';
 import useSetFairUseLimit from '../api/useSetFairUseLimit';
 
-const TIERS: Tier[] = [Tier.low, Tier.medium, Tier.high];
-
 interface TierRowProps {
   readonly tier: Tier;
   readonly current: FairUseTierLimit | undefined;
@@ -102,12 +100,18 @@ function TierRow({ tier, current }: TierRowProps) {
 
 export default function FairUseLimitsSection() {
   const { t } = useTranslation('super-admin-settings-platform-config');
-  const { low, medium, high, isLoading, isError } = useFairUseLimits();
+  const { zero, low, medium, high, isLoading, isError } = useFairUseLimits();
 
+  // Exhaustive over the `Tier` enum. ZERO is a first-class tier here even
+  // though the runtime fair-use check skips it — the super admin can still
+  // configure a value, the backend persists it, and Get/Set round-trip
+  // cleanly. The runtime bypass lives in `tierToFairUseQuotaType`, not in
+  // the config layer.
   const tierData: Record<Tier, FairUseTierLimit | undefined> = {
-    low,
-    medium,
-    high,
+    [Tier.zero]: zero,
+    [Tier.low]: low,
+    [Tier.medium]: medium,
+    [Tier.high]: high,
   };
 
   return (
@@ -131,7 +135,7 @@ export default function FairUseLimitsSection() {
         )}
         {!isLoading && !isError && (
           <div className="space-y-3">
-            {TIERS.map((tier) => (
+            {Object.values(Tier).map((tier) => (
               <TierRow key={tier} tier={tier} current={tierData[tier]} />
             ))}
           </div>

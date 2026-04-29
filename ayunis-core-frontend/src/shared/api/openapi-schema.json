@@ -7592,7 +7592,7 @@
     },
     "/super-admin/platform-config/fair-use-limits": {
       "get": {
-        "description": "Retrieve the configured fair-use limits: per-tier message limits (low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. Super admin only.",
+        "description": "Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.",
         "operationId": "SuperAdminPlatformConfigController_getFairUseLimits",
         "parameters": [],
         "responses": {
@@ -7617,7 +7617,7 @@
         "tags": ["Super Admin Platform Config"]
       },
       "put": {
-        "description": "Update the messages-per-window limit for one model tier (low, medium, or high). Super admin only.",
+        "description": "Update the messages-per-window limit for one model tier (zero, low, medium, or high). Storing a value for the zero tier is permitted but informational — runtime quota enforcement skips ZERO-tier models. Super admin only.",
         "operationId": "SuperAdminPlatformConfigController_setFairUseLimit",
         "parameters": [],
         "requestBody": {
@@ -8497,7 +8497,7 @@
           },
           "tier": {
             "type": "string",
-            "enum": ["low", "medium", "high"],
+            "enum": ["zero", "low", "medium", "high"],
             "description": "Fair-use tier label assigned by super admins; drives quota bucket selection. Undefined for embedding models and untiered language models.",
             "example": "medium"
           }
@@ -8975,7 +8975,7 @@
           },
           "tier": {
             "type": "string",
-            "enum": ["low", "medium", "high"],
+            "enum": ["zero", "low", "medium", "high"],
             "description": "Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
             "example": "medium"
           }
@@ -9228,7 +9228,7 @@
           "tier": {
             "type": "string",
             "description": "Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
-            "enum": ["low", "medium", "high"],
+            "enum": ["zero", "low", "medium", "high"],
             "example": "medium"
           }
         },
@@ -9315,7 +9315,7 @@
           "tier": {
             "type": "string",
             "description": "Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
-            "enum": ["low", "medium", "high"],
+            "enum": ["zero", "low", "medium", "high"],
             "example": "medium"
           }
         },
@@ -13961,6 +13961,14 @@
       "FairUseLimitsResponseDto": {
         "type": "object",
         "properties": {
+          "zero": {
+            "description": "Fair-use limit configured for zero-tier (unrestricted) models. Stored for UI symmetry only — runtime quota enforcement skips ZERO-tier models entirely, so this value is never consulted.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
+          },
           "low": {
             "description": "Fair-use limit for low-tier (cheap) language models",
             "allOf": [
@@ -13994,7 +14002,7 @@
             ]
           }
         },
-        "required": ["low", "medium", "high", "images"]
+        "required": ["zero", "low", "medium", "high", "images"]
       },
       "SetFairUseLimitRequestDto": {
         "type": "object",
@@ -14002,7 +14010,7 @@
           "tier": {
             "type": "string",
             "description": "Model tier whose fair-use limit is being updated",
-            "enum": ["low", "medium", "high"],
+            "enum": ["zero", "low", "medium", "high"],
             "example": "medium"
           },
           "limit": {

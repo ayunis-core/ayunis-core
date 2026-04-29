@@ -104,10 +104,14 @@ export class ExecuteRunUseCase {
       const model = this.pickModel(thread, agent);
 
       // Enforce fair-use + credit budget AFTER pickModel so the tiered quota
-      // bucket matches the resolved model. Untiered models default to MEDIUM.
-      await this.checkQuotaUseCase.execute(
-        new CheckQuotaQuery(userId, tierToFairUseQuotaType(model.model.tier)),
-      );
+      // bucket matches the resolved model. Untiered models default to MEDIUM;
+      // ZERO-tier models return null and bypass the check entirely.
+      const fairUseQuotaType = tierToFairUseQuotaType(model.model.tier);
+      if (fairUseQuotaType !== null) {
+        await this.checkQuotaUseCase.execute(
+          new CheckQuotaQuery(userId, fairUseQuotaType),
+        );
+      }
       await this.creditBudgetGuardService.ensureBudgetAvailable(orgId);
 
       const effectiveIsAnonymous = thread.isAnonymous || model.anonymousOnly;

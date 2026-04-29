@@ -191,6 +191,54 @@ describe('SetFairUseLimitUseCase', () => {
     expect(repository.setMany).not.toHaveBeenCalled();
   });
 
+  it('should atomically write the limit and window keys for the ZERO tier', async () => {
+    // ZERO maps to real `FAIR_USE_ZERO_*` keys so the super-admin UI can
+    // round-trip a value like any other tier. The runtime fair-use check
+    // still skips ZERO via `tierToFairUseQuotaType`, so the persisted
+    // numbers are informational only — but they MUST persist, otherwise
+    // saving from the UI would silently drop the operator's input.
+    await useCase.execute(
+      new SetFairUseLimitCommand({
+        tier: ModelTier.ZERO,
+        limit: 999999,
+        windowMs: 3600000,
+      }),
+    );
+
+    expect(repository.set).not.toHaveBeenCalled();
+    expect(repository.setMany).toHaveBeenCalledTimes(1);
+    expect(repository.setMany).toHaveBeenCalledWith(
+      new Map<PlatformConfigKey, string>([
+        [PlatformConfigKey.FAIR_USE_ZERO_LIMIT, '999999'],
+        [PlatformConfigKey.FAIR_USE_ZERO_WINDOW_MS, '3600000'],
+      ]),
+    );
+  });
+
+  it('should reject the ZERO tier with an invalid limit just like any other tier', async () => {
+    // ZERO is no longer a special case at the validation layer — the same
+    // positive-integer check that protects LOW/MEDIUM/HIGH applies.
+    let caught: PlatformConfigInvalidValueError | null = null;
+    try {
+      await useCase.execute(
+        new SetFairUseLimitCommand({
+          tier: ModelTier.ZERO,
+          limit: -1,
+          windowMs: 3600000,
+        }),
+      );
+    } catch (error) {
+      caught = error as PlatformConfigInvalidValueError;
+    }
+
+    expect(caught).toBeInstanceOf(PlatformConfigInvalidValueError);
+    expect(caught?.metadata).toEqual({
+      key: PlatformConfigKey.FAIR_USE_ZERO_LIMIT,
+      reason: 'must be a positive integer',
+    });
+    expect(repository.setMany).not.toHaveBeenCalled();
+  });
+
   it('should reject an unknown tier before touching the repository', async () => {
     let caught: PlatformConfigInvalidValueError | null = null;
     try {

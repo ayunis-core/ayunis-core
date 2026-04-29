@@ -463,6 +463,30 @@ describe('ExecuteRunUseCase', () => {
       },
     );
 
+    it('skips the fair-use quota check entirely for a ZERO-tier model', async () => {
+      const thread = createMockThread({
+        model: makeTieredModel(ModelTier.ZERO),
+      });
+      findThreadUseCase.execute.mockResolvedValue({
+        thread,
+        isLongChat: false,
+      });
+      stubInferenceWithEmptyResponse();
+
+      const command = new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('hello', []),
+        streaming: true,
+      });
+      await drainGenerator(await useCase.execute(command));
+
+      expect(checkQuotaUseCase.execute).not.toHaveBeenCalled();
+      // Credit budget enforcement still applies — only fair-use is bypassed.
+      expect(
+        creditBudgetGuardService.ensureBudgetAvailable,
+      ).toHaveBeenCalledWith(orgId);
+    });
+
     it('falls back to FAIR_USE_MESSAGES_MEDIUM when the model has no tier', async () => {
       const thread = createMockThread({ model: makeTieredModel(undefined) });
       findThreadUseCase.execute.mockResolvedValue({

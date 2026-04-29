@@ -36,6 +36,8 @@ describe('GetFairUseLimitsUseCase', () => {
 
   it('should return all configured values when every key is present', async () => {
     stubConfig({
+      [PlatformConfigKey.FAIR_USE_ZERO_LIMIT]: '999999',
+      [PlatformConfigKey.FAIR_USE_ZERO_WINDOW_MS]: '3600000',
       [PlatformConfigKey.FAIR_USE_LOW_LIMIT]: '1500',
       [PlatformConfigKey.FAIR_USE_LOW_WINDOW_MS]: '3600000',
       [PlatformConfigKey.FAIR_USE_MEDIUM_LIMIT]: '300',
@@ -49,6 +51,7 @@ describe('GetFairUseLimitsUseCase', () => {
     const result = await useCase.execute();
 
     expect(result).toEqual({
+      zero: { limit: 999999, windowMs: 3600000 },
       low: { limit: 1500, windowMs: 3600000 },
       medium: { limit: 300, windowMs: 7200000 },
       high: { limit: 75, windowMs: 10800000 },
@@ -63,12 +66,13 @@ describe('GetFairUseLimitsUseCase', () => {
     const result = await useCase.execute();
 
     expect(result).toEqual({
+      zero: { limit: 1_000_000, windowMs: THREE_HOURS_MS },
       low: { limit: 1000, windowMs: THREE_HOURS_MS },
       medium: { limit: 200, windowMs: THREE_HOURS_MS },
       high: { limit: 50, windowMs: THREE_HOURS_MS },
       images: { limit: 10, windowMs: TWENTY_FOUR_HOURS_MS },
     });
-    expect(warnSpy).toHaveBeenCalledTimes(8);
+    expect(warnSpy).toHaveBeenCalledTimes(10);
 
     // Calling again with the same (still-missing) state must not re-warn —
     // otherwise the quota resolver would flood logs on every chat message.
@@ -85,6 +89,7 @@ describe('GetFairUseLimitsUseCase', () => {
 
     const result = await useCase.execute();
 
+    expect(result.zero).toEqual({ limit: 1_000_000, windowMs: THREE_HOURS_MS });
     expect(result.low).toEqual({ limit: 1000, windowMs: THREE_HOURS_MS });
     expect(result.medium).toEqual({ limit: 250, windowMs: THREE_HOURS_MS });
     expect(result.high).toEqual({ limit: 50, windowMs: 21600000 });
@@ -93,6 +98,8 @@ describe('GetFairUseLimitsUseCase', () => {
 
   it('should fall back to default and warn when a stored value is not numeric', async () => {
     stubConfig({
+      [PlatformConfigKey.FAIR_USE_ZERO_LIMIT]: '1000000',
+      [PlatformConfigKey.FAIR_USE_ZERO_WINDOW_MS]: '3600000',
       [PlatformConfigKey.FAIR_USE_LOW_LIMIT]: 'not-a-number',
       [PlatformConfigKey.FAIR_USE_LOW_WINDOW_MS]: '3600000',
       [PlatformConfigKey.FAIR_USE_MEDIUM_LIMIT]: '200',
@@ -117,7 +124,7 @@ describe('GetFairUseLimitsUseCase', () => {
     // First run: every key is missing, so each produces one warn.
     repository.get.mockResolvedValue(null);
     await useCase.execute();
-    expect(warnSpy).toHaveBeenCalledTimes(8);
+    expect(warnSpy).toHaveBeenCalledTimes(10);
 
     // Second run: every key is now valid. No new warns, AND crucially the
     // success branch must `warnedKeys.delete(key)` so a future regression
@@ -125,6 +132,8 @@ describe('GetFairUseLimitsUseCase', () => {
     // dropped — the *third* run is what locks the contract in.
     warnSpy.mockClear();
     stubConfig({
+      [PlatformConfigKey.FAIR_USE_ZERO_LIMIT]: '999999',
+      [PlatformConfigKey.FAIR_USE_ZERO_WINDOW_MS]: '3600000',
       [PlatformConfigKey.FAIR_USE_LOW_LIMIT]: '1500',
       [PlatformConfigKey.FAIR_USE_LOW_WINDOW_MS]: '3600000',
       [PlatformConfigKey.FAIR_USE_MEDIUM_LIMIT]: '300',
@@ -140,11 +149,11 @@ describe('GetFairUseLimitsUseCase', () => {
     // Third run: config has been wiped again. Because the previous run
     // cleared `warnedKeys`, each key must re-warn so operators aren't left
     // guessing when config silently regresses. If the `delete` line is
-    // dropped from the use case, this assertion fails (0 vs 8).
+    // dropped from the use case, this assertion fails (0 vs 10).
     warnSpy.mockClear();
     repository.get.mockResolvedValue(null);
     await useCase.execute();
-    expect(warnSpy).toHaveBeenCalledTimes(8);
+    expect(warnSpy).toHaveBeenCalledTimes(10);
   });
 
   it('should expose the configured images limit when set and fall back independently of message tiers', async () => {
@@ -177,6 +186,8 @@ describe('GetFairUseLimitsUseCase', () => {
 
   it('should fall back to default and warn when a stored value is negative or zero', async () => {
     stubConfig({
+      [PlatformConfigKey.FAIR_USE_ZERO_LIMIT]: '1000000',
+      [PlatformConfigKey.FAIR_USE_ZERO_WINDOW_MS]: '3600000',
       [PlatformConfigKey.FAIR_USE_LOW_LIMIT]: '1000',
       [PlatformConfigKey.FAIR_USE_LOW_WINDOW_MS]: '3600000',
       [PlatformConfigKey.FAIR_USE_MEDIUM_LIMIT]: '0',

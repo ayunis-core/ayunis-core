@@ -20,6 +20,7 @@
     "loading": "Wird geladen…",
     "loadError": "Fair-Use-Limits konnten nicht geladen werden.",
     "tier": {
+      "zero": "Unbegrenzte Stufe",
       "low": "Niedrige Stufe",
       "medium": "Mittlere Stufe",
       "high": "Hohe Stufe"

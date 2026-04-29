@@ -20,6 +20,7 @@
     "loading": "Loading…",
     "loadError": "Failed to load fair-use limits.",
     "tier": {
+      "zero": "Unrestricted tier",
       "low": "Low tier",
       "medium": "Medium tier",
       "high": "High tier"

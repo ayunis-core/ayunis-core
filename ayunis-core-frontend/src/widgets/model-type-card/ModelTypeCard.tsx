@@ -30,6 +30,7 @@ import { getFlagByProvider } from '@/shared/lib/getFlagByProvider';
 import { getHostingPriority } from '@/features/models';
 
 const TIER_FILLED_COUNT: Record<ModelWithConfigResponseDtoTier, number> = {
+  [ModelWithConfigResponseDtoTier.zero]: 0,
   [ModelWithConfigResponseDtoTier.low]: 1,
   [ModelWithConfigResponseDtoTier.medium]: 2,
   [ModelWithConfigResponseDtoTier.high]: 3,

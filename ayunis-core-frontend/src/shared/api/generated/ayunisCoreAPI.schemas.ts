@@ -66,6 +66,7 @@ export type ModelWithConfigResponseDtoTier = typeof ModelWithConfigResponseDtoTi
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelWithConfigResponseDtoTier = {
+  zero: 'zero',
   low: 'low',
   medium: 'medium',
   high: 'high',
@@ -423,6 +424,7 @@ export type LanguageModelResponseDtoTier = typeof LanguageModelResponseDtoTier[k
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const LanguageModelResponseDtoTier = {
+  zero: 'zero',
   low: 'low',
   medium: 'medium',
   high: 'high',
@@ -610,6 +612,7 @@ export type CreateLanguageModelRequestDtoTier = typeof CreateLanguageModelReques
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateLanguageModelRequestDtoTier = {
+  zero: 'zero',
   low: 'low',
   medium: 'medium',
   high: 'high',
@@ -676,6 +679,7 @@ export type UpdateLanguageModelRequestDtoTier = typeof UpdateLanguageModelReques
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UpdateLanguageModelRequestDtoTier = {
+  zero: 'zero',
   low: 'low',
   medium: 'medium',
   high: 'high',
@@ -3729,6 +3733,8 @@ export interface FairUseTierLimitDto {
 }
 
 export interface FairUseLimitsResponseDto {
+  /** Fair-use limit configured for zero-tier (unrestricted) models. Stored for UI symmetry only — runtime quota enforcement skips ZERO-tier models entirely, so this value is never consulted. */
+  zero: FairUseTierLimitDto;
   /** Fair-use limit for low-tier (cheap) language models */
   low: FairUseTierLimitDto;
   /** Fair-use limit for medium-tier language models */
@@ -3747,6 +3753,7 @@ export type SetFairUseLimitRequestDtoTier = typeof SetFairUseLimitRequestDtoTier
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const SetFairUseLimitRequestDtoTier = {
+  zero: 'zero',
   low: 'low',
   medium: 'medium',
   high: 'high',
