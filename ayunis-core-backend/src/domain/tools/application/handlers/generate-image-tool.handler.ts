@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
@@ -17,6 +18,10 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
 import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
+import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
+import { PermittedImageGenerationModel } from 'src/domain/models/domain/permitted-model.entity';
+
+type GenerateImageResult = Awaited<ReturnType<GenerateImageUseCase['execute']>>;
 
 @Injectable()
 export class GenerateImageToolHandler extends ToolExecutionHandler {
@@ -38,81 +43,112 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
     input: Record<string, unknown>;
     context: ToolExecutionContext;
   }): Promise<string> {
-    const { tool, input, context } = params;
     this.logger.log('Executing generate_image tool');
-
     try {
-      const validatedInput = tool.validateParams(input);
-
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message: 'User context is required for image generation',
-          exposeToLLM: false,
-        });
-      }
-
-      const permittedModel =
-        await this.getPermittedImageGenerationModelUseCase.execute(
-          new GetPermittedImageGenerationModelQuery({
-            orgId: context.orgId,
-          }),
-        );
-
-      // After model resolution (org access errors trump quota) but before the
-      // provider call (a quota miss must not spend tokens).
-      await this.checkQuotaUseCase.execute(
-        new CheckQuotaQuery(userId, QuotaType.FAIR_USE_IMAGES),
-      );
-
-      const result = await this.generateImageUseCase.execute(
-        new GenerateImageCommand({
-          model: permittedModel.model,
-          prompt: validatedInput.prompt,
-        }),
-      );
-
-      const { id } = await this.saveGeneratedImageUseCase.execute(
-        new SaveGeneratedImageCommand({
-          orgId: context.orgId,
-          userId,
-          threadId: context.threadId,
-          imageData: result.imageData,
-          contentType: result.contentType,
-          isAnonymous: context.isAnonymous ?? false,
-        }),
-      );
-
-      // Collect usage only after the image is persisted, so a save failure
-      // surfaces as a tool-execution failure without recording (and billing)
-      // a run that the user never sees. Mirrors execute-run.use-case.ts.
-      const usage = result.usage;
-      if (
-        usage?.inputTokens !== undefined &&
-        usage.outputTokens !== undefined
-      ) {
-        this.collectUsageAsyncService.collect(
-          permittedModel.model,
-          usage.inputTokens,
-          usage.outputTokens,
-        );
-      }
-
-      return id;
+      return await this.runGeneration(params);
     } catch (error) {
-      if (error instanceof ToolExecutionFailedError) {
-        throw error;
-      }
-      this.logger.error('Failed to execute generate_image tool', error);
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
+      this.handleError(error, params.tool.name);
+    }
+  }
+
+  private async runGeneration(params: {
+    tool: GenerateImageTool;
+    input: Record<string, unknown>;
+    context: ToolExecutionContext;
+  }): Promise<string> {
+    const { tool, input, context } = params;
+    const validatedInput = tool.validateParams(input);
+    const userId = this.requireUserId(tool.name);
+
+    const permittedModel =
+      await this.getPermittedImageGenerationModelUseCase.execute(
+        new GetPermittedImageGenerationModelQuery({ orgId: context.orgId }),
+      );
+
+    // After model resolution (org access errors trump quota) but before the
+    // provider call (a quota miss must not spend tokens).
+    await this.checkQuotaUseCase.execute(
+      new CheckQuotaQuery(userId, QuotaType.FAIR_USE_IMAGES),
+    );
+
+    const result = await this.generateImageUseCase.execute(
+      new GenerateImageCommand({
+        model: permittedModel.model,
+        prompt: validatedInput.prompt,
+      }),
+    );
+
+    return this.persistImageAndCollectUsage({
+      permittedModel,
+      result,
+      context,
+      userId,
+    });
+  }
+
+  private requireUserId(toolName: string): UUID {
+    const userId = this.contextService.get('userId');
+    if (!userId) {
       throw new ToolExecutionFailedError({
-        toolName: tool.name,
-        message: 'Image generation failed. Please try again.',
+        toolName,
+        message: 'User context is required for image generation',
+        exposeToLLM: false,
+      });
+    }
+    return userId;
+  }
+
+  private async persistImageAndCollectUsage(args: {
+    permittedModel: PermittedImageGenerationModel;
+    result: GenerateImageResult;
+    context: ToolExecutionContext;
+    userId: UUID;
+  }): Promise<string> {
+    const { permittedModel, result, context, userId } = args;
+    const { id } = await this.saveGeneratedImageUseCase.execute(
+      new SaveGeneratedImageCommand({
+        orgId: context.orgId,
+        userId,
+        threadId: context.threadId,
+        imageData: result.imageData,
+        contentType: result.contentType,
+        isAnonymous: context.isAnonymous ?? false,
+      }),
+    );
+
+    // Collect usage only after the image is persisted, so a save failure
+    // surfaces as a tool-execution failure without recording (and billing)
+    // a run that the user never sees. Mirrors execute-run.use-case.ts.
+    const usage = result.usage;
+    if (usage?.inputTokens !== undefined && usage.outputTokens !== undefined) {
+      this.collectUsageAsyncService.collect(
+        permittedModel.model,
+        usage.inputTokens,
+        usage.outputTokens,
+      );
+    }
+    return id;
+  }
+
+  private handleError(error: unknown, toolName: string): never {
+    if (error instanceof ToolExecutionFailedError) {
+      throw error;
+    }
+    this.logger.error('Failed to execute generate_image tool', error);
+    if (error instanceof QuotaExceededError) {
+      throw new ToolExecutionFailedError({
+        toolName,
+        message: error.message,
         exposeToLLM: true,
       });
     }
+    if (error instanceof ApplicationError) {
+      throw error;
+    }
+    throw new ToolExecutionFailedError({
+      toolName,
+      message: 'Image generation failed. Please try again.',
+      exposeToLLM: true,
+    });
   }
 }

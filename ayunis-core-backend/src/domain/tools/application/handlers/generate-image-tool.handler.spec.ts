@@ -330,19 +330,31 @@ describe('GenerateImageToolHandler', () => {
     expect(query.quotaType).toBe(QuotaType.FAIR_USE_IMAGES);
   });
 
-  it('should propagate QuotaExceededError without calling the image provider or save', async () => {
+  it('should wrap QuotaExceededError as a tool error exposed to the LLM, preserving the message', async () => {
     setupHappyPath();
-    mockCheckQuota.execute.mockRejectedValue(
-      new QuotaExceededError(QuotaType.FAIR_USE_IMAGES, 50, 86_400_000, 3600),
+    const quotaError = new QuotaExceededError(
+      QuotaType.FAIR_USE_IMAGES,
+      50,
+      86_400_000,
+      3600,
     );
+    mockCheckQuota.execute.mockRejectedValue(quotaError);
 
-    await expect(
-      handler.execute({
+    let caught: unknown;
+    try {
+      await handler.execute({
         tool: new GenerateImageTool(),
         input: { prompt: 'A castle' },
         context: { orgId: mockOrgId, threadId: mockThreadId },
-      }),
-    ).rejects.toThrow(QuotaExceededError);
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ToolExecutionFailedError);
+    const toolError = caught as ToolExecutionFailedError;
+    expect(toolError.exposeToLLM).toBe(true);
+    expect(toolError.message).toContain(quotaError.message);
 
     expect(mockGenerateImage.execute).not.toHaveBeenCalled();
     expect(mockSaveGeneratedImage.execute).not.toHaveBeenCalled();
