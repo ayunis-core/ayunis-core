@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Card,
@@ -12,7 +11,7 @@ import { Button } from '@/shared/ui/shadcn/button';
 import { Label } from '@/shared/ui/shadcn/label';
 import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import { showError } from '@/shared/lib/toast';
+import useFairUseLimitEditor from '@/features/fair-use-limit-editor/useFairUseLimitEditor';
 import { SetFairUseLimitRequestDtoTier as Tier } from '@/shared/api';
 import useFairUseLimits, {
   type FairUseTierLimit,
@@ -21,74 +20,20 @@ import useSetFairUseLimit from '../api/useSetFairUseLimit';
 
 const TIERS: Tier[] = [Tier.low, Tier.medium, Tier.high];
 
-const MIN_WINDOW_HOURS = 0.01;
-
-interface RowEditState {
-  limit: string;
-  windowHours: string;
-}
-
 interface TierRowProps {
   readonly tier: Tier;
   readonly current: FairUseTierLimit | undefined;
 }
 
-function isValidLimit(value: string): boolean {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && Number.isInteger(parsed) && parsed > 0;
-}
-
-function isValidWindowHours(value: string): boolean {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed >= MIN_WINDOW_HOURS;
-}
-
-function toEditState(current: FairUseTierLimit | undefined): RowEditState {
-  return {
-    limit: String(current?.limit ?? ''),
-    windowHours: String(current?.windowHours ?? ''),
-  };
-}
-
 function TierRow({ tier, current }: TierRowProps) {
   const { t } = useTranslation('super-admin-settings-platform-config');
-  const [edit, setEdit] = useState<RowEditState | null>(null);
-  const { mutate, isPending } = useSetFairUseLimit({
-    onSuccessCallback: () => setEdit(null),
+  const editor = useFairUseLimitEditor({
+    current,
+    validationKeyPrefix: 'fairUseLimits',
   });
-
-  const isEditing = edit !== null;
-  const limitValue = isEditing ? edit.limit : String(current?.limit ?? '');
-  const windowValue = isEditing
-    ? edit.windowHours
-    : String(current?.windowHours ?? '');
-
-  function updateField(field: 'limit' | 'windowHours', value: string) {
-    setEdit((prev) => ({ ...(prev ?? toEditState(current)), [field]: value }));
-  }
-
-  function handleSave() {
-    if (!isEditing) return;
-
-    if (!isValidLimit(edit.limit)) {
-      showError(t('fairUseLimits.validationError.limit'));
-      return;
-    }
-    if (!isValidWindowHours(edit.windowHours)) {
-      showError(t('fairUseLimits.validationError.windowHours'));
-      return;
-    }
-
-    mutate({
-      tier,
-      limit: Number(edit.limit),
-      windowHours: Number(edit.windowHours),
-    });
-  }
-
-  function handleCancel() {
-    setEdit(null);
-  }
+  const { mutate, isPending } = useSetFairUseLimit({
+    onSuccessCallback: editor.handleCancel,
+  });
 
   const inputId = `fair-use-${tier}`;
 
@@ -104,8 +49,8 @@ function TierRow({ tier, current }: TierRowProps) {
               type="number"
               min="1"
               step="1"
-              value={limitValue}
-              onChange={(e) => updateField('limit', e.target.value)}
+              value={editor.limitValue}
+              onChange={(e) => editor.updateField('limit', e.target.value)}
               disabled={isPending}
             />
           </div>
@@ -120,22 +65,30 @@ function TierRow({ tier, current }: TierRowProps) {
               type="number"
               min="0.01"
               step="any"
-              value={windowValue}
-              onChange={(e) => updateField('windowHours', e.target.value)}
+              value={editor.windowValue}
+              onChange={(e) =>
+                editor.updateField('windowHours', e.target.value)
+              }
               disabled={isPending}
             />
           </div>
         </div>
-        {isEditing && (
+        {editor.isEditing && (
           <div className="flex gap-2">
-            <Button size="sm" onClick={handleSave} disabled={isPending}>
+            <Button
+              size="sm"
+              onClick={() =>
+                editor.handleSave((values) => mutate({ tier, ...values }))
+              }
+              disabled={isPending}
+            >
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {t('fairUseLimits.save')}
             </Button>
             <Button
               size="sm"
               variant="outline"
-              onClick={handleCancel}
+              onClick={editor.handleCancel}
               disabled={isPending}
             >
               {t('fairUseLimits.cancel')}
