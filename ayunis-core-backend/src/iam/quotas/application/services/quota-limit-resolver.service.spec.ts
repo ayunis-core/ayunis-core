@@ -8,6 +8,9 @@ describe('QuotaLimitResolverService', () => {
   let getFairUseLimitsUseCase: jest.Mocked<GetFairUseLimitsUseCase>;
 
   const limits: FairUseLimitsByTier = {
+    // `zero` is included for type completeness — the resolver never reads
+    // it because `tierToFairUseQuotaType` skips ZERO entirely.
+    zero: { limit: 1_000_000, windowMs: 99_999 },
     low: { limit: 1234, windowMs: 11_111 },
     medium: { limit: 567, windowMs: 22_222 },
     high: { limit: 89, windowMs: 33_333 },

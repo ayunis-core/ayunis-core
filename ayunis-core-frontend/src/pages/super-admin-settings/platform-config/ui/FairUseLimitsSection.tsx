@@ -18,16 +18,6 @@ import useFairUseLimits, {
 } from '../api/useFairUseLimits';
 import useSetFairUseLimit from '../api/useSetFairUseLimit';
 
-// `zero` tier is a first-class `ModelTier` value but exempt from fair-use
-// enforcement (no quota bucket, no deduction at runtime). Skipping it at
-// render-time keeps the UI in lockstep with the backend, which silently
-// no-ops a `SetFairUseLimit` call for ZERO. Iterating `Object.values(Tier)`
-// (rather than a hard-coded subset) means new tiers added to the enum
-// surface here automatically.
-function isConfigurableTier(tier: Tier): boolean {
-  return tier !== Tier.zero;
-}
-
 interface TierRowProps {
   readonly tier: Tier;
   readonly current: FairUseTierLimit | undefined;
@@ -110,15 +100,15 @@ function TierRow({ tier, current }: TierRowProps) {
 
 export default function FairUseLimitsSection() {
   const { t } = useTranslation('super-admin-settings-platform-config');
-  const { low, medium, high, isLoading, isError } = useFairUseLimits();
+  const { zero, low, medium, high, isLoading, isError } = useFairUseLimits();
 
-  // Keyed by the full `Tier` enum — ZERO maps to `undefined` because the
-  // backend does not return a row for it (no quota bucket). The render
-  // loop filters ZERO out via `isConfigurableTier`, so this entry is never
-  // read in practice; declaring it explicitly keeps the record exhaustive
-  // over the enum and makes the "ZERO has no data" intent self-evident.
+  // Exhaustive over the `Tier` enum. ZERO is a first-class tier here even
+  // though the runtime fair-use check skips it — the super admin can still
+  // configure a value, the backend persists it, and Get/Set round-trip
+  // cleanly. The runtime bypass lives in `tierToFairUseQuotaType`, not in
+  // the config layer.
   const tierData: Record<Tier, FairUseTierLimit | undefined> = {
-    [Tier.zero]: undefined,
+    [Tier.zero]: zero,
     [Tier.low]: low,
     [Tier.medium]: medium,
     [Tier.high]: high,
@@ -145,11 +135,9 @@ export default function FairUseLimitsSection() {
         )}
         {!isLoading && !isError && (
           <div className="space-y-3">
-            {Object.values(Tier)
-              .filter(isConfigurableTier)
-              .map((tier) => (
-                <TierRow key={tier} tier={tier} current={tierData[tier]} />
-              ))}
+            {Object.values(Tier).map((tier) => (
+              <TierRow key={tier} tier={tier} current={tierData[tier]} />
+            ))}
           </div>
         )}
       </CardContent>

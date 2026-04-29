@@ -3733,6 +3733,8 @@ export interface FairUseTierLimitDto {
 }
 
 export interface FairUseLimitsResponseDto {
+  /** Fair-use limit configured for zero-tier (unrestricted) models. Stored for UI symmetry only — runtime quota enforcement skips ZERO-tier models entirely, so this value is never consulted. */
+  zero: FairUseTierLimitDto;
   /** Fair-use limit for low-tier (cheap) language models */
   low: FairUseTierLimitDto;
   /** Fair-use limit for medium-tier language models */

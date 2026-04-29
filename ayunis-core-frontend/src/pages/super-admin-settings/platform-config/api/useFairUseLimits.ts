@@ -10,6 +10,12 @@ export default function useFairUseLimits() {
   const { data, isLoading, isError } =
     useSuperAdminPlatformConfigControllerGetFairUseLimits();
 
+  const zero: FairUseTierLimit | undefined = data
+    ? {
+        limit: data.zero.limit,
+        windowHours: windowMsToHours(data.zero.windowMs),
+      }
+    : undefined;
   const low: FairUseTierLimit | undefined = data
     ? { limit: data.low.limit, windowHours: windowMsToHours(data.low.windowMs) }
     : undefined;
@@ -27,6 +33,7 @@ export default function useFairUseLimits() {
     : undefined;
 
   return {
+    zero,
     low,
     medium,
     high,
