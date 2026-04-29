@@ -128,9 +128,11 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
         }),
       );
 
-      // And the user-facing message must NOT leak the raw enum identifier.
+      // The user-facing message must not leak super-admin-configurable
+      // implementation details — neither the raw enum identifier nor the
+      // configured limit. Numeric values stay in `details` for SSE consumers.
       expect(errorEvent.message).not.toContain(quotaType);
-      expect(errorEvent.message).toContain(String(limit));
+      expect(errorEvent.message).not.toContain(String(limit));
 
       // Session frame discipline: open -> error -> close.
       expect(events[0]).toEqual(

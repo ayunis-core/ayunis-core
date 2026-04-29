@@ -1,19 +1,9 @@
 import type { ErrorMetadata } from '../../../common/errors/base.error';
 import { ApplicationError } from '../../../common/errors/base.error';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { QuotaType } from '../domain/quota-type.enum';
 
 export enum QuotaErrorCode {
   QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
-}
-
-// Translates a quota type into the noun shown to end users in the rate-limit
-// message. New quota types must extend this map so the error stays
-// human-readable without leaking the internal enum identifier.
-function unitLabelFor(quotaType: string): string {
-  return quotaType === (QuotaType.FAIR_USE_IMAGES as string)
-    ? 'images'
-    : 'messages';
 }
 
 export abstract class QuotaError extends ApplicationError {
@@ -46,15 +36,13 @@ export class QuotaExceededError extends QuotaError {
     retryAfterSeconds: number,
     metadata?: ErrorMetadata,
   ) {
-    // Avoid hardcoding the window length in the message — `windowMs` is
-    // super-admin-configurable per tier and the value can change at any time.
-    // Phrase the message in terms of the retry hint instead so it stays
-    // accurate regardless of how the window is configured. The internal
-    // `quotaType` enum identifier is intentionally omitted from the message
-    // to avoid leaking implementation details into logs and HTTP response
-    // bodies — consumers get the tier via `code` / `metadata` instead.
+    // The message intentionally omits the configured limit and the internal
+    // `quotaType` identifier — both are super-admin-configurable
+    // implementation details that should not leak into logs, HTTP response
+    // bodies, or LLM tool results. Consumers that need the numbers can read
+    // them from `metadata`.
     super(
-      `Fair use limit reached (${limit} ${unitLabelFor(quotaType)}). Try again in ${Math.ceil(retryAfterSeconds / 60)} minutes.`,
+      `Fair use limit reached. Try again in ${Math.ceil(retryAfterSeconds / 60)} minutes.`,
       QuotaErrorCode.QUOTA_EXCEEDED,
       HttpStatus.TOO_MANY_REQUESTS,
       { quotaType, limit, windowMs, retryAfterSeconds, ...metadata },
