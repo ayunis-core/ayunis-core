@@ -15529,7 +15529,7 @@ export const useSuperAdminPlatformConfigControllerSetCreditsPerEuro = <TError = 
     }
     
 /**
- * Retrieve the configured fair-use limits: per-tier message limits (low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. Super admin only.
+ * Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.
  * @summary Get the current fair-use limits
  */
 export const superAdminPlatformConfigControllerGetFairUseLimits = (
@@ -15623,7 +15623,7 @@ export function useSuperAdminPlatformConfigControllerGetFairUseLimits<TData = Aw
 
 
 /**
- * Update the messages-per-window limit for one model tier (low, medium, or high). Super admin only.
+ * Update the messages-per-window limit for one model tier (zero, low, medium, or high). Storing a value for the zero tier is permitted but informational — runtime quota enforcement skips ZERO-tier models. Super admin only.
  * @summary Set the fair-use limit for a single model tier
  */
 export const superAdminPlatformConfigControllerSetFairUseLimit = (
