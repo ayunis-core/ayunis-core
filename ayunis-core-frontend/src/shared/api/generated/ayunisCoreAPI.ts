@@ -121,6 +121,7 @@ import type {
   RunsControllerSendMessageBody,
   SetCreditsPerEuroRequestDto,
   SetFairUseLimitRequestDto,
+  SetImageFairUseLimitRequestDto,
   SetOrgDefaultModelDto,
   SetTeamDefaultModelDto,
   SetUserConfigDto,
@@ -15528,8 +15529,8 @@ export const useSuperAdminPlatformConfigControllerSetCreditsPerEuro = <TError = 
     }
     
 /**
- * Retrieve the configured messages-per-window limit for low, medium, and high model tiers. Missing keys fall back to baked-in defaults so this endpoint always returns 200. Super admin only.
- * @summary Get the current fair-use limits for every model tier
+ * Retrieve the configured fair-use limits: per-tier message limits (low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. Super admin only.
+ * @summary Get the current fair-use limits
  */
 export const superAdminPlatformConfigControllerGetFairUseLimits = (
     
@@ -15600,7 +15601,7 @@ export function useSuperAdminPlatformConfigControllerGetFairUseLimits<TData = Aw
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get the current fair-use limits for every model tier
+ * @summary Get the current fair-use limits
  */
 
 export function useSuperAdminPlatformConfigControllerGetFairUseLimits<TData = Awaited<ReturnType<typeof superAdminPlatformConfigControllerGetFairUseLimits>>, TError = void>(
@@ -15682,6 +15683,71 @@ export const useSuperAdminPlatformConfigControllerSetFairUseLimit = <TError = vo
       > => {
 
       const mutationOptions = getSuperAdminPlatformConfigControllerSetFairUseLimitMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Update the images-per-window fair-use limit. Image generation has a single global bucket (no tiering), so this endpoint takes only limit + windowMs. Super admin only.
+ * @summary Set the fair-use limit for image generation
+ */
+export const superAdminPlatformConfigControllerSetImageFairUseLimit = (
+    setImageFairUseLimitRequestDto: SetImageFairUseLimitRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/platform-config/image-fair-use-limit`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setImageFairUseLimitRequestDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminPlatformConfigControllerSetImageFairUseLimitMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>, TError,{data: SetImageFairUseLimitRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>, TError,{data: SetImageFairUseLimitRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminPlatformConfigControllerSetImageFairUseLimit'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>, {data: SetImageFairUseLimitRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminPlatformConfigControllerSetImageFairUseLimit(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>>
+    export type SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationBody = SetImageFairUseLimitRequestDto
+    export type SuperAdminPlatformConfigControllerSetImageFairUseLimitMutationError = void
+
+    /**
+ * @summary Set the fair-use limit for image generation
+ */
+export const useSuperAdminPlatformConfigControllerSetImageFairUseLimit = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>, TError,{data: SetImageFairUseLimitRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetImageFairUseLimit>>,
+        TError,
+        {data: SetImageFairUseLimitRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminPlatformConfigControllerSetImageFairUseLimitMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

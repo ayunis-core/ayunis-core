@@ -10,6 +10,7 @@ describe('GetFairUseLimitsUseCase', () => {
   let warnSpy: jest.SpyInstance;
 
   const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+  const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
   beforeEach(() => {
     repository = {
@@ -33,7 +34,7 @@ describe('GetFairUseLimitsUseCase', () => {
     });
   };
 
-  it('should return all six configured values when every key is present', async () => {
+  it('should return all configured values when every key is present', async () => {
     stubConfig({
       [PlatformConfigKey.FAIR_USE_LOW_LIMIT]: '1500',
       [PlatformConfigKey.FAIR_USE_LOW_WINDOW_MS]: '3600000',
@@ -41,6 +42,8 @@ describe('GetFairUseLimitsUseCase', () => {
       [PlatformConfigKey.FAIR_USE_MEDIUM_WINDOW_MS]: '7200000',
       [PlatformConfigKey.FAIR_USE_HIGH_LIMIT]: '75',
       [PlatformConfigKey.FAIR_USE_HIGH_WINDOW_MS]: '10800000',
+      [PlatformConfigKey.FAIR_USE_IMAGES_LIMIT]: '25',
+      [PlatformConfigKey.FAIR_USE_IMAGES_WINDOW_MS]: '86400000',
     });
 
     const result = await useCase.execute();
@@ -49,6 +52,7 @@ describe('GetFairUseLimitsUseCase', () => {
       low: { limit: 1500, windowMs: 3600000 },
       medium: { limit: 300, windowMs: 7200000 },
       high: { limit: 75, windowMs: 10800000 },
+      images: { limit: 25, windowMs: 86400000 },
     });
     expect(warnSpy).not.toHaveBeenCalled();
   });
@@ -62,8 +66,9 @@ describe('GetFairUseLimitsUseCase', () => {
       low: { limit: 1000, windowMs: THREE_HOURS_MS },
       medium: { limit: 200, windowMs: THREE_HOURS_MS },
       high: { limit: 50, windowMs: THREE_HOURS_MS },
+      images: { limit: 10, windowMs: TWENTY_FOUR_HOURS_MS },
     });
-    expect(warnSpy).toHaveBeenCalledTimes(6);
+    expect(warnSpy).toHaveBeenCalledTimes(8);
 
     // Calling again with the same (still-missing) state must not re-warn —
     // otherwise the quota resolver would flood logs on every chat message.
@@ -112,7 +117,7 @@ describe('GetFairUseLimitsUseCase', () => {
     // First run: every key is missing, so each produces one warn.
     repository.get.mockResolvedValue(null);
     await useCase.execute();
-    expect(warnSpy).toHaveBeenCalledTimes(6);
+    expect(warnSpy).toHaveBeenCalledTimes(8);
 
     // Second run: every key is now valid. No new warns, AND crucially the
     // success branch must `warnedKeys.delete(key)` so a future regression
@@ -126,6 +131,8 @@ describe('GetFairUseLimitsUseCase', () => {
       [PlatformConfigKey.FAIR_USE_MEDIUM_WINDOW_MS]: '7200000',
       [PlatformConfigKey.FAIR_USE_HIGH_LIMIT]: '75',
       [PlatformConfigKey.FAIR_USE_HIGH_WINDOW_MS]: '10800000',
+      [PlatformConfigKey.FAIR_USE_IMAGES_LIMIT]: '25',
+      [PlatformConfigKey.FAIR_USE_IMAGES_WINDOW_MS]: '86400000',
     });
     await useCase.execute();
     expect(warnSpy).toHaveBeenCalledTimes(0);
@@ -133,11 +140,39 @@ describe('GetFairUseLimitsUseCase', () => {
     // Third run: config has been wiped again. Because the previous run
     // cleared `warnedKeys`, each key must re-warn so operators aren't left
     // guessing when config silently regresses. If the `delete` line is
-    // dropped from the use case, this assertion fails (0 vs 6).
+    // dropped from the use case, this assertion fails (0 vs 8).
     warnSpy.mockClear();
     repository.get.mockResolvedValue(null);
     await useCase.execute();
-    expect(warnSpy).toHaveBeenCalledTimes(6);
+    expect(warnSpy).toHaveBeenCalledTimes(8);
+  });
+
+  it('should expose the configured images limit when set and fall back independently of message tiers', async () => {
+    // Only the per-tier message keys are configured; the images keys remain
+    // missing. The images bucket should fall back to its baked-in default
+    // (10 / 24h) without affecting the configured message tiers.
+    stubConfig({
+      [PlatformConfigKey.FAIR_USE_LOW_LIMIT]: '1500',
+      [PlatformConfigKey.FAIR_USE_LOW_WINDOW_MS]: '3600000',
+      [PlatformConfigKey.FAIR_USE_MEDIUM_LIMIT]: '300',
+      [PlatformConfigKey.FAIR_USE_MEDIUM_WINDOW_MS]: '7200000',
+      [PlatformConfigKey.FAIR_USE_HIGH_LIMIT]: '75',
+      [PlatformConfigKey.FAIR_USE_HIGH_WINDOW_MS]: '10800000',
+    });
+
+    const result = await useCase.execute();
+
+    expect(result.images).toEqual({
+      limit: 10,
+      windowMs: TWENTY_FOUR_HOURS_MS,
+    });
+    expect(result.low).toEqual({ limit: 1500, windowMs: 3600000 });
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining(PlatformConfigKey.FAIR_USE_IMAGES_LIMIT),
+      expect.objectContaining({
+        key: PlatformConfigKey.FAIR_USE_IMAGES_LIMIT,
+      }),
+    );
   });
 
   it('should fall back to default and warn when a stored value is negative or zero', async () => {
