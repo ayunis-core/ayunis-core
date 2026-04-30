@@ -86,6 +86,11 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
     return records.map((record) => this.sourceMapper.toDomain(record));
   }
 
+  async countSourcesByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<number> {
+    this.logger.debug(`countSourcesByKnowledgeBaseId: ${knowledgeBaseId}`);
+    return this.sourceRepository.count({ where: { knowledgeBaseId } });
+  }
+
   async findSourceByIdAndKnowledgeBaseId(
     sourceId: UUID,
     knowledgeBaseId: UUID,

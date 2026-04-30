@@ -27,6 +27,7 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
     mockRepository = {
       findById: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
+      countSourcesByKnowledgeBaseId: jest.fn(),
     } as unknown as jest.Mocked<KnowledgeBaseRepository>;
 
     mockAccessService = {

@@ -15,6 +15,9 @@ export abstract class KnowledgeBaseRepository {
   abstract findSourcesByKnowledgeBaseId(
     knowledgeBaseId: UUID,
   ): Promise<Source[]>;
+  abstract countSourcesByKnowledgeBaseId(
+    knowledgeBaseId: UUID,
+  ): Promise<number>;
   abstract findSourceByIdAndKnowledgeBaseId(
     sourceId: UUID,
     knowledgeBaseId: UUID,

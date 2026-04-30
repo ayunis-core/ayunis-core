@@ -29,6 +29,9 @@ export default function handleSourceUploadError(
       case 'TOO_MANY_PAGES':
         showError(t('sources.fileSourceTooManyPagesError'));
         break;
+      case 'SOURCE_LIMIT_EXCEEDED':
+        showError(t('sources.sourceLimitExceededError'));
+        break;
       case 'SERVICE_BUSY':
         showError(t('sources.fileSourceServiceBusyError'));
         break;

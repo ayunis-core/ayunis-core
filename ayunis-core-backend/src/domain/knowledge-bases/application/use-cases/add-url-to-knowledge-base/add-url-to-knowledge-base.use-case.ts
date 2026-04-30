@@ -7,8 +7,10 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
 import {
   KnowledgeBaseNotFoundError,
+  KnowledgeBaseSourceLimitExceededError,
   UnexpectedKnowledgeBaseError,
 } from '../../knowledge-bases.errors';
+import { KnowledgeBasesConstants } from '../../../domain/knowledge-bases.constants';
 import { AddUrlToKnowledgeBaseCommand } from './add-url-to-knowledge-base.command';
 
 @Injectable()
@@ -33,6 +35,16 @@ export class AddUrlToKnowledgeBaseUseCase {
       );
       if (knowledgeBase?.userId !== command.userId) {
         throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
+      }
+
+      const sourceCount =
+        await this.knowledgeBaseRepository.countSourcesByKnowledgeBaseId(
+          command.knowledgeBaseId,
+        );
+      if (sourceCount >= KnowledgeBasesConstants.MAX_SOURCES) {
+        throw new KnowledgeBaseSourceLimitExceededError(
+          KnowledgeBasesConstants.MAX_SOURCES,
+        );
       }
 
       const source = await this.createTextSourceUseCase.execute(

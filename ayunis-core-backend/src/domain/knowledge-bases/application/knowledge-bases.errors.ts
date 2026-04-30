@@ -6,6 +6,7 @@ export enum KnowledgeBaseErrorCode {
   UNEXPECTED_KNOWLEDGE_BASE_ERROR = 'UNEXPECTED_KNOWLEDGE_BASE_ERROR',
   DOCUMENT_NOT_IN_KNOWLEDGE_BASE = 'DOCUMENT_NOT_IN_KNOWLEDGE_BASE',
   MISSING_FILE = 'MISSING_FILE',
+  SOURCE_LIMIT_EXCEEDED = 'SOURCE_LIMIT_EXCEEDED',
 }
 
 export abstract class KnowledgeBaseError extends ApplicationError {
@@ -52,6 +53,17 @@ export class DocumentNotInKnowledgeBaseError extends KnowledgeBaseError {
       KnowledgeBaseErrorCode.DOCUMENT_NOT_IN_KNOWLEDGE_BASE,
       404,
       metadata,
+    );
+  }
+}
+
+export class KnowledgeBaseSourceLimitExceededError extends KnowledgeBaseError {
+  constructor(limit: number, metadata?: ErrorMetadata) {
+    super(
+      `Cannot add more than ${limit} documents to a knowledge base`,
+      KnowledgeBaseErrorCode.SOURCE_LIMIT_EXCEEDED,
+      409,
+      { limit, ...metadata },
     );
   }
 }

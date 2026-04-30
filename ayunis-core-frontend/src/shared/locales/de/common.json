@@ -113,6 +113,7 @@
     "fileSourceTooLargeError": "Datei ist zu groß. Maximale Dateigröße ist 25MB.",
     "fileSourceTooManyPagesError": "Dokument hat zu viele Seiten zur Verarbeitung.",
     "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist beschäftigt. Bitte versuchen Sie es später erneut.",
-    "fileSourceTimeoutError": "Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex."
+    "fileSourceTimeoutError": "Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex.",
+    "sourceLimitExceededError": "Ein Chat kann maximal 20 Quellen enthalten. Bitte entfernen Sie eine, bevor Sie eine weitere hinzufügen."
   }
 }

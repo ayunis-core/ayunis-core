@@ -166,9 +166,10 @@
     "failedToAdd": "Dokument konnte nicht hochgeladen werden. Bitte versuchen Sie es erneut.",
     "invalidFileTypeError": "Dieser Dateityp wird derzeit nicht unterstützt.",
     "fileSourceEmptyDataError": "Die hochgeladene Datei enthält keine verarbeitbaren Daten.",
-    "fileSourceTooLargeError": "Datei ist zu groß. Maximale Dateigröße beträgt 50 MB.",
+    "fileSourceTooLargeError": "Datei ist zu groß. Maximale Dateigröße beträgt 25 MB.",
     "fileSourceTooManyPagesError": "Das Dokument hat zu viele Seiten zur Verarbeitung.",
     "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist beschäftigt. Bitte versuchen Sie es später erneut.",
-    "fileSourceTimeoutError": "Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex."
+    "fileSourceTimeoutError": "Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex.",
+    "sourceLimitExceededError": "Eine Wissensdatenbank kann maximal 500 Dokumente enthalten. Bitte entfernen Sie eines, bevor Sie ein weiteres hinzufügen."
   }
 }

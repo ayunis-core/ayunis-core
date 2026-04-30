@@ -7,6 +7,7 @@ export enum ThreadErrorCode {
   THREAD_CREATION_FAILED = 'THREAD_CREATION_FAILED',
   MESSAGE_ADDITION_FAILED = 'MESSAGE_ADDITION_FAILED',
   SOURCE_ALREADY_ASSIGNED = 'SOURCE_ALREADY_ASSIGNED',
+  SOURCE_LIMIT_EXCEEDED = 'SOURCE_LIMIT_EXCEEDED',
   SOURCE_ADDITION_FAILED = 'SOURCE_ADDITION_FAILED',
   SOURCE_REMOVAL_FAILED = 'SOURCE_REMOVAL_FAILED',
   SOURCE_NOT_FOUND = 'SOURCE_NOT_FOUND',
@@ -86,6 +87,17 @@ export class SourceAlreadyAssignedError extends ThreadError {
       ThreadErrorCode.SOURCE_ALREADY_ASSIGNED,
       409,
       metadata,
+    );
+  }
+}
+
+export class ThreadSourceLimitExceededError extends ThreadError {
+  constructor(limit: number, metadata?: ErrorMetadata) {
+    super(
+      `Cannot add more than ${limit} sources to a thread`,
+      ThreadErrorCode.SOURCE_LIMIT_EXCEEDED,
+      409,
+      { limit, ...metadata },
     );
   }
 }
