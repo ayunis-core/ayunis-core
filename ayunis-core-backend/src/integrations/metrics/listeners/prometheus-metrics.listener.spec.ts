@@ -153,11 +153,28 @@ describe('PrometheusMetricsListener', () => {
   });
 
   describe('handleRunExecuted', () => {
-    it('should increment user activity counter', () => {
-      listener.handleRunExecuted(new RunExecutedEvent(USER_ID, ORG_ID));
+    it('should increment user activity counter for user principals', () => {
+      listener.handleRunExecuted(
+        new RunExecutedEvent('user', USER_ID, null, ORG_ID),
+      );
 
       expect(userActivityCounter.inc).toHaveBeenCalledWith({
         user_id: USER_ID,
+        principal_kind: 'user',
+        org_id: ORG_ID,
+      });
+    });
+
+    it('writes apiKeyId into the user_id slot for api-key principals', () => {
+      const API_KEY_ID =
+        '22222222-2222-2222-2222-222222222222' as typeof USER_ID;
+      listener.handleRunExecuted(
+        new RunExecutedEvent('apiKey', null, API_KEY_ID, ORG_ID),
+      );
+
+      expect(userActivityCounter.inc).toHaveBeenCalledWith({
+        user_id: API_KEY_ID,
+        principal_kind: 'apiKey',
         org_id: ORG_ID,
       });
     });
@@ -167,7 +184,9 @@ describe('PrometheusMetricsListener', () => {
     it('should observe inference duration histogram', () => {
       listener.handleInferenceCompleted(
         new InferenceCompletedEvent(
+          'user',
           USER_ID,
+          null,
           ORG_ID,
           'gpt-4',
           'openai',
@@ -185,7 +204,9 @@ describe('PrometheusMetricsListener', () => {
     it('should observe with streaming=true for streaming inference', () => {
       listener.handleInferenceCompleted(
         new InferenceCompletedEvent(
+          'user',
           USER_ID,
+          null,
           ORG_ID,
           'claude-3',
           'anthropic',
@@ -203,7 +224,9 @@ describe('PrometheusMetricsListener', () => {
     it('should classify and increment error counter when error is present', () => {
       listener.handleInferenceCompleted(
         new InferenceCompletedEvent(
+          'user',
           USER_ID,
+          null,
           ORG_ID,
           'gpt-4',
           'openai',
@@ -227,7 +250,9 @@ describe('PrometheusMetricsListener', () => {
     it('should classify error by message when no statusCode', () => {
       listener.handleInferenceCompleted(
         new InferenceCompletedEvent(
+          'user',
           USER_ID,
+          null,
           ORG_ID,
           'gpt-4',
           'openai',
@@ -250,7 +275,9 @@ describe('PrometheusMetricsListener', () => {
     it('should classify unknown errors as "unknown"', () => {
       listener.handleInferenceCompleted(
         new InferenceCompletedEvent(
+          'user',
           USER_ID,
+          null,
           ORG_ID,
           'gpt-4',
           'openai',
@@ -273,7 +300,9 @@ describe('PrometheusMetricsListener', () => {
     it('should not increment error counter when there is no error', () => {
       listener.handleInferenceCompleted(
         new InferenceCompletedEvent(
+          'user',
           USER_ID,
+          null,
           ORG_ID,
           'gpt-4',
           'openai',
@@ -304,6 +333,7 @@ describe('PrometheusMetricsListener', () => {
       expect(tokensCounter.inc).toHaveBeenCalledWith(
         {
           user_id: USER_ID,
+          principal_kind: 'user',
           org_id: ORG_ID,
           model: 'gpt-4',
           provider: 'openai',
@@ -314,6 +344,7 @@ describe('PrometheusMetricsListener', () => {
       expect(tokensCounter.inc).toHaveBeenCalledWith(
         {
           user_id: USER_ID,
+          principal_kind: 'user',
           org_id: ORG_ID,
           model: 'gpt-4',
           provider: 'openai',
@@ -344,7 +375,7 @@ describe('PrometheusMetricsListener', () => {
       );
     });
 
-    it('uses apiKeyId in the user_id label slot for api-key principals', () => {
+    it('uses apiKeyId in the user_id slot and tags principal_kind=apiKey for api-key principals', () => {
       const API_KEY_ID =
         '11111111-1111-1111-1111-111111111111' as typeof USER_ID;
       listener.handleTokensConsumed(
@@ -363,6 +394,7 @@ describe('PrometheusMetricsListener', () => {
       expect(tokensCounter.inc).toHaveBeenCalledWith(
         expect.objectContaining({
           user_id: API_KEY_ID,
+          principal_kind: 'apiKey',
           direction: 'input',
         }),
         100,
@@ -371,11 +403,29 @@ describe('PrometheusMetricsListener', () => {
   });
 
   describe('handleToolUsed', () => {
-    it('should increment tool uses counter', () => {
-      listener.handleToolUsed(new ToolUsedEvent(USER_ID, ORG_ID, 'web_search'));
+    it('should increment tool uses counter for user principals', () => {
+      listener.handleToolUsed(
+        new ToolUsedEvent('user', USER_ID, null, ORG_ID, 'web_search'),
+      );
 
       expect(toolUsesCounter.inc).toHaveBeenCalledWith({
         user_id: USER_ID,
+        principal_kind: 'user',
+        org_id: ORG_ID,
+        tool_name: 'web_search',
+      });
+    });
+
+    it('writes apiKeyId into the user_id slot for api-key principals', () => {
+      const API_KEY_ID =
+        '33333333-3333-3333-3333-333333333333' as typeof USER_ID;
+      listener.handleToolUsed(
+        new ToolUsedEvent('apiKey', null, API_KEY_ID, ORG_ID, 'web_search'),
+      );
+
+      expect(toolUsesCounter.inc).toHaveBeenCalledWith({
+        user_id: API_KEY_ID,
+        principal_kind: 'apiKey',
         org_id: ORG_ID,
         tool_name: 'web_search',
       });

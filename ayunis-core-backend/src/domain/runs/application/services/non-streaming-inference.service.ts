@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { UUID } from 'crypto';
 import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
 import { GetInferenceCommand } from 'src/domain/models/application/use-cases/get-inference/get-inference.command';
 import { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
@@ -48,28 +47,52 @@ export class NonStreamingInferenceService {
       inferenceError = error;
       throw error;
     } finally {
-      const userId = this.contextService.get('userId');
-      const orgId = this.contextService.get('orgId');
-      this.eventEmitter
-        .emitAsync(
-          InferenceCompletedEvent.EVENT_NAME,
-          new InferenceCompletedEvent(
-            userId ?? ('unknown' as UUID),
-            orgId ?? ('unknown' as UUID),
-            params.model.name,
-            params.model.provider,
-            false,
-            Date.now() - startTime,
-            inferenceError
-              ? extractInferenceErrorInfo(inferenceError)
-              : undefined,
-          ),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit InferenceCompletedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-          });
-        });
+      this.emitInferenceCompleted(
+        params.model,
+        false,
+        Date.now() - startTime,
+        inferenceError,
+      );
     }
+  }
+
+  private emitInferenceCompleted(
+    model: LanguageModel,
+    streaming: boolean,
+    durationMs: number,
+    inferenceError: unknown,
+  ): void {
+    let principal;
+    try {
+      principal = this.contextService.requirePrincipal();
+    } catch {
+      // No principal in context — skip emit rather than fabricate a fake UUID.
+      this.logger.warn(
+        'Skipping InferenceCompletedEvent emit: no principal in context',
+      );
+      return;
+    }
+    this.eventEmitter
+      .emitAsync(
+        InferenceCompletedEvent.EVENT_NAME,
+        new InferenceCompletedEvent(
+          principal.kind,
+          principal.kind === 'user' ? principal.userId : null,
+          principal.kind === 'apiKey' ? principal.apiKeyId : null,
+          principal.orgId,
+          model.name,
+          model.provider,
+          streaming,
+          durationMs,
+          inferenceError
+            ? extractInferenceErrorInfo(inferenceError)
+            : undefined,
+        ),
+      )
+      .catch((err: unknown) => {
+        this.logger.error('Failed to emit InferenceCompletedEvent', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+        });
+      });
   }
 }

@@ -16,6 +16,7 @@ import {
   AYUNIS_USER_CREATIONS_TOTAL,
   AYUNIS_MARKETPLACE_INSTALLS_TOTAL,
   LABEL_USER_ID,
+  LABEL_PRINCIPAL_KIND,
   LABEL_ORG_ID,
   LABEL_MODEL,
   LABEL_PROVIDER,
@@ -37,6 +38,7 @@ const tokensCounter = makeCounterProvider({
   help: 'Total number of LLM tokens consumed',
   labelNames: [
     LABEL_USER_ID,
+    LABEL_PRINCIPAL_KIND,
     LABEL_ORG_ID,
     LABEL_MODEL,
     LABEL_PROVIDER,
@@ -66,7 +68,7 @@ const messagesCounter = makeCounterProvider({
 const userActivityCounter = makeCounterProvider({
   name: AYUNIS_USER_ACTIVITY_TOTAL,
   help: 'Total user activity events (one per run execution)',
-  labelNames: [LABEL_USER_ID, LABEL_ORG_ID],
+  labelNames: [LABEL_USER_ID, LABEL_PRINCIPAL_KIND, LABEL_ORG_ID],
 });
 
 const threadMessageCountHistogram = makeHistogramProvider({
@@ -79,7 +81,12 @@ const threadMessageCountHistogram = makeHistogramProvider({
 const toolUsesCounter = makeCounterProvider({
   name: AYUNIS_TOOL_USES_TOTAL,
   help: 'Total number of tool invocations',
-  labelNames: [LABEL_USER_ID, LABEL_ORG_ID, LABEL_TOOL_NAME],
+  labelNames: [
+    LABEL_USER_ID,
+    LABEL_PRINCIPAL_KIND,
+    LABEL_ORG_ID,
+    LABEL_TOOL_NAME,
+  ],
 });
 
 const userCreationsCounter = makeCounterProvider({

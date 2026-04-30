@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { Request } from 'express';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { getPrincipal } from 'src/iam/authentication/domain/get-principal';
+import { getPrincipal } from 'src/iam/authentication/application/util/get-principal';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()

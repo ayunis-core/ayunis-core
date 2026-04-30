@@ -17,7 +17,7 @@ import { UUID } from 'crypto';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
 import { ActiveUser } from '../../domain/active-user.entity';
-import { getPrincipal } from '../../domain/get-principal';
+import { getPrincipal } from '../util/get-principal';
 
 @Injectable()
 @Catch(UnauthorizedException)

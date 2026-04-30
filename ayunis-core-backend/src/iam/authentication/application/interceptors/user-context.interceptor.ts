@@ -7,7 +7,7 @@ import {
 import type { Request } from 'express';
 import * as Sentry from '@sentry/nestjs';
 import { ContextService } from 'src/common/context/services/context.service';
-import { getPrincipal } from '../../domain/get-principal';
+import { getPrincipal } from '../util/get-principal';
 
 /**
  * Reads the authenticated principal from `request.user` (populated by either

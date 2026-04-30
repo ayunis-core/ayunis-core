@@ -14,7 +14,7 @@ import { isIpInCidrs } from '../../domain/cidr.util';
 import { IpAllowlistRepository } from '../ports/ip-allowlist.repository';
 import { IpNotAllowedError } from '../ip-allowlist.errors';
 import { IpAllowlistCachePort } from '../ports/ip-allowlist-cache.port';
-import { getPrincipal } from 'src/iam/authentication/domain/get-principal';
+import { getPrincipal } from 'src/iam/authentication/application/util/get-principal';
 
 interface CacheEntry {
   cidrs: string[] | null;

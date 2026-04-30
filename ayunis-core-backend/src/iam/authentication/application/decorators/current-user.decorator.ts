@@ -1,6 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common';
-import { createParamDecorator } from '@nestjs/common';
+import { UnauthorizedException, createParamDecorator } from '@nestjs/common';
 import type { Request } from 'express';
+import { getPrincipal } from '../util/get-principal';
 
 /**
  * Enum for user properties that can be extracted using the CurrentUser decorator
@@ -22,6 +23,14 @@ export type CurrentUserParam = UserProperty;
  * Custom decorator to extract the current user from the request.
  * Uses an enum to avoid magic strings.
  *
+ * Rejects api-key principals — `request.user` is an `ActivePrincipal`
+ * (`ActiveUser | ActiveApiKey`), but every consumer of this decorator assumes
+ * an `ActiveUser`. Without the kind check, `@CurrentUser(UserProperty.ID)`
+ * silently returns `undefined` for an api-key caller (the api-key has no `id`,
+ * only `apiKeyId`), exposing user-only handlers via the api-key strategy's
+ * USER role. Endpoints that legitimately accept api-key callers (e.g.
+ * `/openai/v1/chat/completions`) must read `getPrincipal(request)` directly.
+ *
  * @param property - Optional property to extract from the user object
  * @returns The entire user object or the specified property
  *
@@ -40,16 +49,22 @@ export const CurrentUser = createParamDecorator(
     ctx: ExecutionContext,
   ) => {
     const request = ctx.switchToHttp().getRequest<Request>();
-    const user = request.user;
+    const principal = getPrincipal(request);
 
-    if (!user) {
+    if (!principal) {
       return null;
     }
 
-    if (property === UserProperty.FULL_USER) {
-      return user;
+    if (principal.kind !== 'user') {
+      throw new UnauthorizedException(
+        'This endpoint requires a user session and cannot be called with an API key.',
+      );
     }
 
-    return user[property as keyof typeof user];
+    if (property === UserProperty.FULL_USER) {
+      return principal;
+    }
+
+    return principal[property as keyof typeof principal];
   },
 );

@@ -118,28 +118,11 @@ export class StreamingInferenceService {
       inferenceError = error;
       throw error;
     } finally {
-      const userId = this.contextService.get('userId');
-      const contextOrgId = this.contextService.get('orgId');
-      this.eventEmitter
-        .emitAsync(
-          InferenceCompletedEvent.EVENT_NAME,
-          new InferenceCompletedEvent(
-            userId ?? ('unknown' as UUID),
-            contextOrgId ?? orgId,
-            model.name,
-            model.provider,
-            true,
-            Date.now() - startTime,
-            inferenceError
-              ? extractInferenceErrorInfo(inferenceError)
-              : undefined,
-          ),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit InferenceCompletedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-          });
-        });
+      this.emitInferenceCompleted(
+        model,
+        Date.now() - startTime,
+        inferenceError,
+      );
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- mutated in callback, TS can't track
       if (streamCompletedSuccessfully && allChunks.length > 0) {
         const usage = this.extractUsageFromChunks(allChunks);
@@ -161,6 +144,44 @@ export class StreamingInferenceService {
         tools,
       );
     }
+  }
+
+  private emitInferenceCompleted(
+    model: LanguageModel,
+    durationMs: number,
+    inferenceError: unknown,
+  ): void {
+    let principal;
+    try {
+      principal = this.contextService.requirePrincipal();
+    } catch {
+      this.logger.warn(
+        'Skipping InferenceCompletedEvent emit: no principal in context',
+      );
+      return;
+    }
+    this.eventEmitter
+      .emitAsync(
+        InferenceCompletedEvent.EVENT_NAME,
+        new InferenceCompletedEvent(
+          principal.kind,
+          principal.kind === 'user' ? principal.userId : null,
+          principal.kind === 'apiKey' ? principal.apiKeyId : null,
+          principal.orgId,
+          model.name,
+          model.provider,
+          true,
+          durationMs,
+          inferenceError
+            ? extractInferenceErrorInfo(inferenceError)
+            : undefined,
+        ),
+      )
+      .catch((err: unknown) => {
+        this.logger.error('Failed to emit InferenceCompletedEvent', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+        });
+      });
   }
 
   private buildAsyncIterable(

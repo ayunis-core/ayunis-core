@@ -11,7 +11,7 @@ describe('NonStreamingInferenceService', () => {
   let service: NonStreamingInferenceService;
   let getInferenceUseCase: { execute: jest.Mock };
   let mockEventEmitter: { emitAsync: jest.Mock };
-  let mockContextService: { get: jest.Mock };
+  let mockContextService: { get: jest.Mock; requirePrincipal: jest.Mock };
 
   const model = { name: 'gpt-4o', provider: 'openai' } as LanguageModel;
   const messages = [] as Message[];
@@ -28,6 +28,13 @@ describe('NonStreamingInferenceService', () => {
         if (key === 'userId') return userId;
         if (key === 'orgId') return orgId;
         return undefined;
+      }),
+      requirePrincipal: jest.fn().mockReturnValue({
+        kind: 'user',
+        userId,
+        orgId,
+        role: 'user',
+        systemRole: 'user',
       }),
     };
 
@@ -51,12 +58,59 @@ describe('NonStreamingInferenceService', () => {
     expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
       InferenceCompletedEvent.EVENT_NAME,
       expect.objectContaining({
+        principalKind: 'user',
+        userId,
+        apiKeyId: null,
+        orgId,
         model: 'gpt-4o',
         provider: 'openai',
         streaming: false,
         error: undefined,
       }),
     );
+  });
+
+  it('should emit principal-aware event for api-key callers', async () => {
+    const apiKeyId = randomUUID();
+    mockContextService.requirePrincipal.mockReturnValue({
+      kind: 'apiKey',
+      apiKeyId,
+      orgId,
+      role: 'user',
+      systemRole: 'user',
+    });
+    const response = new InferenceResponse([], {
+      inputTokens: 10,
+      outputTokens: 5,
+    });
+    getInferenceUseCase.execute.mockResolvedValue(response);
+
+    await service.execute({ model, messages, tools });
+
+    expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+      InferenceCompletedEvent.EVENT_NAME,
+      expect.objectContaining({
+        principalKind: 'apiKey',
+        userId: null,
+        apiKeyId,
+        orgId,
+      }),
+    );
+  });
+
+  it('should skip emit when no principal in context', async () => {
+    mockContextService.requirePrincipal.mockImplementation(() => {
+      throw new Error('no principal');
+    });
+    const response = new InferenceResponse([], {
+      inputTokens: 1,
+      outputTokens: 1,
+    });
+    getInferenceUseCase.execute.mockResolvedValue(response);
+
+    await service.execute({ model, messages, tools });
+
+    expect(mockEventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 
   it('should emit event with error and rethrow when inference fails', async () => {

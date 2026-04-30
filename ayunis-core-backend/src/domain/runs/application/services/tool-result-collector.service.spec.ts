@@ -83,6 +83,13 @@ describe('ToolResultCollectorService', () => {
 
     contextService = {
       get: jest.fn().mockReturnValue(randomUUID()),
+      requirePrincipal: jest.fn().mockReturnValue({
+        kind: 'user',
+        userId: randomUUID(),
+        orgId,
+        role: 'user',
+        systemRole: 'user',
+      }),
     } as unknown as jest.Mocked<ContextService>;
 
     const mockEventEmitter = {

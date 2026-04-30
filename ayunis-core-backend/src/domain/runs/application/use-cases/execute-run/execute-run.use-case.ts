@@ -77,18 +77,23 @@ export class ExecuteRunUseCase {
       inputType: command.input.constructor.name,
     });
     try {
-      const userId = this.contextService.get('userId');
-      const orgId = this.contextService.get('orgId');
-      if (!userId || !orgId) {
-        throw new UnauthorizedException('User not authenticated');
+      const principal = this.contextService.requirePrincipal();
+      // Thread-based runs are user-only; api-key callers reach inference via
+      // `/openai/v1/chat/completions` which bypasses this use case.
+      if (principal.kind !== 'user') {
+        throw new UnauthorizedException(
+          'Thread runs are not available for API key callers.',
+        );
       }
+      const userId = principal.userId;
+      const orgId = principal.orgId;
 
       // Counts "attempted runs" — fires before run validity is established.
       // This is intentional: it serves as the DAU (daily active users) metric.
       this.eventEmitter
         .emitAsync(
           RunExecutedEvent.EVENT_NAME,
-          new RunExecutedEvent(userId, orgId),
+          new RunExecutedEvent('user', userId, null, orgId),
         )
         .catch((err: unknown) => {
           this.logger.error('Failed to emit RunExecutedEvent', {

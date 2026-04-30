@@ -92,7 +92,8 @@ export class PrometheusMetricsListener {
   handleRunExecuted(event: RunExecutedEvent): void {
     safeMetric(this.logger, () => {
       this.userActivityCounter.inc({
-        user_id: event.userId,
+        user_id: event.userId ?? event.apiKeyId ?? '',
+        principal_kind: event.principalKind,
         org_id: event.orgId,
       });
     });
@@ -132,10 +133,12 @@ export class PrometheusMetricsListener {
   handleTokensConsumed(event: TokensConsumedEvent): void {
     // For api-key principals, write the api-key UUID into the existing
     // `user_id` label slot — keeps the label set stable for dashboards while
-    // still uniquely identifying the caller.
+    // still uniquely identifying the caller. The new `principal_kind` label
+    // disambiguates which namespace the id belongs to.
     const principalId = event.userId ?? event.apiKeyId ?? '';
     const baseLabels = {
       user_id: principalId,
+      principal_kind: event.principalKind,
       org_id: event.orgId,
       model: event.model,
       provider: event.provider,
@@ -164,7 +167,8 @@ export class PrometheusMetricsListener {
   handleToolUsed(event: ToolUsedEvent): void {
     safeMetric(this.logger, () => {
       this.toolUsesCounter.inc({
-        user_id: event.userId,
+        user_id: event.userId ?? event.apiKeyId ?? '',
+        principal_kind: event.principalKind,
         org_id: event.orgId,
         tool_name: event.toolName,
       });

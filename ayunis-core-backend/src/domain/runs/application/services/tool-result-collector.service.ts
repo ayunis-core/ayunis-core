@@ -88,18 +88,7 @@ export class ToolResultCollectorService {
       );
     }
 
-    const userId = this.contextService.get('userId');
-    this.eventEmitter
-      .emitAsync(
-        ToolUsedEvent.EVENT_NAME,
-        new ToolUsedEvent(userId ?? ('unknown' as UUID), orgId, content.name),
-      )
-      .catch((err: unknown) => {
-        this.logger.error('Failed to emit ToolUsedEvent', {
-          error: err instanceof Error ? err.message : 'Unknown error',
-          toolName: content.name,
-        });
-      });
+    this.emitToolUsed(content.name);
 
     try {
       const capabilities = this.checkToolCapabilitiesUseCase.execute(
@@ -146,6 +135,33 @@ export class ToolResultCollectorService {
         error: error as Error,
       });
     }
+  }
+
+  private emitToolUsed(toolName: string): void {
+    let principal;
+    try {
+      principal = this.contextService.requirePrincipal();
+    } catch {
+      this.logger.warn('Skipping ToolUsedEvent emit: no principal in context');
+      return;
+    }
+    this.eventEmitter
+      .emitAsync(
+        ToolUsedEvent.EVENT_NAME,
+        new ToolUsedEvent(
+          principal.kind,
+          principal.kind === 'user' ? principal.userId : null,
+          principal.kind === 'apiKey' ? principal.apiKeyId : null,
+          principal.orgId,
+          toolName,
+        ),
+      )
+      .catch((err: unknown) => {
+        this.logger.error('Failed to emit ToolUsedEvent', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+          toolName,
+        });
+      });
   }
 
   private async processHybridTool(

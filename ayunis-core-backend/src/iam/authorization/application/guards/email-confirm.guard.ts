@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { getPrincipal } from 'src/iam/authentication/domain/get-principal';
+import { getPrincipal } from 'src/iam/authentication/application/util/get-principal';
 import { EmailNotVerifiedError } from '../authorization.errors';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import { Reflector } from '@nestjs/core';

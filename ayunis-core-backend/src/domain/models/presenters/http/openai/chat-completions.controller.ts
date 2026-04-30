@@ -13,7 +13,7 @@ import type { UUID } from 'crypto';
 
 import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
 import type { RequestWithSubscriptionContext } from 'src/iam/authorization/application/guards/subscription.guard';
-import { getPrincipal } from 'src/iam/authentication/domain/get-principal';
+import { getPrincipal } from 'src/iam/authentication/application/util/get-principal';
 import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
 import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
 import type { PrincipalRef } from 'src/iam/quotas/domain/principal-ref';

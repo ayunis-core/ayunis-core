@@ -1,5 +1,5 @@
 import type { Request } from 'express';
-import type { ActivePrincipal } from './active-principal.entity';
+import type { ActivePrincipal } from '../../domain/active-principal.entity';
 
 /**
  * Reads the authenticated principal off a request.

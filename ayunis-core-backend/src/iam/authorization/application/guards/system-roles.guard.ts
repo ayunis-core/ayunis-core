@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { SYSTEM_ROLES_KEY } from '../decorators/system-roles.decorator';
-import { getPrincipal } from 'src/iam/authentication/domain/get-principal';
+import { getPrincipal } from 'src/iam/authentication/application/util/get-principal';
 
 @Injectable()
 export class SystemRolesGuard implements CanActivate {

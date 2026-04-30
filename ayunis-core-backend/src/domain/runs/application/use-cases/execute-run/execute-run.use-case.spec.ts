@@ -92,6 +92,13 @@ describe('ExecuteRunUseCase', () => {
 
     contextService = {
       get: jest.fn(),
+      requirePrincipal: jest.fn().mockReturnValue({
+        kind: 'user',
+        userId,
+        orgId,
+        role: 'user',
+        systemRole: 'user',
+      }),
     } as unknown as jest.Mocked<ContextService>;
 
     toolAssemblyService = {

@@ -23,6 +23,11 @@ export const AYUNIS_MARKETPLACE_INSTALLS_TOTAL =
 // performance. Consider moving per-user metrics to logs or a dedicated
 // analytics pipeline instead.
 export const LABEL_USER_ID = 'user_id';
+// principal_kind is bounded to two values ('user' | 'apiKey'), so it adds at
+// most a 2x multiplier on top of user_id cardinality. It disambiguates rows
+// where the user_id slot holds an api-key UUID (for api-key callers) from
+// rows where it holds an actual user UUID.
+export const LABEL_PRINCIPAL_KIND = 'principal_kind';
 export const LABEL_ORG_ID = 'org_id';
 export const LABEL_MODEL = 'model';
 export const LABEL_PROVIDER = 'provider';
