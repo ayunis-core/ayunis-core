@@ -31,13 +31,11 @@ const buildUser = (systemRole: SystemRole): ActiveUser =>
     systemRole,
   });
 
-const buildApiKey = (systemRole: SystemRole): ActiveApiKey =>
+const buildApiKey = (): ActiveApiKey =>
   new ActiveApiKey({
     apiKeyId: randomUUID(),
     label: 'ci-bot',
     orgId,
-    role: UserRole.USER,
-    systemRole,
   });
 
 describe('SystemRolesGuard', () => {
@@ -81,16 +79,15 @@ describe('SystemRolesGuard', () => {
     ).toBe(false);
   });
 
-  it('returns false for an api-key principal even when the systemRole would match', () => {
+  it('returns false for an api-key principal regardless of the required systemRole', () => {
     // Pin the security invariant: system roles are a user concept, so api
-    // keys must never satisfy @SystemRoles(...) regardless of what
-    // systemRole they carry — mirrors the same enforcement RolesGuard does.
+    // keys must never satisfy @SystemRoles(...) — mirrors RolesGuard. The
+    // kind discriminator gates the check; ActiveApiKey structurally cannot
+    // carry a systemRole.
     reflector.getAllAndOverride.mockReturnValue([SystemRole.SUPER_ADMIN]);
 
-    expect(
-      guard.canActivate(
-        buildContext({ user: buildApiKey(SystemRole.SUPER_ADMIN) }),
-      ),
-    ).toBe(false);
+    expect(guard.canActivate(buildContext({ user: buildApiKey() }))).toBe(
+      false,
+    );
   });
 });

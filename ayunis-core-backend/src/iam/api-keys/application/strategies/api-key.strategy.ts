@@ -2,8 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy as BearerStrategy } from 'passport-http-bearer';
 
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { ActiveApiKey } from 'src/iam/authentication/domain/active-api-key.entity';
 
 import { ApiKey } from '../../domain/api-key.entity';
@@ -53,8 +51,6 @@ export class ApiKeyStrategy extends PassportStrategy(
         apiKeyId: apiKey.id,
         label: apiKey.name,
         orgId: apiKey.orgId,
-        role: UserRole.USER,
-        systemRole: SystemRole.CUSTOMER,
       });
     } catch (err) {
       if (err instanceof ApiKeyError && err.statusCode < 500) {

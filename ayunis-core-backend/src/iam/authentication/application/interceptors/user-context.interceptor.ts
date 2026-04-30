@@ -47,13 +47,10 @@ export class UserContextInterceptor implements NestInterceptor {
       this.contextService.set('principalKind', 'apiKey');
       this.contextService.set('apiKeyId', principal.apiKeyId);
       this.contextService.set('orgId', principal.orgId);
-      this.contextService.set('role', principal.role);
-      this.contextService.set('systemRole', principal.systemRole);
 
       Sentry.getCurrentScope().setUser({
         id: principal.apiKeyId,
         orgId: principal.orgId,
-        role: principal.role,
         principalKind: 'apiKey',
       });
     }

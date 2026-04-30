@@ -14,7 +14,9 @@ export interface MyClsStore extends ClsStore {
   /** API key UUID. Set only when `principalKind === 'apiKey'`. */
   apiKeyId?: UUID;
   orgId?: UUID;
+  /** Set only when `principalKind === 'user'`. */
   systemRole?: SystemRole;
+  /** Set only when `principalKind === 'user'`. */
   role?: UserRole;
 }
 
@@ -30,8 +32,6 @@ export type ResolvedPrincipal =
       kind: 'apiKey';
       apiKeyId: UUID;
       orgId: UUID;
-      role: UserRole;
-      systemRole: SystemRole;
     };
 
 /**
@@ -81,14 +81,14 @@ export class ContextService {
   requirePrincipal(): ResolvedPrincipal {
     const kind = this.cls.get('principalKind');
     const orgId = this.cls.get('orgId');
-    const role = this.cls.get('role');
-    const systemRole = this.cls.get('systemRole');
-    if (!kind || !orgId || !role || !systemRole) {
+    if (!kind || !orgId) {
       throw new UnauthorizedAccessError();
     }
     if (kind === 'user') {
       const userId = this.cls.get('userId');
-      if (!userId) {
+      const role = this.cls.get('role');
+      const systemRole = this.cls.get('systemRole');
+      if (!userId || !role || !systemRole) {
         throw new UnauthorizedAccessError();
       }
       return { kind: 'user', userId, orgId, role, systemRole };
@@ -97,6 +97,6 @@ export class ContextService {
     if (!apiKeyId) {
       throw new UnauthorizedAccessError();
     }
-    return { kind: 'apiKey', apiKeyId, orgId, role, systemRole };
+    return { kind: 'apiKey', apiKeyId, orgId };
   }
 }

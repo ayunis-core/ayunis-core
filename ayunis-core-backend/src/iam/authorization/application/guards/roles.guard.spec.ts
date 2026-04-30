@@ -31,13 +31,11 @@ const buildUser = (role: UserRole): ActiveUser =>
     systemRole: SystemRole.CUSTOMER,
   });
 
-const buildApiKey = (role: UserRole): ActiveApiKey =>
+const buildApiKey = (): ActiveApiKey =>
   new ActiveApiKey({
     apiKeyId: randomUUID(),
     label: 'ci-bot',
     orgId,
-    role,
-    systemRole: SystemRole.CUSTOMER,
   });
 
 describe('RolesGuard', () => {
@@ -79,15 +77,14 @@ describe('RolesGuard', () => {
     ).toBe(false);
   });
 
-  it('returns false for an api-key principal even when the role would match', () => {
+  it('returns false for an api-key principal regardless of the required role', () => {
     // Pin the security invariant: roles are a user concept, so api keys must
-    // never satisfy @Roles(...) regardless of what role they carry. A future
-    // change to ApiKeyStrategy that promotes an api key to ADMIN must not
-    // grant access to role-protected endpoints.
+    // never satisfy @Roles(...). The kind discriminator gates the check;
+    // ActiveApiKey structurally cannot carry a role.
     reflector.getAllAndOverride.mockReturnValue([UserRole.ADMIN]);
 
-    expect(
-      guard.canActivate(buildContext({ user: buildApiKey(UserRole.ADMIN) })),
-    ).toBe(false);
+    expect(guard.canActivate(buildContext({ user: buildApiKey() }))).toBe(
+      false,
+    );
   });
 });

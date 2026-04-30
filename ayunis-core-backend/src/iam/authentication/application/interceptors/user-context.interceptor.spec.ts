@@ -61,8 +61,6 @@ describe('UserContextInterceptor', () => {
       apiKeyId: 'key-id' as UUID,
       label: 'ci-bot',
       orgId: 'org-id' as UUID,
-      role: UserRole.USER,
-      systemRole: SystemRole.CUSTOMER,
     });
     const callHandler = createCallHandler();
 
@@ -77,6 +75,8 @@ describe('UserContextInterceptor', () => {
     expect(setMock).toHaveBeenCalledWith('apiKeyId', activeApiKey.apiKeyId);
     expect(setMock).toHaveBeenCalledWith('orgId', activeApiKey.orgId);
     expect(setMock).not.toHaveBeenCalledWith('userId', expect.anything());
+    expect(setMock).not.toHaveBeenCalledWith('role', expect.anything());
+    expect(setMock).not.toHaveBeenCalledWith('systemRole', expect.anything());
     expect(callHandler.handle).toHaveBeenCalled();
   });
 

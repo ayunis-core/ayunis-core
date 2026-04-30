@@ -58,15 +58,11 @@ describe('ContextService', () => {
         principalKind: 'apiKey',
         apiKeyId: API_KEY_ID,
         orgId: ORG_ID,
-        role: UserRole.USER,
-        systemRole: SystemRole.CUSTOMER,
       });
       expect(ctx.requirePrincipal()).toEqual({
         kind: 'apiKey',
         apiKeyId: API_KEY_ID,
         orgId: ORG_ID,
-        role: UserRole.USER,
-        systemRole: SystemRole.CUSTOMER,
       });
     });
 
@@ -89,8 +85,6 @@ describe('ContextService', () => {
       const ctx = makeStore({
         principalKind: 'apiKey',
         orgId: ORG_ID,
-        role: UserRole.USER,
-        systemRole: SystemRole.CUSTOMER,
       });
       expect(() => ctx.requirePrincipal()).toThrow(UnauthorizedAccessError);
     });
