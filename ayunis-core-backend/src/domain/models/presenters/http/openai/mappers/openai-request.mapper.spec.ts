@@ -253,6 +253,47 @@ describe('OpenAIRequestMapper', () => {
       ).toThrow(BadRequestException);
     });
 
+    it('resolves a reused tool_call_id against the most recent assistant turn (not the first occurrence)', () => {
+      const dto = buildRequest({
+        messages: [
+          { role: 'user', content: 'hi' },
+          {
+            role: 'assistant',
+            tool_calls: [
+              {
+                id: 'call_1',
+                type: 'function',
+                function: { name: 'get_weather', arguments: '{}' },
+              },
+            ],
+          },
+          { role: 'tool', content: 'sunny', tool_call_id: 'call_1' },
+          { role: 'user', content: 'and the time?' },
+          {
+            role: 'assistant',
+            tool_calls: [
+              {
+                id: 'call_1',
+                type: 'function',
+                function: { name: 'get_time', arguments: '{}' },
+              },
+            ],
+          },
+          { role: 'tool', content: '12:00', tool_call_id: 'call_1' },
+        ],
+      });
+
+      const cmd = mapper.toGetInferenceCommand(
+        dto,
+        buildPermittedLanguageModel(),
+      );
+
+      const firstResult = cmd.messages[2] as ToolResultMessage;
+      const secondResult = cmd.messages[5] as ToolResultMessage;
+      expect(firstResult.content[0].toolName).toBe('get_weather');
+      expect(secondResult.content[0].toolName).toBe('get_time');
+    });
+
     it('produces a ToolResultMessageContent with the resolved tool name (not the tool_call_id)', () => {
       const dto = buildRequest({
         messages: [

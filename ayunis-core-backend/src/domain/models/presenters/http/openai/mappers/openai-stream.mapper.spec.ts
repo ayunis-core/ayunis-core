@@ -145,7 +145,7 @@ describe('OpenAIStreamMapper', () => {
       expect(result!.choices[0].finish_reason).toBe('length');
     });
 
-    it('overrides finishReason to "tool_calls" when tool calls are present in the SAME chunk as finishReason "stop" (current behavior)', () => {
+    it('overrides finishReason to "tool_calls" when a NEW tool call (id/name) lands in the SAME chunk as finishReason "stop"', () => {
       const chunk = new StreamInferenceResponseChunk({
         thinkingDelta: null,
         textContentDelta: null,
@@ -164,6 +164,39 @@ describe('OpenAIStreamMapper', () => {
 
       expect(result).not.toBeNull();
       expect(result!.choices[0].finish_reason).toBe('tool_calls');
+    });
+
+    it('does NOT override finishReason "stop" when the toolCallsDelta is only an argumentsDelta continuation (id and name are null)', () => {
+      const chunk = new StreamInferenceResponseChunk({
+        thinkingDelta: null,
+        textContentDelta: null,
+        toolCallsDelta: [
+          new StreamInferenceResponseChunkToolCall({
+            index: 0,
+            id: null,
+            name: null,
+            argumentsDelta: '"city":"Berlin"}',
+          }),
+        ],
+        finishReason: 'stop',
+      });
+
+      const result = mapper.toChunkDto(chunk, ctx);
+
+      expect(result).not.toBeNull();
+      expect(result!.choices[0].finish_reason).toBe('stop');
+    });
+
+    it('drops a chunk whose textContentDelta is the empty string and has no other signal', () => {
+      const chunk = new StreamInferenceResponseChunk({
+        thinkingDelta: null,
+        textContentDelta: '',
+        toolCallsDelta: [],
+      });
+
+      const result = mapper.toChunkDto(chunk, ctx);
+
+      expect(result).toBeNull();
     });
 
     it('emits usage only when chunk.usage is set', () => {

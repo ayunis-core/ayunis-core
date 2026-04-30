@@ -7,6 +7,7 @@ import { UsageModule } from 'src/domain/usage/usage.module';
 import { ModelsModule } from '../../../models.module';
 
 import { ChatCompletionsController } from './chat-completions.controller';
+import { OpenAIExceptionFilter } from './filters/openai-exception.filter';
 import { OpenAIRequestMapper } from './mappers/openai-request.mapper';
 import { OpenAIResponseMapper } from './mappers/openai-response.mapper';
 import { OpenAIStreamMapper } from './mappers/openai-stream.mapper';
@@ -28,6 +29,7 @@ import { OpenAIChatCompletionsMappers } from './mappers/openai-mappers';
     OpenAIStreamMapper,
     OpenAIErrorMapper,
     OpenAIChatCompletionsMappers,
+    OpenAIExceptionFilter,
   ],
 })
 export class OpenAICompatModule {}

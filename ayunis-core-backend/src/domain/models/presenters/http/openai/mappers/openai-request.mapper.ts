@@ -72,16 +72,21 @@ export class OpenAIRequestMapper {
     const { systemPrompt, conversation } = this.splitSystemMessages(
       dto.messages,
     );
-    // Build a tool_call_id → function.name map. Tool result messages carry
-    // only `tool_call_id` on the wire, so the name must be recovered from
-    // the prior assistant message that emitted the call. Without this,
-    // downstream provider converters that round-trip the name (Gemini, e.g.)
-    // would send the call id where the function name should be and the model
-    // would reject the request.
-    const toolCallIdToName = this.buildToolCallIdToNameMap(conversation);
-    const messages = conversation.map((msg) =>
-      this.toDomainMessage(msg, threadId, toolCallIdToName),
-    );
+    // Resolve tool result messages against the *current* assistant turn's
+    // tool_calls only. The map is rebuilt each time we encounter an assistant
+    // message with `tool_calls`, so a later turn that reuses an earlier
+    // tool_call_id can't mis-attribute the result to the earlier call.
+    const messages: Message[] = [];
+    let currentTurnMap = new Map<string, string>();
+    for (const msg of conversation) {
+      if (msg.role === 'assistant' && msg.tool_calls) {
+        currentTurnMap = new Map<string, string>();
+        for (const tc of msg.tool_calls) {
+          currentTurnMap.set(tc.id, tc.function.name);
+        }
+      }
+      messages.push(this.toDomainMessage(msg, threadId, currentTurnMap));
+    }
     const inlineTools = (dto.tools ?? []).map((tool) =>
       this.toInlineTool(tool),
     );
@@ -96,20 +101,6 @@ export class OpenAIRequestMapper {
       toolChoice,
       instructions: systemPrompt,
     };
-  }
-
-  private buildToolCallIdToNameMap(
-    messages: ChatCompletionMessageDto[],
-  ): Map<string, string> {
-    const map = new Map<string, string>();
-    for (const msg of messages) {
-      if (msg.role === 'assistant' && msg.tool_calls) {
-        for (const tc of msg.tool_calls) {
-          map.set(tc.id, tc.function.name);
-        }
-      }
-    }
-    return map;
   }
 
   private splitSystemMessages(messages: ChatCompletionMessageDto[]): {
@@ -203,7 +194,7 @@ export class OpenAIRequestMapper {
     const toolName = toolCallIdToName.get(dto.tool_call_id);
     if (!toolName) {
       throw new BadRequestException(
-        `No matching tool_call found for tool_call_id "${dto.tool_call_id}" in any preceding assistant message`,
+        `No matching tool_call found for tool_call_id "${dto.tool_call_id}" in the most recent assistant turn`,
       );
     }
     return new ToolResultMessage({

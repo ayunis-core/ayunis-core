@@ -1,4 +1,12 @@
-import { Body, Controller, Logger, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Logger,
+  Post,
+  Req,
+  Res,
+  UseFilters,
+} from '@nestjs/common';
 import {
   ApiBody,
   ApiExcludeController,
@@ -32,6 +40,7 @@ import { GetPermittedLanguageModelByNameQuery } from '../../../application/use-c
 import type { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
 import { ChatCompletionRequestDto } from './dto/chat-completion-request.dto';
 import { ChatCompletionResponseDto } from './dto/chat-completion-response.dto';
+import { OpenAIExceptionFilter } from './filters/openai-exception.filter';
 import { OpenAIChatCompletionsMappers } from './mappers/openai-mappers';
 
 const HEARTBEAT_INTERVAL_MS = 15_000;
@@ -40,6 +49,7 @@ const HEARTBEAT_INTERVAL_MS = 15_000;
 @ApiExcludeController()
 @Controller('openai/v1/chat/completions')
 @RequireSubscription()
+@UseFilters(OpenAIExceptionFilter)
 export class ChatCompletionsController {
   private readonly logger = new Logger(ChatCompletionsController.name);
 
@@ -71,28 +81,24 @@ export class ChatCompletionsController {
     @Req() request: RequestWithSubscriptionContext,
     @Res() response: Response,
   ): Promise<void> {
-    try {
-      const orgId = this.mappers.context.requireOrgId();
-      const model = await this.resolveModel(dto.model);
+    const orgId = this.mappers.context.requireOrgId();
+    const model = await this.resolveModel(dto.model);
 
-      // Charge fair-use bucket on the resolved model's tier. The bucket is
-      // keyed on the principal — a user-anchored quota for UI requests, an
-      // api-key-anchored quota for API-key requests. ZERO-tier models bypass
-      // the check (no bucket, no row).
-      await this.enforceFairUse(model, request);
+    // Charge fair-use bucket on the resolved model's tier. The bucket is
+    // keyed on the principal — a user-anchored quota for UI requests, an
+    // api-key-anchored quota for API-key requests. ZERO-tier models bypass
+    // the check (no bucket, no row).
+    await this.enforceFairUse(model, request);
 
-      // Trial cap: a single chat-completion request counts as one message,
-      // mirroring runs.controller. SubscriptionGuard already gated entry; we
-      // only need to advance the counter when we're inside the trial window.
-      this.maybeIncrementTrial(orgId, request);
+    // Trial cap: a single chat-completion request counts as one message,
+    // mirroring runs.controller. SubscriptionGuard already gated entry; we
+    // only need to advance the counter when we're inside the trial window.
+    this.maybeIncrementTrial(orgId, request);
 
-      if (dto.stream) {
-        await this.handleStream(dto, model, orgId, request, response);
-      } else {
-        await this.handleNonStream(dto, model, response);
-      }
-    } catch (error) {
-      this.sendError(response, error);
+    if (dto.stream) {
+      await this.handleStream(dto, model, orgId, request, response);
+    } else {
+      await this.handleNonStream(dto, model, response);
     }
   }
 
@@ -213,39 +219,53 @@ export class ChatCompletionsController {
         }
       }, HEARTBEAT_INTERVAL_MS);
 
-      subscriptionRef.current = stream$.subscribe({
-        next: (chunk) => {
-          if (chunk.usage) {
-            if (chunk.usage.inputTokens !== undefined) {
-              lastInputTokens = chunk.usage.inputTokens;
+      try {
+        subscriptionRef.current = stream$.subscribe({
+          next: (chunk) => {
+            if (chunk.usage) {
+              if (chunk.usage.inputTokens !== undefined) {
+                lastInputTokens = chunk.usage.inputTokens;
+              }
+              if (chunk.usage.outputTokens !== undefined) {
+                lastOutputTokens = chunk.usage.outputTokens;
+              }
             }
-            if (chunk.usage.outputTokens !== undefined) {
-              lastOutputTokens = chunk.usage.outputTokens;
+            if (disconnected) return;
+            const dtoChunk = this.mappers.stream.toChunkDto(chunk, ctx);
+            if (dtoChunk) {
+              response.write(`data: ${JSON.stringify(dtoChunk)}\n\n`);
             }
-          }
-          if (disconnected) return;
-          const dtoChunk = this.mappers.stream.toChunkDto(chunk, ctx);
-          if (dtoChunk) {
-            response.write(`data: ${JSON.stringify(dtoChunk)}\n\n`);
-          }
-        },
-        error: (err) => {
-          this.logger.error('Streaming inference failed', err);
-          if (!disconnected) {
-            const envelope = this.mappers.error.toEnvelope(err).body;
-            response.write(`data: ${JSON.stringify(envelope)}\n\n`);
-            // Always emit [DONE] so OpenAI SDK clients close cleanly even
-            // on the error path.
-            response.write('data: [DONE]\n\n');
-          }
-          settle();
-        },
-        complete: () => {
-          if (!disconnected) response.write('data: [DONE]\n\n');
-          this.collectUsage(model, lastInputTokens, lastOutputTokens);
-          settle();
-        },
-      });
+          },
+          error: (err) => {
+            this.logger.error('Streaming inference failed', err);
+            if (!disconnected) {
+              const envelope = this.mappers.error.toEnvelope(err).body;
+              response.write(`data: ${JSON.stringify(envelope)}\n\n`);
+              // Always emit [DONE] so OpenAI SDK clients close cleanly even
+              // on the error path.
+              response.write('data: [DONE]\n\n');
+            }
+            settle();
+          },
+          complete: () => {
+            if (!disconnected) response.write('data: [DONE]\n\n');
+            this.collectUsage(model, lastInputTokens, lastOutputTokens);
+            settle();
+          },
+        });
+      } catch (err) {
+        // rxjs subscribe() can throw synchronously when the producer factory
+        // throws before scheduling. Without this catch, the throw escapes the
+        // executor, settle() never runs, and the heartbeat keeps writing into
+        // a half-open response forever.
+        this.logger.error('Streaming inference threw synchronously', err);
+        if (!disconnected) {
+          const envelope = this.mappers.error.toEnvelope(err).body;
+          response.write(`data: ${JSON.stringify(envelope)}\n\n`);
+          response.write('data: [DONE]\n\n');
+        }
+        settle();
+      }
     });
   }
 
@@ -260,18 +280,5 @@ export class ChatCompletionsController {
       inputTokens,
       outputTokens,
     );
-  }
-
-  private sendError(response: Response, error: unknown): void {
-    if (response.headersSent) {
-      this.logger.error(
-        'Error after headers sent; cannot rewrite response',
-        error,
-      );
-      response.end();
-      return;
-    }
-    const { status, body } = this.mappers.error.toEnvelope(error);
-    response.status(status).json(body);
   }
 }

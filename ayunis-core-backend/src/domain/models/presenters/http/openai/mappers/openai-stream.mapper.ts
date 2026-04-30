@@ -62,11 +62,18 @@ export class OpenAIStreamMapper {
       }),
     );
 
-    const hasContent = chunk.textContentDelta !== null;
+    const hasContent =
+      chunk.textContentDelta !== null && chunk.textContentDelta.length > 0;
     const hasToolCalls = toolCalls.length > 0;
+    // Only a delta carrying `id` or `name` introduces a new tool-call
+    // boundary. Pure `argumentsDelta` continuations of an in-flight call must
+    // not flip a legitimate `stop` into `tool_calls`.
+    const hasNewToolCall = chunk.toolCallsDelta.some(
+      (d) => d.id !== null || d.name !== null,
+    );
     const finishReason =
       chunk.finishReason !== null && chunk.finishReason !== undefined
-        ? this.mapFinishReason(chunk.finishReason, hasToolCalls)
+        ? this.mapFinishReason(chunk.finishReason, hasNewToolCall)
         : null;
     const usage = chunk.usage;
 
@@ -99,9 +106,9 @@ export class OpenAIStreamMapper {
 
   private mapFinishReason(
     upstream: string,
-    hasToolCalls: boolean,
+    hasNewToolCall: boolean,
   ): 'stop' | 'length' | 'tool_calls' {
-    if (hasToolCalls) return 'tool_calls';
+    if (hasNewToolCall) return 'tool_calls';
     if (upstream === 'length') return 'length';
     if (upstream === 'tool_calls' || upstream === 'tool_use')
       return 'tool_calls';
