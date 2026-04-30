@@ -4304,7 +4304,7 @@ export const SharesControllerGetSharesEntityType = {
 } as const;
 
 export type KnowledgeBasesControllerAddDocumentBody = {
-  /** The file to upload (PDF, DOCX, PPTX, TXT) */
+  /** The file to upload (PDF, DOCX, PPTX, TXT, max 25 MB) */
   file: Blob;
 };
 

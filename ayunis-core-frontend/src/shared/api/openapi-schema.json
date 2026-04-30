@@ -5468,7 +5468,7 @@
                   "file": {
                     "type": "string",
                     "format": "binary",
-                    "description": "The file to upload (PDF, DOCX, PPTX, TXT)"
+                    "description": "The file to upload (PDF, DOCX, PPTX, TXT, max 25 MB)"
                   }
                 },
                 "required": ["file"]
@@ -5489,6 +5489,9 @@
           },
           "404": {
             "description": "Knowledge base not found"
+          },
+          "413": {
+            "description": "File exceeds the 25 MB upload limit"
           }
         },
         "summary": "Add a document to a knowledge base",
