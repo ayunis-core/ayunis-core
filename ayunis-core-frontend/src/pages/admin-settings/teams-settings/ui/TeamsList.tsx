@@ -69,13 +69,14 @@ export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
             <Button
               variant="ghost"
               size="icon"
+              className="text-destructive hover:text-destructive"
               onClick={(e) => {
                 e.stopPropagation();
                 deleteTeam(team.id);
               }}
               disabled={isDeleting}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 />
             </Button>
             <Link
               to="/admin-settings/teams/$id"

@@ -73,6 +73,7 @@ export default function AgentCard({ agent }: Readonly<AgentCardProps>) {
         <Button
           variant="ghost"
           size="icon"
+          className="text-destructive hover:text-destructive"
           onClick={(e) => {
             e.stopPropagation();
             if (agent.isShared) return null;
@@ -80,7 +81,7 @@ export default function AgentCard({ agent }: Readonly<AgentCardProps>) {
           }}
           disabled={deleteAgent.isPending || agent.isShared}
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 />
         </Button>
       </ItemActions>
     </Item>

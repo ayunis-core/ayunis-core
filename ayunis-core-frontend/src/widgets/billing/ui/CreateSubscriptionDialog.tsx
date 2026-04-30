@@ -377,7 +377,7 @@ function StartDateField({
                         !field.value && 'text-muted-foreground',
                       )}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <CalendarIcon />
                       {selectedDate
                         ? selectedDate.toLocaleDateString()
                         : t('subscriptionDialog.startsAtPlaceholder')}

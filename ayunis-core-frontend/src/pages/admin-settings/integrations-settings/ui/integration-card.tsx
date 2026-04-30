@@ -100,7 +100,7 @@ export function IntegrationCard({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onDelete(integration)}
-              className="text-red-600"
+              variant="destructive"
             >
               {t('integrations.card.delete')}
             </DropdownMenuItem>

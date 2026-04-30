@@ -157,7 +157,7 @@ export default function KnowledgeBaseDocumentsCard({
                 {isAddingUrl ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                  <Globe className="mr-2 h-4 w-4" />
+                  <Globe />
                 )}
                 {t('detail.documents.addUrl')}
               </Button>
@@ -170,7 +170,7 @@ export default function KnowledgeBaseDocumentsCard({
                 {isUploading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                  <Upload className="mr-2 h-4 w-4" />
+                  <Upload />
                 )}
                 {t('detail.documents.upload')}
               </Button>

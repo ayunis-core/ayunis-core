@@ -219,7 +219,7 @@ export function ChatsSidebarGroup() {
                         </SidebarMenuAction>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
-                        className="w-48 rounded-lg"
+                        className="rounded-lg"
                         side="bottom"
                         align="end"
                         data-testid="chat-dropdown"
@@ -230,14 +230,15 @@ export function ChatsSidebarGroup() {
                           }
                           data-testid="rename"
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Pencil />
                           <span>{t('sidebar.renameChat')}</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
+                          variant="destructive"
                           onClick={() => handleDeleteClick(thread.id)}
                           data-testid="delete"
                         >
-                          <Trash className="text-destructive" />
+                          <Trash />
                           <span>{t('sidebar.deleteChat')}</span>
                         </DropdownMenuItem>
                       </DropdownMenuContent>

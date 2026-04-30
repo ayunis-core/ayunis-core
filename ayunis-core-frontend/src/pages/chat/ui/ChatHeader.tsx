@@ -79,7 +79,7 @@ export default function ChatHeader({
                 <span>{t('chat.renameThread')}</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onDelete} variant="destructive">
-                <Trash2 className="h-4 w-4" />
+                <Trash2 />
                 <span>{t('chat.deleteThread')}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
