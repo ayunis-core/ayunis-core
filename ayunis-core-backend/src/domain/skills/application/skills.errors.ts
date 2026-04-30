@@ -6,6 +6,7 @@ export enum SkillErrorCode {
   SKILL_INVALID_INPUT = 'SKILL_INVALID_INPUT',
   DUPLICATE_SKILL_NAME = 'DUPLICATE_SKILL_NAME',
   SOURCE_ALREADY_ASSIGNED = 'SOURCE_ALREADY_ASSIGNED',
+  SOURCE_LIMIT_EXCEEDED = 'SOURCE_LIMIT_EXCEEDED',
   MCP_INTEGRATION_NOT_FOUND = 'MCP_INTEGRATION_NOT_FOUND',
   MCP_INTEGRATION_ALREADY_ASSIGNED = 'MCP_INTEGRATION_ALREADY_ASSIGNED',
   MCP_INTEGRATION_DISABLED = 'MCP_INTEGRATION_DISABLED',
@@ -74,6 +75,17 @@ export class SkillSourceAlreadyAssignedError extends SkillError {
       SkillErrorCode.SOURCE_ALREADY_ASSIGNED,
       409,
       metadata,
+    );
+  }
+}
+
+export class SkillSourceLimitExceededError extends SkillError {
+  constructor(limit: number, metadata?: ErrorMetadata) {
+    super(
+      `Cannot add more than ${limit} sources to a skill`,
+      SkillErrorCode.SOURCE_LIMIT_EXCEEDED,
+      409,
+      { limit, ...metadata },
     );
   }
 }

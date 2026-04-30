@@ -70,6 +70,7 @@ import {
   KnowledgeBaseDocumentListResponseDto,
 } from './dto/knowledge-base-document-response.dto';
 import { MissingFileError } from '../../application/knowledge-bases.errors';
+import { KnowledgeBasesConstants } from '../../domain/knowledge-bases.constants';
 import { KnowledgeBaseDtoMapper } from './mappers/knowledge-base-dto.mapper';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
@@ -279,7 +280,7 @@ export class KnowledgeBasesController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'The file to upload (PDF, DOCX, PPTX, TXT)',
+          description: 'The file to upload (PDF, DOCX, PPTX, TXT, max 25 MB)',
         },
       },
       required: ['file'],
@@ -293,6 +294,10 @@ export class KnowledgeBasesController {
     type: KnowledgeBaseDocumentResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Knowledge base not found' })
+  @ApiResponse({
+    status: 413,
+    description: 'File exceeds the 25 MB upload limit',
+  })
   /* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP Content-Length */
   @UseInterceptors(
     FileInterceptor('file', {
@@ -303,7 +308,7 @@ export class KnowledgeBasesController {
           cb(null, `${randomName}${extname(file.originalname)}`);
         },
       }),
-      limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
+      limits: { fileSize: KnowledgeBasesConstants.MAX_FILE_SIZE_BYTES },
     }),
   )
   /* eslint-enable sonarjs/content-length */
