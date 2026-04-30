@@ -62,7 +62,13 @@ export class GetInferenceUseCase {
     if (error instanceof ModelError) throw error;
     this.logger.error('Inference failed', {
       model: command.model,
-      messages: command.messages,
+      // Conversation contents may carry user-provided PII; this logger sink
+      // reaches Sentry on the InferenceFailedError 500 path. Drop the bytes,
+      // keep the structure.
+      messages: command.messages.map((m) => ({
+        role: m.role,
+        contentParts: m.content.length,
+      })),
       tools: command.tools,
       toolChoice: command.toolChoice,
       error: error instanceof Error ? error : new Error('Unknown error'),
