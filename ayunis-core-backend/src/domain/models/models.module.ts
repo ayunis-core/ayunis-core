@@ -103,6 +103,15 @@ import { MessagesModule } from '../messages/messages.module';
 import { OpenAIResponsesMessageConverter } from './infrastructure/converters/openai-responses-message.converter';
 import { GeminiMessageConverter } from './infrastructure/converters/gemini-message.converter';
 import { MistralMessageConverter } from './infrastructure/converters/mistral-message.converter';
+import { ChatCompletionsController } from './presenters/http/openai/chat-completions.controller';
+import { OpenAIExceptionFilter } from './presenters/http/openai/filters/openai-exception.filter';
+import { OpenAIRequestMapper } from './presenters/http/openai/mappers/openai-request.mapper';
+import { OpenAIResponseMapper } from './presenters/http/openai/mappers/openai-response.mapper';
+import { OpenAIStreamMapper } from './presenters/http/openai/mappers/openai-stream.mapper';
+import { OpenAIErrorMapper } from './presenters/http/openai/mappers/openai-error.mapper';
+import { QuotasModule } from 'src/iam/quotas/quotas.module';
+import { TrialsModule } from 'src/iam/trials/trials.module';
+import { UsageModule } from '../usage/usage.module';
 
 @Module({
   imports: [
@@ -113,6 +122,9 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     UsersModule,
     TeamsModule,
     StorageModule,
+    QuotasModule,
+    TrialsModule,
+    UsageModule,
     forwardRef(() => MessagesModule), // ImageContentService for inference handlers
     forwardRef(() => SourcesModule), // Sources → Retrievers → FileRetrievers → Models (circular)
     forwardRef(() => ThreadsModule), // Threads query models, deleting permitted model updates threads
@@ -127,6 +139,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     SuperAdminLanguageCatalogModelsController,
     SuperAdminEmbeddingCatalogModelsController,
     SuperAdminImageGenerationCatalogModelsController,
+    ChatCompletionsController,
   ],
   providers: [
     ModelProviderInfoRegistry,
@@ -335,6 +348,12 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     GetModelByIdUseCase,
     GetAllModelsUseCase,
     DeleteModelUseCase,
+    // OpenAI-compat presenters
+    OpenAIRequestMapper,
+    OpenAIResponseMapper,
+    OpenAIStreamMapper,
+    OpenAIErrorMapper,
+    OpenAIExceptionFilter,
   ],
   exports: [
     InferenceHandlerRegistry,

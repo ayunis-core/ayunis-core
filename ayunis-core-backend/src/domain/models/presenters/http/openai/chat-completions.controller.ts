@@ -37,11 +37,16 @@ import { GetPermittedLanguageModelQuery } from '../../../application/use-cases/g
 import { GetPermittedLanguageModelByNameUseCase } from '../../../application/use-cases/get-permitted-language-model-by-name/get-permitted-language-model-by-name.use-case';
 import { GetPermittedLanguageModelByNameQuery } from '../../../application/use-cases/get-permitted-language-model-by-name/get-permitted-language-model-by-name.query';
 
+import { ContextService } from 'src/common/context/services/context.service';
+
 import type { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
 import { ChatCompletionRequestDto } from './dto/chat-completion-request.dto';
 import { ChatCompletionResponseDto } from './dto/chat-completion-response.dto';
 import { OpenAIExceptionFilter } from './filters/openai-exception.filter';
-import { OpenAIChatCompletionsMappers } from './mappers/openai-mappers';
+import { OpenAIRequestMapper } from './mappers/openai-request.mapper';
+import { OpenAIResponseMapper } from './mappers/openai-response.mapper';
+import { OpenAIStreamMapper } from './mappers/openai-stream.mapper';
+import { OpenAIErrorMapper } from './mappers/openai-error.mapper';
 
 const HEARTBEAT_INTERVAL_MS = 15_000;
 
@@ -61,7 +66,11 @@ export class ChatCompletionsController {
     private readonly checkQuotaUseCase: CheckQuotaUseCase,
     private readonly incrementTrialMessagesUseCase: IncrementTrialMessagesUseCase,
     private readonly collectUsageAsyncService: CollectUsageAsyncService,
-    private readonly mappers: OpenAIChatCompletionsMappers,
+    private readonly requestMapper: OpenAIRequestMapper,
+    private readonly responseMapper: OpenAIResponseMapper,
+    private readonly streamMapper: OpenAIStreamMapper,
+    private readonly errorMapper: OpenAIErrorMapper,
+    private readonly contextService: ContextService,
   ) {}
 
   @Post()
@@ -81,7 +90,7 @@ export class ChatCompletionsController {
     @Req() request: RequestWithSubscriptionContext,
     @Res() response: Response,
   ): Promise<void> {
-    const orgId = this.mappers.context.requireOrgId();
+    const orgId = this.contextService.requireOrgId();
     const model = await this.resolveModel(dto.model);
 
     // Charge fair-use bucket on the resolved model's tier. The bucket is
@@ -150,14 +159,14 @@ export class ChatCompletionsController {
     model: PermittedLanguageModel,
     response: Response,
   ): Promise<void> {
-    const command = this.mappers.request.toGetInferenceCommand(dto, model);
+    const command = this.requestMapper.toGetInferenceCommand(dto, model);
     const inferenceResponse = await this.getInferenceUseCase.execute(command);
     this.collectUsage(
       model,
       inferenceResponse.meta.inputTokens,
       inferenceResponse.meta.outputTokens,
     );
-    const responseDto = this.mappers.response.toResponseDto(
+    const responseDto = this.responseMapper.toResponseDto(
       inferenceResponse,
       dto.model,
     );
@@ -171,11 +180,7 @@ export class ChatCompletionsController {
     request: RequestWithSubscriptionContext,
     response: Response,
   ): Promise<void> {
-    const input = this.mappers.request.toStreamInferenceInput(
-      dto,
-      model,
-      orgId,
-    );
+    const input = this.requestMapper.toStreamInferenceInput(dto, model, orgId);
     const stream$ = this.streamInferenceUseCase.execute(input);
 
     response.setHeader('Content-Type', 'text/event-stream');
@@ -183,9 +188,9 @@ export class ChatCompletionsController {
     response.setHeader('Connection', 'keep-alive');
     response.write(': connection established\n\n');
 
-    const ctx = this.mappers.stream.createContext(dto.model);
+    const ctx = this.streamMapper.createContext(dto.model);
     response.write(
-      `data: ${JSON.stringify(this.mappers.stream.initialChunk(ctx))}\n\n`,
+      `data: ${JSON.stringify(this.streamMapper.initialChunk(ctx))}\n\n`,
     );
 
     const subscriptionRef: { current?: Subscription } = {};
@@ -231,7 +236,7 @@ export class ChatCompletionsController {
               }
             }
             if (disconnected) return;
-            const dtoChunk = this.mappers.stream.toChunkDto(chunk, ctx);
+            const dtoChunk = this.streamMapper.toChunkDto(chunk, ctx);
             if (dtoChunk) {
               response.write(`data: ${JSON.stringify(dtoChunk)}\n\n`);
             }
@@ -239,7 +244,7 @@ export class ChatCompletionsController {
           error: (err) => {
             this.logger.error('Streaming inference failed', err);
             if (!disconnected) {
-              const envelope = this.mappers.error.toEnvelope(err).body;
+              const envelope = this.errorMapper.toEnvelope(err).body;
               response.write(`data: ${JSON.stringify(envelope)}\n\n`);
               // Always emit [DONE] so OpenAI SDK clients close cleanly even
               // on the error path.
@@ -260,7 +265,7 @@ export class ChatCompletionsController {
         // a half-open response forever.
         this.logger.error('Streaming inference threw synchronously', err);
         if (!disconnected) {
-          const envelope = this.mappers.error.toEnvelope(err).body;
+          const envelope = this.errorMapper.toEnvelope(err).body;
           response.write(`data: ${JSON.stringify(envelope)}\n\n`);
           response.write('data: [DONE]\n\n');
         }
