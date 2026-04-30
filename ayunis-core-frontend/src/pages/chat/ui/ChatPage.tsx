@@ -9,7 +9,8 @@ import {
 } from 'react';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
 import ChatMessage from '@/pages/chat/ui/ChatMessage';
-import StreamingLoadingIndicator from '@/pages/chat/ui/StreamingLoadingIndicator';
+import AssistantRunBlock from '@/pages/chat/ui/AssistantRunBlock';
+import { groupMessagesIntoRuns } from '@/pages/chat/ui/agent-run-timeline';
 import ChatInput from '@/widgets/chat-input';
 import { useMessageSend } from '../api/useMessageSend';
 import ChatHeader from './ChatHeader';
@@ -352,38 +353,33 @@ export default function ChatPage({
     />
   );
 
-  // Show loading indicator when streaming and no assistant content has arrived yet
-  const lastMessage = sortedMessages[sortedMessages.length - 1];
-  /* eslint-disable eqeqeq, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain -- lastMessage may be undefined if sortedMessages is empty; content may be undefined during streaming even if typed as required */
-  const lastAssistantHasEmptyContent =
-    lastMessage != null &&
-    lastMessage.role === 'assistant' &&
-    (lastMessage.content == null || lastMessage.content.length === 0);
-  const showLoadingMessage =
-    isStreaming &&
-    (lastMessage == null ||
-      lastMessage.role !== 'assistant' ||
-      lastAssistantHasEmptyContent);
-  /* eslint-enable eqeqeq, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain */
+  const renderUnits = useMemo(
+    () =>
+      groupMessagesIntoRuns(sortedMessages, {
+        isStreaming,
+        toolResultsByToolId,
+      }),
+    [sortedMessages, isStreaming, toolResultsByToolId],
+  );
 
   const chatContent = (
     <div className="p-4 pb-8">
-      {sortedMessages.map((message, i) => (
-        <ChatMessage
-          key={message.id}
-          message={message}
-          hideAvatar={i > 0 && sortedMessages[i - 1].role !== 'user'}
-          isStreaming={
-            isStreaming &&
-            i === sortedMessages.length - 1 &&
-            message.role === 'assistant'
-          }
-          threadId={thread.id}
-          onOpenArtifact={handleOpenArtifact}
-          toolResultsByToolId={toolResultsByToolId}
-        />
-      ))}
-      {showLoadingMessage && <StreamingLoadingIndicator />}
+      {renderUnits.map((unit, i) => {
+        if (unit.kind === 'user') {
+          return <ChatMessage key={unit.key} message={unit.message} />;
+        }
+        const previousUnit = i > 0 ? renderUnits[i - 1] : undefined;
+        const hideAvatar = previousUnit?.kind === 'agent-run';
+        return (
+          <AssistantRunBlock
+            key={unit.key}
+            unit={unit}
+            hideAvatar={hideAvatar}
+            threadId={thread.id}
+            onOpenArtifact={handleOpenArtifact}
+          />
+        );
+      })}
     </div>
   );
 
