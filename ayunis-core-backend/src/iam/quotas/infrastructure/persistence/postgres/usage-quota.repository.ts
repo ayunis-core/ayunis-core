@@ -1,13 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
-import { randomUUID, UUID } from 'crypto';
+import {
+  Repository,
+  DataSource,
+  type EntityManager,
+  type SelectQueryBuilder,
+} from 'typeorm';
+import { randomUUID } from 'crypto';
 import {
   UsageQuotaRepositoryPort,
   CheckAndIncrementResult,
 } from '../../../application/ports/usage-quota.repository.port';
-import { UsageQuota } from '../../../domain/usage-quota.entity';
 import { QuotaType } from '../../../domain/quota-type.enum';
+import type { PrincipalRef } from '../../../domain/principal-ref';
 import { UsageQuotaRecord } from './schema/usage-quota.record';
 import { UsageQuotaMapper } from './mappers/usage-quota.mapper';
 
@@ -21,62 +26,8 @@ export class UsageQuotaRepository extends UsageQuotaRepositoryPort {
     super();
   }
 
-  async incrementAndGet(
-    userId: UUID,
-    quotaType: QuotaType,
-    windowDurationMs: number,
-  ): Promise<UsageQuota> {
-    return await this.dataSource.transaction(async (manager) => {
-      const repo = manager.getRepository(UsageQuotaRecord);
-
-      // Use SELECT FOR UPDATE to lock the row
-      let record = await repo
-        .createQueryBuilder('quota')
-        .setLock('pessimistic_write')
-        .where('quota.userId = :userId', { userId })
-        .andWhere('quota.quotaType = :quotaType', { quotaType })
-        .getOne();
-
-      const now = new Date();
-
-      if (!record) {
-        // Create new quota record
-        const newQuota = new UsageQuota({
-          userId,
-          quotaType,
-          count: 1,
-          windowStartAt: now,
-          windowDurationMs,
-        });
-        record = UsageQuotaMapper.toRecord(newQuota);
-        await repo.save(record);
-        return newQuota;
-      }
-
-      // Check if window has expired
-      const windowEndAt = new Date(
-        record.windowStartAt.getTime() + Number(record.windowDurationMs),
-      );
-
-      if (now > windowEndAt) {
-        // Reset window
-        record.windowStartAt = now;
-        record.count = 1;
-        record.windowDurationMs = String(windowDurationMs);
-      } else {
-        // Increment counter
-        record.count++;
-      }
-
-      record.updatedAt = now;
-      await repo.save(record);
-
-      return UsageQuotaMapper.toDomain(record);
-    });
-  }
-
   async checkAndIncrement(
-    userId: UUID,
+    principal: PrincipalRef,
     quotaType: QuotaType,
     windowDurationMs: number,
     limit: number,
@@ -85,51 +36,49 @@ export class UsageQuotaRepository extends UsageQuotaRepositoryPort {
       const repo = manager.getRepository(UsageQuotaRecord);
       const now = new Date();
 
-      // Use INSERT ... ON CONFLICT DO NOTHING to handle race condition on first insert
-      // This atomically creates a record if it doesn't exist, without updating
-      // an existing row (which would reset the count in concurrent scenarios)
+      // INSERT ... ON CONFLICT DO NOTHING — atomic create-if-missing without
+      // resetting count on concurrent requests. The partial unique indexes
+      // (one per principal kind) drive conflict detection automatically when
+      // no explicit target is given.
       await repo
         .createQueryBuilder()
         .insert()
         .into(UsageQuotaRecord)
         .values({
           id: randomUUID(),
-          userId,
+          userId: principal.kind === 'user' ? principal.userId : null,
+          apiKeyId: principal.kind === 'apiKey' ? principal.apiKeyId : null,
           quotaType,
-          count: 0, // Start at 0, we'll increment conditionally below
+          count: 0,
           windowStartAt: now,
           windowDurationMs: String(windowDurationMs),
         })
-        .orIgnore() // ON CONFLICT DO NOTHING - prevents resetting count on concurrent requests
+        .orIgnore()
         .execute();
 
-      // Now SELECT FOR UPDATE to lock the row for the remainder of this transaction
-      const record = await repo
-        .createQueryBuilder('quota')
-        .setLock('pessimistic_write')
-        .where('quota.userId = :userId', { userId })
-        .andWhere('quota.quotaType = :quotaType', { quotaType })
-        .getOne();
+      // SELECT FOR UPDATE — lock the row for the rest of the transaction.
+      const record = await this.lockForPrincipal(
+        manager,
+        principal,
+        quotaType,
+      ).getOne();
 
       if (!record) {
-        // This should never happen after upsert, but handle defensively
         throw new Error('Failed to get or create quota record');
       }
 
-      // Check if window has expired and reset if needed
+      // Reset window if expired.
       const windowEndAt = new Date(
         record.windowStartAt.getTime() + Number(record.windowDurationMs),
       );
-
       if (now > windowEndAt) {
-        // Reset window
         record.windowStartAt = now;
         record.count = 0;
         record.windowDurationMs = String(windowDurationMs);
       }
 
-      // Check limit BEFORE incrementing - this is the key fix
-      // If at or over limit, return exceeded WITHOUT incrementing
+      // Check limit BEFORE incrementing — prevents counter inflation on
+      // rejected requests.
       if (record.count >= limit) {
         return {
           quota: UsageQuotaMapper.toDomain(record),
@@ -137,7 +86,6 @@ export class UsageQuotaRepository extends UsageQuotaRepositoryPort {
         };
       }
 
-      // Under limit - increment and save
       record.count++;
       record.updatedAt = now;
       await repo.save(record);
@@ -147,5 +95,26 @@ export class UsageQuotaRepository extends UsageQuotaRepositoryPort {
         exceeded: false,
       };
     });
+  }
+
+  private lockForPrincipal(
+    manager: EntityManager,
+    principal: PrincipalRef,
+    quotaType: QuotaType,
+  ): SelectQueryBuilder<UsageQuotaRecord> {
+    const qb = manager
+      .getRepository(UsageQuotaRecord)
+      .createQueryBuilder('quota')
+      .setLock('pessimistic_write')
+      .andWhere('quota.quotaType = :quotaType', { quotaType });
+
+    if (principal.kind === 'user') {
+      return qb
+        .andWhere('quota.userId = :userId', { userId: principal.userId })
+        .andWhere('quota.apiKeyId IS NULL');
+    }
+    return qb
+      .andWhere('quota.apiKeyId = :apiKeyId', { apiKeyId: principal.apiKeyId })
+      .andWhere('quota.userId IS NULL');
   }
 }

@@ -68,7 +68,7 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
     // After model resolution (org access errors trump quota) but before the
     // provider call (a quota miss must not spend tokens).
     await this.checkQuotaUseCase.execute(
-      new CheckQuotaQuery(userId, QuotaType.FAIR_USE_IMAGES),
+      new CheckQuotaQuery({ kind: 'user', userId }, QuotaType.FAIR_USE_IMAGES),
     );
 
     const result = await this.generateImageUseCase.execute(

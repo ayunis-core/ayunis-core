@@ -109,7 +109,7 @@ export class ExecuteRunUseCase {
       const fairUseQuotaType = tierToFairUseQuotaType(model.model.tier);
       if (fairUseQuotaType !== null) {
         await this.checkQuotaUseCase.execute(
-          new CheckQuotaQuery(userId, fairUseQuotaType),
+          new CheckQuotaQuery({ kind: 'user', userId }, fairUseQuotaType),
         );
       }
       await this.creditBudgetGuardService.ensureBudgetAvailable(orgId);

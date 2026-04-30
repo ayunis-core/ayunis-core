@@ -6,12 +6,21 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 import type { Subscription } from 'rxjs';
 import { isUUID } from 'class-validator';
 import type { UUID } from 'crypto';
 
 import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
+import type { RequestWithSubscriptionContext } from 'src/iam/authorization/application/guards/subscription.guard';
+import { getPrincipal } from 'src/iam/authentication/domain/get-principal';
+import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
+import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
+import type { PrincipalRef } from 'src/iam/quotas/domain/principal-ref';
+import { tierToFairUseQuotaType } from 'src/iam/quotas/domain/tier-to-quota-type';
+import { IncrementTrialMessagesUseCase } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.use-case';
+import { IncrementTrialMessagesCommand } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.command';
+import { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 
 import { GetInferenceUseCase } from '../../../application/use-cases/get-inference/get-inference.use-case';
 import { StreamInferenceUseCase } from '../../../application/use-cases/stream-inference/stream-inference.use-case';
@@ -39,6 +48,9 @@ export class ChatCompletionsController {
     private readonly streamInferenceUseCase: StreamInferenceUseCase,
     private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
     private readonly getPermittedLanguageModelByNameUseCase: GetPermittedLanguageModelByNameUseCase,
+    private readonly checkQuotaUseCase: CheckQuotaUseCase,
+    private readonly incrementTrialMessagesUseCase: IncrementTrialMessagesUseCase,
+    private readonly collectUsageAsyncService: CollectUsageAsyncService,
     private readonly mappers: OpenAIChatCompletionsMappers,
   ) {}
 
@@ -56,12 +68,24 @@ export class ChatCompletionsController {
   @ApiResponse({ status: 404, description: 'Model not found' })
   async create(
     @Body() dto: ChatCompletionRequestDto,
-    @Req() request: Request,
+    @Req() request: RequestWithSubscriptionContext,
     @Res() response: Response,
   ): Promise<void> {
     try {
       const orgId = this.mappers.context.requireOrgId();
       const model = await this.resolveModel(dto.model);
+
+      // Charge fair-use bucket on the resolved model's tier. The bucket is
+      // keyed on the principal — a user-anchored quota for UI requests, an
+      // api-key-anchored quota for API-key requests. ZERO-tier models bypass
+      // the check (no bucket, no row).
+      await this.enforceFairUse(model, request);
+
+      // Trial cap: a single chat-completion request counts as one message,
+      // mirroring runs.controller. SubscriptionGuard already gated entry; we
+      // only need to advance the counter when we're inside the trial window.
+      this.maybeIncrementTrial(orgId, request);
+
       if (dto.stream) {
         await this.handleStream(dto, model, orgId, request, response);
       } else {
@@ -83,6 +107,38 @@ export class ChatCompletionsController {
     );
   }
 
+  private async enforceFairUse(
+    model: PermittedLanguageModel,
+    request: RequestWithSubscriptionContext,
+  ): Promise<void> {
+    const principal = getPrincipal(request);
+    if (!principal) return;
+    const quotaType = tierToFairUseQuotaType(model.model.tier);
+    if (quotaType === null) return;
+    const principalRef: PrincipalRef =
+      principal.kind === 'user'
+        ? { kind: 'user', userId: principal.id }
+        : { kind: 'apiKey', apiKeyId: principal.apiKeyId };
+    await this.checkQuotaUseCase.execute(
+      new CheckQuotaQuery(principalRef, quotaType),
+    );
+  }
+
+  private maybeIncrementTrial(
+    orgId: UUID,
+    request: RequestWithSubscriptionContext,
+  ): void {
+    if (!request.subscriptionContext?.hasRemainingTrialMessages) return;
+    void this.incrementTrialMessagesUseCase
+      .execute(new IncrementTrialMessagesCommand(orgId))
+      .catch((err: unknown) => {
+        this.logger.error('Failed to increment trial messages', {
+          orgId,
+          error: err instanceof Error ? err.message : 'Unknown error',
+        });
+      });
+  }
+
   private async handleNonStream(
     dto: ChatCompletionRequestDto,
     model: PermittedLanguageModel,
@@ -90,6 +146,11 @@ export class ChatCompletionsController {
   ): Promise<void> {
     const command = this.mappers.request.toGetInferenceCommand(dto, model);
     const inferenceResponse = await this.getInferenceUseCase.execute(command);
+    this.collectUsage(
+      model,
+      inferenceResponse.meta.inputTokens,
+      inferenceResponse.meta.outputTokens,
+    );
     const responseDto = this.mappers.response.toResponseDto(
       inferenceResponse,
       dto.model,
@@ -101,7 +162,7 @@ export class ChatCompletionsController {
     dto: ChatCompletionRequestDto,
     model: PermittedLanguageModel,
     orgId: UUID,
-    request: Request,
+    request: RequestWithSubscriptionContext,
     response: Response,
   ): Promise<void> {
     const input = this.mappers.request.toStreamInferenceInput(
@@ -124,6 +185,10 @@ export class ChatCompletionsController {
     const subscriptionRef: { current?: Subscription } = {};
     let disconnected = false;
     let settled = false;
+    // Capture the last non-empty usage block from the stream — providers
+    // typically emit it on the final chunk. We persist usage on `complete`.
+    let lastInputTokens: number | undefined;
+    let lastOutputTokens: number | undefined;
 
     await new Promise<void>((resolve) => {
       const settle = () => {
@@ -150,6 +215,14 @@ export class ChatCompletionsController {
 
       subscriptionRef.current = stream$.subscribe({
         next: (chunk) => {
+          if (chunk.usage) {
+            if (chunk.usage.inputTokens !== undefined) {
+              lastInputTokens = chunk.usage.inputTokens;
+            }
+            if (chunk.usage.outputTokens !== undefined) {
+              lastOutputTokens = chunk.usage.outputTokens;
+            }
+          }
           if (disconnected) return;
           const dtoChunk = this.mappers.stream.toChunkDto(chunk, ctx);
           if (dtoChunk) {
@@ -169,10 +242,24 @@ export class ChatCompletionsController {
         },
         complete: () => {
           if (!disconnected) response.write('data: [DONE]\n\n');
+          this.collectUsage(model, lastInputTokens, lastOutputTokens);
           settle();
         },
       });
     });
+  }
+
+  private collectUsage(
+    model: PermittedLanguageModel,
+    inputTokens: number | undefined,
+    outputTokens: number | undefined,
+  ): void {
+    if (inputTokens === undefined || outputTokens === undefined) return;
+    this.collectUsageAsyncService.collect(
+      model.model,
+      inputTokens,
+      outputTokens,
+    );
   }
 
   private sendError(response: Response, error: unknown): void {
