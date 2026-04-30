@@ -17,6 +17,7 @@ export class ApiKey {
   public prefix: string;
   public hash: string;
   public expiresAt: Date | null;
+  public revokedAt: Date | null;
   public orgId: UUID;
   public createdByUserId: UUID | null;
   public createdAt: Date;
@@ -28,6 +29,7 @@ export class ApiKey {
     prefix: string;
     hash: string;
     expiresAt?: Date | null;
+    revokedAt?: Date | null;
     orgId: UUID;
     createdByUserId: UUID | null;
     createdAt?: Date;
@@ -38,6 +40,7 @@ export class ApiKey {
     this.prefix = params.prefix;
     this.hash = params.hash;
     this.expiresAt = params.expiresAt ?? null;
+    this.revokedAt = params.revokedAt ?? null;
     this.orgId = params.orgId;
     this.createdByUserId = params.createdByUserId;
     this.createdAt = params.createdAt ?? new Date();

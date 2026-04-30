@@ -11,6 +11,7 @@ import type { Subscription } from 'rxjs';
 import { isUUID } from 'class-validator';
 import type { UUID } from 'crypto';
 
+import { RequirePrincipalKind } from 'src/iam/authorization/application/decorators/require-principal-kind.decorator';
 import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
 import type { RequestWithSubscriptionContext } from 'src/iam/authorization/application/guards/subscription.guard';
 import { getPrincipal } from 'src/iam/authentication/application/util/get-principal';
@@ -39,6 +40,7 @@ const HEARTBEAT_INTERVAL_MS = 15_000;
 @ApiTags('openai-compat')
 @ApiExcludeController()
 @Controller('openai/v1/chat/completions')
+@RequirePrincipalKind('apiKey')
 @RequireSubscription()
 export class ChatCompletionsController {
   private readonly logger = new Logger(ChatCompletionsController.name);

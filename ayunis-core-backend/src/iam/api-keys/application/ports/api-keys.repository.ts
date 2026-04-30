@@ -6,5 +6,5 @@ export abstract class ApiKeysRepository {
   abstract findByPrefix(prefix: string): Promise<ApiKey | null>;
   abstract findByOrgId(orgId: UUID): Promise<ApiKey[]>;
   abstract create(apiKey: ApiKey): Promise<ApiKey>;
-  abstract delete(id: UUID): Promise<void>;
+  abstract revoke(id: UUID): Promise<void>;
 }

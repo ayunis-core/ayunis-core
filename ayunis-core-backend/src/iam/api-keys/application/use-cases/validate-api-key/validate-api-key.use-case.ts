@@ -5,6 +5,7 @@ import { ValidateApiKeyCommand } from './validate-api-key.command';
 import {
   ApiKeyExpiredError,
   ApiKeyInvalidError,
+  ApiKeyRevokedError,
   UnexpectedApiKeyError,
 } from '../../api-keys.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -48,8 +49,14 @@ export class ValidateApiKeyUseCase {
         throw new ApiKeyInvalidError();
       }
 
+      if (apiKey.revokedAt) {
+        this.logger.warn('API key revoked', { apiKeyId: apiKey.id });
+        throw new ApiKeyRevokedError();
+      }
+
       if (apiKey.expiresAt && apiKey.expiresAt.getTime() <= Date.now()) {
-        throw new ApiKeyExpiredError({ apiKeyId: apiKey.id });
+        this.logger.warn('API key expired', { apiKeyId: apiKey.id });
+        throw new ApiKeyExpiredError();
       }
 
       return apiKey;

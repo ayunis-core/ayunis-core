@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { ApiKeysRepository } from '../../../application/ports/api-keys.repository';
 import { ApiKey } from '../../../domain/api-key.entity';
@@ -42,7 +42,7 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
     this.logger.log('findByOrgId', { orgId });
 
     const records = await this.apiKeyRepository.find({
-      where: { orgId },
+      where: { orgId, revokedAt: IsNull() },
       order: { createdAt: 'DESC' },
     });
     return records.map((record) => ApiKeyMapper.toDomain(record));
@@ -56,9 +56,9 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
     return ApiKeyMapper.toDomain(saved);
   }
 
-  async delete(id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
+  async revoke(id: UUID): Promise<void> {
+    this.logger.log('revoke', { id });
 
-    await this.apiKeyRepository.delete(id);
+    await this.apiKeyRepository.update(id, { revokedAt: new Date() });
   }
 }

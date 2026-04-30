@@ -47,7 +47,18 @@ export class RevokeApiKeyUseCase {
         throw new ApiKeyNotFoundError(command.apiKeyId);
       }
 
-      await this.apiKeysRepository.delete(command.apiKeyId);
+      if (apiKey.revokedAt) {
+        // Re-revoking an already-revoked key is a no-op — preserve the
+        // original revocation timestamp for the audit trail rather than
+        // shifting it forward on each call.
+        this.logger.debug('API key already revoked', {
+          apiKeyId: command.apiKeyId,
+          revokedAt: apiKey.revokedAt,
+        });
+        return;
+      }
+
+      await this.apiKeysRepository.revoke(command.apiKeyId);
 
       this.logger.debug('API key revoked', { apiKeyId: command.apiKeyId });
     } catch (error) {

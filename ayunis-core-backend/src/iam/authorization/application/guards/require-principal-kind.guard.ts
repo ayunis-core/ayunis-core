@@ -1,31 +1,28 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { SYSTEM_ROLES_KEY } from '../decorators/system-roles.decorator';
+import type { PrincipalKind } from 'src/iam/authentication/domain/active-principal.entity';
 import { getPrincipal } from 'src/iam/authentication/application/util/get-principal';
+import { REQUIRE_PRINCIPAL_KIND_KEY } from '../decorators/require-principal-kind.decorator';
 
 @Injectable()
-export class SystemRolesGuard implements CanActivate {
+export class RequirePrincipalKindGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<SystemRole[]>(
-      SYSTEM_ROLES_KEY,
+    const requiredKind = this.reflector.getAllAndOverride<PrincipalKind>(
+      REQUIRE_PRINCIPAL_KIND_KEY,
       [context.getHandler(), context.getClass()],
     );
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Reflector returns T but is undefined at runtime when no metadata is set
-    if (!requiredRoles) {
+    if (!requiredKind) {
       return true;
     }
     const request = context.switchToHttp().getRequest<Request>();
     const principal = getPrincipal(request);
-    // System roles are a user-level concept. API-key principals must never
-    // satisfy `@SystemRoles(...)`, mirroring the same invariant `RolesGuard`
-    // enforces.
-    if (principal?.kind !== 'user') {
+    if (!principal) {
       return false;
     }
-    return requiredRoles.some((role) => principal.systemRole === role);
+    return principal.kind === requiredKind;
   }
 }

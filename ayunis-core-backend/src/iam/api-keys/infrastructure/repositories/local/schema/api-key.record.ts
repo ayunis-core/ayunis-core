@@ -19,6 +19,9 @@ export class ApiKeyRecord extends BaseRecord {
   @Column({ name: 'expires_at', type: 'timestamptz', nullable: true })
   expiresAt: Date | null;
 
+  @Column({ name: 'revoked_at', type: 'timestamptz', nullable: true })
+  revokedAt: Date | null;
+
   @Index()
   @Column({ name: 'org_id' })
   orgId: UUID;

@@ -23,7 +23,10 @@ export class RolesGuard implements CanActivate {
     }
     const request = context.switchToHttp().getRequest<Request>();
     const principal = getPrincipal(request);
-    if (!principal) {
+    // Roles are a user-permission concept. API-key principals must never
+    // satisfy `@Roles(...)` regardless of what role field they carry — the
+    // role they hold is currently a hardcoded artifact of the principal type.
+    if (principal?.kind !== 'user') {
       return false;
     }
     return contextRoles.some((role) => principal.role === role);

@@ -7,6 +7,7 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { TrialsModule } from '../trials/trials.module';
 import { EmailConfirmGuard } from './application/guards/email-confirm.guard';
 import { SystemRolesGuard } from './application/guards/system-roles.guard';
+import { RequirePrincipalKindGuard } from './application/guards/require-principal-kind.guard';
 import { IpAllowlistModule } from '../ip-allowlist/ip-allowlist.module';
 import { IpAllowlistGuard } from '../ip-allowlist/application/guards/ip-allowlist.guard';
 
@@ -16,6 +17,10 @@ import { IpAllowlistGuard } from '../ip-allowlist/application/guards/ip-allowlis
     {
       provide: APP_GUARD,
       useExisting: IpAllowlistGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RequirePrincipalKindGuard,
     },
     {
       provide: APP_GUARD,

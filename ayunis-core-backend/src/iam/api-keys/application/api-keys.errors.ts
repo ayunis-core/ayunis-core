@@ -7,6 +7,7 @@ export enum ApiKeyErrorCode {
   API_KEY_EXPIRATION_IN_PAST = 'API_KEY_EXPIRATION_IN_PAST',
   API_KEY_INVALID = 'API_KEY_INVALID',
   API_KEY_EXPIRED = 'API_KEY_EXPIRED',
+  API_KEY_REVOKED = 'API_KEY_REVOKED',
   UNEXPECTED_API_KEY_ERROR = 'UNEXPECTED_API_KEY_ERROR',
 }
 
@@ -65,6 +66,17 @@ export class ApiKeyExpiredError extends ApiKeyError {
     super(
       'API key has expired',
       ApiKeyErrorCode.API_KEY_EXPIRED,
+      401,
+      metadata,
+    );
+  }
+}
+
+export class ApiKeyRevokedError extends ApiKeyError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'API key has been revoked',
+      ApiKeyErrorCode.API_KEY_REVOKED,
       401,
       metadata,
     );

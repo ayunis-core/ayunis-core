@@ -7,7 +7,11 @@ import { ValidateApiKeyUseCase } from './validate-api-key.use-case';
 import { ValidateApiKeyCommand } from './validate-api-key.command';
 import { ApiKeysRepository } from '../../ports/api-keys.repository';
 import { ApiKey } from '../../../domain/api-key.entity';
-import { ApiKeyExpiredError, ApiKeyInvalidError } from '../../api-keys.errors';
+import {
+  ApiKeyExpiredError,
+  ApiKeyInvalidError,
+  ApiKeyRevokedError,
+} from '../../api-keys.errors';
 import { CompareHashUseCase } from '../../../../hashing/application/use-cases/compare-hash/compare-hash.use-case';
 
 describe('ValidateApiKeyUseCase', () => {
@@ -17,7 +21,7 @@ describe('ValidateApiKeyUseCase', () => {
     findById: jest.Mock;
     findByOrgId: jest.Mock;
     create: jest.Mock;
-    delete: jest.Mock;
+    revoke: jest.Mock;
   };
   let mockCompareHashUseCase: { execute: jest.Mock };
 
@@ -45,7 +49,7 @@ describe('ValidateApiKeyUseCase', () => {
       findById: jest.fn(),
       findByOrgId: jest.fn(),
       create: jest.fn(),
-      delete: jest.fn(),
+      revoke: jest.fn(),
     };
 
     mockCompareHashUseCase = {
@@ -63,6 +67,7 @@ describe('ValidateApiKeyUseCase', () => {
     useCase = module.get<ValidateApiKeyUseCase>(ValidateApiKeyUseCase);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
     jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
@@ -111,7 +116,7 @@ describe('ValidateApiKeyUseCase', () => {
     expect(mockCompareHashUseCase.execute).toHaveBeenCalledTimes(1);
   });
 
-  it('throws ApiKeyExpiredError carrying the apiKeyId when the key is past expiration', async () => {
+  it('throws ApiKeyExpiredError without leaking apiKeyId in the public payload when the key is past expiration', async () => {
     const past = new Date(Date.now() - 60_000);
     mockApiKeysRepository.findByPrefix.mockResolvedValue(
       buildApiKey({ expiresAt: past }),
@@ -126,9 +131,22 @@ describe('ValidateApiKeyUseCase', () => {
     }
 
     expect(caught).toBeInstanceOf(ApiKeyExpiredError);
-    expect((caught as ApiKeyExpiredError).metadata).toEqual(
-      expect.objectContaining({ apiKeyId }),
+    // The use case is exported and ApplicationErrorFilter would serialize
+    // metadata into the public response body, so apiKeyId must not be on
+    // the error itself — it stays in server-side logs only.
+    expect((caught as ApiKeyExpiredError).metadata).toBeUndefined();
+  });
+
+  it('throws ApiKeyRevokedError when the key has revokedAt set', async () => {
+    const past = new Date(Date.now() - 60_000);
+    mockApiKeysRepository.findByPrefix.mockResolvedValue(
+      buildApiKey({ revokedAt: past }),
     );
+    mockCompareHashUseCase.execute.mockResolvedValue(true);
+
+    await expect(
+      useCase.execute(new ValidateApiKeyCommand(validToken)),
+    ).rejects.toThrow(ApiKeyRevokedError);
   });
 
   it('returns the api key when hash matches and there is no expiration', async () => {
