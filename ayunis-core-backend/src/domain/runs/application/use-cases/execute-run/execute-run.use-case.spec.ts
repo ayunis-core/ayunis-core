@@ -455,7 +455,7 @@ describe('ExecuteRunUseCase', () => {
 
         expect(checkQuotaUseCase.execute).toHaveBeenCalledTimes(1);
         const query = checkQuotaUseCase.execute.mock.calls[0][0];
-        expect(query.userId).toBe(userId);
+        expect(query.principal).toEqual({ kind: 'user', userId });
         expect(query.quotaType).toBe(expectedQuotaType);
         expect(
           creditBudgetGuardService.ensureBudgetAvailable,

@@ -326,7 +326,7 @@ describe('GenerateImageToolHandler', () => {
 
     expect(mockCheckQuota.execute).toHaveBeenCalledTimes(1);
     const query = mockCheckQuota.execute.mock.calls[0][0];
-    expect(query.userId).toBe(mockUserId);
+    expect(query.principal).toEqual({ kind: 'user', userId: mockUserId });
     expect(query.quotaType).toBe(QuotaType.FAIR_USE_IMAGES);
   });
 
