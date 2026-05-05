@@ -6,6 +6,50 @@ import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import { showError } from '@/shared/lib/toast';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import type { PendingImage } from '../api/useMessageSend';
+import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+
+const PROCESSING_POLL_INTERVAL_MS = 500;
+
+interface ThreadSourceStatus {
+  id: string;
+  status?: SourceResponseDtoStatus;
+}
+
+function isSourceWithId(value: unknown): value is { id: string } {
+  if (value === null || typeof value !== 'object' || !('id' in value)) {
+    return false;
+  }
+  return typeof (value as { id: unknown }).id === 'string';
+}
+
+function extractSourceIds(results: unknown[]): string[] {
+  const ids: string[] = [];
+  for (const result of results) {
+    if (!Array.isArray(result)) continue;
+    for (const source of result) {
+      if (isSourceWithId(source)) {
+        ids.push(source.id);
+      }
+    }
+  }
+  return ids;
+}
+
+function areSourcesReady(
+  threadSources: ThreadSourceStatus[],
+  uploadedIds: string[],
+): boolean {
+  for (const id of uploadedIds) {
+    if (!threadSources.some((s) => s.id === id)) return false;
+  }
+  return !threadSources.some(
+    (s) => s.status === SourceResponseDtoStatus.processing,
+  );
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 interface UsePendingMessageParams {
   sendTextMessage: (params: {
@@ -17,6 +61,7 @@ interface UsePendingMessageParams {
   resetCreateFileSourceMutation: () => void;
   addKnowledgeBaseAsync: (id: string) => Promise<unknown>;
   chatInputRef: RefObject<ChatInputRef | null>;
+  threadSources: ThreadSourceStatus[];
 }
 
 export function usePendingMessage({
@@ -25,6 +70,7 @@ export function usePendingMessage({
   resetCreateFileSourceMutation,
   addKnowledgeBaseAsync,
   chatInputRef,
+  threadSources,
 }: UsePendingMessageParams) {
   const { t } = useTranslation('chat');
   const processedPendingMessageRef = useRef<string | null>(null);
@@ -44,15 +90,33 @@ export function usePendingMessage({
     setPendingSkillId,
   } = useChatContext();
 
+  // Keep the latest thread sources accessible to the polling loop without
+  // re-running the send effect whenever statuses tick.
+  const threadSourcesRef = useRef(threadSources);
   useEffect(() => {
-    async function uploadPendingSources() {
-      if (sources.length === 0) return;
-      setIsProcessingPendingSources(true);
+    threadSourcesRef.current = threadSources;
+  }, [threadSources]);
+
+  useEffect(() => {
+    async function uploadPendingSources(): Promise<string[]> {
+      if (sources.length === 0) return [];
       const promises = sources.map((source) =>
         createFileSourceAsync({ file: source.file }),
       );
-      await Promise.all(promises as Promise<unknown>[]);
+      const results = await Promise.all(promises as Promise<unknown>[]);
       resetCreateFileSourceMutation();
+      return extractSourceIds(results);
+    }
+
+    async function waitForSourcesProcessed(uploadedIds: string[]) {
+      // Wait until: (a) every just-uploaded source is visible in the thread
+      // query (covers the brief gap between upload-success and refetch), and
+      // (b) no thread source is still PROCESSING.
+      let ready = false;
+      while (!ready) {
+        ready = areSourcesReady(threadSourcesRef.current, uploadedIds);
+        if (!ready) await delay(PROCESSING_POLL_INTERVAL_MS);
+      }
     }
 
     async function attachPendingKnowledgeBases() {
@@ -84,9 +148,11 @@ export function usePendingMessage({
         return;
       }
       processedPendingMessageRef.current = pendingMessage;
+      setIsProcessingPendingSources(true);
       try {
-        await uploadPendingSources();
+        const uploadedIds = await uploadPendingSources();
         setSources([]);
+        await waitForSourcesProcessed(uploadedIds);
         await attachPendingKnowledgeBases();
         await sendTextMessage({
           text: pendingMessage,
