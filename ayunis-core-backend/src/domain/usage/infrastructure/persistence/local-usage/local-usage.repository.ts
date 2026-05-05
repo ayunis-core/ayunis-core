@@ -373,7 +373,7 @@ export class LocalUsageRepository extends UsageRepository {
     lastActivity?: Date | string | null;
   }): { credits: number; requests: number; lastActivity: Date | null } {
     return {
-      credits: row.credits ? Math.round(parseFloat(row.credits)) : 0,
+      credits: row.credits ? parseFloat(row.credits) : 0,
       requests: row.requests ? parseInt(row.requests, 10) : 0,
       lastActivity: row.lastActivity ? new Date(row.lastActivity) : null,
     };

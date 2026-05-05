@@ -22,5 +22,5 @@ export async function sumCreditsForOrg(
 
   const result = await qb.getRawOne<{ totalCredits: string }>();
 
-  return Math.round(parseFloat(result?.totalCredits ?? '0'));
+  return parseFloat(result?.totalCredits ?? '0') || 0;
 }
