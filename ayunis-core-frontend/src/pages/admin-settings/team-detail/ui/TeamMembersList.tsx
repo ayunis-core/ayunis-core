@@ -49,9 +49,8 @@ export function TeamMembersList({
             </TableCell>
             <TableCell>
               <Button
-                variant="ghost"
+                variant="ghost-destructive"
                 size="icon"
-                className="text-destructive hover:text-destructive"
                 onClick={() => removeTeamMember(member.userId)}
                 disabled={removingUserIds.has(member.userId)}
               >
