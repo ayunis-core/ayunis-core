@@ -12,7 +12,6 @@ import {
   FormItem,
   FormMessage,
 } from '@/shared/ui/shadcn/form';
-import { Label } from '@/shared/ui/shadcn/label';
 
 interface AcceptanceCheckboxFieldProps<TFieldValues extends FieldValues> {
   readonly form: UseFormReturn<TFieldValues>;
@@ -33,6 +32,7 @@ export function AcceptanceCheckboxField<TFieldValues extends FieldValues>({
     <FormField
       control={form.control}
       name={name as FieldPath<TFieldValues>}
+      rules={{ validate: (v) => v === true }}
       render={({ field }) => (
         <FormItem>
           <FormControl>
@@ -40,14 +40,16 @@ export function AcceptanceCheckboxField<TFieldValues extends FieldValues>({
               <Checkbox
                 id={id}
                 className="mt-0.5"
-                required
                 checked={Boolean(field.value)}
                 onCheckedChange={field.onChange}
                 disabled={disabled}
               />
-              <Label htmlFor={id} className="block font-normal leading-normal">
+              <label
+                htmlFor={id}
+                className="text-sm font-normal leading-normal select-none"
+              >
                 {children}
-              </Label>
+              </label>
             </div>
           </FormControl>
           <FormMessage />

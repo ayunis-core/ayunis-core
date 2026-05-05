@@ -235,6 +235,7 @@ function InstallIntegrationCardView({
 
       <Form {...form}>
         <form
+          noValidate
           onSubmit={(e) => {
             void form.handleSubmit(() => onInstall())(e);
           }}
