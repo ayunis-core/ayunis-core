@@ -119,9 +119,8 @@ export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="ghost"
+                variant="ghost-destructive"
                 size="icon"
-                className="text-destructive hover:text-destructive"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDelete();

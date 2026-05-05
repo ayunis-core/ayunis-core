@@ -85,9 +85,8 @@ export function LetterheadsSettingsPage() {
                   </Button>
                 </Link>
                 <Button
-                  variant="ghost"
+                  variant="ghost-destructive"
                   size="icon"
-                  className="text-destructive hover:text-destructive"
                   onClick={(e) => {
                     e.stopPropagation();
                     setDeleteTarget(lh);

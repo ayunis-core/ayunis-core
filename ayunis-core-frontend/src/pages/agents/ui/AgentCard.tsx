@@ -71,9 +71,8 @@ export default function AgentCard({ agent }: Readonly<AgentCardProps>) {
           </Button>
         </Link>
         <Button
-          variant="ghost"
+          variant="ghost-destructive"
           size="icon"
-          className="text-destructive hover:text-destructive"
           onClick={(e) => {
             e.stopPropagation();
             if (agent.isShared) return null;
