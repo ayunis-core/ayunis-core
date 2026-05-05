@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useForm, type UseFormReturn } from 'react-hook-form';
 import { useTranslation, Trans } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import type { TFunction } from 'i18next';
@@ -20,13 +21,19 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/ui/shadcn/card';
-import { Checkbox } from '@/shared/ui/shadcn/checkbox';
+import { Form } from '@/shared/ui/shadcn/form';
 import { useMarketplaceConfig } from '@/features/marketplace';
 
 import { ConfigFieldInput } from '@/shared/ui/config-field-input';
+import { AcceptanceCheckboxField } from './AcceptanceCheckboxField';
 
 interface InstallIntegrationPageProps {
   readonly integrationIdentifier: string | undefined;
+}
+
+interface InstallIntegrationFormFields {
+  legalAccepted: boolean;
+  termsAccepted: boolean;
 }
 
 export default function InstallIntegrationPage({
@@ -73,8 +80,9 @@ function InstallIntegrationContent({
   } = useMarketplaceControllerGetIntegration(integrationIdentifier);
   const installMutation = useInstallIntegrationFromMarketplace();
   const [formValues, setFormValues] = useState<Record<string, string>>({});
-  const [legalAccepted, setLegalAccepted] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const form = useForm<InstallIntegrationFormFields>({
+    defaultValues: { legalAccepted: false, termsAccepted: false },
+  });
 
   if (isLoading) {
     return <InstallLoadingSkeleton />;
@@ -107,10 +115,7 @@ function InstallIntegrationContent({
       onFormValuesChange={setFormValues}
       onInstall={handleInstall}
       isInstalling={installMutation.isPending}
-      legalAccepted={legalAccepted}
-      onLegalAcceptedChange={setLegalAccepted}
-      termsAccepted={termsAccepted}
-      onTermsAcceptedChange={setTermsAccepted}
+      form={form}
     />
   );
 }
@@ -121,10 +126,7 @@ interface InstallIntegrationCardProps {
   readonly onFormValuesChange: (values: Record<string, string>) => void;
   readonly onInstall: () => void;
   readonly isInstalling: boolean;
-  readonly legalAccepted: boolean;
-  readonly onLegalAcceptedChange: (accepted: boolean) => void;
-  readonly termsAccepted: boolean;
-  readonly onTermsAcceptedChange: (accepted: boolean) => void;
+  readonly form: UseFormReturn<InstallIntegrationFormFields>;
 }
 
 function InstallIntegrationCard({
@@ -133,10 +135,7 @@ function InstallIntegrationCard({
   onFormValuesChange,
   onInstall,
   isInstalling,
-  legalAccepted,
-  onLegalAcceptedChange,
-  termsAccepted,
-  onTermsAcceptedChange,
+  form,
 }: InstallIntegrationCardProps) {
   const { t } = useTranslation('install-integration');
   const marketplace = useMarketplaceConfig();
@@ -161,10 +160,7 @@ function InstallIntegrationCard({
       onFormValuesChange={onFormValuesChange}
       onInstall={onInstall}
       isInstalling={isInstalling}
-      legalAccepted={legalAccepted}
-      onLegalAcceptedChange={onLegalAcceptedChange}
-      termsAccepted={termsAccepted}
-      onTermsAcceptedChange={onTermsAcceptedChange}
+      form={form}
       termsOfServiceUrl={termsOfServiceUrl}
       t={t}
     />
@@ -197,10 +193,7 @@ interface InstallIntegrationCardViewProps {
   readonly onFormValuesChange: (values: Record<string, string>) => void;
   readonly onInstall: () => void;
   readonly isInstalling: boolean;
-  readonly legalAccepted: boolean;
-  readonly onLegalAcceptedChange: (accepted: boolean) => void;
-  readonly termsAccepted: boolean;
-  readonly onTermsAcceptedChange: (accepted: boolean) => void;
+  readonly form: UseFormReturn<InstallIntegrationFormFields>;
   readonly termsOfServiceUrl: string | null;
   readonly t: TFunction;
 }
@@ -214,10 +207,7 @@ function InstallIntegrationCardView({
   onFormValuesChange,
   onInstall,
   isInstalling,
-  legalAccepted,
-  onLegalAcceptedChange,
-  termsAccepted,
-  onTermsAcceptedChange,
+  form,
   termsOfServiceUrl,
   t,
 }: InstallIntegrationCardViewProps) {
@@ -243,53 +233,72 @@ function InstallIntegrationCardView({
         <CardDescription>{integration.description}</CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        <div className="rounded-md bg-muted/50 p-4">
-          <p className="text-sm text-muted-foreground">
-            {isZeroConfig
-              ? t('detail.zeroConfigNote')
-              : t('detail.installNote')}
-          </p>
-        </div>
+      <Form {...form}>
+        <form
+          onSubmit={(e) => {
+            void form.handleSubmit(() => onInstall())(e);
+          }}
+        >
+          <CardContent className="space-y-4">
+            <div className="rounded-md bg-muted/50 p-4">
+              <p className="text-sm text-muted-foreground">
+                {isZeroConfig
+                  ? t('detail.zeroConfigNote')
+                  : t('detail.installNote')}
+              </p>
+            </div>
 
-        {editableFields.map((field) => (
-          <ConfigFieldInput
-            key={field.key}
-            field={field}
-            value={formValues[field.key] ?? ''}
-            onChange={(value) =>
-              onFormValuesChange({ ...formValues, [field.key]: value })
-            }
-            disabled={isInstalling}
-          />
-        ))}
-
-        {hasLegalText && (
-          <div className="flex items-start gap-2">
-            <Checkbox
-              id="legal-accept"
-              className="mt-0.5"
-              checked={legalAccepted}
-              onCheckedChange={(checked) =>
-                onLegalAcceptedChange(checked === true)
-              }
-              disabled={isInstalling}
-            />
-            <span
-              className="text-sm leading-normal cursor-pointer select-none"
-              onClick={(e) => {
-                if (!isInstalling && !(e.target as HTMLElement).closest('a')) {
-                  onLegalAcceptedChange(!legalAccepted);
+            {editableFields.map((field) => (
+              <ConfigFieldInput
+                key={field.key}
+                field={field}
+                value={formValues[field.key] ?? ''}
+                onChange={(value) =>
+                  onFormValuesChange({ ...formValues, [field.key]: value })
                 }
-              }}
+                disabled={isInstalling}
+              />
+            ))}
+
+            {hasLegalText && (
+              <AcceptanceCheckboxField
+                form={form}
+                name="legalAccepted"
+                id="legal-accept"
+                disabled={isInstalling}
+              >
+                <Trans
+                  ns="install-integration"
+                  i18nKey="detail.legalText"
+                  components={{
+                    legalLink: (
+                      <a
+                        href={integration.legalTextUrl ?? ''}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline text-primary hover:text-primary/80"
+                      >
+                        placeholder
+                      </a>
+                    ),
+                  }}
+                />
+              </AcceptanceCheckboxField>
+            )}
+
+            <AcceptanceCheckboxField
+              form={form}
+              name="termsAccepted"
+              id="terms-accept"
+              disabled={isInstalling}
             >
               <Trans
                 ns="install-integration"
-                i18nKey="detail.legalText"
+                i18nKey="detail.termsOfServiceText"
                 components={{
-                  legalLink: (
+                  termsLink: (
                     <a
-                      href={integration.legalTextUrl ?? ''}
+                      href={termsOfServiceUrl ?? '#'}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="underline text-primary hover:text-primary/80"
@@ -299,65 +308,25 @@ function InstallIntegrationCardView({
                   ),
                 }}
               />
-            </span>
-          </div>
-        )}
+            </AcceptanceCheckboxField>
+          </CardContent>
 
-        <div className="flex items-start gap-2">
-          <Checkbox
-            id="terms-accept"
-            className="mt-0.5"
-            checked={termsAccepted}
-            onCheckedChange={(checked) =>
-              onTermsAcceptedChange(checked === true)
-            }
-            disabled={isInstalling}
-          />
-          <span
-            className="text-sm leading-normal cursor-pointer select-none"
-            onClick={(e) => {
-              if (!isInstalling && !(e.target as HTMLElement).closest('a')) {
-                onTermsAcceptedChange(!termsAccepted);
-              }
-            }}
-          >
-            <Trans
-              ns="install-integration"
-              i18nKey="detail.termsOfServiceText"
-              components={{
-                termsLink: (
-                  <a
-                    href={termsOfServiceUrl ?? '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline text-primary hover:text-primary/80"
-                  >
-                    placeholder
-                  </a>
-                ),
-              }}
-            />
-          </span>
-        </div>
-      </CardContent>
-
-      <CardFooter className="flex gap-3">
-        <Button variant="outline" className="flex-1" asChild>
-          <Link to="/admin-settings/integrations">{t('action.cancel')}</Link>
-        </Button>
-        <Button
-          className="flex-1"
-          onClick={onInstall}
-          disabled={
-            isInstalling ||
-            !allRequiredFilled ||
-            (hasLegalText && !legalAccepted) ||
-            !termsAccepted
-          }
-        >
-          {isInstalling ? t('action.installing') : t('action.install')}
-        </Button>
-      </CardFooter>
+          <CardFooter className="flex gap-3">
+            <Button variant="outline" className="flex-1" asChild>
+              <Link to="/admin-settings/integrations">
+                {t('action.cancel')}
+              </Link>
+            </Button>
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={isInstalling || !allRequiredFilled}
+            >
+              {isInstalling ? t('action.installing') : t('action.install')}
+            </Button>
+          </CardFooter>
+        </form>
+      </Form>
     </Card>
   );
 }
