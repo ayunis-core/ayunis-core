@@ -256,6 +256,12 @@ export class RunsController {
     response.setHeader('Content-Type', 'text/event-stream');
     response.setHeader('Cache-Control', 'no-cache');
     response.setHeader('Connection', 'keep-alive');
+    // Disable response buffering in nginx-style reverse proxies so SSE chunks
+    // reach the client immediately. Without this, buffered streams that get
+    // interrupted mid-flight surface as permanently truncated assistant
+    // messages because the server-side finally-block persists what it has.
+    response.setHeader('X-Accel-Buffering', 'no');
+    response.flushHeaders();
     // Send initial connection confirmation
     response.write(': connection established\n\n');
 
