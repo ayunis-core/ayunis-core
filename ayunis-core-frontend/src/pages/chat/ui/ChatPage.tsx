@@ -85,6 +85,7 @@ export default function ChatPage({
     enabled: isAgentsEnabled,
   });
   const { models, isLoading: isLoadingModels } = usePermittedModels();
+  const [isStreaming, setIsStreaming] = useState(false);
   const { data: thread = initialThread } = useQuery({
     queryKey: getThreadsControllerFindOneQueryKey(initialThread.id),
     queryFn: () => threadsControllerFindOne(initialThread.id),
@@ -92,6 +93,10 @@ export default function ChatPage({
     staleTime: 0,
     // eslint-disable-next-line sonarjs/function-return-type -- React Query's refetchInterval expects number | false
     refetchInterval: (query) => {
+      // Pause polling while streaming so a poll started before stream end
+      // can't land in the cache afterwards and shorten the displayed text
+      // via the [thread] reconciliation effect.
+      if (isStreaming) return false;
       const data = query.state.data;
       if (!data) return false;
       const hasProcessing = data.sources.some(
@@ -130,7 +135,6 @@ export default function ChatPage({
     thread.title,
   );
   const [messages, setMessages] = useState<Message[]>(thread.messages);
-  const [isStreaming, setIsStreaming] = useState(false);
   const [pendingSubmission, setPendingSubmission] = useState<string | null>(
     null,
   );
