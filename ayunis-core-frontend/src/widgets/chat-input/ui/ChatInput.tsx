@@ -173,7 +173,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const handleSend = () => {
       if (
         (!message.trim() && pendingImages.length === 0 && !selectedSkillId) ||
-        !(modelId || agentId)
+        !(modelId || agentId) ||
+        isCreatingFileSource
       ) {
         return;
       }
@@ -221,7 +222,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const canSend =
       (message.trim() || pendingImages.length > 0 || selectedSkillId) &&
       // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: empty string should use fallback
-      (modelId || agentId);
+      (modelId || agentId) &&
+      !isCreatingFileSource;
 
     function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
       // Ensure emojis are preserved when pasting

@@ -6,6 +6,62 @@ import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import { showError } from '@/shared/lib/toast';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import type { PendingImage } from '../api/useMessageSend';
+import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+
+const PROCESSING_POLL_INTERVAL_MS = 500;
+const PROCESSING_TIMEOUT_MS = 180_000;
+
+interface ThreadSourceStatus {
+  id: string;
+  status?: SourceResponseDtoStatus;
+}
+
+function isSourceWithId(value: unknown): value is { id: string } {
+  if (value === null || typeof value !== 'object' || !('id' in value)) {
+    return false;
+  }
+  return typeof (value as { id: unknown }).id === 'string';
+}
+
+function extractSourceIds(results: unknown[]): string[] {
+  const ids: string[] = [];
+  for (const result of results) {
+    if (!Array.isArray(result)) continue;
+    for (const source of result) {
+      if (isSourceWithId(source)) {
+        ids.push(source.id);
+      }
+    }
+  }
+  return ids;
+}
+
+function areSourcesReady(
+  threadSources: ThreadSourceStatus[],
+  uploadedIds: string[],
+): boolean {
+  for (const id of uploadedIds) {
+    if (!threadSources.some((s) => s.id === id)) return false;
+  }
+  return !threadSources.some(
+    (s) => s.status === SourceResponseDtoStatus.processing,
+  );
+}
+
+function delay(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener('abort', () => {
+      clearTimeout(timer);
+      const reason: unknown = signal.reason;
+      reject(
+        reason instanceof Error
+          ? reason
+          : new Error(typeof reason === 'string' ? reason : 'Aborted'),
+      );
+    });
+  });
+}
 
 interface UsePendingMessageParams {
   sendTextMessage: (params: {
@@ -17,6 +73,7 @@ interface UsePendingMessageParams {
   resetCreateFileSourceMutation: () => void;
   addKnowledgeBaseAsync: (id: string) => Promise<unknown>;
   chatInputRef: RefObject<ChatInputRef | null>;
+  threadSources: ThreadSourceStatus[];
 }
 
 export function usePendingMessage({
@@ -25,6 +82,7 @@ export function usePendingMessage({
   resetCreateFileSourceMutation,
   addKnowledgeBaseAsync,
   chatInputRef,
+  threadSources,
 }: UsePendingMessageParams) {
   const { t } = useTranslation('chat');
   const processedPendingMessageRef = useRef<string | null>(null);
@@ -44,15 +102,40 @@ export function usePendingMessage({
     setPendingSkillId,
   } = useChatContext();
 
+  // Keep the latest thread sources accessible to the polling loop without
+  // re-running the send effect whenever statuses tick.
+  const threadSourcesRef = useRef(threadSources);
   useEffect(() => {
-    async function uploadPendingSources() {
-      if (sources.length === 0) return;
-      setIsProcessingPendingSources(true);
+    threadSourcesRef.current = threadSources;
+  }, [threadSources]);
+
+  useEffect(() => {
+    async function uploadPendingSources(): Promise<string[]> {
+      if (sources.length === 0) return [];
       const promises = sources.map((source) =>
         createFileSourceAsync({ file: source.file }),
       );
-      await Promise.all(promises as Promise<unknown>[]);
+      const results = await Promise.all(promises as Promise<unknown>[]);
       resetCreateFileSourceMutation();
+      return extractSourceIds(results);
+    }
+
+    async function waitForSourcesProcessed(
+      uploadedIds: string[],
+      signal: AbortSignal,
+    ) {
+      const deadline = Date.now() + PROCESSING_TIMEOUT_MS;
+      let ready = false;
+      while (!ready) {
+        signal.throwIfAborted();
+        ready = areSourcesReady(threadSourcesRef.current, uploadedIds);
+        if (!ready) {
+          if (Date.now() >= deadline) {
+            throw new Error('Source processing timed out');
+          }
+          await delay(PROCESSING_POLL_INTERVAL_MS, signal);
+        }
+      }
     }
 
     async function attachPendingKnowledgeBases() {
@@ -76,6 +159,8 @@ export function usePendingMessage({
       }));
     }
 
+    const abortController = new AbortController();
+
     async function sendPendingMessage() {
       if (
         !pendingMessage ||
@@ -84,9 +169,11 @@ export function usePendingMessage({
         return;
       }
       processedPendingMessageRef.current = pendingMessage;
+      setIsProcessingPendingSources(true);
       try {
-        await uploadPendingSources();
+        const uploadedIds = await uploadPendingSources();
         setSources([]);
+        await waitForSourcesProcessed(uploadedIds, abortController.signal);
         await attachPendingKnowledgeBases();
         await sendTextMessage({
           text: pendingMessage,
@@ -94,6 +181,7 @@ export function usePendingMessage({
           skillId: pendingSkillId,
         });
       } catch (error) {
+        if (abortController.signal.aborted) return;
         if (error instanceof AxiosError && error.response?.status === 403) {
           showError(t('chat.upgradeToProError'));
         } else {
@@ -101,14 +189,20 @@ export function usePendingMessage({
         }
         chatInputRef.current?.setMessage(pendingMessage);
       } finally {
-        setIsProcessingPendingSources(false);
-        setPendingMessage('');
-        setPendingImages([]);
-        setPendingKnowledgeBases([]);
-        setPendingSkillId(undefined);
+        if (!abortController.signal.aborted) {
+          setIsProcessingPendingSources(false);
+          setPendingMessage('');
+          setPendingImages([]);
+          setPendingKnowledgeBases([]);
+          setPendingSkillId(undefined);
+        }
       }
     }
     void sendPendingMessage();
+
+    return () => {
+      abortController.abort();
+    };
   }, [
     pendingMessage,
     sendTextMessage,

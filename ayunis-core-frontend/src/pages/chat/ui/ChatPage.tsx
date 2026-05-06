@@ -246,16 +246,21 @@ export default function ChatPage({
     },
   });
 
+  const hasProcessingSources = thread.sources.some(
+    (s) => s.status === SourceResponseDtoStatus.processing,
+  );
+
   const { isProcessingPendingSources } = usePendingMessage({
     sendTextMessage,
     createFileSourceAsync,
     resetCreateFileSourceMutation,
     addKnowledgeBaseAsync,
     chatInputRef,
+    threadSources: thread.sources,
   });
 
   const isTotallyCreatingFileSource =
-    isCreatingFileSource || isProcessingPendingSources;
+    isCreatingFileSource || isProcessingPendingSources || hasProcessingSources;
 
   async function handleSend(
     message: string,
