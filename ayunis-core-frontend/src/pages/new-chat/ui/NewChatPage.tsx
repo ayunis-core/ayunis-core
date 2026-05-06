@@ -1,6 +1,9 @@
 import NewChatPageLayout from './NewChatPageLayout';
 import ChatInput from '@/widgets/chat-input';
-import { useInitiateChat } from '../api/useInitiateChat';
+import {
+  useInitiateChat,
+  type SourceUploadStatus,
+} from '../api/useInitiateChat';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
@@ -8,7 +11,10 @@ import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
 import type { AgentResponseDto } from '@/shared/api';
-import { SourceResponseDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import {
+  SourceResponseDtoStatus,
+  SourceResponseDtoType,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
@@ -35,11 +41,10 @@ export default function NewChatPage({
   agents,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
-  const { initiateChat } = useInitiateChat();
+  const { initiateChat, cancel, isCreating } = useInitiateChat();
   const { models } = usePermittedModels();
   const greeting = useTimeBasedGreeting();
-  const { setPendingImages, setPendingKnowledgeBases, setPendingSkillId } =
-    useChatContext();
+  const { setPendingImages, setPendingSkillId } = useChatContext();
   const {
     hasSystemPrompt,
     isLoading: isSystemPromptLoading,
@@ -57,14 +62,36 @@ export default function NewChatPage({
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
   const [isAnonymous, setIsAnonymous] = useState(false);
-  const [sources, setSources] = useState<
-    Array<{
-      id: string;
-      name: string;
-      type: SourceResponseDtoType;
-      file: File;
-    }>
-  >([]);
+  type LocalSource = {
+    id: string;
+    name: string;
+    type: SourceResponseDtoType;
+    file: File;
+    // Local status mirroring the server-side SourceResponseDtoStatus values
+    // — set during upload+processing so the chip in ChatInput renders the
+    // correct spinner/error state via the same code path the chat page uses.
+    status?: SourceResponseDtoStatus;
+    processingError?: string;
+  };
+  const [sources, setSources] = useState<LocalSource[]>([]);
+
+  function applySourceStatus(
+    source: LocalSource,
+    status: SourceUploadStatus,
+  ): LocalSource {
+    if (status.kind === 'failed') {
+      return {
+        ...source,
+        status: SourceResponseDtoStatus.failed,
+        processingError: status.message,
+      };
+    }
+    return {
+      ...source,
+      status: SourceResponseDtoStatus.processing,
+      processingError: undefined,
+    };
+  }
   const [selectedKnowledgeBases, setSelectedKnowledgeBases] = useState<
     KnowledgeBaseSummary[]
   >([]);
@@ -132,6 +159,12 @@ export default function NewChatPage({
     setModelId(selectedModelId);
   }
 
+  function handleSourceStatus(sourceId: string, status: SourceUploadStatus) {
+    setSources((prev) =>
+      prev.map((s) => (s.id === sourceId ? applySourceStatus(s, status) : s)),
+    );
+  }
+
   function handleSend(
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
@@ -142,18 +175,34 @@ export default function NewChatPage({
       return;
     }
 
-    // Store images in context for ChatPage to upload after thread creation
-    if (imageFiles && imageFiles.length > 0) {
-      setPendingImages(imageFiles);
-    }
-
-    // Store selected KBs in context for ChatPage to attach after thread creation
-    // Always set — even when empty — to clear stale KBs from a previous failed attempt
-    setPendingKnowledgeBases(selectedKnowledgeBases);
-
+    // Images are sent as part of the first multipart request from ChatPage,
+    // so they hitch a ride through context. KBs and sources are attached
+    // before navigation by initiateChat itself.
+    setPendingImages(imageFiles && imageFiles.length > 0 ? imageFiles : []);
     setPendingSkillId(skillId);
 
-    initiateChat(message, modelId, agentId, sources, isAnonymous);
+    void initiateChat({
+      message,
+      modelId,
+      agentId,
+      sources,
+      knowledgeBases: selectedKnowledgeBases,
+      isAnonymous,
+      onSourceStatus: handleSourceStatus,
+    });
+  }
+
+  function handleCancel() {
+    cancel();
+    // Clear in-flight statuses so chips become removable again. Keep the
+    // sources themselves so the user doesn't lose their attachments.
+    setSources((prev) =>
+      prev.map((s) => ({
+        ...s,
+        status: undefined,
+        processingError: undefined,
+      })),
+    );
   }
 
   if (!isSystemPromptLoading && !isSystemPromptError && !hasSystemPrompt) {
@@ -198,11 +247,12 @@ export default function NewChatPage({
           agentId={agentId}
           sources={sources}
           knowledgeBases={selectedKnowledgeBases}
+          submissionState={isCreating ? 'submitting' : 'idle'}
           onModelChange={handleModelChange}
           onAgentChange={handleAgentChange}
           onAgentRemove={handleAgentRemove}
           onSend={handleSend}
-          onSendCancelled={() => null}
+          onCancel={handleCancel}
           onFileUpload={handleFileUpload}
           onRemoveSource={handleRemoveSource}
           onDownloadSource={() => null}

@@ -32,6 +32,21 @@ import { showError } from '@/shared/lib/toast';
 import { MicrophoneButton } from './MicrophoneButton';
 import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
 
+/**
+ * Lifecycle of an in-flight submit. The input behaves differently in each:
+ *
+ * - `idle`     — fully editable, send button visible, can submit if `canSend`.
+ * - `submitting` — message is being delivered (upload + processing pipeline
+ *                  on the new-chat page). Textarea is read-only, plus button
+ *                  disabled, send button replaced with a cancel button. Local
+ *                  message state is preserved so it survives a cancellation
+ *                  or a failure.
+ * - `streaming`  — assistant response is streaming. Textarea remains editable
+ *                  (so the user can prepare a follow-up), but the send button
+ *                  is replaced with a cancel button.
+ */
+export type ChatInputSubmissionState = 'idle' | 'submitting' | 'streaming';
+
 interface ChatInputProps {
   modelId: string | undefined;
   agentId: string | undefined;
@@ -44,8 +59,13 @@ interface ChatInputProps {
     processingError?: string;
   }[];
   knowledgeBases?: KnowledgeBaseSummary[];
-  isStreaming?: boolean;
-  isCreatingFileSource?: boolean;
+  /** Default `'idle'`. See {@link ChatInputSubmissionState}. */
+  submissionState?: ChatInputSubmissionState;
+  /**
+   * Extra reason to disable the send button even when `submissionState` is
+   * `'idle'` — e.g. existing-chat sources still processing server-side.
+   */
+  isSendDisabled?: boolean;
   isModelChangeDisabled: boolean;
   isAgentChangeDisabled?: boolean;
   isAnonymousChangeDisabled?: boolean;
@@ -62,7 +82,8 @@ interface ChatInputProps {
     imageFiles?: Array<{ file: File; altText?: string }>,
     skillId?: string,
   ) => void;
-  onSendCancelled: () => void;
+  /** Fired when the user clicks the cancel button while in-flight. */
+  onCancel: () => void;
   selectedSkillId?: string;
   selectedSkillName?: string;
   onSkillRemove?: () => void;
@@ -89,8 +110,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       agentId,
       sources,
       knowledgeBases,
-      isStreaming,
-      isCreatingFileSource,
+      submissionState = 'idle',
+      isSendDisabled,
       isModelChangeDisabled,
       isAgentChangeDisabled,
       isAnonymousChangeDisabled,
@@ -103,7 +124,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onAddKnowledgeBase,
       onRemoveKnowledgeBase,
       onSend,
-      onSendCancelled,
+      onCancel,
       isEmbeddingModelEnabled,
       isAnonymous,
       onAnonymousChange,
@@ -117,6 +138,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
   ) => {
     const [isFocused, setIsFocused] = useState<boolean>(false);
     const [message, setMessage] = useState('');
+    const isSubmitting = submissionState === 'submitting';
+    const inFlight = submissionState !== 'idle';
     const { t } = useTranslation('common');
     const isAgentsEnabled = useIsAgentsEnabled();
     const { agents } = useAgents({ enabled: isAgentsEnabled });
@@ -149,7 +172,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
           showError(t('chatInput.imageLimitExceeded', { max: MAX_IMAGES }));
         }
       },
-      isDocumentUploadEnabled: isEmbeddingModelEnabled && !isCreatingFileSource,
+      isDocumentUploadEnabled: isEmbeddingModelEnabled && !inFlight,
       isImageUploadEnabled: isVisionEnabled,
       acceptedDocumentExtensions: [
         '.pdf',
@@ -174,7 +197,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       if (
         (!message.trim() && pendingImages.length === 0 && !selectedSkillId) ||
         !(modelId || agentId) ||
-        isCreatingFileSource
+        inFlight ||
+        isSendDisabled
       ) {
         return;
       }
@@ -190,7 +214,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         imageFiles.length > 0 ? imageFiles : undefined,
         selectedSkillId,
       );
-      setMessage('');
+      // Note: we deliberately do NOT clear `message` here. Parents can call
+      // `chatInputRef.current.setMessage('')` once the submit has actually
+      // committed (e.g. after navigation). This way the typed text survives
+      // the upload pipeline and any cancellation/error.
       clearImages();
     };
 
@@ -223,7 +250,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       (message.trim() || pendingImages.length > 0 || selectedSkillId) &&
       // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: empty string should use fallback
       (modelId || agentId) &&
-      !isCreatingFileSource;
+      !inFlight &&
+      !isSendDisabled;
 
     function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
       // Ensure emojis are preserved when pasting
@@ -293,13 +321,17 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                 maxRows={10}
                 value={message}
                 autoFocus
+                readOnly={isSubmitting}
                 onChange={(e) => setMessage(e.target.value)}
                 onPaste={handlePaste}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 placeholder={t('chatInput.placeholder')}
                 aria-label={t('chatInput.placeholder')}
-                className="border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0"
+                className={cn(
+                  'border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0',
+                  isSubmitting && 'opacity-60 cursor-not-allowed',
+                )}
                 data-testid="input"
               />
 
@@ -309,9 +341,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                   <PlusButton
                     onFileUpload={onFileUpload}
                     onImageSelect={handleImageSelect}
-                    isFileSourceDisabled={!isEmbeddingModelEnabled}
-                    isCreatingFileSource={isCreatingFileSource}
-                    isImageUploadDisabled={!isVisionEnabled}
+                    isFileSourceDisabled={
+                      !isEmbeddingModelEnabled || isSubmitting
+                    }
+                    isImageUploadDisabled={!isVisionEnabled || isSubmitting}
                     onKnowledgeBaseSelect={onAddKnowledgeBase}
                     attachedKnowledgeBaseIds={knowledgeBases?.map(
                       (kb) => kb.id,
@@ -372,10 +405,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     }}
                   />
                   <SendButton
-                    isStreaming={!!isStreaming}
+                    inFlight={inFlight}
                     canSend={!!canSend}
                     onSend={handleSend}
-                    onCancel={onSendCancelled}
+                    onCancel={onCancel}
                   />
                 </div>
               </div>

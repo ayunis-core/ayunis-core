@@ -29,8 +29,6 @@ import { useIsKnowledgeBasesEnabled } from '@/features/feature-toggles';
 interface PlusButtonProps {
   onFileUpload: (file: File) => void;
   onImageSelect?: (files: FileList | null) => void;
-  isCreatingFileSource?: boolean;
-  isUploadingFile?: boolean;
   isFileSourceDisabled?: boolean;
   isImageUploadDisabled?: boolean;
   onKnowledgeBaseSelect?: (knowledgeBase: KnowledgeBaseSummary) => void;
@@ -41,8 +39,6 @@ export default function PlusButton({
   onFileUpload,
   onImageSelect,
   isFileSourceDisabled,
-  isUploadingFile,
-  isCreatingFileSource,
   isImageUploadDisabled = false,
   onKnowledgeBaseSelect,
   attachedKnowledgeBaseIds = [],
@@ -90,9 +86,6 @@ export default function PlusButton({
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- boolean OR, false should fall through
-  const isLoading = isUploadingFile || isCreatingFileSource;
-
   // Filter out already-attached knowledge bases
   const availableKBs = knowledgeBases.filter(
     (kb) => !attachedKnowledgeBaseIds.includes(kb.id),
@@ -107,13 +100,10 @@ export default function PlusButton({
             <Button
               size="icon"
               variant="outline"
+              disabled={isFileSourceDisabled && isImageUploadDisabled}
               aria-label={t('chatInput.addButtonTooltip')}
             >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
+              <Plus className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
         </DropdownMenuTrigger>
@@ -125,8 +115,7 @@ export default function PlusButton({
             >
               <DropdownMenuItem
                 onClick={() => documentInputRef.current?.click()}
-                // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- boolean OR, false should fall through
-                disabled={isLoading || isFileSourceDisabled}
+                disabled={isFileSourceDisabled}
               >
                 <FileText className="h-4 w-4" />
                 <span>{t('chatInput.uploadDocument')}</span>
@@ -134,8 +123,7 @@ export default function PlusButton({
             </TooltipIf>
             <DropdownMenuItem
               onClick={() => imageInputRef.current?.click()}
-              // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- boolean OR, false should fall through
-              disabled={isLoading || isImageUploadDisabled}
+              disabled={isImageUploadDisabled}
             >
               <Image className="h-4 w-4" />
               <span>{t('chatInput.uploadImage')}</span>

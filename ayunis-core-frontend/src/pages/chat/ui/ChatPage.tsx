@@ -173,20 +173,17 @@ export default function ChatPage({
     },
   });
 
-  const {
-    createFileSource,
-    createFileSourceAsync,
-    isLoading: isCreatingFileSource,
-    reset: resetCreateFileSourceMutation,
-  } = useCreateFileSource({
-    threadId: thread.id,
-  });
+  const { createFileSource, isLoading: isCreatingFileSource } =
+    useCreateFileSource({
+      threadId: thread.id,
+    });
   const { deleteFileSource } = useDeleteFileSource({
     threadId: thread.id,
   });
 
-  const { addKnowledgeBase, addKnowledgeBaseAsync, removeKnowledgeBase } =
-    useKnowledgeBaseAttachment({ threadId: thread.id });
+  const { addKnowledgeBase, removeKnowledgeBase } = useKnowledgeBaseAttachment({
+    threadId: thread.id,
+  });
   const { downloadSource } = useDownloadSource(thread);
 
   const handleMessage = useCallback((message: RunMessageResponseDtoMessage) => {
@@ -250,17 +247,15 @@ export default function ChatPage({
     (s) => s.status === SourceResponseDtoStatus.processing,
   );
 
-  const { isProcessingPendingSources } = usePendingMessage({
+  usePendingMessage({
     sendTextMessage,
-    createFileSourceAsync,
-    resetCreateFileSourceMutation,
-    addKnowledgeBaseAsync,
-    chatInputRef,
-    threadSources: thread.sources,
+    onSendStart: () => setIsStreaming(true),
   });
 
-  const isTotallyCreatingFileSource =
-    isCreatingFileSource || isProcessingPendingSources || hasProcessingSources;
+  // Send is gated while a fresh upload is in flight or while server-side
+  // processing of an attached source hasn't finished — both are reasons we
+  // want the user to wait before they can submit a message.
+  const isSendDisabled = isCreatingFileSource || hasProcessingSources;
 
   async function handleSend(
     message: string,
@@ -410,8 +405,8 @@ export default function ChatPage({
         sources={thread.sources}
         knowledgeBases={thread.knowledgeBases}
         isAnonymous={thread.isAnonymous}
-        isStreaming={isStreaming}
-        isCreatingFileSource={isTotallyCreatingFileSource}
+        submissionState={isStreaming ? 'streaming' : 'idle'}
+        isSendDisabled={isSendDisabled}
         onModelChange={() => {}}
         onAgentChange={() => {}}
         onAgentRemove={() => {}}
@@ -421,7 +416,7 @@ export default function ChatPage({
         onAddKnowledgeBase={(kb) => addKnowledgeBase(kb.id)}
         onRemoveKnowledgeBase={removeKnowledgeBase}
         onSend={(m, imageFiles) => void handleSend(m, imageFiles)}
-        onSendCancelled={handleSendCancelled}
+        onCancel={handleSendCancelled}
         isEmbeddingModelEnabled={isEmbeddingModelEnabled}
         isVisionEnabled={isVisionEnabled}
       />
