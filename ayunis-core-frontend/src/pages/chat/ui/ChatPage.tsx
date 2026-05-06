@@ -10,6 +10,7 @@ import {
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
 import ChatMessage from '@/pages/chat/ui/ChatMessage';
 import AssistantRunBlock from '@/pages/chat/ui/AssistantRunBlock';
+import LoadingAssistantBlock from '@/pages/chat/ui/LoadingAssistantBlock';
 import { groupMessagesIntoRuns } from '@/pages/chat/ui/agent-run-timeline';
 import ChatInput from '@/widgets/chat-input';
 import { useMessageSend } from '../api/useMessageSend';
@@ -130,6 +131,9 @@ export default function ChatPage({
   );
   const [messages, setMessages] = useState<Message[]>(thread.messages);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [pendingSubmission, setPendingSubmission] = useState<string | null>(
+    null,
+  );
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const {
     openArtifact,
@@ -187,6 +191,7 @@ export default function ChatPage({
   const { downloadSource } = useDownloadSource(thread);
 
   const handleMessage = useCallback((message: RunMessageResponseDtoMessage) => {
+    setPendingSubmission(null);
     setMessages((prev) => {
       const exists = prev.some((m) => m.id === message.id);
       if (exists) return prev.map((m) => (m.id === message.id ? message : m));
@@ -240,6 +245,7 @@ export default function ChatPage({
       // eslint-disable-next-line no-console
       console.log('Message sending completed');
       setIsStreaming(false);
+      setPendingSubmission(null);
     },
   });
 
@@ -249,7 +255,10 @@ export default function ChatPage({
 
   usePendingMessage({
     sendTextMessage,
-    onSendStart: () => setIsStreaming(true),
+    onSendStart: (text) => {
+      setPendingSubmission(text);
+      setIsStreaming(true);
+    },
   });
 
   // Send is gated while a fresh upload is in flight or while server-side
@@ -262,6 +271,7 @@ export default function ChatPage({
     imageFiles?: Array<{ file: File; altText?: string }>,
   ) {
     try {
+      setPendingSubmission(message);
       setIsStreaming(true);
       chatInputRef.current?.setMessage('');
 
@@ -281,6 +291,7 @@ export default function ChatPage({
     } catch (error) {
       chatInputRef.current?.setMessage(message);
       setIsStreaming(false);
+      setPendingSubmission(null);
       if (error instanceof AxiosError && error.response?.status === 403) {
         showError(t('chat.upgradeToProError'));
       } else {
@@ -293,6 +304,7 @@ export default function ChatPage({
   function handleSendCancelled() {
     abort();
     setIsStreaming(false);
+    setPendingSubmission(null);
 
     // Immediately remove tool calls from the last assistant message in local state
     // This provides instant feedback matching what the backend will save
@@ -362,6 +374,14 @@ export default function ChatPage({
     [sortedMessages, isStreaming, toolResultsByToolId],
   );
 
+  const lastUnitKind =
+    renderUnits.length > 0
+      ? renderUnits[renderUnits.length - 1].kind
+      : undefined;
+  const showPendingUserBubble = pendingSubmission !== null;
+  const showLoadingPlaceholder =
+    pendingSubmission !== null || (isStreaming && lastUnitKind === 'user');
+
   const chatContent = (
     <div className="p-4 pb-8">
       {renderUnits.map((unit, i) => {
@@ -380,6 +400,13 @@ export default function ChatPage({
           />
         );
       })}
+      {showPendingUserBubble && (
+        <ChatMessage
+          key="pending-user"
+          message={makePendingUserMessage(pendingSubmission)}
+        />
+      )}
+      {showLoadingPlaceholder && <LoadingAssistantBlock />}
     </div>
   );
 
@@ -460,4 +487,13 @@ export default function ChatPage({
       />
     </AppLayout>
   );
+}
+
+function makePendingUserMessage(text: string): Message {
+  return {
+    id: 'pending-user-message',
+    role: 'user',
+    content: [{ type: 'text', text }],
+    createdAt: new Date().toISOString(),
+  } as unknown as Message;
 }

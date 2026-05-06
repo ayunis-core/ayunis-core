@@ -150,7 +150,7 @@ describe('groupMessagesIntoRuns', () => {
     expect(run.finalText[0].text).toBe('still typing');
   });
 
-  it('keeps interim text inside the timeline when the same message also has tool_use', () => {
+  it('routes text out of the timeline even when the same message has a tool_use', () => {
     const messages = [
       userMessage('go'),
       assistantMessage([
@@ -164,8 +164,10 @@ describe('groupMessagesIntoRuns', () => {
     });
     const run = units[1];
     if (run.kind !== 'agent-run') throw new Error('expected agent-run');
-    expect(run.finalText).toHaveLength(0);
-    expect(run.steps.some((s) => s.kind === 'interim_text')).toBe(true);
+    expect(run.finalText).toHaveLength(1);
+    expect(run.finalText[0].text).toBe('Let me search...');
+    expect(run.steps).toHaveLength(1);
+    expect(run.steps[0].kind).toBe('tool');
   });
 
   it('extracts rich-tool calls into richCards', () => {
@@ -251,18 +253,14 @@ describe('groupMessagesIntoRuns', () => {
     expect(run.steps[0].transcript).toContain('second part');
   });
 
-  it('emits a pending agent-run when streaming has started but no assistant message arrived', () => {
+  it('does not synthesize a pending agent-run when streaming has started but no assistant message arrived', () => {
     const messages = [userMessage('go')];
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: true,
       toolResultsByToolId: {},
     });
-    expect(units).toHaveLength(2);
+    expect(units).toHaveLength(1);
     expect(units[0].kind).toBe('user');
-    expect(units[1].kind).toBe('agent-run');
-    if (units[1].kind !== 'agent-run') return;
-    expect(units[1].steps).toHaveLength(0);
-    expect(units[1].isStreaming).toBe(true);
   });
 
   it('does not emit a pending run when not streaming', () => {

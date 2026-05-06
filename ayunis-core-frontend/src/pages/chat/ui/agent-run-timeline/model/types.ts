@@ -21,12 +21,6 @@ export type TimelineStep =
       status: StepStatus;
     }
   | {
-      kind: 'interim_text';
-      key: string;
-      text: string;
-      status: StepStatus;
-    }
-  | {
       kind: 'skill_instruction';
       key: string;
       text: string;

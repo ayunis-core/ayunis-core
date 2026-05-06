@@ -8,7 +8,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/shared/ui/shadcn/collapsible';
-import type { AgentRunUnit, TimelineStep } from '../model/types';
+import type { AgentRunUnit } from '../model/types';
 import AgentRunTimelineRow from './AgentRunTimelineRow';
 import { renderRichToolCard } from '../lib/render-rich-tool-card';
 
@@ -32,18 +32,13 @@ export default function AgentRunTimeline({
   }
   const open = userOpen ?? unit.isStreaming;
 
-  const displaySteps = withTrailingThinking(
-    unit.steps,
-    unit.isStreaming,
-    unit.finalText.length > 0,
-  );
   const stepCount = unit.steps.length;
 
   const headerLabel = unit.isStreaming
     ? t('chat.timeline.working')
     : t('chat.timeline.summary', { count: stepCount });
 
-  const showHeader = unit.isStreaming || stepCount > 0;
+  const showHeader = stepCount > 0;
 
   return (
     <div className="flex flex-col gap-3 w-full">
@@ -73,17 +68,11 @@ export default function AgentRunTimeline({
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="px-3 pb-3 pt-1">
-                {displaySteps.length === 0 ? (
-                  <span className="text-sm text-muted-foreground animate-pulse">
-                    {t('chat.timeline.thinking')}
-                  </span>
-                ) : (
-                  <div>
-                    {displaySteps.map((step) => (
-                      <AgentRunTimelineRow key={step.key} step={step} />
-                    ))}
-                  </div>
-                )}
+                <div>
+                  {unit.steps.map((step) => (
+                    <AgentRunTimelineRow key={step.key} step={step} />
+                  ))}
+                </div>
               </div>
             </CollapsibleContent>
           </div>
@@ -111,24 +100,4 @@ export default function AgentRunTimeline({
       )}
     </div>
   );
-}
-
-function withTrailingThinking(
-  steps: TimelineStep[],
-  isStreaming: boolean,
-  hasFinalText: boolean,
-): TimelineStep[] {
-  if (!isStreaming || hasFinalText) return steps;
-  if (steps.length > 0 && steps[steps.length - 1].status === 'in_progress') {
-    return steps;
-  }
-  return [
-    ...steps,
-    {
-      kind: 'thinking',
-      key: `pending-thinking-${steps.length}`,
-      transcript: '',
-      status: 'in_progress',
-    },
-  ];
 }
