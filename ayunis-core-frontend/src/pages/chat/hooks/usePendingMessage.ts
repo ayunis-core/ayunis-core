@@ -9,7 +9,7 @@ import type { PendingImage } from '../api/useMessageSend';
 import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 const PROCESSING_POLL_INTERVAL_MS = 500;
-const PROCESSING_TIMEOUT_MS = 60_000;
+const PROCESSING_TIMEOUT_MS = 180_000;
 
 interface ThreadSourceStatus {
   id: string;
