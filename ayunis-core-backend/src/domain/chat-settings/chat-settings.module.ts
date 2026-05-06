@@ -6,9 +6,10 @@ import { UpsertUserSystemPromptUseCase } from './application/use-cases/upsert-us
 import { DeleteUserSystemPromptUseCase } from './application/use-cases/delete-user-system-prompt/delete-user-system-prompt.use-case';
 import { GeneratePersonalizedSystemPromptUseCase } from './application/use-cases/generate-personalized-system-prompt/generate-personalized-system-prompt.use-case';
 import { ModelsModule } from '../models/models.module';
+import { UsersModule } from 'src/iam/users/users.module';
 
 @Module({
-  imports: [LocalUserSystemPromptsRepositoryModule, ModelsModule],
+  imports: [LocalUserSystemPromptsRepositoryModule, ModelsModule, UsersModule],
   controllers: [ChatSettingsController],
   providers: [
     GetUserSystemPromptUseCase,

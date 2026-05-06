@@ -6,6 +6,8 @@ import { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/
 import { GetDefaultModelQuery } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.query';
 import { UpsertUserSystemPromptUseCase } from '../upsert-user-system-prompt/upsert-user-system-prompt.use-case';
 import { UpsertUserSystemPromptCommand } from '../upsert-user-system-prompt/upsert-user-system-prompt.command';
+import { SendFirstStepsEmailUseCase } from 'src/iam/users/application/use-cases/send-first-steps-email/send-first-steps-email.use-case';
+import { SendFirstStepsEmailCommand } from 'src/iam/users/application/use-cases/send-first-steps-email/send-first-steps-email.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { PersonalizedSystemPromptGenerationError } from '../../chat-settings.errors';
@@ -40,6 +42,7 @@ export class GeneratePersonalizedSystemPromptUseCase {
     private readonly getDefaultModelUseCase: GetDefaultModelUseCase,
     private readonly upsertUserSystemPromptUseCase: UpsertUserSystemPromptUseCase,
     private readonly contextService: ContextService,
+    private readonly sendFirstStepsEmailUseCase: SendFirstStepsEmailUseCase,
   ) {}
 
   async execute(
@@ -79,6 +82,13 @@ export class GeneratePersonalizedSystemPromptUseCase {
         systemPrompt,
         command.preferredName,
         permittedModel.model,
+      );
+
+      // Trigger the first-steps onboarding email. The use case is itself
+      // idempotent (no-op if already sent) and swallows transient SMTP
+      // errors, so the personalisation API response is never blocked.
+      void this.sendFirstStepsEmailUseCase.execute(
+        new SendFirstStepsEmailCommand(userId),
       );
 
       return { systemPrompt, welcomeMessage };

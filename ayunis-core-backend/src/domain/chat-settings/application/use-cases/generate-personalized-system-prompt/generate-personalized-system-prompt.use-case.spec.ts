@@ -12,6 +12,7 @@ import type { GetInferenceUseCase } from 'src/domain/models/application/use-case
 import type { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.use-case';
 import type { UpsertUserSystemPromptUseCase } from '../upsert-user-system-prompt/upsert-user-system-prompt.use-case';
 import type { ContextService } from 'src/common/context/services/context.service';
+import type { SendFirstStepsEmailUseCase } from 'src/iam/users/application/use-cases/send-first-steps-email/send-first-steps-email.use-case';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
@@ -49,6 +50,9 @@ describe('GeneratePersonalizedSystemPromptUseCase', () => {
     Pick<UpsertUserSystemPromptUseCase, 'execute'>
   >;
   let contextService: { get: jest.Mock };
+  let sendFirstStepsEmailUseCase: jest.Mocked<
+    Pick<SendFirstStepsEmailUseCase, 'execute'>
+  >;
 
   beforeEach(() => {
     getInferenceUseCase = {
@@ -71,11 +75,16 @@ describe('GeneratePersonalizedSystemPromptUseCase', () => {
       }),
     };
 
+    sendFirstStepsEmailUseCase = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    };
+
     useCase = new GeneratePersonalizedSystemPromptUseCase(
       getInferenceUseCase as unknown as GetInferenceUseCase,
       getDefaultModelUseCase as unknown as GetDefaultModelUseCase,
       upsertUserSystemPromptUseCase as unknown as UpsertUserSystemPromptUseCase,
       contextService as unknown as ContextService,
+      sendFirstStepsEmailUseCase as unknown as SendFirstStepsEmailUseCase,
     );
   });
 

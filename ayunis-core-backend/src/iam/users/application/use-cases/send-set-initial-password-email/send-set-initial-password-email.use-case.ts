@@ -1,98 +1,91 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { SendPasswordResetEmailCommand } from './send-password-reset-email.command';
-import { SendEmailCommand } from 'src/common/emails/application/use-cases/send-email/send-email.command';
-import { SendEmailUseCase } from 'src/common/emails/application/use-cases/send-email/send-email.use-case';
 import { ConfigService } from '@nestjs/config';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { PasswordResetTemplate } from 'src/common/email-templates/domain/email-template.entity';
+import { SetInitialPasswordTemplate } from 'src/common/email-templates/domain/email-template.entity';
 import { RenderTemplateUseCase } from 'src/common/email-templates/application/use-cases/render-template/render-template.use-case';
 import { RenderTemplateCommand } from 'src/common/email-templates/application/use-cases/render-template/render-template.command';
+import { SendEmailCommand } from 'src/common/emails/application/use-cases/send-email/send-email.command';
+import { SendEmailUseCase } from 'src/common/emails/application/use-cases/send-email/send-email.use-case';
+import { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
+import { FindOrgByIdQuery } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.query';
+import { SendSetInitialPasswordEmailCommand } from './send-set-initial-password-email.command';
 import { PasswordResetEmailSendingFailedError } from '../../users.errors';
 
+/**
+ * Sends the "Konto aktivieren" email to a user whose account has just been
+ * created on their behalf (admin / super-admin onboarding flow). Re-uses the
+ * password-reset token mechanism so the existing /password/reset frontend
+ * route can complete activation, but presents the email as a welcoming
+ * first-step rather than a security action.
+ */
 @Injectable()
-export class SendPasswordResetEmailUseCase {
-  private readonly logger = new Logger(SendPasswordResetEmailUseCase.name);
+export class SendSetInitialPasswordEmailUseCase {
+  private readonly logger = new Logger(SendSetInitialPasswordEmailUseCase.name);
 
   constructor(
     private readonly sendEmailUseCase: SendEmailUseCase,
     private readonly configService: ConfigService,
     private readonly renderTemplateUseCase: RenderTemplateUseCase,
+    private readonly findOrgByIdUseCase: FindOrgByIdUseCase,
   ) {}
 
-  async execute(command: SendPasswordResetEmailCommand): Promise<void> {
+  async execute(command: SendSetInitialPasswordEmailCommand): Promise<void> {
     try {
-      this.logger.log('execute', {
-        email: command.userEmail,
-        hasUserName: !!command.userName,
-      });
+      this.logger.log('execute', { email: command.userEmail });
 
-      // Build password reset link
+      const org = await this.findOrgByIdUseCase.execute(
+        new FindOrgByIdQuery(command.orgId),
+      );
+
       const frontendBaseUrl = this.configService.get<string>(
         'app.frontend.baseUrl',
       );
       const passwordResetEndpoint = this.configService.get<string>(
         'app.frontend.passwordResetEndpoint',
       );
-      const forgotPasswordEndpoint = this.configService.get<string>(
-        'app.frontend.forgotPasswordEndpoint',
-      );
-      const resetUrl = `${frontendBaseUrl}${passwordResetEndpoint}?token=${command.resetToken}`;
-      const forgotPasswordUrl = `${frontendBaseUrl}${forgotPasswordEndpoint}`;
       const emailAssetsPath = this.configService.get<string>(
         'app.frontend.emailAssetsPath',
       );
+      const resetUrl = `${frontendBaseUrl}${passwordResetEndpoint}?token=${command.resetToken}`;
       const assetBase = `${frontendBaseUrl}${emailAssetsPath}`;
 
-      // Create password reset email template
-      this.logger.debug('Creating password reset email template', {
-        email: command.userEmail,
-      });
-      const template = new PasswordResetTemplate({
+      const template = new SetInitialPasswordTemplate({
         resetUrl,
-        forgotPasswordUrl,
         userEmail: command.userEmail,
-        companyName: 'Ayunis',
+        invitingCompanyName: org.name,
+        userName: command.userName,
         productName: 'Ayunis Core',
         currentYear: new Date().getFullYear().toString(),
-        userName: command.userName,
         logoUrl: `${assetBase}/logo.png`,
         teamUrl: `${assetBase}/team.png`,
+        bannerUrl: `${assetBase}/banner-welcome.png`,
       });
 
-      // Render email content
       const emailContent = this.renderTemplateUseCase.execute(
         new RenderTemplateCommand(template),
       );
 
-      // Send the password reset email
-      this.logger.debug('Sending password reset email', {
-        email: command.userEmail,
-      });
       await this.sendEmailUseCase.execute(
         new SendEmailCommand({
           to: command.userEmail,
-          subject: 'Passwort zurücksetzen für Ayunis Core',
+          subject: `Ihr Konto bei ${org.name} – Passwort festlegen`,
           html: emailContent.html,
           text: emailContent.text,
         }),
       );
 
-      this.logger.debug('Password reset email sent successfully', {
+      this.logger.debug('Set-initial-password email sent', {
         email: command.userEmail,
       });
     } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error sending password reset email', {
+      if (error instanceof ApplicationError) throw error;
+      this.logger.error('Error sending set-initial-password email', {
         error: error instanceof Error ? error.message : 'Unknown error',
         email: command.userEmail,
       });
       throw new PasswordResetEmailSendingFailedError(
         error instanceof Error ? error.message : 'Unknown error',
-        {
-          email: command.userEmail,
-        },
+        { email: command.userEmail },
       );
     }
   }
