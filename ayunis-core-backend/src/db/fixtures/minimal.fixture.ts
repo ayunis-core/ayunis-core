@@ -3,10 +3,6 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
-/**
- * Minimal fixture for development and E2E testing
- * Contains: 2 orgs (seat-based + usage-based), admin users, models, subscriptions
- */
 export const minimalFixture = {
   org: {
     name: 'Demo Org',

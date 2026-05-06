@@ -38,6 +38,12 @@ export class UserResponseDto {
   orgId: UUID;
 
   @ApiProperty({
+    description: 'Whether the user has activated their account',
+    example: true,
+  })
+  activated: boolean;
+
+  @ApiProperty({
     description: 'Department the user belongs to',
     example: 'hauptamt',
     required: false,

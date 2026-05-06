@@ -14,12 +14,12 @@ export function useTriggerPasswordReset(
   const mutation = useUserControllerTriggerPasswordResetForUser({
     mutation: {
       onSuccess: () => {
-        showSuccess(t('triggerPasswordReset.success'));
+        showSuccess(t('triggerActivation.success'));
         options?.onSuccessCallback?.();
       },
       onError: (err) => {
-        console.error('Error triggering password reset', err);
-        showError(t('triggerPasswordReset.error'));
+        console.error('Error triggering activation email', err);
+        showError(t('triggerActivation.error'));
       },
     },
   });

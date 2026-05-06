@@ -18,10 +18,10 @@
     "sentDate": "Sendedatum",
     "name": "Name",
     "active": "Aktiv",
-    "pending": "ausstehend",
-    "accepted": "akzeptiert",
-    "rejected": "abgelehnt",
-    "expired": "abgelaufen",
+    "pending": "Ausstehend",
+    "accepted": "Akzeptiert",
+    "rejected": "Abgelehnt",
+    "expired": "Abgelaufen",
     "more": "Mehr",
     "edit": "Bearbeiten",
     "delete": "Löschen",
@@ -30,7 +30,8 @@
     "user": "Benutzer",
     "admin": "Administrator",
     "resend": "Einladung erneut senden",
-    "sendPasswordReset": "Passwort-Reset senden",
+    "sendActivationLink": "Aktivierungslink senden",
+    "resetPassword": "Passwort-Reset senden",
     "noInvitesFound": "Keine Einladungen gefunden",
     "total": "{{count}} gesamt"
   },
@@ -141,9 +142,9 @@
     "success": "Passwort-Reset-E-Mail erfolgreich gesendet",
     "error": "Fehler beim Senden der Passwort-Reset-E-Mail. Bitte versuchen Sie es erneut."
   },
-  "confirmPasswordReset": {
-    "title": "Passwort-Reset-E-Mail senden",
-    "description": "Eine Passwort-Reset-E-Mail an {{name}} ({{email}}) senden?",
+  "confirmActivation": {
+    "title": "Zugangslink senden",
+    "description": "Einen Zugangslink an {{name}} ({{email}}) senden?",
     "confirmText": "Senden",
     "cancelText": "Abbrechen"
   },

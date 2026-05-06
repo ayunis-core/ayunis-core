@@ -5,9 +5,12 @@ import { UUID } from 'crypto';
 import type { StringValue } from 'ms';
 import { InvalidTokenError } from '../../../authentication/application/authentication.errors';
 
+export type TokenPurpose = 'activation' | 'reset';
+
 export interface PasswordResetJwtPayload {
   userId: UUID;
   email: string;
+  purpose: TokenPurpose;
 }
 
 @Injectable()
@@ -20,20 +23,40 @@ export class PasswordResetJwtService {
   ) {}
 
   generatePasswordResetToken(params: { userId: UUID; email: string }): string {
+    const expiresIn = this.configService.get<StringValue>(
+      'auth.jwt.passwordResetExpiresIn',
+      '2h',
+    );
+    return this.generateToken(params, expiresIn, 'reset');
+  }
+
+  generateInitialPasswordToken(params: {
+    userId: UUID;
+    email: string;
+  }): string {
+    const expiresIn = this.configService.get<StringValue>(
+      'auth.jwt.initialPasswordExpiresIn',
+      '7d',
+    );
+    return this.generateToken(params, expiresIn, 'activation');
+  }
+
+  private generateToken(
+    params: { userId: UUID; email: string },
+    expiresIn: StringValue,
+    purpose: TokenPurpose,
+  ): string {
     this.logger.log('generatePasswordResetToken', {
       userId: params.userId,
       email: params.email,
+      purpose,
     });
 
     const payload: PasswordResetJwtPayload = {
       userId: params.userId,
       email: params.email,
+      purpose,
     };
-
-    const expiresIn = this.configService.get<StringValue>(
-      'auth.jwt.passwordResetExpiresIn',
-      '2h',
-    );
 
     return this.jwtService.sign(payload, { expiresIn });
   }
