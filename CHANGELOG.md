@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.32.0](https://github.com/ayunis-core/ayunis-core/compare/v1.31.0...v1.32.0) (2026-05-06)
+
+
+### Features
+
+* **chat:** group tool calls into a collapsible "Working…" timeline (AYC-000) ([#654](https://github.com/ayunis-core/ayunis-core/issues/654)) ([8e38e3a](https://github.com/ayunis-core/ayunis-core/commit/8e38e3ac1cafae4e2b3942df9826ee4c34aba711))
+* **uploads:** enforce source and file-size limits for chats, skills, and KBs (AYC-74) ([#646](https://github.com/ayunis-core/ayunis-core/issues/646)) ([f7a75fa](https://github.com/ayunis-core/ayunis-core/commit/f7a75faafec7df4188557c7abb5750a6ddf2a6d9))
+
+
+### Bug Fixes
+
+* **chat:** block send while uploaded sources are still processing (AYC-94) ([#660](https://github.com/ayunis-core/ayunis-core/issues/660)) ([16cd340](https://github.com/ayunis-core/ayunis-core/commit/16cd3408dd2b6cb0ce0db33f54e8a4c0af1cdac4))
+* **chat:** polish tool-use indicator visuals (AYC-94) ([#667](https://github.com/ayunis-core/ayunis-core/issues/667)) ([2b47d39](https://github.com/ayunis-core/ayunis-core/commit/2b47d39431da75314a054a7a1ebdcfd4f17bed38))
+* **chat:** rework new-chat submission flow and unify ChatInput states (AYC-94) ([#666](https://github.com/ayunis-core/ayunis-core/issues/666)) ([6cb85ab](https://github.com/ayunis-core/ayunis-core/commit/6cb85abc0c35a5ffa6418321b1df2a4415a80060))
+* **dev:** unbreak slot startup and stop clobbering provider keys (AYC-000) ([#665](https://github.com/ayunis-core/ayunis-core/issues/665)) ([7306c73](https://github.com/ayunis-core/ayunis-core/commit/7306c734401ec84c907ef1eaaed4e25f43bf11e7))
+* **install:** use native form validation for terms checkbox (AYC-000) ([#658](https://github.com/ayunis-core/ayunis-core/issues/658)) ([e1b7220](https://github.com/ayunis-core/ayunis-core/commit/e1b72202e860c2540315da7e02aae0ea0240caa8))
+* **runs:** disable proxy buffering on SSE stream to prevent truncation (AYC-93) ([#656](https://github.com/ayunis-core/ayunis-core/issues/656)) ([a71c145](https://github.com/ayunis-core/ayunis-core/commit/a71c145bf4eea90cda06ca329396732b9e918639))
+* **ui:** consistent destructive styling and dropdown icon spacing (AYC-000) ([#644](https://github.com/ayunis-core/ayunis-core/issues/644)) ([4bb4856](https://github.com/ayunis-core/ayunis-core/commit/4bb48562a800b75f7b119fafa50431f9e7d896ea))
+
+
+### Miscellaneous
+
+* adjust skills (AYC-000) ([#662](https://github.com/ayunis-core/ayunis-core/issues/662)) ([1c75b00](https://github.com/ayunis-core/ayunis-core/commit/1c75b006a3b98c3c9ae5e23fcb2a82b1c462c03d))
+* **api:** regenerate frontend client for KB upload changes (AYC-74) ([#649](https://github.com/ayunis-core/ayunis-core/issues/649)) ([2f71e1e](https://github.com/ayunis-core/ayunis-core/commit/2f71e1ef91ad28f85609cbdad6bb1ef10a392d05))
+
 ## [1.31.0](https://github.com/ayunis-core/ayunis-core/compare/v1.30.0...v1.31.0) (2026-04-29)
 
 
