@@ -11,6 +11,7 @@ interface UsePendingMessageParams {
     images?: PendingImage[];
     skillId?: string;
   }) => Promise<void>;
+  onSendStart?: () => void;
 }
 
 /**
@@ -23,6 +24,7 @@ interface UsePendingMessageParams {
  */
 export function usePendingMessage({
   sendTextMessage,
+  onSendStart,
 }: UsePendingMessageParams) {
   const { t } = useTranslation('chat');
   const sentRef = useRef(false);
@@ -55,6 +57,7 @@ export function usePendingMessage({
 
     void (async () => {
       try {
+        onSendStart?.();
         await sendTextMessage({ text, images, skillId });
       } catch (error) {
         if (error instanceof AxiosError && error.response?.status === 403) {
@@ -68,6 +71,7 @@ export function usePendingMessage({
     pendingMessage,
     pendingImages,
     pendingSkillId,
+    onSendStart,
     sendTextMessage,
     setPendingMessage,
     setPendingImages,

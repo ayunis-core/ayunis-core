@@ -247,7 +247,10 @@ export default function ChatPage({
     (s) => s.status === SourceResponseDtoStatus.processing,
   );
 
-  usePendingMessage({ sendTextMessage });
+  usePendingMessage({
+    sendTextMessage,
+    onSendStart: () => setIsStreaming(true),
+  });
 
   // Send is gated while a fresh upload is in flight or while server-side
   // processing of an attached source hasn't finished — both are reasons we

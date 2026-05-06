@@ -178,9 +178,7 @@ export default function NewChatPage({
     // Images are sent as part of the first multipart request from ChatPage,
     // so they hitch a ride through context. KBs and sources are attached
     // before navigation by initiateChat itself.
-    if (imageFiles && imageFiles.length > 0) {
-      setPendingImages(imageFiles);
-    }
+    setPendingImages(imageFiles && imageFiles.length > 0 ? imageFiles : []);
     setPendingSkillId(skillId);
 
     void initiateChat({
