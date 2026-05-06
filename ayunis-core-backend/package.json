@@ -119,7 +119,7 @@
     "protobufjs": "Patches GHSA-xq3m-2v4x-88gg (arbitrary code execution, fixed in 7.5.5). Transitive via @google/genai. @google/genai declares `^7.5.4`, so this floor stays within its range. Remove when @google/genai's declared range moves past 7.5.5 — verify with `npm ls protobufjs` after any @google/genai upgrade."
   },
   "devDependencies": {
-    "@eslint/js": "^9.18.0",
+    "@eslint/js": "^10.0.1",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.1.17",
