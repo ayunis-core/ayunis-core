@@ -67,9 +67,8 @@ export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
               <Pencil className="h-4 w-4" />
             </Button>
             <Button
-              variant="ghost"
+              variant="ghost-destructive"
               size="icon"
-              className="text-destructive hover:text-destructive"
               onClick={(e) => {
                 e.stopPropagation();
                 deleteTeam(team.id);
