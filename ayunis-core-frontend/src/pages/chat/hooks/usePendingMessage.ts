@@ -53,7 +53,12 @@ function delay(ms: number, signal?: AbortSignal): Promise<void> {
     const timer = setTimeout(resolve, ms);
     signal?.addEventListener('abort', () => {
       clearTimeout(timer);
-      reject(signal.reason);
+      const reason: unknown = signal.reason;
+      reject(
+        reason instanceof Error
+          ? reason
+          : new Error(typeof reason === 'string' ? reason : 'Aborted'),
+      );
     });
   });
 }
