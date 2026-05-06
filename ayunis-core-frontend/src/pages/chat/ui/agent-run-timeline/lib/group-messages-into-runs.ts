@@ -70,17 +70,6 @@ export function groupMessagesIntoRuns(
     const lastUnit = units[units.length - 1];
     if (lastUnit.kind === 'agent-run') {
       lastUnit.isStreaming = true;
-    } else {
-      // Streaming has begun but the assistant's first chunk hasn't arrived;
-      // emit an empty run so the UI can show "Working…" instead of nothing.
-      units.push({
-        kind: 'agent-run',
-        key: `run-pending-${lastUnit.message.id}`,
-        steps: pendingSkillSteps,
-        richCards: [],
-        finalText: [],
-        isStreaming: true,
-      });
     }
   }
 
@@ -115,16 +104,7 @@ function appendAssistantMessage(
   { isStreaming, isLastMessage, toolResultsByToolId }: AppendOptions,
 ): void {
   const content = message.content;
-  let hasToolUse = false;
-  let hasText = false;
-  for (const block of content) {
-    if (block.type === 'tool_use') hasToolUse = true;
-    else if (block.type === 'text') hasText = true;
-  }
   const isStreamingThisMessage = isStreaming && isLastMessage;
-  // Text without a trailing tool call is the model's reply, not interim narration —
-  // so it goes in finalText (rendered outside the timeline) even mid-stream.
-  const isFinalMessage = !hasToolUse && hasText;
 
   let pendingThinking: { transcript: string; key: string } | null = null;
   const flushThinking = (status: 'in_progress' | 'done') => {
@@ -178,17 +158,7 @@ function appendAssistantMessage(
     }
 
     if (block.type === 'text') {
-      const text = block as TextMessageContent;
-      if (isFinalMessage) {
-        run.finalText.push(text);
-      } else {
-        run.steps.push({
-          kind: 'interim_text',
-          key: `${message.id}-text-${index}`,
-          text: text.text,
-          status: 'done',
-        });
-      }
+      run.finalText.push(block as TextMessageContent);
     }
   });
 

@@ -128,15 +128,6 @@ function getStepView(
     };
   }
 
-  if (step.kind === 'interim_text') {
-    return {
-      label: step.text || t('chat.timeline.interimText'),
-      hasDetails: false,
-      expandable: false,
-      details: null,
-    };
-  }
-
   if (step.kind === 'skill_instruction') {
     return {
       label: t('chat.skillInstructions'),

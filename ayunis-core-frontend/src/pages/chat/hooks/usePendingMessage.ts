@@ -11,7 +11,7 @@ interface UsePendingMessageParams {
     images?: PendingImage[];
     skillId?: string;
   }) => Promise<void>;
-  onSendStart?: () => void;
+  onSendStart?: (text: string) => void;
 }
 
 /**
@@ -57,7 +57,7 @@ export function usePendingMessage({
 
     void (async () => {
       try {
-        onSendStart?.();
+        onSendStart?.(text);
         await sendTextMessage({ text, images, skillId });
       } catch (error) {
         if (error instanceof AxiosError && error.response?.status === 403) {
