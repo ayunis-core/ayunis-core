@@ -199,7 +199,6 @@ export function useMessageSend(params: UseMessageSendParams) {
           }
         }
 
-        params.onComplete?.();
       } catch (error) {
         console.error('Error in sendMessage', error);
 
@@ -238,6 +237,7 @@ export function useMessageSend(params: UseMessageSendParams) {
         // When aborted, we keep the optimistic local state to avoid race conditions
         // with the backend's async save operation
         if (!wasAbortedRef.current) {
+          params.onComplete?.();
           // Cancel any in-flight thread refetch (e.g. an active refetchInterval
           // poll) so its older response can't land after ours and shorten the
           // displayed assistant text. Then await the refetch so the cache
