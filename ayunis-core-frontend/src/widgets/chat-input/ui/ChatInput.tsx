@@ -341,7 +341,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                   <PlusButton
                     onFileUpload={onFileUpload}
                     onImageSelect={handleImageSelect}
-                    isFileSourceDisabled={!isEmbeddingModelEnabled || isSubmitting}
+                    isFileSourceDisabled={
+                      !isEmbeddingModelEnabled || isSubmitting
+                    }
                     isImageUploadDisabled={!isVisionEnabled || isSubmitting}
                     onKnowledgeBaseSelect={onAddKnowledgeBase}
                     attachedKnowledgeBaseIds={knowledgeBases?.map(
