@@ -198,7 +198,6 @@ export function useMessageSend(params: UseMessageSendParams) {
             dispatchLine(line);
           }
         }
-
       } catch (error) {
         console.error('Error in sendMessage', error);
 
