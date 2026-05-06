@@ -1,0 +1,33 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments — must not clobber the in-image .venv created by `uv sync`
+.venv
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
+
+# Git / Docker meta
+.git
+.gitignore
+.dockerignore
+Dockerfile
+
+# OS
+.DS_Store
+Thumbs.db

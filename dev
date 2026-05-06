@@ -156,18 +156,11 @@ REDIS_HOST=localhost
 REDIS_PORT=$REDIS_HOST_PORT
 GOTENBERG_URL=http://localhost:$GOTENBERG_HOST_PORT
 MCP_ENCRYPTION_KEY=$mcp_key
-# Provider API key stubs — every inference handler except Azure eagerly
-# constructs its SDK client at module init and the SDKs throw on empty
-# apiKey. Placeholders let the backend boot; real keys override these
-# via the user's shell env if set. Remove when handlers lazy-init (see
-# AzureStreamInferenceHandler for the correct pattern).
-OPENAI_API_KEY=\${OPENAI_API_KEY:-sk-dev-placeholder}
-ANTHROPIC_API_KEY=\${ANTHROPIC_API_KEY:-sk-ant-dev-placeholder}
-MISTRAL_API_KEY=\${MISTRAL_API_KEY:-dev-placeholder}
-OTC_API_KEY=\${OTC_API_KEY:-dev-placeholder}
-SCALEWAY_API_KEY=\${SCALEWAY_API_KEY:-dev-placeholder}
-STACKIT_API_KEY=\${STACKIT_API_KEY:-dev-placeholder}
-GEMINI_API_KEY=\${GEMINI_API_KEY:-dev-placeholder}
+# Provider API keys (OPENAI_API_KEY, ANTHROPIC_API_KEY, MISTRAL_API_KEY, …)
+# are intentionally NOT written here — they belong in .env (or your shell)
+# and would otherwise be clobbered by placeholders. If the backend crashes
+# at boot because a provider SDK rejects an empty key, add the key to
+# ayunis-core-backend/.env.
 EOF
 
   # -- 3. Run database migrations ------------------------------------------

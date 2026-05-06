@@ -15,11 +15,15 @@ RUN uv sync --frozen --no-dev
 ENV HF_HOME=/root/.cache/huggingface
 RUN uv run python -c "from huggingface_hub import snapshot_download; snapshot_download('urchade/gliner_multi_pii-v1')"
 
-# Copy application code
+# Copy application code, then re-sync so the project install reflects the
+# actual source (otherwise `uv run` does this on every container start and
+# restarts uvicorn mid-boot, blowing past the healthcheck window).
 COPY . .
+RUN uv sync --frozen --no-dev
 
 # Expose the service port
 EXPOSE 8000
 
-# Run the application
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# --no-sync skips the implicit sync uv would otherwise run on every container
+# start; the venv is already complete from the build step above.
+CMD ["uv", "run", "--no-sync", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
