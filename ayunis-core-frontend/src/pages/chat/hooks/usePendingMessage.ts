@@ -9,6 +9,7 @@ import type { PendingImage } from '../api/useMessageSend';
 import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 const PROCESSING_POLL_INTERVAL_MS = 500;
+const PROCESSING_TIMEOUT_MS = 60_000;
 
 interface ThreadSourceStatus {
   id: string;
@@ -47,8 +48,14 @@ function areSourcesReady(
   );
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function delay(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener('abort', () => {
+      clearTimeout(timer);
+      reject(signal.reason);
+    });
+  });
 }
 
 interface UsePendingMessageParams {
@@ -108,14 +115,21 @@ export function usePendingMessage({
       return extractSourceIds(results);
     }
 
-    async function waitForSourcesProcessed(uploadedIds: string[]) {
-      // Wait until: (a) every just-uploaded source is visible in the thread
-      // query (covers the brief gap between upload-success and refetch), and
-      // (b) no thread source is still PROCESSING.
+    async function waitForSourcesProcessed(
+      uploadedIds: string[],
+      signal: AbortSignal,
+    ) {
+      const deadline = Date.now() + PROCESSING_TIMEOUT_MS;
       let ready = false;
       while (!ready) {
+        signal.throwIfAborted();
         ready = areSourcesReady(threadSourcesRef.current, uploadedIds);
-        if (!ready) await delay(PROCESSING_POLL_INTERVAL_MS);
+        if (!ready) {
+          if (Date.now() >= deadline) {
+            throw new Error('Source processing timed out');
+          }
+          await delay(PROCESSING_POLL_INTERVAL_MS, signal);
+        }
       }
     }
 
@@ -140,6 +154,8 @@ export function usePendingMessage({
       }));
     }
 
+    const abortController = new AbortController();
+
     async function sendPendingMessage() {
       if (
         !pendingMessage ||
@@ -152,7 +168,7 @@ export function usePendingMessage({
       try {
         const uploadedIds = await uploadPendingSources();
         setSources([]);
-        await waitForSourcesProcessed(uploadedIds);
+        await waitForSourcesProcessed(uploadedIds, abortController.signal);
         await attachPendingKnowledgeBases();
         await sendTextMessage({
           text: pendingMessage,
@@ -160,6 +176,7 @@ export function usePendingMessage({
           skillId: pendingSkillId,
         });
       } catch (error) {
+        if (abortController.signal.aborted) return;
         if (error instanceof AxiosError && error.response?.status === 403) {
           showError(t('chat.upgradeToProError'));
         } else {
@@ -167,14 +184,20 @@ export function usePendingMessage({
         }
         chatInputRef.current?.setMessage(pendingMessage);
       } finally {
-        setIsProcessingPendingSources(false);
-        setPendingMessage('');
-        setPendingImages([]);
-        setPendingKnowledgeBases([]);
-        setPendingSkillId(undefined);
+        if (!abortController.signal.aborted) {
+          setIsProcessingPendingSources(false);
+          setPendingMessage('');
+          setPendingImages([]);
+          setPendingKnowledgeBases([]);
+          setPendingSkillId(undefined);
+        }
       }
     }
     void sendPendingMessage();
+
+    return () => {
+      abortController.abort();
+    };
   }, [
     pendingMessage,
     sendTextMessage,
