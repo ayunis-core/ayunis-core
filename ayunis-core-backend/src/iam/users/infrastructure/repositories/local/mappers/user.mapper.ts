@@ -14,6 +14,7 @@ export class UserMapper {
       name: entity.name,
       hasAcceptedMarketing: entity.hasAcceptedMarketing,
       department: entity.department,
+      hasReceivedFirstStepsEmail: entity.hasReceivedFirstStepsEmail,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     });
@@ -31,6 +32,7 @@ export class UserMapper {
     entity.name = domain.name;
     entity.hasAcceptedMarketing = domain.hasAcceptedMarketing;
     entity.department = domain.department;
+    entity.hasReceivedFirstStepsEmail = domain.hasReceivedFirstStepsEmail;
     entity.updatedAt = domain.updatedAt;
     entity.createdAt = domain.createdAt;
     return entity;

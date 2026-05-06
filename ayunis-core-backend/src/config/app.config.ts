@@ -15,6 +15,10 @@ export const appConfig = registerAs('app', () => ({
       process.env.FORGOT_PASSWORD_ENDPOINT || '/password/forgot',
     inviteAcceptEndpoint:
       process.env.INVITE_ACCEPT_ENDPOINT || '/accept-invite',
+    chatEndpoint: process.env.CHAT_ENDPOINT || '/chat',
+    marketplaceEndpoint: process.env.MARKETPLACE_ENDPOINT || '/marketplace',
+    knowledgeEndpoint: process.env.KNOWLEDGE_ENDPOINT || '/knowledge',
+    emailAssetsPath: process.env.EMAIL_ASSETS_PATH || '/email',
   },
   orgEventsWebhookUrl: process.env.ORG_EVENTS_WEBHOOK_URL,
   isDevelopment: process.env.NODE_ENV === 'development',

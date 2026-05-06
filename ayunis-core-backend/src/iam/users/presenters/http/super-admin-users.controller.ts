@@ -25,10 +25,10 @@ import { ApiUsersListQueries } from './decorators/api-users-list.decorator';
 import { FindUsersByOrgIdUseCase } from '../../application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { FindUserByIdUseCase } from '../../application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { DeleteUserUseCase } from '../../application/use-cases/delete-user/delete-user.use-case';
-import { TriggerPasswordResetUseCase } from '../../application/use-cases/trigger-password-reset/trigger-password-reset.use-case';
-import { TriggerPasswordResetCommand } from '../../application/use-cases/trigger-password-reset/trigger-password-reset.command';
 import { SuperAdminTriggerPasswordResetUseCase } from '../../application/use-cases/super-admin-trigger-password-reset/super-admin-trigger-password-reset.use-case';
 import { SuperAdminTriggerPasswordResetCommand } from '../../application/use-cases/super-admin-trigger-password-reset/super-admin-trigger-password-reset.command';
+import { TriggerSetInitialPasswordUseCase } from '../../application/use-cases/trigger-set-initial-password/trigger-set-initial-password.use-case';
+import { TriggerSetInitialPasswordCommand } from '../../application/use-cases/trigger-set-initial-password/trigger-set-initial-password.command';
 import { CreateUserUseCase } from '../../application/use-cases/create-user/create-user.use-case';
 import { CreateUserCommand } from '../../application/use-cases/create-user/create-user.command';
 import { UserResponseDtoMapper } from './mappers/user-response-dto.mapper';
@@ -57,7 +57,7 @@ export class SuperAdminUsersController {
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
     private readonly deleteUserUseCase: DeleteUserUseCase,
-    private readonly triggerPasswordResetUseCase: TriggerPasswordResetUseCase,
+    private readonly triggerSetInitialPasswordUseCase: TriggerSetInitialPasswordUseCase,
     private readonly superAdminTriggerPasswordResetUseCase: SuperAdminTriggerPasswordResetUseCase,
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly userResponseDtoMapper: UserResponseDtoMapper,
@@ -239,10 +239,13 @@ export class SuperAdminUsersController {
       }),
     );
 
-    // Send password reset email so user can set their own password
+    // Send "Konto aktivieren" email so the user can set their own password.
+    // We use the dedicated set-initial-password flow (not the regular
+    // password-reset email) because this is a first-time activation, not a
+    // forgot-password event — the email copy and tone differ accordingly.
     if (createUserDto.sendPasswordResetEmail) {
-      await this.triggerPasswordResetUseCase.execute(
-        new TriggerPasswordResetCommand(user.email),
+      await this.triggerSetInitialPasswordUseCase.execute(
+        new TriggerSetInitialPasswordCommand(user.email, orgId),
       );
     }
 

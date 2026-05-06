@@ -53,6 +53,15 @@ export class SendInvitationEmailUseCase {
         invitingUserName = invitingUser.name;
       }
 
+      // Build asset URLs (logo, banner, team photo) from frontend base URL.
+      const frontendBaseUrl = this.configService.get<string>(
+        'app.frontend.baseUrl',
+      );
+      const emailAssetsPath = this.configService.get<string>(
+        'app.frontend.emailAssetsPath',
+      );
+      const assetBase = `${frontendBaseUrl}${emailAssetsPath}`;
+
       // Create invitation email template
       this.logger.debug('Creating invitation email template', {
         inviteId: command.invite.id,
@@ -65,6 +74,9 @@ export class SendInvitationEmailUseCase {
         productName: 'Ayunis Core',
         currentYear: new Date().getFullYear().toString(),
         adminName: invitingUserName,
+        logoUrl: `${assetBase}/logo.png`,
+        teamUrl: `${assetBase}/team.png`,
+        bannerUrl: `${assetBase}/banner-welcome.png`,
       });
 
       // Render email content
@@ -80,7 +92,7 @@ export class SendInvitationEmailUseCase {
       await this.sendEmailUseCase.execute(
         new SendEmailCommand({
           to: command.invite.email,
-          subject: `Einladung zu ${org.name}`,
+          subject: `Einladung zu ${org.name} – Ayunis Core`,
           html: emailContent.html,
           text: emailContent.text,
         }),

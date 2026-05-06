@@ -42,4 +42,13 @@ export class UserRecord extends BaseRecord {
 
   @Column({ nullable: true })
   department?: string;
+
+  /**
+   * Idempotency flag for the "first-steps" onboarding email. Set to true
+   * after the user finishes (or skips) the personalisation wizard for the
+   * first time and the email has been dispatched, so subsequent re-runs of
+   * the wizard don't trigger duplicate emails.
+   */
+  @Column({ default: false })
+  hasReceivedFirstStepsEmail: boolean;
 }

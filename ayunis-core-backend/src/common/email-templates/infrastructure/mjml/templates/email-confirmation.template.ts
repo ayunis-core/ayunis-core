@@ -1,3 +1,11 @@
+/**
+ * @deprecated Self-registration is currently disabled in production
+ * (see DISABLE_REGISTRATION env). This template is therefore never
+ * dispatched. Kept in the codebase so the flow can be reactivated without
+ * re-implementing the template — when that happens, the template should be
+ * redesigned to match the rest of the family (`_layout.ts` helpers,
+ * banner/logo from `public/email/`).
+ */
 import mjml2html from 'mjml';
 import type { EmailConfirmationTemplateContent } from '../../../domain/email-template.entity';
 
