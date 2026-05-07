@@ -22,6 +22,7 @@ import { Route as AuthenticatedSuperAdminSettingsIndexRouteImport } from './rout
 import { Route as AuthenticatedSkillsIndexRouteImport } from './routes/_authenticated/skills.index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedKnowledgeBasesIndexRouteImport } from './routes/_authenticated/knowledge-bases.index'
+import { Route as AuthenticatedGettingStartedIndexRouteImport } from './routes/_authenticated/getting-started.index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats.index'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedAgentsIndexRouteImport } from './routes/_authenticated/agents.index'
@@ -118,6 +119,12 @@ const AuthenticatedKnowledgeBasesIndexRoute =
   AuthenticatedKnowledgeBasesIndexRouteImport.update({
     id: '/knowledge-bases/',
     path: '/knowledge-bases/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedGettingStartedIndexRoute =
+  AuthenticatedGettingStartedIndexRouteImport.update({
+    id: '/getting-started/',
+    path: '/getting-started/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexRouteImport.update({
@@ -317,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/agents/': typeof AuthenticatedAgentsIndexRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
   '/chats/': typeof AuthenticatedChatsIndexRoute
+  '/getting-started/': typeof AuthenticatedGettingStartedIndexRoute
   '/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/skills/': typeof AuthenticatedSkillsIndexRoute
@@ -360,6 +368,7 @@ export interface FileRoutesByTo {
   '/agents': typeof AuthenticatedAgentsIndexRoute
   '/chat': typeof AuthenticatedChatIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
+  '/getting-started': typeof AuthenticatedGettingStartedIndexRoute
   '/knowledge-bases': typeof AuthenticatedKnowledgeBasesIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/skills': typeof AuthenticatedSkillsIndexRoute
@@ -405,6 +414,7 @@ export interface FileRoutesById {
   '/_authenticated/agents/': typeof AuthenticatedAgentsIndexRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
+  '/_authenticated/getting-started/': typeof AuthenticatedGettingStartedIndexRoute
   '/_authenticated/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/skills/': typeof AuthenticatedSkillsIndexRoute
@@ -450,6 +460,7 @@ export interface FileRouteTypes {
     | '/agents/'
     | '/chat/'
     | '/chats/'
+    | '/getting-started/'
     | '/knowledge-bases/'
     | '/settings/'
     | '/skills/'
@@ -493,6 +504,7 @@ export interface FileRouteTypes {
     | '/agents'
     | '/chat'
     | '/chats'
+    | '/getting-started'
     | '/knowledge-bases'
     | '/settings'
     | '/skills'
@@ -537,6 +549,7 @@ export interface FileRouteTypes {
     | '/_authenticated/agents/'
     | '/_authenticated/chat/'
     | '/_authenticated/chats/'
+    | '/_authenticated/getting-started/'
     | '/_authenticated/knowledge-bases/'
     | '/_authenticated/settings/'
     | '/_authenticated/skills/'
@@ -658,6 +671,13 @@ declare module '@tanstack/react-router' {
       path: '/knowledge-bases'
       fullPath: '/knowledge-bases/'
       preLoaderRoute: typeof AuthenticatedKnowledgeBasesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/getting-started/': {
+      id: '/_authenticated/getting-started/'
+      path: '/getting-started'
+      fullPath: '/getting-started/'
+      preLoaderRoute: typeof AuthenticatedGettingStartedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/chats/': {
@@ -884,6 +904,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAgentsIndexRoute: typeof AuthenticatedAgentsIndexRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
+  AuthenticatedGettingStartedIndexRoute: typeof AuthenticatedGettingStartedIndexRoute
   AuthenticatedKnowledgeBasesIndexRoute: typeof AuthenticatedKnowledgeBasesIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedSkillsIndexRoute: typeof AuthenticatedSkillsIndexRoute
@@ -921,6 +942,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAgentsIndexRoute: AuthenticatedAgentsIndexRoute,
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
+  AuthenticatedGettingStartedIndexRoute: AuthenticatedGettingStartedIndexRoute,
   AuthenticatedKnowledgeBasesIndexRoute: AuthenticatedKnowledgeBasesIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedSkillsIndexRoute: AuthenticatedSkillsIndexRoute,

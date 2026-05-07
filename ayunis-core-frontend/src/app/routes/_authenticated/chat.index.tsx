@@ -40,6 +40,7 @@ const queryAgentsOptions = () => ({
 const searchSchema = z.object({
   modelId: z.string().optional(),
   agentId: z.string().optional(),
+  prompt: z.string().optional(),
 });
 
 export const Route = createFileRoute('/_authenticated/chat/')({
@@ -103,12 +104,14 @@ export const Route = createFileRoute('/_authenticated/chat/')({
 function RouteComponent() {
   const { selectedModelId, selectedAgentId, isEmbeddingModelEnabled, agents } =
     Route.useLoaderData();
+  const { prompt } = Route.useSearch();
   return (
     <NewChatPage
       selectedModelId={selectedModelId}
       selectedAgentId={selectedAgentId}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
       agents={agents}
+      initialPrompt={prompt}
     />
   );
 }

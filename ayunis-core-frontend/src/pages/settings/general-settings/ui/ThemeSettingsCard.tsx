@@ -18,7 +18,7 @@ export function ThemeSettingsCard() {
   };
 
   return (
-    <Card>
+    <Card data-spotlight="theme-settings">
       <CardHeader>
         <CardTitle>{t('general.appearance')}</CardTitle>
       </CardHeader>

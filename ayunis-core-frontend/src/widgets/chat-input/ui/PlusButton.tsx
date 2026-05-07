@@ -102,6 +102,7 @@ export default function PlusButton({
               variant="outline"
               disabled={isFileSourceDisabled && isImageUploadDisabled}
               aria-label={t('chatInput.addButtonTooltip')}
+              data-spotlight="chat-upload"
             >
               <Plus className="h-4 w-4" />
             </Button>

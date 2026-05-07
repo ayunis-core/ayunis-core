@@ -1,6 +1,8 @@
 import React from 'react';
 import { SidebarProvider, SidebarInset } from '@/shared/ui/shadcn/sidebar';
 import AppSidebar from '@/widgets/app-sidebar';
+import SpotlightOverlay from '@/shared/ui/spotlight-overlay/SpotlightOverlay';
+import { GettingStartedPill } from '@/features/getting-started-pill';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -19,6 +21,8 @@ export default function AppLayout({
           {children}
         </div>
       </SidebarInset>
+      <SpotlightOverlay />
+      <GettingStartedPill />
     </SidebarProvider>
   );
 }

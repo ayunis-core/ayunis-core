@@ -27,12 +27,15 @@ export function PinnedSkills({
 
   const pinnedSkills = skills?.filter((skill) => skill.isPinned) ?? [];
 
-  if (!skillsEnabled || pinnedSkills.length === 0) {
+  if (!skillsEnabled) {
     return null;
   }
 
   return (
-    <div className="flex justify-center items-center gap-2 flex-wrap">
+    <div
+      className="flex justify-center items-center gap-2 flex-wrap"
+      data-spotlight="pinned-skills"
+    >
       {pinnedSkills.map((skill) => (
         <Tooltip key={skill.id}>
           <TooltipTrigger asChild>

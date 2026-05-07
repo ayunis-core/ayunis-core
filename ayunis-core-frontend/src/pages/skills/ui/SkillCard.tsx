@@ -96,6 +96,7 @@ export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
               <Button
                 variant="ghost"
                 size="icon"
+                data-spotlight="pin-skill"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleTogglePinned();

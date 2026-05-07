@@ -69,6 +69,7 @@ export function MicrophoneButton({
             onClick={handleClick}
             disabled={busy}
             aria-label={tooltipText}
+            data-spotlight="voice-input"
           >
             {busy ? (
               <Loader2 className="h-4 w-4 animate-spin" />

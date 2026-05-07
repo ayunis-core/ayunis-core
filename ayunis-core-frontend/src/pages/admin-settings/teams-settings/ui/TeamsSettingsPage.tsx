@@ -21,7 +21,11 @@ export function TeamsSettingsPage({ teams }: Readonly<TeamsSettingsPageProps>) {
   const headerActions = (
     <div className="flex gap-2">
       <HelpLink path="settings/admin/teams/" />
-      <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+      <Button
+        size="sm"
+        onClick={() => setCreateDialogOpen(true)}
+        data-spotlight="create-team"
+      >
         {t('teams.page.add')}
       </Button>
     </div>

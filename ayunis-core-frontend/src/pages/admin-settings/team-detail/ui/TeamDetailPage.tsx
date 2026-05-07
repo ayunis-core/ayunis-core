@@ -36,7 +36,11 @@ export function TeamDetailPage({
 
   const headerActions =
     activeTab === 'members' ? (
-      <Button size="sm" onClick={() => setAddMemberDialogOpen(true)}>
+      <Button
+        size="sm"
+        data-spotlight="add-team-member"
+        onClick={() => setAddMemberDialogOpen(true)}
+      >
         {t('teamDetail.addMember.button')}
       </Button>
     ) : null;

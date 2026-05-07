@@ -96,6 +96,7 @@ interface ChatInputProps {
   isAnonymousEnforced?: boolean;
   /** Whether the selected model supports vision (image upload) */
   isVisionEnabled?: boolean;
+  initialMessage?: string;
 }
 
 export interface ChatInputRef {
@@ -133,11 +134,12 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       selectedSkillId,
       selectedSkillName,
       onSkillRemove,
+      initialMessage,
     },
     ref,
   ) => {
     const [isFocused, setIsFocused] = useState<boolean>(false);
-    const [message, setMessage] = useState('');
+    const [message, setMessage] = useState(initialMessage ?? '');
     const isSubmitting = submissionState === 'submitting';
     const inFlight = submissionState !== 'idle';
     const { t } = useTranslation('common');

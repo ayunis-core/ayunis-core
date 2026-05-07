@@ -103,7 +103,7 @@ export function SystemPromptCard() {
   } = useUserSystemPrompt();
 
   return (
-    <Card>
+    <Card data-spotlight="system-prompt">
       <CardHeader>
         <CardTitle>{t('chat.systemPromptTitle')}</CardTitle>
       </CardHeader>

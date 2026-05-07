@@ -1,0 +1,207 @@
+{
+  "page": {
+    "title": "Erste Schritte",
+    "description": "Entdecke, was Ayunis Core für dich tun kann.",
+    "checkboxHint": "Hake erledigte Schritte selbst ab, um deinen Fortschritt zu verfolgen."
+  },
+  "progress": {
+    "completed": "{{count}} von {{total}} erledigt"
+  },
+  "stepCompleted": "Schritt erledigt! ✓",
+  "spotlightDismiss": "Alles klar",
+  "returnPill": "Zurück zu Erste Schritte",
+  "milestones": {
+    "goodStart": "Guter Start! Weiter so.",
+    "halfWay": "Schon die Hälfte geschafft!",
+    "almostDone": "Fast fertig — nur noch ein paar Schritte!",
+    "complete": "Alles erledigt — du bist startklar!"
+  },
+  "categories": {
+    "workspace": {
+      "title": "Arbeitsplatz einrichten",
+      "description": "Konfiguriere deinen Arbeitsplatz für dein Team."
+    },
+    "firstChat": {
+      "title": "Entdecke den Chat",
+      "description": "Lerne die wichtigsten Funktionen kennen."
+    },
+    "skills": {
+      "title": "Fähigkeiten entdecken",
+      "description": "In den Fähigkeiten findest du spezialisierte Experten — z. B. einen Daten-Analysten oder einen Dokumenten-Zusammenfasser. Einmal hinzugefügt, stehen sie automatisch im Chat zur Verfügung.",
+      "helpLink": "Mehr über Fähigkeiten erfahren"
+    },
+    "knowledgeManagement": {
+      "title": "Wissensmanagement",
+      "description": "Erstelle Wissenssammlungen mit eigenen Dokumenten und URLs — Ayunis Core nutzt dieses Wissen automatisch für präzisere Antworten.",
+      "helpLink": "Mehr über Wissenssammlungen erfahren"
+    },
+    "advanced": {
+      "title": "Fortgeschrittene Funktionen",
+      "description": "Entdecke weitere Funktionen, die deinen Arbeitsalltag noch effizienter machen."
+    },
+    "workflows": {
+      "title": "Anwendungsfälle",
+      "description": "Probiere typische Aufgaben aus und sieh, was Ayunis Core für dich erledigen kann."
+    }
+  },
+  "steps": {
+    "configureModels": {
+      "title": "Modelle prüfen und konfigurieren",
+      "description": "Prüfe, welche Modelle für deine Organisation freigeschaltet sind, und passe bei Bedarf das Standardmodell an.",
+      "action": "Modelle konfigurieren",
+      "spotlightTitle": "Freigeschaltete Modelle",
+      "spotlightDescription": "Hier siehst du die verfügbaren Modelle. Du kannst Modelle aktivieren oder deaktivieren und oben das Standardmodell ändern."
+    },
+    "inviteColleagues": {
+      "title": "Kollegen einladen",
+      "description": "Lade weitere Benutzer ein, damit alle von Ayunis Core profitieren können.",
+      "action": "Benutzer einladen",
+      "spotlightTitle": "Nutzer einladen",
+      "spotlightDescription": "Klicke hier, um neue Nutzer per E-Mail einzuladen. Eingeladene Kollegen können sofort loslegen."
+    },
+    "createTeams": {
+      "title": "Teams erstellen",
+      "description": "Organisiere deine Kollegen in Teams für bessere Zusammenarbeit.",
+      "action": "Teams verwalten",
+      "spotlightTitle": "Team erstellen",
+      "spotlightDescription": "Klicke hier, um ein neues Team zu erstellen. Teams helfen dir, Kollegen zu organisieren und Berechtigungen gemeinsam zu verwalten."
+    },
+    "sendFirstMessage": {
+      "title": "Starte deinen ersten Chat",
+      "description": "Schreibe deine erste Nachricht und erlebe, wie Ayunis Core dich unterstützt — von Texten über Analysen bis hin zu Übersetzungen.",
+      "prompt": "Hallo Ayunis Core! Wobei kannst du mir in meinem Arbeitsalltag in der Verwaltung helfen? Bitte mit konkreten Beispielen.",
+      "action": "Chat starten"
+    },
+    "uploadDocument": {
+      "title": "Lade ein Dokument hoch",
+      "description": "Lade ein PDF, Word- oder Excel-Dokument hoch und stelle Fragen dazu — Ayunis Core kann zusammenfassen, analysieren und extrahieren.",
+      "action": "Dokument hochladen",
+      "spotlightTitle": "Dokument hochladen",
+      "spotlightDescription": "Klicke hier, um ein Dokument hochzuladen. Ayunis Core kann es zusammenfassen, analysieren oder Fragen dazu beantworten."
+    },
+    "tryDifferentModel": {
+      "title": "Probiere ein anderes Modell",
+      "description": "Wechsle zwischen verschiedenen Modellen — jedes hat unterschiedliche Stärken. Vergleiche die Ergebnisse.",
+      "action": "Modell wechseln",
+      "spotlightTitle": "Modell wechseln",
+      "spotlightDescription": "Wähle hier ein anderes Modell aus. Verschiedene Modelle liefern unterschiedliche Ergebnisse — probiere aus, welches am besten zu deiner Aufgabe passt."
+    },
+    "tryVoiceInput": {
+      "title": "Nutze die Spracheingabe",
+      "description": "Diktiere deine Nachricht per Mikrofon statt zu tippen — ideal für schnelle Fragen oder unterwegs.",
+      "action": "Spracheingabe testen",
+      "spotlightTitle": "Spracheingabe",
+      "spotlightDescription": "Klicke auf das Mikrofon, um deine Nachricht per Sprache einzugeben. Die Aufnahme wird automatisch in Text umgewandelt."
+    },
+    "anonymousMode": {
+      "title": "Aktiviere den anonymen Modus",
+      "description": "Schütze personenbezogene Daten automatisch — Namen, Adressen und andere sensible Informationen werden vor dem Senden anonymisiert.",
+      "action": "Anonymen Modus ansehen",
+      "spotlightTitle": "Anonymer Modus",
+      "spotlightDescription": "Aktiviere den anonymen Modus, um personenbezogene Daten (PII) automatisch zu erkennen und zu anonymisieren, bevor sie an das Modell gesendet werden."
+    },
+    "installSkill": {
+      "title": "Fähigkeit aus dem Marketplace installieren",
+      "description": "Stöbere im Marketplace und installiere fertige Fähigkeiten mit einem Klick.",
+      "action": "Marketplace öffnen"
+    },
+    "createSkill": {
+      "title": "Eigene Fähigkeit erstellen",
+      "description": "Erstelle eine Fähigkeit, die genau auf deine Aufgaben zugeschnitten ist.",
+      "action": "Fähigkeit erstellen",
+      "spotlightTitle": "Fähigkeit erstellen",
+      "spotlightDescription": "Klicke hier, um eine neue Fähigkeit zu erstellen. Fähigkeiten sind wiederverwendbare Vorlagen für häufige Aufgaben."
+    },
+    "useSkillInChat": {
+      "title": "Fähigkeit anheften",
+      "description": "Fähigkeiten aktivieren sich automatisch, wenn sie zu deiner Frage passen. Du kannst sie auch hier anheften, um sie gezielt in einem neuen Chat zu verwenden.",
+      "action": "Fähigkeit anheften",
+      "spotlightTitle": "Fähigkeit anheften",
+      "spotlightDescription": "Klicke auf das Pin-Symbol, um eine Fähigkeit an neue Chats anzuheften."
+    },
+    "activateSkillInChat": {
+      "title": "Angeheftete Fähigkeit im Chat nutzen",
+      "description": "Deine angehefteten Fähigkeiten erscheinen als Buttons unter dem Chat-Eingabefeld. Klicke auf eine Fähigkeit, um sie für diesen Chat zu aktivieren.",
+      "action": "Zum Chat",
+      "spotlightTitle": "Angeheftete Fähigkeiten",
+      "spotlightDescription": "Hier siehst du deine angehefteten Fähigkeiten. Klicke auf eine, um sie für diesen Chat zu aktivieren."
+    },
+    "createKnowledgeBase": {
+      "title": "Wissenssammlung erstellen",
+      "description": "Erstelle eine Wissenssammlung, um eigene Dokumente und Webseiten als Wissensquelle für Ayunis Core bereitzustellen.",
+      "action": "Wissenssammlung erstellen",
+      "spotlightTitle": "Wissenssammlung erstellen",
+      "spotlightDescription": "Klicke hier, um eine neue Wissenssammlung anzulegen. Du kannst anschließend Dokumente und URLs hinzufügen."
+    },
+    "addDocuments": {
+      "title": "Dokumente hinzufügen",
+      "description": "Lade PDFs, Word-Dokumente oder füge Web-URLs hinzu. Ayunis Core verarbeitet die Inhalte automatisch und kann darauf basierend Fragen beantworten.",
+      "action": "Zur Wissenssammlung",
+      "spotlightTitle": "Wissenssammlung öffnen",
+      "spotlightDescription": "Klicke auf deine Wissenssammlung, um Dokumente, PDFs oder Web-URLs hinzuzufügen."
+    },
+    "useKnowledgeBaseInChat": {
+      "title": "Wissenssammlung im Chat nutzen",
+      "description": "Füge eine Wissenssammlung über das Plus-Menü zu deinem Chat hinzu. Ayunis Core bezieht dann dein eigenes Wissen in die Antworten ein.",
+      "action": "Chat starten",
+      "spotlightTitle": "Wissenssammlung hinzufügen",
+      "spotlightDescription": "Über das Plus-Menü kannst du Wissenssammlungen zu deinem Chat hinzufügen. Ayunis Core nutzt dann dein eigenes Wissen für präzisere Antworten."
+    },
+    "customInstructions": {
+      "title": "Eigene Anweisungen festlegen",
+      "description": "Definiere einen persönlichen System-Prompt, der in jedem Chat automatisch angewendet wird — z. B. Tonalität, Sprache oder Rollenanweisungen.",
+      "action": "Anweisungen konfigurieren",
+      "spotlightTitle": "Eigene Anweisungen",
+      "spotlightDescription": "Hier kannst du einen persönlichen System-Prompt hinterlegen. Er wird automatisch in jedem neuen Chat verwendet."
+    },
+    "generateImage": {
+      "title": "Bild generieren lassen",
+      "description": "Ayunis Core kann Bilder auf Basis deiner Beschreibung erstellen — ideal für Präsentationen, Entwürfe oder kreative Ideen. Voraussetzung: Ein Administrator muss ein Bilderzeugungsmodell aktiviert haben.",
+      "prompt": "Erstelle ein modernes, minimalistisches Icon für eine Gemeinde-App. Das Icon soll ein stilisiertes Rathaus zeigen, in Blau- und Weißtönen, flaches Design.",
+      "action": "Ausprobieren"
+    },
+    "switchTheme": {
+      "title": "Dark Mode aktivieren",
+      "description": "Wechsle zwischen hellem und dunklem Design — schont die Augen bei langen Arbeitstagen.",
+      "action": "Design anpassen",
+      "spotlightTitle": "Erscheinungsbild",
+      "spotlightDescription": "Aktiviere hier den Dark Mode. Das dunkle Design schont die Augen, besonders bei längerer Nutzung."
+    },
+    "citizenInquiry": {
+      "title": "Bürgeranfrage beantworten",
+      "description": "Sieh, wie schnell eine professionelle Antwort entsteht.",
+      "prompt": "Ein Bürger schreibt: 'Ich möchte einen Anbau an mein Einfamilienhaus errichten. Welche Unterlagen benötige ich für den Bauantrag?' — Formuliere eine freundliche, professionelle Antwort mit allen nötigen Unterlagen und nächsten Schritten.",
+      "action": "Ausprobieren"
+    },
+    "simplifyLaw": {
+      "title": "Gesetzestext vereinfachen",
+      "description": "Mache einen komplexen Rechtstext für Bürger verständlich.",
+      "prompt": "Vereinfache § 35 BauGB (Bauen im Außenbereich) in einfache, bürgerfreundliche Sprache. Erkläre die 3 wichtigsten Punkte so, dass sie auch ohne juristische Vorkenntnisse verständlich sind.",
+      "action": "Ausprobieren"
+    },
+    "internalMemo": {
+      "title": "Internen Vermerk erstellen",
+      "description": "Lass dir einen strukturierten Vermerk generieren.",
+      "prompt": "Erstelle einen internen Vermerk für eine Dienstbesprechung am 15.05. mit folgenden Themen: Einführung Dokumentenmanagementsystem, Urlaubsplanung Sommer, Vertretungsregelung Frau Müller. Verwende das Format: Datum, Teilnehmer, Tagesordnung, Beschlüsse, nächste Schritte.",
+      "action": "Ausprobieren"
+    },
+    "meetingAgenda": {
+      "title": "Tagesordnung erstellen",
+      "description": "Lass dir eine strukturierte Agenda für dein Meeting erstellen.",
+      "prompt": "Erstelle eine Tagesordnung für die Amtsleiterrunde am Montag, 10:00-11:30 Uhr. Themen: 1) Stand Digitalisierungsprojekt E-Akte, 2) Personalplanung Q3, 3) Rückmeldungen Bürgersprechstunde, 4) Verschiedenes. Füge realistische Zeitslots hinzu.",
+      "action": "Ausprobieren"
+    },
+    "translateCitizenInfo": {
+      "title": "Bürgerinformation übersetzen",
+      "description": "Übersetze Infomaterial in mehrere Sprachen.",
+      "prompt": "Übersetze folgenden Text ins Englische, Türkische und Arabische: 'Die Sprechzeiten des Bürgerbüros ändern sich ab 1. Juni. Montag bis Freitag: 8-12 Uhr, Dienstag und Donnerstag zusätzlich 14-18 Uhr. Terminvereinbarung unter 0800-123456 oder online.' Achte auf kulturelle Angemessenheit.",
+      "action": "Ausprobieren"
+    },
+    "checkReadability": {
+      "title": "Bescheidtext prüfen",
+      "description": "Lass deinen Bescheid auf Verständlichkeit prüfen.",
+      "prompt": "Prüfe folgenden Bescheidtext auf Verständlichkeit: 'Gemäß § 48 VwVfG wird der Ihnen erteilte Bescheid vom 01.03.2025 hiermit zurückgenommen. Die Rücknahme erfolgt mit Wirkung für die Vergangenheit.' Bewerte: 1) Sprachliche Klarheit, 2) Bürgerfreundlichkeit. Schlage eine verständlichere Version vor.",
+      "action": "Ausprobieren"
+    }
+  }
+}

@@ -35,7 +35,9 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
   const headerAction = (
     <div className="flex gap-2">
       <HelpLink path="skills/" />
-      <CreateSkillDialog />
+      <div data-spotlight="create-skill">
+        <CreateSkillDialog />
+      </div>
     </div>
   );
 

@@ -36,7 +36,9 @@ export default function KnowledgeBasesPage({
   const headerAction = (
     <div className="flex gap-2">
       <HelpLink path="knowledge-collections/" />
-      <CreateKnowledgeBaseDialog />
+      <span data-spotlight="create-knowledge-base">
+        <CreateKnowledgeBaseDialog />
+      </span>
     </div>
   );
 
@@ -86,8 +88,12 @@ export default function KnowledgeBasesPage({
                 />
               ) : (
                 <div className="space-y-3">
-                  {personalKnowledgeBases.map((kb) => (
-                    <KnowledgeBaseCard key={kb.id} knowledgeBase={kb} />
+                  {personalKnowledgeBases.map((kb, index) => (
+                    <KnowledgeBaseCard
+                      key={kb.id}
+                      knowledgeBase={kb}
+                      spotlight={index === 0 ? 'add-documents' : undefined}
+                    />
                   ))}
                 </div>
               )}

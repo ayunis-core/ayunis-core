@@ -1,11 +1,11 @@
 import { Lock } from 'lucide-react';
 import NewChatPageLayout from './NewChatPageLayout';
-import ChatInput from '@/widgets/chat-input';
+import ChatInput, { type ChatInputRef } from '@/widgets/chat-input';
 import {
   useInitiateChat,
   type SourceUploadStatus,
 } from '../api/useInitiateChat';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
@@ -33,6 +33,7 @@ interface NewChatPageProps {
   selectedAgentId?: string;
   agents: AgentResponseDto[];
   isEmbeddingModelEnabled: boolean;
+  initialPrompt?: string;
 }
 
 export default function NewChatPage({
@@ -40,6 +41,7 @@ export default function NewChatPage({
   selectedAgentId,
   isEmbeddingModelEnabled,
   agents,
+  initialPrompt,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
   const { initiateChat, cancel, isCreating } = useInitiateChat();
@@ -60,6 +62,14 @@ export default function NewChatPage({
   }, [isSystemPromptError, t]);
   const queryClient = useQueryClient();
   const router = useRouter();
+  const chatInputRef = useRef<ChatInputRef>(null);
+
+  useEffect(() => {
+    if (initialPrompt) {
+      chatInputRef.current?.setMessage(initialPrompt);
+    }
+  }, [initialPrompt]);
+
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -240,6 +250,8 @@ export default function NewChatPage({
       </div>
       <div className="w-full flex flex-col gap-4 mt-2">
         <ChatInput
+          ref={chatInputRef}
+          initialMessage={initialPrompt}
           // If an agent is selected, use the agent's model,
           // but disable the model selection
           // to only show the model that the agent uses
