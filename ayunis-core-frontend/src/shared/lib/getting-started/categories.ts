@@ -42,7 +42,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
       {
         id: 'sendFirstMessage',
         translationKey: 'sendFirstMessage',
-        action: { type: 'prompt', prompt: 'sendFirstMessage' },
+        action: { type: 'prompt' },
       },
       {
         id: 'uploadDocument',
@@ -67,8 +67,16 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
   {
     id: 'skills',
     translationKey: 'skills',
-    helpUrl: 'https://docs.ayunis.com/de/skills/',
     steps: [
+      {
+        id: 'whatAreSkills',
+        translationKey: 'whatAreSkills',
+        action: { type: 'prompt' },
+        secondaryAction: {
+          type: 'help-center',
+          path: 'skills/',
+        },
+      },
       {
         id: 'installSkill',
         translationKey: 'installSkill',
@@ -109,7 +117,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
   {
     id: 'knowledgeManagement',
     translationKey: 'knowledgeManagement',
-    helpUrl: 'https://docs.ayunis.com/de/knowledge-collections/',
+    helpPath: 'knowledge-collections/',
     steps: [
       {
         id: 'createKnowledgeBase',
@@ -149,32 +157,32 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
       {
         id: 'citizenInquiry',
         translationKey: 'citizenInquiry',
-        action: { type: 'prompt', prompt: 'citizenInquiry' },
+        action: { type: 'prompt' },
       },
       {
         id: 'simplifyLaw',
         translationKey: 'simplifyLaw',
-        action: { type: 'prompt', prompt: 'simplifyLaw' },
+        action: { type: 'prompt' },
       },
       {
         id: 'internalMemo',
         translationKey: 'internalMemo',
-        action: { type: 'prompt', prompt: 'internalMemo' },
+        action: { type: 'prompt' },
       },
       {
         id: 'meetingAgenda',
         translationKey: 'meetingAgenda',
-        action: { type: 'prompt', prompt: 'meetingAgenda' },
+        action: { type: 'prompt' },
       },
       {
         id: 'translateCitizenInfo',
         translationKey: 'translateCitizenInfo',
-        action: { type: 'prompt', prompt: 'translateCitizenInfo' },
+        action: { type: 'prompt' },
       },
       {
         id: 'checkReadability',
         translationKey: 'checkReadability',
-        action: { type: 'prompt', prompt: 'checkReadability' },
+        action: { type: 'prompt' },
       },
     ],
   },
@@ -203,7 +211,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
       {
         id: 'generateImage',
         translationKey: 'generateImage',
-        action: { type: 'prompt', prompt: 'generateImage' },
+        action: { type: 'prompt' },
       },
       {
         id: 'switchTheme',

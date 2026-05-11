@@ -79,13 +79,6 @@
       "spotlightTitle": "Upload document",
       "spotlightDescription": "Click here to upload a document. Ayunis Core can summarize, analyze, or answer questions about it."
     },
-    "tryDifferentModel": {
-      "title": "Try a different model",
-      "description": "Switch between different models — each has different strengths. Compare the results.",
-      "action": "Switch model",
-      "spotlightTitle": "Switch model",
-      "spotlightDescription": "Select a different model here. Different models produce different results — try which one fits your task best."
-    },
     "tryVoiceInput": {
       "title": "Use voice input",
       "description": "Dictate your message by microphone instead of typing — ideal for quick questions or on the go.",
@@ -99,6 +92,13 @@
       "action": "View anonymous mode",
       "spotlightTitle": "Anonymous mode",
       "spotlightDescription": "Enable anonymous mode to automatically detect and anonymize personally identifiable information (PII) before it's sent to the model."
+    },
+    "whatAreSkills": {
+      "title": "What are skills?",
+      "description": "Skills are specialized experts for specific tasks — like a data analyst or a document summarizer. Have the details explained directly by Ayunis Core or check the documentation.",
+      "prompt": "Please explain what skills are in Ayunis Core. What can I use them for, what examples are there, and how do they help me in my daily work? Give me a concise, easy-to-understand overview.",
+      "action": "Explain in chat",
+      "secondaryAction": "Help center"
     },
     "installSkill": {
       "title": "Install a skill from the marketplace",

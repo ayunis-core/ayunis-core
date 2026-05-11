@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ChevronDown, ExternalLink } from 'lucide-react';
 import { Progress } from '@/shared/ui/shadcn/progress';
 import { cn } from '@/shared/lib/shadcn/utils';
+import { getHelpCenterUrl } from '@/shared/lib/help-center';
 import type { GettingStartedCategory } from '@/shared/lib/getting-started/types';
 import StepItem from './StepItem';
 
@@ -63,12 +64,12 @@ export default function CategoryCard({
 
       {expanded && (
         <div className="px-5 pb-3">
-          {category.helpUrl && (
+          {category.helpPath && (
             <div className="pb-2.5 mb-1 border-b border-border/50">
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {t(`categories.${category.translationKey}.description`)}{' '}
                 <a
-                  href={category.helpUrl}
+                  href={getHelpCenterUrl(category.helpPath)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-0.5 text-primary hover:underline"

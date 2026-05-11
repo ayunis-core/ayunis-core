@@ -56,8 +56,8 @@
       "title": "Kollegen einladen",
       "description": "Lade weitere Benutzer ein, damit alle von Ayunis Core profitieren können.",
       "action": "Benutzer einladen",
-      "spotlightTitle": "Nutzer einladen",
-      "spotlightDescription": "Klicke hier, um neue Nutzer per E-Mail einzuladen. Eingeladene Kollegen können sofort loslegen."
+      "spotlightTitle": "Benutzer einladen",
+      "spotlightDescription": "Klicke hier, um neue Benutzer per E-Mail einzuladen. Eingeladene Kollegen können sofort loslegen."
     },
     "createTeams": {
       "title": "Teams erstellen",
@@ -79,13 +79,6 @@
       "spotlightTitle": "Dokument hochladen",
       "spotlightDescription": "Klicke hier, um ein Dokument hochzuladen. Ayunis Core kann es zusammenfassen, analysieren oder Fragen dazu beantworten."
     },
-    "tryDifferentModel": {
-      "title": "Probiere ein anderes Modell",
-      "description": "Wechsle zwischen verschiedenen Modellen — jedes hat unterschiedliche Stärken. Vergleiche die Ergebnisse.",
-      "action": "Modell wechseln",
-      "spotlightTitle": "Modell wechseln",
-      "spotlightDescription": "Wähle hier ein anderes Modell aus. Verschiedene Modelle liefern unterschiedliche Ergebnisse — probiere aus, welches am besten zu deiner Aufgabe passt."
-    },
     "tryVoiceInput": {
       "title": "Nutze die Spracheingabe",
       "description": "Diktiere deine Nachricht per Mikrofon statt zu tippen — ideal für schnelle Fragen oder unterwegs.",
@@ -99,6 +92,13 @@
       "action": "Anonymen Modus ansehen",
       "spotlightTitle": "Anonymer Modus",
       "spotlightDescription": "Aktiviere den anonymen Modus, um personenbezogene Daten (PII) automatisch zu erkennen und zu anonymisieren, bevor sie an das Modell gesendet werden."
+    },
+    "whatAreSkills": {
+      "title": "Was sind Fähigkeiten?",
+      "description": "Fähigkeiten sind spezialisierte Experten für bestimmte Aufgaben — z. B. ein Daten-Analyst oder ein Dokumenten-Zusammenfasser. Lass dir die Details direkt von Ayunis Core erklären oder lies in der Dokumentation nach.",
+      "prompt": "Erkläre mir bitte, was Fähigkeiten in Ayunis Core sind. Wofür kann ich sie verwenden, welche Beispiele gibt es und wie helfen sie mir im Alltag? Gib mir eine kompakte, verständliche Übersicht.",
+      "action": "Jetzt erklären lassen",
+      "secondaryAction": "Zum Hilfecenter"
     },
     "installSkill": {
       "title": "Fähigkeit aus dem Marketplace installieren",

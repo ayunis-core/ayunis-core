@@ -3,14 +3,13 @@ import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { Progress } from '@/shared/ui/shadcn/progress';
 import { useMe } from '../api/useMe';
-import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { MeResponseDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { GETTING_STARTED_CATEGORIES } from '@/shared/lib/getting-started/categories';
-
-const STORAGE_KEY = 'getting-started-completed';
+import { COMPLETED_STEPS_STORAGE_KEY } from '@/shared/lib/getting-started/constants';
 
 function getCompletedSteps(): Set<string> {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(COMPLETED_STEPS_STORAGE_KEY);
     if (stored) return new Set(JSON.parse(stored) as string[]);
   } catch {
     // ignore
@@ -22,10 +21,10 @@ export function GettingStartedCard() {
   const { t } = useTranslation('common');
   const { user } = useMe();
 
-  const isSuperAdmin = user?.systemRole === MeResponseDtoSystemRole.super_admin;
+  const isAdmin = user?.role === MeResponseDtoRole.admin;
 
   const categories = GETTING_STARTED_CATEGORIES.filter(
-    (cat) => !cat.adminOnly || isSuperAdmin,
+    (cat) => !cat.adminOnly || isAdmin,
   );
 
   const completedSteps = getCompletedSteps();

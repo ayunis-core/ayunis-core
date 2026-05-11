@@ -5,6 +5,7 @@ import { ChevronDown, ArrowRight, Lock } from 'lucide-react';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Checkbox } from '@/shared/ui/shadcn/checkbox';
 import { cn } from '@/shared/lib/shadcn/utils';
+import { getHelpCenterUrl } from '@/shared/lib/help-center';
 import { requestSpotlight } from '@/shared/lib/spotlight';
 import type { GettingStartedStep } from '@/shared/lib/getting-started/types';
 
@@ -28,11 +29,12 @@ export default function StepItem({
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   const prompt =
-    step.action.type === 'prompt'
+    step.action?.type === 'prompt'
       ? t(`steps.${step.translationKey}.prompt`)
       : null;
 
   const handleAction = () => {
+    if (!step.action) return;
     if (step.action.type === 'prompt') {
       sessionStorage.setItem('getting-started-pending-step', step.id);
       sessionStorage.setItem('getting-started-target-path', '/chat');
@@ -102,10 +104,31 @@ export default function StepItem({
           <p className="text-sm text-muted-foreground leading-relaxed">
             {t(`steps.${step.translationKey}.description`)}
           </p>
-          <Button size="sm" onClick={handleAction}>
-            {t(`steps.${step.translationKey}.action`)}
-            <ArrowRight className="size-3" />
-          </Button>
+          {(step.action ?? step.secondaryAction) && (
+            <div className="flex items-center gap-2">
+              {step.action && (
+                <Button size="sm" onClick={handleAction}>
+                  {t(`steps.${step.translationKey}.action`)}
+                  <ArrowRight className="size-3" />
+                </Button>
+              )}
+              {step.secondaryAction && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    const url =
+                      step.secondaryAction!.type === 'help-center'
+                        ? getHelpCenterUrl(step.secondaryAction!.path)
+                        : step.secondaryAction!.url;
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                  }}
+                >
+                  {t(`steps.${step.translationKey}.secondaryAction`)}
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

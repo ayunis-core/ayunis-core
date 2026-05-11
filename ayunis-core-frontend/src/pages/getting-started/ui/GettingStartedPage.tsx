@@ -9,6 +9,7 @@ import { Progress } from '@/shared/ui/shadcn/progress';
 import { useMe } from '@/widgets/app-sidebar/api/useMe';
 import { MeResponseDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { GETTING_STARTED_CATEGORIES } from '@/shared/lib/getting-started/categories';
+import { COMPLETED_STEPS_STORAGE_KEY } from '@/shared/lib/getting-started/constants';
 import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
 import { Button } from '@/shared/ui/shadcn/button';
 import { showSuccess } from '@/shared/lib/toast';
@@ -16,11 +17,9 @@ import brandIconDark from '@/shared/assets/brand/brand-icon-round-dark.svg';
 import CategoryCard from './CategoryCard';
 import ShimmerDots from './ShimmerDots';
 
-const STORAGE_KEY = 'getting-started-completed';
-
 function loadCompleted(): Set<string> {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(COMPLETED_STEPS_STORAGE_KEY);
     if (stored) return new Set(JSON.parse(stored) as string[]);
   } catch {
     // ignore
@@ -29,7 +28,10 @@ function loadCompleted(): Set<string> {
 }
 
 function saveCompleted(completed: Set<string>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...completed]));
+  localStorage.setItem(
+    COMPLETED_STEPS_STORAGE_KEY,
+    JSON.stringify([...completed]),
+  );
 }
 
 function getMilestoneMessage(
