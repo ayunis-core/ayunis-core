@@ -1,6 +1,8 @@
 import { SettingsLayout } from '../../settings-layout';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import { SpotlightTarget } from '@/shared/ui/spotlight-overlay/SpotlightTarget';
+import { SPOTLIGHT_TARGET } from '@/shared/lib/spotlight-targets';
 import { ChatSettingsCard } from './ChatSettingsCard';
 import { SystemPromptCard } from './SystemPromptCard';
 
@@ -14,7 +16,9 @@ export default function ChatSettingsPage() {
     >
       <div className="space-y-4">
         <ChatSettingsCard />
-        <SystemPromptCard />
+        <SpotlightTarget name={SPOTLIGHT_TARGET.systemPrompt}>
+          <SystemPromptCard />
+        </SpotlightTarget>
       </div>
     </SettingsLayout>
   );

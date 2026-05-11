@@ -176,7 +176,7 @@ export default function ModelTypeCard({
   }
 
   return (
-    <Card data-spotlight={`configure-models-${type}`}>
+    <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>

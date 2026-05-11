@@ -9,6 +9,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import { SpotlightTarget } from '@/shared/ui/spotlight-overlay/SpotlightTarget';
+import { SPOTLIGHT_TARGET } from '@/shared/lib/spotlight-targets';
+import { requestSpotlight } from '@/shared/lib/spotlight';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
 import type { AgentResponseDto } from '@/shared/api';
@@ -34,6 +37,7 @@ interface NewChatPageProps {
   agents: AgentResponseDto[];
   isEmbeddingModelEnabled: boolean;
   initialPrompt?: string;
+  initialAttachmentUrl?: string;
 }
 
 export default function NewChatPage({
@@ -42,6 +46,7 @@ export default function NewChatPage({
   isEmbeddingModelEnabled,
   agents,
   initialPrompt,
+  initialAttachmentUrl,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
   const { initiateChat, cancel, isCreating } = useInitiateChat();
@@ -68,6 +73,16 @@ export default function NewChatPage({
     if (initialPrompt) {
       chatInputRef.current?.setMessage(initialPrompt);
     }
+  }, [initialPrompt]);
+
+  // Highlight the Send button (ring only, no tooltip) when the chat was
+  // opened with a prefilled prompt — gives the user a clear next step.
+  useEffect(() => {
+    if (!initialPrompt) return;
+    const timeoutId = setTimeout(() => {
+      requestSpotlight({ target: SPOTLIGHT_TARGET.sendMessage });
+    }, 600);
+    return () => clearTimeout(timeoutId);
   }, [initialPrompt]);
 
   const [modelId, setModelId] = useState(selectedModelId);
@@ -110,6 +125,40 @@ export default function NewChatPage({
   const [selectedSkillName, setSelectedSkillName] = useState<string>();
   const selectedAgent = agents.find((agent) => agent.id === agentId);
   const selectedModel = models.find((m) => m.id === modelId);
+
+  useEffect(() => {
+    if (!initialAttachmentUrl) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(initialAttachmentUrl);
+        if (!res.ok || cancelled) return;
+        const blob = await res.blob();
+        if (cancelled) return;
+        const filename = initialAttachmentUrl.split('/').pop() ?? 'file';
+        const file = new File([blob], filename, {
+          type: blob.type || 'application/octet-stream',
+        });
+        const isCsvFile = filename.endsWith('.csv');
+        setSources((prev) => [
+          ...prev,
+          {
+            id: generateUUID(),
+            name: file.name,
+            type: isCsvFile
+              ? SourceResponseDtoType.data
+              : SourceResponseDtoType.text,
+            file,
+          },
+        ]);
+      } catch {
+        // Sample attachment is optional — ignore fetch failures silently.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialAttachmentUrl]);
 
   // Determine if anonymous mode is enforced by the selected model
   const isAnonymousEnforced = agentId
@@ -286,10 +335,12 @@ export default function NewChatPage({
           selectedSkillName={selectedSkillName}
           onSkillRemove={handleSkillRemove}
         />
-        <PinnedSkills
-          onSkillSelect={handleSkillSelect}
-          selectedSkillId={selectedSkillId}
-        />
+        <SpotlightTarget name={SPOTLIGHT_TARGET.pinnedSkills}>
+          <PinnedSkills
+            onSkillSelect={handleSkillSelect}
+            selectedSkillId={selectedSkillId}
+          />
+        </SpotlightTarget>
         <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
           <Lock className="h-3 w-3" />
           <span>{t('newChat.privacyHint')}</span>

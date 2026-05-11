@@ -54,7 +54,6 @@ export default function ModelSelector({
         className="border-none shadow-none"
         disabled={isDisabled || isDisabledModels}
         aria-label={t('chatInput.modelSelectorAriaLabel')}
-        data-spotlight="model-selector"
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>

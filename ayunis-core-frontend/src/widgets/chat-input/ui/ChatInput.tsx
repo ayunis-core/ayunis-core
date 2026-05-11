@@ -1,6 +1,8 @@
 import { useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
+import { SpotlightTarget } from '@/shared/ui/spotlight-overlay/SpotlightTarget';
+import { SPOTLIGHT_TARGET } from '@/shared/lib/spotlight-targets';
 import AgentButton from './AgentButton';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useTranslation } from 'react-i18next';
@@ -340,18 +342,20 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               <div className="flex items-center justify-between">
                 {/* Left side */}
                 <div className="flex-shrink-0 flex items-center space-x-2">
-                  <PlusButton
-                    onFileUpload={onFileUpload}
-                    onImageSelect={handleImageSelect}
-                    isFileSourceDisabled={
-                      !isEmbeddingModelEnabled || isSubmitting
-                    }
-                    isImageUploadDisabled={!isVisionEnabled || isSubmitting}
-                    onKnowledgeBaseSelect={onAddKnowledgeBase}
-                    attachedKnowledgeBaseIds={knowledgeBases?.map(
-                      (kb) => kb.id,
-                    )}
-                  />
+                  <SpotlightTarget name={SPOTLIGHT_TARGET.chatUpload}>
+                    <PlusButton
+                      onFileUpload={onFileUpload}
+                      onImageSelect={handleImageSelect}
+                      isFileSourceDisabled={
+                        !isEmbeddingModelEnabled || isSubmitting
+                      }
+                      isImageUploadDisabled={!isVisionEnabled || isSubmitting}
+                      onKnowledgeBaseSelect={onAddKnowledgeBase}
+                      attachedKnowledgeBaseIds={knowledgeBases?.map(
+                        (kb) => kb.id,
+                      )}
+                    />
+                  </SpotlightTarget>
                   {isAgentsEnabled && (
                     <AgentButton
                       selectedAgentId={agentId}
@@ -359,12 +363,14 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                       isDisabled={isAgentChangeDisabled}
                     />
                   )}
-                  <AnonymousButton
-                    isAnonymous={isAnonymous}
-                    onAnonymousChange={onAnonymousChange}
-                    isDisabled={isAnonymousChangeDisabled}
-                    isEnforced={isAnonymousEnforced}
-                  />
+                  <SpotlightTarget name={SPOTLIGHT_TARGET.anonymousMode}>
+                    <AnonymousButton
+                      isAnonymous={isAnonymous}
+                      onAnonymousChange={onAnonymousChange}
+                      isDisabled={isAnonymousChangeDisabled}
+                      isEnforced={isAnonymousEnforced}
+                    />
+                  </SpotlightTarget>
                   {isAgentsEnabled && agentId && (
                     <AgentBadge
                       agentId={agentId}
@@ -386,32 +392,38 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     condition={isModelChangeDisabled}
                     tooltip={t('chatInput.modelChangeDisabledTooltip')}
                   >
-                    <ModelSelector
-                      isDisabled={isModelChangeDisabled}
-                      selectedModelId={modelId}
-                      onModelChange={onModelChange}
-                    />
+                    <SpotlightTarget name={SPOTLIGHT_TARGET.modelSelector}>
+                      <ModelSelector
+                        isDisabled={isModelChangeDisabled}
+                        selectedModelId={modelId}
+                        onModelChange={onModelChange}
+                      />
+                    </SpotlightTarget>
                   </TooltipIf>
-                  <MicrophoneButton
-                    onTranscriptionComplete={(text) => {
-                      setMessage((prev) => (prev ? `${prev} ${text}` : text));
-                      // Focus textarea and place cursor at end after transcription
-                      setTimeout(() => {
-                        const textarea = textareaRef.current;
-                        if (textarea) {
-                          textarea.focus();
-                          const length = textarea.value.length;
-                          textarea.setSelectionRange(length, length);
-                        }
-                      }, 0);
-                    }}
-                  />
-                  <SendButton
-                    inFlight={inFlight}
-                    canSend={!!canSend}
-                    onSend={handleSend}
-                    onCancel={onCancel}
-                  />
+                  <SpotlightTarget name={SPOTLIGHT_TARGET.voiceInput}>
+                    <MicrophoneButton
+                      onTranscriptionComplete={(text) => {
+                        setMessage((prev) => (prev ? `${prev} ${text}` : text));
+                        // Focus textarea and place cursor at end after transcription
+                        setTimeout(() => {
+                          const textarea = textareaRef.current;
+                          if (textarea) {
+                            textarea.focus();
+                            const length = textarea.value.length;
+                            textarea.setSelectionRange(length, length);
+                          }
+                        }, 0);
+                      }}
+                    />
+                  </SpotlightTarget>
+                  <SpotlightTarget name={SPOTLIGHT_TARGET.sendMessage}>
+                    <SendButton
+                      inFlight={inFlight}
+                      canSend={!!canSend}
+                      onSend={handleSend}
+                      onCancel={onCancel}
+                    />
+                  </SpotlightTarget>
                 </div>
               </div>
             </div>

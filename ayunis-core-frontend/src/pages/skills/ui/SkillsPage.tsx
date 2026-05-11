@@ -1,6 +1,8 @@
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { SpotlightTarget } from '@/shared/ui/spotlight-overlay/SpotlightTarget';
+import { SPOTLIGHT_TARGET } from '@/shared/lib/spotlight-targets';
 import CreateSkillDialog from './CreateSkillDialog';
 import MarketplacePromoCard from './MarketplacePromoCard';
 import SkillCard from './SkillCard';
@@ -35,9 +37,9 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
   const headerAction = (
     <div className="flex gap-2">
       <HelpLink path="skills/" />
-      <div data-spotlight="create-skill">
+      <SpotlightTarget name={SPOTLIGHT_TARGET.createSkill}>
         <CreateSkillDialog />
-      </div>
+      </SpotlightTarget>
     </div>
   );
 
@@ -89,8 +91,12 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
                 />
               ) : (
                 <div className="space-y-3">
-                  {personalSkills.map((skill) => (
-                    <SkillCard key={skill.id} skill={skill} />
+                  {personalSkills.map((skill, index) => (
+                    <SkillCard
+                      key={skill.id}
+                      skill={skill}
+                      highlightPin={index === 0}
+                    />
                   ))}
                 </div>
               )}

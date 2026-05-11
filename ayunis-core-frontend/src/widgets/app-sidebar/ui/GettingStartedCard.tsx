@@ -5,21 +5,12 @@ import { Progress } from '@/shared/ui/shadcn/progress';
 import { useMe } from '../api/useMe';
 import { MeResponseDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { GETTING_STARTED_CATEGORIES } from '@/shared/lib/getting-started/categories';
-import { COMPLETED_STEPS_STORAGE_KEY } from '@/shared/lib/getting-started/constants';
-
-function getCompletedSteps(): Set<string> {
-  try {
-    const stored = localStorage.getItem(COMPLETED_STEPS_STORAGE_KEY);
-    if (stored) return new Set(JSON.parse(stored) as string[]);
-  } catch {
-    // ignore
-  }
-  return new Set<string>();
-}
+import { useCompletedSteps } from '@/shared/lib/getting-started-storage';
 
 export function GettingStartedCard() {
   const { t } = useTranslation('common');
   const { user } = useMe();
+  const completedSteps = useCompletedSteps();
 
   const isAdmin = user?.role === MeResponseDtoRole.admin;
 
@@ -27,7 +18,6 @@ export function GettingStartedCard() {
     (cat) => !cat.adminOnly || isAdmin,
   );
 
-  const completedSteps = getCompletedSteps();
   const totalSteps = categories.reduce((sum, cat) => sum + cat.steps.length, 0);
   const completedCount = categories.reduce(
     (sum, cat) =>
@@ -36,6 +26,10 @@ export function GettingStartedCard() {
   );
   const progressPercent =
     totalSteps > 0 ? Math.round((completedCount / totalSteps) * 100) : 0;
+
+  if (progressPercent >= 100) {
+    return null;
+  }
 
   return (
     <Link

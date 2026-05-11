@@ -1,13 +1,17 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from '@tanstack/react-router';
+import { useLocation, useNavigate } from '@tanstack/react-router';
 import { ChevronDown, ArrowRight, Lock } from 'lucide-react';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Checkbox } from '@/shared/ui/shadcn/checkbox';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { getHelpCenterUrl } from '@/shared/lib/help-center';
 import { requestSpotlight } from '@/shared/lib/spotlight';
+import { setPendingStep } from '@/shared/lib/getting-started-storage';
+import { useKnowledgeBasesControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
 import type { GettingStartedStep } from '@/shared/lib/getting-started/types';
+
+const SPOTLIGHT_REVEAL_DELAY_MS = 300;
 
 interface StepItemProps {
   step: GettingStartedStep;
@@ -26,40 +30,72 @@ export default function StepItem({
 }: Readonly<StepItemProps>) {
   const { t } = useTranslation('getting-started');
   const navigate = useNavigate();
+  const location = useLocation();
+  const origin = location.pathname;
   const [expanded, setExpanded] = useState(defaultExpanded);
+  const spotlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const isAddDocumentsStep = step.id === 'addDocuments';
+  const { data: kbResponse } = useKnowledgeBasesControllerFindAll({
+    query: { enabled: isAddDocumentsStep && !locked },
+  });
+  const firstKnowledgeBase = kbResponse?.data[0];
 
   const prompt =
     step.action?.type === 'prompt'
       ? t(`steps.${step.translationKey}.prompt`)
       : null;
 
+  const triggerSpotlight = (spotlight: string) => {
+    const title = t(`steps.${step.translationKey}.spotlightTitle`, '');
+    const desc = t(`steps.${step.translationKey}.spotlightDescription`, '');
+    if (spotlightTimeoutRef.current) {
+      clearTimeout(spotlightTimeoutRef.current);
+    }
+    // Small delay after navigation lets the new page settle visually before
+    // the spotlight ring + card appear — feels more polished than an instant
+    // reveal.
+    spotlightTimeoutRef.current = setTimeout(() => {
+      spotlightTimeoutRef.current = null;
+      requestSpotlight({
+        target: spotlight,
+        title: title || undefined,
+        description: desc || undefined,
+      });
+    }, SPOTLIGHT_REVEAL_DELAY_MS);
+  };
+
   const handleAction = () => {
     if (!step.action) return;
     if (step.action.type === 'prompt') {
-      sessionStorage.setItem('getting-started-pending-step', step.id);
-      sessionStorage.setItem('getting-started-target-path', '/chat');
-      void navigate({ to: '/chat', search: { prompt: prompt ?? undefined } });
-    } else if (step.action.type === 'link') {
-      sessionStorage.setItem('getting-started-pending-step', step.id);
-      sessionStorage.setItem('getting-started-target-path', step.action.to);
-      void navigate({ to: step.action.to });
-      if (step.action.spotlight) {
-        const { spotlight } = step.action;
-        const title = t(`steps.${step.translationKey}.spotlightTitle`, '');
-        const desc = t(`steps.${step.translationKey}.spotlightDescription`, '');
-        setTimeout(
-          () =>
-            requestSpotlight({
-              target: spotlight,
-              title: title || undefined,
-              description: desc || undefined,
-            }),
-          300,
-        );
-      }
-    } else {
-      window.open(step.action.url, '_blank', 'noopener,noreferrer');
+      setPendingStep(step.id, '/chat', origin);
+      void navigate({
+        to: '/chat',
+        search: {
+          prompt: prompt ?? undefined,
+          attachment: step.action.attachment,
+        },
+      });
+      return;
     }
+    if (step.action.type === 'external') {
+      window.open(step.action.url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    // type === 'link'
+    const spotlight = step.action.spotlight;
+    const onArrived = () => {
+      if (spotlight) triggerSpotlight(spotlight);
+    };
+    if (isAddDocumentsStep && firstKnowledgeBase) {
+      const target = `/knowledge-bases/${firstKnowledgeBase.id}`;
+      setPendingStep(step.id, target, origin);
+      void navigate({ to: target }).then(onArrived);
+      return;
+    }
+    setPendingStep(step.id, step.action.to, origin);
+    void navigate({ to: step.action.to }).then(onArrived);
   };
 
   return (
@@ -118,21 +154,25 @@ export default function StepItem({
                   <ArrowRight className="size-3" />
                 </Button>
               )}
-              {step.secondaryAction && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    const url =
-                      step.secondaryAction!.type === 'help-center'
-                        ? getHelpCenterUrl(step.secondaryAction!.path)
-                        : step.secondaryAction!.url;
-                    window.open(url, '_blank', 'noopener,noreferrer');
-                  }}
-                >
-                  {t(`steps.${step.translationKey}.secondaryAction`)}
-                </Button>
-              )}
+              {(() => {
+                const secondary = step.secondaryAction;
+                if (!secondary) return null;
+                return (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      const url =
+                        secondary.type === 'help-center'
+                          ? getHelpCenterUrl(secondary.path)
+                          : secondary.url;
+                      window.open(url, '_blank', 'noopener,noreferrer');
+                    }}
+                  >
+                    {t(`steps.${step.translationKey}.secondaryAction`)}
+                  </Button>
+                );
+              })()}
             </div>
           )}
         </div>

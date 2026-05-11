@@ -1,10 +1,12 @@
+import type { SpotlightTargetName } from '@/shared/lib/spotlight-targets';
+
 export interface GettingStartedStep {
   id: string;
   translationKey: string;
   dependsOn?: string;
   action?:
-    | { type: 'prompt' }
-    | { type: 'link'; to: string; spotlight?: string }
+    | { type: 'prompt'; attachment?: string }
+    | { type: 'link'; to: string; spotlight?: SpotlightTargetName }
     | { type: 'external'; url: string };
   secondaryAction?:
     | { type: 'external'; url: string }

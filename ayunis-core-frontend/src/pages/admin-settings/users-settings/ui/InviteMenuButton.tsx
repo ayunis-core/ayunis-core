@@ -20,7 +20,7 @@ export default function InviteMenuButton() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button size="sm" data-spotlight="invite-users">
+          <Button size="sm">
             {t('inviteDialog.inviteUser')}
             <ChevronDown className="h-4 w-4" />
           </Button>

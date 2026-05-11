@@ -1,3 +1,5 @@
+import { GETTING_STARTED_SAMPLE } from '@/shared/lib/getting-started-samples';
+import { SPOTLIGHT_TARGET } from '@/shared/lib/spotlight-targets';
 import type { GettingStartedCategory } from './types';
 
 export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
@@ -12,7 +14,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
         action: {
           type: 'link',
           to: '/admin-settings/models',
-          spotlight: 'configure-models-language',
+          spotlight: SPOTLIGHT_TARGET.configureModelsLanguage,
         },
       },
       {
@@ -21,7 +23,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
         action: {
           type: 'link',
           to: '/admin-settings/users',
-          spotlight: 'invite-users',
+          spotlight: SPOTLIGHT_TARGET.inviteUsers,
         },
       },
       {
@@ -30,7 +32,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
         action: {
           type: 'link',
           to: '/admin-settings/teams',
-          spotlight: 'create-team',
+          spotlight: SPOTLIGHT_TARGET.createTeam,
         },
       },
     ],
@@ -50,7 +52,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
         action: {
           type: 'link',
           to: '/chat',
-          spotlight: 'chat-upload',
+          spotlight: SPOTLIGHT_TARGET.chatUpload,
         },
       },
       {
@@ -59,7 +61,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
         action: {
           type: 'link',
           to: '/chat',
-          spotlight: 'anonymous-mode',
+          spotlight: SPOTLIGHT_TARGET.anonymousMode,
         },
       },
     ],
@@ -91,7 +93,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
         action: {
           type: 'link',
           to: '/skills',
-          spotlight: 'create-skill',
+          spotlight: SPOTLIGHT_TARGET.createSkill,
         },
       },
       {
@@ -100,7 +102,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
         action: {
           type: 'link',
           to: '/skills',
-          spotlight: 'pin-skill',
+          spotlight: SPOTLIGHT_TARGET.pinSkill,
         },
       },
       {
@@ -109,7 +111,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
         action: {
           type: 'link',
           to: '/chat',
-          spotlight: 'pinned-skills',
+          spotlight: SPOTLIGHT_TARGET.pinnedSkills,
         },
       },
     ],
@@ -117,7 +119,6 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
   {
     id: 'knowledgeManagement',
     translationKey: 'knowledgeManagement',
-    helpPath: 'knowledge-collections/',
     steps: [
       {
         id: 'createKnowledgeBase',
@@ -125,7 +126,11 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
         action: {
           type: 'link',
           to: '/knowledge-bases',
-          spotlight: 'create-knowledge-base',
+          spotlight: SPOTLIGHT_TARGET.createKnowledgeBase,
+        },
+        secondaryAction: {
+          type: 'help-center',
+          path: 'knowledge-collections/',
         },
       },
       {
@@ -135,7 +140,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
         action: {
           type: 'link',
           to: '/knowledge-bases',
-          spotlight: 'add-documents',
+          spotlight: SPOTLIGHT_TARGET.addDocuments,
         },
       },
       {
@@ -145,7 +150,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
         action: {
           type: 'link',
           to: '/chat',
-          spotlight: 'chat-upload',
+          spotlight: SPOTLIGHT_TARGET.chatUpload,
         },
       },
     ],
@@ -155,33 +160,44 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
     translationKey: 'workflows',
     steps: [
       {
-        id: 'citizenInquiry',
-        translationKey: 'citizenInquiry',
+        id: 'writeEmail',
+        translationKey: 'writeEmail',
         action: { type: 'prompt' },
       },
       {
-        id: 'simplifyLaw',
-        translationKey: 'simplifyLaw',
+        id: 'createDocument',
+        translationKey: 'createDocument',
         action: { type: 'prompt' },
       },
       {
-        id: 'internalMemo',
-        translationKey: 'internalMemo',
+        id: 'summarizeDocument',
+        translationKey: 'summarizeDocument',
+        action: {
+          type: 'prompt',
+          attachment: GETTING_STARTED_SAMPLE.protokoll,
+        },
+      },
+      {
+        id: 'analyzeData',
+        translationKey: 'analyzeData',
+        action: {
+          type: 'prompt',
+          attachment: GETTING_STARTED_SAMPLE.stadtlauf,
+        },
+      },
+      {
+        id: 'createFlowchart',
+        translationKey: 'createFlowchart',
         action: { type: 'prompt' },
       },
       {
-        id: 'meetingAgenda',
-        translationKey: 'meetingAgenda',
+        id: 'createCalendarEntry',
+        translationKey: 'createCalendarEntry',
         action: { type: 'prompt' },
       },
       {
-        id: 'translateCitizenInfo',
-        translationKey: 'translateCitizenInfo',
-        action: { type: 'prompt' },
-      },
-      {
-        id: 'checkReadability',
-        translationKey: 'checkReadability',
+        id: 'webResearch',
+        translationKey: 'webResearch',
         action: { type: 'prompt' },
       },
     ],
@@ -196,7 +212,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
         action: {
           type: 'link',
           to: '/chat',
-          spotlight: 'voice-input',
+          spotlight: SPOTLIGHT_TARGET.voiceInput,
         },
       },
       {
@@ -205,7 +221,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
         action: {
           type: 'link',
           to: '/settings/chat',
-          spotlight: 'system-prompt',
+          spotlight: SPOTLIGHT_TARGET.systemPrompt,
         },
       },
       {
@@ -219,7 +235,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
         action: {
           type: 'link',
           to: '/settings/general',
-          spotlight: 'theme-settings',
+          spotlight: SPOTLIGHT_TARGET.themeSettings,
         },
       },
     ],

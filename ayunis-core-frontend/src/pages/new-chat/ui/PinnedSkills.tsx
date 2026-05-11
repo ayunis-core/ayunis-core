@@ -32,10 +32,7 @@ export function PinnedSkills({
   }
 
   return (
-    <div
-      className="flex justify-center items-center gap-2 flex-wrap"
-      data-spotlight="pinned-skills"
-    >
+    <div className="flex justify-center items-center gap-2 flex-wrap">
       {pinnedSkills.map((skill) => (
         <Tooltip key={skill.id}>
           <TooltipTrigger asChild>

@@ -7,6 +7,8 @@ import type {
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import { SharesTab } from '@/widgets/shares-tab';
+import { SpotlightTarget } from '@/shared/ui/spotlight-overlay/SpotlightTarget';
+import { SPOTLIGHT_TARGET } from '@/shared/lib/spotlight-targets';
 import {
   Tabs,
   TabsList,
@@ -85,10 +87,12 @@ export function KnowledgeBasePage({
         knowledgeBase={knowledgeBase}
         disabled={isReadOnly}
       />
-      <KnowledgeBaseDocumentsCard
-        knowledgeBaseId={knowledgeBase.id}
-        disabled={isReadOnly}
-      />
+      <SpotlightTarget name={SPOTLIGHT_TARGET.addDocuments}>
+        <KnowledgeBaseDocumentsCard
+          knowledgeBaseId={knowledgeBase.id}
+          disabled={isReadOnly}
+        />
+      </SpotlightTarget>
     </div>
   );
 

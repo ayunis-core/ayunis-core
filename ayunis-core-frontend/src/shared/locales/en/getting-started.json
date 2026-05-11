@@ -32,8 +32,7 @@
     },
     "knowledgeManagement": {
       "title": "Knowledge management",
-      "description": "Create knowledge collections with your own documents and URLs — Ayunis Core uses this knowledge automatically for more precise answers.",
-      "helpLink": "Learn more about knowledge collections"
+      "description": "Create knowledge collections with your own documents and URLs — Ayunis Core uses this knowledge automatically for more precise answers."
     },
     "advanced": {
       "title": "Advanced features",
@@ -121,15 +120,16 @@
     },
     "activateSkillInChat": {
       "title": "Use a pinned skill in chat",
-      "description": "Your pinned skills appear as buttons below the chat input. Click a skill to activate it for this chat.",
+      "description": "Your pinned skills appear as buttons below the chat input. Click one to use it explicitly in this chat — that way it's guaranteed to be applied.",
       "action": "Go to chat",
       "spotlightTitle": "Pinned skills",
-      "spotlightDescription": "Here are your pinned skills. Click one to activate it for this chat."
+      "spotlightDescription": "Here are your pinned skills. Click one to use it explicitly in this chat — that way it's guaranteed to be applied."
     },
     "createKnowledgeBase": {
       "title": "Create a knowledge collection",
       "description": "Create a knowledge collection to provide your own documents and web pages as a knowledge source for Ayunis Core.",
       "action": "Create knowledge collection",
+      "secondaryAction": "Open help center",
       "spotlightTitle": "Create knowledge collection",
       "spotlightDescription": "Click here to create a new knowledge collection. You can then add documents and URLs."
     },
@@ -137,15 +137,15 @@
       "title": "Add documents",
       "description": "Upload PDFs, Word documents or add web URLs. Ayunis Core processes the content automatically and can answer questions based on it.",
       "action": "Go to knowledge collection",
-      "spotlightTitle": "Open knowledge collection",
-      "spotlightDescription": "Click on your knowledge collection to add documents, PDFs or web URLs."
+      "spotlightTitle": "Upload documents",
+      "spotlightDescription": "Upload PDFs or Word documents here, or add web URLs. Ayunis Core processes the content automatically and uses it to give you more accurate answers."
     },
     "useKnowledgeBaseInChat": {
       "title": "Use knowledge collection in chat",
-      "description": "Add a knowledge collection to your chat via the plus menu. Ayunis Core will then include your own knowledge in its answers.",
-      "action": "Start chat",
+      "description": "Add a knowledge collection to your chat via the plus icon. Ayunis Core will then include your own knowledge in its answers.",
+      "action": "Add knowledge collection",
       "spotlightTitle": "Add knowledge collection",
-      "spotlightDescription": "Use the plus menu to add knowledge collections to your chat. Ayunis Core then uses your own knowledge for more precise answers."
+      "spotlightDescription": "Use the plus icon to add knowledge collections to your chat. Ayunis Core then uses your own knowledge for more precise answers."
     },
     "customInstructions": {
       "title": "Set custom instructions",
@@ -167,40 +167,46 @@
       "spotlightTitle": "Appearance",
       "spotlightDescription": "Activate dark mode here. The dark design is easier on the eyes, especially during extended use."
     },
-    "citizenInquiry": {
-      "title": "Answer a citizen inquiry",
-      "description": "See how quickly a professional response is created.",
-      "prompt": "A citizen writes: 'I would like to build an extension to my house. What documents do I need for the building permit?' — Draft a friendly, professional response with all required documents and next steps.",
+    "writeEmail": {
+      "title": "Write an email",
+      "description": "Generate, e.g., a friendly invitation to a town hall meeting — with all the important details about location, time, and topics.",
+      "prompt": "Write and draft a friendly invitation email to the citizens for the next town hall meeting.\n\nOccasion: presentation of the planned downtown revitalization and new mobility concepts. Date: Thursday, June 18, 2026, 6:30–8:30 p.m. in the town hall's citizens' hall. Mention that there will be an opportunity to chat over a small buffet afterwards, and ask attendees to RSVP informally by email to rathaus@samplecity.com. Keep the tone warm, welcoming, and close to the citizens.",
       "action": "Try it"
     },
-    "simplifyLaw": {
-      "title": "Simplify legal text",
-      "description": "Make a complex legal text understandable for citizens.",
-      "prompt": "Simplify Section 35 of the Building Code (Building in Outlying Areas) into plain, citizen-friendly language. Explain the 3 most important points so they are understandable without legal expertise.",
+    "createDocument": {
+      "title": "Create a document",
+      "description": "Generate structured documents like press releases, concept papers, or notices — Ayunis Core automatically opens an editor where you can continue working on the result.",
+      "prompt": "Write a press release about the opening of the new Citizens' Service Center in our city.\n\nKey facts:\n- Opening: Monday, September 1, 2026, 10:00 a.m.\n- Address: Main Street 12, 12345 Sampleton\n- New services: digital application submission, shorter wait times through online appointment scheduling, barrier-free access, multilingual service (German, English, Turkish, Arabic)\n\nStructure the press release with a strong headline, a short introduction, a main section with three key points, and a closing section including a press contact (press@sampleton.com, 0123/456789). Keep the tone factual but positive and citizen-friendly.",
       "action": "Try it"
     },
-    "internalMemo": {
-      "title": "Create an internal memo",
-      "description": "Get a structured memo generated for you.",
-      "prompt": "Create an internal memo for a staff meeting on May 15th with the following topics: introduction of document management system, summer vacation planning, substitute arrangement for Mrs. Mueller. Use the format: date, participants, agenda, decisions, next steps.",
+    "summarizeDocument": {
+      "title": "Summarize a document",
+      "description": "Summarize long documents such as meeting minutes, notices, or proposals in a few sentences — ideal for file review or briefings to colleagues. The sample file is attached automatically.",
+      "prompt": "Attached are the minutes of our last city council meeting.\n\nPlease create a compact summary that includes:\n- the 3–5 most important decisions and topics\n- concrete numbers and data where relevant\n- the next upcoming dates or steps\n\nKeep the summary factual and clear — suitable as a briefing for colleagues who were not present.",
       "action": "Try it"
     },
-    "meetingAgenda": {
-      "title": "Create a meeting agenda",
-      "description": "Get a structured agenda for your meeting.",
-      "prompt": "Create an agenda for the department heads meeting on Monday, 10:00-11:30 AM. Topics: 1) Digital records project status, 2) Q3 staffing plan, 3) Citizen consultation feedback, 4) Other business. Add realistic time slots.",
+    "analyzeData": {
+      "title": "Analyze & visualize data",
+      "description": "Spot trends in tables and let Ayunis Core create a suitable chart (line, pie, or bar). The sample file is attached automatically.",
+      "prompt": "Attached is a CSV file with the participant numbers of our annual city run from 2019 to 2026, broken down by distance.\n\nPlease analyze the data as follows:\n- Create a line chart showing how participant numbers per distance developed over the years.\n- Calculate the total growth from 2019 to 2026 and name the most popular distance today.\n- Summarize in three short bullet points what stands out — also with regard to the share of women and youth.",
       "action": "Try it"
     },
-    "translateCitizenInfo": {
-      "title": "Translate citizen information",
-      "description": "Translate information materials into multiple languages.",
-      "prompt": "Translate the following text into Spanish, French, and Arabic: 'Office hours are changing from June 1st. Monday to Friday: 8am-12pm, Tuesday and Thursday additionally 2-6pm. Appointments at 0800-123456 or online.' Ensure cultural appropriateness.",
+    "createFlowchart": {
+      "title": "Create a flowchart & process diagram",
+      "description": "Visualize administrative processes as a diagram — useful for training, concepts, or documentation.",
+      "prompt": "Create a flowchart for the following administrative process:\n\nA citizen submits a housing benefit application online. The case worker checks the completeness of the documents. If all documents are present, the application is reviewed on its merits and either approved or rejected — the citizen is informed in writing in each case. If documents are missing, the citizen receives a request for additional documents.",
       "action": "Try it"
     },
-    "checkReadability": {
-      "title": "Check notice readability",
-      "description": "Get your official notice checked for readability.",
-      "prompt": "Check the following official notice for readability: 'Pursuant to Section 48 of the Administrative Procedure Act, the decision issued to you on March 1, 2025 is hereby revoked. The revocation takes effect retroactively.' Evaluate: 1) Language clarity, 2) Citizen-friendliness. Suggest a more understandable version.",
+    "createCalendarEntry": {
+      "title": "Create a calendar entry",
+      "description": "Turn a brief description into a complete calendar entry with date, time, location, and agenda.",
+      "prompt": "Create a calendar entry for me: staff meeting with the Public Order department next Thursday from 2:00 to 3:30 p.m. in meeting room 3. Topic is the implementation of the new data protection guideline. Create title, location, time range, suggested participants, and a short agenda with three items.",
+      "action": "Try it"
+    },
+    "webResearch": {
+      "title": "Run a web search",
+      "description": "Use web search to find current funding opportunities, studies, or best practices for your municipality.",
+      "prompt": "Which current federal and state funding programs in Germany are available for digitalization of municipal administrations? List the most important ones with funding amount, application deadline, and requirements — please include links to the application office.",
       "action": "Try it"
     }
   }

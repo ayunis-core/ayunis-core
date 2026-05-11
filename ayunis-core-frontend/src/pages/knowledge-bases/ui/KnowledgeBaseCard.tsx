@@ -16,12 +16,10 @@ import {
 
 interface KnowledgeBaseCardProps {
   knowledgeBase: KnowledgeBase;
-  spotlight?: string;
 }
 
 export default function KnowledgeBaseCard({
   knowledgeBase,
-  spotlight,
 }: Readonly<KnowledgeBaseCardProps>) {
   const { t } = useTranslation('knowledge-bases');
   const deleteKnowledgeBase = useDeleteKnowledgeBase();
@@ -49,7 +47,6 @@ export default function KnowledgeBaseCard({
     <Item
       variant="outline"
       className="cursor-pointer"
-      data-spotlight={spotlight}
       onClick={() =>
         void router.navigate({
           to: '/knowledge-bases/$id',
