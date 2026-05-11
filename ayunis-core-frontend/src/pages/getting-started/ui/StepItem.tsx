@@ -44,12 +44,18 @@ export default function StepItem({
       sessionStorage.setItem('getting-started-target-path', step.action.to);
       void navigate({ to: step.action.to });
       if (step.action.spotlight) {
+        const { spotlight } = step.action;
         const title = t(`steps.${step.translationKey}.spotlightTitle`, '');
         const desc = t(`steps.${step.translationKey}.spotlightDescription`, '');
-        let payload = step.action.spotlight;
-        if (title) payload += `::${title}`;
-        if (title && desc) payload += `::${desc}`;
-        setTimeout(() => requestSpotlight(payload), 300);
+        setTimeout(
+          () =>
+            requestSpotlight({
+              target: spotlight,
+              title: title || undefined,
+              description: desc || undefined,
+            }),
+          300,
+        );
       }
     } else {
       window.open(step.action.url, '_blank', 'noopener,noreferrer');

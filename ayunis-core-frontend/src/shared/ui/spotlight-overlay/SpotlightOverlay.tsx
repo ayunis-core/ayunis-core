@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { onSpotlightRequest } from '@/shared/lib/spotlight';
+import {
+  onSpotlightRequest,
+  type SpotlightRequest,
+} from '@/shared/lib/spotlight';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
   Card,
@@ -19,17 +22,12 @@ interface Rect {
   height: number;
 }
 
-interface SpotlightData {
-  target: string;
-  title: string | null;
-  description: string | null;
-}
-
 const PADDING = 8;
 const BORDER_RADIUS = 12;
 const POLL_INTERVAL = 200;
 const MAX_POLL_TIME = 5000;
 const TOOLTIP_MAX_WIDTH = 340;
+const PRESENCE_CHECK_INTERVAL = 500;
 
 function getTargetRect(target: string): Rect | null {
   const el = document.querySelector(`[data-spotlight="${target}"]`);
@@ -43,6 +41,12 @@ function getTargetRect(target: string): Rect | null {
   };
 }
 
+function isInsideRect(x: number, y: number, r: Rect): boolean {
+  return (
+    x >= r.left && x <= r.left + r.width && y >= r.top && y <= r.top + r.height
+  );
+}
+
 function clampLeft(idealLeft: number): number {
   const maxLeft = window.innerWidth - TOOLTIP_MAX_WIDTH - 16;
   return Math.max(16, Math.min(idealLeft, maxLeft));
@@ -51,7 +55,7 @@ function clampLeft(idealLeft: number): number {
 function Overlay({
   data,
   onClose,
-}: Readonly<{ data: SpotlightData; onClose: () => void }>) {
+}: Readonly<{ data: SpotlightRequest; onClose: () => void }>) {
   const { t } = useTranslation('getting-started');
   const [rect, setRect] = useState<Rect | null>(null);
 
@@ -71,12 +75,50 @@ function Overlay({
   }, [data.target, onClose]);
 
   useEffect(() => {
+    if (!rect) return;
+
+    const sync = () => {
+      const r = getTargetRect(data.target);
+      if (!r) {
+        onClose();
+        return;
+      }
+      setRect(r);
+    };
+
+    window.addEventListener('scroll', sync, true);
+    window.addEventListener('resize', sync);
+    const checkId = setInterval(sync, PRESENCE_CHECK_INTERVAL);
+
+    return () => {
+      window.removeEventListener('scroll', sync, true);
+      window.removeEventListener('resize', sync);
+      clearInterval(checkId);
+    };
+    // Only set up once when rect becomes non-null
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!!rect, data.target, onClose]);
+
+  useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose]);
+
+  const handleOverlayClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (rect && isInsideRect(e.clientX, e.clientY, rect)) {
+        onClose();
+        const el = document.querySelector(`[data-spotlight="${data.target}"]`);
+        if (el instanceof HTMLElement) el.click();
+        return;
+      }
+      onClose();
+    },
+    [rect, data.target, onClose],
+  );
 
   if (!rect) return null;
 
@@ -94,7 +136,7 @@ function Overlay({
   return createPortal(
     <div
       className="fixed inset-0 z-[9999]"
-      onClick={onClose}
+      onClick={handleOverlayClick}
       role="presentation"
     >
       <div
@@ -157,26 +199,10 @@ function Overlay({
   );
 }
 
-// Format: "target" | "target::title" | "target::title::description"
-function parseSpotlightPayload(raw: string): SpotlightData {
-  const parts = raw.split('::');
-  return {
-    target: parts[0],
-    title: parts[1] ?? null,
-    description: parts[2] ?? null,
-  };
-}
-
 export default function SpotlightOverlay() {
-  const [active, setActive] = useState<SpotlightData | null>(null);
+  const [active, setActive] = useState<SpotlightRequest | null>(null);
 
-  useEffect(
-    () =>
-      onSpotlightRequest((raw) => {
-        setActive(parseSpotlightPayload(raw));
-      }),
-    [],
-  );
+  useEffect(() => onSpotlightRequest((req) => setActive(req)), []);
 
   if (!active) return null;
 
