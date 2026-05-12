@@ -38,29 +38,29 @@ export function InstallSkillCard({
     : null;
 
   return (
-    <Card className="w-full max-w-lg">
-      <CardHeader className="text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-          {skill.iconUrl ? (
-            <img
-              src={skill.iconUrl}
-              alt={skill.name}
-              className="h-10 w-10 rounded-full object-cover"
-            />
-          ) : (
-            <Bot className="h-8 w-8 text-primary" />
-          )}
-        </div>
-        <CardTitle className="text-xl">{skill.name}</CardTitle>
-        <CardDescription>{skill.shortDescription}</CardDescription>
-      </CardHeader>
+    <Form {...form}>
+      <form
+        onSubmit={(e) => {
+          void form.handleSubmit(() => onInstall())(e);
+        }}
+      >
+        <Card className="w-full max-w-lg">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+              {skill.iconUrl ? (
+                <img
+                  src={skill.iconUrl}
+                  alt={skill.name}
+                  className="h-10 w-10 rounded-full object-cover"
+                />
+              ) : (
+                <Bot className="h-8 w-8 text-primary" />
+              )}
+            </div>
+            <CardTitle className="text-xl">{skill.name}</CardTitle>
+            <CardDescription>{skill.shortDescription}</CardDescription>
+          </CardHeader>
 
-      <Form {...form}>
-        <form
-          onSubmit={(e) => {
-            void form.handleSubmit(() => onInstall())(e);
-          }}
-        >
           <CardContent className="space-y-4">
             <div className="rounded-md bg-muted/50 p-4">
               <p className="text-sm text-muted-foreground">
@@ -101,8 +101,8 @@ export function InstallSkillCard({
               {isInstalling ? t('action.installing') : t('action.install')}
             </Button>
           </CardFooter>
-        </form>
-      </Form>
-    </Card>
+        </Card>
+      </form>
+    </Form>
   );
 }
