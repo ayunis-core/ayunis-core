@@ -27,7 +27,6 @@ interface TargetRect {
 const PADDING = 7;
 const POLL_INTERVAL = 200;
 const MAX_POLL_TIME = 3000;
-const TOOLTIP_MAX_WIDTH = 340;
 const PRESENCE_CHECK_INTERVAL = 500;
 const RING_STROKE_WIDTH = 4;
 const GLOW_OFFSET = 5;
@@ -73,8 +72,15 @@ function roundedRectPath(
   return `M${x + rr},${y} L${x + w - rr},${y} A${rr},${rr} 0 0 1 ${x + w},${y + rr} L${x + w},${y + h - rr} A${rr},${rr} 0 0 1 ${x + w - rr},${y + h} L${x + rr},${y + h} A${rr},${rr} 0 0 1 ${x},${y + h - rr} L${x},${y + rr} A${rr},${rr} 0 0 1 ${x + rr},${y} Z`;
 }
 
-function clampLeft(idealLeft: number): number {
-  const maxLeft = window.innerWidth - TOOLTIP_MAX_WIDTH - 16;
+const CARD_WIDTH = 320;
+
+function alignLeft(targetRect: TargetRect): number {
+  const targetCenter = targetRect.left + targetRect.width / 2;
+  const idealLeft =
+    targetCenter > window.innerWidth / 2
+      ? targetRect.left + targetRect.width - CARD_WIDTH
+      : targetRect.left;
+  const maxLeft = window.innerWidth - CARD_WIDTH - 16;
   return Math.max(16, Math.min(idealLeft, maxLeft));
 }
 
@@ -326,7 +332,7 @@ function Overlay({
             // one-frame flash at the default top: 0).
             return {
               top,
-              left: clampLeft(rect.left),
+              left: alignLeft(rect),
               visibility: cardHeight === 0 ? 'hidden' : 'visible',
             } as const;
           })()}
