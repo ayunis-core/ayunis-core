@@ -2,7 +2,10 @@
   "page": {
     "title": "Getting Started",
     "description": "Discover what Ayunis Core can do for you.",
-    "checkboxHint": "Check off completed steps to track your progress."
+    "checkboxHint": "Check off completed steps to track your progress.",
+    "hide": "Hide getting started",
+    "hideHint": "You can find this page anytime under Settings → Getting Started.",
+    "show": "Show again in sidebar"
   },
   "progress": {
     "completed": "{{count}} of {{total}} completed"

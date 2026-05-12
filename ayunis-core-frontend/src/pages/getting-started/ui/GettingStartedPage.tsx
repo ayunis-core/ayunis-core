@@ -19,7 +19,7 @@ export default function GettingStartedPage() {
             action={<HelpLink path="getting-started/" />}
           />
         }
-        contentArea={<GettingStartedContent />}
+        contentArea={<GettingStartedContent showHideOption />}
       />
     </AppLayout>
   );

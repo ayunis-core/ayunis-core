@@ -20,7 +20,7 @@ export default function SettingsGettingStartedPage() {
             action={<HelpLink path="getting-started/" />}
           />
         }
-        contentArea={<GettingStartedContent />}
+        contentArea={<GettingStartedContent showRestoreOption />}
       />
     </AppLayout>
   );

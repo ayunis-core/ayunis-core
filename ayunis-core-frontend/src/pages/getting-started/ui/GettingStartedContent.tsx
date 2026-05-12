@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Info, PartyPopper } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
+import { Eye, EyeOff, Info, PartyPopper } from 'lucide-react';
 import { Progress } from '@/shared/ui/shadcn/progress';
+import { Button } from '@/shared/ui/shadcn/button';
 import { useMe } from '@/widgets/app-sidebar/api/useMe';
 import { MeResponseDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { GETTING_STARTED_CATEGORIES } from '@/shared/lib/getting-started/categories';
@@ -10,7 +12,10 @@ import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
 import { showSuccess } from '@/shared/lib/toast';
 import {
   clearPendingStep,
+  hideGettingStarted,
   notifyCompletedStepsChanged,
+  showGettingStarted,
+  useGettingStartedHidden,
 } from '@/shared/lib/getting-started-storage';
 import brandIconDark from '@/shared/assets/brand/brand-icon-round-dark.svg';
 import CategoryCard from './CategoryCard';
@@ -44,9 +49,19 @@ function getMilestoneMessage(
   return null;
 }
 
-export default function GettingStartedContent() {
+interface Props {
+  showHideOption?: boolean;
+  showRestoreOption?: boolean;
+}
+
+export default function GettingStartedContent({
+  showHideOption = false,
+  showRestoreOption = false,
+}: Readonly<Props>) {
   const { t } = useTranslation('getting-started');
+  const navigate = useNavigate();
   const { user } = useMe();
+  const hidden = useGettingStartedHidden();
   const [completedSteps, setCompletedSteps] = useState(loadCompleted);
 
   const isAdmin = user?.role === MeResponseDtoRole.admin;
@@ -141,6 +156,38 @@ export default function GettingStartedContent() {
           />
         ))}
       </div>
+
+      {showHideOption && (
+        <div className="text-center pt-2 pb-4 space-y-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground"
+            onClick={() => {
+              hideGettingStarted();
+              void navigate({ to: '/chat' });
+            }}
+          >
+            <EyeOff className="size-3.5" />
+            {t('page.hide')}
+          </Button>
+          <p className="text-xs text-muted-foreground">{t('page.hideHint')}</p>
+        </div>
+      )}
+
+      {showRestoreOption && hidden && (
+        <div className="text-center pt-2 pb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground"
+            onClick={showGettingStarted}
+          >
+            <Eye className="size-3.5" />
+            {t('page.show')}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

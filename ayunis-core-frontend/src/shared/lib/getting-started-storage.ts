@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
-import { COMPLETED_STEPS_STORAGE_KEY } from '@/shared/lib/getting-started/constants';
+import {
+  COMPLETED_STEPS_STORAGE_KEY,
+  HIDDEN_EVENT,
+  HIDDEN_STORAGE_KEY,
+} from '@/shared/lib/getting-started/constants';
 
 const PENDING_STEP_KEY = 'getting-started-pending-step';
 const TARGET_PATH_KEY = 'getting-started-target-path';
@@ -80,4 +84,32 @@ export function useCompletedSteps(): Set<string> {
     };
   }, []);
   return value;
+}
+
+export function isGettingStartedHidden(): boolean {
+  return localStorage.getItem(HIDDEN_STORAGE_KEY) === 'true';
+}
+
+export function hideGettingStarted() {
+  localStorage.setItem(HIDDEN_STORAGE_KEY, 'true');
+  window.dispatchEvent(new Event(HIDDEN_EVENT));
+}
+
+export function showGettingStarted() {
+  localStorage.removeItem(HIDDEN_STORAGE_KEY);
+  window.dispatchEvent(new Event(HIDDEN_EVENT));
+}
+
+export function useGettingStartedHidden(): boolean {
+  const [hidden, setHidden] = useState(() => isGettingStartedHidden());
+  useEffect(() => {
+    const handler = () => setHidden(isGettingStartedHidden());
+    window.addEventListener(HIDDEN_EVENT, handler);
+    window.addEventListener('storage', handler);
+    return () => {
+      window.removeEventListener(HIDDEN_EVENT, handler);
+      window.removeEventListener('storage', handler);
+    };
+  }, []);
+  return hidden;
 }

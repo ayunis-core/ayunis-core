@@ -5,12 +5,16 @@ import { Progress } from '@/shared/ui/shadcn/progress';
 import { useMe } from '../api/useMe';
 import { MeResponseDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { GETTING_STARTED_CATEGORIES } from '@/shared/lib/getting-started/categories';
-import { useCompletedSteps } from '@/shared/lib/getting-started-storage';
+import {
+  useCompletedSteps,
+  useGettingStartedHidden,
+} from '@/shared/lib/getting-started-storage';
 
 export function GettingStartedCard() {
   const { t } = useTranslation('common');
   const { user } = useMe();
   const completedSteps = useCompletedSteps();
+  const hidden = useGettingStartedHidden();
 
   const isAdmin = user?.role === MeResponseDtoRole.admin;
 
@@ -27,7 +31,7 @@ export function GettingStartedCard() {
   const progressPercent =
     totalSteps > 0 ? Math.round((completedCount / totalSteps) * 100) : 0;
 
-  if (progressPercent >= 100) {
+  if (hidden || progressPercent >= 100) {
     return null;
   }
 

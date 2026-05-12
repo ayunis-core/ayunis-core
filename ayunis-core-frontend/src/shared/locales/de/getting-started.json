@@ -2,7 +2,10 @@
   "page": {
     "title": "Erste Schritte",
     "description": "Entdecken Sie, was Ayunis Core für Sie tun kann.",
-    "checkboxHint": "Haken Sie erledigte Schritte selbst ab, um Ihren Fortschritt zu verfolgen."
+    "checkboxHint": "Haken Sie erledigte Schritte selbst ab, um Ihren Fortschritt zu verfolgen.",
+    "hide": "Erste Schritte ausblenden",
+    "hideHint": "Sie finden diese Seite jederzeit unter Einstellungen → Erste Schritte.",
+    "show": "In der Sidebar wieder einblenden"
   },
   "progress": {
     "completed": "{{count}} von {{total}} erledigt"
