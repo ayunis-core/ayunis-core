@@ -8199,6 +8199,54 @@
         "summary": "Revoke an API key",
         "tags": ["api-keys"]
       }
+    },
+    "/branding": {
+      "get": {
+        "operationId": "BrandingController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandingResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the current org's branding",
+        "tags": ["Branding"]
+      },
+      "patch": {
+        "operationId": "BrandingController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBrandingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandingResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Update the current org's branding",
+        "tags": ["Branding"]
+      }
     }
   },
   "info": {
@@ -14297,6 +14345,49 @@
           "createdAt",
           "secret"
         ]
+      },
+      "BrandingResponseDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Organization name",
+            "example": "Demo Org"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Display name shown to end users in the sidebar. null means the platform default name is shown instead of the org name.",
+            "nullable": true,
+            "example": "Demo Org"
+          },
+          "faviconUrl": {
+            "type": "string",
+            "description": "Presigned URL for the organization favicon",
+            "nullable": true,
+            "example": null
+          }
+        },
+        "required": ["name"]
+      },
+      "UpdateBrandingDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "Display name shown to end users in the sidebar. Send an empty string to clear and fall back to the platform default.",
+            "example": "My Org"
+          },
+          "removeFavicon": {
+            "type": "string",
+            "description": "Set to \"true\" to remove the current favicon",
+            "example": "true"
+          },
+          "favicon": {
+            "type": "string",
+            "format": "binary",
+            "description": "Favicon image file (PNG or JPEG, max 512 KB)"
+          }
+        }
       }
     }
   }
