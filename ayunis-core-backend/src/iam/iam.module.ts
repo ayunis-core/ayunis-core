@@ -18,6 +18,7 @@ import { QuotasModule } from './quotas/quotas.module';
 import { TeamsModule } from './teams/teams.module';
 import { PlatformConfigModule } from './platform-config/platform-config.module';
 import { IpAllowlistModule } from './ip-allowlist/ip-allowlist.module';
+import { BrandingModule } from './branding/branding.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { JwtAuthGuard } from './authentication/application/guards/jwt-auth.guard';
 import { IpAllowlistGuard } from './ip-allowlist/application/guards/ip-allowlist.guard';
@@ -43,6 +44,7 @@ const IAM_FEATURE_MODULES = [
   PlatformConfigModule,
   IpAllowlistModule,
   ApiKeysModule,
+  BrandingModule,
 ];
 
 // Global guard execution order is declared HERE — explicitly, in array

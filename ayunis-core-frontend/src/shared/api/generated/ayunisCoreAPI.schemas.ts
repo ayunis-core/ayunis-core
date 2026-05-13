@@ -4131,6 +4131,30 @@ export interface CreateApiKeyResponseDto {
   secret: string;
 }
 
+export interface BrandingResponseDto {
+  /** Organization name */
+  name: string;
+  /**
+   * Display name shown to end users in the sidebar. null means the platform default name is shown instead of the org name.
+   * @nullable
+   */
+  displayName?: string | null;
+  /**
+   * Presigned URL for the organization favicon
+   * @nullable
+   */
+  faviconUrl?: string | null;
+}
+
+export interface UpdateBrandingDto {
+  /** Display name shown to end users in the sidebar. Send an empty string to clear and fall back to the platform default. */
+  displayName?: string;
+  /** Set to "true" to remove the current favicon */
+  removeFavicon?: string;
+  /** Favicon image file (PNG or JPEG, max 512 KB) */
+  favicon?: Blob;
+}
+
 export type ModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto | PermittedImageGenerationModelResponseDto;
 
 export type SuperAdminPermittedModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto | PermittedImageGenerationModelResponseDto;
