@@ -1,0 +1,25 @@
+{
+  "organization": {
+    "title": "Organisation",
+    "displayNameLabel": "Anzeigename",
+    "displayNamePlaceholder": "Anzeigename eingeben",
+    "displayNameDescription": "Wird in der Sidebar anstelle des Plattformnamens angezeigt. Leer lassen, um den Plattform-Standard zu verwenden.",
+    "faviconLabel": "Organisationslogo",
+    "faviconDescription": "Erscheint im Sidebar-Header neben dem Namen.",
+    "faviconHint": "Quadratisches Format (1:1), PNG oder JPEG, max. 512 KB",
+    "faviconUpload": "Logo hochladen",
+    "faviconReplace": "Logo ersetzen",
+    "faviconRemove": "Entfernen",
+    "faviconEmpty": "Kein Logo hochgeladen",
+    "faviconCurrent": "Aktuelles Logo",
+    "save": "Speichern",
+    "saving": "Speichert...",
+    "success": "Organisationsbranding aktualisiert",
+    "saved": "Gespeichert",
+    "error": "Fehler beim Aktualisieren des Organisationsbrandings",
+    "invalidFile": "Ungueltige Datei. Bitte laden Sie ein quadratisches PNG- oder JPEG-Bild unter 512 KB hoch.",
+    "errorFileType": "Falscher Dateityp. Bitte waehlen Sie ein PNG- oder JPEG-Bild.",
+    "errorFileSize": "Datei ist zu gross. Maximale Groesse ist 512 KB.",
+    "errorNotSquare": "Bild ist nicht quadratisch. Bitte laden Sie ein 1:1-Bild hoch, damit es auch in kleiner Darstellung scharf bleibt."
+  }
+}

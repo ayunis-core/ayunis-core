@@ -32,9 +32,10 @@ import { useLogout } from '../api/useLogout';
 import { Link, useLocation } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
+import { useBranding } from '@/features/useBranding';
 import { useNavigate } from '@tanstack/react-router';
-import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';
-import brandFullDark from '@/shared/assets/brand/brand-full-dark.svg';
+import brandIconLight from '@/shared/assets/brand/brand-icon-round-light.svg';
+import brandIconDark from '@/shared/assets/brand/brand-icon-round-dark.svg';
 import { useTheme } from '@/features/theme';
 import { useSidebar } from '@/shared/ui/shadcn/sidebar';
 import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -46,6 +47,7 @@ import { useMarketplaceConfig } from '@/features/marketplace';
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
   const { user } = useMe();
+  const { branding } = useBranding();
   const { logout } = useLogout();
   const { t } = useTranslation('common');
   const navigate = useNavigate();
@@ -89,16 +91,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <div className="flex items-center justify-between w-full">
-              <SidebarMenuButton size="lg" asChild className="flex-1">
-                <Link to="/">
-                  <img
-                    src={theme === 'dark' ? brandFullDark : brandFullLight}
-                    alt="Ayunis Logo"
-                    className="w-full max-w-32"
-                  />
-                </Link>
-              </SidebarMenuButton>
+            <div className="flex items-center justify-between w-full px-2 py-1.5">
+              <Link to="/" className="flex items-center gap-2 flex-1 min-w-0">
+                <img
+                  src={
+                    branding?.faviconUrl ??
+                    (theme === 'dark' ? brandIconDark : brandIconLight)
+                  }
+                  alt={branding?.displayName ?? config.app.name}
+                  className="size-6 shrink-0 rounded-sm object-cover"
+                />
+                <span className="truncate text-sm font-semibold">
+                  {branding?.displayName ?? config.app.name}
+                </span>
+              </Link>
               {config.features.announcableOrgId && <ReleaseNotesButton />}
             </div>
           </SidebarMenuItem>

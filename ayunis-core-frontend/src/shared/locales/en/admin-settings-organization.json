@@ -1,0 +1,25 @@
+{
+  "organization": {
+    "title": "Organization",
+    "displayNameLabel": "Display Name",
+    "displayNamePlaceholder": "Enter display name",
+    "displayNameDescription": "Shown in the sidebar instead of the platform name. Leave empty to use the platform default.",
+    "faviconLabel": "Organization Logo",
+    "faviconDescription": "Appears in the sidebar header next to the name.",
+    "faviconHint": "Square format (1:1), PNG or JPEG, max 512 KB",
+    "faviconUpload": "Upload logo",
+    "faviconReplace": "Replace logo",
+    "faviconRemove": "Remove",
+    "faviconEmpty": "No logo uploaded",
+    "faviconCurrent": "Current logo",
+    "save": "Save",
+    "saving": "Saving...",
+    "success": "Organization branding updated",
+    "saved": "Saved",
+    "error": "Failed to update organization branding",
+    "invalidFile": "Invalid file. Please upload a square PNG or JPEG image under 512 KB.",
+    "errorFileType": "Wrong file type. Please choose a PNG or JPEG image.",
+    "errorFileSize": "File is too large. Maximum size is 512 KB.",
+    "errorNotSquare": "Image is not square. Please upload a 1:1 image so it stays sharp at small sizes."
+  }
+}

@@ -7,6 +7,6 @@ export const Route = createFileRoute('/_authenticated/admin-settings/')({
       throw redirect({ to: '/' });
     }
 
-    throw redirect({ to: '/admin-settings/users' });
+    throw redirect({ to: '/admin-settings/organization' });
   },
 });

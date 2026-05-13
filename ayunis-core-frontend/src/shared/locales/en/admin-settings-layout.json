@@ -11,6 +11,7 @@
     "usage": "Usage",
     "security": "Security",
     "letterheads": "Letterheads",
-    "apiKeys": "API Keys"
+    "apiKeys": "API Keys",
+    "organization": "Organization"
   }
 }

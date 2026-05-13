@@ -7,6 +7,7 @@ import {
   Shield,
   FileText,
   Key,
+  Building2,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -20,6 +21,11 @@ export function AdminSettingsSidebar() {
   const isLetterheadsEnabled = useIsLetterheadsEnabled();
 
   const menuItems: SidebarMenuItem[] = [
+    {
+      to: '/admin-settings/organization',
+      icon: <Building2 />,
+      label: t('layout.organization'),
+    },
     {
       to: '/admin-settings/users',
       icon: <User />,

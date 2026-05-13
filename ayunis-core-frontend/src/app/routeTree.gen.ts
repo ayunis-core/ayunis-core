@@ -35,6 +35,7 @@ import { Route as AuthenticatedChatsThreadIdRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminSettingsUsersRouteImport } from './routes/_authenticated/admin-settings.users'
 import { Route as AuthenticatedAdminSettingsUsageRouteImport } from './routes/_authenticated/admin-settings.usage'
 import { Route as AuthenticatedAdminSettingsSecurityRouteImport } from './routes/_authenticated/admin-settings.security'
+import { Route as AuthenticatedAdminSettingsOrganizationRouteImport } from './routes/_authenticated/admin-settings.organization'
 import { Route as AuthenticatedAdminSettingsModelsRouteImport } from './routes/_authenticated/admin-settings.models'
 import { Route as AuthenticatedAdminSettingsIntegrationsRouteImport } from './routes/_authenticated/admin-settings.integrations'
 import { Route as AuthenticatedAdminSettingsApiKeysRouteImport } from './routes/_authenticated/admin-settings.api-keys'
@@ -195,6 +196,12 @@ const AuthenticatedAdminSettingsSecurityRoute =
     path: '/admin-settings/security',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminSettingsOrganizationRoute =
+  AuthenticatedAdminSettingsOrganizationRouteImport.update({
+    id: '/admin-settings/organization',
+    path: '/admin-settings/organization',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminSettingsModelsRoute =
   AuthenticatedAdminSettingsModelsRouteImport.update({
     id: '/admin-settings/models',
@@ -306,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/admin-settings/organization': typeof AuthenticatedAdminSettingsOrganizationRoute
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
@@ -349,6 +357,7 @@ export interface FileRoutesByTo {
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/admin-settings/organization': typeof AuthenticatedAdminSettingsOrganizationRoute
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
@@ -394,6 +403,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/_authenticated/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/_authenticated/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/_authenticated/admin-settings/organization': typeof AuthenticatedAdminSettingsOrganizationRoute
   '/_authenticated/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/_authenticated/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/_authenticated/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
@@ -439,6 +449,7 @@ export interface FileRouteTypes {
     | '/admin-settings/api-keys'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
+    | '/admin-settings/organization'
     | '/admin-settings/security'
     | '/admin-settings/usage'
     | '/admin-settings/users'
@@ -482,6 +493,7 @@ export interface FileRouteTypes {
     | '/admin-settings/api-keys'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
+    | '/admin-settings/organization'
     | '/admin-settings/security'
     | '/admin-settings/usage'
     | '/admin-settings/users'
@@ -526,6 +538,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-settings/api-keys'
     | '/_authenticated/admin-settings/integrations'
     | '/_authenticated/admin-settings/models'
+    | '/_authenticated/admin-settings/organization'
     | '/_authenticated/admin-settings/security'
     | '/_authenticated/admin-settings/usage'
     | '/_authenticated/admin-settings/users'
@@ -753,6 +766,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsSecurityRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin-settings/organization': {
+      id: '/_authenticated/admin-settings/organization'
+      path: '/admin-settings/organization'
+      fullPath: '/admin-settings/organization'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsOrganizationRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin-settings/models': {
       id: '/_authenticated/admin-settings/models'
       path: '/admin-settings/models'
@@ -873,6 +893,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminSettingsApiKeysRoute: typeof AuthenticatedAdminSettingsApiKeysRoute
   AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
   AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
+  AuthenticatedAdminSettingsOrganizationRoute: typeof AuthenticatedAdminSettingsOrganizationRoute
   AuthenticatedAdminSettingsSecurityRoute: typeof AuthenticatedAdminSettingsSecurityRoute
   AuthenticatedAdminSettingsUsageRoute: typeof AuthenticatedAdminSettingsUsageRoute
   AuthenticatedAdminSettingsUsersRoute: typeof AuthenticatedAdminSettingsUsersRoute
@@ -909,6 +930,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminSettingsIntegrationsRoute:
     AuthenticatedAdminSettingsIntegrationsRoute,
   AuthenticatedAdminSettingsModelsRoute: AuthenticatedAdminSettingsModelsRoute,
+  AuthenticatedAdminSettingsOrganizationRoute:
+    AuthenticatedAdminSettingsOrganizationRoute,
   AuthenticatedAdminSettingsSecurityRoute:
     AuthenticatedAdminSettingsSecurityRoute,
   AuthenticatedAdminSettingsUsageRoute: AuthenticatedAdminSettingsUsageRoute,
