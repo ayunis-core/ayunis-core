@@ -4066,6 +4066,11 @@ export interface BrandingResponseDto {
    * @nullable
    */
   faviconUrl?: string | null;
+  /**
+   * Organization primary brand color (6-digit hex)
+   * @nullable
+   */
+  primaryColor?: string | null;
 }
 
 export interface UpdateBrandingDto {
@@ -4073,6 +4078,10 @@ export interface UpdateBrandingDto {
   displayName?: string;
   /** Set to "true" to remove the current favicon */
   removeFavicon?: string;
+  /** Primary brand color as a 6-digit hex string */
+  primaryColor?: string;
+  /** Set to "true" to reset the primary color to default */
+  resetPrimaryColor?: string;
   /** Favicon image file (PNG or JPEG, max 512 KB) */
   favicon?: Blob;
 }

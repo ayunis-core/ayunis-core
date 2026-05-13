@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, Matches } from 'class-validator';
 
 export class UpdateBrandingDto {
   @ApiPropertyOptional({
@@ -18,6 +18,25 @@ export class UpdateBrandingDto {
   @IsOptional()
   @IsString()
   removeFavicon?: string;
+
+  @ApiPropertyOptional({
+    description: 'Primary brand color as a 6-digit hex string',
+    example: '#3b82f6',
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{6}$/, {
+    message: 'primaryColor must be a 6-digit hex like #3b82f6',
+  })
+  primaryColor?: string;
+
+  @ApiPropertyOptional({
+    description: 'Set to "true" to reset the primary color to default',
+    example: 'true',
+  })
+  @IsOptional()
+  @IsString()
+  resetPrimaryColor?: string;
 
   // Declared for the OpenAPI schema only — the actual file is delivered by
   // the FileFieldsInterceptor via @UploadedFiles(), never through the body.

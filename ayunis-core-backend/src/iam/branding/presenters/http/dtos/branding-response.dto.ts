@@ -22,4 +22,13 @@ export class BrandingResponseDto {
     example: null,
   })
   faviconUrl: string | null;
+
+  @ApiProperty({
+    description: 'Organization primary brand color (6-digit hex)',
+    type: 'string',
+    nullable: true,
+    required: false,
+    example: null,
+  })
+  primaryColor: string | null;
 }

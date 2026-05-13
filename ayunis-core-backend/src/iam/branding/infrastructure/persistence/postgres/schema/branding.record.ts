@@ -14,6 +14,9 @@ export class BrandingRecord extends BaseRecord {
   @Column({ nullable: true, type: 'varchar' })
   faviconStoragePath: string | null;
 
+  @Column({ nullable: true, type: 'varchar' })
+  primaryColor: string | null;
+
   @OneToOne(() => OrgRecord, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'orgId' })
   org: OrgRecord;

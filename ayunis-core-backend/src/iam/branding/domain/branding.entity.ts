@@ -6,6 +6,7 @@ export interface BrandingParams {
   orgId: UUID;
   displayName?: string | null;
   faviconStoragePath?: string | null;
+  primaryColor?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -17,6 +18,8 @@ export class Branding {
   // name in the read path instead.
   displayName: string | null;
   faviconStoragePath: string | null;
+  // 6-digit hex; null = platform default theme
+  primaryColor: string | null;
   createdAt: Date;
   updatedAt: Date;
 
@@ -25,6 +28,7 @@ export class Branding {
     this.orgId = params.orgId;
     this.displayName = params.displayName ?? null;
     this.faviconStoragePath = params.faviconStoragePath ?? null;
+    this.primaryColor = params.primaryColor ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

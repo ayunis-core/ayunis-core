@@ -1,6 +1,6 @@
 import CreateSkillDialog from './CreateSkillDialog';
 import { useTranslation } from 'react-i18next';
-import { ExternalLink, Store } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { EmptyState } from '@/widgets/empty-state';
 import { Button } from '@/shared/ui/shadcn/button';
 import { useMarketplaceConfig } from '@/features/marketplace';
@@ -20,13 +20,12 @@ export default function SkillsEmptyState() {
             showIcon={true}
           />
           {marketplace.enabled && marketplace.url && (
-            <Button variant="ghost" size="sm" className="text-brand" asChild>
+            <Button variant="link" asChild>
               <a
                 href={marketplace.url}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Store />
                 {t('emptyState.browseMarketplace')}
                 <ExternalLink />
               </a>

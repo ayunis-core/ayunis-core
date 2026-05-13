@@ -7,7 +7,7 @@ import {
   Shield,
   FileText,
   Key,
-  Building2,
+  Palette,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -22,11 +22,6 @@ export function AdminSettingsSidebar() {
 
   const menuItems: SidebarMenuItem[] = [
     {
-      to: '/admin-settings/organization',
-      icon: <Building2 />,
-      label: t('layout.organization'),
-    },
-    {
       to: '/admin-settings/users',
       icon: <User />,
       label: t('layout.users'),
@@ -40,6 +35,11 @@ export function AdminSettingsSidebar() {
       to: '/admin-settings/models',
       icon: <Brain />,
       label: t('layout.models'),
+    },
+    {
+      to: '/admin-settings/organization',
+      icon: <Palette />,
+      label: t('layout.branding'),
     },
     {
       to: '/admin-settings/integrations',

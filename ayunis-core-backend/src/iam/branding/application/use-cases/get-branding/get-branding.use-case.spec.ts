@@ -48,7 +48,18 @@ describe('GetBrandingUseCase', () => {
       name: 'Stadt Musterstadt',
       displayName: 'Stadt Musterstadt',
       faviconUrl: null,
+      primaryColor: null,
     });
+  });
+
+  it('should return the stored primary color', async () => {
+    repository.findByOrgId.mockResolvedValue(
+      new Branding({ orgId, primaryColor: '#3b82f6' }),
+    );
+
+    const result = await useCase.execute(new GetBrandingQuery(orgId));
+
+    expect(result.primaryColor).toBe('#3b82f6');
   });
 
   it('should return null displayName (platform default) when the row has displayName cleared', async () => {

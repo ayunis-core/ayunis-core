@@ -24,6 +24,8 @@ export interface ResolvedBranding {
   // row exists (same observable behavior as an untouched org).
   displayName: string | null;
   faviconUrl: string | null;
+  // 6-digit hex; null = platform default theme
+  primaryColor: string | null;
 }
 
 @Injectable()
@@ -55,6 +57,7 @@ export class GetBrandingUseCase {
         name: org.name,
         displayName: branding ? branding.displayName : org.name,
         faviconUrl,
+        primaryColor: branding?.primaryColor ?? null,
       };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;

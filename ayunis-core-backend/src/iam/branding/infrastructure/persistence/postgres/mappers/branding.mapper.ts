@@ -8,6 +8,7 @@ export class BrandingMapper {
       orgId: record.orgId,
       displayName: record.displayName,
       faviconStoragePath: record.faviconStoragePath,
+      primaryColor: record.primaryColor,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -19,6 +20,7 @@ export class BrandingMapper {
     record.orgId = domain.orgId;
     record.displayName = domain.displayName;
     record.faviconStoragePath = domain.faviconStoragePath;
+    record.primaryColor = domain.primaryColor;
     record.createdAt = domain.createdAt;
     record.updatedAt = new Date();
     return record;

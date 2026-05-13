@@ -21,7 +21,7 @@ export default function MarketplacePromoCard() {
     <Item
       asChild
       variant="muted"
-      className="mt-4 border-brand/40 bg-brand/10 hover:bg-brand/20"
+      className="mt-4 border-primary/40 bg-primary/10 hover:bg-primary/20"
     >
       <a
         href={marketplace.url}
@@ -29,13 +29,13 @@ export default function MarketplacePromoCard() {
         rel="noopener noreferrer"
         aria-label={t('marketplaceBanner.title')}
       >
-        <ItemMedia variant="icon" className="text-brand">
+        <ItemMedia variant="icon" className="text-primary">
           <Store />
         </ItemMedia>
         <ItemContent>
           <ItemTitle>
             <span>{t('marketplaceBanner.title')}</span>
-            <ExternalLink className="size-4 text-brand" />
+            <ExternalLink className="size-4 text-primary" />
           </ItemTitle>
           <ItemDescription>
             {t('marketplaceBanner.description')}

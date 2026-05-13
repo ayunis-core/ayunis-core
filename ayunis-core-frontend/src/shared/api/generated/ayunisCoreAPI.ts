@@ -16785,6 +16785,12 @@ if(updateBrandingDto.displayName !== undefined) {
 if(updateBrandingDto.removeFavicon !== undefined) {
  formData.append(`removeFavicon`, updateBrandingDto.removeFavicon)
  }
+if(updateBrandingDto.primaryColor !== undefined) {
+ formData.append(`primaryColor`, updateBrandingDto.primaryColor)
+ }
+if(updateBrandingDto.resetPrimaryColor !== undefined) {
+ formData.append(`resetPrimaryColor`, updateBrandingDto.resetPrimaryColor)
+ }
 if(updateBrandingDto.favicon !== undefined) {
  formData.append(`favicon`, updateBrandingDto.favicon)
  }

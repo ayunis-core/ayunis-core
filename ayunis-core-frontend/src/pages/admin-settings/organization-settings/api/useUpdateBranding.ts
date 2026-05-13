@@ -11,6 +11,8 @@ interface UpdateBrandingParams {
   displayName?: string;
   favicon?: File;
   removeFavicon?: boolean;
+  primaryColor?: string;
+  resetPrimaryColor?: boolean;
 }
 
 export function useUpdateBranding(onSuccess?: () => void) {
@@ -23,6 +25,8 @@ export function useUpdateBranding(onSuccess?: () => void) {
         displayName: params.displayName,
         favicon: params.favicon,
         removeFavicon: params.removeFavicon ? 'true' : undefined,
+        primaryColor: params.primaryColor,
+        resetPrimaryColor: params.resetPrimaryColor ? 'true' : undefined,
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({
@@ -37,6 +41,12 @@ export function useUpdateBranding(onSuccess?: () => void) {
         switch (code) {
           case 'BRANDING_INVALID_FILE':
             showError(t('organization.invalidFile'));
+            break;
+          case 'BRANDING_INVALID_COLOR':
+            showError(t('organization.errorInvalidColor'));
+            break;
+          case 'BRANDING_INSUFFICIENT_CONTRAST':
+            showError(t('organization.errorInsufficientContrast'));
             break;
           default:
             showError(t('organization.error'));

@@ -9,9 +9,15 @@ import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/de
 import { Branding } from '../../../domain/branding.entity';
 import { BrandingRepository } from '../../ports/branding.repository';
 import {
+  BrandingInsufficientContrastError,
+  BrandingInvalidColorError,
   BrandingInvalidFileError,
   UnexpectedBrandingError,
 } from '../../branding.errors';
+import {
+  normalizeHex,
+  validatePrimaryColor,
+} from '../../../domain/color-validation';
 import { GetBrandingUseCase } from '../get-branding/get-branding.use-case';
 import type { UpdateBrandingCommand } from './update-branding.command';
 
@@ -44,6 +50,8 @@ export class UpdateBrandingUseCase {
         branding.displayName = trimmed === '' ? null : trimmed;
       }
 
+      this.applyPrimaryColorChange(command, branding);
+
       const previousPath = await this.applyFaviconChange(command, branding);
 
       const saved = await this.brandingRepository.upsert(branding);
@@ -69,6 +77,27 @@ export class UpdateBrandingUseCase {
         orgId: command.orgId,
         ...(error instanceof Error && { originalError: error.message }),
       });
+    }
+  }
+
+  private applyPrimaryColorChange(
+    command: UpdateBrandingCommand,
+    branding: Branding,
+  ): void {
+    if (command.primaryColor !== undefined) {
+      const normalized = normalizeHex(command.primaryColor);
+      const result = validatePrimaryColor(normalized);
+      if (!result.ok) {
+        if (result.reason === 'invalid_format') {
+          throw new BrandingInvalidColorError(
+            'Color must be a 6-digit hex like #3b82f6',
+          );
+        }
+        throw new BrandingInsufficientContrastError(result.bestContrast ?? 0);
+      }
+      branding.primaryColor = normalized;
+    } else if (command.resetPrimaryColor && branding.primaryColor) {
+      branding.primaryColor = null;
     }
   }
 

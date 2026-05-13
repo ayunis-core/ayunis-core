@@ -14365,6 +14365,12 @@
             "description": "Presigned URL for the organization favicon",
             "nullable": true,
             "example": null
+          },
+          "primaryColor": {
+            "type": "string",
+            "description": "Organization primary brand color (6-digit hex)",
+            "nullable": true,
+            "example": null
           }
         },
         "required": ["name"]
@@ -14380,6 +14386,16 @@
           "removeFavicon": {
             "type": "string",
             "description": "Set to \"true\" to remove the current favicon",
+            "example": "true"
+          },
+          "primaryColor": {
+            "type": "string",
+            "description": "Primary brand color as a 6-digit hex string",
+            "example": "#3b82f6"
+          },
+          "resetPrimaryColor": {
+            "type": "string",
+            "description": "Set to \"true\" to reset the primary color to default",
             "example": "true"
           },
           "favicon": {

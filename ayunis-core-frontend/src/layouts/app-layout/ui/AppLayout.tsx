@@ -2,6 +2,7 @@ import React from 'react';
 import { useRouterState } from '@tanstack/react-router';
 import { SidebarProvider, SidebarInset } from '@/shared/ui/shadcn/sidebar';
 import AppSidebar from '@/widgets/app-sidebar';
+import { useApplyOrgTheme } from '@/features/org-theme';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,8 @@ export default function AppLayout({
   sidebar,
 }: Readonly<AppLayoutProps>) {
   const { location } = useRouterState();
+
+  useApplyOrgTheme();
 
   return (
     <SidebarProvider pathname={location.pathname}>

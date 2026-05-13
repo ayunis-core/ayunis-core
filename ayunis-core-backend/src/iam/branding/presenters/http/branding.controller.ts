@@ -79,6 +79,8 @@ export class BrandingController {
       hasDisplayName: dto.displayName !== undefined,
       hasFavicon: !!faviconFile,
       removeFavicon: dto.removeFavicon,
+      hasPrimaryColor: dto.primaryColor !== undefined,
+      resetPrimaryColor: dto.resetPrimaryColor,
     });
 
     await this.updateBrandingUseCase.execute(
@@ -88,6 +90,8 @@ export class BrandingController {
         faviconBuffer: faviconFile?.buffer,
         faviconMimeType: faviconFile?.mimetype,
         removeFavicon: dto.removeFavicon === 'true',
+        primaryColor: dto.primaryColor,
+        resetPrimaryColor: dto.resetPrimaryColor === 'true',
       }),
     );
 

@@ -2,6 +2,7 @@ import { UpdateBrandingUseCase } from './update-branding.use-case';
 import { UpdateBrandingCommand } from './update-branding.command';
 import type { BrandingRepository } from '../../ports/branding.repository';
 import {
+  BrandingInvalidColorError,
   BrandingInvalidFileError,
   UnexpectedBrandingError,
 } from '../../branding.errors';
@@ -238,6 +239,57 @@ describe('UpdateBrandingUseCase', () => {
         }),
       ),
     ).rejects.toThrow(BrandingInvalidFileError);
+  });
+
+  it('should store a normalized (lowercase) primary color', async () => {
+    const result = await useCase.execute(
+      new UpdateBrandingCommand({ orgId, primaryColor: '#3B82F6' }),
+    );
+
+    expect(result.primaryColor).toBe('#3b82f6');
+  });
+
+  it('should reject a primary color that is not a 6-digit hex', async () => {
+    await expect(
+      useCase.execute(
+        new UpdateBrandingCommand({ orgId, primaryColor: 'blue' }),
+      ),
+    ).rejects.toThrow(BrandingInvalidColorError);
+  });
+
+  it('should accept a mid-gray primary color (black text yields >4.5:1 contrast)', async () => {
+    // The guard checks contrast against white OR black text, whichever is
+    // better — the worst possible color still reaches ~4.58:1, so every
+    // valid hex passes WCAG AA. See color-validation.spec.ts.
+    const result = await useCase.execute(
+      new UpdateBrandingCommand({ orgId, primaryColor: '#808080' }),
+    );
+
+    expect(result.primaryColor).toBe('#808080');
+  });
+
+  it('should clear the primary color when resetPrimaryColor is set', async () => {
+    repository.findByOrgId.mockResolvedValue(
+      new Branding({ orgId, primaryColor: '#3b82f6' }),
+    );
+
+    const result = await useCase.execute(
+      new UpdateBrandingCommand({ orgId, resetPrimaryColor: true }),
+    );
+
+    expect(result.primaryColor).toBeNull();
+  });
+
+  it('should keep the existing primary color when the command omits it', async () => {
+    repository.findByOrgId.mockResolvedValue(
+      new Branding({ orgId, primaryColor: '#3b82f6' }),
+    );
+
+    const result = await useCase.execute(
+      new UpdateBrandingCommand({ orgId, displayName: 'Neues Portal' }),
+    );
+
+    expect(result.primaryColor).toBe('#3b82f6');
   });
 
   it('should invalidate the favicon URL cache after a successful update', async () => {
