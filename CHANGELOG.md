@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.33.0](https://github.com/ayunis-core/ayunis-core/compare/v1.32.0...v1.33.0) (2026-05-19)
+
+
+### Features
+
+* **chat:** add copy button to code blocks in chat messages (AYC-106) ([#687](https://github.com/ayunis-core/ayunis-core/issues/687)) ([2a66708](https://github.com/ayunis-core/ayunis-core/commit/2a667089642a605e67c115caf639452c2ab525b4))
+* **chat:** feedback Herzebrock Clarholz: trust and clarity tweaks across chat, skills, and settings (AYC-000) ([#691](https://github.com/ayunis-core/ayunis-core/issues/691)) ([d2464c1](https://github.com/ayunis-core/ayunis-core/commit/d2464c1fbed94ef30691efafaedf471e44f7436c))
+
+
+### Bug Fixes
+
+* **admin-users:** restore actions menu visibility in user list (AYC-112) ([#688](https://github.com/ayunis-core/ayunis-core/issues/688)) ([ba47b26](https://github.com/ayunis-core/ayunis-core/commit/ba47b2687ae09c87255e9c68196eeccb6cd6ee96))
+* **chat:** reconcile streaming text with server state to prevent visual truncation (AYC-93) ([#661](https://github.com/ayunis-core/ayunis-core/issues/661)) ([200e05d](https://github.com/ayunis-core/ayunis-core/commit/200e05d14f907ac62f4a5f9164d7558a13e24fb0))
+
 ## [1.32.0](https://github.com/ayunis-core/ayunis-core/compare/v1.31.0...v1.32.0) (2026-05-06)
 
 
