@@ -136,7 +136,6 @@ export default function UsersSection({
               <TableHead>{t('users.email')}</TableHead>
               <TableHead>{t('users.role')}</TableHead>
               <TableHead>{t('users.status')}</TableHead>
-              <TableHead>{t('users.joinDate')}</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -152,9 +151,6 @@ export default function UsersSection({
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     {t('users.active')}
                   </span>
-                </TableCell>
-                <TableCell>
-                  {new Date(user.createdAt).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
