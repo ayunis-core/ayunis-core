@@ -72,8 +72,8 @@ export default function CodeBlock({
         <TooltipTrigger asChild>
           <Button
             variant="ghost"
-            size="icon"
-            className="absolute top-1 right-1 h-7 w-7 bg-background/60 hover:bg-background/80 backdrop-blur-sm"
+            size="icon-sm"
+            className="absolute top-1 right-1"
             onClick={() => void handleCopy()}
             aria-label={t('chat.copyToClipboard')}
           >
