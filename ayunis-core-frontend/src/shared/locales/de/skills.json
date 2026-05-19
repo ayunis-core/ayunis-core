@@ -62,6 +62,7 @@
       "create": "Fähigkeit erstellen",
       "creating": "Wird erstellt..."
     },
+    "marketplaceHint": "Fähigkeiten werden nicht automatisch im Marketplace veröffentlicht.",
     "validation": {
       "nameRequired": "Name ist erforderlich",
       "shortDescriptionRequired": "Auslöser ist erforderlich",

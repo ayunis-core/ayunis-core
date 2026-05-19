@@ -62,6 +62,7 @@
       "create": "Create Skill",
       "creating": "Creating..."
     },
+    "marketplaceHint": "Skills are not automatically published to the marketplace.",
     "validation": {
       "nameRequired": "Name is required",
       "shortDescriptionRequired": "Trigger is required",

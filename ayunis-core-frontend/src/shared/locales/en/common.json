@@ -87,10 +87,12 @@
     "microphonePermissionDenied": "Microphone access denied",
     "recordingNotSupported": "Voice recording is not supported in this browser",
     "transcriptionFailed": "Transcription failed",
-    "modelSelectorAriaLabel": "Select AI model"
+    "modelSelectorAriaLabel": "Select AI model",
+    "deactivateSkillTooltip": "Deactivate skill"
   },
   "pinnedSkills": {
-    "empty": "No pinned skills"
+    "empty": "No pinned skills",
+    "activateTooltip": "Activate skill"
   },
   "common": {
     "loading": "Loading...",

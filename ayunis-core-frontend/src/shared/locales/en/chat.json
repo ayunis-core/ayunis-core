@@ -187,6 +187,7 @@
     "personalizedPromptError": "Failed to generate personalized system prompt",
     "systemPromptLoadError": "Could not load personalization status. Personalization may have been skipped.",
     "noDefaultModelError": "No default model configured. Please contact your administrator.",
+    "privacyHint": "Only you can see your chats.",
     "personalization": {
       "stepperName": "Name",
       "stepperStyle": "Style",
