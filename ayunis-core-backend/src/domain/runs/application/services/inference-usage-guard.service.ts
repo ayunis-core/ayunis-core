@@ -41,7 +41,11 @@ export class InferenceUsageGuard {
       const fairUseQuotaType = tierToFairUseQuotaType(model.tier);
       if (fairUseQuotaType !== null) {
         await this.checkQuotaUseCase.execute(
-          new CheckQuotaQuery(principal.userId, fairUseQuotaType),
+          new CheckQuotaQuery(
+            principal.userId,
+            principal.orgId,
+            fairUseQuotaType,
+          ),
         );
       }
     }

@@ -59,6 +59,7 @@ describe('InferenceUsageGuard', () => {
       expect(checkQuotaUseCase.execute.mock.calls[0][0]).toEqual(
         expect.objectContaining({
           userId,
+          orgId,
           quotaType: QuotaType.FAIR_USE_MESSAGES_MEDIUM,
         }),
       );
