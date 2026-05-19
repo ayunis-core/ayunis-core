@@ -17,7 +17,6 @@
     "status": "Status",
     "sentDate": "Sent Date",
     "name": "Name",
-    "joinDate": "Join Date",
     "active": "Active",
     "pending": "pending",
     "accepted": "accepted",
