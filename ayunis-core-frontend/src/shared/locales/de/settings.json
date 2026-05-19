@@ -56,7 +56,7 @@
     "defaultModelDescription": "Wählen Sie das Standard-KI-Modell für neue Gespräche",
     "selectDefaultModel": "Standardmodell auswählen",
     "none": "Kein Modell ausgewählt",
-    "systemPromptTitle": "System-Prompt",
+    "systemPromptTitle": "Personalisierung",
     "systemPromptLabel": "Persönliche Anweisung",
     "systemPromptDescription": "Definieren Sie einen persönlichen System-Prompt, der in jede KI-Unterhaltung eingefügt wird. Verwenden Sie dies, um das KI-Verhalten an Ihre Präferenzen anzupassen.",
     "systemPromptPlaceholder": "z.B. Antworten Sie immer in Stichpunkten. Ich arbeite in der Finanzabteilung.",

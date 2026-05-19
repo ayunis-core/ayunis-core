@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { ExternalLink } from 'lucide-react';
+import { CircleHelp } from 'lucide-react';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
   Tooltip,
@@ -25,7 +25,7 @@ export function HelpLink({ path, variant = 'default' }: HelpLinkProps) {
         <TooltipTrigger asChild>
           <Button variant="ghost" size="icon" asChild>
             <a href={url} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-4 w-4" />
+              <CircleHelp className="h-4 w-4" />
             </a>
           </Button>
         </TooltipTrigger>
@@ -37,7 +37,7 @@ export function HelpLink({ path, variant = 'default' }: HelpLinkProps) {
   return (
     <Button variant="outline" size="sm" asChild>
       <a href={url} target="_blank" rel="noopener noreferrer">
-        <ExternalLink className="h-4 w-4" />
+        <CircleHelp className="h-4 w-4" />
         {label}
       </a>
     </Button>

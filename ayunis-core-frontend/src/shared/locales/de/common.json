@@ -87,10 +87,12 @@
     "microphonePermissionDenied": "Mikrofonzugriff verweigert",
     "recordingNotSupported": "Sprachaufnahme wird in diesem Browser nicht unterstützt",
     "transcriptionFailed": "Transkription fehlgeschlagen",
-    "modelSelectorAriaLabel": "KI-Modell auswählen"
+    "modelSelectorAriaLabel": "KI-Modell auswählen",
+    "deactivateSkillTooltip": "Fähigkeit deaktivieren"
   },
   "pinnedSkills": {
-    "empty": "Keine angehefteten Fähigkeiten"
+    "empty": "Keine angehefteten Fähigkeiten",
+    "activateTooltip": "Fähigkeit aktivieren"
   },
   "common": {
     "loading": "Laden...",

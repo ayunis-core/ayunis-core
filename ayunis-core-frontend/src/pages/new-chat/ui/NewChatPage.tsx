@@ -1,3 +1,4 @@
+import { Lock } from 'lucide-react';
 import NewChatPageLayout from './NewChatPageLayout';
 import ChatInput from '@/widgets/chat-input';
 import {
@@ -277,6 +278,10 @@ export default function NewChatPage({
           onSkillSelect={handleSkillSelect}
           selectedSkillId={selectedSkillId}
         />
+        <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
+          <Lock className="h-3 w-3" />
+          <span>{t('newChat.privacyHint')}</span>
+        </div>
       </div>
     </NewChatPageLayout>
   );

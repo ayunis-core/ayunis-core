@@ -187,6 +187,7 @@
     "personalizedPromptError": "Personalisierter System-Prompt konnte nicht erstellt werden",
     "systemPromptLoadError": "Personalisierungsstatus konnte nicht geladen werden. Die Personalisierung wurde möglicherweise übersprungen.",
     "noDefaultModelError": "Kein Standardmodell konfiguriert. Bitte wenden Sie sich an Ihren Administrator.",
+    "privacyHint": "Nur Sie sehen Ihre Chats.",
     "personalization": {
       "stepperName": "Name",
       "stepperStyle": "Stil",

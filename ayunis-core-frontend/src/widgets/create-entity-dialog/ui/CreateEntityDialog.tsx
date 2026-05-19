@@ -28,6 +28,7 @@ interface CreateEntityDialogProps {
   buttonText?: string;
   showIcon?: boolean;
   buttonClassName?: string;
+  footerHint?: ReactNode;
   children: ReactNode;
 }
 
@@ -41,6 +42,7 @@ export default function CreateEntityDialog({
   buttonText,
   showIcon = false,
   buttonClassName = '',
+  footerHint,
   children,
 }: Readonly<CreateEntityDialogProps>) {
   return (
@@ -61,18 +63,29 @@ export default function CreateEntityDialog({
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-6">
           {children}
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={isLoading}
-            >
-              {translations.cancel}
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? translations.creating : translations.create}
-            </Button>
+          <DialogFooter
+            className={
+              footerHint ? 'sm:justify-between sm:items-center' : undefined
+            }
+          >
+            {footerHint && (
+              <p className="text-xs text-muted-foreground sm:max-w-xs">
+                {footerHint}
+              </p>
+            )}
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={isLoading}
+              >
+                {translations.cancel}
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? translations.creating : translations.create}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
