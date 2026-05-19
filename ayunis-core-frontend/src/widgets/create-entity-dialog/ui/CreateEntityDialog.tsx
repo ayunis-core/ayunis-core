@@ -63,29 +63,23 @@ export default function CreateEntityDialog({
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-6">
           {children}
-          <DialogFooter
-            className={
-              footerHint ? 'sm:justify-between sm:items-center' : undefined
-            }
-          >
+          <DialogFooter>
             {footerHint && (
-              <p className="text-xs text-muted-foreground sm:max-w-xs">
+              <p className="text-xs text-muted-foreground sm:mr-auto sm:max-w-xs sm:self-center">
                 {footerHint}
               </p>
             )}
-            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                disabled={isLoading}
-              >
-                {translations.cancel}
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? translations.creating : translations.create}
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isLoading}
+            >
+              {translations.cancel}
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? translations.creating : translations.create}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

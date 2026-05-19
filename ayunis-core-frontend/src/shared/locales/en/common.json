@@ -92,7 +92,8 @@
   },
   "pinnedSkills": {
     "empty": "No pinned skills",
-    "activateTooltip": "Activate skill"
+    "activateTooltip": "Activate skill",
+    "deactivateTooltip": "Deactivate skill"
   },
   "common": {
     "loading": "Loading...",

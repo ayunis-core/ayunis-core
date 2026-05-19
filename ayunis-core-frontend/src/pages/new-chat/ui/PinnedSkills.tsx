@@ -45,7 +45,11 @@ export function PinnedSkills({
               {skill.name}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>{t('pinnedSkills.activateTooltip')}</TooltipContent>
+          <TooltipContent>
+            {selectedSkillId === skill.id
+              ? t('pinnedSkills.deactivateTooltip')
+              : t('pinnedSkills.activateTooltip')}
+          </TooltipContent>
         </Tooltip>
       ))}
       <HelpLink

@@ -92,7 +92,8 @@
   },
   "pinnedSkills": {
     "empty": "Keine angehefteten Fähigkeiten",
-    "activateTooltip": "Fähigkeit aktivieren"
+    "activateTooltip": "Fähigkeit aktivieren",
+    "deactivateTooltip": "Fähigkeit deaktivieren"
   },
   "common": {
     "loading": "Laden...",
