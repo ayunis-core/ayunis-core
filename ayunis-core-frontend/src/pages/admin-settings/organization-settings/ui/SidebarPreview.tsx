@@ -171,7 +171,7 @@ function TogglesSnippet({ primaryColor }: { primaryColor: string | null }) {
           )}
           style={primaryColor ? { backgroundColor: primaryColor } : undefined}
         >
-          <span className="size-4 translate-x-4 rounded-full bg-white shadow-sm transition-transform" />
+          <span className="size-4 translate-x-4 rounded-full bg-background shadow-sm transition-transform" />
         </span>
       </div>
       <div className="flex items-center justify-between">
@@ -180,7 +180,7 @@ function TogglesSnippet({ primaryColor }: { primaryColor: string | null }) {
           <span>GPT-5</span>
         </span>
         <span className="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-muted px-0.5">
-          <span className="size-4 rounded-full bg-white shadow-sm transition-transform" />
+          <span className="size-4 rounded-full bg-background shadow-sm transition-transform" />
         </span>
       </div>
     </div>
