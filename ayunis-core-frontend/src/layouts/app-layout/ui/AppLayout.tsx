@@ -7,15 +7,17 @@ import { useApplyOrgTheme } from '@/features/org-theme';
 interface AppLayoutProps {
   children: React.ReactNode;
   sidebar?: React.ReactNode;
+  applyOrgTheme?: boolean;
 }
 
 export default function AppLayout({
   children,
   sidebar,
+  applyOrgTheme = true,
 }: Readonly<AppLayoutProps>) {
   const { location } = useRouterState();
 
-  useApplyOrgTheme();
+  useApplyOrgTheme(applyOrgTheme);
 
   return (
     <SidebarProvider pathname={location.pathname}>

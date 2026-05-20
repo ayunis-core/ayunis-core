@@ -100,6 +100,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   }
                   alt={branding?.displayName ?? config.app.name}
                   className="size-6 shrink-0 rounded-sm object-cover"
+                  crossOrigin="anonymous"
                 />
                 <span className="truncate text-sm font-semibold">
                   {branding?.displayName ?? config.app.name}

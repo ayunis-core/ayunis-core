@@ -1,10 +1,14 @@
 {
   "organization": {
     "title": "Branding",
-    "identityLabel": "Display Name & Logo",
-    "identityDescription": "Shown in the sidebar instead of the platform branding. Leave the display name empty to use the platform default.",
-    "displayNameLabel": "Display Name",
+    "identityLabel": "Name & Logo",
+    "identityDescription": "Configure how your organization appears: display name and logo.",
+    "nameLabel": "Organization Name",
+    "namePlaceholder": "Enter organization name",
+    "nameHint": "Internal name — used in invoices, audit logs, and sales context.",
+    "displayNameLabel": "Display name",
     "displayNamePlaceholder": "Enter display name",
+    "displayNameHint": "Shown to your users in the sidebar. Leave empty to show \"Ayunis Core\" instead.",
     "faviconLabel": "Organization Logo",
     "faviconHint": "Square format (1:1), PNG or JPEG, max 512 KB",
     "faviconRemove": "Remove",

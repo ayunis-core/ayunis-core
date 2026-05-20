@@ -1,5 +1,7 @@
 import {
   getSuperAdminUsersControllerGetUsersByOrgIdQueryKey,
+  getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey,
+  getSuperAdminUsageControllerGetUsageStatsQueryKey,
   useSuperAdminUsersControllerCreateUser,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { CreateUserDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -26,6 +28,19 @@ export function useSuperAdminCreateUser(
         showSuccess(t('createUser.success'));
         void queryClient.invalidateQueries({
           queryKey: getSuperAdminUsersControllerGetUsersByOrgIdQueryKey(
+            options.orgId,
+          ),
+        });
+        // The overview cards on the "Allgemeines" tab depend on the
+        // subscription (seats used) and usage stats. Without these the
+        // cards stay stale until a full page reload.
+        void queryClient.invalidateQueries({
+          queryKey: getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey(
+            options.orgId,
+          ),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getSuperAdminUsageControllerGetUsageStatsQueryKey(
             options.orgId,
           ),
         });

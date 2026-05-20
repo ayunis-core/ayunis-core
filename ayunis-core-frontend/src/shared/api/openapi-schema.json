@@ -8247,6 +8247,80 @@
         "summary": "Update the current org's branding",
         "tags": ["Branding"]
       }
+    },
+    "/super-admin/orgs/{id}/branding": {
+      "get": {
+        "operationId": "SuperAdminBrandingController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandingResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Get an organization's branding (super admin)",
+        "tags": ["Branding"]
+      },
+      "patch": {
+        "operationId": "SuperAdminBrandingController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/SuperAdminUpdateBrandingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandingResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Update an organization's branding and name (super admin)",
+        "tags": ["Branding"]
+      }
     }
   },
   "info": {
@@ -14402,6 +14476,41 @@
             "type": "string",
             "format": "binary",
             "description": "Favicon image file (PNG or JPEG, max 512 KB)"
+          }
+        }
+      },
+      "SuperAdminUpdateBrandingDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "Display name shown to end users in the sidebar. Send an empty string to clear and fall back to the platform default.",
+            "example": "My Org"
+          },
+          "removeFavicon": {
+            "type": "string",
+            "description": "Set to \"true\" to remove the current favicon",
+            "example": "true"
+          },
+          "primaryColor": {
+            "type": "string",
+            "description": "Primary brand color as a 6-digit hex string",
+            "example": "#3b82f6"
+          },
+          "resetPrimaryColor": {
+            "type": "string",
+            "description": "Set to \"true\" to reset the primary color to default",
+            "example": "true"
+          },
+          "favicon": {
+            "type": "string",
+            "format": "binary",
+            "description": "Favicon image file (PNG or JPEG, max 512 KB)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Canonical organization name (internal — invoices, audit logs). Only super admins may rename an organization.",
+            "example": "Stadt Musterstadt"
           }
         }
       }

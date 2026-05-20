@@ -23,7 +23,7 @@ describe('GetBrandingUseCase', () => {
     repository = {
       findByOrgId: jest.fn(),
       upsert: jest.fn(),
-    } as jest.Mocked<BrandingRepository>;
+    };
 
     findOrgByIdUseCase = { execute: jest.fn().mockResolvedValue(org) };
     getPresignedUrlUseCase = {

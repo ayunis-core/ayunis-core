@@ -1,21 +1,9 @@
-// Downsample to this many px on the longest side before sampling. 64 is
-// enough to identify dominant colors in a logo while keeping the pixel
-// count under 4K and edge anti-aliasing noise low.
 const MAX_DIMENSION = 64;
-// Pixels less opaque than this are treated as background — typical logo
-// PNGs have alpha=0 for transparent backgrounds; we allow a small fringe.
 const MIN_ALPHA = 200;
-// Skip near-white and near-black pixels — almost always background or
-// outline, not brand color. Tuned so muted brand colors still survive.
 const MAX_LIGHTNESS = 0.92;
 const MIN_LIGHTNESS = 0.08;
-// Skip grayscale pixels — they're not "colors" in the brand sense.
 const MIN_SATURATION = 0.18;
-// 5 bits per channel = 32 levels each = 32k buckets. Pixels within ~8 RGB
-// values of each other land in the same bucket, smoothing anti-aliasing.
 const BUCKET_BITS = 5;
-// Reject candidate colors that are within this Euclidean RGB distance of
-// an already-picked one — prevents returning five shades of the same hue.
 const MIN_PERCEPTUAL_DISTANCE = 48;
 
 interface RgbBucket {

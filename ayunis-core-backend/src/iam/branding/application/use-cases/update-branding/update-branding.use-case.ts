@@ -55,7 +55,13 @@ export class UpdateBrandingUseCase {
       const previousPath = await this.applyFaviconChange(command, branding);
 
       const saved = await this.brandingRepository.upsert(branding);
-      this.getBrandingUseCase.invalidateCache(command.orgId);
+
+      // Only bust the favicon-URL cache when the favicon actually changed.
+      // Color/display-name updates can keep the cached presigned URL, which
+      // avoids an extra storage round-trip on the follow-up read.
+      if (command.faviconBuffer || previousPath !== null) {
+        this.getBrandingUseCase.invalidateCache(command.orgId);
+      }
 
       // Delete the replaced object only after the row is persisted, so a
       // failed update never leaves the database referencing a deleted file.

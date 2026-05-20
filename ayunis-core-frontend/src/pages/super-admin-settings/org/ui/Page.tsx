@@ -11,7 +11,7 @@ import { Badge } from '@/shared/ui/shadcn/badge';
 import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
 import { ClockIcon } from 'lucide-react';
 import UsersTable from './UsersTable';
-import OrgDetails from './OrgDetails';
+import OrgGeneralTab from './OrgGeneralTab';
 import LicenseSeatsSection from './LicenseSeatsSection';
 import CreditBudgetSection from './CreditBudgetSection';
 import BillingInfoSection from './BillingInfoSection';
@@ -112,7 +112,11 @@ export default function SuperAdminSettingsOrgPage({
           <TabsTrigger value="usage">{t('tabs.usage')}</TabsTrigger>
         </TabsList>
         <TabsContent value="org" className="mt-4">
-          <OrgDetails org={org} />
+          <OrgGeneralTab
+            orgId={org.id}
+            subscription={subscription}
+            trial={trial}
+          />
         </TabsContent>
         <TabsContent value="users" className="mt-4">
           <UsersTable

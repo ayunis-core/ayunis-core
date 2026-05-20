@@ -1,5 +1,7 @@
 import {
   getSuperAdminUsersControllerGetUsersByOrgIdQueryKey,
+  getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey,
+  getSuperAdminUsageControllerGetUsageStatsQueryKey,
   useSuperAdminUsersControllerDeleteUser,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useQueryClient } from '@tanstack/react-query';
@@ -24,6 +26,19 @@ export function useSuperAdminDeleteUser(
         showSuccess(t('deleteUser.success'));
         void queryClient.invalidateQueries({
           queryKey: getSuperAdminUsersControllerGetUsersByOrgIdQueryKey(
+            options.orgId,
+          ),
+        });
+        // Overview cards on the "Allgemeines" tab depend on subscription
+        // (seats used) and usage stats — invalidate both so the stat cards
+        // refresh without a full page reload.
+        void queryClient.invalidateQueries({
+          queryKey: getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey(
+            options.orgId,
+          ),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getSuperAdminUsageControllerGetUsageStatsQueryKey(
             options.orgId,
           ),
         });

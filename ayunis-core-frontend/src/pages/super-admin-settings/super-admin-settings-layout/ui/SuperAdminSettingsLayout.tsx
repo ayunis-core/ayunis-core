@@ -28,7 +28,7 @@ export default function SuperAdminSettingsLayout({
   );
 
   return (
-    <AppLayout sidebar={<SuperAdminSettingsSidebar />}>
+    <AppLayout sidebar={<SuperAdminSettingsSidebar />} applyOrgTheme={false}>
       <ContentAreaLayout contentHeader={contentHeader} contentArea={children} />
     </AppLayout>
   );

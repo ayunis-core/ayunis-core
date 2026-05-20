@@ -248,7 +248,7 @@
     "createSubscription": "Create Subscription"
   },
   "tabs": {
-    "org": "Organization",
+    "org": "General",
     "users": "Users",
     "subscriptions": "Subscriptions",
     "trials": "Trials",
@@ -296,6 +296,29 @@
   "orgDetails": {
     "name": "Name",
     "id": "ID"
+  },
+  "overview": {
+    "subscription": "Subscription",
+    "subscriptionActive": "Active",
+    "subscriptionCancelled": "Cancelled",
+    "subscriptionNone": "Inactive",
+    "subscriptionTypeSeat": "Seat-based",
+    "subscriptionTypeUsage": "Usage-based",
+    "subscriptionScheduled": "Scheduled",
+    "subscriptionScheduledFrom": "from {{date}}",
+    "seats": "Seats",
+    "seatsValue": "{{used}} / {{total}}",
+    "seatsLimitReached": "Seat limit reached",
+    "credits": "Credits",
+    "creditsUnit": "per month",
+    "trial": "Trial",
+    "trialValue": "{{sent}} / {{max}}",
+    "trialUnit": "Messages",
+    "trialLimitReached": "Message limit reached",
+    "trialNone": "No trial",
+    "activeUsers": "Active users",
+    "activeUsersHint": "last 30 days",
+    "empty": "–"
   },
   "trial": {
     "title": "Trial Information",

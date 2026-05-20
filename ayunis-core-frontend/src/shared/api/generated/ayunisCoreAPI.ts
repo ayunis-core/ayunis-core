@@ -146,6 +146,7 @@ import type {
   SuperAdminPermittedModelsControllerUpdatePermittedModel200,
   SuperAdminTrialResponseDto,
   SuperAdminTrialResponseDtoNullable,
+  SuperAdminUpdateBrandingDto,
   SuperAdminUsageControllerGetModelDistributionParams,
   SuperAdminUsageControllerGetUsageStatsParams,
   SuperAdminUsageDataControllerGetProviderUsageChartParams,
@@ -16847,6 +16848,183 @@ export const useBrandingControllerUpdate = <TError = unknown,
       > => {
 
       const mutationOptions = getBrandingControllerUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Get an organization's branding (super admin)
+ */
+export const superAdminBrandingControllerGet = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<BrandingResponseDto>(
+      {url: `/super-admin/orgs/${id}/branding`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminBrandingControllerGetQueryKey = (id?: string,) => {
+    return [
+    `/super-admin/orgs/${id}/branding`
+    ] as const;
+    }
+
+    
+export const getSuperAdminBrandingControllerGetQueryOptions = <TData = Awaited<ReturnType<typeof superAdminBrandingControllerGet>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminBrandingControllerGet>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminBrandingControllerGetQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminBrandingControllerGet>>> = ({ signal }) => superAdminBrandingControllerGet(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminBrandingControllerGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminBrandingControllerGetQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminBrandingControllerGet>>>
+export type SuperAdminBrandingControllerGetQueryError = void
+
+
+export function useSuperAdminBrandingControllerGet<TData = Awaited<ReturnType<typeof superAdminBrandingControllerGet>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminBrandingControllerGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminBrandingControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminBrandingControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminBrandingControllerGet<TData = Awaited<ReturnType<typeof superAdminBrandingControllerGet>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminBrandingControllerGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminBrandingControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminBrandingControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminBrandingControllerGet<TData = Awaited<ReturnType<typeof superAdminBrandingControllerGet>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminBrandingControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get an organization's branding (super admin)
+ */
+
+export function useSuperAdminBrandingControllerGet<TData = Awaited<ReturnType<typeof superAdminBrandingControllerGet>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminBrandingControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminBrandingControllerGetQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Update an organization's branding and name (super admin)
+ */
+export const superAdminBrandingControllerUpdate = (
+    id: string,
+    superAdminUpdateBrandingDto: SuperAdminUpdateBrandingDto,
+ ) => {
+      
+      const formData = new FormData();
+if(superAdminUpdateBrandingDto.displayName !== undefined) {
+ formData.append(`displayName`, superAdminUpdateBrandingDto.displayName)
+ }
+if(superAdminUpdateBrandingDto.removeFavicon !== undefined) {
+ formData.append(`removeFavicon`, superAdminUpdateBrandingDto.removeFavicon)
+ }
+if(superAdminUpdateBrandingDto.primaryColor !== undefined) {
+ formData.append(`primaryColor`, superAdminUpdateBrandingDto.primaryColor)
+ }
+if(superAdminUpdateBrandingDto.resetPrimaryColor !== undefined) {
+ formData.append(`resetPrimaryColor`, superAdminUpdateBrandingDto.resetPrimaryColor)
+ }
+if(superAdminUpdateBrandingDto.favicon !== undefined) {
+ formData.append(`favicon`, superAdminUpdateBrandingDto.favicon)
+ }
+if(superAdminUpdateBrandingDto.name !== undefined) {
+ formData.append(`name`, superAdminUpdateBrandingDto.name)
+ }
+
+      return customAxiosInstance<BrandingResponseDto>(
+      {url: `/super-admin/orgs/${id}/branding`, method: 'PATCH',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminBrandingControllerUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminBrandingControllerUpdate>>, TError,{id: string;data: SuperAdminUpdateBrandingDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminBrandingControllerUpdate>>, TError,{id: string;data: SuperAdminUpdateBrandingDto}, TContext> => {
+
+const mutationKey = ['superAdminBrandingControllerUpdate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminBrandingControllerUpdate>>, {id: string;data: SuperAdminUpdateBrandingDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  superAdminBrandingControllerUpdate(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminBrandingControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminBrandingControllerUpdate>>>
+    export type SuperAdminBrandingControllerUpdateMutationBody = SuperAdminUpdateBrandingDto
+    export type SuperAdminBrandingControllerUpdateMutationError = void
+
+    /**
+ * @summary Update an organization's branding and name (super admin)
+ */
+export const useSuperAdminBrandingControllerUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminBrandingControllerUpdate>>, TError,{id: string;data: SuperAdminUpdateBrandingDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminBrandingControllerUpdate>>,
+        TError,
+        {id: string;data: SuperAdminUpdateBrandingDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminBrandingControllerUpdateMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

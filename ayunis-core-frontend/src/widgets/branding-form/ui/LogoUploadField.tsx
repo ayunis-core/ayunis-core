@@ -28,8 +28,6 @@ async function loadImageDimensions(
 interface LogoUploadFieldProps {
   currentUrl: string | null | undefined;
   pendingFile: File | null;
-  // Object-URL preview of `pendingFile`, owned by the parent so it can also
-  // be reused by the live preview without creating a second object URL.
   pendingPreview: string | null;
   removed: boolean;
   disabled?: boolean;
@@ -45,7 +43,7 @@ export function LogoUploadField({
   disabled,
   onChange,
   onRemove,
-}: LogoUploadFieldProps) {
+}: Readonly<LogoUploadFieldProps>) {
   const { t } = useTranslation('admin-settings-organization');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -88,7 +86,7 @@ export function LogoUploadField({
     e.preventDefault();
     setIsDragging(false);
     if (disabled) return;
-    const file = e.dataTransfer.files?.[0];
+    const file = e.dataTransfer.files.item(0);
     if (file) await validateAndSet(file);
   }
 
@@ -108,8 +106,8 @@ export function LogoUploadField({
           if (!disabled) setIsDragging(true);
         }}
         onDragLeave={(e) => {
-          // Ignore leave events that fire when the cursor moves between
-          // child elements within the dropzone — only react to true exits.
+          // Browser fires dragleave when the pointer moves over a child
+          // element. Skip those so the highlight doesn't flicker.
           if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
           setIsDragging(false);
         }}
@@ -131,6 +129,7 @@ export function LogoUploadField({
               src={displayUrl}
               alt={t('organization.faviconCurrent')}
               className="size-full object-cover"
+              crossOrigin="anonymous"
             />
           ) : (
             <ImageIcon

@@ -34,7 +34,7 @@ describe('UpdateBrandingUseCase', () => {
       upsert: jest
         .fn()
         .mockImplementation((branding: Branding) => Promise.resolve(branding)),
-    } as jest.Mocked<BrandingRepository>;
+    };
 
     uploadObjectUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
     deleteObjectUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
@@ -292,12 +292,26 @@ describe('UpdateBrandingUseCase', () => {
     expect(result.primaryColor).toBe('#3b82f6');
   });
 
-  it('should invalidate the favicon URL cache after a successful update', async () => {
+  it('should invalidate the favicon URL cache when the favicon changes', async () => {
+    await useCase.execute(
+      new UpdateBrandingCommand({
+        orgId,
+        faviconBuffer: pngBuffer,
+        faviconMimeType: 'image/png',
+      }),
+    );
+
+    expect(getBrandingUseCase.invalidateCache).toHaveBeenCalledWith(orgId);
+  });
+
+  it('should not invalidate the favicon URL cache for a non-favicon update', async () => {
+    // Color/display-name updates keep the cached presigned URL valid,
+    // avoiding an extra storage round-trip on the follow-up read.
     await useCase.execute(
       new UpdateBrandingCommand({ orgId, displayName: 'Neues Portal' }),
     );
 
-    expect(getBrandingUseCase.invalidateCache).toHaveBeenCalledWith(orgId);
+    expect(getBrandingUseCase.invalidateCache).not.toHaveBeenCalled();
   });
 
   it('should throw UnexpectedBrandingError when the repository throws an unexpected error', async () => {

@@ -4086,6 +4086,21 @@ export interface UpdateBrandingDto {
   favicon?: Blob;
 }
 
+export interface SuperAdminUpdateBrandingDto {
+  /** Display name shown to end users in the sidebar. Send an empty string to clear and fall back to the platform default. */
+  displayName?: string;
+  /** Set to "true" to remove the current favicon */
+  removeFavicon?: string;
+  /** Primary brand color as a 6-digit hex string */
+  primaryColor?: string;
+  /** Set to "true" to reset the primary color to default */
+  resetPrimaryColor?: string;
+  /** Favicon image file (PNG or JPEG, max 512 KB) */
+  favicon?: Blob;
+  /** Canonical organization name (internal — invoices, audit logs). Only super admins may rename an organization. */
+  name?: string;
+}
+
 export type ModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto | PermittedImageGenerationModelResponseDto;
 
 export type SuperAdminPermittedModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto | PermittedImageGenerationModelResponseDto;

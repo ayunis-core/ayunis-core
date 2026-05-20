@@ -248,7 +248,7 @@
     "createSubscription": "Abonnement erstellen"
   },
   "tabs": {
-    "org": "Organisation",
+    "org": "Allgemeines",
     "users": "Benutzer",
     "subscriptions": "Abonnement",
     "trials": "Trial",
@@ -296,6 +296,29 @@
   "orgDetails": {
     "name": "Name",
     "id": "ID"
+  },
+  "overview": {
+    "subscription": "Abonnement",
+    "subscriptionActive": "Aktiv",
+    "subscriptionCancelled": "Gekündigt",
+    "subscriptionNone": "Inaktiv",
+    "subscriptionTypeSeat": "Seat-basiert",
+    "subscriptionTypeUsage": "Nutzungs-basiert",
+    "subscriptionScheduled": "Geplant",
+    "subscriptionScheduledFrom": "ab {{date}}",
+    "seats": "Plätze",
+    "seatsValue": "{{used}} / {{total}}",
+    "seatsLimitReached": "Sitzplatzlimit erreicht",
+    "credits": "Credits",
+    "creditsUnit": "pro Monat",
+    "trial": "Trial",
+    "trialValue": "{{sent}} / {{max}}",
+    "trialUnit": "Nachrichten",
+    "trialLimitReached": "Nachrichtenlimit erreicht",
+    "trialNone": "Kein Trial",
+    "activeUsers": "Aktive Nutzer",
+    "activeUsersHint": "letzte 30 Tage",
+    "empty": "–"
   },
   "trial": {
     "title": "Trial-Informationen",

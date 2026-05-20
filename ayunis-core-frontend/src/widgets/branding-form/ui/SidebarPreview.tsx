@@ -5,24 +5,16 @@ import { cn } from '@/shared/lib/shadcn/utils';
 interface SidebarPreviewProps {
   favicon: string | null;
   name: string;
-  // When null/null, the preview renders with the design system's primary
-  // token (`bg-primary text-primary-foreground`). When set, the user has
-  // picked a custom color and we apply it via inline style.
   primaryColor: string | null;
   primaryForeground: string | null;
 }
 
-/**
- * Three side-by-side preview cards showing different aspects of where
- * the org's branding appears in the app — sidebar, chat input, toggles.
- * Purely visual; nothing focusable.
- */
 export function SidebarPreview({
   favicon,
   name,
   primaryColor,
   primaryForeground,
-}: SidebarPreviewProps) {
+}: Readonly<SidebarPreviewProps>) {
   const { t } = useTranslation('admin-settings-organization');
   return (
     <div
@@ -48,10 +40,10 @@ export function SidebarPreview({
 function PreviewCard({
   label,
   children,
-}: {
+}: Readonly<{
   label: string;
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <div className="space-y-2">
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
@@ -63,13 +55,12 @@ function PreviewCard({
 function SidebarSnippet({
   favicon,
   name,
-}: {
+}: Readonly<{
   favicon: string | null;
   name: string;
-}) {
+}>) {
   return (
     <div className="h-full overflow-hidden rounded-lg border bg-sidebar p-3 text-sidebar-foreground">
-      {/* Header: favicon + name */}
       <div className="flex items-center gap-2">
         <div
           className={cn(
@@ -78,7 +69,12 @@ function SidebarSnippet({
           )}
         >
           {favicon ? (
-            <img src={favicon} alt="" className="size-full object-cover" />
+            <img
+              src={favicon}
+              alt=""
+              className="size-full object-cover"
+              crossOrigin="anonymous"
+            />
           ) : (
             <Building2
               className="size-4 text-sidebar-foreground/60"
@@ -91,7 +87,6 @@ function SidebarSnippet({
         </span>
       </div>
 
-      {/* Menu items */}
       <div className="mt-3 space-y-1">
         <div className="flex h-5 items-center rounded-md bg-sidebar-accent px-2">
           <div className="h-1.5 w-12 rounded bg-sidebar-foreground/60" />
@@ -110,10 +105,10 @@ function SidebarSnippet({
 function ChatInputSnippet({
   primaryColor,
   primaryForeground,
-}: {
+}: Readonly<{
   primaryColor: string | null;
   primaryForeground: string | null;
-}) {
+}>) {
   return (
     <div className="flex h-full flex-col justify-center rounded-lg border bg-background p-3">
       <div className="rounded-xl border bg-card p-2 shadow-sm">
@@ -156,7 +151,9 @@ function ChatInputSnippet({
   );
 }
 
-function TogglesSnippet({ primaryColor }: { primaryColor: string | null }) {
+function TogglesSnippet({
+  primaryColor,
+}: Readonly<{ primaryColor: string | null }>) {
   return (
     <div className="flex h-full flex-col justify-center gap-3 rounded-lg border bg-background p-4">
       <div className="flex items-center justify-between">

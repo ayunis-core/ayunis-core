@@ -30,14 +30,15 @@ function pickForeground(hex: string): '#ffffff' | '#000000' {
 /**
  * Applies the org's custom primary color as a CSS variable override on
  * <html>. Removes the override when the org clears its color (the
- * branding query no longer returns a primary color).
+ * branding query no longer returns a primary color) or when `enabled`
+ * is false (e.g. super-admin pages that must not be org-themed).
  *
  * Works for both light and dark mode — the override is set on :root so
  * it wins against both light and dark theme defaults.
  */
-export function useApplyOrgTheme(): void {
+export function useApplyOrgTheme(enabled: boolean = true): void {
   const { branding } = useBranding();
-  const primary = branding?.primaryColor ?? null;
+  const primary = enabled ? (branding?.primaryColor ?? null) : null;
 
   useEffect(() => {
     const root = document.documentElement;

@@ -11,6 +11,7 @@ import { GetBrandingUseCase } from './application/use-cases/get-branding/get-bra
 import { UpdateBrandingUseCase } from './application/use-cases/update-branding/update-branding.use-case';
 
 import { BrandingController } from './presenters/http/branding.controller';
+import { SuperAdminBrandingController } from './presenters/http/super-admin-branding.controller';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { BrandingController } from './presenters/http/branding.controller';
     StorageModule,
     OrgsModule,
   ],
-  controllers: [BrandingController],
+  controllers: [BrandingController, SuperAdminBrandingController],
   providers: [
     {
       provide: BrandingRepository,

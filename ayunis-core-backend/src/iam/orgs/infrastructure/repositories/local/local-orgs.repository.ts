@@ -169,8 +169,14 @@ export class LocalOrgsRepository extends OrgsRepository {
         throw new OrgNotFoundError(org.id);
       }
 
-      const orgEntity = OrgMapper.toEntity(org);
-      const savedOrgEntity = await this.orgRepository.save(orgEntity);
+      // Targeted column update. A cascade `save()` of the mapped entity
+      // would try to sync the (unloaded, therefore empty) users relation
+      // and orphan every user of the org.
+      await this.orgRepository.update({ id: org.id }, { name: org.name });
+
+      const savedOrgEntity = await this.orgRepository.findOneOrFail({
+        where: { id: org.id },
+      });
 
       this.logger.debug('Organization updated successfully', {
         id: savedOrgEntity.id,

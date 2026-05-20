@@ -1,10 +1,14 @@
 {
   "organization": {
     "title": "Branding",
-    "identityLabel": "Anzeigename & Logo",
-    "identityDescription": "Wird in der Sidebar anstelle des Plattform-Brandings angezeigt. Lassen Sie den Anzeigenamen leer, um den Plattform-Standard zu verwenden.",
+    "identityLabel": "Name & Logo",
+    "identityDescription": "Legen Sie fest, wie Ihre Organisation erscheint: Anzeigename und Logo.",
+    "nameLabel": "Organisationsname",
+    "namePlaceholder": "Name der Organisation eingeben",
+    "nameHint": "Interner Name — wird in Rechnungen, Audit-Logs und Sales-Kontext verwendet.",
     "displayNameLabel": "Anzeigename",
     "displayNamePlaceholder": "Anzeigename eingeben",
+    "displayNameHint": "Wird in der Sidebar Ihren Nutzern angezeigt. Leer lassen, um stattdessen \"Ayunis Core\" zu zeigen.",
     "faviconLabel": "Organisationslogo",
     "faviconHint": "Quadratisches Format (1:1), PNG oder JPEG, max. 512 KB",
     "faviconRemove": "Entfernen",

@@ -1,13 +1,5 @@
-/**
- * Color utilities for the org primary-color picker.
- *
- * Mirrors the backend's color-validation logic so the UI can show live
- * feedback (contrast ratio, accessibility status) without a network round
- * trip. The backend still re-validates on save — this is purely UX.
- */
-
 export const HEX_REGEX = /^#[0-9a-fA-F]{6}$/;
-export const MIN_CONTRAST_RATIO = 4.5; // WCAG AA, normal text
+export const MIN_CONTRAST_RATIO = 4.5;
 
 export function isValidHex(value: string): boolean {
   return HEX_REGEX.test(value);
@@ -39,7 +31,6 @@ function contrastRatio(l1: number, l2: number): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-/** Best contrast achievable with white or black foreground. */
 export function bestForegroundContrast(hex: string): {
   ratio: number;
   foreground: '#ffffff' | '#000000';
