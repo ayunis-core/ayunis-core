@@ -130,8 +130,12 @@ export class PrometheusMetricsListener {
 
   @OnEvent(TokensConsumedEvent.EVENT_NAME)
   handleTokensConsumed(event: TokensConsumedEvent): void {
+    // Usage rows use XOR on userId/apiKeyId; mirror that on the metric by
+    // labeling the absent principal as 'none' rather than collapsing api-key
+    // traffic into a synthetic 'unknown' user bucket.
     const baseLabels = {
-      user_id: event.userId,
+      user_id: event.userId ?? 'none',
+      api_key_id: event.apiKeyId ?? 'none',
       org_id: event.orgId,
       model: event.model,
       provider: event.provider,

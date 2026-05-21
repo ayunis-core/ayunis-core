@@ -37,13 +37,15 @@ export class CollectUsageAsyncService {
     });
 
     const userId = this.contextService.get('userId');
+    const apiKeyId = this.contextService.get('apiKeyId');
     const orgId = this.contextService.get('orgId');
 
     this.eventEmitter
       .emitAsync(
         TokensConsumedEvent.EVENT_NAME,
         new TokensConsumedEvent(
-          userId ?? ('unknown' as UUID),
+          userId,
+          apiKeyId,
           orgId ?? ('unknown' as UUID),
           model.name,
           model.provider,

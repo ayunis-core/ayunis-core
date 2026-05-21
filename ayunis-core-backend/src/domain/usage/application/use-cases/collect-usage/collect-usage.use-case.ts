@@ -28,13 +28,18 @@ export class CollectUsageUseCase {
     const apiKeyId = this.contextService.get('apiKeyId');
     const organizationId = this.contextService.get('orgId');
 
-    // XOR mirrored from the DB `@Check` on `usage`: either userId or
-    // apiKeyId must be set, and orgId is always required.
-    if ((!userId && !apiKeyId) || !organizationId) {
+    // Enforce XOR on the principal: exactly one of userId or apiKeyId must
+    // be set. The DB `CHK_usage_principal_not_both` constraint rejects
+    // "both set" as a safety net; we reject both "neither" and "both" here
+    // so the failure is synchronous and the error type is meaningful.
+    const hasUserId = !!userId;
+    const hasApiKeyId = !!apiKeyId;
+    if (hasUserId === hasApiKeyId || !organizationId) {
       throw new UsageCollectionFailedError(
-        'Principal (userId or apiKeyId) or Organization ID not available in context',
+        'Exactly one of userId or apiKeyId must be set in context, and Organization ID is required',
         {
           userId: userId ?? undefined,
+          apiKeyId: apiKeyId ?? undefined,
           organizationId: organizationId ?? undefined,
           modelId: command.modelId,
         },
