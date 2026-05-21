@@ -6,6 +6,7 @@ import { PassportModule } from '@nestjs/passport';
 
 import { JwtStrategy } from './application/strategies/jwt.strategy';
 import { LocalStrategy } from './application/strategies/local.strategy';
+import { ApiKeyStrategy } from './application/strategies/api-key.strategy';
 import { AuthenticationController } from './presenters/http/authentication.controller';
 import { AuthProvider } from '../../config/authentication.config';
 import { LocalAuthenticationRepository } from './infrastructure/repositories/local/local-authentication.repository';
@@ -28,6 +29,7 @@ import { EmailTemplatesModule } from 'src/common/email-templates/email-templates
 import { HashingModule } from '../hashing/hashing.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { TrialsModule } from '../trials/trials.module';
+import { ApiKeysModule } from '../api-keys/api-keys.module';
 import { ClsModule } from 'nestjs-cls';
 import { UserContextInterceptor } from './application/interceptors/user-context.interceptor';
 
@@ -50,6 +52,7 @@ export class AuthenticationModule {
         HashingModule,
         SubscriptionsModule,
         TrialsModule,
+        ApiKeysModule,
         JwtModule.registerAsync({
           imports: [ConfigModule],
           inject: [ConfigService],
@@ -104,6 +107,7 @@ export class AuthenticationModule {
         // Strategies and Guards
         LocalStrategy,
         JwtStrategy,
+        ApiKeyStrategy,
         {
           provide: APP_GUARD,
           useClass: JwtAuthGuard,

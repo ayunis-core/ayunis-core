@@ -31,7 +31,9 @@ export class ValidateApiKeyUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to validate API key', { error: error as Error });
+      this.logger.error('Failed to validate API key', {
+        error: error as Error,
+      });
       throw new UnexpectedApiKeyError();
     }
   }
