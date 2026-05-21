@@ -9,6 +9,7 @@ import { ApiKeyRecord } from './infrastructure/repositories/local/schema/api-key
 import { CreateApiKeyUseCase } from './application/use-cases/create-api-key/create-api-key.use-case';
 import { ListApiKeysByOrgUseCase } from './application/use-cases/list-api-keys-by-org/list-api-keys-by-org.use-case';
 import { RevokeApiKeyUseCase } from './application/use-cases/revoke-api-key/revoke-api-key.use-case';
+import { ValidateApiKeyUseCase } from './application/use-cases/validate-api-key/validate-api-key.use-case';
 
 import { ApiKeysController } from './presenters/http/api-keys.controller';
 import { ApiKeyDtoMapper } from './presenters/http/mappers/api-key-dto.mapper';
@@ -29,8 +30,14 @@ import { HashingModule } from '../hashing/hashing.module';
     CreateApiKeyUseCase,
     ListApiKeysByOrgUseCase,
     RevokeApiKeyUseCase,
+    ValidateApiKeyUseCase,
     ApiKeyDtoMapper,
   ],
-  exports: [CreateApiKeyUseCase, ListApiKeysByOrgUseCase, RevokeApiKeyUseCase],
+  exports: [
+    CreateApiKeyUseCase,
+    ListApiKeysByOrgUseCase,
+    RevokeApiKeyUseCase,
+    ValidateApiKeyUseCase,
+  ],
 })
 export class ApiKeysModule {}
