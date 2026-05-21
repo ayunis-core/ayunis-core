@@ -1920,6 +1920,60 @@
         },
         "summary": "Delete a user",
         "tags": ["Users"]
+      },
+      "patch": {
+        "description": "Update another user's name and/or email within your organization. You cannot edit your own profile through this endpoint.",
+        "operationId": "AdminUserController_adminUpdateUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User ID to update",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Fields to update (at least one of name or email)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminUpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or no fields to update"
+          },
+          "401": {
+            "description": "User not authenticated, trying to edit own profile, or target user is in a different organization"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while updating user"
+          }
+        },
+        "summary": "Update a user (admin)",
+        "tags": ["Users"]
       }
     },
     "/users/{id}/trigger-password-reset": {
@@ -9791,6 +9845,23 @@
           }
         },
         "required": ["resetToken", "newPassword", "newPasswordConfirmation"]
+      },
+      "AdminUpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "New name for the user",
+            "example": "Maria Schmidt",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "description": "New email address for the user",
+            "example": "maria.schmidt@gemeinde.de"
+          }
+        }
       },
       "TriggerPasswordResetResponseDto": {
         "type": "object",

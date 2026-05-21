@@ -23,6 +23,7 @@ import { MoreHorizontal, Edit, Trash2, UserCheck, Mail } from 'lucide-react';
 import { useUserRoleUpdate } from '../api/useUserRoleUpdate';
 import { useUserDelete } from '../api/useUserDelete';
 import { useTriggerPasswordReset } from '../api/useTriggerPasswordReset';
+import EditUserDialog from './EditUserDialog';
 import { useState, type ReactNode } from 'react';
 import type { User } from '../model/openapi';
 import type { UserResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -44,6 +45,7 @@ export default function UsersSection({
 }: Readonly<UsersSectionProps>) {
   const { t } = useTranslation('admin-settings-users');
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const { updateUserRole, isLoading: isUpdatingRole } = useUserRoleUpdate({
     onSuccessCallback: () => setLoadingUserId(null),
   });
@@ -164,7 +166,10 @@ export default function UsersSection({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem disabled>
+                      <DropdownMenuItem
+                        onClick={() => setEditingUser(user)}
+                        disabled={isUserLoading(user.id)}
+                      >
                         <Edit />
                         {t('users.edit')}
                       </DropdownMenuItem>
@@ -204,6 +209,7 @@ export default function UsersSection({
         </Table>
         {paginationSlot}
       </CardContent>
+      <EditUserDialog user={editingUser} onClose={() => setEditingUser(null)} />
     </Card>
   );
 }
