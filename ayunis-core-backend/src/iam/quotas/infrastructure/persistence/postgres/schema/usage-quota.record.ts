@@ -4,11 +4,16 @@ import { UserRecord } from '../../../../../users/infrastructure/repositories/loc
 import { QuotaType } from '../../../../domain/quota-type.enum';
 import { UUID } from 'crypto';
 
+const bigintToNumberTransformer = {
+  to: (value: number) => value,
+  from: (value: string) => Number(value),
+};
+
 @Entity('usage_quotas')
 @Index(['userId', 'quotaType'])
 @Unique(['userId', 'quotaType'])
 export class UsageQuotaRecord extends BaseRecord {
-  @Column('uuid')
+  @Column()
   userId: UUID;
 
   @ManyToOne(() => UserRecord, { onDelete: 'CASCADE' })
@@ -23,6 +28,6 @@ export class UsageQuotaRecord extends BaseRecord {
   @Column('timestamp')
   windowStartAt: Date;
 
-  @Column('bigint')
-  windowDurationMs: string;
+  @Column({ type: 'bigint', transformer: bigintToNumberTransformer })
+  windowDurationMs: number;
 }

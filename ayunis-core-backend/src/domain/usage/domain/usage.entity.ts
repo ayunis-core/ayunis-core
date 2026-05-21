@@ -4,7 +4,8 @@ import type { ModelProvider } from '../../models/domain/value-objects/model-prov
 
 export class Usage {
   public readonly id: UUID;
-  public readonly userId: UUID;
+  public readonly userId: UUID | null;
+  public readonly apiKeyId: UUID | null;
   public readonly organizationId: UUID;
   /**
    * The base model ID (not the permitted model ID).
@@ -25,7 +26,8 @@ export class Usage {
 
   constructor(params: {
     id?: UUID;
-    userId: UUID;
+    userId: UUID | null;
+    apiKeyId?: UUID | null;
     organizationId: UUID;
     modelId: UUID;
     provider: ModelProvider;
@@ -39,6 +41,7 @@ export class Usage {
   }) {
     this.id = params.id ?? randomUUID();
     this.userId = params.userId;
+    this.apiKeyId = params.apiKeyId ?? null;
     this.organizationId = params.organizationId;
     this.modelId = params.modelId;
     this.provider = params.provider;

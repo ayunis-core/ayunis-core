@@ -55,14 +55,14 @@ export class UsageQuotaRepository extends UsageQuotaRepositoryPort {
 
       // Check if window has expired
       const windowEndAt = new Date(
-        record.windowStartAt.getTime() + Number(record.windowDurationMs),
+        record.windowStartAt.getTime() + record.windowDurationMs,
       );
 
       if (now > windowEndAt) {
         // Reset window
         record.windowStartAt = now;
         record.count = 1;
-        record.windowDurationMs = String(windowDurationMs);
+        record.windowDurationMs = windowDurationMs;
       } else {
         // Increment counter
         record.count++;
@@ -85,67 +85,78 @@ export class UsageQuotaRepository extends UsageQuotaRepositoryPort {
       const repo = manager.getRepository(UsageQuotaRecord);
       const now = new Date();
 
-      // Use INSERT ... ON CONFLICT DO NOTHING to handle race condition on first insert
-      // This atomically creates a record if it doesn't exist, without updating
-      // an existing row (which would reset the count in concurrent scenarios)
-      await repo
-        .createQueryBuilder()
-        .insert()
-        .into(UsageQuotaRecord)
-        .values({
-          id: randomUUID(),
-          userId,
-          quotaType,
-          count: 0, // Start at 0, we'll increment conditionally below
-          windowStartAt: now,
-          windowDurationMs: String(windowDurationMs),
-        })
-        .orIgnore() // ON CONFLICT DO NOTHING - prevents resetting count on concurrent requests
-        .execute();
+      await this.upsertEmptyQuota(repo, userId, quotaType, windowDurationMs, now);
+      const record = await this.lockQuotaRow(repo, userId, quotaType);
+      resetWindowIfExpired(record, now, windowDurationMs);
 
-      // Now SELECT FOR UPDATE to lock the row for the remainder of this transaction
-      const record = await repo
-        .createQueryBuilder('quota')
-        .setLock('pessimistic_write')
-        .where('quota.userId = :userId', { userId })
-        .andWhere('quota.quotaType = :quotaType', { quotaType })
-        .getOne();
-
-      if (!record) {
-        // This should never happen after upsert, but handle defensively
-        throw new Error('Failed to get or create quota record');
-      }
-
-      // Check if window has expired and reset if needed
-      const windowEndAt = new Date(
-        record.windowStartAt.getTime() + Number(record.windowDurationMs),
-      );
-
-      if (now > windowEndAt) {
-        // Reset window
-        record.windowStartAt = now;
-        record.count = 0;
-        record.windowDurationMs = String(windowDurationMs);
-      }
-
-      // Check limit BEFORE incrementing - this is the key fix
-      // If at or over limit, return exceeded WITHOUT incrementing
       if (record.count >= limit) {
-        return {
-          quota: UsageQuotaMapper.toDomain(record),
-          exceeded: true,
-        };
+        return { quota: UsageQuotaMapper.toDomain(record), exceeded: true };
       }
 
-      // Under limit - increment and save
       record.count++;
       record.updatedAt = now;
       await repo.save(record);
 
-      return {
-        quota: UsageQuotaMapper.toDomain(record),
-        exceeded: false,
-      };
+      return { quota: UsageQuotaMapper.toDomain(record), exceeded: false };
     });
+  }
+
+  // Atomically create the row if missing, without updating existing rows
+  // (which would otherwise reset the count under concurrent requests).
+  private async upsertEmptyQuota(
+    repo: Repository<UsageQuotaRecord>,
+    userId: UUID,
+    quotaType: QuotaType,
+    windowDurationMs: number,
+    now: Date,
+  ): Promise<void> {
+    await repo
+      .createQueryBuilder()
+      .insert()
+      .into(UsageQuotaRecord)
+      .values({
+        id: randomUUID(),
+        userId,
+        quotaType,
+        count: 0,
+        windowStartAt: now,
+        windowDurationMs,
+      })
+      .orIgnore()
+      .execute();
+  }
+
+  private async lockQuotaRow(
+    repo: Repository<UsageQuotaRecord>,
+    userId: UUID,
+    quotaType: QuotaType,
+  ): Promise<UsageQuotaRecord> {
+    const record = await repo
+      .createQueryBuilder('quota')
+      .setLock('pessimistic_write')
+      .where('quota.userId = :userId', { userId })
+      .andWhere('quota.quotaType = :quotaType', { quotaType })
+      .getOne();
+
+    if (!record) {
+      // Should never happen after upsert; defensive guard.
+      throw new Error('Failed to get or create quota record');
+    }
+    return record;
+  }
+}
+
+function resetWindowIfExpired(
+  record: UsageQuotaRecord,
+  now: Date,
+  windowDurationMs: number,
+): void {
+  const windowEndAt = new Date(
+    record.windowStartAt.getTime() + record.windowDurationMs,
+  );
+  if (now > windowEndAt) {
+    record.windowStartAt = now;
+    record.count = 0;
+    record.windowDurationMs = windowDurationMs;
   }
 }
