@@ -38,6 +38,7 @@ import type {
   ArtifactResponseDto,
   ArtifactVersionResponseDto,
   ArtifactsControllerExportParams,
+  ChatCompletionRequestDto,
   ConfirmEmailDto,
   CreateAgentDto,
   CreateAgentShareDto,
@@ -16489,6 +16490,65 @@ export const useTranscriptionsControllerTranscribe = <TError = void,
       > => {
 
       const mutationOptions = getTranscriptionsControllerTranscribeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+export const chatCompletionsControllerCreate = (
+    chatCompletionRequestDto: ChatCompletionRequestDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/openai-compat/v1/chat/completions`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: chatCompletionRequestDto, signal
+    },
+      );
+    }
+  
+
+
+export const getChatCompletionsControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chatCompletionsControllerCreate>>, TError,{data: ChatCompletionRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof chatCompletionsControllerCreate>>, TError,{data: ChatCompletionRequestDto}, TContext> => {
+
+const mutationKey = ['chatCompletionsControllerCreate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof chatCompletionsControllerCreate>>, {data: ChatCompletionRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  chatCompletionsControllerCreate(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChatCompletionsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof chatCompletionsControllerCreate>>>
+    export type ChatCompletionsControllerCreateMutationBody = ChatCompletionRequestDto
+    export type ChatCompletionsControllerCreateMutationError = unknown
+
+    export const useChatCompletionsControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chatCompletionsControllerCreate>>, TError,{data: ChatCompletionRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof chatCompletionsControllerCreate>>,
+        TError,
+        {data: ChatCompletionRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getChatCompletionsControllerCreateMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

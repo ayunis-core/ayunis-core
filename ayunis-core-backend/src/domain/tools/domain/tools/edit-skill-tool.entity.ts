@@ -3,7 +3,6 @@ import { createAjv } from 'src/common/validators/ajv.factory';
 import { DisplayableTool } from '../displayable-tool.entity';
 import { ToolType } from '../value-objects/tool-type.enum';
 
-// eslint-disable-next-line sonarjs/function-return-type -- same pattern as ActivateSkillTool.buildParameters
 function buildParameters(slugs: string[]): JSONSchema {
   const skillSlugProperty: Record<string, unknown> = {
     type: 'string' as const,

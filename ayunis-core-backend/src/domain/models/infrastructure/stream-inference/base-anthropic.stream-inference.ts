@@ -178,10 +178,36 @@ export abstract class BaseAnthropicStreamInferenceHandler implements StreamInfer
       thinkingDelta: null,
       textContentDelta: null,
       toolCallsDelta: [],
+      // Map Anthropic's stop_reason into the provider-neutral terms the
+      // OpenAI-compat stream mapper understands. Anthropic's `tool_use`
+      // becomes `tool_calls` (the OpenAI finish_reason); the rest pass
+      // through. The stream mapper's own fallback turns anything unknown
+      // into `stop`, so this conversion is best-effort, not exhaustive.
+      finishReason: mapAnthropicStopReason(chunk.delta.stop_reason),
       usage: {
         inputTokens: undefined,
         outputTokens: chunk.usage.output_tokens,
       },
     });
+  }
+}
+
+function mapAnthropicStopReason(
+  reason: Anthropic.Messages.MessageDeltaEvent['delta']['stop_reason'],
+): string | null {
+  switch (reason) {
+    case 'end_turn':
+    case 'stop_sequence':
+      return 'stop';
+    case 'max_tokens':
+      return 'length';
+    case 'tool_use':
+      return 'tool_calls';
+    case 'pause_turn':
+    case 'refusal':
+    case null:
+      return null;
+    default:
+      return null;
   }
 }

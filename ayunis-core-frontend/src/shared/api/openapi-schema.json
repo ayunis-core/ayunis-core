@@ -8143,6 +8143,28 @@
         "tags": ["transcriptions"]
       }
     },
+    "/openai-compat/v1/chat/completions": {
+      "post": {
+        "operationId": "ChatCompletionsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatCompletionRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["ChatCompletions"]
+      }
+    },
     "/auth/login": {
       "post": {
         "description": "Authenticate user with email and password. Sets authentication cookies on successful login.",
@@ -14634,6 +14656,10 @@
           }
         },
         "required": ["text"]
+      },
+      "ChatCompletionRequestDto": {
+        "type": "object",
+        "properties": {}
       },
       "LoginDto": {
         "type": "object",

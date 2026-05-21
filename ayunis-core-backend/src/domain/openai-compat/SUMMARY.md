@@ -1,0 +1,25 @@
+OpenAI-compatible Chat Completions
+Stateless POST /api/openai-compat/v1/chat/completions surface compatible with the OpenAI SDK (clients configure `base_url=…/api/openai-compat/v1`)
+
+This module exposes an OpenAI-compatible chat-completions endpoint so external clients can target ayunis with the standard OpenAI SDK. The surface is stateless — no thread persistence, `threadId` is synthesised per request — and authenticated via API key.
+
+The module consumes `ModelsModule` for `GetPermittedLanguageModelsUseCase`, `GetInferenceUseCase`, and `StreamInferenceUseCase`, and `RunsModule` for `InferenceUsageGuard` (preflight quota check + post-hoc usage accounting). It does not own its own persistence. Cross-module imports of inference port shapes (`StreamInferenceInput`, `InferenceResponse`, chunk types) are an intentional trade-off baselined in `.dependency-cruiser-known-violations.json` for the openai-compat → models edge.
+
+## Controllers
+
+- **ChatCompletionsController** (`presenters/http/chat-completions.controller.ts`): POST `/api/openai-compat/v1/chat/completions` (controller path `openai-compat/v1/chat` + global `api` prefix; SDK clients set `base_url=…/api/openai-compat/v1`) supporting both non-streaming JSON and Server-Sent Events streaming. Authenticated via `AuthGuard('api-key')` (overrides the global `JwtAuthGuard` for this route). Rate-limited at 60 requests/minute per client IP via the global `RateLimitGuard` (production only; the guard short-circuits in non-prod). All orchestration is delegated to the use case; the controller only handles DTO ↔ command conversion and SSE framing.
+
+## Use Cases
+
+- **ExecuteOpenAIChatCompletionUseCase** (`application/use-cases/execute-openai-chat-completion`): Sole orchestrator on this surface. Resolves the requested model against the caller's org permits, runs `InferenceUsageGuard.preflight`, dispatches to `GetInferenceUseCase` (non-streaming) or `StreamInferenceUseCase` (streaming), and accounts usage via `InferenceUsageGuard.collectUsage`. Streaming usage is recorded via RxJS `finalize()` so totals are summed across chunks and flushed on complete, error, or client unsubscribe (AYC-92 streaming usage-drift fix).
+
+## Mappers
+
+- **OpenAIRequestMapper** (`application/mappers/openai-request.mapper.ts`): Maps the OpenAI request DTO to domain `Message` entities, `ToolSchema[]`, system prompt, and `ModelToolChoice`. Rebuilds the `tool_call_id → name` map per assistant turn (AYC-78 finding I6). Forwards named `tool_choice` as the function name string — provider converters interpret a non-enum string as a named-tool choice.
+- **OpenAIResponseMapper** (`application/mappers/openai-response.mapper.ts`): Converts an `InferenceResponse` into the OpenAI `chat.completion` shape.
+- **OpenAIStreamMapper** (`application/mappers/openai-stream.mapper.ts`): Converts a domain stream chunk into an OpenAI `chat.completion.chunk`, dropping empty/thinking-only/usage-only chunks (returns `null`, filtered upstream).
+- **OpenAIErrorMapper** (`application/mappers/openai-error.mapper.ts`): Converts domain errors to OpenAI-style error response bodies.
+
+## Filters
+
+- **OpenAIExceptionFilter** (`presenters/http/filters/openai-exception.filter.ts`): Wraps thrown domain errors into OpenAI-compatible HTTP error responses so SDK clients see the shape they expect.

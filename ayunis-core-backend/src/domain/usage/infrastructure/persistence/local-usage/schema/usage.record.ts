@@ -23,10 +23,7 @@ const decimalTransformer = {
 @Index(['modelId', 'createdAt'])
 @Index(['provider', 'createdAt'])
 @Index(['organizationId', 'provider', 'createdAt'])
-@Check(
-  'CHK_usage_principal_not_both',
-  `"userId" IS NULL OR "apiKeyId" IS NULL`,
-)
+@Check('CHK_usage_principal_not_both', `"userId" IS NULL OR "apiKeyId" IS NULL`)
 export class UsageRecord extends BaseRecord {
   @Column({ nullable: true })
   userId: UUID | null;

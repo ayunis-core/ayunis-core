@@ -4085,6 +4085,8 @@ export interface TranscriptionResponseDto {
   text: string;
 }
 
+export interface ChatCompletionRequestDto { [key: string]: unknown }
+
 export interface LoginDto {
   /** Email address for authentication */
   email: string;

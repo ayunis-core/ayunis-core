@@ -85,7 +85,13 @@ export class UsageQuotaRepository extends UsageQuotaRepositoryPort {
       const repo = manager.getRepository(UsageQuotaRecord);
       const now = new Date();
 
-      await this.upsertEmptyQuota(repo, userId, quotaType, windowDurationMs, now);
+      await this.upsertEmptyQuota(
+        repo,
+        userId,
+        quotaType,
+        windowDurationMs,
+        now,
+      );
       const record = await this.lockQuotaRow(repo, userId, quotaType);
       resetWindowIfExpired(record, now, windowDurationMs);
 

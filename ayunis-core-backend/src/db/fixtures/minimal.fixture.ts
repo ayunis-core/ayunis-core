@@ -18,7 +18,7 @@ export const minimalFixture = {
 
   user: {
     email: 'admin@demo.local',
-    // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- dev-only seed credential
+
     password: 'admin',
     name: 'Admin',
     role: UserRole.ADMIN,
@@ -29,7 +29,7 @@ export const minimalFixture = {
 
   usageUser: {
     email: 'admin@usage.local',
-    // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- dev-only seed credential
+
     password: 'admin',
     name: 'Usage Admin',
     role: UserRole.ADMIN,
