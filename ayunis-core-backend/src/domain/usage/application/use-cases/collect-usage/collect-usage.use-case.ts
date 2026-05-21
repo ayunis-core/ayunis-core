@@ -25,11 +25,14 @@ export class CollectUsageUseCase {
 
   async execute(command: CollectUsageCommand): Promise<void> {
     const userId = this.contextService.get('userId');
+    const apiKeyId = this.contextService.get('apiKeyId');
     const organizationId = this.contextService.get('orgId');
 
-    if (!userId || !organizationId) {
+    // XOR mirrored from the DB `@Check` on `usage`: either userId or
+    // apiKeyId must be set, and orgId is always required.
+    if ((!userId && !apiKeyId) || !organizationId) {
       throw new UsageCollectionFailedError(
-        'User ID or Organization ID not available in context',
+        'Principal (userId or apiKeyId) or Organization ID not available in context',
         {
           userId: userId ?? undefined,
           organizationId: organizationId ?? undefined,
@@ -40,6 +43,7 @@ export class CollectUsageUseCase {
 
     this.logger.log('CollectUsageUseCase.execute called', {
       userId,
+      apiKeyId,
       organizationId,
       modelId: command.modelId,
       provider: command.provider,
@@ -53,7 +57,8 @@ export class CollectUsageUseCase {
       const creditsConsumed = await this.calculateCredits(cost);
 
       const usage = new Usage({
-        userId,
+        userId: userId ?? null,
+        apiKeyId: apiKeyId ?? null,
         organizationId,
         modelId: command.modelId,
         provider: command.provider,
@@ -69,6 +74,7 @@ export class CollectUsageUseCase {
 
       this.logger.log('Usage collected successfully', {
         userId,
+        apiKeyId,
         organizationId,
         modelId: command.modelId,
         provider: command.provider,

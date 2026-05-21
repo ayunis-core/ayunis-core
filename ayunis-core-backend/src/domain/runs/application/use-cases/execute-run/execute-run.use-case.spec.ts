@@ -18,6 +18,8 @@ import { ExecuteRunCommand } from './execute-run.command';
 import { RunUserInput } from '../../../domain/run-input.entity';
 import type { CreditBudgetGuardService } from '../../services/credit-budget-guard.service';
 import type { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
+import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
+import type { CollectUsageAsyncService } from '../../services/collect-usage-async.service';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
 import { RunErrorCode } from '../../runs.errors';
 import type { Agent } from 'src/domain/agents/domain/agent.entity';
@@ -114,6 +116,16 @@ describe('ExecuteRunUseCase', () => {
       return undefined;
     });
 
+    const collectUsageAsyncService = {
+      collect: jest.fn(),
+    } as unknown as jest.Mocked<CollectUsageAsyncService>;
+
+    const inferenceUsageGuard = new InferenceUsageGuard(
+      checkQuotaUseCase,
+      creditBudgetGuardService,
+      collectUsageAsyncService,
+    );
+
     useCase = new ExecuteRunUseCase(
       { execute: jest.fn() } as unknown as CreateUserMessageUseCase,
       { execute: jest.fn() } as unknown as CreateToolResultMessageUseCase,
@@ -122,8 +134,7 @@ describe('ExecuteRunUseCase', () => {
       { execute: jest.fn() } as unknown as AddMessageToThreadUseCase,
       contextService,
       anonymizeTextUseCase,
-      checkQuotaUseCase,
-      creditBudgetGuardService,
+      inferenceUsageGuard,
       toolAssemblyService,
       {
         collectToolResults: jest.fn().mockResolvedValue([]),
