@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.34.0](https://github.com/ayunis-core/ayunis-core/compare/v1.33.0...v1.34.0) (2026-05-21)
+
+
+### Features
+
+* **admin-users:** enable editing user name and email from admin list (AYC-123) ([#695](https://github.com/ayunis-core/ayunis-core/issues/695)) ([1601f13](https://github.com/ayunis-core/ayunis-core/commit/1601f13b0b8f0698d6dcb0fea474aa26742265ad))
+
+
+### CI/CD
+
+* sync Linear releases after deploys (AYC-126) ([#696](https://github.com/ayunis-core/ayunis-core/issues/696)) ([dd237d6](https://github.com/ayunis-core/ayunis-core/commit/dd237d685d8f34f23440f42e9a8f50f04145c557))
+
 ## [1.33.0](https://github.com/ayunis-core/ayunis-core/compare/v1.32.0...v1.33.0) (2026-05-19)
 
 
