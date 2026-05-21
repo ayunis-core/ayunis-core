@@ -1039,6 +1039,17 @@ export interface ResetPasswordDto {
   newPasswordConfirmation: string;
 }
 
+export interface AdminUpdateUserDto {
+  /**
+   * New name for the user
+   * @minLength 1
+   * @maxLength 100
+   */
+  name?: string;
+  /** New email address for the user */
+  email?: string;
+}
+
 export interface TriggerPasswordResetResponseDto {
   /** The password reset URL sent to the user */
   resetUrl: string;

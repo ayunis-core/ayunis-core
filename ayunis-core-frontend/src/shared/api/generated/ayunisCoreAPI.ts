@@ -30,6 +30,7 @@ import type {
   ActiveSubscriptionResponseDto,
   AddTeamMemberDto,
   AddUrlToKnowledgeBaseDto,
+  AdminUpdateUserDto,
   AgentResponseDto,
   AgentSourceResponseDto,
   AgentsControllerAddFileSourceBody,
@@ -4208,6 +4209,72 @@ export const useUserControllerDeleteUser = <TError = void,
       > => {
 
       const mutationOptions = getUserControllerDeleteUserMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Update another user's name and/or email within your organization. You cannot edit your own profile through this endpoint.
+ * @summary Update a user (admin)
+ */
+export const adminUserControllerAdminUpdateUser = (
+    id: string,
+    adminUpdateUserDto: AdminUpdateUserDto,
+ ) => {
+      
+      
+      return customAxiosInstance<UserResponseDto>(
+      {url: `/users/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: adminUpdateUserDto
+    },
+      );
+    }
+  
+
+
+export const getAdminUserControllerAdminUpdateUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUserControllerAdminUpdateUser>>, TError,{id: string;data: AdminUpdateUserDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof adminUserControllerAdminUpdateUser>>, TError,{id: string;data: AdminUpdateUserDto}, TContext> => {
+
+const mutationKey = ['adminUserControllerAdminUpdateUser'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUserControllerAdminUpdateUser>>, {id: string;data: AdminUpdateUserDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminUserControllerAdminUpdateUser(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUserControllerAdminUpdateUserMutationResult = NonNullable<Awaited<ReturnType<typeof adminUserControllerAdminUpdateUser>>>
+    export type AdminUserControllerAdminUpdateUserMutationBody = AdminUpdateUserDto
+    export type AdminUserControllerAdminUpdateUserMutationError = void
+
+    /**
+ * @summary Update a user (admin)
+ */
+export const useAdminUserControllerAdminUpdateUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUserControllerAdminUpdateUser>>, TError,{id: string;data: AdminUpdateUserDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminUserControllerAdminUpdateUser>>,
+        TError,
+        {id: string;data: AdminUpdateUserDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminUserControllerAdminUpdateUserMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

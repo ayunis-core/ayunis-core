@@ -117,6 +117,26 @@
     "error": "Fehler beim Ändern der Benutzerrolle. Bitte versuchen Sie es erneut.",
     "notFound": "Benutzer nicht gefunden. Er wurde möglicherweise entfernt."
   },
+  "editUserDialog": {
+    "title": "Benutzer bearbeiten",
+    "description": "Name und E-Mail-Adresse des Benutzers aktualisieren.",
+    "nameLabel": "Name",
+    "namePlaceholder": "Vollständiger Name",
+    "nameRequired": "Name ist erforderlich",
+    "emailLabel": "E-Mail",
+    "emailPlaceholder": "benutzer@beispiel.de",
+    "emailRequired": "E-Mail-Adresse ist erforderlich",
+    "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "saving": "Wird gespeichert..."
+  },
+  "userUpdate": {
+    "success": "Benutzer erfolgreich aktualisiert",
+    "error": "Fehler beim Aktualisieren des Benutzers. Bitte versuchen Sie es erneut.",
+    "notFound": "Benutzer nicht gefunden. Er wurde möglicherweise entfernt.",
+    "emailInUse": "Diese E-Mail-Adresse wird bereits von einem anderen Benutzer verwendet."
+  },
   "triggerPasswordReset": {
     "success": "Passwort-Reset-E-Mail erfolgreich gesendet",
     "error": "Fehler beim Senden der Passwort-Reset-E-Mail. Bitte versuchen Sie es erneut."
