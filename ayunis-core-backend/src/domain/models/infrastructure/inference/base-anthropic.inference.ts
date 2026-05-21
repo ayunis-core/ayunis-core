@@ -32,62 +32,51 @@ export abstract class BaseAnthropicInferenceHandler extends InferenceHandler {
   }
 
   async answer(input: InferenceInput): Promise<InferenceResponse> {
-    this.logger.log('answer', {
+    const { messages, tools, toolChoice, systemPrompt, orgId } = input;
+    const anthropicTools = tools.map((t) => this.converter.convertTool(t));
+    const anthropicMessages = await this.converter.convertMessages(
+      messages,
+      orgId,
+    );
+    const anthropicToolChoice = toolChoice
+      ? this.converter.convertToolChoice(toolChoice)
+      : undefined;
+
+    const completionOptions: MessageCreateParamsNonStreaming = {
       model: input.model.name,
-      messageCount: input.messages.length,
-      toolCount: input.tools.length,
-      toolChoice: input.toolChoice,
+      system: systemPrompt,
+      messages: anthropicMessages,
+      tools: anthropicTools,
+      tool_choice: anthropicToolChoice,
+      max_tokens: 1000,
+      stream: false,
+    };
+
+    this.logger.debug('completionOptions prepared', {
+      model: input.model.name,
+      messageCount: anthropicMessages.length,
+      toolCount: anthropicTools.length,
+      hasSystem: Boolean(systemPrompt),
     });
-    try {
-      const { messages, tools, toolChoice, systemPrompt, orgId } = input;
-      const anthropicTools = tools.map((t) => this.converter.convertTool(t));
-      const anthropicMessages = await this.converter.convertMessages(
-        messages,
-        orgId,
-      );
-      const anthropicToolChoice = toolChoice
-        ? this.converter.convertToolChoice(toolChoice)
-        : undefined;
 
-      const completionOptions: MessageCreateParamsNonStreaming = {
-        model: input.model.name,
-        system: systemPrompt,
-        messages: anthropicMessages,
-        tools: anthropicTools,
-        tool_choice: anthropicToolChoice,
-        max_tokens: 1000,
-        stream: false,
-      };
+    const completionFn = () => this.client.messages.create(completionOptions);
 
-      this.logger.debug('completionOptions', completionOptions);
+    const response = await retryWithBackoff({
+      fn: completionFn,
+      maxRetries: 3,
+      delay: 1000,
+    });
 
-      const completionFn = () => this.client.messages.create(completionOptions);
-
-      const response = await retryWithBackoff({
-        fn: completionFn,
-        maxRetries: 3,
-        delay: 1000,
-      });
-
-      const modelResponse = this.parseCompletion(response);
-      return modelResponse;
-    } catch (error) {
-      this.logger.error('Failed to get response from Anthropic', error);
-      if (error instanceof InferenceFailedError) {
-        throw error;
-      }
-      throw new InferenceFailedError('Anthropic inference failed', {
-        source: 'anthropic',
-        originalError:
-          error instanceof Error ? error : new Error('Unknown error'),
-      });
-    }
+    return this.parseCompletion(response);
   }
 
   protected parseCompletion = (
     response: Anthropic.Messages.Message,
   ): InferenceResponse => {
-    this.logger.debug('parseCompletion', response);
+    this.logger.debug('parseCompletion', {
+      stopReason: response.stop_reason,
+      contentBlocks: response.content.length,
+    });
     if (!['tool_use', 'end_turn'].includes(response.stop_reason ?? '')) {
       throw new InferenceFailedError(
         `Unexpected stop reason: ${response.stop_reason}`,
