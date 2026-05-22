@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Card, CardContent } from '@/shared/ui/shadcn/card';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/shadcn/dialog';
+import { cn } from '@/shared/lib/shadcn/utils';
 import type { Message, ImageMessageContentResponseDto } from '../model/openapi';
 import config from '@/shared/config';
 import { Markdown } from '@/widgets/markdown';
@@ -25,25 +25,28 @@ export default function ChatMessage({ message }: ChatMessageProps) {
   return (
     <div className="flex justify-end my-4">
       <div className="max-w-2xl min-w-0 space-y-1" data-testid="user-message">
-        <Card className="p-2 py-0 bg-muted">
-          <CardContent className="p-2 space-y-2 min-w-0 overflow-hidden">
-            {images.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {images.map((imageContent, index) => (
-                  <ImageThumbnail
-                    key={`image-${index}-${imageContent.imageUrl}`}
-                    imageContent={imageContent}
-                  />
-                ))}
-              </div>
-            )}
-            {texts.map((textContent, index) => (
-              <Markdown key={`text-${index}-${textContent.text.slice(0, 50)}`}>
-                {textContent.text}
-              </Markdown>
-            ))}
-          </CardContent>
-        </Card>
+        <div
+          className={cn(
+            'min-w-0 space-y-2 overflow-hidden p-3',
+            'rounded-r-2 bg-surface-soft text-foreground',
+          )}
+        >
+          {images.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {images.map((imageContent, index) => (
+                <ImageThumbnail
+                  key={`image-${index}-${imageContent.imageUrl}`}
+                  imageContent={imageContent}
+                />
+              ))}
+            </div>
+          )}
+          {texts.map((textContent, index) => (
+            <Markdown key={`text-${index}-${textContent.text.slice(0, 50)}`}>
+              {textContent.text}
+            </Markdown>
+          ))}
+        </div>
       </div>
     </div>
   );

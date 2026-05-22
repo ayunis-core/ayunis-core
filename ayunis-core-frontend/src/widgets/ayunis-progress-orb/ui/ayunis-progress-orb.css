@@ -1,0 +1,424 @@
+/* Flat glass disc — theme tokens on shell; no drop shadow */
+
+.ayunis-progress-orb-shell {
+  --ayunis-orb-highlight: #e8e4f2;
+  --ayunis-orb-mid: #a799cf;
+  --ayunis-orb-shadow: #9f93d0;
+  --ayunis-orb-brand: #584b9a;
+  --ayunis-orb-brand-deep: #4a4088;
+  --ayunis-orb-base-top: rgba(248, 246, 252, 0.92);
+  --ayunis-orb-base-bottom: rgba(183, 171, 216, 0.88);
+  --ayunis-orb-base-mid: #d8d2eb;
+  --ayunis-orb-core-top: rgba(255, 255, 255, 0.2);
+  --ayunis-orb-core-mid: rgba(232, 228, 242, 0.35);
+  --ayunis-orb-core-bottom: rgba(167, 153, 207, 0.28);
+  --ayunis-orb-blob-brand-fade: rgba(88, 75, 154, 0.7);
+  --ayunis-orb-blob-deep-fade: rgba(74, 64, 136, 0.65);
+  --ayunis-orb-blob-light: rgba(216, 210, 235, 0.95);
+  --ayunis-orb-blob-light-fade: rgba(167, 153, 207, 0.45);
+  --ayunis-orb-blob-blend: multiply;
+  --ayunis-orb-blob-3-blend: soft-light;
+  --ayunis-orb-blob-opacity: 0.88;
+  --ayunis-orb-blob-3-opacity: 0.82;
+  --ayunis-orb-inset-top: rgba(255, 255, 255, 0.5);
+  --ayunis-orb-glass-top: rgba(255, 255, 255, 0.52);
+  --ayunis-orb-glass-mid: rgba(255, 255, 255, 0.14);
+  --ayunis-orb-glass-tint: rgba(232, 228, 242, 0.06);
+  --ayunis-orb-glass-bottom: rgba(255, 255, 255, 0.08);
+  --ayunis-orb-glass-border: rgba(255, 255, 255, 0.58);
+  --ayunis-orb-glass-border-outer: rgba(167, 153, 207, 0.14);
+  --ayunis-orb-glass-specular-strong: rgba(255, 255, 255, 0.62);
+  --ayunis-orb-glass-specular-soft: rgba(255, 255, 255, 0.22);
+  --ayunis-orb-glass-rim: rgba(255, 255, 255, 0.75);
+  --ayunis-orb-glass-rim-soft: rgba(255, 255, 255, 0.1);
+  --ayunis-orb-backdrop-saturate: 1.12;
+  --orb-shell-size: 2rem;
+  --orb-size: 1.5rem;
+
+  position: relative;
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: var(--orb-shell-size);
+  height: var(--orb-shell-size);
+}
+
+:is(.dark, .theme-core.dark) .ayunis-progress-orb-shell {
+  --ayunis-orb-highlight: #3a364f;
+  --ayunis-orb-mid: #524d6c;
+  --ayunis-orb-shadow: #6a6488;
+  --ayunis-orb-brand: #a49fce;
+  --ayunis-orb-brand-deep: #8178c3;
+  --ayunis-orb-base-top: rgba(36, 33, 50, 0.96);
+  --ayunis-orb-base-bottom: rgba(58, 54, 78, 0.94);
+  --ayunis-orb-base-mid: #46415f;
+  --ayunis-orb-core-top: rgba(196, 191, 232, 0.14);
+  --ayunis-orb-core-mid: rgba(124, 117, 160, 0.28);
+  --ayunis-orb-core-bottom: rgba(74, 68, 102, 0.42);
+  --ayunis-orb-blob-brand-fade: rgba(164, 159, 206, 0.55);
+  --ayunis-orb-blob-deep-fade: rgba(129, 120, 195, 0.5);
+  --ayunis-orb-blob-light: rgba(196, 191, 232, 0.75);
+  --ayunis-orb-blob-light-fade: rgba(129, 120, 195, 0.35);
+  --ayunis-orb-blob-blend: screen;
+  --ayunis-orb-blob-3-blend: screen;
+  --ayunis-orb-blob-opacity: 0.92;
+  --ayunis-orb-blob-3-opacity: 0.78;
+  --ayunis-orb-inset-top: rgba(196, 191, 232, 0.22);
+  --ayunis-orb-glass-top: rgba(210, 205, 235, 0.22);
+  --ayunis-orb-glass-mid: rgba(164, 159, 206, 0.1);
+  --ayunis-orb-glass-tint: rgba(90, 84, 120, 0.12);
+  --ayunis-orb-glass-bottom: rgba(120, 114, 150, 0.1);
+  --ayunis-orb-glass-border: rgba(196, 191, 232, 0.28);
+  --ayunis-orb-glass-border-outer: rgba(90, 84, 120, 0.35);
+  --ayunis-orb-glass-specular-strong: rgba(220, 216, 242, 0.34);
+  --ayunis-orb-glass-specular-soft: rgba(164, 159, 206, 0.14);
+  --ayunis-orb-glass-rim: rgba(196, 191, 232, 0.42);
+  --ayunis-orb-glass-rim-soft: rgba(129, 120, 195, 0.18);
+  --ayunis-orb-backdrop-saturate: 1.25;
+}
+
+.ayunis-progress-orb-shell--md {
+  --orb-shell-size: 9.25rem;
+  --orb-size: 6.5rem;
+}
+
+.ayunis-progress-orb__motion {
+  display: grid;
+  place-items: center;
+  width: var(--orb-size);
+  height: var(--orb-size);
+}
+
+.ayunis-progress-orb__motion--working {
+  animation: ayunis-orb-disc-spin 4.5s linear infinite;
+}
+
+.ayunis-progress-orb {
+  position: relative;
+  width: var(--orb-size);
+  height: var(--orb-size);
+  border-radius: 999px;
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(
+    180deg,
+    var(--ayunis-orb-base-top) 0%,
+    var(--ayunis-orb-highlight) 38%,
+    var(--ayunis-orb-base-mid) 72%,
+    var(--ayunis-orb-base-bottom) 100%
+  );
+  box-shadow: inset 0 1px 0 var(--ayunis-orb-inset-top);
+  transform: scale(1);
+}
+
+.ayunis-progress-orb-shell--active .ayunis-progress-orb {
+  transform: scaleX(1.05) scaleY(0.96);
+  animation: ayunis-orb-disc-pulse 2.2s cubic-bezier(0.45, 0.05, 0.55, 0.95)
+    infinite;
+}
+
+.ayunis-progress-orb-shell--completing .ayunis-progress-orb__motion {
+  animation: none;
+  transform: rotate(0deg);
+}
+
+.ayunis-progress-orb-shell--completing .ayunis-progress-orb {
+  transform: scale(1);
+  animation: ayunis-orb-disc-settle-round 0.22s ease-out forwards;
+}
+
+.ayunis-progress-orb-shell--completing {
+  animation: ayunis-orb-dissolve 0.58s ease-out 0.18s forwards;
+}
+
+.ayunis-progress-orb__core {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    var(--ayunis-orb-core-top) 0%,
+    var(--ayunis-orb-core-mid) 45%,
+    var(--ayunis-orb-core-bottom) 100%
+  );
+}
+
+.ayunis-progress-orb-shell--active .ayunis-progress-orb__core {
+  animation: ayunis-orb-core-swirl 7s linear infinite;
+}
+
+.ayunis-progress-orb__blob {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(0.28rem);
+  opacity: var(--ayunis-orb-blob-opacity);
+  will-change: transform;
+  mix-blend-mode: var(--ayunis-orb-blob-blend);
+}
+
+.ayunis-progress-orb__blob--1 {
+  width: 70%;
+  height: 48%;
+  left: 8%;
+  top: 28%;
+  background: radial-gradient(
+    ellipse 100% 80% at 50% 50%,
+    var(--ayunis-orb-brand) 0%,
+    var(--ayunis-orb-blob-brand-fade) 45%,
+    transparent 72%
+  );
+}
+
+.ayunis-progress-orb__blob--2 {
+  width: 64%;
+  height: 44%;
+  right: 4%;
+  bottom: 22%;
+  background: radial-gradient(
+    ellipse 100% 80% at 50% 50%,
+    var(--ayunis-orb-brand-deep) 0%,
+    var(--ayunis-orb-blob-deep-fade) 46%,
+    transparent 70%
+  );
+}
+
+.ayunis-progress-orb__blob--3 {
+  width: 58%;
+  height: 40%;
+  left: 20%;
+  bottom: 26%;
+  mix-blend-mode: var(--ayunis-orb-blob-3-blend);
+  opacity: var(--ayunis-orb-blob-3-opacity);
+  background: radial-gradient(
+    ellipse 100% 80% at 50% 50%,
+    var(--ayunis-orb-blob-light) 0%,
+    var(--ayunis-orb-blob-light-fade) 50%,
+    transparent 68%
+  );
+}
+
+.ayunis-progress-orb-shell--active .ayunis-progress-orb__blob--1 {
+  animation: ayunis-orb-blob-1 2.6s ease-in-out infinite;
+}
+
+.ayunis-progress-orb-shell--active .ayunis-progress-orb__blob--2 {
+  animation: ayunis-orb-blob-2 3.1s ease-in-out infinite;
+}
+
+.ayunis-progress-orb-shell--active .ayunis-progress-orb__blob--3 {
+  animation: ayunis-orb-blob-3 2.2s ease-in-out infinite;
+}
+
+/* Frosted glass plate on top */
+.ayunis-progress-orb__glass {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  backdrop-filter: blur(2px) saturate(var(--ayunis-orb-backdrop-saturate));
+  background: linear-gradient(
+    180deg,
+    var(--ayunis-orb-glass-top) 0%,
+    var(--ayunis-orb-glass-mid) 28%,
+    var(--ayunis-orb-glass-tint) 55%,
+    var(--ayunis-orb-glass-bottom) 100%
+  );
+  box-shadow:
+    inset 0 0 0 1px var(--ayunis-orb-glass-border),
+    inset 0 0 0 2px var(--ayunis-orb-glass-border-outer);
+}
+
+/* Top specular band across the disc */
+.ayunis-progress-orb__glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    var(--ayunis-orb-glass-specular-strong) 0%,
+    var(--ayunis-orb-glass-specular-soft) 18%,
+    transparent 38%
+  );
+}
+
+/* Thin rim catch at the outer edge */
+.ayunis-progress-orb__glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: transparent;
+  box-shadow:
+    inset 0 0 0 1px var(--ayunis-orb-glass-rim),
+    inset 0 0 0 2px var(--ayunis-orb-glass-rim-soft);
+  mask: radial-gradient(
+    circle,
+    transparent calc(100% - 3px),
+    #000 calc(100% - 3px)
+  );
+}
+
+.ayunis-progress-orb-shell--active .ayunis-progress-orb__glass {
+  animation: ayunis-orb-glass-shimmer 2.8s ease-in-out infinite;
+}
+
+.ayunis-progress-orb-shell--active .ayunis-progress-orb__glass::before {
+  animation: ayunis-orb-disc-glint 3.2s ease-in-out infinite;
+}
+
+@keyframes ayunis-orb-disc-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ayunis-orb-disc-pulse {
+  0%,
+  100% {
+    transform: scaleX(1.05) scaleY(0.96);
+  }
+  50% {
+    transform: scaleX(1.08) scaleY(0.99);
+  }
+}
+
+@keyframes ayunis-orb-disc-settle-round {
+  from {
+    transform: scaleX(1.05) scaleY(0.96);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes ayunis-orb-dissolve {
+  0% {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(5px);
+    transform: scale(1.1);
+  }
+}
+
+@keyframes ayunis-orb-dissolve-reduced {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ayunis-orb-core-swirl {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ayunis-orb-blob-1 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  25% {
+    transform: translate3d(28%, 6%, 0) scale(1.12);
+  }
+  50% {
+    transform: translate3d(6%, 18%, 0) scale(0.92);
+  }
+  75% {
+    transform: translate3d(-18%, 4%, 0) scale(1.08);
+  }
+}
+
+@keyframes ayunis-orb-blob-2 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(-28%, -10%, 0) scale(1.14);
+  }
+  66% {
+    transform: translate3d(16%, -14%, 0) scale(0.94);
+  }
+}
+
+@keyframes ayunis-orb-blob-3 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  20% {
+    transform: translate3d(20%, -16%, 0) scale(1.12);
+  }
+  55% {
+    transform: translate3d(-14%, -4%, 0) scale(0.9);
+  }
+  80% {
+    transform: translate3d(8%, 14%, 0) scale(1.06);
+  }
+}
+
+@keyframes ayunis-orb-glass-shimmer {
+  0%,
+  100% {
+    opacity: 0.88;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes ayunis-orb-disc-glint {
+  0%,
+  100% {
+    opacity: 0.82;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ayunis-progress-orb__motion--working {
+    animation: none;
+  }
+
+  .ayunis-progress-orb-shell--active .ayunis-progress-orb {
+    transform: scaleX(1.03) scaleY(0.98);
+    animation: none;
+  }
+
+  .ayunis-progress-orb-shell--active .ayunis-progress-orb__core,
+  .ayunis-progress-orb-shell--active .ayunis-progress-orb__blob--1,
+  .ayunis-progress-orb-shell--active .ayunis-progress-orb__blob--2,
+  .ayunis-progress-orb-shell--active .ayunis-progress-orb__blob--3,
+  .ayunis-progress-orb-shell--active .ayunis-progress-orb__glass,
+  .ayunis-progress-orb-shell--active .ayunis-progress-orb__glass::before {
+    animation: none;
+  }
+
+  .ayunis-progress-orb-shell--completing .ayunis-progress-orb {
+    animation: none;
+    transform: scale(1);
+  }
+
+  .ayunis-progress-orb-shell--completing {
+    animation: ayunis-orb-dissolve-reduced 0.2s ease-out forwards;
+  }
+}
