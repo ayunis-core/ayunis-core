@@ -3,12 +3,15 @@ import { ScrollArea } from '@/shared/ui/shadcn/scroll-area';
 
 interface ContentAreaLayoutProps {
   contentHeader?: React.ReactNode;
+  /** Fixed below header (outside scroll) — for toolbars with focus rings/shadows */
+  contentToolbar?: React.ReactNode;
   contentArea: React.ReactNode;
   className?: string;
 }
 
 export const ContentAreaLayout: React.FC<ContentAreaLayoutProps> = ({
   contentHeader,
+  contentToolbar,
   contentArea,
   className = '',
 }) => {
@@ -21,9 +24,17 @@ export const ContentAreaLayout: React.FC<ContentAreaLayoutProps> = ({
         </div>
       )}
 
+      {contentToolbar && (
+        <div className="mx-auto mb-4 w-full max-w-[800px] shrink-0 px-0.5">
+          {contentToolbar}
+        </div>
+      )}
+
       {/* Content Area - takes up remaining space with scrollable content */}
-      <div className="flex-1 overflow-hidden  w-full max-w-[800px] mx-auto">
-        <ScrollArea className="h-full">{contentArea}</ScrollArea>
+      <div className="mx-auto w-full max-w-[800px] flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
+          <div className="px-0.5 pb-4">{contentArea}</div>
+        </ScrollArea>
       </div>
     </div>
   );

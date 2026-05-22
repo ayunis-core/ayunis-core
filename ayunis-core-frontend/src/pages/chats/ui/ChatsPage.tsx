@@ -61,9 +61,11 @@ export default function ChatsPage({
             action={<HelpLink path="chat/" />}
           />
         }
+        contentToolbar={
+          <ChatsFilters agents={agents} search={search} agentId={agentId} />
+        }
         contentArea={
           <>
-            <ChatsFilters agents={agents} search={search} agentId={agentId} />
             {chats.length === 0 ? (
               <ChatsEmptyState hasFilters={hasFilters} />
             ) : (

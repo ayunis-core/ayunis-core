@@ -28,13 +28,13 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
       {/* Chat Header - sticky at top, not scrollable */}
       <div className="flex-shrink-0 sticky top-0 z-10">{chatHeader}</div>
 
-      {/* Chat Content Area - takes up remaining space with scrollable content */}
+      {/* Scroll at pane edge; content width stays centered below */}
       <div
-        className="flex-1 overflow-y-auto w-full max-w-[800px] mx-auto"
+        className="flex-1 min-h-0 overflow-y-auto w-full"
         ref={scrollRef}
         onScroll={handleScroll}
       >
-        {chatContent}
+        <div className="w-full max-w-[800px] mx-auto">{chatContent}</div>
       </div>
 
       {/* Chat Input Area - adjusts to content height */}

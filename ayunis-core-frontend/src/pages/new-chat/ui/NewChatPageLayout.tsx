@@ -66,15 +66,13 @@ export default function NewChatPageLayout({
 
   return (
     <AppLayout>
-      <div className="absolute inset-0 flex flex-col overflow-hidden">
-        <div className="sticky top-0 z-10 w-full shrink-0 bg-background px-4">
-          {header}
-        </div>
+      <div className="absolute inset-0 flex flex-col overflow-hidden px-4 pb-4">
+        <div className="sticky top-0 z-10 shrink-0 mb-2">{header}</div>
 
         {useComposeLayout ? (
           <div
             ref={stageRef}
-            className="flex min-h-0 flex-1 flex-col justify-end px-4 pb-4"
+            className="flex min-h-0 flex-1 flex-col justify-end"
           >
             <div
               ref={composeRef}
@@ -96,7 +94,7 @@ export default function NewChatPageLayout({
             </div>
           </div>
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 pb-4">
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto">
             <div className="w-full max-w-[800px]">{children}</div>
           </div>
         )}
