@@ -26,7 +26,7 @@ export class AddApiKeyAttribution1779367289418 implements MigrationInterface {
         // ALTER below can succeed.
         await queryRunner.query(`DELETE FROM "usage" WHERE "userId" IS NULL`);
         await queryRunner.query(`ALTER TABLE "usage" ALTER COLUMN "userId" SET NOT NULL`);
-        await queryRunner.query(`CREATE INDEX "IDX_3b5f7176c00a59a347ac3d0eb5" ON "usage" ("createdAt", "userId") `);
+        await queryRunner.query(`CREATE INDEX "IDX_3b5f7176c00a59a347ac3d0eb5" ON "usage" ("userId", "createdAt") `);
         await queryRunner.query(`ALTER TABLE "usage" ADD CONSTRAINT "FK_91e198d9fab36eceba00b08f2b6" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "usage" DROP COLUMN "apiKeyId"`);
     }
