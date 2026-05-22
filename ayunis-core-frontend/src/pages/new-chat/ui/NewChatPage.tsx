@@ -27,6 +27,7 @@ import { useSkipPersonalization } from '../api/useSkipPersonalization';
 import { useQueryClient } from '@tanstack/react-query';
 import { getChatSettingsControllerGetSystemPromptQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
 import { useRouter } from '@tanstack/react-router';
+import { cn } from '@/shared/lib/shadcn/utils';
 
 interface NewChatPageProps {
   selectedModelId?: string;
@@ -228,61 +229,87 @@ export default function NewChatPage({
 
   return (
     <NewChatPageLayout
+      isSettling={isCreating}
       header={
         <ContentAreaHeader
           breadcrumbs={[{ label: t('newChat.newChat') }]}
           action={<HelpLink path="" />}
         />
       }
-    >
-      <div className="text-center">
-        <h1 className="text-2xl font-bold">{greeting}</h1>
-      </div>
-      <div className="w-full flex flex-col gap-4 mt-2">
-        <ChatInput
-          // If an agent is selected, use the agent's model,
-          // but disable the model selection
-          // to only show the model that the agent uses
-          modelId={agentId ? selectedAgent?.model.id : modelId}
-          isModelChangeDisabled={!!agentId}
-          agentId={agentId}
-          sources={sources}
-          knowledgeBases={selectedKnowledgeBases}
-          submissionState={isCreating ? 'submitting' : 'idle'}
-          onModelChange={handleModelChange}
-          onAgentChange={handleAgentChange}
-          onAgentRemove={handleAgentRemove}
-          onSend={handleSend}
-          onCancel={handleCancel}
-          onFileUpload={handleFileUpload}
-          onRemoveSource={handleRemoveSource}
-          onDownloadSource={() => null}
-          onAddKnowledgeBase={(kb) => {
-            setSelectedKnowledgeBases((prev) => [...prev, kb]);
-          }}
-          onRemoveKnowledgeBase={(kbId) => {
-            setSelectedKnowledgeBases((prev) =>
-              prev.filter((kb) => kb.id !== kbId),
-            );
-          }}
-          isEmbeddingModelEnabled={isEmbeddingModelEnabled}
-          isAnonymous={isAnonymous}
-          onAnonymousChange={setIsAnonymous}
-          isAnonymousEnforced={isAnonymousEnforced}
-          isVisionEnabled={isVisionEnabled}
-          selectedSkillId={selectedSkillId}
-          selectedSkillName={selectedSkillName}
-          onSkillRemove={handleSkillRemove}
-        />
-        <PinnedSkills
-          onSkillSelect={handleSkillSelect}
-          selectedSkillId={selectedSkillId}
-        />
-        <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
-          <Lock className="h-3 w-3" />
-          <span>{t('newChat.privacyHint')}</span>
-        </div>
-      </div>
-    </NewChatPageLayout>
+      compose={
+        <>
+          <h1
+            className={cn(
+              'new-chat-greeting text-center text-2xl font-bold',
+              isCreating && 'new-chat-greeting--exit',
+            )}
+            aria-hidden={isCreating}
+          >
+            {greeting}
+          </h1>
+
+          <div className="new-chat-input-stack relative w-full">
+            <p
+              className={cn(
+                'new-chat-disclaimer absolute bottom-full left-0 right-0 mb-2 text-center text-xs text-muted-foreground',
+                isCreating && 'new-chat-disclaimer--visible',
+              )}
+              aria-hidden={!isCreating}
+            >
+              {t('chat.inputDisclaimer')}
+            </p>
+
+            <ChatInput
+              modelId={agentId ? selectedAgent?.model.id : modelId}
+              isModelChangeDisabled={!!agentId}
+              agentId={agentId}
+              sources={sources}
+              knowledgeBases={selectedKnowledgeBases}
+              submissionState={isCreating ? 'submitting' : 'idle'}
+              onModelChange={handleModelChange}
+              onAgentChange={handleAgentChange}
+              onAgentRemove={handleAgentRemove}
+              onSend={handleSend}
+              onCancel={handleCancel}
+              onFileUpload={handleFileUpload}
+              onRemoveSource={handleRemoveSource}
+              onDownloadSource={() => null}
+              onAddKnowledgeBase={(kb) => {
+                setSelectedKnowledgeBases((prev) => [...prev, kb]);
+              }}
+              onRemoveKnowledgeBase={(kbId) => {
+                setSelectedKnowledgeBases((prev) =>
+                  prev.filter((kb) => kb.id !== kbId),
+                );
+              }}
+              isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+              isAnonymous={isAnonymous}
+              onAnonymousChange={setIsAnonymous}
+              isAnonymousEnforced={isAnonymousEnforced}
+              isVisionEnabled={isVisionEnabled}
+              selectedSkillId={selectedSkillId}
+              selectedSkillName={selectedSkillName}
+              onSkillRemove={handleSkillRemove}
+            />
+          </div>
+          <div
+            className={cn(
+              'new-chat-dock-extras mt-4 flex flex-col gap-4 overflow-hidden',
+              isCreating && 'new-chat-dock-extras--collapsed',
+            )}
+            aria-hidden={isCreating}
+          >
+            <PinnedSkills
+              onSkillSelect={handleSkillSelect}
+              selectedSkillId={selectedSkillId}
+            />
+            <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+              <Lock className="h-3 w-3 shrink-0" />
+              <span>{t('newChat.privacyHint')}</span>
+            </div>
+          </div>
+        </>
+      }
+    />
   );
 }
