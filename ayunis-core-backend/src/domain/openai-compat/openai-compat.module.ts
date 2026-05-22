@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { ModelsModule } from '../models/models.module';
 import { RunsModule } from '../runs/runs.module';
+import { AuthorizationModule } from 'src/iam/authorization/authorization.module';
 import { ChatCompletionsController } from './presenters/http/chat-completions.controller';
 import { ExecuteOpenAIChatCompletionUseCase } from './application/use-cases/execute-openai-chat-completion/execute-openai-chat-completion.use-case';
 import { OpenAIRequestMapper } from './application/mappers/openai-request.mapper';
@@ -17,6 +18,12 @@ import { OpenAIExceptionFilter } from './presenters/http/filters/openai-exceptio
     ModelsModule,
     // Required to consume InferenceUsageGuard.
     RunsModule,
+    // Provides SubscriptionGuard for `@UseGuards(AuthGuard('api-key'),
+    // SubscriptionGuard)` so subscription gating runs AFTER api-key auth
+    // populates `request.user`. Also exposes TrialsModule transitively, which
+    // is how IncrementTrialMessagesUseCase reaches the controller for the
+    // trial-message accounting path.
+    AuthorizationModule,
     // ApiKeyStrategy is registered globally by IamModule; AuthGuard('api-key')
     // resolves it from Passport at request time and needs no import here.
     // `@Public()` is read by JwtAuthGuard via Reflector — also no import needed.
