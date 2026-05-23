@@ -12,7 +12,7 @@ import { AuthProvider } from '../../config/authentication.config';
 import { LocalAuthenticationRepository } from './infrastructure/repositories/local/local-authentication.repository';
 import { AUTHENTICATION_REPOSITORY } from './application/tokens/authentication-repository.token';
 import { JwtAuthGuard } from './application/guards/jwt-auth.guard';
-import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { UsersModule } from '../users/users.module';
 import { OrgsModule } from '../orgs/orgs.module';
 import { UnauthorizedExceptionFilter } from './application/filters/unauthorized-exception.filter';
@@ -108,10 +108,9 @@ export class AuthenticationModule {
         LocalStrategy,
         JwtStrategy,
         ApiKeyStrategy,
-        {
-          provide: APP_GUARD,
-          useClass: JwtAuthGuard,
-        },
+        // JwtAuthGuard is a regular provider; IamModule owns the APP_GUARD
+        // binding so global guard order stays explicit in one place.
+        JwtAuthGuard,
         {
           provide: APP_FILTER,
           useClass: UnauthorizedExceptionFilter,
@@ -128,6 +127,7 @@ export class AuthenticationModule {
         RefreshTokenUseCase,
         RegisterUserUseCase,
         GetCurrentUserUseCase,
+        JwtAuthGuard,
       ],
     };
   }

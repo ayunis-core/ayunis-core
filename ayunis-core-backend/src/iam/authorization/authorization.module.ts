@@ -1,43 +1,33 @@
-import { APP_GUARD } from '@nestjs/core';
+import { Module } from '@nestjs/common';
 import { RolesGuard } from './application/guards/roles.guard';
 import { SubscriptionGuard } from './application/guards/subscription.guard';
 import { RateLimitGuard } from './application/guards/rate-limit.guard';
-import { Module } from '@nestjs/common';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { TrialsModule } from '../trials/trials.module';
 import { EmailConfirmGuard } from './application/guards/email-confirm.guard';
 import { SystemRolesGuard } from './application/guards/system-roles.guard';
-import { IpAllowlistModule } from '../ip-allowlist/ip-allowlist.module';
-import { IpAllowlistGuard } from '../ip-allowlist/application/guards/ip-allowlist.guard';
 
+/**
+ * Authorization guards live here as regular providers and are exported for
+ * consumers. APP_GUARD bindings (which determine global guard execution
+ * order) are owned by IamModule, so the order between authn and authz is
+ * declared in one place rather than derived from module scan order.
+ */
 @Module({
-  imports: [SubscriptionsModule, TrialsModule, IpAllowlistModule],
+  imports: [SubscriptionsModule, TrialsModule],
   providers: [
-    {
-      provide: APP_GUARD,
-      useExisting: IpAllowlistGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: EmailConfirmGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: SystemRolesGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: SubscriptionGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RateLimitGuard,
-    },
+    EmailConfirmGuard,
+    RolesGuard,
+    SystemRolesGuard,
+    SubscriptionGuard,
+    RateLimitGuard,
   ],
-  exports: [],
+  exports: [
+    EmailConfirmGuard,
+    RolesGuard,
+    SystemRolesGuard,
+    SubscriptionGuard,
+    RateLimitGuard,
+  ],
 })
 export class AuthorizationModule {}
