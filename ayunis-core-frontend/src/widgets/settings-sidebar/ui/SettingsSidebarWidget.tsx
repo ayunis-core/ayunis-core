@@ -36,8 +36,8 @@ export function SettingsSidebarWidget({
 }: Readonly<SettingsSidebarWidgetProps>) {
   const { t } = useTranslation(translationNamespace);
   const location = useLocation();
-  const { state } = useSidebar();
-  const isCollapsed = state === 'collapsed';
+  const { isIconCollapsed } = useSidebar();
+  const isCollapsed = isIconCollapsed;
   const goBackLabel = t('layout.goBack');
 
   return (

@@ -47,7 +47,7 @@ export function ChatsSidebarGroup() {
   const { deleteChat } = useDeleteThread({});
   const params = useParams({ strict: false });
   const navigate = useNavigate();
-  const { state } = useSidebar();
+  const { isIconCollapsed } = useSidebar();
 
   const [isOpen, setOpen] = useChatsSidebarOpen();
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -56,7 +56,7 @@ export function ChatsSidebarGroup() {
     title: string | null;
   } | null>(null);
 
-  if (state === 'collapsed') {
+  if (isIconCollapsed) {
     return <CollapsedChatsSidebarMenu />;
   }
 

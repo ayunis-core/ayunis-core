@@ -47,11 +47,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { logout } = useLogout();
   const { t } = useTranslation('common');
   const navigate = useNavigate();
-  const { closeMobileWithCleanup, state } = useSidebar();
+  const { closeMobileWithCleanup, isIconCollapsed } = useSidebar();
   const featureToggles = useFeatureToggles();
   const marketplace = useMarketplaceConfig();
   const location = useLocation();
-  const isCollapsed = state === 'collapsed';
+  const isCollapsed = isIconCollapsed;
 
   useKeyboardShortcut(['j', 'Meta'], () => {
     void navigate({ to: '/chat' });

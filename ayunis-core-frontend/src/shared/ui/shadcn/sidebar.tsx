@@ -50,6 +50,8 @@ const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
 
 type SidebarContextProps = {
   state: 'expanded' | 'collapsed';
+  /** Desktop icon rail only — mobile sheet always uses expanded layout */
+  isIconCollapsed: boolean;
   open: boolean;
   setOpen: (open: boolean) => void;
   openMobile: boolean;
@@ -231,10 +233,12 @@ function SidebarProvider({
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
   const state = open ? 'expanded' : 'collapsed';
+  const isIconCollapsed = !isMobile && state === 'collapsed';
 
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
       state,
+      isIconCollapsed,
       open,
       setOpen,
       isMobile,
@@ -245,6 +249,7 @@ function SidebarProvider({
     }),
     [
       state,
+      isIconCollapsed,
       open,
       setOpen,
       isMobile,
@@ -328,7 +333,13 @@ function Sidebar({
             <SheetTitle>Sidebar</SheetTitle>
             <SheetDescription>Displays the mobile sidebar.</SheetDescription>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div
+            className="flex h-full w-full flex-col"
+            data-state="expanded"
+            data-mobile="true"
+          >
+            {children}
+          </div>
         </SheetContent>
       </Sheet>
     );
@@ -639,7 +650,7 @@ function SidebarMenuButton({
   tooltip?: string | React.ComponentProps<typeof TooltipContent>;
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot : 'button';
-  const { isMobile, state } = useSidebar();
+  const { isIconCollapsed } = useSidebar();
 
   const button = (
     <Comp
@@ -668,7 +679,7 @@ function SidebarMenuButton({
       <TooltipContent
         side="right"
         align="center"
-        hidden={state !== 'collapsed' || isMobile}
+        hidden={!isIconCollapsed}
         {...tooltip}
       />
     </Tooltip>

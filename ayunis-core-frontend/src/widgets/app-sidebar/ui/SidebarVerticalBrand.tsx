@@ -19,10 +19,10 @@ const VERTICAL_BRAND_HEIGHT_PX = Math.round(
 );
 
 export function SidebarVerticalBrand() {
-  const { state } = useSidebar();
+  const { isIconCollapsed } = useSidebar();
   const { theme } = useTheme();
   const { t } = useTranslation('common');
-  const isCollapsed = state === 'collapsed';
+  const isCollapsed = isIconCollapsed;
   const brandSrc = theme === 'dark' ? brandFullDark : brandFullLight;
 
   return (
