@@ -20,7 +20,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
   useSidebar,
 } from '@/shared/ui/shadcn/sidebar';
 import {
@@ -30,7 +29,8 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/dropdown-menu';
 import { ChatsSidebarGroup } from './ChatsSidebarGroup';
-import { SidebarBrandLink } from './SidebarBrand';
+import { SidebarHeaderControls } from './SidebarHeaderControls';
+import { SidebarVerticalBrand } from './SidebarVerticalBrand';
 import { useMe } from '../api/useMe';
 import { useLogout } from '../api/useLogout';
 import { Link, useLocation } from '@tanstack/react-router';
@@ -38,15 +38,9 @@ import { useTranslation } from 'react-i18next';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useNavigate } from '@tanstack/react-router';
 import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import config from '@/shared/config';
-import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { useFeatureToggles } from '@/features/feature-toggles';
 import { useMarketplaceConfig } from '@/features/marketplace';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+import { cn } from '@/shared/lib/shadcn/utils';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useMe();
@@ -111,47 +105,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       data-testid="sidebar"
     >
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <div className="flex w-full items-center gap-1">
-              <SidebarMenuButton
-                size="lg"
-                asChild
-                className="min-w-0 flex-1"
-                tooltip={t('sidebar.appName')}
-              >
-                <SidebarBrandLink />
-              </SidebarMenuButton>
-              <div className="hidden shrink-0 items-center md:flex group-data-[collapsible=icon]:hidden">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SidebarTrigger
-                      className="size-8"
-                      data-testid="sidebar-trigger"
-                      aria-label={sidebarToggleLabel}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent side="right" align="center">
-                    {t('sidebar.toggleShortcut')}
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              {config.features.announcableOrgId && (
-                <div className="shrink-0 group-data-[collapsible=icon]:hidden">
-                  <ReleaseNotesButton />
-                </div>
-              )}
-            </div>
-          </SidebarMenuItem>
-          {config.features.announcableOrgId && (
-            <SidebarMenuItem className="hidden group-data-[collapsible=icon]:flex">
-              <ReleaseNotesButton />
-            </SidebarMenuItem>
-          )}
-        </SidebarMenu>
+        <SidebarHeaderControls
+          isCollapsed={isCollapsed}
+          sidebarToggleLabel={sidebarToggleLabel}
+        />
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className={isCollapsed ? 'flex-none' : undefined}>
         <SidebarGroup>
           <SidebarMenu>
             {items.map((item) => (
@@ -192,23 +152,34 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <ChatsSidebarGroup />
       </SidebarContent>
 
+      <SidebarVerticalBrand />
+
       <SidebarFooter className="border-t border-sidebar-border">
         <SidebarMenu>
-          <SidebarMenuItem>
+          <SidebarMenuItem className={cn(isCollapsed && 'flex justify-center')}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
-                  size="lg"
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  size={isCollapsed ? 'default' : 'lg'}
+                  className={cn(
+                    'data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground',
+                    isCollapsed && 'justify-center',
+                  )}
                   data-testid="menu"
                   tooltip={user?.name ?? t('sidebar.accountSettings')}
                 >
-                  <User2 className="size-4" />
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">{user?.name}</span>
-                    <span className="truncate text-xs">{user?.email}</span>
-                  </div>
-                  <ChevronUp className="ml-auto size-4" />
+                  <User2 className="size-4 shrink-0" />
+                  {!isCollapsed && (
+                    <>
+                      <div className="grid flex-1 text-left text-sm leading-tight">
+                        <span className="truncate font-semibold">
+                          {user?.name}
+                        </span>
+                        <span className="truncate text-xs">{user?.email}</span>
+                      </div>
+                      <ChevronUp className="ml-auto size-4 shrink-0" />
+                    </>
+                  )}
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
