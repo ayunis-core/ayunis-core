@@ -25,12 +25,10 @@
   --ayunis-orb-glass-mid: rgba(255, 255, 255, 0.14);
   --ayunis-orb-glass-tint: rgba(232, 228, 242, 0.06);
   --ayunis-orb-glass-bottom: rgba(255, 255, 255, 0.08);
-  --ayunis-orb-glass-border: rgba(255, 255, 255, 0.58);
-  --ayunis-orb-glass-border-outer: rgba(167, 153, 207, 0.14);
+  --ayunis-orb-edge-border: rgba(255, 255, 255, 0.58);
+  --ayunis-orb-edge-recess: rgba(88, 75, 154, 0.16);
   --ayunis-orb-glass-specular-strong: rgba(255, 255, 255, 0.62);
   --ayunis-orb-glass-specular-soft: rgba(255, 255, 255, 0.22);
-  --ayunis-orb-glass-rim: rgba(255, 255, 255, 0.75);
-  --ayunis-orb-glass-rim-soft: rgba(255, 255, 255, 0.1);
   --ayunis-orb-backdrop-saturate: 1.12;
   --orb-shell-size: 2rem;
   --orb-size: 1.5rem;
@@ -68,12 +66,10 @@
   --ayunis-orb-glass-mid: rgba(164, 159, 206, 0.1);
   --ayunis-orb-glass-tint: rgba(90, 84, 120, 0.12);
   --ayunis-orb-glass-bottom: rgba(120, 114, 150, 0.1);
-  --ayunis-orb-glass-border: rgba(196, 191, 232, 0.28);
-  --ayunis-orb-glass-border-outer: rgba(90, 84, 120, 0.35);
+  --ayunis-orb-edge-border: rgba(196, 191, 232, 0.28);
+  --ayunis-orb-edge-recess: rgba(12, 10, 22, 0.42);
   --ayunis-orb-glass-specular-strong: rgba(220, 216, 242, 0.34);
   --ayunis-orb-glass-specular-soft: rgba(164, 159, 206, 0.14);
-  --ayunis-orb-glass-rim: rgba(196, 191, 232, 0.42);
-  --ayunis-orb-glass-rim-soft: rgba(129, 120, 195, 0.18);
   --ayunis-orb-backdrop-saturate: 1.25;
 }
 
@@ -103,7 +99,10 @@
     var(--ayunis-orb-base-mid) 72%,
     var(--ayunis-orb-base-bottom) 100%
   );
-  box-shadow: inset 0 1px 0 var(--ayunis-orb-inset-top);
+  box-shadow:
+    inset 0 1px 0 var(--ayunis-orb-inset-top),
+    inset 0 0 0 1px var(--ayunis-orb-edge-border),
+    inset 0 3px 10px var(--ayunis-orb-edge-recess);
   transform: scale(1);
 }
 
@@ -205,7 +204,7 @@
   animation: ayunis-orb-blob-3 2.2s ease-in-out infinite;
 }
 
-/* Frosted glass plate on top */
+/* Frosted glass plate on top — edge/recess live on .ayunis-progress-orb */
 .ayunis-progress-orb__glass {
   position: absolute;
   inset: 0;
@@ -219,9 +218,6 @@
     var(--ayunis-orb-glass-tint) 55%,
     var(--ayunis-orb-glass-bottom) 100%
   );
-  box-shadow:
-    inset 0 0 0 1px var(--ayunis-orb-glass-border),
-    inset 0 0 0 2px var(--ayunis-orb-glass-border-outer);
 }
 
 /* Top specular band across the disc */
@@ -236,24 +232,6 @@
     var(--ayunis-orb-glass-specular-strong) 0%,
     var(--ayunis-orb-glass-specular-soft) 18%,
     transparent 38%
-  );
-}
-
-/* Thin rim catch at the outer edge */
-.ayunis-progress-orb__glass::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: transparent;
-  box-shadow:
-    inset 0 0 0 1px var(--ayunis-orb-glass-rim),
-    inset 0 0 0 2px var(--ayunis-orb-glass-rim-soft);
-  mask: radial-gradient(
-    circle,
-    transparent calc(100% - 3px),
-    #000 calc(100% - 3px)
   );
 }
 

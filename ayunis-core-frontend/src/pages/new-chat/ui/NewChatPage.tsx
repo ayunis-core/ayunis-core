@@ -1,11 +1,11 @@
 import { Lock } from 'lucide-react';
-import NewChatPageLayout from './NewChatPageLayout';
+import NewChatPageLayout, { type NewChatMistPhase } from './NewChatPageLayout';
 import ChatInput from '@/widgets/chat-input';
 import {
   useInitiateChat,
   type SourceUploadStatus,
 } from '../api/useInitiateChat';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
@@ -99,6 +99,11 @@ export default function NewChatPage({
   >([]);
   const [selectedSkillId, setSelectedSkillId] = useState<string>();
   const [selectedSkillName, setSelectedSkillName] = useState<string>();
+  const [mistPhase, setMistPhase] = useState<NewChatMistPhase>('idle');
+
+  const handleMistExitComplete = useCallback(() => {
+    setMistPhase('hidden');
+  }, []);
   const selectedAgent = agents.find((agent) => agent.id === agentId);
   const selectedModel = models.find((m) => m.id === modelId);
 
@@ -177,6 +182,8 @@ export default function NewChatPage({
       return;
     }
 
+    setMistPhase((current) => (current === 'idle' ? 'exiting' : current));
+
     // Images are sent as part of the first multipart request from ChatPage,
     // so they hitch a ride through context. KBs and sources are attached
     // before navigation by initiateChat itself.
@@ -230,6 +237,8 @@ export default function NewChatPage({
   return (
     <NewChatPageLayout
       isSettling={isCreating}
+      mistPhase={mistPhase}
+      onMistExitComplete={handleMistExitComplete}
       header={
         <ContentAreaHeader
           breadcrumbs={[{ label: t('newChat.newChat') }]}
@@ -240,7 +249,7 @@ export default function NewChatPage({
         <>
           <h1
             className={cn(
-              'new-chat-greeting text-center text-2xl font-bold',
+              'new-chat-greeting text-center text-2xl font-semibold',
               isCreating && 'new-chat-greeting--exit',
             )}
             aria-hidden={isCreating}

@@ -9,6 +9,11 @@ import {
   useRef,
   useState,
 } from 'react';
+import NewChatAmbientMist, {
+  type NewChatAmbientMistPhase,
+} from './NewChatAmbientMist';
+
+export type NewChatMistPhase = NewChatAmbientMistPhase | 'hidden';
 
 interface NewChatPageLayoutProps {
   header: React.ReactNode;
@@ -17,6 +22,8 @@ interface NewChatPageLayoutProps {
   /** Greeting + input stack; lifted when idle, slides to chat dock when settling */
   compose?: React.ReactNode;
   isSettling?: boolean;
+  mistPhase?: NewChatMistPhase;
+  onMistExitComplete?: () => void;
 }
 
 export default function NewChatPageLayout({
@@ -24,6 +31,8 @@ export default function NewChatPageLayout({
   children,
   compose,
   isSettling = false,
+  mistPhase = 'hidden',
+  onMistExitComplete,
 }: Readonly<NewChatPageLayoutProps>) {
   const useComposeLayout = compose !== undefined;
   const stageRef = useRef<HTMLDivElement>(null);
@@ -64,40 +73,53 @@ export default function NewChatPageLayout({
     };
   }, [useComposeLayout, measureLift, isSettling]);
 
+  const mistLayer =
+    useComposeLayout && mistPhase !== 'hidden' && onMistExitComplete ? (
+      <div className="new-chat-ambient-mist-panel-clip">
+        <NewChatAmbientMist
+          phase={mistPhase}
+          onExitComplete={onMistExitComplete}
+        />
+      </div>
+    ) : null;
+
   return (
     <AppLayout>
-      <div className="absolute inset-0 flex flex-col overflow-hidden px-4 pb-4">
-        <div className="content-area-page-header">{header}</div>
+      <div className="absolute inset-0 flex flex-col">
+        {mistLayer}
+        <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+          <div className="content-area-page-header px-4">{header}</div>
 
-        {useComposeLayout ? (
-          <div
-            ref={stageRef}
-            className="flex min-h-0 flex-1 flex-col justify-end"
-          >
+          {useComposeLayout ? (
             <div
-              ref={composeRef}
-              className={cn(
-                'new-chat-compose mx-auto flex w-full max-w-[800px] flex-col',
-                isSettling
-                  ? 'new-chat-compose--settling gap-0'
-                  : 'new-chat-compose--idle gap-4',
-              )}
-              style={
-                isSettling
-                  ? undefined
-                  : ({
-                      '--new-chat-lift': `${liftPx}px`,
-                    } as React.CSSProperties)
-              }
+              ref={stageRef}
+              className="flex min-h-0 flex-1 flex-col justify-end pb-4"
             >
-              {compose}
+              <div
+                ref={composeRef}
+                className={cn(
+                  'new-chat-compose mx-auto flex w-full max-w-[800px] flex-col px-4',
+                  isSettling
+                    ? 'new-chat-compose--settling gap-0'
+                    : 'new-chat-compose--idle gap-4',
+                )}
+                style={
+                  isSettling
+                    ? undefined
+                    : ({
+                        '--new-chat-lift': `${liftPx}px`,
+                      } as React.CSSProperties)
+                }
+              >
+                {compose}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto">
-            <div className="w-full max-w-[800px]">{children}</div>
-          </div>
-        )}
+          ) : (
+            <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 pb-4">
+              <div className="w-full max-w-[800px]">{children}</div>
+            </div>
+          )}
+        </div>
       </div>
     </AppLayout>
   );

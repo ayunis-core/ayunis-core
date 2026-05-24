@@ -35,6 +35,7 @@
 }
 
 .new-chat-greeting {
+  font-weight: 600;
   max-height: 4rem;
   overflow: hidden;
   transition:
