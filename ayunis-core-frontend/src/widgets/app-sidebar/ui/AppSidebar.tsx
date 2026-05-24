@@ -20,6 +20,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
+  useSidebar,
 } from '@/shared/ui/shadcn/sidebar';
 import {
   DropdownMenu,
@@ -28,35 +30,42 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/dropdown-menu';
 import { ChatsSidebarGroup } from './ChatsSidebarGroup';
+import { SidebarBrandLink } from './SidebarBrand';
 import { useMe } from '../api/useMe';
 import { useLogout } from '../api/useLogout';
 import { Link, useLocation } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useNavigate } from '@tanstack/react-router';
-import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';
-import brandFullDark from '@/shared/assets/brand/brand-full-dark.svg';
-import { useTheme } from '@/features/theme';
-import { useSidebar } from '@/shared/ui/shadcn/sidebar';
 import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import config from '@/shared/config';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { useFeatureToggles } from '@/features/feature-toggles';
 import { useMarketplaceConfig } from '@/features/marketplace';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/shared/ui/shadcn/tooltip';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { theme } = useTheme();
   const { user } = useMe();
   const { logout } = useLogout();
   const { t } = useTranslation('common');
   const navigate = useNavigate();
-  const { closeMobileWithCleanup } = useSidebar();
+  const { closeMobileWithCleanup, state } = useSidebar();
   const featureToggles = useFeatureToggles();
   const marketplace = useMarketplaceConfig();
   const location = useLocation();
+  const isCollapsed = state === 'collapsed';
+
   useKeyboardShortcut(['j', 'Meta'], () => {
     void navigate({ to: '/chat' });
   });
+
+  const sidebarToggleLabel = isCollapsed
+    ? t('sidebar.expandSidebar')
+    : t('sidebar.collapseSidebar');
 
   // Menu items.
   const items = [
@@ -95,23 +104,50 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   ];
 
   return (
-    <Sidebar {...props} variant="inset" data-testid="sidebar">
+    <Sidebar
+      {...props}
+      collapsible="icon"
+      variant="inset"
+      data-testid="sidebar"
+    >
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <div className="flex items-center justify-between w-full">
-              <SidebarMenuButton size="lg" asChild className="flex-1">
-                <Link to="/">
-                  <img
-                    src={theme === 'dark' ? brandFullDark : brandFullLight}
-                    alt="Ayunis Logo"
-                    className="w-full max-w-32"
-                  />
-                </Link>
+            <div className="flex w-full items-center gap-1">
+              <SidebarMenuButton
+                size="lg"
+                asChild
+                className="min-w-0 flex-1"
+                tooltip={t('sidebar.appName')}
+              >
+                <SidebarBrandLink />
               </SidebarMenuButton>
-              {config.features.announcableOrgId && <ReleaseNotesButton />}
+              <div className="hidden shrink-0 items-center md:flex group-data-[collapsible=icon]:hidden">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SidebarTrigger
+                      className="size-8"
+                      data-testid="sidebar-trigger"
+                      aria-label={sidebarToggleLabel}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent side="right" align="center">
+                    {t('sidebar.toggleShortcut')}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              {config.features.announcableOrgId && (
+                <div className="shrink-0 group-data-[collapsible=icon]:hidden">
+                  <ReleaseNotesButton />
+                </div>
+              )}
             </div>
           </SidebarMenuItem>
+          {config.features.announcableOrgId && (
+            <SidebarMenuItem className="hidden group-data-[collapsible=icon]:flex">
+              <ReleaseNotesButton />
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarHeader>
 
@@ -122,6 +158,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
                   asChild
+                  tooltip={item.title}
                   isActive={
                     item.url === '/chat'
                       ? location.pathname === '/chat'
@@ -137,7 +174,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             ))}
             {marketplace.enabled && marketplace.url && (
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton asChild tooltip={t('sidebar.marketplace')}>
                   <a
                     href={marketplace.url}
                     target="_blank"
@@ -164,6 +201,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   size="lg"
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   data-testid="menu"
+                  tooltip={user?.name ?? t('sidebar.accountSettings')}
                 >
                   <User2 className="size-4" />
                   <div className="grid flex-1 text-left text-sm leading-tight">
@@ -175,8 +213,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                side="bottom"
-                align="end"
+                side={isCollapsed ? 'right' : 'bottom'}
+                align={isCollapsed ? 'start' : 'end'}
                 sideOffset={4}
               >
                 <DropdownMenuItem asChild>
