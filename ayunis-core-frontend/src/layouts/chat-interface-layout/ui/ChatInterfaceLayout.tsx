@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 import { useAutoScroll } from '@/features/useAutoScroll';
+import { useContentScrollHeader } from '@/features/useContentScrollHeader';
 import {
   Panel,
   Group as PanelGroup,
@@ -21,39 +22,44 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
   sidePanel,
   className = '',
 }) => {
-  const { scrollRef, handleScroll } = useAutoScroll(chatContent);
-  const [headerScrolled, setHeaderScrolled] = useState(false);
+  const { scrollRef: autoScrollRef, handleScroll } = useAutoScroll(chatContent);
+  const {
+    scrollRef: headerScrollRef,
+    headerScrolled,
+    onScroll: onHeaderScroll,
+  } = useContentScrollHeader(chatContent);
+
+  const setScrollRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      autoScrollRef.current = node;
+      headerScrollRef.current = node;
+    },
+    [autoScrollRef, headerScrollRef],
+  );
 
   const onScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
       handleScroll(e);
-      setHeaderScrolled(e.currentTarget.scrollTop > 0);
+      onHeaderScroll(e);
     },
-    [handleScroll],
+    [handleScroll, onHeaderScroll],
   );
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (el) {
-      setHeaderScrolled(el.scrollTop > 0);
-    }
-  }, [chatContent, scrollRef]);
 
   const chatPane = (
     <div
       className={`flex h-full min-h-0 flex-col overflow-hidden rounded-t-xl px-4 pb-4 ${className}`}
     >
-      <div className="relative flex min-h-0 flex-1 flex-col">
+      <div className="content-scroll-region relative flex min-h-0 flex-1 flex-col">
         <div
           className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto w-full"
-          ref={scrollRef}
+          ref={setScrollRef}
           onScroll={onScroll}
         >
-          <div className="chat-scroll-header-offset" aria-hidden />
+          <div className="content-scroll-header-offset" aria-hidden />
           <div className="mx-auto w-full max-w-[800px]">{chatContent}</div>
         </div>
         <div
-          className="chat-scroll-header"
+          className="content-scroll-header"
           data-scrolled={headerScrolled ? 'true' : 'false'}
         >
           {chatHeader}

@@ -42,19 +42,34 @@
     @apply sticky top-0 z-10 mb-1.5 w-full shrink-0 bg-background pt-3;
   }
 
-  /* Chat thread: frosted header overlay; content scrolls underneath */
-  .chat-scroll-header {
+  /* Shared sizing for overlay header + scroll offset (siblings under .content-scroll-region) */
+  .content-scroll-region {
+    --content-scroll-header-row: 2.25rem; /* min-h-9 */
+    --content-scroll-header-pad-block: 1.5rem; /* py-3 */
+    --content-scroll-header-gap: 1rem; /* clear space before first content block */
+  }
+
+  /* Frosted header overlay (chat thread, settings, lists); content scrolls underneath */
+  .content-scroll-header {
     @apply absolute inset-x-0 top-0 z-10 -mx-4 overflow-hidden rounded-t-xl border-b border-transparent px-4 py-3;
     @apply bg-background/80 backdrop-blur-md transition-[border-color] duration-200 ease-out;
     @apply supports-[backdrop-filter]:bg-background/65;
+    min-height: calc(
+      var(--content-scroll-header-row) + var(--content-scroll-header-pad-block)
+    );
   }
 
-  .chat-scroll-header[data-scrolled='true'] {
+  .content-scroll-header[data-scrolled='true'] {
     @apply border-border/40;
   }
 
-  /* Matches .chat-scroll-header height (py-3 + min-h-9 content) */
-  .chat-scroll-header-offset {
-    @apply h-[3.75rem] shrink-0;
+  /* Header height + gap so content does not sit under the frosted bar at scroll top */
+  .content-scroll-header-offset {
+    @apply shrink-0;
+    height: calc(
+      var(--content-scroll-header-row) +
+        var(--content-scroll-header-pad-block) +
+        var(--content-scroll-header-gap)
+    );
   }
 }
