@@ -120,6 +120,7 @@
   --chat-input-brand: #6055a6;
   --chat-input-brand-rgb: 96, 85, 166;
   --chat-input-brand-light-rgb: 125, 115, 184;
+  --chat-input-glow-ring: 2px;
   position: relative;
   border-radius: 0.75rem;
 }
@@ -154,7 +155,7 @@
 }
 
 .chat-input-shell--active {
-  padding: 1px;
+  padding: var(--chat-input-glow-ring);
   isolation: isolate;
 }
 
@@ -215,7 +216,8 @@
   position: relative;
   z-index: 1;
   border-color: transparent;
-  box-shadow: 0 0 0 1px rgba(var(--chat-input-brand-rgb), 0.12);
+  box-shadow: 0 0 0 var(--chat-input-glow-ring)
+    rgba(var(--chat-input-brand-rgb), 0.2);
 }
 
 .chat-input-shell--active .chat-input-shell__card::after {
@@ -287,7 +289,8 @@
   }
 
   .chat-input-shell--active .chat-input-shell__card {
-    box-shadow: 0 0 0 1px rgba(var(--chat-input-brand-rgb), 0.24);
+    box-shadow: 0 0 0 var(--chat-input-glow-ring)
+      rgba(var(--chat-input-brand-rgb), 0.32);
   }
 
   .chat-input-shell--active .chat-input-shell__card::after {

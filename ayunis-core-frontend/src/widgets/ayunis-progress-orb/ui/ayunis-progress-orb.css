@@ -89,10 +89,6 @@
   height: var(--orb-size);
 }
 
-.ayunis-progress-orb__motion--working {
-  animation: ayunis-orb-disc-spin 4.5s linear infinite;
-}
-
 .ayunis-progress-orb {
   position: relative;
   width: var(--orb-size);
@@ -112,14 +108,13 @@
 }
 
 .ayunis-progress-orb-shell--active .ayunis-progress-orb {
-  transform: scaleX(1.05) scaleY(0.96);
-  animation: ayunis-orb-disc-pulse 2.2s cubic-bezier(0.45, 0.05, 0.55, 0.95)
+  animation: ayunis-orb-disc-wobble 4.2s cubic-bezier(0.45, 0.05, 0.55, 0.95)
     infinite;
+  will-change: transform;
 }
 
 .ayunis-progress-orb-shell--completing .ayunis-progress-orb__motion {
   animation: none;
-  transform: rotate(0deg);
 }
 
 .ayunis-progress-orb-shell--completing .ayunis-progress-orb {
@@ -270,31 +265,43 @@
   animation: ayunis-orb-disc-glint 3.2s ease-in-out infinite;
 }
 
-@keyframes ayunis-orb-disc-spin {
-  from {
-    transform: rotate(0deg);
+/* Horizontal = wider ellipse; 90°/270° = round — liquid wobble */
+@keyframes ayunis-orb-disc-wobble {
+  0% {
+    transform: rotate(0deg) scale(1.16, 0.84);
   }
-  to {
-    transform: rotate(360deg);
+  12.5% {
+    transform: rotate(45deg) scale(1.06, 0.94);
   }
-}
-
-@keyframes ayunis-orb-disc-pulse {
-  0%,
-  100% {
-    transform: scaleX(1.05) scaleY(0.96);
+  25% {
+    transform: rotate(90deg) scale(1, 1);
+  }
+  37.5% {
+    transform: rotate(135deg) scale(1.06, 0.94);
   }
   50% {
-    transform: scaleX(1.08) scaleY(0.99);
+    transform: rotate(180deg) scale(1.16, 0.84);
+  }
+  62.5% {
+    transform: rotate(225deg) scale(1.06, 0.94);
+  }
+  75% {
+    transform: rotate(270deg) scale(1, 1);
+  }
+  87.5% {
+    transform: rotate(315deg) scale(1.06, 0.94);
+  }
+  100% {
+    transform: rotate(360deg) scale(1.16, 0.84);
   }
 }
 
 @keyframes ayunis-orb-disc-settle-round {
   from {
-    transform: scaleX(1.05) scaleY(0.96);
+    transform: rotate(0deg) scale(1.16, 0.84);
   }
   to {
-    transform: scale(1);
+    transform: rotate(0deg) scale(1, 1);
   }
 }
 
@@ -395,12 +402,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ayunis-progress-orb__motion--working {
-    animation: none;
-  }
-
   .ayunis-progress-orb-shell--active .ayunis-progress-orb {
-    transform: scaleX(1.03) scaleY(0.98);
+    transform: scale(1.1, 0.9);
     animation: none;
   }
 
