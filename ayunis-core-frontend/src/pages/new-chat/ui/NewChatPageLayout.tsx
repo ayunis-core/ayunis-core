@@ -67,7 +67,7 @@ export default function NewChatPageLayout({
   return (
     <AppLayout>
       <div className="absolute inset-0 flex flex-col overflow-hidden px-4 pb-4">
-        <div className="sticky top-0 z-10 shrink-0 mb-2">{header}</div>
+        <div className="content-area-page-header">{header}</div>
 
         {useComposeLayout ? (
           <div

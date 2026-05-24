@@ -35,3 +35,10 @@
 .prose a {
   cursor: pointer;
 }
+
+/* Shared top bar: title + actions (Wissen, /chat, thread, …) */
+@layer components {
+  .content-area-page-header {
+    @apply sticky top-0 z-10 mb-1.5 w-full shrink-0 bg-background pt-3;
+  }
+}

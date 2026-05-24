@@ -17,11 +17,8 @@ export const ContentAreaLayout: React.FC<ContentAreaLayoutProps> = ({
 }) => {
   return (
     <div className={`flex flex-col absolute inset-0 ${className} px-4 pb-4`}>
-      {/* Content Header - sticky at top, not scrollable */}
       {contentHeader && (
-        <div className="flex-shrink-0 sticky top-0 z-10 bg-background mb-2">
-          {contentHeader}
-        </div>
+        <div className="content-area-page-header">{contentHeader}</div>
       )}
 
       {contentToolbar && (
@@ -30,7 +27,6 @@ export const ContentAreaLayout: React.FC<ContentAreaLayoutProps> = ({
         </div>
       )}
 
-      {/* Content Area - takes up remaining space with scrollable content */}
       <div className="mx-auto w-full max-w-[800px] flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="px-0.5 pb-4">{contentArea}</div>

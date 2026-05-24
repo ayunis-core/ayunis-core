@@ -26,7 +26,7 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
   const chatPane = (
     <div className={`flex flex-col h-full px-4 pb-4 ${className}`}>
       {/* Chat Header - sticky at top, not scrollable */}
-      <div className="flex-shrink-0 sticky top-0 z-10">{chatHeader}</div>
+      <div className="content-area-page-header">{chatHeader}</div>
 
       {/* Scroll at pane edge; content width stays centered below */}
       <div
