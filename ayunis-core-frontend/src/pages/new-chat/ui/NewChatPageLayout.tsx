@@ -47,7 +47,14 @@ export default function NewChatPageLayout({
     if (!stage || !block) return;
 
     const lift = -((stage.clientHeight - block.offsetHeight) / 2);
-    setLiftPx(Math.round(lift));
+    const nextLift = Math.round(lift);
+
+    setLiftPx((prev) => {
+      if (prev === nextLift) return prev;
+      // Ignore sub-pixel layout churn (textarea autosize, fonts) while idle
+      if (prev !== 0 && Math.abs(prev - nextLift) <= 2) return prev;
+      return nextLift;
+    });
   }, [isSettling]);
 
   useLayoutEffect(() => {
@@ -93,15 +100,15 @@ export default function NewChatPageLayout({
           {useComposeLayout ? (
             <div
               ref={stageRef}
-              className="flex min-h-0 flex-1 flex-col justify-end pb-4"
+              className="flex min-h-0 flex-1 flex-col justify-end px-4 pb-4"
             >
               <div
                 ref={composeRef}
                 className={cn(
-                  'new-chat-compose mx-auto flex w-full max-w-[800px] flex-col px-4',
+                  'new-chat-compose mx-auto flex w-full max-w-[800px] flex-col',
                   isSettling
-                    ? 'new-chat-compose--settling gap-0'
-                    : 'new-chat-compose--idle gap-4',
+                    ? 'new-chat-compose--settling'
+                    : 'new-chat-compose--idle',
                 )}
                 style={
                   isSettling

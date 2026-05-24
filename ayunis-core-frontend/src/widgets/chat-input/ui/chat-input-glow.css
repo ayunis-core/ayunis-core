@@ -21,17 +21,22 @@
 
 /* Bottom-anchored compose block, lifted to visual center when idle */
 .new-chat-compose {
-  transition: transform var(--new-chat-settle-duration)
-    var(--new-chat-settle-ease);
-  will-change: transform;
+  gap: 1rem;
 }
 
+/* Snap to measured lift on load/resize — no transform transition (avoids slide + end jump) */
 .new-chat-compose--idle {
   transform: translate3d(0, var(--new-chat-lift, 0), 0);
 }
 
+/* Animate down to chat dock only when the user sends the first message */
 .new-chat-compose--settling {
   transform: translate3d(0, 0, 0);
+  gap: 0;
+  will-change: transform;
+  transition:
+    transform var(--new-chat-settle-duration) var(--new-chat-settle-ease),
+    gap var(--new-chat-settle-duration) var(--new-chat-settle-ease);
 }
 
 .new-chat-greeting {
@@ -104,6 +109,7 @@
   .new-chat-dock-extras--collapsed {
     transition: none;
     transform: none;
+    gap: 1rem;
     opacity: 1;
     max-height: none;
     margin-top: 1rem;
@@ -124,6 +130,9 @@
   --chat-input-glow-ring: 2px;
   position: relative;
   border-radius: 0.75rem;
+  /* Reserve ring space always — toggling --active must not change layout width */
+  padding: var(--chat-input-glow-ring);
+  box-sizing: border-box;
 }
 
 @keyframes chat-input-glow-orbit {
@@ -156,7 +165,6 @@
 }
 
 .chat-input-shell--active {
-  padding: var(--chat-input-glow-ring);
   isolation: isolate;
 }
 
