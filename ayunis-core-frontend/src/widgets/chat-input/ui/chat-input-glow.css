@@ -22,21 +22,19 @@
 /* Bottom-anchored compose block, lifted to visual center when idle */
 .new-chat-compose {
   gap: 1rem;
+  transition:
+    transform var(--new-chat-settle-duration) var(--new-chat-settle-ease),
+    gap var(--new-chat-settle-duration) var(--new-chat-settle-ease);
+  will-change: transform;
 }
 
-/* Snap to measured lift on load/resize — no transform transition (avoids slide + end jump) */
 .new-chat-compose--idle {
   transform: translate3d(0, var(--new-chat-lift, 0), 0);
 }
 
-/* Animate down to chat dock only when the user sends the first message */
 .new-chat-compose--settling {
   transform: translate3d(0, 0, 0);
   gap: 0;
-  will-change: transform;
-  transition:
-    transform var(--new-chat-settle-duration) var(--new-chat-settle-ease),
-    gap var(--new-chat-settle-duration) var(--new-chat-settle-ease);
 }
 
 .new-chat-greeting {
