@@ -41,4 +41,20 @@
   .content-area-page-header {
     @apply sticky top-0 z-10 mb-1.5 w-full shrink-0 bg-background pt-3;
   }
+
+  /* Chat thread: frosted header overlay; content scrolls underneath */
+  .chat-scroll-header {
+    @apply absolute inset-x-0 top-0 z-10 -mx-4 overflow-hidden rounded-t-xl border-b border-transparent px-4 py-3;
+    @apply bg-background/80 backdrop-blur-md transition-[border-color] duration-200 ease-out;
+    @apply supports-[backdrop-filter]:bg-background/65;
+  }
+
+  .chat-scroll-header[data-scrolled='true'] {
+    @apply border-border/40;
+  }
+
+  /* Matches .chat-scroll-header height (py-3 + min-h-9 content) */
+  .chat-scroll-header-offset {
+    @apply h-[3.75rem] shrink-0;
+  }
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAutoScroll } from '@/features/useAutoScroll';
 import {
   Panel,
@@ -22,30 +22,50 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
   className = '',
 }) => {
   const { scrollRef, handleScroll } = useAutoScroll(chatContent);
+  const [headerScrolled, setHeaderScrolled] = useState(false);
+
+  const onScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      handleScroll(e);
+      setHeaderScrolled(e.currentTarget.scrollTop > 0);
+    },
+    [handleScroll],
+  );
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) {
+      setHeaderScrolled(el.scrollTop > 0);
+    }
+  }, [chatContent, scrollRef]);
 
   const chatPane = (
-    <div className={`flex flex-col h-full px-4 pb-4 ${className}`}>
-      {/* Chat Header - sticky at top, not scrollable */}
-      <div className="content-area-page-header">{chatHeader}</div>
-
-      {/* Scroll at pane edge; content width stays centered below */}
-      <div
-        className="flex-1 min-h-0 overflow-y-auto w-full"
-        ref={scrollRef}
-        onScroll={handleScroll}
-      >
-        <div className="w-full max-w-[800px] mx-auto">{chatContent}</div>
+    <div
+      className={`flex h-full min-h-0 flex-col overflow-hidden rounded-t-xl px-4 pb-4 ${className}`}
+    >
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <div
+          className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto w-full"
+          ref={scrollRef}
+          onScroll={onScroll}
+        >
+          <div className="chat-scroll-header-offset" aria-hidden />
+          <div className="mx-auto w-full max-w-[800px]">{chatContent}</div>
+        </div>
+        <div
+          className="chat-scroll-header"
+          data-scrolled={headerScrolled ? 'true' : 'false'}
+        >
+          {chatHeader}
+        </div>
       </div>
 
-      {/* Chat Input Area - adjusts to content height */}
-      <div className="flex-shrink-0 sticky bottom-0 z-10 bg-background w-full max-w-[800px] mx-auto">
+      <div className="mx-auto w-full max-w-[800px] flex-shrink-0 sticky bottom-0 z-10 bg-background">
         {chatInput}
       </div>
     </div>
   );
 
-  // Always render the PanelGroup so the chat pane's scroll container is never
-  // unmounted/remounted when the side panel opens or closes.
   return (
     <PanelGroup orientation="horizontal" className="absolute inset-0">
       <Panel defaultSize={sidePanel ? 50 : 100} minSize={30}>
