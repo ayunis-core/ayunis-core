@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import './themes/core.css';
+@import './interactions.css';
 
 @plugin "tailwindcss-animate";
 

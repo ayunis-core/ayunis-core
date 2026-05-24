@@ -1,0 +1,37 @@
+/* Pointer cursor on interactive controls (hand, not arrow) */
+@layer base {
+  a[href],
+  area[href],
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='link']:not([aria-disabled='true']),
+  [role='menuitem']:not([aria-disabled='true']),
+  [role='menuitemcheckbox']:not([aria-disabled='true']),
+  [role='menuitemradio']:not([aria-disabled='true']),
+  [role='option']:not([aria-disabled='true']),
+  [role='tab']:not([aria-disabled='true']),
+  [role='checkbox']:not([aria-disabled='true']),
+  [role='radio']:not([aria-disabled='true']),
+  [role='switch']:not([aria-disabled='true']),
+  label[for],
+  summary,
+  [data-sidebar='menu-button']:not([aria-disabled='true']),
+  [data-sidebar='menu-sub-button']:not([aria-disabled='true']),
+  [data-sidebar='menu-action']:not([aria-disabled='true']),
+  [data-slot='breadcrumb-link'],
+  [data-slot='tabs-trigger'],
+  [data-slot='accordion-trigger'],
+  [data-slot='pagination-link'],
+  select:not(:disabled),
+  input[type='button']:not(:disabled),
+  input[type='submit']:not(:disabled),
+  input[type='reset']:not(:disabled),
+  input[type='checkbox']:not(:disabled),
+  input[type='radio']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+.prose a {
+  cursor: pointer;
+}
