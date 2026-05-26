@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.35.0](https://github.com/ayunis-core/ayunis-core/compare/v1.34.0...v1.35.0) (2026-05-26)
+
+
+### Features
+
+* **api-keys:** add org-scoped API keys management (AYC-130) ([#698](https://github.com/ayunis-core/ayunis-core/issues/698)) ([d5a9141](https://github.com/ayunis-core/ayunis-core/commit/d5a9141b905157192e993b8422ef7db5e40a5021))
+* **openai-compat:** add OpenAI-compatible chat completions endpoint (AYC-132) ([#705](https://github.com/ayunis-core/ayunis-core/issues/705)) ([f925d71](https://github.com/ayunis-core/ayunis-core/commit/f925d71cb656dbfcfc13749b6ab998b350b33bea))
+* **ui:** show model name for API in models section (AYC-92) ([#712](https://github.com/ayunis-core/ayunis-core/issues/712)) ([c7082da](https://github.com/ayunis-core/ayunis-core/commit/c7082dad329218b23a6c620961e893525714d7d4))
+
+
+### Bug Fixes
+
+* **models:** redact prompt content from all inference log sites (AYC-132) ([#704](https://github.com/ayunis-core/ayunis-core/issues/704)) ([d42cde4](https://github.com/ayunis-core/ayunis-core/commit/d42cde4fa7750343c3cc11f1ce185a4fd5884d63))
+
 ## [1.34.0](https://github.com/ayunis-core/ayunis-core/compare/v1.33.0...v1.34.0) (2026-05-21)
 
 
