@@ -34,6 +34,16 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
     return records.map((record) => ApiKeyMapper.toDomain(record));
   }
 
+  async findByPrefix(prefix: string): Promise<ApiKey | null> {
+    this.logger.log('findByPrefix');
+
+    const record = await this.apiKeyRepository.findOne({ where: { prefix } });
+    if (!record) {
+      return null;
+    }
+    return ApiKeyMapper.toDomain(record);
+  }
+
   async create(apiKey: ApiKey): Promise<ApiKey> {
     this.logger.log('create', { id: apiKey.id, orgId: apiKey.orgId });
 

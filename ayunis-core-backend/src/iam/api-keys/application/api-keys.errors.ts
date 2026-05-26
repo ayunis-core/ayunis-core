@@ -5,6 +5,7 @@ export enum ApiKeyErrorCode {
   API_KEY_NOT_FOUND = 'API_KEY_NOT_FOUND',
   API_KEY_INVALID_INPUT = 'API_KEY_INVALID_INPUT',
   API_KEY_EXPIRATION_IN_PAST = 'API_KEY_EXPIRATION_IN_PAST',
+  API_KEY_EXPIRED = 'API_KEY_EXPIRED',
   UNEXPECTED_API_KEY_ERROR = 'UNEXPECTED_API_KEY_ERROR',
 }
 
@@ -20,9 +21,11 @@ export abstract class ApiKeyError extends ApplicationError {
 }
 
 export class ApiKeyNotFoundError extends ApiKeyError {
-  constructor(apiKeyId: string, metadata?: ErrorMetadata) {
+  constructor(apiKeyId?: string, metadata?: ErrorMetadata) {
     super(
-      `API key with ID '${apiKeyId}' not found`,
+      apiKeyId
+        ? `API key with ID '${apiKeyId}' not found`
+        : 'API key not found',
       ApiKeyErrorCode.API_KEY_NOT_FOUND,
       404,
       metadata,
@@ -49,6 +52,15 @@ export class ApiKeyExpirationInPastError extends ApiKeyError {
       400,
       metadata,
     );
+  }
+}
+
+// Public payload intentionally carries no metadata — `apiKeyId` is sensitive
+// at validation time (it identifies which key was presented). The throw site
+// logs `apiKeyId` at warn level for forensics.
+export class ApiKeyExpiredError extends ApiKeyError {
+  constructor() {
+    super('API key has expired', ApiKeyErrorCode.API_KEY_EXPIRED, 401);
   }
 }
 
