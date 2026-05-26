@@ -17,6 +17,7 @@ import {
   Item,
   ItemActions,
   ItemContent,
+  ItemDescription,
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
 import {
@@ -205,6 +206,9 @@ export default function ModelTypeCard({
                       {model.displayName || model.name}
                       {model.tier && <ModelTierStars tier={model.tier} />}
                     </ItemTitle>
+                    {model.displayName && (
+                      <ItemDescription>{model.name}</ItemDescription>
+                    )}
                   </ItemContent>
                   <ItemActions>
                     {model.isPermitted && updatePermittedModel && (
