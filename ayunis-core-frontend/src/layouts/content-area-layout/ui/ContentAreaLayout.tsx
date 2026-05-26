@@ -3,7 +3,7 @@ import { useContentScrollHeader } from '@/features/useContentScrollHeader';
 
 interface ContentAreaLayoutProps {
   contentHeader?: React.ReactNode;
-  /** Fixed below header (outside scroll) — for toolbars with focus rings/shadows */
+  /** Sits below the frosted header inside the scroll region — for filters/search */
   contentToolbar?: React.ReactNode;
   contentArea: React.ReactNode;
   className?: string;
@@ -22,12 +22,6 @@ export const ContentAreaLayout: React.FC<ContentAreaLayoutProps> = ({
     <div
       className={`flex min-h-0 flex-col absolute inset-0 px-4 pb-4 ${className}`}
     >
-      {contentToolbar && (
-        <div className="mx-auto mb-4 w-full max-w-[800px] shrink-0">
-          {contentToolbar}
-        </div>
-      )}
-
       <div className="content-scroll-region relative flex min-h-0 flex-1 flex-col">
         <div
           ref={scrollRef}
@@ -38,6 +32,9 @@ export const ContentAreaLayout: React.FC<ContentAreaLayoutProps> = ({
             <div className="content-scroll-header-offset" aria-hidden />
           )}
           <div className="mx-auto w-full max-w-[800px]">
+            {contentToolbar && (
+              <div className="mb-4 px-0.5">{contentToolbar}</div>
+            )}
             <div className="px-0.5">{contentArea}</div>
           </div>
         </div>
