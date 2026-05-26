@@ -341,6 +341,7 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
     UpdatePermittedModelUseCase,
     GetPermittedModelUseCase,
     GetPermittedLanguageModelUseCase,
+    GetPermittedLanguageModelsUseCase,
     GetPermittedEmbeddingModelUseCase,
     GetPermittedImageGenerationModelUseCase,
     GetPermittedModelsUseCase,

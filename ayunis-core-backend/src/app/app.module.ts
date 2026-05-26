@@ -27,6 +27,7 @@ import { KnowledgeBasesModule } from '../domain/knowledge-bases/knowledge-bases.
 import { SkillTemplatesModule } from '../domain/skill-templates/skill-templates.module';
 import { ArtifactsModule } from '../domain/artifacts/artifacts.module';
 import { LetterheadsModule } from '../domain/letterheads/letterheads.module';
+import { OpenAICompatModule } from '../domain/openai-compat/openai-compat.module';
 import { IamModule } from '../iam/iam.module';
 
 import { modelsConfig } from '../config/models.config';
@@ -167,6 +168,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     SkillTemplatesModule,
     ArtifactsModule,
     LetterheadsModule,
+    OpenAICompatModule,
     IamModule.register({
       authProvider:
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- env var may be undefined at runtime despite type cast

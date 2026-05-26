@@ -128,10 +128,13 @@ export class AdminUpdateUserUseCase {
         new SendConfirmationEmailCommand(user),
       );
     } catch (error) {
-      this.logger.error('Failed to send confirmation email after admin update', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: user.id,
-      });
+      this.logger.error(
+        'Failed to send confirmation email after admin update',
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId: user.id,
+        },
+      );
     }
   }
 

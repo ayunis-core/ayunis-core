@@ -133,5 +133,32 @@
       "severity": "error",
       "name": "no-cross-module-port-imports"
     }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/openai-compat/application/use-cases/execute-openai-chat-completion/execute-openai-chat-completion.use-case.ts",
+    "to": "src/domain/models/application/ports/stream-inference.handler.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/openai-compat/application/mappers/openai-stream.mapper.ts",
+    "to": "src/domain/models/application/ports/stream-inference.handler.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/openai-compat/application/mappers/openai-response.mapper.ts",
+    "to": "src/domain/models/application/ports/inference.handler.ts",
+    "rule": {
+      "severity": "error",
+      "name": "no-cross-module-port-imports"
+    }
   }
 ]
