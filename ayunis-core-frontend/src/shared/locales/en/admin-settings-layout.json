@@ -10,6 +10,7 @@
     "integrations": "Integrations",
     "usage": "Usage",
     "security": "Security",
-    "letterheads": "Letterheads"
+    "letterheads": "Letterheads",
+    "apiKeys": "API Keys"
   }
 }
