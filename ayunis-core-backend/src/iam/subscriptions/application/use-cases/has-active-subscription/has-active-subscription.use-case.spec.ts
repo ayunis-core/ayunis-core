@@ -6,6 +6,7 @@ import { HasActiveSubscriptionUseCase } from './has-active-subscription.use-case
 import { HasActiveSubscriptionQuery } from './has-active-subscription.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { SubscriptionError } from '../../subscription.errors';
+import { SubscriptionType } from '../../../domain/value-objects/subscription-type.enum';
 import { isActive } from '../../util/is-active';
 
 // Mock the isActive utility
@@ -232,6 +233,59 @@ describe('HasActiveSubscriptionUseCase', () => {
           orgId: mockOrgId,
         },
       );
+    });
+
+    it('returns the matching subscription when a type filter is supplied', async () => {
+      const query = new HasActiveSubscriptionQuery(
+        mockOrgId,
+        SubscriptionType.USAGE_BASED,
+      );
+      configService.get.mockReturnValue(false);
+
+      const mockSubscriptions = [
+        { id: '1', orgId: mockOrgId, type: SubscriptionType.SEAT_BASED } as any,
+        {
+          id: '2',
+          orgId: mockOrgId,
+          type: SubscriptionType.USAGE_BASED,
+        } as any,
+      ];
+
+      subscriptionRepository.findByOrgId.mockResolvedValue(
+        mockSubscriptions as any,
+      );
+      mockIsActive.mockReturnValue(true);
+
+      const result = await useCase.execute(query);
+
+      expect(result).toEqual({
+        hasActiveSubscription: true,
+        subscriptionType: SubscriptionType.USAGE_BASED,
+      });
+    });
+
+    it('returns false when no active subscription matches the type filter', async () => {
+      const query = new HasActiveSubscriptionQuery(
+        mockOrgId,
+        SubscriptionType.USAGE_BASED,
+      );
+      configService.get.mockReturnValue(false);
+
+      const mockSubscriptions = [
+        { id: '1', orgId: mockOrgId, type: SubscriptionType.SEAT_BASED } as any,
+      ];
+
+      subscriptionRepository.findByOrgId.mockResolvedValue(
+        mockSubscriptions as any,
+      );
+      mockIsActive.mockReturnValue(true);
+
+      const result = await useCase.execute(query);
+
+      expect(result).toEqual({
+        hasActiveSubscription: false,
+        subscriptionType: null,
+      });
     });
 
     it('should handle unknown error types', async () => {

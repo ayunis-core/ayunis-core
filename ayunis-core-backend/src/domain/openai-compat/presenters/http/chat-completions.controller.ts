@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Logger,
   Post,
   Req,
   Res,
@@ -8,11 +9,19 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 import type { Subscription } from 'rxjs';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
+import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
+import {
+  SubscriptionGuard,
+  RequestWithSubscriptionContext,
+} from 'src/iam/authorization/application/guards/subscription.guard';
+import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
+import { IncrementTrialMessagesUseCase } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.use-case';
+import { IncrementTrialMessagesCommand } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.command';
 import { Public } from 'src/common/guards/public.guard';
 import { ExecuteOpenAIChatCompletionUseCase } from '../../application/use-cases/execute-openai-chat-completion/execute-openai-chat-completion.use-case';
 import { ExecuteOpenAIChatCompletionCommand } from '../../application/use-cases/execute-openai-chat-completion/execute-openai-chat-completion.command';
@@ -23,10 +32,13 @@ import { OpenAIExceptionFilter } from './filters/openai-exception.filter';
  * OpenAI-compatible chat-completions endpoint. Thin shell — all
  * orchestration lives in `ExecuteOpenAIChatCompletionUseCase`.
  *
- * Auth: `@UseGuards(AuthGuard('api-key'))` overrides the global
- * `JwtAuthGuard` for this controller. The bearer strategy is the only
- * one that can authenticate this route — no JWT-before-bearer flip is
- * possible by construction (AYC-92 decision).
+ * Auth: `@UseGuards(AuthGuard('api-key'), SubscriptionGuard)` overrides the
+ * global `JwtAuthGuard` for this controller. The bearer strategy is the only
+ * one that can authenticate this route. `SubscriptionGuard` is bound here
+ * (rather than relying on the global APP_GUARD instance) so it runs AFTER
+ * api-key auth populates `request.user` — guard ordering in NestJS goes
+ * global → controller → route, and the global instance defers on `@Public()`
+ * routes where no principal is available yet.
  *
  * Exception handling uses TWO registrations of `OpenAIExceptionFilter`:
  * - `@UseFilters` (here): wins over the global `UnauthorizedExceptionFilter`
@@ -39,23 +51,29 @@ import { OpenAIExceptionFilter } from './filters/openai-exception.filter';
  */
 @Controller('openai-compat/v1/chat')
 @Public() // bypass the global JwtAuthGuard; AuthGuard('api-key') takes over
-@UseGuards(AuthGuard('api-key'))
+@UseGuards(AuthGuard('api-key'), SubscriptionGuard)
+@RequireSubscription({ type: SubscriptionType.USAGE_BASED })
 @UseFilters(OpenAIExceptionFilter)
 @RateLimit({ limit: 60, windowMs: 60_000 })
 export class ChatCompletionsController {
+  private readonly logger = new Logger(ChatCompletionsController.name);
+
   constructor(
     private readonly useCase: ExecuteOpenAIChatCompletionUseCase,
     private readonly contextService: ContextService,
+    private readonly incrementTrialMessagesUseCase: IncrementTrialMessagesUseCase,
   ) {}
 
   @Post('completions')
   async create(
     @Body() dto: ChatCompletionRequestDto,
-    @Req() request: Request,
+    @Req() request: RequestWithSubscriptionContext,
     @Res() response: Response,
   ): Promise<void> {
     const principal = this.resolvePrincipal();
     const command = new ExecuteOpenAIChatCompletionCommand(dto, principal);
+
+    this.maybeIncrementTrial(request, principal.orgId);
 
     if (dto.stream) {
       await this.streamCompletion(command, request, response);
@@ -81,9 +99,29 @@ export class ChatCompletionsController {
     return { apiKeyId, orgId };
   }
 
+  private maybeIncrementTrial(
+    request: RequestWithSubscriptionContext,
+    orgId: UUID,
+  ): void {
+    if (!request.subscriptionContext?.hasRemainingTrialMessages) {
+      return;
+    }
+    // Fire-and-forget — mirrors RunsController.send-message. The trial
+    // counter is a soft cap; failing to increment is logged but never blocks
+    // a request that has already passed the gate.
+    void this.incrementTrialMessagesUseCase
+      .execute(new IncrementTrialMessagesCommand(orgId))
+      .catch((error: unknown) => {
+        this.logger.warn('Failed to increment trial messages', {
+          orgId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      });
+  }
+
   private async streamCompletion(
     command: ExecuteOpenAIChatCompletionCommand,
-    request: Request,
+    request: RequestWithSubscriptionContext,
     response: Response,
   ): Promise<void> {
     const stream$ = await this.useCase.executeStreaming(command);
