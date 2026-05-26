@@ -8,9 +8,7 @@ import type { ContextService } from 'src/common/context/services/context.service
 import type { UUID } from 'crypto';
 
 describe('UserContextInterceptor', () => {
-  const createExecutionContext = (
-    user?: Partial<ActiveUser>,
-  ): ExecutionContext =>
+  const createExecutionContext = (user?: unknown): ExecutionContext =>
     ({
       switchToHttp: () => ({
         getRequest: () => ({
@@ -23,7 +21,7 @@ describe('UserContextInterceptor', () => {
     handle: jest.fn(() => of(null)),
   });
 
-  it('sets user identifiers into the context store when user is present', async () => {
+  it('sets user identifiers into the context store when an ActiveUser is present', async () => {
     const setMock = jest.fn();
     const contextService = { set: setMock } as unknown as ContextService;
     const interceptor = new UserContextInterceptor(contextService);
@@ -44,7 +42,34 @@ describe('UserContextInterceptor', () => {
 
     expect(setMock).toHaveBeenCalledWith('userId', activeUser.id);
     expect(setMock).toHaveBeenCalledWith('orgId', activeUser.orgId);
+    expect(setMock).toHaveBeenCalledWith('role', activeUser.role);
     expect(setMock).toHaveBeenCalledWith('systemRole', activeUser.systemRole);
+    expect(setMock).not.toHaveBeenCalledWith('apiKeyId', expect.anything());
+    expect(callHandler.handle).toHaveBeenCalled();
+  });
+
+  it('sets apiKeyId and orgId only when the principal is an api-key shape', async () => {
+    const setMock = jest.fn();
+    const contextService = { set: setMock } as unknown as ContextService;
+    const interceptor = new UserContextInterceptor(contextService);
+    const apiKeyPrincipal = {
+      apiKeyId: 'api-key-id' as UUID,
+      orgId: 'org-id' as UUID,
+    };
+    const callHandler = createCallHandler();
+
+    await lastValueFrom(
+      interceptor.intercept(
+        createExecutionContext(apiKeyPrincipal),
+        callHandler,
+      ),
+    );
+
+    expect(setMock).toHaveBeenCalledWith('apiKeyId', apiKeyPrincipal.apiKeyId);
+    expect(setMock).toHaveBeenCalledWith('orgId', apiKeyPrincipal.orgId);
+    expect(setMock).not.toHaveBeenCalledWith('userId', expect.anything());
+    expect(setMock).not.toHaveBeenCalledWith('role', expect.anything());
+    expect(setMock).not.toHaveBeenCalledWith('systemRole', expect.anything());
     expect(callHandler.handle).toHaveBeenCalled();
   });
 
@@ -55,7 +80,7 @@ describe('UserContextInterceptor', () => {
     const callHandler = createCallHandler();
 
     await lastValueFrom(
-      interceptor.intercept(createExecutionContext(undefined), callHandler),
+      interceptor.intercept(createExecutionContext(), callHandler),
     );
 
     expect(setMock).not.toHaveBeenCalled();
