@@ -63,7 +63,12 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
             ? this.converter.convertToolChoice(toolChoice)
             : undefined,
         };
-      this.logger.debug('completionOptions', completionOptions);
+      this.logger.debug('completionOptions prepared', {
+        model: input.model.name,
+        messageCount: openAiMessages.length,
+        toolCount: openAiTools.length,
+        hasSystem: Boolean(input.systemPrompt),
+      });
       const completionFn = () =>
         this.client.responses.create(completionOptions);
 
@@ -88,8 +93,6 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
   private convertChunk = (
     chunk: OpenAI.Responses.ResponseStreamEvent,
   ): StreamInferenceResponseChunk | null => {
-    if (chunk.type !== 'response.output_text.delta')
-      this.logger.debug('convertChunk', chunk);
     return this.dispatchChunkByType(chunk);
   };
 

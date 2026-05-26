@@ -27,60 +27,46 @@ export abstract class BaseOpenAIChatInferenceHandler extends InferenceHandler {
   }
 
   async answer(input: InferenceInput): Promise<InferenceResponse> {
-    this.logger.log('answer', {
+    const { messages, tools, toolChoice, orgId } = input;
+    const openAiTools = tools
+      .map((t) => this.chatConverter.convertTool(t))
+      .map((tool) => ({
+        ...tool,
+        function: { ...tool.function, strict: true },
+      }));
+    const openAiMessages = await this.chatConverter.convertMessages(
+      messages,
+      orgId,
+    );
+    const systemPrompt = input.systemPrompt
+      ? this.chatConverter.convertSystemPrompt(input.systemPrompt)
+      : undefined;
+    const completionOptions = {
       model: input.model.name,
-      messageCount: input.messages.length,
-      toolCount: input.tools.length,
-      toolChoice: input.toolChoice,
+      messages: systemPrompt
+        ? [systemPrompt, ...openAiMessages]
+        : openAiMessages,
+      tools: openAiTools,
+      tool_choice: toolChoice
+        ? this.chatConverter.convertToolChoice(toolChoice)
+        : undefined,
+    };
+    this.logger.debug('completionOptions prepared', {
+      model: input.model.name,
+      messageCount: openAiMessages.length,
+      toolCount: openAiTools.length,
+      hasSystem: Boolean(systemPrompt),
     });
-    try {
-      const { messages, tools, toolChoice, orgId } = input;
-      const openAiTools = tools
-        .map((t) => this.chatConverter.convertTool(t))
-        .map((tool) => ({
-          ...tool,
-          function: { ...tool.function, strict: true },
-        }));
-      const openAiMessages = await this.chatConverter.convertMessages(
-        messages,
-        orgId,
-      );
-      const systemPrompt = input.systemPrompt
-        ? this.chatConverter.convertSystemPrompt(input.systemPrompt)
-        : undefined;
-      const completionOptions = {
-        model: input.model.name,
-        messages: systemPrompt
-          ? [systemPrompt, ...openAiMessages]
-          : openAiMessages,
-        tools: openAiTools,
-        tool_choice: toolChoice
-          ? this.chatConverter.convertToolChoice(toolChoice)
-          : undefined,
-      };
-      this.logger.debug('completionOptions', completionOptions);
-      const completionFn = () =>
-        this.client.chat.completions.create(completionOptions);
+    const completionFn = () =>
+      this.client.chat.completions.create(completionOptions);
 
-      const response = await retryWithBackoff({
-        fn: completionFn,
-        maxRetries: 3,
-        delay: 1000,
-      });
+    const response = await retryWithBackoff({
+      fn: completionFn,
+      maxRetries: 3,
+      delay: 1000,
+    });
 
-      const modelResponse = this.parseCompletion(response);
-      return modelResponse;
-    } catch (error) {
-      this.logger.error('Failed to get response from OpenAI', error);
-      if (error instanceof InferenceFailedError) {
-        throw error;
-      }
-      throw new InferenceFailedError('OpenAI inference failed', {
-        source: 'openai',
-        originalError:
-          error instanceof Error ? error : new Error('Unknown error'),
-      });
-    }
+    return this.parseCompletion(response);
   }
 
   private parseCompletion(

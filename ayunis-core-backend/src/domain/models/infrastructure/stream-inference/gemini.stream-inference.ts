@@ -50,7 +50,12 @@ export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
         toolChoice,
       });
 
-      this.logger.debug('generateContentStream config', { config });
+      this.logger.debug('generateContentStream config prepared', {
+        model: input.model.name,
+        messageCount: contents.length,
+        toolCount: input.tools.length,
+        hasSystem: Boolean(input.systemPrompt),
+      });
 
       const completionFn = () =>
         this.client.models.generateContentStream({
@@ -95,11 +100,6 @@ export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
 
       subscriber.complete();
     } catch (error) {
-      this.logger.error('Gemini streaming inference failed', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        status: (error as Record<string, unknown>).status,
-        contents: JSON.stringify(error).substring(0, 2000),
-      });
       subscriber.error(error);
     }
   }

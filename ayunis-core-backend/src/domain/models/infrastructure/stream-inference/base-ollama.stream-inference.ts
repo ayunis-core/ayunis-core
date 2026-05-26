@@ -45,7 +45,6 @@ export class BaseOllamaStreamInferenceHandler implements StreamInferenceHandler 
     try {
       this.thinkingParser.reset();
       const completionOptions = await this.buildCompletionOptions(input);
-      this.logger.debug('completionOptions', completionOptions);
 
       const completionFn = () => this.client.chat(completionOptions);
       const response = await retryWithBackoff({
@@ -89,7 +88,7 @@ export class BaseOllamaStreamInferenceHandler implements StreamInferenceHandler 
       ? this.converter.convertSystemPrompt(input.systemPrompt)
       : undefined;
 
-    return {
+    const completionOptions: ChatRequest & { stream: true } = {
       model: input.model.name,
       messages: systemPrompt
         ? [systemPrompt, ...ollamaMessages]
@@ -98,6 +97,13 @@ export class BaseOllamaStreamInferenceHandler implements StreamInferenceHandler 
       stream: true as const,
       options: { num_ctx: 30000 },
     };
+    this.logger.debug('completionOptions prepared', {
+      model: input.model.name,
+      messageCount: completionOptions.messages?.length ?? 0,
+      toolCount: completionOptions.tools?.length ?? 0,
+      hasSystem: Boolean(input.systemPrompt),
+    });
+    return completionOptions;
   };
 
   private convertChunk = (

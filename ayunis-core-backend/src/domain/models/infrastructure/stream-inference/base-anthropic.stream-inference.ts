@@ -66,7 +66,12 @@ export abstract class BaseAnthropicStreamInferenceHandler implements StreamInfer
         stream: true,
       };
 
-      this.logger.debug('completionOptions', completionOptions);
+      this.logger.debug('completionOptions prepared', {
+        model: input.model.name,
+        messageCount: anthropicMessages.length,
+        toolCount: anthropicTools.length,
+        hasSystem: Boolean(systemPrompt),
+      });
 
       const completionFn = () => this.client.messages.create(completionOptions);
 
@@ -85,11 +90,6 @@ export abstract class BaseAnthropicStreamInferenceHandler implements StreamInfer
 
       subscriber.complete();
     } catch (error) {
-      this.logger.error('Anthropic stream inference failed', {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        name: error instanceof Error ? error.name : undefined,
-      });
       subscriber.error(error);
     }
   }

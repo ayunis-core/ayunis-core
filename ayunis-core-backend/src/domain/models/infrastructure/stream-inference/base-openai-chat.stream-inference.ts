@@ -41,34 +41,7 @@ export class BaseOpenAIChatStreamInferenceHandler implements StreamInferenceHand
       // Reset thinking parser for new stream
       this.thinkingParser.reset();
 
-      const { messages, tools, toolChoice, orgId } = input;
-      const openAiTools = tools
-        .map((t) => this.chatConverter.convertTool(t))
-        .map((tool) => ({
-          ...tool,
-          function: { ...tool.function, strict: true },
-        }));
-      const openAiMessages = await this.chatConverter.convertMessages(
-        messages,
-        orgId,
-      );
-      const systemPrompt = input.systemPrompt
-        ? this.chatConverter.convertSystemPrompt(input.systemPrompt)
-        : undefined;
-
-      const completionOptions: OpenAI.ChatCompletionCreateParamsStreaming = {
-        model: input.model.name,
-        messages: systemPrompt
-          ? [systemPrompt, ...openAiMessages]
-          : openAiMessages,
-        tools: openAiTools,
-        tool_choice: toolChoice
-          ? this.chatConverter.convertToolChoice(toolChoice)
-          : undefined,
-        stream: true,
-        stream_options: { include_usage: true },
-      };
-      this.logger.debug('completionOptions', completionOptions);
+      const completionOptions = await this.buildCompletionOptions(input);
       const completionFn = () =>
         this.client.chat.completions.create(completionOptions);
 
@@ -85,7 +58,6 @@ export class BaseOpenAIChatStreamInferenceHandler implements StreamInferenceHand
       let receivedFinishReason = false;
 
       for await (const chunk of response) {
-        this.logger.debug('chunk', chunk);
         const delta = this.convertChunk(chunk);
         if (
           delta.textContentDelta ||
@@ -103,6 +75,45 @@ export class BaseOpenAIChatStreamInferenceHandler implements StreamInferenceHand
     } catch (error) {
       subscriber.error(error);
     }
+  };
+
+  private buildCompletionOptions = async (
+    input: StreamInferenceInput,
+  ): Promise<OpenAI.ChatCompletionCreateParamsStreaming> => {
+    const { messages, tools, toolChoice, orgId } = input;
+    const openAiTools = tools
+      .map((t) => this.chatConverter.convertTool(t))
+      .map((tool) => ({
+        ...tool,
+        function: { ...tool.function, strict: true },
+      }));
+    const openAiMessages = await this.chatConverter.convertMessages(
+      messages,
+      orgId,
+    );
+    const systemPrompt = input.systemPrompt
+      ? this.chatConverter.convertSystemPrompt(input.systemPrompt)
+      : undefined;
+
+    const completionOptions: OpenAI.ChatCompletionCreateParamsStreaming = {
+      model: input.model.name,
+      messages: systemPrompt
+        ? [systemPrompt, ...openAiMessages]
+        : openAiMessages,
+      tools: openAiTools,
+      tool_choice: toolChoice
+        ? this.chatConverter.convertToolChoice(toolChoice)
+        : undefined,
+      stream: true,
+      stream_options: { include_usage: true },
+    };
+    this.logger.debug('completionOptions prepared', {
+      model: input.model.name,
+      messageCount: completionOptions.messages.length,
+      toolCount: openAiTools.length,
+      hasSystem: Boolean(systemPrompt),
+    });
+    return completionOptions;
   };
 
   private convertChunk = (

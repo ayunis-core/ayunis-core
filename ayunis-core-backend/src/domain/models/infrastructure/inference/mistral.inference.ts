@@ -1,4 +1,4 @@
-import { Logger, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   InferenceHandler,
   InferenceResponse,
@@ -19,7 +19,6 @@ import { MistralMessageConverter } from '../converters/mistral-message.converter
 
 @Injectable()
 export class MistralInferenceHandler extends InferenceHandler {
-  private readonly logger = new Logger(MistralInferenceHandler.name);
   private readonly client: Mistral;
   private readonly converter: MistralMessageConverter;
 
@@ -35,12 +34,6 @@ export class MistralInferenceHandler extends InferenceHandler {
   }
 
   async answer(input: HandlerInferenceInput): Promise<InferenceResponse> {
-    this.logger.log('answer', {
-      model: input.model.name,
-      messageCount: input.messages.length,
-      toolCount: input.tools.length,
-      toolChoice: input.toolChoice,
-    });
     const { model, messages, tools, toolChoice, orgId } = input;
     const mistralTools = tools.map((t) => this.converter.convertTool(t));
     const mistralMessages = await this.converter.convertMessages(

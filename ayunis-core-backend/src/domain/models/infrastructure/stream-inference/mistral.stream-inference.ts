@@ -69,7 +69,12 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
         stream: true,
       };
 
-      this.logger.debug('completionOptions', completionOptions);
+      this.logger.debug('completionOptions prepared', {
+        model: input.model.name,
+        messageCount: completionOptions.messages.length,
+        toolCount: mistralTools.length,
+        hasSystem: Boolean(systemPrompt),
+      });
 
       const completionFn = () => this.client.chat.stream(completionOptions);
 

@@ -1,4 +1,11 @@
+import { ApplicationError } from 'src/common/errors/base.error';
 import { extractInferenceErrorInfo } from './extract-inference-error-info.helper';
+
+class TestDomainError extends ApplicationError {
+  constructor(statusCode: number, metadata?: Record<string, unknown>) {
+    super('domain failure', 'TEST_DOMAIN_ERROR', statusCode, metadata);
+  }
+}
 
 describe('extractInferenceErrorInfo', () => {
   it('should extract message from Error instance', () => {
@@ -82,6 +89,74 @@ describe('extractInferenceErrorInfo', () => {
 
     expect(extractInferenceErrorInfo(undefined)).toEqual({
       message: 'undefined',
+    });
+  });
+
+  it('prefers metadata.status over a direct statusCode field', () => {
+    // Simulates the shape of InferenceFailedError (ApplicationError) after
+    // Get/StreamInferenceUseCase wraps a provider 429: ApplicationError sets
+    // .statusCode = 500 (HTTP), while the upstream status is stashed in
+    // metadata.status.
+    const wrapped = Object.assign(
+      new Error('Inference failed: Provider inference failed'),
+      {
+        statusCode: 500,
+        metadata: { status: 429 },
+      },
+    );
+
+    const result = extractInferenceErrorInfo(wrapped);
+
+    expect(result).toEqual({
+      message: 'Inference failed: Provider inference failed',
+      statusCode: 429,
+    });
+  });
+
+  it('falls back to response.status for fetch-style errors', () => {
+    const error = Object.assign(new Error('unauthorized'), {
+      response: { status: 401 },
+    });
+
+    expect(extractInferenceErrorInfo(error)).toEqual({
+      message: 'unauthorized',
+      statusCode: 401,
+    });
+  });
+
+  it('falls back to $metadata.httpStatusCode for AWS / Bedrock errors', () => {
+    const error = Object.assign(new Error('throttled'), {
+      $metadata: { httpStatusCode: 429 },
+    });
+
+    expect(extractInferenceErrorInfo(error)).toEqual({
+      message: 'throttled',
+      statusCode: 429,
+    });
+  });
+
+  it('ignores ApplicationError.statusCode when no metadata.status is set', () => {
+    // A non-wrapped ApplicationError (e.g., ModelProviderNotSupportedError
+    // from the registry) carries its outbound HTTP code in `.statusCode`.
+    // We must not surface that as the upstream provider's status.
+    const result = extractInferenceErrorInfo(new TestDomainError(400));
+
+    expect(result).toEqual({
+      message: 'domain failure',
+      statusCode: undefined,
+    });
+  });
+
+  it('honours metadata.status on an ApplicationError (true wrapped upstream)', () => {
+    // InferenceFailedError shape: ApplicationError with metadata.status set
+    // by the use-case wrapper.
+    const result = extractInferenceErrorInfo(
+      new TestDomainError(500, { status: 429 }),
+    );
+
+    expect(result).toEqual({
+      message: 'domain failure',
+      statusCode: 429,
     });
   });
 });
