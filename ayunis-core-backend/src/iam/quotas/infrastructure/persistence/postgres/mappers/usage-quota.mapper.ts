@@ -9,7 +9,7 @@ export class UsageQuotaMapper {
       quotaType: record.quotaType,
       count: record.count,
       windowStartAt: record.windowStartAt,
-      windowDurationMs: Number(record.windowDurationMs),
+      windowDurationMs: record.windowDurationMs,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -22,7 +22,7 @@ export class UsageQuotaMapper {
     record.quotaType = entity.quotaType;
     record.count = entity.count;
     record.windowStartAt = entity.windowStartAt;
-    record.windowDurationMs = String(entity.windowDurationMs);
+    record.windowDurationMs = entity.windowDurationMs;
     record.createdAt = entity.createdAt;
     record.updatedAt = entity.updatedAt;
     return record;
