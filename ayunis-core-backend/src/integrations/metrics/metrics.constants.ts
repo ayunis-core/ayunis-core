@@ -23,6 +23,7 @@ export const AYUNIS_MARKETPLACE_INSTALLS_TOTAL =
 // performance. Consider moving per-user metrics to logs or a dedicated
 // analytics pipeline instead.
 export const LABEL_USER_ID = 'user_id';
+export const LABEL_API_KEY_ID = 'api_key_id';
 export const LABEL_ORG_ID = 'org_id';
 export const LABEL_MODEL = 'model';
 export const LABEL_PROVIDER = 'provider';

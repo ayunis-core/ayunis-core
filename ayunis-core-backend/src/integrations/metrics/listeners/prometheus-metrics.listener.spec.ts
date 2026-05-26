@@ -17,6 +17,7 @@ const USER_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 const ORG_ID = '00000000-0000-0000-0000-000000000002' as UUID;
 const THREAD_ID = '00000000-0000-0000-0000-000000000003' as UUID;
 const MESSAGE_ID = '00000000-0000-0000-0000-000000000004' as UUID;
+const API_KEY_ID = '00000000-0000-0000-0000-000000000005' as UUID;
 
 function makeUser(overrides?: Partial<{ department: string }>): User {
   return new User({
@@ -289,12 +290,21 @@ describe('PrometheusMetricsListener', () => {
   describe('handleTokensConsumed', () => {
     it('should increment tokens counter for input and output', () => {
       listener.handleTokensConsumed(
-        new TokensConsumedEvent(USER_ID, ORG_ID, 'gpt-4', 'openai', 100, 50),
+        new TokensConsumedEvent(
+          USER_ID,
+          undefined,
+          ORG_ID,
+          'gpt-4',
+          'openai',
+          100,
+          50,
+        ),
       );
 
       expect(tokensCounter.inc).toHaveBeenCalledWith(
         {
           user_id: USER_ID,
+          api_key_id: 'none',
           org_id: ORG_ID,
           model: 'gpt-4',
           provider: 'openai',
@@ -305,6 +315,44 @@ describe('PrometheusMetricsListener', () => {
       expect(tokensCounter.inc).toHaveBeenCalledWith(
         {
           user_id: USER_ID,
+          api_key_id: 'none',
+          org_id: ORG_ID,
+          model: 'gpt-4',
+          provider: 'openai',
+          direction: 'output',
+        },
+        50,
+      );
+    });
+
+    it('should attribute api-key traffic via api_key_id label', () => {
+      listener.handleTokensConsumed(
+        new TokensConsumedEvent(
+          undefined,
+          API_KEY_ID,
+          ORG_ID,
+          'gpt-4',
+          'openai',
+          100,
+          50,
+        ),
+      );
+
+      expect(tokensCounter.inc).toHaveBeenCalledWith(
+        {
+          user_id: 'none',
+          api_key_id: API_KEY_ID,
+          org_id: ORG_ID,
+          model: 'gpt-4',
+          provider: 'openai',
+          direction: 'input',
+        },
+        100,
+      );
+      expect(tokensCounter.inc).toHaveBeenCalledWith(
+        {
+          user_id: 'none',
+          api_key_id: API_KEY_ID,
           org_id: ORG_ID,
           model: 'gpt-4',
           provider: 'openai',
@@ -316,7 +364,15 @@ describe('PrometheusMetricsListener', () => {
 
     it('should skip zero-value token counts', () => {
       listener.handleTokensConsumed(
-        new TokensConsumedEvent(USER_ID, ORG_ID, 'gpt-4', 'openai', 100, 0),
+        new TokensConsumedEvent(
+          USER_ID,
+          undefined,
+          ORG_ID,
+          'gpt-4',
+          'openai',
+          100,
+          0,
+        ),
       );
 
       expect(tokensCounter.inc).toHaveBeenCalledTimes(1);

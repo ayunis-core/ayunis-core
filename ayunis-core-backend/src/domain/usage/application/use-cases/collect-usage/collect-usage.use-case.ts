@@ -25,13 +25,21 @@ export class CollectUsageUseCase {
 
   async execute(command: CollectUsageCommand): Promise<void> {
     const userId = this.contextService.get('userId');
+    const apiKeyId = this.contextService.get('apiKeyId');
     const organizationId = this.contextService.get('orgId');
 
-    if (!userId || !organizationId) {
+    // Enforce XOR on the principal: exactly one of userId or apiKeyId must
+    // be set. The DB `CHK_usage_principal_not_both` constraint rejects
+    // "both set" as a safety net; we reject both "neither" and "both" here
+    // so the failure is synchronous and the error type is meaningful.
+    const hasUserId = !!userId;
+    const hasApiKeyId = !!apiKeyId;
+    if (hasUserId === hasApiKeyId || !organizationId) {
       throw new UsageCollectionFailedError(
-        'User ID or Organization ID not available in context',
+        'Exactly one of userId or apiKeyId must be set in context, and Organization ID is required',
         {
           userId: userId ?? undefined,
+          apiKeyId: apiKeyId ?? undefined,
           organizationId: organizationId ?? undefined,
           modelId: command.modelId,
         },
@@ -40,6 +48,7 @@ export class CollectUsageUseCase {
 
     this.logger.log('CollectUsageUseCase.execute called', {
       userId,
+      apiKeyId,
       organizationId,
       modelId: command.modelId,
       provider: command.provider,
@@ -53,7 +62,8 @@ export class CollectUsageUseCase {
       const creditsConsumed = await this.calculateCredits(cost);
 
       const usage = new Usage({
-        userId,
+        userId: userId ?? null,
+        apiKeyId: apiKeyId ?? null,
         organizationId,
         modelId: command.modelId,
         provider: command.provider,
@@ -69,6 +79,7 @@ export class CollectUsageUseCase {
 
       this.logger.log('Usage collected successfully', {
         userId,
+        apiKeyId,
         organizationId,
         modelId: command.modelId,
         provider: command.provider,

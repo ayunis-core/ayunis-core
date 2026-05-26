@@ -18,6 +18,8 @@ import { GetCreditsPerEuroUseCase } from '../../../../../iam/platform-config/app
 import { PlatformConfigNotFoundError } from '../../../../../iam/platform-config/application/platform-config.errors';
 import { PlatformConfigKey } from '../../../../../iam/platform-config/domain/platform-config-keys.enum';
 
+type ContextKey = 'userId' | 'apiKeyId' | 'orgId';
+
 describe('CollectUsageUseCase', () => {
   let useCase: CollectUsageUseCase;
   let mockUsageRepository: Partial<UsageRepository>;
@@ -25,6 +27,7 @@ describe('CollectUsageUseCase', () => {
   let mockGetCreditsPerEuroUseCase: { execute: jest.Mock };
 
   const userId = 'user-id' as UUID;
+  const apiKeyId = 'api-key-id' as UUID;
   const orgId = 'org-id' as UUID;
   const modelId = 'model-id' as UUID;
   const requestId = 'request-id' as UUID;
@@ -52,7 +55,7 @@ describe('CollectUsageUseCase', () => {
     };
 
     mockContextService = {
-      get: jest.fn((key?: 'userId' | 'orgId') => {
+      get: jest.fn((key?: 'userId' | 'apiKeyId' | 'orgId') => {
         if (key === 'userId') return userId;
         if (key === 'orgId') return orgId;
         return undefined;
@@ -80,7 +83,7 @@ describe('CollectUsageUseCase', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (mockContextService.get as jest.Mock).mockImplementation(
-      (key?: 'userId' | 'orgId') => {
+      (key?: ContextKey) => {
         if (key === 'userId') return userId;
         if (key === 'orgId') return orgId;
         return undefined;
@@ -109,6 +112,7 @@ describe('CollectUsageUseCase', () => {
       expect(mockUsageRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
           userId,
+          apiKeyId: null,
           organizationId: orgId,
           modelId,
           provider: ModelProvider.OPENAI,
@@ -117,6 +121,35 @@ describe('CollectUsageUseCase', () => {
           totalTokens: 150,
           cost: undefined,
           requestId,
+        }),
+      );
+    });
+
+    it('should attribute usage to apiKeyId when only apiKeyId is in context', async () => {
+      jest.spyOn(mockContextService, 'get').mockImplementation(((
+        key?: ContextKey,
+      ) => {
+        if (key === 'apiKeyId') return apiKeyId;
+        if (key === 'orgId') return orgId;
+        return undefined;
+      }) as any);
+
+      const model = createMockModel();
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: 50,
+        requestId,
+      });
+
+      await useCase.execute(command);
+
+      expect(mockUsageRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: null,
+          apiKeyId,
+          organizationId: orgId,
+          modelId,
         }),
       );
     });
@@ -268,7 +301,6 @@ describe('CollectUsageUseCase', () => {
       expect(saveCall.cost).toBeUndefined();
     });
 
-
     it('should return undefined cost if only input cost is set', async () => {
       const model = createMockModel({
         inputTokenCost: 1,
@@ -344,11 +376,10 @@ describe('CollectUsageUseCase', () => {
   });
 
   describe('error handling', () => {
-    it('should throw UsageCollectionFailedError when userId is missing from context', async () => {
+    it('should throw UsageCollectionFailedError when neither userId nor apiKeyId is in context', async () => {
       jest.spyOn(mockContextService, 'get').mockImplementation(((
-        key?: 'userId' | 'orgId',
+        key?: ContextKey,
       ) => {
-        if (key === 'userId') return undefined;
         if (key === 'orgId') return orgId;
         return undefined;
       }) as any);
@@ -369,7 +400,7 @@ describe('CollectUsageUseCase', () => {
 
     it('should throw UsageCollectionFailedError when orgId is missing from context', async () => {
       jest.spyOn(mockContextService, 'get').mockImplementation(((
-        key?: 'userId' | 'orgId',
+        key?: ContextKey,
       ) => {
         if (key === 'userId') return userId;
         if (key === 'orgId') return undefined;

@@ -34,10 +34,7 @@ import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-
 import { AgentNotFoundError } from 'src/domain/agents/application/agents.errors';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
-import { CreditBudgetGuardService } from '../../services/credit-budget-guard.service';
-import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
-import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
-import { tierToFairUseQuotaType } from 'src/iam/quotas/domain/tier-to-quota-type';
+import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { ToolAssemblyService } from '../../services/tool-assembly.service';
 import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
@@ -58,8 +55,7 @@ export class ExecuteRunUseCase {
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
     private readonly contextService: ContextService,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
-    private readonly checkQuotaUseCase: CheckQuotaUseCase,
-    private readonly creditBudgetGuardService: CreditBudgetGuardService,
+    private readonly inferenceUsageGuard: InferenceUsageGuard,
     private readonly toolAssemblyService: ToolAssemblyService,
     private readonly toolResultCollectorService: ToolResultCollectorService,
     private readonly messageCleanupService: MessageCleanupService,
@@ -77,64 +73,18 @@ export class ExecuteRunUseCase {
       inputType: command.input.constructor.name,
     });
     try {
-      const userId = this.contextService.get('userId');
-      const orgId = this.contextService.get('orgId');
-      if (!userId || !orgId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
-
-      // Counts "attempted runs" — fires before run validity is established.
-      // This is intentional: it serves as the DAU (daily active users) metric.
-      this.eventEmitter
-        .emitAsync(
-          RunExecutedEvent.EVENT_NAME,
-          new RunExecutedEvent(userId, orgId),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit RunExecutedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            userId,
-          });
-        });
-
-      const { thread } = await this.findThreadUseCase.execute(
-        new FindThreadQuery(command.threadId),
-      );
-      const agent = await this.resolveThreadAgent(thread, command.threadId);
-      const model = this.pickModel(thread, agent);
-
-      // Enforce fair-use + credit budget AFTER pickModel so the tiered quota
-      // bucket matches the resolved model. Untiered models default to MEDIUM;
-      // ZERO-tier models return null and bypass the check entirely.
-      const fairUseQuotaType = tierToFairUseQuotaType(model.model.tier);
-      if (fairUseQuotaType !== null) {
-        await this.checkQuotaUseCase.execute(
-          new CheckQuotaQuery(userId, fairUseQuotaType),
-        );
-      }
-      await this.creditBudgetGuardService.ensureBudgetAvailable(orgId);
-
-      const effectiveIsAnonymous = thread.isAnonymous || model.anonymousOnly;
-      const activeSkills = await this.toolAssemblyService.findActiveSkills();
-      const { tools, instructions } =
-        await this.toolAssemblyService.buildRunContext(
-          thread,
-          agent,
-          activeSkills,
-          model.model.canUseTools,
-        );
-
+      const prepared = await this.prepareRun(command);
       return this.orchestrateRun({
-        thread,
-        tools,
-        model: model.model,
+        thread: prepared.thread,
+        tools: prepared.tools,
+        model: prepared.model.model,
         input: command.input as RunUserInput | RunToolResultInput,
-        instructions,
+        instructions: prepared.instructions,
         streaming: command.streaming,
-        orgId,
-        isAnonymous: effectiveIsAnonymous,
-        agent,
-        activeSkills,
+        orgId: prepared.orgId,
+        isAnonymous: prepared.isAnonymous,
+        agent: prepared.agent,
+        activeSkills: prepared.activeSkills,
         skillId:
           command.input instanceof RunUserInput
             ? command.input.skillId
@@ -148,6 +98,74 @@ export class ExecuteRunUseCase {
         error: error as Error,
       });
     }
+  }
+
+  private async prepareRun(command: ExecuteRunCommand): Promise<{
+    userId: UUID;
+    orgId: UUID;
+    thread: Thread;
+    agent?: Agent;
+    model: PermittedLanguageModel;
+    isAnonymous: boolean;
+    tools: RunParams['tools'];
+    instructions?: string;
+    activeSkills: RunParams['activeSkills'];
+  }> {
+    const userId = this.contextService.get('userId');
+    const orgId = this.contextService.get('orgId');
+    if (!userId || !orgId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+    this.emitRunExecuted(userId, orgId);
+
+    const { thread } = await this.findThreadUseCase.execute(
+      new FindThreadQuery(command.threadId),
+    );
+    const agent = await this.resolveThreadAgent(thread, command.threadId);
+    const model = this.pickModel(thread, agent);
+
+    // Enforce fair-use + credit budget AFTER pickModel so the tiered quota
+    // bucket matches the resolved model. Untiered models default to MEDIUM;
+    // ZERO-tier models return null and bypass the check entirely.
+    await this.inferenceUsageGuard.preflight({ userId, orgId }, model.model);
+
+    const isAnonymous = thread.isAnonymous || model.anonymousOnly;
+    const activeSkills = await this.toolAssemblyService.findActiveSkills();
+    const { tools, instructions } =
+      await this.toolAssemblyService.buildRunContext(
+        thread,
+        agent,
+        activeSkills,
+        model.model.canUseTools,
+      );
+
+    return {
+      userId,
+      orgId,
+      thread,
+      agent,
+      model,
+      isAnonymous,
+      tools,
+      instructions,
+      activeSkills,
+    };
+  }
+
+  // Counts "attempted runs" — fires before run validity is established.
+  // This is intentional: it serves as the DAU (daily active users) metric.
+  private emitRunExecuted(userId: UUID, orgId: UUID): void {
+    this.eventEmitter
+      .emitAsync(
+        RunExecutedEvent.EVENT_NAME,
+        new RunExecutedEvent(userId, orgId),
+      )
+      .catch((err: unknown) => {
+        this.logger.error('Failed to emit RunExecutedEvent', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+          userId,
+        });
+      });
   }
 
   /**

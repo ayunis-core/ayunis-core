@@ -13,7 +13,7 @@ import {
   StreamInferenceInput,
   StreamInferenceResponseChunk,
 } from 'src/domain/models/application/ports/stream-inference.handler';
-import { CollectUsageAsyncService } from './collect-usage-async.service';
+import { InferenceUsageGuard } from './inference-usage-guard.service';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import { Message } from 'src/domain/messages/domain/message.entity';
@@ -56,7 +56,7 @@ export class StreamingInferenceService {
   constructor(
     private readonly streamInferenceUseCase: StreamInferenceUseCase,
     private readonly saveAssistantMessageUseCase: SaveAssistantMessageUseCase,
-    private readonly collectUsageAsyncService: CollectUsageAsyncService,
+    private readonly inferenceUsageGuard: InferenceUsageGuard,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -144,10 +144,9 @@ export class StreamingInferenceService {
       if (streamCompletedSuccessfully && allChunks.length > 0) {
         const usage = this.extractUsageFromChunks(allChunks);
         if (usage) {
-          this.collectUsage(
+          this.inferenceUsageGuard.collectUsage(
             model,
-            usage.inputTokens,
-            usage.outputTokens,
+            usage,
             assistantMessage.id,
           );
         }
@@ -465,19 +464,5 @@ export class StreamingInferenceService {
     }
 
     return hasUsageData ? { inputTokens, outputTokens } : undefined;
-  }
-
-  private collectUsage(
-    model: LanguageModel,
-    inputTokens: number,
-    outputTokens: number,
-    messageId?: UUID,
-  ): void {
-    this.collectUsageAsyncService.collect(
-      model,
-      inputTokens,
-      outputTokens,
-      messageId,
-    );
   }
 }

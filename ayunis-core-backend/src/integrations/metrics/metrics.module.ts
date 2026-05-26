@@ -16,6 +16,7 @@ import {
   AYUNIS_USER_CREATIONS_TOTAL,
   AYUNIS_MARKETPLACE_INSTALLS_TOTAL,
   LABEL_USER_ID,
+  LABEL_API_KEY_ID,
   LABEL_ORG_ID,
   LABEL_MODEL,
   LABEL_PROVIDER,
@@ -37,6 +38,7 @@ const tokensCounter = makeCounterProvider({
   help: 'Total number of LLM tokens consumed',
   labelNames: [
     LABEL_USER_ID,
+    LABEL_API_KEY_ID,
     LABEL_ORG_ID,
     LABEL_MODEL,
     LABEL_PROVIDER,
