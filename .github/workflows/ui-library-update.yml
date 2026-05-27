@@ -170,4 +170,6 @@ jobs:
           AYUNIS_REGISTRY_TOKEN: ${{ secrets.AYUNIS_REGISTRY_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          agent -p "$(cat /tmp/agent-instructions.txt)" --force --model claude-4.6-opus-high-thinking
+          # Use --model auto on purpose: Cursor retires pinned models quietly,
+          # which silently breaks rarely-run workflows like this one. auto stays valid.
+          agent -p "$(cat /tmp/agent-instructions.txt)" --force --model auto
