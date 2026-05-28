@@ -41,7 +41,9 @@ export class OpenAIRequestMapper {
     let currentTurnToolMap = new Map<string, string>();
 
     for (const msg of request.messages) {
-      if (msg.role === 'system') {
+      if (msg.role === 'system' || msg.role === 'developer') {
+        // OpenAI's 'developer' role (o1+ models) replaces 'system' — fold
+        // both into the same system prompt.
         const text = this.extractTextContent(msg);
         systemPrompt = systemPrompt ? `${systemPrompt}\n\n${text}` : text;
       } else if (msg.role === 'user') {
@@ -65,12 +67,9 @@ export class OpenAIRequestMapper {
     msg: OpenAIChatCompletionMessage,
     threadId: UUID,
   ): UserMessage {
+    // OpenAI permits empty user content (turn markers, conversation
+    // replays). Forward an empty TextMessageContent rather than throwing.
     const text = this.extractTextContent(msg);
-    if (!text) {
-      throw new OpenAIInvalidRequestError(
-        'user message must have non-empty text content',
-      );
-    }
     return new UserMessage({
       threadId,
       content: [new TextMessageContent(text)],
@@ -98,11 +97,10 @@ export class OpenAIRequestMapper {
       }
     }
     if (blocks.length === 0) {
-      // OpenAI permits assistant messages with content=null + tool_calls
-      // undefined as placeholders; reject as invalid.
-      throw new OpenAIInvalidRequestError(
-        'assistant message must contain text or tool_calls',
-      );
+      // OpenAI clients sometimes replay assistant turns with content=null
+      // and no tool_calls (placeholders / continuation markers). Emit an
+      // empty text block so the domain model accepts it instead of throwing.
+      blocks.push(new TextMessageContent(''));
     }
     return new AssistantMessage({ threadId, content: blocks });
   }
@@ -172,10 +170,37 @@ export class OpenAIRequestMapper {
   private extractTextContent(msg: OpenAIChatCompletionMessage): string {
     if (msg.content === undefined || msg.content === null) return '';
     if (typeof msg.content === 'string') return msg.content;
-    // Array-of-parts content (multimodal) is not supported in iter 3.
-    throw new OpenAIInvalidRequestError(
-      'array-of-parts message content is not supported (use a string)',
-    );
+    // Many OpenAI-SDK clients always wrap content as an array of parts even
+    // for plain text. Fold all text parts into a single string; reject only
+    // genuinely unsupported modalities so connection tests pass. The DTO
+    // doesn't deeply validate parts, so treat each as unknown at runtime.
+    if (!Array.isArray(msg.content)) {
+      throw new OpenAIInvalidRequestError(
+        'message content must be a string or an array of content parts',
+      );
+    }
+    const texts: string[] = [];
+    for (const raw of msg.content as unknown[]) {
+      if (raw === null || typeof raw !== 'object') {
+        throw new OpenAIInvalidRequestError(
+          'message content parts must be objects with a "type" field',
+        );
+      }
+      const part = raw as { type?: unknown; text?: unknown };
+      if (part.type === 'text') {
+        if (typeof part.text !== 'string') {
+          throw new OpenAIInvalidRequestError(
+            'text content part must include a "text" string',
+          );
+        }
+        texts.push(part.text);
+      } else {
+        throw new OpenAIInvalidRequestError(
+          `message content part of type '${String(part.type)}' is not supported`,
+        );
+      }
+    }
+    return texts.join('');
   }
 
   private safeParseToolArgs(raw: string): Record<string, unknown> {
