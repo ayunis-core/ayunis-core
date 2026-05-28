@@ -203,12 +203,8 @@ export default function ChatPage({
     });
   }, []);
 
-  const handleFileUpload = useCallback(
-    (file: File) => {
-      createFileSource({ file });
-    },
-    [createFileSource],
-  );
+  const handleFileUpload = (files: File[]) =>
+    files.forEach((file) => createFileSource({ file }));
 
   const handleError = useRunErrorHandler(thread.id);
 

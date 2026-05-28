@@ -111,19 +111,16 @@ export default function NewChatPage({
     ? (selectedAgent?.model.canVision ?? false)
     : (selectedModel?.canVision ?? false);
 
-  function handleFileUpload(file: File) {
-    const isCsvFile = file.name.endsWith('.csv');
-    setSources([
-      ...sources,
-      {
-        id: generateUUID(),
-        name: file.name,
-        type: isCsvFile
-          ? SourceResponseDtoType.data
-          : SourceResponseDtoType.text,
-        file,
-      },
-    ]);
+  function handleFileUpload(files: File[]) {
+    const newSources: LocalSource[] = files.map((file) => ({
+      id: generateUUID(),
+      name: file.name,
+      type: file.name.endsWith('.csv')
+        ? SourceResponseDtoType.data
+        : SourceResponseDtoType.text,
+      file,
+    }));
+    setSources([...sources, ...newSources]);
   }
 
   function handleRemoveSource(sourceId: string) {

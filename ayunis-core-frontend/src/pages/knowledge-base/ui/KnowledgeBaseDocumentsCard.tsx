@@ -93,15 +93,21 @@ export default function KnowledgeBaseDocumentsCard({
 
   const { isDragging } = useDocumentDrop({
     containerRef: cardRef,
-    onDrop: uploadDocument,
+    onDrop: (files) => {
+      for (const file of files) {
+        uploadDocument(file);
+      }
+    },
     acceptedExtensions: ACCEPTED_EXTENSIONS,
     disabled,
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      uploadDocument(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      for (const file of Array.from(files)) {
+        uploadDocument(file);
+      }
       e.target.value = '';
     }
   };
@@ -149,6 +155,7 @@ export default function KnowledgeBaseDocumentsCard({
             <input
               ref={fileInputRef}
               type="file"
+              multiple
               accept={ACCEPTED_FILE_TYPES}
               onChange={handleFileChange}
               className="hidden"
