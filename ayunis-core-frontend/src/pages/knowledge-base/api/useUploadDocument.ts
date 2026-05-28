@@ -1,4 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useIsMutating, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { showSuccess, showInfo, showError } from '@/shared/lib/toast';
 import {
@@ -11,9 +11,11 @@ import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 export function useUploadDocument(knowledgeBaseId: string) {
   const { t } = useTranslation('knowledge-bases');
   const queryClient = useQueryClient();
+  const mutationKey = ['knowledgeBasesAddDocument', knowledgeBaseId];
 
   const mutation = useKnowledgeBasesControllerAddDocument({
     mutation: {
+      mutationKey,
       onSuccess: (data) => {
         void queryClient.invalidateQueries({
           queryKey:
@@ -42,5 +44,7 @@ export function useUploadDocument(knowledgeBaseId: string) {
     });
   };
 
-  return { uploadDocument, isUploading: mutation.isPending };
+  const activeUploads = useIsMutating({ mutationKey });
+
+  return { uploadDocument, isUploading: activeUploads > 0 };
 }
