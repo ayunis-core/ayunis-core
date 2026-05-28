@@ -6,7 +6,7 @@ import { separateFilesByType } from '../utils/fileHandlers';
 
 interface UseFileDropOptions {
   containerRef: RefObject<HTMLElement | null>;
-  onDocumentDrop: (file: File) => void;
+  onDocumentDrop: (files: File[]) => void;
   onImagesDrop: (files: File[]) => void;
   isDocumentUploadEnabled: boolean;
   isImageUploadEnabled: boolean;
@@ -49,7 +49,7 @@ export function useFileDrop({
       if (isDocumentUploadEnabled && regularFiles.length > 0) {
         const validDocuments = regularFiles.filter(isValidDocumentFile);
         if (validDocuments.length > 0) {
-          onDocumentDrop(validDocuments[0]);
+          onDocumentDrop(validDocuments);
         }
         if (validDocuments.length < regularFiles.length) {
           hasSkippedFiles = true;

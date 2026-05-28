@@ -27,7 +27,7 @@ import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
 import { useIsKnowledgeBasesEnabled } from '@/features/feature-toggles';
 
 interface PlusButtonProps {
-  onFileUpload: (file: File) => void;
+  onFileUpload: (files: File[]) => void;
   onImageSelect?: (files: FileList | null) => void;
   isFileSourceDisabled?: boolean;
   isImageUploadDisabled?: boolean;
@@ -59,13 +59,11 @@ export default function PlusButton({
   const handleDocumentChange = (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    // Only allow single document upload
-    const file = files[0];
     if (isFileSourceDisabled) {
       showError(t('chatInput.noEmbeddingModelEnabled'));
       return;
     }
-    onFileUpload(file);
+    onFileUpload(Array.from(files));
 
     // Reset input to allow selecting the same file again
     if (documentInputRef.current) {
@@ -191,6 +189,7 @@ export default function PlusButton({
       <Input
         type="file"
         hidden
+        multiple
         accept=".pdf,.csv,.xlsx,.xls,.docx,.pptx,.txt,.md,.mp3,.m4a,.wav,.webm"
         onChange={(e) => handleDocumentChange(e.target.files)}
         ref={documentInputRef}

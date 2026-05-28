@@ -5,7 +5,7 @@ import { useDragOver } from './useDragOver';
 
 interface UseDocumentDropOptions {
   containerRef: RefObject<HTMLElement | null>;
-  onDrop: (file: File) => void;
+  onDrop: (files: File[]) => void;
   acceptedExtensions: string[];
   disabled?: boolean;
 }
@@ -42,7 +42,7 @@ export function useDocumentDrop({
         showError(t('chatInput.invalidDroppedFileType'));
       }
 
-      onDrop(validFiles[0]);
+      onDrop(validFiles);
     },
     [isValidFile, onDrop, t],
   );

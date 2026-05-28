@@ -74,7 +74,7 @@ interface ChatInputProps {
   onModelChange: (modelId: string) => void;
   onAgentChange: (agentId: string) => void;
   onAgentRemove: (agentId: string) => void;
-  onFileUpload: (file: File) => void;
+  onFileUpload: (files: File[]) => void;
   onRemoveSource: (sourceId: string) => void;
   onDownloadSource: (sourceId: string) => void;
   onAddKnowledgeBase?: (knowledgeBase: KnowledgeBaseSummary) => void;
