@@ -174,6 +174,11 @@ export class OpenAIRequestMapper {
     // for plain text. Fold all text parts into a single string; reject only
     // genuinely unsupported modalities so connection tests pass. The DTO
     // doesn't deeply validate parts, so treat each as unknown at runtime.
+    if (!Array.isArray(msg.content)) {
+      throw new OpenAIInvalidRequestError(
+        'message content must be a string or an array of content parts',
+      );
+    }
     const texts: string[] = [];
     for (const raw of msg.content as unknown[]) {
       if (raw === null || typeof raw !== 'object') {
