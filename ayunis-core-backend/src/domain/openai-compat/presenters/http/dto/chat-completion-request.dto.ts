@@ -1,4 +1,5 @@
 import {
+  ArrayNotEmpty,
   IsArray,
   IsBoolean,
   IsIn,
@@ -10,8 +11,10 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import type {
+  OpenAIChatCompletionContentPart,
   OpenAIChatCompletionMessage,
   OpenAIChatCompletionRequest,
+  OpenAIChatCompletionRole,
   OpenAIChatCompletionToolChoice,
 } from '../../../application/types/openai-request.types';
 
@@ -61,14 +64,17 @@ export class ChatCompletionToolCallDto {
 }
 
 export class ChatCompletionMessageDto implements OpenAIChatCompletionMessage {
-  @IsIn(['system', 'user', 'assistant', 'tool'])
-  role!: 'system' | 'user' | 'assistant' | 'tool';
+  // 'developer' is OpenAI's o1+ replacement for 'system'; the mapper folds
+  // it into the system prompt.
+  @IsIn(['system', 'developer', 'user', 'assistant', 'tool'])
+  role!: OpenAIChatCompletionRole;
 
-  // Either a string (OpenAI's common shorthand) or null on assistant
-  // messages that produced only tool_calls. Array-of-parts (multimodal) is
-  // not supported in iter 3 — reject in the mapper for clarity.
+  // string, null (assistant tool-call-only turns), or OpenAI's array-of-parts
+  // form. The mapper folds text parts into a single string and rejects
+  // non-text modalities (image_url, input_audio) since multimodal is not
+  // yet wired through the inference port.
   @IsOptional()
-  content?: string | null;
+  content?: string | OpenAIChatCompletionContentPart[] | null;
 
   @IsOptional()
   @IsString()
@@ -91,6 +97,7 @@ export class ChatCompletionRequestDto implements OpenAIChatCompletionRequest {
   model!: string;
 
   @IsArray()
+  @ArrayNotEmpty()
   @ValidateNested({ each: true })
   @Type(() => ChatCompletionMessageDto)
   messages!: ChatCompletionMessageDto[];

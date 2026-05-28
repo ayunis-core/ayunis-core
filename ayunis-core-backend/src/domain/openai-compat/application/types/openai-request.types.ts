@@ -32,9 +32,36 @@ export interface OpenAIChatCompletionToolCall {
   function: OpenAIChatCompletionFunctionCall;
 }
 
+export interface OpenAIChatCompletionTextPart {
+  type: 'text';
+  text: string;
+}
+
+export interface OpenAIChatCompletionImagePart {
+  type: 'image_url';
+  image_url: { url: string; detail?: string };
+}
+
+export interface OpenAIChatCompletionInputAudioPart {
+  type: 'input_audio';
+  input_audio: { data: string; format: string };
+}
+
+export type OpenAIChatCompletionContentPart =
+  | OpenAIChatCompletionTextPart
+  | OpenAIChatCompletionImagePart
+  | OpenAIChatCompletionInputAudioPart;
+
+export type OpenAIChatCompletionRole =
+  | 'system'
+  | 'developer'
+  | 'user'
+  | 'assistant'
+  | 'tool';
+
 export interface OpenAIChatCompletionMessage {
-  role: 'system' | 'user' | 'assistant' | 'tool';
-  content?: string | null;
+  role: OpenAIChatCompletionRole;
+  content?: string | OpenAIChatCompletionContentPart[] | null;
   tool_call_id?: string;
   tool_calls?: OpenAIChatCompletionToolCall[];
   name?: string;
