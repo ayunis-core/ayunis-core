@@ -5,6 +5,7 @@ import AgentButton from './AgentButton';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useTranslation } from 'react-i18next';
 import type {
+  FileSourceResponseDtoFileType,
   SourceResponseDtoCreatedBy,
   SourceResponseDtoStatus,
   SourceResponseDtoType,
@@ -54,6 +55,7 @@ interface ChatInputProps {
     id: string;
     name: string;
     type: SourceResponseDtoType;
+    fileType?: FileSourceResponseDtoFileType;
     createdBy?: SourceResponseDtoCreatedBy;
     status?: SourceResponseDtoStatus;
     processingError?: string;

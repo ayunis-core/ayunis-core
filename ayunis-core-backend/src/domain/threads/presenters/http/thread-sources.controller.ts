@@ -57,6 +57,7 @@ import { Source } from 'src/domain/sources/domain/source.entity';
 import {
   detectFileType,
   getCanonicalMimeType,
+  isAudioFile,
   isDocumentFile,
   isPlainTextFile,
   isSpreadsheetFile,
@@ -83,6 +84,10 @@ const SUPPORTED_FILE_TYPES = [
   'CSV',
   'XLSX',
   'XLS',
+  'MP3',
+  'M4A',
+  'WAV',
+  'WEBM',
 ];
 
 @ApiTags('threads')
@@ -368,7 +373,11 @@ export class ThreadSourcesController {
     file: { originalname: string; mimetype: string; path: string },
     detectedType: ReturnType<typeof detectFileType>,
   ): Promise<Source[]> {
-    if (isDocumentFile(detectedType) || isPlainTextFile(detectedType)) {
+    if (
+      isDocumentFile(detectedType) ||
+      isPlainTextFile(detectedType) ||
+      isAudioFile(detectedType)
+    ) {
       return this.processDocumentUpload(thread, file, detectedType);
     } else if (isCSVFile(detectedType)) {
       return this.processCSVUpload(thread, file);

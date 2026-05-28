@@ -53,6 +53,11 @@ export class CreateProcessingSourceUseCase {
         return FileType.PPTX;
       case MIME_TYPES.TXT:
         return FileType.TXT;
+      case MIME_TYPES.MP3:
+      case MIME_TYPES.M4A:
+      case MIME_TYPES.WAV:
+      case MIME_TYPES.WEBM:
+        return FileType.AUDIO;
       default:
         throw new UnsupportedSourceFileTypeError(mimeType);
     }

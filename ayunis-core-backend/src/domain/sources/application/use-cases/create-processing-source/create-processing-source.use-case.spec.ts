@@ -66,6 +66,28 @@ describe('CreateProcessingSourceUseCase', () => {
     expect(result.status).toBe(SourceStatus.PROCESSING);
   });
 
+  it.each([
+    ['audio/mpeg', 'meeting.mp3'],
+    ['audio/x-m4a', 'voice-memo.m4a'],
+    ['audio/wav', 'interview.wav'],
+    ['audio/webm', 'recording.webm'],
+  ])(
+    'should create a FileSource with PROCESSING status for audio (%s)',
+    async (mimeType, fileName) => {
+      const command = new CreateProcessingSourceCommand({
+        fileType: mimeType,
+        fileName,
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.fileType).toBe(FileType.AUDIO);
+      expect(result.textType).toBe(TextType.FILE);
+      expect(result.status).toBe(SourceStatus.PROCESSING);
+      expect(result.processingStartedAt).toBeInstanceOf(Date);
+    },
+  );
+
   it('should throw UnsupportedSourceFileTypeError for unsupported file types', async () => {
     const command = new CreateProcessingSourceCommand({
       fileType: 'image/jpeg',

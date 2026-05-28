@@ -1623,6 +1623,11 @@ export interface UploadFileResponseDto {
   lastModified?: string;
 }
 
+export interface TranscriptionResponseDto {
+  /** The transcribed text from the audio file */
+  text: string;
+}
+
 export interface RetrieveUrlDto {
   /** URL to retrieve content from */
   url: string;
@@ -2014,6 +2019,7 @@ export const FileSourceResponseDtoFileType = {
   docx: 'docx',
   pptx: 'pptx',
   txt: 'txt',
+  audio: 'audio',
 } as const;
 
 export interface FileSourceResponseDto {
@@ -4080,11 +4086,6 @@ export interface GeneratePersonalizedSystemPromptResponseDto {
   welcomeMessage: string;
 }
 
-export interface TranscriptionResponseDto {
-  /** The transcribed text from the audio file */
-  text: string;
-}
-
 export interface ChatCompletionRequestDto { [key: string]: unknown }
 
 export interface LoginDto {
@@ -4325,6 +4326,13 @@ export type StorageControllerUploadFileBody = {
   file: Blob;
 };
 
+export type TranscriptionsControllerTranscribeBody = {
+  /** The audio file to transcribe */
+  file: Blob;
+  /** Optional language hint (e.g., "en", "de") */
+  language?: string;
+};
+
 export type ThreadsControllerFindAllParams = {
 /**
  * Search threads by title
@@ -4548,11 +4556,4 @@ export type RunsControllerSendMessageBody = {
 };
 
 export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;
-
-export type TranscriptionsControllerTranscribeBody = {
-  /** The audio file to transcribe */
-  file: Blob;
-  /** Optional language hint (e.g., "en", "de") */
-  language?: string;
-};
 

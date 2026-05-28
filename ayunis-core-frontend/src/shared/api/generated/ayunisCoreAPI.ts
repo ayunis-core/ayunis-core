@@ -7342,6 +7342,77 @@ export function useStorageControllerGetPresignedUrl<TData = Awaited<ReturnType<t
 
 
 /**
+ * Upload an audio file and receive the transcribed text. Supports webm, mp4, mp3, wav, and m4a formats.
+ * @summary Transcribe audio file to text
+ */
+export const transcriptionsControllerTranscribe = (
+    transcriptionsControllerTranscribeBody: TranscriptionsControllerTranscribeBody,
+ signal?: AbortSignal
+) => {
+      
+      const formData = new FormData();
+formData.append(`file`, transcriptionsControllerTranscribeBody.file)
+if(transcriptionsControllerTranscribeBody.language !== undefined) {
+ formData.append(`language`, transcriptionsControllerTranscribeBody.language)
+ }
+
+      return customAxiosInstance<TranscriptionResponseDto>(
+      {url: `/transcriptions`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      );
+    }
+  
+
+
+export const getTranscriptionsControllerTranscribeMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof transcriptionsControllerTranscribe>>, TError,{data: TranscriptionsControllerTranscribeBody}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof transcriptionsControllerTranscribe>>, TError,{data: TranscriptionsControllerTranscribeBody}, TContext> => {
+
+const mutationKey = ['transcriptionsControllerTranscribe'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof transcriptionsControllerTranscribe>>, {data: TranscriptionsControllerTranscribeBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  transcriptionsControllerTranscribe(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TranscriptionsControllerTranscribeMutationResult = NonNullable<Awaited<ReturnType<typeof transcriptionsControllerTranscribe>>>
+    export type TranscriptionsControllerTranscribeMutationBody = TranscriptionsControllerTranscribeBody
+    export type TranscriptionsControllerTranscribeMutationError = void
+
+    /**
+ * @summary Transcribe audio file to text
+ */
+export const useTranscriptionsControllerTranscribe = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof transcriptionsControllerTranscribe>>, TError,{data: TranscriptionsControllerTranscribeBody}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof transcriptionsControllerTranscribe>>,
+        TError,
+        {data: TranscriptionsControllerTranscribeBody},
+        TContext
+      > => {
+
+      const mutationOptions = getTranscriptionsControllerTranscribeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * @summary Retrieve content from a URL
  */
 export const urlRetrieverControllerRetrieveUrl = (
@@ -16419,77 +16490,6 @@ export const useChatSettingsControllerGeneratePersonalizedSystemPrompt = <TError
       > => {
 
       const mutationOptions = getChatSettingsControllerGeneratePersonalizedSystemPromptMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * Upload an audio file and receive the transcribed text. Supports webm, mp4, mp3, wav, and m4a formats.
- * @summary Transcribe audio file to text
- */
-export const transcriptionsControllerTranscribe = (
-    transcriptionsControllerTranscribeBody: TranscriptionsControllerTranscribeBody,
- signal?: AbortSignal
-) => {
-      
-      const formData = new FormData();
-formData.append(`file`, transcriptionsControllerTranscribeBody.file)
-if(transcriptionsControllerTranscribeBody.language !== undefined) {
- formData.append(`language`, transcriptionsControllerTranscribeBody.language)
- }
-
-      return customAxiosInstance<TranscriptionResponseDto>(
-      {url: `/transcriptions`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData, signal
-    },
-      );
-    }
-  
-
-
-export const getTranscriptionsControllerTranscribeMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof transcriptionsControllerTranscribe>>, TError,{data: TranscriptionsControllerTranscribeBody}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof transcriptionsControllerTranscribe>>, TError,{data: TranscriptionsControllerTranscribeBody}, TContext> => {
-
-const mutationKey = ['transcriptionsControllerTranscribe'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof transcriptionsControllerTranscribe>>, {data: TranscriptionsControllerTranscribeBody}> = (props) => {
-          const {data} = props ?? {};
-
-          return  transcriptionsControllerTranscribe(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TranscriptionsControllerTranscribeMutationResult = NonNullable<Awaited<ReturnType<typeof transcriptionsControllerTranscribe>>>
-    export type TranscriptionsControllerTranscribeMutationBody = TranscriptionsControllerTranscribeBody
-    export type TranscriptionsControllerTranscribeMutationError = void
-
-    /**
- * @summary Transcribe audio file to text
- */
-export const useTranscriptionsControllerTranscribe = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof transcriptionsControllerTranscribe>>, TError,{data: TranscriptionsControllerTranscribeBody}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof transcriptionsControllerTranscribe>>,
-        TError,
-        {data: TranscriptionsControllerTranscribeBody},
-        TContext
-      > => {
-
-      const mutationOptions = getTranscriptionsControllerTranscribeMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
