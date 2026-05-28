@@ -11,7 +11,6 @@ import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeade
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
-import type { AgentResponseDto } from '@/shared/api';
 import {
   SourceResponseDtoStatus,
   SourceResponseDtoType,
@@ -30,16 +29,12 @@ import { useRouter } from '@tanstack/react-router';
 
 interface NewChatPageProps {
   selectedModelId?: string;
-  selectedAgentId?: string;
-  agents: AgentResponseDto[];
   isEmbeddingModelEnabled: boolean;
 }
 
 export default function NewChatPage({
   selectedModelId,
-  selectedAgentId,
   isEmbeddingModelEnabled,
-  agents,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
   const { initiateChat, cancel, isCreating } = useInitiateChat();
@@ -61,16 +56,12 @@ export default function NewChatPage({
   const queryClient = useQueryClient();
   const router = useRouter();
   const [modelId, setModelId] = useState(selectedModelId);
-  const [agentId, setAgentId] = useState(selectedAgentId);
   const [isAnonymous, setIsAnonymous] = useState(false);
   type LocalSource = {
     id: string;
     name: string;
     type: SourceResponseDtoType;
     file: File;
-    // Local status mirroring the server-side SourceResponseDtoStatus values
-    // — set during upload+processing so the chip in ChatInput renders the
-    // correct spinner/error state via the same code path the chat page uses.
     status?: SourceResponseDtoStatus;
     processingError?: string;
   };
@@ -98,18 +89,10 @@ export default function NewChatPage({
   >([]);
   const [selectedSkillId, setSelectedSkillId] = useState<string>();
   const [selectedSkillName, setSelectedSkillName] = useState<string>();
-  const selectedAgent = agents.find((agent) => agent.id === agentId);
   const selectedModel = models.find((m) => m.id === modelId);
 
-  // Determine if anonymous mode is enforced by the selected model
-  const isAnonymousEnforced = agentId
-    ? (selectedAgent?.model.anonymousOnly ?? false)
-    : (selectedModel?.anonymousOnly ?? false);
-
-  // Determine if vision is enabled by the selected model
-  const isVisionEnabled = agentId
-    ? (selectedAgent?.model.canVision ?? false)
-    : (selectedModel?.canVision ?? false);
+  const isAnonymousEnforced = selectedModel?.anonymousOnly ?? false;
+  const isVisionEnabled = selectedModel?.canVision ?? false;
 
   function handleFileUpload(files: File[]) {
     const newSources: LocalSource[] = files.map((file) => ({
@@ -129,12 +112,6 @@ export default function NewChatPage({
 
   function handleModelChange(modelId: string) {
     setModelId(modelId);
-    setAgentId(undefined);
-  }
-
-  function handleAgentChange(agentId: string) {
-    setAgentId(agentId);
-    setModelId(undefined);
   }
 
   function handleSkillSelect(skillId: string, skillName: string) {
@@ -152,11 +129,6 @@ export default function NewChatPage({
     setSelectedSkillName(undefined);
   }
 
-  function handleAgentRemove() {
-    setAgentId(undefined);
-    setModelId(selectedModelId);
-  }
-
   function handleSourceStatus(sourceId: string, status: SourceUploadStatus) {
     setSources((prev) =>
       prev.map((s) => (s.id === sourceId ? applySourceStatus(s, status) : s)),
@@ -168,21 +140,17 @@ export default function NewChatPage({
     imageFiles?: Array<{ file: File; altText?: string }>,
     skillId?: string,
   ) {
-    if (!modelId && !agentId) {
+    if (!modelId) {
       showError(t('newChat.noModelOrAgentError'));
       return;
     }
 
-    // Images are sent as part of the first multipart request from ChatPage,
-    // so they hitch a ride through context. KBs and sources are attached
-    // before navigation by initiateChat itself.
     setPendingImages(imageFiles && imageFiles.length > 0 ? imageFiles : []);
     setPendingSkillId(skillId);
 
     void initiateChat({
       message,
       modelId,
-      agentId,
       sources,
       knowledgeBases: selectedKnowledgeBases,
       isAnonymous,
@@ -192,8 +160,6 @@ export default function NewChatPage({
 
   function handleCancel() {
     cancel();
-    // Clear in-flight statuses so chips become removable again. Keep the
-    // sources themselves so the user doesn't lose their attachments.
     setSources((prev) =>
       prev.map((s) => ({
         ...s,
@@ -237,18 +203,11 @@ export default function NewChatPage({
       </div>
       <div className="w-full flex flex-col gap-4 mt-2">
         <ChatInput
-          // If an agent is selected, use the agent's model,
-          // but disable the model selection
-          // to only show the model that the agent uses
-          modelId={agentId ? selectedAgent?.model.id : modelId}
-          isModelChangeDisabled={!!agentId}
-          agentId={agentId}
+          modelId={modelId}
           sources={sources}
           knowledgeBases={selectedKnowledgeBases}
           submissionState={isCreating ? 'submitting' : 'idle'}
           onModelChange={handleModelChange}
-          onAgentChange={handleAgentChange}
-          onAgentRemove={handleAgentRemove}
           onSend={handleSend}
           onCancel={handleCancel}
           onFileUpload={handleFileUpload}

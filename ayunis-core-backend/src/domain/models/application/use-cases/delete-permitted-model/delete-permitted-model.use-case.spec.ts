@@ -22,7 +22,6 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { DeleteUserDefaultModelsByModelIdUseCase } from '../delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
 import { GetPermittedModelsUseCase } from '../get-permitted-models/get-permitted-models.use-case';
 import { ReplaceModelWithUserDefaultUseCase } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
-import { ReplaceModelWithUserDefaultUseCase as ReplaceModelWithUserDefaultUseCaseAgents } from 'src/domain/agents/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { FindAllThreadsByOrgWithSourcesUseCase } from 'src/domain/threads/application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.use-case';
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -84,10 +83,6 @@ describe('DeletePermittedModelUseCase', () => {
         },
         {
           provide: ReplaceModelWithUserDefaultUseCase,
-          useValue: { execute: jest.fn() },
-        },
-        {
-          provide: ReplaceModelWithUserDefaultUseCaseAgents,
           useValue: { execute: jest.fn() },
         },
         {

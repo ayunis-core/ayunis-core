@@ -2,7 +2,6 @@ import { AnonymizationFailedError } from 'src/common/anonymization/application/a
 import type { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { RunAnonymizationUnavailableError } from '../../runs.errors';
 import type { ContextService } from 'src/common/context/services/context.service';
-import type { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
 
@@ -21,7 +20,6 @@ import { InferenceUsageGuard } from '../../services/inference-usage-guard.servic
 import type { CollectUsageAsyncService } from '../../services/collect-usage-async.service';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
 import { RunErrorCode } from '../../runs.errors';
-import type { Agent } from 'src/domain/agents/domain/agent.entity';
 import type { ToolAssemblyService } from '../../services/tool-assembly.service';
 import type { ToolResultCollectorService } from '../../services/tool-result-collector.service';
 import type { MessageCleanupService } from '../../services/message-cleanup.service';
@@ -37,7 +35,6 @@ describe('ExecuteRunUseCase', () => {
   let useCase: ExecuteRunUseCase;
   let anonymizeTextUseCase: jest.Mocked<AnonymizeTextUseCase>;
   let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
-  let findOneAgentUseCase: jest.Mocked<FindOneAgentUseCase>;
   let contextService: jest.Mocked<ContextService>;
   let toolAssemblyService: jest.Mocked<ToolAssemblyService>;
   let messageCleanupService: jest.Mocked<MessageCleanupService>;
@@ -61,7 +58,6 @@ describe('ExecuteRunUseCase', () => {
     return {
       id: threadId,
       userId,
-      agentId: null,
       model,
       isAnonymous: false,
       messages: [],
@@ -78,10 +74,6 @@ describe('ExecuteRunUseCase', () => {
     findThreadUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<FindThreadUseCase>;
-
-    findOneAgentUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<FindOneAgentUseCase>;
 
     checkQuotaUseCase = {
       execute: jest.fn().mockResolvedValue(undefined),
@@ -129,7 +121,6 @@ describe('ExecuteRunUseCase', () => {
       { execute: jest.fn() } as unknown as CreateUserMessageUseCase,
       { execute: jest.fn() } as unknown as CreateToolResultMessageUseCase,
       findThreadUseCase,
-      findOneAgentUseCase,
       { execute: jest.fn() } as unknown as AddMessageToThreadUseCase,
       contextService,
       anonymizeTextUseCase,
@@ -515,40 +506,6 @@ describe('ExecuteRunUseCase', () => {
       expect(checkQuotaUseCase.execute).toHaveBeenCalledTimes(1);
       expect(checkQuotaUseCase.execute.mock.calls[0][0].quotaType).toBe(
         QuotaType.FAIR_USE_MESSAGES_MEDIUM,
-      );
-    });
-
-    it('uses the agent model tier when the thread is agent-backed', async () => {
-      const agentId = randomUUID();
-      const thread = createMockThread({
-        agentId,
-        // Thread carries no model of its own — must fall through to the
-        // agent's model.
-        model: undefined as unknown as PermittedLanguageModel,
-      });
-      findThreadUseCase.execute.mockResolvedValue({
-        thread,
-        isLongChat: false,
-      });
-      findOneAgentUseCase.execute.mockResolvedValue({
-        agent: {
-          id: agentId,
-          model: makeTieredModel(ModelTier.HIGH),
-        } as unknown as Agent,
-        isShared: false,
-      });
-      stubInferenceWithEmptyResponse();
-
-      const command = new ExecuteRunCommand({
-        threadId,
-        input: new RunUserInput('hello', []),
-        streaming: true,
-      });
-      await drainGenerator(await useCase.execute(command));
-
-      expect(findOneAgentUseCase.execute).toHaveBeenCalledTimes(1);
-      expect(checkQuotaUseCase.execute.mock.calls[0][0].quotaType).toBe(
-        QuotaType.FAIR_USE_MESSAGES_HIGH,
       );
     });
 

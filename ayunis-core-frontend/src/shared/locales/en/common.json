@@ -3,7 +3,6 @@
     "appName": "Ayunis Core",
     "appTagline": "whoop whoop",
     "newChat": "New Chat",
-    "agents": "Agents",
     "skills": "Skills",
     "knowledge": "Knowledge",
     "marketplace": "Marketplace",
@@ -39,10 +38,7 @@
   },
   "chatInput": {
     "placeholder": "How can I help today?",
-    "createFirstAgent": "Create agent",
     "addButtonTooltip": "Add",
-    "agentButtonTooltip": "Agents",
-    "agentsEmptyState": "No agent created yet",
     "fileSourceUploadError": "Error uploading file",
     "fileSourceEmptyDataError": "The uploaded file contains no processable data",
     "invalidFileTypeError": "This file type is currently not supported.",
@@ -63,15 +59,11 @@
     "shared": "Shared",
     "createKnowledgeBase": "Create knowledge base",
     "noEmbeddingModelEnabled": "To upload documents, an embedding model must be enabled.",
-    "modelChangeDisabledTooltip": "The model cannot be changed when an agent is selected.",
     "cancelTooltip": "Cancel",
     "sendTooltip": "Send",
     "anonymousModeEnabled": "Deactivate Anonymous Mode",
     "anonymousModeDisabled": "Activate Anonymous Mode",
     "anonymousModeEnforced": "Privacy mode is required by this model",
-    "agents": {
-      "title": "Agents"
-    },
     "tools": {
       "title": "Tools",
       "internet_search": "Internet Search",

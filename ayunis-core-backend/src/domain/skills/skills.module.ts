@@ -73,7 +73,7 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
     LocalSkillRepositoryModule,
     SourcesModule,
     McpModule,
-    KnowledgeBasesModule,
+    forwardRef(() => KnowledgeBasesModule),
     MarketplaceModule,
     forwardRef(() => SharesModule),
     forwardRef(() => ThreadsModule),

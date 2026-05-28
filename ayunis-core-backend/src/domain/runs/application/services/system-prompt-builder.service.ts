@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
-import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
@@ -17,7 +16,6 @@ import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/kno
 import type { SkillEntry } from 'src/common/util/skill-slug';
 
 export interface SystemPromptBuildParams {
-  agent?: Agent;
   tools: Tool[];
   currentTime: Date;
   sources?: Source[];
@@ -30,7 +28,6 @@ export interface SystemPromptBuildParams {
 export class SystemPromptBuilderService {
   build(params: SystemPromptBuildParams): string {
     const {
-      agent,
       tools,
       currentTime,
       sources = [],
@@ -49,9 +46,6 @@ export class SystemPromptBuilderService {
       this.buildDataHandlingSection(),
       this.buildResponseGuidelines(),
       this.buildPlatformSection(),
-      agent?.instructions
-        ? this.buildAgentInstructionsSection(agent.instructions)
-        : '',
       userSystemPrompt
         ? this.buildUserInstructionsSection(userSystemPrompt)
         : '',
@@ -65,7 +59,7 @@ export class SystemPromptBuilderService {
     return `You are an AI assistant powered by Ayunis Core, an open-source AI gateway platform designed for public administrations.
 
 <application_details>
-Ayunis Core is an AI platform that enables intelligent conversations with customizable AI agents, advanced prompt management, and extensible tool integration. It is built for public sector organizations that need sovereign AI solutions with full control over data, models, and integrations.
+Ayunis Core is an AI platform that enables intelligent conversations, customizable skills, and extensible tool integration. It is built for public sector organizations that need sovereign AI solutions with full control over data, models, and integrations.
 </application_details>
 
 <context>
@@ -120,7 +114,7 @@ When tools are available (such as source queries or web access), use them to pro
     return `<tool_usage>
 
 <available_tools>
-Your capabilities depend on which tools have been assigned to this agent. Use tools when they help answer the user's question or complete their task. Don't use tools unnecessarily.
+Your capabilities depend on which tools are available in this conversation. Use tools when they help answer the user's question or complete their task. Don't use tools unnecessarily.
 </available_tools>
 
 <tool_guidelines>
@@ -217,7 +211,7 @@ If users ask about Ayunis Core itself:
 Ayunis Core is an open-source AI gateway platform. Key features include:
 
 - Multi-LLM support (various AI model providers)
-- Customizable agents with specific instructions and tools
+- Customizable skills with specific instructions and tools
 - Document processing and semantic search (RAG)
 - Tool integrations for external services
 - Multi-tenant organization management
@@ -233,14 +227,6 @@ For technical questions about the platform, configuration, or deployment, users 
       .join('\n\n');
 
     return toolSections;
-  }
-
-  private buildAgentInstructionsSection(instructions: string): string {
-    return `
-<agent_instructions>
-${instructions}
-</agent_instructions>
-`;
   }
 
   private buildUserInstructionsSection(userSystemPrompt: string): string {

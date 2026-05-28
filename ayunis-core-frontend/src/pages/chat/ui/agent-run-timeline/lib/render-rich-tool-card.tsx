@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
-import { ToolAssignmentDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+
 import SendEmailWidget from '@/pages/chat/ui/chat-widgets/SendEmailWidget';
 import CreateCalendarEventWidget from '@/pages/chat/ui/chat-widgets/CreateCalendarEventWidget';
 import CreateSkillWidget from '@/pages/chat/ui/chat-widgets/CreateSkillWidget';
@@ -32,26 +32,26 @@ export function renderRichToolCard({
   index,
 }: RenderRichToolCardOptions): ReactNode {
   switch (toolUse.name) {
-    case ToolAssignmentDtoType.send_email:
+    case 'send_email':
       return <SendEmailWidget content={toolUse} isStreaming={isStreaming} />;
-    case ToolAssignmentDtoType.create_calendar_event:
+    case 'create_calendar_event':
       return (
         <CreateCalendarEventWidget
           content={toolUse}
           isStreaming={isStreaming}
         />
       );
-    case ToolAssignmentDtoType.create_skill:
+    case 'create_skill':
       return <CreateSkillWidget content={toolUse} isStreaming={isStreaming} />;
-    case ToolAssignmentDtoType.edit_skill:
+    case 'edit_skill':
       return <EditSkillWidget content={toolUse} isStreaming={isStreaming} />;
-    case ToolAssignmentDtoType.bar_chart:
+    case 'bar_chart':
       return <BarChartWidget content={toolUse} isStreaming={isStreaming} />;
-    case ToolAssignmentDtoType.line_chart:
+    case 'line_chart':
       return <LineChartWidget content={toolUse} isStreaming={isStreaming} />;
-    case ToolAssignmentDtoType.pie_chart:
+    case 'pie_chart':
       return <PieChartWidget content={toolUse} isStreaming={isStreaming} />;
-    case ToolAssignmentDtoType.generate_image:
+    case 'generate_image':
       return (
         <GenerateImageWidget
           content={toolUse}

@@ -8,7 +8,6 @@ import ChatInput from '@/widgets/chat-input';
 import { useMessageSend } from '../api/useMessageSend';
 import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
-import UnavailableAgentWarning from './UnavailableAgentWarning';
 import type { Thread, Message } from '../model/openapi';
 import { showError } from '@/shared/lib/toast';
 import config from '@/shared/config';
@@ -33,8 +32,6 @@ import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
 import { useDeleteFileSource } from '../api/useDeleteFileSource';
 import { useArtifactActions } from '../hooks/useArtifactActions';
-import { useAgents } from '@/features/useAgents';
-import { useIsAgentsEnabled } from '@/features/feature-toggles';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import {
@@ -72,10 +69,6 @@ export default function ChatPage({
   const { t } = useTranslation('chat');
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
-  const isAgentsEnabled = useIsAgentsEnabled();
-  const { agents, isLoading: isLoadingAgents } = useAgents({
-    enabled: isAgentsEnabled,
-  });
   const { models, isLoading: isLoadingModels } = usePermittedModels();
   const [isStreaming, setIsStreaming] = useState(false);
   const { data: thread = initialThread } = useQuery({
@@ -98,27 +91,15 @@ export default function ChatPage({
     },
   });
 
-  const selectedAgent = agents.find((agent) => agent.id === thread.agentId);
-
   const selectedModel = models.find((m) => m.id === thread.permittedModelId);
-  const isVisionEnabled = thread.agentId
-    ? (selectedAgent?.model.canVision ?? false)
-    : (selectedModel?.canVision ?? false);
+  const isVisionEnabled = selectedModel?.canVision ?? false;
 
-  // Detect if the agent or model used in this thread is no longer accessible.
+  // Detect if the model used in this thread is no longer accessible.
   // Only flagged after loading completes to avoid flashing the warning.
-  const isAgentUnavailable = useMemo(() => {
-    if (thread.agentId) return !isLoadingAgents && !selectedAgent;
+  const isModelUnavailable = useMemo(() => {
     if (thread.permittedModelId) return !isLoadingModels && !selectedModel;
     return false;
-  }, [
-    thread.agentId,
-    thread.permittedModelId,
-    selectedAgent,
-    selectedModel,
-    isLoadingAgents,
-    isLoadingModels,
-  ]);
+  }, [thread.permittedModelId, selectedModel, isLoadingModels]);
 
   const queryClient = useQueryClient();
   const chatInputRef = useRef<ChatInputRef>(null);
@@ -409,9 +390,7 @@ export default function ChatPage({
   );
 
   // Controls are always disabled — thread already has messages
-  const chatInput = isAgentUnavailable ? (
-    <UnavailableAgentWarning />
-  ) : (
+  const chatInput = isModelUnavailable ? null : (
     <>
       <p className="text-xs text-muted-foreground text-center mb-2">
         {t('chat.inputDisclaimer')}
@@ -420,21 +399,15 @@ export default function ChatPage({
       <ChatInput
         key={thread.id}
         ref={chatInputRef}
-        modelId={
-          thread.agentId ? selectedAgent?.model.id : thread.permittedModelId
-        }
+        modelId={thread.permittedModelId}
         isModelChangeDisabled={true}
-        isAgentChangeDisabled={true}
         isAnonymousChangeDisabled={true}
-        agentId={thread.agentId}
         sources={thread.sources}
         knowledgeBases={thread.knowledgeBases}
         isAnonymous={thread.isAnonymous}
         submissionState={isStreaming ? 'streaming' : 'idle'}
         isSendDisabled={isSendDisabled}
         onModelChange={() => {}}
-        onAgentChange={() => {}}
-        onAgentRemove={() => {}}
         onFileUpload={handleFileUpload}
         onRemoveSource={deleteFileSource}
         onDownloadSource={(sourceId) => void downloadSource(sourceId)}

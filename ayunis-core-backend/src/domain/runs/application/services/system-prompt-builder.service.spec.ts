@@ -122,25 +122,6 @@ describe('SystemPromptBuilderService', () => {
       expect(result).not.toContain('<user_instructions>');
     });
 
-    it('should place user_instructions after agent_instructions', () => {
-      const agent = {
-        instructions: 'Agent-level instructions here',
-      } as any;
-
-      const result = service.build({
-        agent,
-        tools: [],
-        currentTime: new Date('2026-01-15T10:00:00Z'),
-        userSystemPrompt: 'User-level preferences here',
-      });
-
-      const agentPos = result.indexOf('<agent_instructions>');
-      const userPos = result.indexOf('<user_instructions>');
-      expect(agentPos).toBeGreaterThan(-1);
-      expect(userPos).toBeGreaterThan(-1);
-      expect(userPos).toBeGreaterThan(agentPos);
-    });
-
     it('should place user_instructions before the closing ready message', () => {
       const result = service.build({
         tools: [],

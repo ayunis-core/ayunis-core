@@ -3,7 +3,6 @@ import { ExecuteRunAndSetTitleUseCase } from './execute-run-and-set-title.use-ca
 import { ExecuteRunAndSetTitleCommand } from './execute-run-and-set-title.command';
 import type { ExecuteRunUseCase } from '../execute-run/execute-run.use-case';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
-import type { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
 import type { GenerateAndSetThreadTitleUseCase } from 'src/domain/threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.use-case';
 import type { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { RunUserInput } from 'src/domain/runs/domain/run-input.entity';
@@ -19,7 +18,6 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
   let useCase: ExecuteRunAndSetTitleUseCase;
   let executeRunUseCase: jest.Mocked<ExecuteRunUseCase>;
   let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
-  let findOneAgentUseCase: jest.Mocked<FindOneAgentUseCase>;
   let generateAndSetThreadTitleUseCase: jest.Mocked<GenerateAndSetThreadTitleUseCase>;
   let anonymizeTextUseCase: jest.Mocked<AnonymizeTextUseCase>;
 
@@ -28,7 +26,6 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
   function makeThread(): Thread {
     return {
       id: threadId,
-      agentId: null,
       isAnonymous: false,
       messages: [],
     } as unknown as Thread;
@@ -58,10 +55,6 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
       }),
     } as unknown as jest.Mocked<FindThreadUseCase>;
 
-    findOneAgentUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<FindOneAgentUseCase>;
-
     generateAndSetThreadTitleUseCase = {
       execute: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<GenerateAndSetThreadTitleUseCase>;
@@ -73,7 +66,6 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
     useCase = new ExecuteRunAndSetTitleUseCase(
       executeRunUseCase,
       findThreadUseCase,
-      findOneAgentUseCase,
       generateAndSetThreadTitleUseCase,
       anonymizeTextUseCase,
     );

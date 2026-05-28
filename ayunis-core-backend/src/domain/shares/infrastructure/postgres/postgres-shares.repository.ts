@@ -79,7 +79,7 @@ export class PostgresSharesRepository extends SharesRepository {
         .andWhere('scope.orgId = :scopeId', { scopeId })
         .orderBy('share.createdAt', 'DESC')
         .getMany();
-    } else if (scopeType === ShareScopeType.TEAM) {
+    } else {
       records = await this.shareRepository
         .createQueryBuilder('share')
         .leftJoinAndSelect('share.scope', 'scope')
@@ -112,7 +112,7 @@ export class PostgresSharesRepository extends SharesRepository {
         .andWhere('scope.scope_type = :scopeType', { scopeType })
         .andWhere('scope.orgId = :scopeId', { scopeId })
         .getOne();
-    } else if (scopeType === ShareScopeType.TEAM) {
+    } else {
       record = await this.shareRepository
         .createQueryBuilder('share')
         .leftJoinAndSelect('share.scope', 'scope')
@@ -166,7 +166,6 @@ export class PostgresSharesRepository extends SharesRepository {
 
   private getEntityColumn(entityType: SharedEntityType): string {
     const entityColumnMap: Partial<Record<SharedEntityType, string>> = {
-      [SharedEntityType.AGENT]: 'share.agent_id',
       [SharedEntityType.SKILL]: 'share.skill_id',
       [SharedEntityType.KNOWLEDGE_BASE]: 'share.knowledge_base_id',
     };

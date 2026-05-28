@@ -14,7 +14,7 @@ import { SharesRepository } from '../../ports/shares-repository.port';
 import { ShareDeletedEvent } from '../../events/share-deleted.event';
 import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
 import { ShareScopeType } from '../../../domain/value-objects/share-scope-type.enum';
-import { AgentShare, SkillShare } from '../../../domain/share.entity';
+import { SkillShare } from '../../../domain/share.entity';
 import {
   OrgShareScope,
   TeamShareScope,
@@ -130,10 +130,10 @@ describe('DeleteShareUseCase', () => {
     ]);
   });
 
-  it('should delete the share and emit ShareDeletedEvent for an agent share', async () => {
-    const agentId = randomUUID();
-    const share = new AgentShare({
-      agentId,
+  it('should delete the share and emit ShareDeletedEvent for a skill share', async () => {
+    const skillId = randomUUID();
+    const share = new SkillShare({
+      skillId,
       scope: new OrgShareScope({ orgId: mockOrgId }),
       ownerId: mockUserId,
     });
@@ -154,8 +154,8 @@ describe('DeleteShareUseCase', () => {
     );
 
     const emittedEvent = (eventEmitter.emit as jest.Mock).mock.calls[0][1];
-    expect(emittedEvent.entityType).toBe(SharedEntityType.AGENT);
-    expect(emittedEvent.entityId).toBe(agentId);
+    expect(emittedEvent.entityType).toBe(SharedEntityType.SKILL);
+    expect(emittedEvent.entityId).toBe(skillId);
     expect(emittedEvent.ownerId).toBe(mockUserId);
     expect(emittedEvent.remainingScopes).toEqual([]);
   });
@@ -179,8 +179,8 @@ describe('DeleteShareUseCase', () => {
 
   it('should throw UnauthorizedAccessError when user does not own the share', async () => {
     const otherUserId = randomUUID();
-    const share = new AgentShare({
-      agentId: randomUUID(),
+    const share = new SkillShare({
+      skillId: randomUUID(),
       scope: new OrgShareScope({ orgId: mockOrgId }),
       ownerId: otherUserId,
     });

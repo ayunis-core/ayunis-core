@@ -11,7 +11,6 @@ interface SearchPaginationProps {
 /**
  * A convenience wrapper around PaginationWidget for the common case
  * of paginating with a `search` query and a `page` number.
- * Accepts optional extra search params (e.g. agentId).
  */
 export default function SearchPagination({
   currentPage,

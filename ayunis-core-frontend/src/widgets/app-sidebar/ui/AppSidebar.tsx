@@ -5,7 +5,6 @@ import {
   Settings2,
   LogOut,
   Plus,
-  Bot,
   Brain,
   Sparkles,
   Store,
@@ -65,15 +64,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: '/chat',
       icon: Plus,
     },
-    ...(featureToggles.agentsEnabled
-      ? [
-          {
-            title: t('sidebar.agents'),
-            url: '/agents',
-            icon: Bot,
-          },
-        ]
-      : []),
     ...(featureToggles.skillsEnabled
       ? [
           {

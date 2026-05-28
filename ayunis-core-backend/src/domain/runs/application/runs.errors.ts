@@ -12,7 +12,6 @@ export enum RunErrorCode {
   RUN_TOOL_EXECUTION_FAILED = 'RUN_TOOL_EXECUTION_FAILED',
   RUN_NO_MODEL_FOUND = 'RUN_NO_MODEL_FOUND',
   RUN_ANONYMIZATION_UNAVAILABLE = 'RUN_ANONYMIZATION_UNAVAILABLE',
-  THREAD_AGENT_NO_LONGER_ACCESSIBLE = 'THREAD_AGENT_NO_LONGER_ACCESSIBLE',
 }
 
 /**
@@ -119,21 +118,6 @@ export class RunAnonymizationUnavailableError extends RunError {
       RunErrorCode.RUN_ANONYMIZATION_UNAVAILABLE,
       503,
       metadata,
-    );
-  }
-}
-
-/**
- * Error thrown when the agent used in a thread is no longer accessible
- * (e.g., agent was deleted, share was removed, user was removed from team)
- */
-export class ThreadAgentNoLongerAccessibleError extends RunError {
-  constructor(threadId: string, agentId: string, metadata?: ErrorMetadata) {
-    super(
-      `The agent used in this conversation is no longer accessible. The agent may have been deleted or you no longer have access to it.`,
-      RunErrorCode.THREAD_AGENT_NO_LONGER_ACCESSIBLE,
-      403,
-      { threadId, agentId, ...metadata },
     );
   }
 }

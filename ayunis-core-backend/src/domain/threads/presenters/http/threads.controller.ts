@@ -80,7 +80,6 @@ export class ThreadsController {
     const thread = await this.createThreadUseCase.execute(
       new CreateThreadCommand({
         modelId: createThreadDto.modelId,
-        agentId: createThreadDto.agentId,
         isAnonymous: createThreadDto.isAnonymous,
       }),
     );
@@ -95,12 +94,6 @@ export class ThreadsController {
     required: false,
     type: String,
     description: 'Search threads by title',
-  })
-  @ApiQuery({
-    name: 'agentId',
-    required: false,
-    type: String,
-    description: 'Filter threads by agent ID',
   })
   @ApiQuery({
     name: 'limit',
@@ -132,7 +125,6 @@ export class ThreadsController {
         undefined,
         {
           search: queryParams.search,
-          agentId: queryParams.agentId,
         },
         {
           limit: queryParams.limit,

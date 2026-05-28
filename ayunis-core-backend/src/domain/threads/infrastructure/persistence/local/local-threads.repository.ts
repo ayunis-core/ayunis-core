@@ -105,12 +105,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
       });
     }
 
-    if (filters?.agentId) {
-      queryBuilder.andWhere('thread.agentId = :agentId', {
-        agentId: filters.agentId,
-      });
-    }
-
     if (options?.withMessages) {
       queryBuilder.leftJoinAndSelect('thread.messages', 'messages');
     }
@@ -172,21 +166,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
     this.logger.log('findAllByModel', { modelId });
     const threadEntities = await this.threadRepository.find({
       where: { modelId },
-      relations: this.getRelations(options),
-      order: options?.withMessages
-        ? { messages: { createdAt: 'ASC' } }
-        : undefined,
-    });
-    return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
-  }
-
-  async findAllByAgent(
-    agentId: UUID,
-    options?: ThreadsFindAllOptions,
-  ): Promise<Thread[]> {
-    this.logger.log('findAllByAgent', { agentId });
-    const threadEntities = await this.threadRepository.find({
-      where: { agentId },
       relations: this.getRelations(options),
       order: options?.withMessages
         ? { messages: { createdAt: 'ASC' } }
@@ -260,7 +239,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
       .update(ThreadRecord)
       .set({
         modelId: params.permittedModelId,
-        agentId: () => 'NULL',
       })
       .where('id = :threadId AND userId = :userId', {
         threadId: params.threadId,

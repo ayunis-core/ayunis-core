@@ -8,10 +8,6 @@ export function useIsFeatureEnabled(
   return toggles[feature];
 }
 
-export function useIsAgentsEnabled(): boolean {
-  return useIsFeatureEnabled('agentsEnabled');
-}
-
 export function useIsKnowledgeBasesEnabled(): boolean {
   return useIsFeatureEnabled('knowledgeBasesEnabled');
 }
