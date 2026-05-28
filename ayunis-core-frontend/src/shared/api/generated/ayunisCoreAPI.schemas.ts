@@ -504,9 +504,6 @@ export type EmbeddingModelResponseDtoDimensions = typeof EmbeddingModelResponseD
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const EmbeddingModelResponseDtoDimensions = {
-  DIMENSION_1024: 'DIMENSION_1024',
-  DIMENSION_1536: 'DIMENSION_1536',
-  DIMENSION_2560: 'DIMENSION_2560',
   NUMBER_1024: 1024,
   NUMBER_1536: 1536,
   NUMBER_2560: 2560,

@@ -9002,6 +9002,7 @@
           "permittedLanguageModel": {
             "description": "The permitted language model",
             "nullable": true,
+            "type": "object",
             "allOf": [
               {
                 "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
@@ -9220,15 +9221,8 @@
             "example": false
           },
           "dimensions": {
-            "type": "string",
-            "enum": [
-              "DIMENSION_1024",
-              "DIMENSION_1536",
-              "DIMENSION_2560",
-              1024,
-              1536,
-              2560
-            ],
+            "type": "number",
+            "enum": [1024, 1536, 2560],
             "description": "The dimensions of the embedding",
             "example": 1536
           },
