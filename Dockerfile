@@ -1,64 +1,58 @@
-# Multi-stage build for production deployment
-# Stage 1: Build Frontend
-FROM node:24-alpine AS frontend-builder
+# Multi-stage build for production deployment (pnpm workspaces)
 
-WORKDIR /app/frontend
+# ---- Stage 1: Build — install workspace, build FE + BE, create prod bundle ----
+FROM node:24-alpine AS build
 
-# Copy frontend package files
-COPY ayunis-core-frontend/package*.json ./
-RUN npm ci
-
-# Copy frontend source
-COPY ayunis-core-frontend/ ./
-
-# Build frontend
-RUN npm run build
-
-# Stage 2: Build Backend
-FROM node:24-alpine AS backend-builder
-
-# Install build dependencies for bcrypt
+# pnpm via corepack (version pinned by root package.json "packageManager")
+RUN corepack enable
+# Native build deps for bcrypt (node-pre-gyp builds from source on musl/alpine)
 RUN apk add --no-cache python3 make g++ gcc
 
-WORKDIR /app
+# Skip husky in the image (no .git here; prepare script would otherwise run)
+ENV HUSKY=0
 
-# Copy backend package files
-COPY ayunis-core-backend/package*.json ./
-RUN npm ci
+WORKDIR /usr/src/app
 
-# Copy backend source
-COPY ayunis-core-backend/ ./
+# Copy the whole workspace. The root .dockerignore prunes node_modules, build
+# outputs, .env files, the Python services, and tooling.
+COPY . .
 
-# Copy built frontend from frontend-builder stage
-COPY --from=frontend-builder /app/frontend/dist ./frontend
+# Install the full workspace, frozen to the committed lockfile.
+RUN pnpm install --frozen-lockfile
 
-# Build backend
-RUN npm run build
+# Build the frontend, then bundle it where the backend serves it from: a sibling
+# of dist/ (so nest's deleteOutDir doesn't wipe it), copied into dist/frontend in
+# the final stage. Then build the backend.
+RUN pnpm --filter core-frontend-tanstack run build
+RUN cp -r ayunis-core-frontend/dist ayunis-core-backend/frontend
+RUN pnpm --filter core-backend run build
 
-# Stage 3: Production
+# Produce a self-contained, production-only deploy bundle for the backend
+# workspace (prunes devDependencies; --legacy avoids the inject-workspace-packages
+# requirement — no workspace package deps exist yet, AYC-148 revisits).
+RUN pnpm --filter=core-backend --prod --legacy deploy /prod/backend
+
+# ---- Stage 2: Production runtime ----
 FROM node:24-alpine AS production
 
-# Install runtime dependencies for bcrypt and Chromium for Puppeteer PDF export
-RUN apk add --no-cache python3 make g++ gcc chromium
-
+# Chromium for Puppeteer PDF export
+RUN apk add --no-cache chromium
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 WORKDIR /app
 
-# Copy package files and install production dependencies
-COPY ayunis-core-backend/package*.json ./
-RUN npm ci --only=production && npm rebuild bcrypt --build-from-source
+# Production node_modules + manifest from the deploy bundle (bcrypt already built
+# during install on this same alpine platform). Built backend + bundled frontend
+# copied explicitly (dist is git-ignored, so the deploy bundle omits it).
+COPY --from=build /prod/backend/node_modules ./node_modules
+COPY --from=build /prod/backend/package.json ./package.json
+COPY --from=build /usr/src/app/ayunis-core-backend/dist ./dist
+COPY --from=build /usr/src/app/ayunis-core-backend/frontend ./dist/frontend
 
-# Copy built backend from builder stage
-COPY --from=backend-builder /app/dist ./dist
-
-# Copy frontend files from builder stage into dist/frontend
-COPY --from=backend-builder /app/frontend ./dist/frontend
-
-# Create uploads directory
+# Uploads dir (resolved relative to cwd = /app at runtime; matches the
+# app-uploads:/app/uploads compose mount)
 RUN mkdir -p uploads
 
-# Set environment variables
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=3072"
 # PORT is set via environment variable at runtime, defaults to 3000 in app code
@@ -68,5 +62,5 @@ ENV NODE_OPTIONS="--max-old-space-size=3072"
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 3000) + '/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
-# Start the application
-CMD ["node", "dist/src/main.js"] 
+# Start the application (cwd /app → dist/frontend served, ./uploads = /app/uploads)
+CMD ["node", "dist/src/main.js"]

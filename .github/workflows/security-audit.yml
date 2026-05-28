@@ -3,56 +3,35 @@ name: Security Audit
 on:
   pull_request:
     paths:
-      - '**/package-lock.json'
+      - 'pnpm-lock.yaml'
       - '.github/workflows/security-audit.yml'
   schedule:
     - cron: '0 9 * * 1'
 
 jobs:
-  backend:
-    name: Backend
+  audit:
+    name: Audit
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ayunis-core-backend
 
     steps:
       - uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: ayunis-core-backend/package-lock.json
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
+      # Audits the whole workspace from the single root lockfile. Root
+      # pnpm.overrides patch known-vulnerable transitive deps (basic-ftp,
+      # protobufjs); keep them in sync with this gate.
       - name: Run security audit
-        run: npx better-npm-audit audit --level critical
-        continue-on-error: ${{ github.event_name == 'schedule' }}
-
-  frontend:
-    name: Frontend
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ayunis-core-frontend
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: ayunis-core-frontend/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run security audit
-        run: npx better-npm-audit audit --level critical
+        run: pnpm audit --audit-level critical
         continue-on-error: ${{ github.event_name == 'schedule' }}

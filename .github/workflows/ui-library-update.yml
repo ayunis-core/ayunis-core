@@ -44,6 +44,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
@@ -57,7 +60,7 @@ jobs:
           for f in src/shared/ui/shadcn/*.tsx; do
             name=$(basename "$f" .tsx)
             echo "::group::shadcn add @ayunis/$name"
-            npx shadcn@latest add "@ayunis/$name" --overwrite --yes \
+            pnpm dlx shadcn@latest add "@ayunis/$name" --overwrite --yes \
               || echo "::warning::shadcn failed for $name (skipping)"
             echo "::endgroup::"
           done
