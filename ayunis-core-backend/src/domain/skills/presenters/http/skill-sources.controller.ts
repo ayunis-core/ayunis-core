@@ -55,6 +55,7 @@ import { Skill } from '../../domain/skill.entity';
 import {
   detectFileType,
   getCanonicalMimeType,
+  isAudioFile,
   isDocumentFile,
   isPlainTextFile,
   isSpreadsheetFile,
@@ -244,7 +245,11 @@ export class SkillSourcesController {
   ): Promise<Skill> {
     const detectedType = detectFileType(file.mimetype, file.originalname);
 
-    if (isDocumentFile(detectedType) || isPlainTextFile(detectedType)) {
+    if (
+      isDocumentFile(detectedType) ||
+      isPlainTextFile(detectedType) ||
+      isAudioFile(detectedType)
+    ) {
       const fileData = fs.readFileSync(file.path);
       const canonicalMimeType = getCanonicalMimeType(detectedType);
       if (!canonicalMimeType) {
@@ -269,7 +274,19 @@ export class SkillSourcesController {
     } else {
       throw new UnsupportedFileTypeError(
         detectedType === 'unknown' ? file.originalname : detectedType,
-        ['PDF', 'DOCX', 'PPTX', 'TXT', 'CSV', 'XLSX', 'XLS'],
+        [
+          'PDF',
+          'DOCX',
+          'PPTX',
+          'TXT',
+          'CSV',
+          'XLSX',
+          'XLS',
+          'MP3',
+          'M4A',
+          'WAV',
+          'WEBM',
+        ],
       );
     }
   }

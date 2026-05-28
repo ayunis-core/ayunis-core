@@ -1,5 +1,6 @@
 // Types
 import type {
+  FileSourceResponseDtoFileType,
   SourceResponseDtoType,
   SourceResponseDtoCreatedBy,
 } from '@/shared/api';
@@ -25,6 +26,7 @@ import {
   Brain,
   Loader2,
   AlertCircle,
+  Mic,
 } from 'lucide-react';
 import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
 
@@ -32,6 +34,7 @@ interface Source {
   id: string;
   name: string;
   type: SourceResponseDtoType;
+  fileType?: FileSourceResponseDtoFileType;
   createdBy?: SourceResponseDtoCreatedBy;
   status?: SourceResponseDtoStatus;
   processingError?: string;
@@ -47,10 +50,14 @@ interface SourcesListProps {
 
 function getSourceIcon(source: {
   type: SourceResponseDtoType;
+  fileType?: FileSourceResponseDtoFileType;
   createdByLLM?: boolean;
 }) {
   if (source.createdByLLM) {
     return <Sparkles className="h-3 w-3" />;
+  }
+  if (source.fileType === 'audio') {
+    return <Mic className="h-3 w-3" />;
   }
   switch (source.type) {
     case 'text':
