@@ -1,0 +1,306 @@
+/* Brand: #6055A6 — smooth orbit glow + matching send/stop button */
+
+:root {
+  --chat-input-ease: cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  --chat-input-duration: 0.52s;
+  --new-chat-greeting-exit-duration: 0.55s;
+  --new-chat-greeting-exit-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --new-chat-settle-duration: 1.45s;
+  --new-chat-settle-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --new-chat-disclaimer-fade-duration: 0.9s;
+  --new-chat-disclaimer-fade-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.chat-input-shell__textarea {
+  transition: height var(--chat-input-duration) var(--chat-input-ease);
+}
+
+.chat-input-shell__card .chat-input-body {
+  transition: gap var(--chat-input-duration) var(--chat-input-ease);
+}
+
+/* Bottom-anchored compose block, lifted to visual center when idle */
+.new-chat-compose {
+  gap: 1rem;
+  transition:
+    transform var(--new-chat-settle-duration) var(--new-chat-settle-ease),
+    gap var(--new-chat-settle-duration) var(--new-chat-settle-ease);
+  will-change: transform;
+}
+
+.new-chat-compose--idle {
+  transform: translate3d(0, var(--new-chat-lift, 0), 0);
+}
+
+.new-chat-compose--settling {
+  transform: translate3d(0, 0, 0);
+  gap: 0;
+}
+
+.new-chat-greeting {
+  font-weight: 600;
+  max-height: 4rem;
+  overflow: hidden;
+  transition:
+    opacity var(--new-chat-greeting-exit-duration)
+      var(--new-chat-greeting-exit-ease),
+    transform var(--new-chat-greeting-exit-duration)
+      var(--new-chat-greeting-exit-ease),
+    max-height var(--new-chat-greeting-exit-duration)
+      var(--new-chat-greeting-exit-ease);
+}
+
+.new-chat-greeting--exit {
+  max-height: 0;
+  opacity: 0;
+  transform: translate3d(0, -0.75rem, 0);
+  pointer-events: none;
+}
+
+/* Absolutely positioned — opacity/transform only, no layout shift on the input */
+.new-chat-disclaimer {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(0, 0.4rem, 0);
+  transition:
+    opacity var(--new-chat-disclaimer-fade-duration)
+      var(--new-chat-disclaimer-fade-ease),
+    transform var(--new-chat-disclaimer-fade-duration)
+      var(--new-chat-disclaimer-fade-ease);
+}
+
+.new-chat-disclaimer--visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate3d(0, 0, 0);
+  transition-delay: var(--new-chat-settle-duration);
+}
+
+.new-chat-dock-extras {
+  transition:
+    max-height var(--new-chat-greeting-exit-duration)
+      var(--new-chat-greeting-exit-ease),
+    opacity var(--new-chat-greeting-exit-duration)
+      var(--new-chat-greeting-exit-ease),
+    margin-top var(--new-chat-greeting-exit-duration)
+      var(--new-chat-greeting-exit-ease);
+  max-height: 24rem;
+}
+
+.new-chat-dock-extras--collapsed {
+  max-height: 0;
+  margin-top: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-input-shell__textarea,
+  .chat-input-shell__card .chat-input-body,
+  .chat-input-expandable,
+  .new-chat-compose,
+  .new-chat-compose--idle,
+  .new-chat-compose--settling,
+  .new-chat-greeting,
+  .new-chat-greeting--exit,
+  .new-chat-dock-extras,
+  .new-chat-dock-extras--collapsed {
+    transition: none;
+    transform: none;
+    gap: 1rem;
+    opacity: 1;
+    max-height: none;
+    margin-top: 1rem;
+  }
+
+  .new-chat-disclaimer--visible {
+    transition: none;
+    transition-delay: 0ms;
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.chat-input-shell {
+  --chat-input-brand: #6055a6;
+  --chat-input-brand-rgb: 96, 85, 166;
+  --chat-input-brand-light-rgb: 125, 115, 184;
+  --chat-input-glow-ring: 2px;
+  position: relative;
+  border-radius: 0.75rem;
+  /* Reserve ring space always — toggling --active must not change layout width */
+  padding: var(--chat-input-glow-ring);
+  box-sizing: border-box;
+}
+
+@keyframes chat-input-glow-orbit {
+  from {
+    transform: translate3d(-50%, -50%, 0) rotate(0deg);
+  }
+  to {
+    transform: translate3d(-50%, -50%, 0) rotate(360deg);
+  }
+}
+
+@keyframes chat-input-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.78;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes chat-input-glow-halo {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.82;
+  }
+}
+
+.chat-input-shell--active {
+  isolation: isolate;
+}
+
+.chat-input-shell__glow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.chat-input-shell__glow-spinner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 220%;
+  height: 220%;
+  transform: translate3d(-50%, -50%, 0);
+  transform-origin: center center;
+  will-change: transform;
+  animation: chat-input-glow-orbit 5.2s linear infinite;
+}
+
+.chat-input-shell__glow-arc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 270deg,
+    rgba(var(--chat-input-brand-rgb), 0.55) 0deg,
+    rgba(var(--chat-input-brand-light-rgb), 0.36) 14deg,
+    rgba(var(--chat-input-brand-light-rgb), 0.14) 26deg,
+    transparent 40deg,
+    transparent 360deg
+  );
+  animation: chat-input-glow-breathe 3.6s cubic-bezier(0.45, 0.05, 0.55, 0.95)
+    infinite;
+}
+
+.chat-input-shell__glow-bloom {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 270deg,
+    rgba(var(--chat-input-brand-rgb), 0.2) 0deg,
+    rgba(var(--chat-input-brand-light-rgb), 0.11) 18deg,
+    transparent 36deg,
+    transparent 360deg
+  );
+  filter: blur(8px);
+  animation: chat-input-glow-halo 3.6s cubic-bezier(0.45, 0.05, 0.55, 0.95)
+    infinite;
+}
+
+.chat-input-shell--active .chat-input-shell__card {
+  position: relative;
+  z-index: 1;
+  border-color: transparent;
+  box-shadow: 0 0 0 var(--chat-input-glow-ring)
+    rgba(var(--chat-input-brand-rgb), 0.2);
+}
+
+.chat-input-shell--active .chat-input-shell__card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 18px rgba(var(--chat-input-brand-rgb), 0.14);
+  opacity: 0.55;
+  animation: chat-input-glow-halo 3.6s cubic-bezier(0.45, 0.05, 0.55, 0.95)
+    infinite;
+}
+
+.chat-input-send-button--stop {
+  border: 1px solid rgba(var(--chat-input-brand-rgb), 0.35) !important;
+  background-color: var(--chat-input-brand) !important;
+  color: #fff !important;
+  box-shadow:
+    0 0 0 1px rgba(var(--chat-input-brand-rgb), 0.2),
+    0 0 14px rgba(var(--chat-input-brand-rgb), 0.28);
+  transition:
+    background-color 0.25s cubic-bezier(0.45, 0.05, 0.55, 0.95),
+    box-shadow 0.25s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  animation: chat-input-glow-breathe 3.6s cubic-bezier(0.45, 0.05, 0.55, 0.95)
+    infinite;
+}
+
+.chat-input-send-button--stop:hover {
+  background-color: #524997 !important;
+  box-shadow:
+    0 0 0 1px rgba(var(--chat-input-brand-rgb), 0.28),
+    0 0 18px rgba(var(--chat-input-brand-rgb), 0.34);
+}
+
+.chat-input-send-button--disabled:disabled {
+  border: 1px solid rgba(var(--chat-input-brand-rgb), 0.16) !important;
+  background-color: rgba(var(--chat-input-brand-rgb), 0.08) !important;
+  color: rgba(var(--chat-input-brand-rgb), 0.38) !important;
+  opacity: 1 !important;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.chat-input-send-button--ready:not(:disabled) {
+  background-color: var(--chat-input-brand) !important;
+  color: #fff !important;
+  border: 1px solid transparent !important;
+  box-shadow: 0 1px 2px rgba(var(--chat-input-brand-rgb), 0.2);
+}
+
+.chat-input-send-button--ready:not(:disabled):hover {
+  background-color: #524997 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-input-shell__glow-spinner {
+    animation: none;
+    transform: translate3d(-50%, -50%, 0);
+  }
+
+  .chat-input-shell__glow-arc,
+  .chat-input-shell__glow-bloom,
+  .chat-input-shell--active .chat-input-shell__card::after,
+  .chat-input-send-button--stop {
+    animation: none;
+    opacity: 0.85;
+  }
+
+  .chat-input-shell--active .chat-input-shell__card {
+    box-shadow: 0 0 0 var(--chat-input-glow-ring)
+      rgba(var(--chat-input-brand-rgb), 0.32);
+  }
+
+  .chat-input-shell--active .chat-input-shell__card::after {
+    opacity: 0;
+  }
+}

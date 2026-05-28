@@ -9,11 +9,7 @@ export default function FullScreenMessageLayout({
 }: Readonly<FullScreenMessageLayoutProps>) {
   return (
     <div className="flex flex-col h-full">
-      {header && (
-        <div className="flex-shrink-0 sticky top-0 z-10 bg-background w-full">
-          {header}
-        </div>
-      )}
+      {header && <div className="content-area-page-header">{header}</div>}
       <div className="flex flex-col h-full w-full mx-auto items-center justify-center -translate-y-[40px]">
         {children}
       </div>

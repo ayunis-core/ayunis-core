@@ -1,0 +1,75 @@
+/* Pointer cursor on interactive controls (hand, not arrow) */
+@layer base {
+  a[href],
+  area[href],
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='link']:not([aria-disabled='true']),
+  [role='menuitem']:not([aria-disabled='true']),
+  [role='menuitemcheckbox']:not([aria-disabled='true']),
+  [role='menuitemradio']:not([aria-disabled='true']),
+  [role='option']:not([aria-disabled='true']),
+  [role='tab']:not([aria-disabled='true']),
+  [role='checkbox']:not([aria-disabled='true']),
+  [role='radio']:not([aria-disabled='true']),
+  [role='switch']:not([aria-disabled='true']),
+  label[for],
+  summary,
+  [data-sidebar='menu-button']:not([aria-disabled='true']),
+  [data-sidebar='menu-sub-button']:not([aria-disabled='true']),
+  [data-sidebar='menu-action']:not([aria-disabled='true']),
+  [data-slot='breadcrumb-link'],
+  [data-slot='tabs-trigger'],
+  [data-slot='accordion-trigger'],
+  [data-slot='pagination-link'],
+  select:not(:disabled),
+  input[type='button']:not(:disabled),
+  input[type='submit']:not(:disabled),
+  input[type='reset']:not(:disabled),
+  input[type='checkbox']:not(:disabled),
+  input[type='radio']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+.prose a {
+  cursor: pointer;
+}
+
+/* Shared top bar: title + actions (Wissen, /chat, thread, …) */
+@layer components {
+  .content-area-page-header {
+    @apply sticky top-0 z-10 mb-1.5 w-full shrink-0 bg-background pt-3;
+  }
+
+  /* Shared sizing for overlay header + scroll offset (siblings under .content-scroll-region) */
+  .content-scroll-region {
+    --content-scroll-header-row: 2.25rem; /* min-h-9 */
+    --content-scroll-header-pad-block: 1.5rem; /* py-3 */
+    --content-scroll-header-gap: 1rem; /* clear space before first content block */
+  }
+
+  /* Frosted header overlay (chat thread, settings, lists); content scrolls underneath */
+  .content-scroll-header {
+    @apply absolute inset-x-0 top-0 z-10 -mx-4 overflow-hidden rounded-t-xl border-b border-transparent px-4 py-3;
+    @apply bg-background/80 backdrop-blur-md transition-[border-color] duration-200 ease-out;
+    @apply supports-[backdrop-filter]:bg-background/65;
+    min-height: calc(
+      var(--content-scroll-header-row) + var(--content-scroll-header-pad-block)
+    );
+  }
+
+  .content-scroll-header[data-scrolled='true'] {
+    @apply border-border/40;
+  }
+
+  /* Header height + gap so content does not sit under the frosted bar at scroll top */
+  .content-scroll-header-offset {
+    @apply shrink-0;
+    height: calc(
+      var(--content-scroll-header-row) +
+        var(--content-scroll-header-pad-block) +
+        var(--content-scroll-header-gap)
+    );
+  }
+}

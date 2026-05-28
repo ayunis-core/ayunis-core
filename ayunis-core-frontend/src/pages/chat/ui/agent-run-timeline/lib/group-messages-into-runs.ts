@@ -11,11 +11,17 @@ import { isRichTool } from './tool-classification';
 interface GroupingOptions {
   isStreaming: boolean;
   toolResultsByToolId: Readonly<Record<string, string>>;
+  /** New user turn is pending outside `messages` (optimistic bubble only). */
+  hasPendingUserTurn?: boolean;
 }
 
 export function groupMessagesIntoRuns(
   messages: readonly Message[],
-  { isStreaming, toolResultsByToolId }: GroupingOptions,
+  {
+    isStreaming,
+    toolResultsByToolId,
+    hasPendingUserTurn = false,
+  }: GroupingOptions,
 ): RenderUnit[] {
   const units: RenderUnit[] = [];
   let currentRun: AgentRunUnit | null = null;
@@ -66,7 +72,7 @@ export function groupMessagesIntoRuns(
 
   closeRun();
 
-  if (isStreaming && units.length > 0) {
+  if (isStreaming && !hasPendingUserTurn && units.length > 0) {
     const lastUnit = units[units.length - 1];
     if (lastUnit.kind === 'agent-run') {
       lastUnit.isStreaming = true;

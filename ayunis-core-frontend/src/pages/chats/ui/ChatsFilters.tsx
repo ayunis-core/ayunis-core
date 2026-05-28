@@ -91,8 +91,8 @@ export default function ChatsFilters({
   };
 
   return (
-    <div className="flex gap-4 mb-6">
-      <div className="relative flex-1 max-w-md">
+    <div className="flex gap-4">
+      <div className="relative flex-1 max-w-md py-0.5">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
         <Input
           ref={searchInputRef}

@@ -15,7 +15,7 @@ export default function AppLayout({
     <SidebarProvider>
       {sidebar ?? <AppSidebar />}
       <SidebarInset>
-        <div className="flex flex-1 flex-col h-screen overflow-hidden p-4 pt-0 relative">
+        <div className="flex flex-1 flex-col h-screen min-h-0 p-4 pt-0 relative">
           {children}
         </div>
       </SidebarInset>

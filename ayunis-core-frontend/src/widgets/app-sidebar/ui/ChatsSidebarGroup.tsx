@@ -18,6 +18,7 @@ import {
   SidebarMenuItem,
   SidebarMenuAction,
   SidebarGroupContent,
+  useSidebar,
 } from '@/shared/ui/shadcn/sidebar';
 import {
   DropdownMenu,
@@ -37,6 +38,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
+import { CollapsedChatsSidebarMenu } from './CollapsedChatsSidebarMenu';
 
 export function ChatsSidebarGroup() {
   const { t } = useTranslation('common');
@@ -45,15 +47,18 @@ export function ChatsSidebarGroup() {
   const { deleteChat } = useDeleteThread({});
   const params = useParams({ strict: false });
   const navigate = useNavigate();
+  const { isIconCollapsed } = useSidebar();
 
   const [isOpen, setOpen] = useChatsSidebarOpen();
-
-  // Rename dialog state
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [threadToRename, setThreadToRename] = useState<{
     id: string;
     title: string | null;
   } | null>(null);
+
+  if (isIconCollapsed) {
+    return <CollapsedChatsSidebarMenu />;
+  }
 
   const handleRenameClick = (threadId: string, currentTitle: string | null) => {
     setThreadToRename({ id: threadId, title: currentTitle });

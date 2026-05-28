@@ -31,6 +31,8 @@ import { SourcesList } from './SourcesList';
 import { showError } from '@/shared/lib/toast';
 import { MicrophoneButton } from './MicrophoneButton';
 import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
+import { ChatInputExpandable } from './ChatInputExpandable';
+import './chat-input-glow.css';
 
 /**
  * Lifecycle of an in-flight submit. The input behaves differently in each:
@@ -139,7 +141,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const [isFocused, setIsFocused] = useState<boolean>(false);
     const [message, setMessage] = useState('');
     const isSubmitting = submissionState === 'submitting';
+    const isStreaming = submissionState === 'streaming';
     const inFlight = submissionState !== 'idle';
+    const showProcessingGlow = inFlight;
     const { t } = useTranslation('common');
     const isAgentsEnabled = useIsAgentsEnabled();
     const { agents } = useAgents({ enabled: isAgentsEnabled });
@@ -282,139 +286,171 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       }, 0);
     }
 
+    const hasAttachmentChips =
+      sources.length > 0 || (knowledgeBases?.length ?? 0) > 0;
+    const hasPendingImages = pendingImages.length > 0;
+
     return (
       <div
         ref={containerRef}
         className="w-full space-y-2"
         data-testid="chat-input"
       >
-        <Card
+        <div
           className={cn(
-            'py-4',
-            isDragging && 'border-2 border-dashed border-primary bg-primary/5',
+            'chat-input-shell',
+            showProcessingGlow && 'chat-input-shell--active',
           )}
+          aria-busy={showProcessingGlow}
+          data-processing={showProcessingGlow ? 'true' : undefined}
         >
-          <CardContent className="px-4">
-            <div className="flex flex-col gap-4">
-              <SourcesList
-                sources={sources}
-                knowledgeBases={knowledgeBases}
-                onRemove={onRemoveSource}
-                onRemoveKnowledgeBase={onRemoveKnowledgeBase}
-                onDownload={onDownloadSource}
-              />
-
-              {pendingImages.length > 0 && (
-                <div className="flex flex-wrap gap-2 items-center">
-                  {pendingImages.map((image: PendingImage) => (
-                    <PendingImageThumbnail
-                      key={image.id}
-                      image={image}
-                      onRemove={removeImage}
-                    />
-                  ))}
-                </div>
-              )}
-
-              <TextareaAutosize
-                ref={textareaRef}
-                maxRows={10}
-                value={message}
-                autoFocus
-                readOnly={isSubmitting}
-                onChange={(e) => setMessage(e.target.value)}
-                onPaste={handlePaste}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                placeholder={t('chatInput.placeholder')}
-                aria-label={t('chatInput.placeholder')}
-                className={cn(
-                  'border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0',
-                  isSubmitting && 'opacity-60 cursor-not-allowed',
-                )}
-                data-testid="input"
-              />
-
-              <div className="flex items-center justify-between">
-                {/* Left side */}
-                <div className="flex-shrink-0 flex items-center space-x-2">
-                  <PlusButton
-                    onFileUpload={onFileUpload}
-                    onImageSelect={handleImageSelect}
-                    isFileSourceDisabled={
-                      !isEmbeddingModelEnabled || isSubmitting
-                    }
-                    isImageUploadDisabled={!isVisionEnabled || isSubmitting}
-                    onKnowledgeBaseSelect={onAddKnowledgeBase}
-                    attachedKnowledgeBaseIds={knowledgeBases?.map(
-                      (kb) => kb.id,
-                    )}
-                  />
-                  {isAgentsEnabled && (
-                    <AgentButton
-                      selectedAgentId={agentId}
-                      onAgentChange={onAgentChange}
-                      isDisabled={isAgentChangeDisabled}
-                    />
-                  )}
-                  <AnonymousButton
-                    isAnonymous={isAnonymous}
-                    onAnonymousChange={onAnonymousChange}
-                    isDisabled={isAnonymousChangeDisabled}
-                    isEnforced={isAnonymousEnforced}
-                  />
-                  {isAgentsEnabled && agentId && (
-                    <AgentBadge
-                      agentId={agentId}
-                      agent={agents.find((a) => a.id === agentId)}
-                      isDisabled={isAgentChangeDisabled ?? false}
-                      onRemove={onAgentRemove}
-                    />
-                  )}
-                  {selectedSkillId && selectedSkillName && onSkillRemove && (
-                    <SkillBadge
-                      skillName={selectedSkillName}
-                      onRemove={() => onSkillRemove()}
-                    />
-                  )}
-                </div>
-
-                <div className="flex-shrink-0 flex space-x-2">
-                  <TooltipIf
-                    condition={isModelChangeDisabled}
-                    tooltip={t('chatInput.modelChangeDisabledTooltip')}
-                  >
-                    <ModelSelector
-                      isDisabled={isModelChangeDisabled}
-                      selectedModelId={modelId}
-                      onModelChange={onModelChange}
-                    />
-                  </TooltipIf>
-                  <MicrophoneButton
-                    onTranscriptionComplete={(text) => {
-                      setMessage((prev) => (prev ? `${prev} ${text}` : text));
-                      // Focus textarea and place cursor at end after transcription
-                      setTimeout(() => {
-                        const textarea = textareaRef.current;
-                        if (textarea) {
-                          textarea.focus();
-                          const length = textarea.value.length;
-                          textarea.setSelectionRange(length, length);
-                        }
-                      }, 0);
-                    }}
-                  />
-                  <SendButton
-                    inFlight={inFlight}
-                    canSend={!!canSend}
-                    onSend={handleSend}
-                    onCancel={onCancel}
-                  />
-                </div>
+          {showProcessingGlow && (
+            <div className="chat-input-shell__glow" aria-hidden="true">
+              <div className="chat-input-shell__glow-spinner">
+                <div className="chat-input-shell__glow-arc" />
+                <div className="chat-input-shell__glow-bloom" />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          )}
+          <Card
+            className={cn(
+              'chat-input-shell__card py-4',
+              isDragging &&
+                'border-2 border-dashed border-primary bg-primary/5',
+              showProcessingGlow && !isDragging && 'bg-card',
+            )}
+          >
+            <CardContent className="px-4">
+              <div className="chat-input-body flex flex-col gap-4">
+                {hasAttachmentChips && (
+                  <ChatInputExpandable show>
+                    <SourcesList
+                      sources={sources}
+                      knowledgeBases={knowledgeBases}
+                      onRemove={onRemoveSource}
+                      onRemoveKnowledgeBase={onRemoveKnowledgeBase}
+                      onDownload={onDownloadSource}
+                    />
+                  </ChatInputExpandable>
+                )}
+
+                {hasPendingImages && (
+                  <ChatInputExpandable show>
+                    <div className="flex flex-wrap gap-2 items-center pt-0">
+                      {pendingImages.map((image: PendingImage) => (
+                        <PendingImageThumbnail
+                          key={image.id}
+                          image={image}
+                          onRemove={removeImage}
+                        />
+                      ))}
+                    </div>
+                  </ChatInputExpandable>
+                )}
+
+                <TextareaAutosize
+                  minRows={1}
+                  ref={textareaRef}
+                  maxRows={10}
+                  value={message}
+                  autoFocus
+                  readOnly={isSubmitting}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onPaste={handlePaste}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  placeholder={t('chatInput.placeholder')}
+                  aria-label={t('chatInput.placeholder')}
+                  className={cn(
+                    'chat-input-shell__textarea border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0',
+                    showProcessingGlow && 'opacity-90',
+                    isSubmitting && 'cursor-not-allowed',
+                    isStreaming && 'cursor-text',
+                  )}
+                  data-testid="input"
+                />
+
+                <div className="flex items-center justify-between">
+                  {/* Left side */}
+                  <div className="flex-shrink-0 flex items-center space-x-2">
+                    <PlusButton
+                      onFileUpload={onFileUpload}
+                      onImageSelect={handleImageSelect}
+                      isFileSourceDisabled={
+                        !isEmbeddingModelEnabled || isSubmitting
+                      }
+                      isImageUploadDisabled={!isVisionEnabled || isSubmitting}
+                      onKnowledgeBaseSelect={onAddKnowledgeBase}
+                      attachedKnowledgeBaseIds={knowledgeBases?.map(
+                        (kb) => kb.id,
+                      )}
+                    />
+                    {isAgentsEnabled && (
+                      <AgentButton
+                        selectedAgentId={agentId}
+                        onAgentChange={onAgentChange}
+                        isDisabled={isAgentChangeDisabled}
+                      />
+                    )}
+                    <AnonymousButton
+                      isAnonymous={isAnonymous}
+                      onAnonymousChange={onAnonymousChange}
+                      isDisabled={isAnonymousChangeDisabled}
+                      isEnforced={isAnonymousEnforced}
+                    />
+                    {isAgentsEnabled && agentId && (
+                      <AgentBadge
+                        agentId={agentId}
+                        agent={agents.find((a) => a.id === agentId)}
+                        isDisabled={isAgentChangeDisabled ?? false}
+                        onRemove={onAgentRemove}
+                      />
+                    )}
+                    {selectedSkillId && selectedSkillName && onSkillRemove && (
+                      <SkillBadge
+                        skillName={selectedSkillName}
+                        onRemove={() => onSkillRemove()}
+                      />
+                    )}
+                  </div>
+
+                  <div className="flex-shrink-0 flex space-x-2">
+                    <TooltipIf
+                      condition={isModelChangeDisabled}
+                      tooltip={t('chatInput.modelChangeDisabledTooltip')}
+                    >
+                      <ModelSelector
+                        isDisabled={isModelChangeDisabled}
+                        selectedModelId={modelId}
+                        onModelChange={onModelChange}
+                      />
+                    </TooltipIf>
+                    <MicrophoneButton
+                      onTranscriptionComplete={(text) => {
+                        setMessage((prev) => (prev ? `${prev} ${text}` : text));
+                        // Focus textarea and place cursor at end after transcription
+                        setTimeout(() => {
+                          const textarea = textareaRef.current;
+                          if (textarea) {
+                            textarea.focus();
+                            const length = textarea.value.length;
+                            textarea.setSelectionRange(length, length);
+                          }
+                        }, 0);
+                      }}
+                    />
+                    <SendButton
+                      inFlight={inFlight}
+                      canSend={!!canSend}
+                      onSend={handleSend}
+                      onCancel={onCancel}
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   },

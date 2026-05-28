@@ -20,6 +20,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/shared/ui/shadcn/sidebar';
 import {
   DropdownMenu,
@@ -28,35 +29,37 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/dropdown-menu';
 import { ChatsSidebarGroup } from './ChatsSidebarGroup';
+import { SidebarHeaderControls } from './SidebarHeaderControls';
+import { SidebarVerticalBrand } from './SidebarVerticalBrand';
 import { useMe } from '../api/useMe';
 import { useLogout } from '../api/useLogout';
 import { Link, useLocation } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useNavigate } from '@tanstack/react-router';
-import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';
-import brandFullDark from '@/shared/assets/brand/brand-full-dark.svg';
-import { useTheme } from '@/features/theme';
-import { useSidebar } from '@/shared/ui/shadcn/sidebar';
 import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import config from '@/shared/config';
-import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { useFeatureToggles } from '@/features/feature-toggles';
 import { useMarketplaceConfig } from '@/features/marketplace';
+import { cn } from '@/shared/lib/shadcn/utils';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { theme } = useTheme();
   const { user } = useMe();
   const { logout } = useLogout();
   const { t } = useTranslation('common');
   const navigate = useNavigate();
-  const { closeMobileWithCleanup } = useSidebar();
+  const { closeMobileWithCleanup, isIconCollapsed } = useSidebar();
   const featureToggles = useFeatureToggles();
   const marketplace = useMarketplaceConfig();
   const location = useLocation();
+  const isCollapsed = isIconCollapsed;
+
   useKeyboardShortcut(['j', 'Meta'], () => {
     void navigate({ to: '/chat' });
   });
+
+  const sidebarToggleLabel = isCollapsed
+    ? t('sidebar.expandSidebar')
+    : t('sidebar.collapseSidebar');
 
   // Menu items.
   const items = [
@@ -95,33 +98,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   ];
 
   return (
-    <Sidebar {...props} variant="inset" data-testid="sidebar">
+    <Sidebar
+      {...props}
+      collapsible="icon"
+      variant="inset"
+      data-testid="sidebar"
+    >
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <div className="flex items-center justify-between w-full">
-              <SidebarMenuButton size="lg" asChild className="flex-1">
-                <Link to="/">
-                  <img
-                    src={theme === 'dark' ? brandFullDark : brandFullLight}
-                    alt="Ayunis Logo"
-                    className="w-full max-w-32"
-                  />
-                </Link>
-              </SidebarMenuButton>
-              {config.features.announcableOrgId && <ReleaseNotesButton />}
-            </div>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <SidebarHeaderControls
+          isCollapsed={isCollapsed}
+          sidebarToggleLabel={sidebarToggleLabel}
+        />
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className={isCollapsed ? 'flex-none' : undefined}>
         <SidebarGroup>
           <SidebarMenu>
             {items.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
                   asChild
+                  tooltip={item.title}
                   isActive={
                     item.url === '/chat'
                       ? location.pathname === '/chat'
@@ -137,7 +134,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             ))}
             {marketplace.enabled && marketplace.url && (
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton asChild tooltip={t('sidebar.marketplace')}>
                   <a
                     href={marketplace.url}
                     target="_blank"
@@ -155,28 +152,40 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <ChatsSidebarGroup />
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarVerticalBrand />
+
+      <SidebarFooter className="border-t border-sidebar-border">
         <SidebarMenu>
-          <SidebarMenuItem>
+          <SidebarMenuItem className={cn(isCollapsed && 'flex justify-center')}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
-                  size="lg"
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  size={isCollapsed ? 'default' : 'lg'}
+                  className={cn(
+                    'data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground',
+                    isCollapsed && 'justify-center',
+                  )}
                   data-testid="menu"
+                  tooltip={user?.name ?? t('sidebar.accountSettings')}
                 >
-                  <User2 className="size-4" />
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">{user?.name}</span>
-                    <span className="truncate text-xs">{user?.email}</span>
-                  </div>
-                  <ChevronUp className="ml-auto size-4" />
+                  <User2 className="size-4 shrink-0" />
+                  {!isCollapsed && (
+                    <>
+                      <div className="grid flex-1 text-left text-sm leading-tight">
+                        <span className="truncate font-semibold">
+                          {user?.name}
+                        </span>
+                        <span className="truncate text-xs">{user?.email}</span>
+                      </div>
+                      <ChevronUp className="ml-auto size-4 shrink-0" />
+                    </>
+                  )}
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                side="bottom"
-                align="end"
+                side={isCollapsed ? 'right' : 'bottom'}
+                align={isCollapsed ? 'start' : 'end'}
                 sideOffset={4}
               >
                 <DropdownMenuItem asChild>

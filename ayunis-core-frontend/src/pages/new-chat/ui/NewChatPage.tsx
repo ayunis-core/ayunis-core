@@ -1,11 +1,11 @@
 import { Lock } from 'lucide-react';
-import NewChatPageLayout from './NewChatPageLayout';
+import NewChatPageLayout, { type NewChatMistPhase } from './NewChatPageLayout';
 import ChatInput from '@/widgets/chat-input';
 import {
   useInitiateChat,
   type SourceUploadStatus,
 } from '../api/useInitiateChat';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
@@ -27,6 +27,7 @@ import { useSkipPersonalization } from '../api/useSkipPersonalization';
 import { useQueryClient } from '@tanstack/react-query';
 import { getChatSettingsControllerGetSystemPromptQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
 import { useRouter } from '@tanstack/react-router';
+import { cn } from '@/shared/lib/shadcn/utils';
 
 interface NewChatPageProps {
   selectedModelId?: string;
@@ -98,6 +99,11 @@ export default function NewChatPage({
   >([]);
   const [selectedSkillId, setSelectedSkillId] = useState<string>();
   const [selectedSkillName, setSelectedSkillName] = useState<string>();
+  const [mistPhase, setMistPhase] = useState<NewChatMistPhase>('idle');
+
+  const handleMistExitComplete = useCallback(() => {
+    setMistPhase('hidden');
+  }, []);
   const selectedAgent = agents.find((agent) => agent.id === agentId);
   const selectedModel = models.find((m) => m.id === modelId);
 
@@ -176,6 +182,8 @@ export default function NewChatPage({
       return;
     }
 
+    setMistPhase((current) => (current === 'idle' ? 'exiting' : current));
+
     // Images are sent as part of the first multipart request from ChatPage,
     // so they hitch a ride through context. KBs and sources are attached
     // before navigation by initiateChat itself.
@@ -228,61 +236,89 @@ export default function NewChatPage({
 
   return (
     <NewChatPageLayout
+      isSettling={isCreating}
+      mistPhase={mistPhase}
+      onMistExitComplete={handleMistExitComplete}
       header={
         <ContentAreaHeader
           breadcrumbs={[{ label: t('newChat.newChat') }]}
           action={<HelpLink path="" />}
         />
       }
-    >
-      <div className="text-center">
-        <h1 className="text-2xl font-bold">{greeting}</h1>
-      </div>
-      <div className="w-full flex flex-col gap-4 mt-2">
-        <ChatInput
-          // If an agent is selected, use the agent's model,
-          // but disable the model selection
-          // to only show the model that the agent uses
-          modelId={agentId ? selectedAgent?.model.id : modelId}
-          isModelChangeDisabled={!!agentId}
-          agentId={agentId}
-          sources={sources}
-          knowledgeBases={selectedKnowledgeBases}
-          submissionState={isCreating ? 'submitting' : 'idle'}
-          onModelChange={handleModelChange}
-          onAgentChange={handleAgentChange}
-          onAgentRemove={handleAgentRemove}
-          onSend={handleSend}
-          onCancel={handleCancel}
-          onFileUpload={handleFileUpload}
-          onRemoveSource={handleRemoveSource}
-          onDownloadSource={() => null}
-          onAddKnowledgeBase={(kb) => {
-            setSelectedKnowledgeBases((prev) => [...prev, kb]);
-          }}
-          onRemoveKnowledgeBase={(kbId) => {
-            setSelectedKnowledgeBases((prev) =>
-              prev.filter((kb) => kb.id !== kbId),
-            );
-          }}
-          isEmbeddingModelEnabled={isEmbeddingModelEnabled}
-          isAnonymous={isAnonymous}
-          onAnonymousChange={setIsAnonymous}
-          isAnonymousEnforced={isAnonymousEnforced}
-          isVisionEnabled={isVisionEnabled}
-          selectedSkillId={selectedSkillId}
-          selectedSkillName={selectedSkillName}
-          onSkillRemove={handleSkillRemove}
-        />
-        <PinnedSkills
-          onSkillSelect={handleSkillSelect}
-          selectedSkillId={selectedSkillId}
-        />
-        <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
-          <Lock className="h-3 w-3" />
-          <span>{t('newChat.privacyHint')}</span>
-        </div>
-      </div>
-    </NewChatPageLayout>
+      compose={
+        <>
+          <h1
+            className={cn(
+              'new-chat-greeting text-center text-2xl font-semibold',
+              isCreating && 'new-chat-greeting--exit',
+            )}
+            aria-hidden={isCreating}
+          >
+            {greeting}
+          </h1>
+
+          <div className="new-chat-input-stack relative w-full">
+            <p
+              className={cn(
+                'new-chat-disclaimer absolute bottom-full left-0 right-0 mb-2 text-center text-xs text-muted-foreground',
+                isCreating && 'new-chat-disclaimer--visible',
+              )}
+              aria-hidden={!isCreating}
+            >
+              {t('chat.inputDisclaimer')}
+            </p>
+
+            <ChatInput
+              modelId={agentId ? selectedAgent?.model.id : modelId}
+              isModelChangeDisabled={!!agentId}
+              agentId={agentId}
+              sources={sources}
+              knowledgeBases={selectedKnowledgeBases}
+              submissionState={isCreating ? 'submitting' : 'idle'}
+              onModelChange={handleModelChange}
+              onAgentChange={handleAgentChange}
+              onAgentRemove={handleAgentRemove}
+              onSend={handleSend}
+              onCancel={handleCancel}
+              onFileUpload={handleFileUpload}
+              onRemoveSource={handleRemoveSource}
+              onDownloadSource={() => null}
+              onAddKnowledgeBase={(kb) => {
+                setSelectedKnowledgeBases((prev) => [...prev, kb]);
+              }}
+              onRemoveKnowledgeBase={(kbId) => {
+                setSelectedKnowledgeBases((prev) =>
+                  prev.filter((kb) => kb.id !== kbId),
+                );
+              }}
+              isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+              isAnonymous={isAnonymous}
+              onAnonymousChange={setIsAnonymous}
+              isAnonymousEnforced={isAnonymousEnforced}
+              isVisionEnabled={isVisionEnabled}
+              selectedSkillId={selectedSkillId}
+              selectedSkillName={selectedSkillName}
+              onSkillRemove={handleSkillRemove}
+            />
+          </div>
+          <div
+            className={cn(
+              'new-chat-dock-extras mt-4 flex flex-col gap-4 overflow-hidden',
+              isCreating && 'new-chat-dock-extras--collapsed',
+            )}
+            aria-hidden={isCreating}
+          >
+            <PinnedSkills
+              onSkillSelect={handleSkillSelect}
+              selectedSkillId={selectedSkillId}
+            />
+            <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+              <Lock className="h-3 w-3 shrink-0" />
+              <span>{t('newChat.privacyHint')}</span>
+            </div>
+          </div>
+        </>
+      }
+    />
   );
 }

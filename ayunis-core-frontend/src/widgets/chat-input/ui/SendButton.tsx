@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
 import { useTranslation } from 'react-i18next';
+import { cn } from '@/shared/lib/shadcn/utils';
 
 interface SendButtonProps {
   /** True while a submit is in flight (submitting or streaming). Replaces
@@ -31,7 +32,9 @@ export function SendButton({
           <div>
             <Button
               size="icon"
-              className="rounded-full border border-transparent"
+              className={cn(
+                'chat-input-send-button chat-input-send-button--stop rounded-full',
+              )}
               onClick={onCancel}
               aria-label={t('chatInput.cancelTooltip')}
             >
@@ -50,7 +53,12 @@ export function SendButton({
         <div>
           <Button
             disabled={!canSend}
-            className="rounded-full border border-transparent"
+            className={cn(
+              'chat-input-send-button rounded-full',
+              canSend
+                ? 'chat-input-send-button--ready'
+                : 'chat-input-send-button--disabled',
+            )}
             size="icon"
             data-testid="send"
             onClick={onSend}

@@ -1,0 +1,195 @@
+/* New-chat ambient — purple blobs (ayunis.com CTA), bottom-weighted */
+
+.new-chat-ambient-mist {
+  --new-chat-mist-exit-duration: 1.3s;
+  --new-chat-mist-exit-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --new-chat-mist-scale: 0.58;
+
+  --ambient-blob-color: #8178c3;
+
+  --ambient-blob-opacity-1: 0.4;
+  --ambient-blob-opacity-2: 0.9;
+  --ambient-blob-opacity-3: 1;
+
+  --ambient-blob-blur-1: 100px;
+  --ambient-blob-blur-2: 80px;
+  --ambient-blob-blur-3: 60px;
+
+  --ambient-blob-speed-1: 6s;
+  --ambient-blob-speed-2: 8s;
+  --ambient-blob-speed-3: 10s;
+
+  --ambient-blob-delay-1: 0s;
+  --ambient-blob-delay-2: 0s;
+  --ambient-blob-delay-3: 0s;
+
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.new-chat-ambient-mist-panel-clip {
+  position: absolute;
+  top: 0;
+  right: -1rem;
+  bottom: -1rem;
+  left: -1rem;
+  z-index: 0;
+  pointer-events: none;
+}
+
+:is(.dark, .theme-core.dark) .new-chat-ambient-mist {
+  --ambient-blob-color: #8178c3;
+  --ambient-blob-opacity-1: 0.35;
+  --ambient-blob-opacity-2: 0.55;
+  --ambient-blob-opacity-3: 0.65;
+}
+
+.new-chat-ambient-mist__canvas {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition:
+    opacity var(--new-chat-mist-exit-duration) var(--new-chat-mist-exit-ease),
+    transform var(--new-chat-mist-exit-duration) var(--new-chat-mist-exit-ease);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    transparent 45%,
+    rgb(242 241 249 / 0.35) 68%,
+    #eceaf6 100%
+  );
+}
+
+:is(.dark, .theme-core.dark) .new-chat-ambient-mist__canvas {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    transparent 45%,
+    rgb(58 54 78 / 0.4) 68%,
+    rgb(20 18 28 / 0.92) 100%
+  );
+}
+
+.new-chat-ambient-mist--exiting .new-chat-ambient-mist__canvas {
+  opacity: 0;
+  transform: translate3d(0, 18%, 0);
+}
+
+.new-chat-ambient-mist--exiting .new-chat-ambient-mist__blob {
+  animation-play-state: paused !important;
+}
+
+.new-chat-ambient-mist__blobs {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 8%;
+  width: 118%;
+  height: 72%;
+  transform: scale(var(--new-chat-mist-scale));
+  transform-origin: 85% 100%;
+}
+
+.new-chat-ambient-mist__blob {
+  position: absolute;
+  border-radius: 999rem;
+  pointer-events: none;
+  will-change: transform;
+  transform-origin: center;
+  background-color: var(--ambient-blob-color);
+}
+
+.new-chat-ambient-mist__blob.is-1 {
+  left: 28%;
+  bottom: -52%;
+  width: 64rem;
+  height: 34rem;
+  opacity: var(--ambient-blob-opacity-1);
+  filter: blur(var(--ambient-blob-blur-1));
+  animation: newChatAmbientBlobOne var(--ambient-blob-speed-1) ease-in-out
+    infinite alternate;
+  animation-delay: var(--ambient-blob-delay-1);
+}
+
+.new-chat-ambient-mist__blob.is-2 {
+  left: 38%;
+  bottom: -48%;
+  width: 72rem;
+  height: 28rem;
+  border-radius: 50%;
+  opacity: var(--ambient-blob-opacity-2);
+  filter: blur(var(--ambient-blob-blur-2));
+  animation: newChatAmbientBlobTwo var(--ambient-blob-speed-2) ease-in-out
+    infinite alternate;
+  animation-delay: var(--ambient-blob-delay-2);
+}
+
+/* Wide ellipse — reaches toward screen center while anchored bottom-right */
+.new-chat-ambient-mist__blob.is-3 {
+  right: -6%;
+  bottom: -46%;
+  width: 88rem;
+  height: 22rem;
+  border-radius: 50%;
+  opacity: var(--ambient-blob-opacity-3);
+  filter: blur(var(--ambient-blob-blur-3));
+  animation: newChatAmbientBlobThree var(--ambient-blob-speed-3) ease-in-out
+    infinite alternate;
+  animation-delay: var(--ambient-blob-delay-3);
+}
+
+@keyframes newChatAmbientBlobOne {
+  0% {
+    transform: translate3d(0%, 0%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4%, -4%, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(-3%, -7%, 0) scale(0.97);
+  }
+}
+
+@keyframes newChatAmbientBlobTwo {
+  0% {
+    transform: translate3d(0%, 0%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(5%, -5%, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(-4%, -6%, 0) scale(1.01);
+  }
+}
+
+@keyframes newChatAmbientBlobThree {
+  0% {
+    transform: translate3d(0%, 0%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-14%, -5%, 0) scale(1.05, 1.02);
+  }
+  100% {
+    transform: translate3d(-8%, -6%, 0) scale(0.98, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .new-chat-ambient-mist__canvas {
+    transition: none;
+  }
+
+  .new-chat-ambient-mist--exiting .new-chat-ambient-mist__canvas {
+    opacity: 0;
+    transform: none;
+  }
+
+  .new-chat-ambient-mist__blob {
+    animation: none !important;
+  }
+}
