@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.36.0](https://github.com/ayunis-core/ayunis-core/compare/v1.35.0...v1.36.0) (2026-05-28)
+
+
+### Features
+
+* **chat:** enable multi-select document upload (AYC-105) ([#715](https://github.com/ayunis-core/ayunis-core/issues/715)) ([9f1b12f](https://github.com/ayunis-core/ayunis-core/commit/9f1b12f950e9e61ff83441cc8ec35c6b17442e59))
+* **sources:** upload audio files as RAG sources (AYC-124) ([#716](https://github.com/ayunis-core/ayunis-core/issues/716)) ([f5bb206](https://github.com/ayunis-core/ayunis-core/commit/f5bb20669487054ee525e389cbbc59ca611a9e34))
+
+
+### Bug Fixes
+
+* **openai-compat:** accept stricter-than-spec request shapes (AYC-000) ([#719](https://github.com/ayunis-core/ayunis-core/issues/719)) ([d401af8](https://github.com/ayunis-core/ayunis-core/commit/d401af8cf4715e63ddd4f75f09ce0dd4faa3ce6f))
+
+
+### Documentation
+
+* **api-keys:** link admin page to help center (AYC-000) ([#714](https://github.com/ayunis-core/ayunis-core/issues/714)) ([1c0b4de](https://github.com/ayunis-core/ayunis-core/commit/1c0b4de61429610a953818623f0cb9797061acbc))
+
+
+### CI/CD
+
+* react to ui library releases and open sync PR (AYC-161) ([#718](https://github.com/ayunis-core/ayunis-core/issues/718)) ([8e73d5b](https://github.com/ayunis-core/ayunis-core/commit/8e73d5b5ef1c9551636de27fb42da88180ad046a))
+
 ## [1.35.0](https://github.com/ayunis-core/ayunis-core/compare/v1.34.0...v1.35.0) (2026-05-26)
 
 
