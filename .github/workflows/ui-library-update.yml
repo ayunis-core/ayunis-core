@@ -38,6 +38,24 @@ jobs:
       TAG_NAME: ${{ github.event.client_payload.tag_name || github.event.inputs.tag_name }}
       RELEASE_URL: ${{ github.event.client_payload.release_url || github.event.inputs.release_url }}
     steps:
+      # Validate the dispatch inputs BEFORE anything else — these come from an
+      # external repository_dispatch payload and would otherwise be interpolated
+      # straight into the agent prompt, enabling prompt-injection attacks.
+      # Strict format checks make it impossible to smuggle arbitrary text in.
+      - name: Validate dispatch inputs
+        run: |
+          TAG_RE='^v[0-9]+\.[0-9]+\.[0-9]+$'
+          URL_RE='^https://github\.com/ayunis-core/ayunis-ui/releases/tag/v[0-9]+\.[0-9]+\.[0-9]+$'
+          if [[ ! "$TAG_NAME" =~ $TAG_RE ]]; then
+            echo "::error::Invalid tag_name '$TAG_NAME' — must match $TAG_RE"
+            exit 1
+          fi
+          if [ -n "$RELEASE_URL" ] && [[ ! "$RELEASE_URL" =~ $URL_RE ]]; then
+            echo "::error::Invalid release_url '$RELEASE_URL' — must match $URL_RE"
+            exit 1
+          fi
+          echo "✓ Inputs validated: tag=$TAG_NAME"
+
       - name: Checkout consumer repository
         uses: actions/checkout@v4
         with:
