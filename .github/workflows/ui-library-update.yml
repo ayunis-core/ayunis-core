@@ -1,0 +1,145 @@
+# Reacts to UI library releases published by ayunis-core/ayunis-ui.
+#
+# Contract: ayunis-ui sends a `repository_dispatch` of type `ui-library-released`
+# with NO payload. The fact that the event arrived is the entire signal.
+#
+# What this workflow does:
+#   1. Re-pulls every @ayunis component already installed in this repo from
+#      the registry (so we get whatever's current). Components not installed
+#      here are deliberately ignored — adding new ones is a manual decision.
+#   2. If nothing changed, exits cleanly.
+#   3. Otherwise hands the diff to a Cursor agent that classifies changes,
+#      scans this repo for affected call sites, and opens a PR with findings.
+#
+# Required secrets in this repo:
+#   AYUNIS_REGISTRY_TOKEN   Bearer token for https://registry.ayunis.de
+#   CURSOR_API_KEY          Cursor agent API key
+#
+# Known limitation: a PR created with the default GITHUB_TOKEN does not
+# trigger workflow runs (GitHub's anti-recursion guard). The PR's frontend
+# CI therefore does NOT run automatically — a maintainer needs to push a
+# noop commit or close-and-reopen the PR to kick it off. If that gets
+# annoying, swap GH_TOKEN for a fine-grained PAT stored as a secret.
+
+name: UI Library Update
+
+on:
+  repository_dispatch:
+    types: [ui-library-released]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ui-library-update
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Sync installed @ayunis components from the registry
+        working-directory: ayunis-core-frontend
+        env:
+          AYUNIS_REGISTRY_TOKEN: ${{ secrets.AYUNIS_REGISTRY_TOKEN }}
+        run: |
+          set -e
+          for f in src/shared/ui/shadcn/*.tsx; do
+            name=$(basename "$f" .tsx)
+            echo "::group::shadcn add @ayunis/$name"
+            npx shadcn@latest add "@ayunis/$name" --overwrite --yes \
+              || echo "::warning::shadcn failed for $name (skipping)"
+            echo "::endgroup::"
+          done
+
+      - name: Detect changes
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Registry is already in sync — nothing to do."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Cursor CLI
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          curl https://cursor.com/install -fsS | bash
+          echo "$HOME/.cursor/bin" >> "$GITHUB_PATH"
+
+      - name: Annotate diff and open PR
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          cat > /tmp/agent-instructions.md <<'EOF'
+          The shadcn registry just refreshed every installed @ayunis component
+          in this repo. The pending changes are in the working tree, mostly
+          under ./ayunis-core-frontend/src/shared/ui/shadcn/.
+
+          DO THESE FOUR THINGS:
+
+          1. CATEGORIZE — run `git diff` and classify each changed component as
+             one of: cosmetic | behavioral | breaking.
+
+          2. USAGE SCAN — for behavioral/breaking changes, ripgrep
+             ./ayunis-core-frontend/src/ (excluding the shadcn/ folder itself)
+             for callers that touch the affected API. Record file:line for
+             every hit and classify each as `safe` or `needs review`.
+
+          3. CONSERVATIVE AUTO-FIXES — only fix unambiguous renames where the
+             mapping is mechanical and unique. Anything ambiguous goes in the
+             "needs review" list instead.
+
+          4. OPEN PR using this exact branch name and commit message:
+                BRANCH:  chore/sync-ayunis-kit-run-${RUN_ID}
+                COMMIT:  chore: sync @ayunis components from the registry
+
+             git config user.name "github-actions[bot]"
+             git config user.email "github-actions[bot]@users.noreply.github.com"
+             git checkout -b "chore/sync-ayunis-kit-run-${RUN_ID}"
+             git add -A
+             git commit -m "chore: sync @ayunis components from the registry"
+             git push -u origin "chore/sync-ayunis-kit-run-${RUN_ID}"
+
+             Then write the PR body to /tmp/pr-body.md following this structure
+             and use `gh pr create --body-file /tmp/pr-body.md`:
+
+                ## @ayunis components synced from the registry
+                (If anything is breaking, summarize the risk in 1-2 lines here.)
+                ### Components changed
+                <name → cosmetic | behavioral | breaking>
+                ### Usage scan
+                <file:line — kind of change — safe | needs review>
+                ### Auto-fixes applied
+                <or "none">
+                ### Manual action required
+                <or "none — safe to merge">
+
+          CONSTRAINTS
+          - PR title MUST start with a conventional-commit prefix. Use `chore:`
+            unless you're applying a bug fix, in which case `fix:`. This repo
+            enforces it via .github/workflows/pr-title.yml.
+          - Never merge automatically.
+          - Lint and build are NOT run here. The repo's frontend-build.yml
+            workflow runs on PRs and will surface failures — but see the
+            "Known limitation" note at the top of this workflow about CI
+            not auto-triggering on github-actions[bot] PRs.
+          EOF
+
+          # --model auto on purpose: pinned Cursor models get retired silently,
+          # which would break this workflow without anyone noticing.
+          agent -p "$(cat /tmp/agent-instructions.md)" --force --model auto
