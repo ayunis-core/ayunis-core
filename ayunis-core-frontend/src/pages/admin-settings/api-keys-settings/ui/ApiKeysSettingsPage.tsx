@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import SettingsLayout from '../../admin-settings-layout';
 import { ApiKeysList } from './ApiKeysList';
 import { CreateApiKeyDialog } from './CreateApiKeyDialog';
@@ -21,6 +22,7 @@ export function ApiKeysSettingsPage({
 
   const headerActions = (
     <div className="flex gap-2">
+      <HelpLink path="settings/admin/api-keys/" />
       <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
         {t('apiKeys.page.add')}
       </Button>
