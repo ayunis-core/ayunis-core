@@ -41,7 +41,7 @@ describe('RemoveDocumentFromKnowledgeBaseUseCase', () => {
       findSourcesByKnowledgeBaseId: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
-    } as jest.Mocked<KnowledgeBaseRepository>;
+    };
 
     mockDeleteSourceUseCase = {
       execute: jest.fn(),

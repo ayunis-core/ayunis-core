@@ -377,7 +377,7 @@ describe('UpdateArtifactUseCase', () => {
       threadId: mockThreadId,
       userId: mockUserId,
       title: 'Letter with letterhead',
-      letterheadId: '423e4567-e89b-12d3-a456-426614174000' as UUID,
+      letterheadId: '423e4567-e89b-12d3-a456-426614174000',
       currentVersionNumber: 1,
     });
 

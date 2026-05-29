@@ -1,7 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { useCreateImageGenerationModel } from '../api/useCreateImageGenerationModel';
 import type { ImageGenerationModelFormData } from '../model/types';
-import type { CreateImageGenerationModelRequestDtoProvider } from '@/shared/api';
 import { IMAGE_GENERATION_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
 import { ModelPricingFields } from './ModelPricingFields';
@@ -18,7 +17,7 @@ export function CreateImageGenerationModelDialog({
   const form = useForm<ImageGenerationModelFormData>({
     defaultValues: {
       name: '',
-      provider: 'azure' as CreateImageGenerationModelRequestDtoProvider,
+      provider: 'azure',
       displayName: '',
       isArchived: false,
     },

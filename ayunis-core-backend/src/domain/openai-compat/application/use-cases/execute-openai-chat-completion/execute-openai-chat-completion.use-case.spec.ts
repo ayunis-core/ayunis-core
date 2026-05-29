@@ -59,7 +59,7 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
         model: 'gpt-4o',
         messages: [{ role: 'user', content: 'hello' }],
         ...overrides,
-      } as ConstructorParameters<typeof ExecuteOpenAIChatCompletionCommand>[0],
+      },
       principal,
     );
 
@@ -289,9 +289,7 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
             },
             { role: 'tool', tool_call_id: 'call_1', content: 'delivered' },
           ],
-        } as ConstructorParameters<
-          typeof ExecuteOpenAIChatCompletionCommand
-        >[0],
+        },
         principal,
       );
 

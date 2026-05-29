@@ -11,7 +11,7 @@ describe('MarketplaceConfigService', () => {
     encryption = {
       encrypt: jest.fn(),
       decrypt: jest.fn(),
-    } as jest.Mocked<McpCredentialEncryptionPort>;
+    };
 
     encryption.encrypt.mockImplementation(
       async (plaintext) => `encrypted:${plaintext}`,

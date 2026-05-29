@@ -40,7 +40,7 @@ export class DeleteAgentUseCase {
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Error deleting agent', error);
-      throw new UnexpectedAgentError(error as Error);
+      throw new UnexpectedAgentError(error);
     }
   }
 }

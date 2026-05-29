@@ -40,7 +40,7 @@ describe('AddUrlToKnowledgeBaseUseCase', () => {
       findSourcesByKnowledgeBaseId: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
-    } as jest.Mocked<KnowledgeBaseRepository>;
+    };
 
     mockCreateTextSourceUseCase = {
       execute: jest.fn(),
@@ -74,9 +74,7 @@ describe('AddUrlToKnowledgeBaseUseCase', () => {
       name: 'example.com/stadtrat',
       type: TextType.WEB,
     });
-    mockCreateTextSourceUseCase.execute.mockResolvedValue(
-      createdSource as never,
-    );
+    mockCreateTextSourceUseCase.execute.mockResolvedValue(createdSource);
     mockRepository.assignSourceToKnowledgeBase.mockResolvedValue(undefined);
 
     const command = new AddUrlToKnowledgeBaseCommand({

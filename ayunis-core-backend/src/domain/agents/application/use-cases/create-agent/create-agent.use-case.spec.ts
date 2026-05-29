@@ -121,9 +121,7 @@ describe('CreateAgentUseCase', () => {
         userId: mockUserId,
       });
 
-      getPermittedLanguageModelUseCase.execute.mockResolvedValue(
-        mockModel as any,
-      );
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(mockModel);
       assembleToolUseCase.execute.mockResolvedValue(mockTool);
       agentRepository.create.mockResolvedValue(mockCreatedAgent);
 
@@ -189,9 +187,7 @@ describe('CreateAgentUseCase', () => {
         userId: mockUserId,
       });
 
-      getPermittedLanguageModelUseCase.execute.mockResolvedValue(
-        mockModel as any,
-      );
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(mockModel);
       assembleToolUseCase.execute.mockResolvedValue(mockTool);
       agentRepository.create.mockResolvedValue(mockCreatedAgent);
 
@@ -220,7 +216,7 @@ describe('CreateAgentUseCase', () => {
           },
           {
             toolType: ToolType.SEND_EMAIL,
-            toolConfigId: '123e4567-e89b-12d3-a456-426614174003' as any,
+            toolConfigId: '123e4567-e89b-12d3-a456-426614174003',
           },
         ],
       });
@@ -264,9 +260,7 @@ describe('CreateAgentUseCase', () => {
         userId: mockUserId,
       });
 
-      getPermittedLanguageModelUseCase.execute.mockResolvedValue(
-        mockModel as any,
-      );
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(mockModel);
       assembleToolUseCase.execute
         .mockResolvedValueOnce(mockTool1)
         .mockResolvedValueOnce(mockTool2);
@@ -311,9 +305,7 @@ describe('CreateAgentUseCase', () => {
         userId: mockUserId,
       });
 
-      getPermittedLanguageModelUseCase.execute.mockResolvedValue(
-        mockModel as any,
-      );
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(mockModel);
       agentRepository.create.mockResolvedValue(mockCreatedAgent);
 
       const logSpy = jest.spyOn(Logger.prototype, 'log');

@@ -9,7 +9,6 @@ import { ToolUseMessageContent } from 'src/domain/messages/domain/message-conten
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import type { ToolSchema } from 'src/domain/models/domain/value-objects/tool-schema';
-import type { JSONSchema } from 'json-schema-to-ts';
 import { OpenAIInvalidRequestError } from '../openai-compat.errors';
 import type {
   OpenAIChatCompletionMessage,
@@ -159,7 +158,7 @@ export class OpenAIRequestMapper {
     return (request.tools ?? []).map((t) => ({
       name: t.function.name,
       description: t.function.description ?? '',
-      parameters: (t.function.parameters ?? {}) as JSONSchema,
+      parameters: t.function.parameters ?? {},
     }));
   }
 

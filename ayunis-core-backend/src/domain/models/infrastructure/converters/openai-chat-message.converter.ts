@@ -1,5 +1,4 @@
 import type OpenAI from 'openai';
-import type { FunctionParameters } from 'openai/resources/shared';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import type { ToolSchema } from '../../domain/value-objects/tool-schema';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
@@ -26,7 +25,7 @@ export class OpenAIChatMessageConverter {
         description: tool.description,
         parameters: normalizeSchemaForOpenAI(
           tool.parameters as Record<string, unknown> | undefined,
-        ) as FunctionParameters | undefined,
+        ),
       },
     };
   }

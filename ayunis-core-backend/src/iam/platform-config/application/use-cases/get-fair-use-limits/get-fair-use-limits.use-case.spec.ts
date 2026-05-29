@@ -17,7 +17,7 @@ describe('GetFairUseLimitsUseCase', () => {
       get: jest.fn(),
       set: jest.fn(),
       setMany: jest.fn(),
-    } as jest.Mocked<PlatformConfigRepositoryPort>;
+    };
 
     useCase = new GetFairUseLimitsUseCase(repository);
     warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => {});

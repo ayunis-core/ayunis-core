@@ -103,7 +103,7 @@ export class PermittedModelQueryService {
       )
       .map((permittedModel) =>
         this.permittedModelMapper.toDomain(permittedModel),
-      ) as PermittedImageGenerationModel[];
+      );
   }
 
   async findManyLanguage(orgId: UUID): Promise<PermittedLanguageModel[]> {

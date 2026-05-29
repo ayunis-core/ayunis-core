@@ -1,6 +1,5 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import type { UUID } from 'crypto';
 import { FindAlwaysOnTemplateByNameUseCase } from './find-always-on-template-by-name.use-case';
 import { FindAlwaysOnTemplateByNameQuery } from './find-always-on-template-by-name.query';
 import { FindActiveAlwaysOnTemplatesUseCase } from '../find-active-always-on-templates/find-active-always-on-templates.use-case';
@@ -12,7 +11,7 @@ describe('FindAlwaysOnTemplateByNameUseCase', () => {
   let findActiveAlwaysOnTemplates: jest.Mocked<FindActiveAlwaysOnTemplatesUseCase>;
 
   const alwaysOnTemplate = new AlwaysOnSkillTemplate({
-    id: '123e4567-e89b-12d3-a456-426614174001' as UUID,
+    id: '123e4567-e89b-12d3-a456-426614174001',
     name: 'German Administrative Law',
     shortDescription: 'German admin law guidelines',
     instructions: 'Follow German administrative law...',
@@ -20,7 +19,7 @@ describe('FindAlwaysOnTemplateByNameUseCase', () => {
   });
 
   const preCreatedTemplate = new PreCreatedCopySkillTemplate({
-    id: '123e4567-e89b-12d3-a456-426614174002' as UUID,
+    id: '123e4567-e89b-12d3-a456-426614174002',
     name: 'Data Analysis',
     shortDescription: 'Data analysis helper',
     instructions: 'Analyze data...',

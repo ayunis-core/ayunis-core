@@ -137,7 +137,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
     credentialEncryption = {
       encrypt: jest.fn(),
       decrypt: jest.fn(),
-    } as jest.Mocked<McpCredentialEncryptionPort>;
+    };
 
     factory = new McpIntegrationFactory();
     authFactory = new McpIntegrationAuthFactory();
@@ -315,7 +315,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
     );
 
     const existingIntegration = new MarketplaceMcpIntegration({
-      id: '880e8400-e29b-41d4-a716-446655440000' as UUID,
+      id: '880e8400-e29b-41d4-a716-446655440000',
       orgId,
       name: 'OParl Council Data',
       serverUrl: 'https://mcp.ayunis.de/oparl',

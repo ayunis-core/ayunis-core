@@ -61,7 +61,7 @@ describe('SetOrgDefaultLanguageModelUseCase', () => {
       orgId,
       isDefault: false,
       model: new LanguageModel({
-        id: '123e4567-e89b-12d3-a456-426614174002' as UUID,
+        id: '123e4567-e89b-12d3-a456-426614174002',
         name: 'gpt-4o',
         displayName: 'GPT-4o',
         provider: ModelProvider.OPENAI,

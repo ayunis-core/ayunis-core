@@ -43,20 +43,16 @@ function createSeatBasedRecord(
   record.startsAt = new Date('2025-01-01');
   record.orgId = randomUUID();
   record.noOfSeats =
-    overrides.noOfSeats === null
-      ? (null as unknown as number)
-      : (overrides.noOfSeats ?? 10);
+    overrides.noOfSeats === null ? null : (overrides.noOfSeats ?? 10);
   record.pricePerSeat =
-    overrides.pricePerSeat === null
-      ? (null as unknown as number)
-      : (overrides.pricePerSeat ?? 9.99);
+    overrides.pricePerSeat === null ? null : (overrides.pricePerSeat ?? 9.99);
   record.renewalCycle =
     overrides.renewalCycle === null
-      ? (null as unknown as RenewalCycle)
+      ? null
       : (overrides.renewalCycle ?? RenewalCycle.MONTHLY);
   record.renewalCycleAnchor =
     overrides.renewalCycleAnchor === null
-      ? (null as unknown as Date)
+      ? null
       : (overrides.renewalCycleAnchor ?? new Date('2025-01-01'));
   record.billingInfo = createBillingInfoRecord();
   return record;
@@ -133,7 +129,7 @@ describe('SubscriptionMapper', () => {
       record.cancelledAt = null;
       record.startsAt = new Date('2025-01-01');
       record.orgId = randomUUID();
-      record.monthlyCredits = null as unknown as number;
+      record.monthlyCredits = null;
       record.billingInfo = createBillingInfoRecord();
 
       expect(() => mapper.toDomain(record)).toThrow(
@@ -162,9 +158,7 @@ describe('SubscriptionMapper', () => {
       });
 
       const record = mapper.toRecord(original);
-      const restored = mapper.toDomain(
-        record as SeatBasedSubscriptionRecord,
-      ) as SeatBasedSubscription;
+      const restored = mapper.toDomain(record) as SeatBasedSubscription;
 
       expect(restored.id).toBe(original.id);
       expect(restored.orgId).toBe(original.orgId);
@@ -191,9 +185,7 @@ describe('SubscriptionMapper', () => {
       });
 
       const record = mapper.toRecord(original);
-      const restored = mapper.toDomain(
-        record as UsageBasedSubscriptionRecord,
-      ) as UsageBasedSubscription;
+      const restored = mapper.toDomain(record) as UsageBasedSubscription;
 
       expect(restored.id).toBe(original.id);
       expect(restored.orgId).toBe(original.orgId);

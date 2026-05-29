@@ -117,7 +117,7 @@ export function ModelFormDialog<T extends BaseModelFormData>({
                     <FormLabel>Provider</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      value={field.value as string}
+                      value={field.value}
                       disabled={isSubmitting}
                     >
                       <FormControl>
@@ -169,7 +169,7 @@ export function ModelFormDialog<T extends BaseModelFormData>({
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                     <FormControl>
                       <Checkbox
-                        checked={field.value as boolean}
+                        checked={field.value}
                         onCheckedChange={field.onChange}
                         disabled={isSubmitting}
                       />

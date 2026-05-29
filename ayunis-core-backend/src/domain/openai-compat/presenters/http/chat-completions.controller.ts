@@ -140,7 +140,8 @@ export class ChatCompletionsController {
             if (response.writableEnded) return;
             response.write(`data: ${JSON.stringify(chunk)}\n\n`);
           },
-          error: (err: unknown) => reject(err as Error),
+          error: (err: unknown) =>
+            reject(err instanceof Error ? err : new Error(String(err))),
           complete: () => resolve(),
         });
 

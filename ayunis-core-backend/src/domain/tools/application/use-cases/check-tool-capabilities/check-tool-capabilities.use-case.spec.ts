@@ -5,7 +5,6 @@ import { CheckToolCapabilitiesQuery } from './check-tool-capabilities.query';
 import { Tool } from '../../../domain/tool.entity';
 import { DisplayableTool } from '../../../domain/displayable-tool.entity';
 import { ToolType } from '../../../domain/value-objects/tool-type.enum';
-import type { JSONSchema } from 'json-schema-to-ts';
 
 // Mock tool implementation for testing
 class MockTool extends Tool {
@@ -13,7 +12,7 @@ class MockTool extends Tool {
     super({
       name,
       description: 'Mock tool for testing',
-      parameters: {} as JSONSchema,
+      parameters: {},
       type,
     });
   }
@@ -33,7 +32,7 @@ class MockDisplayableTool extends DisplayableTool {
     super({
       name: 'mock_displayable',
       description: 'Mock displayable tool',
-      parameters: {} as JSONSchema,
+      parameters: {},
       type: ToolType.SEND_EMAIL,
     });
   }
@@ -55,7 +54,7 @@ class MockHybridTool extends DisplayableTool {
     super({
       name: 'mock_hybrid',
       description: 'Mock hybrid tool',
-      parameters: {} as JSONSchema,
+      parameters: {},
       type: ToolType.CREATE_DOCUMENT,
     });
   }

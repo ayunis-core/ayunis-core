@@ -129,7 +129,7 @@ export class LocalSourceRepository extends SourceRepository {
       await this.sourceContentChunkRepository.save(contentChunks);
     savedSource.textSourceDetails = savedDetails;
     savedDetails.contentChunks = savedContentChunks;
-    return this.mapper.toDomain(savedSource as TextSourceRecord);
+    return this.mapper.toDomain(savedSource);
   }
 
   async findStaleProcessingSources(threshold: Date): Promise<Source[]> {

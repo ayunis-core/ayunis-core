@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { PanelLeftIcon } from 'lucide-react';
-import { useRouterState } from '@tanstack/react-router';
+import { useRouter } from '@tanstack/react-router';
 
 import { useIsMobile } from '@/shared/hooks/shadcn/use-mobile';
 import { cn } from '@/shared/lib/shadcn/utils';
@@ -69,7 +69,7 @@ function SidebarProvider({
 }) {
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
-  const { location } = useRouterState();
+  const router = useRouter();
 
   // Centralized cleanup function to avoid duplication
   const cleanupMobileSidebar = React.useCallback(() => {
@@ -204,11 +204,14 @@ function SidebarProvider({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggleSidebar]);
 
-  // Close mobile sidebar on route changes to prevent overlay blocking content
+  // Close mobile sidebar on route changes to prevent overlay blocking content.
+  // Subscribe to router navigation events so the state update happens in an
+  // event callback rather than synchronously in the effect body.
   React.useEffect(() => {
-    cleanupMobileSidebar();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.href]);
+    return router.subscribe('onResolved', () => {
+      cleanupMobileSidebar();
+    });
+  }, [router, cleanupMobileSidebar]);
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.

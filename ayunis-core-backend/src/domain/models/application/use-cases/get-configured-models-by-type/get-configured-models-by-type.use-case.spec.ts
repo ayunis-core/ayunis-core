@@ -108,7 +108,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       ModelType.LANGUAGE,
     );
     const languageModel = new LanguageModel({
-      id: '123e4567-e89b-12d3-a456-426614174001' as UUID,
+      id: '123e4567-e89b-12d3-a456-426614174001',
       name: 'gpt-4',
       displayName: 'gpt-4',
       provider: ModelProvider.OPENAI,
@@ -119,7 +119,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       canVision: false,
     });
     const imageModel = new ImageGenerationModel({
-      id: '123e4567-e89b-12d3-a456-426614174002' as UUID,
+      id: '123e4567-e89b-12d3-a456-426614174002',
       name: 'gpt-image-1',
       displayName: 'GPT Image 1',
       provider: ModelProvider.AZURE,
@@ -140,7 +140,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       ModelType.EMBEDDING,
     );
     const embeddingModel = new EmbeddingModel({
-      id: '123e4567-e89b-12d3-a456-426614174001' as UUID,
+      id: '123e4567-e89b-12d3-a456-426614174001',
       name: 'text-embedding-3-small',
       displayName: 'Text Embedding 3 Small',
       provider: ModelProvider.OPENAI,
@@ -148,7 +148,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       dimensions: EmbeddingDimensions.DIMENSION_1536,
     });
     const languageModel = new LanguageModel({
-      id: '123e4567-e89b-12d3-a456-426614174002' as UUID,
+      id: '123e4567-e89b-12d3-a456-426614174002',
       name: 'gpt-4',
       displayName: 'gpt-4',
       provider: ModelProvider.OPENAI,
@@ -173,14 +173,14 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       ModelType.IMAGE_GENERATION,
     );
     const imageModel = new ImageGenerationModel({
-      id: '123e4567-e89b-12d3-a456-426614174001' as UUID,
+      id: '123e4567-e89b-12d3-a456-426614174001',
       name: 'gpt-image-1',
       displayName: 'GPT Image 1',
       provider: ModelProvider.AZURE,
       isArchived: false,
     });
     const languageModel = new LanguageModel({
-      id: '123e4567-e89b-12d3-a456-426614174002' as UUID,
+      id: '123e4567-e89b-12d3-a456-426614174002',
       name: 'gpt-4',
       displayName: 'gpt-4',
       provider: ModelProvider.OPENAI,
@@ -205,7 +205,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       ModelType.LANGUAGE,
     );
     const activeModel = new LanguageModel({
-      id: '123e4567-e89b-12d3-a456-426614174001' as UUID,
+      id: '123e4567-e89b-12d3-a456-426614174001',
       name: 'gpt-4',
       displayName: 'gpt-4',
       provider: ModelProvider.OPENAI,
@@ -216,7 +216,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       canVision: false,
     });
     const archivedModel = new LanguageModel({
-      id: '123e4567-e89b-12d3-a456-426614174002' as UUID,
+      id: '123e4567-e89b-12d3-a456-426614174002',
       name: 'legacy-model',
       displayName: 'legacy-model',
       provider: ModelProvider.OPENAI,
@@ -241,7 +241,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       ModelType.LANGUAGE,
     );
     const modelWithKey = new LanguageModel({
-      id: '123e4567-e89b-12d3-a456-426614174001' as UUID,
+      id: '123e4567-e89b-12d3-a456-426614174001',
       name: 'gpt-4',
       displayName: 'gpt-4',
       provider: ModelProvider.OPENAI,
@@ -252,7 +252,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       canVision: false,
     });
     const modelWithoutKey = new LanguageModel({
-      id: '123e4567-e89b-12d3-a456-426614174002' as UUID,
+      id: '123e4567-e89b-12d3-a456-426614174002',
       name: 'claude-3-opus',
       displayName: 'claude-3-opus',
       provider: ModelProvider.ANTHROPIC,

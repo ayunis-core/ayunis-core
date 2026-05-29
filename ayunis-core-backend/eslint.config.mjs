@@ -64,7 +64,13 @@ export default tseslint.config(
 
       // Rules set to warn (many existing violations — tighten later)
       '@typescript-eslint/no-unnecessary-condition': 'warn',
-      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
+      // Only flag `||` on non-primitive operands, where `??` is genuinely the
+      // intended nullish coalescing. Primitive falsy-defaults (e.g.
+      // `process.env.PORT || 3000`) are intentional and `??` would change behavior.
+      '@typescript-eslint/prefer-nullish-coalescing': [
+        'warn',
+        { ignorePrimitives: true },
+      ],
       '@typescript-eslint/prefer-optional-chain': 'warn',
       '@typescript-eslint/consistent-type-imports': 'warn',
       '@typescript-eslint/no-import-type-side-effects': 'warn',

@@ -13,7 +13,6 @@ import type { ContextService } from 'src/common/context/services/context.service
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { ToolResultCollectorService } from './tool-result-collector.service';
 import { randomUUID } from 'crypto';
-import type { JSONSchema } from 'json-schema-to-ts';
 
 // --- Helpers ---
 
@@ -22,7 +21,7 @@ class MockTool extends Tool {
     super({
       name,
       description: 'mock',
-      parameters: {} as JSONSchema,
+      parameters: {},
       type,
     });
   }
