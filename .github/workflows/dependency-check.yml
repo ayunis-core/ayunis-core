@@ -40,7 +40,7 @@ jobs:
       - name: Generate violation report (on failure)
         if: failure()
         run: |
-          pnpm run deps:check -- --output-type err-html > dependency-violations.html || true
+          pnpm exec dependency-cruiser src --config .dependency-cruiser.cjs --ignore-known --output-type err-html > dependency-violations.html || true
           echo "::error::Backend architecture violations detected. See artifact for details."
 
       - name: Upload violation report
@@ -80,7 +80,7 @@ jobs:
       - name: Generate violation report (on failure)
         if: failure()
         run: |
-          pnpm run deps:check -- --output-type err-html > dependency-violations.html || true
+          pnpm exec dependency-cruiser src --config .dependency-cruiser.cjs --ignore-known --output-type err-html > dependency-violations.html || true
           echo "::error::Frontend FSD violations detected. See artifact for details."
 
       - name: Upload violation report

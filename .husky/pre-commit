@@ -201,7 +201,7 @@ run_depcruise() {
   set +e
   (
     cd ayunis-core-backend >/dev/null 2>&1
-    pnpm run deps:check --silent
+    pnpm run --silent deps:check
   )
   STATUS=$?
   set -e
@@ -214,7 +214,7 @@ run_fe_depcruise() {
   set +e
   (
     cd ayunis-core-frontend >/dev/null 2>&1
-    pnpm run deps:check --silent
+    pnpm run --silent deps:check
   )
   STATUS=$?
   set -e

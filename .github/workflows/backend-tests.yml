@@ -140,7 +140,7 @@ jobs:
           EOF
 
       - name: Run migrations
-        run: pnpm run typeorm -- migration:run -d src/db/datasource.ts
+        run: pnpm run migration:run:dev
         env:
           NODE_ENV: test
 

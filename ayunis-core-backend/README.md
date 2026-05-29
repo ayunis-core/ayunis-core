@@ -97,22 +97,22 @@ The application uses TypeORM for database migrations:
 
 ```bash
 # Generate a migration (development)
-npm run migration:generate:dev -- migrations/MigrationName
+pnpm run migration:generate:dev src/db/migrations/MigrationName
 
 # Run migrations (development)
-npm run migration:run:dev
+pnpm run migration:run:dev
 
 # Revert migrations (development)
-npm run migration:revert:dev
+pnpm run migration:revert:dev
 
 # Show migration status (development)
-npm run migration:show:dev
+pnpm run migration:show:dev
 
 # Production migration commands
-npm run migration:generate:prod
-npm run migration:run:prod
-npm run migration:revert:prod
-npm run migration:show:prod
+pnpm run migration:generate:prod src/db/migrations/MigrationName
+pnpm run migration:run:prod
+pnpm run migration:revert:prod
+pnpm run migration:show:prod
 ```
 
 ## Project Structure
