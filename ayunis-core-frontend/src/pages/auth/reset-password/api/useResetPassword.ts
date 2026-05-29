@@ -5,6 +5,7 @@ import { showError, showSuccess } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { useUserControllerResetPassword } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { passwordPolicySchema } from '@/shared/lib/password-policy';
 import * as z from 'zod';
 
 export function useResetPassword(token: string) {
@@ -13,11 +14,9 @@ export function useResetPassword(token: string) {
 
   const resetPasswordFormSchema = z
     .object({
-      newPassword: z.string().min(8, {
-        message: t('resetPassword.passwordTooShort'),
-      }),
-      confirmPassword: z.string().min(8, {
-        message: t('resetPassword.passwordTooShort'),
+      newPassword: passwordPolicySchema(t('passwordPolicy', { ns: 'common' })),
+      confirmPassword: z.string().min(1, {
+        message: t('resetPassword.passwordsDontMatch'),
       }),
     })
     .refine((data) => data.newPassword === data.confirmPassword, {

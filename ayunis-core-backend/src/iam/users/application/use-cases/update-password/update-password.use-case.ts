@@ -1,16 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from '../../ports/users.repository';
 import { UpdatePasswordCommand } from './update-password.command';
-import {
-  UserError,
-  UserInvalidInputError,
-  UserNotFoundError,
-} from '../../users.errors';
+import { UserInvalidInputError, UserNotFoundError } from '../../users.errors';
 import { HashTextCommand } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.command';
 import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
 import { HashingError } from 'src/iam/hashing/application/hashing.errors';
 import { ValidateUserUseCase } from '../validate-user/validate-user.use-case';
 import { ValidateUserQuery } from '../validate-user/validate-user.query';
+import { InvalidPasswordError } from 'src/iam/authentication/application/authentication.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class UpdatePasswordUseCase {
@@ -40,11 +38,13 @@ export class UpdatePasswordUseCase {
       );
 
       const isValidPassword = await this.usersRepository.isValidPassword(
-        command.currentPassword,
+        command.newPassword,
       );
 
       if (!isValidPassword) {
-        throw new UserInvalidInputError(command.currentPassword);
+        throw new InvalidPasswordError(
+          'Password does not meet security requirements',
+        );
       }
 
       const newHashedPassword = await this.hashTextUseCase
@@ -63,7 +63,7 @@ export class UpdatePasswordUseCase {
       await this.usersRepository.update(user);
       return;
     } catch (error) {
-      if (error instanceof UserError || error instanceof HashingError) {
+      if (error instanceof ApplicationError) {
         throw error;
       }
       this.logger.error('Password update failed', {

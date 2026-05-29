@@ -11,6 +11,7 @@ import {
 } from '@/shared/lib/compute-department';
 import { DEPARTMENT_OTHER_MAX_LENGTH } from '@/shared/constants/department';
 import { useTranslation } from 'react-i18next';
+import { passwordPolicySchema } from '@/shared/lib/password-policy';
 import * as z from 'zod';
 
 export function useInviteAccept(invite: Invite, inviteToken: string) {
@@ -24,9 +25,7 @@ export function useInviteAccept(invite: Invite, inviteToken: string) {
       name: z.string().min(1, {
         message: t('inviteAccept.nameRequired'),
       }),
-      password: z.string().min(8, {
-        message: t('inviteAccept.passwordTooShort'),
-      }),
+      password: passwordPolicySchema(t('passwordPolicy', { ns: 'common' })),
       department: z.string().optional(),
       departmentOther: z.string().max(DEPARTMENT_OTHER_MAX_LENGTH).optional(),
       inviteToken: z.string(),
