@@ -48,21 +48,21 @@ export function validateDateRange(startDate: Date, endDate: Date): void {
 }
 
 /**
- * Processes model distribution data by calculating percentages and sorting by token usage.
+ * Processes model distribution data by calculating percentages and sorting by credit usage.
  * @param modelDistribution Raw model distribution data
  * @param maxModels Maximum number of models to return (0 or negative for no limit)
- * @returns Processed model distribution with percentages, sorted by token usage descending
+ * @returns Processed model distribution with percentages, sorted by credit usage descending
  */
 export function processModelDistribution(
   modelDistribution: ModelDistribution[],
   maxModels: number,
 ): ModelDistribution[] {
-  const totalTokens = modelDistribution.reduce(
-    (sum, model) => sum + model.tokens,
+  const totalCredits = modelDistribution.reduce(
+    (sum, model) => sum + model.credits,
     0,
   );
 
-  if (totalTokens === 0) {
+  if (totalCredits === 0) {
     return [];
   }
 
@@ -74,12 +74,12 @@ export function processModelDistribution(
           modelName: model.modelName,
           displayName: model.displayName,
           provider: model.provider,
-          tokens: model.tokens,
+          credits: model.credits,
           requests: model.requests,
-          percentage: (model.tokens / totalTokens) * 100,
+          percentage: (model.credits / totalCredits) * 100,
         }),
     )
-    .sort((a, b) => b.tokens - a.tokens);
+    .sort((a, b) => b.credits - a.credits);
 
   return maxModels > 0 ? sortedModels.slice(0, maxModels) : sortedModels;
 }
@@ -92,18 +92,18 @@ export function processModelDistribution(
 export function calculateProviderPercentages(
   providerUsage: ProviderUsage[],
 ): ProviderUsage[] {
-  const totalTokens = providerUsage.reduce(
-    (sum, provider) => sum + provider.tokens,
+  const totalCredits = providerUsage.reduce(
+    (sum, provider) => sum + provider.credits,
     0,
   );
 
   return providerUsage.map((provider) => {
     const percentage =
-      totalTokens > 0 ? (provider.tokens / totalTokens) * 100 : 0;
+      totalCredits > 0 ? (provider.credits / totalCredits) * 100 : 0;
 
     return new ProviderUsage({
       provider: provider.provider,
-      tokens: provider.tokens,
+      credits: provider.credits,
       requests: provider.requests,
       percentage,
       timeSeriesData: provider.timeSeriesData,

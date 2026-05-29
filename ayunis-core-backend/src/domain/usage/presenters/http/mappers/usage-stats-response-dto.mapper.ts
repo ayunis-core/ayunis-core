@@ -6,7 +6,7 @@ import { UsageStatsResponseDto } from '../dto/usage-stats-response.dto';
 export class UsageStatsResponseDtoMapper {
   toDto(usageStats: UsageStats): UsageStatsResponseDto {
     return {
-      totalTokens: usageStats.totalTokens,
+      totalCredits: usageStats.totalCredits,
       totalRequests: usageStats.totalRequests,
       activeUsers: usageStats.activeUsers,
       totalUsers: usageStats.totalUsers,

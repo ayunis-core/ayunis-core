@@ -11,7 +11,7 @@ export async function getUsageAggregateStats(
 ): Promise<UsageAggregateRow | null> {
   const qb = usageRepository
     .createQueryBuilder('usage')
-    .select('SUM(usage.totalTokens)', 'totalTokens')
+    .select('COALESCE(SUM(usage.creditsConsumed), 0)', 'totalCredits')
     .addSelect('COUNT(*)', 'totalRequests')
     .addSelect('COUNT(DISTINCT usage.userId)', 'totalUsers')
     .where('usage.organizationId = :orgId', { orgId: organizationId });

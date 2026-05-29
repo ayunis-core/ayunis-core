@@ -3,20 +3,20 @@ import { TimeSeriesPoint } from './time-series-point.entity';
 
 export class ProviderUsage {
   public readonly provider: ModelProvider;
-  public readonly tokens: number;
+  public readonly credits: number;
   public readonly requests: number;
   public readonly percentage: number;
   public readonly timeSeriesData: TimeSeriesPoint[];
 
   constructor(params: {
     provider: ModelProvider;
-    tokens: number;
+    credits: number;
     requests: number;
     percentage: number;
     timeSeriesData: TimeSeriesPoint[];
   }) {
     this.provider = params.provider;
-    this.tokens = params.tokens;
+    this.credits = params.credits;
     this.requests = params.requests;
     this.percentage = params.percentage;
     this.timeSeriesData = params.timeSeriesData;

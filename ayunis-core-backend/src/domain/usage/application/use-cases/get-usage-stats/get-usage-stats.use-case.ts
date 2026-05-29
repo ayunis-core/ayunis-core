@@ -29,7 +29,7 @@ export class GetUsageStatsUseCase {
       });
 
       return new UsageStats({
-        totalTokens: Math.max(0, stats.totalTokens),
+        totalCredits: Math.max(0, stats.totalCredits),
         totalRequests: Math.max(0, stats.totalRequests),
         activeUsers: Math.min(
           Math.max(0, stats.activeUsers),

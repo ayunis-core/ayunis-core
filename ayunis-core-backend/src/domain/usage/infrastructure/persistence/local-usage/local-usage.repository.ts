@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { Usage } from '../../../domain/usage.entity';
-import { UsageConstants } from '../../../domain/value-objects/usage.constants';
 import {
   UsageRepository,
   ProviderUsage,
@@ -24,9 +23,6 @@ import { getProviderStats } from './queries/get-provider-stats.db-query';
 import { getModelStats } from './queries/get-model-stats.db-query';
 import { getTopModels } from './queries/get-top-models.db-query';
 import { getProviderTimeSeries as queryProviderTimeSeries } from './queries/get-provider-time-series.db-query';
-import { getGlobalProviderStats } from './queries/get-global-provider-stats.db-query';
-import { getGlobalProviderTimeSeries } from './queries/get-global-provider-time-series.db-query';
-import { getGlobalModelStats } from './queries/get-global-model-stats.db-query';
 import { getUserUsageRows } from './queries/get-user-usage-rows.db-query';
 import { countUsersForUserUsage } from './queries/count-users-for-user-usage.db-query';
 import { sumCreditsForOrg } from './queries/sum-credits-for-org.db-query';
@@ -37,11 +33,6 @@ import { getUsageAggregateStats } from './queries/get-usage-aggregate-stats.db-q
 import { countActiveUsersSince } from './queries/count-active-users-since.db-query';
 import { countUsagesInRange } from './queries/count-usages-in-range.db-query';
 import { UsageQueryMapper } from './mappers/usage-query.mapper';
-import { GetGlobalProviderUsageQuery } from '../../../application/use-cases/get-global-provider-usage/get-global-provider-usage.query';
-import { GetGlobalModelDistributionQuery } from '../../../application/use-cases/get-global-model-distribution/get-global-model-distribution.query';
-import { GetGlobalUserUsageQuery } from '../../../application/use-cases/get-global-user-usage/get-global-user-usage.query';
-import { GlobalUserUsageItem } from '../../../domain/global-user-usage-item.entity';
-import { getGlobalUserUsageRows } from './queries/get-global-user-usage-rows.db-query';
 
 @Injectable()
 export class LocalUsageRepository extends UsageRepository {
@@ -114,39 +105,39 @@ export class LocalUsageRepository extends UsageRepository {
     query: GetProviderUsageQuery,
   ): Promise<ProviderUsage[]> {
     // Get aggregated provider usage
-    const providerStats = await getProviderStats(
-      this.usageRepository,
-      query.organizationId,
-      query.startDate,
-      query.endDate,
-      query.provider,
-      query.modelId,
-    );
+    const providerStats = await getProviderStats({
+      usageRepository: this.usageRepository,
+      organizationId: query.organizationId,
+      startDate: query.startDate,
+      endDate: query.endDate,
+      provider: query.provider,
+      modelId: query.modelId,
+    });
 
-    const totalTokens = providerStats.reduce(
-      (sum, stat) => sum + parseInt(stat.tokens, 10),
+    const totalCredits = providerStats.reduce(
+      (sum, stat) => sum + (Number(stat.credits) || 0),
       0,
     );
 
     const results: ProviderUsage[] = [];
     for (const stat of providerStats) {
       const timeSeriesRows = query.includeTimeSeriesData
-        ? await queryProviderTimeSeries(
-            this.usageRepository,
-            query.organizationId,
-            String(stat.provider),
-            query.startDate,
-            query.endDate,
-            query.modelId,
-          )
+        ? await queryProviderTimeSeries({
+            usageRepository: this.usageRepository,
+            organizationId: query.organizationId,
+            provider: String(stat.provider),
+            startDate: query.startDate,
+            endDate: query.endDate,
+            modelId: query.modelId,
+          })
         : [];
       const timeSeries =
         this.usageQueryMapper.mapTimeSeriesRows(timeSeriesRows);
       results.push(
-        this.usageQueryMapper.mapProviderRow(stat, totalTokens, timeSeries),
+        this.usageQueryMapper.mapProviderRow(stat, totalCredits, timeSeries),
       );
     }
-    return results.sort((a, b) => b.tokens - a.tokens);
+    return results.sort((a, b) => b.credits - a.credits);
   }
 
   async getModelDistribution(
@@ -230,7 +221,7 @@ export class LocalUsageRepository extends UsageRepository {
       query.startDate,
       query.endDate,
     )) ?? {
-      totalTokens: '0',
+      totalCredits: '0',
       totalRequests: '0',
       totalUsers: '0',
     };
@@ -255,8 +246,7 @@ export class LocalUsageRepository extends UsageRepository {
     const topModels = this.usageQueryMapper.mapTopModelRows(topModelsResult);
 
     return new UsageStats({
-      totalTokens:
-        (stats.totalTokens ? parseInt(stats.totalTokens, 10) : 0) || 0,
+      totalCredits: (stats.totalCredits ? Number(stats.totalCredits) : 0) || 0,
       totalRequests: parseInt(stats.totalRequests, 10) || 0,
       activeUsers,
       totalUsers: parseInt(stats.totalUsers, 10) || 0,
@@ -277,55 +267,6 @@ export class LocalUsageRepository extends UsageRepository {
     );
   }
 
-  async getGlobalProviderUsage(
-    query: GetGlobalProviderUsageQuery,
-  ): Promise<ProviderUsage[]> {
-    const providerStats = await getGlobalProviderStats(
-      this.usageRepository,
-      query.startDate,
-      query.endDate,
-      query.provider,
-      query.modelId,
-    );
-
-    const totalTokens = providerStats.reduce(
-      (sum, stat) => sum + parseInt(stat.tokens, 10),
-      0,
-    );
-
-    const results: ProviderUsage[] = [];
-    for (const stat of providerStats) {
-      const timeSeriesRows = query.includeTimeSeriesData
-        ? await getGlobalProviderTimeSeries(
-            this.usageRepository,
-            String(stat.provider),
-            query.startDate,
-            query.endDate,
-            query.modelId,
-          )
-        : [];
-      const timeSeries =
-        this.usageQueryMapper.mapTimeSeriesRows(timeSeriesRows);
-      results.push(
-        this.usageQueryMapper.mapProviderRow(stat, totalTokens, timeSeries),
-      );
-    }
-    return results.sort((a, b) => b.tokens - a.tokens);
-  }
-
-  async getGlobalModelDistribution(
-    query: GetGlobalModelDistributionQuery,
-  ): Promise<ModelDistribution[]> {
-    const modelStats = await getGlobalModelStats(
-      this.usageRepository,
-      query.startDate,
-      query.endDate,
-      query.modelId,
-    );
-
-    return this.usageQueryMapper.mapModelStatsToDistribution(modelStats).items;
-  }
-
   async getMonthlyCreditUsage(
     organizationId: UUID,
     monthStart: Date,
@@ -338,33 +279,6 @@ export class LocalUsageRepository extends UsageRepository {
       .getRawOne<{ total: string }>();
 
     return parseFloat(result?.total ?? '0') || 0;
-  }
-
-  async getGlobalUserUsage(
-    query: GetGlobalUserUsageQuery,
-  ): Promise<GlobalUserUsageItem[]> {
-    const rows = await getGlobalUserUsageRows({
-      usageRepository: this.usageRepository,
-      userRepository: this.userRepository,
-      startDate: query.startDate,
-      endDate: query.endDate,
-      limit: UsageConstants.GLOBAL_USER_USAGE_LIMIT,
-    });
-
-    return rows.map((row) => {
-      const { credits, requests, lastActivity } = this.mapUsageRow(row);
-
-      return new GlobalUserUsageItem({
-        userId: row.userId as unknown as UUID,
-        userName: row.userName ?? '',
-        userEmail: row.userEmail ?? '',
-        credits,
-        requests,
-        lastActivity,
-        isActive: UserUsageItem.computeIsActive(lastActivity),
-        organizationName: row.organizationName ?? '',
-      });
-    });
   }
 
   private mapUsageRow(row: {

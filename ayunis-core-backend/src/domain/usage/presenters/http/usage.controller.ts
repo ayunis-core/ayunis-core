@@ -3,6 +3,9 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { UserUsageResponseDto } from './dto/user-usage-response.dto';
 import { UsageConfigResponseDto } from './dto/usage-config-response.dto';
 import { CreditUsageResponseDto } from './dto/credit-usage-response.dto';
+import { UsageStatsResponseDto } from './dto/usage-stats-response.dto';
+import { ModelDistributionResponseDto } from './dto/model-distribution-response.dto';
+import { ProviderUsageChartResponseDto } from './dto/provider-usage-chart-response.dto';
 import { UsageResponseMapper } from './mappers/usage-response.mapper';
 import { UsageUseCasesFacade } from './usage-use-cases.facade';
 import { ConfigService } from '@nestjs/config';
@@ -17,6 +20,10 @@ import {
   UserUsageSortBy,
   SortOrder,
 } from '../../application/use-cases/get-user-usage/get-user-usage.query';
+import { GetUsageStatsQuery } from '../../application/use-cases/get-usage-stats/get-usage-stats.query';
+import { GetModelDistributionQuery } from '../../application/use-cases/get-model-distribution/get-model-distribution.query';
+import { GetProviderUsageQuery } from '../../application/use-cases/get-provider-usage/get-provider-usage.query';
+import { ModelProvider } from '../../../models/domain/value-objects/model-provider.enum';
 import { UsageConstants } from '../../domain/value-objects/usage.constants';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -160,5 +167,82 @@ export class UsageController {
     const userUsage = await this.useCases.getUserUsage(query);
 
     return this.mapper.toUserUsageDto(userUsage);
+  }
+
+  @Get('stats')
+  @ApiOperation({
+    summary: 'Get overall usage statistics for the current organization',
+  })
+  @ApiResponse({ status: 200, type: UsageStatsResponseDto })
+  @ApiQuery({ name: 'startDate', type: String, required: false })
+  @ApiQuery({ name: 'endDate', type: String, required: false })
+  async getUsageStats(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    const query = new GetUsageStatsQuery({
+      organizationId: orgId,
+      startDate: startDate ? parseDate(startDate, 'startDate') : undefined,
+      endDate: endDate ? parseDate(endDate, 'endDate') : undefined,
+    });
+    const stats = await this.useCases.getUsageStats(query);
+    return this.mapper.toUsageStatsDto(stats);
+  }
+
+  @Get('models')
+  @ApiOperation({
+    summary: 'Get usage distribution by model for the current organization',
+  })
+  @ApiResponse({ status: 200, type: ModelDistributionResponseDto })
+  @ApiQuery({ name: 'startDate', type: String, required: false })
+  @ApiQuery({ name: 'endDate', type: String, required: false })
+  @ApiQuery({ name: 'maxModels', type: Number, required: false })
+  @ApiQuery({ name: 'modelId', type: String, required: false })
+  async getModelDistribution(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('maxModels') maxModels: number = UsageConstants.MAX_MODELS,
+    @Query('modelId') modelId?: string,
+  ) {
+    const query = new GetModelDistributionQuery({
+      organizationId: orgId,
+      startDate: startDate ? parseDate(startDate, 'startDate') : undefined,
+      endDate: endDate ? parseDate(endDate, 'endDate') : undefined,
+      maxModels,
+      modelId: modelId as UUID | undefined,
+    });
+    const modelDistribution = await this.useCases.getModelDistribution(query);
+    return this.mapper.toModelDistributionDto(modelDistribution);
+  }
+
+  @Get('providers/chart')
+  @ApiOperation({
+    summary:
+      'Get provider usage time series for the current organization (chart-ready)',
+  })
+  @ApiResponse({ status: 200, type: ProviderUsageChartResponseDto })
+  @ApiQuery({ name: 'startDate', type: String, required: false })
+  @ApiQuery({ name: 'endDate', type: String, required: false })
+  @ApiQuery({ name: 'provider', type: String, required: false })
+  @ApiQuery({ name: 'modelId', type: String, required: false })
+  async getProviderUsageChart(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('provider') provider?: string,
+    @Query('modelId') modelId?: string,
+  ) {
+    const query = new GetProviderUsageQuery({
+      organizationId: orgId,
+      startDate: startDate ? parseDate(startDate, 'startDate') : undefined,
+      endDate: endDate ? parseDate(endDate, 'endDate') : undefined,
+      includeTimeSeriesData: true,
+      provider: provider as ModelProvider | undefined,
+      modelId: modelId as UUID | undefined,
+    });
+    const providerUsage = await this.useCases.getProviderUsage(query);
+    return this.mapper.toProviderUsageChartDto(providerUsage);
   }
 }
