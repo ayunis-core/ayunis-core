@@ -6,7 +6,7 @@ export class ModelDistribution {
   public readonly modelName: string;
   public readonly displayName: string;
   public readonly provider: ModelProvider;
-  public readonly tokens: number;
+  public readonly credits: number;
   public readonly requests: number;
   public readonly percentage: number;
 
@@ -15,7 +15,7 @@ export class ModelDistribution {
     modelName: string;
     displayName: string;
     provider: ModelProvider;
-    tokens: number;
+    credits: number;
     requests: number;
     percentage: number;
   }) {
@@ -23,7 +23,7 @@ export class ModelDistribution {
     this.modelName = params.modelName;
     this.displayName = params.displayName;
     this.provider = params.provider;
-    this.tokens = params.tokens;
+    this.credits = params.credits;
     this.requests = params.requests;
     this.percentage = params.percentage;
   }

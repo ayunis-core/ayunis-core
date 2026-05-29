@@ -38,7 +38,7 @@ describe('GetUsageStatsUseCase', () => {
   describe('successful execution', () => {
     it('should return usage stats', async () => {
       const mockStats = new UsageStats({
-        totalTokens: 10000,
+        totalCredits: 10000,
         totalRequests: 100,
         activeUsers: 10,
         totalUsers: 20,
@@ -52,7 +52,7 @@ describe('GetUsageStatsUseCase', () => {
       const query = new GetUsageStatsQuery({ organizationId: orgId });
       const result = await useCase.execute(query);
 
-      expect(result.totalTokens).toBe(10000);
+      expect(result.totalCredits).toBe(10000);
       expect(result.totalRequests).toBe(100);
       expect(result.activeUsers).toBe(10);
       expect(result.totalUsers).toBe(20);
@@ -60,7 +60,7 @@ describe('GetUsageStatsUseCase', () => {
 
     it('should ensure non-negative values', async () => {
       const mockStats = new UsageStats({
-        totalTokens: -100,
+        totalCredits: -100,
         totalRequests: -50,
         activeUsers: -5,
         totalUsers: -10,
@@ -74,7 +74,7 @@ describe('GetUsageStatsUseCase', () => {
       const query = new GetUsageStatsQuery({ organizationId: orgId });
       const result = await useCase.execute(query);
 
-      expect(result.totalTokens).toBe(0);
+      expect(result.totalCredits).toBe(0);
       expect(result.totalRequests).toBe(0);
       expect(result.activeUsers).toBe(0);
       expect(result.totalUsers).toBe(0);
@@ -82,7 +82,7 @@ describe('GetUsageStatsUseCase', () => {
 
     it('should ensure activeUsers does not exceed totalUsers', async () => {
       const mockStats = new UsageStats({
-        totalTokens: 10000,
+        totalCredits: 10000,
         totalRequests: 100,
         activeUsers: 25,
         totalUsers: 20, // activeUsers > totalUsers
@@ -102,7 +102,7 @@ describe('GetUsageStatsUseCase', () => {
 
     it('should handle zero values correctly', async () => {
       const mockStats = new UsageStats({
-        totalTokens: 0,
+        totalCredits: 0,
         totalRequests: 0,
         activeUsers: 0,
         totalUsers: 0,
@@ -116,7 +116,7 @@ describe('GetUsageStatsUseCase', () => {
       const query = new GetUsageStatsQuery({ organizationId: orgId });
       const result = await useCase.execute(query);
 
-      expect(result.totalTokens).toBe(0);
+      expect(result.totalCredits).toBe(0);
       expect(result.totalRequests).toBe(0);
       expect(result.activeUsers).toBe(0);
       expect(result.totalUsers).toBe(0);
@@ -178,7 +178,7 @@ describe('GetUsageStatsUseCase', () => {
       });
 
       const mockStats = new UsageStats({
-        totalTokens: 0,
+        totalCredits: 0,
         totalRequests: 0,
         activeUsers: 0,
         totalUsers: 0,
@@ -217,7 +217,7 @@ describe('GetUsageStatsUseCase', () => {
       const query = new GetUsageStatsQuery({ organizationId: orgId });
 
       const mockStats = new UsageStats({
-        totalTokens: 0,
+        totalCredits: 0,
         totalRequests: 0,
         activeUsers: 0,
         totalUsers: 0,

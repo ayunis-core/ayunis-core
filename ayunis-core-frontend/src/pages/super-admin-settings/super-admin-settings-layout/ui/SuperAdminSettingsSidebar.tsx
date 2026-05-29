@@ -1,7 +1,6 @@
 import {
   Building2,
   Brain,
-  BarChart3,
   Sparkles,
   ShieldCheck,
   Settings2,
@@ -25,11 +24,6 @@ export function SuperAdminSettingsSidebar() {
       to: '/super-admin-settings/models-catalog',
       icon: <Brain />,
       label: t('layout.modelsCatalog'),
-    },
-    {
-      to: '/super-admin-settings/usage',
-      icon: <BarChart3 />,
-      label: t('layout.usage'),
     },
     {
       to: '/super-admin-settings/skills',

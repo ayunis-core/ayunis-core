@@ -3400,8 +3400,8 @@ export interface UserUsageResponseDto {
 }
 
 export interface UsageStatsResponseDto {
-  /** Total tokens consumed across all users and models in the specified period */
-  totalTokens: number;
+  /** Total credits consumed across all users and models in the specified period */
+  totalCredits: number;
   /** Total number of API requests made in the specified period */
   totalRequests: number;
   /** Number of users who made requests within the active user threshold (last 30 days) */
@@ -3443,8 +3443,8 @@ export interface ModelDistributionDto {
   displayName: string;
   /** Model provider */
   provider: ModelDistributionDtoProvider;
-  /** Total tokens for this model */
-  tokens: number;
+  /** Total credits for this model */
+  credits: number;
   /** Total requests for this model */
   requests: number;
   /** Percentage of total usage */
@@ -3456,11 +3456,38 @@ export interface ModelDistributionResponseDto {
   models: ModelDistributionDto[];
 }
 
+export interface ProviderValuesDto {
+  /** Credits for OpenAI */
+  openai?: number;
+  /** Credits for Anthropic */
+  anthropic?: number;
+  /** Credits for Mistral */
+  mistral?: number;
+  /** Credits for Ollama */
+  ollama?: number;
+  /** Credits for Synaforce */
+  synaforce?: number;
+  /** Credits for Ayunis (internal) */
+  ayunis?: number;
+}
+
+export interface ProviderTimeSeriesRowDto {
+  /** Date of the data point */
+  date: string;
+  /** Credits per provider for this date */
+  values: ProviderValuesDto;
+}
+
+export interface ProviderUsageChartResponseDto {
+  /** Aligned time series rows by date with provider credit values */
+  timeSeries: ProviderTimeSeriesRowDto[];
+}
+
 export interface TimeSeriesPointDto {
   /** Date of the data point */
   date: string;
-  /** Number of tokens at this point */
-  tokens: number;
+  /** Number of credits at this point */
+  credits: number;
   /** Number of requests at this point */
   requests: number;
 }
@@ -3490,8 +3517,8 @@ export const ProviderUsageDtoProvider = {
 export interface ProviderUsageDto {
   /** Model provider */
   provider: ProviderUsageDtoProvider;
-  /** Total tokens for this provider */
-  tokens: number;
+  /** Total credits for this provider */
+  credits: number;
   /** Total requests for this provider */
   requests: number;
   /** Percentage of total usage */
@@ -3503,60 +3530,6 @@ export interface ProviderUsageDto {
 export interface ProviderUsageResponseDto {
   /** Provider usage statistics */
   providers: ProviderUsageDto[];
-}
-
-export interface ProviderValuesDto {
-  /** Tokens for OpenAI */
-  openai?: number;
-  /** Tokens for Anthropic */
-  anthropic?: number;
-  /** Tokens for Mistral */
-  mistral?: number;
-  /** Tokens for Ollama */
-  ollama?: number;
-  /** Tokens for Synaforce */
-  synaforce?: number;
-  /** Tokens for Ayunis (internal) */
-  ayunis?: number;
-}
-
-export interface ProviderTimeSeriesRowDto {
-  /** Date of the data point */
-  date: string;
-  /** Tokens per provider for this date */
-  values: ProviderValuesDto;
-}
-
-export interface ProviderUsageChartResponseDto {
-  /** Aligned time series rows by date with provider token values */
-  timeSeries: ProviderTimeSeriesRowDto[];
-}
-
-export interface GlobalUserUsageDto {
-  /** User ID */
-  userId: string;
-  /** User name */
-  userName: string;
-  /** User email */
-  userEmail: string;
-  /** Total credits consumed by this user */
-  credits: number;
-  /** Total requests for this user */
-  requests: number;
-  /**
-   * Last activity date (null if no activity)
-   * @nullable
-   */
-  lastActivity: string | null;
-  /** Whether the user is considered active */
-  isActive: boolean;
-  /** Name of the organization the user belongs to */
-  organizationName: string;
-}
-
-export interface GlobalUserUsageResponseDto {
-  /** Top users by credit usage across all organizations */
-  data: GlobalUserUsageDto[];
 }
 
 export interface CreditsPerEuroResponseDto {
@@ -4282,6 +4255,25 @@ export const UsageControllerGetUserUsageSortOrder = {
   desc: 'desc',
 } as const;
 
+export type UsageControllerGetUsageStatsParams = {
+startDate?: string;
+endDate?: string;
+};
+
+export type UsageControllerGetModelDistributionParams = {
+startDate?: string;
+endDate?: string;
+maxModels?: number;
+modelId?: string;
+};
+
+export type UsageControllerGetProviderUsageChartParams = {
+startDate?: string;
+endDate?: string;
+provider?: string;
+modelId?: string;
+};
+
 export type SuperAdminUsageControllerGetUsageStatsParams = {
 startDate?: string;
 endDate?: string;
@@ -4338,24 +4330,6 @@ export const SuperAdminUsageDataControllerGetUserUsageSortOrder = {
   asc: 'asc',
   desc: 'desc',
 } as const;
-
-export type SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartParams = {
-startDate?: string;
-endDate?: string;
-provider?: string;
-modelId?: string;
-};
-
-export type SuperAdminGlobalUsageControllerGetGlobalModelDistributionParams = {
-startDate?: string;
-endDate?: string;
-modelId?: string;
-};
-
-export type SuperAdminGlobalUsageControllerGetGlobalUserUsageParams = {
-startDate?: string;
-endDate?: string;
-};
 
 export type RunsControllerSendMessageBody = {
   threadId: string;

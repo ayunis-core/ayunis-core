@@ -2,21 +2,21 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 
 // Explicit fields so Swagger shows concrete keys instead of additionalProp*
 export class ProviderValuesDto {
-  @ApiPropertyOptional({ description: 'Tokens for OpenAI' })
+  @ApiPropertyOptional({ description: 'Credits for OpenAI' })
   openai?: number;
 
-  @ApiPropertyOptional({ description: 'Tokens for Anthropic' })
+  @ApiPropertyOptional({ description: 'Credits for Anthropic' })
   anthropic?: number;
 
-  @ApiPropertyOptional({ description: 'Tokens for Mistral' })
+  @ApiPropertyOptional({ description: 'Credits for Mistral' })
   mistral?: number;
 
-  @ApiPropertyOptional({ description: 'Tokens for Ollama' })
+  @ApiPropertyOptional({ description: 'Credits for Ollama' })
   ollama?: number;
 
-  @ApiPropertyOptional({ description: 'Tokens for Synaforce' })
+  @ApiPropertyOptional({ description: 'Credits for Synaforce' })
   synaforce?: number;
 
-  @ApiPropertyOptional({ description: 'Tokens for Ayunis (internal)' })
+  @ApiPropertyOptional({ description: 'Credits for Ayunis (internal)' })
   ayunis?: number;
 }

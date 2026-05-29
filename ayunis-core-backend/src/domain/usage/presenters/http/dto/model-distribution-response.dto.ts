@@ -14,8 +14,8 @@ export class ModelDistributionDto {
   @ApiProperty({ enum: ModelProvider, description: 'Model provider' })
   provider: ModelProvider;
 
-  @ApiProperty({ description: 'Total tokens for this model' })
-  tokens: number;
+  @ApiProperty({ description: 'Total credits for this model' })
+  credits: number;
 
   @ApiProperty({ description: 'Total requests for this model' })
   requests: number;
