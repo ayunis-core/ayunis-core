@@ -2543,6 +2543,11 @@ export interface SkillResponseDto {
   isShared: boolean;
   /** Whether the skill is pinned for quick access in chat */
   isPinned: boolean;
+  /**
+   * Display name of the user who shared this skill with the current user. Non-null only for shared skills whose creator can be resolved within the caller’s organisation; otherwise null.
+   * @nullable
+   */
+  creatorName: string | null;
 }
 
 export interface CreateSkillDto {

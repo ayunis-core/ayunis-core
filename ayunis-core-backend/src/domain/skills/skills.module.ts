@@ -38,6 +38,7 @@ import { CreateSkillWithUniqueNameUseCase } from './application/use-cases/create
 import { MarketplaceSkillInstallationService } from './application/services/marketplace-skill-installation.service';
 import { SkillAccessService } from './application/services/skill-access.service';
 import { SkillActivationService } from './application/services/skill-activation.service';
+import { SkillCreatorNameService } from './application/services/skill-creator-name.service';
 
 // Listeners
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
@@ -52,6 +53,7 @@ import { SharedEntityType } from '../shares/domain/value-objects/shared-entity-t
 import { SharesModule } from '../shares/shares.module';
 
 import { ThreadsModule } from '../threads/threads.module';
+import { UsersModule } from 'src/iam/users/users.module';
 
 // Presenters
 import { SkillsController } from './presenters/http/skills.controller';
@@ -75,6 +77,7 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
     McpModule,
     forwardRef(() => KnowledgeBasesModule),
     MarketplaceModule,
+    UsersModule,
     forwardRef(() => SharesModule),
     forwardRef(() => ThreadsModule),
   ],
@@ -86,6 +89,7 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
     // Services
     SkillAccessService,
     SkillActivationService,
+    SkillCreatorNameService,
 
     // Use Cases
     CreateSkillUseCase,

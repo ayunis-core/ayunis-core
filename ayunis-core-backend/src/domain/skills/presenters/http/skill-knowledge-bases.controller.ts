@@ -20,6 +20,7 @@ import { UnassignKnowledgeBaseFromSkillCommand } from '../../application/use-cas
 import { ListSkillKnowledgeBasesQuery } from '../../application/use-cases/list-skill-knowledge-bases/list-skill-knowledge-bases.query';
 
 import { SkillAccessService } from '../../application/services/skill-access.service';
+import { SkillCreatorNameService } from '../../application/services/skill-creator-name.service';
 
 import { SkillResponseDto } from './dto/skill-response.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
@@ -42,6 +43,7 @@ export class SkillKnowledgeBasesController {
     private readonly skillDtoMapper: SkillDtoMapper,
     private readonly knowledgeBaseDtoMapper: KnowledgeBaseDtoMapper,
     private readonly skillAccessService: SkillAccessService,
+    private readonly skillCreatorNameService: SkillCreatorNameService,
   ) {}
 
   @Post(':skillId/knowledge-bases/:knowledgeBaseId')
@@ -80,8 +82,11 @@ export class SkillKnowledgeBasesController {
     );
 
     const context = await this.skillAccessService.resolveUserContext(skillId);
+    const creatorName = context.isShared
+      ? await this.skillCreatorNameService.resolveOne(skill.userId)
+      : null;
 
-    return this.skillDtoMapper.toDto(skill, context);
+    return this.skillDtoMapper.toDto(skill, context, creatorName);
   }
 
   @Delete(':skillId/knowledge-bases/:knowledgeBaseId')
@@ -118,8 +123,11 @@ export class SkillKnowledgeBasesController {
     );
 
     const context = await this.skillAccessService.resolveUserContext(skillId);
+    const creatorName = context.isShared
+      ? await this.skillCreatorNameService.resolveOne(skill.userId)
+      : null;
 
-    return this.skillDtoMapper.toDto(skill, context);
+    return this.skillDtoMapper.toDto(skill, context, creatorName);
   }
 
   @Get(':skillId/knowledge-bases')
