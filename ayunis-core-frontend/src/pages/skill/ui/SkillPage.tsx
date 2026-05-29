@@ -102,7 +102,14 @@ export function SkillPage({
             ]}
             badge={
               isReadOnly ? (
-                <Badge variant="secondary">{t('shared.badge')}</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{t('shared.badge')}</Badge>
+                  {skill.creatorName && (
+                    <span className="text-sm text-muted-foreground">
+                      {t('shared.by', { name: skill.creatorName })}
+                    </span>
+                  )}
+                </div>
               ) : undefined
             }
             action={

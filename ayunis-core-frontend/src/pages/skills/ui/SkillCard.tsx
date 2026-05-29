@@ -75,6 +75,11 @@ export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
               {t('shared.badge')}
             </Badge>
           )}
+          {skill.isShared && skill.creatorName && (
+            <span className="text-xs text-muted-foreground">
+              {t('shared.by', { name: skill.creatorName })}
+            </span>
+          )}
         </ItemTitle>
         <ItemDescription>{skill.shortDescription}</ItemDescription>
       </ItemContent>

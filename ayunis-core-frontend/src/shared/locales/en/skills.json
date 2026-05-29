@@ -1,6 +1,7 @@
 {
   "shared": {
-    "badge": "Shared"
+    "badge": "Shared",
+    "by": "Shared by {{name}}"
   },
   "page": {
     "title": "Skills"

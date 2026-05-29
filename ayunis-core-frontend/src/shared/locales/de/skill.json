@@ -3,7 +3,8 @@
     "skills": "Fähigkeiten"
   },
   "shared": {
-    "badge": "Freigegeben"
+    "badge": "Freigegeben",
+    "by": "Geteilt von {{name}}"
   },
   "tabs": {
     "configuration": "Konfiguration",

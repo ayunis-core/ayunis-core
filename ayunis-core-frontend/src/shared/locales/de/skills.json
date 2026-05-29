@@ -1,6 +1,7 @@
 {
   "shared": {
-    "badge": "Freigegeben"
+    "badge": "Freigegeben",
+    "by": "Geteilt von {{name}}"
   },
   "page": {
     "title": "Fähigkeiten"
