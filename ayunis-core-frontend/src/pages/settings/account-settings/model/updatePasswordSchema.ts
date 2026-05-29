@@ -6,7 +6,7 @@ export function createUpdatePasswordSchema(t: TFunction) {
   return z
     .object({
       currentPassword: z.string().min(1, {
-        message: t('account.error.incorrectCurrentPassword'),
+        message: t('account.error.currentPasswordRequired'),
       }),
       newPassword: passwordPolicySchema(t('passwordPolicy', { ns: 'common' })),
       newPasswordConfirmation: z.string().min(1, {

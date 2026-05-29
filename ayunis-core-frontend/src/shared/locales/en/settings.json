@@ -37,7 +37,8 @@
       "invalidName": "Invalid name provided",
       "updateFailed": "Failed to update. Please try again.",
       "invalidPassword": "Password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number.",
-      "incorrectCurrentPassword": "Current password is incorrect"
+      "incorrectCurrentPassword": "Current password is incorrect",
+      "currentPasswordRequired": "Current password is required"
     }
   },
   "general": {
