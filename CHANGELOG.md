@@ -1,5 +1,36 @@
 # Changelog
 
+## [2.0.0](https://github.com/ayunis-core/ayunis-core/compare/v1.36.0...v2.0.0) (2026-05-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* **agents:** GET /agents and related endpoints removed. The agentsEnabled feature toggle no longer ships in /api/feature-toggles.
+
+### Features
+
+* **agents:** remove agents feature (superseded by skills) (AYC-165) ([#720](https://github.com/ayunis-core/ayunis-core/issues/720)) ([40be97c](https://github.com/ayunis-core/ayunis-core/commit/40be97c322872443a093e427fd44931d611a623e))
+* **skills:** show creator name on shared skills (AYC-11) ([#726](https://github.com/ayunis-core/ayunis-core/issues/726)) ([f7f4d5a](https://github.com/ayunis-core/ayunis-core/commit/f7f4d5aa260a0947c9c0f45996ad59146d267ebf))
+* **usage:** consolidate usage into one credit-based monthly view (AYC-171) ([#729](https://github.com/ayunis-core/ayunis-core/issues/729)) ([5838be1](https://github.com/ayunis-core/ayunis-core/commit/5838be1362338af039b86d9f8768697675aa812c))
+
+
+### Bug Fixes
+
+* **auth:** show password policy on invalid password across reset/invite/settings (AYC-170) ([#727](https://github.com/ayunis-core/ayunis-core/issues/727)) ([ba8d48d](https://github.com/ayunis-core/ayunis-core/commit/ba8d48df75e9409d4db42ecd79c02ba3d0e6d673))
+* **ci:** repair pnpm-migrated dependency-cruiser pre-commit (AYC-150) ([#722](https://github.com/ayunis-core/ayunis-core/issues/722)) ([6921afb](https://github.com/ayunis-core/ayunis-core/commit/6921afbbd7e32cbfad4c35fa3ce5a9ae710cc429))
+* **models:** expose numeric embedding dimensions enum, unpin @nestjs/swagger (AYC-150) ([#723](https://github.com/ayunis-core/ayunis-core/issues/723)) ([0507160](https://github.com/ayunis-core/ayunis-core/commit/05071609abf06b8bbebe8d7d8ed2960a233cef69))
+* **quotas:** skip fair-use for usage-based subscriptions (AYC-72) ([#690](https://github.com/ayunis-core/ayunis-core/issues/690)) ([1bc401d](https://github.com/ayunis-core/ayunis-core/commit/1bc401dea3370881dbec38065a0a3c68b8af8011))
+
+
+### Miscellaneous
+
+* **lint:** adopt typescript-eslint 8.60 + react-hooks 7.1, unpin (AYC-150) ([#724](https://github.com/ayunis-core/ayunis-core/issues/724)) ([a813dce](https://github.com/ayunis-core/ayunis-core/commit/a813dcebbc72774b6421f594bcda90818f01e4f9))
+
+
+### Build System
+
+* migrate monorepo to pnpm workspaces (AYC-150) ([#721](https://github.com/ayunis-core/ayunis-core/issues/721)) ([45c547f](https://github.com/ayunis-core/ayunis-core/commit/45c547fa427b56161f2b6e21ba7b9457c82acf4b))
+
 ## [1.36.0](https://github.com/ayunis-core/ayunis-core/compare/v1.35.0...v1.36.0) (2026-05-28)
 
 
