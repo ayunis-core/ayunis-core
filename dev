@@ -165,7 +165,7 @@ EOF
 
   # -- 3. Run database migrations ------------------------------------------
   info "Running database migrations …"
-  (cd "$REPO_DIR/ayunis-core-backend" && npm run migration:run:dev 2>&1) | tail -3
+  (cd "$REPO_DIR/ayunis-core-backend" && pnpm run migration:run:dev 2>&1) | tail -3
 
   # -- 4. Backend (native) ------------------------------------------------
   if _pid_alive "$STATE_DIR/backend.pid" "$BACKEND_SESSION"; then
@@ -178,7 +178,7 @@ EOF
       "$STATE_DIR/backend.pid" \
       "$STATE_DIR/backend.log" \
       "$BACKEND_SESSION" \
-      "cd '$REPO_DIR/ayunis-core-backend' && exec npm run start:dev"
+      "cd '$REPO_DIR/ayunis-core-backend' && exec pnpm run start:dev"
   fi
 
   # -- 5. Frontend (native) -----------------------------------------------
@@ -192,7 +192,7 @@ EOF
       "$STATE_DIR/frontend.pid" \
       "$STATE_DIR/frontend.log" \
       "$FRONTEND_SESSION" \
-      "cd '$REPO_DIR/ayunis-core-frontend' && export VITE_API_BASE_URL='http://localhost:$BACKEND_PORT/api' && exec npx vite --port '$FRONTEND_PORT'"
+      "cd '$REPO_DIR/ayunis-core-frontend' && export VITE_API_BASE_URL='http://localhost:$BACKEND_PORT/api' && exec pnpm exec vite --port '$FRONTEND_PORT'"
   fi
 
   # -- 6. Wait for backend health -----------------------------------------

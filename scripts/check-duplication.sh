@@ -50,7 +50,7 @@ trap 'rm -rf "$REPORT_DIR"' EXIT
 # - *.entity.ts & *.record.ts: TypeORM entities/records (constructor param forwarding is intentional)
 (
   cd "$PROJECT_DIR"
-  npx --yes jscpd src \
+  pnpm dlx jscpd src \
     --threshold 100 \
     --min-lines "$MIN_LINES" \
     --min-tokens "$MIN_TOKENS" \
