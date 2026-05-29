@@ -191,11 +191,7 @@ export function CreateCustomDialog({
                     {t('integrations.createCustomDialog.authMethod')}
                   </FormLabel>
                   <Select
-                    onValueChange={(value) =>
-                      field.onChange(
-                        value as CreateCustomIntegrationFormData['authMethod'],
-                      )
-                    }
+                    onValueChange={(value) => field.onChange(value)}
                     value={field.value ?? undefined}
                     disabled={isCreating}
                   >

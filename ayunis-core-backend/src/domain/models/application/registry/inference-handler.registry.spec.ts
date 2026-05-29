@@ -13,7 +13,7 @@ describe('InferenceHandlerRegistry', () => {
   let mockMistralHandler: Partial<InferenceHandler>;
 
   beforeAll(async () => {
-    mockMistralHandler = {} as InferenceHandler;
+    mockMistralHandler = {};
 
     const mockConfigService = {
       get: jest.fn((key: string) => {

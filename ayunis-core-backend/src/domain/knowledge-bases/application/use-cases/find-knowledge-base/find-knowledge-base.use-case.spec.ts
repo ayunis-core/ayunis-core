@@ -29,7 +29,7 @@ describe('FindKnowledgeBaseUseCase', () => {
       findSourcesByKnowledgeBaseId: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
-    } as jest.Mocked<KnowledgeBaseRepository>;
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

@@ -337,6 +337,5 @@ export function useMessageSend(params: UseMessageSendParams) {
     sendTextMessage,
     sendToolResult,
     abort,
-    isLoading: isLoadingRef.current,
   };
 }

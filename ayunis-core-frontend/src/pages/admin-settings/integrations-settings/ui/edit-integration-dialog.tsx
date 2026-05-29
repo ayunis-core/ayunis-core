@@ -128,25 +128,30 @@ export function EditIntegrationDialog({
         authHeaderName: '',
         credentials: '',
       });
-
-      if (isMarketplace) {
-        const initial: Record<string, string> = {};
-        for (const field of editableFields) {
-          if (field.type === 'secret') {
-            // Leave secret fields empty — empty means "keep existing"
-            initial[field.key] = '';
-          } else {
-            initial[field.key] = currentOrgValues[field.key] ?? '';
-          }
-        }
-        setConfigFormValues(initial);
-      }
     }
     // Only reset form when the dialog opens with a (potentially different) integration.
-    // Derived values (editableFields, currentOrgValues, isMarketplace) are new references
-    // every render — including them would cause infinite re-render loops.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [integration, open]);
+
+  // Initialize the marketplace config form when the dialog opens for an
+  // integration. Done during render (keyed on the integration) rather than in
+  // an effect to avoid the extra commit pass flagged by
+  // react-hooks/set-state-in-effect.
+  const configKey =
+    open && integration && isMarketplace ? integration.id : null;
+  const [configKeyState, setConfigKeyState] = useState<string | null>(null);
+  if (configKey !== configKeyState) {
+    setConfigKeyState(configKey);
+    const initial: Record<string, string> = {};
+    if (configKey) {
+      for (const field of editableFields) {
+        // Leave secret fields empty — empty means "keep existing"
+        initial[field.key] =
+          field.type === 'secret' ? '' : (currentOrgValues[field.key] ?? '');
+      }
+    }
+    setConfigFormValues(initial);
+  }
 
   const handleSubmit = (data: UpdateIntegrationFormData) => {
     if (!integration) return;

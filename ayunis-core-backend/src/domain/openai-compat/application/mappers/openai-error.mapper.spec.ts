@@ -32,7 +32,7 @@ describe('OpenAIErrorMapper', () => {
     it('maps CreditBudgetExceededError (HTTP 429) to rate_limit_error', () => {
       const result = mapper.toEnvelope(
         new CreditBudgetExceededError({
-          orgId: 'org' as never,
+          orgId: 'org',
           creditsUsed: 1000,
           monthlyCredits: 500,
         }),

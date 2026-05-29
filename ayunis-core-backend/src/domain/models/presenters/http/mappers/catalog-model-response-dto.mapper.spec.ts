@@ -2,14 +2,13 @@ import { CatalogModelResponseDtoMapper } from './catalog-model-response-dto.mapp
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
-import type { UUID } from 'crypto';
 
 describe('CatalogModelResponseDtoMapper', () => {
   const mapper = new CatalogModelResponseDtoMapper();
 
   it('maps image-generation catalog models to DTOs', () => {
     const model = new ImageGenerationModel({
-      id: '123e4567-e89b-12d3-a456-426614174000' as UUID,
+      id: '123e4567-e89b-12d3-a456-426614174000',
       name: 'gpt-image-1',
       provider: ModelProvider.AZURE,
       displayName: 'GPT Image 1',

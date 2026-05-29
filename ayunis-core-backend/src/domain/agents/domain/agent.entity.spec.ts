@@ -103,7 +103,7 @@ describe('Agent Entity', () => {
         instructions: 'Test instructions',
         model: createMockModel(),
         userId: mockUserId,
-        mcpIntegrationIds: ['123e4567-e89b-12d3-a456-426614174010' as UUID],
+        mcpIntegrationIds: ['123e4567-e89b-12d3-a456-426614174010'],
       });
 
       // Assert

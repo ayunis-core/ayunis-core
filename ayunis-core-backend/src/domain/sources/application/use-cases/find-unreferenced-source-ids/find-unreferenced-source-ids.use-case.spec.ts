@@ -23,7 +23,7 @@ describe('FindUnreferencedSourceIdsUseCase', () => {
       deleteMany: jest.fn(),
       updateStatusConditionally: jest.fn(),
       findUnreferencedIds: jest.fn(),
-    } as jest.Mocked<SourceRepository>;
+    };
 
     useCase = new FindUnreferencedSourceIdsUseCase(sourceRepository);
   });

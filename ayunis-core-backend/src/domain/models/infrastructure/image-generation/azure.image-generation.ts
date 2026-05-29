@@ -7,7 +7,6 @@ import {
   ImageGenerationResult,
 } from '../../application/ports/image-generation.handler';
 import { ImageGenerationFailedError } from '../../application/models.errors';
-import type { ImageModel } from 'openai/resources/images';
 
 const VALID_SIZES = ['1024x1024', '1024x1536', '1536x1024', 'auto'] as const;
 type ImageSize = (typeof VALID_SIZES)[number];
@@ -74,7 +73,7 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
 
     try {
       const response = await client.images.generate({
-        model: input.model.name as ImageModel,
+        model: input.model.name,
         prompt: input.prompt,
         size,
         quality,

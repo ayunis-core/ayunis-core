@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import type {
-  FieldPath,
   FieldPathByValue,
   FieldValues,
   UseFormReturn,
@@ -32,7 +31,7 @@ export function AcceptanceCheckboxField<TFieldValues extends FieldValues>({
   return (
     <FormField
       control={form.control}
-      name={name as FieldPath<TFieldValues>}
+      name={name}
       render={({ field }) => (
         <FormItem>
           <FormControl>

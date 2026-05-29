@@ -14,7 +14,7 @@ describe('SetFairUseLimitUseCase', () => {
       get: jest.fn(),
       set: jest.fn().mockResolvedValue(undefined),
       setMany: jest.fn().mockResolvedValue(undefined),
-    } as jest.Mocked<PlatformConfigRepositoryPort>;
+    };
 
     useCase = new SetFairUseLimitUseCase(repository);
   });

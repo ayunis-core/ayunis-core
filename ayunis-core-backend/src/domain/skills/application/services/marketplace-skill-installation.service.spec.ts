@@ -44,7 +44,7 @@ describe('MarketplaceSkillInstallationService', () => {
       getPreInstalledSkills: jest.fn(),
       getSkillByIdentifier: jest.fn(),
       getIntegrationByIdentifier: jest.fn(),
-    } as jest.Mocked<MarketplaceClient>;
+    };
 
     service = new MarketplaceSkillInstallationService(
       getMarketplaceSkillUseCase,

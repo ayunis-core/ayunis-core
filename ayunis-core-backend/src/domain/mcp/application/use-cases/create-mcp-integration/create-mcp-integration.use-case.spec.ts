@@ -119,7 +119,7 @@ describe('CreateMcpIntegrationUseCase', () => {
     encryption = {
       encrypt: jest.fn(),
       decrypt: jest.fn(),
-    } as any;
+    };
 
     validateUseCase = {
       execute: jest.fn().mockResolvedValue({ isValid: true }),

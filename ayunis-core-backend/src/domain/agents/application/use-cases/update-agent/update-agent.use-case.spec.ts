@@ -147,9 +147,7 @@ describe('UpdateAgentUseCase', () => {
       });
 
       agentRepository.findOne.mockResolvedValue(existingAgent);
-      getPermittedLanguageModelUseCase.execute.mockResolvedValue(
-        mockModel as any,
-      );
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(mockModel);
       agentRepository.update.mockResolvedValue(updatedAgent);
 
       // Act
@@ -193,9 +191,7 @@ describe('UpdateAgentUseCase', () => {
       });
 
       agentRepository.findOne.mockResolvedValue(existingAgent);
-      getPermittedLanguageModelUseCase.execute.mockResolvedValue(
-        mockModel as any,
-      );
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(mockModel);
       agentRepository.update.mockImplementation(async (agent) => agent);
 
       // Act
@@ -234,9 +230,7 @@ describe('UpdateAgentUseCase', () => {
       });
 
       agentRepository.findOne.mockResolvedValue(existingAgent);
-      getPermittedLanguageModelUseCase.execute.mockResolvedValue(
-        mockModel as any,
-      );
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(mockModel);
       agentRepository.update.mockImplementation(async (agent) => agent);
 
       // Act
@@ -272,9 +266,7 @@ describe('UpdateAgentUseCase', () => {
       });
 
       agentRepository.findOne.mockResolvedValue(existingAgent);
-      getPermittedLanguageModelUseCase.execute.mockResolvedValue(
-        mockModel as any,
-      );
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(mockModel);
       agentRepository.update.mockImplementation(async (agent) => agent);
 
       // Act
@@ -324,9 +316,7 @@ describe('UpdateAgentUseCase', () => {
       });
 
       agentRepository.findOne.mockResolvedValue(existingAgent);
-      getPermittedLanguageModelUseCase.execute.mockResolvedValue(
-        mockModel as any,
-      );
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(mockModel);
       agentRepository.update.mockImplementation(async (agent) => agent);
 
       // Act
@@ -412,9 +402,7 @@ describe('UpdateAgentUseCase', () => {
       });
 
       agentRepository.findOne.mockResolvedValue(existingAgent);
-      getPermittedLanguageModelUseCase.execute.mockResolvedValue(
-        mockModel as any,
-      );
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(mockModel);
       agentRepository.update.mockImplementation(async (agent) => agent);
 
       // Act
@@ -447,9 +435,7 @@ describe('UpdateAgentUseCase', () => {
       });
 
       agentRepository.findOne.mockResolvedValue(existingAgent);
-      getPermittedLanguageModelUseCase.execute.mockResolvedValue(
-        mockModel as any,
-      );
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(mockModel);
       agentRepository.update.mockImplementation(async (agent) => agent);
 
       const logSpy = jest.spyOn(Logger.prototype, 'log');

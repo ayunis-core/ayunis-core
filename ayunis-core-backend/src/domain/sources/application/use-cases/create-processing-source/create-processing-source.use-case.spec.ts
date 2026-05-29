@@ -25,7 +25,7 @@ describe('CreateProcessingSourceUseCase', () => {
       deleteMany: jest.fn(),
       updateStatusConditionally: jest.fn(),
       findUnreferencedIds: jest.fn(),
-    } as jest.Mocked<SourceRepository>;
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

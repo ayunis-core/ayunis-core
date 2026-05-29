@@ -94,7 +94,7 @@ export class GeminiMessageConverter {
   extractProviderMetadata(
     part: Part,
   ): { gemini: { thoughtSignature: string } } | null {
-    const sig = (part as GeminiPart).thoughtSignature;
+    const sig = part.thoughtSignature;
     return sig ? { gemini: { thoughtSignature: sig } } : null;
   }
 

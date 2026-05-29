@@ -77,9 +77,7 @@ function parseMargins(value: unknown, label: string): PageMargins {
   let parsed: MarginsInput;
   try {
     parsed =
-      typeof value === 'string'
-        ? (JSON.parse(value) as MarginsInput)
-        : (value as MarginsInput);
+      typeof value === 'string' ? (JSON.parse(value) as MarginsInput) : value;
   } catch {
     throw new BadRequestException(
       `Invalid ${label}: must be a JSON object with top, bottom, left, right`,

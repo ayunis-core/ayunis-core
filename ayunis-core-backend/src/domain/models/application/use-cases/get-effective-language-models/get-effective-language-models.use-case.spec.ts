@@ -27,7 +27,7 @@ describe('GetEffectiveLanguageModelsUseCase', () => {
 
   function makeLanguageModel(name: string, id?: UUID): LanguageModel {
     return new LanguageModel({
-      id: id ?? (`${name}-0000-0000-0000-000000000000` as UUID),
+      id: id ?? `${name}-0000-0000-0000-000000000000`,
       name,
       displayName: name,
       provider: ModelProvider.OPENAI,

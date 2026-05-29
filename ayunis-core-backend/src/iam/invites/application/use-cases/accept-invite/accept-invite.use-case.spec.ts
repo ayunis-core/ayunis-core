@@ -81,9 +81,7 @@ describe('AcceptInviteUseCase', () => {
       .spyOn(mockInviteJwtService, 'verifyInviteToken')
       .mockReturnValue({ inviteId });
     jest.spyOn(mockInvitesRepository, 'findOne').mockResolvedValue(invite);
-    jest
-      .spyOn(mockFindUserByEmailUseCase, 'execute')
-      .mockResolvedValue(null as never);
+    jest.spyOn(mockFindUserByEmailUseCase, 'execute').mockResolvedValue(null);
     jest.spyOn(mockIsValidPasswordUseCase, 'execute').mockResolvedValue(true);
 
     const command = new AcceptInviteCommand({
@@ -114,9 +112,7 @@ describe('AcceptInviteUseCase', () => {
       .spyOn(mockInviteJwtService, 'verifyInviteToken')
       .mockReturnValue({ inviteId });
     jest.spyOn(mockInvitesRepository, 'findOne').mockResolvedValue(invite);
-    jest
-      .spyOn(mockFindUserByEmailUseCase, 'execute')
-      .mockResolvedValue(null as never);
+    jest.spyOn(mockFindUserByEmailUseCase, 'execute').mockResolvedValue(null);
     jest.spyOn(mockIsValidPasswordUseCase, 'execute').mockResolvedValue(true);
 
     const command = new AcceptInviteCommand({

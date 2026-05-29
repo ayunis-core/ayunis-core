@@ -17,7 +17,7 @@ describe('GetIpAllowlistUseCase', () => {
       findByOrgId: jest.fn(),
       upsert: jest.fn(),
       deleteByOrgId: jest.fn(),
-    } as jest.Mocked<IpAllowlistRepository>;
+    };
 
     useCase = new GetIpAllowlistUseCase(repository);
   });

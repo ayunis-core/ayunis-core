@@ -263,7 +263,7 @@ describe('DeleteThreadUseCase', () => {
 
       const generatedImages = [
         new GeneratedImage(
-          '00000000-0000-0000-0000-000000000001' as any,
+          '00000000-0000-0000-0000-000000000001',
           mockOrgId,
           mockUserId,
           mockThreadId,
@@ -272,7 +272,7 @@ describe('DeleteThreadUseCase', () => {
           'generated-images/org/thread/image-1.png',
         ),
         new GeneratedImage(
-          '00000000-0000-0000-0000-000000000002' as any,
+          '00000000-0000-0000-0000-000000000002',
           mockOrgId,
           mockUserId,
           mockThreadId,
@@ -355,7 +355,7 @@ describe('DeleteThreadUseCase', () => {
 
       const generatedImages = [
         new GeneratedImage(
-          '00000000-0000-0000-0000-000000000001' as any,
+          '00000000-0000-0000-0000-000000000001',
           mockOrgId,
           mockUserId,
           mockThreadId,
@@ -364,7 +364,7 @@ describe('DeleteThreadUseCase', () => {
           'generated-images/org/thread/image-1.png',
         ),
         new GeneratedImage(
-          '00000000-0000-0000-0000-000000000002' as any,
+          '00000000-0000-0000-0000-000000000002',
           mockOrgId,
           mockUserId,
           mockThreadId,

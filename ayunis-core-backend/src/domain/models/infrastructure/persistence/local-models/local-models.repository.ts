@@ -82,7 +82,7 @@ export class LocalModelsRepository extends ModelsRepository {
     if (!model || !(model instanceof ImageGenerationModelRecord)) {
       return undefined;
     }
-    return this.localModelMapper.toDomain(model) as ImageGenerationModel;
+    return this.localModelMapper.toDomain(model);
   }
 
   async save(model: Model): Promise<void> {

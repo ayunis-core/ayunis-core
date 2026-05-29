@@ -4,7 +4,6 @@ import { RunAnonymizationUnavailableError } from '../../runs.errors';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
-import type { Message } from 'src/domain/messages/domain/message.entity';
 import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
 
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
@@ -186,7 +185,7 @@ describe('ExecuteRunUseCase', () => {
         (async function* () {
           yield assistantMessage;
           return assistantMessage;
-        })() as AsyncGenerator<Message, AssistantMessage, void>,
+        })(),
       );
 
       const toolResultCollectorService = (
@@ -272,12 +271,12 @@ describe('ExecuteRunUseCase', () => {
           return (async function* () {
             yield toolCallMessage;
             return toolCallMessage;
-          })() as AsyncGenerator<Message, AssistantMessage, void>;
+          })();
         }
         return (async function* () {
           yield finalMessage;
           return finalMessage;
-        })() as AsyncGenerator<Message, AssistantMessage, void>;
+        })();
       });
 
       const toolResultCollectorService = (
@@ -430,7 +429,7 @@ describe('ExecuteRunUseCase', () => {
         (async function* () {
           yield assistantMessage;
           return assistantMessage;
-        })() as AsyncGenerator<Message, AssistantMessage, void>,
+        })(),
       );
     }
 

@@ -36,7 +36,7 @@ function createMockInferenceResponse(text: string): InferenceResponse {
   return {
     content: [new TextMessageContent(text)],
     meta: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
-  } as InferenceResponse;
+  };
 }
 
 describe('GeneratePersonalizedSystemPromptUseCase', () => {

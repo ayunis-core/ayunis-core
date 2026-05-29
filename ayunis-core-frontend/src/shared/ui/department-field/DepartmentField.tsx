@@ -50,7 +50,7 @@ export function DepartmentField<T extends FieldValues>({
                   form.clearErrors(departmentOtherName);
                 }
               }}
-              value={(field.value as string) ?? ''}
+              value={field.value ?? ''}
             >
               <FormControl>
                 <SelectTrigger className="w-full">

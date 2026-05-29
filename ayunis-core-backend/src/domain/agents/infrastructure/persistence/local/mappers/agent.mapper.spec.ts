@@ -92,7 +92,7 @@ describe('AgentMapper', () => {
       record.createdAt = new Date();
       record.updatedAt = new Date();
 
-      permittedModelMapper.toDomain.mockReturnValue(createMockModel() as any);
+      permittedModelMapper.toDomain.mockReturnValue(createMockModel());
 
       // Act
       const result = mapper.toDomain(record);
@@ -116,7 +116,7 @@ describe('AgentMapper', () => {
       record.createdAt = new Date();
       record.updatedAt = new Date();
 
-      permittedModelMapper.toDomain.mockReturnValue(createMockModel() as any);
+      permittedModelMapper.toDomain.mockReturnValue(createMockModel());
 
       // Act
       const result = mapper.toDomain(record);
@@ -137,7 +137,7 @@ describe('AgentMapper', () => {
       record.createdAt = new Date();
       record.updatedAt = new Date();
 
-      permittedModelMapper.toDomain.mockReturnValue(createMockModel() as any);
+      permittedModelMapper.toDomain.mockReturnValue(createMockModel());
 
       // Act
       const result = mapper.toDomain(record);
@@ -162,7 +162,7 @@ describe('AgentMapper', () => {
       record.createdAt = new Date();
       record.updatedAt = new Date();
 
-      permittedModelMapper.toDomain.mockReturnValue(createMockModel() as any);
+      permittedModelMapper.toDomain.mockReturnValue(createMockModel());
 
       // Act
       const result = mapper.toDomain(record);

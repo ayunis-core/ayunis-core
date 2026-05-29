@@ -1,12 +1,4 @@
-import {
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-  useMemo,
-  lazy,
-  Suspense,
-} from 'react';
+import { useState, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
 import ChatMessage from '@/pages/chat/ui/ChatMessage';
 import AssistantRunBlock from '@/pages/chat/ui/AssistantRunBlock';
@@ -95,7 +87,7 @@ export default function ChatPage({
     refetchInterval: (query) => {
       // Pause polling while streaming so a poll started before stream end
       // can't land in the cache afterwards and shorten the displayed text
-      // via the [thread] reconciliation effect.
+      // via the thread reconciliation pass.
       if (isStreaming) return false;
       const data = query.state.data;
       if (!data) return false;
@@ -135,6 +127,17 @@ export default function ChatPage({
     thread.title,
   );
   const [messages, setMessages] = useState<Message[]>(thread.messages);
+
+  // Reconcile local message/title state whenever the thread reference changes
+  // (navigating to another thread, or a refetch returning fresh server data).
+  // Done during render rather than in an effect to avoid the extra commit pass
+  // flagged by react-hooks/set-state-in-effect.
+  const [reconciledThread, setReconciledThread] = useState(thread);
+  if (thread !== reconciledThread) {
+    setReconciledThread(thread);
+    setMessages(thread.messages);
+    setThreadTitle(thread.title);
+  }
   const [pendingSubmission, setPendingSubmission] = useState<string | null>(
     null,
   );
@@ -350,11 +353,6 @@ export default function ChatPage({
       setRenameDialogOpen(true);
     }
   }
-
-  useEffect(() => {
-    setMessages(thread.messages);
-    setThreadTitle(thread.title);
-  }, [thread]);
 
   const chatHeader = (
     <ChatHeader

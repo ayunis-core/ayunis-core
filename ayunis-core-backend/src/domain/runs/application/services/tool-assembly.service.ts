@@ -130,21 +130,26 @@ export class ToolAssemblyService {
     const slugMap = new Map<string, string>();
     const skillEntries: SkillEntry[] = [];
 
-    const allInputs: {
+    type SkillInput = {
       name: string;
       prefix: SkillPrefix;
       description: string;
-    }[] = [
-      ...activeSkills.map((s) => ({
-        name: s.name,
-        prefix: USER_PREFIX as SkillPrefix,
-        description: s.shortDescription,
-      })),
-      ...alwaysOnTemplates.map((t) => ({
-        name: t.name,
-        prefix: SYSTEM_PREFIX as SkillPrefix,
-        description: t.shortDescription,
-      })),
+    };
+    const allInputs: SkillInput[] = [
+      ...activeSkills.map(
+        (s): SkillInput => ({
+          name: s.name,
+          prefix: USER_PREFIX,
+          description: s.shortDescription,
+        }),
+      ),
+      ...alwaysOnTemplates.map(
+        (t): SkillInput => ({
+          name: t.name,
+          prefix: SYSTEM_PREFIX,
+          description: t.shortDescription,
+        }),
+      ),
     ];
 
     for (const input of allInputs) {

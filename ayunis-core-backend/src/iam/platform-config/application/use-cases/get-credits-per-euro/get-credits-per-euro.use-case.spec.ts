@@ -16,7 +16,7 @@ describe('GetCreditsPerEuroUseCase', () => {
       get: jest.fn(),
       set: jest.fn(),
       setMany: jest.fn(),
-    } as jest.Mocked<PlatformConfigRepositoryPort>;
+    };
 
     useCase = new GetCreditsPerEuroUseCase(repository);
   });

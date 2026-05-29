@@ -231,7 +231,7 @@ describe('AdminUpdateUserUseCase', () => {
   it('should throw UserAlreadyExistsError when the new email is taken by another user', async () => {
     const targetUser = buildTargetUser();
     const otherUser = new User({
-      id: '880e8400-e29b-41d4-a716-446655440000' as UUID,
+      id: '880e8400-e29b-41d4-a716-446655440000',
       email: 'taken@gemeinde.de',
       emailVerified: true,
       passwordHash: 'hash',

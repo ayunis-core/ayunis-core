@@ -51,7 +51,7 @@ describe('IngestBulkContentUseCase', () => {
       deleteMany: jest.fn(),
       find: jest.fn(),
       findByDocumentIds: jest.fn(),
-    } as jest.Mocked<ParentChildIndexerRepositoryPort>;
+    };
 
     mockSplitter = {
       execute: jest.fn(),
