@@ -42,36 +42,36 @@ describe('GetProviderUsageUseCase', () => {
       const mockProviderUsage = [
         new ProviderUsage({
           provider: ModelProvider.OPENAI,
-          tokens: 1000,
+          credits: 1000,
           requests: 10,
           percentage: 50,
           timeSeriesData: [
             new TimeSeriesPoint({
               date: new Date('2024-01-01'),
-              tokens: 500,
+              credits: 500,
               requests: 5,
             }),
             new TimeSeriesPoint({
               date: new Date('2024-01-02'),
-              tokens: 500,
+              credits: 500,
               requests: 5,
             }),
           ],
         }),
         new ProviderUsage({
           provider: ModelProvider.ANTHROPIC,
-          tokens: 1000,
+          credits: 1000,
           requests: 10,
           percentage: 50,
           timeSeriesData: [
             new TimeSeriesPoint({
               date: new Date('2024-01-01'),
-              tokens: 500,
+              credits: 500,
               requests: 5,
             }),
             new TimeSeriesPoint({
               date: new Date('2024-01-02'),
-              tokens: 500,
+              credits: 500,
               requests: 5,
             }),
           ],
@@ -94,14 +94,14 @@ describe('GetProviderUsageUseCase', () => {
       const mockProviderUsage = [
         new ProviderUsage({
           provider: ModelProvider.OPENAI,
-          tokens: 600,
+          credits: 600,
           requests: 6,
           percentage: 0,
           timeSeriesData: [],
         }),
         new ProviderUsage({
           provider: ModelProvider.ANTHROPIC,
-          tokens: 400,
+          credits: 400,
           requests: 4,
           percentage: 0,
           timeSeriesData: [],
@@ -132,7 +132,7 @@ describe('GetProviderUsageUseCase', () => {
       const mockProviderUsage = [
         new ProviderUsage({
           provider: ModelProvider.OPENAI,
-          tokens: 0,
+          credits: 0,
           requests: 0,
           percentage: 0,
           timeSeriesData: [],
@@ -245,18 +245,18 @@ describe('GetProviderUsageUseCase', () => {
       const mockProviderUsage = [
         new ProviderUsage({
           provider: ModelProvider.OPENAI,
-          tokens: 1000,
+          credits: 1000,
           requests: 10,
           percentage: 100,
           timeSeriesData: [
             new TimeSeriesPoint({
               date: new Date('2024-01-01'),
-              tokens: 500,
+              credits: 500,
               requests: 5,
             }),
             new TimeSeriesPoint({
               date: new Date('2024-01-02'),
-              tokens: 500,
+              credits: 500,
               requests: 5,
             }),
           ],

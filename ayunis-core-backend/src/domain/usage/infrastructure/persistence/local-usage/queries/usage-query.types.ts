@@ -5,7 +5,7 @@ import type { UserRecord } from 'src/iam/users/infrastructure/repositories/local
 
 export interface ProviderStatsRow {
   provider: ModelProvider | string;
-  tokens: string; // numeric aggregates come back as strings
+  credits: string; // numeric aggregates come back as strings
   requests: string;
 }
 
@@ -14,24 +14,24 @@ export interface ModelStatsRow {
   provider: ModelProvider;
   modelName: string | null;
   displayName: string | null;
-  tokens: string;
+  credits: string;
   requests: string;
 }
 
 export interface TopModelRow {
   modelId: UUID;
   displayName: string | null;
-  tokens: string;
+  credits: string;
 }
 
 export interface TimeSeriesRow {
   date: string | Date;
-  tokens: string;
+  credits: string;
   requests: string;
 }
 
 export interface UsageAggregateRow {
-  totalTokens: string | null;
+  totalCredits: string | null;
   totalRequests: string;
   totalUsers: string;
 }
