@@ -23,20 +23,22 @@
     "currentPasswordPlaceholder": "Enter your current password",
     "newPassword": "New password",
     "newPasswordPlaceholder": "Enter your new password",
-    "newPasswordDescription": "Password must be at least 8 characters long.",
+    "newPasswordDescription": "Password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number.",
     "confirmPassword": "Confirm new password",
     "confirmPasswordPlaceholder": "Confirm your new password",
     "changePassword": "Change Password",
     "changingPassword": "Changing Password...",
     "passwordUpdatedSuccessfully": "Password updated successfully",
+    "passwordsDontMatch": "Passwords don't match",
     "accountActions": "Account Actions",
     "deleteAccount": "Delete Account",
     "deleteAccountDescription": "Permanently delete your account and all associated data.",
     "error": {
       "invalidName": "Invalid name provided",
       "updateFailed": "Failed to update. Please try again.",
-      "invalidPassword": "Invalid password provided",
-      "incorrectCurrentPassword": "Current password is incorrect"
+      "invalidPassword": "Password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number.",
+      "incorrectCurrentPassword": "Current password is incorrect",
+      "currentPasswordRequired": "Current password is required"
     }
   },
   "general": {

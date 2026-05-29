@@ -1,4 +1,5 @@
 {
+  "passwordPolicy": "Passwort muss mindestens 8 Zeichen lang sein und einen Großbuchstaben, einen Kleinbuchstaben und eine Zahl enthalten.",
   "sidebar": {
     "appName": "Ayunis Core",
     "appTagline": "whoop whoop",
