@@ -6,9 +6,20 @@ import {
 } from '@/shared/ui/shadcn/card';
 import { CreditBudgetDisplay } from '@/widgets/credit-budget-display';
 import { useTranslation } from 'react-i18next';
-import { useCreditUsage } from '../api/useCreditUsage';
+import type { CreditUsageView } from '../model/types';
 
-export function CreditUsageCard() {
+interface CreditBudgetCardProps {
+  creditUsage: CreditUsageView;
+}
+
+/**
+ * Credit budget summary for the current calendar month. Independent of the
+ * month picker — always reflects the current month. When the org has no
+ * usage-based subscription, only credits used are shown.
+ */
+export function CreditBudgetCard({
+  creditUsage,
+}: Readonly<CreditBudgetCardProps>) {
   const { t } = useTranslation('admin-settings-usage');
   const {
     monthlyCredits,
@@ -18,11 +29,7 @@ export function CreditUsageCard() {
     hasSubscription,
     isLoading,
     isError,
-  } = useCreditUsage();
-
-  if (!hasSubscription && !isLoading && !isError) {
-    return null;
-  }
+  } = creditUsage;
 
   return (
     <Card>
@@ -35,6 +42,7 @@ export function CreditUsageCard() {
           creditsUsed={creditsUsed}
           creditsRemaining={creditsRemaining}
           usagePercent={usagePercent}
+          hasBudget={hasSubscription}
           isLoading={isLoading}
           isError={isError}
           labels={{

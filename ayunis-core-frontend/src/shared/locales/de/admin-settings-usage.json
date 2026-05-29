@@ -1,16 +1,10 @@
 {
   "filters": {
-    "selectDateRange": "Datumsbereich auswählen",
-    "last7Days": "Letzte 7 Tage",
-    "last30Days": "Letzte 30 Tage",
-    "last90Days": "Letzte 90 Tage",
-    "custom": "Benutzerdefiniert",
-    "allTime": "Gesamter Zeitraum",
     "allProviders": "Alle Anbieter",
     "allModels": "Alle Modelle"
   },
   "stats": {
-    "totalTokens": "Verbrauchte Tokens",
+    "totalCredits": "Verbrauchte Credits",
     "activeUsers": "Aktive Nutzer",
     "estimatedCost": "Geschätzte Kosten"
   },
@@ -25,32 +19,13 @@
       "models": "Modelle",
       "more": "mehr",
       "others": "Andere",
-      "othersWithCount": "Andere ({{count}} Modelle)"
-    },
-    "tokenConsumption": {
-      "title": "Token Verbrauch",
-      "description": "Anzeigen der Gesamtzahl der Besucher im ausgewählten Zeitraum"
+      "othersWithCount": "Andere ({{count}} Modelle)",
+      "creditsLabel": "Credits"
     },
     "providerConsumption": {
       "title": "Verbrauch nach Provider",
-      "description": "Anzeigen der Gesamtzahl der Besucher im ausgewählten Zeitraum"
+      "description": "Zeigt die insgesamt verbrauchten Credits"
     }
-  },
-  "globalTopUsers": {
-    "title": "Top Nutzer nach Credit-Verbrauch",
-    "description": "Die 20 Nutzer mit dem höchsten Credit-Verbrauch über alle Organisationen",
-    "rank": "Rang",
-    "name": "Name",
-    "email": "E-Mail",
-    "organization": "Organisation",
-    "credits": "Credits",
-    "requests": "Anfragen",
-    "lastActivity": "Letzte Aktivität",
-    "lastActivityHint": "Zeigt die letzte Aktivität insgesamt, nicht nach Zeitraum gefiltert",
-    "empty": "Keine Nutzungsdaten vorhanden",
-    "active": "Aktiv",
-    "inactive": "Inaktiv",
-    "allProvidersNote": "Über alle Anbieter und Modelle"
   },
   "creditUsage": {
     "title": "Credits-Budget",

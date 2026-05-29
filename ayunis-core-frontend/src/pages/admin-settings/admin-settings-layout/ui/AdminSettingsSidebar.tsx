@@ -10,10 +10,6 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
-  ActiveSubscriptionResponseDtoSubscriptionType,
-  useSubscriptionsControllerHasActiveSubscription,
-} from '@/shared/api';
-import {
   SettingsSidebarWidget,
   type SidebarMenuItem,
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
@@ -21,11 +17,6 @@ import { useIsLetterheadsEnabled } from '@/features/feature-toggles';
 
 export function AdminSettingsSidebar() {
   const { t } = useTranslation('admin-settings-layout');
-  const { data: subscriptionData } =
-    useSubscriptionsControllerHasActiveSubscription();
-  const isUsageBased =
-    subscriptionData?.subscriptionType ===
-    ActiveSubscriptionResponseDtoSubscriptionType.USAGE_BASED;
   const isLetterheadsEnabled = useIsLetterheadsEnabled();
 
   const menuItems: SidebarMenuItem[] = [
@@ -59,6 +50,11 @@ export function AdminSettingsSidebar() {
       icon: <Key />,
       label: t('layout.apiKeys'),
     },
+    {
+      to: '/admin-settings/usage',
+      icon: <BarChart3 />,
+      label: t('layout.usage'),
+    },
     ...(isLetterheadsEnabled
       ? [
           {
@@ -69,14 +65,6 @@ export function AdminSettingsSidebar() {
         ]
       : []),
   ];
-
-  if (isUsageBased) {
-    menuItems.push({
-      to: '/admin-settings/usage',
-      icon: <BarChart3 />,
-      label: t('layout.usage'),
-    });
-  }
 
   return (
     <SettingsSidebarWidget

@@ -17,6 +17,12 @@ interface CreditBudgetDisplayProps {
   usagePercent: number;
   isLoading: boolean;
   isError: boolean;
+  /**
+   * Whether the organization has a configured credit budget. When false,
+   * only the "credits used" figure is shown (no budget, remaining, or
+   * progress bar) — used for organizations without a usage-based subscription.
+   */
+  hasBudget?: boolean;
   labels: {
     error: string;
     budget: string;
@@ -33,6 +39,7 @@ export function CreditBudgetDisplay({
   usagePercent,
   isLoading,
   isError,
+  hasBudget = true,
   labels,
 }: Readonly<CreditBudgetDisplayProps>) {
   if (isError) {
@@ -53,6 +60,23 @@ export function CreditBudgetDisplay({
           <Skeleton className="h-12 rounded-lg" />
         </div>
         <Skeleton className="h-2 rounded-full" />
+      </div>
+    );
+  }
+
+  if (!hasBudget) {
+    return (
+      <div className="grid grid-cols-1">
+        <Item variant="muted" size="sm">
+          <ItemContent>
+            <ItemTitle>{labels.used}</ItemTitle>
+          </ItemContent>
+          <ItemActions>
+            <Badge variant="outline">
+              {Math.round(creditsUsed).toLocaleString()}
+            </Badge>
+          </ItemActions>
+        </Item>
       </div>
     );
   }
