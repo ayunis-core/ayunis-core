@@ -11,7 +11,6 @@ import {
 } from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { PermittedModelRecord } from '../../../../../models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
-import { AgentRecord } from '../../../../../agents/infrastructure/persistence/local/schema/agent.record';
 import { ThreadSourceAssignmentRecord } from './thread-source-assignment.record';
 import { ThreadKnowledgeBaseAssignmentRecord } from './thread-knowledge-base-assignment.record';
 import { McpIntegrationRecord } from '../../../../../mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
@@ -28,13 +27,6 @@ export class ThreadRecord extends BaseRecord {
 
   @ManyToOne(() => PermittedModelRecord, { onDelete: 'SET NULL' })
   model?: PermittedModelRecord;
-
-  @Column({ nullable: true })
-  @Index()
-  agentId?: UUID;
-
-  @ManyToOne(() => AgentRecord, { onDelete: 'SET NULL' })
-  agent?: AgentRecord;
 
   @Column({ nullable: true })
   title?: string;

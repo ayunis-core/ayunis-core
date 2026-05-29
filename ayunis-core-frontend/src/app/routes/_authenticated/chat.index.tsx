@@ -7,10 +7,6 @@ import {
   getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey,
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
   modelsControllerIsEmbeddingModelEnabled,
-  getAgentsControllerFindAllQueryKey,
-  agentsControllerFindAll,
-  appControllerFeatureToggles,
-  getAppControllerFeatureTogglesQueryKey,
   chatSettingsControllerGetSystemPrompt,
   getChatSettingsControllerGetSystemPromptQueryKey,
 } from '@/shared/api';
@@ -32,30 +28,17 @@ const queryIsEmbeddingModelEnabledOptions = () => ({
   queryFn: () => modelsControllerIsEmbeddingModelEnabled(),
 });
 
-const queryAgentsOptions = () => ({
-  queryKey: getAgentsControllerFindAllQueryKey(),
-  queryFn: () => agentsControllerFindAll(),
-});
-
 const searchSchema = z.object({
   modelId: z.string().optional(),
-  agentId: z.string().optional(),
 });
 
 export const Route = createFileRoute('/_authenticated/chat/')({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps: { modelId, agentId }, context: { queryClient } }) => {
-    const featureToggles = await queryClient.fetchQuery({
-      queryKey: getAppControllerFeatureTogglesQueryKey(),
-      queryFn: () => appControllerFeatureToggles(),
-    });
+  loader: async ({ deps: { modelId }, context: { queryClient } }) => {
     let selectedModelId: string | undefined;
-    let selectedAgentId: string | undefined;
     if (modelId) {
       selectedModelId = modelId;
-    } else if (agentId) {
-      selectedAgentId = agentId;
     } else {
       const defaultModelResponse = await queryClient.fetchQuery(
         queryDefaultModelOptions(),
@@ -69,9 +52,6 @@ export const Route = createFileRoute('/_authenticated/chat/')({
     const { hasActiveSubscription } = await queryClient.fetchQuery(
       queryHasActiveSubscriptionOptions(),
     );
-    const agents = featureToggles.agentsEnabled
-      ? await queryClient.fetchQuery(queryAgentsOptions())
-      : [];
     // Await system prompt status so PersonalizationCard doesn't flash
     await queryClient.prefetchQuery({
       queryKey: getChatSettingsControllerGetSystemPromptQueryKey(),
@@ -79,10 +59,8 @@ export const Route = createFileRoute('/_authenticated/chat/')({
     });
     return {
       selectedModelId,
-      selectedAgentId,
       hasActiveSubscription,
       isEmbeddingModelEnabled,
-      agents,
     };
   },
   errorComponent: ({ error }) => {
@@ -93,7 +71,6 @@ export const Route = createFileRoute('/_authenticated/chat/')({
       }
       return <NewChatPageNoModelError />;
     } catch {
-      // Non-AxiosError (network failure, request cancellation, etc.)
       return <NewChatPageNoModelError />;
     }
   },
@@ -101,14 +78,11 @@ export const Route = createFileRoute('/_authenticated/chat/')({
 });
 
 function RouteComponent() {
-  const { selectedModelId, selectedAgentId, isEmbeddingModelEnabled, agents } =
-    Route.useLoaderData();
+  const { selectedModelId, isEmbeddingModelEnabled } = Route.useLoaderData();
   return (
     <NewChatPage
       selectedModelId={selectedModelId}
-      selectedAgentId={selectedAgentId}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
-      agents={agents}
     />
   );
 }

@@ -37,7 +37,6 @@ export type SourceUploadStatus =
 interface InitiateChatParams {
   message: string;
   modelId?: string;
-  agentId?: string;
   sources: PendingSource[];
   knowledgeBases: KnowledgeBaseSummary[];
   isAnonymous: boolean;
@@ -153,7 +152,6 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
   async function initiateChat({
     message,
     modelId,
-    agentId,
     sources,
     knowledgeBases,
     isAnonymous,
@@ -166,7 +164,6 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
     try {
       const createThreadData: CreateThreadData = {
         modelId,
-        agentId,
         isAnonymous,
       };
       thread = await createThreadMutation.mutateAsync({

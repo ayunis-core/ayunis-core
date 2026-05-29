@@ -28,10 +28,6 @@ import enSettings from './shared/locales/en/settings.json';
 import deSettings from './shared/locales/de/settings.json';
 import enChat from './shared/locales/en/chat.json';
 import deChat from './shared/locales/de/chat.json';
-import enAgents from './shared/locales/en/agents.json';
-import deAgents from './shared/locales/de/agents.json';
-import enAgent from './shared/locales/en/agent.json';
-import deAgent from './shared/locales/de/agent.json';
 import enChats from './shared/locales/en/chats.json';
 import deChats from './shared/locales/de/chats.json';
 import enInstall from './shared/locales/en/install.json';
@@ -75,8 +71,6 @@ const resources = {
     settings: enSettings,
     chat: enChat,
     chats: enChats,
-    agents: enAgents,
-    agent: enAgent,
     install: enInstall,
     'install-integration': enInstallIntegration,
     skills: enSkills,
@@ -105,8 +99,6 @@ const resources = {
     settings: deSettings,
     chat: deChat,
     chats: deChats,
-    agents: deAgents,
-    agent: deAgent,
     install: deInstall,
     'install-integration': deInstallIntegration,
     skills: deSkills,

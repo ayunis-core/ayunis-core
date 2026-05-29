@@ -5,7 +5,6 @@ export function useFeatureToggles(): FeatureTogglesResponseDto {
   const { data } = useAppControllerFeatureToggles();
 
   return {
-    agentsEnabled: data?.agentsEnabled ?? true,
     knowledgeBasesEnabled: data?.knowledgeBasesEnabled ?? true,
     letterheadsEnabled: data?.letterheadsEnabled ?? false,
     skillsEnabled: data?.skillsEnabled ?? false,

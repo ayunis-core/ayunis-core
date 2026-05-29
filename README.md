@@ -2,15 +2,14 @@
 
 > An open-source AI gateway for public administrations
 
-Ayunis Core is a comprehensive AI platform that enables intelligent conversations with customizable agents, advanced prompt management, and extensible tool integration. Built with ❤️ for public administrations.
+Ayunis Core is a comprehensive AI platform that enables intelligent conversations with customizable skills, knowledge bases, and extensible tool integration. Built with ❤️ for public administrations.
 
 ## ✨ Features
 
 ### 🤖 AI Conversations
 
 - **Multiple LLM providers** - Seamlessly connect to Ollama, Mistral, Anthropic or OpenAI without configuration overhead
-- **Prompt Library** - Organize prompts for easy reuse
-- **Agent Builder** - Create your personalized AI assistants to help with your tasks. Share the best with your entire team.
+- **Skills** - Package reusable instructions, tools, and knowledge sources into named skills. Share the best with your entire team.
 - **RAG Pipeline** - Enhance model context with your own data & documents. Use our pipeline in your own services.
 
 ### 🛠️ Advanced Capabilities
@@ -156,7 +155,7 @@ Admins can create MCP integrations through the admin UI or API:
 3. Select integration type (e.g., "Locaboo 4")
 4. Provide server URL and authentication credentials
 5. Test connection before saving
-6. Once saved, organization users can use the integration in agents
+6. Once saved, organization users can use the integration in skills
 
 For API-based creation, see the MCP integration endpoints in the OpenAPI documentation.
 
@@ -196,9 +195,8 @@ See also:
 - As a super admin, add models to the catalog and permit them for your organization (see [Model Configuration](#model-configuration))
 - Go to Admin Settings → Models and enable at least one language model and one embedding model
 - Invite users
-- Go to the Prompt Library and add some prompts for easy access
-- Create some agents for your most important use cases
-- Chat with your enabled models, add prompts via the book icon button below the chat input
+- Create some skills for your most important use cases
+- Chat with your enabled models, activate skills as needed
 
 ## 💻 Development
 

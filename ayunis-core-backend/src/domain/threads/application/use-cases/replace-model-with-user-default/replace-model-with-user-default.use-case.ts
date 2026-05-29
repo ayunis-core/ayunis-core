@@ -20,20 +20,12 @@ export class ReplaceModelWithUserDefaultUseCase {
       command,
     });
     try {
-      let threads: Thread[] = [];
-      if (command.oldPermittedModelId) {
-        threads = await this.threadsRepository.findAllByModel(
-          command.oldPermittedModelId,
-        );
-      } else if (command.oldAgentId) {
-        threads = await this.threadsRepository.findAllByAgent(
-          command.oldAgentId,
-        );
-      }
+      const threads: Thread[] = await this.threadsRepository.findAllByModel(
+        command.oldPermittedModelId,
+      );
       this.logger.debug('Found threads', {
         threads,
       });
-      // TODO: Make this a single transaction
       for (const thread of threads) {
         const defaultModel = await this.getDefaultModelUseCase.execute(
           new GetDefaultModelQuery({

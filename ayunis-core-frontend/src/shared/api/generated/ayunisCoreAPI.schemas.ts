@@ -13,8 +13,6 @@ export interface IsCloudResponseDto {
 }
 
 export interface FeatureTogglesResponseDto {
-  /** Whether the agents feature is enabled */
-  agentsEnabled: boolean;
   /** Whether the standalone knowledge bases feature is enabled */
   knowledgeBasesEnabled: boolean;
   /** Whether the letterheads feature is enabled */
@@ -1633,8 +1631,6 @@ export interface RetrieveUrlDto {
 export interface CreateThreadDto {
   /** The id of the model */
   modelId?: string;
-  /** The id of the agent */
-  agentId?: string;
   /** Enable anonymous mode for this thread */
   isAnonymous?: boolean;
 }
@@ -1880,19 +1876,41 @@ export interface ImageMessageContentResponseDto {
   altText?: string;
 }
 
+/**
+ * The provider of the model
+ */
+export type ModelResponseDtoProvider = typeof ModelResponseDtoProvider[keyof typeof ModelResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
 export interface ModelResponseDto {
-  /** The unique identifier of the model */
+  /** The ID of the model */
   id: string;
   /** The name of the model */
   name: string;
   /** The provider of the model */
-  provider: string;
+  provider: ModelResponseDtoProvider;
   /** The display name of the model */
   displayName: string;
-  /** Whether this model requires anonymous mode (PII redaction) */
-  anonymousOnly: boolean;
-  /** Whether the model supports vision (image processing) */
-  canVision: boolean;
+  /** Whether the model can stream */
+  canStream: boolean;
+  /** Whether the model can reason */
+  isReasoning: boolean;
 }
 
 /**
@@ -2219,8 +2237,6 @@ export interface GetThreadResponseDto {
   userId: string;
   /** Permitted model ID */
   permittedModelId: string;
-  /** Agent ID */
-  agentId: string;
   /** Title of the thread */
   title?: string;
   /** Array of messages in the thread (role-specific types) */
@@ -2275,164 +2291,314 @@ export interface GeneratedImageUrlResponseDto {
   expiresAt: string;
 }
 
-/**
- * The type of tool to assign
- */
-export type ToolAssignmentDtoType = typeof ToolAssignmentDtoType[keyof typeof ToolAssignmentDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ToolAssignmentDtoType = {
-  http: 'http',
-  source_query: 'source_query',
-  source_get_text: 'source_get_text',
-  internet_search: 'internet_search',
-  website_content: 'website_content',
-  send_email: 'send_email',
-  create_calendar_event: 'create_calendar_event',
-  code_execution: 'code_execution',
-  bar_chart: 'bar_chart',
-  line_chart: 'line_chart',
-  pie_chart: 'pie_chart',
-  mcp_tool: 'mcp_tool',
-  mcp_resource: 'mcp_resource',
-  mcp_prompt: 'mcp_prompt',
-  activate_skill: 'activate_skill',
-  create_skill: 'create_skill',
-  edit_skill: 'edit_skill',
-  knowledge_query: 'knowledge_query',
-  knowledge_get_text: 'knowledge_get_text',
-  create_document: 'create_document',
-  update_document: 'update_document',
-  edit_document: 'edit_document',
-  read_document: 'read_document',
-  generate_image: 'generate_image',
-  create_diagram: 'create_diagram',
-  update_diagram: 'update_diagram',
-} as const;
-
-export interface ToolAssignmentDto {
-  /** The type of tool to assign */
-  type: ToolAssignmentDtoType;
-  /** The ID of the tool configuration to assign */
-  toolConfigId?: string;
-}
-
-export interface CreateAgentDto {
+export interface CreateKnowledgeBaseDto {
   /**
-   * The name of the agent
+   * The name of the knowledge base
    * @minLength 1
    * @maxLength 255
    */
   name: string;
-  /** The instructions for the agent */
-  instructions: string;
-  /** The ID of the permitted model to use for this agent */
-  modelId: string;
-  /** The tools to assign to the agent */
-  toolAssignments: ToolAssignmentDto[];
+  /**
+   * An optional description of the knowledge base
+   * @maxLength 2000
+   */
+  description?: string;
 }
 
-/**
- * The type of the tool
- */
-export type ToolResponseDtoType = typeof ToolResponseDtoType[keyof typeof ToolResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ToolResponseDtoType = {
-  http: 'http',
-  source_query: 'source_query',
-  source_get_text: 'source_get_text',
-  internet_search: 'internet_search',
-  website_content: 'website_content',
-  send_email: 'send_email',
-  create_calendar_event: 'create_calendar_event',
-  code_execution: 'code_execution',
-  bar_chart: 'bar_chart',
-  line_chart: 'line_chart',
-  pie_chart: 'pie_chart',
-  mcp_tool: 'mcp_tool',
-  mcp_resource: 'mcp_resource',
-  mcp_prompt: 'mcp_prompt',
-  activate_skill: 'activate_skill',
-  create_skill: 'create_skill',
-  edit_skill: 'edit_skill',
-  knowledge_query: 'knowledge_query',
-  knowledge_get_text: 'knowledge_get_text',
-  create_document: 'create_document',
-  update_document: 'update_document',
-  edit_document: 'edit_document',
-  read_document: 'read_document',
-  generate_image: 'generate_image',
-  create_diagram: 'create_diagram',
-  update_diagram: 'update_diagram',
-} as const;
-
-export interface ToolResponseDto {
-  /** The type of the tool */
-  type: ToolResponseDtoType;
-}
-
-/**
- * The type of source
- */
-export type AgentSourceResponseDtoType = typeof AgentSourceResponseDtoType[keyof typeof AgentSourceResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const AgentSourceResponseDtoType = {
-  file: 'file',
-  url: 'url',
-} as const;
-
-export interface AgentSourceResponseDto {
-  /** The unique identifier of the source assignment */
+export interface KnowledgeBaseResponseDto {
+  /** The unique identifier of the knowledge base */
   id: string;
+  /** The name of the knowledge base */
+  name: string;
+  /** The description of the knowledge base */
+  description: string;
+  /** The date and time when the knowledge base was created */
+  createdAt: string;
+  /** The date and time when the knowledge base was last updated */
+  updatedAt: string;
+  /** Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases). */
+  isShared?: boolean;
+}
+
+export interface KnowledgeBaseListResponseDto {
+  /** The list of knowledge bases */
+  data: KnowledgeBaseResponseDto[];
+}
+
+export interface UpdateKnowledgeBaseDto {
+  /**
+   * The name of the knowledge base
+   * @minLength 1
+   * @maxLength 255
+   */
+  name?: string;
+  /**
+   * The description of the knowledge base
+   * @maxLength 2000
+   */
+  description?: string;
+}
+
+/**
+ * The type of the source
+ */
+export type KnowledgeBaseDocumentResponseDtoType = typeof KnowledgeBaseDocumentResponseDtoType[keyof typeof KnowledgeBaseDocumentResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const KnowledgeBaseDocumentResponseDtoType = {
+  text: 'text',
+  data: 'data',
+} as const;
+
+/**
+ * Who created the source
+ */
+export type KnowledgeBaseDocumentResponseDtoCreatedBy = typeof KnowledgeBaseDocumentResponseDtoCreatedBy[keyof typeof KnowledgeBaseDocumentResponseDtoCreatedBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const KnowledgeBaseDocumentResponseDtoCreatedBy = {
+  user: 'user',
+  llm: 'llm',
+  system: 'system',
+} as const;
+
+/**
+ * The processing status of the document
+ */
+export type KnowledgeBaseDocumentResponseDtoStatus = typeof KnowledgeBaseDocumentResponseDtoStatus[keyof typeof KnowledgeBaseDocumentResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const KnowledgeBaseDocumentResponseDtoStatus = {
+  processing: 'processing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+/**
+ * The text source subtype (e.g. file, web)
+ */
+export type KnowledgeBaseDocumentResponseDtoTextType = typeof KnowledgeBaseDocumentResponseDtoTextType[keyof typeof KnowledgeBaseDocumentResponseDtoTextType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const KnowledgeBaseDocumentResponseDtoTextType = {
+  file: 'file',
+  web: 'web',
+} as const;
+
+export interface KnowledgeBaseDocumentResponseDto {
+  /** The unique identifier of the document */
+  id: string;
+  /** The name of the document */
+  name: string;
+  /** The type of the source */
+  type: KnowledgeBaseDocumentResponseDtoType;
+  /** Who created the source */
+  createdBy: KnowledgeBaseDocumentResponseDtoCreatedBy;
+  /** The date and time when the document was added */
+  createdAt: string;
+  /** The date and time when the document was last updated */
+  updatedAt: string;
+  /** The processing status of the document */
+  status: KnowledgeBaseDocumentResponseDtoStatus;
+  /** Error message if processing failed (only present when status is failed) */
+  processingError?: string;
+  /** The text source subtype (e.g. file, web) */
+  textType?: KnowledgeBaseDocumentResponseDtoTextType;
+  /** The URL of the source (only for web sources) */
+  url?: string;
+}
+
+export interface KnowledgeBaseDocumentListResponseDto {
+  /** The list of documents in the knowledge base */
+  data: KnowledgeBaseDocumentResponseDto[];
+}
+
+export interface AddUrlToKnowledgeBaseDto {
+  /** The URL to crawl and add to the knowledge base */
+  url: string;
+}
+
+/**
+ * Type of entity being shared
+ */
+export type CreateSkillShareDtoEntityType = typeof CreateSkillShareDtoEntityType[keyof typeof CreateSkillShareDtoEntityType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateSkillShareDtoEntityType = {
+  prompt: 'prompt',
+  skill: 'skill',
+  knowledge_base: 'knowledge_base',
+} as const;
+
+export interface CreateSkillShareDto {
+  /** Type of entity being shared */
+  entityType: CreateSkillShareDtoEntityType;
+  /** ID of the skill to share */
+  skillId: string;
+  /** ID of the team to share with (if not provided, shares with entire organization) */
+  teamId?: string;
+}
+
+/**
+ * Type of entity being shared
+ */
+export type ShareResponseDtoEntityType = typeof ShareResponseDtoEntityType[keyof typeof ShareResponseDtoEntityType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ShareResponseDtoEntityType = {
+  prompt: 'prompt',
+  skill: 'skill',
+  knowledge_base: 'knowledge_base',
+} as const;
+
+/**
+ * Type of share scope (organization, user, or team)
+ */
+export type ShareResponseDtoScopeType = typeof ShareResponseDtoScopeType[keyof typeof ShareResponseDtoScopeType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ShareResponseDtoScopeType = {
+  org: 'org',
+  team: 'team',
+} as const;
+
+export interface ShareResponseDto {
+  /** Unique identifier of the share */
+  id: string;
+  /** Type of entity being shared */
+  entityType: ShareResponseDtoEntityType;
+  /** ID of the entity being shared */
+  entityId: string;
+  /** Type of share scope (organization, user, or team) */
+  scopeType: ShareResponseDtoScopeType;
+  /** ID of the user who created the share */
+  ownerId: string;
+  /** ID of the team (only present for team-scoped shares) */
+  teamId?: string;
+  /** Name of the team (only present for team-scoped shares) */
+  teamName?: string;
+  /** When the share was created */
+  createdAt: string;
+  /** When the share was last updated */
+  updatedAt: string;
+}
+
+/**
+ * Type of entity being shared
+ */
+export type CreateKnowledgeBaseShareDtoEntityType = typeof CreateKnowledgeBaseShareDtoEntityType[keyof typeof CreateKnowledgeBaseShareDtoEntityType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateKnowledgeBaseShareDtoEntityType = {
+  prompt: 'prompt',
+  skill: 'skill',
+  knowledge_base: 'knowledge_base',
+} as const;
+
+export interface CreateKnowledgeBaseShareDto {
+  /** Type of entity being shared */
+  entityType: CreateKnowledgeBaseShareDtoEntityType;
+  /** ID of the knowledge base to share */
+  knowledgeBaseId: string;
+  /** ID of the team to share with (if not provided, shares with entire organization) */
+  teamId?: string;
+}
+
+export interface InstallSkillFromMarketplaceDto {
+  /** The unique identifier (slug) of the marketplace skill */
+  identifier: string;
+}
+
+export interface SkillResponseDto {
+  /** The unique identifier of the skill */
+  id: string;
+  /** The name of the skill */
+  name: string;
+  /** A short description of the skill */
+  shortDescription: string;
+  /** Detailed instructions for the skill */
+  instructions: string;
+  /**
+   * The marketplace identifier if this skill was installed from the marketplace
+   * @nullable
+   */
+  marketplaceIdentifier: string | null;
+  /** Whether the skill is active and available for use in chats */
+  isActive: boolean;
+  /** The unique identifier of the user who owns this skill */
+  userId: string;
+  /** The date and time when the skill was created */
+  createdAt: string;
+  /** The date and time when the skill was last updated */
+  updatedAt: string;
+  /** Whether the skill is shared with the current user (not owned) */
+  isShared: boolean;
+  /** Whether the skill is pinned for quick access in chat */
+  isPinned: boolean;
+}
+
+export interface CreateSkillDto {
+  /**
+   * The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
+   * @minLength 1
+   * @maxLength 100
+   */
+  name: string;
+  /** A short description of the skill (shown in system prompt for LLM to decide activation) */
+  shortDescription: string;
+  /** Detailed instructions for the skill (injected when the skill is activated) */
+  instructions: string;
+  /** Whether the skill is active (defaults to true) */
+  isActive?: boolean;
+}
+
+export interface UpdateSkillDto {
+  /**
+   * The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
+   * @minLength 1
+   * @maxLength 100
+   */
+  name: string;
+  /** A short description of the skill (shown in system prompt for LLM to decide activation) */
+  shortDescription: string;
+  /** Detailed instructions for the skill (injected when the skill is activated) */
+  instructions: string;
+}
+
+/**
+ * Processing status of the source
+ */
+export type SkillSourceResponseDtoStatus = typeof SkillSourceResponseDtoStatus[keyof typeof SkillSourceResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SkillSourceResponseDtoStatus = {
+  processing: 'processing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+export interface SkillSourceResponseDto {
   /** The unique identifier of the source */
-  sourceId: string;
+  id: string;
   /** The name of the source */
   name: string;
   /** The type of source */
-  type: AgentSourceResponseDtoType;
-}
-
-export interface AgentResponseDto {
-  /** The unique identifier of the agent */
-  id: string;
-  /** The name of the agent */
-  name: string;
-  /** The instructions for the agent */
-  instructions: string;
-  /** The unique identifier of the user who owns this agent */
-  userId: string;
-  /** The date and time when the agent was created */
+  type: string;
+  /** Processing status of the source */
+  status: SkillSourceResponseDtoStatus;
+  /** Error message if processing failed */
+  processingError?: string;
+  /** The date and time when the source was created */
   createdAt: string;
-  /** The date and time when the agent was last updated */
-  updatedAt: string;
-  /** The model configuration for this agent */
-  model: ModelResponseDto;
-  /** The tools assigned to this agent */
-  tools: ToolResponseDto[];
-  /** The sources assigned to this agent */
-  sources: AgentSourceResponseDto[];
-  /** Whether this agent is shared with the current user (vs. owned by them) */
-  isShared: boolean;
-  /** The unique identifier of the user who owns this agent (same as userId) */
-  ownerId: string;
-}
-
-export interface UpdateAgentDto {
-  /**
-   * The name of the agent
-   * @minLength 1
-   * @maxLength 255
-   */
-  name: string;
-  /** The instructions for the agent */
-  instructions: string;
-  /** The ID of the permitted model to use for this agent */
-  modelId: string;
 }
 
 /**
@@ -2534,122 +2700,6 @@ export interface McpIntegrationResponseDto {
   logoUrl?: string | null;
   /** Human-readable description of the integration (populated from marketplace shortDescription or predefined config description) */
   description?: string;
-}
-
-/**
- * Type of entity being shared
- */
-export type CreateAgentShareDtoEntityType = typeof CreateAgentShareDtoEntityType[keyof typeof CreateAgentShareDtoEntityType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateAgentShareDtoEntityType = {
-  agent: 'agent',
-  prompt: 'prompt',
-  skill: 'skill',
-  knowledge_base: 'knowledge_base',
-} as const;
-
-export interface CreateAgentShareDto {
-  /** Type of entity being shared */
-  entityType: CreateAgentShareDtoEntityType;
-  /** ID of the agent to share */
-  agentId: string;
-  /** ID of the team to share with (if not provided, shares with entire organization) */
-  teamId?: string;
-}
-
-/**
- * Type of entity being shared
- */
-export type ShareResponseDtoEntityType = typeof ShareResponseDtoEntityType[keyof typeof ShareResponseDtoEntityType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ShareResponseDtoEntityType = {
-  agent: 'agent',
-  prompt: 'prompt',
-  skill: 'skill',
-  knowledge_base: 'knowledge_base',
-} as const;
-
-/**
- * Type of share scope (organization, user, or team)
- */
-export type ShareResponseDtoScopeType = typeof ShareResponseDtoScopeType[keyof typeof ShareResponseDtoScopeType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ShareResponseDtoScopeType = {
-  org: 'org',
-  team: 'team',
-} as const;
-
-export interface ShareResponseDto {
-  /** Unique identifier of the share */
-  id: string;
-  /** Type of entity being shared */
-  entityType: ShareResponseDtoEntityType;
-  /** ID of the entity being shared */
-  entityId: string;
-  /** Type of share scope (organization, user, or team) */
-  scopeType: ShareResponseDtoScopeType;
-  /** ID of the user who created the share */
-  ownerId: string;
-  /** ID of the team (only present for team-scoped shares) */
-  teamId?: string;
-  /** Name of the team (only present for team-scoped shares) */
-  teamName?: string;
-  /** When the share was created */
-  createdAt: string;
-  /** When the share was last updated */
-  updatedAt: string;
-}
-
-/**
- * Type of entity being shared
- */
-export type CreateSkillShareDtoEntityType = typeof CreateSkillShareDtoEntityType[keyof typeof CreateSkillShareDtoEntityType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateSkillShareDtoEntityType = {
-  agent: 'agent',
-  prompt: 'prompt',
-  skill: 'skill',
-  knowledge_base: 'knowledge_base',
-} as const;
-
-export interface CreateSkillShareDto {
-  /** Type of entity being shared */
-  entityType: CreateSkillShareDtoEntityType;
-  /** ID of the skill to share */
-  skillId: string;
-  /** ID of the team to share with (if not provided, shares with entire organization) */
-  teamId?: string;
-}
-
-/**
- * Type of entity being shared
- */
-export type CreateKnowledgeBaseShareDtoEntityType = typeof CreateKnowledgeBaseShareDtoEntityType[keyof typeof CreateKnowledgeBaseShareDtoEntityType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateKnowledgeBaseShareDtoEntityType = {
-  agent: 'agent',
-  prompt: 'prompt',
-  skill: 'skill',
-  knowledge_base: 'knowledge_base',
-} as const;
-
-export interface CreateKnowledgeBaseShareDto {
-  /** Type of entity being shared */
-  entityType: CreateKnowledgeBaseShareDtoEntityType;
-  /** ID of the knowledge base to share */
-  knowledgeBaseId: string;
-  /** ID of the team to share with (if not provided, shares with entire organization) */
-  teamId?: string;
 }
 
 /**
@@ -3004,226 +3054,6 @@ export interface MarketplaceIntegrationResponseDto {
   createdAt: string;
   /** Last update timestamp */
   updatedAt: string;
-}
-
-export interface CreateKnowledgeBaseDto {
-  /**
-   * The name of the knowledge base
-   * @minLength 1
-   * @maxLength 255
-   */
-  name: string;
-  /**
-   * An optional description of the knowledge base
-   * @maxLength 2000
-   */
-  description?: string;
-}
-
-export interface KnowledgeBaseResponseDto {
-  /** The unique identifier of the knowledge base */
-  id: string;
-  /** The name of the knowledge base */
-  name: string;
-  /** The description of the knowledge base */
-  description: string;
-  /** The date and time when the knowledge base was created */
-  createdAt: string;
-  /** The date and time when the knowledge base was last updated */
-  updatedAt: string;
-  /** Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases). */
-  isShared?: boolean;
-}
-
-export interface KnowledgeBaseListResponseDto {
-  /** The list of knowledge bases */
-  data: KnowledgeBaseResponseDto[];
-}
-
-export interface UpdateKnowledgeBaseDto {
-  /**
-   * The name of the knowledge base
-   * @minLength 1
-   * @maxLength 255
-   */
-  name?: string;
-  /**
-   * The description of the knowledge base
-   * @maxLength 2000
-   */
-  description?: string;
-}
-
-/**
- * The type of the source
- */
-export type KnowledgeBaseDocumentResponseDtoType = typeof KnowledgeBaseDocumentResponseDtoType[keyof typeof KnowledgeBaseDocumentResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const KnowledgeBaseDocumentResponseDtoType = {
-  text: 'text',
-  data: 'data',
-} as const;
-
-/**
- * Who created the source
- */
-export type KnowledgeBaseDocumentResponseDtoCreatedBy = typeof KnowledgeBaseDocumentResponseDtoCreatedBy[keyof typeof KnowledgeBaseDocumentResponseDtoCreatedBy];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const KnowledgeBaseDocumentResponseDtoCreatedBy = {
-  user: 'user',
-  llm: 'llm',
-  system: 'system',
-} as const;
-
-/**
- * The processing status of the document
- */
-export type KnowledgeBaseDocumentResponseDtoStatus = typeof KnowledgeBaseDocumentResponseDtoStatus[keyof typeof KnowledgeBaseDocumentResponseDtoStatus];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const KnowledgeBaseDocumentResponseDtoStatus = {
-  processing: 'processing',
-  ready: 'ready',
-  failed: 'failed',
-} as const;
-
-/**
- * The text source subtype (e.g. file, web)
- */
-export type KnowledgeBaseDocumentResponseDtoTextType = typeof KnowledgeBaseDocumentResponseDtoTextType[keyof typeof KnowledgeBaseDocumentResponseDtoTextType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const KnowledgeBaseDocumentResponseDtoTextType = {
-  file: 'file',
-  web: 'web',
-} as const;
-
-export interface KnowledgeBaseDocumentResponseDto {
-  /** The unique identifier of the document */
-  id: string;
-  /** The name of the document */
-  name: string;
-  /** The type of the source */
-  type: KnowledgeBaseDocumentResponseDtoType;
-  /** Who created the source */
-  createdBy: KnowledgeBaseDocumentResponseDtoCreatedBy;
-  /** The date and time when the document was added */
-  createdAt: string;
-  /** The date and time when the document was last updated */
-  updatedAt: string;
-  /** The processing status of the document */
-  status: KnowledgeBaseDocumentResponseDtoStatus;
-  /** Error message if processing failed (only present when status is failed) */
-  processingError?: string;
-  /** The text source subtype (e.g. file, web) */
-  textType?: KnowledgeBaseDocumentResponseDtoTextType;
-  /** The URL of the source (only for web sources) */
-  url?: string;
-}
-
-export interface KnowledgeBaseDocumentListResponseDto {
-  /** The list of documents in the knowledge base */
-  data: KnowledgeBaseDocumentResponseDto[];
-}
-
-export interface AddUrlToKnowledgeBaseDto {
-  /** The URL to crawl and add to the knowledge base */
-  url: string;
-}
-
-export interface InstallSkillFromMarketplaceDto {
-  /** The unique identifier (slug) of the marketplace skill */
-  identifier: string;
-}
-
-export interface SkillResponseDto {
-  /** The unique identifier of the skill */
-  id: string;
-  /** The name of the skill */
-  name: string;
-  /** A short description of the skill */
-  shortDescription: string;
-  /** Detailed instructions for the skill */
-  instructions: string;
-  /**
-   * The marketplace identifier if this skill was installed from the marketplace
-   * @nullable
-   */
-  marketplaceIdentifier: string | null;
-  /** Whether the skill is active and available for use in chats */
-  isActive: boolean;
-  /** The unique identifier of the user who owns this skill */
-  userId: string;
-  /** The date and time when the skill was created */
-  createdAt: string;
-  /** The date and time when the skill was last updated */
-  updatedAt: string;
-  /** Whether the skill is shared with the current user (not owned) */
-  isShared: boolean;
-  /** Whether the skill is pinned for quick access in chat */
-  isPinned: boolean;
-}
-
-export interface CreateSkillDto {
-  /**
-   * The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
-   * @minLength 1
-   * @maxLength 100
-   */
-  name: string;
-  /** A short description of the skill (shown in system prompt for LLM to decide activation) */
-  shortDescription: string;
-  /** Detailed instructions for the skill (injected when the skill is activated) */
-  instructions: string;
-  /** Whether the skill is active (defaults to true) */
-  isActive?: boolean;
-}
-
-export interface UpdateSkillDto {
-  /**
-   * The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
-   * @minLength 1
-   * @maxLength 100
-   */
-  name: string;
-  /** A short description of the skill (shown in system prompt for LLM to decide activation) */
-  shortDescription: string;
-  /** Detailed instructions for the skill (injected when the skill is activated) */
-  instructions: string;
-}
-
-/**
- * Processing status of the source
- */
-export type SkillSourceResponseDtoStatus = typeof SkillSourceResponseDtoStatus[keyof typeof SkillSourceResponseDtoStatus];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SkillSourceResponseDtoStatus = {
-  processing: 'processing',
-  ready: 'ready',
-  failed: 'failed',
-} as const;
-
-export interface SkillSourceResponseDto {
-  /** The unique identifier of the source */
-  id: string;
-  /** The name of the source */
-  name: string;
-  /** The type of source */
-  type: string;
-  /** Processing status of the source */
-  status: SkillSourceResponseDtoStatus;
-  /** Error message if processing failed */
-  processingError?: string;
-  /** The date and time when the source was created */
-  createdAt: string;
 }
 
 /**
@@ -4336,10 +4166,6 @@ export type ThreadsControllerFindAllParams = {
  */
 search?: string;
 /**
- * Filter threads by agent ID
- */
-agentId?: string;
-/**
  * Maximum number of threads to return (default: 50)
  */
 limit?: number;
@@ -4358,8 +4184,8 @@ export type ThreadSourcesControllerAddFileSourceBody = {
 
 export type ThreadSourcesControllerAddFileSource201Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 
-export type AgentsControllerAddFileSourceBody = {
-  /** The file to upload (max 25 MB) */
+export type KnowledgeBasesControllerAddDocumentBody = {
+  /** The file to upload (PDF, DOCX, PPTX, TXT, max 25 MB) */
   file: Blob;
 };
 
@@ -4379,16 +4205,10 @@ export type SharesControllerGetSharesEntityType = typeof SharesControllerGetShar
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const SharesControllerGetSharesEntityType = {
-  agent: 'agent',
   prompt: 'prompt',
   skill: 'skill',
   knowledge_base: 'knowledge_base',
 } as const;
-
-export type KnowledgeBasesControllerAddDocumentBody = {
-  /** The file to upload (PDF, DOCX, PPTX, TXT, max 25 MB) */
-  file: Blob;
-};
 
 export type SkillSourcesControllerAddFileSourceBody = {
   /** The file to upload (max 25 MB) */

@@ -6,7 +6,6 @@ import { getDataSourceToken, TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './presenters/http/app.controller';
 import { ModelsModule } from '../domain/models/models.module';
-import { AgentsModule } from '../domain/agents/agents.module';
 import { SkillsModule } from '../domain/skills/skills.module';
 import { MessagesModule } from '../domain/messages/messages.module';
 import { ToolsModule } from '../domain/tools/tools.module';
@@ -147,7 +146,6 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     IntegrationsModule,
     ContextModule, // Global
     ModelsModule,
-    AgentsModule,
     SkillsModule,
     MessagesModule,
     ToolsModule,

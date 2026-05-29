@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { ToolUseMessageContent } from '../../model/openapi';
-import { ToolAssignmentDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+
 import CreateDocumentWidget from './CreateDocumentWidget';
 import UpdateDocumentWidget from './UpdateDocumentWidget';
 import EditDocumentWidget from './EditDocumentWidget';
@@ -30,7 +30,7 @@ export function renderArtifactToolWidget(params: {
   const keySuffix = `${index}-${content.name.slice(0, 50)}`;
 
   switch (content.name) {
-    case ToolAssignmentDtoType.create_document:
+    case 'create_document':
       return (
         <CreateDocumentWidget
           key={`create-document-${keySuffix}`}
@@ -40,7 +40,7 @@ export function renderArtifactToolWidget(params: {
           onOpenArtifact={onOpenArtifact}
         />
       );
-    case ToolAssignmentDtoType.update_document:
+    case 'update_document':
       return (
         <UpdateDocumentWidget
           key={`update-document-${keySuffix}`}
@@ -49,7 +49,7 @@ export function renderArtifactToolWidget(params: {
           onOpenArtifact={onOpenArtifact}
         />
       );
-    case ToolAssignmentDtoType.edit_document:
+    case 'edit_document':
       return (
         <EditDocumentWidget
           key={`edit-document-${keySuffix}`}
@@ -58,7 +58,7 @@ export function renderArtifactToolWidget(params: {
           onOpenArtifact={onOpenArtifact}
         />
       );
-    case ToolAssignmentDtoType.create_diagram:
+    case 'create_diagram':
       return (
         <CreateDiagramWidget
           key={`create-diagram-${keySuffix}`}
@@ -68,7 +68,7 @@ export function renderArtifactToolWidget(params: {
           onOpenArtifact={onOpenArtifact}
         />
       );
-    case ToolAssignmentDtoType.update_diagram:
+    case 'update_diagram':
       return (
         <UpdateDiagramWidget
           key={`update-diagram-${keySuffix}`}

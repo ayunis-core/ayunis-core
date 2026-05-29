@@ -40,7 +40,6 @@ import { GeneratedImagesController } from './presenters/http/generated-images.co
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { CleanupStaleThreadSourcesUseCase } from './application/use-cases/cleanup-stale-thread-sources/cleanup-stale-thread-sources.use-case';
 import { StaleThreadSourcesCleanupTask } from './infrastructure/tasks/stale-thread-sources-cleanup.task';
-import { AgentsModule } from '../agents/agents.module';
 import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
@@ -50,7 +49,6 @@ import { SharesModule } from '../shares/shares.module';
     LocalThreadsRepositoryModule,
     SourcesModule,
     forwardRef(() => ModelsModule),
-    forwardRef(() => AgentsModule),
     KnowledgeBasesModule,
     MessagesModule,
     OrgsModule,

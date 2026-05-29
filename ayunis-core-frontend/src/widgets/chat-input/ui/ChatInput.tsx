@@ -1,7 +1,6 @@
 import { useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
-import AgentButton from './AgentButton';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useTranslation } from 'react-i18next';
 import type {
@@ -12,13 +11,10 @@ import type {
 } from '@/shared/api';
 import PlusButton from './PlusButton';
 import ModelSelector from './ModelSelector';
-import { useAgents } from '../../../features/useAgents';
 import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import { SendButton } from './SendButton';
 import { AnonymousButton } from './AnonymousButton';
-import { AgentBadge } from './AgentBadge';
 import { SkillBadge } from './SkillBadge';
-import { useIsAgentsEnabled } from '@/features/feature-toggles';
 import {
   usePendingImages,
   type PendingImage,
@@ -50,7 +46,6 @@ export type ChatInputSubmissionState = 'idle' | 'submitting' | 'streaming';
 
 interface ChatInputProps {
   modelId: string | undefined;
-  agentId: string | undefined;
   sources: {
     id: string;
     name: string;
@@ -68,12 +63,9 @@ interface ChatInputProps {
    * `'idle'` — e.g. existing-chat sources still processing server-side.
    */
   isSendDisabled?: boolean;
-  isModelChangeDisabled: boolean;
-  isAgentChangeDisabled?: boolean;
+  isModelChangeDisabled?: boolean;
   isAnonymousChangeDisabled?: boolean;
   onModelChange: (modelId: string) => void;
-  onAgentChange: (agentId: string) => void;
-  onAgentRemove: (agentId: string) => void;
   onFileUpload: (files: File[]) => void;
   onRemoveSource: (sourceId: string) => void;
   onDownloadSource: (sourceId: string) => void;
@@ -109,17 +101,13 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
   (
     {
       modelId,
-      agentId,
       sources,
       knowledgeBases,
       submissionState = 'idle',
       isSendDisabled,
       isModelChangeDisabled,
-      isAgentChangeDisabled,
       isAnonymousChangeDisabled,
       onModelChange,
-      onAgentChange,
-      onAgentRemove,
       onFileUpload,
       onRemoveSource,
       onDownloadSource,
@@ -143,8 +131,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const isSubmitting = submissionState === 'submitting';
     const inFlight = submissionState !== 'idle';
     const { t } = useTranslation('common');
-    const isAgentsEnabled = useIsAgentsEnabled();
-    const { agents } = useAgents({ enabled: isAgentsEnabled });
     const containerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -190,7 +176,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     useImperativeHandle(ref, () => ({
       setMessage,
       sendMessage: (text: string) => {
-        if (!text.trim() || !(modelId || agentId)) return;
+        if (!text.trim() || !modelId) return;
         onSend(text);
       },
     }));
@@ -198,7 +184,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const handleSend = () => {
       if (
         (!message.trim() && pendingImages.length === 0 && !selectedSkillId) ||
-        !(modelId || agentId) ||
+        !modelId ||
         inFlight ||
         isSendDisabled
       ) {
@@ -250,8 +236,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
 
     const canSend =
       (message.trim() || pendingImages.length > 0 || selectedSkillId) &&
-      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: empty string should use fallback
-      (modelId || agentId) &&
+      modelId &&
       !inFlight &&
       !isSendDisabled;
 
@@ -352,27 +337,12 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                       (kb) => kb.id,
                     )}
                   />
-                  {isAgentsEnabled && (
-                    <AgentButton
-                      selectedAgentId={agentId}
-                      onAgentChange={onAgentChange}
-                      isDisabled={isAgentChangeDisabled}
-                    />
-                  )}
                   <AnonymousButton
                     isAnonymous={isAnonymous}
                     onAnonymousChange={onAnonymousChange}
                     isDisabled={isAnonymousChangeDisabled}
                     isEnforced={isAnonymousEnforced}
                   />
-                  {isAgentsEnabled && agentId && (
-                    <AgentBadge
-                      agentId={agentId}
-                      agent={agents.find((a) => a.id === agentId)}
-                      isDisabled={isAgentChangeDisabled ?? false}
-                      onRemove={onAgentRemove}
-                    />
-                  )}
                   {selectedSkillId && selectedSkillName && onSkillRemove && (
                     <SkillBadge
                       skillName={selectedSkillName}
@@ -383,11 +353,11 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
 
                 <div className="flex-shrink-0 flex space-x-2">
                   <TooltipIf
-                    condition={isModelChangeDisabled}
+                    condition={isModelChangeDisabled ?? false}
                     tooltip={t('chatInput.modelChangeDisabledTooltip')}
                   >
                     <ModelSelector
-                      isDisabled={isModelChangeDisabled}
+                      isDisabled={isModelChangeDisabled ?? false}
                       selectedModelId={modelId}
                       onModelChange={onModelChange}
                     />

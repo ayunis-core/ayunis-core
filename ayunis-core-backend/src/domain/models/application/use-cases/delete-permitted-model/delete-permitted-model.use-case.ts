@@ -9,8 +9,6 @@ import {
 } from '../../models.errors';
 import { ReplaceModelWithUserDefaultUseCase } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { ReplaceModelWithUserDefaultCommand } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.command';
-import { ReplaceModelWithUserDefaultUseCase as ReplaceModelWithUserDefaultUseCaseAgents } from 'src/domain/agents/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
-import { ReplaceModelWithUserDefaultCommand as ReplaceModelWithUserDefaultCommandAgents } from 'src/domain/agents/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.command';
 import { DeleteUserDefaultModelsByModelIdUseCase } from '../delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
 import { DeleteUserDefaultModelsByModelIdCommand } from '../delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.command';
 import { GetPermittedModelsUseCase } from '../get-permitted-models/get-permitted-models.use-case';
@@ -41,7 +39,6 @@ export class DeletePermittedModelUseCase {
     private readonly deleteUserDefaultModelByModelIdUseCase: DeleteUserDefaultModelsByModelIdUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
     private readonly replaceModelWithUserDefaultUseCase: ReplaceModelWithUserDefaultUseCase,
-    private readonly replaceModelWithUserDefaultUseCaseAgents: ReplaceModelWithUserDefaultUseCaseAgents,
     private readonly findAllThreadsByOrgWithSourcesUseCase: FindAllThreadsByOrgWithSourcesUseCase,
     private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
     private readonly contextService: ContextService,
@@ -161,16 +158,6 @@ export class DeletePermittedModelUseCase {
         oldPermittedModelId: model.id,
         catalogModelId: model.model.id,
       }),
-    );
-
-    this.logger.debug('Replacing model in all agents that use it', {
-      modelId: model.id,
-    });
-
-    // Replace the model in all agents that use it
-    // This will fall back to the user's default model or org default model
-    await this.replaceModelWithUserDefaultUseCaseAgents.execute(
-      new ReplaceModelWithUserDefaultCommandAgents(model.id, model.model.id),
     );
 
     // Cascade: remove team-scoped permitted models referencing the same catalog model

@@ -19,9 +19,6 @@ import {
 } from 'src/domain/runs/domain/run-input.entity';
 import { RunNoModelFoundError } from '../../runs.errors';
 import { Thread } from '../../../../threads/domain/thread.entity';
-import { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
-import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.query';
-import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -33,7 +30,6 @@ export class ExecuteRunAndSetTitleUseCase {
   constructor(
     private readonly executeRunUseCase: ExecuteRunUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
-    private readonly findOneAgentUseCase: FindOneAgentUseCase,
     private readonly generateAndSetThreadTitleUseCase: GenerateAndSetThreadTitleUseCase,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
   ) {}
@@ -145,17 +141,7 @@ export class ExecuteRunAndSetTitleUseCase {
         isAnonymous: thread.isAnonymous,
       });
 
-      // Fetch agent if thread has agentId
-      let agent: Agent | undefined;
-      if (thread.agentId) {
-        agent = (
-          await this.findOneAgentUseCase.execute(
-            new FindOneAgentQuery(thread.agentId),
-          )
-        ).agent;
-      }
-
-      const model = thread.model ?? agent?.model;
+      const model = thread.model;
       if (!model) {
         throw new RunNoModelFoundError({
           threadId: command.threadId,

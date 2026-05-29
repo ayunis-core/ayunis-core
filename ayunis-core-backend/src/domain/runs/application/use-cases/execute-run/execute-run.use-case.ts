@@ -13,7 +13,6 @@ import {
   RunInvalidInputError,
   RunMaxIterationsReachedError,
   RunNoModelFoundError,
-  ThreadAgentNoLongerAccessibleError,
 } from '../../runs.errors';
 import {
   RunUserInput,
@@ -28,10 +27,6 @@ import { UUID } from 'crypto';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
-import { Agent } from 'src/domain/agents/domain/agent.entity';
-import { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
-import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.query';
-import { AgentNotFoundError } from 'src/domain/agents/application/agents.errors';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
@@ -51,7 +46,6 @@ export class ExecuteRunUseCase {
     private readonly createUserMessageUseCase: CreateUserMessageUseCase,
     private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
-    private readonly findOneAgentUseCase: FindOneAgentUseCase,
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
     private readonly contextService: ContextService,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
@@ -83,7 +77,6 @@ export class ExecuteRunUseCase {
         streaming: command.streaming,
         orgId: prepared.orgId,
         isAnonymous: prepared.isAnonymous,
-        agent: prepared.agent,
         activeSkills: prepared.activeSkills,
         skillId:
           command.input instanceof RunUserInput
@@ -104,7 +97,6 @@ export class ExecuteRunUseCase {
     userId: UUID;
     orgId: UUID;
     thread: Thread;
-    agent?: Agent;
     model: PermittedLanguageModel;
     isAnonymous: boolean;
     tools: RunParams['tools'];
@@ -121,8 +113,7 @@ export class ExecuteRunUseCase {
     const { thread } = await this.findThreadUseCase.execute(
       new FindThreadQuery(command.threadId),
     );
-    const agent = await this.resolveThreadAgent(thread, command.threadId);
-    const model = this.pickModel(thread, agent);
+    const model = this.pickModel(thread);
 
     // Enforce fair-use + credit budget AFTER pickModel so the tiered quota
     // bucket matches the resolved model. Untiered models default to MEDIUM;
@@ -134,7 +125,6 @@ export class ExecuteRunUseCase {
     const { tools, instructions } =
       await this.toolAssemblyService.buildRunContext(
         thread,
-        agent,
         activeSkills,
         model.model.canUseTools,
       );
@@ -143,7 +133,6 @@ export class ExecuteRunUseCase {
       userId,
       orgId,
       thread,
-      agent,
       model,
       isAnonymous,
       tools,
@@ -168,32 +157,7 @@ export class ExecuteRunUseCase {
       });
   }
 
-  /**
-   * Resolves the agent for a thread, throwing if it's no longer accessible.
-   */
-  private async resolveThreadAgent(
-    thread: Thread,
-    threadId: UUID,
-  ): Promise<Agent | undefined> {
-    if (!thread.agentId) return undefined;
-    try {
-      return (
-        await this.findOneAgentUseCase.execute(
-          new FindOneAgentQuery(thread.agentId),
-        )
-      ).agent;
-    } catch (error) {
-      if (error instanceof AgentNotFoundError) {
-        throw new ThreadAgentNoLongerAccessibleError(threadId, thread.agentId);
-      }
-      throw error;
-    }
-  }
-
-  private pickModel(thread: Thread, agent?: Agent): PermittedLanguageModel {
-    if (agent) {
-      return agent.model;
-    }
+  private pickModel(thread: Thread): PermittedLanguageModel {
     if (thread.model) {
       return thread.model;
     }
@@ -347,7 +311,6 @@ Skill "${skillName}" has already been activated on this thread. Do not call acti
     params.thread = refreshedThread;
     const refreshed = await this.toolAssemblyService.buildRunContext(
       refreshedThread,
-      params.agent,
       params.activeSkills,
       params.model.canUseTools,
     );

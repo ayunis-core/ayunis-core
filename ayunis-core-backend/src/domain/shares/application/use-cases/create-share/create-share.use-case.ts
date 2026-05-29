@@ -6,8 +6,6 @@ import {
 import { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
-  CreateOrgAgentShareCommand,
-  CreateTeamAgentShareCommand,
   CreateOrgSkillShareCommand,
   CreateTeamSkillShareCommand,
   CreateOrgKnowledgeBaseShareCommand,
@@ -16,7 +14,6 @@ import {
 } from './create-share.command';
 import { SharesRepository } from '../../ports/shares-repository.port';
 import {
-  AgentShare,
   SkillShare,
   KnowledgeBaseShare,
   Share,
@@ -74,11 +71,7 @@ export class CreateShareUseCase {
   private resolveCommandConfig(
     command: CreateShareCommand,
   ): ShareCommandConfig {
-    if (command instanceof CreateOrgAgentShareCommand) {
-      return this.agentConfig(command.agentId);
-    } else if (command instanceof CreateTeamAgentShareCommand) {
-      return { ...this.agentConfig(command.agentId), teamId: command.teamId };
-    } else if (command instanceof CreateOrgSkillShareCommand) {
+    if (command instanceof CreateOrgSkillShareCommand) {
       return this.skillConfig(command.skillId);
     } else if (command instanceof CreateTeamSkillShareCommand) {
       return { ...this.skillConfig(command.skillId), teamId: command.teamId };
@@ -91,14 +84,6 @@ export class CreateShareUseCase {
       };
     }
     throw new Error('Unsupported share command type');
-  }
-
-  private agentConfig(agentId: UUID): ShareCommandConfig {
-    return {
-      entityType: SharedEntityType.AGENT,
-      entityId: agentId,
-      factory: (ownerId, scope) => new AgentShare({ agentId, scope, ownerId }),
-    };
   }
 
   private skillConfig(skillId: UUID): ShareCommandConfig {

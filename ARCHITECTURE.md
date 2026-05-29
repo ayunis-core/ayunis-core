@@ -2,7 +2,7 @@
 
 **2-word:** AI Gateway
 
-**8-word:** Multi-tenant AI gateway with agents, tools, and RAG.
+**8-word:** Multi-tenant AI gateway with skills, tools, and RAG.
 
 **32-word:** Ayunis Core is an open-source AI gateway enabling municipalities to run customizable AI assistants with multi-provider LLM support, tool integration, document retrieval (RAG), and organization-scoped access control. Hexagonal architecture separates domain logic from infrastructure.
 
@@ -10,7 +10,7 @@
 
 ## Repository Structure
 
-```
+```text
 ayunis-core/
 ├── ayunis-core-backend/       # NestJS API server
 ├── ayunis-core-frontend/      # React SPA (Feature-Sliced Design)
@@ -31,7 +31,6 @@ ayunis-core/
 
 | Module | Summary | Detail |
 |--------|---------|--------|
-| [agents](ayunis-core-backend/src/domain/agents/SUMMARY.md) | AI Assistants | Configurable AI agents with tools and sources |
 | [threads](ayunis-core-backend/src/domain/threads/SUMMARY.md) | Conversations | Chat session management with organization sharing |
 | [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md) | Chat History | Message storage and retrieval |
 | [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md) | AI Execution | LLM request tracking and streaming |
@@ -85,7 +84,7 @@ ayunis-core/
 
 | Layer | Summary | Detail |
 |-------|---------|--------|
-| [pages](ayunis-core-frontend/src/pages/SUMMARY.md) | Routes | Auth, chat, agents, prompts, settings |
+| [pages](ayunis-core-frontend/src/pages/SUMMARY.md) | Routes | Auth, chat, skills, knowledge bases, settings |
 | [features](ayunis-core-frontend/src/features/SUMMARY.md) | Business Logic | Theme, language, models, usage tracking |
 | [widgets](ayunis-core-frontend/src/widgets/SUMMARY.md) | Composites | Sidebar, chat input, markdown renderer |
 | [shared](ayunis-core-frontend/src/shared/SUMMARY.md) | Primitives | UI components, generated API client, i18n |
@@ -96,7 +95,7 @@ ayunis-core/
 
 ### Hexagonal Architecture (Backend)
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────┐
 │                        Presenters                            │
 │                   (HTTP Controllers)                         │
@@ -119,7 +118,7 @@ ayunis-core/
 
 ### Feature-Sliced Design (Frontend)
 
-```
+```text
 pages → widgets → features → shared
   ↓        ↓         ↓          ↓
 Routes  Composites  Logic    Primitives
@@ -134,4 +133,4 @@ Import rules: layers only depend on layers to their right.
 - **Adding a backend feature**: Start at the relevant domain module's SUMMARY.md
 - **Adding a frontend page**: See [pages/SUMMARY.md](ayunis-core-frontend/src/pages/SUMMARY.md)
 - **Understanding auth**: [authentication](ayunis-core-backend/src/iam/authentication/SUMMARY.md) + [authorization](ayunis-core-backend/src/iam/authorization/SUMMARY.md)
-- **AI execution flow**: [agents](ayunis-core-backend/src/domain/agents/SUMMARY.md) → [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md) → [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md)
+- **AI execution flow**: [threads](ayunis-core-backend/src/domain/threads/SUMMARY.md) → [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md) → [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md)

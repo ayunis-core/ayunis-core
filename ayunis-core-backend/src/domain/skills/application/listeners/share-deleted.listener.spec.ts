@@ -168,21 +168,6 @@ describe('ShareDeletedListener', () => {
     );
   });
 
-  it('should not deactivate anything when an agent share is deleted', async () => {
-    const event = new ShareDeletedEvent(
-      SharedEntityType.AGENT,
-      randomUUID(),
-      randomUUID(),
-      randomUUID(),
-      [],
-    );
-
-    await listener.handleShareDeleted(event);
-
-    expect(skillRepository.deactivateAllExceptOwner).not.toHaveBeenCalled();
-    expect(skillRepository.deactivateUsersNotInSet).not.toHaveBeenCalled();
-  });
-
   it('should not deactivate anything when a prompt share is deleted', async () => {
     const event = new ShareDeletedEvent(
       SharedEntityType.PROMPT,
