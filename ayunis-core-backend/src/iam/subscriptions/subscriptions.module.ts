@@ -25,6 +25,7 @@ import { SubscriptionBillingInfoMapper } from './infrastructure/persistence/loca
 import { SubscriptionBillingInfoRecord } from './infrastructure/persistence/local/schema/subscription-billing-info.record';
 import { GetCurrentPriceUseCase } from './application/use-cases/get-current-price/get-current-price.use-case';
 import { GetMonthlyCreditLimitUseCase } from './application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
+import { IsUsageBasedSubscriptionUseCase } from './application/use-cases/is-usage-based-subscription/is-usage-based-subscription.use-case';
 import { UpdateStartDateUseCase } from './application/use-cases/update-start-date/update-start-date.use-case';
 
 @Module({
@@ -58,6 +59,7 @@ import { UpdateStartDateUseCase } from './application/use-cases/update-start-dat
     UpdateStartDateUseCase,
     GetCurrentPriceUseCase,
     GetMonthlyCreditLimitUseCase,
+    IsUsageBasedSubscriptionUseCase,
   ],
   exports: [
     HasActiveSubscriptionUseCase,
@@ -65,6 +67,7 @@ import { UpdateStartDateUseCase } from './application/use-cases/update-start-dat
     CreateSubscriptionUseCase,
     UpdateSeatsUseCase,
     GetMonthlyCreditLimitUseCase,
+    IsUsageBasedSubscriptionUseCase,
   ],
 })
 export class SubscriptionsModule {}
