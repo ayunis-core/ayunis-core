@@ -15,7 +15,11 @@
     "roleAdmin": "Admin",
     "roleUser": "User",
     "actions": "Actions",
-    "sendPasswordReset": "Send Password Reset",
+    "status": "Status",
+    "active": "Active",
+    "pending": "Pending",
+    "sendActivationLink": "Send Activation Link",
+    "resetPassword": "Reset Password",
     "delete": "Delete"
   },
   "empty": {
@@ -179,30 +183,30 @@
     "confirmText": "Delete",
     "cancelText": "Cancel"
   },
-  "triggerPasswordReset": {
-    "success": "Password reset email sent successfully",
-    "error": "Failed to send password reset email. Please try again.",
+  "triggerActivation": {
+    "success": "Access link sent successfully",
+    "error": "Failed to send access link. Please try again.",
     "notFound": "User not found."
   },
-  "passwordResetSuccess": {
-    "title": "Password Reset Email Sent",
-    "description": "A password reset email has been sent to {{email}}. You can also share the reset link directly.",
-    "urlLabel": "Password Reset Link",
+  "activationSuccess": {
+    "title": "Access Link Sent",
+    "description": "An access link has been sent to {{email}}. You can also share the link directly.",
+    "urlLabel": "Access Link",
     "copyButton": "Copy",
     "copiedButton": "Copied",
     "copied": "Link copied to clipboard",
     "close": "Close"
   },
-  "confirmPasswordReset": {
-    "title": "Send Password Reset Email",
-    "description": "Send a password reset email to {{name}} ({{email}})?",
-    "confirmText": "Send Email",
+  "confirmActivation": {
+    "title": "Send Access Link",
+    "description": "Send an access link to {{name}} ({{email}})?",
+    "confirmText": "Send Link",
     "cancelText": "Cancel"
   },
   "createUser": {
     "button": "Add User",
     "title": "Create New User",
-    "description": "Create a new user in this organization. A random password will be generated and a password reset email can optionally be sent to the user.",
+    "description": "Create a new user in this organization. A random password will be generated and an activation email can optionally be sent to the user.",
     "nameLabel": "Name",
     "namePlaceholder": "Enter user name",
     "nameRequired": "Name is required",
@@ -218,7 +222,7 @@
     "create": "Create User",
     "creating": "Creating...",
     "cancel": "Cancel",
-    "sendPasswordResetEmailLabel": "Send password reset email to user",
+    "sendActivationEmailLabel": "Send activation email to user",
     "success": "User created successfully.",
     "error": "Failed to create user. Please try again.",
     "emailProviderBlacklisted": "This email provider is not allowed.",

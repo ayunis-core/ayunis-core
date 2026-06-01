@@ -2099,6 +2099,12 @@
                     "valid": {
                       "type": "boolean",
                       "example": true
+                    },
+                    "purpose": {
+                      "type": "string",
+                      "enum": ["activation", "reset"],
+                      "example": "reset",
+                      "nullable": true
                     }
                   }
                 }
@@ -9373,6 +9379,11 @@
             "example": "123e4567-e89b-12d3-a456-426614174001",
             "format": "uuid"
           },
+          "activated": {
+            "type": "boolean",
+            "description": "Whether the user has activated their account",
+            "example": true
+          },
           "department": {
             "type": "string",
             "description": "Department the user belongs to",
@@ -9386,7 +9397,15 @@
             "example": "2024-01-15T10:30:00Z"
           }
         },
-        "required": ["id", "name", "email", "role", "orgId", "createdAt"]
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role",
+          "orgId",
+          "activated",
+          "createdAt"
+        ]
       },
       "PaginatedUsersListResponseDto": {
         "type": "object",
@@ -9605,6 +9624,11 @@
             "example": "123e4567-e89b-12d3-a456-426614174001",
             "format": "uuid"
           },
+          "activated": {
+            "type": "boolean",
+            "description": "Whether the user has activated their account",
+            "example": true
+          },
           "department": {
             "type": "string",
             "description": "Department the user belongs to",
@@ -9630,6 +9654,7 @@
           "email",
           "role",
           "orgId",
+          "activated",
           "createdAt",
           "systemRole"
         ]

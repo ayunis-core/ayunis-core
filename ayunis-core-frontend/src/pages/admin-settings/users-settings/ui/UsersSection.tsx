@@ -95,15 +95,15 @@ export default function UsersSection({
     });
   };
 
-  const handleTriggerPasswordReset = (user: UserResponseDto) => {
+  const handleTriggerActivation = (user: UserResponseDto) => {
     confirm({
-      title: t('confirmPasswordReset.title'),
-      description: t('confirmPasswordReset.description', {
+      title: t('confirmActivation.title'),
+      description: t('confirmActivation.description', {
         name: user.name,
         email: user.email,
       }),
-      confirmText: t('confirmPasswordReset.confirmText'),
-      cancelText: t('confirmPasswordReset.cancelText'),
+      confirmText: t('confirmActivation.confirmText'),
+      cancelText: t('confirmActivation.cancelText'),
       variant: 'default',
       onConfirm: () => {
         setLoadingUserId(user.id);
@@ -150,9 +150,15 @@ export default function UsersSection({
                   {user.role === 'admin' ? t('users.admin') : t('users.user')}
                 </TableCell>
                 <TableCell>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    {t('users.active')}
-                  </span>
+                  {user.activated ? (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      {t('users.active')}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      {t('users.pending')}
+                    </span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -186,11 +192,13 @@ export default function UsersSection({
                         })}
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleTriggerPasswordReset(user)}
+                        onClick={() => handleTriggerActivation(user)}
                         disabled={isUserLoading(user.id)}
                       >
                         <Mail />
-                        {t('users.sendPasswordReset')}
+                        {user.activated
+                          ? t('users.resetPassword')
+                          : t('users.sendActivationLink')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         variant="destructive"

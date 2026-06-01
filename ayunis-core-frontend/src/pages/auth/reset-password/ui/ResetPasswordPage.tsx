@@ -13,22 +13,29 @@ import { useResetPassword } from '../api/useResetPassword';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 
-export function ResetPasswordPage({ token }: Readonly<{ token: string }>) {
-  const { form, onSubmit, isLoading } = useResetPassword(token);
+interface Props {
+  token: string;
+  purpose: 'activation' | 'reset';
+}
+
+export function ResetPasswordPage({ token, purpose }: Readonly<Props>) {
+  const { form, onSubmit, isLoading } = useResetPassword(token, purpose);
   const { t } = useTranslation('auth');
+  const isActivation = purpose === 'activation';
+  const prefix = isActivation ? 'activateAccount' : 'resetPassword';
 
   return (
     <OnboardingLayout
-      title={t('resetPassword.title')}
-      description={t('resetPassword.description')}
+      title={t(`${prefix}.title`)}
+      description={t(`${prefix}.description`)}
       footer={
         <>
-          {t('resetPassword.backToLogin')}{' '}
+          {t(`${prefix}.backToLogin`)}{' '}
           <Link
             to="/login"
             className="font-medium text-primary hover:underline"
           >
-            {t('resetPassword.signIn')}
+            {t(`${prefix}.signIn`)}
           </Link>
         </>
       }
@@ -45,10 +52,10 @@ export function ResetPasswordPage({ token }: Readonly<{ token: string }>) {
             name="newPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('resetPassword.newPassword')}</FormLabel>
+                <FormLabel>{t(`${prefix}.password`)}</FormLabel>
                 <FormControl>
                   <PasswordInput
-                    placeholder={t('resetPassword.newPasswordPlaceholder')}
+                    placeholder={t(`${prefix}.passwordPlaceholder`)}
                     {...field}
                   />
                 </FormControl>
@@ -61,10 +68,10 @@ export function ResetPasswordPage({ token }: Readonly<{ token: string }>) {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('resetPassword.confirmPassword')}</FormLabel>
+                <FormLabel>{t(`${prefix}.confirmPassword`)}</FormLabel>
                 <FormControl>
                   <PasswordInput
-                    placeholder={t('resetPassword.confirmPasswordPlaceholder')}
+                    placeholder={t(`${prefix}.confirmPasswordPlaceholder`)}
                     {...field}
                   />
                 </FormControl>
@@ -73,9 +80,7 @@ export function ResetPasswordPage({ token }: Readonly<{ token: string }>) {
             )}
           />
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading
-              ? t('resetPassword.resetting')
-              : t('resetPassword.resetPasswordButton')}
+            {isLoading ? t(`${prefix}.resetting`) : t(`${prefix}.submitButton`)}
           </Button>
         </form>
       </Form>

@@ -7,6 +7,7 @@ export class CreateRegularUserCommand {
   public readonly name: string;
   public readonly emailVerified: boolean;
   public readonly hasAcceptedMarketing: boolean;
+  public readonly activated: boolean;
   public readonly department?: string;
 
   constructor(params: {
@@ -16,6 +17,7 @@ export class CreateRegularUserCommand {
     name: string;
     emailVerified: boolean;
     hasAcceptedMarketing: boolean;
+    activated?: boolean;
     department?: string;
   }) {
     this.email = params.email;
@@ -24,6 +26,7 @@ export class CreateRegularUserCommand {
     this.name = params.name;
     this.emailVerified = params.emailVerified;
     this.hasAcceptedMarketing = params.hasAcceptedMarketing;
+    this.activated = params.activated ?? true;
     this.department = params.department;
   }
 }

@@ -4,6 +4,8 @@ import { TokenExpiredPage } from '@/pages/auth/reset-password/ui/TokenExpiredPag
 import { z } from 'zod';
 import { userControllerValidateResetToken } from '@/shared/api/generated/ayunisCoreAPI';
 
+type TokenPurpose = 'activation' | 'reset';
+
 const searchSchema = z.object({
   token: z.string(),
 });
@@ -14,24 +16,22 @@ export const Route = createFileRoute('/(onboarding)/password/reset')({
   loaderDeps: ({ search }) => search,
   loader: async ({ deps: { token } }) => {
     try {
-      const isValid = await userControllerValidateResetToken({ token });
-      return {
-        token,
-        isValid,
+      const result = await userControllerValidateResetToken({ token });
+      const { valid, purpose } = result as unknown as {
+        valid: boolean;
+        purpose: TokenPurpose | null;
       };
+      return { token, isValid: valid, purpose: purpose ?? 'reset' };
     } catch {
-      return {
-        token,
-        isValid: false,
-      };
+      return { token, isValid: false, purpose: 'reset' as TokenPurpose };
     }
   },
 });
 
 function RouteComponent() {
-  const { token, isValid } = Route.useLoaderData();
+  const { token, isValid, purpose } = Route.useLoaderData();
   if (!isValid) {
-    return <TokenExpiredPage />;
+    return <TokenExpiredPage purpose={purpose} />;
   }
-  return <ResetPasswordPage token={token} />;
+  return <ResetPasswordPage token={token} purpose={purpose} />;
 }

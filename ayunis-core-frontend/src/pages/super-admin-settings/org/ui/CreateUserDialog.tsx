@@ -194,7 +194,7 @@ export default function CreateUserDialog({
                         htmlFor="sendPasswordResetEmail"
                         className="block font-normal leading-5 cursor-pointer"
                       >
-                        {t('createUser.sendPasswordResetEmailLabel')}
+                        {t('createUser.sendActivationEmailLabel')}
                       </Label>
                     </div>
                   </FormControl>

@@ -514,9 +514,12 @@ export class UserController {
     schema: {
       type: 'object',
       properties: {
-        valid: {
-          type: 'boolean',
-          example: true,
+        valid: { type: 'boolean', example: true },
+        purpose: {
+          type: 'string',
+          enum: ['activation', 'reset'],
+          example: 'reset',
+          nullable: true,
         },
       },
     },
@@ -530,10 +533,8 @@ export class UserController {
   validateResetToken(@Query() query: ValidatePasswordResetTokenDto) {
     this.logger.log('validateResetToken', { hasToken: !!query.token });
 
-    const result = this.validatePasswordResetTokenUseCase.execute(
+    return this.validatePasswordResetTokenUseCase.execute(
       new ValidatePasswordResetTokenQuery(query.token),
     );
-
-    return { valid: result };
   }
 }

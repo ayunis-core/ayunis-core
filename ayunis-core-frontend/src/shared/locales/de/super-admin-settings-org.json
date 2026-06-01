@@ -15,7 +15,11 @@
     "roleAdmin": "Administrator",
     "roleUser": "Benutzer",
     "actions": "Aktionen",
-    "sendPasswordReset": "Passwort-Reset senden",
+    "status": "Status",
+    "active": "Aktiv",
+    "pending": "Ausstehend",
+    "sendActivationLink": "Aktivierungslink senden",
+    "resetPassword": "Passwort-Reset senden",
     "delete": "Löschen"
   },
   "empty": {
@@ -179,30 +183,30 @@
     "confirmText": "Löschen",
     "cancelText": "Abbrechen"
   },
-  "triggerPasswordReset": {
-    "success": "Passwort-Reset-E-Mail erfolgreich gesendet",
-    "error": "Passwort-Reset-E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
+  "triggerActivation": {
+    "success": "Zugangslink erfolgreich gesendet",
+    "error": "Zugangslink konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
     "notFound": "Benutzer nicht gefunden."
   },
-  "passwordResetSuccess": {
-    "title": "Passwort-Reset-E-Mail gesendet",
-    "description": "Eine Passwort-Reset-E-Mail wurde an {{email}} gesendet. Sie können den Reset-Link auch direkt teilen.",
-    "urlLabel": "Passwort-Reset-Link",
+  "activationSuccess": {
+    "title": "Zugangslink gesendet",
+    "description": "Ein Zugangslink wurde an {{email}} gesendet. Sie können den Link auch direkt teilen.",
+    "urlLabel": "Zugangslink",
     "copyButton": "Kopieren",
     "copiedButton": "Kopiert",
     "copied": "Link in Zwischenablage kopiert",
     "close": "Schließen"
   },
-  "confirmPasswordReset": {
-    "title": "Passwort-Reset-E-Mail senden",
-    "description": "Eine Passwort-Reset-E-Mail an {{name}} ({{email}}) senden?",
-    "confirmText": "E-Mail senden",
+  "confirmActivation": {
+    "title": "Zugangslink senden",
+    "description": "Einen Zugangslink an {{name}} ({{email}}) senden?",
+    "confirmText": "Link senden",
     "cancelText": "Abbrechen"
   },
   "createUser": {
     "button": "Benutzer hinzufügen",
     "title": "Neuen Benutzer erstellen",
-    "description": "Erstellen Sie einen neuen Benutzer in dieser Organisation. Ein zufälliges Passwort wird generiert und eine Passwort-Reset-E-Mail kann optional an den Benutzer gesendet werden.",
+    "description": "Erstellen Sie einen neuen Benutzer in dieser Organisation. Ein zufälliges Passwort wird generiert und eine Aktivierungs-E-Mail kann optional an den Benutzer gesendet werden.",
     "nameLabel": "Name",
     "namePlaceholder": "Benutzernamen eingeben",
     "nameRequired": "Name ist erforderlich",
@@ -218,7 +222,7 @@
     "create": "Benutzer erstellen",
     "creating": "Wird erstellt...",
     "cancel": "Abbrechen",
-    "sendPasswordResetEmailLabel": "Passwort-Reset-E-Mail an Benutzer senden",
+    "sendActivationEmailLabel": "Aktivierungs-E-Mail an Benutzer senden",
     "success": "Benutzer erfolgreich erstellt.",
     "error": "Benutzer konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
     "emailProviderBlacklisted": "Dieser E-Mail-Anbieter ist nicht erlaubt.",

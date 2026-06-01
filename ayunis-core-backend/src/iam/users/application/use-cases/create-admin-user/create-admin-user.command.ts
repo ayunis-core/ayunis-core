@@ -7,6 +7,7 @@ export class CreateAdminUserCommand {
   public readonly name: string;
   public readonly emailVerified: boolean;
   public readonly hasAcceptedMarketing: boolean;
+  public readonly activated: boolean;
   public readonly department?: string;
 
   constructor({
@@ -16,6 +17,7 @@ export class CreateAdminUserCommand {
     name,
     emailVerified,
     hasAcceptedMarketing,
+    activated,
     department,
   }: {
     email: string;
@@ -24,6 +26,7 @@ export class CreateAdminUserCommand {
     name: string;
     emailVerified: boolean;
     hasAcceptedMarketing: boolean;
+    activated?: boolean;
     department?: string;
   }) {
     this.email = email;
@@ -32,6 +35,7 @@ export class CreateAdminUserCommand {
     this.name = name;
     this.emailVerified = emailVerified;
     this.hasAcceptedMarketing = hasAcceptedMarketing;
+    this.activated = activated ?? true;
     this.department = department;
   }
 }
