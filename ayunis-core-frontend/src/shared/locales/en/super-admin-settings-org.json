@@ -230,7 +230,17 @@
     "used": "Credits Used",
     "remaining": "Credits Remaining",
     "usageProgress": "Usage",
-    "error": "Failed to load credit usage data."
+    "error": "Failed to load credit usage data.",
+    "edit": "Edit",
+    "updateTitle": "Edit Monthly Credits",
+    "updateDescription": "Adjust the monthly credit budget for this organization. The new budget applies to the current billing month.",
+    "updateLabel": "Monthly credits",
+    "save": "Save",
+    "updateSuccess": "Monthly credits updated successfully",
+    "updateErrorSubscriptionNotFound": "Subscription not found",
+    "updateErrorInvalidType": "Monthly credits can only be set for usage-based subscriptions",
+    "updateErrorInvalidData": "Invalid monthly credits value",
+    "updateErrorUnexpected": "An unexpected error occurred"
   },
   "noSubscription": {
     "title": "No subscription yet",

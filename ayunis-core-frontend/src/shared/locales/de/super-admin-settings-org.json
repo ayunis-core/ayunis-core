@@ -230,7 +230,17 @@
     "used": "Verbrauchte Credits",
     "remaining": "Verbleibende Credits",
     "usageProgress": "Nutzung",
-    "error": "Credits-Nutzungsdaten konnten nicht geladen werden."
+    "error": "Credits-Nutzungsdaten konnten nicht geladen werden.",
+    "edit": "Bearbeiten",
+    "updateTitle": "Monatliche Credits bearbeiten",
+    "updateDescription": "Passen Sie das monatliche Credits-Budget für diese Organisation an. Das neue Budget gilt für den aktuellen Abrechnungsmonat.",
+    "updateLabel": "Monatliche Credits",
+    "save": "Speichern",
+    "updateSuccess": "Monatliche Credits erfolgreich aktualisiert",
+    "updateErrorSubscriptionNotFound": "Abonnement nicht gefunden",
+    "updateErrorInvalidType": "Monatliche Credits können nur für nutzungsbasierte Abonnements festgelegt werden",
+    "updateErrorInvalidData": "Ungültiger Wert für monatliche Credits",
+    "updateErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten"
   },
   "noSubscription": {
     "title": "Noch kein Abonnement",

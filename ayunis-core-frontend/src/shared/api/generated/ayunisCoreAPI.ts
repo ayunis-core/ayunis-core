@@ -170,6 +170,7 @@ import type {
   UpdateLanguageModelRequestDto,
   UpdateLetterheadDto,
   UpdateMcpIntegrationDto,
+  UpdateMonthlyCreditsDto,
   UpdatePasswordDto,
   UpdatePermittedModelDto,
   UpdateSeatsDto,
@@ -6135,6 +6136,71 @@ export const useSuperAdminSubscriptionsControllerUpdateSeats = <TError = void,
       > => {
 
       const mutationOptions = getSuperAdminSubscriptionsControllerUpdateSeatsMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Update monthly credits for an organization (super admin)
+ */
+export const superAdminSubscriptionsControllerUpdateMonthlyCredits = (
+    orgId: string,
+    updateMonthlyCreditsDto: UpdateMonthlyCreditsDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/subscriptions/${orgId}/monthly-credits`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateMonthlyCreditsDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSubscriptionsControllerUpdateMonthlyCreditsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateMonthlyCredits>>, TError,{orgId: string;data: UpdateMonthlyCreditsDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateMonthlyCredits>>, TError,{orgId: string;data: UpdateMonthlyCreditsDto}, TContext> => {
+
+const mutationKey = ['superAdminSubscriptionsControllerUpdateMonthlyCredits'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateMonthlyCredits>>, {orgId: string;data: UpdateMonthlyCreditsDto}> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminSubscriptionsControllerUpdateMonthlyCredits(orgId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSubscriptionsControllerUpdateMonthlyCreditsMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateMonthlyCredits>>>
+    export type SuperAdminSubscriptionsControllerUpdateMonthlyCreditsMutationBody = UpdateMonthlyCreditsDto
+    export type SuperAdminSubscriptionsControllerUpdateMonthlyCreditsMutationError = void
+
+    /**
+ * @summary Update monthly credits for an organization (super admin)
+ */
+export const useSuperAdminSubscriptionsControllerUpdateMonthlyCredits = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateMonthlyCredits>>, TError,{orgId: string;data: UpdateMonthlyCreditsDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateMonthlyCredits>>,
+        TError,
+        {orgId: string;data: UpdateMonthlyCreditsDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSubscriptionsControllerUpdateMonthlyCreditsMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

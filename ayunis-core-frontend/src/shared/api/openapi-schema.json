@@ -10,7 +10,9 @@
             "description": "Cloud deployment status",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/IsCloudResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/IsCloudResponseDto"
+                }
               }
             }
           }
@@ -23,7 +25,11 @@
       "get": {
         "operationId": "AppController_health",
         "parameters": [],
-        "responses": { "200": { "description": "Health status" } },
+        "responses": {
+          "200": {
+            "description": "Health status"
+          }
+        },
         "summary": "Check if the deployment is healthy",
         "tags": ["app"]
       }
@@ -66,7 +72,9 @@
               }
             }
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get all available language models",
         "tags": ["models"]
@@ -90,7 +98,9 @@
               }
             }
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get all available embedding models",
         "tags": ["models"]
@@ -114,7 +124,9 @@
               }
             }
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get all available image-generation models",
         "tags": ["models"]
@@ -158,9 +170,15 @@
           }
         },
         "responses": {
-          "201": { "description": "Successfully created a permitted model" },
-          "400": { "description": "Invalid model input" },
-          "500": { "description": "Internal server error" }
+          "201": {
+            "description": "Successfully created a permitted model"
+          },
+          "400": {
+            "description": "Invalid model input"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Create a permitted model",
         "tags": ["models"]
@@ -174,12 +192,18 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "Successfully deleted a permitted model" },
-          "401": { "description": "Unauthorized" }
+          "204": {
+            "description": "Successfully deleted a permitted model"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
         },
         "summary": "Delete a permitted model",
         "tags": ["models"]
@@ -191,7 +215,9 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -225,8 +251,12 @@
               }
             }
           },
-          "401": { "description": "Unauthorized" },
-          "404": { "description": "Permitted model not found" }
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Permitted model not found"
+          }
         },
         "summary": "Update a permitted model",
         "tags": ["models"]
@@ -251,7 +281,9 @@
               }
             }
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get effective permitted language models for the current user",
         "tags": ["models"]
@@ -276,7 +308,9 @@
               }
             }
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get org-level permitted language models (admin view)",
         "tags": ["models"]
@@ -291,7 +325,9 @@
             "name": "provider",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -305,8 +341,12 @@
               }
             }
           },
-          "404": { "description": "Model provider not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Model provider not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get model provider information",
         "tags": ["models"]
@@ -327,7 +367,9 @@
               }
             }
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Check if an embedding model is enabled for this org",
         "tags": ["models"]
@@ -349,7 +391,9 @@
               }
             }
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get the effective default model for the user",
         "tags": ["models"]
@@ -371,7 +415,9 @@
               }
             }
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get the organization default model",
         "tags": ["models"]
@@ -384,7 +430,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/SetOrgDefaultModelDto" }
+              "schema": {
+                "$ref": "#/components/schemas/SetOrgDefaultModelDto"
+              }
             }
           }
         },
@@ -399,8 +447,12 @@
               }
             }
           },
-          "400": { "description": "Invalid request payload" },
-          "404": { "description": "Permitted model not found" }
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "404": {
+            "description": "Permitted model not found"
+          }
         },
         "summary": "Set or update the organization default model",
         "tags": ["models"]
@@ -422,7 +474,9 @@
               }
             }
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get the user-specific default model",
         "tags": ["models"]
@@ -452,8 +506,12 @@
               }
             }
           },
-          "400": { "description": "Invalid request payload" },
-          "404": { "description": "Permitted model not found" }
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "404": {
+            "description": "Permitted model not found"
+          }
         },
         "summary": "Set or update the user default model",
         "tags": ["models"]
@@ -465,7 +523,9 @@
           "204": {
             "description": "Successfully deleted the user default model"
           },
-          "404": { "description": "User default model not found" }
+          "404": {
+            "description": "User default model not found"
+          }
         },
         "summary": "Delete the user default model",
         "tags": ["models"]
@@ -479,7 +539,9 @@
             "name": "teamId",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -496,7 +558,9 @@
               }
             }
           },
-          "404": { "description": "Team not found" }
+          "404": {
+            "description": "Team not found"
+          }
         },
         "summary": "List a team's permitted language models",
         "tags": ["team-permitted-models"]
@@ -509,7 +573,9 @@
             "name": "teamId",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -533,9 +599,15 @@
               }
             }
           },
-          "400": { "description": "Invalid input or model not org-permitted" },
-          "404": { "description": "Model not found" },
-          "409": { "description": "Model already permitted for this team" }
+          "400": {
+            "description": "Invalid input or model not org-permitted"
+          },
+          "404": {
+            "description": "Model not found"
+          },
+          "409": {
+            "description": "Model already permitted for this team"
+          }
         },
         "summary": "Add a permitted model to a team",
         "tags": ["team-permitted-models"]
@@ -549,20 +621,26 @@
             "name": "teamId",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "204": {
             "description": "Successfully removed permitted model from team"
           },
-          "404": { "description": "Permitted model not found" }
+          "404": {
+            "description": "Permitted model not found"
+          }
         },
         "summary": "Remove a permitted model from a team",
         "tags": ["team-permitted-models"]
@@ -577,7 +655,9 @@
             "name": "teamId",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -601,7 +681,9 @@
               }
             }
           },
-          "404": { "description": "Permitted model not found" }
+          "404": {
+            "description": "Permitted model not found"
+          }
         },
         "summary": "Set the team's default model",
         "tags": ["team-permitted-models"]
@@ -615,7 +697,10 @@
             "name": "orgId",
             "required": true,
             "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -632,8 +717,12 @@
               }
             }
           },
-          "401": { "description": "Not authorized as super admin" },
-          "500": { "description": "Internal server error" }
+          "401": {
+            "description": "Not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get all available language models",
         "tags": ["Super Admin Models"]
@@ -647,7 +736,10 @@
             "name": "orgId",
             "required": true,
             "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -664,8 +756,12 @@
               }
             }
           },
-          "401": { "description": "Not authorized as super admin" },
-          "500": { "description": "Internal server error" }
+          "401": {
+            "description": "Not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get all available embedding models",
         "tags": ["Super Admin Models"]
@@ -679,7 +775,10 @@
             "name": "orgId",
             "required": true,
             "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -696,8 +795,12 @@
               }
             }
           },
-          "401": { "description": "Not authorized as super admin" },
-          "500": { "description": "Internal server error" }
+          "401": {
+            "description": "Not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get all available image-generation models",
         "tags": ["Super Admin Models"]
@@ -724,7 +827,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/SetOrgDefaultModelDto" }
+              "schema": {
+                "$ref": "#/components/schemas/SetOrgDefaultModelDto"
+              }
             }
           }
         },
@@ -739,12 +844,18 @@
               }
             }
           },
-          "400": { "description": "Invalid request payload" },
+          "400": {
+            "description": "Invalid request payload"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "404": { "description": "Permitted model not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Permitted model not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Set or update the organization default model",
         "tags": ["Super Admin Models"]
@@ -794,7 +905,9 @@
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get all permitted models for a specific organization",
         "tags": ["Super Admin Models"]
@@ -826,15 +939,21 @@
           }
         },
         "responses": {
-          "201": { "description": "Successfully created permitted model" },
-          "400": { "description": "Invalid model input" },
+          "201": {
+            "description": "Successfully created permitted model"
+          },
+          "400": {
+            "description": "Invalid model input"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
           "409": {
             "description": "Model already permitted for this organization"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Create a permitted model for a specific organization",
         "tags": ["Super Admin Models"]
@@ -869,15 +988,21 @@
           }
         ],
         "responses": {
-          "204": { "description": "Successfully deleted permitted model" },
+          "204": {
+            "description": "Successfully deleted permitted model"
+          },
           "400": {
             "description": "Cannot delete the last permitted language model or default model"
           },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "404": { "description": "Permitted model not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Permitted model not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Delete a permitted model for a specific organization",
         "tags": ["Super Admin Models"]
@@ -940,12 +1065,18 @@
               }
             }
           },
-          "400": { "description": "Invalid update data provided" },
+          "400": {
+            "description": "Invalid update data provided"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "404": { "description": "Permitted model not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Permitted model not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Update a permitted model for a specific organization",
         "tags": ["Super Admin Models"]
@@ -983,7 +1114,9 @@
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get all models in the catalog",
         "tags": ["Super Admin Models"]
@@ -1013,7 +1146,9 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
-                    { "$ref": "#/components/schemas/LanguageModelResponseDto" },
+                    {
+                      "$ref": "#/components/schemas/LanguageModelResponseDto"
+                    },
                     {
                       "$ref": "#/components/schemas/EmbeddingModelResponseDto"
                     },
@@ -1028,8 +1163,12 @@
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "404": { "description": "Model not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Model not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get a model by ID from the catalog",
         "tags": ["Super Admin Models"]
@@ -1051,12 +1190,18 @@
           }
         ],
         "responses": {
-          "204": { "description": "Successfully deleted model" },
+          "204": {
+            "description": "Successfully deleted model"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "404": { "description": "Model not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Model not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Delete a model from the catalog",
         "tags": ["Super Admin Models"]
@@ -1088,12 +1233,18 @@
               }
             }
           },
-          "400": { "description": "Invalid model data provided" },
+          "400": {
+            "description": "Invalid model data provided"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "409": { "description": "Model already exists" },
-          "500": { "description": "Internal server error" }
+          "409": {
+            "description": "Model already exists"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Create a new language model in the catalog",
         "tags": ["Super Admin Models"]
@@ -1137,12 +1288,18 @@
               }
             }
           },
-          "400": { "description": "Invalid model data provided" },
+          "400": {
+            "description": "Invalid model data provided"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "404": { "description": "Model not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Model not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Update a language model in the catalog",
         "tags": ["Super Admin Models"]
@@ -1174,12 +1331,18 @@
               }
             }
           },
-          "400": { "description": "Invalid model data provided" },
+          "400": {
+            "description": "Invalid model data provided"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "409": { "description": "Model already exists" },
-          "500": { "description": "Internal server error" }
+          "409": {
+            "description": "Model already exists"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Create a new embedding model in the catalog",
         "tags": ["Super Admin Models"]
@@ -1223,12 +1386,18 @@
               }
             }
           },
-          "400": { "description": "Invalid model data provided" },
+          "400": {
+            "description": "Invalid model data provided"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "404": { "description": "Model not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Model not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Update an embedding model in the catalog",
         "tags": ["Super Admin Models"]
@@ -1260,12 +1429,18 @@
               }
             }
           },
-          "400": { "description": "Invalid model data provided" },
+          "400": {
+            "description": "Invalid model data provided"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "409": { "description": "Model already exists" },
-          "500": { "description": "Internal server error" }
+          "409": {
+            "description": "Model already exists"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Create a new image-generation model in the catalog",
         "tags": ["Super Admin Models"]
@@ -1309,12 +1484,18 @@
               }
             }
           },
-          "400": { "description": "Invalid model data provided" },
+          "400": {
+            "description": "Invalid model data provided"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "404": { "description": "Model not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Model not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Update an image-generation model in the catalog",
         "tags": ["Super Admin Models"]
@@ -1330,7 +1511,9 @@
           "description": "Organization information",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateOrgRequestDto" }
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrgRequestDto"
+              }
             }
           }
         },
@@ -1348,7 +1531,9 @@
           "400": {
             "description": "Invalid request format or validation errors."
           },
-          "403": { "description": "The requester is not a super admin." }
+          "403": {
+            "description": "The requester is not a super admin."
+          }
         },
         "summary": "Create a new organization",
         "tags": ["Super Admin Orgs"]
@@ -1362,21 +1547,32 @@
             "required": false,
             "in": "query",
             "description": "Search organizations by name.",
-            "schema": { "example": "Acme", "type": "string" }
+            "schema": {
+              "example": "Acme",
+              "type": "string"
+            }
           },
           {
             "name": "limit",
             "required": false,
             "in": "query",
             "description": "Maximum number of organizations to return (default: 50).",
-            "schema": { "default": 50, "example": 25, "type": "number" }
+            "schema": {
+              "default": 50,
+              "example": 25,
+              "type": "number"
+            }
           },
           {
             "name": "offset",
             "required": false,
             "in": "query",
             "description": "Number of organizations to skip (default: 0).",
-            "schema": { "default": 0, "example": 0, "type": "number" }
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
           }
         ],
         "responses": {
@@ -1390,7 +1586,9 @@
               }
             }
           },
-          "403": { "description": "The requester is not a super admin." }
+          "403": {
+            "description": "The requester is not a super admin."
+          }
         },
         "summary": "List all organizations",
         "tags": ["Super Admin Orgs"]
@@ -1406,7 +1604,9 @@
             "required": true,
             "in": "path",
             "description": "The ID of the organization to retrieve.",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1420,7 +1620,9 @@
               }
             }
           },
-          "403": { "description": "The requester is not a super admin." }
+          "403": {
+            "description": "The requester is not a super admin."
+          }
         },
         "summary": "Get an organization by ID",
         "tags": ["Super Admin Orgs"]
@@ -1436,21 +1638,32 @@
             "required": false,
             "in": "query",
             "description": "Search users by name or email",
-            "schema": { "example": "john", "type": "string" }
+            "schema": {
+              "example": "john",
+              "type": "string"
+            }
           },
           {
             "name": "limit",
             "required": false,
             "in": "query",
             "description": "Maximum number of users to return (default: 25)",
-            "schema": { "default": 25, "example": 25, "type": "number" }
+            "schema": {
+              "default": 25,
+              "example": 25,
+              "type": "number"
+            }
           },
           {
             "name": "offset",
             "required": false,
             "in": "query",
             "description": "Number of users to skip (default: 0)",
-            "schema": { "default": 0, "example": 0, "type": "number" }
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
           }
         ],
         "responses": {
@@ -1464,7 +1677,9 @@
               }
             }
           },
-          "401": { "description": "User not authenticated" },
+          "401": {
+            "description": "User not authenticated"
+          },
           "500": {
             "description": "Internal server error occurred while retrieving users"
           }
@@ -1495,7 +1710,9 @@
           "description": "New role information",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateUserRoleDto" }
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRoleDto"
+              }
             }
           }
         },
@@ -1504,15 +1721,21 @@
             "description": "User role successfully updated",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
               }
             }
           },
-          "400": { "description": "Invalid role value" },
+          "400": {
+            "description": "Invalid role value"
+          },
           "401": {
             "description": "User not authenticated or trying to update own role"
           },
-          "404": { "description": "User not found" },
+          "404": {
+            "description": "User not found"
+          },
           "500": {
             "description": "Internal server error occurred while updating user role"
           }
@@ -1531,7 +1754,9 @@
           "description": "New name information",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateUserNameDto" }
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserNameDto"
+              }
             }
           }
         },
@@ -1540,15 +1765,21 @@
             "description": "User name successfully updated",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
               }
             }
           },
-          "400": { "description": "Invalid name value" },
+          "400": {
+            "description": "Invalid name value"
+          },
           "401": {
             "description": "User not authenticated or not authorized to update this user"
           },
-          "404": { "description": "User not found" },
+          "404": {
+            "description": "User not found"
+          },
           "500": {
             "description": "Internal server error occurred while updating user name"
           }
@@ -1567,12 +1798,16 @@
           "description": "Password update information",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdatePasswordDto" }
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePasswordDto"
+              }
             }
           }
         },
         "responses": {
-          "204": { "description": "Password successfully updated" },
+          "204": {
+            "description": "Password successfully updated"
+          },
           "400": {
             "description": "Invalid password values or passwords do not match"
           },
@@ -1597,14 +1832,22 @@
           "description": "Email confirmation token",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/ConfirmEmailDto" }
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmEmailDto"
+              }
             }
           }
         },
         "responses": {
-          "204": { "description": "Email successfully confirmed" },
-          "400": { "description": "Invalid token or token has expired" },
-          "404": { "description": "User not found" },
+          "204": {
+            "description": "Email successfully confirmed"
+          },
+          "400": {
+            "description": "Invalid token or token has expired"
+          },
+          "404": {
+            "description": "User not found"
+          },
           "500": {
             "description": "Internal server error occurred while confirming email"
           }
@@ -1633,7 +1876,9 @@
           "204": {
             "description": "Confirmation email resent (or silently handled)"
           },
-          "400": { "description": "Invalid email format" },
+          "400": {
+            "description": "Invalid email format"
+          },
           "500": {
             "description": "Internal server error occurred while sending email"
           }
@@ -1660,9 +1905,15 @@
           }
         ],
         "responses": {
-          "204": { "description": "User successfully deleted" },
-          "401": { "description": "User not authenticated" },
-          "404": { "description": "User not found" },
+          "204": {
+            "description": "User successfully deleted"
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "404": {
+            "description": "User not found"
+          },
           "500": {
             "description": "Internal server error occurred while deleting user"
           }
@@ -1691,7 +1942,9 @@
           "description": "Fields to update (at least one of name or email)",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/AdminUpdateUserDto" }
+              "schema": {
+                "$ref": "#/components/schemas/AdminUpdateUserDto"
+              }
             }
           }
         },
@@ -1700,15 +1953,21 @@
             "description": "User successfully updated",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
               }
             }
           },
-          "400": { "description": "Invalid input or no fields to update" },
+          "400": {
+            "description": "Invalid input or no fields to update"
+          },
           "401": {
             "description": "User not authenticated, trying to edit own profile, or target user is in a different organization"
           },
-          "404": { "description": "User not found" },
+          "404": {
+            "description": "User not found"
+          },
           "500": {
             "description": "Internal server error occurred while updating user"
           }
@@ -1727,15 +1986,22 @@
             "required": true,
             "in": "path",
             "description": "User ID to send password reset email to",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "Password reset email sent successfully" },
+          "204": {
+            "description": "Password reset email sent successfully"
+          },
           "401": {
             "description": "Not authorized to reset this user's password"
           },
-          "404": { "description": "User not found" }
+          "404": {
+            "description": "User not found"
+          }
         },
         "summary": "Trigger password reset for a user",
         "tags": ["Users"]
@@ -1751,7 +2017,9 @@
           "description": "Email address to send reset link to",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/ForgotPasswordDto" }
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordDto"
+              }
             }
           }
         },
@@ -1780,16 +2048,22 @@
           "description": "Password reset information including token and new password",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/ResetPasswordDto" }
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
             }
           }
         },
         "responses": {
-          "204": { "description": "Password reset successful." },
+          "204": {
+            "description": "Password reset successful."
+          },
           "400": {
             "description": "Invalid request format, validation errors, or password requirements not met"
           },
-          "401": { "description": "Invalid or expired reset token" },
+          "401": {
+            "description": "Invalid or expired reset token"
+          },
           "500": {
             "description": "Internal server error while processing the request"
           }
@@ -1822,13 +2096,18 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "valid": { "type": "boolean", "example": true }
+                    "valid": {
+                      "type": "boolean",
+                      "example": true
+                    }
                   }
                 }
               }
             }
           },
-          "401": { "description": "Invalid or expired reset token" },
+          "401": {
+            "description": "Invalid or expired reset token"
+          },
           "500": {
             "description": "Internal server error while processing the request"
           }
@@ -1858,21 +2137,32 @@
             "required": false,
             "in": "query",
             "description": "Search users by name or email",
-            "schema": { "example": "john", "type": "string" }
+            "schema": {
+              "example": "john",
+              "type": "string"
+            }
           },
           {
             "name": "limit",
             "required": false,
             "in": "query",
             "description": "Maximum number of users to return (default: 25)",
-            "schema": { "default": 25, "example": 25, "type": "number" }
+            "schema": {
+              "default": 25,
+              "example": 25,
+              "type": "number"
+            }
           },
           {
             "name": "offset",
             "required": false,
             "in": "query",
             "description": "Number of users to skip (default: 0)",
-            "schema": { "default": 0, "example": 0, "type": "number" }
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
           }
         ],
         "responses": {
@@ -1889,7 +2179,9 @@
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "404": { "description": "Organization not found" },
+          "404": {
+            "description": "Organization not found"
+          },
           "500": {
             "description": "Internal server error occurred while retrieving users"
           }
@@ -1916,11 +2208,15 @@
           }
         ],
         "responses": {
-          "204": { "description": "User successfully deleted" },
+          "204": {
+            "description": "User successfully deleted"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "404": { "description": "User not found" },
+          "404": {
+            "description": "User not found"
+          },
           "500": {
             "description": "Internal server error occurred while deleting user"
           }
@@ -1960,7 +2256,9 @@
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "404": { "description": "User not found" },
+          "404": {
+            "description": "User not found"
+          },
           "500": {
             "description": "Internal server error occurred while sending password reset email"
           }
@@ -1991,7 +2289,9 @@
           "description": "User information",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateUserDto" }
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
             }
           }
         },
@@ -2000,7 +2300,9 @@
             "description": "User created successfully",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
               }
             }
           },
@@ -2010,7 +2312,9 @@
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "404": { "description": "Organization not found" },
+          "404": {
+            "description": "Organization not found"
+          },
           "500": {
             "description": "Internal server error occurred while creating user"
           }
@@ -2074,7 +2378,9 @@
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "404": { "description": "User with the given email not found" }
+          "404": {
+            "description": "User with the given email not found"
+          }
         },
         "summary": "Promote a user to super admin",
         "tags": ["Super Admin Management"]
@@ -2098,14 +2404,24 @@
           }
         ],
         "responses": {
-          "204": { "description": "Super admin status removed" },
+          "204": {
+            "description": "Super admin status removed"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "403": { "description": "Cannot remove your own super admin status" },
-          "404": { "description": "User not found" },
-          "409": { "description": "Cannot demote the last super admin" },
-          "422": { "description": "User is not a super admin" }
+          "403": {
+            "description": "Cannot remove your own super admin status"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "409": {
+            "description": "Cannot demote the last super admin"
+          },
+          "422": {
+            "description": "User is not a super admin"
+          }
         },
         "summary": "Remove super admin status from a user",
         "tags": ["Super Admin Management"]
@@ -2120,7 +2436,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateInviteDto" }
+              "schema": {
+                "$ref": "#/components/schemas/CreateInviteDto"
+              }
             }
           }
         },
@@ -2135,8 +2453,12 @@
               }
             }
           },
-          "400": { "description": "Invalid invite data" },
-          "500": { "description": "Internal server error" }
+          "400": {
+            "description": "Invalid invite data"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Create a new invite",
         "tags": ["invites"]
@@ -2150,21 +2472,32 @@
             "required": false,
             "in": "query",
             "description": "Search invites by email",
-            "schema": { "example": "john@example.com", "type": "string" }
+            "schema": {
+              "example": "john@example.com",
+              "type": "string"
+            }
           },
           {
             "name": "limit",
             "required": false,
             "in": "query",
             "description": "Maximum number of invites to return (default: 25)",
-            "schema": { "default": 25, "example": 25, "type": "number" }
+            "schema": {
+              "default": 25,
+              "example": 25,
+              "type": "number"
+            }
           },
           {
             "name": "offset",
             "required": false,
             "in": "query",
             "description": "Number of invites to skip (default: 0)",
-            "schema": { "default": 0, "example": 0, "type": "number" }
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
           }
         ],
         "responses": {
@@ -2178,7 +2511,9 @@
               }
             }
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get all invites for current user's organization",
         "tags": ["invites"]
@@ -2193,7 +2528,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateBulkInvitesDto" }
+              "schema": {
+                "$ref": "#/components/schemas/CreateBulkInvitesDto"
+              }
             }
           }
         },
@@ -2208,8 +2545,12 @@
               }
             }
           },
-          "400": { "description": "Validation failed for one or more invites" },
-          "500": { "description": "Internal server error" }
+          "400": {
+            "description": "Validation failed for one or more invites"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Create multiple invites in bulk",
         "tags": ["invites"]
@@ -2225,7 +2566,10 @@
             "required": true,
             "in": "path",
             "description": "Token of the invited user",
-            "schema": { "example": "1234567890", "type": "string" }
+            "schema": {
+              "example": "1234567890",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2239,8 +2583,12 @@
               }
             }
           },
-          "404": { "description": "Invite not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Invite not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get a single invite by token",
         "tags": ["invites"]
@@ -2255,7 +2603,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/AcceptInviteDto" }
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInviteDto"
+              }
             }
           }
         },
@@ -2273,8 +2623,12 @@
           "400": {
             "description": "Invalid invite token or invite already accepted/expired"
           },
-          "404": { "description": "Invite not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Invite not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Accept an invite",
         "tags": ["invites"]
@@ -2290,7 +2644,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the expired invite to resend",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2307,8 +2664,12 @@
           "400": {
             "description": "Invite has not expired yet or invalid data"
           },
-          "404": { "description": "Invite not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Invite not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Resend an expired invite",
         "tags": ["invites"]
@@ -2330,8 +2691,12 @@
               }
             }
           },
-          "403": { "description": "Unauthorized - Admin role required" },
-          "500": { "description": "Internal server error" }
+          "403": {
+            "description": "Unauthorized - Admin role required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Delete all pending invites",
         "tags": ["invites"]
@@ -2347,14 +2712,25 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the invite to delete",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "The invite has been successfully deleted" },
-          "403": { "description": "Unauthorized to delete this invite" },
-          "404": { "description": "Invite not found" },
-          "500": { "description": "Internal server error" }
+          "204": {
+            "description": "The invite has been successfully deleted"
+          },
+          "403": {
+            "description": "Unauthorized to delete this invite"
+          },
+          "404": {
+            "description": "Invite not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Delete an invite",
         "tags": ["invites"]
@@ -2375,7 +2751,9 @@
               }
             }
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Check if the current organization has an active subscription",
         "tags": ["subscriptions"]
@@ -2390,12 +2768,18 @@
             "description": "Successfully retrieved current price",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/PriceResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/PriceResponseDto"
+                }
               }
             }
           },
-          "404": { "description": "Price not configured" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Price not configured"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get the current price per seat monthly",
         "tags": ["subscriptions"]
@@ -2432,7 +2816,9 @@
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get subscription details for a specific organization",
         "tags": ["Super Admin Subscriptions"]
@@ -2474,14 +2860,18 @@
               }
             }
           },
-          "400": { "description": "Invalid subscription data provided" },
+          "400": {
+            "description": "Invalid subscription data provided"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
           "409": {
             "description": "Subscription already exists for this organization"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Create a new subscription for a specific organization",
         "tags": ["Super Admin Subscriptions"]
@@ -2503,15 +2893,21 @@
           }
         ],
         "responses": {
-          "204": { "description": "Successfully cancelled subscription" },
+          "204": {
+            "description": "Successfully cancelled subscription"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
           "404": {
             "description": "No subscription found for the organization"
           },
-          "409": { "description": "Subscription is already cancelled" },
-          "500": { "description": "Internal server error" }
+          "409": {
+            "description": "Subscription is already cancelled"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Cancel the subscription for a specific organization",
         "tags": ["Super Admin Subscriptions"]
@@ -2538,22 +2934,74 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateSeatsDto" }
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSeatsDto"
+              }
             }
           }
         },
         "responses": {
-          "204": { "description": "Successfully updated seats" },
-          "400": { "description": "Invalid seat update data provided" },
+          "204": {
+            "description": "Successfully updated seats"
+          },
+          "400": {
+            "description": "Invalid seat update data provided"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
           "404": {
             "description": "No subscription found for the organization"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Update the number of seats for a specific organization",
+        "tags": ["Super Admin Subscriptions"]
+      }
+    },
+    "/super-admin/subscriptions/{orgId}/monthly-credits": {
+      "put": {
+        "operationId": "SuperAdminSubscriptionsController_updateMonthlyCredits",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to update monthly credits for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMonthlyCreditsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated monthly credits"
+          },
+          "400": {
+            "description": "Invalid monthly credits provided or subscription is not usage-based"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "No subscription found for the organization"
+          }
+        },
+        "summary": "Update monthly credits for an organization (super admin)",
         "tags": ["Super Admin Subscriptions"]
       }
     },
@@ -2578,20 +3026,28 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateBillingInfoDto" }
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBillingInfoDto"
+              }
             }
           }
         },
         "responses": {
-          "204": { "description": "Successfully updated billing information" },
-          "400": { "description": "Invalid billing information provided" },
+          "204": {
+            "description": "Successfully updated billing information"
+          },
+          "400": {
+            "description": "Invalid billing information provided"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
           "404": {
             "description": "No subscription found for the organization"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Update the billing information for a specific organization",
         "tags": ["Super Admin Subscriptions"]
@@ -2618,7 +3074,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateStartDateDto" }
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStartDateDto"
+              }
             }
           }
         },
@@ -2626,14 +3084,18 @@
           "204": {
             "description": "Successfully updated subscription start date"
           },
-          "400": { "description": "Invalid start date provided" },
+          "400": {
+            "description": "Invalid start date provided"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
           "404": {
             "description": "No subscription found for the organization"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Update the start date for a specific organization subscription",
         "tags": ["Super Admin Subscriptions"]
@@ -2657,15 +3119,21 @@
           }
         ],
         "responses": {
-          "204": { "description": "Successfully uncancelled subscription" },
+          "204": {
+            "description": "Successfully uncancelled subscription"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
           "404": {
             "description": "No subscription found for the organization"
           },
-          "409": { "description": "Subscription is not cancelled" },
-          "500": { "description": "Internal server error" }
+          "409": {
+            "description": "Subscription is not cancelled"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Uncancel the subscription for a specific organization",
         "tags": ["Super Admin Subscriptions"]
@@ -2682,14 +3150,22 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/TeamResponseDto" }
+                  "items": {
+                    "$ref": "#/components/schemas/TeamResponseDto"
+                  }
                 }
               }
             }
           },
-          "401": { "description": "User is not authenticated" },
-          "403": { "description": "User is not authorized to view teams" },
-          "500": { "description": "Internal server error" }
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to view teams"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "List all teams for the current organization",
         "tags": ["teams"]
@@ -2701,7 +3177,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateTeamDto" }
+              "schema": {
+                "$ref": "#/components/schemas/CreateTeamDto"
+              }
             }
           }
         },
@@ -2710,17 +3188,27 @@
             "description": "Successfully created team",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TeamResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/TeamResponseDto"
+                }
               }
             }
           },
-          "400": { "description": "Invalid team data provided" },
-          "401": { "description": "User is not authenticated" },
-          "403": { "description": "User is not authorized to create teams" },
+          "400": {
+            "description": "Invalid team data provided"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to create teams"
+          },
           "409": {
             "description": "Team with this name already exists in the organization"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Create a new team for the current organization",
         "tags": ["teams"]
@@ -2737,13 +3225,19 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/TeamResponseDto" }
+                  "items": {
+                    "$ref": "#/components/schemas/TeamResponseDto"
+                  }
                 }
               }
             }
           },
-          "401": { "description": "User is not authenticated" },
-          "500": { "description": "Internal server error" }
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "List teams the current user is a member of",
         "tags": ["teams"]
@@ -2757,7 +3251,9 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2765,14 +3261,24 @@
             "description": "Successfully retrieved team",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TeamResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/TeamResponseDto"
+                }
               }
             }
           },
-          "401": { "description": "User is not authenticated" },
-          "403": { "description": "User is not authorized to view teams" },
-          "404": { "description": "Team not found" },
-          "500": { "description": "Internal server error" }
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to view teams"
+          },
+          "404": {
+            "description": "Team not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get a team by ID",
         "tags": ["teams"]
@@ -2784,14 +3290,18 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateTeamDto" }
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTeamDto"
+              }
             }
           }
         },
@@ -2800,18 +3310,30 @@
             "description": "Successfully updated team",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TeamResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/TeamResponseDto"
+                }
               }
             }
           },
-          "400": { "description": "Invalid team data provided" },
-          "401": { "description": "User is not authenticated" },
-          "403": { "description": "User is not authorized to update teams" },
-          "404": { "description": "Team not found" },
+          "400": {
+            "description": "Invalid team data provided"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to update teams"
+          },
+          "404": {
+            "description": "Team not found"
+          },
           "409": {
             "description": "Team with this name already exists in the organization"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Update a team in the current organization",
         "tags": ["teams"]
@@ -2823,15 +3345,27 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "Team successfully deleted" },
-          "401": { "description": "User is not authenticated" },
-          "403": { "description": "User is not authorized to delete teams" },
-          "404": { "description": "Team not found" },
-          "500": { "description": "Internal server error" }
+          "204": {
+            "description": "Team successfully deleted"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to delete teams"
+          },
+          "404": {
+            "description": "Team not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Delete a team from the current organization",
         "tags": ["teams"]
@@ -2845,21 +3379,31 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "limit",
             "required": false,
             "in": "query",
             "description": "Maximum number of items per page",
-            "schema": { "default": 50, "example": 50, "type": "number" }
+            "schema": {
+              "default": 50,
+              "example": 50,
+              "type": "number"
+            }
           },
           {
             "name": "offset",
             "required": false,
             "in": "query",
             "description": "Number of items to skip",
-            "schema": { "default": 0, "example": 0, "type": "number" }
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
           }
         ],
         "responses": {
@@ -2873,12 +3417,18 @@
               }
             }
           },
-          "401": { "description": "User is not authenticated" },
+          "401": {
+            "description": "User is not authenticated"
+          },
           "403": {
             "description": "User is not authorized to view team members"
           },
-          "404": { "description": "Team not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Team not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "List members of a team",
         "tags": ["teams"]
@@ -2890,14 +3440,18 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/AddTeamMemberDto" }
+              "schema": {
+                "$ref": "#/components/schemas/AddTeamMemberDto"
+              }
             }
           }
         },
@@ -2915,13 +3469,21 @@
           "400": {
             "description": "Invalid data provided or user not in same organization"
           },
-          "401": { "description": "User is not authenticated" },
+          "401": {
+            "description": "User is not authenticated"
+          },
           "403": {
             "description": "User is not authorized to add team members"
           },
-          "404": { "description": "Team or user not found" },
-          "409": { "description": "User is already a member of the team" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Team or user not found"
+          },
+          "409": {
+            "description": "User is already a member of the team"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Add a user to a team",
         "tags": ["teams"]
@@ -2935,25 +3497,35 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "userId",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "User successfully removed from team" },
-          "401": { "description": "User is not authenticated" },
+          "204": {
+            "description": "User successfully removed from team"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
           "403": {
             "description": "User is not authorized to remove team members"
           },
           "404": {
             "description": "Team not found or user is not a member of the team"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Remove a user from a team",
         "tags": ["teams"]
@@ -2993,7 +3565,9 @@
               }
             }
           },
-          "400": { "description": "No file provided or invalid request" }
+          "400": {
+            "description": "No file provided or invalid request"
+          }
         },
         "summary": "Upload a file to object storage",
         "tags": ["storage"]
@@ -3008,10 +3582,16 @@
             "required": true,
             "in": "path",
             "description": "Name of the object to retrieve",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
-        "responses": { "200": { "description": "" } },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
         "tags": ["storage"]
       },
       "delete": {
@@ -3022,10 +3602,16 @@
             "required": true,
             "in": "path",
             "description": "Name of the object to delete",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
-        "responses": { "200": { "description": "" } },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
         "tags": ["storage"]
       }
     },
@@ -3038,10 +3624,16 @@
             "required": true,
             "in": "path",
             "description": "Name of the object to get URL for",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
-        "responses": { "200": { "description": "" } },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
         "tags": ["storage"]
       }
     },
@@ -3087,10 +3679,18 @@
           "400": {
             "description": "Invalid request or unsupported audio format"
           },
-          "401": { "description": "Unauthorized" },
-          "500": { "description": "Transcription failed" }
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Transcription failed"
+          }
         },
-        "security": [{ "bearer": [] }],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Transcribe audio file to text",
         "tags": ["transcriptions"]
       }
@@ -3103,7 +3703,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/RetrieveUrlDto" }
+              "schema": {
+                "$ref": "#/components/schemas/RetrieveUrlDto"
+              }
             }
           }
         },
@@ -3124,7 +3726,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateThreadDto" }
+              "schema": {
+                "$ref": "#/components/schemas/CreateThreadDto"
+              }
             }
           }
         },
@@ -3139,8 +3743,12 @@
               }
             }
           },
-          "400": { "description": "Invalid model data" },
-          "500": { "description": "Internal server error" }
+          "400": {
+            "description": "Invalid model data"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Create a new thread",
         "tags": ["threads"]
@@ -3153,21 +3761,28 @@
             "required": false,
             "in": "query",
             "description": "Search threads by title",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "limit",
             "required": false,
             "in": "query",
             "description": "Maximum number of threads to return (default: 50)",
-            "schema": { "type": "number" }
+            "schema": {
+              "type": "number"
+            }
           },
           {
             "name": "offset",
             "required": false,
             "in": "query",
             "description": "Number of threads to skip (default: 0)",
-            "schema": { "default": 0, "type": "number" }
+            "schema": {
+              "default": 0,
+              "type": "number"
+            }
           }
         ],
         "responses": {
@@ -3181,7 +3796,9 @@
               }
             }
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get all threads for the current user",
         "tags": ["threads"]
@@ -3196,7 +3813,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the thread to retrieve",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -3210,8 +3830,12 @@
               }
             }
           },
-          "404": { "description": "Thread not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Thread not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get a thread by ID",
         "tags": ["threads"]
@@ -3224,13 +3848,22 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the thread to delete",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "The thread has been successfully deleted" },
-          "404": { "description": "Thread not found" },
-          "500": { "description": "Internal server error" }
+          "204": {
+            "description": "The thread has been successfully deleted"
+          },
+          "404": {
+            "description": "Thread not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Delete a thread",
         "tags": ["threads"]
@@ -3245,14 +3878,19 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the thread to update",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateThreadTitleDto" }
+              "schema": {
+                "$ref": "#/components/schemas/UpdateThreadTitleDto"
+              }
             }
           }
         },
@@ -3260,9 +3898,15 @@
           "204": {
             "description": "The thread title has been successfully updated"
           },
-          "400": { "description": "Invalid title data" },
-          "404": { "description": "Thread not found" },
-          "500": { "description": "Internal server error" }
+          "400": {
+            "description": "Invalid title data"
+          },
+          "404": {
+            "description": "Thread not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Update a thread title",
         "tags": ["threads"]
@@ -3277,7 +3921,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the thread",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -3289,8 +3936,12 @@
                   "type": "array",
                   "items": {
                     "oneOf": [
-                      { "$ref": "#/components/schemas/FileSourceResponseDto" },
-                      { "$ref": "#/components/schemas/UrlSourceResponseDto" },
+                      {
+                        "$ref": "#/components/schemas/FileSourceResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/UrlSourceResponseDto"
+                      },
                       {
                         "$ref": "#/components/schemas/CSVDataSourceResponseDto"
                       }
@@ -3300,8 +3951,12 @@
               }
             }
           },
-          "404": { "description": "Thread not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Thread not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get all sources for a thread",
         "tags": ["threads"]
@@ -3316,7 +3971,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the thread",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -3346,8 +4004,12 @@
                   "type": "array",
                   "items": {
                     "oneOf": [
-                      { "$ref": "#/components/schemas/FileSourceResponseDto" },
-                      { "$ref": "#/components/schemas/UrlSourceResponseDto" },
+                      {
+                        "$ref": "#/components/schemas/FileSourceResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/UrlSourceResponseDto"
+                      },
                       {
                         "$ref": "#/components/schemas/CSVDataSourceResponseDto"
                       }
@@ -3357,7 +4019,9 @@
               }
             }
           },
-          "413": { "description": "File exceeds the 25 MB upload limit" }
+          "413": {
+            "description": "File exceeds the 25 MB upload limit"
+          }
         },
         "summary": "Add a file source to a thread",
         "tags": ["threads"]
@@ -3372,21 +4036,29 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the thread",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "sourceId",
             "required": true,
             "in": "path",
             "description": "The UUID of the source to remove",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "204": {
             "description": "The source has been successfully removed from the thread"
           },
-          "404": { "description": "Thread or source not found" }
+          "404": {
+            "description": "Thread or source not found"
+          }
         },
         "summary": "Remove a source from a thread",
         "tags": ["threads"]
@@ -3401,25 +4073,40 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the thread",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "sourceId",
             "required": true,
             "in": "path",
             "description": "The UUID of the source to download",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
             "description": "Returns the source as a CSV file",
             "content": {
-              "text/csv": { "schema": { "type": "string", "format": "binary" } }
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
             }
           },
-          "400": { "description": "Source is not a CSV data source" },
-          "404": { "description": "Thread or source not found" }
+          "400": {
+            "description": "Source is not a CSV data source"
+          },
+          "404": {
+            "description": "Thread or source not found"
+          }
         },
         "summary": "Download a data source as CSV",
         "tags": ["threads"]
@@ -3434,21 +4121,29 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the thread",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "knowledgeBaseId",
             "required": true,
             "in": "path",
             "description": "The UUID of the knowledge base to add",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "204": {
             "description": "The knowledge base has been successfully added to the thread"
           },
-          "404": { "description": "Thread or knowledge base not found" }
+          "404": {
+            "description": "Thread or knowledge base not found"
+          }
         },
         "summary": "Add a knowledge base to a thread",
         "tags": ["threads"]
@@ -3461,21 +4156,29 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the thread",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "knowledgeBaseId",
             "required": true,
             "in": "path",
             "description": "The UUID of the knowledge base to remove",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "204": {
             "description": "The knowledge base has been successfully removed from the thread"
           },
-          "404": { "description": "Thread not found" }
+          "404": {
+            "description": "Thread not found"
+          }
         },
         "summary": "Remove a knowledge base from a thread",
         "tags": ["threads"]
@@ -3489,13 +4192,19 @@
             "name": "threadId",
             "required": true,
             "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "imageId",
             "required": true,
             "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -3509,7 +4218,9 @@
               }
             }
           },
-          "404": { "description": "Thread or image not found" }
+          "404": {
+            "description": "Thread or image not found"
+          }
         },
         "summary": "Get presigned URL for a generated image",
         "tags": ["threads"]
@@ -3540,7 +4251,9 @@
               }
             }
           },
-          "400": { "description": "Invalid input data" }
+          "400": {
+            "description": "Invalid input data"
+          }
         },
         "summary": "Create a new knowledge base",
         "tags": ["knowledge-bases"]
@@ -3573,7 +4286,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the knowledge base",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -3587,7 +4303,9 @@
               }
             }
           },
-          "404": { "description": "Knowledge base not found" }
+          "404": {
+            "description": "Knowledge base not found"
+          }
         },
         "summary": "Get a knowledge base by ID",
         "tags": ["knowledge-bases"]
@@ -3600,7 +4318,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the knowledge base to update",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -3624,8 +4345,12 @@
               }
             }
           },
-          "400": { "description": "Invalid input data" },
-          "404": { "description": "Knowledge base not found" }
+          "400": {
+            "description": "Invalid input data"
+          },
+          "404": {
+            "description": "Knowledge base not found"
+          }
         },
         "summary": "Update a knowledge base",
         "tags": ["knowledge-bases"]
@@ -3638,14 +4363,19 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the knowledge base to delete",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "204": {
             "description": "The knowledge base has been successfully deleted"
           },
-          "404": { "description": "Knowledge base not found" }
+          "404": {
+            "description": "Knowledge base not found"
+          }
         },
         "summary": "Delete a knowledge base",
         "tags": ["knowledge-bases"]
@@ -3660,7 +4390,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the knowledge base",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -3674,7 +4407,9 @@
               }
             }
           },
-          "404": { "description": "Knowledge base not found" }
+          "404": {
+            "description": "Knowledge base not found"
+          }
         },
         "summary": "List all documents in a knowledge base",
         "tags": ["knowledge-bases"]
@@ -3687,7 +4422,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the knowledge base",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -3719,8 +4457,12 @@
               }
             }
           },
-          "404": { "description": "Knowledge base not found" },
-          "413": { "description": "File exceeds the 25 MB upload limit" }
+          "404": {
+            "description": "Knowledge base not found"
+          },
+          "413": {
+            "description": "File exceeds the 25 MB upload limit"
+          }
         },
         "summary": "Add a document to a knowledge base",
         "tags": ["knowledge-bases"]
@@ -3735,7 +4477,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the knowledge base",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -3759,7 +4504,9 @@
               }
             }
           },
-          "404": { "description": "Knowledge base not found" }
+          "404": {
+            "description": "Knowledge base not found"
+          }
         },
         "summary": "Add a URL source to a knowledge base",
         "tags": ["knowledge-bases"]
@@ -3774,21 +4521,29 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the knowledge base",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "documentId",
             "required": true,
             "in": "path",
             "description": "The UUID of the document to remove",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "204": {
             "description": "The document has been removed from the knowledge base"
           },
-          "404": { "description": "Knowledge base or document not found" }
+          "404": {
+            "description": "Knowledge base or document not found"
+          }
         },
         "summary": "Remove a document from a knowledge base",
         "tags": ["knowledge-bases"]
@@ -3803,7 +4558,9 @@
           "description": "Skill share creation data",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateSkillShareDto" }
+              "schema": {
+                "$ref": "#/components/schemas/CreateSkillShareDto"
+              }
             }
           }
         },
@@ -3812,13 +4569,21 @@
             "description": "Share created successfully",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ShareResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ShareResponseDto"
+                }
               }
             }
           },
-          "400": { "description": "Invalid request data" },
-          "401": { "description": "User not authenticated" },
-          "403": { "description": "User cannot create share for this skill" }
+          "400": {
+            "description": "Invalid request data"
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "403": {
+            "description": "User cannot create share for this skill"
+          }
         },
         "summary": "Create a share for a skill",
         "tags": ["shares"]
@@ -3844,12 +4609,18 @@
             "description": "Share created successfully",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ShareResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ShareResponseDto"
+                }
               }
             }
           },
-          "400": { "description": "Invalid request data" },
-          "401": { "description": "User not authenticated" },
+          "400": {
+            "description": "Invalid request data"
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
           "403": {
             "description": "User cannot create share for this knowledge base"
           }
@@ -3867,7 +4638,10 @@
             "required": true,
             "in": "query",
             "description": "ID of the entity to get shares for",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "entityType",
@@ -3887,14 +4661,22 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/ShareResponseDto" }
+                  "items": {
+                    "$ref": "#/components/schemas/ShareResponseDto"
+                  }
                 }
               }
             }
           },
-          "401": { "description": "User not authenticated" },
-          "403": { "description": "User cannot view shares for this entity" },
-          "500": { "description": "Internal server error" }
+          "401": {
+            "description": "User not authenticated"
+          },
+          "403": {
+            "description": "User cannot view shares for this entity"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get shares for an entity",
         "tags": ["shares"]
@@ -3909,14 +4691,25 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the share to delete",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "The share has been successfully deleted" },
-          "401": { "description": "Unauthorized" },
-          "404": { "description": "Share not found" },
-          "500": { "description": "Internal server error" }
+          "204": {
+            "description": "The share has been successfully deleted"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Share not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Delete a share",
         "tags": ["shares"]
@@ -3941,11 +4734,15 @@
             "description": "The skill has been successfully installed from the marketplace",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SkillResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
               }
             }
           },
-          "404": { "description": "Marketplace skill not found" }
+          "404": {
+            "description": "Marketplace skill not found"
+          }
         },
         "summary": "Install a skill from the marketplace",
         "tags": ["skills"]
@@ -3959,7 +4756,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateSkillDto" }
+              "schema": {
+                "$ref": "#/components/schemas/CreateSkillDto"
+              }
             }
           }
         },
@@ -3968,12 +4767,18 @@
             "description": "The skill has been successfully created",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SkillResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
               }
             }
           },
-          "400": { "description": "Invalid skill data" },
-          "409": { "description": "A skill with this name already exists" }
+          "400": {
+            "description": "Invalid skill data"
+          },
+          "409": {
+            "description": "A skill with this name already exists"
+          }
         },
         "summary": "Create a new skill",
         "tags": ["skills"]
@@ -3988,7 +4793,9 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/SkillResponseDto" }
+                  "items": {
+                    "$ref": "#/components/schemas/SkillResponseDto"
+                  }
                 }
               }
             }
@@ -4007,7 +4814,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the skill to retrieve",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4015,11 +4825,15 @@
             "description": "Returns the skill with the specified ID",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SkillResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
               }
             }
           },
-          "404": { "description": "Skill not found" }
+          "404": {
+            "description": "Skill not found"
+          }
         },
         "summary": "Get a skill by ID",
         "tags": ["skills"]
@@ -4032,14 +4846,19 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the skill to update",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateSkillDto" }
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSkillDto"
+              }
             }
           }
         },
@@ -4048,13 +4867,21 @@
             "description": "The skill has been successfully updated",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SkillResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
               }
             }
           },
-          "400": { "description": "Invalid skill data" },
-          "404": { "description": "Skill not found" },
-          "409": { "description": "A skill with this name already exists" }
+          "400": {
+            "description": "Invalid skill data"
+          },
+          "404": {
+            "description": "Skill not found"
+          },
+          "409": {
+            "description": "A skill with this name already exists"
+          }
         },
         "summary": "Update a skill",
         "tags": ["skills"]
@@ -4067,12 +4894,19 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the skill to delete",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "The skill has been successfully deleted" },
-          "404": { "description": "Skill not found" }
+          "204": {
+            "description": "The skill has been successfully deleted"
+          },
+          "404": {
+            "description": "Skill not found"
+          }
         },
         "summary": "Delete a skill",
         "tags": ["skills"]
@@ -4087,7 +4921,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the skill to toggle",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4095,11 +4932,15 @@
             "description": "The skill active status has been toggled",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SkillResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
               }
             }
           },
-          "404": { "description": "Skill not found" }
+          "404": {
+            "description": "Skill not found"
+          }
         },
         "summary": "Toggle skill active/inactive status",
         "tags": ["skills"]
@@ -4114,7 +4955,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the skill to toggle pinned status",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4122,12 +4966,18 @@
             "description": "The skill pinned status has been toggled",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SkillResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
               }
             }
           },
-          "400": { "description": "Skill is not active" },
-          "404": { "description": "Skill not found" }
+          "400": {
+            "description": "Skill is not active"
+          },
+          "404": {
+            "description": "Skill not found"
+          }
         },
         "summary": "Toggle skill pinned/unpinned status",
         "tags": ["skills"]
@@ -4142,7 +4992,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the skill",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4159,7 +5012,9 @@
               }
             }
           },
-          "404": { "description": "Skill not found" }
+          "404": {
+            "description": "Skill not found"
+          }
         },
         "summary": "Get all sources for a skill",
         "tags": ["skills"]
@@ -4174,7 +5029,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the skill",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -4200,13 +5058,21 @@
             "description": "The file source has been successfully added to the skill",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SkillResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
               }
             }
           },
-          "400": { "description": "Invalid or unsupported file type" },
-          "404": { "description": "Skill not found" },
-          "413": { "description": "File exceeds the 25 MB upload limit" }
+          "400": {
+            "description": "Invalid or unsupported file type"
+          },
+          "404": {
+            "description": "Skill not found"
+          },
+          "413": {
+            "description": "File exceeds the 25 MB upload limit"
+          }
         },
         "summary": "Add a file source to a skill",
         "tags": ["skills"]
@@ -4221,21 +5087,29 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the skill",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "sourceId",
             "required": true,
             "in": "path",
             "description": "The UUID of the source to remove",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "204": {
             "description": "The source has been successfully removed from the skill"
           },
-          "404": { "description": "Skill or source not found" }
+          "404": {
+            "description": "Skill or source not found"
+          }
         },
         "summary": "Remove a source from a skill",
         "tags": ["skills"]
@@ -4250,14 +5124,20 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the skill",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "integrationId",
             "required": true,
             "in": "path",
             "description": "The UUID of the MCP integration to assign",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4265,12 +5145,18 @@
             "description": "The MCP integration has been successfully assigned",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SkillResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
               }
             }
           },
-          "404": { "description": "Skill or integration not found" },
-          "409": { "description": "Integration already assigned" }
+          "404": {
+            "description": "Skill or integration not found"
+          },
+          "409": {
+            "description": "Integration already assigned"
+          }
         },
         "summary": "Assign MCP integration to skill",
         "tags": ["skills"]
@@ -4283,14 +5169,20 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the skill",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "integrationId",
             "required": true,
             "in": "path",
             "description": "The UUID of the MCP integration to unassign",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4298,7 +5190,9 @@
             "description": "The MCP integration has been successfully unassigned",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SkillResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
               }
             }
           },
@@ -4319,7 +5213,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the skill",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4336,7 +5233,9 @@
               }
             }
           },
-          "404": { "description": "Skill not found" }
+          "404": {
+            "description": "Skill not found"
+          }
         },
         "summary": "List MCP integrations assigned to skill",
         "tags": ["skills"]
@@ -4351,14 +5250,20 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the skill",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "knowledgeBaseId",
             "required": true,
             "in": "path",
             "description": "The UUID of the knowledge base to assign",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4366,12 +5271,18 @@
             "description": "The knowledge base has been successfully assigned",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SkillResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
               }
             }
           },
-          "404": { "description": "Skill or knowledge base not found" },
-          "409": { "description": "Knowledge base already assigned" }
+          "404": {
+            "description": "Skill or knowledge base not found"
+          },
+          "409": {
+            "description": "Knowledge base already assigned"
+          }
         },
         "summary": "Assign knowledge base to skill",
         "tags": ["skills"]
@@ -4384,14 +5295,20 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the skill",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "knowledgeBaseId",
             "required": true,
             "in": "path",
             "description": "The UUID of the knowledge base to unassign",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4399,7 +5316,9 @@
             "description": "The knowledge base has been successfully unassigned",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SkillResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
               }
             }
           },
@@ -4420,7 +5339,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the skill",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4437,7 +5359,9 @@
               }
             }
           },
-          "404": { "description": "Skill not found" }
+          "404": {
+            "description": "Skill not found"
+          }
         },
         "summary": "List knowledge bases assigned to skill",
         "tags": ["skills"]
@@ -4468,8 +5392,12 @@
               }
             }
           },
-          "400": { "description": "Invalid slug or missing required fields" },
-          "404": { "description": "Predefined integration slug not found" }
+          "400": {
+            "description": "Invalid slug or missing required fields"
+          },
+          "404": {
+            "description": "Predefined integration slug not found"
+          }
         },
         "summary": "Create a new predefined MCP integration",
         "tags": ["mcp-integrations"]
@@ -4500,7 +5428,9 @@
               }
             }
           },
-          "400": { "description": "Invalid data" }
+          "400": {
+            "description": "Invalid data"
+          }
         },
         "summary": "Create a new custom MCP integration",
         "tags": ["mcp-integrations"]
@@ -4583,7 +5513,10 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4597,7 +5530,9 @@
               }
             }
           },
-          "404": { "description": "Integration not found" }
+          "404": {
+            "description": "Integration not found"
+          }
         },
         "summary": "Get MCP integration by ID",
         "tags": ["mcp-integrations"]
@@ -4609,7 +5544,10 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -4633,8 +5571,12 @@
               }
             }
           },
-          "400": { "description": "Invalid data" },
-          "404": { "description": "Integration not found" }
+          "400": {
+            "description": "Invalid data"
+          },
+          "404": {
+            "description": "Integration not found"
+          }
         },
         "summary": "Update MCP integration",
         "tags": ["mcp-integrations"]
@@ -4646,12 +5588,19 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "Integration deleted successfully" },
-          "404": { "description": "Integration not found" }
+          "204": {
+            "description": "Integration deleted successfully"
+          },
+          "404": {
+            "description": "Integration not found"
+          }
         },
         "summary": "Delete MCP integration",
         "tags": ["mcp-integrations"]
@@ -4665,7 +5614,10 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4679,7 +5631,9 @@
               }
             }
           },
-          "404": { "description": "Integration not found" }
+          "404": {
+            "description": "Integration not found"
+          }
         },
         "summary": "Enable MCP integration",
         "tags": ["mcp-integrations"]
@@ -4693,7 +5647,10 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4707,7 +5664,9 @@
               }
             }
           },
-          "404": { "description": "Integration not found" }
+          "404": {
+            "description": "Integration not found"
+          }
         },
         "summary": "Disable MCP integration",
         "tags": ["mcp-integrations"]
@@ -4741,7 +5700,9 @@
           "400": {
             "description": "Missing required config fields or OAuth not supported"
           },
-          "404": { "description": "Marketplace integration not found" }
+          "404": {
+            "description": "Marketplace integration not found"
+          }
         },
         "summary": "Install an MCP integration from the marketplace",
         "tags": ["mcp-integrations"]
@@ -4755,7 +5716,10 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4780,14 +5744,19 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/SetUserConfigDto" }
+              "schema": {
+                "$ref": "#/components/schemas/SetUserConfigDto"
+              }
             }
           }
         },
@@ -4802,8 +5771,12 @@
               }
             }
           },
-          "400": { "description": "Integration has no user fields" },
-          "404": { "description": "Integration not found" }
+          "400": {
+            "description": "Integration has no user fields"
+          },
+          "404": {
+            "description": "Integration not found"
+          }
         },
         "summary": "Set current user config for a marketplace MCP integration",
         "tags": ["mcp-integrations"]
@@ -4817,7 +5790,10 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4831,7 +5807,9 @@
               }
             }
           },
-          "404": { "description": "Integration not found" }
+          "404": {
+            "description": "Integration not found"
+          }
         },
         "summary": "Validate MCP integration connection",
         "tags": ["mcp-integrations"]
@@ -4866,7 +5844,9 @@
             "required": true,
             "in": "path",
             "description": "The unique identifier slug of the marketplace skill",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4880,7 +5860,9 @@
               }
             }
           },
-          "404": { "description": "Marketplace skill not found" }
+          "404": {
+            "description": "Marketplace skill not found"
+          }
         },
         "summary": "Preview a marketplace skill before installation",
         "tags": ["marketplace"]
@@ -4895,7 +5877,9 @@
             "required": true,
             "in": "path",
             "description": "The unique identifier slug of the marketplace integration",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4909,7 +5893,9 @@
               }
             }
           },
-          "404": { "description": "Marketplace integration not found" }
+          "404": {
+            "description": "Marketplace integration not found"
+          }
         },
         "summary": "Preview a marketplace integration before installation",
         "tags": ["marketplace"]
@@ -4947,7 +5933,9 @@
           "409": {
             "description": "Skill template with this name already exists"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Create a new skill template",
         "tags": ["Super Admin Skill Templates"]
@@ -4973,7 +5961,9 @@
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get all skill templates",
         "tags": ["Super Admin Skill Templates"]
@@ -4989,7 +5979,10 @@
             "required": true,
             "in": "path",
             "description": "Skill template ID",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5006,8 +5999,12 @@
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "404": { "description": "Skill template not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Skill template not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get a skill template by ID",
         "tags": ["Super Admin Skill Templates"]
@@ -5021,7 +6018,10 @@
             "required": true,
             "in": "path",
             "description": "Skill template ID",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -5048,11 +6048,15 @@
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "404": { "description": "Skill template not found" },
+          "404": {
+            "description": "Skill template not found"
+          },
           "409": {
             "description": "Skill template with this name already exists"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Update a skill template",
         "tags": ["Super Admin Skill Templates"]
@@ -5066,16 +6070,25 @@
             "required": true,
             "in": "path",
             "description": "Skill template ID",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "Successfully deleted skill template" },
+          "204": {
+            "description": "Successfully deleted skill template"
+          },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "404": { "description": "Skill template not found" },
-          "500": { "description": "Internal server error" }
+          "404": {
+            "description": "Skill template not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Delete a skill template",
         "tags": ["Super Admin Skill Templates"]
@@ -5089,7 +6102,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateArtifactDto" }
+              "schema": {
+                "$ref": "#/components/schemas/CreateArtifactDto"
+              }
             }
           }
         },
@@ -5098,11 +6113,15 @@
             "description": "The artifact has been created",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ArtifactResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactResponseDto"
+                }
               }
             }
           },
-          "400": { "description": "Invalid input data" }
+          "400": {
+            "description": "Invalid input data"
+          }
         },
         "summary": "Create a new artifact (document)",
         "tags": ["artifacts"]
@@ -5117,14 +6136,19 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the artifact",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateArtifactDto" }
+              "schema": {
+                "$ref": "#/components/schemas/UpdateArtifactDto"
+              }
             }
           }
         },
@@ -5139,8 +6163,12 @@
               }
             }
           },
-          "204": { "description": "Letterhead updated (no content change)" },
-          "404": { "description": "Artifact not found" }
+          "204": {
+            "description": "Letterhead updated (no content change)"
+          },
+          "404": {
+            "description": "Artifact not found"
+          }
         },
         "summary": "Update an artifact (add a new version)",
         "tags": ["artifacts"]
@@ -5153,7 +6181,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the artifact",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5161,11 +6192,15 @@
             "description": "The artifact with all versions",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ArtifactResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactResponseDto"
+                }
               }
             }
           },
-          "404": { "description": "Artifact not found" }
+          "404": {
+            "description": "Artifact not found"
+          }
         },
         "summary": "Get an artifact by ID with all versions",
         "tags": ["artifacts"]
@@ -5180,7 +6215,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the thread",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5211,14 +6249,19 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the artifact",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/RevertArtifactDto" }
+              "schema": {
+                "$ref": "#/components/schemas/RevertArtifactDto"
+              }
             }
           }
         },
@@ -5233,7 +6276,9 @@
               }
             }
           },
-          "404": { "description": "Artifact or version not found" }
+          "404": {
+            "description": "Artifact or version not found"
+          }
         },
         "summary": "Revert an artifact to a specific version",
         "tags": ["artifacts"]
@@ -5248,14 +6293,20 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the artifact",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "format",
             "required": true,
             "in": "query",
             "description": "Export format",
-            "schema": { "enum": ["docx", "pdf"], "type": "string" }
+            "schema": {
+              "enum": ["docx", "pdf"],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5263,11 +6314,16 @@
             "description": "The exported file",
             "content": {
               "application/octet-stream": {
-                "schema": { "type": "string", "format": "binary" }
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
               }
             }
           },
-          "404": { "description": "Artifact not found" }
+          "404": {
+            "description": "Artifact not found"
+          }
         },
         "summary": "Export an artifact as DOCX or PDF",
         "tags": ["artifacts"]
@@ -5281,7 +6337,9 @@
           "required": true,
           "content": {
             "multipart/form-data": {
-              "schema": { "$ref": "#/components/schemas/CreateLetterheadDto" }
+              "schema": {
+                "$ref": "#/components/schemas/CreateLetterheadDto"
+              }
             }
           }
         },
@@ -5296,7 +6354,9 @@
               }
             }
           },
-          "400": { "description": "Invalid input data" }
+          "400": {
+            "description": "Invalid input data"
+          }
         },
         "summary": "Create a new letterhead",
         "tags": ["letterheads"]
@@ -5332,7 +6392,10 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the letterhead",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5346,7 +6409,9 @@
               }
             }
           },
-          "404": { "description": "Letterhead not found" }
+          "404": {
+            "description": "Letterhead not found"
+          }
         },
         "summary": "Get a letterhead by ID",
         "tags": ["letterheads"]
@@ -5359,14 +6424,19 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the letterhead",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "multipart/form-data": {
-              "schema": { "$ref": "#/components/schemas/UpdateLetterheadDto" }
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLetterheadDto"
+              }
             }
           }
         },
@@ -5381,7 +6451,9 @@
               }
             }
           },
-          "404": { "description": "Letterhead not found" }
+          "404": {
+            "description": "Letterhead not found"
+          }
         },
         "summary": "Update a letterhead",
         "tags": ["letterheads"]
@@ -5394,12 +6466,19 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the letterhead",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "Letterhead deleted" },
-          "404": { "description": "Letterhead not found" }
+          "204": {
+            "description": "Letterhead deleted"
+          },
+          "404": {
+            "description": "Letterhead not found"
+          }
         },
         "summary": "Delete a letterhead",
         "tags": ["letterheads"]
@@ -5414,12 +6493,19 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the letterhead",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "The first-page PDF file" },
-          "404": { "description": "Letterhead not found" }
+          "200": {
+            "description": "The first-page PDF file"
+          },
+          "404": {
+            "description": "Letterhead not found"
+          }
         },
         "summary": "Download the first-page PDF of a letterhead",
         "tags": ["letterheads"]
@@ -5434,12 +6520,19 @@
             "required": true,
             "in": "path",
             "description": "The UUID of the letterhead",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "The continuation-page PDF file" },
-          "404": { "description": "Letterhead or PDF not found" }
+          "200": {
+            "description": "The continuation-page PDF file"
+          },
+          "404": {
+            "description": "Letterhead or PDF not found"
+          }
         },
         "summary": "Download the continuation-page PDF of a letterhead",
         "tags": ["letterheads"]
@@ -5517,21 +6610,30 @@
             "required": false,
             "in": "query",
             "description": "Number of users per page (1-1000). Defaults to 50.",
-            "schema": { "example": 50, "type": "number" }
+            "schema": {
+              "example": 50,
+              "type": "number"
+            }
           },
           {
             "name": "offset",
             "required": false,
             "in": "query",
             "description": "Number of users to skip for pagination. Defaults to 0.",
-            "schema": { "example": 0, "type": "number" }
+            "schema": {
+              "example": 0,
+              "type": "number"
+            }
           },
           {
             "name": "search",
             "required": false,
             "in": "query",
             "description": "Search term to filter users by name or email",
-            "schema": { "example": "john.doe", "type": "string" }
+            "schema": {
+              "example": "john.doe",
+              "type": "string"
+            }
           },
           {
             "name": "sortBy",
@@ -5548,7 +6650,10 @@
             "required": false,
             "in": "query",
             "description": "Sort order (ascending or descending). Defaults to desc.",
-            "schema": { "enum": ["asc", "desc"], "type": "string" }
+            "schema": {
+              "enum": ["asc", "desc"],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5575,13 +6680,17 @@
             "name": "startDate",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "endDate",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5608,25 +6717,33 @@
             "name": "startDate",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "endDate",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "maxModels",
             "required": false,
             "in": "query",
-            "schema": { "type": "number" }
+            "schema": {
+              "type": "number"
+            }
           },
           {
             "name": "modelId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5653,25 +6770,33 @@
             "name": "startDate",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "endDate",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "provider",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "modelId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5699,7 +6824,9 @@
             "required": true,
             "in": "path",
             "description": "Organization ID",
-            "schema": { "format": "uuid" }
+            "schema": {
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -5728,7 +6855,10 @@
             "required": true,
             "in": "path",
             "description": "Organization ID",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5756,19 +6886,26 @@
             "required": true,
             "in": "path",
             "description": "Organization ID",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "startDate",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "endDate",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5796,31 +6933,42 @@
             "required": true,
             "in": "path",
             "description": "Organization ID",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "startDate",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "endDate",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "maxModels",
             "required": false,
             "in": "query",
-            "schema": { "type": "number" }
+            "schema": {
+              "type": "number"
+            }
           },
           {
             "name": "modelId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5848,37 +6996,50 @@
             "required": true,
             "in": "path",
             "description": "Organization ID",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "startDate",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "endDate",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "includeTimeSeries",
             "required": false,
             "in": "query",
-            "schema": { "type": "boolean" }
+            "schema": {
+              "type": "boolean"
+            }
           },
           {
             "name": "provider",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "modelId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5906,31 +7067,42 @@
             "required": true,
             "in": "path",
             "description": "Organization ID",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "startDate",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "endDate",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "provider",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "modelId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5958,37 +7130,50 @@
             "required": true,
             "in": "path",
             "description": "Organization ID",
-            "schema": { "format": "uuid", "type": "string" }
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           },
           {
             "name": "startDate",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "endDate",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "limit",
             "required": false,
             "in": "query",
-            "schema": { "type": "number" }
+            "schema": {
+              "type": "number"
+            }
           },
           {
             "name": "offset",
             "required": false,
             "in": "query",
-            "schema": { "type": "number" }
+            "schema": {
+              "type": "number"
+            }
           },
           {
             "name": "search",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "sortBy",
@@ -6003,7 +7188,10 @@
             "name": "sortOrder",
             "required": false,
             "in": "query",
-            "schema": { "enum": ["asc", "desc"], "type": "string" }
+            "schema": {
+              "enum": ["asc", "desc"],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -6044,7 +7232,9 @@
           "404": {
             "description": "Credits-per-euro value has not been configured"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get the current credits-per-euro configuration",
         "tags": ["Super Admin Platform Config"]
@@ -6073,7 +7263,9 @@
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Set the credits-per-euro configuration",
         "tags": ["Super Admin Platform Config"]
@@ -6098,7 +7290,9 @@
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Get the current fair-use limits",
         "tags": ["Super Admin Platform Config"]
@@ -6127,7 +7321,9 @@
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Set the fair-use limit for a single model tier",
         "tags": ["Super Admin Platform Config"]
@@ -6149,14 +7345,18 @@
           }
         },
         "responses": {
-          "204": { "description": "Successfully updated image fair-use limit" },
+          "204": {
+            "description": "Successfully updated image fair-use limit"
+          },
           "400": {
             "description": "Invalid value provided (limit and windowMs must be positive)"
           },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
-          "500": { "description": "Internal server error" }
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Set the fair-use limit for image generation",
         "tags": ["Super Admin Platform Config"]
@@ -6175,14 +7375,20 @@
                 "type": "object",
                 "required": ["threadId"],
                 "properties": {
-                  "threadId": { "type": "string", "format": "uuid" },
+                  "threadId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
                   "text": {
                     "type": "string",
                     "description": "Message text (optional if images provided)"
                   },
                   "images": {
                     "type": "array",
-                    "items": { "type": "string", "format": "binary" },
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
                     "description": "Image files to attach (max 10, max 10MB each, 50MB total)"
                   },
                   "imageAltTexts": {
@@ -6198,7 +7404,10 @@
                     "format": "uuid",
                     "description": "Skill ID to activate for this message"
                   },
-                  "streaming": { "type": "boolean", "default": true }
+                  "streaming": {
+                    "type": "boolean",
+                    "default": true
+                  }
                 }
               }
             }
@@ -6211,10 +7420,18 @@
               "text/event-stream": {
                 "schema": {
                   "oneOf": [
-                    { "$ref": "#/components/schemas/RunSessionResponseDto" },
-                    { "$ref": "#/components/schemas/RunMessageResponseDto" },
-                    { "$ref": "#/components/schemas/RunErrorResponseDto" },
-                    { "$ref": "#/components/schemas/RunThreadResponseDto" }
+                    {
+                      "$ref": "#/components/schemas/RunSessionResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunMessageResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunErrorResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunThreadResponseDto"
+                    }
                   ],
                   "discriminator": {
                     "propertyName": "type",
@@ -6231,21 +7448,36 @@
             "headers": {
               "Content-Type": {
                 "description": "Content type for server-sent events",
-                "schema": { "type": "string", "example": "text/event-stream" }
+                "schema": {
+                  "type": "string",
+                  "example": "text/event-stream"
+                }
               },
               "Cache-Control": {
                 "description": "Cache control header",
-                "schema": { "type": "string", "example": "no-cache" }
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache"
+                }
               },
               "Connection": {
                 "description": "Connection type",
-                "schema": { "type": "string", "example": "keep-alive" }
+                "schema": {
+                  "type": "string",
+                  "example": "keep-alive"
+                }
               }
             }
           },
-          "400": { "description": "Invalid request payload" },
-          "403": { "description": "Subscription required" },
-          "500": { "description": "Internal server error" }
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "403": {
+            "description": "Subscription required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         },
         "summary": "Send a message with optional images and receive streaming response",
         "tags": ["runs"]
@@ -6261,7 +7493,9 @@
           "description": "Trial information",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateTrialRequestDto" }
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrialRequestDto"
+              }
             }
           }
         },
@@ -6279,7 +7513,9 @@
           "400": {
             "description": "Invalid request format or validation errors."
           },
-          "403": { "description": "The requester is not a super admin." }
+          "403": {
+            "description": "The requester is not a super admin."
+          }
         },
         "summary": "Create a new trial",
         "tags": ["Super Admin Trials"]
@@ -6295,7 +7531,9 @@
             "required": true,
             "in": "path",
             "description": "The organization ID of the trial to retrieve.",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -6309,8 +7547,12 @@
               }
             }
           },
-          "400": { "description": "Trial not found for the organization." },
-          "403": { "description": "The requester is not a super admin." }
+          "400": {
+            "description": "Trial not found for the organization."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
         },
         "summary": "Get a trial by organization ID",
         "tags": ["Super Admin Trials"]
@@ -6324,7 +7566,9 @@
             "required": true,
             "in": "path",
             "description": "The organization ID of the trial to update.",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -6332,7 +7576,9 @@
           "description": "Trial update information",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateTrialRequestDto" }
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrialRequestDto"
+              }
             }
           }
         },
@@ -6350,7 +7596,9 @@
           "400": {
             "description": "Invalid request format or validation errors."
           },
-          "403": { "description": "The requester is not a super admin." }
+          "403": {
+            "description": "The requester is not a super admin."
+          }
         },
         "summary": "Update a trial",
         "tags": ["Super Admin Trials"]
@@ -6401,7 +7649,9 @@
               }
             }
           },
-          "400": { "description": "Invalid request payload" }
+          "400": {
+            "description": "Invalid request payload"
+          }
         },
         "summary": "Set or update the user system prompt",
         "tags": ["Chat Settings"]
@@ -6445,11 +7695,15 @@
               }
             }
           },
-          "400": { "description": "Invalid request payload" },
+          "400": {
+            "description": "Invalid request payload"
+          },
           "422": {
             "description": "No default model configured for the organization"
           },
-          "500": { "description": "Inference failure during prompt generation" }
+          "500": {
+            "description": "Inference failure during prompt generation"
+          }
         },
         "summary": "Generate a personalized system prompt",
         "tags": ["Chat Settings"]
@@ -6469,7 +7723,11 @@
             }
           }
         },
-        "responses": { "201": { "description": "" } },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
         "tags": ["ChatCompletions"]
       }
     },
@@ -6483,7 +7741,9 @@
           "description": "User credentials for authentication",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/LoginDto" }
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
             }
           }
         },
@@ -6492,7 +7752,9 @@
             "description": "Login successful. Authentication cookies are set.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponseDto"
+                }
               }
             }
           },
@@ -6500,7 +7762,9 @@
             "description": "Invalid request format",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
               }
             }
           },
@@ -6508,7 +7772,9 @@
             "description": "Invalid credentials",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
               }
             }
           }
@@ -6527,7 +7793,9 @@
           "description": "User registration information",
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/RegisterDto" }
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
             }
           }
         },
@@ -6536,7 +7804,9 @@
             "description": "Registration successful. User is automatically logged in and authentication cookies are set.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponseDto"
+                }
               }
             }
           },
@@ -6544,7 +7814,9 @@
             "description": "Invalid request format or validation errors",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
               }
             }
           },
@@ -6552,7 +7824,9 @@
             "description": "User with this email already exists",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
               }
             }
           }
@@ -6571,7 +7845,9 @@
             "description": "Token refresh successful. New authentication cookies are set.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponseDto"
+                }
               }
             }
           },
@@ -6579,7 +7855,9 @@
             "description": "Invalid or expired refresh token",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
               }
             }
           },
@@ -6587,12 +7865,18 @@
             "description": "Authentication configuration error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
               }
             }
           }
         },
-        "security": [{ "refreshToken": [] }],
+        "security": [
+          {
+            "refreshToken": []
+          }
+        ],
         "summary": "Refresh authentication tokens",
         "tags": ["Authentication"]
       }
@@ -6607,7 +7891,9 @@
             "description": "User information retrieved successfully. If tokens were refreshed, new cookies are set.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MeResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponseDto"
+                }
               }
             }
           },
@@ -6615,7 +7901,9 @@
             "description": "Not authenticated - no valid tokens found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
               }
             }
           },
@@ -6623,7 +7911,9 @@
             "description": "Authentication configuration error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
               }
             }
           }
@@ -6642,7 +7932,9 @@
             "description": "Logout successful. Authentication cookies are cleared.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponseDto"
+                }
               }
             }
           }
@@ -6704,7 +7996,11 @@
       "delete": {
         "operationId": "IpAllowlistController_remove",
         "parameters": [],
-        "responses": { "204": { "description": "IP allow list removed" } },
+        "responses": {
+          "204": {
+            "description": "IP allow list removed"
+          }
+        },
         "summary": "Remove the IP allow list (disable IP restriction)",
         "tags": ["ip-allowlist"]
       }
@@ -6720,13 +8016,19 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/ApiKeyResponseDto" }
+                  "items": {
+                    "$ref": "#/components/schemas/ApiKeyResponseDto"
+                  }
                 }
               }
             }
           },
-          "401": { "description": "User is not authenticated" },
-          "403": { "description": "User is not authorized to view API keys" }
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to view API keys"
+          }
         },
         "summary": "List API keys for the current organization",
         "tags": ["api-keys"]
@@ -6738,7 +8040,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateApiKeyDto" }
+              "schema": {
+                "$ref": "#/components/schemas/CreateApiKeyDto"
+              }
             }
           }
         },
@@ -6753,9 +8057,15 @@
               }
             }
           },
-          "400": { "description": "Invalid input" },
-          "401": { "description": "User is not authenticated" },
-          "403": { "description": "User is not authorized to create API keys" }
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to create API keys"
+          }
         },
         "summary": "Create a new API key. The full plaintext secret is returned ONLY in this response.",
         "tags": ["api-keys"]
@@ -6769,16 +8079,24 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "API key successfully revoked" },
-          "401": { "description": "User is not authenticated" },
+          "204": {
+            "description": "API key successfully revoked"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
           "403": {
             "description": "User is not authorized to revoke this API key"
           },
-          "404": { "description": "API key not found" }
+          "404": {
+            "description": "API key not found"
+          }
         },
         "summary": "Revoke an API key",
         "tags": ["api-keys"]
@@ -6791,7 +8109,12 @@
     "version": "1.0",
     "contact": {}
   },
-  "tags": [{ "name": "ayunis", "description": "" }],
+  "tags": [
+    {
+      "name": "ayunis",
+      "description": ""
+    }
+  ],
   "servers": [],
   "components": {
     "schemas": {
@@ -6839,13 +8162,19 @@
       "ModelWithConfigResponseDto": {
         "type": "object",
         "properties": {
-          "modelId": { "type": "string", "description": "The id of the model" },
+          "modelId": {
+            "type": "string",
+            "description": "The id of the model"
+          },
           "permittedModelId": {
             "type": "string",
             "description": "The id of the model. Null if the model is not permitted.",
             "nullable": true
           },
-          "name": { "type": "string", "description": "The name of the model" },
+          "name": {
+            "type": "string",
+            "description": "The name of the model"
+          },
           "provider": {
             "type": "string",
             "enum": [
@@ -6996,7 +8325,10 @@
             "type": "string",
             "description": "The id of the permitted model"
           },
-          "name": { "type": "string", "description": "The name of the model" },
+          "name": {
+            "type": "string",
+            "description": "The name of the model"
+          },
           "provider": {
             "type": "string",
             "enum": [
@@ -7080,7 +8412,10 @@
             "type": "string",
             "description": "The id of the permitted model"
           },
-          "name": { "type": "string", "description": "The name of the model" },
+          "name": {
+            "type": "string",
+            "description": "The name of the model"
+          },
           "provider": {
             "type": "string",
             "enum": [
@@ -7150,7 +8485,10 @@
             "type": "string",
             "description": "The id of the permitted model"
           },
-          "name": { "type": "string", "description": "The name of the model" },
+          "name": {
+            "type": "string",
+            "description": "The name of the model"
+          },
           "provider": {
             "type": "string",
             "enum": [
@@ -7989,11 +9327,17 @@
           "data": {
             "description": "Array of organizations for the current page",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/SuperAdminOrgResponseDto" }
+            "items": {
+              "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
+            }
           },
           "pagination": {
             "description": "Pagination metadata",
-            "allOf": [{ "$ref": "#/components/schemas/PaginationDto" }]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
           }
         },
         "required": ["data", "pagination"]
@@ -8050,11 +9394,17 @@
           "data": {
             "description": "Array of users for the current page",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/UserResponseDto" }
+            "items": {
+              "$ref": "#/components/schemas/UserResponseDto"
+            }
           },
           "pagination": {
             "description": "Pagination metadata",
-            "allOf": [{ "$ref": "#/components/schemas/PaginationDto" }]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
           }
         },
         "required": ["data", "pagination"]
@@ -8349,7 +9699,9 @@
             "maxItems": 500,
             "minItems": 1,
             "type": "array",
-            "items": { "$ref": "#/components/schemas/CreateBulkInviteItemDto" }
+            "items": {
+              "$ref": "#/components/schemas/CreateBulkInviteItemDto"
+            }
           }
         },
         "required": ["invites"]
@@ -8422,7 +9774,9 @@
           "results": {
             "description": "Individual results for each invite",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/BulkInviteResultDto" }
+            "items": {
+              "$ref": "#/components/schemas/BulkInviteResultDto"
+            }
           }
         },
         "required": ["totalCount", "successCount", "failureCount", "results"]
@@ -8480,11 +9834,17 @@
           "data": {
             "description": "Array of invites for the current page",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/InviteResponseDto" }
+            "items": {
+              "$ref": "#/components/schemas/InviteResponseDto"
+            }
           },
           "pagination": {
             "description": "Pagination metadata",
-            "allOf": [{ "$ref": "#/components/schemas/PaginationDto" }]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
           }
         },
         "required": ["data", "pagination"]
@@ -8804,7 +10164,9 @@
           "subscription": {
             "description": "Subscription",
             "allOf": [
-              { "$ref": "#/components/schemas/SubscriptionResponseDto" }
+              {
+                "$ref": "#/components/schemas/SubscriptionResponseDto"
+              }
             ]
           }
         }
@@ -8946,7 +10308,14 @@
         },
         "required": ["startsAt"]
       },
-      "UpdateSeatsDto": { "type": "object", "properties": {} },
+      "UpdateMonthlyCreditsDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateSeatsDto": {
+        "type": "object",
+        "properties": {}
+      },
       "CreateTeamDto": {
         "type": "object",
         "properties": {
@@ -9075,11 +10444,17 @@
           "data": {
             "description": "Array of team members for the current page",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/TeamMemberResponseDto" }
+            "items": {
+              "$ref": "#/components/schemas/TeamMemberResponseDto"
+            }
           },
           "pagination": {
             "description": "Pagination metadata",
-            "allOf": [{ "$ref": "#/components/schemas/PaginationDto" }]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
           }
         },
         "required": ["data", "pagination"]
@@ -9402,11 +10777,18 @@
           "params": {
             "type": "object",
             "description": "Parameters passed to the tool",
-            "example": { "location": "New York", "unit": "celsius" }
+            "example": {
+              "location": "New York",
+              "unit": "celsius"
+            }
           },
           "integration": {
             "description": "Integration metadata if this tool belongs to a marketplace integration",
-            "allOf": [{ "$ref": "#/components/schemas/ToolUseIntegrationDto" }]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ToolUseIntegrationDto"
+              }
+            ]
           }
         },
         "required": ["type", "id", "name", "params"]
@@ -9545,7 +10927,10 @@
             "type": "string",
             "description": "Thread ID this source belongs to"
           },
-          "name": { "type": "string", "description": "Name of the source" },
+          "name": {
+            "type": "string",
+            "description": "Name of the source"
+          },
           "type": {
             "type": "string",
             "description": "Type of source",
@@ -9596,7 +10981,10 @@
             "type": "string",
             "description": "Thread ID this source belongs to"
           },
-          "name": { "type": "string", "description": "Name of the source" },
+          "name": {
+            "type": "string",
+            "description": "Name of the source"
+          },
           "type": {
             "type": "string",
             "description": "Type of source",
@@ -9659,7 +11047,10 @@
             "type": "string",
             "description": "Thread ID this source belongs to"
           },
-          "name": { "type": "string", "description": "Name of the source" },
+          "name": {
+            "type": "string",
+            "description": "Name of the source"
+          },
           "type": {
             "type": "string",
             "description": "Type of source",
@@ -9692,7 +11083,10 @@
             "description": "Type of text",
             "enum": ["file", "web"]
           },
-          "url": { "type": "string", "description": "URL of the source" }
+          "url": {
+            "type": "string",
+            "description": "URL of the source"
+          }
         },
         "required": [
           "id",
@@ -9718,7 +11112,10 @@
             "type": "string",
             "description": "Thread ID this source belongs to"
           },
-          "name": { "type": "string", "description": "Name of the source" },
+          "name": {
+            "type": "string",
+            "description": "Name of the source"
+          },
           "type": {
             "type": "string",
             "description": "Type of source",
@@ -9758,12 +11155,19 @@
             "properties": {
               "headers": {
                 "type": "array",
-                "items": { "type": "string" },
+                "items": {
+                  "type": "string"
+                },
                 "description": "Column headers"
               },
               "rows": {
                 "type": "array",
-                "items": { "type": "array", "items": { "type": "string" } },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
                 "description": "Data rows"
               }
             }
@@ -9826,17 +11230,27 @@
             "description": "Array of messages in the thread (role-specific types)",
             "items": {
               "oneOf": [
-                { "$ref": "#/components/schemas/UserMessageResponseDto" },
-                { "$ref": "#/components/schemas/SystemMessageResponseDto" },
-                { "$ref": "#/components/schemas/AssistantMessageResponseDto" },
-                { "$ref": "#/components/schemas/ToolResultMessageResponseDto" }
+                {
+                  "$ref": "#/components/schemas/UserMessageResponseDto"
+                },
+                {
+                  "$ref": "#/components/schemas/SystemMessageResponseDto"
+                },
+                {
+                  "$ref": "#/components/schemas/AssistantMessageResponseDto"
+                },
+                {
+                  "$ref": "#/components/schemas/ToolResultMessageResponseDto"
+                }
               ]
             }
           },
           "sources": {
             "type": "array",
             "description": "Array of sources in the thread",
-            "items": { "$ref": "#/components/schemas/SourceResponseDto" }
+            "items": {
+              "$ref": "#/components/schemas/SourceResponseDto"
+            }
           },
           "createdAt": {
             "type": "string",
@@ -9922,7 +11336,11 @@
           },
           "pagination": {
             "description": "Pagination metadata",
-            "allOf": [{ "$ref": "#/components/schemas/PaginationDto" }]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
           }
         },
         "required": ["data", "pagination"]
@@ -10019,7 +11437,9 @@
           "data": {
             "description": "The list of knowledge bases",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/KnowledgeBaseResponseDto" }
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeBaseResponseDto"
+            }
           }
         },
         "required": ["data"]
@@ -10586,9 +12006,16 @@
           },
           "configValues": {
             "description": "List of config values for credential fields",
-            "example": [{ "name": "token", "value": "sk_test_123abc" }],
+            "example": [
+              {
+                "name": "token",
+                "value": "sk_test_123abc"
+              }
+            ],
             "type": "array",
-            "items": { "$ref": "#/components/schemas/ConfigValueDto" }
+            "items": {
+              "$ref": "#/components/schemas/ConfigValueDto"
+            }
           },
           "returnsPii": {
             "type": "boolean",
@@ -10699,7 +12126,9 @@
           "credentialFields": {
             "description": "Credential fields required for this integration",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/CredentialFieldDto" }
+            "items": {
+              "$ref": "#/components/schemas/CredentialFieldDto"
+            }
           }
         },
         "required": ["slug", "displayName", "description", "authType"]
@@ -10732,7 +12161,9 @@
           "orgConfigValues": {
             "type": "object",
             "description": "Org-level config values for marketplace integrations. For secret fields, omit or send empty string to keep the existing value.",
-            "example": { "endpointUrl": "https://example.com/api" }
+            "example": {
+              "endpointUrl": "https://example.com/api"
+            }
           }
         }
       },
@@ -10747,8 +12178,12 @@
           "orgConfigValues": {
             "type": "object",
             "description": "Organization-level configuration values (key-value pairs matching config schema orgFields)",
-            "example": { "oparlEndpointUrl": "https://rim.ekom21.de/oparl/v1" },
-            "additionalProperties": { "type": "string" }
+            "example": {
+              "oparlEndpointUrl": "https://rim.ekom21.de/oparl/v1"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
           },
           "returnsPii": {
             "type": "boolean",
@@ -10769,8 +12204,12 @@
           "configValues": {
             "type": "object",
             "description": "Configuration values with secret values masked (keys present, values replaced with \"••••••\")",
-            "example": { "personalToken": "••••••" },
-            "additionalProperties": { "type": "string" }
+            "example": {
+              "personalToken": "••••••"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         },
         "required": ["hasConfig", "configValues"]
@@ -10781,8 +12220,12 @@
           "configValues": {
             "type": "object",
             "description": "User-level configuration values (key-value pairs matching config schema userFields)",
-            "example": { "personalToken": "my-personal-access-token" },
-            "additionalProperties": { "type": "string" }
+            "example": {
+              "personalToken": "my-personal-access-token"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         },
         "required": ["configValues"]
@@ -10798,7 +12241,11 @@
           "capabilities": {
             "type": "object",
             "description": "Discovered capabilities from the MCP server",
-            "example": { "tools": 5, "resources": 3, "prompts": 2 }
+            "example": {
+              "tools": 5,
+              "resources": 3,
+              "prompts": 2
+            }
           },
           "error": {
             "type": "string",
@@ -10828,12 +12275,18 @@
       "MarketplaceSkillResponseDto": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "description": "Skill UUID" },
+          "id": {
+            "type": "string",
+            "description": "Skill UUID"
+          },
           "identifier": {
             "type": "string",
             "description": "Unique identifier (slug)"
           },
-          "name": { "type": "string", "description": "Display name" },
+          "name": {
+            "type": "string",
+            "description": "Display name"
+          },
           "shortDescription": {
             "type": "string",
             "description": "Short description for marketplace display"
@@ -10961,12 +12414,18 @@
       "MarketplaceIntegrationResponseDto": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "description": "Integration UUID" },
+          "id": {
+            "type": "string",
+            "description": "Integration UUID"
+          },
           "identifier": {
             "type": "string",
             "description": "Unique identifier (slug)"
           },
-          "name": { "type": "string", "description": "Display name" },
+          "name": {
+            "type": "string",
+            "description": "Display name"
+          },
           "shortDescription": {
             "type": "string",
             "description": "Short description for marketplace display"
@@ -10990,7 +12449,10 @@
             "description": "Category UUID from the marketplace",
             "nullable": true
           },
-          "serverUrl": { "type": "string", "description": "MCP server URL" },
+          "serverUrl": {
+            "type": "string",
+            "description": "MCP server URL"
+          },
           "configSchema": {
             "description": "Configuration schema (authType, orgFields, userFields, oauth)",
             "allOf": [
@@ -11467,11 +12929,19 @@
           },
           "firstPageMargins": {
             "description": "Margins for the first page in mm",
-            "allOf": [{ "$ref": "#/components/schemas/PageMarginsDto" }]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PageMarginsDto"
+              }
+            ]
           },
           "continuationPageMargins": {
             "description": "Margins for continuation pages in mm",
-            "allOf": [{ "$ref": "#/components/schemas/PageMarginsDto" }]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PageMarginsDto"
+              }
+            ]
           },
           "hasContinuationPage": {
             "type": "boolean",
@@ -11562,9 +13032,18 @@
       "UserUsageDto": {
         "type": "object",
         "properties": {
-          "userId": { "type": "string", "description": "User ID" },
-          "userName": { "type": "string", "description": "User name" },
-          "userEmail": { "type": "string", "description": "User email" },
+          "userId": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "userName": {
+            "type": "string",
+            "description": "User name"
+          },
+          "userEmail": {
+            "type": "string",
+            "description": "User email"
+          },
           "credits": {
             "type": "number",
             "description": "Total credits consumed by this user"
@@ -11600,11 +13079,17 @@
           "data": {
             "description": "User usage statistics",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/UserUsageDto" }
+            "items": {
+              "$ref": "#/components/schemas/UserUsageDto"
+            }
           },
           "pagination": {
             "description": "Pagination metadata",
-            "allOf": [{ "$ref": "#/components/schemas/PaginationDto" }]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
           },
           "totalCredits": {
             "type": "number",
@@ -11640,7 +13125,9 @@
             "description": "List of the most frequently used model names, ordered by usage",
             "example": ["gpt-4", "claude-3-sonnet", "gpt-3.5-turbo"],
             "type": "array",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
@@ -11654,8 +13141,14 @@
       "ModelDistributionDto": {
         "type": "object",
         "properties": {
-          "modelId": { "type": "string", "description": "Model ID" },
-          "modelName": { "type": "string", "description": "Model name" },
+          "modelId": {
+            "type": "string",
+            "description": "Model ID"
+          },
+          "modelName": {
+            "type": "string",
+            "description": "Model name"
+          },
           "displayName": {
             "type": "string",
             "description": "Model display name"
@@ -11707,7 +13200,9 @@
           "models": {
             "description": "Model distribution statistics",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/ModelDistributionDto" }
+            "items": {
+              "$ref": "#/components/schemas/ModelDistributionDto"
+            }
           }
         },
         "required": ["models"]
@@ -11715,13 +13210,22 @@
       "ProviderValuesDto": {
         "type": "object",
         "properties": {
-          "openai": { "type": "number", "description": "Credits for OpenAI" },
+          "openai": {
+            "type": "number",
+            "description": "Credits for OpenAI"
+          },
           "anthropic": {
             "type": "number",
             "description": "Credits for Anthropic"
           },
-          "mistral": { "type": "number", "description": "Credits for Mistral" },
-          "ollama": { "type": "number", "description": "Credits for Ollama" },
+          "mistral": {
+            "type": "number",
+            "description": "Credits for Mistral"
+          },
+          "ollama": {
+            "type": "number",
+            "description": "Credits for Ollama"
+          },
           "synaforce": {
             "type": "number",
             "description": "Credits for Synaforce"
@@ -11742,7 +13246,11 @@
           },
           "values": {
             "description": "Credits per provider for this date",
-            "allOf": [{ "$ref": "#/components/schemas/ProviderValuesDto" }]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProviderValuesDto"
+              }
+            ]
           }
         },
         "required": ["date", "values"]
@@ -11753,7 +13261,9 @@
           "timeSeries": {
             "description": "Aligned time series rows by date with provider credit values",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/ProviderTimeSeriesRowDto" }
+            "items": {
+              "$ref": "#/components/schemas/ProviderTimeSeriesRowDto"
+            }
           }
         },
         "required": ["timeSeries"]
@@ -11813,7 +13323,9 @@
           "timeSeriesData": {
             "description": "Time series data for this provider",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/TimeSeriesPointDto" }
+            "items": {
+              "$ref": "#/components/schemas/TimeSeriesPointDto"
+            }
           }
         },
         "required": [
@@ -11830,7 +13342,9 @@
           "providers": {
             "description": "Provider usage statistics",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/ProviderUsageDto" }
+            "items": {
+              "$ref": "#/components/schemas/ProviderUsageDto"
+            }
           }
         },
         "required": ["providers"]
@@ -11878,23 +13392,43 @@
         "properties": {
           "zero": {
             "description": "Fair-use limit configured for zero-tier (unrestricted) models. Stored for UI symmetry only — runtime quota enforcement skips ZERO-tier models entirely, so this value is never consulted.",
-            "allOf": [{ "$ref": "#/components/schemas/FairUseTierLimitDto" }]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
           },
           "low": {
             "description": "Fair-use limit for low-tier (cheap) language models",
-            "allOf": [{ "$ref": "#/components/schemas/FairUseTierLimitDto" }]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
           },
           "medium": {
             "description": "Fair-use limit for medium-tier language models",
-            "allOf": [{ "$ref": "#/components/schemas/FairUseTierLimitDto" }]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
           },
           "high": {
             "description": "Fair-use limit for high-tier (expensive) language models",
-            "allOf": [{ "$ref": "#/components/schemas/FairUseTierLimitDto" }]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
           },
           "images": {
             "description": "Fair-use limit for image generation. Single global bucket (no tiering).",
-            "allOf": [{ "$ref": "#/components/schemas/FairUseTierLimitDto" }]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FairUseTierLimitDto"
+              }
+            ]
           }
         },
         "required": ["zero", "low", "medium", "high", "images"]
@@ -11997,10 +13531,18 @@
           "message": {
             "description": "The message data",
             "oneOf": [
-              { "$ref": "#/components/schemas/UserMessageResponseDto" },
-              { "$ref": "#/components/schemas/AssistantMessageResponseDto" },
-              { "$ref": "#/components/schemas/ToolResultMessageResponseDto" },
-              { "$ref": "#/components/schemas/SystemMessageResponseDto" }
+              {
+                "$ref": "#/components/schemas/UserMessageResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/AssistantMessageResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/ToolResultMessageResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/SystemMessageResponseDto"
+              }
             ]
           },
           "threadId": {
@@ -12048,7 +13590,9 @@
           "details": {
             "type": "object",
             "description": "Optional additional error details",
-            "example": { "originalError": "Network timeout" }
+            "example": {
+              "originalError": "Network timeout"
+            }
           }
         },
         "required": ["type", "message", "threadId", "timestamp"]
@@ -12146,12 +13690,22 @@
           "imageAltTexts": {
             "type": "array",
             "description": "JSON array of alt texts matching the order of uploaded images",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
           "toolResult": {
             "description": "Tool result input (for tool_result type only)",
-            "oneOf": [{ "$ref": "#/components/schemas/ToolResultInput" }],
-            "allOf": [{ "$ref": "#/components/schemas/ToolResultInput" }]
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ToolResultInput"
+              }
+            ],
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ToolResultInput"
+              }
+            ]
           },
           "skillId": {
             "type": "string",
@@ -12222,7 +13776,9 @@
           "trial": {
             "description": "Trial",
             "allOf": [
-              { "$ref": "#/components/schemas/SuperAdminTrialResponseDto" }
+              {
+                "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+              }
             ]
           }
         }
@@ -12326,7 +13882,10 @@
         },
         "required": ["systemPrompt", "welcomeMessage"]
       },
-      "ChatCompletionRequestDto": { "type": "object", "properties": {} },
+      "ChatCompletionRequestDto": {
+        "type": "object",
+        "properties": {}
+      },
       "LoginDto": {
         "type": "object",
         "properties": {
@@ -12442,7 +14001,9 @@
             "description": "List of allowed CIDR ranges",
             "example": ["203.0.113.0/24"],
             "type": "array",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": ["cidrs"]
@@ -12454,7 +14015,9 @@
             "description": "List of CIDR ranges to allow (e.g. \"192.168.1.0/24\")",
             "example": ["203.0.113.0/24"],
             "type": "array",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": ["cidrs"]
