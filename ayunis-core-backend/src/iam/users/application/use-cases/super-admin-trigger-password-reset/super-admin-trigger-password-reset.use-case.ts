@@ -8,8 +8,6 @@ import { UsersRepository } from '../../ports/users.repository';
 import { PasswordResetJwtService } from '../../services/password-reset-jwt.service';
 import { SendPasswordResetEmailUseCase } from '../send-password-reset-email/send-password-reset-email.use-case';
 import { SendPasswordResetEmailCommand } from '../send-password-reset-email/send-password-reset-email.command';
-import { SendSetInitialPasswordEmailUseCase } from '../send-set-initial-password-email/send-set-initial-password-email.use-case';
-import { SendSetInitialPasswordEmailCommand } from '../send-set-initial-password-email/send-set-initial-password-email.command';
 import { UserNotFoundError, UserUnexpectedError } from '../../users.errors';
 
 @Injectable()
@@ -22,7 +20,6 @@ export class SuperAdminTriggerPasswordResetUseCase {
     private readonly usersRepository: UsersRepository,
     private readonly passwordResetJwtService: PasswordResetJwtService,
     private readonly sendPasswordResetEmailUseCase: SendPasswordResetEmailUseCase,
-    private readonly sendSetInitialPasswordEmailUseCase: SendSetInitialPasswordEmailUseCase,
     private readonly configService: ConfigService,
   ) {}
 
@@ -39,14 +36,11 @@ export class SuperAdminTriggerPasswordResetUseCase {
         throw new UserNotFoundError(command.userId);
       }
 
-      const resetUrl = user.activated
-        ? await this.sendResetEmail(user)
-        : await this.sendActivationEmail(user);
+      const resetUrl = await this.sendResetEmail(user);
 
       this.logger.log('Email triggered for user', {
         userId: command.userId,
         email: user.email,
-        activated: user.activated,
       });
 
       return new SuperAdminTriggerPasswordResetResult(resetUrl);
@@ -76,32 +70,6 @@ export class SuperAdminTriggerPasswordResetUseCase {
 
     await this.sendPasswordResetEmailUseCase.execute(
       new SendPasswordResetEmailCommand(user.email, resetToken, user.name),
-    );
-
-    return resetUrl;
-  }
-
-  private async sendActivationEmail(user: {
-    id: UUID;
-    email: string;
-    name: string;
-    orgId: UUID;
-  }): Promise<string> {
-    const resetToken =
-      this.passwordResetJwtService.generateInitialPasswordToken({
-        userId: user.id,
-        email: user.email,
-      });
-
-    const resetUrl = this.buildResetUrl(resetToken);
-
-    await this.sendSetInitialPasswordEmailUseCase.execute(
-      new SendSetInitialPasswordEmailCommand(
-        user.email,
-        user.name,
-        resetToken,
-        user.orgId,
-      ),
     );
 
     return resetUrl;

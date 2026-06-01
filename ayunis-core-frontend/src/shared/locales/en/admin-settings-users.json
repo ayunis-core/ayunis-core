@@ -17,11 +17,10 @@
     "status": "Status",
     "sentDate": "Sent Date",
     "name": "Name",
-    "active": "Active",
-    "pending": "Pending",
-    "accepted": "Accepted",
-    "rejected": "Rejected",
-    "expired": "Expired",
+    "pending": "pending",
+    "accepted": "accepted",
+    "rejected": "rejected",
+    "expired": "expired",
     "more": "More",
     "edit": "Edit",
     "delete": "Delete",
@@ -30,8 +29,7 @@
     "user": "User",
     "admin": "Admin",
     "resend": "Resend Invite",
-    "sendActivationLink": "Send Activation Link",
-    "resetPassword": "Reset Password",
+    "sendPasswordReset": "Send Password Reset",
     "noInvitesFound": "No invites found",
     "total": "{{count}} total"
   },
@@ -141,9 +139,9 @@
     "success": "Password reset email sent successfully",
     "error": "Failed to send password reset email. Please try again."
   },
-  "confirmActivation": {
-    "title": "Send Access Link",
-    "description": "Send an access link to {{name}} ({{email}})?",
+  "confirmPasswordReset": {
+    "title": "Send Password Reset Email",
+    "description": "Send a password reset email to {{name}} ({{email}})?",
     "confirmText": "Send",
     "cancelText": "Cancel"
   },

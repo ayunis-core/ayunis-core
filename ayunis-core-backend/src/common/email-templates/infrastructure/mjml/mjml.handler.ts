@@ -2,7 +2,6 @@ import { TemplateRendererPort } from '../../application/ports/template-renderer.
 import {
   EmailConfirmationTemplate,
   EmailTemplate,
-  FirstStepsTemplate,
   InvitationTemplate,
   PasswordResetTemplate,
   SetInitialPasswordTemplate,
@@ -24,10 +23,6 @@ import {
   setInitialPasswordHtml,
   setInitialPasswordText,
 } from './templates/set-initial-password.template';
-import {
-  firstStepsHtml,
-  firstStepsText,
-} from './templates/first-steps.template';
 import { RenderedEmailContent } from '../../domain/rendered-email-content.entity';
 
 @Injectable()
@@ -55,12 +50,6 @@ export class MjmlHandler implements TemplateRendererPort {
       return new RenderedEmailContent({
         html: setInitialPasswordHtml(template.content).html,
         text: setInitialPasswordText(template.content),
-      });
-    }
-    if (template instanceof FirstStepsTemplate) {
-      return new RenderedEmailContent({
-        html: firstStepsHtml(template.content).html,
-        text: firstStepsText(template.content),
       });
     }
     throw new Error(`Template type ${template.templateType} not supported`);

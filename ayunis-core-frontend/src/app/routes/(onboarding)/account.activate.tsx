@@ -8,7 +8,7 @@ const searchSchema = z.object({
   token: z.string(),
 });
 
-export const Route = createFileRoute('/(onboarding)/password/reset')({
+export const Route = createFileRoute('/(onboarding)/account/activate')({
   component: RouteComponent,
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
@@ -27,7 +27,7 @@ export const Route = createFileRoute('/(onboarding)/password/reset')({
 function RouteComponent() {
   const { token, isValid } = Route.useLoaderData();
   if (!isValid) {
-    return <TokenExpiredPage mode="reset" />;
+    return <TokenExpiredPage mode="activation" />;
   }
-  return <ResetPasswordPage token={token} mode="reset" />;
+  return <ResetPasswordPage token={token} mode="activation" />;
 }

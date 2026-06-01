@@ -236,11 +236,10 @@ export class SuperAdminUsersController {
         role: createUserDto.role,
         emailVerified: true,
         hasAcceptedMarketing: false,
-        activated: false,
       }),
     );
 
-    if (createUserDto.sendPasswordResetEmail) {
+    if (createUserDto.sendActivationEmail) {
       await this.triggerSetInitialPasswordUseCase.execute(
         new TriggerSetInitialPasswordCommand(user.email, orgId),
       );

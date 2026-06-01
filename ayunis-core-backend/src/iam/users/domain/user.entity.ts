@@ -14,7 +14,6 @@ export class User {
   public orgId: UUID;
   public name: string;
   public hasAcceptedMarketing: boolean;
-  public activated: boolean;
   public department?: string;
   public createdAt: Date;
   public updatedAt: Date;
@@ -30,7 +29,6 @@ export class User {
     org?: Org;
     name: string;
     hasAcceptedMarketing: boolean;
-    activated?: boolean;
     department?: string;
     createdAt?: Date;
     updatedAt?: Date;
@@ -44,7 +42,6 @@ export class User {
     this.orgId = params.orgId;
     this.name = params.name;
     this.hasAcceptedMarketing = params.hasAcceptedMarketing;
-    this.activated = params.activated ?? true;
     this.department = params.department;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();

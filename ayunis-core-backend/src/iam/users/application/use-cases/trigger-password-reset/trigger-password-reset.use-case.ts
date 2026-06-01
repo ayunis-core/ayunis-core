@@ -4,8 +4,6 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedAuthenticationError } from '../../../../authentication/application/authentication.errors';
 import { SendPasswordResetEmailUseCase } from '../send-password-reset-email/send-password-reset-email.use-case';
 import { SendPasswordResetEmailCommand } from '../send-password-reset-email/send-password-reset-email.command';
-import { SendSetInitialPasswordEmailUseCase } from '../send-set-initial-password-email/send-set-initial-password-email.use-case';
-import { SendSetInitialPasswordEmailCommand } from '../send-set-initial-password-email/send-set-initial-password-email.command';
 import { PasswordResetJwtService } from '../../services/password-reset-jwt.service';
 import { UserNotFoundError } from 'src/iam/users/application/users.errors';
 import { UsersRepository } from '../../ports/users.repository';
@@ -17,7 +15,6 @@ export class TriggerPasswordResetUseCase {
 
   constructor(
     private readonly sendPasswordResetEmailUseCase: SendPasswordResetEmailUseCase,
-    private readonly sendSetInitialPasswordEmailUseCase: SendSetInitialPasswordEmailUseCase,
     private readonly passwordResetJwtService: PasswordResetJwtService,
     private readonly usersRepository: UsersRepository,
   ) {}
@@ -32,11 +29,7 @@ export class TriggerPasswordResetUseCase {
         return;
       }
 
-      if (user.activated) {
-        await this.sendResetEmail(user);
-      } else {
-        await this.sendActivationEmail(user);
-      }
+      await this.sendResetEmail(user);
     } catch (error) {
       if (error instanceof UserNotFoundError) {
         return;
@@ -63,28 +56,6 @@ export class TriggerPasswordResetUseCase {
     );
 
     this.logger.debug('Password reset email sent', {
-      userId: user.id,
-      email: user.email,
-    });
-  }
-
-  private async sendActivationEmail(user: User): Promise<void> {
-    const resetToken =
-      this.passwordResetJwtService.generateInitialPasswordToken({
-        userId: user.id,
-        email: user.email,
-      });
-
-    await this.sendSetInitialPasswordEmailUseCase.execute(
-      new SendSetInitialPasswordEmailCommand(
-        user.email,
-        user.name,
-        resetToken,
-        user.orgId,
-      ),
-    );
-
-    this.logger.debug('Activation email sent', {
       userId: user.id,
       email: user.email,
     });

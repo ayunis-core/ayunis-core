@@ -50,23 +50,6 @@ export interface SetInitialPasswordTemplateContent {
   bannerUrl: string;
 }
 
-export interface FirstStepsTemplateContent {
-  userEmail: string;
-  firstName: string;
-  chatUrl: string;
-  marketplaceUrl: string;
-  knowledgeUrl: string;
-  logoUrl: string;
-  teamUrl: string;
-  heroBannerUrl: string;
-  skillsBannerUrl: string;
-  knowledgeBannerUrl: string;
-  iconPencilUrl: string;
-  iconFileTextUrl: string;
-  iconMessageCircleUrl: string;
-  currentYear: string;
-}
-
 export class EmailConfirmationTemplate extends EmailTemplate {
   constructor(public readonly content: EmailConfirmationTemplateContent) {
     super(EmailTemplateType.EMAIL_CONFIRMATION, {
@@ -113,19 +96,6 @@ export class SetInitialPasswordTemplate extends EmailTemplate {
       invitingCompanyName: content.invitingCompanyName,
       userName: content.userName,
       productName: content.productName,
-      currentYear: content.currentYear,
-    });
-  }
-}
-
-export class FirstStepsTemplate extends EmailTemplate {
-  constructor(public readonly content: FirstStepsTemplateContent) {
-    super(EmailTemplateType.FIRST_STEPS, {
-      userEmail: content.userEmail,
-      firstName: content.firstName,
-      chatUrl: content.chatUrl,
-      marketplaceUrl: content.marketplaceUrl,
-      knowledgeUrl: content.knowledgeUrl,
       currentYear: content.currentYear,
     });
   }

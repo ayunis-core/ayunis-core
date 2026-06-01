@@ -7,13 +7,12 @@ function frontendConfig() {
       process.env.EMAIL_CONFIRM_ENDPOINT || '/confirm-email',
     passwordResetEndpoint:
       process.env.PASSWORD_RESET_ENDPOINT || '/password/reset',
+    accountActivateEndpoint:
+      process.env.ACCOUNT_ACTIVATE_ENDPOINT || '/account/activate',
     forgotPasswordEndpoint:
       process.env.FORGOT_PASSWORD_ENDPOINT || '/password/forgot',
     inviteAcceptEndpoint:
       process.env.INVITE_ACCEPT_ENDPOINT || '/accept-invite',
-    chatEndpoint: process.env.CHAT_ENDPOINT || '/chat',
-    marketplaceEndpoint: process.env.MARKETPLACE_ENDPOINT || '/marketplace',
-    knowledgeEndpoint: process.env.KNOWLEDGE_ENDPOINT || '/knowledge',
     emailAssetsPath: process.env.EMAIL_ASSETS_PATH || '/email',
   };
 }

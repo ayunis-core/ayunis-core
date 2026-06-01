@@ -37,10 +37,10 @@ export class CreateUserDto {
   role: UserRole;
 
   @ApiProperty({
-    description: 'Send password reset email',
+    description: 'Send the account activation (welcome) email to the new user',
     example: true,
   })
   @IsBoolean()
   @IsOptional()
-  sendPasswordResetEmail?: boolean;
+  sendActivationEmail?: boolean;
 }

@@ -39,6 +39,7 @@ import { Route as AuthenticatedAdminSettingsIntegrationsRouteImport } from './ro
 import { Route as AuthenticatedAdminSettingsApiKeysRouteImport } from './routes/_authenticated/admin-settings.api-keys'
 import { Route as onboardingPasswordResetRouteImport } from './routes/(onboarding)/password.reset'
 import { Route as onboardingPasswordForgotRouteImport } from './routes/(onboarding)/password.forgot'
+import { Route as onboardingAccountActivateRouteImport } from './routes/(onboarding)/account.activate'
 import { Route as AuthenticatedSuperAdminSettingsSuperAdminsIndexRouteImport } from './routes/_authenticated/super-admin-settings.super-admins.index'
 import { Route as AuthenticatedSuperAdminSettingsSkillsIndexRouteImport } from './routes/_authenticated/super-admin-settings.skills.index'
 import { Route as AuthenticatedSuperAdminSettingsPlatformConfigIndexRouteImport } from './routes/_authenticated/super-admin-settings.platform-config.index'
@@ -216,6 +217,12 @@ const onboardingPasswordForgotRoute =
     path: '/password/forgot',
     getParentRoute: () => rootRouteImport,
   } as any)
+const onboardingAccountActivateRoute =
+  onboardingAccountActivateRouteImport.update({
+    id: '/(onboarding)/account/activate',
+    path: '/account/activate',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute =
   AuthenticatedSuperAdminSettingsSuperAdminsIndexRouteImport.update({
     id: '/super-admin-settings/super-admins/',
@@ -286,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
   '/install': typeof AuthenticatedInstallRoute
+  '/account/activate': typeof onboardingAccountActivateRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
@@ -327,6 +335,7 @@ export interface FileRoutesByTo {
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
   '/install': typeof AuthenticatedInstallRoute
+  '/account/activate': typeof onboardingAccountActivateRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
@@ -370,6 +379,7 @@ export interface FileRoutesById {
   '/(onboarding)/login': typeof onboardingLoginRoute
   '/(onboarding)/register': typeof onboardingRegisterRoute
   '/_authenticated/install': typeof AuthenticatedInstallRoute
+  '/(onboarding)/account/activate': typeof onboardingAccountActivateRoute
   '/(onboarding)/password/forgot': typeof onboardingPasswordForgotRoute
   '/(onboarding)/password/reset': typeof onboardingPasswordResetRoute
   '/_authenticated/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
@@ -413,6 +423,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/install'
+    | '/account/activate'
     | '/password/forgot'
     | '/password/reset'
     | '/admin-settings/api-keys'
@@ -454,6 +465,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/install'
+    | '/account/activate'
     | '/password/forgot'
     | '/password/reset'
     | '/admin-settings/api-keys'
@@ -496,6 +508,7 @@ export interface FileRouteTypes {
     | '/(onboarding)/login'
     | '/(onboarding)/register'
     | '/_authenticated/install'
+    | '/(onboarding)/account/activate'
     | '/(onboarding)/password/forgot'
     | '/(onboarding)/password/reset'
     | '/_authenticated/admin-settings/api-keys'
@@ -538,6 +551,7 @@ export interface RootRouteChildren {
   onboardingIpBlockedRoute: typeof onboardingIpBlockedRoute
   onboardingLoginRoute: typeof onboardingLoginRoute
   onboardingRegisterRoute: typeof onboardingRegisterRoute
+  onboardingAccountActivateRoute: typeof onboardingAccountActivateRoute
   onboardingPasswordForgotRoute: typeof onboardingPasswordForgotRoute
   onboardingPasswordResetRoute: typeof onboardingPasswordResetRoute
 }
@@ -754,6 +768,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof onboardingPasswordForgotRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(onboarding)/account/activate': {
+      id: '/(onboarding)/account/activate'
+      path: '/account/activate'
+      fullPath: '/account/activate'
+      preLoaderRoute: typeof onboardingAccountActivateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/super-admin-settings/super-admins/': {
       id: '/_authenticated/super-admin-settings/super-admins/'
       path: '/super-admin-settings/super-admins'
@@ -920,6 +941,7 @@ const rootRouteChildren: RootRouteChildren = {
   onboardingIpBlockedRoute: onboardingIpBlockedRoute,
   onboardingLoginRoute: onboardingLoginRoute,
   onboardingRegisterRoute: onboardingRegisterRoute,
+  onboardingAccountActivateRoute: onboardingAccountActivateRoute,
   onboardingPasswordForgotRoute: onboardingPasswordForgotRoute,
   onboardingPasswordResetRoute: onboardingPasswordResetRoute,
 }

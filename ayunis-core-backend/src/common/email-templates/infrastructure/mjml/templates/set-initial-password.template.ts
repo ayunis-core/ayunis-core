@@ -18,7 +18,7 @@ export function setInitialPasswordText(
 
 Hallo ${template.userName},
 
-${template.invitingCompanyName} hat ein Konto für Sie bei ${template.productName} angelegt. Legen Sie nur noch ein Passwort fest, um Ihr Konto zu aktivieren – danach können Sie direkt loslegen.
+Wir haben ein Konto für Sie bei ${template.productName} angelegt. Legen Sie nur noch ein Passwort fest, um Ihr Konto zu aktivieren – danach können Sie direkt loslegen.
 
 Konto aktivieren: ${template.resetUrl}
 
@@ -34,13 +34,12 @@ export function setInitialPasswordHtml(
   template: SetInitialPasswordTemplateContent,
 ) {
   const userName = escapeText(template.userName);
-  const companyName = escapeText(template.invitingCompanyName);
 
   const body = [
     h1(`Willkommen bei ${template.productName}!`),
     p(`Hallo ${userName},`),
     p(
-      `<strong>${companyName}</strong> hat ein Konto für Sie bei ${template.productName} angelegt. Legen Sie nur noch ein Passwort fest, um Ihr Konto zu aktivieren – danach können Sie direkt loslegen.`,
+      `Wir haben ein Konto für Sie bei ${template.productName} angelegt. Legen Sie nur noch ein Passwort fest, um Ihr Konto zu aktivieren – danach können Sie direkt loslegen.`,
     ),
     cta('Konto aktivieren', template.resetUrl),
     fineprint(
@@ -52,8 +51,8 @@ export function setInitialPasswordHtml(
 
   return mjml2html(
     renderLayout({
-      title: `Konto bei ${template.invitingCompanyName} eingerichtet · ${template.productName}`,
-      preheader: `${template.invitingCompanyName} hat ein Konto für Sie angelegt. Legen Sie jetzt Ihr Passwort fest.`,
+      title: `Ihr Konto bei ${template.invitingCompanyName} · ${template.productName}`,
+      preheader: `Wir haben ein Konto für Sie angelegt. Legen Sie jetzt Ihr Passwort fest.`,
       logoUrl: template.logoUrl,
       bannerUrl: template.bannerUrl,
       bannerAlt: `${template.productName} – Die Plattform, auf der moderne Kommunen laufen.`,

@@ -3,18 +3,15 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from '@tanstack/react-router';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
-import { useUserControllerResetPassword } from '@/shared/api';
+import { useUserPasswordResetControllerResetPassword } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { passwordPolicySchema } from '@/shared/lib/password-policy';
 import * as z from 'zod';
 
-export function useResetPassword(
-  token: string,
-  purpose: 'activation' | 'reset',
-) {
+export function useResetPassword(token: string, mode: 'activation' | 'reset') {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
-  const prefix = purpose === 'activation' ? 'activateAccount' : 'resetPassword';
+  const prefix = mode === 'activation' ? 'activateAccount' : 'resetPassword';
 
   const resetPasswordFormSchema = z
     .object({
@@ -36,32 +33,33 @@ export function useResetPassword(
     },
   });
 
-  const { mutate: resetPassword, isPending } = useUserControllerResetPassword({
-    mutation: {
-      onSuccess: () => {
-        showSuccess(t(`${prefix}.success`));
-        void navigate({ to: '/login' });
-      },
-      onError: (error) => {
-        try {
-          const { code } = extractErrorData(error);
-          switch (code) {
-            case 'INVALID_TOKEN':
-              showError(t(`${prefix}.invalidToken`));
-              break;
-            case 'INVALID_PASSWORD':
-              showError(t(`${prefix}.invalidPassword`));
-              break;
-            default:
-              showError(t(`${prefix}.error`));
+  const { mutate: resetPassword, isPending } =
+    useUserPasswordResetControllerResetPassword({
+      mutation: {
+        onSuccess: () => {
+          showSuccess(t(`${prefix}.success`));
+          void navigate({ to: '/login' });
+        },
+        onError: (error) => {
+          try {
+            const { code } = extractErrorData(error);
+            switch (code) {
+              case 'INVALID_TOKEN':
+                showError(t(`${prefix}.invalidToken`));
+                break;
+              case 'INVALID_PASSWORD':
+                showError(t(`${prefix}.invalidPassword`));
+                break;
+              default:
+                showError(t(`${prefix}.error`));
+            }
+          } catch {
+            // Non-AxiosError (network failure, request cancellation, etc.)
+            showError(t(`${prefix}.error`));
           }
-        } catch {
-          // Non-AxiosError (network failure, request cancellation, etc.)
-          showError(t(`${prefix}.error`));
-        }
+        },
       },
-    },
-  });
+    });
 
   function onSubmit(values: z.infer<typeof resetPasswordFormSchema>) {
     resetPassword({

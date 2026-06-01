@@ -1979,7 +1979,7 @@
     "/users/{id}/trigger-password-reset": {
       "post": {
         "description": "Send a password reset email to a user in your organization. Only organization admins can use this endpoint.",
-        "operationId": "UserController_triggerPasswordResetForUser",
+        "operationId": "UserPasswordResetController_triggerPasswordResetForUser",
         "parameters": [
           {
             "name": "id",
@@ -2010,7 +2010,7 @@
     "/users/forgot-password": {
       "post": {
         "description": "Send a password reset email to the provided email address. If the email exists in the system, a reset link will be sent.",
-        "operationId": "UserController_forgotPassword",
+        "operationId": "UserPasswordResetController_forgotPassword",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -2041,7 +2041,7 @@
     "/users/reset-password": {
       "post": {
         "description": "Reset user password using the token received via email. The token must be valid and not expired.",
-        "operationId": "UserController_resetPassword",
+        "operationId": "UserPasswordResetController_resetPassword",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -2075,7 +2075,7 @@
     "/users/validate-reset-token": {
       "get": {
         "description": "Validate a password reset token without performing the actual password reset. Used to check if a token is valid before showing the reset form.",
-        "operationId": "UserController_validateResetToken",
+        "operationId": "UserPasswordResetController_validateResetToken",
         "parameters": [
           {
             "name": "token",
@@ -2099,12 +2099,6 @@
                     "valid": {
                       "type": "boolean",
                       "example": true
-                    },
-                    "purpose": {
-                      "type": "string",
-                      "enum": ["activation", "reset"],
-                      "example": "reset",
-                      "nullable": true
                     }
                   }
                 }
@@ -9379,11 +9373,6 @@
             "example": "123e4567-e89b-12d3-a456-426614174001",
             "format": "uuid"
           },
-          "activated": {
-            "type": "boolean",
-            "description": "Whether the user has activated their account",
-            "example": true
-          },
           "department": {
             "type": "string",
             "description": "Department the user belongs to",
@@ -9397,15 +9386,7 @@
             "example": "2024-01-15T10:30:00Z"
           }
         },
-        "required": [
-          "id",
-          "name",
-          "email",
-          "role",
-          "orgId",
-          "activated",
-          "createdAt"
-        ]
+        "required": ["id", "name", "email", "role", "orgId", "createdAt"]
       },
       "PaginatedUsersListResponseDto": {
         "type": "object",
@@ -9585,13 +9566,13 @@
             "enum": ["admin", "user"],
             "example": "user"
           },
-          "sendPasswordResetEmail": {
+          "sendActivationEmail": {
             "type": "boolean",
-            "description": "Send password reset email",
+            "description": "Send the account activation (welcome) email to the new user",
             "example": true
           }
         },
-        "required": ["email", "name", "role", "sendPasswordResetEmail"]
+        "required": ["email", "name", "role", "sendActivationEmail"]
       },
       "SuperAdminUserResponseDto": {
         "type": "object",
@@ -9624,11 +9605,6 @@
             "example": "123e4567-e89b-12d3-a456-426614174001",
             "format": "uuid"
           },
-          "activated": {
-            "type": "boolean",
-            "description": "Whether the user has activated their account",
-            "example": true
-          },
           "department": {
             "type": "string",
             "description": "Department the user belongs to",
@@ -9654,7 +9630,6 @@
           "email",
           "role",
           "orgId",
-          "activated",
           "createdAt",
           "systemRole"
         ]
