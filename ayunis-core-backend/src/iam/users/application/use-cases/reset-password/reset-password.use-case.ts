@@ -96,7 +96,6 @@ export class ResetPasswordUseCase {
         });
 
       user.passwordHash = newHashedPassword;
-      user.activated = true;
       await this.usersRepository.update(user);
 
       this.logger.debug('Password reset successfully', {

@@ -6,7 +6,6 @@ import { SuperAdminTriggerPasswordResetCommand } from './super-admin-trigger-pas
 import { UsersRepository } from '../../ports/users.repository';
 import { PasswordResetJwtService } from '../../services/password-reset-jwt.service';
 import { SendPasswordResetEmailUseCase } from '../send-password-reset-email/send-password-reset-email.use-case';
-import { SendSetInitialPasswordEmailUseCase } from '../send-set-initial-password-email/send-set-initial-password-email.use-case';
 import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
 import { UserNotFoundError } from '../../users.errors';
@@ -17,7 +16,6 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
   let mockUsersRepository: Partial<UsersRepository>;
   let mockPasswordResetJwtService: Partial<PasswordResetJwtService>;
   let mockSendPasswordResetEmailUseCase: Partial<SendPasswordResetEmailUseCase>;
-  let mockSendSetInitialPasswordEmailUseCase: Partial<SendSetInitialPasswordEmailUseCase>;
   let mockConfigService: Partial<ConfigService>;
 
   const userId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
@@ -25,10 +23,20 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
   const userName = 'Maria Müller';
   const orgId = '660e8400-e29b-41d4-a716-446655440000' as UUID;
   const resetToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock-token';
-  const activationToken =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock-activation-token';
   const frontendBaseUrl = 'http://localhost:3001';
   const passwordResetEndpoint = '/password/reset';
+
+  const buildUser = () =>
+    new User({
+      id: userId,
+      name: userName,
+      email: userEmail,
+      emailVerified: true,
+      passwordHash: 'hashed-password',
+      role: UserRole.USER,
+      orgId,
+      hasAcceptedMarketing: false,
+    });
 
   beforeAll(async () => {
     mockUsersRepository = {
@@ -41,10 +49,6 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
     };
 
     mockSendPasswordResetEmailUseCase = {
-      execute: jest.fn(),
-    };
-
-    mockSendSetInitialPasswordEmailUseCase = {
       execute: jest.fn(),
     };
 
@@ -64,10 +68,6 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
           provide: SendPasswordResetEmailUseCase,
           useValue: mockSendPasswordResetEmailUseCase,
         },
-        {
-          provide: SendSetInitialPasswordEmailUseCase,
-          useValue: mockSendSetInitialPasswordEmailUseCase,
-        },
         { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
@@ -84,13 +84,7 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
       .spyOn(mockPasswordResetJwtService, 'generatePasswordResetToken')
       .mockReturnValue(resetToken);
     jest
-      .spyOn(mockPasswordResetJwtService, 'generateInitialPasswordToken')
-      .mockReturnValue(activationToken);
-    jest
       .spyOn(mockSendPasswordResetEmailUseCase, 'execute')
-      .mockResolvedValue(undefined);
-    jest
-      .spyOn(mockSendSetInitialPasswordEmailUseCase, 'execute')
       .mockResolvedValue(undefined);
     jest.spyOn(mockConfigService, 'get').mockImplementation((key: string) => {
       if (key === 'app.frontend.baseUrl') return frontendBaseUrl;
@@ -100,21 +94,10 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
     });
   });
 
-  it('should send password reset email for activated user', async () => {
-    const activatedUser = new User({
-      id: userId,
-      name: userName,
-      email: userEmail,
-      emailVerified: true,
-      passwordHash: 'hashed-password',
-      role: UserRole.USER,
-      orgId,
-      hasAcceptedMarketing: false,
-      activated: true,
-    });
+  it('should send the password reset email and return the reset url', async () => {
     jest
       .spyOn(mockUsersRepository, 'findOneById')
-      .mockResolvedValue(activatedUser);
+      .mockResolvedValue(buildUser());
 
     const command = new SuperAdminTriggerPasswordResetCommand(userId);
     const result = await useCase.execute(command);
@@ -132,45 +115,6 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
         userName,
       }),
     );
-    expect(
-      mockSendSetInitialPasswordEmailUseCase.execute,
-    ).not.toHaveBeenCalled();
-  });
-
-  it('should send activation email for non-activated user', async () => {
-    const unactivatedUser = new User({
-      id: userId,
-      name: userName,
-      email: userEmail,
-      emailVerified: true,
-      passwordHash: 'hashed-password',
-      role: UserRole.USER,
-      orgId,
-      hasAcceptedMarketing: false,
-      activated: false,
-    });
-    jest
-      .spyOn(mockUsersRepository, 'findOneById')
-      .mockResolvedValue(unactivatedUser);
-
-    const command = new SuperAdminTriggerPasswordResetCommand(userId);
-    const result = await useCase.execute(command);
-
-    expect(result.resetUrl).toBe(
-      `${frontendBaseUrl}${passwordResetEndpoint}?token=${activationToken}`,
-    );
-    expect(
-      mockPasswordResetJwtService.generateInitialPasswordToken,
-    ).toHaveBeenCalledWith({ userId, email: userEmail });
-    expect(mockSendSetInitialPasswordEmailUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        userEmail,
-        userName,
-        resetToken: activationToken,
-        orgId,
-      }),
-    );
-    expect(mockSendPasswordResetEmailUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('should throw UserNotFoundError when user does not exist', async () => {
@@ -180,8 +124,5 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
 
     await expect(useCase.execute(command)).rejects.toThrow(UserNotFoundError);
     expect(mockSendPasswordResetEmailUseCase.execute).not.toHaveBeenCalled();
-    expect(
-      mockSendSetInitialPasswordEmailUseCase.execute,
-    ).not.toHaveBeenCalled();
   });
 });

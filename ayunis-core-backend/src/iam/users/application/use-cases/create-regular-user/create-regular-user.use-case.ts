@@ -26,7 +26,6 @@ export class CreateRegularUserUseCase {
       role: UserRole.USER,
       emailVerified: command.emailVerified,
       hasAcceptedMarketing: command.hasAcceptedMarketing,
-      activated: command.activated,
       department: command.department,
     });
 

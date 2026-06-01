@@ -15,13 +15,13 @@ import { Link } from '@tanstack/react-router';
 
 interface Props {
   token: string;
-  purpose: 'activation' | 'reset';
+  mode: 'activation' | 'reset';
 }
 
-export function ResetPasswordPage({ token, purpose }: Readonly<Props>) {
-  const { form, onSubmit, isLoading } = useResetPassword(token, purpose);
+export function ResetPasswordPage({ token, mode }: Readonly<Props>) {
+  const { form, onSubmit, isLoading } = useResetPassword(token, mode);
   const { t } = useTranslation('auth');
-  const isActivation = purpose === 'activation';
+  const isActivation = mode === 'activation';
   const prefix = isActivation ? 'activateAccount' : 'resetPassword';
 
   return (

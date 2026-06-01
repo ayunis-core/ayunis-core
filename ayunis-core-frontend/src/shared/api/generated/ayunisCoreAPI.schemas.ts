@@ -944,8 +944,6 @@ export interface UserResponseDto {
   role: UserResponseDtoRole;
   /** Organization ID the user belongs to */
   orgId: string;
-  /** Whether the user has activated their account */
-  activated: boolean;
   /**
    * Department the user belongs to
    * @nullable
@@ -1071,8 +1069,8 @@ export interface CreateUserDto {
   name: string;
   /** Role for the user */
   role: CreateUserDtoRole;
-  /** Send password reset email */
-  sendPasswordResetEmail: boolean;
+  /** Send the account activation (welcome) email to the new user */
+  sendActivationEmail: boolean;
 }
 
 /**
@@ -1110,8 +1108,6 @@ export interface SuperAdminUserResponseDto {
   role: SuperAdminUserResponseDtoRole;
   /** Organization ID the user belongs to */
   orgId: string;
-  /** Whether the user has activated their account */
-  activated: boolean;
   /**
    * Department the user belongs to
    * @nullable
@@ -4080,29 +4076,15 @@ limit?: number;
 offset?: number;
 };
 
-export type UserControllerValidateResetTokenParams = {
+export type UserPasswordResetControllerValidateResetTokenParams = {
 /**
  * Password reset token from email
  */
 token: string;
 };
 
-/**
- * @nullable
- */
-export type UserControllerValidateResetToken200Purpose = typeof UserControllerValidateResetToken200Purpose[keyof typeof UserControllerValidateResetToken200Purpose] | null;
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UserControllerValidateResetToken200Purpose = {
-  activation: 'activation',
-  reset: 'reset',
-} as const;
-
-export type UserControllerValidateResetToken200 = {
+export type UserPasswordResetControllerValidateResetToken200 = {
   valid?: boolean;
-  /** @nullable */
-  purpose?: UserControllerValidateResetToken200Purpose;
 };
 
 export type SuperAdminUsersControllerGetUsersByOrgIdParams = {

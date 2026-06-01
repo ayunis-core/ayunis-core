@@ -5,13 +5,13 @@ import { useNavigate } from '@tanstack/react-router';
 import { AlertCircle } from 'lucide-react';
 
 interface Props {
-  purpose: 'activation' | 'reset';
+  mode: 'activation' | 'reset';
 }
 
-export function TokenExpiredPage({ purpose }: Readonly<Props>) {
+export function TokenExpiredPage({ mode }: Readonly<Props>) {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
-  const prefix = purpose === 'activation' ? 'activateAccount' : 'resetPassword';
+  const prefix = mode === 'activation' ? 'activateAccount' : 'resetPassword';
 
   const handleRequestNewLink = () => {
     void navigate({ to: '/password/forgot' });

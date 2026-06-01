@@ -15,11 +15,7 @@
     "roleAdmin": "Admin",
     "roleUser": "User",
     "actions": "Actions",
-    "status": "Status",
-    "active": "Active",
-    "pending": "Pending",
-    "sendActivationLink": "Send Activation Link",
-    "resetPassword": "Reset Password",
+    "sendPasswordReset": "Send Password Reset",
     "delete": "Delete"
   },
   "empty": {
@@ -183,24 +179,24 @@
     "confirmText": "Delete",
     "cancelText": "Cancel"
   },
-  "triggerActivation": {
-    "success": "Access link sent successfully",
-    "error": "Failed to send access link. Please try again.",
+  "triggerPasswordReset": {
+    "success": "Password reset email sent successfully",
+    "error": "Failed to send password reset email. Please try again.",
     "notFound": "User not found."
   },
-  "activationSuccess": {
-    "title": "Access Link Sent",
-    "description": "An access link has been sent to {{email}}. You can also share the link directly.",
-    "urlLabel": "Access Link",
+  "passwordResetSuccess": {
+    "title": "Password Reset Email Sent",
+    "description": "A password reset email has been sent to {{email}}. You can also share the reset link directly.",
+    "urlLabel": "Password Reset Link",
     "copyButton": "Copy",
     "copiedButton": "Copied",
     "copied": "Link copied to clipboard",
     "close": "Close"
   },
-  "confirmActivation": {
-    "title": "Send Access Link",
-    "description": "Send an access link to {{name}} ({{email}})?",
-    "confirmText": "Send Link",
+  "confirmPasswordReset": {
+    "title": "Send Password Reset Email",
+    "description": "Send a password reset email to {{name}} ({{email}})?",
+    "confirmText": "Send Email",
     "cancelText": "Cancel"
   },
   "createUser": {

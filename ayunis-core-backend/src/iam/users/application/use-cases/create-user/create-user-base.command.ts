@@ -1,12 +1,15 @@
 import type { UUID } from 'crypto';
-import type { UserRole } from '../../../domain/value-objects/role.object';
 
-export class CreateUserCommand {
+/**
+ * Shared shape for role-agnostic user-creation commands. The concrete role is
+ * assigned by the wrapping use case (admin vs regular), so the command itself
+ * carries everything except the role.
+ */
+export abstract class CreateUserBaseCommand {
   public readonly email: string;
   public readonly password: string;
   public readonly orgId: UUID;
   public readonly name: string;
-  public readonly role: UserRole;
   public readonly emailVerified: boolean;
   public readonly hasAcceptedMarketing: boolean;
   public readonly department?: string;
@@ -16,7 +19,6 @@ export class CreateUserCommand {
     password: string;
     orgId: UUID;
     name: string;
-    role: UserRole;
     emailVerified: boolean;
     hasAcceptedMarketing: boolean;
     department?: string;
@@ -25,7 +27,6 @@ export class CreateUserCommand {
     this.password = params.password;
     this.orgId = params.orgId;
     this.name = params.name;
-    this.role = params.role;
     this.emailVerified = params.emailVerified;
     this.hasAcceptedMarketing = params.hasAcceptedMarketing;
     this.department = params.department;

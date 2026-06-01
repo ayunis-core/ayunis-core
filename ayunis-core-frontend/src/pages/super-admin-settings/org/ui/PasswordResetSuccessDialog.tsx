@@ -39,7 +39,7 @@ export default function PasswordResetSuccessDialog({
     try {
       await navigator.clipboard.writeText(resetUrl);
       setIsCopied(true);
-      showSuccess(t('activationSuccess.copied'));
+      showSuccess(t('passwordResetSuccess.copied'));
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy URL:', err);
@@ -50,15 +50,15 @@ export default function PasswordResetSuccessDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>{t('activationSuccess.title')}</DialogTitle>
+          <DialogTitle>{t('passwordResetSuccess.title')}</DialogTitle>
           <DialogDescription>
-            {t('activationSuccess.description', { email: userEmail })}
+            {t('passwordResetSuccess.description', { email: userEmail })}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="resetUrl" className="text-sm font-medium">
-              {t('activationSuccess.urlLabel')}
+              {t('passwordResetSuccess.urlLabel')}
             </Label>
             <div className="flex items-center space-x-2">
               <Input
@@ -75,12 +75,12 @@ export default function PasswordResetSuccessDialog({
                 {isCopied ? (
                   <>
                     <Check className="h-4 w-4" />
-                    <span>{t('activationSuccess.copiedButton')}</span>
+                    <span>{t('passwordResetSuccess.copiedButton')}</span>
                   </>
                 ) : (
                   <>
                     <Copy className="h-4 w-4" />
-                    <span>{t('activationSuccess.copyButton')}</span>
+                    <span>{t('passwordResetSuccess.copyButton')}</span>
                   </>
                 )}
               </Button>
@@ -88,7 +88,7 @@ export default function PasswordResetSuccessDialog({
           </div>
           <DialogFooter>
             <Button onClick={handleClose}>
-              {t('activationSuccess.close')}
+              {t('passwordResetSuccess.close')}
             </Button>
           </DialogFooter>
         </div>

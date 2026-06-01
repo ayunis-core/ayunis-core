@@ -15,11 +15,7 @@
     "roleAdmin": "Administrator",
     "roleUser": "Benutzer",
     "actions": "Aktionen",
-    "status": "Status",
-    "active": "Aktiv",
-    "pending": "Ausstehend",
-    "sendActivationLink": "Aktivierungslink senden",
-    "resetPassword": "Passwort-Reset senden",
+    "sendPasswordReset": "Passwort-Reset senden",
     "delete": "Löschen"
   },
   "empty": {
@@ -183,24 +179,24 @@
     "confirmText": "Löschen",
     "cancelText": "Abbrechen"
   },
-  "triggerActivation": {
-    "success": "Zugangslink erfolgreich gesendet",
-    "error": "Zugangslink konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
+  "triggerPasswordReset": {
+    "success": "Passwort-Reset-E-Mail erfolgreich gesendet",
+    "error": "Passwort-Reset-E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
     "notFound": "Benutzer nicht gefunden."
   },
-  "activationSuccess": {
-    "title": "Zugangslink gesendet",
-    "description": "Ein Zugangslink wurde an {{email}} gesendet. Sie können den Link auch direkt teilen.",
-    "urlLabel": "Zugangslink",
+  "passwordResetSuccess": {
+    "title": "Passwort-Reset-E-Mail gesendet",
+    "description": "Eine Passwort-Reset-E-Mail wurde an {{email}} gesendet. Sie können den Reset-Link auch direkt teilen.",
+    "urlLabel": "Passwort-Reset-Link",
     "copyButton": "Kopieren",
     "copiedButton": "Kopiert",
     "copied": "Link in Zwischenablage kopiert",
     "close": "Schließen"
   },
-  "confirmActivation": {
-    "title": "Zugangslink senden",
-    "description": "Einen Zugangslink an {{name}} ({{email}}) senden?",
-    "confirmText": "Link senden",
+  "confirmPasswordReset": {
+    "title": "Passwort-Reset-E-Mail senden",
+    "description": "Eine Passwort-Reset-E-Mail an {{name}} ({{email}}) senden?",
+    "confirmText": "E-Mail senden",
     "cancelText": "Abbrechen"
   },
   "createUser": {

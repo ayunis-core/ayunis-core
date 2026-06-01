@@ -21,12 +21,12 @@ export function useSuperAdminTriggerPasswordReset(
         try {
           const { code } = extractErrorData(error);
           if (code === 'USER_NOT_FOUND') {
-            showError(t('triggerActivation.notFound'));
+            showError(t('triggerPasswordReset.notFound'));
           } else {
-            showError(t('triggerActivation.error'));
+            showError(t('triggerPasswordReset.error'));
           }
         } catch {
-          showError(t('triggerActivation.error'));
+          showError(t('triggerPasswordReset.error'));
         }
       },
     },

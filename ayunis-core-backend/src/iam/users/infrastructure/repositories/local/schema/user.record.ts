@@ -40,9 +40,6 @@ export class UserRecord extends BaseRecord {
   @Column({ default: false })
   hasAcceptedMarketing: boolean;
 
-  @Column({ default: true })
-  activated: boolean;
-
   @Column({ nullable: true })
   department?: string;
 }

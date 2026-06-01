@@ -1,4 +1,4 @@
-import { useUserControllerTriggerPasswordResetForUser } from '@/shared/api/generated/ayunisCoreAPI';
+import { useUserPasswordResetControllerTriggerPasswordResetForUser } from '@/shared/api/generated/ayunisCoreAPI';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 
@@ -11,15 +11,15 @@ export function useTriggerPasswordReset(
 ) {
   const { t } = useTranslation('admin-settings-users');
 
-  const mutation = useUserControllerTriggerPasswordResetForUser({
+  const mutation = useUserPasswordResetControllerTriggerPasswordResetForUser({
     mutation: {
       onSuccess: () => {
-        showSuccess(t('triggerActivation.success'));
+        showSuccess(t('triggerPasswordReset.success'));
         options?.onSuccessCallback?.();
       },
       onError: (err) => {
-        console.error('Error triggering activation email', err);
-        showError(t('triggerActivation.error'));
+        console.error('Error triggering password reset', err);
+        showError(t('triggerPasswordReset.error'));
       },
     },
   });

@@ -33,13 +33,13 @@ export class SendSetInitialPasswordEmailUseCase {
       const frontendBaseUrl = this.configService.get<string>(
         'app.frontend.baseUrl',
       );
-      const passwordResetEndpoint = this.configService.get<string>(
-        'app.frontend.passwordResetEndpoint',
+      const accountActivateEndpoint = this.configService.get<string>(
+        'app.frontend.accountActivateEndpoint',
       );
       const emailAssetsPath = this.configService.get<string>(
         'app.frontend.emailAssetsPath',
       );
-      const resetUrl = `${frontendBaseUrl}${passwordResetEndpoint}?token=${command.resetToken}`;
+      const resetUrl = `${frontendBaseUrl}${accountActivateEndpoint}?token=${command.resetToken}`;
       const assetBase = `${frontendBaseUrl}${emailAssetsPath}`;
 
       const template = new SetInitialPasswordTemplate({

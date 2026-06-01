@@ -32,6 +32,7 @@ import { EmailConfirmationJwtService } from './application/services/email-confir
 
 // Import controllers and mappers
 import { UserController } from './presenters/http/user.controller';
+import { UserPasswordResetController } from './presenters/http/user-password-reset.controller';
 import { AdminUserController } from './presenters/http/admin-user.controller';
 import { UserResponseDtoMapper } from './presenters/http/mappers/user-response-dto.mapper';
 import { SuperAdminUserResponseDtoMapper } from './presenters/http/mappers/super-admin-user-response-dto.mapper';
@@ -49,7 +50,6 @@ import { InvitesModule } from '../invites/invites.module';
 import { OrgsModule } from '../orgs/orgs.module';
 import { SendSetInitialPasswordEmailUseCase } from './application/use-cases/send-set-initial-password-email/send-set-initial-password-email.use-case';
 import { TriggerSetInitialPasswordUseCase } from './application/use-cases/trigger-set-initial-password/trigger-set-initial-password.use-case';
-import { FirstStepsEmailListener } from './application/listeners/first-steps-email.listener';
 import { SuperAdminUsersController } from './presenters/http/super-admin-users.controller';
 import { SuperAdminManagementController } from './presenters/http/super-admin-management.controller';
 import { FindSuperAdminsUseCase } from './application/use-cases/find-super-admins/find-super-admins.use-case';
@@ -83,6 +83,7 @@ import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from
   ],
   controllers: [
     UserController,
+    UserPasswordResetController,
     AdminUserController,
     SuperAdminUsersController,
     SuperAdminManagementController,
@@ -124,7 +125,6 @@ import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from
     SuperAdminTriggerPasswordResetUseCase,
     SendSetInitialPasswordEmailUseCase,
     TriggerSetInitialPasswordUseCase,
-    FirstStepsEmailListener,
     FindSuperAdminsUseCase,
     PromoteToSuperAdminUseCase,
     DemoteFromSuperAdminUseCase,

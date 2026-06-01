@@ -95,15 +95,15 @@ export default function UsersSection({
     });
   };
 
-  const handleTriggerActivation = (user: UserResponseDto) => {
+  const handleTriggerPasswordReset = (user: UserResponseDto) => {
     confirm({
-      title: t('confirmActivation.title'),
-      description: t('confirmActivation.description', {
+      title: t('confirmPasswordReset.title'),
+      description: t('confirmPasswordReset.description', {
         name: user.name,
         email: user.email,
       }),
-      confirmText: t('confirmActivation.confirmText'),
-      cancelText: t('confirmActivation.cancelText'),
+      confirmText: t('confirmPasswordReset.confirmText'),
+      cancelText: t('confirmPasswordReset.cancelText'),
       variant: 'default',
       onConfirm: () => {
         setLoadingUserId(user.id);
@@ -137,7 +137,6 @@ export default function UsersSection({
               <TableHead>{t('users.name')}</TableHead>
               <TableHead>{t('users.email')}</TableHead>
               <TableHead>{t('users.role')}</TableHead>
-              <TableHead>{t('users.status')}</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -148,17 +147,6 @@ export default function UsersSection({
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
                   {user.role === 'admin' ? t('users.admin') : t('users.user')}
-                </TableCell>
-                <TableCell>
-                  {user.activated ? (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      {t('users.active')}
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                      {t('users.pending')}
-                    </span>
-                  )}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -192,13 +180,11 @@ export default function UsersSection({
                         })}
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleTriggerActivation(user)}
+                        onClick={() => handleTriggerPasswordReset(user)}
                         disabled={isUserLoading(user.id)}
                       >
                         <Mail />
-                        {user.activated
-                          ? t('users.resetPassword')
-                          : t('users.sendActivationLink')}
+                        {t('users.sendPasswordReset')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         variant="destructive"

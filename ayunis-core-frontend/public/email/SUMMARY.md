@@ -8,16 +8,9 @@ Static assets used by transactional emails sent from `ayunis-core-backend`. All 
 |---|---|---|
 | `logo.png` | All emails (header) | 130px wide |
 | `banner-welcome.png` | Invitation, Konto-aktivieren | 496px wide |
-| `banner-hero-people.png` | First-Steps (post-personalization) | 496px wide |
-| `banner-skills.png` | First-Steps (Fähigkeiten section) | 496px wide |
-| `banner-knowledge.png` | First-Steps (Wissen section) | 496px wide |
 | `team.png` | All emails (signoff) | 126px wide |
 
 PNG is used everywhere because Outlook Desktop (Word renderer) cannot render SVG.
-
-## Pending
-
-- **Icon PNGs** for the use-case rows in the First-Steps email (`pencil`, `file-text`, `message-circle`). Currently embedded inline as SVG — Outlook Desktop will fall back to broken icons. Export each as 80×80 PNG with the brand purple stroke (`#7C5CFF`) on a transparent background.
 
 ## Why these files live here
 

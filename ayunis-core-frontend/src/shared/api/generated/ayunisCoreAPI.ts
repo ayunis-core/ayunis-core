@@ -192,8 +192,8 @@ import type {
   UsageStatsResponseDto,
   UserConfigResponseDto,
   UserControllerGetUsersInOrganizationParams,
-  UserControllerValidateResetToken200,
-  UserControllerValidateResetTokenParams,
+  UserPasswordResetControllerValidateResetToken200,
+  UserPasswordResetControllerValidateResetTokenParams,
   UserResponseDto,
   UserSystemPromptResponseDto,
   UserUsageResponseDto,
@@ -4281,7 +4281,7 @@ export const useAdminUserControllerAdminUpdateUser = <TError = void,
  * Send a password reset email to a user in your organization. Only organization admins can use this endpoint.
  * @summary Trigger password reset for a user
  */
-export const userControllerTriggerPasswordResetForUser = (
+export const userPasswordResetControllerTriggerPasswordResetForUser = (
     id: string,
  signal?: AbortSignal
 ) => {
@@ -4295,11 +4295,11 @@ export const userControllerTriggerPasswordResetForUser = (
   
 
 
-export const getUserControllerTriggerPasswordResetForUserMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerTriggerPasswordResetForUser>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof userControllerTriggerPasswordResetForUser>>, TError,{id: string}, TContext> => {
+export const getUserPasswordResetControllerTriggerPasswordResetForUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userPasswordResetControllerTriggerPasswordResetForUser>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userPasswordResetControllerTriggerPasswordResetForUser>>, TError,{id: string}, TContext> => {
 
-const mutationKey = ['userControllerTriggerPasswordResetForUser'];
+const mutationKey = ['userPasswordResetControllerTriggerPasswordResetForUser'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -4309,10 +4309,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerTriggerPasswordResetForUser>>, {id: string}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userPasswordResetControllerTriggerPasswordResetForUser>>, {id: string}> = (props) => {
           const {id} = props ?? {};
 
-          return  userControllerTriggerPasswordResetForUser(id,)
+          return  userPasswordResetControllerTriggerPasswordResetForUser(id,)
         }
 
         
@@ -4320,23 +4320,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type UserControllerTriggerPasswordResetForUserMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerTriggerPasswordResetForUser>>>
+    export type UserPasswordResetControllerTriggerPasswordResetForUserMutationResult = NonNullable<Awaited<ReturnType<typeof userPasswordResetControllerTriggerPasswordResetForUser>>>
     
-    export type UserControllerTriggerPasswordResetForUserMutationError = void
+    export type UserPasswordResetControllerTriggerPasswordResetForUserMutationError = void
 
     /**
  * @summary Trigger password reset for a user
  */
-export const useUserControllerTriggerPasswordResetForUser = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerTriggerPasswordResetForUser>>, TError,{id: string}, TContext>, }
+export const useUserPasswordResetControllerTriggerPasswordResetForUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userPasswordResetControllerTriggerPasswordResetForUser>>, TError,{id: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof userControllerTriggerPasswordResetForUser>>,
+        Awaited<ReturnType<typeof userPasswordResetControllerTriggerPasswordResetForUser>>,
         TError,
         {id: string},
         TContext
       > => {
 
-      const mutationOptions = getUserControllerTriggerPasswordResetForUserMutationOptions(options);
+      const mutationOptions = getUserPasswordResetControllerTriggerPasswordResetForUserMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -4345,7 +4345,7 @@ export const useUserControllerTriggerPasswordResetForUser = <TError = void,
  * Send a password reset email to the provided email address. If the email exists in the system, a reset link will be sent.
  * @summary Trigger password reset
  */
-export const userControllerForgotPassword = (
+export const userPasswordResetControllerForgotPassword = (
     forgotPasswordDto: ForgotPasswordDto,
  signal?: AbortSignal
 ) => {
@@ -4361,11 +4361,11 @@ export const userControllerForgotPassword = (
   
 
 
-export const getUserControllerForgotPasswordMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerForgotPassword>>, TError,{data: ForgotPasswordDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof userControllerForgotPassword>>, TError,{data: ForgotPasswordDto}, TContext> => {
+export const getUserPasswordResetControllerForgotPasswordMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userPasswordResetControllerForgotPassword>>, TError,{data: ForgotPasswordDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userPasswordResetControllerForgotPassword>>, TError,{data: ForgotPasswordDto}, TContext> => {
 
-const mutationKey = ['userControllerForgotPassword'];
+const mutationKey = ['userPasswordResetControllerForgotPassword'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -4375,10 +4375,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerForgotPassword>>, {data: ForgotPasswordDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userPasswordResetControllerForgotPassword>>, {data: ForgotPasswordDto}> = (props) => {
           const {data} = props ?? {};
 
-          return  userControllerForgotPassword(data,)
+          return  userPasswordResetControllerForgotPassword(data,)
         }
 
         
@@ -4386,23 +4386,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type UserControllerForgotPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerForgotPassword>>>
-    export type UserControllerForgotPasswordMutationBody = ForgotPasswordDto
-    export type UserControllerForgotPasswordMutationError = void
+    export type UserPasswordResetControllerForgotPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof userPasswordResetControllerForgotPassword>>>
+    export type UserPasswordResetControllerForgotPasswordMutationBody = ForgotPasswordDto
+    export type UserPasswordResetControllerForgotPasswordMutationError = void
 
     /**
  * @summary Trigger password reset
  */
-export const useUserControllerForgotPassword = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerForgotPassword>>, TError,{data: ForgotPasswordDto}, TContext>, }
+export const useUserPasswordResetControllerForgotPassword = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userPasswordResetControllerForgotPassword>>, TError,{data: ForgotPasswordDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof userControllerForgotPassword>>,
+        Awaited<ReturnType<typeof userPasswordResetControllerForgotPassword>>,
         TError,
         {data: ForgotPasswordDto},
         TContext
       > => {
 
-      const mutationOptions = getUserControllerForgotPasswordMutationOptions(options);
+      const mutationOptions = getUserPasswordResetControllerForgotPasswordMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -4411,7 +4411,7 @@ export const useUserControllerForgotPassword = <TError = void,
  * Reset user password using the token received via email. The token must be valid and not expired.
  * @summary Reset password with token
  */
-export const userControllerResetPassword = (
+export const userPasswordResetControllerResetPassword = (
     resetPasswordDto: ResetPasswordDto,
  signal?: AbortSignal
 ) => {
@@ -4427,11 +4427,11 @@ export const userControllerResetPassword = (
   
 
 
-export const getUserControllerResetPasswordMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerResetPassword>>, TError,{data: ResetPasswordDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof userControllerResetPassword>>, TError,{data: ResetPasswordDto}, TContext> => {
+export const getUserPasswordResetControllerResetPasswordMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userPasswordResetControllerResetPassword>>, TError,{data: ResetPasswordDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userPasswordResetControllerResetPassword>>, TError,{data: ResetPasswordDto}, TContext> => {
 
-const mutationKey = ['userControllerResetPassword'];
+const mutationKey = ['userPasswordResetControllerResetPassword'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -4441,10 +4441,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerResetPassword>>, {data: ResetPasswordDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userPasswordResetControllerResetPassword>>, {data: ResetPasswordDto}> = (props) => {
           const {data} = props ?? {};
 
-          return  userControllerResetPassword(data,)
+          return  userPasswordResetControllerResetPassword(data,)
         }
 
         
@@ -4452,23 +4452,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type UserControllerResetPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerResetPassword>>>
-    export type UserControllerResetPasswordMutationBody = ResetPasswordDto
-    export type UserControllerResetPasswordMutationError = void
+    export type UserPasswordResetControllerResetPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof userPasswordResetControllerResetPassword>>>
+    export type UserPasswordResetControllerResetPasswordMutationBody = ResetPasswordDto
+    export type UserPasswordResetControllerResetPasswordMutationError = void
 
     /**
  * @summary Reset password with token
  */
-export const useUserControllerResetPassword = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerResetPassword>>, TError,{data: ResetPasswordDto}, TContext>, }
+export const useUserPasswordResetControllerResetPassword = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userPasswordResetControllerResetPassword>>, TError,{data: ResetPasswordDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof userControllerResetPassword>>,
+        Awaited<ReturnType<typeof userPasswordResetControllerResetPassword>>,
         TError,
         {data: ResetPasswordDto},
         TContext
       > => {
 
-      const mutationOptions = getUserControllerResetPasswordMutationOptions(options);
+      const mutationOptions = getUserPasswordResetControllerResetPasswordMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -4477,13 +4477,13 @@ export const useUserControllerResetPassword = <TError = void,
  * Validate a password reset token without performing the actual password reset. Used to check if a token is valid before showing the reset form.
  * @summary Validate password reset token
  */
-export const userControllerValidateResetToken = (
-    params: UserControllerValidateResetTokenParams,
+export const userPasswordResetControllerValidateResetToken = (
+    params: UserPasswordResetControllerValidateResetTokenParams,
  signal?: AbortSignal
 ) => {
       
       
-      return customAxiosInstance<UserControllerValidateResetToken200>(
+      return customAxiosInstance<UserPasswordResetControllerValidateResetToken200>(
       {url: `/users/validate-reset-token`, method: 'GET',
         params, signal
     },
@@ -4493,69 +4493,69 @@ export const userControllerValidateResetToken = (
 
 
 
-export const getUserControllerValidateResetTokenQueryKey = (params?: UserControllerValidateResetTokenParams,) => {
+export const getUserPasswordResetControllerValidateResetTokenQueryKey = (params?: UserPasswordResetControllerValidateResetTokenParams,) => {
     return [
     `/users/validate-reset-token`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const getUserControllerValidateResetTokenQueryOptions = <TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(params: UserControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>>, }
+export const getUserPasswordResetControllerValidateResetTokenQueryOptions = <TData = Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>, TError = void>(params: UserPasswordResetControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getUserControllerValidateResetTokenQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getUserPasswordResetControllerValidateResetTokenQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof userControllerValidateResetToken>>> = ({ signal }) => userControllerValidateResetToken(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>> = ({ signal }) => userPasswordResetControllerValidateResetToken(params, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type UserControllerValidateResetTokenQueryResult = NonNullable<Awaited<ReturnType<typeof userControllerValidateResetToken>>>
-export type UserControllerValidateResetTokenQueryError = void
+export type UserPasswordResetControllerValidateResetTokenQueryResult = NonNullable<Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>>
+export type UserPasswordResetControllerValidateResetTokenQueryError = void
 
 
-export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(
- params: UserControllerValidateResetTokenParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>> & Pick<
+export function useUserPasswordResetControllerValidateResetToken<TData = Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>, TError = void>(
+ params: UserPasswordResetControllerValidateResetTokenParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof userControllerValidateResetToken>>,
+          Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>,
           TError,
-          Awaited<ReturnType<typeof userControllerValidateResetToken>>
+          Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(
- params: UserControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>> & Pick<
+export function useUserPasswordResetControllerValidateResetToken<TData = Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>, TError = void>(
+ params: UserPasswordResetControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof userControllerValidateResetToken>>,
+          Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>,
           TError,
-          Awaited<ReturnType<typeof userControllerValidateResetToken>>
+          Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(
- params: UserControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>>, }
+export function useUserPasswordResetControllerValidateResetToken<TData = Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>, TError = void>(
+ params: UserPasswordResetControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Validate password reset token
  */
 
-export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(
- params: UserControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>>, }
+export function useUserPasswordResetControllerValidateResetToken<TData = Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>, TError = void>(
+ params: UserPasswordResetControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userPasswordResetControllerValidateResetToken>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getUserControllerValidateResetTokenQueryOptions(params,options)
+  const queryOptions = getUserPasswordResetControllerValidateResetTokenQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

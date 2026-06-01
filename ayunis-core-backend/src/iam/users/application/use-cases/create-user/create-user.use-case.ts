@@ -81,7 +81,6 @@ export class CreateUserUseCase {
         role: command.role,
         name: command.name,
         hasAcceptedMarketing: command.hasAcceptedMarketing,
-        activated: command.activated,
         department: command.department,
       });
 
