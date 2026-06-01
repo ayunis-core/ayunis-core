@@ -53,13 +53,23 @@ export default function useSuperAdminSubscriptionMonthlyCreditsUpdate(
       },
     });
 
-  function updateMonthlyCredits(monthlyCredits: number) {
-    mutate({
-      orgId,
-      data: {
-        monthlyCredits,
+  function updateMonthlyCredits(
+    monthlyCredits: number,
+    options?: { onSuccess?: () => void },
+  ) {
+    mutate(
+      {
+        orgId,
+        data: {
+          monthlyCredits,
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          options?.onSuccess?.();
+        },
+      },
+    );
   }
 
   return { updateMonthlyCredits, isPending };

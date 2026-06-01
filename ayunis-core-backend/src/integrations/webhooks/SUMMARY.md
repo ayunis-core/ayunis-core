@@ -10,7 +10,7 @@ The webhooks module dispatches domain lifecycle events (user created/updated/del
 - `application/use-cases/send-webhook/send-webhook.use-case.ts` — Receives a `SendWebhookCommand` and delegates to the `WebhookHandler` port.
 - `application/ports/webhook.handler.ts` — Abstract port defining the webhook delivery contract.
 - `infrastructure/http/http-webhook.handler.ts` — Infrastructure adapter that performs the actual HTTP POST to the configured webhook URL.
-- `domain/entities/webhook-event.entity.ts` — Abstract `WebhookEvent` entity with UUID, event type enum, data payload, and timestamp. Nine concrete event types cover organization, user, and subscription lifecycle events.
+- `domain/entities/webhook-event.entity.ts` — Abstract `WebhookEvent` entity with UUID, event type enum, data payload, and timestamp. Ten concrete event types cover organization, user, and subscription lifecycle events (including subscription monthly credits updates).
 
 **Architecture:**
 

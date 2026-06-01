@@ -50,8 +50,7 @@ export default function CreditBudgetUpdateDialog({
     if (!isValid) {
       return;
     }
-    updateMonthlyCredits(parsed);
-    setOpen(false);
+    updateMonthlyCredits(parsed, { onSuccess: () => setOpen(false) });
   }
 
   return (

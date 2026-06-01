@@ -7,5 +7,6 @@ export enum WebhookEventType {
   SUBSCRIPTION_CANCELLED = 'subscription.cancelled',
   SUBSCRIPTION_UNCANCELLED = 'subscription.uncancelled',
   SUBSCRIPTION_SEATS_UPDATED = 'subscription.seats_updated',
+  SUBSCRIPTION_MONTHLY_CREDITS_UPDATED = 'subscription.monthly_credits_updated',
   SUBSCRIPTION_BILLING_INFO_UPDATED = 'subscription.billing_info_updated',
 }

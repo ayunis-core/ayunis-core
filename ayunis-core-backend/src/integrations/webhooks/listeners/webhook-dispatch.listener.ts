@@ -8,6 +8,7 @@ import { SubscriptionCreatedEvent } from 'src/iam/subscriptions/application/even
 import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/events/subscription-cancelled.event';
 import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/events/subscription-uncancelled.event';
 import { SubscriptionSeatsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-seats-updated.event';
+import { SubscriptionMonthlyCreditsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-monthly-credits-updated.event';
 import { SubscriptionBillingInfoUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-billing-info-updated.event';
 import { SendWebhookUseCase } from '../application/use-cases/send-webhook/send-webhook.use-case';
 import { SendWebhookCommand } from '../application/use-cases/send-webhook/send-webhook.command';
@@ -19,6 +20,7 @@ import { SubscriptionCreatedWebhookEvent } from '../domain/webhook-events/subscr
 import { SubscriptionCancelledWebhookEvent } from '../domain/webhook-events/subscription-cancelled.webhook-event';
 import { SubscriptionUncancelledWebhookEvent } from '../domain/webhook-events/subscription-uncancelled.webhook-event';
 import { SubscriptionSeatsUpdatedWebhookEvent } from '../domain/webhook-events/subscription-seats-updated.webhook-event';
+import { SubscriptionMonthlyCreditsUpdatedWebhookEvent } from '../domain/webhook-events/subscription-monthly-credits-updated.webhook-event';
 import { SubscriptionBillingInfoUpdatedWebhookEvent } from '../domain/webhook-events/subscription-billing-info-updated.webhook-event';
 import { mapSubscriptionToWebhookPayload } from './subscription-payload.mapper';
 import { mapBillingInfoToWebhookPayload } from './billing-info-payload.mapper';
@@ -96,6 +98,17 @@ export class WebhookDispatchListener {
   ): Promise<void> {
     await this.dispatch(
       new SubscriptionSeatsUpdatedWebhookEvent(
+        mapSubscriptionToWebhookPayload(event.payload),
+      ),
+    );
+  }
+
+  @OnEvent(SubscriptionMonthlyCreditsUpdatedEvent.EVENT_NAME)
+  async handleSubscriptionMonthlyCreditsUpdated(
+    event: SubscriptionMonthlyCreditsUpdatedEvent,
+  ): Promise<void> {
+    await this.dispatch(
+      new SubscriptionMonthlyCreditsUpdatedWebhookEvent(
         mapSubscriptionToWebhookPayload(event.payload),
       ),
     );
