@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { PanelLeftIcon } from 'lucide-react';
-import { useRouter } from '@tanstack/react-router';
+import { useRouterState } from '@tanstack/react-router';
 
 import { useIsMobile } from '@/shared/hooks/shadcn/use-mobile';
 import { cn } from '@/shared/lib/shadcn/utils';
@@ -69,7 +69,7 @@ function SidebarProvider({
 }) {
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
-  const router = useRouter();
+  const { location } = useRouterState();
 
   // Centralized cleanup function to avoid duplication
   const cleanupMobileSidebar = React.useCallback(() => {
@@ -204,14 +204,27 @@ function SidebarProvider({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggleSidebar]);
 
-  // Close mobile sidebar on route changes to prevent overlay blocking content.
-  // Subscribe to router navigation events so the state update happens in an
-  // event callback rather than synchronously in the effect body.
+  // Close mobile sidebar on real route changes only.
+  //
+  // The previous implementation subscribed to `router.subscribe('onResolved')`,
+  // but `onResolved` also fires for TanStack's hover-prefetched routes — which
+  // caused the mobile sidebar to close as soon as the user hovered any link.
+  // Depending on `location.href` instead means the effect only runs on actual
+  // URL changes (real navigation).
+  //
+  // Linter disables below are intentional:
+  // - `set-state-in-effect`: cleanup of UI state on real navigation is exactly
+  //   the case where setting state in an effect body is correct. The new
+  //   react-hooks 7.1 heuristic flags it but there's no cleaner pattern that
+  //   avoids the prefetch trigger.
+  // - `exhaustive-deps`: `cleanupMobileSidebar` intentionally re-uses the
+  //   latest captured closure; depending on its identity would cause
+  //   re-subscription loops.
   React.useEffect(() => {
-    return router.subscribe('onResolved', () => {
-      cleanupMobileSidebar();
-    });
-  }, [router, cleanupMobileSidebar]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    cleanupMobileSidebar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.href]);
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
