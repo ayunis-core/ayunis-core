@@ -1,13 +1,16 @@
 import {
   Card,
+  CardAction,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@/shared/ui/shadcn/card';
+import { Button } from '@/shared/ui/shadcn/button';
 import { CreditBudgetDisplay } from '@/widgets/credit-budget-display';
 import { useTranslation } from 'react-i18next';
 import useSuperAdminCreditUsage from '../api/useSuperAdminCreditUsage';
 import { computeUsagePercent } from '@/shared/lib/computeUsagePercent';
+import CreditBudgetUpdateDialog from './CreditBudgetUpdateDialog';
 
 interface CreditBudgetSectionProps {
   orgId: string;
@@ -33,6 +36,17 @@ export default function CreditBudgetSection({
         <CardTitle className="flex items-center gap-2">
           {t('creditBudget.title')}
         </CardTitle>
+        <CardAction>
+          <CreditBudgetUpdateDialog
+            orgId={orgId}
+            monthlyCredits={monthlyCredits}
+            trigger={
+              <Button variant="outline" size="sm">
+                {t('creditBudget.edit')}
+              </Button>
+            }
+          />
+        </CardAction>
       </CardHeader>
       <CardContent className="space-y-4">
         <CreditBudgetDisplay

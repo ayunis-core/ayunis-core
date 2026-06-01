@@ -49,6 +49,9 @@ import { UpdateBillingInfoUseCase } from '../../application/use-cases/update-bil
 import { UpdateBillingInfoCommand } from '../../application/use-cases/update-billing-info/update-billing-info.command';
 import { UpdateStartDateUseCase } from '../../application/use-cases/update-start-date/update-start-date.use-case';
 import { UpdateStartDateCommand } from '../../application/use-cases/update-start-date/update-start-date.command';
+import { UpdateMonthlyCreditsUseCase } from '../../application/use-cases/update-monthly-credits/update-monthly-credits.use-case';
+import { UpdateMonthlyCreditsCommand } from '../../application/use-cases/update-monthly-credits/update-monthly-credits.command';
+import { UpdateMonthlyCreditsDto } from './dto/update-monthly-credits.dto';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { SubscriptionNotFoundError } from '../../application/subscription.errors';
@@ -64,6 +67,7 @@ import { UpdateStartDateDto } from './dto/update-start-date.dto';
   ActiveSubscriptionResponseDto,
   UpdateBillingInfoDto,
   UpdateStartDateDto,
+  UpdateMonthlyCreditsDto,
 )
 export class SuperAdminSubscriptionsController {
   private readonly logger = new Logger(SuperAdminSubscriptionsController.name);
@@ -77,6 +81,7 @@ export class SuperAdminSubscriptionsController {
     private readonly updateSeatsUseCase: UpdateSeatsUseCase,
     private readonly updateBillingInfoUseCase: UpdateBillingInfoUseCase,
     private readonly updateStartDateUseCase: UpdateStartDateUseCase,
+    private readonly updateMonthlyCreditsUseCase: UpdateMonthlyCreditsUseCase,
   ) {}
 
   @Get(':orgId')
@@ -244,6 +249,50 @@ export class SuperAdminSubscriptionsController {
     });
     await this.updateSeatsUseCase.execute(command);
     this.logger.log(`Successfully updated seats for org ${orgId}`);
+  }
+
+  @Put(':orgId/monthly-credits')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Update monthly credits for an organization (super admin)',
+  })
+  @ApiParam({
+    name: 'orgId',
+    description: 'Organization ID to update monthly credits for',
+    format: 'uuid',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Successfully updated monthly credits',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Invalid monthly credits provided or subscription is not usage-based',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'No subscription found for the organization',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User not authenticated or not authorized as super admin',
+  })
+  async updateMonthlyCredits(
+    @Param('orgId') orgId: UUID,
+    @CurrentUser(UserProperty.ID) userId: UUID,
+    @Body() updateMonthlyCreditsDto: UpdateMonthlyCreditsDto,
+  ): Promise<void> {
+    this.logger.log(
+      `Updating monthly credits for org ${orgId} by super admin ${userId}`,
+    );
+    const command = new UpdateMonthlyCreditsCommand({
+      orgId,
+      requestingUserId: userId,
+      monthlyCredits: updateMonthlyCreditsDto.monthlyCredits,
+    });
+    await this.updateMonthlyCreditsUseCase.execute(command);
+    this.logger.log(`Successfully updated monthly credits for org ${orgId}`);
   }
 
   @Put(':orgId/billing-info')

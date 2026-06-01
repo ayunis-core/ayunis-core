@@ -1528,6 +1528,8 @@ export interface UpdateStartDateDto {
   startsAt: string;
 }
 
+export interface UpdateMonthlyCreditsDto { [key: string]: unknown }
+
 export interface UpdateSeatsDto { [key: string]: unknown }
 
 export interface CreateTeamDto {

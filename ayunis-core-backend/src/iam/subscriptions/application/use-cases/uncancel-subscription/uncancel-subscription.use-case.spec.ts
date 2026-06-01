@@ -106,6 +106,12 @@ describe('UncancelSubscriptionUseCase', () => {
   });
 
   beforeEach(() => {
+    // Pin the clock to a fixed mid-month instant so the relative dates used
+    // in the billing-period tests below stay consistent regardless of the
+    // calendar day the suite runs on.
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2025-06-15T12:00:00.000Z'));
+
     contextService.get.mockImplementation((key) => {
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       if (key === 'role') return UserRole.ADMIN;
@@ -115,6 +121,7 @@ describe('UncancelSubscriptionUseCase', () => {
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     jest.clearAllMocks();
   });
 
