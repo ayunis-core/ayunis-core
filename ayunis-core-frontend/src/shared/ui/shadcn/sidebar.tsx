@@ -1,9 +1,7 @@
-// This file modified, need to be pulled from ayunis registry.
 import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { PanelLeftIcon } from 'lucide-react';
-import { useRouterState } from '@tanstack/react-router';
 
 import { useIsMobile } from '@/shared/hooks/shadcn/use-mobile';
 import { cn } from '@/shared/lib/shadcn/utils';
@@ -40,12 +38,18 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void;
   isMobile: boolean;
   toggleSidebar: () => void;
+  /**
+   * Closes the mobile sidebar AND runs a defensive cleanup pass that removes
+   * lingering Radix/Chrome layer artifacts (inert, aria-hidden, sheet overlays,
+   * stuck pointer-events on body, etc.). Use this on Link/menu-item clicks to
+   * make sure the page is fully interactive after the sidebar dismisses.
+   */
   closeMobileWithCleanup: () => void;
 };
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
 
-function useSidebar() {
+function useSidebar(): SidebarContextProps {
   const context = React.useContext(SidebarContext);
   if (!context) {
     throw new Error('useSidebar must be used within a SidebarProvider.');
@@ -58,6 +62,7 @@ function SidebarProvider({
   defaultOpen = true,
   open: openProp,
   onOpenChange: setOpenProp,
+  pathname,
   className,
   style,
   children,
@@ -66,18 +71,31 @@ function SidebarProvider({
   defaultOpen?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-}) {
+  /**
+   * Current route pathname. When it changes, the mobile sidebar auto-closes
+   * (with cleanup) so the overlay doesn't block the next screen.
+   *
+   * Stays router-agnostic — the consumer reads it from whatever router they
+   * use and passes it in. Example with TanStack Router:
+   *
+   *   const { location } = useRouterState()
+   *   <SidebarProvider pathname={location.pathname}>…</SidebarProvider>
+   */
+  pathname?: string;
+}): React.ReactElement {
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
-  const { location } = useRouterState();
 
-  // Centralized cleanup function to avoid duplication
-  const cleanupMobileSidebar = React.useCallback(() => {
+  // Defensive cleanup function for Radix/Chrome quirks when the mobile sidebar
+  // closes. Several browser bugs leave artifacts behind (stuck inert,
+  // aria-hidden, stale overlays, pointer-events on body, scroll-lock styles)
+  // that can make the page unresponsive. We run cleanup three times to catch
+  // Chrome's delayed paint passes.
+  const cleanupMobileSidebar = React.useCallback((): void => {
     if (isMobile && openMobile) {
       setOpenMobile(false);
 
-      // Enhanced cleanup with multiple passes to handle Chrome's different rendering behavior
-      const performCleanup = () => {
+      const performCleanup = (): void => {
         // Remove any lingering inert attributes
         document.querySelectorAll('[inert]').forEach((el) => {
           el.removeAttribute('inert');
@@ -97,7 +115,8 @@ function SidebarProvider({
             el.remove();
           });
 
-        // Chrome-specific: Also remove any radix overlays with different selectors
+        // Chrome-specific: remove any radix overlays still pointing at a
+        // closed state (or outside the sidebar tree)
         document
           .querySelectorAll('[data-radix-dismissable-layer]')
           .forEach((el) => {
@@ -109,57 +128,50 @@ function SidebarProvider({
             }
           });
 
-        // Ensure body doesn't have pointer-events disabled
+        // Ensure body doesn't have pointer-events / overflow / transform stuck
         document.body.style.pointerEvents = '';
         document.body.style.overflow = '';
-
-        // Chrome-specific: Reset any transform or position styles that might interfere
         document.body.style.transform = '';
         document.body.style.position = '';
 
-        // Force re-enable interactions on main content areas
+        // Force re-enable interactions on the inset area
         document
           .querySelectorAll('[data-slot="sidebar-inset"]')
           .forEach((el) => {
             (el as HTMLElement).style.pointerEvents = '';
           });
 
-        // Chrome-specific: Remove any lingering event capture layers
+        // Remove lingering radix focus guards from closed overlays
         document.querySelectorAll('[data-radix-focus-guard]').forEach((el) => {
           if (!el.closest('[data-state="open"]')) {
             el.remove();
           }
         });
 
-        // Chrome-specific: Reset scroll lock and focus management
+        // Reset scroll-lock styles on html element
         document.documentElement.style.overflow = '';
         document.documentElement.style.paddingRight = '';
 
-        // Remove any style tags that might have been injected by Radix for scroll lock
+        // Remove style tags injected by radix for scroll lock
         document
           .querySelectorAll('style[data-radix-scroll-area-viewport]')
           .forEach((el) => {
             el.remove();
           });
 
-        // Force focus back to document if it's trapped
+        // If focus is trapped inside the closed sheet, release it
         if (document.activeElement?.closest('[data-slot="sheet-content"]')) {
           (document.activeElement as HTMLElement).blur();
           document.body.focus();
         }
 
-        // Chrome-specific: Force a reflow to ensure styles are properly applied
-        // eslint-disable-next-line sonarjs/void-use -- Intentional: reading offsetHeight forces a reflow
-        void document.body.offsetHeight;
+        // Force a reflow so the browser commits the style resets
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        document.body.offsetHeight;
       };
 
-      // Immediate cleanup
       performCleanup();
-
-      // First delayed cleanup - for standard Radix cleanup
       setTimeout(performCleanup, 50);
-
-      // Second delayed cleanup - Chrome needs more time sometimes
       setTimeout(performCleanup, 150);
     }
   }, [isMobile, openMobile]);
@@ -169,7 +181,7 @@ function SidebarProvider({
   const [_open, _setOpen] = React.useState(defaultOpen);
   const open = openProp ?? _open;
   const setOpen = React.useCallback(
-    (value: boolean | ((value: boolean) => boolean)) => {
+    (value: boolean | ((value: boolean) => boolean)): void => {
       const openState = typeof value === 'function' ? value(open) : value;
       if (setOpenProp) {
         setOpenProp(openState);
@@ -184,13 +196,13 @@ function SidebarProvider({
   );
 
   // Helper to toggle the sidebar.
-  const toggleSidebar = React.useCallback(() => {
+  const toggleSidebar = React.useCallback((): void => {
     return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
   }, [isMobile, setOpen, setOpenMobile]);
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent): void => {
       if (
         event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
         (event.metaKey || event.ctrlKey)
@@ -201,30 +213,29 @@ function SidebarProvider({
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return (): void => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [toggleSidebar]);
 
   // Close mobile sidebar on real route changes only.
   //
-  // The previous implementation subscribed to `router.subscribe('onResolved')`,
-  // but `onResolved` also fires for TanStack's hover-prefetched routes — which
-  // caused the mobile sidebar to close as soon as the user hovered any link.
-  // Depending on `location.href` instead means the effect only runs on actual
-  // URL changes (real navigation).
+  // We intentionally depend on `pathname` rather than subscribing to a router
+  // event — that pattern fires on hover-prefetched routes too and would close
+  // the sidebar before the user can click. Depending on a string means the
+  // effect only re-runs on actual URL changes.
   //
   // Linter disables below are intentional:
   // - `set-state-in-effect`: cleanup of UI state on real navigation is exactly
-  //   the case where setting state in an effect body is correct. The new
-  //   react-hooks 7.1 heuristic flags it but there's no cleaner pattern that
-  //   avoids the prefetch trigger.
-  // - `exhaustive-deps`: `cleanupMobileSidebar` intentionally re-uses the
-  //   latest captured closure; depending on its identity would cause
-  //   re-subscription loops.
+  //   the case where state-in-effect is correct.
+  // - `exhaustive-deps`: `cleanupMobileSidebar` intentionally uses the latest
+  //   captured closure; depending on its identity would re-subscribe on every
+  //   open/close transition.
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     cleanupMobileSidebar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.href]);
+  }, [pathname]);
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
@@ -289,7 +300,7 @@ function Sidebar({
   side?: 'left' | 'right';
   variant?: 'sidebar' | 'floating' | 'inset';
   collapsible?: 'offcanvas' | 'icon' | 'none';
-}) {
+}): React.ReactElement {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
 
   if (collapsible === 'none') {
@@ -384,7 +395,7 @@ function SidebarTrigger({
   className,
   onClick,
   ...props
-}: React.ComponentProps<typeof Button>) {
+}: React.ComponentProps<typeof Button>): React.ReactElement {
   const { toggleSidebar } = useSidebar();
 
   return (
@@ -406,7 +417,10 @@ function SidebarTrigger({
   );
 }
 
-function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
+function SidebarRail({
+  className,
+  ...props
+}: React.ComponentProps<'button'>): React.ReactElement {
   const { toggleSidebar } = useSidebar();
 
   return (
@@ -431,7 +445,10 @@ function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
   );
 }
 
-function SidebarInset({ className, ...props }: React.ComponentProps<'main'>) {
+function SidebarInset({
+  className,
+  ...props
+}: React.ComponentProps<'main'>): React.ReactElement {
   return (
     <main
       data-slot="sidebar-inset"
@@ -448,7 +465,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<'main'>) {
 function SidebarInput({
   className,
   ...props
-}: React.ComponentProps<typeof Input>) {
+}: React.ComponentProps<typeof Input>): React.ReactElement {
   return (
     <Input
       data-slot="sidebar-input"
@@ -459,7 +476,10 @@ function SidebarInput({
   );
 }
 
-function SidebarHeader({ className, ...props }: React.ComponentProps<'div'>) {
+function SidebarHeader({
+  className,
+  ...props
+}: React.ComponentProps<'div'>): React.ReactElement {
   return (
     <div
       data-slot="sidebar-header"
@@ -470,7 +490,10 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<'div'>) {
   );
 }
 
-function SidebarFooter({ className, ...props }: React.ComponentProps<'div'>) {
+function SidebarFooter({
+  className,
+  ...props
+}: React.ComponentProps<'div'>): React.ReactElement {
   return (
     <div
       data-slot="sidebar-footer"
@@ -484,7 +507,7 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<'div'>) {
 function SidebarSeparator({
   className,
   ...props
-}: React.ComponentProps<typeof Separator>) {
+}: React.ComponentProps<typeof Separator>): React.ReactElement {
   return (
     <Separator
       data-slot="sidebar-separator"
@@ -495,22 +518,27 @@ function SidebarSeparator({
   );
 }
 
-function SidebarContent({ className, ...props }: React.ComponentProps<'div'>) {
+function SidebarContent({
+  className,
+  ...props
+}: React.ComponentProps<'div'>): React.ReactElement {
   return (
     <div
       data-slot="sidebar-content"
       data-sidebar="content"
       className={cn(
-        'flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden',
+        'flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden group-data-[collapsible=icon]:overflow-hidden',
         className,
       )}
-    >
-      {props.children}
-    </div>
+      {...props}
+    />
   );
 }
 
-function SidebarGroup({ className, ...props }: React.ComponentProps<'div'>) {
+function SidebarGroup({
+  className,
+  ...props
+}: React.ComponentProps<'div'>): React.ReactElement {
   return (
     <div
       data-slot="sidebar-group"
@@ -525,7 +553,7 @@ function SidebarGroupLabel({
   className,
   asChild = false,
   ...props
-}: React.ComponentProps<'div'> & { asChild?: boolean }) {
+}: React.ComponentProps<'div'> & { asChild?: boolean }): React.ReactElement {
   const Comp = asChild ? Slot : 'div';
 
   return (
@@ -546,7 +574,7 @@ function SidebarGroupAction({
   className,
   asChild = false,
   ...props
-}: React.ComponentProps<'button'> & { asChild?: boolean }) {
+}: React.ComponentProps<'button'> & { asChild?: boolean }): React.ReactElement {
   const Comp = asChild ? Slot : 'button';
 
   return (
@@ -568,7 +596,7 @@ function SidebarGroupAction({
 function SidebarGroupContent({
   className,
   ...props
-}: React.ComponentProps<'div'>) {
+}: React.ComponentProps<'div'>): React.ReactElement {
   return (
     <div
       data-slot="sidebar-group-content"
@@ -579,7 +607,10 @@ function SidebarGroupContent({
   );
 }
 
-function SidebarMenu({ className, ...props }: React.ComponentProps<'ul'>) {
+function SidebarMenu({
+  className,
+  ...props
+}: React.ComponentProps<'ul'>): React.ReactElement {
   return (
     <ul
       data-slot="sidebar-menu"
@@ -590,7 +621,10 @@ function SidebarMenu({ className, ...props }: React.ComponentProps<'ul'>) {
   );
 }
 
-function SidebarMenuItem({ className, ...props }: React.ComponentProps<'li'>) {
+function SidebarMenuItem({
+  className,
+  ...props
+}: React.ComponentProps<'li'>): React.ReactElement {
   return (
     <li
       data-slot="sidebar-menu-item"
@@ -635,7 +669,7 @@ function SidebarMenuButton({
   asChild?: boolean;
   isActive?: boolean;
   tooltip?: string | React.ComponentProps<typeof TooltipContent>;
-} & VariantProps<typeof sidebarMenuButtonVariants>) {
+} & VariantProps<typeof sidebarMenuButtonVariants>): React.ReactElement {
   const Comp = asChild ? Slot : 'button';
   const { isMobile, state } = useSidebar();
 
@@ -681,7 +715,7 @@ function SidebarMenuAction({
 }: React.ComponentProps<'button'> & {
   asChild?: boolean;
   showOnHover?: boolean;
-}) {
+}): React.ReactElement {
   const Comp = asChild ? Slot : 'button';
 
   return (
@@ -708,7 +742,7 @@ function SidebarMenuAction({
 function SidebarMenuBadge({
   className,
   ...props
-}: React.ComponentProps<'div'>) {
+}: React.ComponentProps<'div'>): React.ReactElement {
   return (
     <div
       data-slot="sidebar-menu-badge"
@@ -733,12 +767,14 @@ function SidebarMenuSkeleton({
   ...props
 }: React.ComponentProps<'div'> & {
   showIcon?: boolean;
-}) {
-  // Random width between 50 to 90%.
-  const [width] = React.useState(() => {
-    // eslint-disable-next-line sonarjs/pseudo-random -- Random skeleton width for visual variety, not security-sensitive
-    return `${Math.floor(Math.random() * 40) + 50}%`;
-  });
+}): React.ReactElement {
+  // Random width between 50 to 90% (lazy init avoids impure render).
+
+  const [width] = React.useState(
+    () =>
+      // eslint-disable-next-line sonarjs/pseudo-random -- Random skeleton width for visual variety, not security-sensitive
+      `${Math.floor(Math.random() * 40) + 50}%`,
+  );
 
   return (
     <div
@@ -766,7 +802,10 @@ function SidebarMenuSkeleton({
   );
 }
 
-function SidebarMenuSub({ className, ...props }: React.ComponentProps<'ul'>) {
+function SidebarMenuSub({
+  className,
+  ...props
+}: React.ComponentProps<'ul'>): React.ReactElement {
   return (
     <ul
       data-slot="sidebar-menu-sub"
@@ -784,7 +823,7 @@ function SidebarMenuSub({ className, ...props }: React.ComponentProps<'ul'>) {
 function SidebarMenuSubItem({
   className,
   ...props
-}: React.ComponentProps<'li'>) {
+}: React.ComponentProps<'li'>): React.ReactElement {
   return (
     <li
       data-slot="sidebar-menu-sub-item"
@@ -805,7 +844,7 @@ function SidebarMenuSubButton({
   asChild?: boolean;
   size?: 'sm' | 'md';
   isActive?: boolean;
-}) {
+}): React.ReactElement {
   const Comp = asChild ? Slot : 'a';
 
   return (
@@ -851,7 +890,6 @@ export {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
+  // eslint-disable-next-line react-refresh/only-export-components
+  useSidebar,
 };
-
-// eslint-disable-next-line react-refresh/only-export-components
-export { useSidebar };

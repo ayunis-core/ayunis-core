@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/prefer-read-only-props */
 import * as React from 'react';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 
@@ -6,9 +7,7 @@ import { cn } from '@/shared/lib/shadcn/utils';
 function TooltipProvider({
   delayDuration = 0,
   ...props
-}: Readonly<
-  React.ComponentProps<typeof TooltipPrimitive.Provider>
->): React.ReactElement {
+}: React.ComponentProps<typeof TooltipPrimitive.Provider>): React.ReactElement {
   return (
     <TooltipPrimitive.Provider
       data-slot="tooltip-provider"
@@ -20,9 +19,7 @@ function TooltipProvider({
 
 function Tooltip({
   ...props
-}: Readonly<
-  React.ComponentProps<typeof TooltipPrimitive.Root>
->): React.ReactElement {
+}: React.ComponentProps<typeof TooltipPrimitive.Root>): React.ReactElement {
   return (
     <TooltipProvider>
       <TooltipPrimitive.Root data-slot="tooltip" {...props} />

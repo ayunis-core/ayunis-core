@@ -1,6 +1,9 @@
 import * as React from 'react';
+import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from 'lucide-react';
 
 import { cn } from '@/shared/lib/shadcn/utils';
+
+/* eslint-disable sonarjs/no-nested-conditional */
 
 function Table({
   className,
@@ -40,7 +43,10 @@ function TableBody({
   return (
     <tbody
       data-slot="table-body"
-      className={cn('[&_tr:last-child]:border-0', className)}
+      className={cn(
+        '[&_tr:last-child]:border-0 [&>tr]:hover:bg-muted/50',
+        className,
+      )}
       {...props}
     />
   );
@@ -64,15 +70,38 @@ function TableFooter({
 
 function TableRow({
   className,
+  onClick,
+  onKeyDown,
   ...props
 }: React.ComponentProps<'tr'>): React.ReactElement {
+  const isClickable = !!onClick;
+
+  const handleKeyDown = isClickable
+    ? (e: React.KeyboardEvent<HTMLTableRowElement>) => {
+        if (
+          e.target === e.currentTarget &&
+          (e.key === 'Enter' || e.key === ' ')
+        ) {
+          e.preventDefault();
+          e.currentTarget.click();
+        }
+
+        onKeyDown?.(e);
+      }
+    : onKeyDown;
+
   return (
     <tr
       data-slot="table-row"
       className={cn(
-        'hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors',
+        'data-[state=selected]:bg-muted border-b transition-colors',
+        isClickable &&
+          'cursor-pointer focus-visible:bg-muted/50 focus-visible:outline-none',
         className,
       )}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      {...(isClickable && { tabIndex: 0 })}
       {...props}
     />
   );
@@ -80,17 +109,52 @@ function TableRow({
 
 function TableHead({
   className,
+  sortable,
+  sortDirection,
+  onSort,
+  align,
+  children,
   ...props
-}: React.ComponentProps<'th'>): React.ReactElement {
+}: React.ComponentProps<'th'> & {
+  sortable?: boolean;
+  sortDirection?: 'asc' | 'desc';
+  onSort?: () => void;
+  align?: 'left' | 'center' | 'right';
+}): React.ReactElement {
   return (
     <th
       data-slot="table-head"
       className={cn(
         'text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]',
+        align === 'right' && 'text-right',
+        align === 'center' && 'text-center',
         className,
       )}
       {...props}
-    />
+    >
+      {sortable ? (
+        <button
+          type="button"
+          onClick={onSort}
+          className={cn(
+            'hover:bg-accent flex h-8 cursor-pointer items-center gap-1.5 rounded-md px-2 -ml-2 text-sm font-medium transition-colors',
+            align === 'right' && 'ml-auto -mr-2',
+            align === 'center' && 'mx-auto',
+          )}
+        >
+          {children}
+          {sortDirection === 'asc' ? (
+            <ArrowUpIcon className="size-4 shrink-0" />
+          ) : sortDirection === 'desc' ? (
+            <ArrowDownIcon className="size-4 shrink-0" />
+          ) : (
+            <ArrowUpDownIcon className="size-4 shrink-0" />
+          )}
+        </button>
+      ) : (
+        children
+      )}
+    </th>
   );
 }
 
