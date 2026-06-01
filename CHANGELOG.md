@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/ayunis-core/ayunis-core/compare/v2.0.0...v2.1.0) (2026-06-01)
+
+
+### Features
+
+* **subscriptions:** allow super admins to edit monthly credits (AYC-000) ([#730](https://github.com/ayunis-core/ayunis-core/issues/730)) ([ee2052d](https://github.com/ayunis-core/ayunis-core/commit/ee2052d8691e7e15340a62522f3e0ea88de41d97))
+
 ## [2.0.0](https://github.com/ayunis-core/ayunis-core/compare/v1.36.0...v2.0.0) (2026-05-29)
 
 
