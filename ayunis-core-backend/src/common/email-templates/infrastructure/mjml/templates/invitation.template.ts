@@ -37,7 +37,7 @@ Diese Einladung ist 7 Tage gültig. Wenn Sie diese E-Mail nicht erwartet haben, 
 Diese E-Mail wurde an ${template.userEmail} gesendet.
 Bei Fragen: help@ayunis.com
 
-© ${template.currentYear} Ayunis GmbH. Alle Rechte vorbehalten.
+© ${template.currentYear} Ayunis / Locaboo GmbH. Alle Rechte vorbehalten.
 `;
 }
 

@@ -30,7 +30,7 @@ Link abgelaufen? Neue E-Mail anfordern: ${template.forgotPasswordUrl}
 Diese E-Mail wurde an ${template.userEmail} gesendet.
 Bei Fragen: help@ayunis.com
 
-© ${template.currentYear} Ayunis GmbH. Alle Rechte vorbehalten.
+© ${template.currentYear} Ayunis / Locaboo GmbH. Alle Rechte vorbehalten.
 `;
 }
 

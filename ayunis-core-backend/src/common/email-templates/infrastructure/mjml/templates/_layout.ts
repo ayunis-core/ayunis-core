@@ -22,6 +22,20 @@ export interface LayoutOptions {
   termsUrl?: string;
 }
 
+interface RenderBodyOptions {
+  logoUrl: string;
+  bannerSection: string;
+  bodyMjml: string;
+  footerSection: string;
+}
+
+interface FooterSectionOptions {
+  footerEmail: string;
+  currentYear: string;
+  privacyUrl: string;
+  termsUrl: string;
+}
+
 export function renderLayout(options: LayoutOptions): string {
   const {
     title,
@@ -36,17 +50,25 @@ export function renderLayout(options: LayoutOptions): string {
     termsUrl = 'https://www.ayunis.com/agb-software-%c3%bcberlassung',
   } = options;
 
-  const bannerSection = bannerUrl
-    ? `<mj-section background-color="${COLOR.card}" padding="16px 32px 0 32px">
-         <mj-column>
-           <mj-image src="${bannerUrl}" alt="${escapeAttr(bannerAlt ?? '')}" width="496px" border-radius="10px" padding="0" />
-         </mj-column>
-       </mj-section>`
-    : '';
-
   return `
 <mjml>
-  <mj-head>
+  ${renderHead(title, preheader)}
+  ${renderBody({
+    logoUrl,
+    bannerSection: renderBannerSection(bannerUrl, bannerAlt),
+    bodyMjml,
+    footerSection: renderFooterSection({
+      footerEmail,
+      currentYear,
+      privacyUrl,
+      termsUrl,
+    }),
+  })}
+</mjml>`;
+}
+
+function renderHead(title: string, preheader: string): string {
+  return `<mj-head>
     <mj-title>${escapeText(title)}</mj-title>
     <mj-preview>${escapeText(preheader)}</mj-preview>
     <mj-attributes>
@@ -57,9 +79,11 @@ export function renderLayout(options: LayoutOptions): string {
     <mj-style inline="inline">
       a { color: ${COLOR.brand}; text-decoration: underline; }
     </mj-style>
-  </mj-head>
+  </mj-head>`;
+}
 
-  <mj-body background-color="${COLOR.bg}" width="560px">
+function renderBody(options: RenderBodyOptions): string {
+  return `<mj-body background-color="${COLOR.bg}" width="560px">
 
     <mj-section padding="32px 0 0 0">
       <mj-column><mj-spacer height="1px" /></mj-column>
@@ -67,34 +91,50 @@ export function renderLayout(options: LayoutOptions): string {
 
     <mj-section background-color="${COLOR.card}" border-radius="14px 14px 0 0" padding="32px 32px 8px 32px">
       <mj-column>
-        <mj-image src="${logoUrl}" alt="Ayunis Core" width="130px" align="left" padding="0" />
+        <mj-image src="${options.logoUrl}" alt="Ayunis Core" width="130px" align="left" padding="0" />
       </mj-column>
     </mj-section>
 
-    ${bannerSection}
+    ${options.bannerSection}
 
     <mj-section background-color="${COLOR.card}" border-radius="0 0 14px 14px" padding="24px 32px 40px 32px">
       <mj-column>
-        ${bodyMjml}
+        ${options.bodyMjml}
       </mj-column>
     </mj-section>
 
-    <mj-section padding="24px 32px 40px 32px">
+    ${options.footerSection}
+
+  </mj-body>`;
+}
+
+function renderBannerSection(
+  bannerUrl: string | null | undefined,
+  bannerAlt: string | undefined,
+): string {
+  return bannerUrl
+    ? `<mj-section background-color="${COLOR.card}" padding="16px 32px 0 32px">
+         <mj-column>
+           <mj-image src="${bannerUrl}" alt="${escapeAttr(bannerAlt ?? '')}" width="496px" border-radius="10px" padding="0" />
+         </mj-column>
+       </mj-section>`
+    : '';
+}
+
+function renderFooterSection(options: FooterSectionOptions): string {
+  return `<mj-section padding="24px 32px 40px 32px">
       <mj-column>
         <mj-text align="center" color="${COLOR.muted}" font-size="13px" padding-bottom="6px">
-          Diese E-Mail wurde an <strong>${escapeText(footerEmail)}</strong> gesendet.
+          Diese E-Mail wurde an <strong>${escapeText(options.footerEmail)}</strong> gesendet.
         </mj-text>
         <mj-text align="center" color="${COLOR.muted}" font-size="13px" padding-bottom="14px">
           Fragen? Schreiben Sie uns an <a href="mailto:help@ayunis.com">help@ayunis.com</a>
         </mj-text>
         <mj-text align="center" color="#9ca3af" font-size="12px">
-          © ${escapeText(currentYear)} Ayunis GmbH · <a href="${privacyUrl}" style="color:#9ca3af;">Datenschutz</a> · <a href="${termsUrl}" style="color:#9ca3af;">AGB</a>
+          © ${escapeText(options.currentYear)} Ayunis / Locaboo GmbH · <a href="${options.privacyUrl}" style="color:#9ca3af;">Datenschutz</a> · <a href="${options.termsUrl}" style="color:#9ca3af;">AGB</a>
         </mj-text>
       </mj-column>
-    </mj-section>
-
-  </mj-body>
-</mjml>`;
+    </mj-section>`;
 }
 
 export function h1(text: string): string {

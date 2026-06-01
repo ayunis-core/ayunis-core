@@ -26,7 +26,7 @@ Der Link ist 7 Tage gültig. Sollten Sie das nicht erwartet haben, wenden Sie si
 
 Diese E-Mail wurde an ${template.userEmail} gesendet.
 
-© ${template.currentYear} Ayunis GmbH. Alle Rechte vorbehalten.
+© ${template.currentYear} Ayunis / Locaboo GmbH. Alle Rechte vorbehalten.
 `;
 }
 

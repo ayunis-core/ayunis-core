@@ -53,12 +53,36 @@ Viele Grüße
 Ihr Ayunis-Team
 
 Diese E-Mail wurde an ${template.userEmail} gesendet.
-© ${template.currentYear} Ayunis GmbH.
+© ${template.currentYear} Ayunis / Locaboo GmbH.
 `;
 }
 
 export function firstStepsHtml(template: FirstStepsTemplateContent) {
-  const body = [
+  return mjml2html(
+    renderLayout({
+      title: 'Was Sie mit Ayunis Core machen können',
+      preheader:
+        'Drei Wege, wie Sie Ayunis Core ab heute in Ihrem Verwaltungsalltag nutzen können.',
+      logoUrl: template.logoUrl,
+      bodyMjml: firstStepsBody(template),
+      footerEmail: template.userEmail,
+      currentYear: template.currentYear,
+    }),
+  );
+}
+
+function firstStepsBody(template: FirstStepsTemplateContent): string {
+  return [
+    introSection(template),
+    useCasesSection(template),
+    skillsSection(template),
+    knowledgeSection(template),
+    supportSection(template),
+  ].join('\n');
+}
+
+function introSection(template: FirstStepsTemplateContent): string {
+  return [
     `<mj-image src="${template.heroBannerUrl}" alt="Willkommen bei Ayunis Core" width="496px" border-radius="10px" padding="0 0 24px 0" />`,
     h1(`Schön, dass Sie da sind, ${escapeText(template.firstName)}!`),
     p(
@@ -73,7 +97,11 @@ export function firstStepsHtml(template: FirstStepsTemplateContent) {
     ),
     cta('Jetzt im Chat ausprobieren', template.chatUrl),
     divider(),
+  ].join('\n');
+}
 
+function useCasesSection(template: FirstStepsTemplateContent): string {
+  return [
     sectionHeading('BEISPIELE', 'Anwendungsbeispiele für Ihren Alltag'),
     useCaseRow(
       template.iconPencilUrl,
@@ -91,7 +119,11 @@ export function firstStepsHtml(template: FirstStepsTemplateContent) {
       'Antworten in Ihrem Tonfall formulieren lassen – Sie passen an, kürzen oder versenden direkt.',
     ),
     divider(),
+  ].join('\n');
+}
 
+function skillsSection(template: FirstStepsTemplateContent): string {
+  return [
     sectionHeading('ERWEITERN', 'Fähigkeiten entdecken'),
     p(
       'In den <strong>Fähigkeiten</strong> finden Sie spezialisierte „Experten" – z. B. einen Daten-Analysten oder einen Dokumenten-Zusammenfasser. Einmal hinzugefügt, stehen sie automatisch im Chat zur Verfügung – ohne weitere Einrichtung.',
@@ -102,7 +134,11 @@ export function firstStepsHtml(template: FirstStepsTemplateContent) {
     ),
     ctaGhost('Marketplace entdecken', template.marketplaceUrl),
     divider(),
+  ].join('\n');
+}
 
+function knowledgeSection(template: FirstStepsTemplateContent): string {
+  return [
     sectionHeading('WISSEN NUTZEN', 'Eigene Wissenssammlung nutzen'),
     p(
       'Laden Sie z. B. Gebührenordnungen, Richtlinien, Protokolle oder andere Dokumente hoch. Ayunis Core greift dann gezielt auf Ihre Inhalte zu – statt auf allgemeines Wissen – und zeigt Ihnen passende Quellen direkt an.',
@@ -111,22 +147,14 @@ export function firstStepsHtml(template: FirstStepsTemplateContent) {
     p('So arbeitet Ihre KI immer im Kontext Ihrer Organisation.'),
     ctaGhost('Wissen einrichten', template.knowledgeUrl),
     divider(),
+  ].join('\n');
+}
 
+function supportSection(template: FirstStepsTemplateContent): string {
+  return [
     p(
       'Wenn Sie Fragen haben oder Unterstützung brauchen, melden Sie sich jederzeit gern.',
     ),
     teamSignoff(template.teamUrl),
   ].join('\n');
-
-  return mjml2html(
-    renderLayout({
-      title: 'Was Sie mit Ayunis Core machen können',
-      preheader:
-        'Drei Wege, wie Sie Ayunis Core ab heute in Ihrem Verwaltungsalltag nutzen können.',
-      logoUrl: template.logoUrl,
-      bodyMjml: body,
-      footerEmail: template.userEmail,
-      currentYear: template.currentYear,
-    }),
-  );
 }
