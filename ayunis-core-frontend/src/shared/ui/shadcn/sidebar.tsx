@@ -205,11 +205,23 @@ function SidebarProvider({
   }, [toggleSidebar]);
 
   // Close mobile sidebar on real route changes only.
-  // Earlier this subscribed to `router.onResolved`, which TanStack also fires
-  // for hover-prefetched routes — that caused the mobile sidebar to close as
-  // soon as the user hovered any link. Depending on `location.href` instead
-  // means the effect only runs on actual navigation.
+  //
+  // The previous implementation subscribed to `router.subscribe('onResolved')`,
+  // but `onResolved` also fires for TanStack's hover-prefetched routes — which
+  // caused the mobile sidebar to close as soon as the user hovered any link.
+  // Depending on `location.href` instead means the effect only runs on actual
+  // URL changes (real navigation).
+  //
+  // Linter disables below are intentional:
+  // - `set-state-in-effect`: cleanup of UI state on real navigation is exactly
+  //   the case where setting state in an effect body is correct. The new
+  //   react-hooks 7.1 heuristic flags it but there's no cleaner pattern that
+  //   avoids the prefetch trigger.
+  // - `exhaustive-deps`: `cleanupMobileSidebar` intentionally re-uses the
+  //   latest captured closure; depending on its identity would cause
+  //   re-subscription loops.
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     cleanupMobileSidebar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.href]);
