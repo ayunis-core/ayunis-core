@@ -172,6 +172,7 @@ describe('SourceMapper', () => {
       record.textType = TextType.WEB;
       record.fileType = null;
       record.url = 'https://example.com';
+      record.maxDepth = 2;
       record.createdAt = new Date();
       record.updatedAt = new Date();
       // textSourceDetails intentionally NOT set
@@ -181,6 +182,7 @@ describe('SourceMapper', () => {
       expect(domain).toBeInstanceOf(UrlSource);
       expect(domain.name).toBe('Test URL');
       expect((domain as UrlSource).url).toBe('https://example.com');
+      expect((domain as UrlSource).maxDepth).toBe(2);
       expect('text' in domain).toBe(false);
       expect('contentChunks' in domain).toBe(false);
     });
@@ -228,6 +230,7 @@ describe('SourceMapper', () => {
         url: 'https://example.com',
         name: 'Test URL',
         type: TextType.WEB,
+        maxDepth: 2,
         createdBy: SourceCreator.USER,
       });
 
@@ -251,6 +254,7 @@ describe('SourceMapper', () => {
       expect(result.source.textType).toBe(TextType.WEB);
       expect(result.source.fileType).toBeNull();
       expect(result.source.url).toBe('https://example.com');
+      expect(result.source.maxDepth).toBe(2);
       expect(result.details).toBeInstanceOf(UrlSourceDetailsRecord);
       expect(result.details.text).toBe('full url text');
       expect(result.contentChunks).toHaveLength(2);

@@ -48,12 +48,15 @@ export class FileSource extends TextSource {
 
 export class UrlSource extends TextSource {
   url: string;
+  /** Link depth this source was crawled at (0 = root page only). */
+  maxDepth: number;
 
   constructor(params: {
     id?: UUID;
     url: string;
     name: string;
     type: TextType;
+    maxDepth?: number;
     knowledgeBaseId?: UUID | null;
     status?: SourceStatus;
     processingError?: string | null;
@@ -64,5 +67,6 @@ export class UrlSource extends TextSource {
   }) {
     super({ ...params, type: TextType.WEB });
     this.url = params.url;
+    this.maxDepth = params.maxDepth ?? 0;
   }
 }

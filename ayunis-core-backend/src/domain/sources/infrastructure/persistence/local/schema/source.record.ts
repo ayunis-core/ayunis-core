@@ -69,6 +69,10 @@ export class TextSourceRecord extends SourceRecord {
   @Column({ type: 'varchar', nullable: true })
   url: string | null;
 
+  /** Link depth a URL source was crawled at; null for non-URL sources. */
+  @Column({ type: 'int', nullable: true })
+  maxDepth: number | null;
+
   @OneToOne(() => TextSourceDetailsRecord, (details) => details.source, {
     cascade: true,
   })
