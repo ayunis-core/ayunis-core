@@ -73,13 +73,6 @@ const splitTextUseCase = {
   }),
 };
 
-const ingestBulkContentUseCase = {
-  execute: jest.fn().mockResolvedValue(undefined),
-};
-const deleteContentUseCase = {
-  execute: jest.fn().mockResolvedValue(undefined),
-};
-
 const downloadObjectUseCase = {
   execute: jest.fn().mockResolvedValue(
     (async function* () {
@@ -99,8 +92,10 @@ const sourceRepository = {
   updateStatusConditionally: jest.fn(),
 };
 
-const markSourceFailedUseCase = {
-  execute: jest.fn().mockResolvedValue(undefined),
+const helper = {
+  index: jest.fn().mockResolvedValue(undefined),
+  markFailed: jest.fn().mockResolvedValue(undefined),
+  cleanupIndex: jest.fn().mockResolvedValue(undefined),
 };
 
 /* ------------------------------------------------------------------ */
@@ -117,12 +112,10 @@ describe('DocumentProcessingConsumer', () => {
       contextService as never,
       retrieveFileContentUseCase as never,
       splitTextUseCase as never,
-      ingestBulkContentUseCase as never,
-      deleteContentUseCase as never,
       downloadObjectUseCase as never,
       deleteObjectUseCase as never,
       sourceRepository as never,
-      markSourceFailedUseCase as never,
+      helper as never,
     );
   });
 
@@ -165,7 +158,7 @@ describe('DocumentProcessingConsumer', () => {
       { processingError: null },
     );
     // Partial index should be cleaned up since update failed
-    expect(deleteContentUseCase.execute).toHaveBeenCalled();
+    expect(helper.cleanupIndex).toHaveBeenCalledWith(SOURCE_ID);
   });
 
   it('should process normally when source exists throughout', async () => {
@@ -183,14 +176,13 @@ describe('DocumentProcessingConsumer', () => {
       SourceStatus.READY,
       { processingError: null },
     );
-    // Chunks are indexed via a single bulk call (not one call per chunk)
-    expect(ingestBulkContentUseCase.execute).toHaveBeenCalledTimes(1);
-    const bulkCommand = ingestBulkContentUseCase.execute.mock.calls[0][0];
-    expect(bulkCommand.orgId).toBe(ORG_ID);
-    expect(bulkCommand.entries).toHaveLength(1);
-    expect(bulkCommand.entries[0]).toMatchObject({
-      documentId: SOURCE_ID,
-      content: 'hello world',
-    });
+    // Chunks are indexed via the shared helper (delete-then-bulk-ingest)
+    expect(helper.index).toHaveBeenCalledTimes(1);
+    const [indexedSourceId, indexedOrgId, indexedChunks] =
+      helper.index.mock.calls[0];
+    expect(indexedSourceId).toBe(SOURCE_ID);
+    expect(indexedOrgId).toBe(ORG_ID);
+    expect(indexedChunks).toHaveLength(1);
+    expect(indexedChunks[0].content).toBe('hello world');
   });
 });
