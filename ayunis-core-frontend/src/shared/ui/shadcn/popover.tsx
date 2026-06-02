@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/prefer-read-only-props */
 import * as React from 'react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 
@@ -5,9 +6,7 @@ import { cn } from '@/shared/lib/shadcn/utils';
 
 function Popover({
   ...props
-}: Readonly<
-  React.ComponentProps<typeof PopoverPrimitive.Root>
->): React.ReactElement {
+}: React.ComponentProps<typeof PopoverPrimitive.Root>): React.ReactElement {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
 }
 

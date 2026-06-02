@@ -5,9 +5,24 @@ import { ChevronDownIcon } from 'lucide-react';
 import { cn } from '@/shared/lib/shadcn/utils';
 
 function Accordion({
+  className,
+  variant = 'default',
   ...props
-}: React.ComponentProps<typeof AccordionPrimitive.Root>): React.ReactElement {
-  return <AccordionPrimitive.Root data-slot="accordion" {...props} />;
+}: React.ComponentProps<typeof AccordionPrimitive.Root> & {
+  variant?: 'default' | 'outline';
+}): React.ReactElement {
+  return (
+    <AccordionPrimitive.Root
+      data-slot="accordion"
+      data-variant={variant}
+      className={cn(
+        'group/accordion',
+        variant === 'outline' && 'rounded-lg border',
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 function AccordionItem({
@@ -17,7 +32,10 @@ function AccordionItem({
   return (
     <AccordionPrimitive.Item
       data-slot="accordion-item"
-      className={cn('border-b last:border-b-0', className)}
+      className={cn(
+        'border-b last:border-b-0 group-data-[variant=outline]/accordion:px-4',
+        className,
+      )}
       {...props}
     />
   );
