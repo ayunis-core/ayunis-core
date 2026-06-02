@@ -134,13 +134,17 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
   private parseHtml(html: string, url: string): UrlRetrieverResult {
     try {
       const $ = cheerio.load(html);
+
+      // Extract links before stripping tags — anchors live in the body.
+      const links = this.extractLinks($, url);
+
       $('script, style, meta, link').remove();
 
       const textContent = $('body').text();
       const cleanedText = textContent.replace(/\s+/g, ' ').trim();
       const websiteTitle = $('title').text();
 
-      return new UrlRetrieverResult(cleanedText, url, websiteTitle);
+      return new UrlRetrieverResult(cleanedText, url, websiteTitle, {}, links);
     } catch (error) {
       throw new UrlRetrieverParsingError(
         url,
@@ -148,6 +152,33 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
         { error: error instanceof Error ? error.stack : 'Unknown error' },
       );
     }
+  }
+
+  /**
+   * Collect absolute http(s) links from anchor tags, resolving relative hrefs
+   * against the page URL. Fragments are stripped and duplicates removed so the
+   * crawler sees each target page once.
+   */
+  private extractLinks($: cheerio.CheerioAPI, baseUrl: string): string[] {
+    const links = new Set<string>();
+
+    $('a[href]').each((_, element) => {
+      const href = $(element).attr('href');
+      if (!href) return;
+
+      try {
+        const resolved = new URL(href, baseUrl);
+        if (resolved.protocol !== 'http:' && resolved.protocol !== 'https:') {
+          return;
+        }
+        resolved.hash = '';
+        links.add(resolved.toString());
+      } catch {
+        // Malformed href — skip it.
+      }
+    });
+
+    return [...links];
   }
 
   private handleTopLevelError(error: unknown, url: string): never {
