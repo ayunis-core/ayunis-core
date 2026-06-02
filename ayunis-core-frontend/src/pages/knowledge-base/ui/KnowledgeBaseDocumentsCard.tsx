@@ -9,8 +9,6 @@ import {
   CardAction,
 } from '@/shared/ui/shadcn/card';
 import { Button } from '@/shared/ui/shadcn/button';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Label } from '@/shared/ui/shadcn/label';
 import {
   Item,
   ItemContent,
@@ -21,14 +19,6 @@ import {
   ItemGroup,
   ItemSeparator,
 } from '@/shared/ui/shadcn/item';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/shared/ui/shadcn/dialog';
 import {
   KnowledgeBaseDocumentResponseDtoTextType,
   KnowledgeBaseDocumentResponseDtoStatus,
@@ -59,6 +49,7 @@ import {
   useRemoveDocument,
 } from '../api';
 import { isValidUrl } from '../lib/isValidUrl';
+import { AddUrlDialog } from './AddUrlDialog';
 
 const ACCEPTED_EXTENSIONS = [
   '.pdf',
@@ -86,6 +77,7 @@ export default function KnowledgeBaseDocumentsCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const [urlDialogOpen, setUrlDialogOpen] = useState(false);
   const [urlInput, setUrlInput] = useState('');
+  const [urlDepth, setUrlDepth] = useState(0);
   const { documents, isLoading } = useKnowledgeBaseDocuments(knowledgeBaseId);
   const { uploadDocument, isUploading } = useUploadDocument(knowledgeBaseId);
   const { addUrlAsync, isAddingUrl } = useAddUrl(knowledgeBaseId);
@@ -116,8 +108,9 @@ export default function KnowledgeBaseDocumentsCard({
     const trimmed = urlInput.trim();
     if (!trimmed || !isValidUrl(trimmed) || isAddingUrl) return;
     try {
-      await addUrlAsync(trimmed);
+      await addUrlAsync(trimmed, urlDepth);
       setUrlInput('');
+      setUrlDepth(0);
       setUrlDialogOpen(false);
     } catch {
       // error toast is handled by the mutation's onError callback
@@ -129,6 +122,7 @@ export default function KnowledgeBaseDocumentsCard({
     setUrlDialogOpen(open);
     if (!open) {
       setUrlInput('');
+      setUrlDepth(0);
     }
   };
 
@@ -210,6 +204,8 @@ export default function KnowledgeBaseDocumentsCard({
         onOpenChange={handleUrlDialogOpenChange}
         urlInput={urlInput}
         onUrlChange={setUrlInput}
+        depth={urlDepth}
+        onDepthChange={setUrlDepth}
         onSubmit={() => void handleAddUrl()}
         isAddingUrl={isAddingUrl}
         t={t}
@@ -407,65 +403,4 @@ function DocumentItemIcon({
   }
   const Icon = isWeb ? Globe : FileText;
   return <Icon className="h-3.5 w-3.5 shrink-0" />;
-}
-
-function AddUrlDialog({
-  open,
-  onOpenChange,
-  urlInput,
-  onUrlChange,
-  onSubmit,
-  isAddingUrl,
-  t,
-}: Readonly<{
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  urlInput: string;
-  onUrlChange: (value: string) => void;
-  onSubmit: () => void;
-  isAddingUrl: boolean;
-  t: (key: string) => string;
-}>) {
-  const isUrlValid = urlInput.trim() !== '' && isValidUrl(urlInput.trim());
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t('detail.documents.urlDialogTitle')}</DialogTitle>
-          <DialogDescription>
-            {t('detail.documents.urlDialogDescription')}
-          </DialogDescription>
-        </DialogHeader>
-        <div>
-          <Label htmlFor="add-url-input" className="sr-only">
-            {t('detail.documents.urlLabel')}
-          </Label>
-          <Input
-            id="add-url-input"
-            type="url"
-            placeholder={t('detail.documents.urlPlaceholder')}
-            value={urlInput}
-            onChange={(e) => onUrlChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && isUrlValid && !isAddingUrl) onSubmit();
-            }}
-          />
-        </div>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isAddingUrl}
-          >
-            {t('detail.documents.urlDialogCancel')}
-          </Button>
-          <Button onClick={onSubmit} disabled={!isUrlValid || isAddingUrl}>
-            {isAddingUrl && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {t('detail.documents.addUrl')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
 }
