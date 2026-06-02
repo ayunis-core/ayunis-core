@@ -398,6 +398,7 @@ export class KnowledgeBasesController {
     this.logger.log('addUrl', {
       knowledgeBaseId: id,
       url: dto.url,
+      maxDepth: dto.maxDepth,
     });
 
     const source = await this.addUrlUseCase.execute(
@@ -405,6 +406,7 @@ export class KnowledgeBasesController {
         knowledgeBaseId: id,
         userId,
         url: dto.url,
+        maxDepth: dto.maxDepth,
       }),
     );
 
