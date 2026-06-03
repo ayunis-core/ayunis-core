@@ -4,6 +4,7 @@ import {
   useMcpIntegrationsControllerGetUserConfig,
   useMcpIntegrationsControllerSetUserConfig,
   getMcpIntegrationsControllerGetUserConfigQueryKey,
+  getMcpIntegrationsControllerListAvailableQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
@@ -21,7 +22,7 @@ export function useSetUserConfig(
   integrationId: string,
   onSuccess?: () => void,
 ) {
-  const { t } = useTranslation('admin-settings-integrations');
+  const { t } = useTranslation('mcp-user-config');
   const queryClient = useQueryClient();
 
   const mutation = useMcpIntegrationsControllerSetUserConfig({
@@ -31,11 +32,15 @@ export function useSetUserConfig(
           queryKey:
             getMcpIntegrationsControllerGetUserConfigQueryKey(integrationId),
         });
-        showSuccess(t('integrations.userConfig.success'));
+        // Refresh the available list so per-user authorization status badges update.
+        void queryClient.invalidateQueries({
+          queryKey: getMcpIntegrationsControllerListAvailableQueryKey(),
+        });
+        showSuccess(t('success'));
         onSuccess?.();
       },
       onError: () => {
-        showError(t('integrations.userConfig.error'));
+        showError(t('error'));
       },
     },
   });

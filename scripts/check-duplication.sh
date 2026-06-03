@@ -45,7 +45,7 @@ trap 'rm -rf "$REPORT_DIR"' EXIT
 
 # ── Run jscpd on full src/ ───────────────────────────────────────────────────
 # Ignore patterns:
-# - generated/** & migrations/**: auto-generated code
+# - generated/**, *.gen.ts & migrations/**: auto-generated code (e.g. route tree)
 # - *.spec/test.*: test files
 # - *.entity.ts & *.record.ts: TypeORM entities/records (constructor param forwarding is intentional)
 (
@@ -55,13 +55,7 @@ trap 'rm -rf "$REPORT_DIR"' EXIT
     --min-lines "$MIN_LINES" \
     --min-tokens "$MIN_TOKENS" \
     --format "typescript,tsx" \
-    --ignore '**/generated/**' \
-    --ignore '**/migrations/**' \
-    --ignore '**/*.spec.ts' \
-    --ignore '**/*.test.ts' \
-    --ignore '**/*.test.tsx' \
-    --ignore '**/*.entity.ts' \
-    --ignore '**/*.record.ts' \
+    --ignore '**/generated/**,**/*.gen.ts,**/migrations/**,**/*.spec.ts,**/*.test.ts,**/*.test.tsx,**/*.entity.ts,**/*.record.ts' \
     --reporters json \
     --output "$REPORT_DIR" \
     --silent >/dev/null 2>&1

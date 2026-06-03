@@ -143,15 +143,6 @@
       "deleting": "Wird gelöscht...",
       "delete": "Löschen"
     },
-    "userConfig": {
-      "title": "Benutzerkonfiguration — {{name}}",
-      "description": "Legen Sie Ihre persönliche Konfiguration für diese Integration fest. Diese Werte überschreiben die Organisationsstandards.",
-      "save": "Speichern",
-      "saving": "Wird gespeichert…",
-      "cancel": "Abbrechen",
-      "success": "Benutzerkonfiguration erfolgreich gespeichert",
-      "error": "Benutzerkonfiguration konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
-    },
     "helpers": {
       "type": {
         "predefined": "Vordefiniert",

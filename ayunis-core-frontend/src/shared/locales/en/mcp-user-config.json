@@ -1,0 +1,9 @@
+{
+  "title": "Authorize {{name}}",
+  "description": "Provide your personal credentials for this integration. These values are used only for your own requests and override organization defaults.",
+  "save": "Save",
+  "saving": "Saving…",
+  "cancel": "Cancel",
+  "success": "Your credentials were saved successfully",
+  "error": "Failed to save your credentials. Please try again."
+}

@@ -9,7 +9,7 @@ import { CreatePredefinedDialog } from './create-predefined-dialog';
 import { CreateCustomDialog } from './create-custom-dialog';
 import { EditIntegrationDialog } from './edit-integration-dialog';
 import { DeleteConfirmationDialog } from './delete-confirmation-dialog';
-import { UserConfigDialog } from './user-config-dialog';
+import { UserConfigDialog } from '@/widgets/mcp-user-config';
 import SettingsLayout from '../../admin-settings-layout';
 import { useMcpIntegrationsQueries } from '../api/useMcpIntegrationsQueries';
 import type { McpIntegration } from '../model/types';

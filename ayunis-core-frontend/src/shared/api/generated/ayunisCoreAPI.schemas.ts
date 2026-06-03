@@ -2698,6 +2698,10 @@ export interface McpIntegrationResponseDto {
   configSchema?: McpIntegrationResponseDtoConfigSchema;
   /** Whether this marketplace integration has user-level config fields */
   hasUserFields?: boolean;
+  /** Whether this marketplace integration requires each individual user to provide their own credentials before they can use it (has required user-level fields). */
+  userAuthorizationRequired?: boolean;
+  /** Whether the current user has satisfied the per-user authorization requirement. Only populated on per-user endpoints (e.g. the available integrations list); undefined elsewhere. */
+  userAuthorized?: boolean;
   /** Current org-level config values for marketplace integrations. Non-secret fields contain plaintext values. Secret fields are masked with "••••••". */
   orgConfigValues?: McpIntegrationResponseDtoOrgConfigValues;
   /**

@@ -5,7 +5,24 @@
     "settings": "Settings",
     "general": "General",
     "chat": "Chat",
+    "integrations": "Integrations",
     "account": "Account"
+  },
+  "integrations": {
+    "description": "Configure the integrations your organization has enabled that you can authorize with your own personal credentials.",
+    "empty": "None of your organization's integrations can be authorized with your personal credentials.",
+    "failedToLoad": "Failed to load integrations.",
+    "retry": "Retry",
+    "status": {
+      "actionRequired": "Action required",
+      "connected": "Connected",
+      "optional": "Optional"
+    },
+    "action": {
+      "actionRequired": "Authorize",
+      "connected": "Update",
+      "optional": "Configure"
+    }
   },
   "account": {
     "title": "Account Settings",

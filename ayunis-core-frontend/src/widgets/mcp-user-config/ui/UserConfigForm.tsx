@@ -1,64 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/shadcn/dialog';
+import { DialogFooter } from '@/shared/ui/shadcn/dialog';
 import { Button } from '@/shared/ui/shadcn/button';
 import { ConfigFieldInput } from '@/shared/ui/config-field-input';
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
 import { useGetUserConfig, useSetUserConfig } from '../api/useUserConfig';
-import type { McpIntegration } from '../model/types';
-import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type {
+  McpIntegrationResponseDto,
+  MarketplaceIntegrationConfigFieldDto,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { SECRET_MASK } from '@/shared/constants/secret-mask';
 
-interface UserConfigDialogProps {
-  readonly integration: McpIntegration | null;
-  readonly open: boolean;
-  readonly onOpenChange: (open: boolean) => void;
-}
-
-export function UserConfigDialog({
-  integration,
-  open,
-  onOpenChange,
-}: Readonly<UserConfigDialogProps>) {
-  const { t } = useTranslation('admin-settings-integrations');
-
-  if (!integration) return null;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[525px]">
-        <DialogHeader>
-          <DialogTitle>
-            {t('integrations.userConfig.title', { name: integration.name })}
-          </DialogTitle>
-          <DialogDescription>
-            {t('integrations.userConfig.description')}
-          </DialogDescription>
-        </DialogHeader>
-        <UserConfigForm
-          integration={integration}
-          onClose={() => onOpenChange(false)}
-        />
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function UserConfigForm({
+/**
+ * Per-user credential form for a marketplace MCP integration. Renders the
+ * integration's `userFields` and lets the current user save their own values.
+ * Shared by the admin integrations page and the user Settings → Integrations page.
+ */
+export function UserConfigForm({
   integration,
   onClose,
 }: Readonly<{
-  integration: McpIntegration;
+  integration: McpIntegrationResponseDto;
   onClose: () => void;
 }>) {
-  const { t } = useTranslation('admin-settings-integrations');
+  const { t } = useTranslation('mcp-user-config');
   const { userConfig, isLoadingUserConfig } = useGetUserConfig(integration.id);
   const { setUserConfig, isSaving } = useSetUserConfig(integration.id, onClose);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
@@ -101,12 +66,10 @@ function UserConfigForm({
           onClick={onClose}
           disabled={isSaving}
         >
-          {t('integrations.userConfig.cancel')}
+          {t('cancel')}
         </Button>
         <Button type="submit" disabled={isSaving}>
-          {isSaving
-            ? t('integrations.userConfig.saving')
-            : t('integrations.userConfig.save')}
+          {isSaving ? t('saving') : t('save')}
         </Button>
       </DialogFooter>
     </form>
@@ -114,7 +77,7 @@ function UserConfigForm({
 }
 
 function getUserFields(
-  integration: McpIntegration,
+  integration: McpIntegrationResponseDto,
 ): MarketplaceIntegrationConfigFieldDto[] {
   const schema = integration.configSchema as
     | { userFields?: MarketplaceIntegrationConfigFieldDto[] }
@@ -130,7 +93,7 @@ function initFormFromExisting(
   const initial: Record<string, string> = {};
   for (const field of fields) {
     const existingValue = existing[field.key];
-    // Secret fields come back masked — don't prefill
+    // Secret fields come back masked — don't prefill.
     if (existingValue && existingValue !== SECRET_MASK) {
       initial[field.key] = existingValue;
     }
