@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EmbedTextCommand } from './embed-text.command';
 import { EmbeddingsHandlerRegistry } from '../../embeddings-handler.registry';
+import { EmbeddingsThrottleService } from '../../services/embeddings-throttle.service';
 import { Embedding } from '../../../domain/embedding.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 
@@ -8,7 +9,10 @@ import { ApplicationError } from 'src/common/errors/base.error';
 export class EmbedTextUseCase {
   private readonly logger = new Logger(EmbedTextUseCase.name);
 
-  constructor(private readonly providerRegistry: EmbeddingsHandlerRegistry) {}
+  constructor(
+    private readonly providerRegistry: EmbeddingsHandlerRegistry,
+    private readonly throttle: EmbeddingsThrottleService,
+  ) {}
 
   async execute(command: EmbedTextCommand): Promise<Embedding[]> {
     this.logger.log('execute', {
@@ -17,7 +21,11 @@ export class EmbedTextUseCase {
     try {
       const handler = this.providerRegistry.getHandler(command.model.provider);
 
-      return handler.embed(command.texts, command.model);
+      // Route through the global throttle so ingestion floods can never
+      // starve retrieval; retrieval embeds jump ahead of ingestion embeds.
+      return this.throttle.run(command.priority, () =>
+        handler.embed(command.texts, command.model),
+      );
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;

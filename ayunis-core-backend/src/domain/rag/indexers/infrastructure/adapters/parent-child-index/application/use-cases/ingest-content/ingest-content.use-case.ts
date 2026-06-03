@@ -7,6 +7,7 @@ import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum
 import { ChildChunk } from '../../../domain/child-chunk.entity';
 import { EmbedTextUseCase } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.use-case';
 import { EmbedTextCommand } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.command';
+import { EmbeddingPriority } from 'src/domain/rag/embeddings/domain/embedding-priority.enum';
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
 import { GetPermittedEmbeddingModelQuery } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.query';
 import { IngestContentCommand } from './ingest-content.command';
@@ -41,6 +42,7 @@ export class IngestContentUseCase {
         texts: childChunkTexts.chunks.map((chunk) => chunk.text),
         model: model.model,
         orgId: command.orgId,
+        priority: EmbeddingPriority.INGESTION,
       }),
     );
     const parentId = randomUUID();
