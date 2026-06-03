@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 @import './themes/core.css';
+@import './scroll-region.css';
+@import './interactions.css';
+@import './scrollbar.css';
 
 @plugin "tailwindcss-animate";
 

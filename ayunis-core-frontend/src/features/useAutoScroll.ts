@@ -8,9 +8,19 @@ import { useEffect, useRef, useState } from 'react';
  * @param content - The content that triggers auto-scrolling when it changes
  * @returns Object containing the ref for the scrollable element and scroll handler
  */
-export function useAutoScroll(content: string | React.ReactNode) {
+export function useAutoScroll(
+  content: string | React.ReactNode,
+  resetKey?: unknown,
+) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [hasScrolledUp, setHasScrolledUp] = useState<boolean>(false);
+
+  // Resume auto-scroll when the container is reused for a different thread
+  const [prevResetKey, setPrevResetKey] = useState(resetKey);
+  if (resetKey !== prevResetKey) {
+    setPrevResetKey(resetKey);
+    setHasScrolledUp(false);
+  }
 
   // Auto-scroll to bottom when content changes (if user hasn't scrolled up)
   useEffect(() => {

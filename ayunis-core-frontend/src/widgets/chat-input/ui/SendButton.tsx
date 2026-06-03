@@ -8,13 +8,14 @@ import {
 import { useTranslation } from 'react-i18next';
 
 interface SendButtonProps {
-  /** True while a submit is in flight (submitting or streaming). Replaces
-   *  the send icon with a stop icon wired to {@link onCancel}. */
   inFlight: boolean;
   canSend: boolean;
   onSend: () => void;
   onCancel: () => void;
 }
+
+const brandIconButtonClasses =
+  'rounded-full border border-transparent bg-brand text-brand-foreground hover:bg-brand/90';
 
 export function SendButton({
   inFlight,
@@ -31,7 +32,7 @@ export function SendButton({
           <div>
             <Button
               size="icon"
-              className="rounded-full border border-transparent"
+              className={brandIconButtonClasses}
               onClick={onCancel}
               aria-label={t('chatInput.cancelTooltip')}
             >
@@ -50,7 +51,7 @@ export function SendButton({
         <div>
           <Button
             disabled={!canSend}
-            className="rounded-full border border-transparent"
+            className={brandIconButtonClasses}
             size="icon"
             data-testid="send"
             onClick={onSend}

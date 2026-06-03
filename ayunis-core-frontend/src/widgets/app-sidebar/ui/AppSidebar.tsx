@@ -92,16 +92,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <div className="flex items-center justify-between w-full">
-              <SidebarMenuButton size="lg" asChild className="flex-1">
-                <Link to="/">
-                  <img
-                    src={theme === 'dark' ? brandFullDark : brandFullLight}
-                    alt="Ayunis Logo"
-                    className="w-full max-w-32"
-                  />
-                </Link>
-              </SidebarMenuButton>
+            <div className="flex h-12 items-center justify-between w-full p-2">
+              <Link to="/" aria-label="Ayunis Core" className="inline-flex">
+                <img
+                  src={theme === 'dark' ? brandFullDark : brandFullLight}
+                  alt="Ayunis Logo"
+                  className="w-full max-w-32"
+                />
+              </Link>
               {config.features.announcableOrgId && <ReleaseNotesButton />}
             </div>
           </SidebarMenuItem>
