@@ -17,7 +17,10 @@ import { ConfigField } from '../../domain/value-objects/integration-config-schem
 import { BearerMcpIntegrationAuth } from '../../domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { OAuthMcpIntegrationAuth } from '../../domain/auth/oauth-mcp-integration-auth.entity';
-import { McpAuthenticationError } from '../mcp.errors';
+import {
+  McpAuthenticationError,
+  McpUserAuthorizationRequiredError,
+} from '../mcp.errors';
 
 /**
  * Service for executing MCP operations with authentication.
@@ -64,9 +67,33 @@ export class McpClientService {
     integration: MarketplaceMcpIntegration,
     userId?: UUID,
   ): Promise<McpConnectionConfig> {
+    const { configSchema, orgConfigValues } = integration;
+
+    // Resolve the per-user config and enforce authorization *before* the
+    // header-building try/catch below, so the specific authorization error is
+    // not masked as a generic McpAuthenticationError. Enforcement only applies
+    // when acting on behalf of a user — org-level operations (userId
+    // undefined, e.g. admin connection validation) build with org config only.
+    const userConfig =
+      userId && configSchema.userFields.length > 0
+        ? await this.userConfigRepository.findByIntegrationAndUser(
+            integration.id,
+            userId,
+          )
+        : null;
+
+    if (
+      userId &&
+      !integration.isUserAuthorized(userConfig?.configValues ?? null)
+    ) {
+      throw new McpUserAuthorizationRequiredError(
+        integration.id,
+        integration.name,
+      );
+    }
+
     try {
       const headers: Record<string, string> = {};
-      const { configSchema, orgConfigValues } = integration;
 
       // Apply org-level fields to headers
       await this.applyConfigFieldHeaders(
@@ -75,21 +102,13 @@ export class McpClientService {
         orgConfigValues,
       );
 
-      // Apply user-level overrides if applicable
-      if (userId && configSchema.userFields.length > 0) {
-        const userConfig =
-          await this.userConfigRepository.findByIntegrationAndUser(
-            integration.id,
-            userId,
-          );
-
-        if (userConfig) {
-          await this.applyConfigFieldHeaders(
-            headers,
-            configSchema.userFields,
-            userConfig.configValues,
-          );
-        }
+      // Apply user-level overrides if present
+      if (userConfig) {
+        await this.applyConfigFieldHeaders(
+          headers,
+          configSchema.userFields,
+          userConfig.configValues,
+        );
       }
 
       return { serverUrl: integration.serverUrl, headers };

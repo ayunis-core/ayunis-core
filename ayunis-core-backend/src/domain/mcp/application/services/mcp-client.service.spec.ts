@@ -15,7 +15,10 @@ import { BearerMcpIntegrationAuth } from '../../domain/auth/bearer-mcp-integrati
 import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { OAuthMcpIntegrationAuth } from '../../domain/auth/oauth-mcp-integration-auth.entity';
 import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { McpAuthenticationError } from '../mcp.errors';
+import {
+  McpAuthenticationError,
+  McpUserAuthorizationRequiredError,
+} from '../mcp.errors';
 
 class MockMcpClientPort extends McpClientPort {
   listTools = jest.fn();
@@ -36,6 +39,7 @@ class MockCredentialEncryptionPort extends McpCredentialEncryptionPort {
 class MockUserConfigRepository extends McpIntegrationUserConfigRepositoryPort {
   save = jest.fn();
   findByIntegrationAndUser = jest.fn();
+  findByIntegrationIdsAndUser = jest.fn();
   deleteByIntegrationId = jest.fn();
 }
 
@@ -411,6 +415,78 @@ describe('McpClientService', () => {
 
       await service.buildConnectionConfig(integration);
 
+      expect(userConfigRepo.findByIntegrationAndUser).not.toHaveBeenCalled();
+    });
+
+    it('throws when a required user field is missing for the user', async () => {
+      const userId = randomUUID();
+      const schema: IntegrationConfigSchema = {
+        authType: 'BEARER_TOKEN',
+        orgFields: [
+          {
+            key: 'orgToken',
+            label: 'Token',
+            type: 'secret',
+            headerName: 'X-Org',
+            required: true,
+          },
+        ],
+        userFields: [
+          {
+            key: 'personalToken',
+            label: 'Personal Token',
+            type: 'secret',
+            headerName: 'Authorization',
+            prefix: 'Bearer ',
+            required: true,
+          },
+        ],
+      };
+      const integration = buildMarketplaceIntegration(schema, {
+        orgToken: 'encrypted-org-token',
+      });
+
+      userConfigRepo.findByIntegrationAndUser.mockResolvedValue(null);
+
+      await expect(
+        service.buildConnectionConfig(integration, userId),
+      ).rejects.toBeInstanceOf(McpUserAuthorizationRequiredError);
+    });
+
+    it('does not enforce user authorization for org-level (no userId) operations', async () => {
+      const schema: IntegrationConfigSchema = {
+        authType: 'BEARER_TOKEN',
+        orgFields: [
+          {
+            key: 'orgToken',
+            label: 'Token',
+            type: 'secret',
+            headerName: 'Authorization',
+            prefix: 'Bearer ',
+            required: true,
+          },
+        ],
+        userFields: [
+          {
+            key: 'personalToken',
+            label: 'Personal Token',
+            type: 'secret',
+            headerName: 'X-Personal',
+            required: true,
+          },
+        ],
+      };
+      const integration = buildMarketplaceIntegration(schema, {
+        orgToken: 'encrypted-org-token',
+      });
+
+      encryption.decrypt.mockResolvedValue('org-token-decrypted');
+
+      const config = await service.buildConnectionConfig(integration);
+
+      expect(config.headers).toEqual({
+        Authorization: 'Bearer org-token-decrypted',
+      });
       expect(userConfigRepo.findByIntegrationAndUser).not.toHaveBeenCalled();
     });
 
