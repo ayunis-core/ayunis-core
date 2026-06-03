@@ -7,8 +7,8 @@ import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retriever
 import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
 import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
-import { IngestContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.use-case';
-import { IngestContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.command';
+import { IngestBulkContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.use-case';
+import { IngestBulkContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
 import { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
 import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
@@ -26,9 +26,6 @@ import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity
 import type { DocumentProcessingJobData } from '../../application/ports/document-processing.port';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 
-/** Max concurrent embedding API calls to avoid rate limits */
-const EMBEDDING_CONCURRENCY = 20;
-
 @Processor(DOCUMENT_PROCESSING_QUEUE, { concurrency: 2 })
 export class DocumentProcessingConsumer extends WorkerHost {
   private readonly logger = new Logger(DocumentProcessingConsumer.name);
@@ -37,7 +34,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     private readonly contextService: ContextService,
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
     private readonly splitTextUseCase: SplitTextUseCase,
-    private readonly ingestContentUseCase: IngestContentUseCase,
+    private readonly ingestBulkContentUseCase: IngestBulkContentUseCase,
     private readonly deleteContentUseCase: DeleteContentUseCase,
     private readonly downloadObjectUseCase: DownloadObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
@@ -236,23 +233,20 @@ export class DocumentProcessingConsumer extends WorkerHost {
       new DeleteContentCommand({ documentId: sourceId }),
     );
 
-    // Dynamic import required: p-limit is ESM-only, our codebase uses CJS
-    const { default: pLimit } = await import('p-limit');
-    const limit = pLimit(EMBEDDING_CONCURRENCY);
-    await Promise.all(
-      chunks.map((chunk) =>
-        limit(async () => {
-          await this.ingestContentUseCase.execute(
-            new IngestContentCommand({
-              orgId,
-              documentId: sourceId,
-              chunkId: chunk.id,
-              content: chunk.content,
-              type: IndexType.PARENT_CHILD,
-            }),
-          );
-        }),
-      ),
+    // Bulk ingest all chunks: the embedding model is resolved once, child
+    // texts are embedded in batched API calls, and all parent chunks are saved
+    // in a single DB write. This keeps embedding API pressure low (sequential
+    // batches) instead of firing one call per chunk.
+    await this.ingestBulkContentUseCase.execute(
+      new IngestBulkContentCommand({
+        orgId,
+        entries: chunks.map((chunk) => ({
+          documentId: sourceId,
+          chunkId: chunk.id,
+          content: chunk.content,
+        })),
+        type: IndexType.PARENT_CHILD,
+      }),
     );
   }
 
