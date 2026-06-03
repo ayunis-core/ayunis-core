@@ -6,6 +6,8 @@ import ModelTypeCard from './ModelTypeCard';
 import { OrgDefaultModelCard } from './OrgDefaultModelCard';
 import SettingsLayout from '../../admin-settings-layout';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import { SpotlightTarget } from '@/shared/ui/spotlight-overlay/SpotlightTarget';
+import { SPOTLIGHT_TARGET } from '@/shared/ui/spotlight-overlay/lib/spotlight-targets';
 import { Trans, useTranslation } from 'react-i18next';
 import {
   useLanguageModels,
@@ -87,7 +89,9 @@ export default function ModelSettingsPage() {
         {hasModels ? (
           <>
             {!hasLanguageError && (
-              <ModelTypeCard type="language" models={languageModels} />
+              <SpotlightTarget name={SPOTLIGHT_TARGET.configureModelsLanguage}>
+                <ModelTypeCard type="language" models={languageModels} />
+              </SpotlightTarget>
             )}
             {!hasEmbeddingError && (
               <ModelTypeCard type="embedding" models={embeddingModels} />

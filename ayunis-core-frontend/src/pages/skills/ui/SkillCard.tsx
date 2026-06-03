@@ -23,12 +23,23 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
+import { SpotlightTarget } from '@/shared/ui/spotlight-overlay/SpotlightTarget';
+import { SPOTLIGHT_TARGET } from '@/shared/ui/spotlight-overlay/lib/spotlight-targets';
 
 interface SkillCardProps {
   skill: Skill;
+  /**
+   * If true, wraps the pin button with a SpotlightTarget so the onboarding
+   * step "Fähigkeit anheften" can highlight it. Optional — default behaviour
+   * is unchanged.
+   */
+  highlightPin?: boolean;
 }
 
-export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
+export default function SkillCard({
+  skill,
+  highlightPin = false,
+}: Readonly<SkillCardProps>) {
   const { t } = useTranslation('skills');
   const deleteSkill = useDeleteSkill();
   const toggleActive = useToggleSkillActive();
@@ -95,9 +106,9 @@ export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
             onClick={(e) => e.stopPropagation()}
           />
         </div>
-        {skill.isActive && (
-          <Tooltip>
-            <TooltipTrigger asChild>
+        {skill.isActive &&
+          (() => {
+            const pinButton = (
               <Button
                 variant="ghost"
                 size="icon"
@@ -114,12 +125,24 @@ export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
                   className={`h-4 w-4 ${skill.isPinned ? 'fill-current' : ''}`}
                 />
               </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')}
-            </TooltipContent>
-          </Tooltip>
-        )}
+            );
+            return (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  {highlightPin ? (
+                    <SpotlightTarget name={SPOTLIGHT_TARGET.pinSkill}>
+                      {pinButton}
+                    </SpotlightTarget>
+                  ) : (
+                    pinButton
+                  )}
+                </TooltipTrigger>
+                <TooltipContent>
+                  {skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')}
+                </TooltipContent>
+              </Tooltip>
+            );
+          })()}
         {!skill.isShared && (
           <Tooltip>
             <TooltipTrigger asChild>

@@ -1,6 +1,8 @@
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { SpotlightTarget } from '@/shared/ui/spotlight-overlay/SpotlightTarget';
+import { SPOTLIGHT_TARGET } from '@/shared/ui/spotlight-overlay/lib/spotlight-targets';
 import CreateKnowledgeBaseDialog from './CreateKnowledgeBaseDialog';
 import KnowledgeBaseCard from './KnowledgeBaseCard';
 import KnowledgeBasesEmptyState from './KnowledgeBasesEmptyState';
@@ -36,7 +38,9 @@ export default function KnowledgeBasesPage({
   const headerAction = (
     <div className="flex gap-2">
       <HelpLink path="knowledge-collections/" />
-      <CreateKnowledgeBaseDialog />
+      <SpotlightTarget name={SPOTLIGHT_TARGET.createKnowledgeBase}>
+        <CreateKnowledgeBaseDialog />
+      </SpotlightTarget>
     </div>
   );
 

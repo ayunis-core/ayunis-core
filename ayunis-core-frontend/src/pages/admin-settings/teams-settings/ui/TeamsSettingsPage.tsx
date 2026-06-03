@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
+import { SpotlightTarget } from '@/shared/ui/spotlight-overlay/SpotlightTarget';
+import { SPOTLIGHT_TARGET } from '@/shared/ui/spotlight-overlay/lib/spotlight-targets';
 import { TeamsList } from './TeamsList';
 import TeamsFilters from './TeamsFilters';
 import {
@@ -38,9 +40,11 @@ export function TeamsSettingsPage({ teams }: Readonly<TeamsSettingsPageProps>) {
   const headerActions = (
     <div className="flex gap-2">
       <HelpLink path="settings/admin/teams/" />
-      <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
-        {t('teams.page.add')}
-      </Button>
+      <SpotlightTarget name={SPOTLIGHT_TARGET.createTeam}>
+        <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+          {t('teams.page.add')}
+        </Button>
+      </SpotlightTarget>
     </div>
   );
 

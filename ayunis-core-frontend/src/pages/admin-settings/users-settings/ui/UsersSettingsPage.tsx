@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import SettingsLayout from '../../admin-settings-layout';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import { SpotlightTarget } from '@/shared/ui/spotlight-overlay/SpotlightTarget';
+import { SPOTLIGHT_TARGET } from '@/shared/ui/spotlight-overlay/lib/spotlight-targets';
 import InviteMenuButton from './InviteMenuButton';
 import InvitesSection from './InvitesSection';
 import InvitesSearch from './InvitesSearch';
@@ -49,7 +51,9 @@ export default function UsersSettingsPage({
       action={
         <div className="flex gap-2">
           <HelpLink path="settings/admin/users/" />
-          <InviteMenuButton />
+          <SpotlightTarget name={SPOTLIGHT_TARGET.inviteUsers}>
+            <InviteMenuButton />
+          </SpotlightTarget>
         </div>
       }
       title={t('layout.users')}

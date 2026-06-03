@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Users } from 'lucide-react';
 import { Badge } from '@/shared/ui/shadcn/badge';
 import { Button } from '@/shared/ui/shadcn/button';
+import { SpotlightTarget } from '@/shared/ui/spotlight-overlay/SpotlightTarget';
+import { SPOTLIGHT_TARGET } from '@/shared/ui/spotlight-overlay/lib/spotlight-targets';
 import {
   Card,
   CardContent,
@@ -36,9 +38,11 @@ export function TeamDetailPage({
 
   const headerActions =
     activeTab === 'members' ? (
-      <Button size="sm" onClick={() => setAddMemberDialogOpen(true)}>
-        {t('teamDetail.addMember.button')}
-      </Button>
+      <SpotlightTarget name={SPOTLIGHT_TARGET.addTeamMember}>
+        <Button size="sm" onClick={() => setAddMemberDialogOpen(true)}>
+          {t('teamDetail.addMember.button')}
+        </Button>
+      </SpotlightTarget>
     ) : null;
 
   return (

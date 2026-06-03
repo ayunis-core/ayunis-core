@@ -2,6 +2,8 @@ import React from 'react';
 import { useRouterState } from '@tanstack/react-router';
 import { SidebarProvider, SidebarInset } from '@/shared/ui/shadcn/sidebar';
 import AppSidebar from '@/widgets/app-sidebar';
+import SpotlightOverlay from '@/shared/ui/spotlight-overlay/SpotlightOverlay';
+import { GettingStartedPill } from '@/widgets/getting-started-pill';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -22,6 +24,8 @@ export default function AppLayout({
           {children}
         </div>
       </SidebarInset>
+      <SpotlightOverlay />
+      <GettingStartedPill />
     </SidebarProvider>
   );
 }
