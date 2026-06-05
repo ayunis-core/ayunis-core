@@ -36,6 +36,7 @@ export function UserConfigDialog({
           <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
         <UserConfigForm
+          key={integration.id}
           integration={integration}
           onClose={() => onOpenChange(false)}
         />
