@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.2.0](https://github.com/ayunis-core/ayunis-core/compare/v2.1.0...v2.2.0) (2026-06-05)
+
+
+### Features
+
+* **crawl:** restrict web crawling to org-bound domains (AYC-190) ([#755](https://github.com/ayunis-core/ayunis-core/issues/755)) ([28e2dfe](https://github.com/ayunis-core/ayunis-core/commit/28e2dfe36e3236356f9e2a306494c8a5060356f7))
+* **emails:** redesign transactional emails and add onboarding sequence (AYC-128) ([#664](https://github.com/ayunis-core/ayunis-core/issues/664)) ([b9372a4](https://github.com/ayunis-core/ayunis-core/commit/b9372a4d456578eca220bc1155656c0bf61a57c0))
+* **integrations:** let users self-authorize org MCP integrations (AYC-186) ([7b2e281](https://github.com/ayunis-core/ayunis-core/commit/7b2e281a573d7abc1ad3d079b7666fb9d8ae2d32))
+* **knowledge-bases:** add link-depth selector for URL sources (AYC-176) ([#751](https://github.com/ayunis-core/ayunis-core/issues/751)) ([d58cad2](https://github.com/ayunis-core/ayunis-core/commit/d58cad240f2309ee92d91a0f033d7a200dab8a6e))
+
+
+### Bug Fixes
+
+* **embeddings:** add global throttle prioritizing retrieval over ingestion (AYC-182) ([#754](https://github.com/ayunis-core/ayunis-core/issues/754)) ([a320433](https://github.com/ayunis-core/ayunis-core/commit/a3204334cbd8979cf52d11a4968a59970e081159))
+* **sources:** batch queue-based document ingestion to stop embedding API floods (AYC-183) ([#752](https://github.com/ayunis-core/ayunis-core/issues/752)) ([5a4e8b1](https://github.com/ayunis-core/ayunis-core/commit/5a4e8b1125dae2ef60572f5701c2a60baa2d2d2a))
+
+
+### Miscellaneous
+
+* sync [@ayunis](https://github.com/ayunis) components from the registry ([#745](https://github.com/ayunis-core/ayunis-core/issues/745)) ([108d67f](https://github.com/ayunis-core/ayunis-core/commit/108d67ff4b5c4cfa747eeef20bbfcd6948341a77))
+
 ## [2.1.0](https://github.com/ayunis-core/ayunis-core/compare/v2.0.0...v2.1.0) (2026-06-01)
 
 
