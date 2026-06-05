@@ -37,6 +37,7 @@ import type {
   ArtifactsControllerExportParams,
   ChatCompletionRequestDto,
   ConfirmEmailDto,
+  CrawlDomainGrantResponseDto,
   CreateApiKeyDto,
   CreateApiKeyResponseDto,
   CreateArtifactDto,
@@ -77,6 +78,7 @@ import type {
   GeneratedImageUrlResponseDto,
   GetThreadResponseDto,
   GetThreadsResponseDto,
+  GrantCrawlDomainRequestDto,
   ImageGenerationModelResponseDto,
   InstallMarketplaceIntegrationDto,
   InstallSkillFromMarketplaceDto,
@@ -114,7 +116,6 @@ import type {
   RegisterDto,
   ResendEmailConfirmationDto,
   ResetPasswordDto,
-  RetrieveUrlDto,
   RevertArtifactDto,
   RunsControllerSendMessage200,
   RunsControllerSendMessageBody,
@@ -7472,29 +7473,123 @@ export const useTranscriptionsControllerTranscribe = <TError = void,
     }
     
 /**
- * @summary Retrieve content from a URL
+ * @summary List the crawl domains assigned to an organization
  */
-export const urlRetrieverControllerRetrieveUrl = (
-    retrieveUrlDto: RetrieveUrlDto,
+export const superAdminCrawlDomainsControllerList = (
+    orgId: string,
  signal?: AbortSignal
 ) => {
       
       
-      return customAxiosInstance<void>(
-      {url: `/retrievers/url`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: retrieveUrlDto, signal
+      return customAxiosInstance<CrawlDomainGrantResponseDto[]>(
+      {url: `/super-admin/crawl-domains/${orgId}`, method: 'GET', signal
     },
       );
     }
   
 
 
-export const getUrlRetrieverControllerRetrieveUrlMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, TError,{data: RetrieveUrlDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, TError,{data: RetrieveUrlDto}, TContext> => {
 
-const mutationKey = ['urlRetrieverControllerRetrieveUrl'];
+export const getSuperAdminCrawlDomainsControllerListQueryKey = (orgId?: string,) => {
+    return [
+    `/super-admin/crawl-domains/${orgId}`
+    ] as const;
+    }
+
+    
+export const getSuperAdminCrawlDomainsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminCrawlDomainsControllerListQueryKey(orgId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>> = ({ signal }) => superAdminCrawlDomainsControllerList(orgId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminCrawlDomainsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>>
+export type SuperAdminCrawlDomainsControllerListQueryError = void
+
+
+export function useSuperAdminCrawlDomainsControllerList<TData = Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>, TError = void>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminCrawlDomainsControllerList<TData = Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminCrawlDomainsControllerList<TData = Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the crawl domains assigned to an organization
+ */
+
+export function useSuperAdminCrawlDomainsControllerList<TData = Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminCrawlDomainsControllerListQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Assign a crawl domain to an organization
+ */
+export const superAdminCrawlDomainsControllerGrant = (
+    orgId: string,
+    grantCrawlDomainRequestDto: GrantCrawlDomainRequestDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<CrawlDomainGrantResponseDto>(
+      {url: `/super-admin/crawl-domains/${orgId}`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: grantCrawlDomainRequestDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminCrawlDomainsControllerGrantMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerGrant>>, TError,{orgId: string;data: GrantCrawlDomainRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerGrant>>, TError,{orgId: string;data: GrantCrawlDomainRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminCrawlDomainsControllerGrant'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -7504,10 +7599,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, {data: RetrieveUrlDto}> = (props) => {
-          const {data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerGrant>>, {orgId: string;data: GrantCrawlDomainRequestDto}> = (props) => {
+          const {orgId,data} = props ?? {};
 
-          return  urlRetrieverControllerRetrieveUrl(data,)
+          return  superAdminCrawlDomainsControllerGrant(orgId,data,)
         }
 
         
@@ -7515,23 +7610,86 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type UrlRetrieverControllerRetrieveUrlMutationResult = NonNullable<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>>
-    export type UrlRetrieverControllerRetrieveUrlMutationBody = RetrieveUrlDto
-    export type UrlRetrieverControllerRetrieveUrlMutationError = unknown
+    export type SuperAdminCrawlDomainsControllerGrantMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerGrant>>>
+    export type SuperAdminCrawlDomainsControllerGrantMutationBody = GrantCrawlDomainRequestDto
+    export type SuperAdminCrawlDomainsControllerGrantMutationError = void
 
     /**
- * @summary Retrieve content from a URL
+ * @summary Assign a crawl domain to an organization
  */
-export const useUrlRetrieverControllerRetrieveUrl = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, TError,{data: RetrieveUrlDto}, TContext>, }
+export const useSuperAdminCrawlDomainsControllerGrant = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerGrant>>, TError,{orgId: string;data: GrantCrawlDomainRequestDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>,
+        Awaited<ReturnType<typeof superAdminCrawlDomainsControllerGrant>>,
         TError,
-        {data: RetrieveUrlDto},
+        {orgId: string;data: GrantCrawlDomainRequestDto},
         TContext
       > => {
 
-      const mutationOptions = getUrlRetrieverControllerRetrieveUrlMutationOptions(options);
+      const mutationOptions = getSuperAdminCrawlDomainsControllerGrantMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Revoke a crawl domain from an organization
+ */
+export const superAdminCrawlDomainsControllerRevoke = (
+    orgId: string,
+    grantId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/crawl-domains/${orgId}/${grantId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminCrawlDomainsControllerRevokeMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerRevoke>>, TError,{orgId: string;grantId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerRevoke>>, TError,{orgId: string;grantId: string}, TContext> => {
+
+const mutationKey = ['superAdminCrawlDomainsControllerRevoke'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerRevoke>>, {orgId: string;grantId: string}> = (props) => {
+          const {orgId,grantId} = props ?? {};
+
+          return  superAdminCrawlDomainsControllerRevoke(orgId,grantId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminCrawlDomainsControllerRevokeMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerRevoke>>>
+    
+    export type SuperAdminCrawlDomainsControllerRevokeMutationError = void
+
+    /**
+ * @summary Revoke a crawl domain from an organization
+ */
+export const useSuperAdminCrawlDomainsControllerRevoke = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminCrawlDomainsControllerRevoke>>, TError,{orgId: string;grantId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminCrawlDomainsControllerRevoke>>,
+        TError,
+        {orgId: string;grantId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminCrawlDomainsControllerRevokeMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
