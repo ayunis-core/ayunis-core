@@ -126,6 +126,7 @@
     "description": "Verbinden Sie externe MCP-Server, um die Fähigkeiten zu erweitern",
     "toggleAriaLabel": "{{name}} Integration umschalten",
     "retryButton": "Erneut versuchen",
+    "configRequiredBadge": "Konfiguration erforderlich",
     "success": {
       "connected": "Integration verbunden",
       "disconnected": "Integration getrennt"

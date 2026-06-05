@@ -6,6 +6,10 @@ import type {
   ConfigField,
   IntegrationConfigSchema,
 } from '../value-objects/integration-config-schema';
+import {
+  fieldRequiresInput,
+  isConfigValuePresent,
+} from '../value-objects/integration-config-schema';
 
 /**
  * MCP integration installed from the Ayunis marketplace.
@@ -93,19 +97,12 @@ export class MarketplaceMcpIntegration extends McpIntegration {
    * @param userConfigValues The user's stored config values, or null if none
    */
   isUserAuthorized(userConfigValues: Record<string, string> | null): boolean {
-    return this.userFieldsRequiringInput.every((field) => {
-      const value = userConfigValues?.[field.key];
-      return typeof value === 'string' && value.trim().length > 0;
-    });
-  }
-
-  private get userFieldsRequiringInput(): ConfigField[] {
-    return this.configSchema.userFields.filter(
-      (field) => field.required && !this.hasFixedValue(field),
+    return this.userFieldsRequiringInput.every((field) =>
+      isConfigValuePresent(userConfigValues?.[field.key]),
     );
   }
 
-  private hasFixedValue(field: ConfigField): boolean {
-    return typeof field.value === 'string' && field.value.length > 0;
+  private get userFieldsRequiringInput(): ConfigField[] {
+    return this.configSchema.userFields.filter(fieldRequiresInput);
   }
 }

@@ -13,7 +13,10 @@ import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.
 import { McpIntegrationUserConfigRepositoryPort } from '../ports/mcp-integration-user-config.repository.port';
 import { McpIntegration } from '../../domain/mcp-integration.entity';
 import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
-import { ConfigField } from '../../domain/value-objects/integration-config-schema';
+import {
+  ConfigField,
+  isSystemFixedField,
+} from '../../domain/value-objects/integration-config-schema';
 import { BearerMcpIntegrationAuth } from '../../domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { OAuthMcpIntegrationAuth } from '../../domain/auth/oauth-mcp-integration-auth.entity';
@@ -144,8 +147,8 @@ export class McpClientService {
       // encrypted, so they are applied directly. Otherwise fall back to the
       // stored value, decrypting secrets.
       let resolvedValue: string;
-      if (typeof field.value === 'string' && field.value.length > 0) {
-        resolvedValue = field.value;
+      if (isSystemFixedField(field)) {
+        resolvedValue = field.value as string;
       } else {
         const rawValue = values[field.key];
         if (!rawValue) continue;

@@ -165,6 +165,23 @@ describe('MarketplaceConfigService', () => {
         service.validateRequiredFields(orgFields, { apiKey: '   ' }),
       ).toThrow(McpMissingRequiredConfigError);
     });
+
+    it('should not require a system-fixed required field even without a stored value', () => {
+      // Regression: a required field whose value is fixed by the marketplace
+      // must not be demanded from the actor — it is satisfied by the schema and
+      // is never persisted in user/org config.
+      const fields: ConfigField[] = [
+        {
+          key: 'systemKey',
+          label: 'System Key',
+          type: 'secret',
+          required: true,
+          value: 'sk-fixed',
+        },
+      ];
+
+      expect(() => service.validateRequiredFields(fields, {})).not.toThrow();
+    });
   });
 
   describe('encryptSecretFields', () => {

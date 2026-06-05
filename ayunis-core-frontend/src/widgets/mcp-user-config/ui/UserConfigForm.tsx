@@ -10,6 +10,7 @@ import type {
   MarketplaceIntegrationConfigFieldDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { SECRET_MASK } from '@/shared/constants/secret-mask';
+import { isUserEditableField } from '@/shared/lib/config-field';
 
 /**
  * Per-user credential form for a marketplace MCP integration. Renders the
@@ -82,7 +83,9 @@ function getUserFields(
   const schema = integration.configSchema as
     | { userFields?: MarketplaceIntegrationConfigFieldDto[] }
     | undefined;
-  return schema?.userFields ?? [];
+  // System-fixed fields carry a marketplace value and must not be shown in the
+  // form — the user cannot meaningfully provide them.
+  return (schema?.userFields ?? []).filter(isUserEditableField);
 }
 
 function initFormFromExisting(

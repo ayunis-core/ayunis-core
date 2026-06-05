@@ -7,7 +7,10 @@ import { OAuthMcpIntegrationAuth } from '../../../domain/auth/oauth-mcp-integrat
 import { McpIntegrationResponseDto } from '../dto/mcp-integration-response.dto';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
-import { ConfigField } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
+import {
+  ConfigField,
+  isSystemFixedField,
+} from 'src/domain/mcp/domain/value-objects/integration-config-schema';
 import { SECRET_MASK } from 'src/domain/mcp/domain/value-objects/secret-mask.constant';
 
 /**
@@ -137,8 +140,8 @@ export class McpIntegrationDtoMapper {
     const masked: Record<string, string> = {};
 
     for (const field of orgFields) {
-      // Skip fixed-value fields — admin didn't provide them
-      if (field.value !== undefined) {
+      // Skip system-fixed fields — admin didn't provide them
+      if (isSystemFixedField(field)) {
         continue;
       }
 
