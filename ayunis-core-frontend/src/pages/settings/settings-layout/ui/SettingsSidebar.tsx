@@ -1,4 +1,4 @@
-import { MessageSquare, Settings, User } from 'lucide-react';
+import { MessageSquare, Plug, Settings, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   SettingsSidebarWidget,
@@ -18,6 +18,11 @@ export function SettingsSidebar() {
       to: '/settings/chat',
       icon: <MessageSquare />,
       label: t('layout.chat'),
+    },
+    {
+      to: '/settings/integrations',
+      icon: <Plug />,
+      label: t('layout.integrations'),
     },
     {
       to: '/settings/account',

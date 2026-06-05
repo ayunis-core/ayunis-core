@@ -7,7 +7,10 @@ import { OAuthMcpIntegrationAuth } from '../../../domain/auth/oauth-mcp-integrat
 import { McpIntegrationResponseDto } from '../dto/mcp-integration-response.dto';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
-import { ConfigField } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
+import {
+  ConfigField,
+  isSystemFixedField,
+} from 'src/domain/mcp/domain/value-objects/integration-config-schema';
 import { SECRET_MASK } from 'src/domain/mcp/domain/value-objects/secret-mask.constant';
 
 /**
@@ -23,7 +26,10 @@ export class McpIntegrationDtoMapper {
    * @param integration - The MCP integration entity
    * @returns The DTO representation
    */
-  toDto(integration: McpIntegration): McpIntegrationResponseDto {
+  toDto(
+    integration: McpIntegration,
+    userAuthorized?: boolean,
+  ): McpIntegrationResponseDto {
     const type = this.resolveType(integration);
 
     const auth = integration.auth;
@@ -49,20 +55,7 @@ export class McpIntegrationDtoMapper {
 
     // Add type-specific fields
     if (integration instanceof MarketplaceMcpIntegration) {
-      baseDto.marketplaceIdentifier = integration.marketplaceIdentifier;
-      baseDto.configSchema = {
-        authType: integration.configSchema.authType,
-        orgFields: integration.configSchema.orgFields,
-        userFields: integration.configSchema.userFields,
-      };
-      baseDto.hasUserFields = integration.configSchema.userFields.length > 0;
-      baseDto.orgConfigValues = this.buildMaskedOrgConfigValues(
-        integration.configSchema.orgFields,
-        integration.orgConfigValues,
-      );
-      baseDto.logoUrl = integration.logoUrl;
-      baseDto.serverUrl = undefined; // Not exposed for marketplace
-      baseDto.slug = undefined;
+      this.applyMarketplaceFields(baseDto, integration, userAuthorized);
     } else if (integration instanceof PredefinedMcpIntegration) {
       baseDto.slug = integration.slug;
       baseDto.serverUrl = undefined; // Not exposed for predefined
@@ -72,6 +65,29 @@ export class McpIntegrationDtoMapper {
     }
 
     return baseDto;
+  }
+
+  private applyMarketplaceFields(
+    baseDto: McpIntegrationResponseDto,
+    integration: MarketplaceMcpIntegration,
+    userAuthorized?: boolean,
+  ): void {
+    baseDto.marketplaceIdentifier = integration.marketplaceIdentifier;
+    baseDto.configSchema = {
+      authType: integration.configSchema.authType,
+      orgFields: integration.configSchema.orgFields,
+      userFields: integration.configSchema.userFields,
+    };
+    baseDto.hasUserFields = integration.configSchema.userFields.length > 0;
+    baseDto.userAuthorizationRequired = integration.requiresUserAuthorization;
+    baseDto.userAuthorized = userAuthorized;
+    baseDto.orgConfigValues = this.buildMaskedOrgConfigValues(
+      integration.configSchema.orgFields,
+      integration.orgConfigValues,
+    );
+    baseDto.logoUrl = integration.logoUrl;
+    baseDto.serverUrl = undefined; // Not exposed for marketplace
+    baseDto.slug = undefined;
   }
 
   private resolveType(
@@ -124,15 +140,15 @@ export class McpIntegrationDtoMapper {
     const masked: Record<string, string> = {};
 
     for (const field of orgFields) {
-      // Skip fixed-value fields — admin didn't provide them
-      if (field.value !== undefined) {
+      // Skip system-fixed fields — admin didn't provide them
+      if (isSystemFixedField(field)) {
         continue;
       }
 
-      const currentValue = orgConfigValues[field.key];
-      if (currentValue === undefined) {
+      if (!(field.key in orgConfigValues)) {
         continue;
       }
+      const currentValue = orgConfigValues[field.key];
 
       if (field.type === 'secret') {
         masked[field.key] = SECRET_MASK;

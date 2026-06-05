@@ -26,6 +26,7 @@ import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedAdminSettingsIndexRouteImport } from './routes/_authenticated/admin-settings.index'
 import { Route as AuthenticatedSkillsIdRouteImport } from './routes/_authenticated/skills.$id'
+import { Route as AuthenticatedSettingsIntegrationsRouteImport } from './routes/_authenticated/settings.integrations'
 import { Route as AuthenticatedSettingsGeneralRouteImport } from './routes/_authenticated/settings.general'
 import { Route as AuthenticatedSettingsChatRouteImport } from './routes/_authenticated/settings.chat'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings.account'
@@ -140,6 +141,12 @@ const AuthenticatedSkillsIdRoute = AuthenticatedSkillsIdRouteImport.update({
   path: '/skills/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedSettingsIntegrationsRoute =
+  AuthenticatedSettingsIntegrationsRouteImport.update({
+    id: '/settings/integrations',
+    path: '/settings/integrations',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSettingsGeneralRoute =
   AuthenticatedSettingsGeneralRouteImport.update({
     id: '/settings/general',
@@ -307,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/skills/$id': typeof AuthenticatedSkillsIdRoute
   '/admin-settings/': typeof AuthenticatedAdminSettingsIndexRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
@@ -349,6 +357,7 @@ export interface FileRoutesByTo {
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/skills/$id': typeof AuthenticatedSkillsIdRoute
   '/admin-settings': typeof AuthenticatedAdminSettingsIndexRoute
   '/chat': typeof AuthenticatedChatIndexRoute
@@ -393,6 +402,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/_authenticated/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/_authenticated/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/_authenticated/skills/$id': typeof AuthenticatedSkillsIdRoute
   '/_authenticated/admin-settings/': typeof AuthenticatedAdminSettingsIndexRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
@@ -437,6 +447,7 @@ export interface FileRouteTypes {
     | '/settings/account'
     | '/settings/chat'
     | '/settings/general'
+    | '/settings/integrations'
     | '/skills/$id'
     | '/admin-settings/'
     | '/chat/'
@@ -479,6 +490,7 @@ export interface FileRouteTypes {
     | '/settings/account'
     | '/settings/chat'
     | '/settings/general'
+    | '/settings/integrations'
     | '/skills/$id'
     | '/admin-settings'
     | '/chat'
@@ -522,6 +534,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/chat'
     | '/_authenticated/settings/general'
+    | '/_authenticated/settings/integrations'
     | '/_authenticated/skills/$id'
     | '/_authenticated/admin-settings/'
     | '/_authenticated/chat/'
@@ -675,6 +688,13 @@ declare module '@tanstack/react-router' {
       path: '/skills/$id'
       fullPath: '/skills/$id'
       preLoaderRoute: typeof AuthenticatedSkillsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/integrations': {
+      id: '/_authenticated/settings/integrations'
+      path: '/settings/integrations'
+      fullPath: '/settings/integrations'
+      preLoaderRoute: typeof AuthenticatedSettingsIntegrationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/settings/general': {
@@ -861,6 +881,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
   AuthenticatedSettingsChatRoute: typeof AuthenticatedSettingsChatRoute
   AuthenticatedSettingsGeneralRoute: typeof AuthenticatedSettingsGeneralRoute
+  AuthenticatedSettingsIntegrationsRoute: typeof AuthenticatedSettingsIntegrationsRoute
   AuthenticatedSkillsIdRoute: typeof AuthenticatedSkillsIdRoute
   AuthenticatedAdminSettingsIndexRoute: typeof AuthenticatedAdminSettingsIndexRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
@@ -897,6 +918,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
   AuthenticatedSettingsChatRoute: AuthenticatedSettingsChatRoute,
   AuthenticatedSettingsGeneralRoute: AuthenticatedSettingsGeneralRoute,
+  AuthenticatedSettingsIntegrationsRoute:
+    AuthenticatedSettingsIntegrationsRoute,
   AuthenticatedSkillsIdRoute: AuthenticatedSkillsIdRoute,
   AuthenticatedAdminSettingsIndexRoute: AuthenticatedAdminSettingsIndexRoute,
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,

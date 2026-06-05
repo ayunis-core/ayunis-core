@@ -22,6 +22,15 @@ export abstract class McpIntegrationUserConfigRepositoryPort {
   ): Promise<McpIntegrationUserConfig | null>;
 
   /**
+   * Finds all configs a single user has for the given integration IDs.
+   * Used to resolve per-user authorization status across a list.
+   */
+  abstract findByIntegrationIdsAndUser(
+    integrationIds: UUID[],
+    userId: UUID,
+  ): Promise<McpIntegrationUserConfig[]>;
+
+  /**
    * Deletes all user configs for a given integration.
    * Used when an integration is deleted.
    */

@@ -9,7 +9,6 @@ import { CreatePredefinedDialog } from './create-predefined-dialog';
 import { CreateCustomDialog } from './create-custom-dialog';
 import { EditIntegrationDialog } from './edit-integration-dialog';
 import { DeleteConfirmationDialog } from './delete-confirmation-dialog';
-import { UserConfigDialog } from './user-config-dialog';
 import SettingsLayout from '../../admin-settings-layout';
 import { useMcpIntegrationsQueries } from '../api/useMcpIntegrationsQueries';
 import type { McpIntegration } from '../model/types';
@@ -40,8 +39,6 @@ export function McpIntegrationsPage({
     null,
   );
   const [deleteIntegration, setDeleteIntegration] =
-    useState<McpIntegration | null>(null);
-  const [userConfigIntegration, setUserConfigIntegration] =
     useState<McpIntegration | null>(null);
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
 
@@ -127,7 +124,6 @@ export function McpIntegrationsPage({
           integrations={integrations}
           onEdit={setEditIntegration}
           onDelete={setDeleteIntegration}
-          onUserConfig={setUserConfigIntegration}
         />
 
         <CreatePredefinedDialog
@@ -152,12 +148,6 @@ export function McpIntegrationsPage({
           integration={deleteIntegration}
           open={!!deleteIntegration}
           onOpenChange={(open) => !open && setDeleteIntegration(null)}
-        />
-
-        <UserConfigDialog
-          integration={userConfigIntegration}
-          open={!!userConfigIntegration}
-          onOpenChange={(open) => !open && setUserConfigIntegration(null)}
         />
 
         <ComingSoonDialog

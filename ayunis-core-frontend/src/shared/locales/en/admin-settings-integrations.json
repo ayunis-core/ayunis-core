@@ -62,8 +62,9 @@
       "enableIntegration": "Enable integration",
       "testing": "Testing...",
       "testConnection": "Test Connection",
+      "testConnectionUserConfigTooltip": "This integration can't be tested centrally because each user connects with their own credentials. Users add their credentials under Settings → Integrations.",
       "marketplace": "Marketplace",
-      "userConfig": "My Config"
+      "userConfigNeeded": "User config needed"
     },
     "list": {
       "noIntegrationsTitle": "No integrations yet",
@@ -141,15 +142,6 @@
       "cancel": "Cancel",
       "deleting": "Deleting...",
       "delete": "Delete"
-    },
-    "userConfig": {
-      "title": "User Configuration — {{name}}",
-      "description": "Set your personal configuration for this integration. These values override organization defaults.",
-      "save": "Save",
-      "saving": "Saving…",
-      "cancel": "Cancel",
-      "success": "User configuration saved successfully",
-      "error": "Failed to save user configuration. Please try again."
     },
     "helpers": {
       "type": {

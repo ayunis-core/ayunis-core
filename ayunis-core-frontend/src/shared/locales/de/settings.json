@@ -5,7 +5,23 @@
     "settings": "Einstellungen",
     "general": "Allgemein",
     "chat": "Chat",
+    "integrations": "Integrationen",
     "account": "Konto"
+  },
+  "integrations": {
+    "empty": "Keine Integration Ihrer Organisation kann mit Ihren persönlichen Zugangsdaten konfiguriert werden.",
+    "failedToLoad": "Integrationen konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "status": {
+      "actionRequired": "Aktion erforderlich",
+      "connected": "Verbunden",
+      "optional": "Optional"
+    },
+    "action": {
+      "actionRequired": "Autorisieren",
+      "connected": "Aktualisieren",
+      "optional": "Konfigurieren"
+    }
   },
   "account": {
     "title": "Kontoeinstellungen",

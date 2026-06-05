@@ -161,4 +161,75 @@ describe('MarketplaceMcpIntegration', () => {
 
     expect(integration.orgConfigValues).toEqual({});
   });
+
+  describe('per-user authorization', () => {
+    const requiredUserField = {
+      key: 'personalToken',
+      label: 'Personal Access Token',
+      type: 'secret' as const,
+      headerName: 'Authorization',
+      prefix: 'Bearer ',
+      required: true,
+    };
+
+    function build(schema: IntegrationConfigSchema): MarketplaceMcpIntegration {
+      return new MarketplaceMcpIntegration({
+        orgId,
+        name: 'Integration',
+        serverUrl: 'https://example.com/mcp',
+        marketplaceIdentifier: 'id',
+        configSchema: schema,
+        orgConfigValues: {},
+        auth: new NoAuthMcpIntegrationAuth(),
+      });
+    }
+
+    it('does not require authorization when there are no required user fields', () => {
+      const integration = build(configSchema); // userField is optional
+      expect(integration.requiresUserAuthorization).toBe(false);
+      expect(integration.isUserAuthorized(null)).toBe(true);
+    });
+
+    it('requires authorization when a required user field exists', () => {
+      const integration = build({
+        authType: 'BEARER_TOKEN',
+        orgFields: [],
+        userFields: [requiredUserField],
+      });
+      expect(integration.requiresUserAuthorization).toBe(true);
+    });
+
+    it('is unauthorized when the required user value is missing, empty, or whitespace', () => {
+      const integration = build({
+        authType: 'BEARER_TOKEN',
+        orgFields: [],
+        userFields: [requiredUserField],
+      });
+      expect(integration.isUserAuthorized(null)).toBe(false);
+      expect(integration.isUserAuthorized({})).toBe(false);
+      expect(integration.isUserAuthorized({ personalToken: '' })).toBe(false);
+      expect(integration.isUserAuthorized({ personalToken: '   ' })).toBe(
+        false,
+      );
+    });
+
+    it('is authorized when every required user value is provided', () => {
+      const integration = build({
+        authType: 'BEARER_TOKEN',
+        orgFields: [],
+        userFields: [requiredUserField],
+      });
+      expect(integration.isUserAuthorized({ personalToken: 'tok' })).toBe(true);
+    });
+
+    it('treats a required field with a system-fixed value as already satisfied', () => {
+      const integration = build({
+        authType: 'BEARER_TOKEN',
+        orgFields: [],
+        userFields: [{ ...requiredUserField, value: 'fixed' }],
+      });
+      expect(integration.requiresUserAuthorization).toBe(false);
+      expect(integration.isUserAuthorized(null)).toBe(true);
+    });
+  });
 });

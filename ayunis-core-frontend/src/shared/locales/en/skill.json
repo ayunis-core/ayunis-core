@@ -126,6 +126,7 @@
     "description": "Connect external MCP servers to extend skill capabilities",
     "toggleAriaLabel": "Toggle {{name}} integration",
     "retryButton": "Retry",
+    "configRequiredBadge": "Configuration required",
     "success": {
       "connected": "Integration connected",
       "disconnected": "Integration disconnected"

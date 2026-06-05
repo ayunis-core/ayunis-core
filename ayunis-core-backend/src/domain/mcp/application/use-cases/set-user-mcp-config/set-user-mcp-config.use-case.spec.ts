@@ -73,6 +73,7 @@ describe('SetUserMcpConfigUseCase', () => {
     userConfigRepository = {
       save: jest.fn(),
       findByIntegrationAndUser: jest.fn(),
+      findByIntegrationIdsAndUser: jest.fn(),
       deleteByIntegrationId: jest.fn(),
     };
 

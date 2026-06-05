@@ -1,0 +1,9 @@
+{
+  "title": "{{name}} autorisieren",
+  "description": "Hinterlegen Sie Ihre persönlichen Zugangsdaten für diese Integration. Diese Werte werden nur für Ihre eigenen Anfragen verwendet und überschreiben die Organisationsstandards.",
+  "save": "Speichern",
+  "saving": "Wird gespeichert…",
+  "cancel": "Abbrechen",
+  "success": "Ihre Zugangsdaten wurden erfolgreich gespeichert",
+  "error": "Ihre Zugangsdaten konnten nicht gespeichert werden. Bitte versuchen Sie es erneut."
+}
