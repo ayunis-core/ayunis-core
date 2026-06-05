@@ -490,6 +490,48 @@ describe('McpClientService', () => {
       expect(userConfigRepo.findByIntegrationAndUser).not.toHaveBeenCalled();
     });
 
+    it('applies system-fixed user field headers without a stored user config', async () => {
+      const userId = randomUUID();
+      const schema: IntegrationConfigSchema = {
+        authType: 'BEARER_TOKEN',
+        orgFields: [
+          {
+            key: 'orgToken',
+            label: 'Token',
+            type: 'secret',
+            headerName: 'X-Org',
+            required: true,
+          },
+        ],
+        userFields: [
+          {
+            key: 'personalToken',
+            label: 'Personal Token',
+            type: 'secret',
+            headerName: 'Authorization',
+            prefix: 'Bearer ',
+            required: true,
+            value: 'fixed-personal-token',
+          },
+        ],
+      };
+      const integration = buildMarketplaceIntegration(schema, {
+        orgToken: 'encrypted-org-token',
+      });
+
+      encryption.decrypt.mockResolvedValue('org-token-decrypted');
+      userConfigRepo.findByIntegrationAndUser.mockResolvedValue(null);
+
+      const config = await service.buildConnectionConfig(integration, userId);
+
+      expect(config.headers).toEqual({
+        'X-Org': 'org-token-decrypted',
+        Authorization: 'Bearer fixed-personal-token',
+      });
+      expect(encryption.decrypt).toHaveBeenCalledTimes(1);
+      expect(encryption.decrypt).toHaveBeenCalledWith('encrypted-org-token');
+    });
+
     it('handles multiple org fields mapping to different headers', async () => {
       const schema: IntegrationConfigSchema = {
         authType: 'CUSTOM_HEADER',

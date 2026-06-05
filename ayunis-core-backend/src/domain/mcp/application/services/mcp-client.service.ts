@@ -102,12 +102,15 @@ export class McpClientService {
         orgConfigValues,
       );
 
-      // Apply user-level overrides if present
-      if (userConfig) {
+      // Apply user-level fields when acting on behalf of a user. System-fixed
+      // user values come from the schema; per-user overrides come from the
+      // stored user config (which may be absent when every required user field
+      // has a fixed value).
+      if (userId) {
         await this.applyConfigFieldHeaders(
           headers,
           configSchema.userFields,
-          userConfig.configValues,
+          userConfig?.configValues ?? {},
         );
       }
 
@@ -135,17 +138,27 @@ export class McpClientService {
     values: Record<string, string>,
   ): Promise<void> {
     for (const field of fields) {
-      const rawValue = values[field.key];
-      if (!rawValue || !field.headerName) continue;
+      if (!field.headerName) continue;
 
-      const decryptedValue =
-        field.type === 'secret'
-          ? await this.credentialEncryption.decrypt(rawValue)
-          : rawValue;
+      // System-fixed values from the schema are plaintext and are never stored
+      // encrypted, so they are applied directly. Otherwise fall back to the
+      // stored value, decrypting secrets.
+      let resolvedValue: string;
+      if (typeof field.value === 'string' && field.value.length > 0) {
+        resolvedValue = field.value;
+      } else {
+        const rawValue = values[field.key];
+        if (!rawValue) continue;
+
+        resolvedValue =
+          field.type === 'secret'
+            ? await this.credentialEncryption.decrypt(rawValue)
+            : rawValue;
+      }
 
       const headerValue = field.prefix
-        ? `${field.prefix}${decryptedValue}`
-        : decryptedValue;
+        ? `${field.prefix}${resolvedValue}`
+        : resolvedValue;
 
       headers[field.headerName] = headerValue;
     }
