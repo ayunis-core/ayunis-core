@@ -39,6 +39,16 @@ function redirect(location: string, status = 302): Response {
   return makeResponse({ status, headers: { location } });
 }
 
+function htmlResponse(body: string): Response {
+  return {
+    ok: true,
+    status: 200,
+    statusText: 'OK',
+    headers: { get: () => 'text/html; charset=utf-8' },
+    text: () => Promise.resolve(body),
+  } as unknown as Response;
+}
+
 describe('CheerioUrlRetrieverHandler', () => {
   let handler: CheerioUrlRetrieverHandler;
   let fetchSpy: jest.SpyInstance;
@@ -129,5 +139,65 @@ describe('CheerioUrlRetrieverHandler', () => {
     await expect(
       handler.retrieveUrl({ url: 'https://example.com' }),
     ).rejects.toBeInstanceOf(UrlRetrieverRetrievalError);
+  });
+});
+
+describe('CheerioUrlRetrieverHandler link extraction', () => {
+  let handler: CheerioUrlRetrieverHandler;
+  const fetchMock = jest.fn();
+
+  beforeAll(() => {
+    global.fetch = fetchMock;
+    const config = { get: () => 5000 } as unknown as ConfigService;
+    handler = new CheerioUrlRetrieverHandler(config);
+  });
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it('resolves relative links against the page URL', async () => {
+    fetchMock.mockResolvedValue(
+      htmlResponse('<a href="/about">About</a><a href="team">Team</a>'),
+    );
+
+    const result = await handler.retrieveUrl({
+      url: 'https://acme.test/docs/',
+    });
+
+    expect(result.links).toEqual([
+      'https://acme.test/about',
+      'https://acme.test/docs/team',
+    ]);
+  });
+
+  it('keeps only http(s) links and strips fragments and duplicates', async () => {
+    fetchMock.mockResolvedValue(
+      htmlResponse(
+        [
+          '<a href="https://acme.test/a#section">A</a>',
+          '<a href="https://acme.test/a">A again</a>',
+          '<a href="mailto:hi@acme.test">Mail</a>',
+          '<a href="javascript:void(0)">JS</a>',
+          '<a href="tel:+49123">Call</a>',
+        ].join(''),
+      ),
+    );
+
+    const result = await handler.retrieveUrl({ url: 'https://acme.test/' });
+
+    expect(result.links).toEqual(['https://acme.test/a']);
+  });
+
+  it('returns no links for plain-text responses', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      headers: { get: () => 'text/plain' },
+      text: () => Promise.resolve('just text https://acme.test/x'),
+    });
+
+    const result = await handler.retrieveUrl({ url: 'https://acme.test/' });
+
+    expect(result.links).toEqual([]);
   });
 });
