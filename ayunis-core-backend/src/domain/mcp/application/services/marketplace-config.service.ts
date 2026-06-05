@@ -32,7 +32,7 @@ export class MarketplaceConfigService {
   }
 
   /**
-   * Validates that all required fields have non-empty values.
+   * Validates that all required fields have non-empty, non-whitespace values.
    * Throws McpMissingRequiredConfigError if any required fields are missing.
    */
   validateRequiredFields(
@@ -40,7 +40,7 @@ export class MarketplaceConfigService {
     values: Record<string, string>,
   ): void {
     const missing = orgFields
-      .filter((field) => field.required && !values[field.key])
+      .filter((field) => field.required && !values[field.key]?.trim())
       .map((field) => field.key);
 
     if (missing.length > 0) {

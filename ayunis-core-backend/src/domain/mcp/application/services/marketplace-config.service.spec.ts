@@ -150,6 +150,21 @@ describe('MarketplaceConfigService', () => {
         service.validateRequiredFields(orgFields, { apiKey: '' }),
       ).toThrow(McpMissingRequiredConfigError);
     });
+
+    it('should treat whitespace-only value as missing for required fields', () => {
+      const orgFields: ConfigField[] = [
+        {
+          key: 'apiKey',
+          label: 'API Key',
+          type: 'secret',
+          required: true,
+        },
+      ];
+
+      expect(() =>
+        service.validateRequiredFields(orgFields, { apiKey: '   ' }),
+      ).toThrow(McpMissingRequiredConfigError);
+    });
   });
 
   describe('encryptSecretFields', () => {
