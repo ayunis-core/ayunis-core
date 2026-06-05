@@ -26,6 +26,7 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
   beforeAll(async () => {
     mockRepository = {
       findById: jest.fn(),
+      lockById: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
     } as unknown as jest.Mocked<KnowledgeBaseRepository>;

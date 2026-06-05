@@ -37,6 +37,7 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
   beforeEach(async () => {
     mockKbRepository = {
       findById: jest.fn(),
+      lockById: jest.fn(),
       findAllByUserId: jest.fn(),
       findByIds: jest.fn(),
       save: jest.fn(),

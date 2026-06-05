@@ -21,6 +21,7 @@ describe('FindKnowledgeBaseUseCase', () => {
   beforeEach(async () => {
     mockRepository = {
       findById: jest.fn(),
+      lockById: jest.fn(),
       findAllByUserId: jest.fn(),
       findByIds: jest.fn(),
       save: jest.fn(),

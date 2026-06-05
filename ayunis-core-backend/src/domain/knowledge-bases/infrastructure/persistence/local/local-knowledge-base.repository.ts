@@ -34,6 +34,15 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
     return this.mapper.toDomain(record);
   }
 
+  async lockById(id: UUID): Promise<void> {
+    this.logger.debug(`lockById: ${id}`);
+    await this.repository
+      .createQueryBuilder('kb')
+      .setLock('pessimistic_write')
+      .where('kb.id = :id', { id })
+      .getOne();
+  }
+
   async findByIds(ids: UUID[]): Promise<KnowledgeBase[]> {
     this.logger.debug(`findByIds: ${ids.length} ids`);
     if (ids.length === 0) {

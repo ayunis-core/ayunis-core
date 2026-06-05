@@ -60,11 +60,26 @@ export class AddUrlToKnowledgeBaseUseCase {
         }),
       );
 
-      // 3. Assign source to KB
-      await this.knowledgeBaseRepository.assignSourceToKnowledgeBase(
-        source.id,
-        command.knowledgeBaseId,
-      );
+      // 3. Re-check the limit and assign atomically while holding a lock on the
+      // knowledge base, so concurrent add-URL requests cannot exceed MAX_SOURCES.
+      await this.txHost.withTransaction(async () => {
+        await this.knowledgeBaseRepository.lockById(command.knowledgeBaseId);
+
+        const sourceCount =
+          await this.knowledgeBaseRepository.countSourcesByKnowledgeBaseId(
+            command.knowledgeBaseId,
+          );
+        if (sourceCount >= KnowledgeBasesConstants.MAX_SOURCES) {
+          throw new KnowledgeBaseSourceLimitExceededError(
+            KnowledgeBasesConstants.MAX_SOURCES,
+          );
+        }
+
+        await this.knowledgeBaseRepository.assignSourceToKnowledgeBase(
+          source.id,
+          command.knowledgeBaseId,
+        );
+      });
 
       return source;
     } catch (error) {

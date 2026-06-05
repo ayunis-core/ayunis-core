@@ -53,6 +53,7 @@ describe('AddUrlToKnowledgeBaseUseCase', () => {
   beforeEach(async () => {
     mockRepository = {
       findById: jest.fn(),
+      lockById: jest.fn(),
       findAllByUserId: jest.fn(),
       findByIds: jest.fn(),
       save: jest.fn(),
@@ -145,6 +146,27 @@ describe('AddUrlToKnowledgeBaseUseCase', () => {
       KnowledgeBaseSourceLimitExceededError,
     );
     expect(mockStartUrlCrawlUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('re-checks the limit under a lock and does not assign when filled concurrently', async () => {
+    mockRepository.findById.mockResolvedValue(ownedKnowledgeBase());
+    mockStartUrlCrawlUseCase.execute.mockResolvedValue(processingUrlSource());
+    // Passes the initial check, but the KB fills up before assignment.
+    mockRepository.countSourcesByKnowledgeBaseId
+      .mockResolvedValueOnce(KnowledgeBasesConstants.MAX_SOURCES - 1)
+      .mockResolvedValueOnce(KnowledgeBasesConstants.MAX_SOURCES);
+
+    const command = new AddUrlToKnowledgeBaseCommand({
+      knowledgeBaseId,
+      userId,
+      url: 'https://example.com/stadtrat',
+    });
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      KnowledgeBaseSourceLimitExceededError,
+    );
+    expect(mockRepository.lockById).toHaveBeenCalledWith(knowledgeBaseId);
+    expect(mockRepository.assignSourceToKnowledgeBase).not.toHaveBeenCalled();
   });
 
   it('wraps non-ApplicationErrors in UnexpectedKnowledgeBaseError', async () => {

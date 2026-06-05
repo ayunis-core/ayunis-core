@@ -12,6 +12,7 @@ describe('KnowledgeBaseShareAuthorizationStrategy', () => {
   beforeAll(async () => {
     const mockKnowledgeBaseRepository = {
       findById: jest.fn(),
+      lockById: jest.fn(),
       findByIds: jest.fn(),
       findAllByUserId: jest.fn(),
       save: jest.fn(),
