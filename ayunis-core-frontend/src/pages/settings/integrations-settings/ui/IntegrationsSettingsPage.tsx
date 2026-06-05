@@ -25,10 +25,6 @@ export default function IntegrationsSettingsPage() {
   return (
     <SettingsLayout title={t('layout.integrations')}>
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          {t('integrations.description')}
-        </p>
-
         <IntegrationsContent
           isLoading={isLoading}
           isError={isError}

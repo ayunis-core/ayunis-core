@@ -9,7 +9,6 @@
     "account": "Account"
   },
   "integrations": {
-    "description": "Configure the integrations your organization has enabled with your own credentials. Some require authorization before you can use them; others are optional.",
     "empty": "None of your organization's integrations can be configured with your personal credentials.",
     "failedToLoad": "Failed to load integrations.",
     "retry": "Retry",

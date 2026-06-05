@@ -9,7 +9,6 @@
     "account": "Konto"
   },
   "integrations": {
-    "description": "Konfigurieren Sie die von Ihrer Organisation aktivierten Integrationen mit Ihren eigenen Zugangsdaten. Einige erfordern eine Autorisierung, bevor Sie sie nutzen können; andere sind optional.",
     "empty": "Keine Integration Ihrer Organisation kann mit Ihren persönlichen Zugangsdaten konfiguriert werden.",
     "failedToLoad": "Integrationen konnten nicht geladen werden.",
     "retry": "Erneut versuchen",
