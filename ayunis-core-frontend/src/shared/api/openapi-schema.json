@@ -3695,27 +3695,125 @@
         "tags": ["transcriptions"]
       }
     },
-    "/retrievers/url": {
+    "/super-admin/crawl-domains/{orgId}": {
+      "get": {
+        "operationId": "SuperAdminCrawlDomainsController_list",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CrawlDomainGrantResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized as super admin"
+          }
+        },
+        "summary": "List the crawl domains assigned to an organization",
+        "tags": ["Super Admin Crawl Domains"]
+      },
       "post": {
-        "operationId": "UrlRetrieverController_retrieveUrl",
-        "parameters": [],
+        "operationId": "SuperAdminCrawlDomainsController_grant",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RetrieveUrlDto"
+                "$ref": "#/components/schemas/GrantCrawlDomainRequestDto"
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "The content has been successfully retrieved"
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CrawlDomainGrantResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid domain"
+          },
+          "401": {
+            "description": "Not authorized as super admin"
+          },
+          "409": {
+            "description": "Domain already assigned to another organization"
           }
         },
-        "summary": "Retrieve content from a URL",
-        "tags": ["retrievers"]
+        "summary": "Assign a crawl domain to an organization",
+        "tags": ["Super Admin Crawl Domains"]
+      }
+    },
+    "/super-admin/crawl-domains/{orgId}/{grantId}": {
+      "delete": {
+        "operationId": "SuperAdminCrawlDomainsController_revoke",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "grantId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Crawl domain revoked"
+          },
+          "401": {
+            "description": "Not authorized as super admin"
+          },
+          "404": {
+            "description": "Crawl domain grant not found"
+          }
+        },
+        "summary": "Revoke a crawl domain from an organization",
+        "tags": ["Super Admin Crawl Domains"]
       }
     },
     "/threads": {
@@ -10530,16 +10628,38 @@
         },
         "required": ["text"]
       },
-      "RetrieveUrlDto": {
+      "CrawlDomainGrantResponseDto": {
         "type": "object",
         "properties": {
-          "url": {
+          "id": {
             "type": "string",
-            "description": "URL to retrieve content from",
-            "example": "https://example.com/article"
+            "format": "uuid"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "domain": {
+            "type": "string",
+            "example": "intranet.customer.de"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           }
         },
-        "required": ["url"]
+        "required": ["id", "orgId", "domain", "createdAt"]
+      },
+      "GrantCrawlDomainRequestDto": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "The exact host to authorize for crawling by this organization. A full URL is accepted and reduced to its host.",
+            "example": "intranet.customer.de"
+          }
+        },
+        "required": ["domain"]
       },
       "CreateThreadDto": {
         "type": "object",

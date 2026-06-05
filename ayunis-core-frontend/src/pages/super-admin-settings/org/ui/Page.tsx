@@ -18,6 +18,7 @@ import BillingInfoSection from './BillingInfoSection';
 import SubscriptionCancellationSection from './SubscriptionCancellationSection';
 import NoSubscriptionSection from './NoSubscriptionSection';
 import ModelsSection from './ModelsSection';
+import CrawlDomainsSection from './CrawlDomainsSection';
 import TrialSection from './TrialSection';
 import NoTrialSection from './NoTrialSection';
 import UsageTab from './UsageTab';
@@ -45,7 +46,8 @@ interface SuperAdminSettingsOrgPageProps {
     | 'subscriptions'
     | 'models'
     | 'trials'
-    | 'usage';
+    | 'usage'
+    | 'crawl-domains';
 }
 export default function SuperAdminSettingsOrgPage({
   org,
@@ -76,7 +78,8 @@ export default function SuperAdminSettingsOrgPage({
             | 'subscriptions'
             | 'models'
             | 'trials'
-            | 'usage',
+            | 'usage'
+            | 'crawl-domains',
         },
       });
     },
@@ -103,6 +106,9 @@ export default function SuperAdminSettingsOrgPage({
           </TabsTrigger>
           <TabsTrigger value="trials">{t('tabs.trials')}</TabsTrigger>
           <TabsTrigger value="models">{t('tabs.models')}</TabsTrigger>
+          <TabsTrigger value="crawl-domains">
+            {t('tabs.crawlDomains')}
+          </TabsTrigger>
           <TabsTrigger value="usage">{t('tabs.usage')}</TabsTrigger>
         </TabsList>
         <TabsContent value="org" className="mt-4">
@@ -167,6 +173,9 @@ export default function SuperAdminSettingsOrgPage({
         </TabsContent>
         <TabsContent value="models" className="mt-4">
           <ModelsSection orgId={org.id} />
+        </TabsContent>
+        <TabsContent value="crawl-domains" className="mt-4">
+          <CrawlDomainsSection orgId={org.id} />
         </TabsContent>
         <TabsContent value="usage" className="mt-4">
           <UsageTab orgId={org.id} />

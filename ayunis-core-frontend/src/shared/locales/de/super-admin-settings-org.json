@@ -253,7 +253,31 @@
     "subscriptions": "Abonnement",
     "trials": "Trial",
     "models": "Modelle",
-    "usage": "Nutzung"
+    "usage": "Nutzung",
+    "crawlDomains": "Crawl-Domains"
+  },
+  "crawlDomains": {
+    "title": "Crawl-Domains",
+    "description": "Hosts, die nur diese Organisation crawlen darf. Jeder Host gehört exklusiv zu einer Organisation; jede andere Organisation wird abgewiesen. Öffentliche URLs sind nicht betroffen.",
+    "empty": "Dieser Organisation sind keine Crawl-Domains zugewiesen.",
+    "error": "Crawl-Domains konnten nicht geladen werden.",
+    "add": {
+      "placeholder": "z. B. intranet.kunde.de",
+      "button": "Hinzufügen",
+      "success": "Crawl-Domain hinzugefügt.",
+      "error": "Crawl-Domain konnte nicht hinzugefügt werden.",
+      "errorAlreadyAssigned": "Diese Domain ist bereits einer anderen Organisation zugewiesen.",
+      "errorInvalid": "Bitte einen gültigen Host oder eine gültige URL eingeben."
+    },
+    "remove": {
+      "button": "Entfernen",
+      "title": "Crawl-Domain entfernen",
+      "description": "\"{{domain}}\" entfernen? Diese Organisation kann sie dann nicht mehr crawlen.",
+      "confirmText": "Entfernen",
+      "cancelText": "Abbrechen",
+      "success": "Crawl-Domain entfernt.",
+      "error": "Crawl-Domain konnte nicht entfernt werden."
+    }
   },
   "orgDetails": {
     "name": "Name",

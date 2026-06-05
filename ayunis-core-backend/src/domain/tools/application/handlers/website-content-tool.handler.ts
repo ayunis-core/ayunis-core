@@ -21,12 +21,12 @@ export class WebsiteContentToolHandler extends ToolExecutionHandler {
     input: Record<string, unknown>;
     context: ToolExecutionContext;
   }): Promise<string> {
-    const { tool, input } = params;
+    const { tool, input, context } = params;
     this.logger.log('execute', tool, input);
     try {
       const validatedInput = tool.validateParams(input);
       const content = await this.retrieveUrlUseCase.execute(
-        new RetrieveUrlCommand(validatedInput.url),
+        new RetrieveUrlCommand(validatedInput.url, context.orgId),
       );
       return JSON.stringify(content);
     } catch (error) {

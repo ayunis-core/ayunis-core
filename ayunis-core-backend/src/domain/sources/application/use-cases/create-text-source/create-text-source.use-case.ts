@@ -68,7 +68,7 @@ export class CreateTextSourceUseCase {
       if (command instanceof CreateFileSourceCommand) {
         result = await this.createFileSource(command);
       } else if (command instanceof CreateUrlSourceCommand) {
-        result = await this.createUrlSource(command);
+        result = await this.createUrlSource(command, orgId);
       } else {
         throw new InvalidSourceTypeError(command.constructor.name);
       }
@@ -120,9 +120,10 @@ export class CreateTextSourceUseCase {
 
   private async createUrlSource(
     command: CreateUrlSourceCommand,
+    orgId: UUID,
   ): Promise<TextSourceWithContent> {
     const urlRetrieverResult = await this.retrieveUrlUseCase.execute(
-      new RetrieveUrlCommand(command.url),
+      new RetrieveUrlCommand(command.url, orgId),
     );
 
     const chunks = this.getChunksFromText(urlRetrieverResult.content, {

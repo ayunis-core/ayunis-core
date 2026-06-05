@@ -23,6 +23,7 @@ import { UsageModule } from '../domain/usage/usage.module';
 import { TranscriptionsModule } from '../domain/transcriptions/transcriptions.module';
 import { ChatSettingsModule } from '../domain/chat-settings/chat-settings.module';
 import { KnowledgeBasesModule } from '../domain/knowledge-bases/knowledge-bases.module';
+import { CrawlDomainGrantsModule } from '../domain/crawl-domain-grants/crawl-domain-grants.module';
 import { SkillTemplatesModule } from '../domain/skill-templates/skill-templates.module';
 import { ArtifactsModule } from '../domain/artifacts/artifacts.module';
 import { LetterheadsModule } from '../domain/letterheads/letterheads.module';
@@ -163,6 +164,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     TranscriptionsModule,
     ChatSettingsModule,
     KnowledgeBasesModule,
+    CrawlDomainGrantsModule,
     SkillTemplatesModule,
     ArtifactsModule,
     LetterheadsModule,

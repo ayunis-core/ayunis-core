@@ -253,7 +253,31 @@
     "subscriptions": "Subscriptions",
     "trials": "Trials",
     "models": "Models",
-    "usage": "Usage"
+    "usage": "Usage",
+    "crawlDomains": "Crawl Domains"
+  },
+  "crawlDomains": {
+    "title": "Crawl Domains",
+    "description": "Hosts only this organization may crawl. Each host is exclusive to one organization; any other organization is denied. Public URLs are unaffected.",
+    "empty": "No crawl domains assigned to this organization.",
+    "error": "Could not load crawl domains.",
+    "add": {
+      "placeholder": "e.g. intranet.customer.de",
+      "button": "Add",
+      "success": "Crawl domain added.",
+      "error": "Could not add the crawl domain.",
+      "errorAlreadyAssigned": "This domain is already assigned to another organization.",
+      "errorInvalid": "Please enter a valid host or URL."
+    },
+    "remove": {
+      "button": "Remove",
+      "title": "Remove crawl domain",
+      "description": "Remove \"{{domain}}\"? This organization will no longer be able to crawl it.",
+      "confirmText": "Remove",
+      "cancelText": "Cancel",
+      "success": "Crawl domain removed.",
+      "error": "Could not remove the crawl domain."
+    }
   },
   "orgDetails": {
     "name": "Name",

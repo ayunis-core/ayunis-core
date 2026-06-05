@@ -1625,9 +1625,16 @@ export interface TranscriptionResponseDto {
   text: string;
 }
 
-export interface RetrieveUrlDto {
-  /** URL to retrieve content from */
-  url: string;
+export interface CrawlDomainGrantResponseDto {
+  id: string;
+  orgId: string;
+  domain: string;
+  createdAt: string;
+}
+
+export interface GrantCrawlDomainRequestDto {
+  /** The exact host to authorize for crawling by this organization. A full URL is accepted and reduced to its host. */
+  domain: string;
 }
 
 export interface CreateThreadDto {
