@@ -137,10 +137,7 @@ export default function McpIntegrationsCard({
                     <ItemTitle>
                       {integration.name}
                       {needsConfiguration && (
-                        <Badge
-                          variant="outline"
-                          className="ml-2 border-amber-500 text-amber-700 dark:text-amber-400"
-                        >
+                        <Badge variant="outline" className="ml-2">
                           {translations.configRequiredBadge}
                         </Badge>
                       )}
