@@ -62,7 +62,9 @@
       "enableIntegration": "Integration aktivieren",
       "testing": "Teste...",
       "testConnection": "Verbindung testen",
-      "marketplace": "Marktplatz"
+      "testConnectionUserConfigTooltip": "Diese Integration kann nicht zentral getestet werden, da sich jede Person mit ihren eigenen Zugangsdaten verbindet. Nutzer hinterlegen ihre Zugangsdaten unter Einstellungen → Integrationen.",
+      "marketplace": "Marktplatz",
+      "userConfigNeeded": "Nutzerkonfiguration nötig"
     },
     "list": {
       "noIntegrationsTitle": "Noch keine Integrationen",

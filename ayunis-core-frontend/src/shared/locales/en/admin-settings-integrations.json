@@ -62,7 +62,9 @@
       "enableIntegration": "Enable integration",
       "testing": "Testing...",
       "testConnection": "Test Connection",
-      "marketplace": "Marketplace"
+      "testConnectionUserConfigTooltip": "This integration can't be tested centrally because each user connects with their own credentials. Users add their credentials under Settings → Integrations.",
+      "marketplace": "Marketplace",
+      "userConfigNeeded": "User config needed"
     },
     "list": {
       "noIntegrationsTitle": "No integrations yet",
