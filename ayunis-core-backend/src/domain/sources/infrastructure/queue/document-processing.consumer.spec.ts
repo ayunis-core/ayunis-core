@@ -1,15 +1,6 @@
 import type { UUID } from 'crypto';
 import type { Job } from 'bullmq';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
-
-// p-limit is ESM-only — mock the dynamic import so Jest (CJS) doesn't choke.
-jest.mock('p-limit', () => ({
-  __esModule: true,
-  default:
-    () =>
-    <T>(fn: () => T) =>
-      fn(),
-}));
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { FileType } from 'src/domain/sources/domain/source-type.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -82,7 +73,7 @@ const splitTextUseCase = {
   }),
 };
 
-const ingestContentUseCase = {
+const ingestBulkContentUseCase = {
   execute: jest.fn().mockResolvedValue(undefined),
 };
 const deleteContentUseCase = {
@@ -126,7 +117,7 @@ describe('DocumentProcessingConsumer', () => {
       contextService as never,
       retrieveFileContentUseCase as never,
       splitTextUseCase as never,
-      ingestContentUseCase as never,
+      ingestBulkContentUseCase as never,
       deleteContentUseCase as never,
       downloadObjectUseCase as never,
       deleteObjectUseCase as never,
@@ -192,5 +183,14 @@ describe('DocumentProcessingConsumer', () => {
       SourceStatus.READY,
       { processingError: null },
     );
+    // Chunks are indexed via a single bulk call (not one call per chunk)
+    expect(ingestBulkContentUseCase.execute).toHaveBeenCalledTimes(1);
+    const bulkCommand = ingestBulkContentUseCase.execute.mock.calls[0][0];
+    expect(bulkCommand.orgId).toBe(ORG_ID);
+    expect(bulkCommand.entries).toHaveLength(1);
+    expect(bulkCommand.entries[0]).toMatchObject({
+      documentId: SOURCE_ID,
+      content: 'hello world',
+    });
   });
 });
