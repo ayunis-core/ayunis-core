@@ -266,6 +266,32 @@ describe('CrawlUrlUseCase', () => {
     expect(retriever.execute).toHaveBeenCalledTimes(2);
   });
 
+  it('dedupes child pages that redirect to one canonical URL', async () => {
+    // Regression: selectLinks marked the pre-redirect href visited, but pages
+    // are stored under the post-redirect URL, which was never recorded. Two
+    // links collapsing to one landing page produced duplicate pages and wasted
+    // MAX_PAGES budget; a later link pointing straight at the redirect target
+    // would also re-fetch it.
+    const retriever = fakeRetriever({
+      'https://acme.test/': {
+        links: ['https://acme.test/x', 'https://acme.test/y'],
+      },
+      'https://acme.test/x': { finalUrl: 'https://acme.test/canonical' },
+      'https://acme.test/y': { finalUrl: 'https://acme.test/canonical' },
+    });
+    const useCase = await buildUseCase(retriever);
+
+    const result = await useCase.execute(
+      new CrawlUrlCommand('https://acme.test/', ORG_ID, 1),
+    );
+
+    // Both children land on the same canonical page — stored once, not twice.
+    expect(result.pages.map((p) => p.url)).toEqual([
+      'https://acme.test/',
+      'https://acme.test/canonical',
+    ]);
+  });
+
   it('skips child pages that fail to fetch but keeps the rest', async () => {
     const retriever = fakeRetriever({
       'https://acme.test/': {

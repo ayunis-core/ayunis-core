@@ -70,7 +70,18 @@ export class CrawlUrlUseCase {
     const successful = results.filter(
       (result): result is UrlRetrieverResult => result !== null,
     );
+    // Pages are stored under their post-redirect URL, but selectLinks only
+    // marked the pre-redirect href visited. Dedupe by the canonical URL so
+    // redirect collapses (two hrefs landing on one page, or a later link
+    // pointing straight at a redirect target) don't push duplicate pages or
+    // waste MAX_PAGES budget. Marking the canonical visited also stops future
+    // waves from re-selecting links that resolve to it.
+    const stored = new Set(pages.map((page) => this.normalize(page.url)));
     for (const result of successful) {
+      const canonical = this.normalize(result.url);
+      if (stored.has(canonical)) continue;
+      stored.add(canonical);
+      visited.add(canonical);
       pages.push(this.toPage(result));
     }
     if (!follow) return [];
