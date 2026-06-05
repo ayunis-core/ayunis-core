@@ -8,7 +8,7 @@ import {
 } from '@/shared/ui/shadcn/dropdown-menu';
 import { Switch } from '@/shared/ui/shadcn/switch';
 import { Badge } from '@/shared/ui/shadcn/badge';
-import { MoreVertical, Loader2, User } from 'lucide-react';
+import { MoreVertical, Loader2 } from 'lucide-react';
 import type { McpIntegration } from '../model/types';
 import { getIntegrationTypeLabel } from '../lib/helpers';
 import {
@@ -25,7 +25,6 @@ interface IntegrationCardProps {
   onDelete: (integration: McpIntegration) => void;
   onToggleEnabled: (integration: McpIntegration, enabled: boolean) => void;
   onValidate: (integration: McpIntegration) => void;
-  onUserConfig?: (integration: McpIntegration) => void;
   isTogglingEnabled?: boolean;
   isValidating?: boolean;
 }
@@ -36,13 +35,11 @@ export function IntegrationCard({
   onDelete,
   onToggleEnabled,
   onValidate,
-  onUserConfig,
   isTogglingEnabled = false,
   isValidating = false,
 }: Readonly<IntegrationCardProps>) {
   const { t } = useTranslation('admin-settings-integrations');
   const isMarketplace = integration.type === 'marketplace';
-  const hasUserFields = integration.hasUserFields === true;
 
   return (
     <Item variant="outline">
@@ -60,16 +57,6 @@ export function IntegrationCard({
         </ItemDescription>
       </ItemContent>
       <ItemActions>
-        {isMarketplace && hasUserFields && onUserConfig && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onUserConfig(integration)}
-          >
-            <User className="h-4 w-4" />
-            {t('integrations.card.userConfig')}
-          </Button>
-        )}
         <Switch
           id={`integration-${integration.id}`}
           checked={integration.enabled}

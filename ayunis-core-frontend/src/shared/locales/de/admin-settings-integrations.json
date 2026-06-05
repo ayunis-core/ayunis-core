@@ -62,8 +62,7 @@
       "enableIntegration": "Integration aktivieren",
       "testing": "Teste...",
       "testConnection": "Verbindung testen",
-      "marketplace": "Marktplatz",
-      "userConfig": "Meine Konfiguration"
+      "marketplace": "Marktplatz"
     },
     "list": {
       "noIntegrationsTitle": "Noch keine Integrationen",

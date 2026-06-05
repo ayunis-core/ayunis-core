@@ -62,8 +62,7 @@
       "enableIntegration": "Enable integration",
       "testing": "Testing...",
       "testConnection": "Test Connection",
-      "marketplace": "Marketplace",
-      "userConfig": "My Config"
+      "marketplace": "Marketplace"
     },
     "list": {
       "noIntegrationsTitle": "No integrations yet",
