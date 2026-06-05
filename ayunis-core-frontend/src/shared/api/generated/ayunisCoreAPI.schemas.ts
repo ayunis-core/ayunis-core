@@ -2429,6 +2429,12 @@ export interface KnowledgeBaseDocumentListResponseDto {
 export interface AddUrlToKnowledgeBaseDto {
   /** The URL to crawl and add to the knowledge base */
   url: string;
+  /**
+   * How many links deep to follow from the URL when crawling (0 = just this page, 1 = + linked pages, 2 = + their links). Only same-domain links are followed. Defaults to 0.
+   * @minimum 0
+   * @maximum 2
+   */
+  maxDepth?: number;
 }
 
 /**

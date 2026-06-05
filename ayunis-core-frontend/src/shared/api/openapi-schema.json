@@ -4592,8 +4592,8 @@
           }
         },
         "responses": {
-          "201": {
-            "description": "The URL source has been added to the knowledge base",
+          "202": {
+            "description": "The URL source has been accepted and is being processed in the background",
             "content": {
               "application/json": {
                 "schema": {
@@ -11673,6 +11673,14 @@
             "type": "string",
             "description": "The URL to crawl and add to the knowledge base",
             "example": "https://example.com/page"
+          },
+          "maxDepth": {
+            "type": "number",
+            "description": "How many links deep to follow from the URL when crawling (0 = just this page, 1 = + linked pages, 2 = + their links). Only same-domain links are followed. Defaults to 0.",
+            "minimum": 0,
+            "maximum": 2,
+            "default": 0,
+            "example": 1
           }
         },
         "required": ["url"]

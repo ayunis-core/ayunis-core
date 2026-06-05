@@ -384,9 +384,11 @@ export class KnowledgeBasesController {
     format: 'uuid',
   })
   @ApiBody({ type: AddUrlToKnowledgeBaseDto })
+  @HttpCode(HttpStatus.ACCEPTED)
   @ApiResponse({
-    status: 201,
-    description: 'The URL source has been added to the knowledge base',
+    status: 202,
+    description:
+      'The URL source has been accepted and is being processed in the background',
     type: KnowledgeBaseDocumentResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Knowledge base not found' })
@@ -398,6 +400,7 @@ export class KnowledgeBasesController {
     this.logger.log('addUrl', {
       knowledgeBaseId: id,
       url: dto.url,
+      maxDepth: dto.maxDepth,
     });
 
     const source = await this.addUrlUseCase.execute(
@@ -405,6 +408,7 @@ export class KnowledgeBasesController {
         knowledgeBaseId: id,
         userId,
         url: dto.url,
+        maxDepth: dto.maxDepth,
       }),
     );
 
