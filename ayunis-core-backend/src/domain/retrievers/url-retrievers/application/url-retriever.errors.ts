@@ -17,6 +17,7 @@ export enum UrlRetrieverErrorCode {
   HTTP_ERROR = 'HTTP_ERROR',
   PARSING_ERROR = 'PARSING_ERROR',
   UNSUPPORTED_CONTENT_TYPE = 'UNSUPPORTED_CONTENT_TYPE',
+  TOO_MANY_REDIRECTS = 'TOO_MANY_REDIRECTS',
 }
 
 /**
@@ -129,5 +130,17 @@ export class UrlRetrieverUnsupportedContentTypeError extends UrlRetrieverError {
       metadata,
     );
     this.name = 'UrlRetrieverUnsupportedContentTypeError';
+  }
+}
+
+export class UrlRetrieverTooManyRedirectsError extends UrlRetrieverError {
+  constructor(url: string, maxRedirects: number, metadata?: ErrorMetadata) {
+    super(
+      `Too many redirects (>${maxRedirects}) when retrieving '${url}'`,
+      UrlRetrieverErrorCode.TOO_MANY_REDIRECTS,
+      422,
+      metadata,
+    );
+    this.name = 'UrlRetrieverTooManyRedirectsError';
   }
 }

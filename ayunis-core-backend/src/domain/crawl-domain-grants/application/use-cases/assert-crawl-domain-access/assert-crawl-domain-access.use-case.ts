@@ -6,6 +6,8 @@ import {
   UnexpectedCrawlDomainGrantError,
 } from '../../crawl-domain-grants.errors';
 import { AssertCrawlDomainAccessCommand } from './assert-crawl-domain-access.command';
+import { normalizeHost } from '../../../domain/crawl-domain.util';
+import { InvalidCrawlDomainError } from '../../../domain/crawl-domain.errors';
 
 /**
  * The single enforcement primitive for org-scoped crawling. Called from the
@@ -52,9 +54,15 @@ export class AssertCrawlDomainAccessUseCase {
 
   private extractHost(url: string): string | null {
     try {
-      return new URL(url).hostname.toLowerCase() || null;
-    } catch {
-      return null;
+      // Use the same canonical normalization that grants are stored with so
+      // the comparison key matches (lowercased, trailing FQDN dot stripped,
+      // bare hosts accepted).
+      return normalizeHost(url);
+    } catch (error) {
+      if (error instanceof InvalidCrawlDomainError) {
+        return null;
+      }
+      throw error;
     }
   }
 }

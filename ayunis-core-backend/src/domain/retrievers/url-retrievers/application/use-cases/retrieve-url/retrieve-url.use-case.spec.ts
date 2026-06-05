@@ -66,7 +66,31 @@ describe('RetrieveUrlUseCase', () => {
     expect(mockHandler.retrieveUrl).toHaveBeenCalledWith({
       url: command.url,
       options: command.options,
+      onRedirect: expect.any(Function),
     });
+  });
+
+  it('should pass an onRedirect guard that re-asserts the gate per hop', async () => {
+    const command = new RetrieveUrlCommand('https://example.com', ORG_ID);
+    jest
+      .spyOn(mockHandler, 'retrieveUrl')
+      .mockResolvedValue(
+        new UrlRetrieverResult('content', command.url, command.url),
+      );
+
+    await useCase.execute(command);
+
+    const input = (mockHandler.retrieveUrl as jest.Mock).mock.calls[0][0];
+    expect(typeof input.onRedirect).toBe('function');
+
+    // Invoking the guard with a redirect target re-runs the crawl gate for it.
+    await input.onRedirect('https://redirected.example.org/page');
+    expect(mockAssertCrawlDomainAccess.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: 'https://redirected.example.org/page',
+        orgId: ORG_ID,
+      }),
+    );
   });
 
   it('should enforce the org crawl gate before fetching', async () => {

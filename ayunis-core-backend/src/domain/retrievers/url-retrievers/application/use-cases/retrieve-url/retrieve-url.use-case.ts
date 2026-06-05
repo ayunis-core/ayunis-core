@@ -33,6 +33,12 @@ export class RetrieveUrlUseCase {
       return await this.handler.retrieveUrl({
         url: command.url,
         options: command.options,
+        // Re-assert the gate on every redirect hop so a crawl cannot be bounced
+        // onto a host bound to another org (see AYC-190).
+        onRedirect: (url) =>
+          this.assertCrawlDomainAccessUseCase.execute(
+            new AssertCrawlDomainAccessCommand(url, command.orgId),
+          ),
       });
     } catch (error) {
       // Just rethrow if it's already a domain error
