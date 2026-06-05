@@ -6,6 +6,7 @@ import {
   UrlRetrieverProviderNotAvailableError,
   UrlRetrieverError,
 } from '../../url-retriever.errors';
+import { CrawlDomainAccessDeniedError } from 'src/domain/crawl-domain-grants/application/crawl-domain-grants.errors';
 import { AssertCrawlDomainAccessUseCase } from 'src/domain/crawl-domain-grants/application/use-cases/assert-crawl-domain-access/assert-crawl-domain-access.use-case';
 import { AssertCrawlDomainAccessCommand } from 'src/domain/crawl-domain-grants/application/use-cases/assert-crawl-domain-access/assert-crawl-domain-access.command';
 
@@ -41,6 +42,12 @@ export class RetrieveUrlUseCase {
           ),
       });
     } catch (error) {
+      // Preserve gate denials raised on a redirect hop so they keep their
+      // hide-existence 404 instead of being masked as a provider error.
+      if (error instanceof CrawlDomainAccessDeniedError) {
+        throw error;
+      }
+
       // Just rethrow if it's already a domain error
       if (error instanceof UrlRetrieverError) {
         throw error;

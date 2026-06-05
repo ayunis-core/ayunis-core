@@ -12,7 +12,14 @@ const GRANT_ERROR_MAP: Record<string, string> = {
   CRAWL_DOMAIN_INVALID: 'crawlDomains.add.errorInvalid',
 };
 
-export function useSuperAdminGrantCrawlDomain(orgId: string) {
+interface UseSuperAdminGrantCrawlDomainOptions {
+  onSuccessCallback?: () => void;
+}
+
+export function useSuperAdminGrantCrawlDomain(
+  orgId: string,
+  options: UseSuperAdminGrantCrawlDomainOptions = {},
+) {
   const { t } = useTranslation('super-admin-settings-org');
   const queryClient = useQueryClient();
 
@@ -23,6 +30,7 @@ export function useSuperAdminGrantCrawlDomain(orgId: string) {
           queryKey: getSuperAdminCrawlDomainsControllerListQueryKey(orgId),
         });
         showSuccess(t('crawlDomains.add.success'));
+        options.onSuccessCallback?.();
       },
       onError: (error) => {
         try {

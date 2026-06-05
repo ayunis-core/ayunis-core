@@ -123,6 +123,17 @@ describe('RetrieveUrlUseCase', () => {
     expect(mockHandler.retrieveUrl).not.toHaveBeenCalled();
   });
 
+  it('should propagate a crawl-domain access denial raised on a redirect hop without masking it', async () => {
+    const command = new RetrieveUrlCommand('https://example.com', ORG_ID);
+    jest
+      .spyOn(mockHandler, 'retrieveUrl')
+      .mockRejectedValue(new CrawlDomainAccessDeniedError());
+
+    await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+      CrawlDomainAccessDeniedError,
+    );
+  });
+
   it('should handle errors and convert to domain error', async () => {
     const command = new RetrieveUrlCommand('https://example.com', ORG_ID);
     const error = new Error('Network error');

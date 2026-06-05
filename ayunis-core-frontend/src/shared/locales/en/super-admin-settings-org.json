@@ -258,12 +258,26 @@
   },
   "crawlDomains": {
     "title": "Crawl Domains",
-    "description": "Hosts only this organization may crawl. Each host is exclusive to one organization; any other organization is denied. Public URLs are unaffected.",
+    "description": "Hosts that only this organization may crawl, each exclusive to one organization.",
     "empty": "No crawl domains assigned to this organization.",
     "error": "Could not load crawl domains.",
-    "add": {
+    "table": {
+      "host": "Host",
+      "createdAt": "Added",
+      "actions": "Actions"
+    },
+    "createDomain": {
+      "button": "Add domain",
+      "title": "Add crawl domain",
+      "description": "Authorize a host that only this organization may crawl. A full URL is accepted and reduced to its host.",
+      "label": "Host",
       "placeholder": "e.g. intranet.customer.de",
-      "button": "Add",
+      "required": "Please enter a host.",
+      "cancel": "Cancel",
+      "create": "Add",
+      "creating": "Adding…"
+    },
+    "add": {
       "success": "Crawl domain added.",
       "error": "Could not add the crawl domain.",
       "errorAlreadyAssigned": "This domain is already assigned to another organization.",

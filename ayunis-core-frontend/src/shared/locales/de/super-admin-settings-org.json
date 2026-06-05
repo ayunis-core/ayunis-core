@@ -258,12 +258,26 @@
   },
   "crawlDomains": {
     "title": "Crawl-Domains",
-    "description": "Hosts, die nur diese Organisation crawlen darf. Jeder Host gehört exklusiv zu einer Organisation; jede andere Organisation wird abgewiesen. Öffentliche URLs sind nicht betroffen.",
+    "description": "Hosts, die nur diese Organisation crawlen darf, jeweils exklusiv einer Organisation zugeordnet.",
     "empty": "Dieser Organisation sind keine Crawl-Domains zugewiesen.",
     "error": "Crawl-Domains konnten nicht geladen werden.",
-    "add": {
+    "table": {
+      "host": "Host",
+      "createdAt": "Hinzugefügt",
+      "actions": "Aktionen"
+    },
+    "createDomain": {
+      "button": "Domain hinzufügen",
+      "title": "Crawl-Domain hinzufügen",
+      "description": "Autorisiere einen Host, den nur diese Organisation crawlen darf. Eine vollständige URL wird akzeptiert und auf ihren Host reduziert.",
+      "label": "Host",
       "placeholder": "z. B. intranet.kunde.de",
-      "button": "Hinzufügen",
+      "required": "Bitte einen Host eingeben.",
+      "cancel": "Abbrechen",
+      "create": "Hinzufügen",
+      "creating": "Wird hinzugefügt…"
+    },
+    "add": {
       "success": "Crawl-Domain hinzugefügt.",
       "error": "Crawl-Domain konnte nicht hinzugefügt werden.",
       "errorAlreadyAssigned": "Diese Domain ist bereits einer anderen Organisation zugewiesen.",
