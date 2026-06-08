@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
 import { TeamsList } from './TeamsList';
+import TeamsFilters from './TeamsFilters';
 import { CreateTeamDialog } from './CreateTeamDialog';
 import { EditTeamDialog } from './EditTeamDialog';
 import SettingsLayout from '../../admin-settings-layout';
@@ -17,6 +18,12 @@ export function TeamsSettingsPage({ teams }: Readonly<TeamsSettingsPageProps>) {
   const { t: tLayout } = useTranslation('admin-settings-layout');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editTeam, setEditTeam] = useState<Team | null>(null);
+  const [search, setSearch] = useState('');
+
+  const normalizedSearch = search.trim().toLowerCase();
+  const filteredTeams = teams.filter((team) =>
+    team.name.toLowerCase().includes(normalizedSearch),
+  );
 
   const headerActions = (
     <div className="flex gap-2">
@@ -30,7 +37,12 @@ export function TeamsSettingsPage({ teams }: Readonly<TeamsSettingsPageProps>) {
   return (
     <SettingsLayout action={headerActions} title={tLayout('layout.teams')}>
       <div className="space-y-4">
-        <TeamsList teams={teams} onEditTeam={setEditTeam} />
+        <TeamsFilters value={search} onChange={setSearch} />
+        <TeamsList
+          teams={filteredTeams}
+          onEditTeam={setEditTeam}
+          hasFilters={normalizedSearch.length > 0}
+        />
 
         <CreateTeamDialog
           open={createDialogOpen}

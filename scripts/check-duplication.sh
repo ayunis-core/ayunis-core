@@ -48,9 +48,13 @@ trap 'rm -rf "$REPORT_DIR"' EXIT
 # - generated/**, *.gen.ts & migrations/**: auto-generated code (e.g. route tree)
 # - *.spec/test.*: test files
 # - *.entity.ts & *.record.ts: TypeORM entities/records (constructor param forwarding is intentional)
+#
+# Pin to jscpd@4: v5 (2026-06-08) is a Rust rewrite with an incompatible CLI
+# (renamed to `cpd`, dropped --ignore/--reporters/--output/--silent), which
+# breaks this invocation. Unpin once the script is migrated to the v5 flags.
 (
   cd "$PROJECT_DIR"
-  pnpm dlx jscpd src \
+  pnpm dlx jscpd@4 src \
     --threshold 100 \
     --min-lines "$MIN_LINES" \
     --min-tokens "$MIN_TOKENS" \

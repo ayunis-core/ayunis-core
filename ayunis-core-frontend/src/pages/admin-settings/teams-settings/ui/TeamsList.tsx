@@ -17,14 +17,19 @@ import type { Team } from '../model/types';
 interface TeamsListProps {
   teams: Team[];
   onEditTeam: (team: Team) => void;
+  hasFilters?: boolean;
 }
 
-export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
+export function TeamsList({
+  teams,
+  onEditTeam,
+  hasFilters = false,
+}: Readonly<TeamsListProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const { deleteTeam, isDeleting } = useDeleteTeam();
 
   if (teams.length === 0) {
-    return <TeamsEmptyState />;
+    return <TeamsEmptyState hasFilters={hasFilters} />;
   }
 
   return (
