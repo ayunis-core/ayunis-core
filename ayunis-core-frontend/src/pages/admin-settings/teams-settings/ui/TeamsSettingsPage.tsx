@@ -20,6 +20,7 @@ export function TeamsSettingsPage({ teams }: Readonly<TeamsSettingsPageProps>) {
   const [editTeam, setEditTeam] = useState<Team | null>(null);
   const [search, setSearch] = useState('');
 
+  const hasTeams = teams.length > 0;
   const normalizedSearch = search.trim().toLowerCase();
   const filteredTeams = teams.filter((team) =>
     team.name.toLowerCase().includes(normalizedSearch),
@@ -37,11 +38,11 @@ export function TeamsSettingsPage({ teams }: Readonly<TeamsSettingsPageProps>) {
   return (
     <SettingsLayout action={headerActions} title={tLayout('layout.teams')}>
       <div className="space-y-4">
-        <TeamsFilters value={search} onChange={setSearch} />
+        {hasTeams && <TeamsFilters value={search} onChange={setSearch} />}
         <TeamsList
           teams={filteredTeams}
           onEditTeam={setEditTeam}
-          hasFilters={normalizedSearch.length > 0}
+          hasFilters={hasTeams && normalizedSearch.length > 0}
         />
 
         <CreateTeamDialog
