@@ -10,27 +10,17 @@ import {
   ItemTitle,
   ItemDescription,
 } from '@/shared/ui/shadcn/item';
-import { TeamsEmptyState } from './TeamsEmptyState';
 import { useDeleteTeam } from '../api/useDeleteTeam';
 import type { Team } from '../model/types';
 
 interface TeamsListProps {
   teams: Team[];
   onEditTeam: (team: Team) => void;
-  hasFilters?: boolean;
 }
 
-export function TeamsList({
-  teams,
-  onEditTeam,
-  hasFilters = false,
-}: Readonly<TeamsListProps>) {
+export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const { deleteTeam, isDeleting } = useDeleteTeam();
-
-  if (teams.length === 0) {
-    return <TeamsEmptyState hasFilters={hasFilters} />;
-  }
 
   return (
     <div className="space-y-3">

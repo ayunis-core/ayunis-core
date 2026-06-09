@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
 import { TeamsSettingsPage } from './TeamsSettingsPage';
@@ -90,5 +90,19 @@ describe('TeamsSettingsPage', () => {
       screen.getByPlaceholderText('teams.filters.searchPlaceholder'),
     ).toBeTruthy();
     expect(screen.getByText('City Services')).toBeTruthy();
+  });
+
+  it('shows the no-matches empty state when a search has no team matches', () => {
+    render(<TeamsSettingsPage teams={[createTeam()]} />);
+
+    fireEvent.change(
+      screen.getByPlaceholderText('teams.filters.searchPlaceholder'),
+      {
+        target: { value: 'missing' },
+      },
+    );
+
+    expect(screen.getByText('teams.list.noMatchesTitle')).toBeTruthy();
+    expect(screen.queryByText('City Services')).toBeNull();
   });
 });
