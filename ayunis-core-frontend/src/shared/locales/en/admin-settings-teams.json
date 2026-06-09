@@ -3,9 +3,14 @@
     "page": {
       "add": "Add Team"
     },
+    "filters": {
+      "searchPlaceholder": "Search teams..."
+    },
     "list": {
       "emptyTitle": "No teams yet",
       "emptyDescription": "Create your first team to organize your users.",
+      "noMatchesTitle": "No teams found",
+      "noMatchesDescription": "No teams match your search.",
       "createdAt": "Created {{date}}",
       "memberCount_one": "{{count}} member",
       "memberCount_other": "{{count}} members"
