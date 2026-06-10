@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.3.0](https://github.com/ayunis-core/ayunis-core/compare/v2.2.0...v2.3.0) (2026-06-10)
+
+
+### Features
+
+* **admin-teams:** add search bar to teams overview (AYC-212) ([#768](https://github.com/ayunis-core/ayunis-core/issues/768)) ([583663e](https://github.com/ayunis-core/ayunis-core/commit/583663e2900b2b6922adfd56fbe83bbce08e39ef))
+
+
+### Bug Fixes
+
+* **chat:** prevent browser auto-translate from corrupting streamed messages (AYC-220) ([#772](https://github.com/ayunis-core/ayunis-core/issues/772)) ([2b1fb09](https://github.com/ayunis-core/ayunis-core/commit/2b1fb092b61b87c31793e81177e960acd881df67))
+* **install:** align spacing in install card form layouts (AYC-000) ([#677](https://github.com/ayunis-core/ayunis-core/issues/677)) ([e9ff2a7](https://github.com/ayunis-core/ayunis-core/commit/e9ff2a7bedbe818d8a33e7a73d04d1f38b12c2f5))
+
 ## [2.2.0](https://github.com/ayunis-core/ayunis-core/compare/v2.1.0...v2.2.0) (2026-06-05)
 
 
