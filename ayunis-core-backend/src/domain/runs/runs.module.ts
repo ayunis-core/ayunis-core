@@ -21,7 +21,7 @@ import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module'
 import { TrialsModule } from 'src/iam/trials/trials.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
 import { SourcesModule } from 'src/domain/sources/sources.module';
-import { AnonymizationModule } from 'src/common/anonymization/anonymization.module';
+import { AnonymizationSettingsModule } from 'src/domain/anonymization-settings/anonymization-settings.module';
 import { UsageModule } from 'src/domain/usage/usage.module';
 import { QuotasModule } from 'src/iam/quotas/quotas.module';
 import { SkillsModule } from 'src/domain/skills/skills.module';
@@ -40,7 +40,7 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
     TrialsModule,
     McpModule,
     SourcesModule,
-    AnonymizationModule,
+    AnonymizationSettingsModule,
     UsageModule,
     QuotasModule,
     SkillsModule,

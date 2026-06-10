@@ -1,5 +1,5 @@
 import { AnonymizationFailedError } from 'src/common/anonymization/application/anonymization.errors';
-import type { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
+import type { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
 import { RunAnonymizationUnavailableError } from '../runs.errors';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
@@ -60,7 +60,7 @@ describe('ToolResultCollectorService', () => {
   let service: ToolResultCollectorService;
   let executeToolUseCase: jest.Mocked<ExecuteToolUseCase>;
   let checkToolCapabilitiesUseCase: jest.Mocked<CheckToolCapabilitiesUseCase>;
-  let anonymizeTextUseCase: jest.Mocked<AnonymizeTextUseCase>;
+  let anonymizeTextForOrgUseCase: jest.Mocked<AnonymizeTextForOrgUseCase>;
   let contextService: jest.Mocked<ContextService>;
 
   const orgId = randomUUID();
@@ -76,9 +76,9 @@ describe('ToolResultCollectorService', () => {
       execute: jest.fn(),
     } as unknown as jest.Mocked<CheckToolCapabilitiesUseCase>;
 
-    anonymizeTextUseCase = {
+    anonymizeTextForOrgUseCase = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<AnonymizeTextUseCase>;
+    } as unknown as jest.Mocked<AnonymizeTextForOrgUseCase>;
 
     contextService = {
       get: jest.fn().mockReturnValue(randomUUID()),
@@ -91,7 +91,7 @@ describe('ToolResultCollectorService', () => {
     service = new ToolResultCollectorService(
       executeToolUseCase,
       checkToolCapabilitiesUseCase,
-      anonymizeTextUseCase,
+      anonymizeTextForOrgUseCase,
       contextService,
       mockEventEmitter as never,
     );
@@ -273,7 +273,7 @@ describe('ToolResultCollectorService', () => {
         'Max Mustermann, Hauptstraße 42, 80331 München, Tel: 089-12345678',
       );
 
-      anonymizeTextUseCase.execute.mockRejectedValue(
+      anonymizeTextForOrgUseCase.execute.mockRejectedValue(
         new AnonymizationFailedError('Connection refused'),
       );
 
@@ -334,7 +334,7 @@ describe('ToolResultCollectorService', () => {
       expect(results).toHaveLength(1);
       expect(results[0]).toBeInstanceOf(ToolResultMessageContent);
       expect(results[0].result).toBe(rawResult);
-      expect(anonymizeTextUseCase.execute).not.toHaveBeenCalled();
+      expect(anonymizeTextForOrgUseCase.execute).not.toHaveBeenCalled();
     });
   });
 });

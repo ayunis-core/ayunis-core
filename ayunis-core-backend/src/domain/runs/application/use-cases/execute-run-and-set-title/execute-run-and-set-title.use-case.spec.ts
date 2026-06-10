@@ -4,7 +4,8 @@ import { ExecuteRunAndSetTitleCommand } from './execute-run-and-set-title.comman
 import type { ExecuteRunUseCase } from '../execute-run/execute-run.use-case';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import type { GenerateAndSetThreadTitleUseCase } from 'src/domain/threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.use-case';
-import type { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
+import type { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
+import type { ContextService } from 'src/common/context/services/context.service';
 import { RunUserInput } from 'src/domain/runs/domain/run-input.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { RunEvent, RunErrorEvent } from '../../run-events';
@@ -19,7 +20,8 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
   let executeRunUseCase: jest.Mocked<ExecuteRunUseCase>;
   let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
   let generateAndSetThreadTitleUseCase: jest.Mocked<GenerateAndSetThreadTitleUseCase>;
-  let anonymizeTextUseCase: jest.Mocked<AnonymizeTextUseCase>;
+  let anonymizeTextForOrgUseCase: jest.Mocked<AnonymizeTextForOrgUseCase>;
+  let contextService: jest.Mocked<ContextService>;
 
   let threadId: UUID;
 
@@ -59,15 +61,20 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
       execute: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<GenerateAndSetThreadTitleUseCase>;
 
-    anonymizeTextUseCase = {
+    anonymizeTextForOrgUseCase = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<AnonymizeTextUseCase>;
+    } as unknown as jest.Mocked<AnonymizeTextForOrgUseCase>;
+
+    contextService = {
+      get: jest.fn().mockReturnValue(randomUUID()),
+    } as unknown as jest.Mocked<ContextService>;
 
     useCase = new ExecuteRunAndSetTitleUseCase(
       executeRunUseCase,
       findThreadUseCase,
       generateAndSetThreadTitleUseCase,
-      anonymizeTextUseCase,
+      anonymizeTextForOrgUseCase,
+      contextService,
     );
   });
 
