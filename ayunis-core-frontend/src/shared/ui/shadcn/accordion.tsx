@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as AccordionPrimitive from '@radix-ui/react-accordion';
 import { ChevronDownIcon } from 'lucide-react';
 
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@/utils/twUtils';
 
 function Accordion({
   className,

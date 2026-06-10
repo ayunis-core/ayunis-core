@@ -2,7 +2,7 @@
 import * as React from 'react';
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@/utils/twUtils';
 import { buttonVariants } from '@/shared/ui/shadcn/button';
 import type { VariantProps } from 'class-variance-authority';
 

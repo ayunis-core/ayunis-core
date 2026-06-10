@@ -5,7 +5,7 @@ import {
   MoreHorizontalIcon,
 } from 'lucide-react';
 
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@/utils/twUtils';
 import { buttonVariants, type Button } from '@/shared/ui/shadcn/button';
 
 function Pagination({

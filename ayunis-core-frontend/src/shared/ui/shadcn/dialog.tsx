@@ -3,7 +3,7 @@ import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { XIcon } from 'lucide-react';
 
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@/utils/twUtils';
 
 // Workaround for radix-ui/primitives#1241 — Radix Dialog sometimes leaves
 // `pointer-events: none` stuck on `<body>` after closing, making the rest of

@@ -1,9 +1,8 @@
+/* eslint-disable sonarjs/no-nested-conditional */
 import * as React from 'react';
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from 'lucide-react';
 
-import { cn } from '@/shared/lib/shadcn/utils';
-
-/* eslint-disable sonarjs/no-nested-conditional */
+import { cn } from '@/utils/twUtils';
 
 function Table({
   className,

@@ -4,7 +4,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { PanelLeftIcon } from 'lucide-react';
 
 import { useIsMobile } from '@/shared/hooks/shadcn/use-mobile';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@/utils/twUtils';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Input } from '@/shared/ui/shadcn/input';
 import { Separator } from '@/shared/ui/shadcn/separator';
@@ -769,7 +769,6 @@ function SidebarMenuSkeleton({
   showIcon?: boolean;
 }): React.ReactElement {
   // Random width between 50 to 90% (lazy init avoids impure render).
-
   const [width] = React.useState(
     () =>
       // eslint-disable-next-line sonarjs/pseudo-random -- Random skeleton width for visual variety, not security-sensitive

@@ -1,9 +1,8 @@
+/* eslint-disable sonarjs/no-nested-conditional */
 import * as React from 'react';
 import * as SliderPrimitive from '@radix-ui/react-slider';
 
-import { cn } from '@/shared/lib/shadcn/utils';
-
-/* eslint-disable sonarjs/no-nested-conditional */
+import { cn } from '@/utils/twUtils';
 
 function Slider({
   className,
