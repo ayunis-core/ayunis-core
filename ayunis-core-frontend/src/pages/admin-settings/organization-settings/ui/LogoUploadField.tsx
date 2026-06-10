@@ -103,11 +103,12 @@ export function LogoUploadField({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled}
-          className="group relative shrink-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+          className="group relative size-20 p-0"
           aria-label={t(
             displayUrl
               ? 'organization.faviconReplace'
@@ -131,7 +132,7 @@ export function LogoUploadField({
           <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-md bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
             <Upload className="size-6 text-white" />
           </span>
-        </button>
+        </Button>
 
         <div className="flex flex-1 flex-col gap-2">
           <div className="flex flex-wrap gap-2">

@@ -77,9 +77,17 @@ export function OrganizationSettingsPage() {
     defaultValues: { displayName: '' },
   });
 
+  // When no branding row exists the backend returns the org name as
+  // displayName.  Treat that the same as null (platform default) so the
+  // field stays empty — matching the "leave empty for platform default" copy.
+  const effectiveDisplayName =
+    branding?.displayName != null && branding.displayName !== branding.name
+      ? branding.displayName
+      : '';
+
   useEffect(() => {
-    if (branding) form.reset({ displayName: branding.displayName ?? '' });
-  }, [branding, form]);
+    if (branding) form.reset({ displayName: effectiveDisplayName });
+  }, [branding, form, effectiveDisplayName]);
 
   function handleFileChange(file: File | null) {
     setFaviconFile(file);
@@ -170,7 +178,7 @@ export function OrganizationSettingsPage() {
           <div className="flex justify-end">
             <SaveButton
               control={form.control}
-              originalDisplayName={branding?.displayName ?? ''}
+              originalDisplayName={effectiveDisplayName}
               hasNewFavicon={faviconFile !== null}
               removeFavicon={removeFavicon}
               isUpdating={isUpdating}
