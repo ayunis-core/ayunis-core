@@ -9,7 +9,6 @@ import { Label } from '@/shared/ui/shadcn/label';
 import {
   Select,
   SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/shadcn/select';
@@ -17,6 +16,10 @@ import { useTranslation } from 'react-i18next';
 import type { ModelWithConfigResponseDto } from '@/shared/api';
 import { useMemo } from 'react';
 import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
+import {
+  ModelSelectOptions,
+  type ModelOption,
+} from '@/widgets/model-select-options';
 
 interface OrgDefaultModelCardWidgetProps {
   models: ModelWithConfigResponseDto[];
@@ -45,6 +48,18 @@ export function OrgDefaultModelCardWidget({
     [models],
   );
   const defaultModel = permittedModels.find((model) => model.isDefault);
+
+  const modelOptions: ModelOption[] = useMemo(
+    () =>
+      permittedModels.map((model) => ({
+        id: model.permittedModelId!,
+        name: model.name,
+        provider: model.provider,
+        displayName: model.displayName,
+        tier: model.tier,
+      })),
+    [permittedModels],
+  );
 
   const isDisabled = isLoading || isSaving || permittedModels.length === 0;
 
@@ -89,15 +104,12 @@ export function OrgDefaultModelCardWidget({
                   }
                 />
               </SelectTrigger>
-              <SelectContent>
-                {permittedModels.map((model) => (
-                  <SelectItem
-                    key={model.permittedModelId}
-                    value={model.permittedModelId!}
-                  >
-                    {model.displayName || model.name}
-                  </SelectItem>
-                ))}
+              <SelectContent position="popper" sideOffset={4} align="end">
+                <ModelSelectOptions
+                  models={modelOptions}
+                  showFlag
+                  showHeading={false}
+                />
               </SelectContent>
             </Select>
           </TooltipIf>

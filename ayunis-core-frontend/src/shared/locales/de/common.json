@@ -110,5 +110,52 @@
     "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist beschäftigt. Bitte versuchen Sie es später erneut.",
     "fileSourceTimeoutError": "Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex.",
     "sourceLimitExceededError": "Ein Chat kann maximal 20 Quellen enthalten. Bitte entfernen Sie eine, bevor Sie eine weitere hinzufügen."
+  },
+  "models": {
+    "availableHeading": "Verfügbare Modelle",
+    "category": {
+      "fast": "Schnell",
+      "balanced": "Ausgewogen",
+      "powerful": "Leistungsstark"
+    },
+    "usage": {
+      "zero": "Unbegrenzt nutzbar",
+      "low": "Geringer Verbrauch",
+      "medium": "Mittlerer Verbrauch",
+      "high": "Hoher Verbrauch"
+    },
+    "providerHosting": {
+      "openai": "Gehostet in den USA von OpenAI.",
+      "anthropic": "Gehostet in den USA von Anthropic.",
+      "gemini": "Gehostet in den USA von Google.",
+      "azure": "Gehostet in der EU bei Microsoft Azure.",
+      "bedrock": "Gehostet in der EU bei AWS Bedrock.",
+      "mistral": "Gehostet in der EU bei Mistral.",
+      "scaleway": "Gehostet in der EU bei Scaleway.",
+      "otc": "Gehostet in Deutschland in der Open Telekom Cloud.",
+      "stackit": "Gehostet in Deutschland bei Stackit.",
+      "synaforce": "Gehostet in Deutschland in der souveränen Cloud von Ayunis.",
+      "ayunis": "Gehostet in Deutschland in der souveränen Cloud von Ayunis.",
+      "ollama": "Selbst gehostet über Ollama."
+    },
+    "descriptions": {
+      "fallback": "Geeignet für allgemeine Aufgaben wie Texte verfassen, Zusammenfassen und Fragen beantworten.",
+      "gpt-5": "Geeignet für Recherche, längere Texte und mehrstufige Aufgaben.",
+      "gpt-5_1": "Geeignet für Standardaufgaben wie Mails, Zusammenfassungen und einfache Recherche.",
+      "gpt-5_2": "Geeignet für komplexere Aufgaben, ausführliche Texte und Analysen.",
+      "gpt-5_4": "Geeignet für sehr komplexe Aufgaben, längere Recherchen und mehrstufige Analysen.",
+      "gpt-5-mini": "Geeignet für kurze Antworten und einfache Aufgaben.",
+      "gpt-4o": "Geeignet für alltägliche Aufgaben wie Texte verfassen, Zusammenfassen und Fragen beantworten.",
+      "gpt-4": "Älteres Modell für einfache Aufgaben wie kurze Texte und das Beantworten von Fragen.",
+      "claude-opus-4-7": "Geeignet für sehr komplexe Aufgaben, gründliche Analysen und längere Recherchen.",
+      "claude-sonnet-4-6": "Solide Wahl für längere Texte, Recherche und komplexere Aufgaben.",
+      "claude-haiku-4-5": "Geeignet für kurze Antworten und einfache Aufgaben.",
+      "claude-3-5-sonnet": "Geeignet für allgemeine Aufgaben und längere Texte.",
+      "claude-3": "Älteres Modell für einfache Aufgaben wie kurze Texte und das Beantworten von Fragen.",
+      "mistral-large": "Geeignet für anspruchsvolle Aufgaben und längere Texte.",
+      "mistral-small": "Geeignet für kurze Antworten und einfache Aufgaben.",
+      "gemini-3-5-flash": "Geeignet für kurze Antworten und einfache Aufgaben.",
+      "gemini-2-5-pro": "Geeignet für komplexere Aufgaben und längere Texte."
+    }
   }
 }
