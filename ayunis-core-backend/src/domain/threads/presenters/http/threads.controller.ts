@@ -47,6 +47,8 @@ import { GetThreadDtoMapper } from './mappers/get-thread.mapper';
 import { GetThreadsDtoMapper } from './mappers/get-threads.mapper';
 import { GetThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
 import { GetThreadPiiMasksQuery } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.query';
+import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
+import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 
 @ApiTags('threads')
 @Controller('threads')
@@ -59,6 +61,7 @@ export class ThreadsController {
     private readonly findAllThreadsUseCase: FindAllThreadsUseCase,
     private readonly deleteThreadUseCase: DeleteThreadUseCase,
     private readonly updateThreadTitleUseCase: UpdateThreadTitleUseCase,
+    private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
     private readonly getThreadDtoMapper: GetThreadDtoMapper,
     private readonly getThreadsDtoMapper: GetThreadsDtoMapper,
     private readonly getThreadPiiMasksUseCase: GetThreadPiiMasksUseCase,
@@ -165,7 +168,10 @@ export class ThreadsController {
           new GetThreadPiiMasksQuery(id),
         )
       : [];
-    return this.getThreadDtoMapper.toDto(result, piiMasks);
+    const mcpIntegrations = await this.getMcpIntegrationsByIdsUseCase.execute(
+      new GetMcpIntegrationsByIdsQuery(result.thread.mcpIntegrationIds),
+    );
+    return this.getThreadDtoMapper.toDto(result, piiMasks, mcpIntegrations);
   }
 
   @Delete(':id')

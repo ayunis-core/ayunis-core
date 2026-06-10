@@ -27,6 +27,7 @@ import {
 } from './source-response.dto';
 import { KnowledgeBaseSummaryResponseDto } from '../knowledge-base-summary-response.dto';
 import { PiiMaskResponseDto } from 'src/domain/thread-pii-masks/presenters/http/dtos/pii-mask-response.dto';
+import { McpIntegrationSummaryResponseDto } from '../mcp-integration-summary-response.dto';
 
 @ApiExtraModels(
   UserMessageResponseDto,
@@ -129,4 +130,10 @@ export class GetThreadResponseDto {
     type: [PiiMaskResponseDto],
   })
   piiMasks: PiiMaskResponseDto[];
+
+  @ApiProperty({
+    description: 'MCP integrations attached to this thread',
+    type: [McpIntegrationSummaryResponseDto],
+  })
+  mcpIntegrations: McpIntegrationSummaryResponseDto[];
 }

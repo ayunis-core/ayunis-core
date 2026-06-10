@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { ThreadsController } from './presenters/http/threads.controller';
 import { ThreadSourcesController } from './presenters/http/thread-sources.controller';
 import { ThreadKnowledgeBasesController } from './presenters/http/thread-knowledge-bases.controller';
+import { ThreadMcpIntegrationsController } from './presenters/http/thread-mcp-integrations.controller';
 import { ThreadsRepository } from './application/ports/threads.repository';
 import { GeneratedImagesRepository } from './application/ports/generated-images.repository';
 import { LocalThreadsRepositoryModule } from './infrastructure/persistence/local/local-threads-repository.module';
@@ -29,6 +30,7 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { ReplaceModelWithUserDefaultUseCase } from './application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { FindAllThreadsByOrgWithSourcesUseCase } from './application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.use-case';
 import { AddMcpIntegrationToThreadUseCase } from './application/use-cases/add-mcp-integration-to-thread/add-mcp-integration-to-thread.use-case';
+import { RemoveMcpIntegrationFromThreadUseCase } from './application/use-cases/remove-mcp-integration-from-thread/remove-mcp-integration-from-thread.use-case';
 import { AddKnowledgeBaseToThreadUseCase } from './application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.use-case';
 import { RemoveKnowledgeBaseFromThreadUseCase } from './application/use-cases/remove-knowledge-base-from-thread/remove-knowledge-base-from-thread.use-case';
 import { RemoveSkillSourcesFromThreadsUseCase } from './application/use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.use-case';
@@ -63,6 +65,7 @@ import { McpModule } from '../mcp/mcp.module';
     ThreadsController,
     ThreadSourcesController,
     ThreadKnowledgeBasesController,
+    ThreadMcpIntegrationsController,
     GeneratedImagesController,
   ],
   providers: [
@@ -88,6 +91,7 @@ import { McpModule } from '../mcp/mcp.module';
     ReplaceModelWithUserDefaultUseCase,
     FindAllThreadsByOrgWithSourcesUseCase,
     AddMcpIntegrationToThreadUseCase,
+    RemoveMcpIntegrationFromThreadUseCase,
     AddKnowledgeBaseToThreadUseCase,
     RemoveKnowledgeBaseFromThreadUseCase,
     RemoveSkillSourcesFromThreadsUseCase,
@@ -119,6 +123,7 @@ import { McpModule } from '../mcp/mcp.module';
     ReplaceModelWithUserDefaultUseCase,
     FindAllThreadsByOrgWithSourcesUseCase,
     AddMcpIntegrationToThreadUseCase,
+    RemoveMcpIntegrationFromThreadUseCase,
     AddKnowledgeBaseToThreadUseCase,
     RemoveKnowledgeBaseFromThreadUseCase,
     RemoveSkillSourcesFromThreadsUseCase,
