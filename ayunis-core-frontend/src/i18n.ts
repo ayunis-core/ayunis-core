@@ -133,6 +133,13 @@ const resources = {
 //   checkWhitelist: true,
 // };
 
+// Keep <html lang> in sync with the active locale. A mismatched lang
+// (e.g. lang="en" on German content) triggers Chrome auto-translate,
+// which rewrites DOM text nodes and corrupts streamed assistant messages.
+i18n.on('languageChanged', (lng) => {
+  document.documentElement.lang = lng;
+});
+
 void i18n
   // detect user language
   //.use(LanguageDetector)

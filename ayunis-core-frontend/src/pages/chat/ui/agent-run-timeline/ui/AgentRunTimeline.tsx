@@ -41,7 +41,12 @@ export default function AgentRunTimeline({
   const showHeader = stepCount > 0;
 
   return (
-    <div className="flex flex-col gap-3 w-full">
+    // translate="no" while streaming: browser page translation rewrites
+    // text nodes mid-stream, freezing each paragraph at its first chunk.
+    <div
+      className="flex flex-col gap-3 w-full"
+      translate={unit.isStreaming ? 'no' : undefined}
+    >
       {showHeader && (
         <Collapsible open={open} onOpenChange={setUserOpen}>
           <div className="rounded-lg border border-border bg-muted/30">
