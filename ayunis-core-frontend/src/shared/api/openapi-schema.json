@@ -4282,6 +4282,78 @@
         "tags": ["threads"]
       }
     },
+    "/threads/{id}/mcp-integrations/{mcpIntegrationId}": {
+      "post": {
+        "operationId": "ThreadMcpIntegrationsController_addMcpIntegration",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "mcpIntegrationId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the MCP integration to add",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The MCP integration has been successfully added to the thread"
+          },
+          "404": {
+            "description": "Thread or MCP integration not found"
+          }
+        },
+        "summary": "Add an MCP integration to a thread",
+        "tags": ["threads"]
+      },
+      "delete": {
+        "operationId": "ThreadMcpIntegrationsController_removeMcpIntegration",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "mcpIntegrationId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the MCP integration to remove",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The MCP integration has been successfully removed from the thread"
+          },
+          "404": {
+            "description": "Thread not found"
+          }
+        },
+        "summary": "Remove an MCP integration from a thread",
+        "tags": ["threads"]
+      }
+    },
     "/threads/{threadId}/generated-images/{imageId}": {
       "get": {
         "operationId": "GeneratedImagesController_resolve",
@@ -11499,6 +11571,28 @@
         },
         "required": ["token", "value", "category"]
       },
+      "McpIntegrationSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the MCP integration",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the MCP integration",
+            "example": "OParl Council Data"
+          },
+          "logoUrl": {
+            "type": "string",
+            "description": "Logo URL for marketplace integrations",
+            "nullable": true,
+            "example": "https://marketplace.ayunis.de/logos/oparl.png"
+          }
+        },
+        "required": ["id", "name"]
+      },
       "GetThreadResponseDto": {
         "type": "object",
         "properties": {
@@ -11582,6 +11676,13 @@
             "items": {
               "$ref": "#/components/schemas/PiiMaskResponseDto"
             }
+          },
+          "mcpIntegrations": {
+            "description": "MCP integrations attached to this thread",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/McpIntegrationSummaryResponseDto"
+            }
           }
         },
         "required": [
@@ -11595,7 +11696,8 @@
           "isAnonymous",
           "isLongChat",
           "knowledgeBases",
-          "piiMasks"
+          "piiMasks",
+          "mcpIntegrations"
         ]
       },
       "GetThreadsResponseDtoItem": {
