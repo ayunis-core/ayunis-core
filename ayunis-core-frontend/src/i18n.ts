@@ -50,6 +50,8 @@ import enSuperAdminSettingsPlatformConfig from './shared/locales/en/super-admin-
 import deSuperAdminSettingsPlatformConfig from './shared/locales/de/super-admin-settings-platform-config.json';
 import enAdminSettingsSecurity from './shared/locales/en/admin-settings-security.json';
 import deAdminSettingsSecurity from './shared/locales/de/admin-settings-security.json';
+import enAdminSettingsAnonymization from './shared/locales/en/admin-settings-anonymization.json';
+import deAdminSettingsAnonymization from './shared/locales/de/admin-settings-anonymization.json';
 import enAdminSettingsLetterheads from './shared/locales/en/admin-settings-letterheads.json';
 import deAdminSettingsLetterheads from './shared/locales/de/admin-settings-letterheads.json';
 import enAdminSettingsApiKeys from './shared/locales/en/admin-settings-api-keys.json';
@@ -83,6 +85,7 @@ const resources = {
     artifacts: enArtifacts,
     'super-admin-settings-platform-config': enSuperAdminSettingsPlatformConfig,
     'admin-settings-security': enAdminSettingsSecurity,
+    'admin-settings-anonymization': enAdminSettingsAnonymization,
     'admin-settings-letterheads': enAdminSettingsLetterheads,
     'admin-settings-api-keys': enAdminSettingsApiKeys,
     'mcp-user-config': enMcpUserConfig,
@@ -112,6 +115,7 @@ const resources = {
     artifacts: deArtifacts,
     'super-admin-settings-platform-config': deSuperAdminSettingsPlatformConfig,
     'admin-settings-security': deAdminSettingsSecurity,
+    'admin-settings-anonymization': deAdminSettingsAnonymization,
     'admin-settings-letterheads': deAdminSettingsLetterheads,
     'admin-settings-api-keys': deAdminSettingsApiKeys,
     'mcp-user-config': deMcpUserConfig,

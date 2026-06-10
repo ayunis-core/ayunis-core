@@ -38,6 +38,7 @@ import { Route as AuthenticatedAdminSettingsSecurityRouteImport } from './routes
 import { Route as AuthenticatedAdminSettingsModelsRouteImport } from './routes/_authenticated/admin-settings.models'
 import { Route as AuthenticatedAdminSettingsIntegrationsRouteImport } from './routes/_authenticated/admin-settings.integrations'
 import { Route as AuthenticatedAdminSettingsApiKeysRouteImport } from './routes/_authenticated/admin-settings.api-keys'
+import { Route as AuthenticatedAdminSettingsAnonymizationRouteImport } from './routes/_authenticated/admin-settings.anonymization'
 import { Route as onboardingPasswordResetRouteImport } from './routes/(onboarding)/password.reset'
 import { Route as onboardingPasswordForgotRouteImport } from './routes/(onboarding)/password.forgot'
 import { Route as onboardingAccountActivateRouteImport } from './routes/(onboarding)/account.activate'
@@ -213,6 +214,12 @@ const AuthenticatedAdminSettingsApiKeysRoute =
     path: '/admin-settings/api-keys',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminSettingsAnonymizationRoute =
+  AuthenticatedAdminSettingsAnonymizationRouteImport.update({
+    id: '/admin-settings/anonymization',
+    path: '/admin-settings/anonymization',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const onboardingPasswordResetRoute = onboardingPasswordResetRouteImport.update({
   id: '/(onboarding)/password/reset',
   path: '/password/reset',
@@ -303,6 +310,7 @@ export interface FileRoutesByFullPath {
   '/account/activate': typeof onboardingAccountActivateRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
+  '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
@@ -346,6 +354,7 @@ export interface FileRoutesByTo {
   '/account/activate': typeof onboardingAccountActivateRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
+  '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
@@ -391,6 +400,7 @@ export interface FileRoutesById {
   '/(onboarding)/account/activate': typeof onboardingAccountActivateRoute
   '/(onboarding)/password/forgot': typeof onboardingPasswordForgotRoute
   '/(onboarding)/password/reset': typeof onboardingPasswordResetRoute
+  '/_authenticated/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/_authenticated/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/_authenticated/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/_authenticated/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
@@ -436,6 +446,7 @@ export interface FileRouteTypes {
     | '/account/activate'
     | '/password/forgot'
     | '/password/reset'
+    | '/admin-settings/anonymization'
     | '/admin-settings/api-keys'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
@@ -479,6 +490,7 @@ export interface FileRouteTypes {
     | '/account/activate'
     | '/password/forgot'
     | '/password/reset'
+    | '/admin-settings/anonymization'
     | '/admin-settings/api-keys'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
@@ -523,6 +535,7 @@ export interface FileRouteTypes {
     | '/(onboarding)/account/activate'
     | '/(onboarding)/password/forgot'
     | '/(onboarding)/password/reset'
+    | '/_authenticated/admin-settings/anonymization'
     | '/_authenticated/admin-settings/api-keys'
     | '/_authenticated/admin-settings/integrations'
     | '/_authenticated/admin-settings/models'
@@ -774,6 +787,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsApiKeysRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin-settings/anonymization': {
+      id: '/_authenticated/admin-settings/anonymization'
+      path: '/admin-settings/anonymization'
+      fullPath: '/admin-settings/anonymization'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsAnonymizationRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/(onboarding)/password/reset': {
       id: '/(onboarding)/password/reset'
       path: '/password/reset'
@@ -870,6 +890,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedInstallRoute: typeof AuthenticatedInstallRoute
+  AuthenticatedAdminSettingsAnonymizationRoute: typeof AuthenticatedAdminSettingsAnonymizationRoute
   AuthenticatedAdminSettingsApiKeysRoute: typeof AuthenticatedAdminSettingsApiKeysRoute
   AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
   AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
@@ -904,6 +925,8 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedInstallRoute: AuthenticatedInstallRoute,
+  AuthenticatedAdminSettingsAnonymizationRoute:
+    AuthenticatedAdminSettingsAnonymizationRoute,
   AuthenticatedAdminSettingsApiKeysRoute:
     AuthenticatedAdminSettingsApiKeysRoute,
   AuthenticatedAdminSettingsIntegrationsRoute:

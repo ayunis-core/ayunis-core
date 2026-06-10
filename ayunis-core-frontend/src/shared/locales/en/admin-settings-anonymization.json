@@ -1,0 +1,61 @@
+{
+  "piiWhitelist": {
+    "heading": "Anonymization exceptions",
+    "description": "In anonymous mode, detected personal data is masked before it is sent to the AI model. Categories enabled below are exempt from masking — either entirely, or only for values that fully match an optional pattern.",
+    "patternLabel": "Only exempt values matching this pattern (optional)",
+    "patternPlaceholder": "e.g. .*@muster-stadt\\.de",
+    "patternHint": "Regular expression, case-insensitive. The entire detected value must match. Leave empty to exempt the whole category.",
+    "invalidPattern": "This pattern is not a valid regular expression.",
+    "patternTooLong": "The pattern must not exceed {{max}} characters.",
+    "unsafePattern": "This pattern was rejected because it could cause excessive processing time.",
+    "saveButton": "Save",
+    "saving": "Saving…",
+    "saveSuccess": "Anonymization exceptions saved.",
+    "saveError": "Saving the anonymization exceptions failed.",
+    "loadError": "The anonymization exceptions could not be loaded.",
+    "retry": "Retry",
+    "exemptBadge": "Not masked",
+    "categories": {
+      "person_name": {
+        "label": "Person names",
+        "description": "First and last names of natural persons"
+      },
+      "organization": {
+        "label": "Organizations",
+        "description": "Names of companies, institutions, and public bodies"
+      },
+      "location": {
+        "label": "Locations & addresses",
+        "description": "Cities, countries, streets, and addresses"
+      },
+      "email_address": {
+        "label": "Email addresses",
+        "description": "Personal and organizational email addresses"
+      },
+      "phone_number": {
+        "label": "Phone numbers",
+        "description": "Landline and mobile numbers"
+      },
+      "url_or_ip": {
+        "label": "URLs & IP addresses",
+        "description": "Web addresses and IP addresses"
+      },
+      "date_time": {
+        "label": "Dates & times",
+        "description": "Specific dates and times, e.g. dates of birth"
+      },
+      "financial_account": {
+        "label": "Financial accounts",
+        "description": "Credit card numbers, IBANs, and bank account numbers"
+      },
+      "government_id": {
+        "label": "Government IDs",
+        "description": "Social security, passport, driver's license, and medical license numbers"
+      },
+      "nationality_religion_politics": {
+        "label": "Nationality, religion & politics",
+        "description": "References to nationality, religious, or political affiliation"
+      }
+    }
+  }
+}
