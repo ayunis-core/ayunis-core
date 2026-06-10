@@ -4,6 +4,9 @@ import { AddMcpIntegrationToThreadCommand } from './add-mcp-integration-to-threa
 import { ContextService } from 'src/common/context/services/context.service';
 import { ThreadNotFoundError } from '../../threads.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
+import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
+import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
 
 @Injectable()
 export class AddMcpIntegrationToThreadUseCase {
@@ -12,6 +15,7 @@ export class AddMcpIntegrationToThreadUseCase {
   constructor(
     private readonly threadsRepository: ThreadsRepository,
     private readonly contextService: ContextService,
+    private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
   ) {}
 
   async execute(command: AddMcpIntegrationToThreadCommand): Promise<void> {
@@ -40,6 +44,14 @@ export class AddMcpIntegrationToThreadUseCase {
 
     if (alreadyAssigned) {
       return;
+    }
+
+    const integrations = await this.getMcpIntegrationsByIdsUseCase.execute(
+      new GetMcpIntegrationsByIdsQuery([command.mcpIntegrationId]),
+    );
+
+    if (integrations.length === 0) {
+      throw new McpIntegrationNotFoundError(command.mcpIntegrationId);
     }
 
     const updatedIds = [...thread.mcpIntegrationIds, command.mcpIntegrationId];
