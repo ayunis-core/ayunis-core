@@ -23,8 +23,12 @@ import { useTranslation } from 'react-i18next';
 import { showError } from '@/shared/lib/toast';
 import { useNavigate } from '@tanstack/react-router';
 import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
-import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
+import type {
+  IntegrationSummary,
+  KnowledgeBaseSummary,
+} from '@/shared/contexts/chat/chatContext';
 import { useIsKnowledgeBasesEnabled } from '@/features/feature-toggles';
+import { IntegrationsSubmenu } from './IntegrationsSubmenu';
 
 interface PlusButtonProps {
   onFileUpload: (files: File[]) => void;
@@ -33,6 +37,8 @@ interface PlusButtonProps {
   isImageUploadDisabled?: boolean;
   onKnowledgeBaseSelect?: (knowledgeBase: KnowledgeBaseSummary) => void;
   attachedKnowledgeBaseIds?: string[];
+  onIntegrationSelect?: (integration: IntegrationSummary) => void;
+  attachedIntegrationIds?: string[];
 }
 
 export default function PlusButton({
@@ -42,6 +48,8 @@ export default function PlusButton({
   isImageUploadDisabled = false,
   onKnowledgeBaseSelect,
   attachedKnowledgeBaseIds = [],
+  onIntegrationSelect,
+  attachedIntegrationIds = [],
 }: Readonly<PlusButtonProps>) {
   const documentInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -183,6 +191,12 @@ export default function PlusButton({
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
             </DropdownMenuGroup>
+          )}
+          {onIntegrationSelect && (
+            <IntegrationsSubmenu
+              onIntegrationSelect={onIntegrationSelect}
+              attachedIntegrationIds={attachedIntegrationIds}
+            />
           )}
         </DropdownMenuContent>
       </DropdownMenu>
