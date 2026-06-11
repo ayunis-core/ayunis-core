@@ -48,14 +48,22 @@ const HOSTING_PRIORITY: Record<HostedIn, number> = {
   [ModelProviderInfoResponseDtoHostedIn.US]: 2,
 };
 
-export function getHostedInByProvider(provider: ModelProvider): HostedIn {
-  return PROVIDER_HOSTED_IN[provider];
+export function getHostedInByProvider(
+  provider: ModelProvider,
+): HostedIn | undefined {
+  // The API may send providers added after this build, so treat the
+  // exhaustive map as sparse at runtime.
+  return (PROVIDER_HOSTED_IN as Partial<Record<ModelProvider, HostedIn>>)[
+    provider
+  ];
 }
 
 export function getFlagByProvider(provider: ModelProvider): string {
-  return HOSTING_FLAG[getHostedInByProvider(provider)];
+  const hostedIn = getHostedInByProvider(provider);
+  return hostedIn ? HOSTING_FLAG[hostedIn] : '';
 }
 
 export function getHostingPriority(provider: ModelProvider): number {
-  return HOSTING_PRIORITY[getHostedInByProvider(provider)];
+  const hostedIn = getHostedInByProvider(provider);
+  return hostedIn ? HOSTING_PRIORITY[hostedIn] : 3;
 }

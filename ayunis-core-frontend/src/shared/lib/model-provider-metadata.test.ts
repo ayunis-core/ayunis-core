@@ -34,6 +34,13 @@ describe('model provider metadata', () => {
     );
   });
 
+  it('degrades gracefully for providers without hosting metadata', () => {
+    const unknownProvider =
+      'unknown-provider' as ModelProviderInfoResponseDtoProvider;
+    expect(getFlagByProvider(unknownProvider)).toBe('');
+    expect(getHostingPriority(unknownProvider)).toBe(3);
+  });
+
   it('sorts German and sovereign hosting before EU and US hosting', () => {
     expect(
       getHostingPriority(ModelProviderInfoResponseDtoProvider.ayunis),

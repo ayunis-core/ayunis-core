@@ -1,19 +1,20 @@
 import { useState } from 'react';
-import * as SelectPrimitive from '@radix-ui/react-select';
-import { CheckIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   Popover,
   PopoverAnchor,
   PopoverContent,
 } from '@/shared/ui/shadcn/popover';
-import { SelectGroup, SelectLabel } from '@/shared/ui/shadcn/select';
+import {
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+} from '@/shared/ui/shadcn/select';
 import {
   getFlagByProvider,
   getHostingPriority,
 } from '@/shared/lib/model-provider-metadata';
 import ModelInfoCard, { type ModelInfoModel } from './ModelInfoCard';
-import { getModelCategory } from '../lib/modelCategory';
 
 export type ModelOption = ModelInfoModel & { id: string };
 
@@ -69,30 +70,23 @@ export default function ModelSelectOptions({
             )}
             {sortedModels.map((model) => {
               const name = stripProviderSuffix(model.displayName);
-              const category = getModelCategory(model.tier);
               return (
-                <SelectPrimitive.Item
+                <SelectItem
                   key={model.id}
                   value={model.id}
                   onMouseEnter={() => setHoveredModel(model)}
-                  className="focus:bg-accent focus:text-accent-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                 >
-                  <SelectPrimitive.ItemText>
-                    {showFlag
-                      ? `${getFlagByProvider(model.provider)} ${name}`
-                      : name}
-                  </SelectPrimitive.ItemText>
-                  {category && (
-                    <span className="text-muted-foreground text-xs">
-                      {t(`models.category.${category}`)}
+                  {showFlag
+                    ? `${getFlagByProvider(model.provider)} ${name}`
+                    : name}
+                  {model.tier && (
+                    // Radix portals the item text into the closed trigger;
+                    // hide the tier label there so only the name shows.
+                    <span className="text-muted-foreground text-xs [[data-slot=select-value]_&]:hidden">
+                      {t(`models.category.${model.tier}`)}
                     </span>
                   )}
-                  <span className="absolute right-2 flex size-3.5 items-center justify-center">
-                    <SelectPrimitive.ItemIndicator>
-                      <CheckIcon className="size-4" />
-                    </SelectPrimitive.ItemIndicator>
-                  </span>
-                </SelectPrimitive.Item>
+                </SelectItem>
               );
             })}
           </SelectGroup>

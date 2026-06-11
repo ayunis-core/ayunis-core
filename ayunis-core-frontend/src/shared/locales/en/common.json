@@ -114,9 +114,10 @@
   "models": {
     "availableHeading": "Available models",
     "category": {
-      "fast": "Fast",
-      "balanced": "Balanced",
-      "powerful": "Powerful"
+      "zero": "Fast",
+      "low": "Fast",
+      "medium": "Balanced",
+      "high": "Powerful"
     },
     "usage": {
       "zero": "Unlimited use",

@@ -114,9 +114,10 @@
   "models": {
     "availableHeading": "Verfügbare Modelle",
     "category": {
-      "fast": "Schnell",
-      "balanced": "Ausgewogen",
-      "powerful": "Leistungsstark"
+      "zero": "Schnell",
+      "low": "Schnell",
+      "medium": "Ausgewogen",
+      "high": "Leistungsstark"
     },
     "usage": {
       "zero": "Unbegrenzt nutzbar",
