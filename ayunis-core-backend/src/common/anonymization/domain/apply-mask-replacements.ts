@@ -32,7 +32,10 @@ export function applyMaskReplacements(
   const masks = new Map(
     inDocumentOrder.map((detection) => [
       detection,
-      registry.resolve(detection.category, text.slice(detection.start, detection.end)),
+      registry.resolve(
+        detection.category,
+        text.slice(detection.start, detection.end),
+      ),
     ]),
   );
 
