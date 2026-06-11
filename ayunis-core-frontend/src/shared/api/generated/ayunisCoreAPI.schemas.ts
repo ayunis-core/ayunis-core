@@ -3869,6 +3869,50 @@ export interface UpdateTrialRequestDto {
   messagesSent?: number;
 }
 
+/**
+ * PII category exempt from anonymization
+ */
+export type PiiCategory = typeof PiiCategory[keyof typeof PiiCategory];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PiiCategory = {
+  person_name: 'person_name',
+  organization: 'organization',
+  location: 'location',
+  email_address: 'email_address',
+  phone_number: 'phone_number',
+  url_or_ip: 'url_or_ip',
+  date_time: 'date_time',
+  financial_account: 'financial_account',
+  government_id: 'government_id',
+  nationality_religion_politics: 'nationality_religion_politics',
+} as const;
+
+export interface PiiWhitelistEntryDto {
+  /** PII category exempt from anonymization */
+  category: PiiCategory;
+  /**
+   * Optional regex; when set, only values fully matching it (case-insensitive) are exempt. Null exempts the whole category.
+   * @maxLength 200
+   * @nullable
+   */
+  pattern: string | null;
+}
+
+export interface PiiWhitelistResponseDto {
+  /** Current whitelist entries for the org */
+  entries: PiiWhitelistEntryDto[];
+}
+
+export interface UpdatePiiWhitelistRequestDto {
+  /**
+   * Full replacement whitelist; an empty array removes all entries
+   * @maxItems 50
+   */
+  entries: PiiWhitelistEntryDto[];
+}
+
 export interface UserSystemPromptResponseDto {
   /**
    * The custom system prompt for the user, or null if not set
