@@ -21,13 +21,13 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
 
   /**
    * Build a ToolAssemblyService with mocked dependencies.
-   * Constructor order (12 params):
+   * Constructor order (13 params):
    *  0 configService, 1 assembleToolsUseCase, 2 discoverMcpCapabilitiesUseCase,
    *  3 systemPromptBuilderService, 4 findActiveSkillsUseCase,
-   *  5 getUserSystemPromptUseCase, 6 getMcpIntegrationsByIdsUseCase,
-   *  7 findActiveAlwaysOnTemplatesUseCase, 8 features,
-   *  9 contextService, 10 getPermittedImageGenerationModelUseCase,
-   *  11 artifactToolAssembler
+   *  5 getUserSystemPromptUseCase, 6 getOrgSystemPromptUseCase,
+   *  7 getMcpIntegrationsByIdsUseCase, 8 findActiveAlwaysOnTemplatesUseCase,
+   *  9 features, 10 contextService,
+   *  11 getPermittedImageGenerationModelUseCase, 12 artifactToolAssembler
    */
   async function buildService(overrides: {
     contextServiceGet?: jest.Mock;
@@ -50,6 +50,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     const systemPromptBuilderService = null;
     const findActiveSkillsUseCase = null;
     const getUserSystemPromptUseCase = null;
+    const getOrgSystemPromptUseCase = null;
     const getMcpIntegrationsByIdsUseCase = {
       execute: jest.fn().mockResolvedValue([]),
     };
@@ -72,6 +73,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       systemPromptBuilderService,
       findActiveSkillsUseCase,
       getUserSystemPromptUseCase,
+      getOrgSystemPromptUseCase,
       getMcpIntegrationsByIdsUseCase,
       findActiveAlwaysOnTemplatesUseCase,
       features,

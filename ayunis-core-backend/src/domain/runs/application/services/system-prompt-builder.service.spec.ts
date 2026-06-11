@@ -165,6 +165,69 @@ describe('SystemPromptBuilderService', () => {
     });
   });
 
+  describe('organization instructions section', () => {
+    it('should include organization_instructions section when orgSystemPrompt is provided', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        orgSystemPrompt:
+          'All responses must comply with municipal communication guidelines.',
+      });
+
+      expect(result).toContain('<organization_instructions>');
+      expect(result).toContain(
+        'All responses must comply with municipal communication guidelines.',
+      );
+      expect(result).toContain('</organization_instructions>');
+    });
+
+    it('should not include organization_instructions section when orgSystemPrompt is undefined', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+      });
+
+      expect(result).not.toContain('<organization_instructions>');
+    });
+
+    it('should not include organization_instructions section when orgSystemPrompt is empty', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        orgSystemPrompt: '',
+      });
+
+      expect(result).not.toContain('<organization_instructions>');
+    });
+
+    it('should place organization_instructions before user_instructions when both are present', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        orgSystemPrompt: 'Org-wide instructions',
+        userSystemPrompt: 'My custom instructions',
+      });
+
+      const orgPos = result.indexOf('<organization_instructions>');
+      const userPos = result.indexOf('<user_instructions>');
+      expect(orgPos).toBeGreaterThan(-1);
+      expect(userPos).toBeGreaterThan(orgPos);
+    });
+
+    it('should place organization_instructions before the closing ready message', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        orgSystemPrompt: 'Org-wide instructions',
+      });
+
+      const orgPos = result.indexOf('<organization_instructions>');
+      const readyPos = result.indexOf('You are now ready to assist the user.');
+      expect(orgPos).toBeGreaterThan(-1);
+      expect(readyPos).toBeGreaterThan(orgPos);
+    });
+  });
+
   describe('files section with source status', () => {
     function createFileSource(
       overrides: Partial<{
