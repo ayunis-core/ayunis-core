@@ -38,6 +38,7 @@ export class ModelResponseDtoMapper {
       canVision: permittedModel.model.canVision,
       isDefault: permittedModel.isDefault,
       anonymousOnly: permittedModel.anonymousOnly,
+      tier: permittedModel.model.tier,
       // Note: Cost fields (inputTokenCost, outputTokenCost) are intentionally
       // not exposed to users. They are tracked internally for usage analytics only.
     };

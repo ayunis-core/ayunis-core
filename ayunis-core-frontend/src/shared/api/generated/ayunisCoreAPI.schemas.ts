@@ -198,6 +198,21 @@ export const PermittedLanguageModelResponseDtoType = {
   language: 'language',
 } as const;
 
+/**
+ * Resource-usage tier of the model, used to categorise models for the user (e.g. fast vs. powerful)
+ * @nullable
+ */
+export type PermittedLanguageModelResponseDtoTier = typeof PermittedLanguageModelResponseDtoTier[keyof typeof PermittedLanguageModelResponseDtoTier] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PermittedLanguageModelResponseDtoTier = {
+  zero: 'zero',
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
 export interface PermittedLanguageModelResponseDto {
   /** The id of the permitted model */
   id: string;
@@ -225,6 +240,11 @@ export interface PermittedLanguageModelResponseDto {
   isDefault: boolean;
   /** Whether this model enforces anonymous mode */
   anonymousOnly: boolean;
+  /**
+   * Resource-usage tier of the model, used to categorise models for the user (e.g. fast vs. powerful)
+   * @nullable
+   */
+  tier?: PermittedLanguageModelResponseDtoTier;
 }
 
 /**

@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
+import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import { BasePermittedModelResponseDto } from './base-permitted-model-response.dto';
 
 export class PermittedLanguageModelResponseDto extends BasePermittedModelResponseDto {
@@ -46,6 +47,15 @@ export class PermittedLanguageModelResponseDto extends BasePermittedModelRespons
     description: 'Whether this model enforces anonymous mode',
   })
   anonymousOnly: boolean;
+
+  @ApiProperty({
+    enum: ModelTier,
+    required: false,
+    nullable: true,
+    description:
+      'Resource-usage tier of the model, used to categorise models for the user (e.g. fast vs. powerful)',
+  })
+  tier?: ModelTier;
 }
 
 export class PermittedLanguageModelResponseDtoNullable {

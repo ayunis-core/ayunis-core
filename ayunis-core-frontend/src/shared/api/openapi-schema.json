@@ -8540,6 +8540,12 @@
           "anonymousOnly": {
             "type": "boolean",
             "description": "Whether this model enforces anonymous mode"
+          },
+          "tier": {
+            "type": "string",
+            "enum": ["zero", "low", "medium", "high"],
+            "nullable": true,
+            "description": "Resource-usage tier of the model, used to categorise models for the user (e.g. fast vs. powerful)"
           }
         },
         "required": [

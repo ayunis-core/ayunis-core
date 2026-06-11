@@ -27,8 +27,10 @@ import {
 } from '@/shared/ui/shadcn/tooltip';
 import { Star } from 'lucide-react';
 import { cn } from '@/shared/lib/shadcn/utils';
-import { getFlagByProvider } from '@/shared/lib/getFlagByProvider';
-import { getHostingPriority } from '@/features/models';
+import {
+  getFlagByProvider,
+  getHostingPriority,
+} from '@/shared/lib/model-provider-metadata';
 
 const TIER_FILLED_COUNT: Record<ModelWithConfigResponseDtoTier, number> = {
   [ModelWithConfigResponseDtoTier.zero]: 0,
