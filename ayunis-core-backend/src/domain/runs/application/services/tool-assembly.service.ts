@@ -17,6 +17,7 @@ import { FindActiveSkillsUseCase } from 'src/domain/skills/application/use-cases
 import { FindActiveSkillsQuery } from 'src/domain/skills/application/use-cases/find-active-skills/find-active-skills.query';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { GetUserSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-user-system-prompt/get-user-system-prompt.use-case';
+import { GetOrgSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-org-system-prompt/get-org-system-prompt.use-case';
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
@@ -48,6 +49,7 @@ export class ToolAssemblyService {
     private readonly systemPromptBuilderService: SystemPromptBuilderService,
     private readonly findActiveSkillsUseCase: FindActiveSkillsUseCase,
     private readonly getUserSystemPromptUseCase: GetUserSystemPromptUseCase,
+    private readonly getOrgSystemPromptUseCase: GetOrgSystemPromptUseCase,
     private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
     private readonly findActiveAlwaysOnTemplatesUseCase: FindActiveAlwaysOnTemplatesUseCase,
     @Inject(featuresConfig.KEY)
@@ -94,7 +96,10 @@ export class ToolAssemblyService {
     // them into ready / processing / failed sections.
     const allSources = thread.sourceAssignments?.map((a) => a.source) ?? [];
 
-    // Fetch user's custom system prompt (returns null if not configured)
+    // Fetch org-wide and user's custom system prompts (null if not configured)
+    const orgSystemPromptEntity =
+      await this.getOrgSystemPromptUseCase.execute();
+    const orgSystemPrompt = orgSystemPromptEntity?.systemPrompt ?? undefined;
     const userSystemPromptEntity =
       await this.getUserSystemPromptUseCase.execute();
     const userSystemPrompt = userSystemPromptEntity?.systemPrompt ?? undefined;
@@ -107,6 +112,7 @@ export class ToolAssemblyService {
       // otherwise the prompt would instruct the model to use activate_skill which isn't available
       skills: canUseTools && this.features.skillsEnabled ? skillEntries : [],
       knowledgeBases: canUseTools ? thread.getUniqueKnowledgeBases() : [],
+      orgSystemPrompt,
       userSystemPrompt,
       isAnonymous,
     });

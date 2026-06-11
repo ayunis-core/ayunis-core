@@ -21,6 +21,7 @@ export interface SystemPromptBuildParams {
   sources?: Source[];
   skills?: SkillEntry[];
   knowledgeBases?: KnowledgeBaseSummary[];
+  orgSystemPrompt?: string;
   userSystemPrompt?: string;
   isAnonymous?: boolean;
 }
@@ -34,6 +35,7 @@ export class SystemPromptBuilderService {
       sources = [],
       skills = [],
       knowledgeBases = [],
+      orgSystemPrompt,
       userSystemPrompt,
       isAnonymous = false,
     } = params;
@@ -49,6 +51,7 @@ export class SystemPromptBuilderService {
       isAnonymous ? this.buildAnonymizationSection() : '',
       this.buildResponseGuidelines(),
       this.buildPlatformSection(),
+      orgSystemPrompt ? this.buildOrgInstructionsSection(orgSystemPrompt) : '',
       userSystemPrompt
         ? this.buildUserInstructionsSection(userSystemPrompt)
         : '',
@@ -243,6 +246,16 @@ For technical questions about the platform, configuration, or deployment, users 
       .join('\n\n');
 
     return toolSections;
+  }
+
+  private buildOrgInstructionsSection(orgSystemPrompt: string): string {
+    return `
+<organization_instructions>
+The following instructions were set by the user's organization administrator and apply to all members of the organization:
+
+${orgSystemPrompt}
+</organization_instructions>
+`;
   }
 
   private buildUserInstructionsSection(userSystemPrompt: string): string {
