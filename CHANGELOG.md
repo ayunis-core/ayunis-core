@@ -1,5 +1,33 @@
 # Changelog
 
+## [2.4.0](https://github.com/ayunis-core/ayunis-core/compare/v2.3.0...v2.4.0) (2026-06-11)
+
+
+### Features
+
+* **admin-settings:** add org-wide instructions admin page (AYC-219) ([#794](https://github.com/ayunis-core/ayunis-core/issues/794)) ([61dc71e](https://github.com/ayunis-core/ayunis-core/commit/61dc71efd45ff54a449fd38cc3a27e87bf8e7fbc))
+* **anonymization:** org-level pii whitelist for anonymous mode (AYC-59) ([#778](https://github.com/ayunis-core/ayunis-core/issues/778)) ([22a7b92](https://github.com/ayunis-core/ayunis-core/commit/22a7b92561946a6351fdc966e1285fd842ed217b))
+* **anonymization:** resolve pii mask tokens to original values in chat (AYC-118) ([#789](https://github.com/ayunis-core/ayunis-core/issues/789)) ([45da9eb](https://github.com/ayunis-core/ayunis-core/commit/45da9ebc7db8e47de0ff9ae8bdc1919a09c22a0f))
+* **chat:** add integrations to a chat via the plus button (AYC-000) ([#782](https://github.com/ayunis-core/ayunis-core/issues/782)) ([3429064](https://github.com/ayunis-core/ayunis-core/commit/34290646b4d21d493084dbc19dfea1de4571e2cc))
+* **models:** show model info and usage tier in model selection (AYC-215) ([#783](https://github.com/ayunis-core/ayunis-core/issues/783)) ([7691c6f](https://github.com/ayunis-core/ayunis-core/commit/7691c6f40da28d4ac663ac12f7aa3efb80c2d6fc))
+
+
+### Bug Fixes
+
+* **build:** inline frontend VITE_* env vars at image build via secret mount (AYC-217) ([#769](https://github.com/ayunis-core/ayunis-core/issues/769)) ([fd07834](https://github.com/ayunis-core/ayunis-core/commit/fd078343b355570ea92810c46c304dcf30c878ca))
+* **integrations:** use marketplace config url instead of hardcoded .de domain (AYC-231) ([#795](https://github.com/ayunis-core/ayunis-core/issues/795)) ([5eaabce](https://github.com/ayunis-core/ayunis-core/commit/5eaabce5e47598365da090f843d2c3d4b6a5c3a8))
+
+
+### Performance Improvements
+
+* **routing:** use cached /auth/me from route context ([#679](https://github.com/ayunis-core/ayunis-core/issues/679)) ([fb8c85d](https://github.com/ayunis-core/ayunis-core/commit/fb8c85d7d83ce35d60abbc9fee6a17e3c1eb50ca))
+
+
+### Miscellaneous
+
+* **lint:** format files committed with lint violations (AYC-227) ([#785](https://github.com/ayunis-core/ayunis-core/issues/785)) ([4c67ec0](https://github.com/ayunis-core/ayunis-core/commit/4c67ec0e3bc20d86f0d068022e15052596064663))
+* **rag:** remove dead single-item ingest path (AYC-184) ([#784](https://github.com/ayunis-core/ayunis-core/issues/784)) ([9108aa2](https://github.com/ayunis-core/ayunis-core/commit/9108aa29412e6850204e575141f62de8543941a4))
+
 ## [2.3.0](https://github.com/ayunis-core/ayunis-core/compare/v2.2.0...v2.3.0) (2026-06-10)
 
 
