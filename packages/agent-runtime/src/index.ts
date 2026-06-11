@@ -59,3 +59,7 @@ export {
   textTurn,
   toolCallTurn,
 } from './providers/mock/mock-provider';
+export {
+  anthropic,
+  type AnthropicProviderOptions,
+} from './providers/anthropic/anthropic-provider';

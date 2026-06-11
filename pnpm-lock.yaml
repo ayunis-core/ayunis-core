@@ -627,6 +627,10 @@ importers:
         version: 4.2.4
 
   packages/agent-runtime:
+    dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.59.0
+        version: 0.59.0
     devDependencies:
       '@eslint/js':
         specifier: ^9.18.0
