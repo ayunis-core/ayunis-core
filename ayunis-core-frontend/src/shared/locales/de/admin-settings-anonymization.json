@@ -1,0 +1,61 @@
+{
+  "piiWhitelist": {
+    "heading": "Ausnahmen von der Anonymisierung",
+    "description": "Im anonymen Modus werden erkannte personenbezogene Daten maskiert, bevor sie an das KI-Modell gesendet werden. Unten aktivierte Kategorien werden von der Maskierung ausgenommen — entweder vollständig oder nur für Werte, die einem optionalen Muster vollständig entsprechen.",
+    "patternLabel": "Nur Werte ausnehmen, die diesem Muster entsprechen (optional)",
+    "patternPlaceholder": "z. B. .*@muster-stadt\\.de",
+    "patternHint": "Regulärer Ausdruck, Groß-/Kleinschreibung wird ignoriert. Der gesamte erkannte Wert muss übereinstimmen. Leer lassen, um die ganze Kategorie auszunehmen.",
+    "invalidPattern": "Dieses Muster ist kein gültiger regulärer Ausdruck.",
+    "patternTooLong": "Das Muster darf höchstens {{max}} Zeichen lang sein.",
+    "unsafePattern": "Dieses Muster wurde abgelehnt, da es zu übermäßiger Verarbeitungszeit führen könnte.",
+    "saveButton": "Speichern",
+    "saving": "Wird gespeichert…",
+    "saveSuccess": "Ausnahmen von der Anonymisierung gespeichert.",
+    "saveError": "Speichern der Ausnahmen ist fehlgeschlagen.",
+    "loadError": "Die Ausnahmen konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "exemptBadge": "Nicht maskiert",
+    "categories": {
+      "person_name": {
+        "label": "Personennamen",
+        "description": "Vor- und Nachnamen natürlicher Personen"
+      },
+      "organization": {
+        "label": "Organisationen",
+        "description": "Namen von Unternehmen, Institutionen und Behörden"
+      },
+      "location": {
+        "label": "Orte & Adressen",
+        "description": "Städte, Länder, Straßen und Adressen"
+      },
+      "email_address": {
+        "label": "E-Mail-Adressen",
+        "description": "Persönliche und organisatorische E-Mail-Adressen"
+      },
+      "phone_number": {
+        "label": "Telefonnummern",
+        "description": "Festnetz- und Mobilfunknummern"
+      },
+      "url_or_ip": {
+        "label": "URLs & IP-Adressen",
+        "description": "Webadressen und IP-Adressen"
+      },
+      "date_time": {
+        "label": "Datums- & Zeitangaben",
+        "description": "Konkrete Daten und Uhrzeiten, z. B. Geburtsdaten"
+      },
+      "financial_account": {
+        "label": "Finanzdaten",
+        "description": "Kreditkartennummern, IBANs und Kontonummern"
+      },
+      "government_id": {
+        "label": "Amtliche Kennnummern",
+        "description": "Sozialversicherungs-, Pass-, Führerschein- und Approbationsnummern"
+      },
+      "nationality_religion_politics": {
+        "label": "Nationalität, Religion & Politik",
+        "description": "Hinweise auf Nationalität, religiöse oder politische Zugehörigkeit"
+      }
+    }
+  }
+}

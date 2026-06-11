@@ -7,6 +7,7 @@ import {
   Shield,
   FileText,
   Key,
+  ShieldCheck,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -44,6 +45,11 @@ export function AdminSettingsSidebar() {
       to: '/admin-settings/security',
       icon: <Shield />,
       label: t('layout.security'),
+    },
+    {
+      to: '/admin-settings/anonymization',
+      icon: <ShieldCheck />,
+      label: t('layout.anonymization'),
     },
     {
       to: '/admin-settings/api-keys',
