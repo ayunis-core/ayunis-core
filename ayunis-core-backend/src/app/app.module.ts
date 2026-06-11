@@ -22,6 +22,7 @@ import { MarketplaceModule } from '../domain/marketplace/marketplace.module';
 import { UsageModule } from '../domain/usage/usage.module';
 import { TranscriptionsModule } from '../domain/transcriptions/transcriptions.module';
 import { ChatSettingsModule } from '../domain/chat-settings/chat-settings.module';
+import { AnonymizationSettingsModule } from '../domain/anonymization-settings/anonymization-settings.module';
 import { KnowledgeBasesModule } from '../domain/knowledge-bases/knowledge-bases.module';
 import { CrawlDomainGrantsModule } from '../domain/crawl-domain-grants/crawl-domain-grants.module';
 import { SkillTemplatesModule } from '../domain/skill-templates/skill-templates.module';
@@ -163,6 +164,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     UsageModule,
     TranscriptionsModule,
     ChatSettingsModule,
+    AnonymizationSettingsModule,
     KnowledgeBasesModule,
     CrawlDomainGrantsModule,
     SkillTemplatesModule,

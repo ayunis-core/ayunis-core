@@ -106,6 +106,7 @@
     "puppeteer-core": "^24.37.5",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "safe-regex2": "^5.1.1",
     "sanitize-html": "^2.17.1",
     "tiktoken": "^1.0.22",
     "typeorm": "^0.3.25",
