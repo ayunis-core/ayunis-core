@@ -36,6 +36,33 @@ jobs:
         run: pnpm exec knip --include files,dependencies,unlisted
         continue-on-error: ${{ github.event_name == 'pull_request' }}
 
+  agent-runtime:
+    name: Agent Runtime
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/agent-runtime
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for dead code
+        run: pnpm exec knip --include files,dependencies,unlisted
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
+
   frontend:
     name: Frontend
     runs-on: ubuntu-latest
