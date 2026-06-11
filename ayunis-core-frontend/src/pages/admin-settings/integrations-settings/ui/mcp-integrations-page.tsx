@@ -25,6 +25,7 @@ import {
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
 import { ComingSoonDialog } from './coming-soon-dialog';
+import { useMarketplaceConfig } from '@/features/marketplace';
 
 export function McpIntegrationsPage({
   isCloud,
@@ -170,19 +171,23 @@ function HeaderActions({
   onCreateCustom: () => void;
   t: (key: string) => string;
 }>) {
+  const marketplace = useMarketplaceConfig();
+
   return (
     <div className="flex gap-2">
       <HelpLink path="settings/admin/integrations/" />
-      <Button variant="outline" size="sm" asChild>
-        <a
-          href="https://marketplace.ayunis.de/integrations"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <ExternalLink className="h-4 w-4" />
-          {t('integrations.page.browseMarketplace')}
-        </a>
-      </Button>
+      {marketplace.enabled && marketplace.url && (
+        <Button variant="outline" size="sm" asChild>
+          <a
+            href={`${marketplace.url.replace(/\/$/, '')}/integrations`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <ExternalLink className="h-4 w-4" />
+            {t('integrations.page.browseMarketplace')}
+          </a>
+        </Button>
+      )}
       {isCloud ? (
         <Button variant="default" size="sm" onClick={onCreatePredefined}>
           <Plus className="h-4 w-4" />

@@ -176,7 +176,7 @@ export class McpIntegrationResponseDto {
     description: 'Logo URL for marketplace integrations',
     type: 'string',
     nullable: true,
-    example: 'https://marketplace.ayunis.de/logos/oparl.png',
+    example: 'https://marketplace.ayunis.com/logos/oparl.png',
   })
   logoUrl?: string | null;
 
