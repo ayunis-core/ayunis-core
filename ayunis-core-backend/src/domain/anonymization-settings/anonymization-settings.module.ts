@@ -9,12 +9,14 @@ import { PostgresAnonymizationWhitelistRepository } from './infrastructure/persi
 import { GetPiiWhitelistUseCase } from './application/use-cases/get-pii-whitelist/get-pii-whitelist.use-case';
 import { UpdatePiiWhitelistUseCase } from './application/use-cases/update-pii-whitelist/update-pii-whitelist.use-case';
 import { AnonymizeTextForOrgUseCase } from './application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
+import { AnonymizationSettingsController } from './presenters/http/anonymization-settings.controller';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([AnonymizationWhitelistEntryRecord]),
     AnonymizationModule,
   ],
+  controllers: [AnonymizationSettingsController],
   providers: [
     {
       provide: AnonymizationWhitelistRepository,
