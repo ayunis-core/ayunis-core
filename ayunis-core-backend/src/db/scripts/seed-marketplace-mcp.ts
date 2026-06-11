@@ -13,7 +13,6 @@
  */
 import 'src/config/env';
 import { randomUUID } from 'crypto';
-import type { UUID } from 'crypto';
 import dataSource from 'src/db/datasource';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { MarketplaceMcpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/marketplace-mcp-integration.record';
@@ -49,7 +48,7 @@ async function run(): Promise<void> {
     for (const org of orgs) {
       const existing = await intRepo.findOne({
         where: {
-          orgId: org.id as UUID,
+          orgId: org.id,
           marketplaceIdentifier: MARKETPLACE_IDENTIFIER,
         },
       });
@@ -62,7 +61,7 @@ async function run(): Promise<void> {
 
       const record = new MarketplaceMcpIntegrationRecord();
       record.id = integrationId;
-      record.orgId = org.id as UUID;
+      record.orgId = org.id;
       record.name = 'Local Test (User Auth)';
       record.serverUrl = 'https://staging-api.speechmind.com/mcp/';
       record.enabled = true;
