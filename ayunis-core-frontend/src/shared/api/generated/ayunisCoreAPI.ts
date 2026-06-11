@@ -103,6 +103,7 @@ import type {
   ModelProviderInfoResponseDto,
   ModelWithConfigResponseDto,
   ModelsControllerUpdatePermittedModel200,
+  OrgSystemPromptResponseDto,
   PaginatedInvitesListResponseDto,
   PaginatedTeamMembersResponseDto,
   PaginatedUsersListResponseDto,
@@ -186,6 +187,7 @@ import type {
   UpdateUserNameDto,
   UpdateUserRoleDto,
   UploadFileResponseDto,
+  UpsertOrgSystemPromptDto,
   UpsertUserSystemPromptDto,
   UsageConfigResponseDto,
   UsageControllerGetModelDistributionParams,
@@ -15979,6 +15981,228 @@ export const useChatSettingsControllerGeneratePersonalizedSystemPrompt = <TError
       > => {
 
       const mutationOptions = getChatSettingsControllerGeneratePersonalizedSystemPromptMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Returns the organization-wide system prompt for the admin's organization, or null if not set. Admin only.
+ * @summary Get the organization-wide system prompt
+ */
+export const orgSystemPromptControllerGetOrgSystemPrompt = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<OrgSystemPromptResponseDto>(
+      {url: `/chat-settings/org-system-prompt`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getOrgSystemPromptControllerGetOrgSystemPromptQueryKey = () => {
+    return [
+    `/chat-settings/org-system-prompt`
+    ] as const;
+    }
+
+    
+export const getOrgSystemPromptControllerGetOrgSystemPromptQueryOptions = <TData = Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getOrgSystemPromptControllerGetOrgSystemPromptQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>> = ({ signal }) => orgSystemPromptControllerGetOrgSystemPrompt(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type OrgSystemPromptControllerGetOrgSystemPromptQueryResult = NonNullable<Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>>
+export type OrgSystemPromptControllerGetOrgSystemPromptQueryError = void
+
+
+export function useOrgSystemPromptControllerGetOrgSystemPrompt<TData = Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>,
+          TError,
+          Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useOrgSystemPromptControllerGetOrgSystemPrompt<TData = Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>,
+          TError,
+          Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useOrgSystemPromptControllerGetOrgSystemPrompt<TData = Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the organization-wide system prompt
+ */
+
+export function useOrgSystemPromptControllerGetOrgSystemPrompt<TData = Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof orgSystemPromptControllerGetOrgSystemPrompt>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getOrgSystemPromptControllerGetOrgSystemPromptQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Creates or replaces the organization-wide system prompt, which is injected into all conversations of users of the organization. Admin only.
+ * @summary Set or update the organization-wide system prompt
+ */
+export const orgSystemPromptControllerUpsertOrgSystemPrompt = (
+    upsertOrgSystemPromptDto: UpsertOrgSystemPromptDto,
+ ) => {
+      
+      
+      return customAxiosInstance<OrgSystemPromptResponseDto>(
+      {url: `/chat-settings/org-system-prompt`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: upsertOrgSystemPromptDto
+    },
+      );
+    }
+  
+
+
+export const getOrgSystemPromptControllerUpsertOrgSystemPromptMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof orgSystemPromptControllerUpsertOrgSystemPrompt>>, TError,{data: UpsertOrgSystemPromptDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof orgSystemPromptControllerUpsertOrgSystemPrompt>>, TError,{data: UpsertOrgSystemPromptDto}, TContext> => {
+
+const mutationKey = ['orgSystemPromptControllerUpsertOrgSystemPrompt'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof orgSystemPromptControllerUpsertOrgSystemPrompt>>, {data: UpsertOrgSystemPromptDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  orgSystemPromptControllerUpsertOrgSystemPrompt(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OrgSystemPromptControllerUpsertOrgSystemPromptMutationResult = NonNullable<Awaited<ReturnType<typeof orgSystemPromptControllerUpsertOrgSystemPrompt>>>
+    export type OrgSystemPromptControllerUpsertOrgSystemPromptMutationBody = UpsertOrgSystemPromptDto
+    export type OrgSystemPromptControllerUpsertOrgSystemPromptMutationError = void
+
+    /**
+ * @summary Set or update the organization-wide system prompt
+ */
+export const useOrgSystemPromptControllerUpsertOrgSystemPrompt = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof orgSystemPromptControllerUpsertOrgSystemPrompt>>, TError,{data: UpsertOrgSystemPromptDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof orgSystemPromptControllerUpsertOrgSystemPrompt>>,
+        TError,
+        {data: UpsertOrgSystemPromptDto},
+        TContext
+      > => {
+
+      const mutationOptions = getOrgSystemPromptControllerUpsertOrgSystemPromptMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Deletes the organization-wide system prompt. Admin only.
+ * @summary Delete the organization-wide system prompt
+ */
+export const orgSystemPromptControllerDeleteOrgSystemPrompt = (
+    
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/chat-settings/org-system-prompt`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getOrgSystemPromptControllerDeleteOrgSystemPromptMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof orgSystemPromptControllerDeleteOrgSystemPrompt>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof orgSystemPromptControllerDeleteOrgSystemPrompt>>, TError,void, TContext> => {
+
+const mutationKey = ['orgSystemPromptControllerDeleteOrgSystemPrompt'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof orgSystemPromptControllerDeleteOrgSystemPrompt>>, void> = () => {
+          
+
+          return  orgSystemPromptControllerDeleteOrgSystemPrompt()
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OrgSystemPromptControllerDeleteOrgSystemPromptMutationResult = NonNullable<Awaited<ReturnType<typeof orgSystemPromptControllerDeleteOrgSystemPrompt>>>
+    
+    export type OrgSystemPromptControllerDeleteOrgSystemPromptMutationError = void
+
+    /**
+ * @summary Delete the organization-wide system prompt
+ */
+export const useOrgSystemPromptControllerDeleteOrgSystemPrompt = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof orgSystemPromptControllerDeleteOrgSystemPrompt>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof orgSystemPromptControllerDeleteOrgSystemPrompt>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getOrgSystemPromptControllerDeleteOrgSystemPromptMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

@@ -1,0 +1,17 @@
+{
+  "instructions": {
+    "title": "Organisationsweite Anweisungen",
+    "description": "Definieren Sie Anweisungen, die auf alle Unterhaltungen aller Benutzer Ihrer Organisation angewendet werden. Benutzer sehen diese Anweisungen nicht, der KI-Assistent befolgt sie jedoch in jedem Chat.",
+    "label": "Anweisungen",
+    "placeholder": "z. B. Alle Antworten müssen unseren Kommunikationsrichtlinien entsprechen. Verwenden Sie stets formelle Sprache.",
+    "save": "Speichern",
+    "saving": "Wird gespeichert...",
+    "delete": "Entfernen",
+    "deleting": "Wird entfernt...",
+    "saved": "Organisationsanweisungen gespeichert.",
+    "deleted": "Organisationsanweisungen entfernt.",
+    "error": "Organisationsanweisungen konnten nicht aktualisiert werden.",
+    "loadError": "Organisationsanweisungen konnten nicht geladen werden.",
+    "retry": "Erneut versuchen"
+  }
+}

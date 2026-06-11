@@ -4008,6 +4008,22 @@ export interface GeneratePersonalizedSystemPromptResponseDto {
   welcomeMessage: string;
 }
 
+export interface OrgSystemPromptResponseDto {
+  /**
+   * The organization-wide system prompt, or null if not set
+   * @nullable
+   */
+  systemPrompt: string | null;
+}
+
+export interface UpsertOrgSystemPromptDto {
+  /**
+   * The organization-wide system prompt
+   * @maxLength 10000
+   */
+  systemPrompt: string;
+}
+
 export interface ChatCompletionRequestDto { [key: string]: unknown }
 
 export interface LoginDto {

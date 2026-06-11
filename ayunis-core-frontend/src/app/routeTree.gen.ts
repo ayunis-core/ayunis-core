@@ -37,6 +37,7 @@ import { Route as AuthenticatedAdminSettingsUsageRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminSettingsSecurityRouteImport } from './routes/_authenticated/admin-settings.security'
 import { Route as AuthenticatedAdminSettingsModelsRouteImport } from './routes/_authenticated/admin-settings.models'
 import { Route as AuthenticatedAdminSettingsIntegrationsRouteImport } from './routes/_authenticated/admin-settings.integrations'
+import { Route as AuthenticatedAdminSettingsInstructionsRouteImport } from './routes/_authenticated/admin-settings.instructions'
 import { Route as AuthenticatedAdminSettingsApiKeysRouteImport } from './routes/_authenticated/admin-settings.api-keys'
 import { Route as AuthenticatedAdminSettingsAnonymizationRouteImport } from './routes/_authenticated/admin-settings.anonymization'
 import { Route as onboardingPasswordResetRouteImport } from './routes/(onboarding)/password.reset'
@@ -208,6 +209,12 @@ const AuthenticatedAdminSettingsIntegrationsRoute =
     path: '/admin-settings/integrations',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminSettingsInstructionsRoute =
+  AuthenticatedAdminSettingsInstructionsRouteImport.update({
+    id: '/admin-settings/instructions',
+    path: '/admin-settings/instructions',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminSettingsApiKeysRoute =
   AuthenticatedAdminSettingsApiKeysRouteImport.update({
     id: '/admin-settings/api-keys',
@@ -312,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/password/reset': typeof onboardingPasswordResetRoute
   '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
+  '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
@@ -356,6 +364,7 @@ export interface FileRoutesByTo {
   '/password/reset': typeof onboardingPasswordResetRoute
   '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
+  '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
@@ -402,6 +411,7 @@ export interface FileRoutesById {
   '/(onboarding)/password/reset': typeof onboardingPasswordResetRoute
   '/_authenticated/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/_authenticated/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
+  '/_authenticated/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/_authenticated/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/_authenticated/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/_authenticated/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
@@ -448,6 +458,7 @@ export interface FileRouteTypes {
     | '/password/reset'
     | '/admin-settings/anonymization'
     | '/admin-settings/api-keys'
+    | '/admin-settings/instructions'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
     | '/admin-settings/security'
@@ -492,6 +503,7 @@ export interface FileRouteTypes {
     | '/password/reset'
     | '/admin-settings/anonymization'
     | '/admin-settings/api-keys'
+    | '/admin-settings/instructions'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
     | '/admin-settings/security'
@@ -537,6 +549,7 @@ export interface FileRouteTypes {
     | '/(onboarding)/password/reset'
     | '/_authenticated/admin-settings/anonymization'
     | '/_authenticated/admin-settings/api-keys'
+    | '/_authenticated/admin-settings/instructions'
     | '/_authenticated/admin-settings/integrations'
     | '/_authenticated/admin-settings/models'
     | '/_authenticated/admin-settings/security'
@@ -780,6 +793,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsIntegrationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin-settings/instructions': {
+      id: '/_authenticated/admin-settings/instructions'
+      path: '/admin-settings/instructions'
+      fullPath: '/admin-settings/instructions'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsInstructionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin-settings/api-keys': {
       id: '/_authenticated/admin-settings/api-keys'
       path: '/admin-settings/api-keys'
@@ -892,6 +912,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedInstallRoute: typeof AuthenticatedInstallRoute
   AuthenticatedAdminSettingsAnonymizationRoute: typeof AuthenticatedAdminSettingsAnonymizationRoute
   AuthenticatedAdminSettingsApiKeysRoute: typeof AuthenticatedAdminSettingsApiKeysRoute
+  AuthenticatedAdminSettingsInstructionsRoute: typeof AuthenticatedAdminSettingsInstructionsRoute
   AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
   AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
   AuthenticatedAdminSettingsSecurityRoute: typeof AuthenticatedAdminSettingsSecurityRoute
@@ -929,6 +950,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedAdminSettingsAnonymizationRoute,
   AuthenticatedAdminSettingsApiKeysRoute:
     AuthenticatedAdminSettingsApiKeysRoute,
+  AuthenticatedAdminSettingsInstructionsRoute:
+    AuthenticatedAdminSettingsInstructionsRoute,
   AuthenticatedAdminSettingsIntegrationsRoute:
     AuthenticatedAdminSettingsIntegrationsRoute,
   AuthenticatedAdminSettingsModelsRoute: AuthenticatedAdminSettingsModelsRoute,

@@ -7862,6 +7862,80 @@
         "tags": ["Chat Settings"]
       }
     },
+    "/chat-settings/org-system-prompt": {
+      "get": {
+        "description": "Returns the organization-wide system prompt for the admin's organization, or null if not set. Admin only.",
+        "operationId": "OrgSystemPromptController_getOrgSystemPrompt",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The organization-wide system prompt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgSystemPromptResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "User is not an organization admin"
+          }
+        },
+        "summary": "Get the organization-wide system prompt",
+        "tags": ["Chat Settings"]
+      },
+      "put": {
+        "description": "Creates or replaces the organization-wide system prompt, which is injected into all conversations of users of the organization. Admin only.",
+        "operationId": "OrgSystemPromptController_upsertOrgSystemPrompt",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertOrgSystemPromptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully set or updated the organization-wide system prompt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgSystemPromptResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "403": {
+            "description": "User is not an organization admin"
+          }
+        },
+        "summary": "Set or update the organization-wide system prompt",
+        "tags": ["Chat Settings"]
+      },
+      "delete": {
+        "description": "Deletes the organization-wide system prompt. Admin only.",
+        "operationId": "OrgSystemPromptController_deleteOrgSystemPrompt",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted the organization-wide system prompt"
+          },
+          "403": {
+            "description": "User is not an organization admin"
+          }
+        },
+        "summary": "Delete the organization-wide system prompt",
+        "tags": ["Chat Settings"]
+      }
+    },
     "/openai-compat/v1/chat/completions": {
       "post": {
         "operationId": "ChatCompletionsController_create",
@@ -14208,6 +14282,30 @@
           }
         },
         "required": ["systemPrompt", "welcomeMessage"]
+      },
+      "OrgSystemPromptResponseDto": {
+        "type": "object",
+        "properties": {
+          "systemPrompt": {
+            "type": "string",
+            "description": "The organization-wide system prompt, or null if not set",
+            "example": "All responses must comply with municipal communication guidelines.",
+            "nullable": true
+          }
+        },
+        "required": ["systemPrompt"]
+      },
+      "UpsertOrgSystemPromptDto": {
+        "type": "object",
+        "properties": {
+          "systemPrompt": {
+            "type": "string",
+            "description": "The organization-wide system prompt",
+            "example": "All responses must comply with municipal communication guidelines.",
+            "maxLength": 10000
+          }
+        },
+        "required": ["systemPrompt"]
       },
       "ChatCompletionRequestDto": {
         "type": "object",

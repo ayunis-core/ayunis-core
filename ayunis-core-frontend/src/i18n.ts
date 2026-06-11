@@ -58,6 +58,8 @@ import enAdminSettingsApiKeys from './shared/locales/en/admin-settings-api-keys.
 import deAdminSettingsApiKeys from './shared/locales/de/admin-settings-api-keys.json';
 import enMcpUserConfig from './shared/locales/en/mcp-user-config.json';
 import deMcpUserConfig from './shared/locales/de/mcp-user-config.json';
+import enAdminSettingsInstructions from './shared/locales/en/admin-settings-instructions.json';
+import deAdminSettingsInstructions from './shared/locales/de/admin-settings-instructions.json';
 
 const resources = {
   en: {
@@ -89,6 +91,7 @@ const resources = {
     'admin-settings-letterheads': enAdminSettingsLetterheads,
     'admin-settings-api-keys': enAdminSettingsApiKeys,
     'mcp-user-config': enMcpUserConfig,
+    'admin-settings-instructions': enAdminSettingsInstructions,
   },
   de: {
     auth: deAuth,
@@ -119,6 +122,7 @@ const resources = {
     'admin-settings-letterheads': deAdminSettingsLetterheads,
     'admin-settings-api-keys': deAdminSettingsApiKeys,
     'mcp-user-config': deMcpUserConfig,
+    'admin-settings-instructions': deAdminSettingsInstructions,
   },
 };
 
