@@ -1,21 +1,15 @@
-const REGION_PREFIXES = ['eu', 'us', 'apac', 'global'];
-const PROVIDER_PREFIXES = [
-  'anthropic',
-  'amazon',
-  'meta',
-  'mistral',
-  'cohere',
-  'ai21',
-];
+function normalizeModelKey(modelName: string): string {
+  return modelName.toLowerCase().replace(/[^a-z0-9-]/g, '_');
+}
 
 export function getModelKey(modelName: string): string {
-  const segments = modelName.toLowerCase().split('.');
-  while (
-    segments.length > 1 &&
-    (REGION_PREFIXES.includes(segments[0]) ||
-      PROVIDER_PREFIXES.includes(segments[0]))
-  ) {
-    segments.shift();
-  }
-  return segments.join('.').replace(/[^a-z0-9-]/g, '_');
+  return normalizeModelKey(modelName);
+}
+
+export function getModelKeyFallbacks(modelName: string): string[] {
+  return modelName
+    .split('.')
+    .map((_, index, segments) =>
+      normalizeModelKey(segments.slice(index).join('.')),
+    );
 }

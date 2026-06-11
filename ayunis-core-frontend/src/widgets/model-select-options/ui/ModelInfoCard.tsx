@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '@/shared/ui/shadcn/badge';
 import { getFlagByProvider } from '@/shared/lib/model-provider-metadata';
 import type { PermittedLanguageModelResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { getModelKey } from '../lib/getModelKey';
+import { getModelKeyFallbacks } from '../lib/getModelKey';
 
 export type ModelInfoModel = Pick<
   PermittedLanguageModelResponseDto,
@@ -16,10 +16,10 @@ interface ModelInfoCardProps {
 export default function ModelInfoCard({ model }: Readonly<ModelInfoCardProps>) {
   const { t } = useTranslation('common');
 
-  const descriptionKey = getModelKey(model.name);
-  const description = t(`models.descriptions.${descriptionKey}`, {
-    defaultValue: t('models.descriptions.fallback'),
-  });
+  const descriptionKeys = getModelKeyFallbacks(model.name).map(
+    (key) => `models.descriptions.${key}`,
+  );
+  const description = t([...descriptionKeys, 'models.descriptions.fallback']);
   const hostingDetail = t(`models.providerHosting.${model.provider}`, {
     defaultValue: '',
   });
