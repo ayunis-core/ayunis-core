@@ -58,8 +58,12 @@ export function AnonymizationSettingsPage() {
     updateMutation.mutate(
       { data: { entries: toEntries(rows) } },
       {
-        onSuccess: () => {
+        onSuccess: (updated) => {
           showSuccess(t('piiWhitelist.saveSuccess'));
+          queryClient.setQueryData(
+            getAnonymizationSettingsControllerGetQueryKey(),
+            updated,
+          );
           setDraft(null);
           void queryClient.invalidateQueries({
             queryKey: getAnonymizationSettingsControllerGetQueryKey(),
