@@ -27,7 +27,10 @@ import { cn } from '@/shared/lib/shadcn/utils';
 import { SourcesList } from './SourcesList';
 import { showError } from '@/shared/lib/toast';
 import { MicrophoneButton } from './MicrophoneButton';
-import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
+import type {
+  IntegrationSummary,
+  KnowledgeBaseSummary,
+} from '@/shared/contexts/chat/chatContext';
 
 /**
  * Lifecycle of an in-flight submit. The input behaves differently in each:
@@ -56,6 +59,7 @@ interface ChatInputProps {
     processingError?: string;
   }[];
   knowledgeBases?: KnowledgeBaseSummary[];
+  mcpIntegrations?: IntegrationSummary[];
   /** Default `'idle'`. See {@link ChatInputSubmissionState}. */
   submissionState?: ChatInputSubmissionState;
   /**
@@ -71,6 +75,8 @@ interface ChatInputProps {
   onDownloadSource: (sourceId: string) => void;
   onAddKnowledgeBase?: (knowledgeBase: KnowledgeBaseSummary) => void;
   onRemoveKnowledgeBase?: (knowledgeBaseId: string) => void;
+  onAddIntegration?: (integration: IntegrationSummary) => void;
+  onRemoveIntegration?: (integrationId: string) => void;
   onSend: (
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
@@ -103,6 +109,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       modelId,
       sources,
       knowledgeBases,
+      mcpIntegrations,
       submissionState = 'idle',
       isSendDisabled,
       isModelChangeDisabled,
@@ -113,6 +120,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onDownloadSource,
       onAddKnowledgeBase,
       onRemoveKnowledgeBase,
+      onAddIntegration,
+      onRemoveIntegration,
       onSend,
       onCancel,
       isEmbeddingModelEnabled,
@@ -286,8 +295,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               <SourcesList
                 sources={sources}
                 knowledgeBases={knowledgeBases}
+                mcpIntegrations={mcpIntegrations}
                 onRemove={onRemoveSource}
                 onRemoveKnowledgeBase={onRemoveKnowledgeBase}
+                onRemoveIntegration={onRemoveIntegration}
                 onDownload={onDownloadSource}
               />
 
@@ -335,6 +346,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     onKnowledgeBaseSelect={onAddKnowledgeBase}
                     attachedKnowledgeBaseIds={knowledgeBases?.map(
                       (kb) => kb.id,
+                    )}
+                    onIntegrationSelect={onAddIntegration}
+                    attachedIntegrationIds={mcpIntegrations?.map(
+                      (integration) => integration.id,
                     )}
                   />
                   <AnonymousButton

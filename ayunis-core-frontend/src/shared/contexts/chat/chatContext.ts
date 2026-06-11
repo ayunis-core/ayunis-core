@@ -10,6 +10,12 @@ export type KnowledgeBaseSummary = {
   name: string;
 };
 
+export type IntegrationSummary = {
+  id: string;
+  name: string;
+  logoUrl?: string | null;
+};
+
 type ChatContextType = {
   pendingMessage: string;
   setPendingMessage: (message: string) => void;

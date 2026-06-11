@@ -18,7 +18,10 @@ import {
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
-import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
+import type {
+  IntegrationSummary,
+  KnowledgeBaseSummary,
+} from '@/shared/contexts/chat/chatContext';
 import { PinnedSkills } from './PinnedSkills';
 import { PersonalizationCard } from './PersonalizationCard';
 import { useUserSystemPromptStatus } from '../api/useUserSystemPromptStatus';
@@ -87,6 +90,9 @@ export default function NewChatPage({
   const [selectedKnowledgeBases, setSelectedKnowledgeBases] = useState<
     KnowledgeBaseSummary[]
   >([]);
+  const [selectedIntegrations, setSelectedIntegrations] = useState<
+    IntegrationSummary[]
+  >([]);
   const [selectedSkillId, setSelectedSkillId] = useState<string>();
   const [selectedSkillName, setSelectedSkillName] = useState<string>();
   const selectedModel = models.find((m) => m.id === modelId);
@@ -153,6 +159,7 @@ export default function NewChatPage({
       modelId,
       sources,
       knowledgeBases: selectedKnowledgeBases,
+      mcpIntegrations: selectedIntegrations,
       isAnonymous,
       onSourceStatus: handleSourceStatus,
     });
@@ -206,6 +213,7 @@ export default function NewChatPage({
           modelId={modelId}
           sources={sources}
           knowledgeBases={selectedKnowledgeBases}
+          mcpIntegrations={selectedIntegrations}
           submissionState={isCreating ? 'submitting' : 'idle'}
           onModelChange={handleModelChange}
           onSend={handleSend}
@@ -219,6 +227,14 @@ export default function NewChatPage({
           onRemoveKnowledgeBase={(kbId) => {
             setSelectedKnowledgeBases((prev) =>
               prev.filter((kb) => kb.id !== kbId),
+            );
+          }}
+          onAddIntegration={(integration) => {
+            setSelectedIntegrations((prev) => [...prev, integration]);
+          }}
+          onRemoveIntegration={(integrationId) => {
+            setSelectedIntegrations((prev) =>
+              prev.filter((integration) => integration.id !== integrationId),
             );
           }}
           isEmbeddingModelEnabled={isEmbeddingModelEnabled}

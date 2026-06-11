@@ -2,6 +2,7 @@ import {
   getThreadsControllerFindAllQueryKey,
   getThreadsControllerFindOneQueryKey,
   threadKnowledgeBasesControllerAddKnowledgeBase,
+  threadMcpIntegrationsControllerAddMcpIntegration,
   threadSourcesControllerAddFileSource,
   threadsControllerFindOne,
   useThreadsControllerCreate,
@@ -10,7 +11,10 @@ import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.sc
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { showError } from '@/shared/lib/toast';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
-import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
+import type {
+  IntegrationSummary,
+  KnowledgeBaseSummary,
+} from '@/shared/contexts/chat/chatContext';
 import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
@@ -39,6 +43,7 @@ interface InitiateChatParams {
   modelId?: string;
   sources: PendingSource[];
   knowledgeBases: KnowledgeBaseSummary[];
+  mcpIntegrations: IntegrationSummary[];
   isAnonymous: boolean;
   /** Reports per-source progress so the page can render upload/processing
    *  state on each chip. */
@@ -149,11 +154,34 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
     return true;
   }
 
+  /** Returns true on success, false on user-visible failure (toast shown). */
+  async function attachIntegrations(
+    threadId: string,
+    mcpIntegrations: IntegrationSummary[],
+    isCancelled: () => boolean,
+  ): Promise<boolean> {
+    for (const integration of mcpIntegrations) {
+      if (isCancelled()) return false;
+      try {
+        await threadMcpIntegrationsControllerAddMcpIntegration(
+          threadId,
+          integration.id,
+        );
+      } catch (error) {
+        console.error('Failed to attach integration:', error);
+        showError(t('chat.errorAddIntegration'));
+        return false;
+      }
+    }
+    return true;
+  }
+
   async function initiateChat({
     message,
     modelId,
     sources,
     knowledgeBases,
+    mcpIntegrations,
     isAnonymous,
     onSourceStatus,
   }: InitiateChatParams): Promise<void> {
@@ -176,7 +204,11 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
     }
     if (isCancelled()) return;
 
-    if (sources.length === 0 && knowledgeBases.length === 0) {
+    if (
+      sources.length === 0 &&
+      knowledgeBases.length === 0 &&
+      mcpIntegrations.length === 0
+    ) {
       finalizeAndNavigate(thread.id, message);
       return;
     }
@@ -203,6 +235,13 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
         isCancelled,
       );
       if (!kbOk || isCancelled()) return;
+
+      const integrationsOk = await attachIntegrations(
+        thread.id,
+        mcpIntegrations,
+        isCancelled,
+      );
+      if (!integrationsOk || isCancelled()) return;
 
       finalizeAndNavigate(thread.id, message);
     } finally {

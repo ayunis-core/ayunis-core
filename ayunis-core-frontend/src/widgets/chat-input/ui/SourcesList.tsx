@@ -27,8 +27,12 @@ import {
   Loader2,
   AlertCircle,
   Mic,
+  Plug,
 } from 'lucide-react';
-import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
+import type {
+  IntegrationSummary,
+  KnowledgeBaseSummary,
+} from '@/shared/contexts/chat/chatContext';
 
 interface Source {
   id: string;
@@ -43,8 +47,10 @@ interface Source {
 interface SourcesListProps {
   sources: Source[];
   knowledgeBases?: KnowledgeBaseSummary[];
+  mcpIntegrations?: IntegrationSummary[];
   onRemove: (sourceId: string) => void;
   onRemoveKnowledgeBase?: (knowledgeBaseId: string) => void;
+  onRemoveIntegration?: (integrationId: string) => void;
   onDownload?: (sourceId: string) => void;
 }
 
@@ -72,15 +78,21 @@ function getSourceIcon(source: {
 export function SourcesList({
   sources,
   knowledgeBases = [],
+  mcpIntegrations = [],
   onRemove,
   onRemoveKnowledgeBase,
+  onRemoveIntegration,
   onDownload,
 }: Readonly<SourcesListProps>) {
   const visibleSources = sources.filter(
     (source) => source.createdBy !== 'system',
   );
 
-  if (visibleSources.length === 0 && knowledgeBases.length === 0) {
+  if (
+    visibleSources.length === 0 &&
+    knowledgeBases.length === 0 &&
+    mcpIntegrations.length === 0
+  ) {
     return null;
   }
 
@@ -94,6 +106,28 @@ export function SourcesList({
             <div
               className="cursor-pointer"
               onClick={() => onRemoveKnowledgeBase(kb.id)}
+            >
+              <XIcon className="h-3 w-3" />
+            </div>
+          )}
+        </Badge>
+      ))}
+      {mcpIntegrations.map((integration) => (
+        <Badge key={`integration-${integration.id}`} variant="secondary">
+          {integration.logoUrl ? (
+            <img
+              src={integration.logoUrl}
+              alt=""
+              className="h-3 w-3 rounded-sm"
+            />
+          ) : (
+            <Plug className="h-3 w-3" />
+          )}
+          {integration.name}
+          {onRemoveIntegration && (
+            <div
+              className="cursor-pointer"
+              onClick={() => onRemoveIntegration(integration.id)}
             >
               <XIcon className="h-3 w-3" />
             </div>

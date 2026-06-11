@@ -43,6 +43,7 @@ import {
   threadsControllerFindOne,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useKnowledgeBaseAttachment } from '../api/useKnowledgeBaseAttachment';
+import { useMcpIntegrationAttachment } from '../api/useMcpIntegrationAttachment';
 import { useDownloadSource } from '../api/useDownloadSource';
 import type { PendingImage } from '../api/useMessageSend';
 
@@ -181,6 +182,9 @@ export default function ChatPage({
   });
 
   const { addKnowledgeBase, removeKnowledgeBase } = useKnowledgeBaseAttachment({
+    threadId: thread.id,
+  });
+  const { addIntegration, removeIntegration } = useMcpIntegrationAttachment({
     threadId: thread.id,
   });
   const { downloadSource } = useDownloadSource(thread);
@@ -424,6 +428,7 @@ export default function ChatPage({
         isAnonymousChangeDisabled={true}
         sources={thread.sources}
         knowledgeBases={thread.knowledgeBases}
+        mcpIntegrations={thread.mcpIntegrations}
         isAnonymous={thread.isAnonymous}
         submissionState={isStreaming ? 'streaming' : 'idle'}
         isSendDisabled={isSendDisabled}
@@ -433,6 +438,8 @@ export default function ChatPage({
         onDownloadSource={(sourceId) => void downloadSource(sourceId)}
         onAddKnowledgeBase={(kb) => addKnowledgeBase(kb.id)}
         onRemoveKnowledgeBase={removeKnowledgeBase}
+        onAddIntegration={(integration) => addIntegration(integration.id)}
+        onRemoveIntegration={removeIntegration}
         onSend={(m, imageFiles) => void handleSend(m, imageFiles)}
         onCancel={handleSendCancelled}
         isEmbeddingModelEnabled={isEmbeddingModelEnabled}
