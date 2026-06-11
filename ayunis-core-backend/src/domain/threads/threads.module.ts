@@ -44,6 +44,7 @@ import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module'
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
 import { SharesModule } from '../shares/shares.module';
+import { ThreadPiiMasksModule } from '../thread-pii-masks/thread-pii-masks.module';
 @Module({
   imports: [
     LocalThreadsRepositoryModule,
@@ -54,6 +55,7 @@ import { SharesModule } from '../shares/shares.module';
     OrgsModule,
     StorageModule,
     SharesModule,
+    ThreadPiiMasksModule,
   ],
   controllers: [
     ThreadsController,

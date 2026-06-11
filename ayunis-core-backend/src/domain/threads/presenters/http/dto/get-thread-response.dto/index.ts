@@ -26,6 +26,7 @@ import {
   UrlSourceResponseDto,
 } from './source-response.dto';
 import { KnowledgeBaseSummaryResponseDto } from '../knowledge-base-summary-response.dto';
+import { PiiMaskResponseDto } from 'src/domain/thread-pii-masks/presenters/http/dtos/pii-mask-response.dto';
 
 @ApiExtraModels(
   UserMessageResponseDto,
@@ -121,4 +122,11 @@ export class GetThreadResponseDto {
     type: [KnowledgeBaseSummaryResponseDto],
   })
   knowledgeBases: KnowledgeBaseSummaryResponseDto[];
+
+  @ApiProperty({
+    description:
+      'PII mask dictionary for anonymous threads — resolves {{pii:...}} tokens in message text to their original values. Empty for non-anonymous threads.',
+    type: [PiiMaskResponseDto],
+  })
+  piiMasks: PiiMaskResponseDto[];
 }

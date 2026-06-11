@@ -12,8 +12,9 @@ import { ExecuteToolCommand } from 'src/domain/tools/application/use-cases/execu
 import { CheckToolCapabilitiesUseCase } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
 import { CheckToolCapabilitiesQuery } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.query';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
-import { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
-import { AnonymizeTextForOrgCommand } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.command';
+import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
+import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
+import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ToolUsedEvent } from '../events/tool-used.event';
@@ -25,6 +26,12 @@ import { RunToolResultInput } from '../../domain/run-input.entity';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
+export interface CollectedToolResults {
+  contents: ToolResultMessageContent[];
+  /** Latest full mask dictionary when any result was anonymized, else null. */
+  piiMasks: ThreadPiiMask[] | null;
+}
+
 @Injectable()
 export class ToolResultCollectorService {
   private readonly logger = new Logger(ToolResultCollectorService.name);
@@ -32,7 +39,7 @@ export class ToolResultCollectorService {
   constructor(
     private readonly executeToolUseCase: ExecuteToolUseCase,
     private readonly checkToolCapabilitiesUseCase: CheckToolCapabilitiesUseCase,
-    private readonly anonymizeTextForOrgUseCase: AnonymizeTextForOrgUseCase,
+    private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -43,7 +50,7 @@ export class ToolResultCollectorService {
     input: RunToolResultInput | null;
     orgId: UUID;
     isAnonymous: boolean;
-  }): Promise<ToolResultMessageContent[]> {
+  }): Promise<CollectedToolResults> {
     this.logger.debug('collectToolResults');
     const { thread, tools, input, orgId, isAnonymous } = params;
 
@@ -54,7 +61,8 @@ export class ToolResultCollectorService {
         )
       : [];
 
-    const toolResultMessageContent: ToolResultMessageContent[] = [];
+    const contents: ToolResultMessageContent[] = [];
+    let piiMasks: ThreadPiiMask[] | null = null;
 
     for (const content of toolUseMessageContent) {
       const result = await this.processToolUse(
@@ -65,10 +73,12 @@ export class ToolResultCollectorService {
         thread.id,
         isAnonymous,
       );
-      toolResultMessageContent.push(result);
+      contents.push(result.content);
+      // Each anonymization returns the full dictionary — the latest wins.
+      piiMasks = result.piiMasks ?? piiMasks;
     }
 
-    return toolResultMessageContent;
+    return { contents, piiMasks };
   }
 
   private async processToolUse(
@@ -78,14 +88,20 @@ export class ToolResultCollectorService {
     orgId: UUID,
     threadId: UUID,
     isAnonymous: boolean,
-  ): Promise<ToolResultMessageContent> {
+  ): Promise<{
+    content: ToolResultMessageContent;
+    piiMasks: ThreadPiiMask[] | null;
+  }> {
     const tool = tools.find((t) => t.name === content.name);
     if (!tool) {
-      return new ToolResultMessageContent(
-        content.id,
-        content.name,
-        `A tool with the name ${content.name} was not found. Only use tools that are available in your given list of tools.`,
-      );
+      return {
+        content: new ToolResultMessageContent(
+          content.id,
+          content.name,
+          `A tool with the name ${content.name} was not found. Only use tools that are available in your given list of tools.`,
+        ),
+        piiMasks: null,
+      };
     }
 
     const userId = this.contextService.get('userId');
@@ -118,7 +134,10 @@ export class ToolResultCollectorService {
       }
 
       if (capabilities.isDisplayable) {
-        return this.handleDisplayableTool(content, input);
+        return {
+          content: this.handleDisplayableTool(content, input),
+          piiMasks: null,
+        };
       }
 
       if (capabilities.isExecutable) {
@@ -129,14 +148,20 @@ export class ToolResultCollectorService {
           threadId,
           isAnonymous,
         );
-        return executionResult.content;
+        return {
+          content: executionResult.content,
+          piiMasks: executionResult.piiMasks,
+        };
       }
 
-      return new ToolResultMessageContent(
-        content.id,
-        content.name,
-        `Tool ${content.name} has no executable or displayable capability.`,
-      );
+      return {
+        content: new ToolResultMessageContent(
+          content.id,
+          content.name,
+          `Tool ${content.name} has no executable or displayable capability.`,
+        ),
+        piiMasks: null,
+      };
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
@@ -155,7 +180,10 @@ export class ToolResultCollectorService {
     orgId: UUID,
     threadId: UUID,
     isAnonymous: boolean,
-  ): Promise<ToolResultMessageContent> {
+  ): Promise<{
+    content: ToolResultMessageContent;
+    piiMasks: ThreadPiiMask[] | null;
+  }> {
     const executionResult = await this.executeBackendTool(
       tool,
       content,
@@ -164,9 +192,15 @@ export class ToolResultCollectorService {
       isAnonymous,
     );
     if (executionResult.succeeded) {
-      return this.handleDisplayableTool(content, input);
+      return {
+        content: this.handleDisplayableTool(content, input),
+        piiMasks: executionResult.piiMasks,
+      };
     }
-    return executionResult.content;
+    return {
+      content: executionResult.content,
+      piiMasks: executionResult.piiMasks,
+    };
   }
 
   exitLoopAfterAgentResponse(
@@ -228,7 +262,11 @@ export class ToolResultCollectorService {
     orgId: UUID,
     threadId: UUID,
     isAnonymous: boolean,
-  ): Promise<{ content: ToolResultMessageContent; succeeded: boolean }> {
+  ): Promise<{
+    content: ToolResultMessageContent;
+    succeeded: boolean;
+    piiMasks: ThreadPiiMask[] | null;
+  }> {
     const context = {
       orgId,
       threadId,
@@ -250,22 +288,30 @@ export class ToolResultCollectorService {
       result = `The tool result was too long to display. Please use the tool in a way that produces a shorter result. Here's the beginning of the result: ${result.substring(0, 200)}`;
     }
 
+    let piiMasks: ThreadPiiMask[] | null = null;
     if (isAnonymous && tool.returnsPii) {
-      result = await this.anonymizeText(result, orgId);
+      const anonymized = await this.anonymizeText(result, orgId, threadId);
+      result = anonymized.anonymizedText;
+      piiMasks = anonymized.masks;
     }
 
     return {
       content: new ToolResultMessageContent(content.id, content.name, result),
       succeeded,
+      piiMasks,
     };
   }
 
-  private async anonymizeText(text: string, orgId: UUID): Promise<string> {
+  private async anonymizeText(
+    text: string,
+    orgId: UUID,
+    threadId: UUID,
+  ): Promise<{ anonymizedText: string; masks: ThreadPiiMask[] }> {
     try {
-      const result = await this.anonymizeTextForOrgUseCase.execute(
-        new AnonymizeTextForOrgCommand(text, orgId),
+      const result = await this.anonymizeTextForThreadUseCase.execute(
+        new AnonymizeTextForThreadCommand(text, orgId, threadId),
       );
-      return result.anonymizedText;
+      return { anonymizedText: result.anonymizedText, masks: result.masks };
     } catch (error) {
       throw new RunAnonymizationUnavailableError({
         originalError: error instanceof Error ? error.message : 'Unknown error',

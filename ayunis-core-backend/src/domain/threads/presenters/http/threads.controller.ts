@@ -45,6 +45,8 @@ import { GetThreadsResponseDto } from './dto/get-threads-response.dto';
 import { FindAllThreadsQueryParamsDto } from './dto/find-all-threads-query-params.dto';
 import { GetThreadDtoMapper } from './mappers/get-thread.mapper';
 import { GetThreadsDtoMapper } from './mappers/get-threads.mapper';
+import { GetThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
+import { GetThreadPiiMasksQuery } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.query';
 
 @ApiTags('threads')
 @Controller('threads')
@@ -59,6 +61,7 @@ export class ThreadsController {
     private readonly updateThreadTitleUseCase: UpdateThreadTitleUseCase,
     private readonly getThreadDtoMapper: GetThreadDtoMapper,
     private readonly getThreadsDtoMapper: GetThreadsDtoMapper,
+    private readonly getThreadPiiMasksUseCase: GetThreadPiiMasksUseCase,
   ) {}
 
   @Post()
@@ -157,7 +160,12 @@ export class ThreadsController {
     const result = await this.findThreadUseCase.execute(
       new FindThreadQuery(id),
     );
-    return this.getThreadDtoMapper.toDto(result);
+    const piiMasks = result.thread.isAnonymous
+      ? await this.getThreadPiiMasksUseCase.execute(
+          new GetThreadPiiMasksQuery(id),
+        )
+      : [];
+    return this.getThreadDtoMapper.toDto(result, piiMasks);
   }
 
   @Delete(':id')

@@ -5999,6 +5999,57 @@
         "tags": ["marketplace"]
       }
     },
+    "/anonymization-settings/pii-whitelist": {
+      "get": {
+        "operationId": "AnonymizationSettingsController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current PII whitelist (empty list if none)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PiiWhitelistResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the PII whitelist for the current org",
+        "tags": ["anonymization-settings"]
+      },
+      "put": {
+        "operationId": "AnonymizationSettingsController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePiiWhitelistRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated PII whitelist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PiiWhitelistResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unsafe regex pattern, or duplicate category"
+          }
+        },
+        "summary": "Replace the PII whitelist for the current org",
+        "tags": ["anonymization-settings"]
+      }
+    },
     "/super-admin/skill-templates": {
       "post": {
         "description": "Create a new skill template. Only accessible to super admins.",
@@ -7529,6 +7580,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/RunThreadResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunMasksResponseDto"
                     }
                   ],
                   "discriminator": {
@@ -7537,7 +7591,8 @@
                       "session": "#/components/schemas/RunSessionResponseDto",
                       "message": "#/components/schemas/RunMessageResponseDto",
                       "error": "#/components/schemas/RunErrorResponseDto",
-                      "thread": "#/components/schemas/RunThreadResponseDto"
+                      "thread": "#/components/schemas/RunThreadResponseDto",
+                      "masks": "#/components/schemas/RunMasksResponseDto"
                     }
                   }
                 }
@@ -7700,57 +7755,6 @@
         },
         "summary": "Update a trial",
         "tags": ["Super Admin Trials"]
-      }
-    },
-    "/anonymization-settings/pii-whitelist": {
-      "get": {
-        "operationId": "AnonymizationSettingsController_get",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Current PII whitelist (empty list if none)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PiiWhitelistResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get the PII whitelist for the current org",
-        "tags": ["anonymization-settings"]
-      },
-      "put": {
-        "operationId": "AnonymizationSettingsController_update",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdatePiiWhitelistRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Updated PII whitelist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PiiWhitelistResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid or unsafe regex pattern, or duplicate category"
-          }
-        },
-        "summary": "Replace the PII whitelist for the current org",
-        "tags": ["anonymization-settings"]
       }
     },
     "/chat-settings/system-prompt": {
@@ -11373,6 +11377,48 @@
         },
         "required": ["id", "name"]
       },
+      "PiiCategory": {
+        "type": "string",
+        "enum": [
+          "person_name",
+          "organization",
+          "location",
+          "email_address",
+          "phone_number",
+          "url_or_ip",
+          "date_time",
+          "financial_account",
+          "government_id",
+          "nationality_religion_politics",
+          "other"
+        ],
+        "description": "PII category of the masked value"
+      },
+      "PiiMaskResponseDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "The placeholder token as it appears in message text, e.g. {{pii:PERSON_NAME_1}}",
+            "example": "{{pii:PERSON_NAME_1}}"
+          },
+          "value": {
+            "type": "string",
+            "description": "The original value the token stands in for",
+            "example": "Max Mustermann"
+          },
+          "category": {
+            "description": "PII category of the masked value",
+            "example": "person_name",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PiiCategory"
+              }
+            ]
+          }
+        },
+        "required": ["token", "value", "category"]
+      },
       "GetThreadResponseDto": {
         "type": "object",
         "properties": {
@@ -11449,6 +11495,13 @@
             "items": {
               "$ref": "#/components/schemas/KnowledgeBaseSummaryResponseDto"
             }
+          },
+          "piiMasks": {
+            "description": "PII mask dictionary for anonymous threads — resolves {{pii:...}} tokens in message text to their original values. Empty for non-anonymous threads.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PiiMaskResponseDto"
+            }
           }
         },
         "required": [
@@ -11461,7 +11514,8 @@
           "updatedAt",
           "isAnonymous",
           "isLongChat",
-          "knowledgeBases"
+          "knowledgeBases",
+          "piiMasks"
         ]
       },
       "GetThreadsResponseDtoItem": {
@@ -12696,6 +12750,55 @@
           "updatedAt"
         ]
       },
+      "PiiWhitelistEntryDto": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "description": "PII category exempt from anonymization",
+            "example": "email_address",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PiiCategory"
+              }
+            ]
+          },
+          "pattern": {
+            "type": "string",
+            "description": "Optional regex; when set, only values fully matching it (case-insensitive) are exempt. Null exempts the whole category.",
+            "example": ".*@muster-stadt\\.de",
+            "nullable": true,
+            "maxLength": 200
+          }
+        },
+        "required": ["category", "pattern"]
+      },
+      "PiiWhitelistResponseDto": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "description": "Current whitelist entries for the org",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PiiWhitelistEntryDto"
+            }
+          }
+        },
+        "required": ["entries"]
+      },
+      "UpdatePiiWhitelistRequestDto": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "description": "Full replacement whitelist; an empty array removes all entries",
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PiiWhitelistEntryDto"
+            }
+          }
+        },
+        "required": ["entries"]
+      },
       "CreateSkillTemplateDto": {
         "type": "object",
         "properties": {
@@ -13819,6 +13922,35 @@
         },
         "required": ["type", "threadId", "updateType", "title", "timestamp"]
       },
+      "RunMasksResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Response type identifier",
+            "example": "masks",
+            "enum": ["masks"]
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID the mask dictionary belongs to",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "masks": {
+            "description": "Full PII mask dictionary of the thread (idempotent to re-apply)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PiiMaskResponseDto"
+            }
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Event timestamp",
+            "example": "2024-01-01T12:00:00.000Z"
+          }
+        },
+        "required": ["type", "threadId", "masks", "timestamp"]
+      },
       "TextInput": {
         "type": "object",
         "properties": {
@@ -14006,71 +14138,6 @@
             "minimum": 0
           }
         }
-      },
-      "PiiCategory": {
-        "type": "string",
-        "enum": [
-          "person_name",
-          "organization",
-          "location",
-          "email_address",
-          "phone_number",
-          "url_or_ip",
-          "date_time",
-          "financial_account",
-          "government_id",
-          "nationality_religion_politics"
-        ],
-        "description": "PII category exempt from anonymization"
-      },
-      "PiiWhitelistEntryDto": {
-        "type": "object",
-        "properties": {
-          "category": {
-            "description": "PII category exempt from anonymization",
-            "example": "email_address",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PiiCategory"
-              }
-            ]
-          },
-          "pattern": {
-            "type": "string",
-            "description": "Optional regex; when set, only values fully matching it (case-insensitive) are exempt. Null exempts the whole category.",
-            "example": ".*@muster-stadt\\.de",
-            "nullable": true,
-            "maxLength": 200
-          }
-        },
-        "required": ["category", "pattern"]
-      },
-      "PiiWhitelistResponseDto": {
-        "type": "object",
-        "properties": {
-          "entries": {
-            "description": "Current whitelist entries for the org",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PiiWhitelistEntryDto"
-            }
-          }
-        },
-        "required": ["entries"]
-      },
-      "UpdatePiiWhitelistRequestDto": {
-        "type": "object",
-        "properties": {
-          "entries": {
-            "description": "Full replacement whitelist; an empty array removes all entries",
-            "maxItems": 50,
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PiiWhitelistEntryDto"
-            }
-          }
-        },
-        "required": ["entries"]
       },
       "UserSystemPromptResponseDto": {
         "type": "object",

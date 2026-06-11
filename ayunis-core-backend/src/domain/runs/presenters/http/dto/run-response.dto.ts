@@ -9,6 +9,7 @@ import {
   ToolResultMessageResponseDto,
   SystemMessageResponseDto,
 } from '../../../../threads/presenters/http/dto/get-thread-response.dto/message-response.dto';
+import { PiiMaskResponseDto } from 'src/domain/thread-pii-masks/presenters/http/dtos/pii-mask-response.dto';
 
 export class RunSessionResponseDto {
   @ApiProperty({
@@ -203,10 +204,43 @@ export class RunHeartbeatResponseDto {
   sequence?: number;
 }
 
+export class RunMasksResponseDto {
+  @ApiProperty({
+    description: 'Response type identifier',
+    example: 'masks',
+    enum: ['masks'],
+    required: true,
+  })
+  type: 'masks';
+
+  @ApiProperty({
+    description: 'Thread ID the mask dictionary belongs to',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: true,
+  })
+  threadId: string;
+
+  @ApiProperty({
+    description:
+      'Full PII mask dictionary of the thread (idempotent to re-apply)',
+    type: [PiiMaskResponseDto],
+    required: true,
+  })
+  masks: PiiMaskResponseDto[];
+
+  @ApiProperty({
+    description: 'Event timestamp',
+    example: '2024-01-01T12:00:00.000Z',
+    required: true,
+  })
+  timestamp: string;
+}
+
 // Union type for TypeScript usage
 export type RunResponse =
   | RunSessionResponseDto
   | RunMessageResponseDto
   | RunErrorResponseDto
   | RunThreadResponseDto
-  | RunHeartbeatResponseDto;
+  | RunHeartbeatResponseDto
+  | RunMasksResponseDto;

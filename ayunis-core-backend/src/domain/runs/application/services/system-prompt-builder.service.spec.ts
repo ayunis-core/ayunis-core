@@ -15,6 +15,35 @@ describe('SystemPromptBuilderService', () => {
     service = new SystemPromptBuilderService();
   });
 
+  describe('anonymization section', () => {
+    it('includes the anonymized_data section when isAnonymous is true', () => {
+      const prompt = service.build({
+        tools: [],
+        currentTime: new Date(),
+        isAnonymous: true,
+      });
+
+      expect(prompt).toContain('<anonymized_data>');
+      expect(prompt).toContain('{{pii:CATEGORY_NUMBER}}');
+      expect(prompt).toContain('copy its placeholder verbatim');
+    });
+
+    it('omits the anonymized_data section when isAnonymous is false or unset', () => {
+      const withFalse = service.build({
+        tools: [],
+        currentTime: new Date(),
+        isAnonymous: false,
+      });
+      const withUnset = service.build({
+        tools: [],
+        currentTime: new Date(),
+      });
+
+      expect(withFalse).not.toContain('<anonymized_data>');
+      expect(withUnset).not.toContain('<anonymized_data>');
+    });
+  });
+
   describe('skills section', () => {
     it('should include available_skills section when active skills are provided', () => {
       const skills: SkillEntry[] = [

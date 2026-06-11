@@ -1,5 +1,5 @@
 import { AnonymizationFailedError } from 'src/common/anonymization/application/anonymization.errors';
-import type { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
+import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { RunAnonymizationUnavailableError } from '../../runs.errors';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
@@ -33,7 +33,7 @@ import { randomUUID } from 'crypto';
 
 describe('ExecuteRunUseCase', () => {
   let useCase: ExecuteRunUseCase;
-  let anonymizeTextForOrgUseCase: jest.Mocked<AnonymizeTextForOrgUseCase>;
+  let anonymizeTextForThreadUseCase: jest.Mocked<AnonymizeTextForThreadUseCase>;
   let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
   let contextService: jest.Mocked<ContextService>;
   let toolAssemblyService: jest.Mocked<ToolAssemblyService>;
@@ -67,9 +67,9 @@ describe('ExecuteRunUseCase', () => {
   }
 
   beforeEach(() => {
-    anonymizeTextForOrgUseCase = {
+    anonymizeTextForThreadUseCase = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<AnonymizeTextForOrgUseCase>;
+    } as unknown as jest.Mocked<AnonymizeTextForThreadUseCase>;
 
     findThreadUseCase = {
       execute: jest.fn(),
@@ -123,11 +123,13 @@ describe('ExecuteRunUseCase', () => {
       findThreadUseCase,
       { execute: jest.fn() } as unknown as AddMessageToThreadUseCase,
       contextService,
-      anonymizeTextForOrgUseCase,
+      anonymizeTextForThreadUseCase,
       inferenceUsageGuard,
       toolAssemblyService,
       {
-        collectToolResults: jest.fn().mockResolvedValue([]),
+        collectToolResults: jest
+          .fn()
+          .mockResolvedValue({ contents: [], piiMasks: null }),
         exitLoopAfterAgentResponse: jest.fn().mockReturnValue(true),
       } as unknown as ToolResultCollectorService,
       messageCleanupService,
@@ -282,16 +284,19 @@ describe('ExecuteRunUseCase', () => {
           collectCallCount++;
           if (collectCallCount === 1) {
             // First call: no pending results (initial processToolResults)
-            return [];
+            return { contents: [], piiMasks: null };
           }
           // Second call: activate_skill tool result
-          return [
-            new ToolResultMessageContent(
-              'tool-1',
-              ToolType.ACTIVATE_SKILL,
-              'Skill activated successfully',
-            ),
-          ];
+          return {
+            contents: [
+              new ToolResultMessageContent(
+                'tool-1',
+                ToolType.ACTIVATE_SKILL,
+                'Skill activated successfully',
+              ),
+            ],
+            piiMasks: null,
+          };
         },
       );
 
@@ -336,7 +341,7 @@ describe('ExecuteRunUseCase', () => {
         thread,
         isLongChat: false,
       });
-      anonymizeTextForOrgUseCase.execute.mockRejectedValue(
+      anonymizeTextForThreadUseCase.execute.mockRejectedValue(
         new AnonymizationFailedError('Connection refused'),
       );
 
@@ -370,7 +375,7 @@ describe('ExecuteRunUseCase', () => {
         thread,
         isLongChat: false,
       });
-      anonymizeTextForOrgUseCase.execute.mockRejectedValue(
+      anonymizeTextForThreadUseCase.execute.mockRejectedValue(
         new AnonymizationFailedError('Service timeout'),
       );
 

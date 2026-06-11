@@ -22,6 +22,7 @@ export interface SystemPromptBuildParams {
   skills?: SkillEntry[];
   knowledgeBases?: KnowledgeBaseSummary[];
   userSystemPrompt?: string;
+  isAnonymous?: boolean;
 }
 
 @Injectable()
@@ -34,6 +35,7 @@ export class SystemPromptBuilderService {
       skills = [],
       knowledgeBases = [],
       userSystemPrompt,
+      isAnonymous = false,
     } = params;
 
     const sections = [
@@ -44,6 +46,7 @@ export class SystemPromptBuilderService {
       this.buildFilesSection(sources),
       this.buildKnowledgeBasesSection(knowledgeBases),
       this.buildDataHandlingSection(),
+      isAnonymous ? this.buildAnonymizationSection() : '',
       this.buildResponseGuidelines(),
       this.buildPlatformSection(),
       userSystemPrompt
@@ -172,6 +175,19 @@ Ayunis Core is multi-tenant. You operate within the context of a specific organi
 
 If users ask about platform-wide information you don't have access to, explain that your context is scoped to their organization.
 </multi_tenant_context>`;
+  }
+
+  private buildAnonymizationSection(): string {
+    return `<anonymized_data>
+This conversation runs in anonymous mode: personally identifiable information in user messages and tool results has been replaced with placeholder tokens of the form {{pii:CATEGORY_NUMBER}} before reaching you (e.g. {{pii:PERSON_NAME_1}}, {{pii:EMAIL_ADDRESS_2}}).
+
+Rules for handling these placeholders:
+
+- Each placeholder consistently refers to the same real entity throughout the conversation.
+- When referring to such an entity, copy its placeholder verbatim — exact braces, spelling, and number (e.g. {{pii:PERSON_NAME_1}}).
+- Never invent new placeholders, alter existing ones, or guess the hidden values.
+- Do not mention this anonymization mechanism unless the user asks about it.
+</anonymized_data>`;
   }
 
   private buildResponseGuidelines(): string {

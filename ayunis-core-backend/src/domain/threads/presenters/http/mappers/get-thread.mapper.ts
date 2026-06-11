@@ -4,15 +4,21 @@ import { GetThreadResponseDto } from '../dto/get-thread-response.dto';
 import { MessageDtoMapper } from './message.mapper';
 import { SourceDtoMapper } from './source.mapper';
 import { FindThreadResult } from '../../../application/use-cases/find-thread/find-thread.use-case';
+import { PiiMaskDtoMapper } from 'src/domain/thread-pii-masks/presenters/http/mappers/pii-mask.mapper';
+import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 
 @Injectable()
 export class GetThreadDtoMapper {
   constructor(
     private readonly messageDtoMapper: MessageDtoMapper,
     private readonly sourceDtoMapper: SourceDtoMapper,
+    private readonly piiMaskDtoMapper: PiiMaskDtoMapper,
   ) {}
 
-  toDto(result: FindThreadResult): GetThreadResponseDto {
+  toDto(
+    result: FindThreadResult,
+    piiMasks: ThreadPiiMask[] = [],
+  ): GetThreadResponseDto {
     const { thread, isLongChat } = result;
 
     return {
@@ -30,6 +36,7 @@ export class GetThreadDtoMapper {
       isAnonymous: thread.isAnonymous,
       isLongChat,
       knowledgeBases: thread.getUniqueKnowledgeBases(),
+      piiMasks: this.piiMaskDtoMapper.toDtoArray(piiMasks),
     };
   }
 

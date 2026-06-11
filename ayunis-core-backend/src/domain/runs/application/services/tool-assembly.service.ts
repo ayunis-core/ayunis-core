@@ -65,6 +65,7 @@ export class ToolAssemblyService {
     thread: Thread,
     activeSkills: Skill[],
     canUseTools: boolean,
+    isAnonymous: boolean,
   ): Promise<{ tools: Tool[]; instructions: string }> {
     // Fetch always-on skill templates (cached, 60s TTL)
     let alwaysOnTemplates: SkillTemplate[] = [];
@@ -107,6 +108,7 @@ export class ToolAssemblyService {
       skills: canUseTools && this.features.skillsEnabled ? skillEntries : [],
       knowledgeBases: canUseTools ? thread.getUniqueKnowledgeBases() : [],
       userSystemPrompt,
+      isAnonymous,
     });
 
     return { tools, instructions };
