@@ -18,10 +18,13 @@ import { useDeleteThread } from '@/features/useDeleteThread';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import type {
+  PiiMaskResponseDto,
+  RunMasksResponseDto,
   RunMessageResponseDtoMessage,
   RunSessionResponseDto,
   RunThreadResponseDto,
 } from '@/shared/api';
+import { PiiMaskProvider } from '@/widgets/markdown';
 import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useRunErrorHandler } from '../hooks/useRunErrorHandler';
 import { useLetterheadChange } from '../hooks/useLetterheadChange';
@@ -108,6 +111,9 @@ export default function ChatPage({
     thread.title,
   );
   const [messages, setMessages] = useState<Message[]>(thread.messages);
+  const [piiMasks, setPiiMasks] = useState<PiiMaskResponseDto[]>(
+    thread.piiMasks,
+  );
 
   // Reconcile local message/title state whenever the thread reference changes
   // (navigating to another thread, or a refetch returning fresh server data).
@@ -118,6 +124,7 @@ export default function ChatPage({
     setReconciledThread(thread);
     setMessages(thread.messages);
     setThreadTitle(thread.title);
+    setPiiMasks(thread.piiMasks);
   }
   const [pendingSubmission, setPendingSubmission] = useState<string | null>(
     null,
@@ -187,6 +194,18 @@ export default function ChatPage({
     });
   }, []);
 
+  const handleMasks = useCallback((data: RunMasksResponseDto) => {
+    // Events carry the thread's full dictionary — replace-by-token merge is
+    // idempotent and keeps any entries from earlier events.
+    setPiiMasks((prev) => {
+      const byToken = new Map(prev.map((mask) => [mask.token, mask]));
+      for (const mask of data.masks) {
+        byToken.set(mask.token, mask);
+      }
+      return [...byToken.values()];
+    });
+  }, []);
+
   const handleFileUpload = (files: File[]) =>
     files.forEach((file) => createFileSource({ file }));
 
@@ -221,6 +240,7 @@ export default function ChatPage({
     onErrorEvent: handleError,
     onSessionEvent: handleSession,
     onThreadEvent: handleThread,
+    onMasksEvent: handleMasks,
     onError: (error) => {
       console.error('Error in useMessageSend:', error);
       showError(t('chat.errorSendMessage'));
@@ -423,33 +443,35 @@ export default function ChatPage({
 
   return (
     <AppLayout>
-      <ChatInterfaceLayout
-        chatHeader={chatHeader}
-        chatContent={chatContent}
-        chatInput={chatInput}
-        sidePanel={
-          openArtifact ? (
-            <Suspense fallback={null}>
-              {openArtifact.type === 'diagram' ? (
-                <LazyDiagramViewer
-                  artifact={openArtifact}
-                  onClose={handleCloseArtifact}
-                />
-              ) : (
-                <LazyArtifactEditor
-                  artifact={openArtifact}
-                  onSave={handleSaveArtifact}
-                  onRevert={handleRevertArtifact}
-                  onExport={handleExportArtifact}
-                  onClose={handleCloseArtifact}
-                  onLetterheadChange={handleLetterheadChange}
-                  isExporting={isExporting}
-                />
-              )}
-            </Suspense>
-          ) : undefined
-        }
-      />
+      <PiiMaskProvider masks={piiMasks}>
+        <ChatInterfaceLayout
+          chatHeader={chatHeader}
+          chatContent={chatContent}
+          chatInput={chatInput}
+          sidePanel={
+            openArtifact ? (
+              <Suspense fallback={null}>
+                {openArtifact.type === 'diagram' ? (
+                  <LazyDiagramViewer
+                    artifact={openArtifact}
+                    onClose={handleCloseArtifact}
+                  />
+                ) : (
+                  <LazyArtifactEditor
+                    artifact={openArtifact}
+                    onSave={handleSaveArtifact}
+                    onRevert={handleRevertArtifact}
+                    onExport={handleExportArtifact}
+                    onClose={handleCloseArtifact}
+                    onLetterheadChange={handleLetterheadChange}
+                    isExporting={isExporting}
+                  />
+                )}
+              </Suspense>
+            ) : undefined
+          }
+        />
+      </PiiMaskProvider>
       <RenameThreadDialog
         open={renameDialogOpen}
         onOpenChange={setRenameDialogOpen}

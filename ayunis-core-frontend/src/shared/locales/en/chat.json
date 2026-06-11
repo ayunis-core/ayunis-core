@@ -172,7 +172,23 @@
     },
     "longChatWarningTitle": "Conversation too long",
     "longChatWarningDescription": "For better results, consider starting a new chat.",
-    "inputDisclaimer": "Input not used for training. AI can make mistakes—verify answers."
+    "inputDisclaimer": "Input not used for training. AI can make mistakes—verify answers.",
+    "piiMask": {
+      "tooltip": "{{category}} — anonymized before being sent to the AI model",
+      "categories": {
+        "person_name": "Person name",
+        "organization": "Organization",
+        "location": "Location or address",
+        "email_address": "Email address",
+        "phone_number": "Phone number",
+        "url_or_ip": "URL or IP address",
+        "date_time": "Date or time",
+        "financial_account": "Financial account",
+        "government_id": "Government ID",
+        "nationality_religion_politics": "Nationality, religion, or politics",
+        "other": "Personal data"
+      }
+    }
   },
   "newChat": {
     "newChat": "New Chat",

@@ -55,6 +55,10 @@
       "nationality_religion_politics": {
         "label": "Nationalität, Religion & Politik",
         "description": "Hinweise auf Nationalität, religiöse oder politische Zugehörigkeit"
+      },
+      "other": {
+        "label": "Sonstige / nicht zugeordnet",
+        "description": "Von der Erkennung gefundene personenbezogene Daten ohne bekannte Kategorie"
       }
     }
   }
