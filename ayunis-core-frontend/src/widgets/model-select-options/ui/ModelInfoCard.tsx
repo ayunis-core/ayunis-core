@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/shared/ui/shadcn/badge';
-import { getFlagByProvider } from '@/shared/lib/getFlagByProvider';
+import { getFlagByProvider } from '@/shared/lib/model-provider-metadata';
 import type { PermittedLanguageModelResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { getModelKey } from '../lib/getModelKey';
 

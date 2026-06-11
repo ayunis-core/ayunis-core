@@ -8,17 +8,14 @@ import {
   PopoverContent,
 } from '@/shared/ui/shadcn/popover';
 import { SelectGroup, SelectLabel } from '@/shared/ui/shadcn/select';
-import { getFlagByProvider } from '@/shared/lib/getFlagByProvider';
+import {
+  getFlagByProvider,
+  getHostingPriority,
+} from '@/shared/lib/model-provider-metadata';
 import ModelInfoCard, { type ModelInfoModel } from './ModelInfoCard';
 import { getModelCategory } from '../lib/modelCategory';
 
 export type ModelOption = ModelInfoModel & { id: string };
-
-const FLAG_PRIORITY: Record<string, number> = {
-  '🇩🇪': 0,
-  '🇪🇺': 1,
-  '🇺🇸': 2,
-};
 
 const TIER_RANK: Record<string, number> = {
   high: 3,
@@ -28,9 +25,9 @@ const TIER_RANK: Record<string, number> = {
 };
 
 function compareModels(a: ModelOption, b: ModelOption): number {
-  const flagA = FLAG_PRIORITY[getFlagByProvider(a.provider)] ?? 3;
-  const flagB = FLAG_PRIORITY[getFlagByProvider(b.provider)] ?? 3;
-  if (flagA !== flagB) return flagA - flagB;
+  const hostingA = getHostingPriority(a.provider);
+  const hostingB = getHostingPriority(b.provider);
+  if (hostingA !== hostingB) return hostingA - hostingB;
 
   const tierA = TIER_RANK[a.tier ?? ''] ?? -1;
   const tierB = TIER_RANK[b.tier ?? ''] ?? -1;
