@@ -10924,7 +10924,7 @@
           "logoUrl": {
             "type": "string",
             "description": "Integration logo URL",
-            "example": "https://marketplace.ayunis.de/logos/weather.png",
+            "example": "https://marketplace.ayunis.com/logos/weather.png",
             "nullable": true
           }
         },
@@ -12201,7 +12201,7 @@
             "type": "string",
             "description": "Logo URL for marketplace integrations",
             "nullable": true,
-            "example": "https://marketplace.ayunis.de/logos/oparl.png"
+            "example": "https://marketplace.ayunis.com/logos/oparl.png"
           },
           "description": {
             "type": "string",
