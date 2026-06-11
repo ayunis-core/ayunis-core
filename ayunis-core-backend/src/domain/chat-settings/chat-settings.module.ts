@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ChatSettingsController } from './presenters/http/chat-settings.controller';
+import { OrgSystemPromptController } from './presenters/http/org-system-prompt.controller';
 import { LocalUserSystemPromptsRepositoryModule } from './infrastructure/persistence/local-user-system-prompts/local-user-system-prompts-repository.module';
 import { LocalOrgSystemPromptsRepositoryModule } from './infrastructure/persistence/local-org-system-prompts/local-org-system-prompts-repository.module';
 import { GetUserSystemPromptUseCase } from './application/use-cases/get-user-system-prompt/get-user-system-prompt.use-case';
@@ -17,7 +18,7 @@ import { ModelsModule } from '../models/models.module';
     LocalOrgSystemPromptsRepositoryModule,
     ModelsModule,
   ],
-  controllers: [ChatSettingsController],
+  controllers: [ChatSettingsController, OrgSystemPromptController],
   providers: [
     GetUserSystemPromptUseCase,
     UpsertUserSystemPromptUseCase,
