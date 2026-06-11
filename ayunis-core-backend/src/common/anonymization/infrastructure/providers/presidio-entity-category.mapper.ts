@@ -20,11 +20,10 @@ const PRESIDIO_ENTITY_TO_CATEGORY: Record<string, PiiCategory> = {
 };
 
 /**
- * Unmapped types return undefined, which the whitelist filter treats as
- * never exemptable (fail-safe for entity types added to the engine later).
+ * Unmapped types fall back to OTHER (fail-safe for entity types added to the
+ * engine later): they are still anonymized, and only exemptable when an org
+ * explicitly whitelists OTHER.
  */
-export function mapPresidioEntityToCategory(
-  entityType: string,
-): PiiCategory | undefined {
-  return PRESIDIO_ENTITY_TO_CATEGORY[entityType];
+export function mapPresidioEntityToCategory(entityType: string): PiiCategory {
+  return PRESIDIO_ENTITY_TO_CATEGORY[entityType] ?? PiiCategory.OTHER;
 }

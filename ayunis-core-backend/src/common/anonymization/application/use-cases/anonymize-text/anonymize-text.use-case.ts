@@ -6,7 +6,9 @@ import {
 import { AnonymizeTextCommand } from './anonymize-text.command';
 import { filterWhitelistedDetections } from '../../../domain/whitelist-filter';
 import { applyReplacements } from '../../../domain/apply-replacements';
+import { applyMaskReplacements } from '../../../domain/apply-mask-replacements';
 import { PiiDetection } from '../../../domain/pii-detection';
+import { PiiMask } from '../../../domain/pii-mask';
 
 @Injectable()
 export class AnonymizeTextUseCase {
@@ -29,10 +31,33 @@ export class AnonymizeTextUseCase {
       ? filterWhitelistedDetections(detections, command.whitelist)
       : detections;
 
+    const { anonymizedText, newMasks } = this.buildAnonymizedText(
+      command,
+      remaining,
+    );
+
     return {
       originalText: command.text,
-      anonymizedText: applyReplacements(command.text, remaining),
+      anonymizedText,
       replacements: remaining.map((detection) => this.toReplacement(detection)),
+      newMasks,
+    };
+  }
+
+  private buildAnonymizedText(
+    command: AnonymizeTextCommand,
+    detections: PiiDetection[],
+  ): { anonymizedText: string; newMasks: PiiMask[] } {
+    if (command.existingMasks !== undefined) {
+      return applyMaskReplacements(
+        command.text,
+        detections,
+        command.existingMasks,
+      );
+    }
+    return {
+      anonymizedText: applyReplacements(command.text, detections),
+      newMasks: [],
     };
   }
 

@@ -1,9 +1,10 @@
 import type { PiiCategory } from '../../domain/pii-category.enum';
 import type { PiiDetection } from '../../domain/pii-detection';
+import type { PiiMask } from '../../domain/pii-mask';
 
 export interface AnonymizationReplacement {
   entityType: string;
-  category?: PiiCategory;
+  category: PiiCategory;
   originalValue: string;
   start: number;
   end: number;
@@ -14,6 +15,8 @@ export interface AnonymizationResult {
   originalText: string;
   anonymizedText: string;
   replacements: AnonymizationReplacement[];
+  /** Masks newly created for this text; empty in legacy placeholder mode. */
+  newMasks: PiiMask[];
 }
 
 /**
