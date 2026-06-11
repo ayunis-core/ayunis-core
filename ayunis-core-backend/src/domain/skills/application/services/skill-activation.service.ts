@@ -10,8 +10,10 @@ import { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases
 import { GetSourcesByIdsQuery } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.query';
 import { SourceAlreadyAssignedError } from 'src/domain/threads/application/threads.errors';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
+import type { Skill } from 'src/domain/skills/domain/skill.entity';
 import type { UUID } from 'crypto';
 
 export interface SkillActivationResult {
@@ -47,7 +49,18 @@ export class SkillActivationService {
 
     const skill = await this.skillAccessService.findAccessibleSkill(skillId);
 
-    // Copy skill's sources to the thread (skip non-ready sources)
+    await this.copySourcesToThread(skill, thread);
+    await this.copyMcpIntegrationsToThread(skill, thread);
+    await this.copyKnowledgeBasesToThread(skill, thread);
+
+    return { instructions: skill.instructions, skillName: skill.name };
+  }
+
+  /** Copies the skill's sources to the thread (skips non-ready sources). */
+  private async copySourcesToThread(
+    skill: Skill,
+    thread: Thread,
+  ): Promise<void> {
     const allSources = await this.getSourcesByIdsUseCase.execute(
       new GetSourcesByIdsQuery(skill.sourceIds),
     );
@@ -78,15 +91,39 @@ export class SkillActivationService {
         throw error;
       }
     }
+  }
 
-    // Copy skill's MCP integrations to the thread
+  /** Copies the skill's MCP integrations to the thread (skips stale refs). */
+  private async copyMcpIntegrationsToThread(
+    skill: Skill,
+    thread: Thread,
+  ): Promise<void> {
     for (const mcpIntegrationId of skill.mcpIntegrationIds) {
-      await this.addMcpIntegrationToThreadUseCase.execute(
-        new AddMcpIntegrationToThreadCommand(thread.id, mcpIntegrationId),
-      );
+      try {
+        await this.addMcpIntegrationToThreadUseCase.execute(
+          new AddMcpIntegrationToThreadCommand(thread.id, mcpIntegrationId),
+        );
+      } catch (error) {
+        if (error instanceof McpIntegrationNotFoundError) {
+          this.logger.warn(
+            'MCP integration not found, skipping (stale reference)',
+            {
+              mcpIntegrationId,
+              threadId: thread.id,
+            },
+          );
+          continue;
+        }
+        throw error;
+      }
     }
+  }
 
-    // Copy skill's knowledge bases to the thread
+  /** Copies the skill's knowledge bases to the thread (skips stale refs). */
+  private async copyKnowledgeBasesToThread(
+    skill: Skill,
+    thread: Thread,
+  ): Promise<void> {
     for (const knowledgeBaseId of skill.knowledgeBaseIds) {
       try {
         await this.addKnowledgeBaseToThreadUseCase.execute(
@@ -110,7 +147,5 @@ export class SkillActivationService {
         throw error;
       }
     }
-
-    return { instructions: skill.instructions, skillName: skill.name };
   }
 }

@@ -45,6 +45,7 @@ import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
 import { SharesModule } from '../shares/shares.module';
 import { ThreadPiiMasksModule } from '../thread-pii-masks/thread-pii-masks.module';
+import { McpModule } from '../mcp/mcp.module';
 @Module({
   imports: [
     LocalThreadsRepositoryModule,
@@ -56,6 +57,7 @@ import { ThreadPiiMasksModule } from '../thread-pii-masks/thread-pii-masks.modul
     StorageModule,
     SharesModule,
     ThreadPiiMasksModule,
+    McpModule,
   ],
   controllers: [
     ThreadsController,
