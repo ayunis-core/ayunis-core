@@ -33,7 +33,7 @@ function InstructionsForm({
   const { t } = useTranslation('admin-settings-instructions');
   const [localValue, setLocalValue] = useState(initialValue);
 
-  const isChanged = localValue !== (systemPrompt ?? '');
+  const isChanged = localValue.trim() !== (systemPrompt ?? '');
 
   const handleSave = () => {
     if (localValue.trim()) {
