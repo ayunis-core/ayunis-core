@@ -8,7 +8,16 @@ import type { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settin
 import type { ContextService } from 'src/common/context/services/context.service';
 import { RunUserInput } from 'src/domain/runs/domain/run-input.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
-import type { RunEvent, RunErrorEvent } from '../../run-events';
+import type {
+  RunEvent,
+  RunErrorEvent,
+  RunMasksEvent,
+  RunMessageEvent,
+} from '../../run-events';
+import { RunPiiMasksUpdate } from '../../../domain/run-pii-masks-update.entity';
+import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
+import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
+import type { Message } from 'src/domain/messages/domain/message.entity';
 import {
   QuotaExceededError,
   QuotaErrorCode,
@@ -76,6 +85,52 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
       anonymizeTextForOrgUseCase,
       contextService,
     );
+  });
+
+  describe('PII masks stream items', () => {
+    it('maps RunPiiMasksUpdate items to masks events before the message event', async () => {
+      const mask = new ThreadPiiMask({
+        threadId,
+        category: PiiCategory.PERSON_NAME,
+        maskIndex: 1,
+        value: 'Max Mustermann',
+      });
+      const userMessage = { id: randomUUID() } as unknown as Message;
+
+      executeRunUseCase.execute.mockResolvedValue(
+        (async function* () {
+          yield new RunPiiMasksUpdate([mask]);
+          yield userMessage;
+        })(),
+      );
+
+      const events = await drain(
+        useCase.execute(
+          new ExecuteRunAndSetTitleCommand({
+            threadId,
+            input: new RunUserInput('hello', []),
+            streaming: true,
+          }),
+        ),
+      );
+
+      const masksIndex = events.findIndex((e) => e.type === 'masks');
+      const messageIndex = events.findIndex((e) => e.type === 'message');
+      expect(masksIndex).toBeGreaterThan(-1);
+      expect(masksIndex).toBeLessThan(messageIndex);
+
+      const masksEvent = events[masksIndex] as RunMasksEvent;
+      expect(masksEvent.masks).toEqual([
+        {
+          token: '{{pii:PERSON_NAME_1}}',
+          value: 'Max Mustermann',
+          category: PiiCategory.PERSON_NAME,
+        },
+      ]);
+
+      const messageEvent = events[messageIndex] as RunMessageEvent;
+      expect(messageEvent.message).toBe(userMessage);
+    });
   });
 
   describe('SSE error event conversion', () => {

@@ -2237,6 +2237,36 @@ export interface KnowledgeBaseSummaryResponseDto {
   name: string;
 }
 
+/**
+ * PII category of the masked value
+ */
+export type PiiCategory = typeof PiiCategory[keyof typeof PiiCategory];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PiiCategory = {
+  person_name: 'person_name',
+  organization: 'organization',
+  location: 'location',
+  email_address: 'email_address',
+  phone_number: 'phone_number',
+  url_or_ip: 'url_or_ip',
+  date_time: 'date_time',
+  financial_account: 'financial_account',
+  government_id: 'government_id',
+  nationality_religion_politics: 'nationality_religion_politics',
+  other: 'other',
+} as const;
+
+export interface PiiMaskResponseDto {
+  /** The placeholder token as it appears in message text, e.g. {{pii:PERSON_NAME_1}} */
+  token: string;
+  /** The original value the token stands in for */
+  value: string;
+  /** PII category of the masked value */
+  category: PiiCategory;
+}
+
 export type GetThreadResponseDtoMessagesItem = UserMessageResponseDto | SystemMessageResponseDto | AssistantMessageResponseDto | ToolResultMessageResponseDto;
 
 export interface GetThreadResponseDto {
@@ -2262,6 +2292,8 @@ export interface GetThreadResponseDto {
   isLongChat: boolean;
   /** Knowledge bases attached to this thread */
   knowledgeBases: KnowledgeBaseSummaryResponseDto[];
+  /** PII mask dictionary for anonymous threads — resolves {{pii:...}} tokens in message text to their original values. Empty for non-anonymous threads. */
+  piiMasks: PiiMaskResponseDto[];
 }
 
 export interface GetThreadsResponseDtoItem {
@@ -3080,6 +3112,30 @@ export interface MarketplaceIntegrationResponseDto {
   updatedAt: string;
 }
 
+export interface PiiWhitelistEntryDto {
+  /** PII category exempt from anonymization */
+  category: PiiCategory;
+  /**
+   * Optional regex; when set, only values fully matching it (case-insensitive) are exempt. Null exempts the whole category.
+   * @maxLength 200
+   * @nullable
+   */
+  pattern: string | null;
+}
+
+export interface PiiWhitelistResponseDto {
+  /** Current whitelist entries for the org */
+  entries: PiiWhitelistEntryDto[];
+}
+
+export interface UpdatePiiWhitelistRequestDto {
+  /**
+   * Full replacement whitelist; an empty array removes all entries
+   * @maxItems 50
+   */
+  entries: PiiWhitelistEntryDto[];
+}
+
 /**
  * The distribution mode of the skill template
  */
@@ -3766,6 +3822,28 @@ export interface RunThreadResponseDto {
 }
 
 /**
+ * Response type identifier
+ */
+export type RunMasksResponseDtoType = typeof RunMasksResponseDtoType[keyof typeof RunMasksResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RunMasksResponseDtoType = {
+  masks: 'masks',
+} as const;
+
+export interface RunMasksResponseDto {
+  /** Response type identifier */
+  type: RunMasksResponseDtoType;
+  /** Thread ID the mask dictionary belongs to */
+  threadId: string;
+  /** Full PII mask dictionary of the thread (idempotent to re-apply) */
+  masks: PiiMaskResponseDto[];
+  /** Event timestamp */
+  timestamp: string;
+}
+
+/**
  * The type of input
  */
 export type TextInputType = typeof TextInputType[keyof typeof TextInputType];
@@ -3867,50 +3945,6 @@ export interface UpdateTrialRequestDto {
    * @minimum 0
    */
   messagesSent?: number;
-}
-
-/**
- * PII category exempt from anonymization
- */
-export type PiiCategory = typeof PiiCategory[keyof typeof PiiCategory];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PiiCategory = {
-  person_name: 'person_name',
-  organization: 'organization',
-  location: 'location',
-  email_address: 'email_address',
-  phone_number: 'phone_number',
-  url_or_ip: 'url_or_ip',
-  date_time: 'date_time',
-  financial_account: 'financial_account',
-  government_id: 'government_id',
-  nationality_religion_politics: 'nationality_religion_politics',
-} as const;
-
-export interface PiiWhitelistEntryDto {
-  /** PII category exempt from anonymization */
-  category: PiiCategory;
-  /**
-   * Optional regex; when set, only values fully matching it (case-insensitive) are exempt. Null exempts the whole category.
-   * @maxLength 200
-   * @nullable
-   */
-  pattern: string | null;
-}
-
-export interface PiiWhitelistResponseDto {
-  /** Current whitelist entries for the org */
-  entries: PiiWhitelistEntryDto[];
-}
-
-export interface UpdatePiiWhitelistRequestDto {
-  /**
-   * Full replacement whitelist; an empty array removes all entries
-   * @maxItems 50
-   */
-  entries: PiiWhitelistEntryDto[];
 }
 
 export interface UserSystemPromptResponseDto {
@@ -4414,5 +4448,5 @@ export type RunsControllerSendMessageBody = {
   streaming?: boolean;
 };
 
-export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;
+export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto;
 

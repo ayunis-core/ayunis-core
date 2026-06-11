@@ -47,8 +47,10 @@ import {
   RunMessageResponseDto,
   RunErrorResponseDto,
   RunThreadResponseDto,
+  RunMasksResponseDto,
   RunResponse,
 } from './dto/run-response.dto';
+import { PiiMaskResponseDto } from 'src/domain/thread-pii-masks/presenters/http/dtos/pii-mask-response.dto';
 import { ExecuteRunAndSetTitleUseCase } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
 import { ExecuteRunAndSetTitleCommand } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.command';
 import { RunEvent } from '../../application/run-events';
@@ -87,6 +89,8 @@ const ALLOWED_IMAGE_TYPES = [
   RunMessageResponseDto,
   RunErrorResponseDto,
   RunThreadResponseDto,
+  RunMasksResponseDto,
+  PiiMaskResponseDto,
   SendMessageDto,
   TextInput,
   ToolResultInput,
@@ -173,6 +177,7 @@ export class RunsController {
             { $ref: getSchemaPath(RunMessageResponseDto) },
             { $ref: getSchemaPath(RunErrorResponseDto) },
             { $ref: getSchemaPath(RunThreadResponseDto) },
+            { $ref: getSchemaPath(RunMasksResponseDto) },
           ],
           discriminator: {
             propertyName: 'type',
@@ -181,6 +186,7 @@ export class RunsController {
               message: getSchemaPath(RunMessageResponseDto),
               error: getSchemaPath(RunErrorResponseDto),
               thread: getSchemaPath(RunThreadResponseDto),
+              masks: getSchemaPath(RunMasksResponseDto),
             },
           },
         },
@@ -367,6 +373,13 @@ export class RunsController {
           threadId: event.threadId,
           timestamp: event.timestamp,
         };
+      case 'masks':
+        return {
+          type: 'masks',
+          threadId: event.threadId,
+          masks: event.masks,
+          timestamp: event.timestamp,
+        };
     }
   }
 
@@ -439,6 +452,9 @@ export class RunsController {
               break;
             case 'session':
               eventId = 'session';
+              break;
+            case 'masks':
+              eventId = `masks-${event.timestamp}`;
               break;
             default:
               eventId = 'event';

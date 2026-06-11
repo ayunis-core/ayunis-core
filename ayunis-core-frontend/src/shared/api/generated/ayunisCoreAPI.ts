@@ -12133,6 +12133,163 @@ export function useMarketplaceControllerGetIntegration<TData = Awaited<ReturnTyp
 
 
 /**
+ * @summary Get the PII whitelist for the current org
+ */
+export const anonymizationSettingsControllerGet = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<PiiWhitelistResponseDto>(
+      {url: `/anonymization-settings/pii-whitelist`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getAnonymizationSettingsControllerGetQueryKey = () => {
+    return [
+    `/anonymization-settings/pii-whitelist`
+    ] as const;
+    }
+
+    
+export const getAnonymizationSettingsControllerGetQueryOptions = <TData = Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAnonymizationSettingsControllerGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>> = ({ signal }) => anonymizationSettingsControllerGet(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AnonymizationSettingsControllerGetQueryResult = NonNullable<Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>>
+export type AnonymizationSettingsControllerGetQueryError = unknown
+
+
+export function useAnonymizationSettingsControllerGet<TData = Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAnonymizationSettingsControllerGet<TData = Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAnonymizationSettingsControllerGet<TData = Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the PII whitelist for the current org
+ */
+
+export function useAnonymizationSettingsControllerGet<TData = Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAnonymizationSettingsControllerGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Replace the PII whitelist for the current org
+ */
+export const anonymizationSettingsControllerUpdate = (
+    updatePiiWhitelistRequestDto: UpdatePiiWhitelistRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<PiiWhitelistResponseDto>(
+      {url: `/anonymization-settings/pii-whitelist`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updatePiiWhitelistRequestDto
+    },
+      );
+    }
+  
+
+
+export const getAnonymizationSettingsControllerUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerUpdate>>, TError,{data: UpdatePiiWhitelistRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerUpdate>>, TError,{data: UpdatePiiWhitelistRequestDto}, TContext> => {
+
+const mutationKey = ['anonymizationSettingsControllerUpdate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof anonymizationSettingsControllerUpdate>>, {data: UpdatePiiWhitelistRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  anonymizationSettingsControllerUpdate(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AnonymizationSettingsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof anonymizationSettingsControllerUpdate>>>
+    export type AnonymizationSettingsControllerUpdateMutationBody = UpdatePiiWhitelistRequestDto
+    export type AnonymizationSettingsControllerUpdateMutationError = void
+
+    /**
+ * @summary Replace the PII whitelist for the current org
+ */
+export const useAnonymizationSettingsControllerUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerUpdate>>, TError,{data: UpdatePiiWhitelistRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof anonymizationSettingsControllerUpdate>>,
+        TError,
+        {data: UpdatePiiWhitelistRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAnonymizationSettingsControllerUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * Create a new skill template. Only accessible to super admins.
  * @summary Create a new skill template
  */
@@ -15534,163 +15691,6 @@ export const useSuperAdminTrialsControllerUpdateTrial = <TError = void,
       > => {
 
       const mutationOptions = getSuperAdminTrialsControllerUpdateTrialMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * @summary Get the PII whitelist for the current org
- */
-export const anonymizationSettingsControllerGet = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<PiiWhitelistResponseDto>(
-      {url: `/anonymization-settings/pii-whitelist`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-
-
-export const getAnonymizationSettingsControllerGetQueryKey = () => {
-    return [
-    `/anonymization-settings/pii-whitelist`
-    ] as const;
-    }
-
-    
-export const getAnonymizationSettingsControllerGetQueryOptions = <TData = Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAnonymizationSettingsControllerGetQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>> = ({ signal }) => anonymizationSettingsControllerGet(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AnonymizationSettingsControllerGetQueryResult = NonNullable<Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>>
-export type AnonymizationSettingsControllerGetQueryError = unknown
-
-
-export function useAnonymizationSettingsControllerGet<TData = Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>,
-          TError,
-          Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAnonymizationSettingsControllerGet<TData = Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>,
-          TError,
-          Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAnonymizationSettingsControllerGet<TData = Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get the PII whitelist for the current org
- */
-
-export function useAnonymizationSettingsControllerGet<TData = Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerGet>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAnonymizationSettingsControllerGetQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-
-/**
- * @summary Replace the PII whitelist for the current org
- */
-export const anonymizationSettingsControllerUpdate = (
-    updatePiiWhitelistRequestDto: UpdatePiiWhitelistRequestDto,
- ) => {
-      
-      
-      return customAxiosInstance<PiiWhitelistResponseDto>(
-      {url: `/anonymization-settings/pii-whitelist`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updatePiiWhitelistRequestDto
-    },
-      );
-    }
-  
-
-
-export const getAnonymizationSettingsControllerUpdateMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerUpdate>>, TError,{data: UpdatePiiWhitelistRequestDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerUpdate>>, TError,{data: UpdatePiiWhitelistRequestDto}, TContext> => {
-
-const mutationKey = ['anonymizationSettingsControllerUpdate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof anonymizationSettingsControllerUpdate>>, {data: UpdatePiiWhitelistRequestDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  anonymizationSettingsControllerUpdate(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AnonymizationSettingsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof anonymizationSettingsControllerUpdate>>>
-    export type AnonymizationSettingsControllerUpdateMutationBody = UpdatePiiWhitelistRequestDto
-    export type AnonymizationSettingsControllerUpdateMutationError = void
-
-    /**
- * @summary Replace the PII whitelist for the current org
- */
-export const useAnonymizationSettingsControllerUpdate = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof anonymizationSettingsControllerUpdate>>, TError,{data: UpdatePiiWhitelistRequestDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof anonymizationSettingsControllerUpdate>>,
-        TError,
-        {data: UpdatePiiWhitelistRequestDto},
-        TContext
-      > => {
-
-      const mutationOptions = getAnonymizationSettingsControllerUpdateMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

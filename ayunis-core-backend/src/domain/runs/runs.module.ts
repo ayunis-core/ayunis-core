@@ -22,6 +22,7 @@ import { TrialsModule } from 'src/iam/trials/trials.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
 import { SourcesModule } from 'src/domain/sources/sources.module';
 import { AnonymizationSettingsModule } from 'src/domain/anonymization-settings/anonymization-settings.module';
+import { ThreadPiiMasksModule } from 'src/domain/thread-pii-masks/thread-pii-masks.module';
 import { UsageModule } from 'src/domain/usage/usage.module';
 import { QuotasModule } from 'src/iam/quotas/quotas.module';
 import { SkillsModule } from 'src/domain/skills/skills.module';
@@ -41,6 +42,7 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
     McpModule,
     SourcesModule,
     AnonymizationSettingsModule,
+    ThreadPiiMasksModule,
     UsageModule,
     QuotasModule,
     SkillsModule,

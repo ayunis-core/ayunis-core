@@ -8,11 +8,14 @@ import { GenerateAndSetThreadTitleUseCase } from '../../../../threads/applicatio
 import { GenerateAndSetThreadTitleCommand } from '../../../../threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.command';
 import {
   RunEvent,
+  RunMasksEvent,
   RunMessageEvent,
   RunThreadEvent,
   RunErrorEvent,
   RunSessionEvent,
 } from '../../run-events';
+import { RunPiiMasksUpdate } from '../../../domain/run-pii-masks-update.entity';
+import type { Message } from 'src/domain/messages/domain/message.entity';
 import {
   RunInput,
   RunUserInput,
@@ -67,15 +70,8 @@ export class ExecuteRunAndSetTitleUseCase {
         }),
       );
 
-      for await (const message of messageGenerator) {
-        // Yield message event with domain entity
-        const messageEvent: RunMessageEvent = {
-          type: 'message',
-          message,
-          threadId: command.threadId,
-          timestamp: new Date().toISOString(),
-        };
-        yield messageEvent;
+      for await (const item of messageGenerator) {
+        yield this.toStreamEvent(item, command.threadId);
       }
       if (shouldGenerateTitle) {
         const titleEvent = await this.generateTitle(command, thread);
@@ -120,6 +116,30 @@ export class ExecuteRunAndSetTitleUseCase {
       };
       yield streamingEndEvent;
     }
+  }
+
+  private toStreamEvent(
+    item: Message | RunPiiMasksUpdate,
+    threadId: string,
+  ): RunMasksEvent | RunMessageEvent {
+    if (item instanceof RunPiiMasksUpdate) {
+      return {
+        type: 'masks',
+        threadId,
+        masks: item.masks.map((mask) => ({
+          token: mask.token,
+          value: mask.value,
+          category: mask.category,
+        })),
+        timestamp: new Date().toISOString(),
+      };
+    }
+    return {
+      type: 'message',
+      message: item,
+      threadId,
+      timestamp: new Date().toISOString(),
+    };
   }
 
   private async generateTitle(
