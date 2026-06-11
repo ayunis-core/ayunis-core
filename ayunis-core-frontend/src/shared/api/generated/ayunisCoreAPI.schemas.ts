@@ -2287,6 +2287,18 @@ export interface PiiMaskResponseDto {
   category: PiiCategory;
 }
 
+export interface McpIntegrationSummaryResponseDto {
+  /** Unique identifier for the MCP integration */
+  id: string;
+  /** Name of the MCP integration */
+  name: string;
+  /**
+   * Logo URL for marketplace integrations
+   * @nullable
+   */
+  logoUrl?: string | null;
+}
+
 export type GetThreadResponseDtoMessagesItem = UserMessageResponseDto | SystemMessageResponseDto | AssistantMessageResponseDto | ToolResultMessageResponseDto;
 
 export interface GetThreadResponseDto {
@@ -2314,6 +2326,8 @@ export interface GetThreadResponseDto {
   knowledgeBases: KnowledgeBaseSummaryResponseDto[];
   /** PII mask dictionary for anonymous threads — resolves {{pii:...}} tokens in message text to their original values. Empty for non-anonymous threads. */
   piiMasks: PiiMaskResponseDto[];
+  /** MCP integrations attached to this thread */
+  mcpIntegrations: McpIntegrationSummaryResponseDto[];
 }
 
 export interface GetThreadsResponseDtoItem {

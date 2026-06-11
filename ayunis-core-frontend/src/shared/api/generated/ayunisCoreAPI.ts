@@ -8530,6 +8530,133 @@ export const useThreadKnowledgeBasesControllerRemoveKnowledgeBase = <TError = vo
     }
     
 /**
+ * @summary Add an MCP integration to a thread
+ */
+export const threadMcpIntegrationsControllerAddMcpIntegration = (
+    id: string,
+    mcpIntegrationId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/threads/${id}/mcp-integrations/${mcpIntegrationId}`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getThreadMcpIntegrationsControllerAddMcpIntegrationMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadMcpIntegrationsControllerAddMcpIntegration>>, TError,{id: string;mcpIntegrationId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadMcpIntegrationsControllerAddMcpIntegration>>, TError,{id: string;mcpIntegrationId: string}, TContext> => {
+
+const mutationKey = ['threadMcpIntegrationsControllerAddMcpIntegration'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadMcpIntegrationsControllerAddMcpIntegration>>, {id: string;mcpIntegrationId: string}> = (props) => {
+          const {id,mcpIntegrationId} = props ?? {};
+
+          return  threadMcpIntegrationsControllerAddMcpIntegration(id,mcpIntegrationId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadMcpIntegrationsControllerAddMcpIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof threadMcpIntegrationsControllerAddMcpIntegration>>>
+    
+    export type ThreadMcpIntegrationsControllerAddMcpIntegrationMutationError = void
+
+    /**
+ * @summary Add an MCP integration to a thread
+ */
+export const useThreadMcpIntegrationsControllerAddMcpIntegration = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadMcpIntegrationsControllerAddMcpIntegration>>, TError,{id: string;mcpIntegrationId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadMcpIntegrationsControllerAddMcpIntegration>>,
+        TError,
+        {id: string;mcpIntegrationId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getThreadMcpIntegrationsControllerAddMcpIntegrationMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Remove an MCP integration from a thread
+ */
+export const threadMcpIntegrationsControllerRemoveMcpIntegration = (
+    id: string,
+    mcpIntegrationId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/threads/${id}/mcp-integrations/${mcpIntegrationId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getThreadMcpIntegrationsControllerRemoveMcpIntegrationMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadMcpIntegrationsControllerRemoveMcpIntegration>>, TError,{id: string;mcpIntegrationId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadMcpIntegrationsControllerRemoveMcpIntegration>>, TError,{id: string;mcpIntegrationId: string}, TContext> => {
+
+const mutationKey = ['threadMcpIntegrationsControllerRemoveMcpIntegration'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadMcpIntegrationsControllerRemoveMcpIntegration>>, {id: string;mcpIntegrationId: string}> = (props) => {
+          const {id,mcpIntegrationId} = props ?? {};
+
+          return  threadMcpIntegrationsControllerRemoveMcpIntegration(id,mcpIntegrationId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadMcpIntegrationsControllerRemoveMcpIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof threadMcpIntegrationsControllerRemoveMcpIntegration>>>
+    
+    export type ThreadMcpIntegrationsControllerRemoveMcpIntegrationMutationError = void
+
+    /**
+ * @summary Remove an MCP integration from a thread
+ */
+export const useThreadMcpIntegrationsControllerRemoveMcpIntegration = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadMcpIntegrationsControllerRemoveMcpIntegration>>, TError,{id: string;mcpIntegrationId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadMcpIntegrationsControllerRemoveMcpIntegration>>,
+        TError,
+        {id: string;mcpIntegrationId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getThreadMcpIntegrationsControllerRemoveMcpIntegrationMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * @summary Get presigned URL for a generated image
  */
 export const generatedImagesControllerResolve = (
