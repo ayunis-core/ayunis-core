@@ -1,5 +1,5 @@
 import { AnonymizationFailedError } from 'src/common/anonymization/application/anonymization.errors';
-import type { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
+import type { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
 import { RunAnonymizationUnavailableError } from '../../runs.errors';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
@@ -33,7 +33,7 @@ import { randomUUID } from 'crypto';
 
 describe('ExecuteRunUseCase', () => {
   let useCase: ExecuteRunUseCase;
-  let anonymizeTextUseCase: jest.Mocked<AnonymizeTextUseCase>;
+  let anonymizeTextForOrgUseCase: jest.Mocked<AnonymizeTextForOrgUseCase>;
   let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
   let contextService: jest.Mocked<ContextService>;
   let toolAssemblyService: jest.Mocked<ToolAssemblyService>;
@@ -67,9 +67,9 @@ describe('ExecuteRunUseCase', () => {
   }
 
   beforeEach(() => {
-    anonymizeTextUseCase = {
+    anonymizeTextForOrgUseCase = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<AnonymizeTextUseCase>;
+    } as unknown as jest.Mocked<AnonymizeTextForOrgUseCase>;
 
     findThreadUseCase = {
       execute: jest.fn(),
@@ -123,7 +123,7 @@ describe('ExecuteRunUseCase', () => {
       findThreadUseCase,
       { execute: jest.fn() } as unknown as AddMessageToThreadUseCase,
       contextService,
-      anonymizeTextUseCase,
+      anonymizeTextForOrgUseCase,
       inferenceUsageGuard,
       toolAssemblyService,
       {
@@ -336,7 +336,7 @@ describe('ExecuteRunUseCase', () => {
         thread,
         isLongChat: false,
       });
-      anonymizeTextUseCase.execute.mockRejectedValue(
+      anonymizeTextForOrgUseCase.execute.mockRejectedValue(
         new AnonymizationFailedError('Connection refused'),
       );
 
@@ -370,7 +370,7 @@ describe('ExecuteRunUseCase', () => {
         thread,
         isLongChat: false,
       });
-      anonymizeTextUseCase.execute.mockRejectedValue(
+      anonymizeTextForOrgUseCase.execute.mockRejectedValue(
         new AnonymizationFailedError('Service timeout'),
       );
 

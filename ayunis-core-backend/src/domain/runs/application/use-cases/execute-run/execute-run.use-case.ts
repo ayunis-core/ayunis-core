@@ -27,8 +27,8 @@ import { UUID } from 'crypto';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
-import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
-import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
+import { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
+import { AnonymizeTextForOrgCommand } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.command';
 import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { ToolAssemblyService } from '../../services/tool-assembly.service';
@@ -48,7 +48,7 @@ export class ExecuteRunUseCase {
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
     private readonly contextService: ContextService,
-    private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
+    private readonly anonymizeTextForOrgUseCase: AnonymizeTextForOrgUseCase,
     private readonly inferenceUsageGuard: InferenceUsageGuard,
     private readonly toolAssemblyService: ToolAssemblyService,
     private readonly toolResultCollectorService: ToolResultCollectorService,
@@ -347,7 +347,7 @@ Skill "${skillName}" has already been activated on this thread. Do not call acti
 
     const messageText =
       hasText && params.isAnonymous
-        ? await this.anonymizeText(userInput.text)
+        ? await this.anonymizeText(userInput.text, params.orgId)
         : userInput.text;
 
     const newUserMessage = await this.createUserMessageUseCase.execute(
@@ -364,10 +364,10 @@ Skill "${skillName}" has already been activated on this thread. Do not call acti
     return newUserMessage;
   }
 
-  private async anonymizeText(text: string): Promise<string> {
+  private async anonymizeText(text: string, orgId: UUID): Promise<string> {
     try {
-      const result = await this.anonymizeTextUseCase.execute(
-        new AnonymizeTextCommand(text),
+      const result = await this.anonymizeTextForOrgUseCase.execute(
+        new AnonymizeTextForOrgCommand(text, orgId),
       );
       if (result.replacements.length > 0) {
         this.logger.log('Anonymized text', {

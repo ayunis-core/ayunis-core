@@ -12,8 +12,8 @@ import { ExecuteToolCommand } from 'src/domain/tools/application/use-cases/execu
 import { CheckToolCapabilitiesUseCase } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
 import { CheckToolCapabilitiesQuery } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.query';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
-import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
-import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
+import { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
+import { AnonymizeTextForOrgCommand } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ToolUsedEvent } from '../events/tool-used.event';
@@ -32,7 +32,7 @@ export class ToolResultCollectorService {
   constructor(
     private readonly executeToolUseCase: ExecuteToolUseCase,
     private readonly checkToolCapabilitiesUseCase: CheckToolCapabilitiesUseCase,
-    private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
+    private readonly anonymizeTextForOrgUseCase: AnonymizeTextForOrgUseCase,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -251,7 +251,7 @@ export class ToolResultCollectorService {
     }
 
     if (isAnonymous && tool.returnsPii) {
-      result = await this.anonymizeText(result);
+      result = await this.anonymizeText(result, orgId);
     }
 
     return {
@@ -260,10 +260,10 @@ export class ToolResultCollectorService {
     };
   }
 
-  private async anonymizeText(text: string): Promise<string> {
+  private async anonymizeText(text: string, orgId: UUID): Promise<string> {
     try {
-      const result = await this.anonymizeTextUseCase.execute(
-        new AnonymizeTextCommand(text),
+      const result = await this.anonymizeTextForOrgUseCase.execute(
+        new AnonymizeTextForOrgCommand(text, orgId),
       );
       return result.anonymizedText;
     } catch (error) {

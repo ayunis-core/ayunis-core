@@ -19,9 +19,11 @@ import {
 } from 'src/domain/runs/domain/run-input.entity';
 import { RunNoModelFoundError } from '../../runs.errors';
 import { Thread } from '../../../../threads/domain/thread.entity';
-import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
-import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
+import { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
+import { AnonymizeTextForOrgCommand } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.command';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { ContextService } from 'src/common/context/services/context.service';
+import { RunAnonymizationUnavailableError } from '../../runs.errors';
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
@@ -31,7 +33,8 @@ export class ExecuteRunAndSetTitleUseCase {
     private readonly executeRunUseCase: ExecuteRunUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly generateAndSetThreadTitleUseCase: GenerateAndSetThreadTitleUseCase,
-    private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
+    private readonly anonymizeTextForOrgUseCase: AnonymizeTextForOrgUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   async *execute(
@@ -183,24 +186,26 @@ export class ExecuteRunAndSetTitleUseCase {
     return undefined;
   }
 
+  // Throws when anonymization is unavailable: generateTitle's catch then
+  // skips the title instead of sending raw PII to the model.
   private async anonymizeText(text: string): Promise<string> {
-    try {
-      const result = await this.anonymizeTextUseCase.execute(
-        new AnonymizeTextCommand(text),
-      );
-      if (result.replacements.length > 0) {
-        this.logger.log('Anonymized text for title generation', {
-          originalLength: text.length,
-          anonymizedLength: result.anonymizedText.length,
-          replacementsCount: result.replacements.length,
-        });
-      }
-      return result.anonymizedText;
-    } catch (error) {
-      this.logger.error('Failed to anonymize text, returning original', {
-        error: error as Error,
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new RunAnonymizationUnavailableError({
+        originalError: 'No org context available for anonymization',
       });
-      return text;
     }
+
+    const result = await this.anonymizeTextForOrgUseCase.execute(
+      new AnonymizeTextForOrgCommand(text, orgId),
+    );
+    if (result.replacements.length > 0) {
+      this.logger.log('Anonymized text for title generation', {
+        originalLength: text.length,
+        anonymizedLength: result.anonymizedText.length,
+        replacementsCount: result.replacements.length,
+      });
+    }
+    return result.anonymizedText;
   }
 }
