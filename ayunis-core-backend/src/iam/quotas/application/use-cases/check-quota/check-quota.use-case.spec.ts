@@ -24,7 +24,7 @@ describe('CheckQuotaUseCase', () => {
     usageQuotaRepository = {
       checkAndIncrement: jest.fn(),
       incrementAndGet: jest.fn(),
-    } as unknown as jest.Mocked<UsageQuotaRepositoryPort>;
+    };
 
     limitResolver = {
       resolve: jest.fn().mockResolvedValue({ limit: 10, windowMs: 60_000 }),
