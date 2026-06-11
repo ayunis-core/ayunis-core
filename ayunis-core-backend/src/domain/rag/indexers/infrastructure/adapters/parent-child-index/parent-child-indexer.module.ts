@@ -14,7 +14,6 @@ import { ParentChildIndexerRepository } from './parent-child-index.repository';
 import { ParentChildIndexerRepositoryPort } from './application/ports/parent-child-indexer-repository.port';
 
 // Use Cases
-import { IngestContentUseCase } from './application/use-cases/ingest-content/ingest-content.use-case';
 import { IngestBulkContentUseCase } from './application/use-cases/ingest-bulk-content/ingest-bulk-content.use-case';
 import { SearchContentUseCase } from './application/use-cases/search-content/search-content.use-case';
 import { DeleteContentUseCase } from './application/use-cases/delete-content/delete-content.use-case';
@@ -46,7 +45,6 @@ import { ModelsModule } from 'src/domain/models/models.module';
     ParentChildIndexerMapper,
 
     // Use Cases
-    IngestContentUseCase,
     IngestBulkContentUseCase,
     SearchContentUseCase,
     DeleteContentUseCase,
@@ -57,7 +55,6 @@ import { ModelsModule } from 'src/domain/models/models.module';
   ],
   exports: [
     ParentChildIndexerAdapter,
-    IngestContentUseCase,
     IngestBulkContentUseCase,
     SearchContentUseCase,
     DeleteContentUseCase,
