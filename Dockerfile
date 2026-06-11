@@ -23,7 +23,19 @@ RUN pnpm install --frozen-lockfile
 # Build the frontend, then bundle it where the backend serves it from: a sibling
 # of dist/ (so nest's deleteOutDir doesn't wipe it), copied into dist/frontend in
 # the final stage. Then build the backend.
-RUN pnpm --filter core-frontend-tanstack run build
+#
+# The frontend .env enters the build context via a .dockerignore exception, so Vite
+# auto-loads it and inlines every VITE_* var at build time — no per-variable ARG/ENV
+# plumbing. Unlike a BuildKit secret mount (whose contents are excluded from the
+# layer cache key), the file is part of the context, so changing a value correctly
+# invalidates this layer instead of reusing a stale, previously-inlined bundle. It
+# lives only in this discarded build stage; the production image copies the built
+# dist, never the .env. The echo surfaces which VITE_* vars are present (names only)
+# so a missing one shows up in build logs rather than silently inlining as undefined.
+RUN echo "Frontend VITE_* vars present at build:" \
+ && (grep -oE '^VITE_[A-Z0-9_]+=' ayunis-core-frontend/.env 2>/dev/null | sort \
+     || echo "  (none — VITE_* will be inlined as undefined)") \
+ && pnpm --filter core-frontend-tanstack run build
 RUN cp -r ayunis-core-frontend/dist ayunis-core-backend/frontend
 RUN pnpm --filter core-backend run build
 
