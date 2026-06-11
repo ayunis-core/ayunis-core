@@ -46,9 +46,16 @@ export type { ChildRunInput, RunInput } from './contracts/run-input';
 export { DEFAULT_MAX_ITERATIONS } from './contracts/run-input';
 export {
   AgentRuntimeError,
+  HookFailedError,
   InvalidRunInputError,
   MaxIterationsError,
   ProviderError,
   RunAbortedError,
 } from './contracts/errors';
 export { RunContext } from './context/run-context';
+export { run } from './engine/run';
+export {
+  MockProvider,
+  textTurn,
+  toolCallTurn,
+} from './providers/mock/mock-provider';

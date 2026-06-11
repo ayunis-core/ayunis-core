@@ -48,3 +48,22 @@ export class ProviderError extends AgentRuntimeError {
     super('PROVIDER_FAILED', message, { cause });
   }
 }
+
+/**
+ * Wraps a hook failure with the hook's name and the phase it failed in,
+ * so multi-hook runs stay debuggable; surfaced as an `error` event.
+ */
+export class HookFailedError extends AgentRuntimeError {
+  constructor(options: { hookName: string; phase: string; cause: unknown }) {
+    const reason =
+      options.cause instanceof Error ? options.cause.message : 'unknown error';
+    super(
+      'HOOK_FAILED',
+      `Hook '${options.hookName}' failed in ${options.phase}: ${reason}`,
+      {
+        details: { hookName: options.hookName, phase: options.phase },
+        cause: options.cause,
+      },
+    );
+  }
+}
