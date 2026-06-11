@@ -194,17 +194,23 @@ export default function ChatPage({
     });
   }, []);
 
-  const handleMasks = useCallback((data: RunMasksResponseDto) => {
-    // Events carry the thread's full dictionary — replace-by-token merge is
-    // idempotent and keeps any entries from earlier events.
-    setPiiMasks((prev) => {
-      const byToken = new Map(prev.map((mask) => [mask.token, mask]));
-      for (const mask of data.masks) {
-        byToken.set(mask.token, mask);
-      }
-      return [...byToken.values()];
-    });
-  }, []);
+  const handleMasks = useCallback(
+    (data: RunMasksResponseDto) => {
+      // Ignore late events from a prior thread's still-open stream — their
+      // tokens could otherwise pollute the current thread's dictionary.
+      if (data.threadId !== thread.id) return;
+      // Events carry the thread's full dictionary — replace-by-token merge is
+      // idempotent and keeps any entries from earlier events.
+      setPiiMasks((prev) => {
+        const byToken = new Map(prev.map((mask) => [mask.token, mask]));
+        for (const mask of data.masks) {
+          byToken.set(mask.token, mask);
+        }
+        return [...byToken.values()];
+      });
+    },
+    [thread.id],
+  );
 
   const handleFileUpload = (files: File[]) =>
     files.forEach((file) => createFileSource({ file }));
