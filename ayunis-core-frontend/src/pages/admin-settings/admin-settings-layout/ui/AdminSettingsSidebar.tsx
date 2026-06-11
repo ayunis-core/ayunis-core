@@ -8,6 +8,7 @@ import {
   FileText,
   Key,
   ShieldCheck,
+  MessageSquareText,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -50,6 +51,11 @@ export function AdminSettingsSidebar() {
       to: '/admin-settings/anonymization',
       icon: <ShieldCheck />,
       label: t('layout.anonymization'),
+    },
+    {
+      to: '/admin-settings/instructions',
+      icon: <MessageSquareText />,
+      label: t('layout.instructions'),
     },
     {
       to: '/admin-settings/api-keys',
