@@ -6,8 +6,7 @@ type EntriesByCategory = Map<PiiCategory, PiiWhitelistEntry>;
 
 /**
  * Drops detections that the org whitelist exempts from anonymization.
- * Fail-safe: detections without a mapped category and entries with invalid
- * patterns never exempt anything.
+ * Fail-safe: entries with invalid patterns never exempt anything.
  */
 export function filterWhitelistedDetections(
   detections: PiiDetection[],
@@ -28,9 +27,6 @@ export function isExempt(
   detection: PiiDetection,
   entriesByCategory: EntriesByCategory,
 ): boolean {
-  if (!detection.category) {
-    return false;
-  }
   const entry = entriesByCategory.get(detection.category);
   if (!entry) {
     return false;

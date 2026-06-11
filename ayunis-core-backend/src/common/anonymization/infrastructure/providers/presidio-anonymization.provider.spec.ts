@@ -67,7 +67,7 @@ describe('PresidioAnonymizationProvider', () => {
     ]);
   });
 
-  it('leaves the category undefined for unmapped entity types', async () => {
+  it('maps unmapped entity types to the OTHER category', async () => {
     const text = 'mein Geheimnis: hunter2';
     mockResults([
       { entity_type: 'FUTURE_SECRET_TYPE', start: 16, end: 23, score: 0.8 },
@@ -75,7 +75,7 @@ describe('PresidioAnonymizationProvider', () => {
 
     const detections = await provider.detect(text);
 
-    expect(detections[0].category).toBeUndefined();
+    expect(detections[0].category).toBe(PiiCategory.OTHER);
   });
 
   it('collapses overlapping spans sharing an end position', async () => {

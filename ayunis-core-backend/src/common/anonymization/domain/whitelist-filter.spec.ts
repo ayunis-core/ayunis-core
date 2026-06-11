@@ -112,21 +112,34 @@ describe('filterWhitelistedDetections', () => {
     );
   });
 
-  it('never exempts a detection without a mapped category', () => {
+  it('keeps OTHER detections when only other categories are whitelisted', () => {
     const detections = [
       detection({
         entityType: 'CUSTOM_FUTURE_ENTITY',
-        category: undefined,
+        category: PiiCategory.OTHER,
         text: 'irgendein Wert',
       }),
     ];
-    const entries = Object.values(PiiCategory).map(
-      (category) => new PiiWhitelistEntry(category, null),
-    );
+    const entries = Object.values(PiiCategory)
+      .filter((category) => category !== PiiCategory.OTHER)
+      .map((category) => new PiiWhitelistEntry(category, null));
 
     expect(filterWhitelistedDetections(detections, entries)).toEqual(
       detections,
     );
+  });
+
+  it('exempts OTHER detections when OTHER is explicitly whitelisted', () => {
+    const detections = [
+      detection({
+        entityType: 'CUSTOM_FUTURE_ENTITY',
+        category: PiiCategory.OTHER,
+        text: 'irgendein Wert',
+      }),
+    ];
+    const entries = [new PiiWhitelistEntry(PiiCategory.OTHER, null)];
+
+    expect(filterWhitelistedDetections(detections, entries)).toEqual([]);
   });
 
   it('filters a mixed set of detections independently', () => {
