@@ -171,7 +171,20 @@ export class ThreadsController {
     const mcpIntegrations = await this.getMcpIntegrationsByIdsUseCase.execute(
       new GetMcpIntegrationsByIdsQuery(result.thread.mcpIntegrationIds),
     );
-    return this.getThreadDtoMapper.toDto(result, piiMasks, mcpIntegrations);
+    const mcpIntegrationsById = new Map(
+      mcpIntegrations.map((integration) => [integration.id, integration]),
+    );
+    const orderedMcpIntegrations = result.thread.mcpIntegrationIds
+      .map((integrationId) => mcpIntegrationsById.get(integrationId))
+      .filter(
+        (integration): integration is (typeof mcpIntegrations)[number] =>
+          integration !== undefined,
+      );
+    return this.getThreadDtoMapper.toDto(
+      result,
+      piiMasks,
+      orderedMcpIntegrations,
+    );
   }
 
   @Delete(':id')
