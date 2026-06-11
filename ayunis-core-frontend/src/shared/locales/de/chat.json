@@ -172,7 +172,23 @@
     },
     "longChatWarningTitle": "Konversation zu lang",
     "longChatWarningDescription": "Für bessere Ergebnisse sollten Sie einen neuen Chat starten.",
-    "inputDisclaimer": "Eingaben werden nicht für Training verwendet. KI kann Fehler machen—Antworten prüfen."
+    "inputDisclaimer": "Eingaben werden nicht für Training verwendet. KI kann Fehler machen—Antworten prüfen.",
+    "piiMask": {
+      "tooltip": "{{category}} — vor dem Senden an das KI-Modell anonymisiert",
+      "categories": {
+        "person_name": "Personenname",
+        "organization": "Organisation",
+        "location": "Ort oder Adresse",
+        "email_address": "E-Mail-Adresse",
+        "phone_number": "Telefonnummer",
+        "url_or_ip": "URL oder IP-Adresse",
+        "date_time": "Datum oder Uhrzeit",
+        "financial_account": "Finanzkonto",
+        "government_id": "Amtliche Kennung",
+        "nationality_religion_politics": "Nationalität, Religion oder Politik",
+        "other": "Personenbezogene Daten"
+      }
+    }
   },
   "newChat": {
     "newChat": "Neuer Chat",

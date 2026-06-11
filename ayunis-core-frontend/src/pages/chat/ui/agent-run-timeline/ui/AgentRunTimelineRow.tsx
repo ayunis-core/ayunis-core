@@ -15,6 +15,7 @@ import {
   CollapsibleTrigger,
 } from '@/shared/ui/shadcn/collapsible';
 import { Badge } from '@/shared/ui/shadcn/badge';
+import { PiiText } from '@/widgets/markdown';
 import type { TimelineStep, StepStatus } from '../model/types';
 import { getToolActionLabel } from '../lib/get-tool-action-label';
 
@@ -121,7 +122,7 @@ function getStepView(
       details: (
         <ScrollArea className="max-h-40">
           <div className="text-xs text-muted-foreground whitespace-pre-wrap">
-            {step.transcript}
+            <PiiText>{step.transcript}</PiiText>
           </div>
         </ScrollArea>
       ),
@@ -171,7 +172,7 @@ function getStepView(
           >
             <ScrollArea className="max-h-32 w-full">
               <span className="text-xs text-muted-foreground whitespace-pre-wrap">
-                {step.result}
+                <PiiText>{step.result ?? ''}</PiiText>
               </span>
             </ScrollArea>
           </Badge>

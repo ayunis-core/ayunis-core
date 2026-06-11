@@ -55,6 +55,10 @@
       "nationality_religion_politics": {
         "label": "Nationality, religion & politics",
         "description": "References to nationality, religious, or political affiliation"
+      },
+      "other": {
+        "label": "Other / unrecognized",
+        "description": "Personal data detected by the engine that does not fit a known category"
       }
     }
   }

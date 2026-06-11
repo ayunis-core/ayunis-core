@@ -12,6 +12,7 @@ export const PII_CATEGORIES: PiiCategory[] = [
   PiiCategory.financial_account,
   PiiCategory.government_id,
   PiiCategory.nationality_religion_politics,
+  PiiCategory.other,
 ];
 
 export interface CategoryRowState {

@@ -3,6 +3,7 @@ import type {
   RunMessageResponseDto,
   RunErrorResponseDto,
   RunThreadResponseDto,
+  RunMasksResponseDto,
 } from '@/shared/api';
 import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
@@ -37,6 +38,7 @@ interface UseMessageSendParams {
   onMessageEvent?: (data: RunMessageResponseDto) => void;
   onSessionEvent?: (data: RunSessionResponseDto) => void;
   onThreadEvent?: (data: RunThreadResponseDto) => void;
+  onMasksEvent?: (data: RunMasksResponseDto) => void;
   onErrorEvent?: (data: RunErrorResponseDto) => void;
   onError?: (error: Error) => void;
   onComplete?: () => void;
@@ -150,6 +152,9 @@ export function useMessageSend(params: UseMessageSendParams) {
                 break;
               case 'thread':
                 params.onThreadEvent?.(data as RunThreadResponseDto);
+                break;
+              case 'masks':
+                params.onMasksEvent?.(data as RunMasksResponseDto);
                 break;
               case 'error':
                 params.onErrorEvent?.(data as RunErrorResponseDto);
