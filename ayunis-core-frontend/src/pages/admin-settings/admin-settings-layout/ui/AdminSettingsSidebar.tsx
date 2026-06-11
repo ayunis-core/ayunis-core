@@ -7,7 +7,7 @@ import {
   Shield,
   FileText,
   Key,
-  VenetianMask,
+  ShieldCheck,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -48,7 +48,7 @@ export function AdminSettingsSidebar() {
     },
     {
       to: '/admin-settings/anonymization',
-      icon: <VenetianMask />,
+      icon: <ShieldCheck />,
       label: t('layout.anonymization'),
     },
     {
