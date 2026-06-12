@@ -10,4 +10,6 @@ export enum WebhookEventType {
   SUBSCRIPTION_BILLING_INFO_UPDATED = 'subscription.billing_info_updated',
   USAGE_COLLECTED = 'usage.collected',
   CHAT_SENT = 'chat.sent',
+  ADDON_ACTIVATED = 'addon.activated',
+  ADDON_DEACTIVATED = 'addon.deactivated',
 }

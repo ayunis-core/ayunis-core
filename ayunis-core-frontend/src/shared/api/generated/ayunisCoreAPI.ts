@@ -30,6 +30,7 @@ import type {
   ActiveSubscriptionResponseDto,
   AddTeamMemberDto,
   AddUrlToKnowledgeBaseDto,
+  AddonStatusResponseDto,
   AdminUpdateUserDto,
   ApiKeyResponseDto,
   ArtifactResponseDto,
@@ -17182,6 +17183,226 @@ export const useApiKeysControllerRevokeApiKey = <TError = void,
       > => {
 
       const mutationOptions = getApiKeysControllerRevokeApiKeyMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary List all add-ons with their active state for an organization
+ */
+export const superAdminAddonsControllerList = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<AddonStatusResponseDto[]>(
+      {url: `/super-admin/addons/${orgId}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminAddonsControllerListQueryKey = (orgId?: string,) => {
+    return [
+    `/super-admin/addons/${orgId}`
+    ] as const;
+    }
+
+    
+export const getSuperAdminAddonsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminAddonsControllerListQueryKey(orgId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminAddonsControllerList>>> = ({ signal }) => superAdminAddonsControllerList(orgId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminAddonsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminAddonsControllerList>>>
+export type SuperAdminAddonsControllerListQueryError = void
+
+
+export function useSuperAdminAddonsControllerList<TData = Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError = void>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminAddonsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminAddonsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminAddonsControllerList<TData = Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminAddonsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminAddonsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminAddonsControllerList<TData = Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List all add-ons with their active state for an organization
+ */
+
+export function useSuperAdminAddonsControllerList<TData = Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAddonsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminAddonsControllerListQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Activate an add-on for an organization
+ */
+export const superAdminAddonsControllerActivate = (
+    orgId: string,
+    type: 'ayunis_core_academy',
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/addons/${orgId}/${type}`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminAddonsControllerActivateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>, TError,{orgId: string;type: 'ayunis_core_academy'}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>, TError,{orgId: string;type: 'ayunis_core_academy'}, TContext> => {
+
+const mutationKey = ['superAdminAddonsControllerActivate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>, {orgId: string;type: 'ayunis_core_academy'}> = (props) => {
+          const {orgId,type} = props ?? {};
+
+          return  superAdminAddonsControllerActivate(orgId,type,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminAddonsControllerActivateMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>>
+    
+    export type SuperAdminAddonsControllerActivateMutationError = void
+
+    /**
+ * @summary Activate an add-on for an organization
+ */
+export const useSuperAdminAddonsControllerActivate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>, TError,{orgId: string;type: 'ayunis_core_academy'}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminAddonsControllerActivate>>,
+        TError,
+        {orgId: string;type: 'ayunis_core_academy'},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminAddonsControllerActivateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Deactivate an add-on for an organization
+ */
+export const superAdminAddonsControllerDeactivate = (
+    orgId: string,
+    type: 'ayunis_core_academy',
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/addons/${orgId}/${type}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminAddonsControllerDeactivateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>, TError,{orgId: string;type: 'ayunis_core_academy'}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>, TError,{orgId: string;type: 'ayunis_core_academy'}, TContext> => {
+
+const mutationKey = ['superAdminAddonsControllerDeactivate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>, {orgId: string;type: 'ayunis_core_academy'}> = (props) => {
+          const {orgId,type} = props ?? {};
+
+          return  superAdminAddonsControllerDeactivate(orgId,type,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminAddonsControllerDeactivateMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>>
+    
+    export type SuperAdminAddonsControllerDeactivateMutationError = void
+
+    /**
+ * @summary Deactivate an add-on for an organization
+ */
+export const useSuperAdminAddonsControllerDeactivate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>, TError,{orgId: string;type: 'ayunis_core_academy'}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminAddonsControllerDeactivate>>,
+        TError,
+        {orgId: string;type: 'ayunis_core_academy'},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminAddonsControllerDeactivateMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

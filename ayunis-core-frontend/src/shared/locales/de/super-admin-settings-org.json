@@ -254,7 +254,27 @@
     "trials": "Trial",
     "models": "Modelle",
     "usage": "Nutzung",
-    "crawlDomains": "Crawl-Domains"
+    "crawlDomains": "Crawl-Domains",
+    "addons": "Add-ons"
+  },
+  "addons": {
+    "title": "Add-ons",
+    "description": "Optionale Produktmodule, die für diese Organisation aktiviert werden können.",
+    "error": "Add-ons konnten nicht geladen werden.",
+    "activate": {
+      "success": "Add-on aktiviert.",
+      "error": "Das Add-on konnte nicht aktiviert werden."
+    },
+    "deactivate": {
+      "success": "Add-on deaktiviert.",
+      "error": "Das Add-on konnte nicht deaktiviert werden."
+    },
+    "items": {
+      "ayunis_core_academy": {
+        "title": "Ayunis Core Academy",
+        "description": "Lernplattform mit Schulungsinhalten für die Arbeit mit Ayunis Core."
+      }
+    }
   },
   "crawlDomains": {
     "title": "Crawl-Domains",

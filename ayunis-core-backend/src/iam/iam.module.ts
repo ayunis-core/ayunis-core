@@ -17,6 +17,7 @@ import { LegalAcceptancesModule } from './legal-acceptances/legal-acceptances.mo
 import { QuotasModule } from './quotas/quotas.module';
 import { TeamsModule } from './teams/teams.module';
 import { PlatformConfigModule } from './platform-config/platform-config.module';
+import { AddonsModule } from './addons/addons.module';
 import { IpAllowlistModule } from './ip-allowlist/ip-allowlist.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { JwtAuthGuard } from './authentication/application/guards/jwt-auth.guard';
@@ -43,6 +44,7 @@ const IAM_FEATURE_MODULES = [
   PlatformConfigModule,
   IpAllowlistModule,
   ApiKeysModule,
+  AddonsModule,
 ];
 
 // Global guard execution order is declared HERE — explicitly, in array

@@ -10,6 +10,9 @@ import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/
 import { SubscriptionSeatsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-seats-updated.event';
 import { SubscriptionBillingInfoUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-billing-info-updated.event';
 import { UsageCollectedEvent } from 'src/domain/usage/application/events/usage-collected.event';
+import { AddonActivatedEvent } from 'src/iam/addons/application/events/addon-activated.event';
+import { AddonDeactivatedEvent } from 'src/iam/addons/application/events/addon-deactivated.event';
+import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/user-message-created.event';
 import { Usage } from 'src/domain/usage/domain/usage.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
@@ -388,6 +391,44 @@ describe('WebhookDispatchListener', () => {
       await listener.handleUserMessageCreated(makeEvent());
 
       expect(sendWebhookUseCase.execute).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('handleAddonActivated', () => {
+    it('should dispatch AddonActivatedWebhookEvent with org, addon type, and actor', async () => {
+      await listener.handleAddonActivated(
+        new AddonActivatedEvent(ORG_ID, AddonType.AYUNIS_CORE_ACADEMY, USER_ID),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.ADDON_ACTIVATED);
+      expect(command.event.data).toEqual({
+        orgId: ORG_ID,
+        addonType: AddonType.AYUNIS_CORE_ACADEMY,
+        actorUserId: USER_ID,
+      });
+    });
+  });
+
+  describe('handleAddonDeactivated', () => {
+    it('should dispatch AddonDeactivatedWebhookEvent with org, addon type, and actor', async () => {
+      await listener.handleAddonDeactivated(
+        new AddonDeactivatedEvent(
+          ORG_ID,
+          AddonType.AYUNIS_CORE_ACADEMY,
+          USER_ID,
+        ),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.ADDON_DEACTIVATED);
+      expect(command.event.data).toEqual({
+        orgId: ORG_ID,
+        addonType: AddonType.AYUNIS_CORE_ACADEMY,
+        actorUserId: USER_ID,
+      });
     });
   });
 
