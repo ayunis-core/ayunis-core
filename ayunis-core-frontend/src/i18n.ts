@@ -44,6 +44,8 @@ import enSuperAdminSettingsSkills from './shared/locales/en/super-admin-settings
 import deSuperAdminSettingsSkills from './shared/locales/de/super-admin-settings-skills.json';
 import enSuperAdminSettingsSuperAdmins from './shared/locales/en/super-admin-settings-super-admins.json';
 import deSuperAdminSettingsSuperAdmins from './shared/locales/de/super-admin-settings-super-admins.json';
+import enSuperAdminSettingsAcademy from './shared/locales/en/super-admin-settings-academy.json';
+import deSuperAdminSettingsAcademy from './shared/locales/de/super-admin-settings-academy.json';
 import enArtifacts from './shared/locales/en/artifacts.json';
 import deArtifacts from './shared/locales/de/artifacts.json';
 import enSuperAdminSettingsPlatformConfig from './shared/locales/en/super-admin-settings-platform-config.json';
@@ -84,6 +86,7 @@ const resources = {
     'knowledge-bases': enKnowledgeBases,
     'super-admin-settings-skills': enSuperAdminSettingsSkills,
     'super-admin-settings-super-admins': enSuperAdminSettingsSuperAdmins,
+    'super-admin-settings-academy': enSuperAdminSettingsAcademy,
     artifacts: enArtifacts,
     'super-admin-settings-platform-config': enSuperAdminSettingsPlatformConfig,
     'admin-settings-security': enAdminSettingsSecurity,
@@ -115,6 +118,7 @@ const resources = {
     'knowledge-bases': deKnowledgeBases,
     'super-admin-settings-skills': deSuperAdminSettingsSkills,
     'super-admin-settings-super-admins': deSuperAdminSettingsSuperAdmins,
+    'super-admin-settings-academy': deSuperAdminSettingsAcademy,
     artifacts: deArtifacts,
     'super-admin-settings-platform-config': deSuperAdminSettingsPlatformConfig,
     'admin-settings-security': deAdminSettingsSecurity,
