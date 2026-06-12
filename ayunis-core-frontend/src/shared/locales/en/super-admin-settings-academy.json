@@ -5,7 +5,9 @@
     "emptyDescription": "Create your first chapter to start building the academy.",
     "addChapter": "Add Chapter",
     "addLesson": "Add Lesson",
-    "noLessons": "No lessons in this chapter yet."
+    "noLessons": "No lessons in this chapter yet.",
+    "dragChapter": "Drag to reorder chapter",
+    "dragLesson": "Drag to reorder lesson"
   },
   "chapterForm": {
     "createTitle": "Create Chapter",
