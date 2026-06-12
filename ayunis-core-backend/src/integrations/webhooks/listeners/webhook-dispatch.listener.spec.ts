@@ -20,6 +20,7 @@ import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/sub
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { SendWebhookUseCase } from '../application/use-cases/send-webhook/send-webhook.use-case';
+import type { UsageCollectedWebhookPayload } from '../domain/webhook-events/usage-collected.webhook-event';
 import type { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import type { ConfigService } from '@nestjs/config';
 import type { SeatBasedSubscriptionEventData } from 'src/iam/subscriptions/application/events/subscription-event-data.types';
@@ -242,21 +243,25 @@ describe('WebhookDispatchListener', () => {
   });
 
   describe('handleUsageCollected', () => {
-    it('should dispatch UsageCollectedWebhookEvent with the model name and ISO createdAt', async () => {
-      const usage = new Usage({
-        id: '00000000-0000-0000-0000-000000000099' as UUID,
-        userId: USER_ID,
+    function makeUsage(userId: UUID | null = USER_ID): Usage {
+      return new Usage({
+        id: '00000000-0000-0000-0000-000000000099',
+        userId,
         organizationId: ORG_ID,
-        modelId: '00000000-0000-0000-0000-0000000000aa' as UUID,
+        modelId: '00000000-0000-0000-0000-0000000000aa',
         provider: ModelProvider.OPENAI,
         inputTokens: 100,
         outputTokens: 50,
         totalTokens: 150,
         cost: 0.0012,
         creditsConsumed: 0.12,
-        requestId: '00000000-0000-0000-0000-0000000000bb' as UUID,
+        requestId: '00000000-0000-0000-0000-0000000000bb',
         createdAt: new Date('2026-04-07T12:00:00.000Z'),
       });
+    }
+
+    it('should dispatch UsageCollectedWebhookEvent with the model name and ISO createdAt', async () => {
+      const usage = makeUsage();
 
       await listener.handleUsageCollected(
         new UsageCollectedEvent(usage, 'gpt-4o-mini'),
@@ -283,11 +288,71 @@ describe('WebhookDispatchListener', () => {
         }),
       );
     });
+
+    it('should enrich the payload with user email and name', async () => {
+      await listener.handleUsageCollected(
+        new UsageCollectedEvent(makeUsage(), 'gpt-4o-mini'),
+      );
+
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.data).toEqual(
+        expect.objectContaining({
+          userEmail: 'test@example.com',
+          userName: 'Test User',
+        }),
+      );
+    });
+
+    it('should dispatch unenriched without a user lookup for API-key usage (null userId)', async () => {
+      await listener.handleUsageCollected(
+        new UsageCollectedEvent(makeUsage(null), 'gpt-4o-mini'),
+      );
+
+      expect(findUserByIdUseCase.execute).not.toHaveBeenCalled();
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      const data = command.event.data as UsageCollectedWebhookPayload;
+      expect(data.userId).toBeNull();
+      expect(data.userEmail).toBeUndefined();
+      expect(data.userName).toBeUndefined();
+    });
+
+    it('should dispatch unenriched when the user lookup fails', async () => {
+      findUserByIdUseCase.execute.mockRejectedValue(
+        new Error('User not found'),
+      );
+
+      await listener.handleUsageCollected(
+        new UsageCollectedEvent(makeUsage(), 'gpt-4o-mini'),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      const data = command.event.data as UsageCollectedWebhookPayload;
+      expect(data.userEmail).toBeUndefined();
+      expect(data.userName).toBeUndefined();
+    });
+
+    it('should skip the user lookup when no webhook url is configured', async () => {
+      configService.get.mockReturnValue(undefined);
+
+      await listener.handleUsageCollected(
+        new UsageCollectedEvent(makeUsage(), 'gpt-4o-mini'),
+      );
+
+      expect(findUserByIdUseCase.execute).not.toHaveBeenCalled();
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('handleUserMessageCreated', () => {
     function makeEvent(): UserMessageCreatedEvent {
-      return new UserMessageCreatedEvent(USER_ID, ORG_ID, THREAD_ID, MESSAGE_ID);
+      return new UserMessageCreatedEvent(
+        USER_ID,
+        ORG_ID,
+        THREAD_ID,
+        MESSAGE_ID,
+      );
     }
 
     it('should dispatch ChatSentWebhookEvent enriched with user email and name', async () => {

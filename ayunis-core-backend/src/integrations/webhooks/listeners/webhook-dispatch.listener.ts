@@ -127,8 +127,14 @@ export class WebhookDispatchListener {
 
   @OnEvent(UsageCollectedEvent.EVENT_NAME)
   async handleUsageCollected(event: UsageCollectedEvent): Promise<void> {
+    // API-key usage has no user; the event is still dispatched unenriched —
+    // receivers decide whether unattributed usage is relevant to them.
+    const user =
+      event.usage.userId && this.webhookConfigured()
+        ? await this.resolveUser(event.usage.userId)
+        : null;
     await this.dispatch(
-      new UsageCollectedWebhookEvent(event.usage, event.modelName),
+      new UsageCollectedWebhookEvent(event.usage, event.modelName, user),
     );
   }
 
@@ -138,7 +144,7 @@ export class WebhookDispatchListener {
   ): Promise<void> {
     // Skip the per-message user lookup entirely when no webhook receiver is
     // configured — this handler fires for every chat message.
-    if (!this.configService.get<string>('app.orgEventsWebhookUrl')) {
+    if (!this.webhookConfigured()) {
       return;
     }
     const user = await this.resolveUser(event.userId);
@@ -146,6 +152,10 @@ export class WebhookDispatchListener {
       return;
     }
     await this.dispatch(new ChatSentWebhookEvent(event, user));
+  }
+
+  private webhookConfigured(): boolean {
+    return !!this.configService.get<string>('app.orgEventsWebhookUrl');
   }
 
   /**
