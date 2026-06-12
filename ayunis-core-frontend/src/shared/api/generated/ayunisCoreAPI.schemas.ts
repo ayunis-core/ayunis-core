@@ -4038,6 +4038,117 @@ export interface UpsertOrgSystemPromptDto {
   systemPrompt: string;
 }
 
+export interface AcademyLessonResponseDto {
+  /** The unique identifier of the lesson */
+  id: string;
+  /** The id of the chapter the lesson belongs to */
+  chapterId: string;
+  /** The title of the lesson */
+  title: string;
+  /**
+   * An optional description of the lesson
+   * @nullable
+   */
+  description: string | null;
+  /** The Loom share or embed link of the lesson video */
+  loomUrl: string;
+  /** The position of the lesson within its chapter (0-based) */
+  position: number;
+  /** The date the lesson was created */
+  createdAt: string;
+  /** The date the lesson was last updated */
+  updatedAt: string;
+}
+
+export interface AcademyChapterResponseDto {
+  /** The unique identifier of the chapter */
+  id: string;
+  /** The title of the chapter */
+  title: string;
+  /** A description of what the chapter covers */
+  description: string;
+  /** The position of the chapter (0-based) */
+  position: number;
+  /** The lessons of the chapter, ordered by position */
+  lessons: AcademyLessonResponseDto[];
+  /** The date the chapter was created */
+  createdAt: string;
+  /** The date the chapter was last updated */
+  updatedAt: string;
+}
+
+export interface CreateChapterRequestDto {
+  /**
+   * The title of the chapter
+   * @maxLength 255
+   */
+  title: string;
+  /**
+   * A description of what the chapter covers
+   * @maxLength 2000
+   */
+  description: string;
+}
+
+export interface ReorderChaptersRequestDto {
+  /** All chapter ids in their new order. Must contain exactly the ids of all existing chapters. */
+  chapterIds: string[];
+}
+
+export interface UpdateChapterRequestDto {
+  /**
+   * The title of the chapter
+   * @maxLength 255
+   */
+  title: string;
+  /**
+   * A description of what the chapter covers
+   * @maxLength 2000
+   */
+  description: string;
+}
+
+export interface CreateLessonRequestDto {
+  /**
+   * The title of the lesson
+   * @maxLength 255
+   */
+  title: string;
+  /**
+   * An optional description of the lesson
+   * @maxLength 2000
+   */
+  description?: string;
+  /**
+   * The Loom share or embed link of the lesson video
+   * @maxLength 500
+   */
+  loomUrl: string;
+}
+
+export interface ReorderLessonsRequestDto {
+  /** All lesson ids of the chapter in their new order. Must contain exactly the ids of all lessons in the chapter. */
+  lessonIds: string[];
+}
+
+export interface UpdateLessonRequestDto {
+  /**
+   * The title of the lesson
+   * @maxLength 255
+   */
+  title: string;
+  /**
+   * An optional description of the lesson
+   * @maxLength 2000
+   */
+  description?: string;
+  /**
+   * The Loom share or embed link of the lesson video
+   * @maxLength 500
+   */
+  loomUrl: string;
+}
+
 export interface ChatCompletionRequestDto { [key: string]: unknown }
 
 export interface LoginDto {
