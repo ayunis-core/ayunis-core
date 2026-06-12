@@ -5,12 +5,12 @@ The webhooks module dispatches domain lifecycle events (user created/updated/del
 
 **Key files:**
 
-- `webhooks.module.ts` — NestJS module wiring. Registers `SendWebhookUseCase`, `WebhookHandler` port/adapter binding, and `WebhookDispatchListener`. All providers are internal to the module. Implements `OnModuleInit` to validate at boot time that `WEBHOOK_SIGNING_SECRET` is present when a webhook URL is configured in production (fails loud); outside production a warning is logged instead. Depends on `ConfigService` for reading app configuration.
-- `listeners/webhook-dispatch.listener.ts` — Central listener that subscribes to domain events (`UserCreatedEvent`, `UserUpdatedEvent`, `UserDeletedEvent`, `OrgCreatedEvent`, subscription events, `UsageCollectedEvent`) and dispatches them as webhook HTTP calls via `SendWebhookUseCase`.
+- `webhooks.module.ts` — NestJS module wiring. Registers `SendWebhookUseCase`, `WebhookHandler` port/adapter binding, and `WebhookDispatchListener`. Imports `UsersModule` for `FindUserByIdUseCase` (payload enrichment). Implements `OnModuleInit` to validate at boot time that `WEBHOOK_SIGNING_SECRET` is present when a webhook URL is configured in production (fails loud); outside production a warning is logged instead. Depends on `ConfigService` for reading app configuration.
+- `listeners/webhook-dispatch.listener.ts` — Central listener that subscribes to domain events (`UserCreatedEvent`, `UserUpdatedEvent`, `UserDeletedEvent`, `OrgCreatedEvent`, subscription events, `UsageCollectedEvent`, `UserMessageCreatedEvent`) and dispatches them as webhook HTTP calls via `SendWebhookUseCase`. The `chat.sent` webhook enriches the payload with the sender's email/name via `FindUserByIdUseCase` and skips the lookup entirely when no webhook URL is configured.
 - `application/use-cases/send-webhook/send-webhook.use-case.ts` — Receives a `SendWebhookCommand` and delegates to the `WebhookHandler` port.
 - `application/ports/webhook.handler.ts` — Abstract port defining the webhook delivery contract.
 - `infrastructure/http/http-webhook.handler.ts` — Infrastructure adapter that performs the actual HTTP POST to the configured webhook URL. Signs outbound payloads with HMAC-SHA256 when `WEBHOOK_SIGNING_SECRET` is configured, producing a Stripe-style `X-Webhook-Signature` header (`t=<unix_seconds>,v1=<hex>`). Uses `ConfigService` to read the webhook URL and signing secret.
-- `domain/entities/webhook-event.entity.ts` — Abstract `WebhookEvent` entity with UUID, event type enum, data payload, and timestamp. Ten concrete event types cover organization, user, subscription lifecycle, and usage events.
+- `domain/entities/webhook-event.entity.ts` — Abstract `WebhookEvent` entity with UUID, event type enum, data payload, and timestamp. Eleven concrete event types cover organization, user, subscription lifecycle, usage, and chat events.
 
 **Architecture:**
 

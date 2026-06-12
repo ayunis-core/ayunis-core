@@ -54,6 +54,1644 @@
         "tags": ["app"]
       }
     },
+    "/users": {
+      "get": {
+        "description": "Retrieve paginated users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.",
+        "operationId": "UserController_getUsersInOrganization",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search users by name or email",
+            "schema": {
+              "example": "john",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of users to return (default: 25)",
+            "schema": {
+              "default": 25,
+              "example": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of users to skip (default: 0)",
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved users in the organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedUsersListResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "500": {
+            "description": "Internal server error occurred while retrieving users"
+          }
+        },
+        "summary": "Get users in current organization",
+        "tags": ["Users"]
+      }
+    },
+    "/users/{id}/role": {
+      "patch": {
+        "description": "Update the role of a user. You cannot update your own role.",
+        "operationId": "UserController_updateUserRole",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User ID to update role for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "New role information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User role successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid role value"
+          },
+          "401": {
+            "description": "User not authenticated or trying to update own role"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while updating user role"
+          }
+        },
+        "summary": "Update user role",
+        "tags": ["Users"]
+      }
+    },
+    "/users/name": {
+      "patch": {
+        "description": "Update the name of a user. Users can only update their own name.",
+        "operationId": "UserController_updateUserName",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "New name information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserNameDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User name successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid name value"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized to update this user"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while updating user name"
+          }
+        },
+        "summary": "Update user name",
+        "tags": ["Users"]
+      }
+    },
+    "/users/password": {
+      "patch": {
+        "description": "Update the password of the current authenticated user. Requires current password for verification.",
+        "operationId": "UserController_updatePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Password update information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password successfully updated"
+          },
+          "400": {
+            "description": "Invalid password values or passwords do not match"
+          },
+          "401": {
+            "description": "User not authenticated or current password is incorrect"
+          },
+          "500": {
+            "description": "Internal server error occurred while updating password"
+          }
+        },
+        "summary": "Update user password",
+        "tags": ["Users"]
+      }
+    },
+    "/users/confirm-email": {
+      "post": {
+        "description": "Confirm a user's email address using a JWT token received via email",
+        "operationId": "UserController_confirmEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Email confirmation token",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmEmailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Email successfully confirmed"
+          },
+          "400": {
+            "description": "Invalid token or token has expired"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while confirming email"
+          }
+        },
+        "summary": "Confirm user email",
+        "tags": ["Users"]
+      }
+    },
+    "/users/resend-confirmation": {
+      "post": {
+        "description": "Resend a confirmation email to the specified email address. Silently succeeds even if email is already verified or user does not exist for security reasons.",
+        "operationId": "UserController_resendEmailConfirmation",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Email address to resend confirmation to",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendEmailConfirmationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Confirmation email resent (or silently handled)"
+          },
+          "400": {
+            "description": "Invalid email format"
+          },
+          "500": {
+            "description": "Internal server error occurred while sending email"
+          }
+        },
+        "summary": "Resend email confirmation",
+        "tags": ["Users"]
+      }
+    },
+    "/users/{id}": {
+      "delete": {
+        "description": "Delete a user by their ID. Only users within the same organization can be deleted.",
+        "operationId": "UserController_deleteUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User ID to delete",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User successfully deleted"
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while deleting user"
+          }
+        },
+        "summary": "Delete a user",
+        "tags": ["Users"]
+      },
+      "patch": {
+        "description": "Update another user's name and/or email within your organization. You cannot edit your own profile through this endpoint.",
+        "operationId": "AdminUserController_adminUpdateUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User ID to update",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Fields to update (at least one of name or email)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminUpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or no fields to update"
+          },
+          "401": {
+            "description": "User not authenticated, trying to edit own profile, or target user is in a different organization"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while updating user"
+          }
+        },
+        "summary": "Update a user (admin)",
+        "tags": ["Users"]
+      }
+    },
+    "/users/{id}/trigger-password-reset": {
+      "post": {
+        "description": "Send a password reset email to a user in your organization. Only organization admins can use this endpoint.",
+        "operationId": "UserPasswordResetController_triggerPasswordResetForUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User ID to send password reset email to",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Password reset email sent successfully"
+          },
+          "401": {
+            "description": "Not authorized to reset this user's password"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "summary": "Trigger password reset for a user",
+        "tags": ["Users"]
+      }
+    },
+    "/users/forgot-password": {
+      "post": {
+        "description": "Send a password reset email to the provided email address. If the email exists in the system, a reset link will be sent.",
+        "operationId": "UserPasswordResetController_forgotPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Email address to send reset link to",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password reset email sent successfully. This response is returned regardless of whether the email exists to prevent email enumeration."
+          },
+          "400": {
+            "description": "Invalid request format or validation errors"
+          },
+          "500": {
+            "description": "Internal server error while processing the request"
+          }
+        },
+        "summary": "Trigger password reset",
+        "tags": ["Users"]
+      }
+    },
+    "/users/reset-password": {
+      "post": {
+        "description": "Reset user password using the token received via email. The token must be valid and not expired.",
+        "operationId": "UserPasswordResetController_resetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Password reset information including token and new password",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password reset successful."
+          },
+          "400": {
+            "description": "Invalid request format, validation errors, or password requirements not met"
+          },
+          "401": {
+            "description": "Invalid or expired reset token"
+          },
+          "500": {
+            "description": "Internal server error while processing the request"
+          }
+        },
+        "summary": "Reset password with token",
+        "tags": ["Users"]
+      }
+    },
+    "/users/validate-reset-token": {
+      "get": {
+        "description": "Validate a password reset token without performing the actual password reset. Used to check if a token is valid before showing the reset form.",
+        "operationId": "UserPasswordResetController_validateResetToken",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "query",
+            "description": "Password reset token from email",
+            "schema": {
+              "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token is valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired reset token"
+          },
+          "500": {
+            "description": "Internal server error while processing the request"
+          }
+        },
+        "summary": "Validate password reset token",
+        "tags": ["Users"]
+      }
+    },
+    "/super-admin/users/{orgId}": {
+      "get": {
+        "description": "Retrieve paginated users that belong to the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminUsersController_getUsersByOrgId",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to get users for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search users by name or email",
+            "schema": {
+              "example": "john",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of users to return (default: 25)",
+            "schema": {
+              "default": 25,
+              "example": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of users to skip (default: 0)",
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved users in the organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedUsersListResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Organization not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while retrieving users"
+          }
+        },
+        "summary": "Get users by organization ID",
+        "tags": ["Super Admin Users"]
+      }
+    },
+    "/super-admin/users/{userId}": {
+      "delete": {
+        "description": "Delete a user by their ID. This endpoint is only accessible to super admins and allows deletion of users from any organization.",
+        "operationId": "SuperAdminUsersController_deleteUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "User ID to delete",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User successfully deleted"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while deleting user"
+          }
+        },
+        "summary": "Delete a user",
+        "tags": ["Super Admin Users"]
+      }
+    },
+    "/super-admin/users/{userId}/trigger-password-reset": {
+      "post": {
+        "description": "Send a password reset email to the specified user and return the reset URL. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminUsersController_triggerPasswordReset",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "User ID to send password reset email to",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Password reset email sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TriggerPasswordResetResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while sending password reset email"
+          }
+        },
+        "summary": "Trigger password reset for a user",
+        "tags": ["Super Admin Users"]
+      }
+    },
+    "/super-admin/users/{orgId}/create": {
+      "post": {
+        "description": "Create a new user in the specified organization with a randomly generated password. A password reset email will be sent to the user. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminUsersController_createUser",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to create the user in",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "User information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Organization not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while creating user"
+          }
+        },
+        "summary": "Create a new user in an organization",
+        "tags": ["Super Admin Users"]
+      }
+    },
+    "/super-admin/super-admins": {
+      "get": {
+        "description": "Retrieve all users with super admin status. Only accessible to super admins.",
+        "operationId": "SuperAdminManagementController_listSuperAdmins",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of super admins",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SuperAdminUserResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          }
+        },
+        "summary": "List all super admins",
+        "tags": ["Super Admin Management"]
+      },
+      "post": {
+        "description": "Promote an existing user to super admin by email address. Idempotent if user is already a super admin.",
+        "operationId": "SuperAdminManagementController_promoteToSuperAdmin",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Email of the user to promote",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromoteToSuperAdminDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User promoted to super admin (or already a super admin)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminUserResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "User with the given email not found"
+          }
+        },
+        "summary": "Promote a user to super admin",
+        "tags": ["Super Admin Management"]
+      }
+    },
+    "/super-admin/super-admins/{userId}": {
+      "delete": {
+        "description": "Demote a user from super admin to customer. Cannot demote yourself.",
+        "operationId": "SuperAdminManagementController_demoteFromSuperAdmin",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "User ID to demote",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Super admin status removed"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "403": {
+            "description": "Cannot remove your own super admin status"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "409": {
+            "description": "Cannot demote the last super admin"
+          },
+          "422": {
+            "description": "User is not a super admin"
+          }
+        },
+        "summary": "Remove super admin status from a user",
+        "tags": ["Super Admin Management"]
+      }
+    },
+    "/invites": {
+      "post": {
+        "description": "Send an invitation to a user to join an organization with a specific role",
+        "operationId": "InvitesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInviteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The invite has been successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateInviteResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid invite data"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a new invite",
+        "tags": ["invites"]
+      },
+      "get": {
+        "description": "Retrieve paginated invites with optional search",
+        "operationId": "InvitesController_getInvites",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search invites by email",
+            "schema": {
+              "example": "john@example.com",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of invites to return (default: 25)",
+            "schema": {
+              "default": 25,
+              "example": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of invites to skip (default: 0)",
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns paginated invites for the organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedInvitesListResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all invites for current user's organization",
+        "tags": ["invites"]
+      }
+    },
+    "/invites/bulk": {
+      "post": {
+        "description": "Send invitations to multiple users. All rows are validated before any are processed.",
+        "operationId": "InvitesController_createBulk",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBulkInvitesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The invites have been processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateBulkInvitesResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed for one or more invites"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create multiple invites in bulk",
+        "tags": ["invites"]
+      }
+    },
+    "/invites/{token}": {
+      "get": {
+        "description": "Retrieve invite details including organization name by token",
+        "operationId": "InvitesController_getInviteByToken",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "description": "Token of the invited user",
+            "schema": {
+              "example": "1234567890",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the invite with organization details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteDetailResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invite not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get a single invite by token",
+        "tags": ["invites"]
+      }
+    },
+    "/invites/accept": {
+      "post": {
+        "description": "Accept an invitation using the JWT token",
+        "operationId": "InvitesController_acceptInvite",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInviteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The invite has been successfully accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptInviteResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid invite token or invite already accepted/expired"
+          },
+          "404": {
+            "description": "Invite not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Accept an invite",
+        "tags": ["invites"]
+      }
+    },
+    "/invites/{id}/resend": {
+      "post": {
+        "description": "Delete the expired invite and create a new one with the same details, then send the invitation email",
+        "operationId": "InvitesController_resendExpiredInvite",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the expired invite to resend",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The invite has been successfully resent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateInviteResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invite has not expired yet or invalid data"
+          },
+          "404": {
+            "description": "Invite not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Resend an expired invite",
+        "tags": ["invites"]
+      }
+    },
+    "/invites/all": {
+      "delete": {
+        "description": "Delete all pending invitations for the organization (Admin only)",
+        "operationId": "InvitesController_deleteAllPending",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "All pending invites have been deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteAllPendingInvitesResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Unauthorized - Admin role required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete all pending invites",
+        "tags": ["invites"]
+      }
+    },
+    "/invites/{id}": {
+      "delete": {
+        "description": "Delete an invitation (only allowed by the user who created it)",
+        "operationId": "InvitesController_deleteInvite",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the invite to delete",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The invite has been successfully deleted"
+          },
+          "403": {
+            "description": "Unauthorized to delete this invite"
+          },
+          "404": {
+            "description": "Invite not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete an invite",
+        "tags": ["invites"]
+      }
+    },
+    "/super-admin/orgs": {
+      "post": {
+        "description": "Create a new organization in the system. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminOrgsController_createOrg",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Organization information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrgRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created organization for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Create a new organization",
+        "tags": ["Super Admin Orgs"]
+      },
+      "get": {
+        "description": "Retrieve paginated organizations in the system. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminOrgsController_getAllOrgs",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search organizations by name.",
+            "schema": {
+              "example": "Acme",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of organizations to return (default: 50).",
+            "schema": {
+              "default": 50,
+              "example": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of organizations to skip (default: 0).",
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved organizations for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminOrgListResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "List all organizations",
+        "tags": ["Super Admin Orgs"]
+      }
+    },
+    "/super-admin/orgs/{id}": {
+      "get": {
+        "description": "Retrieve an organization by its ID. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminOrgsController_getOrgById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the organization to retrieve.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved organization for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Get an organization by ID",
+        "tags": ["Super Admin Orgs"]
+      }
+    },
+    "/subscriptions/active": {
+      "get": {
+        "operationId": "SubscriptionsController_hasActiveSubscription",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully checked subscription status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActiveSubscriptionResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Check if the current organization has an active subscription",
+        "tags": ["subscriptions"]
+      }
+    },
+    "/subscriptions/price": {
+      "get": {
+        "operationId": "SubscriptionsController_getCurrentPrice",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved current price",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Price not configured"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get the current price per seat monthly",
+        "tags": ["subscriptions"]
+      }
+    },
+    "/super-admin/subscriptions/{orgId}": {
+      "get": {
+        "description": "Retrieve subscription details for the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminSubscriptionsController_getSubscription",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to get subscription for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved subscription details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionResponseDtoNullable"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get subscription details for a specific organization",
+        "tags": ["Super Admin Subscriptions"]
+      },
+      "post": {
+        "description": "Create a new subscription for the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminSubscriptionsController_createSubscription",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to create subscription for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubscriptionRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created subscription",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid subscription data provided"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "409": {
+            "description": "Subscription already exists for this organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a new subscription for a specific organization",
+        "tags": ["Super Admin Subscriptions"]
+      },
+      "delete": {
+        "description": "Cancel the subscription for the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminSubscriptionsController_cancelSubscription",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to cancel subscription for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully cancelled subscription"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "No subscription found for the organization"
+          },
+          "409": {
+            "description": "Subscription is already cancelled"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Cancel the subscription for a specific organization",
+        "tags": ["Super Admin Subscriptions"]
+      }
+    },
+    "/super-admin/subscriptions/{orgId}/seats": {
+      "put": {
+        "description": "Update the number of seats for the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminSubscriptionsController_updateSeats",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to update seats for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSeatsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated seats"
+          },
+          "400": {
+            "description": "Invalid seat update data provided"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "No subscription found for the organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update the number of seats for a specific organization",
+        "tags": ["Super Admin Subscriptions"]
+      }
+    },
+    "/super-admin/subscriptions/{orgId}/monthly-credits": {
+      "put": {
+        "operationId": "SuperAdminSubscriptionsController_updateMonthlyCredits",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to update monthly credits for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMonthlyCreditsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated monthly credits"
+          },
+          "400": {
+            "description": "Invalid monthly credits provided or subscription is not usage-based"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "No subscription found for the organization"
+          }
+        },
+        "summary": "Update monthly credits for an organization (super admin)",
+        "tags": ["Super Admin Subscriptions"]
+      }
+    },
+    "/super-admin/subscriptions/{orgId}/billing-info": {
+      "put": {
+        "description": "Update the billing information for the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminSubscriptionsController_updateBillingInfo",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to update billing info for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBillingInfoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated billing information"
+          },
+          "400": {
+            "description": "Invalid billing information provided"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "No subscription found for the organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update the billing information for a specific organization",
+        "tags": ["Super Admin Subscriptions"]
+      }
+    },
+    "/super-admin/subscriptions/{orgId}/start-date": {
+      "put": {
+        "description": "Update the start date for the latest subscription of the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminSubscriptionsController_updateStartDate",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to update the subscription start date for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStartDateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated subscription start date"
+          },
+          "400": {
+            "description": "Invalid start date provided"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "No subscription found for the organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update the start date for a specific organization subscription",
+        "tags": ["Super Admin Subscriptions"]
+      }
+    },
+    "/super-admin/subscriptions/{orgId}/uncancel": {
+      "post": {
+        "description": "Uncancel the subscription for the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminSubscriptionsController_uncancelSubscription",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to uncancel subscription for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully uncancelled subscription"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "No subscription found for the organization"
+          },
+          "409": {
+            "description": "Subscription is not cancelled"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Uncancel the subscription for a specific organization",
+        "tags": ["Super Admin Subscriptions"]
+      }
+    },
     "/models/available/language": {
       "get": {
         "operationId": "ModelsController_getAvailableLanguageModels",
@@ -1499,1644 +3137,6 @@
         },
         "summary": "Update an image-generation model in the catalog",
         "tags": ["Super Admin Models"]
-      }
-    },
-    "/super-admin/orgs": {
-      "post": {
-        "description": "Create a new organization in the system. Only accessible to users with the super admin system role.",
-        "operationId": "SuperAdminOrgsController_createOrg",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Organization information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateOrgRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created organization for the super admin.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request format or validation errors."
-          },
-          "403": {
-            "description": "The requester is not a super admin."
-          }
-        },
-        "summary": "Create a new organization",
-        "tags": ["Super Admin Orgs"]
-      },
-      "get": {
-        "description": "Retrieve paginated organizations in the system. Only accessible to users with the super admin system role.",
-        "operationId": "SuperAdminOrgsController_getAllOrgs",
-        "parameters": [
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "Search organizations by name.",
-            "schema": {
-              "example": "Acme",
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "description": "Maximum number of organizations to return (default: 50).",
-            "schema": {
-              "default": 50,
-              "example": 25,
-              "type": "number"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "description": "Number of organizations to skip (default: 0).",
-            "schema": {
-              "default": 0,
-              "example": 0,
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved organizations for the super admin.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminOrgListResponseDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "The requester is not a super admin."
-          }
-        },
-        "summary": "List all organizations",
-        "tags": ["Super Admin Orgs"]
-      }
-    },
-    "/super-admin/orgs/{id}": {
-      "get": {
-        "description": "Retrieve an organization by its ID. Only accessible to users with the super admin system role.",
-        "operationId": "SuperAdminOrgsController_getOrgById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The ID of the organization to retrieve.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved organization for the super admin.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "The requester is not a super admin."
-          }
-        },
-        "summary": "Get an organization by ID",
-        "tags": ["Super Admin Orgs"]
-      }
-    },
-    "/users": {
-      "get": {
-        "description": "Retrieve paginated users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.",
-        "operationId": "UserController_getUsersInOrganization",
-        "parameters": [
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "Search users by name or email",
-            "schema": {
-              "example": "john",
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "description": "Maximum number of users to return (default: 25)",
-            "schema": {
-              "default": 25,
-              "example": 25,
-              "type": "number"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "description": "Number of users to skip (default: 0)",
-            "schema": {
-              "default": 0,
-              "example": 0,
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved users in the organization",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PaginatedUsersListResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated"
-          },
-          "500": {
-            "description": "Internal server error occurred while retrieving users"
-          }
-        },
-        "summary": "Get users in current organization",
-        "tags": ["Users"]
-      }
-    },
-    "/users/{id}/role": {
-      "patch": {
-        "description": "Update the role of a user. You cannot update your own role.",
-        "operationId": "UserController_updateUserRole",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "User ID to update role for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "New role information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserRoleDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "User role successfully updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid role value"
-          },
-          "401": {
-            "description": "User not authenticated or trying to update own role"
-          },
-          "404": {
-            "description": "User not found"
-          },
-          "500": {
-            "description": "Internal server error occurred while updating user role"
-          }
-        },
-        "summary": "Update user role",
-        "tags": ["Users"]
-      }
-    },
-    "/users/name": {
-      "patch": {
-        "description": "Update the name of a user. Users can only update their own name.",
-        "operationId": "UserController_updateUserName",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "New name information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserNameDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "User name successfully updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid name value"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized to update this user"
-          },
-          "404": {
-            "description": "User not found"
-          },
-          "500": {
-            "description": "Internal server error occurred while updating user name"
-          }
-        },
-        "summary": "Update user name",
-        "tags": ["Users"]
-      }
-    },
-    "/users/password": {
-      "patch": {
-        "description": "Update the password of the current authenticated user. Requires current password for verification.",
-        "operationId": "UserController_updatePassword",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Password update information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdatePasswordDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Password successfully updated"
-          },
-          "400": {
-            "description": "Invalid password values or passwords do not match"
-          },
-          "401": {
-            "description": "User not authenticated or current password is incorrect"
-          },
-          "500": {
-            "description": "Internal server error occurred while updating password"
-          }
-        },
-        "summary": "Update user password",
-        "tags": ["Users"]
-      }
-    },
-    "/users/confirm-email": {
-      "post": {
-        "description": "Confirm a user's email address using a JWT token received via email",
-        "operationId": "UserController_confirmEmail",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Email confirmation token",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ConfirmEmailDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Email successfully confirmed"
-          },
-          "400": {
-            "description": "Invalid token or token has expired"
-          },
-          "404": {
-            "description": "User not found"
-          },
-          "500": {
-            "description": "Internal server error occurred while confirming email"
-          }
-        },
-        "summary": "Confirm user email",
-        "tags": ["Users"]
-      }
-    },
-    "/users/resend-confirmation": {
-      "post": {
-        "description": "Resend a confirmation email to the specified email address. Silently succeeds even if email is already verified or user does not exist for security reasons.",
-        "operationId": "UserController_resendEmailConfirmation",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Email address to resend confirmation to",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResendEmailConfirmationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Confirmation email resent (or silently handled)"
-          },
-          "400": {
-            "description": "Invalid email format"
-          },
-          "500": {
-            "description": "Internal server error occurred while sending email"
-          }
-        },
-        "summary": "Resend email confirmation",
-        "tags": ["Users"]
-      }
-    },
-    "/users/{id}": {
-      "delete": {
-        "description": "Delete a user by their ID. Only users within the same organization can be deleted.",
-        "operationId": "UserController_deleteUser",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "User ID to delete",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "User successfully deleted"
-          },
-          "401": {
-            "description": "User not authenticated"
-          },
-          "404": {
-            "description": "User not found"
-          },
-          "500": {
-            "description": "Internal server error occurred while deleting user"
-          }
-        },
-        "summary": "Delete a user",
-        "tags": ["Users"]
-      },
-      "patch": {
-        "description": "Update another user's name and/or email within your organization. You cannot edit your own profile through this endpoint.",
-        "operationId": "AdminUserController_adminUpdateUser",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "User ID to update",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "Fields to update (at least one of name or email)",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AdminUpdateUserDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "User successfully updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input or no fields to update"
-          },
-          "401": {
-            "description": "User not authenticated, trying to edit own profile, or target user is in a different organization"
-          },
-          "404": {
-            "description": "User not found"
-          },
-          "500": {
-            "description": "Internal server error occurred while updating user"
-          }
-        },
-        "summary": "Update a user (admin)",
-        "tags": ["Users"]
-      }
-    },
-    "/users/{id}/trigger-password-reset": {
-      "post": {
-        "description": "Send a password reset email to a user in your organization. Only organization admins can use this endpoint.",
-        "operationId": "UserPasswordResetController_triggerPasswordResetForUser",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "User ID to send password reset email to",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Password reset email sent successfully"
-          },
-          "401": {
-            "description": "Not authorized to reset this user's password"
-          },
-          "404": {
-            "description": "User not found"
-          }
-        },
-        "summary": "Trigger password reset for a user",
-        "tags": ["Users"]
-      }
-    },
-    "/users/forgot-password": {
-      "post": {
-        "description": "Send a password reset email to the provided email address. If the email exists in the system, a reset link will be sent.",
-        "operationId": "UserPasswordResetController_forgotPassword",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Email address to send reset link to",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ForgotPasswordDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Password reset email sent successfully. This response is returned regardless of whether the email exists to prevent email enumeration."
-          },
-          "400": {
-            "description": "Invalid request format or validation errors"
-          },
-          "500": {
-            "description": "Internal server error while processing the request"
-          }
-        },
-        "summary": "Trigger password reset",
-        "tags": ["Users"]
-      }
-    },
-    "/users/reset-password": {
-      "post": {
-        "description": "Reset user password using the token received via email. The token must be valid and not expired.",
-        "operationId": "UserPasswordResetController_resetPassword",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Password reset information including token and new password",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResetPasswordDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Password reset successful."
-          },
-          "400": {
-            "description": "Invalid request format, validation errors, or password requirements not met"
-          },
-          "401": {
-            "description": "Invalid or expired reset token"
-          },
-          "500": {
-            "description": "Internal server error while processing the request"
-          }
-        },
-        "summary": "Reset password with token",
-        "tags": ["Users"]
-      }
-    },
-    "/users/validate-reset-token": {
-      "get": {
-        "description": "Validate a password reset token without performing the actual password reset. Used to check if a token is valid before showing the reset form.",
-        "operationId": "UserPasswordResetController_validateResetToken",
-        "parameters": [
-          {
-            "name": "token",
-            "required": true,
-            "in": "query",
-            "description": "Password reset token from email",
-            "schema": {
-              "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Token is valid",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "valid": {
-                      "type": "boolean",
-                      "example": true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid or expired reset token"
-          },
-          "500": {
-            "description": "Internal server error while processing the request"
-          }
-        },
-        "summary": "Validate password reset token",
-        "tags": ["Users"]
-      }
-    },
-    "/super-admin/users/{orgId}": {
-      "get": {
-        "description": "Retrieve paginated users that belong to the specified organization. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminUsersController_getUsersByOrgId",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to get users for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "Search users by name or email",
-            "schema": {
-              "example": "john",
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "description": "Maximum number of users to return (default: 25)",
-            "schema": {
-              "default": 25,
-              "example": 25,
-              "type": "number"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "description": "Number of users to skip (default: 0)",
-            "schema": {
-              "default": 0,
-              "example": 0,
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved users in the organization",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PaginatedUsersListResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Organization not found"
-          },
-          "500": {
-            "description": "Internal server error occurred while retrieving users"
-          }
-        },
-        "summary": "Get users by organization ID",
-        "tags": ["Super Admin Users"]
-      }
-    },
-    "/super-admin/users/{userId}": {
-      "delete": {
-        "description": "Delete a user by their ID. This endpoint is only accessible to super admins and allows deletion of users from any organization.",
-        "operationId": "SuperAdminUsersController_deleteUser",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "path",
-            "description": "User ID to delete",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "User successfully deleted"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "User not found"
-          },
-          "500": {
-            "description": "Internal server error occurred while deleting user"
-          }
-        },
-        "summary": "Delete a user",
-        "tags": ["Super Admin Users"]
-      }
-    },
-    "/super-admin/users/{userId}/trigger-password-reset": {
-      "post": {
-        "description": "Send a password reset email to the specified user and return the reset URL. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminUsersController_triggerPasswordReset",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "path",
-            "description": "User ID to send password reset email to",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Password reset email sent successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TriggerPasswordResetResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "User not found"
-          },
-          "500": {
-            "description": "Internal server error occurred while sending password reset email"
-          }
-        },
-        "summary": "Trigger password reset for a user",
-        "tags": ["Super Admin Users"]
-      }
-    },
-    "/super-admin/users/{orgId}/create": {
-      "post": {
-        "description": "Create a new user in the specified organization with a randomly generated password. A password reset email will be sent to the user. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminUsersController_createUser",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to create the user in",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "User information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateUserDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "User created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request format or validation errors"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Organization not found"
-          },
-          "500": {
-            "description": "Internal server error occurred while creating user"
-          }
-        },
-        "summary": "Create a new user in an organization",
-        "tags": ["Super Admin Users"]
-      }
-    },
-    "/super-admin/super-admins": {
-      "get": {
-        "description": "Retrieve all users with super admin status. Only accessible to super admins.",
-        "operationId": "SuperAdminManagementController_listSuperAdmins",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "List of super admins",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SuperAdminUserResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          }
-        },
-        "summary": "List all super admins",
-        "tags": ["Super Admin Management"]
-      },
-      "post": {
-        "description": "Promote an existing user to super admin by email address. Idempotent if user is already a super admin.",
-        "operationId": "SuperAdminManagementController_promoteToSuperAdmin",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Email of the user to promote",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PromoteToSuperAdminDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "User promoted to super admin (or already a super admin)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminUserResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "User with the given email not found"
-          }
-        },
-        "summary": "Promote a user to super admin",
-        "tags": ["Super Admin Management"]
-      }
-    },
-    "/super-admin/super-admins/{userId}": {
-      "delete": {
-        "description": "Demote a user from super admin to customer. Cannot demote yourself.",
-        "operationId": "SuperAdminManagementController_demoteFromSuperAdmin",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "path",
-            "description": "User ID to demote",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Super admin status removed"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "403": {
-            "description": "Cannot remove your own super admin status"
-          },
-          "404": {
-            "description": "User not found"
-          },
-          "409": {
-            "description": "Cannot demote the last super admin"
-          },
-          "422": {
-            "description": "User is not a super admin"
-          }
-        },
-        "summary": "Remove super admin status from a user",
-        "tags": ["Super Admin Management"]
-      }
-    },
-    "/invites": {
-      "post": {
-        "description": "Send an invitation to a user to join an organization with a specific role",
-        "operationId": "InvitesController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateInviteDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The invite has been successfully created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateInviteResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid invite data"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Create a new invite",
-        "tags": ["invites"]
-      },
-      "get": {
-        "description": "Retrieve paginated invites with optional search",
-        "operationId": "InvitesController_getInvites",
-        "parameters": [
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "Search invites by email",
-            "schema": {
-              "example": "john@example.com",
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "description": "Maximum number of invites to return (default: 25)",
-            "schema": {
-              "default": 25,
-              "example": 25,
-              "type": "number"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "description": "Number of invites to skip (default: 0)",
-            "schema": {
-              "default": 0,
-              "example": 0,
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns paginated invites for the organization",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PaginatedInvitesListResponseDto"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get all invites for current user's organization",
-        "tags": ["invites"]
-      }
-    },
-    "/invites/bulk": {
-      "post": {
-        "description": "Send invitations to multiple users. All rows are validated before any are processed.",
-        "operationId": "InvitesController_createBulk",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateBulkInvitesDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The invites have been processed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateBulkInvitesResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation failed for one or more invites"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Create multiple invites in bulk",
-        "tags": ["invites"]
-      }
-    },
-    "/invites/{token}": {
-      "get": {
-        "description": "Retrieve invite details including organization name by token",
-        "operationId": "InvitesController_getInviteByToken",
-        "parameters": [
-          {
-            "name": "token",
-            "required": true,
-            "in": "path",
-            "description": "Token of the invited user",
-            "schema": {
-              "example": "1234567890",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the invite with organization details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InviteDetailResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Invite not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get a single invite by token",
-        "tags": ["invites"]
-      }
-    },
-    "/invites/accept": {
-      "post": {
-        "description": "Accept an invitation using the JWT token",
-        "operationId": "InvitesController_acceptInvite",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AcceptInviteDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The invite has been successfully accepted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AcceptInviteResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid invite token or invite already accepted/expired"
-          },
-          "404": {
-            "description": "Invite not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Accept an invite",
-        "tags": ["invites"]
-      }
-    },
-    "/invites/{id}/resend": {
-      "post": {
-        "description": "Delete the expired invite and create a new one with the same details, then send the invitation email",
-        "operationId": "InvitesController_resendExpiredInvite",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the expired invite to resend",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The invite has been successfully resent",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateInviteResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invite has not expired yet or invalid data"
-          },
-          "404": {
-            "description": "Invite not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Resend an expired invite",
-        "tags": ["invites"]
-      }
-    },
-    "/invites/all": {
-      "delete": {
-        "description": "Delete all pending invitations for the organization (Admin only)",
-        "operationId": "InvitesController_deleteAllPending",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "All pending invites have been deleted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DeleteAllPendingInvitesResponseDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Unauthorized - Admin role required"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Delete all pending invites",
-        "tags": ["invites"]
-      }
-    },
-    "/invites/{id}": {
-      "delete": {
-        "description": "Delete an invitation (only allowed by the user who created it)",
-        "operationId": "InvitesController_deleteInvite",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the invite to delete",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "The invite has been successfully deleted"
-          },
-          "403": {
-            "description": "Unauthorized to delete this invite"
-          },
-          "404": {
-            "description": "Invite not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Delete an invite",
-        "tags": ["invites"]
-      }
-    },
-    "/subscriptions/active": {
-      "get": {
-        "operationId": "SubscriptionsController_hasActiveSubscription",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully checked subscription status",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ActiveSubscriptionResponseDto"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Check if the current organization has an active subscription",
-        "tags": ["subscriptions"]
-      }
-    },
-    "/subscriptions/price": {
-      "get": {
-        "operationId": "SubscriptionsController_getCurrentPrice",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved current price",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PriceResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Price not configured"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get the current price per seat monthly",
-        "tags": ["subscriptions"]
-      }
-    },
-    "/super-admin/subscriptions/{orgId}": {
-      "get": {
-        "description": "Retrieve subscription details for the specified organization. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminSubscriptionsController_getSubscription",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to get subscription for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved subscription details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SubscriptionResponseDtoNullable"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get subscription details for a specific organization",
-        "tags": ["Super Admin Subscriptions"]
-      },
-      "post": {
-        "description": "Create a new subscription for the specified organization. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminSubscriptionsController_createSubscription",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to create subscription for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSubscriptionRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created subscription",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SubscriptionResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid subscription data provided"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "409": {
-            "description": "Subscription already exists for this organization"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Create a new subscription for a specific organization",
-        "tags": ["Super Admin Subscriptions"]
-      },
-      "delete": {
-        "description": "Cancel the subscription for the specified organization. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminSubscriptionsController_cancelSubscription",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to cancel subscription for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successfully cancelled subscription"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "No subscription found for the organization"
-          },
-          "409": {
-            "description": "Subscription is already cancelled"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Cancel the subscription for a specific organization",
-        "tags": ["Super Admin Subscriptions"]
-      }
-    },
-    "/super-admin/subscriptions/{orgId}/seats": {
-      "put": {
-        "description": "Update the number of seats for the specified organization. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminSubscriptionsController_updateSeats",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to update seats for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateSeatsDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully updated seats"
-          },
-          "400": {
-            "description": "Invalid seat update data provided"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "No subscription found for the organization"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Update the number of seats for a specific organization",
-        "tags": ["Super Admin Subscriptions"]
-      }
-    },
-    "/super-admin/subscriptions/{orgId}/monthly-credits": {
-      "put": {
-        "operationId": "SuperAdminSubscriptionsController_updateMonthlyCredits",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to update monthly credits for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateMonthlyCreditsDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully updated monthly credits"
-          },
-          "400": {
-            "description": "Invalid monthly credits provided or subscription is not usage-based"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "No subscription found for the organization"
-          }
-        },
-        "summary": "Update monthly credits for an organization (super admin)",
-        "tags": ["Super Admin Subscriptions"]
-      }
-    },
-    "/super-admin/subscriptions/{orgId}/billing-info": {
-      "put": {
-        "description": "Update the billing information for the specified organization. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminSubscriptionsController_updateBillingInfo",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to update billing info for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateBillingInfoDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully updated billing information"
-          },
-          "400": {
-            "description": "Invalid billing information provided"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "No subscription found for the organization"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Update the billing information for a specific organization",
-        "tags": ["Super Admin Subscriptions"]
-      }
-    },
-    "/super-admin/subscriptions/{orgId}/start-date": {
-      "put": {
-        "description": "Update the start date for the latest subscription of the specified organization. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminSubscriptionsController_updateStartDate",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to update the subscription start date for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateStartDateDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully updated subscription start date"
-          },
-          "400": {
-            "description": "Invalid start date provided"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "No subscription found for the organization"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Update the start date for a specific organization subscription",
-        "tags": ["Super Admin Subscriptions"]
-      }
-    },
-    "/super-admin/subscriptions/{orgId}/uncancel": {
-      "post": {
-        "description": "Uncancel the subscription for the specified organization. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminSubscriptionsController_uncancelSubscription",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to uncancel subscription for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successfully uncancelled subscription"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "No subscription found for the organization"
-          },
-          "409": {
-            "description": "Subscription is not cancelled"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Uncancel the subscription for a specific organization",
-        "tags": ["Super Admin Subscriptions"]
       }
     },
     "/teams": {
@@ -8458,6 +8458,1056 @@
           "skillsEnabled"
         ]
       },
+      "UserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "User unique identifier",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "User name",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "description": "User email address",
+            "example": "john.doe@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "User role",
+            "enum": ["admin", "user"],
+            "example": "user"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID the user belongs to",
+            "example": "123e4567-e89b-12d3-a456-426614174001",
+            "format": "uuid"
+          },
+          "department": {
+            "type": "string",
+            "description": "Department the user belongs to",
+            "example": "hauptamt",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the user was created",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        },
+        "required": ["id", "name", "email", "role", "orgId", "createdAt"]
+      },
+      "PaginationDto": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of items per page",
+            "example": 50
+          },
+          "offset": {
+            "type": "number",
+            "description": "Number of items to skip",
+            "example": 0
+          },
+          "total": {
+            "type": "number",
+            "description": "Total number of items available",
+            "example": 150
+          }
+        },
+        "required": ["limit", "offset"]
+      },
+      "PaginatedUsersListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Array of users for the current page",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserResponseDto"
+            }
+          },
+          "pagination": {
+            "description": "Pagination metadata",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
+          }
+        },
+        "required": ["data", "pagination"]
+      },
+      "UpdateUserRoleDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "description": "New role for the user",
+            "enum": ["admin", "user"],
+            "example": "admin"
+          }
+        },
+        "required": ["role"]
+      },
+      "UpdateUserNameDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "New name for the user",
+            "example": "John Doe",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": ["name"]
+      },
+      "UpdatePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "description": "Current password for verification",
+            "example": "currentPassword123",
+            "minLength": 8
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "New password",
+            "example": "newPassword123!",
+            "minLength": 8
+          },
+          "newPasswordConfirmation": {
+            "type": "string",
+            "description": "Confirmation of the new password",
+            "example": "newPassword123!",
+            "minLength": 8
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword",
+          "newPasswordConfirmation"
+        ]
+      },
+      "ConfirmEmailDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "JWT token for email confirmation",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        },
+        "required": ["token"]
+      },
+      "ResendEmailConfirmationDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address to resend confirmation to",
+            "example": "user@example.com",
+            "format": "email"
+          }
+        },
+        "required": ["email"]
+      },
+      "ForgotPasswordDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address to send password reset link to",
+            "example": "user@example.com"
+          }
+        },
+        "required": ["email"]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "resetToken": {
+            "type": "string",
+            "description": "Password reset token from email",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "New password",
+            "example": "newPassword123!",
+            "minLength": 8
+          },
+          "newPasswordConfirmation": {
+            "type": "string",
+            "description": "Confirm new password",
+            "example": "newPassword123!",
+            "minLength": 8
+          }
+        },
+        "required": ["resetToken", "newPassword", "newPasswordConfirmation"]
+      },
+      "AdminUpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "New name for the user",
+            "example": "Maria Schmidt",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "description": "New email address for the user",
+            "example": "maria.schmidt@gemeinde.de"
+          }
+        }
+      },
+      "TriggerPasswordResetResponseDto": {
+        "type": "object",
+        "properties": {
+          "resetUrl": {
+            "type": "string",
+            "description": "The password reset URL sent to the user",
+            "example": "https://app.ayunis.de/password/reset?token=eyJhbGci..."
+          }
+        },
+        "required": ["resetUrl"]
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address for the user",
+            "example": "user@example.com"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the user",
+            "example": "John Doe"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role for the user",
+            "enum": ["admin", "user"],
+            "example": "user"
+          },
+          "sendActivationEmail": {
+            "type": "boolean",
+            "description": "Send the account activation (welcome) email to the new user",
+            "example": true
+          }
+        },
+        "required": ["email", "name", "role", "sendActivationEmail"]
+      },
+      "SuperAdminUserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "User unique identifier",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "User name",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "description": "User email address",
+            "example": "john.doe@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "User role",
+            "enum": ["admin", "user"],
+            "example": "user"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID the user belongs to",
+            "example": "123e4567-e89b-12d3-a456-426614174001",
+            "format": "uuid"
+          },
+          "department": {
+            "type": "string",
+            "description": "Department the user belongs to",
+            "example": "hauptamt",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the user was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "systemRole": {
+            "type": "string",
+            "description": "System-level role of the user",
+            "enum": ["customer", "super_admin"],
+            "example": "super_admin"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role",
+          "orgId",
+          "createdAt",
+          "systemRole"
+        ]
+      },
+      "PromoteToSuperAdminDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address of the user to promote to super admin",
+            "example": "user@example.com"
+          }
+        },
+        "required": ["email"]
+      },
+      "CreateInviteDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address of the person to invite",
+            "example": "user@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role to assign to the invited user",
+            "enum": ["admin", "user"],
+            "example": "user"
+          }
+        },
+        "required": ["email", "role"]
+      },
+      "CreateInviteResponseDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "URL of the invite, returned when not using email configuration",
+            "example": "https://example.com/invite/123e4567-e89b-12d3-a456-426614174000",
+            "nullable": true
+          }
+        },
+        "required": ["url"]
+      },
+      "CreateBulkInviteItemDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address of the person to invite",
+            "example": "user@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role to assign to the invited user",
+            "enum": ["admin", "user"],
+            "example": "user"
+          }
+        },
+        "required": ["email", "role"]
+      },
+      "CreateBulkInvitesDto": {
+        "type": "object",
+        "properties": {
+          "invites": {
+            "description": "Array of invites to create",
+            "maxItems": 500,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateBulkInviteItemDto"
+            }
+          }
+        },
+        "required": ["invites"]
+      },
+      "BulkInviteResultDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address of the invited user",
+            "example": "user@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role assigned to the invited user",
+            "enum": ["admin", "user"],
+            "example": "user"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether the invite was created successfully",
+            "example": true
+          },
+          "url": {
+            "type": "string",
+            "description": "Invitation URL (only populated when email configuration is unavailable)",
+            "nullable": true,
+            "example": "https://app.example.com/accept-invite?token=abc123"
+          },
+          "errorCode": {
+            "type": "string",
+            "description": "Error code if the invite failed",
+            "nullable": true,
+            "example": "EMAIL_NOT_AVAILABLE"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "Error message if the invite failed",
+            "nullable": true,
+            "example": "Email is already registered"
+          }
+        },
+        "required": [
+          "email",
+          "role",
+          "success",
+          "url",
+          "errorCode",
+          "errorMessage"
+        ]
+      },
+      "CreateBulkInvitesResponseDto": {
+        "type": "object",
+        "properties": {
+          "totalCount": {
+            "type": "number",
+            "description": "Total number of invites in the request",
+            "example": 10
+          },
+          "successCount": {
+            "type": "number",
+            "description": "Number of invites created successfully",
+            "example": 8
+          },
+          "failureCount": {
+            "type": "number",
+            "description": "Number of invites that failed",
+            "example": 2
+          },
+          "results": {
+            "description": "Individual results for each invite",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BulkInviteResultDto"
+            }
+          }
+        },
+        "required": ["totalCount", "successCount", "failureCount", "results"]
+      },
+      "InviteResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the invite",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address of the invited user",
+            "example": "user@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role assigned to the invited user",
+            "enum": ["admin", "user"],
+            "example": "user"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the invite",
+            "enum": ["pending", "accepted", "expired"],
+            "example": "pending"
+          },
+          "sentDate": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the invite was sent",
+            "example": "2023-12-01T10:00:00Z"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the invite expires",
+            "example": "2023-12-08T10:00:00Z"
+          },
+          "acceptedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the invite was accepted (if applicable)",
+            "example": "2023-12-02T15:30:00Z"
+          }
+        },
+        "required": ["id", "email", "role", "status", "sentDate", "expiresAt"]
+      },
+      "PaginatedInvitesListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Array of invites for the current page",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InviteResponseDto"
+            }
+          },
+          "pagination": {
+            "description": "Pagination metadata",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
+          }
+        },
+        "required": ["data", "pagination"]
+      },
+      "InviteDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the invite",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address of the invited user",
+            "example": "user@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role assigned to the invited user",
+            "enum": ["admin", "user"],
+            "example": "user"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the invite",
+            "enum": ["pending", "accepted", "expired"],
+            "example": "pending"
+          },
+          "sentDate": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the invite was sent",
+            "example": "2023-12-01T10:00:00Z"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the invite expires",
+            "example": "2023-12-08T10:00:00Z"
+          },
+          "acceptedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the invite was accepted (if applicable)",
+            "example": "2023-12-02T15:30:00Z"
+          },
+          "organizationName": {
+            "type": "string",
+            "description": "Name of the organization",
+            "example": "Acme Corporation"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "role",
+          "status",
+          "sentDate",
+          "expiresAt",
+          "organizationName"
+        ]
+      },
+      "AcceptInviteDto": {
+        "type": "object",
+        "properties": {
+          "inviteToken": {
+            "type": "string",
+            "description": "JWT token from the invite",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "userName": {
+            "type": "string",
+            "description": "Name of the user accepting the invite",
+            "example": "John Doe"
+          },
+          "password": {
+            "type": "string",
+            "description": "Password of the user accepting the invite",
+            "example": "password"
+          },
+          "hasAcceptedMarketing": {
+            "type": "boolean",
+            "description": "Marketing acceptance",
+            "example": true
+          },
+          "department": {
+            "type": "string",
+            "description": "Department within the municipality",
+            "example": "hauptamt"
+          }
+        },
+        "required": [
+          "inviteToken",
+          "userName",
+          "password",
+          "hasAcceptedMarketing"
+        ]
+      },
+      "AcceptInviteResponseDto": {
+        "type": "object",
+        "properties": {
+          "inviteId": {
+            "type": "string",
+            "description": "ID of the accepted invite",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email of the user who accepted the invite",
+            "example": "user@example.com"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID the user was invited to",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          }
+        },
+        "required": ["inviteId", "email", "orgId"]
+      },
+      "DeleteAllPendingInvitesResponseDto": {
+        "type": "object",
+        "properties": {
+          "deletedCount": {
+            "type": "number",
+            "description": "Number of invites deleted"
+          }
+        },
+        "required": ["deletedCount"]
+      },
+      "CreateOrgRequestDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Organization display name",
+            "example": "Acme Corporation"
+          }
+        },
+        "required": ["name"]
+      },
+      "SuperAdminOrgResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Organization unique identifier",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "description": "Organization display name",
+            "example": "Acme Corporation"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the organization was created",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        },
+        "required": ["id", "name", "createdAt"]
+      },
+      "SuperAdminOrgListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Array of organizations for the current page",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
+            }
+          },
+          "pagination": {
+            "description": "Pagination metadata",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
+          }
+        },
+        "required": ["data", "pagination"]
+      },
+      "ActiveSubscriptionResponseDto": {
+        "type": "object",
+        "properties": {
+          "hasActiveSubscription": {
+            "type": "boolean",
+            "description": "Whether the organization has an active subscription",
+            "example": true
+          },
+          "subscriptionType": {
+            "type": "string",
+            "description": "Type of the active subscription. Null when there is no active subscription or on self-hosted deployments.",
+            "enum": ["SEAT_BASED", "USAGE_BASED"],
+            "example": "SEAT_BASED",
+            "nullable": true
+          }
+        },
+        "required": ["hasActiveSubscription", "subscriptionType"]
+      },
+      "PriceResponseDto": {
+        "type": "object",
+        "properties": {
+          "pricePerSeatMonthly": {
+            "type": "number",
+            "description": "Current price per seat per month in the configured currency",
+            "example": 29.99
+          }
+        },
+        "required": ["pricePerSeatMonthly"]
+      },
+      "SubscriptionBillingInfoResponseDto": {
+        "type": "object",
+        "properties": {
+          "companyName": {
+            "type": "string",
+            "description": "Company name",
+            "example": "Acme GmbH"
+          },
+          "street": {
+            "type": "string",
+            "description": "Street",
+            "example": "Musterstraße"
+          },
+          "houseNumber": {
+            "type": "string",
+            "description": "Number",
+            "example": "123a"
+          },
+          "city": {
+            "type": "string",
+            "description": "City",
+            "example": "Musterstadt"
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "Postal code",
+            "example": "12345"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country",
+            "example": "Deutschland"
+          },
+          "vatNumber": {
+            "type": "string",
+            "description": "USt-ID",
+            "example": "DE1234567890"
+          }
+        },
+        "required": [
+          "companyName",
+          "street",
+          "houseNumber",
+          "city",
+          "postalCode",
+          "country"
+        ]
+      },
+      "SubscriptionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the subscription",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the subscription was created",
+            "example": "2023-12-01T10:00:00Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the subscription was last updated",
+            "example": "2023-12-01T10:00:00Z"
+          },
+          "cancelledAt": {
+            "type": "object",
+            "description": "Date when the subscription was cancelled (if applicable)",
+            "example": "2023-12-15T10:00:00Z"
+          },
+          "startsAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the subscription becomes active",
+            "example": "2026-07-01T00:00:00Z"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID associated with the subscription",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "description": "Subscription type",
+            "enum": ["SEAT_BASED", "USAGE_BASED"],
+            "example": "SEAT_BASED"
+          },
+          "noOfSeats": {
+            "type": "number",
+            "description": "Number of seats in the subscription (seat-based only)",
+            "example": 10
+          },
+          "pricePerSeat": {
+            "type": "number",
+            "description": "Price per seat in the subscription (seat-based only)",
+            "example": 29.99
+          },
+          "renewalCycle": {
+            "type": "string",
+            "description": "Renewal cycle of the subscription (seat-based only)",
+            "enum": ["monthly", "yearly"],
+            "example": "monthly"
+          },
+          "renewalCycleAnchor": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date that serves as the anchor for renewal cycles (seat-based only)",
+            "example": "2023-12-01T10:00:00Z"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Monthly credit budget (usage-based only)",
+            "example": 1000
+          },
+          "availableSeats": {
+            "type": "number",
+            "description": "Number of available seats (total seats minus invites, seat-based only)",
+            "example": 3,
+            "nullable": true
+          },
+          "nextRenewalDate": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date of the next renewal",
+            "example": "2024-01-01T10:00:00Z"
+          },
+          "billingInfo": {
+            "description": "Billing information",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SubscriptionBillingInfoResponseDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "startsAt",
+          "orgId",
+          "type",
+          "nextRenewalDate",
+          "billingInfo"
+        ]
+      },
+      "SubscriptionResponseDtoNullable": {
+        "type": "object",
+        "properties": {
+          "subscription": {
+            "description": "Subscription",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SubscriptionResponseDto"
+              }
+            ]
+          }
+        }
+      },
+      "CreateSubscriptionRequestDto": {
+        "type": "object",
+        "properties": {
+          "companyName": {
+            "type": "string",
+            "description": "Company name for the subscription",
+            "example": "Acme Inc."
+          },
+          "street": {
+            "type": "string",
+            "description": "Street for the subscription",
+            "example": "123 Main St"
+          },
+          "houseNumber": {
+            "type": "string",
+            "description": "House number for the subscription",
+            "example": "123"
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "Postal code for the subscription",
+            "example": "12345"
+          },
+          "city": {
+            "type": "string",
+            "description": "City for the subscription",
+            "example": "New York"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country for the subscription",
+            "example": "United States"
+          },
+          "vatNumber": {
+            "type": "string",
+            "description": "VAT number for the subscription",
+            "example": "1234567890"
+          },
+          "type": {
+            "type": "string",
+            "description": "Subscription type. Defaults to SEAT_BASED if not specified.",
+            "enum": ["SEAT_BASED", "USAGE_BASED"],
+            "example": "SEAT_BASED",
+            "default": "SEAT_BASED"
+          },
+          "noOfSeats": {
+            "type": "number",
+            "description": "Number of seats for the subscription (seat-based only)",
+            "example": 10,
+            "minimum": 1,
+            "default": 1
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Monthly credit budget (usage-based only)",
+            "example": 1000,
+            "minimum": 1
+          },
+          "subText": {
+            "type": "string",
+            "description": "Sub text for the subscription",
+            "example": "Sub text"
+          },
+          "startsAt": {
+            "type": "string",
+            "description": "Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately.",
+            "example": "2026-07-01T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "companyName",
+          "street",
+          "houseNumber",
+          "postalCode",
+          "city",
+          "country"
+        ]
+      },
+      "UpdateBillingInfoDto": {
+        "type": "object",
+        "properties": {
+          "companyName": {
+            "type": "string",
+            "description": "Company name for the subscription",
+            "example": "Acme Inc."
+          },
+          "street": {
+            "type": "string",
+            "description": "Street for the subscription",
+            "example": "123 Main St"
+          },
+          "houseNumber": {
+            "type": "string",
+            "description": "House number for the subscription",
+            "example": "123"
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "Postal code for the subscription",
+            "example": "12345"
+          },
+          "city": {
+            "type": "string",
+            "description": "City for the subscription",
+            "example": "New York"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country for the subscription",
+            "example": "United States"
+          },
+          "vatNumber": {
+            "type": "string",
+            "description": "VAT number for the subscription",
+            "example": "1234567890"
+          }
+        },
+        "required": [
+          "companyName",
+          "street",
+          "houseNumber",
+          "postalCode",
+          "city",
+          "country"
+        ]
+      },
+      "UpdateStartDateDto": {
+        "type": "object",
+        "properties": {
+          "startsAt": {
+            "type": "string",
+            "description": "New subscription start date (ISO 8601)",
+            "example": "2026-08-15T00:00:00.000Z"
+          }
+        },
+        "required": ["startsAt"]
+      },
+      "UpdateMonthlyCreditsDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateSeatsDto": {
+        "type": "object",
+        "properties": {}
+      },
       "ModelWithConfigResponseDto": {
         "type": "object",
         "properties": {
@@ -9570,1056 +10620,6 @@
           }
         },
         "required": ["name", "provider", "displayName", "isArchived"]
-      },
-      "CreateOrgRequestDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Organization display name",
-            "example": "Acme Corporation"
-          }
-        },
-        "required": ["name"]
-      },
-      "SuperAdminOrgResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Organization unique identifier",
-            "format": "uuid",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "name": {
-            "type": "string",
-            "description": "Organization display name",
-            "example": "Acme Corporation"
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the organization was created",
-            "example": "2024-01-15T10:30:00Z"
-          }
-        },
-        "required": ["id", "name", "createdAt"]
-      },
-      "PaginationDto": {
-        "type": "object",
-        "properties": {
-          "limit": {
-            "type": "number",
-            "description": "Maximum number of items per page",
-            "example": 50
-          },
-          "offset": {
-            "type": "number",
-            "description": "Number of items to skip",
-            "example": 0
-          },
-          "total": {
-            "type": "number",
-            "description": "Total number of items available",
-            "example": 150
-          }
-        },
-        "required": ["limit", "offset"]
-      },
-      "SuperAdminOrgListResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "description": "Array of organizations for the current page",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
-            }
-          },
-          "pagination": {
-            "description": "Pagination metadata",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PaginationDto"
-              }
-            ]
-          }
-        },
-        "required": ["data", "pagination"]
-      },
-      "UserResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "User unique identifier",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "User name",
-            "example": "John Doe"
-          },
-          "email": {
-            "type": "string",
-            "description": "User email address",
-            "example": "john.doe@example.com"
-          },
-          "role": {
-            "type": "string",
-            "description": "User role",
-            "enum": ["admin", "user"],
-            "example": "user"
-          },
-          "orgId": {
-            "type": "string",
-            "description": "Organization ID the user belongs to",
-            "example": "123e4567-e89b-12d3-a456-426614174001",
-            "format": "uuid"
-          },
-          "department": {
-            "type": "string",
-            "description": "Department the user belongs to",
-            "example": "hauptamt",
-            "nullable": true
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the user was created",
-            "example": "2024-01-15T10:30:00Z"
-          }
-        },
-        "required": ["id", "name", "email", "role", "orgId", "createdAt"]
-      },
-      "PaginatedUsersListResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "description": "Array of users for the current page",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserResponseDto"
-            }
-          },
-          "pagination": {
-            "description": "Pagination metadata",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PaginationDto"
-              }
-            ]
-          }
-        },
-        "required": ["data", "pagination"]
-      },
-      "UpdateUserRoleDto": {
-        "type": "object",
-        "properties": {
-          "role": {
-            "type": "string",
-            "description": "New role for the user",
-            "enum": ["admin", "user"],
-            "example": "admin"
-          }
-        },
-        "required": ["role"]
-      },
-      "UpdateUserNameDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "New name for the user",
-            "example": "John Doe",
-            "minLength": 1,
-            "maxLength": 100
-          }
-        },
-        "required": ["name"]
-      },
-      "UpdatePasswordDto": {
-        "type": "object",
-        "properties": {
-          "currentPassword": {
-            "type": "string",
-            "description": "Current password for verification",
-            "example": "currentPassword123",
-            "minLength": 8
-          },
-          "newPassword": {
-            "type": "string",
-            "description": "New password",
-            "example": "newPassword123!",
-            "minLength": 8
-          },
-          "newPasswordConfirmation": {
-            "type": "string",
-            "description": "Confirmation of the new password",
-            "example": "newPassword123!",
-            "minLength": 8
-          }
-        },
-        "required": [
-          "currentPassword",
-          "newPassword",
-          "newPasswordConfirmation"
-        ]
-      },
-      "ConfirmEmailDto": {
-        "type": "object",
-        "properties": {
-          "token": {
-            "type": "string",
-            "description": "JWT token for email confirmation",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-          }
-        },
-        "required": ["token"]
-      },
-      "ResendEmailConfirmationDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "description": "Email address to resend confirmation to",
-            "example": "user@example.com",
-            "format": "email"
-          }
-        },
-        "required": ["email"]
-      },
-      "ForgotPasswordDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "description": "Email address to send password reset link to",
-            "example": "user@example.com"
-          }
-        },
-        "required": ["email"]
-      },
-      "ResetPasswordDto": {
-        "type": "object",
-        "properties": {
-          "resetToken": {
-            "type": "string",
-            "description": "Password reset token from email",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-          },
-          "newPassword": {
-            "type": "string",
-            "description": "New password",
-            "example": "newPassword123!",
-            "minLength": 8
-          },
-          "newPasswordConfirmation": {
-            "type": "string",
-            "description": "Confirm new password",
-            "example": "newPassword123!",
-            "minLength": 8
-          }
-        },
-        "required": ["resetToken", "newPassword", "newPasswordConfirmation"]
-      },
-      "AdminUpdateUserDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "New name for the user",
-            "example": "Maria Schmidt",
-            "minLength": 1,
-            "maxLength": 100
-          },
-          "email": {
-            "type": "string",
-            "description": "New email address for the user",
-            "example": "maria.schmidt@gemeinde.de"
-          }
-        }
-      },
-      "TriggerPasswordResetResponseDto": {
-        "type": "object",
-        "properties": {
-          "resetUrl": {
-            "type": "string",
-            "description": "The password reset URL sent to the user",
-            "example": "https://app.ayunis.de/password/reset?token=eyJhbGci..."
-          }
-        },
-        "required": ["resetUrl"]
-      },
-      "CreateUserDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "description": "Email address for the user",
-            "example": "user@example.com"
-          },
-          "name": {
-            "type": "string",
-            "description": "Name of the user",
-            "example": "John Doe"
-          },
-          "role": {
-            "type": "string",
-            "description": "Role for the user",
-            "enum": ["admin", "user"],
-            "example": "user"
-          },
-          "sendActivationEmail": {
-            "type": "boolean",
-            "description": "Send the account activation (welcome) email to the new user",
-            "example": true
-          }
-        },
-        "required": ["email", "name", "role", "sendActivationEmail"]
-      },
-      "SuperAdminUserResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "User unique identifier",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "User name",
-            "example": "John Doe"
-          },
-          "email": {
-            "type": "string",
-            "description": "User email address",
-            "example": "john.doe@example.com"
-          },
-          "role": {
-            "type": "string",
-            "description": "User role",
-            "enum": ["admin", "user"],
-            "example": "user"
-          },
-          "orgId": {
-            "type": "string",
-            "description": "Organization ID the user belongs to",
-            "example": "123e4567-e89b-12d3-a456-426614174001",
-            "format": "uuid"
-          },
-          "department": {
-            "type": "string",
-            "description": "Department the user belongs to",
-            "example": "hauptamt",
-            "nullable": true
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the user was created",
-            "example": "2024-01-15T10:30:00Z"
-          },
-          "systemRole": {
-            "type": "string",
-            "description": "System-level role of the user",
-            "enum": ["customer", "super_admin"],
-            "example": "super_admin"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "email",
-          "role",
-          "orgId",
-          "createdAt",
-          "systemRole"
-        ]
-      },
-      "PromoteToSuperAdminDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "description": "Email address of the user to promote to super admin",
-            "example": "user@example.com"
-          }
-        },
-        "required": ["email"]
-      },
-      "CreateInviteDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "description": "Email address of the person to invite",
-            "example": "user@example.com"
-          },
-          "role": {
-            "type": "string",
-            "description": "Role to assign to the invited user",
-            "enum": ["admin", "user"],
-            "example": "user"
-          }
-        },
-        "required": ["email", "role"]
-      },
-      "CreateInviteResponseDto": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "URL of the invite, returned when not using email configuration",
-            "example": "https://example.com/invite/123e4567-e89b-12d3-a456-426614174000",
-            "nullable": true
-          }
-        },
-        "required": ["url"]
-      },
-      "CreateBulkInviteItemDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "description": "Email address of the person to invite",
-            "example": "user@example.com"
-          },
-          "role": {
-            "type": "string",
-            "description": "Role to assign to the invited user",
-            "enum": ["admin", "user"],
-            "example": "user"
-          }
-        },
-        "required": ["email", "role"]
-      },
-      "CreateBulkInvitesDto": {
-        "type": "object",
-        "properties": {
-          "invites": {
-            "description": "Array of invites to create",
-            "maxItems": 500,
-            "minItems": 1,
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CreateBulkInviteItemDto"
-            }
-          }
-        },
-        "required": ["invites"]
-      },
-      "BulkInviteResultDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "description": "Email address of the invited user",
-            "example": "user@example.com"
-          },
-          "role": {
-            "type": "string",
-            "description": "Role assigned to the invited user",
-            "enum": ["admin", "user"],
-            "example": "user"
-          },
-          "success": {
-            "type": "boolean",
-            "description": "Whether the invite was created successfully",
-            "example": true
-          },
-          "url": {
-            "type": "string",
-            "description": "Invitation URL (only populated when email configuration is unavailable)",
-            "nullable": true,
-            "example": "https://app.example.com/accept-invite?token=abc123"
-          },
-          "errorCode": {
-            "type": "string",
-            "description": "Error code if the invite failed",
-            "nullable": true,
-            "example": "EMAIL_NOT_AVAILABLE"
-          },
-          "errorMessage": {
-            "type": "string",
-            "description": "Error message if the invite failed",
-            "nullable": true,
-            "example": "Email is already registered"
-          }
-        },
-        "required": [
-          "email",
-          "role",
-          "success",
-          "url",
-          "errorCode",
-          "errorMessage"
-        ]
-      },
-      "CreateBulkInvitesResponseDto": {
-        "type": "object",
-        "properties": {
-          "totalCount": {
-            "type": "number",
-            "description": "Total number of invites in the request",
-            "example": 10
-          },
-          "successCount": {
-            "type": "number",
-            "description": "Number of invites created successfully",
-            "example": 8
-          },
-          "failureCount": {
-            "type": "number",
-            "description": "Number of invites that failed",
-            "example": 2
-          },
-          "results": {
-            "description": "Individual results for each invite",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/BulkInviteResultDto"
-            }
-          }
-        },
-        "required": ["totalCount", "successCount", "failureCount", "results"]
-      },
-      "InviteResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier of the invite",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "email": {
-            "type": "string",
-            "description": "Email address of the invited user",
-            "example": "user@example.com"
-          },
-          "role": {
-            "type": "string",
-            "description": "Role assigned to the invited user",
-            "enum": ["admin", "user"],
-            "example": "user"
-          },
-          "status": {
-            "type": "string",
-            "description": "Current status of the invite",
-            "enum": ["pending", "accepted", "expired"],
-            "example": "pending"
-          },
-          "sentDate": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the invite was sent",
-            "example": "2023-12-01T10:00:00Z"
-          },
-          "expiresAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the invite expires",
-            "example": "2023-12-08T10:00:00Z"
-          },
-          "acceptedAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the invite was accepted (if applicable)",
-            "example": "2023-12-02T15:30:00Z"
-          }
-        },
-        "required": ["id", "email", "role", "status", "sentDate", "expiresAt"]
-      },
-      "PaginatedInvitesListResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "description": "Array of invites for the current page",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/InviteResponseDto"
-            }
-          },
-          "pagination": {
-            "description": "Pagination metadata",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PaginationDto"
-              }
-            ]
-          }
-        },
-        "required": ["data", "pagination"]
-      },
-      "InviteDetailResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier of the invite",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "email": {
-            "type": "string",
-            "description": "Email address of the invited user",
-            "example": "user@example.com"
-          },
-          "role": {
-            "type": "string",
-            "description": "Role assigned to the invited user",
-            "enum": ["admin", "user"],
-            "example": "user"
-          },
-          "status": {
-            "type": "string",
-            "description": "Current status of the invite",
-            "enum": ["pending", "accepted", "expired"],
-            "example": "pending"
-          },
-          "sentDate": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the invite was sent",
-            "example": "2023-12-01T10:00:00Z"
-          },
-          "expiresAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the invite expires",
-            "example": "2023-12-08T10:00:00Z"
-          },
-          "acceptedAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the invite was accepted (if applicable)",
-            "example": "2023-12-02T15:30:00Z"
-          },
-          "organizationName": {
-            "type": "string",
-            "description": "Name of the organization",
-            "example": "Acme Corporation"
-          }
-        },
-        "required": [
-          "id",
-          "email",
-          "role",
-          "status",
-          "sentDate",
-          "expiresAt",
-          "organizationName"
-        ]
-      },
-      "AcceptInviteDto": {
-        "type": "object",
-        "properties": {
-          "inviteToken": {
-            "type": "string",
-            "description": "JWT token from the invite",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-          },
-          "userName": {
-            "type": "string",
-            "description": "Name of the user accepting the invite",
-            "example": "John Doe"
-          },
-          "password": {
-            "type": "string",
-            "description": "Password of the user accepting the invite",
-            "example": "password"
-          },
-          "hasAcceptedMarketing": {
-            "type": "boolean",
-            "description": "Marketing acceptance",
-            "example": true
-          },
-          "department": {
-            "type": "string",
-            "description": "Department within the municipality",
-            "example": "hauptamt"
-          }
-        },
-        "required": [
-          "inviteToken",
-          "userName",
-          "password",
-          "hasAcceptedMarketing"
-        ]
-      },
-      "AcceptInviteResponseDto": {
-        "type": "object",
-        "properties": {
-          "inviteId": {
-            "type": "string",
-            "description": "ID of the accepted invite",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "email": {
-            "type": "string",
-            "description": "Email of the user who accepted the invite",
-            "example": "user@example.com"
-          },
-          "orgId": {
-            "type": "string",
-            "description": "Organization ID the user was invited to",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          }
-        },
-        "required": ["inviteId", "email", "orgId"]
-      },
-      "DeleteAllPendingInvitesResponseDto": {
-        "type": "object",
-        "properties": {
-          "deletedCount": {
-            "type": "number",
-            "description": "Number of invites deleted"
-          }
-        },
-        "required": ["deletedCount"]
-      },
-      "ActiveSubscriptionResponseDto": {
-        "type": "object",
-        "properties": {
-          "hasActiveSubscription": {
-            "type": "boolean",
-            "description": "Whether the organization has an active subscription",
-            "example": true
-          },
-          "subscriptionType": {
-            "type": "string",
-            "description": "Type of the active subscription. Null when there is no active subscription or on self-hosted deployments.",
-            "enum": ["SEAT_BASED", "USAGE_BASED"],
-            "example": "SEAT_BASED",
-            "nullable": true
-          }
-        },
-        "required": ["hasActiveSubscription", "subscriptionType"]
-      },
-      "PriceResponseDto": {
-        "type": "object",
-        "properties": {
-          "pricePerSeatMonthly": {
-            "type": "number",
-            "description": "Current price per seat per month in the configured currency",
-            "example": 29.99
-          }
-        },
-        "required": ["pricePerSeatMonthly"]
-      },
-      "SubscriptionBillingInfoResponseDto": {
-        "type": "object",
-        "properties": {
-          "companyName": {
-            "type": "string",
-            "description": "Company name",
-            "example": "Acme GmbH"
-          },
-          "street": {
-            "type": "string",
-            "description": "Street",
-            "example": "Musterstraße"
-          },
-          "houseNumber": {
-            "type": "string",
-            "description": "Number",
-            "example": "123a"
-          },
-          "city": {
-            "type": "string",
-            "description": "City",
-            "example": "Musterstadt"
-          },
-          "postalCode": {
-            "type": "string",
-            "description": "Postal code",
-            "example": "12345"
-          },
-          "country": {
-            "type": "string",
-            "description": "Country",
-            "example": "Deutschland"
-          },
-          "vatNumber": {
-            "type": "string",
-            "description": "USt-ID",
-            "example": "DE1234567890"
-          }
-        },
-        "required": [
-          "companyName",
-          "street",
-          "houseNumber",
-          "city",
-          "postalCode",
-          "country"
-        ]
-      },
-      "SubscriptionResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier of the subscription",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the subscription was created",
-            "example": "2023-12-01T10:00:00Z"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the subscription was last updated",
-            "example": "2023-12-01T10:00:00Z"
-          },
-          "cancelledAt": {
-            "type": "object",
-            "description": "Date when the subscription was cancelled (if applicable)",
-            "example": "2023-12-15T10:00:00Z"
-          },
-          "startsAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the subscription becomes active",
-            "example": "2026-07-01T00:00:00Z"
-          },
-          "orgId": {
-            "type": "string",
-            "description": "Organization ID associated with the subscription",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "type": {
-            "type": "string",
-            "description": "Subscription type",
-            "enum": ["SEAT_BASED", "USAGE_BASED"],
-            "example": "SEAT_BASED"
-          },
-          "noOfSeats": {
-            "type": "number",
-            "description": "Number of seats in the subscription (seat-based only)",
-            "example": 10
-          },
-          "pricePerSeat": {
-            "type": "number",
-            "description": "Price per seat in the subscription (seat-based only)",
-            "example": 29.99
-          },
-          "renewalCycle": {
-            "type": "string",
-            "description": "Renewal cycle of the subscription (seat-based only)",
-            "enum": ["monthly", "yearly"],
-            "example": "monthly"
-          },
-          "renewalCycleAnchor": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date that serves as the anchor for renewal cycles (seat-based only)",
-            "example": "2023-12-01T10:00:00Z"
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "description": "Monthly credit budget (usage-based only)",
-            "example": 1000
-          },
-          "availableSeats": {
-            "type": "number",
-            "description": "Number of available seats (total seats minus invites, seat-based only)",
-            "example": 3,
-            "nullable": true
-          },
-          "nextRenewalDate": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date of the next renewal",
-            "example": "2024-01-01T10:00:00Z"
-          },
-          "billingInfo": {
-            "description": "Billing information",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/SubscriptionBillingInfoResponseDto"
-              }
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "createdAt",
-          "updatedAt",
-          "startsAt",
-          "orgId",
-          "type",
-          "nextRenewalDate",
-          "billingInfo"
-        ]
-      },
-      "SubscriptionResponseDtoNullable": {
-        "type": "object",
-        "properties": {
-          "subscription": {
-            "description": "Subscription",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/SubscriptionResponseDto"
-              }
-            ]
-          }
-        }
-      },
-      "CreateSubscriptionRequestDto": {
-        "type": "object",
-        "properties": {
-          "companyName": {
-            "type": "string",
-            "description": "Company name for the subscription",
-            "example": "Acme Inc."
-          },
-          "street": {
-            "type": "string",
-            "description": "Street for the subscription",
-            "example": "123 Main St"
-          },
-          "houseNumber": {
-            "type": "string",
-            "description": "House number for the subscription",
-            "example": "123"
-          },
-          "postalCode": {
-            "type": "string",
-            "description": "Postal code for the subscription",
-            "example": "12345"
-          },
-          "city": {
-            "type": "string",
-            "description": "City for the subscription",
-            "example": "New York"
-          },
-          "country": {
-            "type": "string",
-            "description": "Country for the subscription",
-            "example": "United States"
-          },
-          "vatNumber": {
-            "type": "string",
-            "description": "VAT number for the subscription",
-            "example": "1234567890"
-          },
-          "type": {
-            "type": "string",
-            "description": "Subscription type. Defaults to SEAT_BASED if not specified.",
-            "enum": ["SEAT_BASED", "USAGE_BASED"],
-            "example": "SEAT_BASED",
-            "default": "SEAT_BASED"
-          },
-          "noOfSeats": {
-            "type": "number",
-            "description": "Number of seats for the subscription (seat-based only)",
-            "example": 10,
-            "minimum": 1,
-            "default": 1
-          },
-          "monthlyCredits": {
-            "type": "number",
-            "description": "Monthly credit budget (usage-based only)",
-            "example": 1000,
-            "minimum": 1
-          },
-          "subText": {
-            "type": "string",
-            "description": "Sub text for the subscription",
-            "example": "Sub text"
-          },
-          "startsAt": {
-            "type": "string",
-            "description": "Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately.",
-            "example": "2026-07-01T00:00:00.000Z"
-          }
-        },
-        "required": [
-          "companyName",
-          "street",
-          "houseNumber",
-          "postalCode",
-          "city",
-          "country"
-        ]
-      },
-      "UpdateBillingInfoDto": {
-        "type": "object",
-        "properties": {
-          "companyName": {
-            "type": "string",
-            "description": "Company name for the subscription",
-            "example": "Acme Inc."
-          },
-          "street": {
-            "type": "string",
-            "description": "Street for the subscription",
-            "example": "123 Main St"
-          },
-          "houseNumber": {
-            "type": "string",
-            "description": "House number for the subscription",
-            "example": "123"
-          },
-          "postalCode": {
-            "type": "string",
-            "description": "Postal code for the subscription",
-            "example": "12345"
-          },
-          "city": {
-            "type": "string",
-            "description": "City for the subscription",
-            "example": "New York"
-          },
-          "country": {
-            "type": "string",
-            "description": "Country for the subscription",
-            "example": "United States"
-          },
-          "vatNumber": {
-            "type": "string",
-            "description": "VAT number for the subscription",
-            "example": "1234567890"
-          }
-        },
-        "required": [
-          "companyName",
-          "street",
-          "houseNumber",
-          "postalCode",
-          "city",
-          "country"
-        ]
-      },
-      "UpdateStartDateDto": {
-        "type": "object",
-        "properties": {
-          "startsAt": {
-            "type": "string",
-            "description": "New subscription start date (ISO 8601)",
-            "example": "2026-08-15T00:00:00.000Z"
-          }
-        },
-        "required": ["startsAt"]
-      },
-      "UpdateMonthlyCreditsDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "UpdateSeatsDto": {
-        "type": "object",
-        "properties": {}
       },
       "CreateTeamDto": {
         "type": "object",

@@ -10,6 +10,7 @@ import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/
 import { SubscriptionSeatsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-seats-updated.event';
 import { SubscriptionBillingInfoUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-billing-info-updated.event';
 import { UsageCollectedEvent } from 'src/domain/usage/application/events/usage-collected.event';
+import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/user-message-created.event';
 import { Usage } from 'src/domain/usage/domain/usage.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { WebhookEventType } from '../domain/value-objects/webhook-event-type.enum';
@@ -19,11 +20,15 @@ import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/sub
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { SendWebhookUseCase } from '../application/use-cases/send-webhook/send-webhook.use-case';
+import type { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
+import type { ConfigService } from '@nestjs/config';
 import type { SeatBasedSubscriptionEventData } from 'src/iam/subscriptions/application/events/subscription-event-data.types';
 
 const USER_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 const ORG_ID = '00000000-0000-0000-0000-000000000002' as UUID;
 const SUB_ID = '00000000-0000-0000-0000-000000000003' as UUID;
+const THREAD_ID = '00000000-0000-0000-0000-000000000004' as UUID;
+const MESSAGE_ID = '00000000-0000-0000-0000-000000000005' as UUID;
 
 function makeUser(): User {
   return new User({
@@ -64,13 +69,25 @@ function makeSeatBasedPayload(): SeatBasedSubscriptionEventData {
 describe('WebhookDispatchListener', () => {
   let listener: WebhookDispatchListener;
   let sendWebhookUseCase: jest.Mocked<SendWebhookUseCase>;
+  let findUserByIdUseCase: jest.Mocked<FindUserByIdUseCase>;
+  let configService: jest.Mocked<ConfigService>;
 
   beforeEach(() => {
     sendWebhookUseCase = {
       execute: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<SendWebhookUseCase>;
+    findUserByIdUseCase = {
+      execute: jest.fn().mockResolvedValue(makeUser()),
+    } as unknown as jest.Mocked<FindUserByIdUseCase>;
+    configService = {
+      get: jest.fn().mockReturnValue('https://connect.example.com/webhooks'),
+    } as unknown as jest.Mocked<ConfigService>;
 
-    listener = new WebhookDispatchListener(sendWebhookUseCase);
+    listener = new WebhookDispatchListener(
+      sendWebhookUseCase,
+      findUserByIdUseCase,
+      configService,
+    );
   });
 
   describe('handleUserCreated', () => {
@@ -265,6 +282,47 @@ describe('WebhookDispatchListener', () => {
           createdAt: '2026-04-07T12:00:00.000Z',
         }),
       );
+    });
+  });
+
+  describe('handleUserMessageCreated', () => {
+    function makeEvent(): UserMessageCreatedEvent {
+      return new UserMessageCreatedEvent(USER_ID, ORG_ID, THREAD_ID, MESSAGE_ID);
+    }
+
+    it('should dispatch ChatSentWebhookEvent enriched with user email and name', async () => {
+      await listener.handleUserMessageCreated(makeEvent());
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.CHAT_SENT);
+      expect(command.event.data).toEqual({
+        userId: USER_ID,
+        orgId: ORG_ID,
+        threadId: THREAD_ID,
+        messageId: MESSAGE_ID,
+        userEmail: 'test@example.com',
+        userName: 'Test User',
+      });
+    });
+
+    it('should skip dispatch and user lookup when no webhook url is configured', async () => {
+      configService.get.mockReturnValue(undefined);
+
+      await listener.handleUserMessageCreated(makeEvent());
+
+      expect(findUserByIdUseCase.execute).not.toHaveBeenCalled();
+      expect(sendWebhookUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it('should skip dispatch when the user lookup fails', async () => {
+      findUserByIdUseCase.execute.mockRejectedValue(
+        new Error('User not found'),
+      );
+
+      await listener.handleUserMessageCreated(makeEvent());
+
+      expect(sendWebhookUseCase.execute).not.toHaveBeenCalled();
     });
   });
 
