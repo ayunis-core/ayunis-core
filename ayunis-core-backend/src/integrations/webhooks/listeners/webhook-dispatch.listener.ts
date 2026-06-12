@@ -12,6 +12,8 @@ import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/
 import { SubscriptionSeatsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-seats-updated.event';
 import { SubscriptionBillingInfoUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-billing-info-updated.event';
 import { UsageCollectedEvent } from 'src/domain/usage/application/events/usage-collected.event';
+import { AddonActivatedEvent } from 'src/iam/addons/application/events/addon-activated.event';
+import { AddonDeactivatedEvent } from 'src/iam/addons/application/events/addon-deactivated.event';
 import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/user-message-created.event';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
@@ -29,6 +31,8 @@ import { SubscriptionSeatsUpdatedWebhookEvent } from '../domain/webhook-events/s
 import { SubscriptionBillingInfoUpdatedWebhookEvent } from '../domain/webhook-events/subscription-billing-info-updated.webhook-event';
 import { UsageCollectedWebhookEvent } from '../domain/webhook-events/usage-collected.webhook-event';
 import { ChatSentWebhookEvent } from '../domain/webhook-events/chat-sent.webhook-event';
+import { AddonActivatedWebhookEvent } from '../domain/webhook-events/addon-activated.webhook-event';
+import { AddonDeactivatedWebhookEvent } from '../domain/webhook-events/addon-deactivated.webhook-event';
 import { mapSubscriptionToWebhookPayload } from './subscription-payload.mapper';
 import { mapBillingInfoToWebhookPayload } from './billing-info-payload.mapper';
 import type { WebhookEvent } from '../domain/webhook-event.entity';
@@ -152,6 +156,28 @@ export class WebhookDispatchListener {
       return;
     }
     await this.dispatch(new ChatSentWebhookEvent(event, user));
+  }
+
+  @OnEvent(AddonActivatedEvent.EVENT_NAME)
+  async handleAddonActivated(event: AddonActivatedEvent): Promise<void> {
+    await this.dispatch(
+      new AddonActivatedWebhookEvent({
+        orgId: event.orgId,
+        addonType: event.addonType,
+        actorUserId: event.actorUserId,
+      }),
+    );
+  }
+
+  @OnEvent(AddonDeactivatedEvent.EVENT_NAME)
+  async handleAddonDeactivated(event: AddonDeactivatedEvent): Promise<void> {
+    await this.dispatch(
+      new AddonDeactivatedWebhookEvent({
+        orgId: event.orgId,
+        addonType: event.addonType,
+        actorUserId: event.actorUserId,
+      }),
+    );
   }
 
   private webhookConfigured(): boolean {

@@ -4181,6 +4181,24 @@ export interface CreateApiKeyResponseDto {
   secret: string;
 }
 
+/**
+ * The add-on this status entry refers to
+ */
+export type AddonType = typeof AddonType[keyof typeof AddonType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AddonType = {
+  ayunis_core_academy: 'ayunis_core_academy',
+} as const;
+
+export interface AddonStatusResponseDto {
+  /** The add-on this status entry refers to */
+  type: AddonType;
+  /** Whether the add-on is active for the organization */
+  active: boolean;
+}
+
 export type UserControllerGetUsersInOrganizationParams = {
 /**
  * Search users by name or email
