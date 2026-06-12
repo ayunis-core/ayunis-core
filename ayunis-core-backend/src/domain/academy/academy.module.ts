@@ -16,12 +16,20 @@ import { CreateLessonUseCase } from './application/use-cases/create-lesson/creat
 import { UpdateLessonUseCase } from './application/use-cases/update-lesson/update-lesson.use-case';
 import { DeleteLessonUseCase } from './application/use-cases/delete-lesson/delete-lesson.use-case';
 import { ReorderLessonsUseCase } from './application/use-cases/reorder-lessons/reorder-lessons.use-case';
+import { SuperAdminAcademyChaptersController } from './presenters/http/super-admin-academy-chapters.controller';
+import { SuperAdminAcademyLessonsController } from './presenters/http/super-admin-academy-lessons.controller';
+import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-response-dto.mapper';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([AcademyChapterRecord, AcademyLessonRecord]),
   ],
+  controllers: [
+    SuperAdminAcademyChaptersController,
+    SuperAdminAcademyLessonsController,
+  ],
   providers: [
+    AcademyResponseDtoMapper,
     AcademyMapper,
     LocalAcademyChapterRepository,
     LocalAcademyLessonRepository,

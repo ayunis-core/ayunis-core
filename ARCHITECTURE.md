@@ -46,7 +46,7 @@ ayunis-core/
 | [transcriptions](ayunis-core-backend/src/domain/transcriptions/SUMMARY.md) | Voice | Audio transcription service |
 | [usage](ayunis-core-backend/src/domain/usage/SUMMARY.md) | Metering | Token and credit usage tracking |
 | [skill-templates](ayunis-core-backend/src/domain/skill-templates/SUMMARY.md) | Blueprints | Admin-managed skill templates with distribution modes |
-| [academy](ayunis-core-backend/src/domain/academy/SUMMARY.md) | Learning Content | Admin-managed chapters and ordered Loom lessons |
+| [academy](ayunis-core-backend/src/domain/academy/SUMMARY.md) | Learning | Academy chapters and lessons managed by super admins |
 | [anonymization-settings](ayunis-core-backend/src/domain/anonymization-settings) | Privacy Config | Org-level PII whitelist for anonymous mode |
 | [thread-pii-masks](ayunis-core-backend/src/domain/thread-pii-masks/SUMMARY.md) | Privacy | Per-thread PII mask dictionary for anonymous mode |
 
