@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.5.0](https://github.com/ayunis-core/ayunis-core/compare/v2.4.0...v2.5.0) (2026-06-12)
+
+
+### Features
+
+* **addons:** add org add-on management with webhook events (AYC-154) ([#804](https://github.com/ayunis-core/ayunis-core/issues/804)) ([a00461d](https://github.com/ayunis-core/ayunis-core/commit/a00461db92e5dc8d1ed15dba58b28d0dde9a38dd))
+* **webhooks:** emit usage.collected webhook after each persisted run (AYC-71) ([#534](https://github.com/ayunis-core/ayunis-core/issues/534)) ([25d72e5](https://github.com/ayunis-core/ayunis-core/commit/25d72e5c79deaa4e59e645be50cc8068f1e99e34))
+* **webhooks:** enrich usage.collected with user email and name (AYC-88) ([#797](https://github.com/ayunis-core/ayunis-core/issues/797)) ([7a7c167](https://github.com/ayunis-core/ayunis-core/commit/7a7c167bf6ee2c01e90ecff979bd0949ff154ad3))
+* **webhooks:** sign outbound webhooks with HMAC-SHA256 (AYC-71) ([#533](https://github.com/ayunis-core/ayunis-core/issues/533)) ([1297d2f](https://github.com/ayunis-core/ayunis-core/commit/1297d2fc8d0e420d54a536791028946f666834e9))
+
+
+### Bug Fixes
+
+* **webhooks:** emit org.created from create-org use case and dedupe payload (AYC-71) ([#532](https://github.com/ayunis-core/ayunis-core/issues/532)) ([9499e85](https://github.com/ayunis-core/ayunis-core/commit/9499e85b460025a5ab159281f9b4e36c131c210c))
+
 ## [2.4.0](https://github.com/ayunis-core/ayunis-core/compare/v2.3.0...v2.4.0) (2026-06-11)
 
 
