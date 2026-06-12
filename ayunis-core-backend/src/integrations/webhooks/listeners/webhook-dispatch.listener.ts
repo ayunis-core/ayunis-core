@@ -9,6 +9,7 @@ import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/ev
 import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/events/subscription-uncancelled.event';
 import { SubscriptionSeatsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-seats-updated.event';
 import { SubscriptionBillingInfoUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-billing-info-updated.event';
+import { UsageCollectedEvent } from 'src/domain/usage/application/events/usage-collected.event';
 import { SendWebhookUseCase } from '../application/use-cases/send-webhook/send-webhook.use-case';
 import { SendWebhookCommand } from '../application/use-cases/send-webhook/send-webhook.command';
 import { UserCreatedWebhookEvent } from '../domain/webhook-events/user-created.webhook-event';
@@ -20,6 +21,7 @@ import { SubscriptionCancelledWebhookEvent } from '../domain/webhook-events/subs
 import { SubscriptionUncancelledWebhookEvent } from '../domain/webhook-events/subscription-uncancelled.webhook-event';
 import { SubscriptionSeatsUpdatedWebhookEvent } from '../domain/webhook-events/subscription-seats-updated.webhook-event';
 import { SubscriptionBillingInfoUpdatedWebhookEvent } from '../domain/webhook-events/subscription-billing-info-updated.webhook-event';
+import { UsageCollectedWebhookEvent } from '../domain/webhook-events/usage-collected.webhook-event';
 import { mapSubscriptionToWebhookPayload } from './subscription-payload.mapper';
 import { mapBillingInfoToWebhookPayload } from './billing-info-payload.mapper';
 import type { WebhookEvent } from '../domain/webhook-event.entity';
@@ -109,6 +111,13 @@ export class WebhookDispatchListener {
       new SubscriptionBillingInfoUpdatedWebhookEvent(
         mapBillingInfoToWebhookPayload(event.payload),
       ),
+    );
+  }
+
+  @OnEvent(UsageCollectedEvent.EVENT_NAME)
+  async handleUsageCollected(event: UsageCollectedEvent): Promise<void> {
+    await this.dispatch(
+      new UsageCollectedWebhookEvent(event.usage, event.modelName),
     );
   }
 
