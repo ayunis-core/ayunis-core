@@ -728,6 +728,9 @@ importers:
 
   packages/provider-anthropic:
     dependencies:
+      '@anthropic-ai/bedrock-sdk':
+        specifier: ^0.26.4
+        version: 0.26.4
       '@anthropic-ai/sdk':
         specifier: ^0.59.0
         version: 0.59.0
