@@ -326,8 +326,9 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
         }),
       );
 
-      // Downstream converters interpret a non-enum string as a named tool —
-      // see openai-chat-message.converter.ts:54-56.
+      // Downstream the runtime request mapper interprets a non-enum string as
+      // a named tool — see infrastructure/runtime/request.mapper.ts
+      // `toInferenceToolChoice`.
       expect(capturedToolChoice).toBe('get_weather');
     });
   });

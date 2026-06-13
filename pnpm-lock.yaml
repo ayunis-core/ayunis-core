@@ -29,12 +29,15 @@ importers:
 
   ayunis-core-backend:
     dependencies:
-      '@anthropic-ai/bedrock-sdk':
-        specifier: ^0.26.4
-        version: 0.26.4
-      '@anthropic-ai/sdk':
-        specifier: ^0.59.0
-        version: 0.59.0
+      '@ayunis/inference':
+        specifier: workspace:*
+        version: link:../packages/inference
+      '@ayunis/provider-anthropic':
+        specifier: workspace:*
+        version: link:../packages/provider-anthropic
+      '@ayunis/provider-openai':
+        specifier: workspace:*
+        version: link:../packages/provider-openai
       '@google/genai':
         specifier: ^1.41.0
         version: 1.52.0(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))

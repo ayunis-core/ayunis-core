@@ -131,9 +131,9 @@ export class OpenAIRequestMapper {
     // DTO type does not model it — guard explicitly.
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, sonarjs/different-types-comparison
     if (tc !== null && typeof tc === 'object') {
-      // Forward the named tool. Downstream provider converters
-      // (openai-chat-message.converter.ts, anthropic-message.converter.ts)
-      // treat any non-enum string as a tool name and emit a named-tool
+      // Forward the named tool. Downstream the runtime request mapper
+      // (infrastructure/runtime/request.mapper.ts `toInferenceToolChoice`)
+      // treats any non-enum string as a tool name and emits a named-tool
       // tool_choice in the provider call.
       const fn = (tc as { function?: { name?: unknown } }).function;
       if (!fn || typeof fn.name !== 'string' || fn.name.length === 0) {
