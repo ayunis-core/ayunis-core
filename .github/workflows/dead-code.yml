@@ -63,6 +63,87 @@ jobs:
         run: pnpm exec knip --include files,dependencies,unlisted
         continue-on-error: ${{ github.event_name == 'pull_request' }}
 
+  inference:
+    name: Inference
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/inference
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for dead code
+        run: pnpm exec knip --include files,dependencies,unlisted
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
+
+  provider-anthropic:
+    name: Provider Anthropic
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/provider-anthropic
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for dead code
+        run: pnpm exec knip --include files,dependencies,unlisted
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
+
+  provider-openai:
+    name: Provider OpenAI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/provider-openai
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for dead code
+        run: pnpm exec knip --include files,dependencies,unlisted
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
+
   frontend:
     name: Frontend
     runs-on: ubuntu-latest
