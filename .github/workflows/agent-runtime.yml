@@ -35,6 +35,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Workspace deps (e.g. @ayunis/inference) resolve via their built `dist`,
+      # which `pnpm install` does not produce — build the dep closure first.
+      - name: Build workspace dependencies
+        run: pnpm --filter "@ayunis/agent-runtime^..." build
+
       - name: Run TypeScript type check
         run: pnpm run typecheck
 

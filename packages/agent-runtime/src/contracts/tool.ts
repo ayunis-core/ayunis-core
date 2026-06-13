@@ -1,16 +1,13 @@
+import type { ToolSchema } from '@ayunis/inference';
+
 import type { RunContext } from '../context/run-context';
 import type { CustomEventInput, RunEvent } from './event';
 import type { ChildRunInput } from './run-input';
 
-/** Minimal JSON Schema shape; tools declare their parameters with it. */
-export type JsonSchema = Readonly<Record<string, unknown>>;
-
-/** The schema-only view of a tool — what gets sent to the model. */
-export interface ToolSchema {
-  name: string;
-  description: string;
-  parameters: JsonSchema;
-}
+// JsonSchema and ToolSchema (the schema-only view sent to the model) live in
+// @ayunis/inference; re-exported here so the engine's `../contracts/tool`
+// imports keep resolving. Tool/ToolExecutionContext below are runtime-only.
+export type { JsonSchema, ToolSchema } from '@ayunis/inference';
 
 export interface ToolExecutionContext {
   /** The run's context bag (host data: tenancy, identity, per-run state). */
