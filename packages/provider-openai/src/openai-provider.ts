@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import OpenAI, { AzureOpenAI } from 'openai';
 import type { ChatCompletionCreateParamsStreaming } from 'openai/resources/chat/completions';
 
 import type {
@@ -23,6 +23,18 @@ export interface OpenAIProviderOptions {
   maxRetries?: number;
 }
 
+export interface AzureProviderOptions {
+  apiKey: string;
+  /** Azure resource endpoint, e.g. 'https://my-resource.openai.azure.com'. */
+  endpoint: string;
+  /** Azure API version, e.g. '2024-10-21'. */
+  apiVersion: string;
+  /** Azure deployment name, passed through as the model id. */
+  model: string;
+  /** SDK-level retry count for transient failures. Default: 2. */
+  maxRetries?: number;
+}
+
 /**
  * A minimal OpenAI Chat Completions ModelProvider. The host supplies
  * selection and credentials. Text, tool calls, finish reason and usage are
@@ -36,18 +48,41 @@ export const openai = (options: OpenAIProviderOptions): ModelProvider => {
       ? { maxRetries: options.maxRetries }
       : {}),
   });
-  return {
-    name: `openai:${options.model}`,
-    stream: (request) => streamOpenAI(client, options, request),
-  };
+  return createProvider(client, `openai:${options.model}`, options.model);
 };
 
-async function* streamOpenAI(
+/**
+ * Azure OpenAI ModelProvider. Same Chat Completions protocol as `openai`,
+ * only the client differs (resource endpoint + API version). `model` is the
+ * Azure deployment name.
+ */
+export const azure = (options: AzureProviderOptions): ModelProvider => {
+  const client = new AzureOpenAI({
+    apiKey: options.apiKey,
+    endpoint: options.endpoint,
+    apiVersion: options.apiVersion,
+    ...(options.maxRetries !== undefined
+      ? { maxRetries: options.maxRetries }
+      : {}),
+  });
+  return createProvider(client, `azure:${options.model}`, options.model);
+};
+
+const createProvider = (
   client: OpenAI,
-  options: OpenAIProviderOptions,
+  name: string,
+  model: string,
+): ModelProvider => ({
+  name,
+  stream: (request) => streamChat(client, model, request),
+});
+
+async function* streamChat(
+  client: OpenAI,
+  model: string,
   request: ProviderRequest,
 ): AsyncIterable<ProviderChunk> {
-  const params = buildParams(options, request);
+  const params = buildParams(model, request);
   const stream = await client.chat.completions.create(
     params,
     request.signal ? { signal: request.signal } : undefined,
@@ -61,12 +96,12 @@ async function* streamOpenAI(
 }
 
 const buildParams = (
-  options: OpenAIProviderOptions,
+  model: string,
   request: ProviderRequest,
 ): ChatCompletionCreateParamsStreaming => {
   const hasTools = request.tools.length > 0;
   return {
-    model: options.model,
+    model,
     messages: convertMessages(request.instructions, request.messages),
     ...(hasTools ? { tools: request.tools.map(convertTool) } : {}),
     ...(hasTools && request.toolChoice !== undefined

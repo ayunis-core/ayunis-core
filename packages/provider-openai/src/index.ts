@@ -1,1 +1,6 @@
-export { openai, type OpenAIProviderOptions } from './openai-provider';
+export {
+  azure,
+  openai,
+  type AzureProviderOptions,
+  type OpenAIProviderOptions,
+} from './openai-provider';
