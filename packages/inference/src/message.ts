@@ -35,11 +35,26 @@ export interface ToolResultContent {
   isError?: boolean;
 }
 
+/**
+ * An image supplied in an input message, already resolved to inline data.
+ * Fetching, validation and access control (storage, tenancy) are host
+ * concerns done before the message reaches a provider — providers only ever
+ * see resolved bytes.
+ */
+export interface ImageContent {
+  type: 'image';
+  /** Base64-encoded image bytes (no `data:` prefix). */
+  data: string;
+  /** MIME type, e.g. 'image/png'. */
+  mediaType: string;
+}
+
 export type MessageContent =
   | TextContent
   | ThinkingContent
   | ToolUseContent
-  | ToolResultContent;
+  | ToolResultContent
+  | ImageContent;
 
 /**
  * `system` carries an in-thread system instruction (distinct from the
