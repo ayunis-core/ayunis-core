@@ -30,8 +30,9 @@ FE_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^ayunis-core-frontend/src/
 # Backend: staged TS files
 BE_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^ayunis-core-backend/(src|apps|libs|test)/.*\.ts$' || true)
 
-# Agent runtime package: staged TS files
-AR_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^packages/agent-runtime/(src|examples)/.*\.ts$' || true)
+# Workspace packages (packages/*): staged TS files, plus the distinct package dirs touched
+PKG_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^packages/[^/]+/(src|examples)/.*\.ts$' || true)
+PKG_DIRS=$(printf "%s\n" "$PKG_TS_STAGED" | sed -E 's#^(packages/[^/]+)/.*#\1#' | sort -u)
 
 # All staged TS/TSX files (for file size check)
 ALL_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '\.(ts|tsx)$' || true)
@@ -65,12 +66,6 @@ DEPCRUISE_STATUS_FILE="$STATUS_DIR/depcruise.status"
 FE_DEPCRUISE_STATUS_FILE="$STATUS_DIR/fe_depcruise.status"
 BE_DUPLICATION_STATUS_FILE="$STATUS_DIR/be_duplication.status"
 FE_DUPLICATION_STATUS_FILE="$STATUS_DIR/fe_duplication.status"
-AR_ESLINT_STATUS_FILE="$STATUS_DIR/ar_eslint.status"
-AR_PRETTIER_STATUS_FILE="$STATUS_DIR/ar_prettier.status"
-AR_TSC_STATUS_FILE="$STATUS_DIR/ar_tsc.status"
-AR_COMPLEXITY_STATUS_FILE="$STATUS_DIR/ar_complexity.status"
-AR_DEPCHECK_STATUS_FILE="$STATUS_DIR/ar_depcheck.status"
-AR_DUPLICATION_STATUS_FILE="$STATUS_DIR/ar_duplication.status"
 FILE_SIZE_STATUS_FILE="$STATUS_DIR/file_size.status"
 MARKDOWNLINT_STATUS_FILE="$STATUS_DIR/markdownlint.status"
 
@@ -193,99 +188,43 @@ run_be_tsc() {
   printf "%s" "$STATUS" > "$STATUS_FILE"
 }
 
-run_ar_eslint() {
-  STATUS_FILE="$1"
-  print_section "Agent Runtime • ESLint (staged TS)"
-  printf "%s\n" "$AR_TS_STAGED" \
-    | sed 's#^packages/agent-runtime/##' \
-    | sed 's#^# - #'
-  set +e
+# Generic checks for one workspace package under packages/* (eslint, prettier,
+# typecheck, complexity, circular deps, duplication). Runs as a single parallel
+# job per touched package, so new packages need no edits to this hook.
+run_pkg_checks() {
+  pkg_dir="$1"; STATUS_FILE="$2"
+  pkg_name=$(basename "$pkg_dir")
+  pkg_staged=$(printf "%s\n" "$PKG_TS_STAGED" | grep -E "^${pkg_dir}/" || true)
+  pkg_rel=$(printf "%s" "$pkg_staged" | sed "s#^${pkg_dir}/##")
+  print_section "Package ${pkg_name} • checks (staged TS)"
+  printf "%s\n" "$pkg_rel" | sed 's#^# - #'
+  st=0
   (
-    cd packages/agent-runtime >/dev/null 2>&1
-    printf "%s" "$AR_TS_STAGED" \
-      | sed 's#^packages/agent-runtime/##' \
-      | tr '\n' '\0' \
+    cd "$pkg_dir" >/dev/null 2>&1
+    printf "%s" "$pkg_rel" | tr '\n' '\0' \
       | xargs -0 pnpm exec eslint --format stylish --max-warnings=0 $ESLINT_FIX_ARGS
-  )
-  STATUS=$?
-  set -e
-  printf "%s" "$STATUS" > "$STATUS_FILE"
-}
-
-run_ar_prettier() {
-  STATUS_FILE="$1"
-  print_section "Agent Runtime • Prettier (staged TS)"
-  printf "%s\n" "$AR_TS_STAGED" \
-    | sed 's#^packages/agent-runtime/##' \
-    | sed 's#^# - #'
-  set +e
+  ) || st=1
   (
-    cd packages/agent-runtime >/dev/null 2>&1
-    printf "%s" "$AR_TS_STAGED" \
-      | sed 's#^packages/agent-runtime/##' \
-      | tr '\n' '\0' \
+    cd "$pkg_dir" >/dev/null 2>&1
+    printf "%s" "$pkg_rel" | tr '\n' '\0' \
       | xargs -0 pnpm exec prettier $BE_PRETTIER_ARGS
-  )
-  STATUS=$?
-  set -e
-  printf "%s" "$STATUS" > "$STATUS_FILE"
-}
-
-run_ar_tsc() {
-  STATUS_FILE="$1"
-  print_section "Agent Runtime • TypeScript typecheck (staged TS)"
-  printf "%s\n" "$AR_TS_STAGED" \
-    | sed 's#^packages/agent-runtime/##' \
-    | sed 's#^# - #'
-  set +e
+  ) || st=1
   (
-    cd packages/agent-runtime >/dev/null 2>&1
-    printf "%s" "$AR_TS_STAGED" \
-      | sed 's#^packages/agent-runtime/##' \
-      | tr '\n' '\0' \
+    cd "$pkg_dir" >/dev/null 2>&1
+    printf "%s" "$pkg_rel" | tr '\n' '\0' \
       | xargs -0 pnpm dlx tsc-files --noEmit -p tsconfig.json
-  )
-  STATUS=$?
-  set -e
-  printf "%s" "$STATUS" > "$STATUS_FILE"
-}
-
-run_ar_complexity() {
-  STATUS_FILE="$1"
-  print_section "Complexity • Lizard (staged agent-runtime TS)"
-  printf "%s\n" "$AR_TS_STAGED" | sed 's#^# - #'
-  set +e
-  printf "%s" "$AR_TS_STAGED" | tr '\n' ' ' | xargs ./scripts/check-complexity.sh
-  STATUS=$?
-  set -e
-  printf "%s" "$STATUS" > "$STATUS_FILE"
-}
-
-run_ar_depcheck() {
-  STATUS_FILE="$1"
-  print_section "Dependencies • madge circular (agent-runtime)"
-  set +e
+  ) || st=1
+  printf "%s" "$pkg_staged" | tr '\n' ' ' | xargs ./scripts/check-complexity.sh || st=1
   (
-    cd packages/agent-runtime >/dev/null 2>&1
+    cd "$pkg_dir" >/dev/null 2>&1
     pnpm run --silent deps:check
-  )
-  STATUS=$?
-  set -e
-  printf "%s" "$STATUS" > "$STATUS_FILE"
-}
-
-run_ar_duplication() {
-  STATUS_FILE="$1"
-  print_section "Duplication • jscpd (agent-runtime)"
-  # jscpd scans src/ only (same scope as backend/frontend), so only pass
-  # staged src files — examples/ are demo code and out of scope.
-  AR_SRC_STAGED=$(printf "%s" "$AR_TS_STAGED" | grep -E '^packages/agent-runtime/src/' || true)
-  set +e
+  ) || st=1
+  # jscpd scans src/ only (same scope as backend/frontend); examples/ are demo
+  # code and out of scope.
+  pkg_src_staged=$(printf "%s" "$pkg_staged" | grep -E "^${pkg_dir}/src/" || true)
   # shellcheck disable=SC2086
-  ./scripts/check-duplication.sh packages/agent-runtime $AR_SRC_STAGED
-  STATUS=$?
-  set -e
-  printf "%s" "$STATUS" > "$STATUS_FILE"
+  ./scripts/check-duplication.sh "$pkg_dir" $pkg_src_staged || st=1
+  printf "%s" "$st" > "$STATUS_FILE"
 }
 
 run_complexity() {
@@ -394,14 +333,15 @@ if [ -n "$BE_TS_STAGED" ]; then
   run_be_duplication "$BE_DUPLICATION_STATUS_FILE" &
 fi
 
-# Agent runtime package checks
-if [ -n "$AR_TS_STAGED" ]; then
-  run_ar_eslint "$AR_ESLINT_STATUS_FILE" &
-  run_ar_prettier "$AR_PRETTIER_STATUS_FILE" &
-  run_ar_tsc "$AR_TSC_STATUS_FILE" &
-  run_ar_complexity "$AR_COMPLEXITY_STATUS_FILE" &
-  run_ar_depcheck "$AR_DEPCHECK_STATUS_FILE" &
-  run_ar_duplication "$AR_DUPLICATION_STATUS_FILE" &
+# Workspace package checks (packages/*) — one parallel job per touched package
+PKG_STATUS_ENTRIES=""
+if [ -n "$PKG_TS_STAGED" ]; then
+  for pkg_dir in $PKG_DIRS; do
+    pkg_safe=$(printf "%s" "$pkg_dir" | tr '/' '_')
+    pkg_status_file="$STATUS_DIR/${pkg_safe}.status"
+    PKG_STATUS_ENTRIES="$PKG_STATUS_ENTRIES ${pkg_dir}:${pkg_status_file}"
+    run_pkg_checks "$pkg_dir" "$pkg_status_file" &
+  done
 fi
 
 # File size check (all staged TS/TSX)
@@ -430,12 +370,6 @@ BE_DUPLICATION_STATUS=$(cat "$BE_DUPLICATION_STATUS_FILE" 2>/dev/null || printf 
 FE_DUPLICATION_STATUS=$(cat "$FE_DUPLICATION_STATUS_FILE" 2>/dev/null || printf "0")
 FILE_SIZE_STATUS=$(cat "$FILE_SIZE_STATUS_FILE" 2>/dev/null || printf "0")
 MARKDOWNLINT_STATUS=$(cat "$MARKDOWNLINT_STATUS_FILE" 2>/dev/null || printf "0")
-AR_ESLINT_STATUS=$(cat "$AR_ESLINT_STATUS_FILE" 2>/dev/null || printf "0")
-AR_PRETTIER_STATUS=$(cat "$AR_PRETTIER_STATUS_FILE" 2>/dev/null || printf "0")
-AR_TSC_STATUS=$(cat "$AR_TSC_STATUS_FILE" 2>/dev/null || printf "0")
-AR_COMPLEXITY_STATUS=$(cat "$AR_COMPLEXITY_STATUS_FILE" 2>/dev/null || printf "0")
-AR_DEPCHECK_STATUS=$(cat "$AR_DEPCHECK_STATUS_FILE" 2>/dev/null || printf "0")
-AR_DUPLICATION_STATUS=$(cat "$AR_DUPLICATION_STATUS_FILE" 2>/dev/null || printf "0")
 
 # Summary and exit code
 FAILED=0
@@ -516,43 +450,19 @@ if [ -n "$BE_TS_STAGED" ]; then
   fi
 
 fi
-if [ -n "$AR_TS_STAGED" ]; then
-  if [ "$AR_ESLINT_STATUS" -ne 0 ]; then
-    printf "%b\n" "${RED}❌ Agent Runtime ESLint failed${NC}"
-    FAILED=1
-  else
-    printf "%b\n" "${GREEN}✅ Agent Runtime ESLint passed${NC}"
-  fi
-  if [ "$AR_PRETTIER_STATUS" -ne 0 ]; then
-    printf "%b\n" "${RED}❌ Agent Runtime Prettier failed${NC}"
-    FAILED=1
-  else
-    printf "%b\n" "${GREEN}✅ Agent Runtime Prettier passed${NC}"
-  fi
-  if [ "$AR_TSC_STATUS" -ne 0 ]; then
-    printf "%b\n" "${RED}❌ Agent Runtime TypeScript typecheck failed${NC}"
-    FAILED=1
-  else
-    printf "%b\n" "${GREEN}✅ Agent Runtime TypeScript typecheck passed${NC}"
-  fi
-  if [ "$AR_COMPLEXITY_STATUS" -ne 0 ]; then
-    printf "%b\n" "${RED}❌ Agent Runtime complexity check failed (CCN>10, length>50, or args>5)${NC}"
-    FAILED=1
-  else
-    printf "%b\n" "${GREEN}✅ Agent Runtime complexity check passed${NC}"
-  fi
-  if [ "$AR_DEPCHECK_STATUS" -ne 0 ]; then
-    printf "%b\n" "${RED}❌ Agent Runtime circular dependency check failed${NC}"
-    FAILED=1
-  else
-    printf "%b\n" "${GREEN}✅ Agent Runtime circular dependency check passed${NC}"
-  fi
-  if [ "$AR_DUPLICATION_STATUS" -ne 0 ]; then
-    printf "%b\n" "${RED}❌ Agent Runtime duplication check failed (copy-paste detected)${NC}"
-    FAILED=1
-  else
-    printf "%b\n" "${GREEN}✅ Agent Runtime duplication check passed${NC}"
-  fi
+if [ -n "$PKG_TS_STAGED" ]; then
+  for entry in $PKG_STATUS_ENTRIES; do
+    pkg_dir=${entry%%:*}
+    pkg_status_file=${entry#*:}
+    pkg_name=$(basename "$pkg_dir")
+    pkg_status=$(cat "$pkg_status_file" 2>/dev/null || printf "0")
+    if [ "$pkg_status" -ne 0 ]; then
+      printf "%b\n" "${RED}❌ Package ${pkg_name} checks failed (eslint/prettier/tsc/complexity/circular/duplication)${NC}"
+      FAILED=1
+    else
+      printf "%b\n" "${GREEN}✅ Package ${pkg_name} checks passed${NC}"
+    fi
+  done
 fi
 if [ -n "$ALL_TS_STAGED" ]; then
   if [ "$FILE_SIZE_STATUS" -ne 0 ]; then
