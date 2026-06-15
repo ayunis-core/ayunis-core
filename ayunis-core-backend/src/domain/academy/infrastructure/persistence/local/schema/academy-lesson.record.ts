@@ -5,14 +5,14 @@ import { AcademyChapterRecord } from './academy-chapter.record';
 
 @Entity({ name: 'academy_lessons' })
 export class AcademyLessonRecord extends BaseRecord {
+  @Column()
+  @Index()
+  chapterId: UUID;
+
   @ManyToOne(() => AcademyChapterRecord, (chapter) => chapter.lessons, {
     onDelete: 'CASCADE',
   })
   chapter: AcademyChapterRecord;
-
-  @Column()
-  @Index()
-  chapterId: UUID;
 
   @Column({ nullable: false })
   title: string;
