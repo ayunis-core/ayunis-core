@@ -1,0 +1,6 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": ["src/index.ts", "src/**/*.spec.ts"],
+  "project": ["src/**/*.ts"],
+  "ignoreDependencies": ["@ayunis/inference", "@ayunis/agent-runtime"]
+}
