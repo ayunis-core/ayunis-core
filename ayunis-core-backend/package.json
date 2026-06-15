@@ -9,9 +9,12 @@
     "node": ">=24"
   },
   "scripts": {
+    "build:deps": "pnpm --filter @ayunis/inference --filter @ayunis/provider-anthropic --filter @ayunis/provider-openai run build",
+    "prebuild": "pnpm run build:deps",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",
     "start": "nest start",
+    "prestart:dev": "pnpm run build:deps",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main",
@@ -47,8 +50,9 @@
     "seed": "pnpm run seed:minimal"
   },
   "dependencies": {
-    "@anthropic-ai/bedrock-sdk": "^0.26.4",
-    "@anthropic-ai/sdk": "^0.59.0",
+    "@ayunis/inference": "workspace:*",
+    "@ayunis/provider-anthropic": "workspace:*",
+    "@ayunis/provider-openai": "workspace:*",
     "@google/genai": "^1.41.0",
     "@mistralai/mistralai": "^1.14.0",
     "@modelcontextprotocol/sdk": "^1.20.2",

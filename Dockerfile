@@ -37,11 +37,18 @@ RUN echo "Frontend VITE_* vars present at build:" \
      || echo "  (none — VITE_* will be inlined as undefined)") \
  && pnpm --filter core-frontend-tanstack run build
 RUN cp -r ayunis-core-frontend/dist ayunis-core-backend/frontend
+# Build the workspace packages the backend depends on (@ayunis/inference,
+# @ayunis/provider-anthropic, @ayunis/provider-openai) before the backend so
+# their dist/ exists when nest build resolves them. The backend's `prebuild`
+# hook also runs this, but doing it explicitly keeps the build order legible.
+RUN pnpm --filter "@ayunis/inference" --filter "@ayunis/provider-anthropic" --filter "@ayunis/provider-openai" run build
 RUN pnpm --filter core-backend run build
 
 # Produce a self-contained, production-only deploy bundle for the backend
-# workspace (prunes devDependencies; --legacy avoids the inject-workspace-packages
-# requirement — no workspace package deps exist yet, AYC-148 revisits).
+# workspace (prunes devDependencies). --legacy uses the pre-inject deploy
+# algorithm, which hard-copies the @ayunis/* workspace dependencies (built
+# above) into the bundle's node_modules — so no inject-workspace-packages
+# setting is required.
 RUN pnpm --filter=core-backend --prod --legacy deploy /prod/backend
 
 # ---- Stage 2: Production runtime ----

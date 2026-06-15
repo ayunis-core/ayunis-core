@@ -10,5 +10,10 @@
     "src/config/evals.config.ts",
     "src/config/locaboo3.config.ts"
   ],
-  "ignoreDependencies": ["tsconfig-paths"]
+  "ignoreDependencies": [
+    "tsconfig-paths",
+    "@ayunis/inference",
+    "@ayunis/provider-anthropic",
+    "@ayunis/provider-openai"
+  ]
 }

@@ -1,18 +1,26 @@
-import { ConfigService } from '@nestjs/config';
-import Anthropic from '@anthropic-ai/sdk';
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { anthropic } from '@ayunis/provider-anthropic';
+import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import { BaseAnthropicStreamInferenceHandler } from './base-anthropic.stream-inference';
+import { RuntimeStreamInferenceHandler } from '../runtime/runtime-stream-inference.handler';
+import type { Model } from '../../domain/model.entity';
+import { INFERENCE_MAX_RETRIES } from '../runtime/inference-config';
 
 @Injectable()
-export class AnthropicStreamInferenceHandler extends BaseAnthropicStreamInferenceHandler {
+export class AnthropicStreamInferenceHandler extends RuntimeStreamInferenceHandler {
   constructor(
     private readonly configService: ConfigService,
     imageContentService: ImageContentService,
   ) {
     super(imageContentService);
-    this.client = new Anthropic({
-      apiKey: this.configService.get('anthropic.apiKey'),
+  }
+
+  protected createProvider(model: Model): ModelProvider {
+    return anthropic({
+      apiKey: this.configService.get<string>('anthropic.apiKey') ?? '',
+      model: model.name,
+      maxRetries: INFERENCE_MAX_RETRIES,
     });
   }
 }
