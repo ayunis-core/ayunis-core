@@ -1,57 +1,46 @@
-# Academy Module
+# Academy
 
-## Purpose
+Platform-global learning content for the **Ayunis Core Academy** add-on
+(`AddonType.AYUNIS_CORE_ACADEMY`): chapters containing video lessons, authored
+centrally by super admins. There is no org or user-facing surface yet — read
+access gated by the org's add-on activation is a follow-up.
 
-The academy provides admin-managed learning content organized as chapters that group ordered lessons. Each lesson links to a Loom video and carries a title, optional description, and a position within its chapter.
+## Model
 
-## Key Concepts
+- `AcademyChapter` — `{ id, title, description, position, lessons[] }`.
+- `AcademyLesson` — `{ id, chapterId, title, description?, loomUrl, position }`,
+  cascade-deleted with its chapter. `loomUrl` is a validated Loom share/embed
+  link (`https://loom.com/(share|embed)/...`).
 
-- **Chapter**: A titled, described, positioned grouping of lessons (`AcademyChapter`).
-- **Lesson**: A titled video lesson belonging to a chapter, with an optional description, a Loom URL, and a position within the chapter (`AcademyLesson`).
-- **Ordering**: Both chapters and lessons are ordered by an integer `position`. Repositories expose `findMaxPosition` for appending and `updatePositions` for reordering.
+## Ordering
 
-## Structure
+Both chapters (globally) and lessons (per chapter) carry a 0-based `position`
+and are freely sortable:
 
-```text
-academy/
-├── SUMMARY.md
-├── domain/
-│   ├── academy-chapter.entity.ts   # AcademyChapter domain entity (holds its lessons)
-│   └── academy-lesson.entity.ts    # AcademyLesson domain entity
-├── application/
-│   ├── academy.errors.ts           # Domain errors + AcademyErrorCode
-│   ├── reorder-validation.ts       # Shared set equality validation for reorder commands
-│   ├── ports/
-│   │   ├── academy-chapter.repository.ts  # Abstract chapter repository interface
-│   │   └── academy-lesson.repository.ts   # Abstract lesson repository interface
-│   └── use-cases/
-│       ├── get-academy-content/    # Load chapters with ordered lessons
-│       ├── create-chapter/         # Append a chapter after the last position
-│       ├── update-chapter/         # Update title/description while preserving position
-│       ├── delete-chapter/         # Delete a chapter
-│       ├── reorder-chapters/       # Rewrite chapter positions after validating id set
-│       ├── create-lesson/          # Append a lesson within an existing chapter
-│       ├── update-lesson/          # Update title/video/description while preserving position
-│       ├── delete-lesson/          # Delete a lesson
-│       └── reorder-lessons/        # Rewrite lesson positions scoped to a chapter
-├── infrastructure/
-│   └── persistence/local/
-│       ├── schema/
-│       │   ├── academy-chapter.record.ts  # AcademyChapterRecord TypeORM entity
-│       │   └── academy-lesson.record.ts   # AcademyLessonRecord TypeORM entity (ManyToOne chapter)
-│       ├── mappers/academy.mapper.ts      # Domain ↔ Record conversion for chapters and lessons
-│       ├── local-academy-chapter.repository.ts  # PostgreSQL chapter repository
-│       └── local-academy-lesson.repository.ts   # PostgreSQL lesson repository
-└── academy.module.ts               # NestJS wiring
-```
+- Creates append at `max(position) + 1`; reads order by
+  `position ASC, createdAt ASC`.
+- Reorder use cases require the submitted ids to be exactly the current set
+  (set equality, validated via `reorder-validation.ts`) and rewrite positions
+  `0..n-1` in a single transaction. Mismatches throw `InvalidReorderError`
+  (400) with `missing`/`extra` metadata.
+- Concurrent reorders are last-write-wins (acceptable for a super-admin-only
+  surface).
 
-## Errors
+## Management
 
-- `ChapterNotFoundError` (404) — chapter id not found.
-- `LessonNotFoundError` (404) — lesson id not found.
-- `InvalidReorderError` (400) — submitted ids do not match the current set of items.
-- `UnexpectedAcademyError` (500) — wraps unexpected errors.
+Super-admin only (`@SystemRoles(SUPER_ADMIN)`), two controllers under
+`super-admin/academy`:
 
-## Module Wiring
+- `SuperAdminAcademyChaptersController` (`super-admin/academy/chapters`) —
+  list (chapters with nested ordered lessons), create, update, delete,
+  reorder (`PUT chapters/order`, declared before the `:id` routes).
+- `SuperAdminAcademyLessonsController` (`super-admin/academy`) — create
+  (`POST chapters/:chapterId/lessons`), reorder
+  (`PUT chapters/:chapterId/lessons/order`), update/delete (`lessons/:id`).
 
-`AcademyModule` registers the `AcademyChapterRecord` and `AcademyLessonRecord` TypeORM entities, the `AcademyMapper`, binds the `AcademyChapterRepository` / `AcademyLessonRepository` ports to their local PostgreSQL implementations (`LocalAcademyChapterRepository`, `LocalAcademyLessonRepository`), and provides the academy content management use cases. Only `GetAcademyContentUseCase` is exported for cross-module consumption for now.
+## Layout
+
+Standard hexagonal: `domain/` (chapter + lesson entities), `application/`
+(repository ports, use-cases, errors, reorder validation), `infrastructure/`
+(Postgres records + mapper + repositories), `presenters/http/` (super-admin
+controllers + DTOs + response mapper).
