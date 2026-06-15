@@ -22,7 +22,7 @@ interface ChapterCardProps {
   onEditLesson: (lesson: AcademyLessonResponseDto) => void;
   onDeleteLesson: (lesson: AcademyLessonResponseDto) => void;
   isDeletingChapter: boolean;
-  isDeletingLesson: boolean;
+  deletingLessonIds: Set<string>;
 }
 
 export function ChapterCard({
@@ -33,7 +33,7 @@ export function ChapterCard({
   onEditLesson,
   onDeleteLesson,
   isDeletingChapter,
-  isDeletingLesson,
+  deletingLessonIds,
 }: Readonly<ChapterCardProps>) {
   const { t } = useTranslation('super-admin-settings-academy');
 
@@ -74,7 +74,7 @@ export function ChapterCard({
                 lesson={lesson}
                 onEdit={() => onEditLesson(lesson)}
                 onDelete={() => onDeleteLesson(lesson)}
-                isDeleting={isDeletingLesson}
+                isDeleting={deletingLessonIds.has(lesson.id)}
               />
             ))}
           </div>

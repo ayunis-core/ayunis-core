@@ -31,7 +31,7 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
     null,
   );
   const { deleteChapter, isDeleting: isDeletingChapter } = useDeleteChapter();
-  const { deleteLesson, isDeleting: isDeletingLesson } = useDeleteLesson();
+  const { deleteLesson, deletingIds: deletingLessonIds } = useDeleteLesson();
   const { confirm } = useConfirmation();
 
   function handleDeleteChapter(chapter: AcademyChapterResponseDto) {
@@ -101,7 +101,7 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
               }
               onDeleteLesson={handleDeleteLesson}
               isDeletingChapter={isDeletingChapter}
-              isDeletingLesson={isDeletingLesson}
+              deletingLessonIds={deletingLessonIds}
             />
           ))}
         </div>

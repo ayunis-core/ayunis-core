@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +13,7 @@ export function useDeleteLesson() {
   const { t } = useTranslation('super-admin-settings-academy');
   const queryClient = useQueryClient();
   const router = useRouter();
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const mutation = useSuperAdminAcademyLessonsControllerDeleteLesson({
     mutation: {
       onSuccess: async () => {
@@ -39,11 +41,23 @@ export function useDeleteLesson() {
   });
 
   function deleteLesson(id: string) {
-    mutation.mutate({ id });
+    setDeletingIds((prev) => new Set(prev).add(id));
+    mutation.mutate(
+      { id },
+      {
+        onSettled: () => {
+          setDeletingIds((prev) => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+          });
+        },
+      },
+    );
   }
 
   return {
     deleteLesson,
-    isDeleting: mutation.isPending,
+    deletingIds,
   };
 }
