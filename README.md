@@ -172,7 +172,10 @@ All super admin endpoints require JWT authentication with a user that has the `S
 
 ```bash
 cd ayunis-core-backend
-npx nestjs-command make:super-admin <email>
+# Look up the user's ID by email
+npm run cli:ts -- users:get --email <email>
+# Promote that user to super admin
+npm run cli:ts -- users:make-super-admin --userId <userId>
 ```
 
 Then use the authenticated API to manage the model catalog. See the full endpoint documentation at `/api/docs` under the **Super Admin Models** tag.

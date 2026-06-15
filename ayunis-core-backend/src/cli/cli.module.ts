@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, getDataSourceToken } from '@nestjs/typeorm';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ClsModule } from 'nestjs-cls';
 import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
@@ -47,6 +48,7 @@ import dataSource from 'src/db/datasource';
         return dataSource;
       },
     }),
+    EventEmitterModule.forRoot(),
     ContextModule,
     UsersModule,
     InvitesModule,
