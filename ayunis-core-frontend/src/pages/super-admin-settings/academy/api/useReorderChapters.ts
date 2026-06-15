@@ -14,6 +14,9 @@ export function useReorderChapters() {
   const router = useRouter();
   const mutation = useSuperAdminAcademyChaptersControllerReorderChapters({
     mutation: {
+      // Serialize reorder requests so a slower earlier request cannot finish
+      // after a newer one and overwrite the latest order on the server.
+      scope: { id: 'reorder-academy-chapters' },
       onSuccess: async () => {
         await queryClient.invalidateQueries({
           queryKey: getSuperAdminAcademyChaptersControllerGetChaptersQueryKey(),

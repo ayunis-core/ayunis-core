@@ -48,15 +48,18 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
   );
   const { deleteChapter, isDeleting: isDeletingChapter } = useDeleteChapter();
   const { deleteLesson, isDeleting: isDeletingLesson } = useDeleteLesson();
-  const { reorderChapters } = useReorderChapters();
+  const { reorderChapters, isReordering } = useReorderChapters();
   const { confirm } = useConfirmation();
 
-  // Optimistic order during drag; re-synced whenever the loader data changes
+  // Optimistic order during drag; re-synced from loader data, except while a
+  // reorder is in flight so an unrelated refetch cannot snap back the order.
   const [orderedChapters, setOrderedChapters] = useState(chapters);
   const [prevChapters, setPrevChapters] = useState(chapters);
   if (prevChapters !== chapters) {
     setPrevChapters(chapters);
-    setOrderedChapters(chapters);
+    if (!isReordering) {
+      setOrderedChapters(chapters);
+    }
   }
 
   const sensors = useSensors(

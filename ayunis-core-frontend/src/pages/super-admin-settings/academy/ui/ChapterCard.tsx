@@ -65,15 +65,19 @@ export function ChapterCard({
     isDragging,
   } = useSortable({ id: chapter.id });
 
-  // Optimistic order during drag; re-synced whenever the loader data changes
+  const { reorderLessons, isReordering } = useReorderLessons();
+
+  // Optimistic order during drag; re-synced from loader data, except while a
+  // reorder is in flight so an unrelated refetch cannot snap back the order.
   const [orderedLessons, setOrderedLessons] = useState(chapter.lessons);
   const [prevLessons, setPrevLessons] = useState(chapter.lessons);
   if (prevLessons !== chapter.lessons) {
     setPrevLessons(chapter.lessons);
-    setOrderedLessons(chapter.lessons);
+    if (!isReordering) {
+      setOrderedLessons(chapter.lessons);
+    }
   }
 
-  const { reorderLessons } = useReorderLessons();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, {
