@@ -8008,6 +8008,368 @@
         "tags": ["Chat Settings"]
       }
     },
+    "/super-admin/academy/chapters": {
+      "get": {
+        "description": "Retrieve all chapters with nested lessons, ordered by position. Only accessible to super admins.",
+        "operationId": "SuperAdminAcademyChaptersController_getChapters",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved academy chapters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AcademyChapterResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all academy chapters with their lessons",
+        "tags": ["Super Admin Academy"]
+      },
+      "post": {
+        "description": "Create a new chapter appended after the last position. Only accessible to super admins.",
+        "operationId": "SuperAdminAcademyChaptersController_createChapter",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChapterRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created chapter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademyChapterResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a new academy chapter",
+        "tags": ["Super Admin Academy"]
+      }
+    },
+    "/super-admin/academy/chapters/order": {
+      "put": {
+        "description": "Persist a new chapter order. The submitted ids must be exactly the ids of all existing chapters. Only accessible to super admins.",
+        "operationId": "SuperAdminAcademyChaptersController_reorderChapters",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderChaptersRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully reordered chapters"
+          },
+          "400": {
+            "description": "Submitted ids do not match the current set of chapters"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Reorder academy chapters",
+        "tags": ["Super Admin Academy"]
+      }
+    },
+    "/super-admin/academy/chapters/{id}": {
+      "put": {
+        "description": "Replace title and description of a chapter. Only accessible to super admins.",
+        "operationId": "SuperAdminAcademyChaptersController_updateChapter",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Chapter ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChapterRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated chapter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademyChapterResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Chapter not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update an academy chapter",
+        "tags": ["Super Admin Academy"]
+      },
+      "delete": {
+        "description": "Delete a chapter and all of its lessons. Only accessible to super admins.",
+        "operationId": "SuperAdminAcademyChaptersController_deleteChapter",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Chapter ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted chapter"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Chapter not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete an academy chapter",
+        "tags": ["Super Admin Academy"]
+      }
+    },
+    "/super-admin/academy/chapters/{chapterId}/lessons": {
+      "post": {
+        "description": "Create a lesson in a chapter, appended after the last position. Only accessible to super admins.",
+        "operationId": "SuperAdminAcademyLessonsController_createLesson",
+        "parameters": [
+          {
+            "name": "chapterId",
+            "required": true,
+            "in": "path",
+            "description": "Chapter ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLessonRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created lesson",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademyLessonResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Chapter not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a new academy lesson",
+        "tags": ["Super Admin Academy"]
+      }
+    },
+    "/super-admin/academy/chapters/{chapterId}/lessons/order": {
+      "put": {
+        "description": "Persist a new lesson order within a chapter. The submitted ids must be exactly the ids of all lessons in the chapter. Only accessible to super admins.",
+        "operationId": "SuperAdminAcademyLessonsController_reorderLessons",
+        "parameters": [
+          {
+            "name": "chapterId",
+            "required": true,
+            "in": "path",
+            "description": "Chapter ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderLessonsRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully reordered lessons"
+          },
+          "400": {
+            "description": "Submitted ids do not match the current lessons of the chapter"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Chapter not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Reorder the lessons of a chapter",
+        "tags": ["Super Admin Academy"]
+      }
+    },
+    "/super-admin/academy/lessons/{id}": {
+      "put": {
+        "description": "Replace title, description, and Loom link of a lesson. Only accessible to super admins.",
+        "operationId": "SuperAdminAcademyLessonsController_updateLesson",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Lesson ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLessonRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated lesson",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademyLessonResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Lesson not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update an academy lesson",
+        "tags": ["Super Admin Academy"]
+      },
+      "delete": {
+        "description": "Delete a lesson. Only accessible to super admins.",
+        "operationId": "SuperAdminAcademyLessonsController_deleteLesson",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Lesson ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted lesson"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Lesson not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete an academy lesson",
+        "tags": ["Super Admin Academy"]
+      }
+    },
     "/openai-compat/v1/chat/completions": {
       "post": {
         "operationId": "ChatCompletionsController_create",
@@ -14512,6 +14874,225 @@
           }
         },
         "required": ["systemPrompt"]
+      },
+      "AcademyLessonResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The unique identifier of the lesson"
+          },
+          "chapterId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The id of the chapter the lesson belongs to"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the lesson",
+            "example": "Creating your first chat"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "An optional description of the lesson",
+            "example": "A short walkthrough of the chat interface."
+          },
+          "loomUrl": {
+            "type": "string",
+            "description": "The Loom share or embed link of the lesson video",
+            "example": "https://www.loom.com/share/abc123def456"
+          },
+          "position": {
+            "type": "integer",
+            "description": "The position of the lesson within its chapter (0-based)",
+            "example": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the lesson was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the lesson was last updated"
+          }
+        },
+        "required": [
+          "id",
+          "chapterId",
+          "title",
+          "description",
+          "loomUrl",
+          "position",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "AcademyChapterResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The unique identifier of the chapter"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the chapter",
+            "example": "Getting Started"
+          },
+          "description": {
+            "type": "string",
+            "description": "A description of what the chapter covers",
+            "example": "Learn the basics of working with Ayunis Core."
+          },
+          "position": {
+            "type": "integer",
+            "description": "The position of the chapter (0-based)",
+            "example": 0
+          },
+          "lessons": {
+            "description": "The lessons of the chapter, ordered by position",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcademyLessonResponseDto"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the chapter was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the chapter was last updated"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "position",
+          "lessons",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateChapterRequestDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title of the chapter",
+            "example": "Getting Started",
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "description": "A description of what the chapter covers",
+            "example": "Learn the basics of working with Ayunis Core.",
+            "maxLength": 2000
+          }
+        },
+        "required": ["title", "description"]
+      },
+      "ReorderChaptersRequestDto": {
+        "type": "object",
+        "properties": {
+          "chapterIds": {
+            "type": "array",
+            "description": "All chapter ids in their new order. Must contain exactly the ids of all existing chapters.",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": ["chapterIds"]
+      },
+      "UpdateChapterRequestDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title of the chapter",
+            "example": "Getting Started",
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "description": "A description of what the chapter covers",
+            "example": "Learn the basics of working with Ayunis Core.",
+            "maxLength": 2000
+          }
+        },
+        "required": ["title", "description"]
+      },
+      "CreateLessonRequestDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title of the lesson",
+            "example": "Creating your first chat",
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "description": "An optional description of the lesson",
+            "example": "A short walkthrough of the chat interface.",
+            "maxLength": 2000
+          },
+          "loomUrl": {
+            "type": "string",
+            "description": "The Loom share or embed link of the lesson video",
+            "example": "https://www.loom.com/share/abc123def456",
+            "maxLength": 500
+          }
+        },
+        "required": ["title", "loomUrl"]
+      },
+      "ReorderLessonsRequestDto": {
+        "type": "object",
+        "properties": {
+          "lessonIds": {
+            "type": "array",
+            "description": "All lesson ids of the chapter in their new order. Must contain exactly the ids of all lessons in the chapter.",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": ["lessonIds"]
+      },
+      "UpdateLessonRequestDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title of the lesson",
+            "example": "Creating your first chat",
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "description": "An optional description of the lesson",
+            "example": "A short walkthrough of the chat interface.",
+            "maxLength": 2000
+          },
+          "loomUrl": {
+            "type": "string",
+            "description": "The Loom share or embed link of the lesson video",
+            "example": "https://www.loom.com/share/abc123def456",
+            "maxLength": 500
+          }
+        },
+        "required": ["title", "loomUrl"]
       },
       "ChatCompletionRequestDto": {
         "type": "object",
