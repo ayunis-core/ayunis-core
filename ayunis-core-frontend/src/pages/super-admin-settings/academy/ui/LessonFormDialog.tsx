@@ -69,15 +69,18 @@ export function LessonFormDialog({
   const isSubmitting = isCreating || isUpdating;
 
   function onSubmit(data: LessonFormValues) {
-    const payload = {
-      title: data.title,
-      description: data.description === '' ? undefined : data.description,
-      loomUrl: data.loomUrl,
-    };
     if (isEdit) {
-      updateLesson(lesson.id, payload);
+      updateLesson(lesson.id, {
+        title: data.title,
+        description: data.description,
+        loomUrl: data.loomUrl,
+      });
     } else if (chapterId) {
-      createLesson(chapterId, payload);
+      createLesson(chapterId, {
+        title: data.title,
+        description: data.description === '' ? undefined : data.description,
+        loomUrl: data.loomUrl,
+      });
     }
   }
 
