@@ -20,9 +20,20 @@ academy/
 │   └── academy-lesson.entity.ts    # AcademyLesson domain entity
 ├── application/
 │   ├── academy.errors.ts           # Domain errors + AcademyErrorCode
-│   └── ports/
-│       ├── academy-chapter.repository.ts  # Abstract chapter repository interface
-│       └── academy-lesson.repository.ts   # Abstract lesson repository interface
+│   ├── reorder-validation.ts       # Shared set equality validation for reorder commands
+│   ├── ports/
+│   │   ├── academy-chapter.repository.ts  # Abstract chapter repository interface
+│   │   └── academy-lesson.repository.ts   # Abstract lesson repository interface
+│   └── use-cases/
+│       ├── get-academy-content/    # Load chapters with ordered lessons
+│       ├── create-chapter/         # Append a chapter after the last position
+│       ├── update-chapter/         # Update title/description while preserving position
+│       ├── delete-chapter/         # Delete a chapter
+│       ├── reorder-chapters/       # Rewrite chapter positions after validating id set
+│       ├── create-lesson/          # Append a lesson within an existing chapter
+│       ├── update-lesson/          # Update title/video/description while preserving position
+│       ├── delete-lesson/          # Delete a lesson
+│       └── reorder-lessons/        # Rewrite lesson positions scoped to a chapter
 ├── infrastructure/
 │   └── persistence/local/
 │       ├── schema/
@@ -43,4 +54,4 @@ academy/
 
 ## Module Wiring
 
-`AcademyModule` registers the `AcademyChapterRecord` and `AcademyLessonRecord` TypeORM entities, the `AcademyMapper`, and binds the `AcademyChapterRepository` / `AcademyLessonRepository` ports to their local PostgreSQL implementations (`LocalAcademyChapterRepository`, `LocalAcademyLessonRepository`).
+`AcademyModule` registers the `AcademyChapterRecord` and `AcademyLessonRecord` TypeORM entities, the `AcademyMapper`, binds the `AcademyChapterRepository` / `AcademyLessonRepository` ports to their local PostgreSQL implementations (`LocalAcademyChapterRepository`, `LocalAcademyLessonRepository`), and provides the academy content management use cases. Only `GetAcademyContentUseCase` is exported for cross-module consumption for now.
