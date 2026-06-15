@@ -73,14 +73,15 @@ fi
 
 # ── Filter clones to those involving staged files ────────────────────────────
 # Build a jq filter array from staged file paths (relative to project src/)
-# Staged files come in as e.g. "ayunis-core-backend/src/domain/foo.ts"
+# Staged files come in as e.g. "ayunis-core-backend/src/domain/foo.ts" or
+# "packages/agent-runtime/src/engine/loop.ts"
 # jscpd report paths are e.g. "src/domain/foo.ts"
-PROJECT_BASENAME=$(basename "$PROJECT_DIR")
 JQ_PATTERNS="["
 FIRST=true
 for f in "${STAGED_FILES[@]}"; do
-  # Strip the project dir prefix: "ayunis-core-backend/src/..." -> "src/..."
-  REL="${f#"$PROJECT_BASENAME"/}"
+  # Strip the project dir prefix: "<project-dir>/src/..." -> "src/..."
+  # (PROJECT_DIR may be nested, e.g. "packages/agent-runtime")
+  REL="${f#"$PROJECT_DIR"/}"
   if [ "$FIRST" = true ]; then
     FIRST=false
   else
