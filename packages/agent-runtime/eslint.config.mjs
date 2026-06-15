@@ -63,9 +63,9 @@ export default tseslint.config(
       'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
-  // Relaxed rules for test files and runnable examples
+  // Relaxed rules for test files
   {
-    files: ['**/*.spec.ts', 'examples/**/*.ts'],
+    files: ['**/*.spec.ts'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',

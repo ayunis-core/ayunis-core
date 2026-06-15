@@ -35,6 +35,33 @@ Design principles:
 Tracked in Linear: AYC-148. See the repo's `ARCHITECTURE.md` for how Ayunis
 Core consumes this package as one host among others.
 
+## Hook phases
+
+| Phase | Typical use |
+| --- | --- |
+| `runStart` | guards (quota), seeding instructions/tools, persisting input |
+| `beforeModelCall` | message transforms (anonymization), trimming |
+| `afterModelCall` | usage collection, persisting the assistant message |
+| `beforeToolCall` | approval gates, rewriting a tool call |
+| `afterToolCall` | injecting tools/instructions, persisting tool results |
+| `runEnd` | finalization, flushing |
+
+Buffered mutations (`addTools`/`removeTools`/`setTools`, `addInstructions`,
+`transformMessages`) apply at the next request assembly: `runStart`/
+`beforeModelCall` mutations affect the imminent model call, `afterModelCall`/
+`afterToolCall` mutations the next iteration. `abort` and `emit` are
+immediate.
+
+## Extending the runtime
+
+Hooks are the only extension point. Concrete hook implementations (logging,
+anonymization, persistence), the emergent-skill pattern (an `activate_skill`
+signal tool + an `afterToolCall` hook that loads a skill definition), and
+agent/skill-definition formats are **host/harness concerns** — they are not
+part of this package and will ship in a separate harness package. This package
+ships only the loop, the contracts, the hook engine, and the `ModelProvider`
+port (mock + Anthropic implementations).
+
 ## Development
 
 ```bash
