@@ -1,9 +1,11 @@
 import type {
   ChatCompletionAssistantMessageParam,
+  ChatCompletionContentPart,
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
   ChatCompletionTool,
   ChatCompletionToolChoiceOption,
+  ChatCompletionUserMessageParam,
 } from 'openai/resources/chat/completions';
 
 import type {
@@ -73,10 +75,40 @@ export const convertMessages = (
     } else if (message.role === 'system') {
       converted.push({ role: 'system', content: joinText(message.content) });
     } else {
-      converted.push({ role: 'user', content: joinText(message.content) });
+      converted.push(convertUser(message.content));
     }
   }
   return converted;
+};
+
+/**
+ * A user turn is a plain string when it is text-only, or an array of content
+ * parts (text + image_url) when it carries images. Images arrive already
+ * resolved; they are emitted as base64 data URIs.
+ */
+const convertUser = (
+  content: readonly MessageContent[],
+): ChatCompletionUserMessageParam => {
+  const hasImage = content.some((c) => c.type === 'image');
+  if (!hasImage) {
+    return { role: 'user', content: joinText(content) };
+  }
+  // Preserve the original order of text and image parts (e.g. image-then-text
+  // or interleaved) rather than hoisting all text ahead of all images.
+  const parts: ChatCompletionContentPart[] = [];
+  for (const c of content) {
+    if (c.type === 'text') {
+      if (c.text) {
+        parts.push({ type: 'text', text: c.text });
+      }
+    } else if (c.type === 'image') {
+      parts.push({
+        type: 'image_url',
+        image_url: { url: `data:${c.mediaType};base64,${c.data}` },
+      });
+    }
+  }
+  return { role: 'user', content: parts };
 };
 
 const convertAssistant = (

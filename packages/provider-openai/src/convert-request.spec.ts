@@ -206,6 +206,65 @@ describe('convertMessages', () => {
     ]);
   });
 
+  it('emits an array of content parts when a user turn has an image', () => {
+    const messages: Message[] = [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'What is this?' },
+          { type: 'image', data: 'aGVsbG8=', mediaType: 'image/png' },
+        ],
+      },
+    ];
+
+    expect(convertMessages('', messages)).toEqual([
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'What is this?' },
+          {
+            type: 'image_url',
+            image_url: { url: 'data:image/png;base64,aGVsbG8=' },
+          },
+        ],
+      },
+    ]);
+  });
+
+  it('keeps a plain string for text-only user turns', () => {
+    const messages: Message[] = [
+      { role: 'user', content: [{ type: 'text', text: 'Hi' }] },
+    ];
+    expect(convertMessages('', messages)).toEqual([
+      { role: 'user', content: 'Hi' },
+    ]);
+  });
+
+  it('preserves the order of image and text parts', () => {
+    const messages: Message[] = [
+      {
+        role: 'user',
+        content: [
+          { type: 'image', data: 'aGVsbG8=', mediaType: 'image/png' },
+          { type: 'text', text: 'Describe this' },
+        ],
+      },
+    ];
+
+    expect(convertMessages('', messages)).toEqual([
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image_url',
+            image_url: { url: 'data:image/png;base64,aGVsbG8=' },
+          },
+          { type: 'text', text: 'Describe this' },
+        ],
+      },
+    ]);
+  });
+
   it('drops thinking content', () => {
     const messages: Message[] = [
       {
