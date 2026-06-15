@@ -156,6 +156,26 @@ describe('convertMessages', () => {
     expect(converted[0].content).toHaveLength(2);
   });
 
+  it('maps image content to a base64 image block', () => {
+    const messages: Message[] = [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'What is this?' },
+          { type: 'image', data: 'aGVsbG8=', mediaType: 'image/png' },
+        ],
+      },
+    ];
+
+    expect(convertMessages(messages)[0].content).toEqual([
+      { type: 'text', text: 'What is this?' },
+      {
+        type: 'image',
+        source: { type: 'base64', media_type: 'image/png', data: 'aGVsbG8=' },
+      },
+    ]);
+  });
+
   it('replays signed thinking blocks and drops unsigned ones', () => {
     const messages: Message[] = [
       {

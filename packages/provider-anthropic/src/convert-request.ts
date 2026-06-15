@@ -105,6 +105,7 @@ const convertAssistantContent = (
         input: content.input,
       };
     case 'tool_result':
+    case 'image':
       return null;
   }
 };
@@ -119,6 +120,16 @@ const convertUserContent = (
         tool_use_id: content.toolCallId,
         content: content.result,
         ...(content.isError ? { is_error: true } : {}),
+      };
+    case 'image':
+      return {
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type:
+            content.mediaType as Anthropic.Base64ImageSource['media_type'],
+          data: content.data,
+        },
       };
     case 'text':
     case 'thinking':
