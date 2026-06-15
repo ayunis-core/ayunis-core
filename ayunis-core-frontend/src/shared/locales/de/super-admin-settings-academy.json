@@ -5,7 +5,9 @@
     "emptyDescription": "Erstellen Sie Ihr erstes Kapitel, um die Academy aufzubauen.",
     "addChapter": "Kapitel hinzufügen",
     "addLesson": "Lektion hinzufügen",
-    "noLessons": "Noch keine Lektionen in diesem Kapitel."
+    "noLessons": "Noch keine Lektionen in diesem Kapitel.",
+    "dragChapter": "Kapitel per Drag & Drop sortieren",
+    "dragLesson": "Lektion per Drag & Drop sortieren"
   },
   "chapterForm": {
     "createTitle": "Kapitel erstellen",
