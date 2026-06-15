@@ -35,7 +35,11 @@ export class LocalAcademyChapterRepository implements AcademyChapterRepository {
 
   async findOne(id: UUID): Promise<AcademyChapter | null> {
     this.logger.log('findOne', { id });
-    const record = await this.repository.findOne({ where: { id } });
+    const record = await this.repository.findOne({
+      where: { id },
+      relations: { lessons: true },
+      order: { lessons: { position: 'ASC', createdAt: 'ASC' } },
+    });
     if (!record) return null;
     return this.mapper.chapterToDomain(record);
   }

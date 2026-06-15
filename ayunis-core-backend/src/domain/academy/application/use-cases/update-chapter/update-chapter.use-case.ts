@@ -28,10 +28,20 @@ export class UpdateChapterUseCase {
         title: command.title,
         description: command.description,
         position: existing.position,
+        lessons: existing.lessons,
         createdAt: existing.createdAt,
         updatedAt: new Date(),
       });
-      return await this.chapterRepository.update(updated);
+      const persisted = await this.chapterRepository.update(updated);
+      return new AcademyChapter({
+        id: persisted.id,
+        title: persisted.title,
+        description: persisted.description,
+        position: persisted.position,
+        lessons: existing.lessons,
+        createdAt: persisted.createdAt,
+        updatedAt: persisted.updatedAt,
+      });
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Error updating academy chapter', {
