@@ -628,9 +628,9 @@ importers:
 
   packages/agent-runtime:
     dependencies:
-      '@anthropic-ai/sdk':
-        specifier: ^0.59.0
-        version: 0.59.0
+      '@ayunis/inference':
+        specifier: workspace:*
+        version: link:../inference
     devDependencies:
       '@eslint/js':
         specifier: ^9.18.0
