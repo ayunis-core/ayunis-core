@@ -86,6 +86,7 @@
     "recordingNotSupported": "Sprachaufnahme wird in diesem Browser nicht unterstützt",
     "transcriptionFailed": "Transkription fehlgeschlagen",
     "modelSelectorAriaLabel": "KI-Modell auswählen",
+    "modelChangeDisabledTooltip": "Das Modell kann in einem bestehenden Chat nicht mehr gewechselt werden.",
     "deactivateSkillTooltip": "Fähigkeit deaktivieren"
   },
   "pinnedSkills": {

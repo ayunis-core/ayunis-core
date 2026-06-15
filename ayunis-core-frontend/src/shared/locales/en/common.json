@@ -86,6 +86,7 @@
     "recordingNotSupported": "Voice recording is not supported in this browser",
     "transcriptionFailed": "Transcription failed",
     "modelSelectorAriaLabel": "Select AI model",
+    "modelChangeDisabledTooltip": "The model can't be changed in an existing chat.",
     "deactivateSkillTooltip": "Deactivate skill"
   },
   "pinnedSkills": {
