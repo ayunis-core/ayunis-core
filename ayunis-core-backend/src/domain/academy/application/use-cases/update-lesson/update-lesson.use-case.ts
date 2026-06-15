@@ -25,7 +25,10 @@ export class UpdateLessonUseCase {
         id: existing.id,
         chapterId: existing.chapterId,
         title: command.title,
-        description: command.description,
+        description:
+          command.description === undefined
+            ? existing.description
+            : command.description,
         loomUrl: command.loomUrl,
         position: existing.position,
         createdAt: existing.createdAt,
