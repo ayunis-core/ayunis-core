@@ -26,6 +26,7 @@ import { AnonymizationSettingsModule } from '../domain/anonymization-settings/an
 import { KnowledgeBasesModule } from '../domain/knowledge-bases/knowledge-bases.module';
 import { CrawlDomainGrantsModule } from '../domain/crawl-domain-grants/crawl-domain-grants.module';
 import { SkillTemplatesModule } from '../domain/skill-templates/skill-templates.module';
+import { AcademyModule } from '../domain/academy/academy.module';
 import { ArtifactsModule } from '../domain/artifacts/artifacts.module';
 import { LetterheadsModule } from '../domain/letterheads/letterheads.module';
 import { OpenAICompatModule } from '../domain/openai-compat/openai-compat.module';
@@ -168,6 +169,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     KnowledgeBasesModule,
     CrawlDomainGrantsModule,
     SkillTemplatesModule,
+    AcademyModule,
     ArtifactsModule,
     LetterheadsModule,
     OpenAICompatModule,
