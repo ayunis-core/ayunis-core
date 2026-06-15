@@ -132,7 +132,7 @@ export class SuperAdminAcademyLessonsController {
   @ApiOperation({
     summary: 'Update an academy lesson',
     description:
-      'Replace title, description, and Loom link of a lesson. Only accessible to super admins.',
+      'Replace title and Loom link of a lesson. Description is optional: omitting it keeps the existing description, sending null clears it. Only accessible to super admins.',
   })
   @ApiParam({ name: 'id', description: 'Lesson ID', format: 'uuid' })
   @ApiBody({ type: UpdateLessonRequestDto })

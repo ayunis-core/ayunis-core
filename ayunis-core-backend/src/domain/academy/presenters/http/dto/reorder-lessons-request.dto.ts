@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
-import { ArrayNotEmpty, ArrayUnique, IsArray, IsUUID } from 'class-validator';
+import { ArrayUnique, IsArray, IsUUID } from 'class-validator';
 
 export class ReorderLessonsRequestDto {
   @ApiProperty({
@@ -10,7 +10,6 @@ export class ReorderLessonsRequestDto {
     items: { type: 'string', format: 'uuid' },
   })
   @IsArray()
-  @ArrayNotEmpty()
   @ArrayUnique()
   @IsUUID(undefined, { each: true })
   lessonIds: UUID[];
