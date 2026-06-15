@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.6.0](https://github.com/ayunis-core/ayunis-core/compare/v2.5.0...v2.6.0) (2026-06-15)
+
+
+### Features
+
+* **academy:** super-admin academy management with sortable chapters and lessons (AYC-243) ([#810](https://github.com/ayunis-core/ayunis-core/issues/810)) ([7494ea9](https://github.com/ayunis-core/ayunis-core/commit/7494ea916da2665c9fc338b422d7adcb7fd95b62))
+* **agent-runtime:** bare agent runtime with hooks — first vertical slice (AYC-148) ([#802](https://github.com/ayunis-core/ayunis-core/issues/802)) ([6d5294d](https://github.com/ayunis-core/ayunis-core/commit/6d5294dd180ef37fff8b3b85d0659e92ec8b09e3))
+
+
+### Bug Fixes
+
+* **help-center:** Correct Helpcenter Link and better tooltip description (AYC-270) ([#823](https://github.com/ayunis-core/ayunis-core/issues/823)) ([50aff2f](https://github.com/ayunis-core/ayunis-core/commit/50aff2f8989dcee01107f99b2a5b9cce1a632f36))
+
 ## [2.5.0](https://github.com/ayunis-core/ayunis-core/compare/v2.4.0...v2.5.0) (2026-06-12)
 
 
