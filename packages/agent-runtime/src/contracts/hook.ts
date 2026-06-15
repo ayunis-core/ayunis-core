@@ -49,7 +49,10 @@ export interface AfterModelCallContext extends HookApi {
 export interface BeforeToolCallContext extends HookApi {
   readonly iteration: number;
   readonly toolCall: ToolCallSummary;
-  /** Undefined when the model called a tool that is not in the tool set. */
+  /**
+   * The definition matching toolCall.name, including rewrites by earlier
+   * hooks. Undefined when that name is not in the tool set.
+   */
   readonly tool: Tool | undefined;
   /** Rewrites THIS tool call before execution (same-phase mutation). */
   rewriteToolCall(patch: {
