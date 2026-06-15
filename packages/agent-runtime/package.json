@@ -30,6 +30,9 @@
     "format": "prettier --write \"src/**/*.ts\" \"examples/**/*.ts\"",
     "deps:check": "madge --circular --extensions ts src"
   },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.59.0"
+  },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
     "@types/node": "^24.12.2",
