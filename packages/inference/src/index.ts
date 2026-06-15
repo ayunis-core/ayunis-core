@@ -1,5 +1,6 @@
 export type {
   AssistantMessage,
+  ImageContent,
   Message,
   MessageContent,
   MessageRole,
