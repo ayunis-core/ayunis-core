@@ -5,5 +5,16 @@
   "emptyState": {
     "title": "Noch keine Kapitel",
     "description": "Academy-Inhalte erscheinen hier, sobald sie veröffentlicht wurden."
+  },
+  "detail": {
+    "letsGo": "Los geht's!",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "finish": "Abschließen",
+    "lessonsTitle": "Lektionen",
+    "noLessons": {
+      "title": "Noch keine Lektionen",
+      "description": "Dieses Kapitel enthält noch keine Lektionen."
+    }
   }
 }

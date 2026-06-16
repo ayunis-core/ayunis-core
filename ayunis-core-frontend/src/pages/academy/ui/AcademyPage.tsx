@@ -4,12 +4,13 @@ import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeade
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { EmptyState } from '@/widgets/empty-state';
 import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/shared/ui/shadcn/card';
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from '@/shared/ui/shadcn/item';
 import { useTranslation } from 'react-i18next';
+import { Link } from '@tanstack/react-router';
 import type { AcademyChapterResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface AcademyPageProps {
@@ -45,12 +46,18 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
         contentArea={
           <div className="space-y-3">
             {sortedChapters.map((chapter) => (
-              <Card key={chapter.id}>
-                <CardHeader>
-                  <CardTitle>{chapter.title}</CardTitle>
-                  <CardDescription>{chapter.description}</CardDescription>
-                </CardHeader>
-              </Card>
+              <Item key={chapter.id} variant="outline">
+                <Link
+                  to="/academy/$chapterId"
+                  params={{ chapterId: chapter.id }}
+                  className="flex-1"
+                >
+                  <ItemContent>
+                    <ItemTitle>{chapter.title}</ItemTitle>
+                    <ItemDescription>{chapter.description}</ItemDescription>
+                  </ItemContent>
+                </Link>
+              </Item>
             ))}
           </div>
         }
