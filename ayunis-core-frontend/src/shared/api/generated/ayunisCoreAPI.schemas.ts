@@ -4151,6 +4151,24 @@ export interface UpdateLessonRequestDto {
 
 export interface ChatCompletionRequestDto { [key: string]: unknown }
 
+/**
+ * The add-on this status entry refers to
+ */
+export type AddonType = typeof AddonType[keyof typeof AddonType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AddonType = {
+  ayunis_core_academy: 'ayunis_core_academy',
+} as const;
+
+export interface AddonStatusResponseDto {
+  /** The add-on this status entry refers to */
+  type: AddonType;
+  /** Whether the add-on is active for the organization */
+  active: boolean;
+}
+
 export interface LoginDto {
   /** Email address for authentication */
   email: string;
@@ -4290,24 +4308,6 @@ export interface CreateApiKeyResponseDto {
   createdAt: string;
   /** The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later. */
   secret: string;
-}
-
-/**
- * The add-on this status entry refers to
- */
-export type AddonType = typeof AddonType[keyof typeof AddonType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const AddonType = {
-  ayunis_core_academy: 'ayunis_core_academy',
-} as const;
-
-export interface AddonStatusResponseDto {
-  /** The add-on this status entry refers to */
-  type: AddonType;
-  /** Whether the add-on is active for the organization */
-  active: boolean;
 }
 
 export type UserControllerGetUsersInOrganizationParams = {

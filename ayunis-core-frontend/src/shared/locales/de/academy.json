@@ -1,0 +1,9 @@
+{
+  "page": {
+    "title": "Academy"
+  },
+  "emptyState": {
+    "title": "Noch keine Kapitel",
+    "description": "Academy-Inhalte erscheinen hier, sobald sie veröffentlicht wurden."
+  }
+}

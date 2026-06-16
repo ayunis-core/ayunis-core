@@ -8,6 +8,7 @@ import {
   Brain,
   Sparkles,
   Store,
+  GraduationCap,
 } from 'lucide-react';
 
 import {
@@ -42,6 +43,7 @@ import config from '@/shared/config';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { useFeatureToggles } from '@/features/feature-toggles';
 import { useMarketplaceConfig } from '@/features/marketplace';
+import { useAcademyActive } from '@/features/academy';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
@@ -52,6 +54,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { closeMobileWithCleanup } = useSidebar();
   const featureToggles = useFeatureToggles();
   const marketplace = useMarketplaceConfig();
+  const academyActive = useAcademyActive();
   const location = useLocation();
   useKeyboardShortcut(['j', 'Meta'], () => {
     void navigate({ to: '/chat' });
@@ -136,6 +139,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <Store />
                     <span>{t('sidebar.marketplace')}</span>
                   </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+            {academyActive && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={location.pathname.startsWith('/academy')}
+                >
+                  <Link to="/academy">
+                    <GraduationCap />
+                    <span>{t('sidebar.academy')}</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}

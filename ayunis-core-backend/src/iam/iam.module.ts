@@ -27,6 +27,7 @@ import { RolesGuard } from './authorization/application/guards/roles.guard';
 import { SystemRolesGuard } from './authorization/application/guards/system-roles.guard';
 import { SubscriptionGuard } from './authorization/application/guards/subscription.guard';
 import { RateLimitGuard } from './authorization/application/guards/rate-limit.guard';
+import { AddonGuard } from './authorization/application/guards/addon.guard';
 
 // Feature modules re-exported by IamModule. Listed once and spread into both
 // `imports` and `exports` so the two cannot drift out of sync.
@@ -71,6 +72,7 @@ const GLOBAL_GUARD_PROVIDERS = [
   { provide: APP_GUARD, useExisting: EmailConfirmGuard },
   { provide: APP_GUARD, useExisting: RolesGuard },
   { provide: APP_GUARD, useExisting: SystemRolesGuard },
+  { provide: APP_GUARD, useExisting: AddonGuard },
   { provide: APP_GUARD, useExisting: SubscriptionGuard },
   { provide: APP_GUARD, useExisting: RateLimitGuard },
 ];
