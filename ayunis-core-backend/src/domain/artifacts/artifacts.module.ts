@@ -10,6 +10,7 @@ import { ArtifactDtoMapper } from './presenters/http/mappers/artifact-dto.mapper
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
 import { StorageModule } from 'src/domain/storage/storage.module';
+import { ThreadPiiMasksModule } from 'src/domain/thread-pii-masks/thread-pii-masks.module';
 
 // Use cases
 import { CreateArtifactUseCase } from './application/use-cases/create-artifact/create-artifact.use-case';
@@ -26,6 +27,7 @@ import { ApplyEditsToArtifactUseCase } from './application/use-cases/apply-edits
     forwardRef(() => ThreadsModule),
     LetterheadsModule,
     StorageModule,
+    ThreadPiiMasksModule,
   ],
   controllers: [ArtifactsController],
   providers: [

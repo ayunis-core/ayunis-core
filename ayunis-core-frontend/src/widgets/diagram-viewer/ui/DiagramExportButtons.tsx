@@ -3,6 +3,8 @@ import { Download } from 'lucide-react';
 import { useCallback, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { showError } from '@/shared/lib/toast';
+import { usePiiMasks, resolvePiiTokens } from '@/widgets/markdown';
+import type { PiiMaskEntry } from '@/widgets/markdown';
 
 interface DiagramExportButtonsProps {
   readonly containerRef: RefObject<HTMLDivElement | null>;
@@ -43,8 +45,39 @@ function computeSvgDimensions(svg: SVGSVGElement): {
   return { width, height };
 }
 
-function svgToDataUrl(svg: SVGSVGElement, width: number, height: number) {
+/**
+ * Replaces `{{pii:...}}` tokens with their original values in every text node of
+ * the (cloned) SVG, so exported files carry real values while the on-screen
+ * viewer stays masked. A token wrapped across multiple <tspan>s won't match, but
+ * tokens are short single words so this is unlikely.
+ */
+function deanonymizeSvgText(
+  root: SVGSVGElement,
+  masks: ReadonlyMap<string, PiiMaskEntry>,
+): void {
+  if (masks.size === 0) return;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node = walker.nextNode();
+  while (node) {
+    const text = node.textContent;
+    if (text) {
+      const resolved = resolvePiiTokens(text, masks);
+      if (resolved !== text) {
+        node.textContent = resolved;
+      }
+    }
+    node = walker.nextNode();
+  }
+}
+
+function svgToDataUrl(
+  svg: SVGSVGElement,
+  width: number,
+  height: number,
+  masks: ReadonlyMap<string, PiiMaskEntry>,
+) {
   const cloned = svg.cloneNode(true) as SVGSVGElement;
+  deanonymizeSvgText(cloned, masks);
   if (!cloned.getAttribute('xmlns')) {
     cloned.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   }
@@ -91,22 +124,25 @@ export function DiagramExportButtons({
   fileName,
 }: DiagramExportButtonsProps) {
   const { t } = useTranslation('artifacts');
+  const masks = usePiiMasks();
 
   const handleSvgExport = useCallback(() => {
     const svg = containerRef.current?.querySelector('svg');
     if (!svg) return;
+    const cloned = svg.cloneNode(true) as SVGSVGElement;
+    deanonymizeSvgText(cloned, masks);
     const serializer = new XMLSerializer();
-    const svgString = serializer.serializeToString(svg);
+    const svgString = serializer.serializeToString(cloned);
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
     triggerDownload(blob, `${safeTitle(fileName)}.svg`);
-  }, [containerRef, fileName]);
+  }, [containerRef, fileName, masks]);
 
   const handlePngExport = useCallback(() => {
     const svg = containerRef.current?.querySelector('svg');
     if (!svg) return;
 
     const { width, height } = computeSvgDimensions(svg);
-    const svgDataUrl = svgToDataUrl(svg, width, height);
+    const svgDataUrl = svgToDataUrl(svg, width, height, masks);
     const fail = () => showError(t('diagram.export.failed'));
 
     const img = new Image();
@@ -123,7 +159,7 @@ export function DiagramExportButtons({
     };
     img.onerror = fail;
     img.src = svgDataUrl;
-  }, [containerRef, fileName, t]);
+  }, [containerRef, fileName, t, masks]);
 
   return (
     <>
