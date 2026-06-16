@@ -35,15 +35,15 @@ importers:
       '@ayunis/provider-anthropic':
         specifier: workspace:*
         version: link:../packages/provider-anthropic
+      '@ayunis/provider-gemini':
+        specifier: workspace:*
+        version: link:../packages/provider-gemini
       '@ayunis/provider-mistral':
         specifier: workspace:*
         version: link:../packages/provider-mistral
       '@ayunis/provider-openai':
         specifier: workspace:*
         version: link:../packages/provider-openai
-      '@google/genai':
-        specifier: ^1.41.0
-        version: 1.52.0(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))
       '@mistralai/mistralai':
         specifier: ^1.14.0
         version: 1.15.1
@@ -756,6 +756,61 @@ importers:
       '@ayunis/agent-runtime':
         specifier: workspace:*
         version: link:../agent-runtime
+      '@eslint/js':
+        specifier: ^9.18.0
+        version: 9.39.4
+      '@types/node':
+        specifier: ^24.12.2
+        version: 24.13.2
+      eslint:
+        specifier: ^9.18.0
+        version: 9.39.4(jiti@2.7.0)
+      eslint-config-prettier:
+        specifier: ^10.0.1
+        version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
+      eslint-plugin-prettier:
+        specifier: ^5.5.5
+        version: 5.5.6(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0))(prettier@3.8.3)
+      eslint-plugin-sonarjs:
+        specifier: ^4.0.2
+        version: 4.0.3(eslint@9.39.4(jiti@2.7.0))
+      eslint-plugin-unused-imports:
+        specifier: ^4.1.4
+        version: 4.4.1(@typescript-eslint/eslint-plugin@8.60.0(@typescript-eslint/parser@8.60.0(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))
+      globals:
+        specifier: ^16.0.0
+        version: 16.5.0
+      knip:
+        specifier: ^5.84.1
+        version: 5.88.1(@types/node@24.13.2)(typescript@5.9.3)
+      madge:
+        specifier: ^8.0.0
+        version: 8.0.0(typescript@5.9.3)
+      prettier:
+        specifier: ^3.8.1
+        version: 3.8.3
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(@swc/core@1.15.40)(jiti@2.7.0)(postcss@8.5.15)(tsx@4.22.4)(typescript@5.9.3)(yaml@2.9.0)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      typescript-eslint:
+        specifier: ^8.60.0
+        version: 8.60.0(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
+      vitest:
+        specifier: ^3.2.6
+        version: 3.2.6(@types/debug@4.1.13)(@types/node@24.13.2)(jiti@2.7.0)(jsdom@26.1.0)(lightningcss@1.32.0)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0)
+
+  packages/provider-gemini:
+    dependencies:
+      '@ayunis/inference':
+        specifier: workspace:*
+        version: link:../inference
+      '@google/genai':
+        specifier: ^1.41.0
+        version: 1.52.0(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))
+    devDependencies:
       '@eslint/js':
         specifier: ^9.18.0
         version: 9.39.4

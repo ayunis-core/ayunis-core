@@ -101,4 +101,54 @@ describe('accumulateResponse', () => {
       totalTokens: 10,
     });
   });
+
+  it('takes last-wins usage when providers emit cumulative usage per chunk', async () => {
+    const response = await accumulateResponse(
+      stream([
+        { textDelta: 'a', usage: { inputTokens: 10, outputTokens: 1 } },
+        { textDelta: 'b', usage: { inputTokens: 10, outputTokens: 2 } },
+        { textDelta: 'c', usage: { inputTokens: 10, outputTokens: 5 } },
+      ]),
+    );
+    expect(response.meta).toEqual({
+      inputTokens: 10,
+      outputTokens: 5,
+      totalTokens: 15,
+    });
+  });
+
+  it('preserves text providerMetadata (e.g. Gemini thoughtSignature)', async () => {
+    const response = await accumulateResponse(
+      stream([
+        {
+          textDelta: 'answer',
+          textProviderMetadata: { gemini: { thoughtSignature: 'sig-1' } },
+        },
+      ]),
+    );
+    expect(
+      (response.content[0] as TextMessageContent).providerMetadata,
+    ).toEqual({ gemini: { thoughtSignature: 'sig-1' } });
+  });
+
+  it('preserves tool-call providerMetadata', async () => {
+    const response = await accumulateResponse(
+      stream([
+        {
+          toolCallDeltas: [
+            {
+              index: 0,
+              id: 'c1',
+              name: 't',
+              argumentsDelta: '{}',
+              providerMetadata: { gemini: { thoughtSignature: 'sig-2' } },
+            },
+          ],
+        },
+      ]),
+    );
+    expect(
+      (response.content[0] as ToolUseMessageContent).providerMetadata,
+    ).toEqual({ gemini: { thoughtSignature: 'sig-2' } });
+  });
 });
