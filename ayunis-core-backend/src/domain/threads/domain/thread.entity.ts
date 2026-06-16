@@ -16,6 +16,7 @@ export class Thread {
   title?: string;
   messages: Message[];
   isAnonymous: boolean;
+  lastActivityAt: Date;
   createdAt: Date;
   updatedAt: Date;
 
@@ -29,6 +30,7 @@ export class Thread {
     title?: string;
     messages: Message[];
     isAnonymous?: boolean;
+    lastActivityAt?: Date;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -43,6 +45,9 @@ export class Thread {
     this.isAnonymous = params.isAnonymous ?? false;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
+    // A freshly created thread's last activity is its creation time; it is
+    // bumped whenever a message is added (see RecordThreadActivityUseCase).
+    this.lastActivityAt = params.lastActivityAt ?? this.createdAt;
   }
 
   getLastMessage(): Message | undefined {

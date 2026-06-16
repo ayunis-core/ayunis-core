@@ -216,6 +216,17 @@ export class LocalThreadsRepository extends ThreadsRepository {
     }
   }
 
+  async updateLastActivityAt(params: {
+    threadId: UUID;
+    lastActivityAt: Date;
+  }): Promise<void> {
+    // Best-effort, fire-and-forget driven: no throw if the thread is gone.
+    await this.threadRepository.update(
+      { id: params.threadId },
+      { lastActivityAt: params.lastActivityAt },
+    );
+  }
+
   async updateSourceAssignments(params: {
     threadId: UUID;
     userId: UUID;

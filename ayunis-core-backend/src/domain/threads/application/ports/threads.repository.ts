@@ -43,6 +43,15 @@ export abstract class ThreadsRepository {
     userId: UUID;
     title: string;
   }): Promise<void>;
+  /**
+   * Bumps the thread's last-activity timestamp. Best-effort and scoped by
+   * threadId only (no userId): it is driven by the message-added event, which
+   * carries no per-call ownership guarantee. A no-op if the thread is gone.
+   */
+  abstract updateLastActivityAt(params: {
+    threadId: UUID;
+    lastActivityAt: Date;
+  }): Promise<void>;
   abstract updateSourceAssignments(params: {
     threadId: UUID;
     userId: UUID;
