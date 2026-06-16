@@ -19,6 +19,20 @@ export interface ThreadsPagination {
   offset: number;
 }
 
+/** Minimal thread reference used by data-retention enforcement. */
+export interface ExpiredThreadRef {
+  id: UUID;
+  userId: UUID;
+}
+
+export interface FindExpiredThreadRefsParams {
+  orgId: UUID;
+  /** Threads whose last activity is strictly before this are expired. */
+  activeBefore: Date;
+  limit: number;
+  offset: number;
+}
+
 export abstract class ThreadsRepository {
   abstract create(thread: Thread): Promise<Thread>;
   abstract findOne(id: UUID, userId: UUID): Promise<Thread | null>;
@@ -76,6 +90,14 @@ export abstract class ThreadsRepository {
   }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
   abstract findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]>;
+  /**
+   * Returns a page of expired thread references (id + owner) for an org,
+   * oldest-activity first. Activity is `lastActivityAt`, falling back to
+   * `createdAt` defensively. Used by data-retention enforcement.
+   */
+  abstract findExpiredThreadRefsByOrg(
+    params: FindExpiredThreadRefsParams,
+  ): Promise<ExpiredThreadRef[]>;
   abstract removeSourceAssignmentsByOriginSkill(params: {
     originSkillId: UUID;
     userIds: UUID[];
