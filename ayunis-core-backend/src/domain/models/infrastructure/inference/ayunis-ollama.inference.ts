@@ -1,23 +1,29 @@
-import { BaseOllamaInferenceHandler } from './base-ollama.inference';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Ollama } from 'ollama';
+import { ollama } from '@ayunis/provider-ollama';
+import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
+import { ThinkingTagInferenceHandler } from '../runtime/thinking-tag-inference.handler';
+import type { Model } from '../../domain/model.entity';
+import { INFERENCE_MAX_RETRIES } from '../runtime/inference-config';
 
 @Injectable()
-export class AyunisOllamaInferenceHandler extends BaseOllamaInferenceHandler {
+export class AyunisOllamaInferenceHandler extends ThinkingTagInferenceHandler {
   constructor(
     private readonly configService: ConfigService,
     imageContentService: ImageContentService,
   ) {
-    super();
-    this.client = new Ollama({
-      host: configService.get('models.ayunis.baseURL'),
+    super(imageContentService);
+  }
+
+  protected createProvider(model: Model): ModelProvider {
+    return ollama({
+      baseUrl: this.configService.get<string>('models.ayunis.baseURL') ?? '',
+      model: model.name,
       headers: {
-        Authorization: `Bearer ${configService.get('models.ayunis.authToken')}`,
+        Authorization: `Bearer ${this.configService.get<string>('models.ayunis.authToken') ?? ''}`,
       },
+      maxRetries: INFERENCE_MAX_RETRIES,
     });
-    this.imageContentService = imageContentService;
-    this.initConverter();
   }
 }
