@@ -12,6 +12,7 @@ import type { ApiKeyPrincipal } from 'src/iam/authentication/application/strateg
 import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 import { IsAddonActiveUseCase } from 'src/iam/addons/application/use-cases/is-addon-active/is-addon-active.use-case';
 import { IsAddonActiveQuery } from 'src/iam/addons/application/use-cases/is-addon-active/is-addon-active.query';
+import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import { REQUIRE_ADDON_KEY } from '../decorators/addon.decorator';
 
 interface RequestWithUser extends Request {
@@ -39,22 +40,43 @@ export class AddonGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<RequestWithUser>();
     const orgId = this.resolveOrgId(request);
     if (!orgId) {
+      // On @Public() routes the global JwtAuthGuard skips, so the global
+      // AddonGuard binding runs before any controller-level auth (e.g.
+      // AuthGuard('api-key')) populates `request.user`. Defer in that case —
+      // the controller is expected to bind AddonGuard locally AFTER its auth
+      // guard so this re-runs with a principal in place.
+      const isPublic = this.reflector.getAllAndOverride<boolean>(
+        IS_PUBLIC_KEY,
+        [context.getHandler(), context.getClass()],
+      );
+      if (isPublic) {
+        return true;
+      }
       this.logger.warn('No principal found on request when checking addon', {
         requiredAddon,
       });
       return false;
     }
 
-    const isActive = await this.isAddonActiveUseCase.execute(
-      new IsAddonActiveQuery(orgId, requiredAddon),
-    );
-    if (!isActive) {
-      this.logger.warn('Access denied: required addon not active', {
+    try {
+      const isActive = await this.isAddonActiveUseCase.execute(
+        new IsAddonActiveQuery(orgId, requiredAddon),
+      );
+      if (!isActive) {
+        this.logger.warn('Access denied: required addon not active', {
+          orgId,
+          requiredAddon,
+        });
+      }
+      return isActive;
+    } catch (error) {
+      this.logger.error('Error checking addon', {
+        error: error instanceof Error ? error.message : 'Unknown error',
         orgId,
         requiredAddon,
       });
+      return false;
     }
-    return isActive;
   }
 
   private resolveOrgId(request: RequestWithUser): UUID | null {
