@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { splitPiiTokens, containsPiiToken } from './pii-token';
+import {
+  splitPiiTokens,
+  containsPiiToken,
+  resolvePiiTokens,
+} from './pii-token';
 
 describe('splitPiiTokens', () => {
   it('returns a single text part when there are no tokens', () => {
@@ -52,5 +56,31 @@ describe('containsPiiToken', () => {
     expect(containsPiiToken('a {{pii:PERSON_NAME_1}} b')).toBe(true);
     expect(containsPiiToken('a {{pii:PERSON_NAME_1}} b')).toBe(true);
     expect(containsPiiToken('plain text')).toBe(false);
+  });
+});
+
+describe('resolvePiiTokens', () => {
+  const masks = new Map([
+    ['{{pii:PERSON_NAME_1}}', { value: 'Max Mustermann' }],
+    ['{{pii:EMAIL_ADDRESS_1}}', { value: 'max@example.de' }],
+  ]);
+
+  it('replaces every known token with its value', () => {
+    expect(
+      resolvePiiTokens(
+        'Hallo {{pii:PERSON_NAME_1}}, schreib an {{pii:EMAIL_ADDRESS_1}}',
+        masks,
+      ),
+    ).toBe('Hallo Max Mustermann, schreib an max@example.de');
+  });
+
+  it('leaves unknown tokens as literal text', () => {
+    expect(resolvePiiTokens('{{pii:LOCATION_2}}', masks)).toBe(
+      '{{pii:LOCATION_2}}',
+    );
+  });
+
+  it('returns the input unchanged when there are no tokens', () => {
+    expect(resolvePiiTokens('plain text', masks)).toBe('plain text');
   });
 });

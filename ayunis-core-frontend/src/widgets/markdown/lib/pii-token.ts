@@ -32,3 +32,19 @@ export function containsPiiToken(text: string): boolean {
   PII_TOKEN_REGEX.lastIndex = 0;
   return PII_TOKEN_REGEX.test(text);
 }
+
+/**
+ * Replaces every `{{pii:...}}` token with its original value from the thread's
+ * mask dictionary. Unknown tokens are left as the literal token text. Use this
+ * at egress points (clipboard, mailto, file export) where the resolved value is
+ * needed — display surfaces should keep rendering tokens via the mask context.
+ */
+export function resolvePiiTokens(
+  text: string,
+  masks: ReadonlyMap<string, { value: string }>,
+): string {
+  return text.replace(
+    PII_TOKEN_REGEX,
+    (token) => masks.get(token)?.value ?? token,
+  );
+}
