@@ -15,14 +15,17 @@ import {
   TooltipContent,
 } from '@/shared/ui/shadcn/tooltip';
 import { Badge } from '@/shared/ui/shadcn/badge';
-import { Brain, FileText, Image, Loader2, Plus } from 'lucide-react';
+import { Brain, Loader2, Paperclip, Plus } from 'lucide-react';
 import { Input } from '@/shared/ui/shadcn/input';
 import { useRef } from 'react';
 import { useKnowledgeBases } from '../api/useKnowledgeBases';
 import { useTranslation } from 'react-i18next';
 import { showError } from '@/shared/lib/toast';
 import { useNavigate } from '@tanstack/react-router';
-import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
+import {
+  separateFilesByType,
+  createFileListFromFiles,
+} from '../utils/fileHandlers';
 import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
@@ -51,8 +54,7 @@ export default function PlusButton({
   onIntegrationSelect,
   attachedIntegrationIds = [],
 }: Readonly<PlusButtonProps>) {
-  const documentInputRef = useRef<HTMLInputElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { t } = useTranslation('common');
   const knowledgeBasesEnabled = useIsKnowledgeBasesEnabled();
@@ -64,31 +66,38 @@ export default function PlusButton({
     enabled: !!onKnowledgeBaseSelect && knowledgeBasesEnabled,
   });
 
-  const handleDocumentChange = (files: FileList | null) => {
+  // Single entry point for all uploads. Splits the selection by type and routes
+  // each category through its existing callback, skipping (and toasting for) any
+  // category whose upload is disabled — mirroring the drag-drop UX in useFileDrop.
+  const handleFileChange = (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    if (isFileSourceDisabled) {
-      showError(t('chatInput.noEmbeddingModelEnabled'));
-      return;
-    }
-    onFileUpload(Array.from(files));
+    const { images, regularFiles } = separateFilesByType(files);
+    let hasSkippedFiles = false;
 
-    // Reset input to allow selecting the same file again
-    if (documentInputRef.current) {
-      documentInputRef.current.value = '';
-    }
-  };
-
-  const handleImageChange = (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-
-    if (onImageSelect) {
-      onImageSelect(files);
+    if (regularFiles.length > 0) {
+      if (isFileSourceDisabled) {
+        hasSkippedFiles = true;
+      } else {
+        onFileUpload(regularFiles);
+      }
     }
 
-    // Reset input to allow selecting the same files again
-    if (imageInputRef.current) {
-      imageInputRef.current.value = '';
+    if (images.length > 0) {
+      if (isImageUploadDisabled || !onImageSelect) {
+        hasSkippedFiles = true;
+      } else {
+        onImageSelect(createFileListFromFiles(images));
+      }
+    }
+
+    if (hasSkippedFiles) {
+      showError(t('chatInput.invalidDroppedFileType'));
+    }
+
+    // Reset input to allow selecting the same file(s) again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -115,24 +124,9 @@ export default function PlusButton({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuGroup>
-            <TooltipIf
-              condition={isFileSourceDisabled ?? false}
-              tooltip={t('chatInput.fileSourceDisabled')}
-            >
-              <DropdownMenuItem
-                onClick={() => documentInputRef.current?.click()}
-                disabled={isFileSourceDisabled}
-              >
-                <FileText className="h-4 w-4" />
-                <span>{t('chatInput.uploadDocument')}</span>
-              </DropdownMenuItem>
-            </TooltipIf>
-            <DropdownMenuItem
-              onClick={() => imageInputRef.current?.click()}
-              disabled={isImageUploadDisabled}
-            >
-              <Image className="h-4 w-4" />
-              <span>{t('chatInput.uploadImage')}</span>
+            <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+              <Paperclip className="h-4 w-4" />
+              <span>{t('chatInput.uploadFile')}</span>
             </DropdownMenuItem>
           </DropdownMenuGroup>
           {onKnowledgeBaseSelect && knowledgeBasesEnabled && (
@@ -204,17 +198,9 @@ export default function PlusButton({
         type="file"
         hidden
         multiple
-        accept=".pdf,.csv,.xlsx,.xls,.docx,.pptx,.txt,.md,.mp3,.m4a,.wav,.webm"
-        onChange={(e) => handleDocumentChange(e.target.files)}
-        ref={documentInputRef}
-      />
-      <Input
-        type="file"
-        hidden
-        accept="image/*"
-        multiple
-        onChange={(e) => handleImageChange(e.target.files)}
-        ref={imageInputRef}
+        accept="image/*,.pdf,.csv,.xlsx,.xls,.docx,.pptx,.txt,.md,.mp3,.m4a,.wav,.webm"
+        onChange={(e) => handleFileChange(e.target.files)}
+        ref={fileInputRef}
       />
     </Tooltip>
   );
