@@ -8,7 +8,6 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/shadcn/utils';
-import { ScrollArea } from '@/shared/ui/shadcn/scroll-area';
 import {
   Collapsible,
   CollapsibleContent,
@@ -120,11 +119,11 @@ function getStepView(
       hasDetails: step.transcript.length > 0,
       expandable: true,
       details: (
-        <ScrollArea className="max-h-40">
+        <div className="max-h-40 overflow-y-auto">
           <div className="text-xs text-muted-foreground whitespace-pre-wrap">
             <PiiText>{step.transcript}</PiiText>
           </div>
-        </ScrollArea>
+        </div>
       ),
     };
   }
@@ -135,11 +134,11 @@ function getStepView(
       hasDetails: step.text.length > 0,
       expandable: true,
       details: (
-        <ScrollArea className="max-h-40">
+        <div className="max-h-40 overflow-y-auto">
           <div className="text-xs text-muted-foreground whitespace-pre-wrap">
             {step.text}
           </div>
-        </ScrollArea>
+        </div>
       ),
     };
   }
@@ -159,22 +158,22 @@ function getStepView(
     details: (
       <>
         {hasParams && (
-          <ScrollArea className="max-h-32">
+          <div className="max-h-32 overflow-y-auto">
             <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
               {JSON.stringify(step.toolUse.params, null, 2)}
             </pre>
-          </ScrollArea>
+          </div>
         )}
         {hasResult && (
           <Badge
             variant="outline"
             className="font-normal whitespace-normal text-left"
           >
-            <ScrollArea className="max-h-32 w-full">
+            <div className="max-h-32 w-full overflow-y-auto">
               <span className="text-xs text-muted-foreground whitespace-pre-wrap">
                 <PiiText>{step.result ?? ''}</PiiText>
               </span>
-            </ScrollArea>
+            </div>
           </Badge>
         )}
       </>
