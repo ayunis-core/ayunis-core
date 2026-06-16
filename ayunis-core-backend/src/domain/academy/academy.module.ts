@@ -18,6 +18,7 @@ import { DeleteLessonUseCase } from './application/use-cases/delete-lesson/delet
 import { ReorderLessonsUseCase } from './application/use-cases/reorder-lessons/reorder-lessons.use-case';
 import { SuperAdminAcademyChaptersController } from './presenters/http/super-admin-academy-chapters.controller';
 import { SuperAdminAcademyLessonsController } from './presenters/http/super-admin-academy-lessons.controller';
+import { AcademyChaptersController } from './presenters/http/academy-chapters.controller';
 import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-response-dto.mapper';
 
 @Module({
@@ -25,6 +26,7 @@ import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-resp
     TypeOrmModule.forFeature([AcademyChapterRecord, AcademyLessonRecord]),
   ],
   controllers: [
+    AcademyChaptersController,
     SuperAdminAcademyChaptersController,
     SuperAdminAcademyLessonsController,
   ],

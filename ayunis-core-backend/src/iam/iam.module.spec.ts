@@ -8,6 +8,7 @@ import { RolesGuard } from './authorization/application/guards/roles.guard';
 import { SystemRolesGuard } from './authorization/application/guards/system-roles.guard';
 import { SubscriptionGuard } from './authorization/application/guards/subscription.guard';
 import { RateLimitGuard } from './authorization/application/guards/rate-limit.guard';
+import { AddonGuard } from './authorization/application/guards/addon.guard';
 
 type GuardRef = abstract new (...args: never[]) => unknown;
 
@@ -48,6 +49,7 @@ describe('IamModule global guard order', () => {
       EmailConfirmGuard,
       RolesGuard,
       SystemRolesGuard,
+      AddonGuard,
       SubscriptionGuard,
       RateLimitGuard,
     ]);

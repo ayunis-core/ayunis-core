@@ -8008,6 +8008,36 @@
         "tags": ["Chat Settings"]
       }
     },
+    "/academy/chapters": {
+      "get": {
+        "description": "Retrieve all chapters with nested lessons, ordered by position. Requires the academy add-on to be active for the organization.",
+        "operationId": "AcademyChaptersController_getChapters",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved academy chapters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AcademyChapterResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or academy add-on not active"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all academy chapters with their lessons",
+        "tags": ["Academy"]
+      }
+    },
     "/super-admin/academy/chapters": {
       "get": {
         "description": "Retrieve all chapters with nested lessons, ordered by position. Only accessible to super admins.",
@@ -8392,6 +8422,136 @@
         "tags": ["ChatCompletions"]
       }
     },
+    "/super-admin/addons/{orgId}": {
+      "get": {
+        "operationId": "SuperAdminAddonsController_list",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AddonStatusResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized as super admin"
+          }
+        },
+        "summary": "List all add-ons with their active state for an organization",
+        "tags": ["Super Admin Addons"]
+      }
+    },
+    "/super-admin/addons/{orgId}/{type}": {
+      "post": {
+        "operationId": "SuperAdminAddonsController_activate",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["ayunis_core_academy"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Add-on active"
+          },
+          "401": {
+            "description": "Not authorized as super admin"
+          }
+        },
+        "summary": "Activate an add-on for an organization",
+        "tags": ["Super Admin Addons"]
+      },
+      "delete": {
+        "operationId": "SuperAdminAddonsController_deactivate",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["ayunis_core_academy"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Add-on inactive"
+          },
+          "401": {
+            "description": "Not authorized as super admin"
+          }
+        },
+        "summary": "Deactivate an add-on for an organization",
+        "tags": ["Super Admin Addons"]
+      }
+    },
+    "/addons": {
+      "get": {
+        "operationId": "AddonsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AddonStatusResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          }
+        },
+        "summary": "List all add-ons with their active state for the current user's organization",
+        "tags": ["Addons"]
+      }
+    },
     "/auth/login": {
       "post": {
         "description": "Authenticate user with email and password. Sets authentication cookies on successful login.",
@@ -8761,110 +8921,6 @@
         },
         "summary": "Revoke an API key",
         "tags": ["api-keys"]
-      }
-    },
-    "/super-admin/addons/{orgId}": {
-      "get": {
-        "operationId": "SuperAdminAddonsController_list",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AddonStatusResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not authorized as super admin"
-          }
-        },
-        "summary": "List all add-ons with their active state for an organization",
-        "tags": ["Super Admin Addons"]
-      }
-    },
-    "/super-admin/addons/{orgId}/{type}": {
-      "post": {
-        "operationId": "SuperAdminAddonsController_activate",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "type",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "enum": ["ayunis_core_academy"],
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Add-on active"
-          },
-          "401": {
-            "description": "Not authorized as super admin"
-          }
-        },
-        "summary": "Activate an add-on for an organization",
-        "tags": ["Super Admin Addons"]
-      },
-      "delete": {
-        "operationId": "SuperAdminAddonsController_deactivate",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "type",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "enum": ["ayunis_core_academy"],
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Add-on inactive"
-          },
-          "401": {
-            "description": "Not authorized as super admin"
-          }
-        },
-        "summary": "Deactivate an add-on for an organization",
-        "tags": ["Super Admin Addons"]
       }
     }
   },
@@ -15098,6 +15154,29 @@
         "type": "object",
         "properties": {}
       },
+      "AddonType": {
+        "type": "string",
+        "enum": ["ayunis_core_academy"],
+        "description": "The add-on this status entry refers to"
+      },
+      "AddonStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "description": "The add-on this status entry refers to",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AddonType"
+              }
+            ]
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the add-on is active for the organization"
+          }
+        },
+        "required": ["type", "active"]
+      },
       "LoginDto": {
         "type": "object",
         "properties": {
@@ -15371,29 +15450,6 @@
           "createdAt",
           "secret"
         ]
-      },
-      "AddonType": {
-        "type": "string",
-        "enum": ["ayunis_core_academy"],
-        "description": "The add-on this status entry refers to"
-      },
-      "AddonStatusResponseDto": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "description": "The add-on this status entry refers to",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/AddonType"
-              }
-            ]
-          },
-          "active": {
-            "type": "boolean",
-            "description": "Whether the add-on is active for the organization"
-          }
-        },
-        "required": ["type", "active"]
       }
     }
   }
