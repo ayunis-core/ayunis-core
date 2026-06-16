@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.7.0](https://github.com/ayunis-core/ayunis-core/compare/v2.6.0...v2.7.0) (2026-06-16)
+
+
+### Features
+
+* **academy:** add chapter detail view with video player (AYC-238) ([#831](https://github.com/ayunis-core/ayunis-core/issues/831)) ([c47d775](https://github.com/ayunis-core/ayunis-core/commit/c47d7754871c724cd5f08a9089645b047d8d364a))
+* **academy:** add user-facing academy page gated by org add-on (AYC-238) ([#829](https://github.com/ayunis-core/ayunis-core/issues/829)) ([1be0d82](https://github.com/ayunis-core/ayunis-core/commit/1be0d82f95cae9e5b66dfd7dc0acc88ae1749dd5))
+* **anonymization:** de-anonymize PII tokens at export egress points (AYC-290) ([#827](https://github.com/ayunis-core/ayunis-core/issues/827)) ([ec205b5](https://github.com/ayunis-core/ayunis-core/commit/ec205b57663626f7c443eb6a42d5de6082dc7128))
+* **chat:** merge file upload buttons into single delegating button (AYC-292) ([#832](https://github.com/ayunis-core/ayunis-core/issues/832)) ([0399261](https://github.com/ayunis-core/ayunis-core/commit/0399261a6e3d3354e574e2de48570f93f60ff73d))
+
+
+### Bug Fixes
+
+* **chat:** prevent skill instructions overlapping answer in timeline (AYC-288) ([#830](https://github.com/ayunis-core/ayunis-core/issues/830)) ([c4a5b9d](https://github.com/ayunis-core/ayunis-core/commit/c4a5b9d4cf0d15ff3dacd4e98fda5185d7c0a7a2))
+
 ## [2.6.0](https://github.com/ayunis-core/ayunis-core/compare/v2.5.0...v2.6.0) (2026-06-15)
 
 
