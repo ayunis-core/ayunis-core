@@ -121,7 +121,7 @@ export default function ChapterDetailPage({
             {t('detail.previous')}
           </Button>
           {isLast ? (
-            <Button onClick={() => void navigate({ to: '/academy' })}>
+            <Button onClick={() => goToLesson(undefined)}>
               {t('detail.finish')}
               <Check className="h-4 w-4" />
             </Button>
