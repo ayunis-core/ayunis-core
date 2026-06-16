@@ -187,6 +187,17 @@ See also:
 - `/src/domain/models/domain/models/embedding.model.ts`
 - `/src/domain/models/domain/value-objects/embedding-dimensions.enum.ts`
 
+#### Seed demo data (local dev)
+
+To skip manual setup locally, seed a demo org, a super admin, and standard models:
+
+```bash
+cd ayunis-core-backend
+npm run seed:minimal:ts
+```
+
+This creates **Demo Org** with `admin@demo.local` / `admin` (super admin) and permits a default language + embedding model. Models only appear once a credential for their provider is set in `.env` (e.g. `AWS_BEDROCK_REGION` for the default Bedrock model, or `OPENAI_API_KEY`); restart the backend after setting it.
+
 ## 🎯 First steps
 
 - Create an account
