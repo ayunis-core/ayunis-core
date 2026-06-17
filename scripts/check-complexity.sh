@@ -16,10 +16,22 @@ GREEN="\033[32m"
 YELLOW="\033[33m"
 NC="\033[0m"
 
-# Check if lizard is installed
+# Check if lizard is installed. Try the available Python installer; many
+# machines (e.g. fresh macOS) ship pip3/pipx but not a bare `pip`.
 if ! command -v lizard &> /dev/null; then
-    echo -e "${YELLOW}Installing lizard...${NC}"
-    pip install lizard --quiet
+    echo -e "${YELLOW}lizard not found; attempting install…${NC}"
+    if command -v pipx &> /dev/null; then
+        pipx install lizard
+    elif command -v pip3 &> /dev/null; then
+        pip3 install lizard --quiet
+    elif command -v pip &> /dev/null; then
+        pip install lizard --quiet
+    else
+        echo -e "${RED}Could not install lizard: no pipx/pip3/pip found.${NC}"
+        echo -e "${YELLOW}Install it manually (e.g. 'pipx install lizard' or 'brew install pipx && pipx install lizard'), then re-commit.${NC}"
+        echo -e "${YELLOW}To bypass this check for now: SKIP_COMPLEXITY=1 git commit …${NC}"
+        [ "${SKIP_COMPLEXITY:-0}" = "1" ] && exit 0 || exit 1
+    fi
 fi
 
 # Get files to check
