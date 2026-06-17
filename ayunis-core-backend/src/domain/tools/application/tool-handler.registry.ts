@@ -18,74 +18,85 @@ import { McpIntegrationToolHandler } from './handlers/mcp-integration-tool.handl
 import { McpIntegrationResourceHandler } from './handlers/mcp-integration-resource.handler';
 import { McpIntegrationTool } from '../domain/tools/mcp-integration-tool.entity';
 import { McpIntegrationResource } from '../domain/tools/mcp-integration-resource.entity';
-import { ProductKnowledgeToolHandler } from './handlers/product-knowledge-tool.handler';
-import { ProductKnowledgeTool } from '../domain/tools/product-knowledge-tool.entity';
 import { ActivateSkillToolHandler } from './handlers/activate-skill-tool.handler';
 import { ActivateSkillTool } from '../domain/tools/activate-skill-tool.entity';
 import { KnowledgeQueryToolHandler } from './handlers/knowledge-query-tool.handler';
 import { KnowledgeQueryTool } from '../domain/tools/knowledge-query-tool.entity';
 import { KnowledgeGetTextToolHandler } from './handlers/knowledge-get-text-tool.handler';
 import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.entity';
+import { CreateDocumentToolHandler } from './handlers/create-document-tool.handler';
+import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
+import { UpdateDocumentToolHandler } from './handlers/update-document-tool.handler';
+import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
+import { EditDocumentToolHandler } from './handlers/edit-document-tool.handler';
+import { EditDocumentTool } from '../domain/tools/edit-document-tool.entity';
+import { ReadDocumentToolHandler } from './handlers/read-document-tool.handler';
+import { ReadDocumentTool } from '../domain/tools/read-document-tool.entity';
+import { GenerateImageToolHandler } from './handlers/generate-image-tool.handler';
+import { GenerateImageTool } from '../domain/tools/generate-image-tool.entity';
+import { CreateDiagramToolHandler } from './handlers/create-diagram-tool.handler';
+import { CreateDiagramTool } from '../domain/tools/create-diagram-tool.entity';
+import { UpdateDiagramToolHandler } from './handlers/update-diagram-tool.handler';
+import { UpdateDiagramTool } from '../domain/tools/update-diagram-tool.entity';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- constructor types vary; used only as Map keys for instanceof matching
+type ToolConstructor = abstract new (...args: any[]) => Tool;
 
 @Injectable()
 export class ToolHandlerRegistry {
   private readonly logger = new Logger(ToolHandlerRegistry.name);
+  private readonly handlers: [ToolConstructor, ToolExecutionHandler][];
 
   constructor(
-    private readonly httpToolHandler: HttpToolHandler,
-    private readonly sourceQueryToolHandler: SourceQueryToolHandler,
-    private readonly sourceGetTextToolHandler: SourceGetTextToolHandler,
-    private readonly internetSearchToolHandler: InternetSearchToolHandler,
-    private readonly websiteContentToolHandler: WebsiteContentToolHandler,
-    private readonly codeExecutionToolHandler: CodeExecutionToolHandler,
-    private readonly mcpIntegrationToolHandler: McpIntegrationToolHandler,
-    private readonly mcpIntegrationResourceHandler: McpIntegrationResourceHandler,
-    private readonly productKnowledgeToolHandler: ProductKnowledgeToolHandler,
-    private readonly activateSkillToolHandler: ActivateSkillToolHandler,
-    private readonly knowledgeQueryToolHandler: KnowledgeQueryToolHandler,
-    private readonly knowledgeGetTextToolHandler: KnowledgeGetTextToolHandler,
-  ) {}
+    httpToolHandler: HttpToolHandler,
+    sourceQueryToolHandler: SourceQueryToolHandler,
+    sourceGetTextToolHandler: SourceGetTextToolHandler,
+    internetSearchToolHandler: InternetSearchToolHandler,
+    websiteContentToolHandler: WebsiteContentToolHandler,
+    codeExecutionToolHandler: CodeExecutionToolHandler,
+    mcpIntegrationToolHandler: McpIntegrationToolHandler,
+    mcpIntegrationResourceHandler: McpIntegrationResourceHandler,
+    activateSkillToolHandler: ActivateSkillToolHandler,
+    knowledgeQueryToolHandler: KnowledgeQueryToolHandler,
+    knowledgeGetTextToolHandler: KnowledgeGetTextToolHandler,
+    createDocumentToolHandler: CreateDocumentToolHandler,
+    updateDocumentToolHandler: UpdateDocumentToolHandler,
+    editDocumentToolHandler: EditDocumentToolHandler,
+    readDocumentToolHandler: ReadDocumentToolHandler,
+    generateImageToolHandler: GenerateImageToolHandler,
+    createDiagramToolHandler: CreateDiagramToolHandler,
+    updateDiagramToolHandler: UpdateDiagramToolHandler,
+  ) {
+    this.handlers = [
+      [HttpTool, httpToolHandler],
+      [SourceQueryTool, sourceQueryToolHandler],
+      [SourceGetTextTool, sourceGetTextToolHandler],
+      [InternetSearchTool, internetSearchToolHandler],
+      [WebsiteContentTool, websiteContentToolHandler],
+      [CodeExecutionTool, codeExecutionToolHandler],
+      [McpIntegrationTool, mcpIntegrationToolHandler],
+      [McpIntegrationResource, mcpIntegrationResourceHandler],
+      [ActivateSkillTool, activateSkillToolHandler],
+      [KnowledgeQueryTool, knowledgeQueryToolHandler],
+      [KnowledgeGetTextTool, knowledgeGetTextToolHandler],
+      [CreateDocumentTool, createDocumentToolHandler],
+      [UpdateDocumentTool, updateDocumentToolHandler],
+      [EditDocumentTool, editDocumentToolHandler],
+      [ReadDocumentTool, readDocumentToolHandler],
+      [GenerateImageTool, generateImageToolHandler],
+      [CreateDiagramTool, createDiagramToolHandler],
+      [UpdateDiagramTool, updateDiagramToolHandler],
+    ];
+  }
 
   getHandler(tool: Tool): ToolExecutionHandler {
     this.logger.log(`Getting handler for tool: ${tool.name}`);
-    if (tool instanceof HttpTool) {
-      return this.httpToolHandler;
+
+    const entry = this.handlers.find(([ctor]) => tool instanceof ctor);
+    if (entry) {
+      return entry[1];
     }
-    if (tool instanceof SourceQueryTool) {
-      return this.sourceQueryToolHandler;
-    }
-    if (tool instanceof SourceGetTextTool) {
-      return this.sourceGetTextToolHandler;
-    }
-    if (tool instanceof InternetSearchTool) {
-      return this.internetSearchToolHandler;
-    }
-    if (tool instanceof WebsiteContentTool) {
-      return this.websiteContentToolHandler;
-    }
-    if (tool instanceof CodeExecutionTool) {
-      return this.codeExecutionToolHandler;
-    }
-    if (tool instanceof McpIntegrationTool) {
-      return this.mcpIntegrationToolHandler;
-    }
-    if (tool instanceof McpIntegrationResource) {
-      return this.mcpIntegrationResourceHandler;
-    }
-    if (tool instanceof ProductKnowledgeTool) {
-      return this.productKnowledgeToolHandler;
-    }
-    if (tool instanceof ActivateSkillTool) {
-      return this.activateSkillToolHandler;
-    }
-    if (tool instanceof KnowledgeQueryTool) {
-      return this.knowledgeQueryToolHandler;
-    }
-    if (tool instanceof KnowledgeGetTextTool) {
-      return this.knowledgeGetTextToolHandler;
-    }
-    throw new ToolHandlerNotFoundError({
-      toolType: tool.name,
-    });
+
+    throw new ToolHandlerNotFoundError({ toolType: tool.name });
   }
 }

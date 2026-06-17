@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Fragment } from 'react/jsx-runtime';
 import {
   Card,
   CardContent,
@@ -8,41 +9,60 @@ import {
   CardAction,
 } from '@/shared/ui/shadcn/card';
 import { Button } from '@/shared/ui/shadcn/button';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Label } from '@/shared/ui/shadcn/label';
-import { Badge } from '@/shared/ui/shadcn/badge';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/shared/ui/shadcn/dialog';
+  Item,
+  ItemContent,
+  ItemTitle,
+  ItemDescription,
+  ItemActions,
+  ItemMedia,
+  ItemGroup,
+  ItemSeparator,
+} from '@/shared/ui/shadcn/item';
 import {
   KnowledgeBaseDocumentResponseDtoTextType,
+  KnowledgeBaseDocumentResponseDtoStatus,
   type KnowledgeBaseDocumentResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { Upload, X, FileText, Globe, Loader2 } from 'lucide-react';
+import {
+  Upload,
+  X,
+  FileText,
+  Globe,
+  Loader2,
+  AlertCircle,
+  Clock,
+} from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/shared/ui/shadcn/tooltip';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import { cn } from '@/shared/lib/shadcn/utils';
+import { useDocumentDrop } from '@/shared/hooks/useDocumentDrop';
 import {
   useKnowledgeBaseDocuments,
   useUploadDocument,
   useAddUrl,
   useRemoveDocument,
 } from '../api';
+import { isValidUrl } from '../lib/isValidUrl';
+import { AddUrlDialog } from './AddUrlDialog';
 
-const ACCEPTED_FILE_TYPES = '.pdf,.docx,.pptx,.txt';
-
-function isValidUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
+const ACCEPTED_EXTENSIONS = [
+  '.pdf',
+  '.docx',
+  '.pptx',
+  '.txt',
+  '.md',
+  '.mp3',
+  '.m4a',
+  '.wav',
+  '.webm',
+];
+const ACCEPTED_FILE_TYPES = ACCEPTED_EXTENSIONS.join(',');
 
 export default function KnowledgeBaseDocumentsCard({
   knowledgeBaseId,
@@ -52,18 +72,34 @@ export default function KnowledgeBaseDocumentsCard({
   disabled?: boolean;
 }>) {
   const { t } = useTranslation('knowledge-bases');
+  const { t: tCommon } = useTranslation('common');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const [urlDialogOpen, setUrlDialogOpen] = useState(false);
   const [urlInput, setUrlInput] = useState('');
+  const [urlDepth, setUrlDepth] = useState(0);
   const { documents, isLoading } = useKnowledgeBaseDocuments(knowledgeBaseId);
   const { uploadDocument, isUploading } = useUploadDocument(knowledgeBaseId);
   const { addUrlAsync, isAddingUrl } = useAddUrl(knowledgeBaseId);
   const { removeDocument, isRemoving } = useRemoveDocument(knowledgeBaseId);
 
+  const { isDragging } = useDocumentDrop({
+    containerRef: cardRef,
+    onDrop: (files) => {
+      for (const file of files) {
+        uploadDocument(file);
+      }
+    },
+    acceptedExtensions: ACCEPTED_EXTENSIONS,
+    disabled,
+  });
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      uploadDocument(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      for (const file of Array.from(files)) {
+        uploadDocument(file);
+      }
       e.target.value = '';
     }
   };
@@ -72,8 +108,9 @@ export default function KnowledgeBaseDocumentsCard({
     const trimmed = urlInput.trim();
     if (!trimmed || !isValidUrl(trimmed) || isAddingUrl) return;
     try {
-      await addUrlAsync(trimmed);
+      await addUrlAsync(trimmed, urlDepth);
       setUrlInput('');
+      setUrlDepth(0);
       setUrlDialogOpen(false);
     } catch {
       // error toast is handled by the mutation's onError callback
@@ -85,11 +122,25 @@ export default function KnowledgeBaseDocumentsCard({
     setUrlDialogOpen(open);
     if (!open) {
       setUrlInput('');
+      setUrlDepth(0);
     }
   };
 
   return (
-    <Card>
+    <Card
+      ref={cardRef}
+      className={cn(
+        'relative',
+        isDragging && 'outline-2 outline-dashed outline-primary',
+      )}
+    >
+      {isDragging && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-primary/5">
+          <p className="text-sm font-medium text-primary">
+            {tCommon('chatInput.dropFilesHint')}
+          </p>
+        </div>
+      )}
       <CardHeader>
         <CardTitle>{t('detail.documents.title')}</CardTitle>
         <CardDescription>{t('detail.documents.description')}</CardDescription>
@@ -98,6 +149,7 @@ export default function KnowledgeBaseDocumentsCard({
             <input
               ref={fileInputRef}
               type="file"
+              multiple
               accept={ACCEPTED_FILE_TYPES}
               onChange={handleFileChange}
               className="hidden"
@@ -116,7 +168,7 @@ export default function KnowledgeBaseDocumentsCard({
                 {isAddingUrl ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                  <Globe className="mr-2 h-4 w-4" />
+                  <Globe />
                 )}
                 {t('detail.documents.addUrl')}
               </Button>
@@ -129,7 +181,7 @@ export default function KnowledgeBaseDocumentsCard({
                 {isUploading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                  <Upload className="mr-2 h-4 w-4" />
+                  <Upload />
                 )}
                 {t('detail.documents.upload')}
               </Button>
@@ -152,6 +204,8 @@ export default function KnowledgeBaseDocumentsCard({
         onOpenChange={handleUrlDialogOpenChange}
         urlInput={urlInput}
         onUrlChange={setUrlInput}
+        depth={urlDepth}
+        onDepthChange={setUrlDepth}
         onSubmit={() => void handleAddUrl()}
         isAddingUrl={isAddingUrl}
         t={t}
@@ -190,19 +244,24 @@ function DocumentsContent({
     );
   }
   return (
-    <div className="flex flex-wrap gap-2">
-      {documents.map((doc) => (
-        <DocumentItem
-          key={doc.id}
-          doc={doc}
-          removeDocument={removeDocument}
-          isRemoving={isRemoving}
-          disabled={disabled}
-        />
+    <ItemGroup>
+      {documents.map((doc, index) => (
+        <Fragment key={doc.id}>
+          <DocumentItem
+            doc={doc}
+            removeDocument={removeDocument}
+            isRemoving={isRemoving}
+            disabled={disabled}
+          />
+          {index < documents.length - 1 && <ItemSeparator />}
+        </Fragment>
       ))}
-    </div>
+    </ItemGroup>
   );
 }
+
+/** Processing sources older than this are shown with a slow-processing warning. */
+const SLOW_PROCESSING_THRESHOLD_MS = 3 * 60 * 1000; // 3 minutes
 
 function DocumentItem({
   doc,
@@ -215,90 +274,133 @@ function DocumentItem({
   isRemoving: boolean;
   disabled?: boolean;
 }>) {
+  const { t } = useTranslation('knowledge-bases');
   const isWeb = doc.textType === KnowledgeBaseDocumentResponseDtoTextType.web;
-  const Icon = isWeb ? Globe : FileText;
+  const isProcessing =
+    doc.status === KnowledgeBaseDocumentResponseDtoStatus.processing;
+  const isFailed = doc.status === KnowledgeBaseDocumentResponseDtoStatus.failed;
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!isProcessing) return;
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, [isProcessing]);
+
+  const isProcessingSlow =
+    isProcessing &&
+    now - new Date(doc.createdAt).getTime() > SLOW_PROCESSING_THRESHOLD_MS;
 
   return (
-    <Badge
-      variant="secondary"
-      className="flex items-center gap-1.5 py-1.5 px-3"
-      title={isWeb ? (doc.url ?? undefined) : undefined}
-    >
-      <Icon className="h-3.5 w-3.5 shrink-0" />
-      <span className="max-w-[200px] truncate">{doc.name}</span>
+    <Item>
+      <ItemMedia variant="icon">
+        <DocumentItemIcon
+          isWeb={isWeb}
+          isProcessing={isProcessing}
+          isProcessingSlow={isProcessingSlow}
+          isFailed={isFailed}
+        />
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle>{doc.name}</ItemTitle>
+        <DocumentItemDescription
+          isWeb={isWeb}
+          url={doc.url}
+          isProcessing={isProcessing}
+          isProcessingSlow={isProcessingSlow}
+          isFailed={isFailed}
+          processingError={doc.processingError}
+          t={t}
+        />
+      </ItemContent>
       {!disabled && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => removeDocument(doc.id)}
-          disabled={isRemoving}
-          className="ml-1 h-5 w-5 rounded-full"
-        >
-          <X className="h-3 w-3" />
-        </Button>
+        <ItemActions>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => removeDocument(doc.id)}
+            disabled={isRemoving}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </ItemActions>
       )}
-    </Badge>
+    </Item>
   );
 }
 
-function AddUrlDialog({
-  open,
-  onOpenChange,
-  urlInput,
-  onUrlChange,
-  onSubmit,
-  isAddingUrl,
+function DocumentItemDescription({
+  isWeb,
+  url,
+  isProcessing,
+  isProcessingSlow,
+  isFailed,
+  processingError,
   t,
 }: Readonly<{
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  urlInput: string;
-  onUrlChange: (value: string) => void;
-  onSubmit: () => void;
-  isAddingUrl: boolean;
+  isWeb: boolean;
+  url: string | null | undefined;
+  isProcessing: boolean;
+  isProcessingSlow: boolean;
+  isFailed: boolean;
+  processingError: string | null | undefined;
   t: (key: string) => string;
 }>) {
-  const isUrlValid = urlInput.trim() !== '' && isValidUrl(urlInput.trim());
+  if (isProcessing) {
+    return (
+      <ItemDescription
+        className={
+          isProcessingSlow ? 'text-amber-600 dark:text-amber-400' : undefined
+        }
+      >
+        {isProcessingSlow
+          ? t('detail.documents.statusProcessingSlow')
+          : t('detail.documents.statusProcessing')}
+      </ItemDescription>
+    );
+  }
+  if (isFailed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <ItemDescription className="text-destructive cursor-help">
+            {t('detail.documents.statusFailed')}
+          </ItemDescription>
+        </TooltipTrigger>
+        <TooltipContent>
+          {processingError ?? t('detail.documents.retryUpload')}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+  if (isWeb && url) {
+    return <ItemDescription>{url}</ItemDescription>;
+  }
+  return null;
+}
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t('detail.documents.urlDialogTitle')}</DialogTitle>
-          <DialogDescription>
-            {t('detail.documents.urlDialogDescription')}
-          </DialogDescription>
-        </DialogHeader>
-        <div>
-          <Label htmlFor="add-url-input" className="sr-only">
-            {t('detail.documents.urlLabel')}
-          </Label>
-          <Input
-            id="add-url-input"
-            type="url"
-            placeholder={t('detail.documents.urlPlaceholder')}
-            value={urlInput}
-            onChange={(e) => onUrlChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && isUrlValid && !isAddingUrl) onSubmit();
-            }}
-          />
-        </div>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isAddingUrl}
-          >
-            {t('detail.documents.urlDialogCancel')}
-          </Button>
-          <Button onClick={onSubmit} disabled={!isUrlValid || isAddingUrl}>
-            {isAddingUrl && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {t('detail.documents.addUrl')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+function DocumentItemIcon({
+  isWeb,
+  isProcessing,
+  isProcessingSlow,
+  isFailed,
+}: Readonly<{
+  isWeb: boolean;
+  isProcessing: boolean;
+  isProcessingSlow: boolean;
+  isFailed: boolean;
+}>) {
+  if (isProcessingSlow) {
+    return (
+      <Clock className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+    );
+  }
+  if (isProcessing) {
+    return <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />;
+  }
+  if (isFailed) {
+    return <AlertCircle className="h-3.5 w-3.5 shrink-0" />;
+  }
+  const Icon = isWeb ? Globe : FileText;
+  return <Icon className="h-3.5 w-3.5 shrink-0" />;
 }

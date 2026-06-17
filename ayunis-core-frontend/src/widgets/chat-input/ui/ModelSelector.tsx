@@ -1,12 +1,11 @@
 import {
   Select,
   SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/shadcn/select';
 import { usePermittedModels } from '@/features/usePermittedModels';
-import { getFlagByProvider } from '@/shared/lib/getFlagByProvider';
+import { ModelSelectOptions } from '@/widgets/model-select-options';
 import { useTranslation } from 'react-i18next';
 
 interface ModelSelectorProps {
@@ -26,24 +25,6 @@ export default function ModelSelector({
     placeholder,
     isDisabled: isDisabledModels,
   } = usePermittedModels();
-  const sortedModels = [...models].sort((a, b) => {
-    const flagPriority: Record<string, number> = {
-      '🇩🇪': 0,
-      '🇪🇺': 1,
-      '🇺🇸': 2,
-    };
-
-    const flagA = getFlagByProvider(a.provider);
-    const flagB = getFlagByProvider(b.provider);
-    const priorityA = flagPriority[flagA] ?? 3;
-    const priorityB = flagPriority[flagB] ?? 3;
-
-    if (priorityA !== priorityB) {
-      return priorityA - priorityB;
-    }
-
-    return a.displayName.localeCompare(b.displayName);
-  });
   return (
     <Select
       value={selectedModelId}
@@ -57,12 +38,13 @@ export default function ModelSelector({
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent>
-        {sortedModels.map((model) => (
-          <SelectItem key={model.id} value={model.id}>
-            {getFlagByProvider(model.provider)} {model.displayName}
-          </SelectItem>
-        ))}
+      <SelectContent
+        position="popper"
+        sideOffset={4}
+        align="end"
+        className="min-w-[260px]"
+      >
+        <ModelSelectOptions models={models} showFlag />
       </SelectContent>
     </Select>
   );

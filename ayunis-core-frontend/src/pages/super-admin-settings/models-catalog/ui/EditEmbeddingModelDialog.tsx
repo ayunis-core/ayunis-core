@@ -6,35 +6,15 @@ import type {
   EmbeddingModelResponseDto,
   UpdateEmbeddingModelRequestDtoProvider,
 } from '@/shared/api';
-import { CreateEmbeddingModelRequestDtoDimensions } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { EMBEDDING_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
 import { EmbeddingDimensionsField } from './EmbeddingDimensionsField';
+import { ModelPricingFields } from './ModelPricingFields';
 
 interface EditEmbeddingModelDialogProps {
   model: EmbeddingModelResponseDto | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-function parseDimensions(
-  dimensions: EmbeddingModelResponseDto['dimensions'],
-): CreateEmbeddingModelRequestDtoDimensions {
-  if (typeof dimensions === 'number') {
-    return dimensions;
-  }
-  if (typeof dimensions === 'string') {
-    const parsed = Number(dimensions.split('_')[1]);
-    if (
-      !isNaN(parsed) &&
-      Object.values(CreateEmbeddingModelRequestDtoDimensions).includes(
-        parsed as CreateEmbeddingModelRequestDtoDimensions,
-      )
-    ) {
-      return parsed as CreateEmbeddingModelRequestDtoDimensions;
-    }
-  }
-  return CreateEmbeddingModelRequestDtoDimensions.NUMBER_1536;
 }
 
 export function EditEmbeddingModelDialog({
@@ -63,8 +43,10 @@ export function EditEmbeddingModelDialog({
         name: model.name,
         provider: model.provider,
         displayName: model.displayName,
-        dimensions: parseDimensions(model.dimensions),
+        dimensions: model.dimensions,
         isArchived: model.isArchived,
+        inputTokenCost: model.inputTokenCost,
+        outputTokenCost: model.outputTokenCost,
       });
     }
   }, [model, open, form]);
@@ -90,6 +72,7 @@ export function EditEmbeddingModelDialog({
       hasContent={!!model}
     >
       <EmbeddingDimensionsField form={form} disabled={isUpdating} mode="edit" />
+      <ModelPricingFields form={form} disabled={isUpdating} />
     </ModelFormDialog>
   );
 }

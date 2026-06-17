@@ -48,6 +48,7 @@ import { ToggleSkillPinnedCommand } from '../../application/use-cases/toggle-ski
 
 // Services
 import { SkillAccessService } from '../../application/services/skill-access.service';
+import { SkillCreatorNameService } from '../../application/services/skill-creator-name.service';
 
 // DTOs & Mappers
 import { CreateSkillDto } from './dto/create-skill.dto';
@@ -76,6 +77,7 @@ export class SkillsController {
     private readonly toggleSkillPinnedUseCase: ToggleSkillPinnedUseCase,
     private readonly skillDtoMapper: SkillDtoMapper,
     private readonly skillAccessService: SkillAccessService,
+    private readonly skillCreatorNameService: SkillCreatorNameService,
   ) {}
 
   @Post('install-from-marketplace')
@@ -177,12 +179,18 @@ export class SkillsController {
     const sharedSkillIds = new Set<string>(
       results.filter((r) => r.isShared).map((r) => r.skill.id),
     );
+    const sharedCreatorIds = results
+      .filter((r) => r.isShared)
+      .map((r) => r.skill.userId);
+    const creatorNamesByUserId =
+      await this.skillCreatorNameService.resolveMany(sharedCreatorIds);
 
     return this.skillDtoMapper.toDtoArray(
       skills,
       activeSkillIds,
       sharedSkillIds,
       pinnedSkillIds,
+      creatorNamesByUserId,
     );
   }
 
@@ -209,7 +217,15 @@ export class SkillsController {
     const { skill, isActive, isShared, isPinned } =
       await this.findOneSkillUseCase.execute(new FindOneSkillQuery(id));
 
-    return this.skillDtoMapper.toDto(skill, { isActive, isShared, isPinned });
+    const creatorName = isShared
+      ? await this.skillCreatorNameService.resolveOne(skill.userId)
+      : null;
+
+    return this.skillDtoMapper.toDto(
+      skill,
+      { isActive, isShared, isPinned },
+      creatorName,
+    );
   }
 
   @Put(':id')
@@ -251,7 +267,11 @@ export class SkillsController {
 
       const context = await this.skillAccessService.resolveUserContext(id);
 
-      return this.skillDtoMapper.toDto(skill, context);
+      const creatorName = context.isShared
+        ? await this.skillCreatorNameService.resolveOne(skill.userId)
+        : null;
+
+      return this.skillDtoMapper.toDto(skill, context, creatorName);
     } catch (error) {
       if (error instanceof InvalidSkillNameError) {
         throw new BadRequestException(error.message);
@@ -307,7 +327,15 @@ export class SkillsController {
         new ToggleSkillActiveCommand({ skillId: id }),
       );
 
-    return this.skillDtoMapper.toDto(skill, { isActive, isShared, isPinned });
+    const creatorName = isShared
+      ? await this.skillCreatorNameService.resolveOne(skill.userId)
+      : null;
+
+    return this.skillDtoMapper.toDto(
+      skill,
+      { isActive, isShared, isPinned },
+      creatorName,
+    );
   }
 
   @Patch(':id/toggle-pinned')
@@ -336,10 +364,18 @@ export class SkillsController {
         new ToggleSkillPinnedCommand({ skillId: id }),
       );
 
-    return this.skillDtoMapper.toDto(skill, {
-      isActive: true,
-      isShared,
-      isPinned,
-    });
+    const creatorName = isShared
+      ? await this.skillCreatorNameService.resolveOne(skill.userId)
+      : null;
+
+    return this.skillDtoMapper.toDto(
+      skill,
+      {
+        isActive: true,
+        isShared,
+        isPinned,
+      },
+      creatorName,
+    );
   }
 }

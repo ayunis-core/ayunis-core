@@ -1,5 +1,10 @@
+import type { PiiCategory } from '../../domain/pii-category.enum';
+import type { PiiDetection } from '../../domain/pii-detection';
+import type { PiiMask } from '../../domain/pii-mask';
+
 export interface AnonymizationReplacement {
   entityType: string;
+  category: PiiCategory;
   originalValue: string;
   start: number;
   end: number;
@@ -10,14 +15,16 @@ export interface AnonymizationResult {
   originalText: string;
   anonymizedText: string;
   replacements: AnonymizationReplacement[];
+  /** Masks newly created for this text; empty in legacy placeholder mode. */
+  newMasks: PiiMask[];
 }
 
-export type AnonymizationLanguage = 'en' | 'de';
-
+/**
+ * Detection-only engine port. Adapters detect PII spans (non-overlapping)
+ * and map their engine-specific entity types onto the PiiCategory taxonomy;
+ * whitelist filtering and placeholder replacement happen in the application
+ * layer.
+ */
 export abstract class AnonymizationPort {
-  abstract anonymize(
-    text: string,
-    language: AnonymizationLanguage,
-    entities?: string[],
-  ): Promise<AnonymizationResult>;
+  abstract detect(text: string, entities?: string[]): Promise<PiiDetection[]>;
 }

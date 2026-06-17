@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateThreadKnowledgeBasesJoinTable1771705515228
-  implements MigrationInterface
-{
+export class CreateThreadKnowledgeBasesJoinTable1771705515228 implements MigrationInterface {
   name = 'CreateThreadKnowledgeBasesJoinTable1771705515228';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

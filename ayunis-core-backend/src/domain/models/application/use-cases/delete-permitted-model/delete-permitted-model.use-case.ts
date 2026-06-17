@@ -9,14 +9,13 @@ import {
 } from '../../models.errors';
 import { ReplaceModelWithUserDefaultUseCase } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { ReplaceModelWithUserDefaultCommand } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.command';
-import { ReplaceModelWithUserDefaultUseCase as ReplaceModelWithUserDefaultUseCaseAgents } from 'src/domain/agents/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
-import { ReplaceModelWithUserDefaultCommand as ReplaceModelWithUserDefaultCommandAgents } from 'src/domain/agents/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.command';
 import { DeleteUserDefaultModelsByModelIdUseCase } from '../delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
 import { DeleteUserDefaultModelsByModelIdCommand } from '../delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.command';
 import { GetPermittedModelsUseCase } from '../get-permitted-models/get-permitted-models.use-case';
 import { GetPermittedModelsQuery } from '../get-permitted-models/get-permitted-models.query';
 import {
   PermittedEmbeddingModel,
+  PermittedImageGenerationModel,
   PermittedLanguageModel,
 } from 'src/domain/models/domain/permitted-model.entity';
 import { UUID } from 'crypto';
@@ -40,7 +39,6 @@ export class DeletePermittedModelUseCase {
     private readonly deleteUserDefaultModelByModelIdUseCase: DeleteUserDefaultModelsByModelIdUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
     private readonly replaceModelWithUserDefaultUseCase: ReplaceModelWithUserDefaultUseCase,
-    private readonly replaceModelWithUserDefaultUseCaseAgents: ReplaceModelWithUserDefaultUseCaseAgents,
     private readonly findAllThreadsByOrgWithSourcesUseCase: FindAllThreadsByOrgWithSourcesUseCase,
     private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
     private readonly contextService: ContextService,
@@ -74,17 +72,27 @@ export class DeletePermittedModelUseCase {
         });
       }
 
+      // Verify the model belongs to the specified org
+      if (model.orgId !== command.orgId) {
+        throw new UnauthorizedAccessError();
+      }
+
       if (model instanceof PermittedLanguageModel) {
         return this.deletePermittedLanguageModel(command.orgId, model);
       } else if (model instanceof PermittedEmbeddingModel) {
         return this.deletePermittedEmbeddingModel(command.orgId, model);
+      } else if (model instanceof PermittedImageGenerationModel) {
+        return this.deletePermittedImageGenerationModel(command.orgId, model);
       } else {
-        this.logger.error('Model is not a language or embedding model', {
-          modelId: command.permittedModelId,
-          orgId: command.orgId,
-        });
+        this.logger.error(
+          'Model is not a language, embedding, or image-generation model',
+          {
+            modelId: command.permittedModelId,
+            orgId: command.orgId,
+          },
+        );
         throw new PermittedModelDeletionFailedError(
-          'Model is not a language or embedding model',
+          'Model is not a language, embedding, or image-generation model',
           {
             modelId: command.permittedModelId,
           },
@@ -148,17 +156,14 @@ export class DeletePermittedModelUseCase {
       new ReplaceModelWithUserDefaultCommand({
         orgId,
         oldPermittedModelId: model.id,
+        catalogModelId: model.model.id,
       }),
     );
 
-    this.logger.debug('Replacing model in all agents that use it', {
-      modelId: model.id,
-    });
-
-    // Replace the model in all agents that use it
-    // This will fall back to the user's default model or org default model
-    await this.replaceModelWithUserDefaultUseCaseAgents.execute(
-      new ReplaceModelWithUserDefaultCommandAgents(model.id),
+    // Cascade: remove team-scoped permitted models referencing the same catalog model
+    await this.permittedModelsRepository.deleteTeamScopedByOrgAndModelId(
+      orgId,
+      model.model.id,
     );
 
     await this.permittedModelsRepository.delete({
@@ -176,15 +181,15 @@ export class DeletePermittedModelUseCase {
       new FindAllThreadsByOrgWithSourcesQuery(orgId),
     );
 
-    // Collect all sources from all threads
-    const sources = threads
-      .flatMap((t) => t.sourceAssignments?.map((sa) => sa.source) ?? [])
+    // Collect all source IDs from all threads
+    const sourceIds = threads
+      .flatMap((t) => t.sourceAssignments?.map((sa) => sa.source.id) ?? [])
       .filter(Boolean);
 
     // Batch delete RAG index + sources (2 queries total)
-    if (sources.length > 0) {
+    if (sourceIds.length > 0) {
       await this.deleteSourcesUseCase.execute(
-        new DeleteSourcesCommand(sources),
+        new DeleteSourcesCommand(sourceIds),
       );
     }
 
@@ -192,6 +197,16 @@ export class DeletePermittedModelUseCase {
     await this.permittedModelsRepository.delete({
       id: model.id,
       orgId: orgId,
+    });
+  }
+
+  private async deletePermittedImageGenerationModel(
+    orgId: UUID,
+    model: PermittedImageGenerationModel,
+  ): Promise<void> {
+    await this.permittedModelsRepository.delete({
+      id: model.id,
+      orgId,
     });
   }
 }

@@ -8,13 +8,11 @@ import ChatsPagination from './ChatsPagination';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import type { ChatListItem, Agent } from '../model/types';
+import type { ChatListItem } from '../model/types';
 
 interface ChatsPageProps {
   chats: ChatListItem[];
-  agents: Agent[];
   search?: string;
-  agentId?: string;
   hasFilters: boolean;
   pagination?: { total?: number; limit: number; offset: number };
   currentPage: number;
@@ -22,9 +20,7 @@ interface ChatsPageProps {
 
 export default function ChatsPage({
   chats,
-  agents,
   search,
-  agentId,
   hasFilters,
   pagination,
   currentPage,
@@ -41,7 +37,7 @@ export default function ChatsPage({
         <FullScreenMessageLayout
           header={
             <ContentAreaHeader
-              title={t('page.title')}
+              breadcrumbs={[{ label: t('page.title') }]}
               action={<HelpLink path="chat/" />}
             />
           }
@@ -57,13 +53,13 @@ export default function ChatsPage({
       <ContentAreaLayout
         contentHeader={
           <ContentAreaHeader
-            title={t('page.title')}
+            breadcrumbs={[{ label: t('page.title') }]}
             action={<HelpLink path="chat/" />}
           />
         }
         contentArea={
           <>
-            <ChatsFilters agents={agents} search={search} agentId={agentId} />
+            <ChatsFilters search={search} />
             {chats.length === 0 ? (
               <ChatsEmptyState hasFilters={hasFilters} />
             ) : (
@@ -77,7 +73,6 @@ export default function ChatsPage({
               currentPage={currentPage}
               totalPages={totalPages}
               search={search}
-              agentId={agentId}
             />
           </>
         }

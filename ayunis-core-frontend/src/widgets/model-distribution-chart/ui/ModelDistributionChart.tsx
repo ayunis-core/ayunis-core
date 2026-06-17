@@ -21,14 +21,14 @@ import { Pie, PieChart, Cell } from 'recharts';
 interface ChartDataItem {
   name: string;
   value: number;
-  tokens: number;
+  credits: number;
   fill: string;
 }
 
 interface ModelBreakdownItem {
   modelId: string;
   displayName: string;
-  tokens: number;
+  credits: number;
   percentage: number;
   color: string;
 }
@@ -148,7 +148,8 @@ export function ModelDistributionChart({
                       {model.displayName}
                     </div>
                     <span className="text-sm text-muted-foreground truncate">
-                      {formatCompact(model.tokens)} tokens
+                      {formatCompact(model.credits)}{' '}
+                      {t('charts.modelDistribution.creditsLabel')}
                     </span>
                   </div>
                 </div>

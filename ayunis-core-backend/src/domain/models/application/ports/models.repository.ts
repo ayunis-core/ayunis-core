@@ -2,6 +2,7 @@ import type { UUID } from 'crypto';
 import type { ModelProvider } from '../../domain/value-objects/model-provider.enum';
 import type { Model } from '../../domain/model.entity';
 import type { EmbeddingModel } from '../../domain/models/embedding.model';
+import type { ImageGenerationModel } from '../../domain/models/image-generation.model';
 import type { LanguageModel } from '../../domain/models/language.model';
 
 export type FindOneModelParams =
@@ -18,6 +19,9 @@ export abstract class ModelsRepository {
   abstract findOne(params: FindOneModelParams): Promise<Model | undefined>;
   abstract findOneLanguage(id: UUID): Promise<LanguageModel | undefined>;
   abstract findOneEmbedding(id: UUID): Promise<EmbeddingModel | undefined>;
+  abstract findOneImageGeneration(
+    id: UUID,
+  ): Promise<ImageGenerationModel | undefined>;
   abstract save(model: Model): Promise<void>;
   abstract delete(id: UUID): Promise<void>;
 }

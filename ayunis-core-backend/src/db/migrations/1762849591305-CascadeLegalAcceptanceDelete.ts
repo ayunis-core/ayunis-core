@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CascadeLegalAcceptanceDelete1762849591305
-  implements MigrationInterface
-{
+export class CascadeLegalAcceptanceDelete1762849591305 implements MigrationInterface {
   name = 'CascadeLegalAcceptanceDelete1762849591305';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

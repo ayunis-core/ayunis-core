@@ -23,7 +23,12 @@ export enum ModelErrorCode {
   MODEL_CREATION_FAILED = 'MODEL_CREATION_FAILED',
   MODEL_PROVIDER_INFO_NOT_FOUND = 'MODEL_PROVIDER_INFO_NOT_FOUND',
   MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED = 'MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED',
+  MULTIPLE_IMAGE_GENERATION_MODELS_NOT_ALLOWED = 'MULTIPLE_IMAGE_GENERATION_MODELS_NOT_ALLOWED',
+  IMAGE_GENERATION_MODEL_PROVIDER_NOT_SUPPORTED = 'IMAGE_GENERATION_MODEL_PROVIDER_NOT_SUPPORTED',
+  IMAGE_GENERATION_FAILED = 'IMAGE_GENERATION_FAILED',
   UNEXPECTED_MODEL_ERROR = 'UNEXPECTED_MODEL_ERROR',
+  DUPLICATE_TEAM_PERMITTED_MODEL = 'DUPLICATE_TEAM_PERMITTED_MODEL',
+  TEAM_NOT_FOUND_IN_ORG = 'TEAM_NOT_FOUND_IN_ORG',
 }
 
 /**
@@ -96,6 +101,28 @@ export class PermittedModelNotFoundError extends ModelError {
   constructor(id: UUID, metadata?: ErrorMetadata) {
     super(
       `Permitted model '${id}' not found`,
+      ModelErrorCode.MODEL_NOT_FOUND,
+      404,
+      metadata,
+    );
+  }
+}
+
+export class PermittedEmbeddingModelNotFoundForOrgError extends ModelError {
+  constructor(orgId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Permitted embedding model not found for org '${orgId}'`,
+      ModelErrorCode.MODEL_NOT_FOUND,
+      404,
+      metadata,
+    );
+  }
+}
+
+export class PermittedImageGenerationModelNotFoundForOrgError extends ModelError {
+  constructor(orgId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Permitted image generation model not found for org '${orgId}'`,
       ModelErrorCode.MODEL_NOT_FOUND,
       404,
       metadata,
@@ -315,6 +342,105 @@ export class MultipleEmbeddingModelsNotAllowedError extends ModelError {
     super(
       'Multiple embedding models are not allowed',
       ModelErrorCode.MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when multiple image-generation models are not allowed.
+ */
+export class MultipleImageGenerationModelsNotAllowedError extends ModelError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Multiple image-generation models are not allowed',
+      ModelErrorCode.MULTIPLE_IMAGE_GENERATION_MODELS_NOT_ALLOWED,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when an image-generation model uses an unsupported provider.
+ */
+export class ImageGenerationModelProviderNotSupportedError extends ModelError {
+  constructor(provider: ModelProvider, metadata?: ErrorMetadata) {
+    super(
+      `Image-generation models must use provider 'azure', received '${provider}'`,
+      ModelErrorCode.IMAGE_GENERATION_MODEL_PROVIDER_NOT_SUPPORTED,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when a team-scoped permitted model already exists for the
+ * given team + model combination.
+ */
+export class DuplicateTeamPermittedModelError extends ModelError {
+  constructor(teamId: UUID, modelId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Model '${modelId}' is already permitted for team '${teamId}'`,
+      ModelErrorCode.DUPLICATE_TEAM_PERMITTED_MODEL,
+      409,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when the specified team does not exist in the caller's org.
+ */
+export class TeamNotFoundInOrgError extends ModelError {
+  constructor(teamId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Team '${teamId}' not found in organization`,
+      ModelErrorCode.TEAM_NOT_FOUND_IN_ORG,
+      404,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when a permitted model does not belong to the specified team.
+ */
+export class PermittedModelNotInTeamError extends ModelError {
+  constructor(permittedModelId: UUID, teamId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Permitted model '${permittedModelId}' does not belong to team '${teamId}'`,
+      ModelErrorCode.MODEL_INVALID,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when image generation fails.
+ */
+export class ImageGenerationFailedError extends ModelError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(
+      `Image generation failed: ${reason}`,
+      ModelErrorCode.IMAGE_GENERATION_FAILED,
+      500,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when a non-language model is used where a language model is required.
+ */
+export class NotALanguageModelError extends ModelError {
+  constructor(modelId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Model '${modelId}' is not a language model`,
+      ModelErrorCode.MODEL_INVALID,
       400,
       metadata,
     );

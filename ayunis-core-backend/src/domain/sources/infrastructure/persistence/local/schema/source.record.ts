@@ -9,8 +9,14 @@ import {
 } from 'typeorm';
 import type { UUID } from 'crypto';
 import { BaseRecord } from '../../../../../../common/db/base-record';
-import { SourceType } from '../../../../domain/source-type.enum';
+import {
+  DataType,
+  FileType,
+  SourceType,
+  TextType,
+} from '../../../../domain/source-type.enum';
 import { SourceCreator } from '../../../../domain/source-creator.enum';
+import { SourceStatus } from '../../../../domain/source-status.enum';
 import { TextSourceDetailsRecord } from './text-source-details.record';
 import { DataSourceDetailsRecord } from './data-source-details.record';
 import { KnowledgeBaseRecord } from '../../../../../knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
@@ -28,6 +34,19 @@ export abstract class SourceRecord extends BaseRecord {
   })
   createdBy: SourceCreator;
 
+  @Column({
+    type: 'enum',
+    enum: SourceStatus,
+    default: SourceStatus.READY,
+  })
+  status: SourceStatus;
+
+  @Column({ type: 'text', nullable: true })
+  processingError: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  processingStartedAt: Date | null;
+
   @Column({ nullable: true })
   knowledgeBaseId: UUID | null;
 
@@ -41,18 +60,32 @@ export abstract class SourceRecord extends BaseRecord {
 
 @ChildEntity(SourceType.TEXT)
 export class TextSourceRecord extends SourceRecord {
+  @Column({ type: 'enum', enum: TextType })
+  textType: TextType;
+
+  @Column({ type: 'enum', enum: FileType, nullable: true })
+  fileType: FileType | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  url: string | null;
+
+  /** Link depth a URL source was crawled at; null for non-URL sources. */
+  @Column({ type: 'int', nullable: true })
+  maxDepth: number | null;
+
   @OneToOne(() => TextSourceDetailsRecord, (details) => details.source, {
     cascade: true,
-    eager: true,
   })
   textSourceDetails: TextSourceDetailsRecord;
 }
 
 @ChildEntity(SourceType.DATA)
 export class DataSourceRecord extends SourceRecord {
+  @Column({ type: 'enum', enum: DataType })
+  dataType: DataType;
+
   @OneToOne(() => DataSourceDetailsRecord, (details) => details.source, {
     cascade: true,
-    eager: true,
   })
   dataSourceDetails: DataSourceDetailsRecord;
 }

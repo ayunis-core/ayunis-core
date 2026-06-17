@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddCreatedByLLMFlagToSource1759761322612
-  implements MigrationInterface
-{
+export class AddCreatedByLLMFlagToSource1759761322612 implements MigrationInterface {
   name = 'AddCreatedByLLMFlagToSource1759761322612';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

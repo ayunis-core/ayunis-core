@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class RemovePermittedProviders1766053066285
-  implements MigrationInterface
-{
+export class RemovePermittedProviders1766053066285 implements MigrationInterface {
   name = 'RemovePermittedProviders1766053066285';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

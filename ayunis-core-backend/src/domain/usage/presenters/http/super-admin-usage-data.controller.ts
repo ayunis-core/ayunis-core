@@ -110,7 +110,7 @@ export class SuperAdminUsageDataController {
   @ApiQuery({ name: 'search', type: String, required: false })
   @ApiQuery({
     name: 'sortBy',
-    enum: ['tokens', 'requests', 'lastActivity', 'userName'],
+    enum: ['credits', 'requests', 'lastActivity', 'userName'],
     required: false,
   })
   @ApiQuery({ name: 'sortOrder', enum: ['asc', 'desc'], required: false })
@@ -121,7 +121,7 @@ export class SuperAdminUsageDataController {
     @Query('limit') limit: number = UsageConstants.DEFAULT_USER_USAGE_LIMIT,
     @Query('offset') offset: number = 0,
     @Query('search') search?: string,
-    @Query('sortBy') sortBy: UserUsageSortBy = 'tokens',
+    @Query('sortBy') sortBy: UserUsageSortBy = 'credits',
     @Query('sortOrder') sortOrder: SortOrder = 'desc',
   ) {
     const query = new GetUserUsageQuery({

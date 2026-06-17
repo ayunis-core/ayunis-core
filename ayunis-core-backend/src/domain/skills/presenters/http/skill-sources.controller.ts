@@ -34,6 +34,7 @@ import { RemoveSourceFromSkillCommand } from '../../application/use-cases/remove
 import { ListSkillSourcesQuery } from '../../application/use-cases/list-skill-sources/list-skill-sources.query';
 
 import { SkillAccessService } from '../../application/services/skill-access.service';
+import { SkillCreatorNameService } from '../../application/services/skill-creator-name.service';
 
 import {
   SkillResponseDto,
@@ -47,16 +48,15 @@ import { extname } from 'path';
 import { randomUUID } from 'crypto';
 import * as fs from 'fs';
 import { Transactional } from '@nestjs-cls/transactional';
-import { CreateFileSourceCommand } from 'src/domain/sources/application/use-cases/create-text-source/create-text-source.command';
-import { CreateTextSourceUseCase } from 'src/domain/sources/application/use-cases/create-text-source/create-text-source.use-case';
-import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
+import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
+import { StartDocumentProcessingCommand } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.command';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { Skill } from '../../domain/skill.entity';
 import {
-  DetectedFileType,
   detectFileType,
   getCanonicalMimeType,
+  isAudioFile,
   isDocumentFile,
   isPlainTextFile,
   isSpreadsheetFile,
@@ -67,8 +67,10 @@ import {
   EmptyFileDataError,
   MissingFileError,
 } from '../../application/skills.errors';
-import { parseCSV } from 'src/common/util/csv';
-import { parseExcel } from 'src/common/util/excel';
+import {
+  buildCsvSourceCommand,
+  buildSpreadsheetSourceCommands,
+} from 'src/domain/sources/application/util/data-source-parsing';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
 
@@ -83,9 +85,10 @@ export class SkillSourcesController {
     private readonly removeSourceFromSkillUseCase: RemoveSourceFromSkillUseCase,
     private readonly listSkillSourcesUseCase: ListSkillSourcesUseCase,
     private readonly skillDtoMapper: SkillDtoMapper,
-    private readonly createTextSourceUseCase: CreateTextSourceUseCase,
+    private readonly startDocumentProcessingUseCase: StartDocumentProcessingUseCase,
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
     private readonly skillAccessService: SkillAccessService,
+    private readonly skillCreatorNameService: SkillCreatorNameService,
   ) {}
 
   @Get(':id/sources')
@@ -131,7 +134,7 @@ export class SkillSourcesController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'The file to upload',
+          description: 'The file to upload (max 25 MB)',
         },
       },
       required: ['file'],
@@ -147,9 +150,13 @@ export class SkillSourcesController {
     status: 400,
     description: 'Invalid or unsupported file type',
   })
+  @ApiResponse({
+    status: 413,
+    description: 'File exceeds the 25 MB upload limit',
+  })
   @UseInterceptors(
+    /* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP Content-Length */
     FileInterceptor('file', {
-      // eslint-disable-next-line sonarjs/content-length -- false positive: diskStorage config, not a Content-Length header
       storage: diskStorage({
         destination: './uploads',
         filename: (req, file, cb) => {
@@ -157,9 +164,10 @@ export class SkillSourcesController {
           cb(null, `${randomName}${extname(file.originalname)}`);
         },
       }),
+      limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB
     }),
+    /* eslint-enable sonarjs/content-length */
   )
-  @Transactional()
   async addFileSource(
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) skillId: UUID,
@@ -190,7 +198,10 @@ export class SkillSourcesController {
 
       fs.unlinkSync(file.path);
       const context = await this.skillAccessService.resolveUserContext(skillId);
-      return this.skillDtoMapper.toDto(updatedSkill, context);
+      const creatorName = context.isShared
+        ? await this.skillCreatorNameService.resolveOne(updatedSkill.userId)
+        : null;
+      return this.skillDtoMapper.toDto(updatedSkill, context, creatorName);
     } catch (error: unknown) {
       this.logger.error('addFileSource', { error: error as Error });
       fs.unlinkSync(file.path);
@@ -237,99 +248,103 @@ export class SkillSourcesController {
     skillId: UUID,
     file: { originalname: string; mimetype: string; path: string },
   ): Promise<Skill> {
-    const sources: Source[] = [];
     const detectedType = detectFileType(file.mimetype, file.originalname);
 
-    if (isDocumentFile(detectedType) || isPlainTextFile(detectedType)) {
-      const source = await this.createDocumentSource(file, detectedType);
-      sources.push(source);
+    if (
+      isDocumentFile(detectedType) ||
+      isPlainTextFile(detectedType) ||
+      isAudioFile(detectedType)
+    ) {
+      const fileData = fs.readFileSync(file.path);
+      const canonicalMimeType = getCanonicalMimeType(detectedType);
+      if (!canonicalMimeType) {
+        throw new Error(
+          `Unable to determine MIME type for detected file type: ${detectedType}`,
+        );
+      }
+      const source = await this.startDocumentProcessingUseCase.execute(
+        new StartDocumentProcessingCommand({
+          fileData,
+          fileName: file.originalname,
+          fileType: canonicalMimeType,
+        }),
+      );
+      return this.addSourceToSkillUseCase.execute(
+        new AddSourceToSkillCommand({ skillId, sourceId: source.id }),
+      );
     } else if (isCSVFile(detectedType)) {
-      const source = await this.createCsvSource(file);
-      sources.push(source);
+      return this.processCSVUpload(skillId, file);
     } else if (isSpreadsheetFile(detectedType)) {
-      const sheetSources = await this.createSpreadsheetSources(file);
-      sources.push(...sheetSources);
+      return this.processSpreadsheetUpload(skillId, file);
     } else {
       throw new UnsupportedFileTypeError(
         detectedType === 'unknown' ? file.originalname : detectedType,
-        ['PDF', 'DOCX', 'PPTX', 'TXT', 'CSV', 'XLSX', 'XLS'],
+        [
+          'PDF',
+          'DOCX',
+          'PPTX',
+          'TXT',
+          'CSV',
+          'XLSX',
+          'XLS',
+          'MP3',
+          'M4A',
+          'WAV',
+          'WEBM',
+        ],
       );
     }
+  }
 
+  @Transactional()
+  private async processCSVUpload(
+    skillId: UUID,
+    file: { originalname: string; path: string },
+  ): Promise<Skill> {
+    const source = await this.createCsvSource(file);
+    return this.addSourceToSkillUseCase.execute(
+      new AddSourceToSkillCommand({ skillId, sourceId: source.id }),
+    );
+  }
+
+  @Transactional()
+  private async processSpreadsheetUpload(
+    skillId: UUID,
+    file: { originalname: string; path: string },
+  ): Promise<Skill> {
+    const sources = await this.createSpreadsheetSources(file);
     let updatedSkill: Skill | undefined;
     for (const source of sources) {
       updatedSkill = await this.addSourceToSkillUseCase.execute(
         new AddSourceToSkillCommand({ skillId, sourceId: source.id }),
       );
     }
-
     return updatedSkill!;
-  }
-
-  private async createDocumentSource(
-    file: { originalname: string; path: string },
-    detectedType: DetectedFileType,
-  ): Promise<Source> {
-    const fileData = fs.readFileSync(file.path);
-    const canonicalMimeType = getCanonicalMimeType(detectedType);
-    if (!canonicalMimeType) {
-      throw new Error(
-        `Unable to determine MIME type for detected file type: ${detectedType}`,
-      );
-    }
-
-    return this.createTextSourceUseCase.execute(
-      new CreateFileSourceCommand({
-        fileType: canonicalMimeType,
-        fileData: fileData,
-        fileName: file.originalname,
-      }),
-    );
   }
 
   private async createCsvSource(file: {
     originalname: string;
     path: string;
   }): Promise<Source> {
-    const fileData = fs.readFileSync(file.path, 'utf8');
-    const { headers, data } = parseCSV(fileData);
-    return this.createDataSourceUseCase.execute(
-      new CreateCSVDataSourceCommand({
-        name: file.originalname,
-        data: { headers, rows: data },
-      }),
-    );
+    const command = buildCsvSourceCommand(file);
+    return this.createDataSourceUseCase.execute(command);
   }
 
   private async createSpreadsheetSources(file: {
     originalname: string;
     path: string;
   }): Promise<Source[]> {
-    const fileData = fs.readFileSync(file.path);
-    const sheets = parseExcel(fileData);
+    const commands = buildSpreadsheetSourceCommands(file);
 
-    if (sheets.length === 0) {
+    if (commands.length === 0) {
       throw new EmptyFileDataError(file.originalname);
     }
 
-    const baseFileName = file.originalname.replace(/\.(xlsx|xls)$/i, '');
     const sources: Source[] = [];
-
-    for (const sheet of sheets) {
-      const sourceName =
-        sheets.length === 1
-          ? `${baseFileName}.csv`
-          : `${baseFileName}_${sheet.sheetName.replace(/\s+/g, '_')}.csv`;
-
-      const source = await this.createDataSourceUseCase.execute(
-        new CreateCSVDataSourceCommand({
-          name: sourceName,
-          data: { headers: sheet.headers, rows: sheet.rows },
-        }),
-      );
+    for (const command of commands) {
+      const source = await this.createDataSourceUseCase.execute(command);
       sources.push(source);
     }
-
     return sources;
   }
 }

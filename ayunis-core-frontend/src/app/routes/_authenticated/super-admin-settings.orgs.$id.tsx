@@ -16,7 +16,16 @@ const USERS_PER_PAGE = 25;
 
 const searchSchema = z.object({
   tab: z
-    .enum(['org', 'users', 'subscriptions', 'models', 'trials', 'usage'])
+    .enum([
+      'org',
+      'users',
+      'subscriptions',
+      'models',
+      'trials',
+      'usage',
+      'crawl-domains',
+      'addons',
+    ])
     .optional(),
   usersSearch: z.string().optional(),
   usersPage: z.number().min(1).optional().catch(1),

@@ -1,8 +1,7 @@
 export { useFeatureToggles } from './useFeatureToggles';
 export {
   useIsFeatureEnabled,
-  useIsAgentsEnabled,
   useIsKnowledgeBasesEnabled,
-  useIsPromptsEnabled,
+  useIsLetterheadsEnabled,
   useIsSkillsEnabled,
 } from './useIsFeatureEnabled';

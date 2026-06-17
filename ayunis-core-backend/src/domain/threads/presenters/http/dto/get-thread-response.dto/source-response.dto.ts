@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import {
   SourceType,
   TextType,
@@ -22,6 +23,18 @@ export abstract class SourceResponseDto {
 
   @ApiProperty({ description: 'Creator of the source', enum: SourceCreator })
   createdBy: SourceCreator;
+
+  @ApiProperty({
+    description: 'Processing status of the source',
+    enum: SourceStatus,
+  })
+  status: SourceStatus;
+
+  @ApiProperty({
+    description: 'Error message if processing failed',
+    required: false,
+  })
+  processingError?: string;
 
   @ApiProperty({ description: 'Creation timestamp' })
   createdAt: string;

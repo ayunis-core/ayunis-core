@@ -25,7 +25,8 @@ skills/
 │   ├── services/
 │   │   ├── marketplace-skill-installation.service.ts  # Marketplace install logic (resolve name, create, activate)
 │   │   ├── skill-access.service.ts        # Shared access-check logic (exported cross-module, used by runs)
-│   │   └── skill-activation.service.ts    # Activates a skill on a thread (sources, MCP, instructions)
+│   │   ├── skill-activation.service.ts    # Activates a skill on a thread (sources, MCP, instructions)
+│   │   └── skill-creator-name.service.ts  # Resolves shared-skill creators' display names (single + batched)
 │   ├── listeners/
 │   │   ├── share-deleted.listener.ts      # Reconciles activations on share deletion
 │   │   └── user-created.listener.ts       # Installs pre-installed marketplace skills for new users
@@ -86,7 +87,7 @@ When a skill share is deleted, the `ShareDeletedListener` handles cleanup of act
 - **McpModule** — for MCP integration validation and batch fetch
 - **ThreadsModule** — for adding sources and MCP integrations to threads during skill activation
 - **SharesModule** — for share authorization strategy registration
-- **UsersModule** — for resolving org-scoped share members (`FindAllUserIdsByOrgIdUseCase`)
+- **UsersModule** — for resolving org-scoped share members (`FindAllUserIdsByOrgIdUseCase`) and shared-skill creator display names (`FindUsersByIdsUseCase`, consumed by `SkillCreatorNameService`)
 - **TeamsModule** — for resolving team-scoped share members (`FindAllUserIdsByTeamIdUseCase`)
 - **MarketplaceModule** — for fetching marketplace skill definitions (`GetMarketplaceSkillUseCase`)
 - **ContextService** — for user context (userId, orgId)

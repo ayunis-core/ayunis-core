@@ -1,9 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
-import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
+import { GetSourcesByKnowledgeBaseIdUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-knowledge-base-id/get-sources-by-knowledge-base-id.use-case';
+import { GetSourcesByKnowledgeBaseIdQuery } from 'src/domain/sources/application/use-cases/get-sources-by-knowledge-base-id/get-sources-by-knowledge-base-id.query';
 import { DeleteKnowledgeBaseCommand } from './delete-knowledge-base.command';
 import {
   KnowledgeBaseNotFoundError,
@@ -17,7 +18,7 @@ export class DeleteKnowledgeBaseUseCase {
 
   constructor(
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
-    private readonly sourceRepository: SourceRepository,
+    private readonly getSourcesByKnowledgeBaseIdUseCase: GetSourcesByKnowledgeBaseIdUseCase,
     private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
   ) {}
 
@@ -36,11 +37,12 @@ export class DeleteKnowledgeBaseUseCase {
         throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
       }
 
-      const sources = await this.sourceRepository.findByKnowledgeBaseId(
-        command.knowledgeBaseId,
+      const sources = await this.getSourcesByKnowledgeBaseIdUseCase.execute(
+        new GetSourcesByKnowledgeBaseIdQuery(command.knowledgeBaseId),
       );
+      const sourceIds = sources.map((s) => s.id);
       await this.deleteSourcesUseCase.execute(
-        new DeleteSourcesCommand(sources),
+        new DeleteSourcesCommand(sourceIds),
       );
 
       await this.knowledgeBaseRepository.delete(existing);

@@ -40,7 +40,11 @@ export class CreateSkillTemplateUseCase {
       const skillTemplate: SkillTemplate =
         command.distributionMode === DistributionMode.ALWAYS_ON
           ? new AlwaysOnSkillTemplate(baseParams)
-          : new PreCreatedCopySkillTemplate(baseParams);
+          : new PreCreatedCopySkillTemplate({
+              ...baseParams,
+              defaultActive: command.defaultActive,
+              defaultPinned: command.defaultPinned,
+            });
 
       return await this.skillTemplateRepository.create(skillTemplate);
     } catch (error) {

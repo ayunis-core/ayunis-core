@@ -2,6 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import CreateSkillDialog from './CreateSkillDialog';
+import MarketplacePromoCard from './MarketplacePromoCard';
 import SkillCard from './SkillCard';
 import type { Skill } from '../model/openapi';
 import SkillsEmptyState from './SkillsEmptyState';
@@ -44,7 +45,10 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
       <AppLayout>
         <FullScreenMessageLayout
           header={
-            <ContentAreaHeader title={t('page.title')} action={headerAction} />
+            <ContentAreaHeader
+              breadcrumbs={[{ label: t('page.title') }]}
+              action={headerAction}
+            />
           }
         >
           <SkillsEmptyState />
@@ -57,7 +61,10 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
     <AppLayout>
       <ContentAreaLayout
         contentHeader={
-          <ContentAreaHeader title={t('page.title')} action={headerAction} />
+          <ContentAreaHeader
+            breadcrumbs={[{ label: t('page.title') }]}
+            action={headerAction}
+          />
         }
         contentArea={
           <Tabs defaultValue="personal" className="w-full">
@@ -65,6 +72,7 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
               <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
               <TabsTrigger value="shared">{t('tabs.shared')}</TabsTrigger>
             </TabsList>
+            <MarketplacePromoCard />
             <TabsContent value="personal" className="mt-4">
               {personalSkills.length === 0 ? (
                 <EmptyState

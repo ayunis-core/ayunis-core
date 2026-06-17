@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddOriginSkillIdToThreadSourceAssignments1771334174752
-  implements MigrationInterface
-{
+export class AddOriginSkillIdToThreadSourceAssignments1771334174752 implements MigrationInterface {
   name = 'AddOriginSkillIdToThreadSourceAssignments1771334174752';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

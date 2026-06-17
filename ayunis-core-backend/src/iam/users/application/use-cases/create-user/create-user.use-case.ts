@@ -11,9 +11,6 @@ import {
   UserEmailProviderBlacklistedError,
 } from '../../users.errors';
 import { HashingError } from '../../../../hashing/application/hashing.errors';
-import { UserCreatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/user-created.webhook-event';
-import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { ConfigService } from '@nestjs/config';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UserCreatedEvent } from '../../events/user-created.event';
@@ -25,7 +22,6 @@ export class CreateUserUseCase {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly hashTextUseCase: HashTextUseCase,
-    private readonly sendWebhookUseCase: SendWebhookUseCase,
     private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -85,6 +81,7 @@ export class CreateUserUseCase {
         role: command.role,
         name: command.name,
         hasAcceptedMarketing: command.hasAcceptedMarketing,
+        department: command.department,
       });
 
       const createdUser = await this.usersRepository.create(user);
@@ -93,20 +90,10 @@ export class CreateUserUseCase {
         role: command.role,
       });
 
-      // Send webhook asynchronously (don't block the main operation)
-      void this.sendWebhookUseCase.execute(
-        new SendWebhookCommand(
-          new UserCreatedWebhookEvent({
-            user: createdUser,
-            orgId: command.orgId,
-          }),
-        ),
-      );
-
       this.eventEmitter
         .emitAsync(
           UserCreatedEvent.EVENT_NAME,
-          new UserCreatedEvent(createdUser.id, command.orgId),
+          new UserCreatedEvent(createdUser.id, command.orgId, createdUser),
         )
         .catch((err: unknown) => {
           this.logger.error('Failed to emit UserCreatedEvent', {

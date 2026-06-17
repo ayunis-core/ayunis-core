@@ -7,8 +7,14 @@ import { PermittedModelsRepository } from '../../ports/permitted-models.reposito
 import { ModelsRepository } from '../../ports/models.repository';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { ModelNotFoundError } from '../../models.errors';
+import {
+  ImageGenerationModelProviderNotSupportedError,
+  ModelNotFoundError,
+  UnexpectedModelError,
+} from '../../models.errors';
+import { ModelPolicyService } from '../../services/model-policy.service';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -27,12 +33,15 @@ describe('CreatePermittedModelUseCase', () => {
       create: jest.fn(),
       findAll: jest.fn(),
       delete: jest.fn(),
-      findByOrgAndModel: jest.fn(),
+      findOne: jest.fn(),
     };
 
     const mockModelsRepository = {
       findOne: jest.fn(),
       findAll: jest.fn(),
+      findOneLanguage: jest.fn(),
+      findOneEmbedding: jest.fn(),
+      findOneImageGeneration: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
     };
@@ -44,6 +53,7 @@ describe('CreatePermittedModelUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreatePermittedModelUseCase,
+        ModelPolicyService,
         {
           provide: PermittedModelsRepository,
           useValue: mockPermittedModelsRepository,
@@ -141,7 +151,7 @@ describe('CreatePermittedModelUseCase', () => {
       expect(permittedModelsRepository.create).not.toHaveBeenCalled();
     });
 
-    it('should handle repository creation errors', async () => {
+    it('wraps non-ApplicationError repository failures in UnexpectedModelError', async () => {
       // Arrange
       const command = new CreatePermittedModelCommand(mockModelId, mockOrgId);
 
@@ -166,14 +176,61 @@ describe('CreatePermittedModelUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
-        'Database constraint violation',
+        UnexpectedModelError,
       );
 
       expect(permittedModelsRepository.create).toHaveBeenCalled();
-      expect(errorSpy).toHaveBeenCalledWith(
-        'Error creating permitted model',
-        repositoryError,
+      expect(errorSpy).toHaveBeenCalledWith('Error creating permitted model', {
+        error: repositoryError,
+      });
+    });
+
+    it('should reject non-Azure image-generation models explicitly', async () => {
+      const command = new CreatePermittedModelCommand(mockModelId, mockOrgId);
+
+      const mockModel = new ImageGenerationModel({
+        id: mockModelId,
+        name: 'gpt-image-1',
+        displayName: 'GPT Image 1',
+        provider: ModelProvider.OPENAI,
+        isArchived: false,
+      });
+
+      modelsRepository.findOne.mockResolvedValue(mockModel);
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        ImageGenerationModelProviderNotSupportedError,
       );
+      expect(permittedModelsRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('should create an Azure image-generation permitted model', async () => {
+      const command = new CreatePermittedModelCommand(mockModelId, mockOrgId);
+
+      const mockModel = new ImageGenerationModel({
+        id: mockModelId,
+        name: 'gpt-image-1',
+        displayName: 'GPT Image 1',
+        provider: ModelProvider.AZURE,
+        isArchived: false,
+      });
+      const mockPermittedModel = new PermittedModel({
+        model: mockModel,
+        orgId: mockOrgId,
+      });
+
+      modelsRepository.findOne.mockResolvedValue(mockModel);
+      permittedModelsRepository.create.mockResolvedValue(mockPermittedModel);
+
+      const result = await useCase.execute(command);
+
+      expect(permittedModelsRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: mockModel,
+          orgId: mockOrgId,
+        }),
+      );
+      expect(result).toBe(mockPermittedModel);
     });
 
     it('should re-throw ModelNotFoundError without logging', async () => {

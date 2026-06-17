@@ -1,11 +1,11 @@
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import type { ModelProvider } from '../../models/domain/value-objects/model-provider.enum';
-import type { Currency } from '../../models/domain/value-objects/currency.enum';
 
 export class Usage {
   public readonly id: UUID;
-  public readonly userId: UUID;
+  public readonly userId: UUID | null;
+  public readonly apiKeyId: UUID | null;
   public readonly organizationId: UUID;
   /**
    * The base model ID (not the permitted model ID).
@@ -18,14 +18,16 @@ export class Usage {
   public readonly inputTokens: number;
   public readonly outputTokens: number;
   public readonly totalTokens: number;
+  /** Cost in EUR */
   public readonly cost?: number;
-  public readonly currency?: Currency;
+  public readonly creditsConsumed?: number;
   public readonly requestId: UUID;
   public readonly createdAt: Date;
 
   constructor(params: {
     id?: UUID;
-    userId: UUID;
+    userId: UUID | null;
+    apiKeyId?: UUID | null;
     organizationId: UUID;
     modelId: UUID;
     provider: ModelProvider;
@@ -33,12 +35,13 @@ export class Usage {
     outputTokens: number;
     totalTokens: number;
     cost?: number;
-    currency?: Currency;
+    creditsConsumed?: number;
     requestId: UUID;
     createdAt?: Date;
   }) {
     this.id = params.id ?? randomUUID();
     this.userId = params.userId;
+    this.apiKeyId = params.apiKeyId ?? null;
     this.organizationId = params.organizationId;
     this.modelId = params.modelId;
     this.provider = params.provider;
@@ -46,7 +49,7 @@ export class Usage {
     this.outputTokens = params.outputTokens;
     this.totalTokens = params.totalTokens;
     this.cost = params.cost;
-    this.currency = params.currency;
+    this.creditsConsumed = params.creditsConsumed;
     this.requestId = params.requestId;
     this.createdAt = params.createdAt ?? new Date();
   }

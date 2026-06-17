@@ -36,7 +36,12 @@ export class KnowledgeBaseDtoMapper {
       createdBy: source.createdBy,
       createdAt: source.createdAt.toISOString(),
       updatedAt: source.updatedAt.toISOString(),
+      status: source.status,
     };
+
+    if (source.processingError) {
+      dto.processingError = source.processingError;
+    }
 
     if (source instanceof TextSource) {
       dto.textType = source.textType;

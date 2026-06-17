@@ -5,9 +5,10 @@ import {
   InferenceInput,
   InferenceResponse,
 } from '../../ports/inference.handler';
-import { InferenceFailedError, ModelError } from '../../models.errors';
+import { InferenceFailedError } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
+import { extractUpstreamStatus } from '../../helpers/extract-upstream-status.helper';
 
 @Injectable()
 export class GetInferenceUseCase {
@@ -19,7 +20,13 @@ export class GetInferenceUseCase {
   ) {}
 
   async execute(command: GetInferenceCommand): Promise<InferenceResponse> {
-    this.logger.log('triggerInference', command);
+    this.logger.log('triggerInference', {
+      model: command.model.name,
+      messageCount: command.messages.length,
+      toolCount: command.tools.length,
+      toolChoice: command.toolChoice,
+      hasInstructions: Boolean(command.instructions),
+    });
 
     const orgId = this.contextService.get('orgId');
     if (!orgId) {
@@ -27,55 +34,40 @@ export class GetInferenceUseCase {
     }
 
     try {
-      // Get the appropriate handler for the model provider
       const inferenceHandler = this.inferenceHandlerRegistry.getHandler(
         command.model.provider,
       );
 
-      // Execute inference
-      return await inferenceHandler
-        .answer(
-          new InferenceInput({
-            model: command.model,
-            messages: command.messages,
-            tools: command.tools,
-            toolChoice: command.toolChoice,
-            orgId,
-          }),
-        )
-        .catch((error) => {
-          if (error instanceof ModelError) {
-            throw error;
-          }
-          this.logger.error('Inference failed', {
-            model: command.model,
-            messages: command.messages,
-            tools: command.tools,
-            toolChoice: command.toolChoice,
-            error: error instanceof Error ? error : new Error('Unknown error'),
-          });
-          throw new InferenceFailedError(
-            error instanceof Error
-              ? error.message
-              : 'Unknown error while triggering inference',
-          );
-        });
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Inference failed', {
-        model: command.model,
-        messages: command.messages,
-        tools: command.tools,
-        toolChoice: command.toolChoice,
-        error: error instanceof Error ? error : new Error('Unknown error'),
-      });
-      throw new InferenceFailedError(
-        error instanceof Error
-          ? error.message
-          : 'Unknown error while triggering inference',
+      return await inferenceHandler.answer(
+        new InferenceInput({
+          model: command.model,
+          messages: command.messages,
+          systemPrompt: command.instructions,
+          tools: command.tools,
+          toolChoice: command.toolChoice,
+          orgId,
+        }),
       );
+    } catch (error) {
+      this.handleInferenceError(error, command);
     }
+  }
+
+  private handleInferenceError(
+    error: unknown,
+    command: GetInferenceCommand,
+  ): never {
+    if (error instanceof ApplicationError) throw error;
+    const status = extractUpstreamStatus(error);
+    this.logger.error('Provider inference failed', {
+      model: command.model.name,
+      provider: command.model.provider,
+      messageCount: command.messages.length,
+      toolCount: command.tools.length,
+      toolChoice: command.toolChoice,
+      errorName: error instanceof Error ? error.name : 'Unknown',
+      status,
+    });
+    throw new InferenceFailedError('Provider inference failed', { status });
   }
 }

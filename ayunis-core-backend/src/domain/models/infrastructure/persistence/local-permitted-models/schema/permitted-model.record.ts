@@ -2,10 +2,18 @@ import { UUID } from 'crypto';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { Org } from '../../../../../../iam/orgs/domain/org.entity';
 import { OrgRecord } from '../../../../../../iam/orgs/infrastructure/repositories/local/schema/org.record';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Check, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { ModelRecord } from '../../local-models/schema/model.record';
+import { TeamRecord } from '../../../../../../iam/teams/infrastructure/repositories/local/schema/team.record';
+import { PermittedModelScope } from '../../../../domain/value-objects/permitted-model-scope.enum';
 
 @Entity({ name: 'permitted_models' })
+@Index(['orgId', 'modelId'], { unique: true, where: `"scope" = 'org'` })
+@Index(['scopeId', 'modelId'], { unique: true, where: `"scope" = 'team'` })
+@Check(
+  'CHK_permitted_models_scope_team',
+  `("scope" = 'org' AND "scope_id" IS NULL) OR ("scope" = 'team' AND "scope_id" IS NOT NULL)`,
+)
 export class PermittedModelRecord extends BaseRecord {
   @Column({ nullable: false })
   orgId: UUID;
@@ -25,4 +33,18 @@ export class PermittedModelRecord extends BaseRecord {
 
   @Column({ nullable: false, default: false })
   anonymousOnly: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: PermittedModelScope,
+    default: PermittedModelScope.ORG,
+  })
+  scope: PermittedModelScope;
+
+  @Column({ name: 'scope_id', nullable: true })
+  scopeId: UUID | null;
+
+  @ManyToOne(() => TeamRecord, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'scope_id' })
+  team: TeamRecord | null;
 }

@@ -3,10 +3,17 @@
     "page": {
       "add": "Team hinzufügen"
     },
+    "filters": {
+      "searchPlaceholder": "Teams suchen..."
+    },
     "list": {
       "emptyTitle": "Noch keine Teams",
       "emptyDescription": "Erstellen Sie Ihr erstes Team, um Ihre Benutzer zu organisieren.",
-      "createdAt": "Erstellt am {{date}}"
+      "noMatchesTitle": "Keine Teams gefunden",
+      "noMatchesDescription": "Keine Teams entsprechen Ihrer Suche.",
+      "createdAt": "Erstellt am {{date}}",
+      "memberCount_one": "{{count}} Mitglied",
+      "memberCount_other": "{{count}} Mitglieder"
     },
     "createDialog": {
       "title": "Team erstellen",
@@ -79,6 +86,28 @@
       "notInSameOrg": "Benutzer muss in derselben Organisation sein",
       "userNotFound": "Benutzer nicht gefunden"
     },
+    "tabs": {
+      "members": "Mitglieder",
+      "models": "Modelle"
+    },
+    "models": {
+      "overrideTitle": "Modellzugriff überschreiben",
+      "overrideDescription": "Wenn aktiviert, sehen die Mitglieder dieses Teams nur die unten ausgewählten Modelle anstelle der Standard-Modelle der Organisation.",
+      "overrideLabel": "Modellzugriff überschreiben",
+      "overrideDisabledMessage": "Dieses Team verwendet die Modelleinstellungen der Organisation. Aktivieren Sie die Überschreibung, um einzuschränken, auf welche Modelle dieses Team zugreifen kann.",
+      "overrideToggleSuccess": "Modellüberschreibung aktualisiert",
+      "overrideToggleError": "Modellüberschreibung konnte nicht aktualisiert werden",
+      "overrideToggleNotFound": "Team nicht gefunden",
+      "enableSuccess": "Modell für Team aktiviert",
+      "enableError": "Modell konnte nicht für Team aktiviert werden",
+      "enableAlreadyEnabled": "Dieses Modell ist bereits für das Team aktiviert",
+      "enableModelNotFound": "Modell nicht gefunden",
+      "enableModelInvalid": "Dieses Modell kann nicht für das Team aktiviert werden",
+      "disableSuccess": "Modell für Team deaktiviert",
+      "disableError": "Modell konnte nicht für Team deaktiviert werden",
+      "disableModelNotFound": "Modell nicht gefunden",
+      "disableModelInvalid": "Dieses Modell kann nicht für das Team deaktiviert werden"
+    },
     "removeMember": {
       "confirmTitle": "Mitglied entfernen",
       "confirmDescription": "Sind Sie sicher, dass Sie dieses Mitglied aus dem Team entfernen möchten?",
@@ -87,6 +116,21 @@
       "success": "Mitglied erfolgreich entfernt",
       "error": "Mitglied konnte nicht entfernt werden",
       "notFound": "Mitglied nicht gefunden"
+    }
+  },
+  "models": {
+    "defaultModel": {
+      "title": "Team-Standardmodell",
+      "description": "Wählen Sie das Standardmodell für die Mitglieder dieses Teams.",
+      "label": "Standardmodell",
+      "helper": "Teammitglieder starten mit diesem Modell, sofern sie kein anderes auswählen.",
+      "placeholder": "Standardmodell auswählen",
+      "loading": "Modelle werden geladen...",
+      "empty": "Aktivieren Sie mindestens ein Modell, um ein Standardmodell festzulegen.",
+      "success": "Team-Standardmodell aktualisiert",
+      "error": "Team-Standardmodell konnte nicht festgelegt werden",
+      "modelNotFound": "Modell nicht gefunden",
+      "modelInvalid": "Dieses Modell kann nicht als Standard für das Team festgelegt werden"
     }
   }
 }

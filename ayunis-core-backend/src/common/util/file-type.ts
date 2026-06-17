@@ -22,6 +22,17 @@ export const MIME_TYPES = {
 
   // Plain text
   TXT: 'text/plain',
+
+  // Markdown
+  MD: 'text/markdown',
+
+  // Audio — formats supported by the STT pipeline (Mistral voxtral).
+  // Keep this list in sync with TranscribeUseCase's supportedMimeTypes.
+  MP3: 'audio/mpeg',
+  M4A: 'audio/x-m4a',
+  M4A_ALT: 'audio/mp4',
+  WAV: 'audio/wav',
+  WEBM: 'audio/webm',
 } as const;
 
 /**
@@ -35,6 +46,11 @@ export const FILE_EXTENSIONS = {
   XLS: '.xls',
   CSV: '.csv',
   TXT: '.txt',
+  MD: '.md',
+  MP3: '.mp3',
+  M4A: '.m4a',
+  WAV: '.wav',
+  WEBM: '.webm',
 } as const;
 
 export type DetectedFileType =
@@ -45,6 +61,10 @@ export type DetectedFileType =
   | 'xls'
   | 'csv'
   | 'txt'
+  | 'mp3'
+  | 'm4a'
+  | 'wav'
+  | 'webm'
   | 'unknown';
 
 /** Lookup: MIME type → detected file type */
@@ -56,6 +76,12 @@ const MIME_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [MIME_TYPES.CSV]: 'csv',
   // Note: MIME_TYPES.XLS is intentionally excluded — XLS MIME can also indicate CSV files
   // Note: MIME_TYPES.TXT is intentionally excluded — text/plain is too broad (matches .md, .log, .json, etc.)
+  [MIME_TYPES.MD]: 'txt',
+  [MIME_TYPES.MP3]: 'mp3',
+  [MIME_TYPES.M4A]: 'm4a',
+  [MIME_TYPES.M4A_ALT]: 'm4a',
+  [MIME_TYPES.WAV]: 'wav',
+  [MIME_TYPES.WEBM]: 'webm',
 };
 
 /** Lookup: file extension → detected file type */
@@ -67,6 +93,11 @@ const EXT_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [FILE_EXTENSIONS.XLS]: 'xls',
   [FILE_EXTENSIONS.CSV]: 'csv',
   [FILE_EXTENSIONS.TXT]: 'txt',
+  [FILE_EXTENSIONS.MD]: 'txt',
+  [FILE_EXTENSIONS.MP3]: 'mp3',
+  [FILE_EXTENSIONS.M4A]: 'm4a',
+  [FILE_EXTENSIONS.WAV]: 'wav',
+  [FILE_EXTENSIONS.WEBM]: 'webm',
 };
 
 /**
@@ -99,8 +130,7 @@ export function isPlainTextFile(fileType: DetectedFileType): boolean {
 }
 
 /**
- * Check if the file type is a document that should be processed through Docling
- * (PDF, Word, PowerPoint)
+ * Check if the file type is a document (PDF, Word, PowerPoint)
  */
 export function isDocumentFile(fileType: DetectedFileType): boolean {
   return fileType === 'pdf' || fileType === 'docx' || fileType === 'pptx';
@@ -121,28 +151,41 @@ export function isCSVFile(fileType: DetectedFileType): boolean {
 }
 
 /**
+ * Check if the file type is an audio file (MP3, M4A, WAV, WebM)
+ */
+export function isAudioFile(fileType: DetectedFileType): boolean {
+  return (
+    fileType === 'mp3' ||
+    fileType === 'm4a' ||
+    fileType === 'wav' ||
+    fileType === 'webm'
+  );
+}
+
+const CANONICAL_MIME_BY_FILE_TYPE: Record<
+  Exclude<DetectedFileType, 'unknown'>,
+  string
+> = {
+  pdf: MIME_TYPES.PDF,
+  docx: MIME_TYPES.DOCX,
+  pptx: MIME_TYPES.PPTX,
+  xlsx: MIME_TYPES.XLSX,
+  xls: MIME_TYPES.XLS,
+  csv: MIME_TYPES.CSV,
+  txt: MIME_TYPES.TXT,
+  mp3: MIME_TYPES.MP3,
+  m4a: MIME_TYPES.M4A,
+  wav: MIME_TYPES.WAV,
+  webm: MIME_TYPES.WEBM,
+};
+
+/**
  * Get the canonical MIME type for a detected file type.
  * This ensures we use the correct MIME type regardless of what the browser sent.
  */
 export function getCanonicalMimeType(
   fileType: DetectedFileType,
 ): string | null {
-  switch (fileType) {
-    case 'pdf':
-      return MIME_TYPES.PDF;
-    case 'docx':
-      return MIME_TYPES.DOCX;
-    case 'pptx':
-      return MIME_TYPES.PPTX;
-    case 'xlsx':
-      return MIME_TYPES.XLSX;
-    case 'xls':
-      return MIME_TYPES.XLS;
-    case 'csv':
-      return MIME_TYPES.CSV;
-    case 'txt':
-      return MIME_TYPES.TXT;
-    case 'unknown':
-      return null;
-  }
+  if (fileType === 'unknown') return null;
+  return CANONICAL_MIME_BY_FILE_TYPE[fileType];
 }

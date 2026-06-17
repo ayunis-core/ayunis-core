@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CascadeDeleteSharesOnScopeDelete1769163990566
-  implements MigrationInterface
-{
+export class CascadeDeleteSharesOnScopeDelete1769163990566 implements MigrationInterface {
   name = 'CascadeDeleteSharesOnScopeDelete1769163990566';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

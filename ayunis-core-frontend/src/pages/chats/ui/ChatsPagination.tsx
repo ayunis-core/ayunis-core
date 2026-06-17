@@ -4,14 +4,12 @@ interface ChatsPaginationProps {
   currentPage: number;
   totalPages: number;
   search?: string;
-  agentId?: string;
 }
 
 export default function ChatsPagination({
   currentPage,
   totalPages,
   search,
-  agentId,
 }: Readonly<ChatsPaginationProps>) {
   return (
     <SearchPagination
@@ -19,7 +17,6 @@ export default function ChatsPagination({
       totalPages={totalPages}
       to="/chats"
       search={search}
-      extraSearchParams={{ agentId }}
     />
   );
 }

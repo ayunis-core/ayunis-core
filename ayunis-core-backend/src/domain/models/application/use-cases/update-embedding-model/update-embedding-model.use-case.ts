@@ -41,7 +41,6 @@ export class UpdateEmbeddingModelUseCase {
         dimensions: command.dimensions,
         inputTokenCost: command.inputTokenCost,
         outputTokenCost: command.outputTokenCost,
-        currency: command.currency,
       });
       await this.modelsRepository.save(model);
 

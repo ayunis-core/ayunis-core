@@ -24,7 +24,6 @@ export abstract class TextSourceDetailsRecord extends BaseRecord {
 
   @OneToMany(() => SourceContentChunkRecord, (content) => content.source, {
     cascade: true,
-    eager: true,
   })
   contentChunks?: SourceContentChunkRecord[];
 }

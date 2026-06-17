@@ -5,14 +5,13 @@ import { CreateThreadUseCase } from './create-thread.use-case';
 import { CreateThreadCommand } from './create-thread.command';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
-import { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
-  NoModelOrAgentProvidedError,
+  NoModelProvidedError,
   ThreadCreationError,
 } from '../../threads.errors';
 import type { UUID } from 'crypto';
@@ -21,7 +20,6 @@ describe('CreateThreadUseCase', () => {
   let useCase: CreateThreadUseCase;
   let threadsRepository: jest.Mocked<ThreadsRepository>;
   let getPermittedLanguageModelUseCase: jest.Mocked<GetPermittedLanguageModelUseCase>;
-  let findOneAgentUseCase: jest.Mocked<FindOneAgentUseCase>;
   let contextService: jest.Mocked<ContextService>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -37,10 +35,6 @@ describe('CreateThreadUseCase', () => {
     };
 
     const mockGetPermittedLanguageModelUseCase = {
-      execute: jest.fn(),
-    };
-
-    const mockGetAgentUseCase = {
       execute: jest.fn(),
     };
 
@@ -60,7 +54,6 @@ describe('CreateThreadUseCase', () => {
           provide: GetPermittedLanguageModelUseCase,
           useValue: mockGetPermittedLanguageModelUseCase,
         },
-        { provide: FindOneAgentUseCase, useValue: mockGetAgentUseCase },
         { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
@@ -70,7 +63,6 @@ describe('CreateThreadUseCase', () => {
     getPermittedLanguageModelUseCase = module.get(
       GetPermittedLanguageModelUseCase,
     );
-    findOneAgentUseCase = module.get(FindOneAgentUseCase);
     contextService = module.get(ContextService);
 
     // Mock logger
@@ -114,7 +106,6 @@ describe('CreateThreadUseCase', () => {
       const mockCreatedThread = new Thread({
         userId: mockUserId,
         model: mockModel,
-        agentId: undefined,
         messages: [],
         createdAt: now,
         updatedAt: now,
@@ -127,7 +118,6 @@ describe('CreateThreadUseCase', () => {
         getPermittedLanguageModelUseCase,
         'execute',
       );
-      const getAgentExecuteSpy = jest.spyOn(findOneAgentUseCase, 'execute');
 
       // Act
       const result = await useCase.execute(command);
@@ -138,28 +128,25 @@ describe('CreateThreadUseCase', () => {
           id: command.modelId,
         }),
       );
-      expect(getAgentExecuteSpy).not.toHaveBeenCalled();
       expect(threadsRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: mockUserId,
           model: mockModel,
-          agentId: undefined,
         }),
       );
       expect(contextService.get).toHaveBeenCalledWith('userId');
       expect(result).toBeTruthy();
     });
 
-    it('should throw NoModelOrAgentProvidedError when neither model nor agent is provided', async () => {
+    it('should throw NoModelProvidedError when no model is provided', async () => {
       // Arrange
       const command = new CreateThreadCommand({});
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
-        NoModelOrAgentProvidedError,
+        NoModelProvidedError,
       );
       expect(getPermittedLanguageModelUseCase.execute).not.toHaveBeenCalled();
-      expect(findOneAgentUseCase.execute).not.toHaveBeenCalled();
       expect(threadsRepository.create).not.toHaveBeenCalled();
     });
 
@@ -194,7 +181,6 @@ describe('CreateThreadUseCase', () => {
       const mockCreatedThread = new Thread({
         userId: mockUserId,
         model: mockModel,
-        agentId: undefined,
         messages: [],
         createdAt: now,
         updatedAt: now,

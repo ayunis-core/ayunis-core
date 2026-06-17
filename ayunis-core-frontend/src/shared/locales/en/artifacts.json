@@ -1,0 +1,53 @@
+{
+  "editor": {
+    "save": "Save",
+    "placeholder": "Start writing…",
+    "linkPrompt": "URL",
+    "invalidUrl": "Please enter a valid URL (http://, https://, or mailto:).",
+    "toolbar": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "heading1": "Heading 1",
+      "heading2": "Heading 2",
+      "heading3": "Heading 3",
+      "bulletList": "Bullet List",
+      "orderedList": "Ordered List",
+      "alignLeft": "Align Left",
+      "alignCenter": "Align Center",
+      "alignRight": "Align Right",
+      "link": "Link",
+      "undo": "Undo",
+      "redo": "Redo"
+    }
+  },
+  "letterhead": {
+    "none": "No letterhead",
+    "changeError": "Failed to change letterhead.",
+    "notFound": "Letterhead not found. It may have been deleted.",
+    "documentNotFound": "Document not found. It may have been deleted."
+  },
+  "export": {
+    "word": "Word",
+    "pdf": "PDF",
+    "errorFormat": "Failed to export as {{format}}"
+  },
+  "versionHistory": {
+    "title": "Version History ({{count}})",
+    "current": "(current)",
+    "revertTo": "Revert to v{{version}}",
+    "revert": "Revert"
+  },
+  "diagram": {
+    "export": {
+      "svg": "SVG",
+      "png": "PNG",
+      "failed": "Failed to export diagram"
+    },
+    "zoom": {
+      "in": "Zoom in",
+      "out": "Zoom out",
+      "reset": "Reset view"
+    }
+  }
+}

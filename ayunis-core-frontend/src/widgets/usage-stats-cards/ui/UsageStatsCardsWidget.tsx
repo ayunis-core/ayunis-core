@@ -8,7 +8,7 @@ import {
 import { UsageStatsCardsLoading } from './UsageStatsCardsLoading';
 
 interface UsageStats {
-  totalTokens?: number;
+  totalCredits?: number;
   activeUsers?: number;
 }
 
@@ -39,11 +39,11 @@ export function UsageStatsCardsWidget({
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle>{t('stats.totalTokens')}</CardTitle>
+          <CardTitle>{t('stats.totalCredits')}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-xl font-semibold">
-            {formatCompact(stats.totalTokens)}
+            {formatCompact(stats.totalCredits)}
           </p>
         </CardContent>
       </Card>

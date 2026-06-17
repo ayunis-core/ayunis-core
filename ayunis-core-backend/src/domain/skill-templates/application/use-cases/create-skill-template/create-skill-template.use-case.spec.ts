@@ -91,6 +91,28 @@ describe('CreateSkillTemplateUseCase', () => {
     expect(result.distributionMode).toBe(DistributionMode.PRE_CREATED_COPY);
   });
 
+  it('should pass defaultActive and defaultPinned to pre-created copy templates', async () => {
+    const command = new CreateSkillTemplateCommand({
+      name: 'Preconfigured Template',
+      shortDescription: 'A preconfigured template',
+      instructions: 'Instructions here.',
+      distributionMode: DistributionMode.PRE_CREATED_COPY,
+      isActive: true,
+      defaultActive: true,
+      defaultPinned: true,
+    });
+
+    repository.findByName.mockResolvedValue(null);
+    repository.create.mockImplementation(async (t) => t);
+
+    const result = await useCase.execute(command);
+
+    expect(result).toBeInstanceOf(PreCreatedCopySkillTemplate);
+    const preCreated = result as PreCreatedCopySkillTemplate;
+    expect(preCreated.defaultActive).toBe(true);
+    expect(preCreated.defaultPinned).toBe(true);
+  });
+
   it('should reject creation when name already exists', async () => {
     const command = new CreateSkillTemplateCommand({
       name: 'Legal Guidelines',

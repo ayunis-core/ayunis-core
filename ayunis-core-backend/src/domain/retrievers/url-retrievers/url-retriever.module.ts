@@ -1,19 +1,21 @@
 import { Module } from '@nestjs/common';
 import { CheerioUrlRetrieverHandler } from './infrastructure/cheerio.url-retriever';
 import { UrlRetrieverHandler } from './application/ports/url-retriever.handler';
-import { UrlRetrieverController } from './presenter/http/url-retriever.controller';
 import { RetrieveUrlUseCase } from './application/use-cases/retrieve-url/retrieve-url.use-case';
+import { CrawlUrlUseCase } from './application/use-cases/crawl-url/crawl-url.use-case';
+import { CrawlDomainGrantsModule } from 'src/domain/crawl-domain-grants/crawl-domain-grants.module';
 
 @Module({
+  imports: [CrawlDomainGrantsModule],
   providers: [
     {
       provide: UrlRetrieverHandler,
       useClass: CheerioUrlRetrieverHandler,
     },
     RetrieveUrlUseCase,
+    CrawlUrlUseCase,
     CheerioUrlRetrieverHandler,
   ],
-  controllers: [UrlRetrieverController],
-  exports: [RetrieveUrlUseCase],
+  exports: [RetrieveUrlUseCase, CrawlUrlUseCase],
 })
 export class UrlRetrieverModule {}

@@ -1,9 +1,7 @@
 import { createLogger, format, transports } from 'winston';
-import Transport from 'winston-transport';
-import * as Sentry from '@sentry/nestjs';
+import { SentryLogTransport } from './sentry-log.transport';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
-const hasSentry = !!process.env.SENTRY_DSN;
 
 function createConsoleFormat() {
   if (isDevelopment) {
@@ -29,24 +27,33 @@ function createConsoleFormat() {
   }
 }
 
-function createTransports() {
-  const transportList: Transport[] = [
+// Sentry error reporting is handled by @SentryExceptionCaptured() on the
+// ApplicationErrorFilter (exception pipeline), not via a Winston transport.
+// This avoids duplicate events when logger.error() is followed by a thrown
+// exception that the filter also captures.
+//
+// Sentry *Logs* (structured log product, separate from Issues) are forwarded
+// in production via SentryLogTransport so that every this.logger.log/warn/…
+// call automatically appears in Sentry Logs, linked to traces.
+export const logger = createLogger({
+  level: isDevelopment ? 'debug' : 'info',
+  transports: [
     new transports.Console({
       format: createConsoleFormat(),
     }),
-  ];
+    ...buildSentryTransport(),
+  ],
+});
 
-  // Add Sentry transport only if configured
-  if (hasSentry) {
-    const SentryWinstonTransport =
-      Sentry.createSentryWinstonTransport(Transport);
-    transportList.push(new SentryWinstonTransport());
+function buildSentryTransport(): SentryLogTransport[] {
+  if (isDevelopment || !process.env.SENTRY_DSN) {
+    return [];
   }
 
-  return transportList;
+  return [
+    new SentryLogTransport({
+      // Only forward info+ to Sentry to avoid noise
+      level: 'info',
+    }),
+  ];
 }
-
-export const logger = createLogger({
-  level: isDevelopment ? 'debug' : 'info',
-  transports: createTransports(),
-});

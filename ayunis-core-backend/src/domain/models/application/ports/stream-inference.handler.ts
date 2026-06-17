@@ -1,15 +1,15 @@
 import type { Message } from 'src/domain/messages/domain/message.entity';
-import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import type { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import type { Model } from '../../domain/model.entity';
 import type { Observable } from 'rxjs';
 import type { ProviderMetadata } from 'src/domain/messages/domain/message-contents/provider-metadata.type';
+import type { ToolSchema } from '../../domain/value-objects/tool-schema';
 
 export class StreamInferenceInput {
   public readonly model: Model;
   public readonly messages: Message[];
   public readonly systemPrompt: string;
-  public readonly tools: Tool[];
+  public readonly tools: ToolSchema[];
   public readonly toolChoice?: ModelToolChoice;
   public readonly orgId: string;
 
@@ -17,7 +17,7 @@ export class StreamInferenceInput {
     model: Model;
     messages: Message[];
     systemPrompt: string;
-    tools?: Tool[];
+    tools?: ToolSchema[];
     toolChoice?: ModelToolChoice;
     orgId: string;
   }) {

@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddDefaultActiveAndPinnedToSkillTemplates1772717984846
-  implements MigrationInterface
-{
+export class AddDefaultActiveAndPinnedToSkillTemplates1772717984846 implements MigrationInterface {
   name = 'AddDefaultActiveAndPinnedToSkillTemplates1772717984846';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

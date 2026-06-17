@@ -30,6 +30,10 @@ FE_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^ayunis-core-frontend/src/
 # Backend: staged TS files
 BE_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^ayunis-core-backend/(src|apps|libs|test)/.*\.ts$' || true)
 
+# Workspace packages (packages/*): staged TS files, plus the distinct package dirs touched
+PKG_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^packages/[^/]+/(src|examples)/.*\.ts$' || true)
+PKG_DIRS=$(printf "%s\n" "$PKG_TS_STAGED" | sed -E 's#^(packages/[^/]+)/.*#\1#' | sort -u)
+
 # All staged TS/TSX files (for file size check)
 ALL_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '\.(ts|tsx)$' || true)
 
@@ -78,7 +82,7 @@ run_fe_prettier() {
     printf "%s" "$FE_STAGED" \
       | sed 's#^ayunis-core-frontend/##' \
       | tr '\n' '\0' \
-      | xargs -0 npx --yes prettier $FE_PRETTIER_ARGS
+      | xargs -0 pnpm exec prettier $FE_PRETTIER_ARGS
   )
   STATUS=$?
   set -e
@@ -101,7 +105,7 @@ run_fe_tsc() {
     } \
       | sed '/^$/d' \
       | tr '\n' '\0' \
-      | xargs -0 npx --yes tsc-files --noEmit -p tsconfig.json
+      | xargs -0 pnpm dlx tsc-files --noEmit -p tsconfig.json
   )
   STATUS=$?
   set -e
@@ -120,7 +124,7 @@ run_fe_eslint() {
     printf "%s" "$FE_TS_STAGED" \
       | sed 's#^ayunis-core-frontend/##' \
       | tr '\n' '\0' \
-      | xargs -0 npx --yes eslint --format stylish --max-warnings=0 --no-warn-ignored $ESLINT_FIX_ARGS
+      | xargs -0 pnpm exec eslint --format stylish --max-warnings=0 --no-warn-ignored $ESLINT_FIX_ARGS
   )
   STATUS=$?
   set -e
@@ -139,7 +143,7 @@ run_be_eslint() {
     printf "%s" "$BE_TS_STAGED" \
       | sed 's#^ayunis-core-backend/##' \
       | tr '\n' '\0' \
-      | xargs -0 npx --yes eslint --format stylish --max-warnings=0 $ESLINT_FIX_ARGS
+      | xargs -0 pnpm exec eslint --format stylish --max-warnings=0 $ESLINT_FIX_ARGS
   )
   STATUS=$?
   set -e
@@ -158,7 +162,7 @@ run_be_prettier() {
     printf "%s" "$BE_TS_STAGED" \
       | sed 's#^ayunis-core-backend/##' \
       | tr '\n' '\0' \
-      | xargs -0 npx --yes prettier $BE_PRETTIER_ARGS
+      | xargs -0 pnpm exec prettier $BE_PRETTIER_ARGS
   )
   STATUS=$?
   set -e
@@ -177,11 +181,50 @@ run_be_tsc() {
     printf "%s" "$BE_TS_STAGED" \
       | sed 's#^ayunis-core-backend/##' \
       | tr '\n' '\0' \
-      | xargs -0 npx --yes tsc-files --noEmit -p tsconfig.json
+      | xargs -0 pnpm dlx tsc-files --noEmit -p tsconfig.json
   )
   STATUS=$?
   set -e
   printf "%s" "$STATUS" > "$STATUS_FILE"
+}
+
+# Generic checks for one workspace package under packages/* (eslint, prettier,
+# typecheck, complexity, circular deps, duplication). Runs as a single parallel
+# job per touched package, so new packages need no edits to this hook.
+run_pkg_checks() {
+  pkg_dir="$1"; STATUS_FILE="$2"
+  pkg_name=$(basename "$pkg_dir")
+  pkg_staged=$(printf "%s\n" "$PKG_TS_STAGED" | grep -E "^${pkg_dir}/" || true)
+  pkg_rel=$(printf "%s" "$pkg_staged" | sed "s#^${pkg_dir}/##")
+  print_section "Package ${pkg_name} • checks (staged TS)"
+  printf "%s\n" "$pkg_rel" | sed 's#^# - #'
+  st=0
+  (
+    cd "$pkg_dir" >/dev/null 2>&1
+    printf "%s" "$pkg_rel" | tr '\n' '\0' \
+      | xargs -0 pnpm exec eslint --format stylish --max-warnings=0 $ESLINT_FIX_ARGS
+  ) || st=1
+  (
+    cd "$pkg_dir" >/dev/null 2>&1
+    printf "%s" "$pkg_rel" | tr '\n' '\0' \
+      | xargs -0 pnpm exec prettier $BE_PRETTIER_ARGS
+  ) || st=1
+  (
+    cd "$pkg_dir" >/dev/null 2>&1
+    printf "%s" "$pkg_rel" | tr '\n' '\0' \
+      | xargs -0 pnpm dlx tsc-files --noEmit -p tsconfig.json
+  ) || st=1
+  printf "%s" "$pkg_staged" | tr '\n' ' ' | xargs ./scripts/check-complexity.sh || st=1
+  (
+    cd "$pkg_dir" >/dev/null 2>&1
+    pnpm run --silent deps:check
+  ) || st=1
+  # jscpd scans src/ only (same scope as backend/frontend); examples/ are demo
+  # code and out of scope.
+  pkg_src_staged=$(printf "%s" "$pkg_staged" | grep -E "^${pkg_dir}/src/" || true)
+  # shellcheck disable=SC2086
+  ./scripts/check-duplication.sh "$pkg_dir" $pkg_src_staged || st=1
+  printf "%s" "$st" > "$STATUS_FILE"
 }
 
 run_complexity() {
@@ -201,7 +244,7 @@ run_depcruise() {
   set +e
   (
     cd ayunis-core-backend >/dev/null 2>&1
-    npm run deps:check --silent
+    pnpm run --silent deps:check
   )
   STATUS=$?
   set -e
@@ -214,7 +257,7 @@ run_fe_depcruise() {
   set +e
   (
     cd ayunis-core-frontend >/dev/null 2>&1
-    npm run deps:check --silent
+    pnpm run --silent deps:check
   )
   STATUS=$?
   set -e
@@ -261,7 +304,7 @@ run_markdownlint() {
   printf "%s\n" "$MD_STAGED" | sed 's#^# - #'
   set +e
   # shellcheck disable=SC2086
-  npx --yes markdownlint-cli2 $MD_STAGED
+  pnpm exec markdownlint-cli2 $MD_STAGED
   STATUS=$?
   set -e
   printf "%s" "$STATUS" > "$STATUS_FILE"
@@ -288,6 +331,17 @@ if [ -n "$BE_TS_STAGED" ]; then
   run_complexity "$COMPLEXITY_STATUS_FILE" &
   run_depcruise "$DEPCRUISE_STATUS_FILE" &
   run_be_duplication "$BE_DUPLICATION_STATUS_FILE" &
+fi
+
+# Workspace package checks (packages/*) — one parallel job per touched package
+PKG_STATUS_ENTRIES=""
+if [ -n "$PKG_TS_STAGED" ]; then
+  for pkg_dir in $PKG_DIRS; do
+    pkg_safe=$(printf "%s" "$pkg_dir" | tr '/' '_')
+    pkg_status_file="$STATUS_DIR/${pkg_safe}.status"
+    PKG_STATUS_ENTRIES="$PKG_STATUS_ENTRIES ${pkg_dir}:${pkg_status_file}"
+    run_pkg_checks "$pkg_dir" "$pkg_status_file" &
+  done
 fi
 
 # File size check (all staged TS/TSX)
@@ -395,6 +449,20 @@ if [ -n "$BE_TS_STAGED" ]; then
     printf "%b\n" "${GREEN}✅ Backend duplication check passed${NC}"
   fi
 
+fi
+if [ -n "$PKG_TS_STAGED" ]; then
+  for entry in $PKG_STATUS_ENTRIES; do
+    pkg_dir=${entry%%:*}
+    pkg_status_file=${entry#*:}
+    pkg_name=$(basename "$pkg_dir")
+    pkg_status=$(cat "$pkg_status_file" 2>/dev/null || printf "0")
+    if [ "$pkg_status" -ne 0 ]; then
+      printf "%b\n" "${RED}❌ Package ${pkg_name} checks failed (eslint/prettier/tsc/complexity/circular/duplication)${NC}"
+      FAILED=1
+    else
+      printf "%b\n" "${GREEN}✅ Package ${pkg_name} checks passed${NC}"
+    fi
+  done
 fi
 if [ -n "$ALL_TS_STAGED" ]; then
   if [ "$FILE_SIZE_STATUS" -ne 0 ]; then

@@ -10,10 +10,12 @@ import { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases
 import { SourceAlreadyAssignedError } from 'src/domain/threads/application/threads.errors';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { UUID } from 'crypto';
 
 describe('SkillActivationService', () => {
@@ -54,14 +56,13 @@ describe('SkillActivationService', () => {
       ...overrides,
     });
 
-  const makeSource = (id: UUID) =>
+  const makeSource = (id: UUID, status: SourceStatus = SourceStatus.READY) =>
     new UrlSource({
       id,
       url: `https://example.com/doc-${id}`,
-      contentChunks: [],
-      text: 'Sample document content.',
       name: `Source ${id}`,
       type: TextType.WEB,
+      status,
     });
 
   beforeEach(async () => {
@@ -295,6 +296,53 @@ describe('SkillActivationService', () => {
       );
     });
 
+    it('should log a warning and continue when an MCP integration is not found (stale ID)', async () => {
+      const thread = makeThread();
+      const skill = makeSkill({
+        sourceIds: [],
+        mcpIntegrationIds: [mcpIntegrationId1, mcpIntegrationId2],
+        knowledgeBaseIds: [],
+      });
+
+      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      getSourcesByIdsUseCase.execute.mockResolvedValue([]);
+      addMcpIntegrationToThreadUseCase.execute
+        .mockRejectedValueOnce(
+          new McpIntegrationNotFoundError(mcpIntegrationId1),
+        )
+        .mockResolvedValueOnce(undefined);
+
+      const result = await service.activateOnThread(skillId, thread);
+
+      expect(addMcpIntegrationToThreadUseCase.execute).toHaveBeenCalledTimes(2);
+      expect(Logger.prototype.warn).toHaveBeenCalledWith(
+        'MCP integration not found, skipping (stale reference)',
+        expect.objectContaining({ mcpIntegrationId: mcpIntegrationId1 }),
+      );
+      expect(result.instructions).toBe(
+        'Analyze the legal question thoroughly.',
+      );
+    });
+
+    it('should rethrow unexpected errors from addMcpIntegrationToThread', async () => {
+      const thread = makeThread();
+      const skill = makeSkill({
+        sourceIds: [],
+        mcpIntegrationIds: [mcpIntegrationId1],
+        knowledgeBaseIds: [],
+      });
+
+      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      getSourcesByIdsUseCase.execute.mockResolvedValue([]);
+      addMcpIntegrationToThreadUseCase.execute.mockRejectedValue(
+        new Error('Database connection lost'),
+      );
+
+      await expect(service.activateOnThread(skillId, thread)).rejects.toThrow(
+        'Database connection lost',
+      );
+    });
+
     it('should rethrow unexpected errors from addKnowledgeBaseToThread', async () => {
       const thread = makeThread();
       const skill = makeSkill({
@@ -331,6 +379,67 @@ describe('SkillActivationService', () => {
       await service.activateOnThread(skillId, thread);
 
       expect(addKnowledgeBaseToThreadUseCase.execute).toHaveBeenCalledTimes(2);
+    });
+
+    it('should skip sources with FAILED status and only attach READY sources', async () => {
+      const thread = makeThread();
+      const skill = makeSkill({
+        mcpIntegrationIds: [],
+        knowledgeBaseIds: [],
+      });
+      const readySource = makeSource(sourceId1, SourceStatus.READY);
+      const failedSource = makeSource(sourceId2, SourceStatus.FAILED);
+
+      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      getSourcesByIdsUseCase.execute.mockResolvedValue([
+        readySource,
+        failedSource,
+      ]);
+
+      await service.activateOnThread(skillId, thread);
+
+      expect(addSourceToThreadUseCase.execute).toHaveBeenCalledTimes(1);
+      expect(addSourceToThreadUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ source: readySource }),
+      );
+    });
+
+    it('should skip sources with PROCESSING status', async () => {
+      const thread = makeThread();
+      const skill = makeSkill({
+        mcpIntegrationIds: [],
+        knowledgeBaseIds: [],
+      });
+      const processingSource = makeSource(sourceId1, SourceStatus.PROCESSING);
+
+      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      getSourcesByIdsUseCase.execute.mockResolvedValue([processingSource]);
+
+      await service.activateOnThread(skillId, thread);
+
+      expect(addSourceToThreadUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it('should log a warning for each non-ready source that is skipped', async () => {
+      const thread = makeThread();
+      const skill = makeSkill({
+        mcpIntegrationIds: [],
+        knowledgeBaseIds: [],
+      });
+      const failedSource = makeSource(sourceId1, SourceStatus.FAILED);
+
+      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      getSourcesByIdsUseCase.execute.mockResolvedValue([failedSource]);
+
+      await service.activateOnThread(skillId, thread);
+
+      expect(Logger.prototype.warn).toHaveBeenCalledWith(
+        'Skipping non-ready source',
+        expect.objectContaining({
+          sourceId: sourceId1,
+          status: SourceStatus.FAILED,
+        }),
+      );
     });
   });
 });

@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import type {
-  IngestInput,
+  IngestBulkInput,
   SearchInput,
   SearchMultiInput,
 } from 'src/domain/rag/indexers/application/ports/indexer';
 import { IndexerPort } from 'src/domain/rag/indexers/application/ports/indexer';
 import type { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
-import { IngestContentUseCase } from './use-cases/ingest-content/ingest-content.use-case';
-import { IngestContentCommand } from './use-cases/ingest-content/ingest-content.command';
+import { IngestBulkContentUseCase } from './use-cases/ingest-bulk-content/ingest-bulk-content.use-case';
+import { IngestBulkContentCommand } from './use-cases/ingest-bulk-content/ingest-bulk-content.command';
 import { SearchContentUseCase } from './use-cases/search-content/search-content.use-case';
 import type { UUID } from 'crypto';
 import { DeleteContentUseCase } from './use-cases/delete-content/delete-content.use-case';
@@ -18,7 +18,7 @@ import { DeleteContentsCommand } from './use-cases/delete-contents/delete-conten
 @Injectable()
 export class ParentChildIndexerAdapter extends IndexerPort {
   constructor(
-    private readonly ingestContentUseCase: IngestContentUseCase,
+    private readonly ingestBulkContentUseCase: IngestBulkContentUseCase,
     private readonly searchContentUseCase: SearchContentUseCase,
     private readonly deleteContentUseCase: DeleteContentUseCase,
     private readonly deleteContentsUseCase: DeleteContentsUseCase,
@@ -26,12 +26,14 @@ export class ParentChildIndexerAdapter extends IndexerPort {
     super();
   }
 
-  async ingest(params: IngestInput): Promise<void> {
-    await this.ingestContentUseCase.execute(
-      new IngestContentCommand({
+  async ingestBulk(params: IngestBulkInput): Promise<void> {
+    await this.ingestBulkContentUseCase.execute(
+      new IngestBulkContentCommand({
         orgId: params.orgId,
-        indexEntry: params.indexEntry,
-        content: params.content,
+        entries: params.entries.map((entry) => ({
+          indexEntry: entry.indexEntry,
+          content: entry.content,
+        })),
       }),
     );
   }

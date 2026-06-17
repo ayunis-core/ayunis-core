@@ -1,6 +1,5 @@
 import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
-import type { Currency } from 'src/domain/models/domain/value-objects/currency.enum';
 
 export class CreateEmbeddingModelCommand {
   name: string;
@@ -10,7 +9,6 @@ export class CreateEmbeddingModelCommand {
   dimensions: EmbeddingDimensions;
   inputTokenCost?: number;
   outputTokenCost?: number;
-  currency?: Currency;
 
   constructor(params: {
     name: string;
@@ -20,7 +18,6 @@ export class CreateEmbeddingModelCommand {
     dimensions: EmbeddingDimensions;
     inputTokenCost?: number;
     outputTokenCost?: number;
-    currency?: Currency;
   }) {
     this.name = params.name;
     this.provider = params.provider;
@@ -29,6 +26,5 @@ export class CreateEmbeddingModelCommand {
     this.dimensions = params.dimensions;
     this.inputTokenCost = params.inputTokenCost;
     this.outputTokenCost = params.outputTokenCost;
-    this.currency = params.currency;
   }
 }

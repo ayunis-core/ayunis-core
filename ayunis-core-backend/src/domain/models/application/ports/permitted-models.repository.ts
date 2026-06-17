@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
 import type {
   PermittedEmbeddingModel,
+  PermittedImageGenerationModel,
   PermittedLanguageModel,
   PermittedModel,
 } from '../../domain/permitted-model.entity';
@@ -28,6 +29,10 @@ export abstract class PermittedModelsRepository {
   abstract findOrgDefaultLanguage(
     orgId: UUID,
   ): Promise<PermittedLanguageModel | null>;
+  abstract findTeamDefaultLanguage(
+    teamId: UUID,
+    orgId: UUID,
+  ): Promise<PermittedLanguageModel | null>;
   abstract findOne(params: FindOneParams): Promise<PermittedModel | null>;
   abstract findOneLanguage(
     params: FindOneParams,
@@ -35,12 +40,29 @@ export abstract class PermittedModelsRepository {
   abstract findOneEmbedding(
     orgId: UUID,
   ): Promise<PermittedEmbeddingModel | null>;
+  abstract findOneImageGeneration(
+    orgId: UUID,
+  ): Promise<PermittedImageGenerationModel | null>;
   abstract findManyLanguage(orgId: UUID): Promise<PermittedLanguageModel[]>;
+  abstract findManyLanguageByTeam(
+    teamId: UUID,
+    orgId: UUID,
+  ): Promise<PermittedLanguageModel[]>;
+  abstract findByTeamAndModelId(
+    teamId: UUID,
+    modelId: UUID,
+    orgId: UUID,
+  ): Promise<PermittedModel | null>;
   abstract create(permittedModel: PermittedModel): Promise<PermittedModel>;
   abstract delete(params: { id: UUID; orgId: UUID }): Promise<void>;
+  abstract deleteTeamScopedByOrgAndModelId(
+    orgId: UUID,
+    modelId: UUID,
+  ): Promise<void>;
   abstract setAsDefault(params: {
     id: UUID;
     orgId: UUID;
+    teamId?: UUID;
   }): Promise<PermittedLanguageModel>;
   abstract update(permittedModel: PermittedModel): Promise<PermittedModel>;
   abstract findAllByCatalogModelId(

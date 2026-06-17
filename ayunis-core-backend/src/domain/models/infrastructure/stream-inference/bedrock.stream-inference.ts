@@ -1,115 +1,17 @@
-import { Injectable, Logger } from '@nestjs/common';
-import {
-  BedrockRuntimeClient,
-  InvokeModelWithResponseStreamCommand,
-} from '@aws-sdk/client-bedrock-runtime';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Observable, Subscriber } from 'rxjs';
-import {
-  StreamInferenceHandler,
-  StreamInferenceInput,
-  StreamInferenceResponseChunk,
-  StreamInferenceResponseChunkToolCall,
-} from '../../application/ports/stream-inference.handler';
+import { bedrock } from '@ayunis/provider-anthropic/bedrock';
+import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import {
-  BedrockMessageConverter,
-  BedrockAnthropicMessage,
-  BedrockAnthropicTool,
-  BedrockAnthropicToolChoice,
-} from '../converters/bedrock-message.converter';
-
-interface BedrockAnthropicRequest {
-  anthropic_version: string;
-  max_tokens: number;
-  system?: string;
-  messages: BedrockAnthropicMessage[];
-  tools?: BedrockAnthropicTool[];
-  tool_choice?: BedrockAnthropicToolChoice;
-}
-
-// Bedrock streaming event types
-interface BedrockTextDelta {
-  type: 'text_delta';
-  text: string;
-}
-
-interface BedrockInputJsonDelta {
-  type: 'input_json_delta';
-  partial_json: string;
-}
-
-interface BedrockThinkingDelta {
-  type: 'thinking_delta';
-  thinking: string;
-}
-
-interface BedrockSignatureDelta {
-  type: 'signature_delta';
-  signature: string;
-}
-
-interface BedrockContentBlockDelta {
-  type: 'content_block_delta';
-  index: number;
-  delta:
-    | BedrockTextDelta
-    | BedrockInputJsonDelta
-    | BedrockThinkingDelta
-    | BedrockSignatureDelta;
-}
-
-interface BedrockToolUseContentBlock {
-  type: 'tool_use';
-  id: string;
-  name: string;
-}
-
-interface BedrockThinkingContentBlock {
-  type: 'thinking';
-}
-
-interface BedrockContentBlockStart {
-  type: 'content_block_start';
-  index: number;
-  content_block:
-    | BedrockToolUseContentBlock
-    | BedrockThinkingContentBlock
-    | { type: string };
-}
-
-interface BedrockMessageStart {
-  type: 'message_start';
-  message: {
-    usage?: {
-      input_tokens: number;
-    };
-  };
-}
-
-interface BedrockMessageDelta {
-  type: 'message_delta';
-  usage?: {
-    output_tokens: number;
-  };
-}
-
-type BedrockStreamEvent =
-  | BedrockContentBlockDelta
-  | BedrockContentBlockStart
-  | BedrockMessageStart
-  | BedrockMessageDelta
-  | { type: string };
+import { RuntimeStreamInferenceHandler } from '../runtime/runtime-stream-inference.handler';
+import type { Model } from '../../domain/model.entity';
+import { INFERENCE_MAX_RETRIES } from '../runtime/inference-config';
 
 @Injectable()
-export class BedrockStreamInferenceHandler implements StreamInferenceHandler {
-  private readonly logger = new Logger(BedrockStreamInferenceHandler.name);
-  private readonly client: BedrockRuntimeClient;
-  private readonly converter: BedrockMessageConverter;
-
+export class BedrockStreamInferenceHandler extends RuntimeStreamInferenceHandler {
   constructor(
     private readonly configService: ConfigService,
-    private readonly imageContentService: ImageContentService,
+    imageContentService: ImageContentService,
   ) {
     const awsRegion =
       this.configService.get<string>('models.bedrock.awsRegion')?.trim() ||
@@ -317,6 +219,20 @@ export class BedrockStreamInferenceHandler implements StreamInferenceHandler {
       textContentDelta: null,
       toolCallsDelta: [],
       usage: { inputTokens: undefined, outputTokens: usage.output_tokens },
+    super(imageContentService);
+  }
+
+  protected createProvider(model: Model): ModelProvider {
+    return bedrock({
+      model: model.name,
+      maxRetries: INFERENCE_MAX_RETRIES,
+      awsRegion: this.configService.get<string>('models.bedrock.awsRegion'),
+      awsAccessKey: this.configService.get<string>(
+        'models.bedrock.awsAccessKeyId',
+      ),
+      awsSecretKey: this.configService.get<string>(
+        'models.bedrock.awsSecretAccessKey',
+      ),
     });
   }
 }

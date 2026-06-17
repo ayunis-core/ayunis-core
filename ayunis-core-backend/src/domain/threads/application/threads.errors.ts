@@ -7,15 +7,17 @@ export enum ThreadErrorCode {
   THREAD_CREATION_FAILED = 'THREAD_CREATION_FAILED',
   MESSAGE_ADDITION_FAILED = 'MESSAGE_ADDITION_FAILED',
   SOURCE_ALREADY_ASSIGNED = 'SOURCE_ALREADY_ASSIGNED',
+  SOURCE_LIMIT_EXCEEDED = 'SOURCE_LIMIT_EXCEEDED',
   SOURCE_ADDITION_FAILED = 'SOURCE_ADDITION_FAILED',
   SOURCE_REMOVAL_FAILED = 'SOURCE_REMOVAL_FAILED',
   SOURCE_NOT_FOUND = 'SOURCE_NOT_FOUND',
   THREAD_UPDATE_FAILED = 'THREAD_UPDATE_FAILED',
   MODEL_REPLACEMENT_FAILED = 'MODEL_REPLACEMENT_FAILED',
-  NO_MODEL_OR_AGENT_PROVIDED = 'NO_MODEL_OR_AGENT_PROVIDED',
+  NO_MODEL_PROVIDED = 'NO_MODEL_PROVIDED',
+  GENERATED_IMAGE_NOT_FOUND = 'GENERATED_IMAGE_NOT_FOUND',
+  GENERATED_IMAGE_SAVE_FAILED = 'GENERATED_IMAGE_SAVE_FAILED',
+  UNSUPPORTED_IMAGE_CONTENT_TYPE = 'UNSUPPORTED_IMAGE_CONTENT_TYPE',
   UNEXPECTED_THREAD_ERROR = 'UNEXPECTED_THREAD_ERROR',
-  EMPTY_FILE_DATA = 'EMPTY_FILE_DATA',
-  UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
 }
 
 /**
@@ -35,7 +37,8 @@ export abstract class ThreadError extends ApplicationError {
 export class ThreadNotFoundError extends ThreadError {
   constructor(threadId: string, userId?: string, metadata?: ErrorMetadata) {
     super(
-      `Thread with ID '${threadId}' not found${userId ? ` for user '${userId}'` : ''}`,
+      `Thread with ID '${threadId}' not found` +
+        (userId ? ` for user '${userId}'` : ''),
       ThreadErrorCode.THREAD_NOT_FOUND,
       404,
       {
@@ -84,6 +87,17 @@ export class SourceAlreadyAssignedError extends ThreadError {
       ThreadErrorCode.SOURCE_ALREADY_ASSIGNED,
       409,
       metadata,
+    );
+  }
+}
+
+export class ThreadSourceLimitExceededError extends ThreadError {
+  constructor(limit: number, metadata?: ErrorMetadata) {
+    super(
+      `Cannot add more than ${limit} sources to a thread`,
+      ThreadErrorCode.SOURCE_LIMIT_EXCEEDED,
+      409,
+      { limit, ...metadata },
     );
   }
 }
@@ -162,14 +176,49 @@ export class ModelReplacementError extends ThreadError {
   }
 }
 
-export class NoModelOrAgentProvidedError extends ThreadError {
+export class NoModelProvidedError extends ThreadError {
   constructor(userId?: string, metadata?: ErrorMetadata) {
+    super('No model provided', ThreadErrorCode.NO_MODEL_PROVIDED, 400, {
+      ...(userId && { userId }),
+      ...metadata,
+    });
+  }
+}
+
+export class GeneratedImageNotFoundError extends ThreadError {
+  constructor(imageId: string, metadata?: ErrorMetadata) {
     super(
-      'No model or agent provided',
-      ThreadErrorCode.NO_MODEL_OR_AGENT_PROVIDED,
+      `Generated image '${imageId}' not found`,
+      ThreadErrorCode.GENERATED_IMAGE_NOT_FOUND,
+      404,
+      { imageId, ...metadata },
+    );
+  }
+}
+
+export class GeneratedImageSaveFailedError extends ThreadError {
+  /** Original cause — available for logging but not serialized to the client. */
+  public readonly cause: Error;
+
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(
+      'Failed to save generated image',
+      ThreadErrorCode.GENERATED_IMAGE_SAVE_FAILED,
+      500,
+      metadata,
+    );
+    this.cause = error;
+  }
+}
+
+export class UnsupportedImageContentTypeError extends ThreadError {
+  constructor(contentType: string, metadata?: ErrorMetadata) {
+    super(
+      `Unsupported image content type: ${contentType}`,
+      ThreadErrorCode.UNSUPPORTED_IMAGE_CONTENT_TYPE,
       400,
       {
-        ...(userId && { userId }),
+        contentType,
         ...metadata,
       },
     );
@@ -177,7 +226,7 @@ export class NoModelOrAgentProvidedError extends ThreadError {
 }
 
 export class UnexpecteThreadError extends ThreadError {
-  constructor(error: Error, metadata?: ErrorMetadata) {
+  constructor(_error: Error, metadata?: ErrorMetadata) {
     super(
       'Unexpected thread error',
       ThreadErrorCode.UNEXPECTED_THREAD_ERROR,
@@ -185,38 +234,6 @@ export class UnexpecteThreadError extends ThreadError {
       {
         ...metadata,
       },
-    );
-  }
-}
-
-export class EmptyFileDataError extends ThreadError {
-  constructor(fileName: string, metadata?: ErrorMetadata) {
-    super(
-      `The file '${fileName}' contains no processable data`,
-      ThreadErrorCode.EMPTY_FILE_DATA,
-      400,
-      {
-        fileName,
-        ...metadata,
-      },
-    );
-  }
-}
-
-/**
- * Error thrown when an unsupported file type is uploaded to a thread
- */
-export class UnsupportedFileTypeError extends ThreadError {
-  constructor(
-    fileType: string,
-    supportedTypes: string[],
-    metadata?: ErrorMetadata,
-  ) {
-    super(
-      `File type '${fileType}' is not supported. Supported types: ${supportedTypes.join(', ')}`,
-      ThreadErrorCode.UNSUPPORTED_FILE_TYPE,
-      400,
-      metadata,
     );
   }
 }

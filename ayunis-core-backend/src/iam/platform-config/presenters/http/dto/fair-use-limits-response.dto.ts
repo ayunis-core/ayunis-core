@@ -1,0 +1,53 @@
+import { ApiProperty } from '@nestjs/swagger';
+
+export class FairUseTierLimitDto {
+  @ApiProperty({
+    description: 'Maximum number of messages allowed within the window',
+    example: 200,
+    type: Number,
+  })
+  limit: number;
+
+  @ApiProperty({
+    description: 'Sliding window duration in milliseconds',
+    example: 10800000,
+    type: Number,
+  })
+  windowMs: number;
+}
+
+export class FairUseLimitsResponseDto {
+  @ApiProperty({
+    description:
+      'Fair-use limit configured for zero-tier (unrestricted) models. ' +
+      'Stored for UI symmetry only — runtime quota enforcement skips ' +
+      'ZERO-tier models entirely, so this value is never consulted.',
+    type: FairUseTierLimitDto,
+  })
+  zero: FairUseTierLimitDto;
+
+  @ApiProperty({
+    description: 'Fair-use limit for low-tier (cheap) language models',
+    type: FairUseTierLimitDto,
+  })
+  low: FairUseTierLimitDto;
+
+  @ApiProperty({
+    description: 'Fair-use limit for medium-tier language models',
+    type: FairUseTierLimitDto,
+  })
+  medium: FairUseTierLimitDto;
+
+  @ApiProperty({
+    description: 'Fair-use limit for high-tier (expensive) language models',
+    type: FairUseTierLimitDto,
+  })
+  high: FairUseTierLimitDto;
+
+  @ApiProperty({
+    description:
+      'Fair-use limit for image generation. Single global bucket (no tiering).',
+    type: FairUseTierLimitDto,
+  })
+  images: FairUseTierLimitDto;
+}

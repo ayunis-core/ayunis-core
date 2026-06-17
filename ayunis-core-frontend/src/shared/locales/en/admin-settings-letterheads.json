@@ -1,0 +1,65 @@
+{
+  "letterheads": {
+    "title": "Letterheads",
+    "add": "Add",
+    "empty": "No letterheads yet. Create a letterhead to use as a background on documents.",
+    "noDescription": "No description",
+    "detail": {
+      "general": "General",
+      "firstPage": "Letterhead",
+      "followingPages": "Following Pages"
+    },
+    "createDialog": {
+      "title": "Create Letterhead",
+      "description": "Upload a PDF to use as letterhead background. Optionally, upload a separate PDF for following pages — if omitted, the first page letterhead is used for all pages.",
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Official Letterhead",
+      "nameRequired": "Name is required",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Description for AI (optional)",
+      "firstPagePdfLabel": "Letterhead (PDF)",
+      "followingPagesPdfLabel": "Following Pages (PDF)",
+      "firstPageMarginsLabel": "First Page Margins (mm)",
+      "followingPagesMarginsLabel": "Following Pages Margins (mm)",
+      "top": "Top",
+      "bottom": "Bottom",
+      "left": "Left",
+      "right": "Right",
+      "useDifferentFollowingPages": "Use different letterhead for following pages",
+      "cancel": "Cancel",
+      "create": "Create",
+      "creating": "Creating…",
+      "success": "Letterhead created successfully.",
+      "error": "Failed to create letterhead.",
+      "firstPageRequired": "A PDF file for the first page is required.",
+      "invalidPdf": "Please upload a valid PDF file.",
+      "invalidPageMargins": "Please enter valid non-negative page margins.",
+      "pdfPreviewError": "Could not render PDF preview."
+    },
+    "editDialog": {
+      "title": "Edit Letterhead",
+      "description": "Change name, description, margins, or replace PDF files.",
+      "save": "Save",
+      "saving": "Saving…",
+      "success": "Letterhead updated successfully.",
+      "error": "Failed to update letterhead.",
+      "invalidPdf": "Please upload a valid PDF file.",
+      "invalidPageMargins": "Please enter valid non-negative page margins.",
+      "removeContinuationPage": "Remove following pages letterhead",
+      "useDifferentFollowingPages": "Use different letterhead for following pages"
+    },
+    "deleteDialog": {
+      "title": "Delete Letterhead",
+      "description": "Are you sure you want to delete the letterhead \"{{name}}\"? Documents using this letterhead will be exported without a background.",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "success": "Letterhead deleted successfully.",
+      "notFound": "Letterhead not found. It may have already been deleted.",
+      "error": "Failed to delete letterhead."
+    },
+    "marginEditor": {
+      "contentArea": "Content area"
+    }
+  }
+}

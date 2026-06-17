@@ -8,6 +8,11 @@
     "teams": "Teams",
     "models": "Modelle",
     "integrations": "Integrationen",
-    "usage": "Nutzung"
+    "usage": "Nutzung",
+    "security": "Sicherheit",
+    "anonymization": "Anonymisierung",
+    "instructions": "Anweisungen",
+    "letterheads": "Briefpapier",
+    "apiKeys": "API-Schlüssel"
   }
 }

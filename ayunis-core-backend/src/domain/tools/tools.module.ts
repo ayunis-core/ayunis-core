@@ -20,26 +20,38 @@ import { ThreadsModule } from '../threads/threads.module';
 import { McpModule } from '../mcp/mcp.module';
 import { McpIntegrationToolHandler } from './application/handlers/mcp-integration-tool.handler';
 import { McpIntegrationResourceHandler } from './application/handlers/mcp-integration-resource.handler';
-import { ProductKnowledgeToolHandler } from './application/handlers/product-knowledge-tool.handler';
-import { ProductKnowledgePort } from './application/ports/product-knowledge.port';
-import { ProductKnowledgeAdapter } from './infrastructure/product-knowledge/product-knowledge.adapter';
 import { ActivateSkillToolHandler } from './application/handlers/activate-skill-tool.handler';
 import { KnowledgeQueryToolHandler } from './application/handlers/knowledge-query-tool.handler';
 import { KnowledgeGetTextToolHandler } from './application/handlers/knowledge-get-text-tool.handler';
+import { CreateDocumentToolHandler } from './application/handlers/create-document-tool.handler';
+import { UpdateDocumentToolHandler } from './application/handlers/update-document-tool.handler';
+import { EditDocumentToolHandler } from './application/handlers/edit-document-tool.handler';
+import { ReadDocumentToolHandler } from './application/handlers/read-document-tool.handler';
+import { CreateDiagramToolHandler } from './application/handlers/create-diagram-tool.handler';
+import { UpdateDiagramToolHandler } from './application/handlers/update-diagram-tool.handler';
 import { SkillsModule } from '../skills/skills.module';
 import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
 import { SkillTemplatesModule } from '../skill-templates/skill-templates.module';
+import { ArtifactsModule } from '../artifacts/artifacts.module';
+import { GenerateImageToolHandler } from './application/handlers/generate-image-tool.handler';
+import { ModelsModule } from '../models/models.module';
+import { UsageModule } from '../usage/usage.module';
+import { QuotasModule } from 'src/iam/quotas/quotas.module';
 
 @Module({
   imports: [
     SourcesModule,
     forwardRef(() => ThreadsModule),
+    forwardRef(() => ModelsModule),
     LocalToolConfigRepositoryModule,
     RetrieverModule,
     McpModule,
     SkillsModule,
     KnowledgeBasesModule,
     SkillTemplatesModule,
+    ArtifactsModule,
+    UsageModule,
+    QuotasModule,
   ],
   providers: [
     // Use cases
@@ -56,14 +68,16 @@ import { SkillTemplatesModule } from '../skill-templates/skill-templates.module'
     CodeExecutionToolHandler,
     McpIntegrationToolHandler,
     McpIntegrationResourceHandler,
-    ProductKnowledgeToolHandler,
     ActivateSkillToolHandler,
     KnowledgeQueryToolHandler,
     KnowledgeGetTextToolHandler,
-    {
-      provide: ProductKnowledgePort,
-      useClass: ProductKnowledgeAdapter,
-    },
+    CreateDocumentToolHandler,
+    UpdateDocumentToolHandler,
+    EditDocumentToolHandler,
+    ReadDocumentToolHandler,
+    GenerateImageToolHandler,
+    CreateDiagramToolHandler,
+    UpdateDiagramToolHandler,
     // Repositories and factories
     {
       provide: ToolConfigRepository,

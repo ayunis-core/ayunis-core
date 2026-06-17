@@ -8,15 +8,10 @@ import {
   Body,
   Delete,
   Patch,
-  UseInterceptors,
-  UploadedFile,
   HttpCode,
   HttpStatus,
-  Res,
-  StreamableFile,
   Query,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { UUID } from 'crypto';
 import {
   CurrentUser,
@@ -28,39 +23,20 @@ import {
   ApiParam,
   ApiTags,
   ApiBody,
-  ApiConsumes,
-  getSchemaPath,
   ApiExtraModels,
   ApiQuery,
 } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-import { randomUUID } from 'crypto';
 import { CreateThreadUseCase } from '../../application/use-cases/create-thread/create-thread.use-case';
 import { FindThreadUseCase } from '../../application/use-cases/find-thread/find-thread.use-case';
 import { FindAllThreadsUseCase } from '../../application/use-cases/find-all-threads/find-all-threads.use-case';
 import { DeleteThreadUseCase } from '../../application/use-cases/delete-thread/delete-thread.use-case';
-import { AddSourceToThreadUseCase } from '../../application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
-import { RemoveSourceFromThreadUseCase } from '../../application/use-cases/remove-source-from-thread/remove-source-from-thread.use-case';
-import { GetThreadSourcesUseCase } from '../../application/use-cases/get-thread-sources/get-thread-sources.use-case';
 import { CreateThreadCommand } from '../../application/use-cases/create-thread/create-thread.command';
 import { FindThreadQuery } from '../../application/use-cases/find-thread/find-thread.query';
 import { FindAllThreadsQuery } from '../../application/use-cases/find-all-threads/find-all-threads.query';
 import { DeleteThreadCommand } from '../../application/use-cases/delete-thread/delete-thread.command';
 import { UpdateThreadTitleUseCase } from '../../application/use-cases/update-thread-title/update-thread-title.use-case';
 import { UpdateThreadTitleCommand } from '../../application/use-cases/update-thread-title/update-thread-title.command';
-import { AddSourceCommand } from '../../application/use-cases/add-source-to-thread/add-source.command';
-import { RemoveSourceCommand } from '../../application/use-cases/remove-source-from-thread/remove-source.command';
-import { FindThreadSourcesQuery } from '../../application/use-cases/get-thread-sources/get-thread-sources.query';
-import { CreateTextSourceUseCase } from '../../../sources/application/use-cases/create-text-source/create-text-source.use-case';
-import { AddFileSourceToThreadDto } from './dto/add-source-to-thread.dto';
-import {
-  FileSourceResponseDto,
-  UrlSourceResponseDto,
-  CSVDataSourceResponseDto,
-} from './dto/get-thread-response.dto/source-response.dto';
-import { SourceDtoMapper } from './mappers/source.mapper';
+
 import { CreateThreadDto } from './dto/create-thread.dto';
 import { UpdateThreadTitleDto } from './dto/update-thread-title.dto';
 import { GetThreadResponseDto } from './dto/get-thread-response.dto';
@@ -69,17 +45,10 @@ import { GetThreadsResponseDto } from './dto/get-threads-response.dto';
 import { FindAllThreadsQueryParamsDto } from './dto/find-all-threads-query-params.dto';
 import { GetThreadDtoMapper } from './mappers/get-thread.mapper';
 import { GetThreadsDtoMapper } from './mappers/get-threads.mapper';
-import * as fs from 'fs';
-import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
-import { convertCSVToString } from 'src/common/util/csv';
-import { createSourcesFromFile } from 'src/domain/sources/application/file-source-creator';
-import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
-import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
-import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
-import {
-  EmptyFileDataError,
-  UnsupportedFileTypeError,
-} from '../../application/threads.errors';
+import { GetThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
+import { GetThreadPiiMasksQuery } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.query';
+import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
+import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 
 @ApiTags('threads')
 @Controller('threads')
@@ -92,15 +61,10 @@ export class ThreadsController {
     private readonly findAllThreadsUseCase: FindAllThreadsUseCase,
     private readonly deleteThreadUseCase: DeleteThreadUseCase,
     private readonly updateThreadTitleUseCase: UpdateThreadTitleUseCase,
-    private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
-    private readonly removeSourceFromThreadUseCase: RemoveSourceFromThreadUseCase,
-    private readonly getThreadSourcesUseCase: GetThreadSourcesUseCase,
-    private readonly createTextSourceUseCase: CreateTextSourceUseCase,
-    private readonly createDataSourceUseCase: CreateDataSourceUseCase,
-    private readonly getSourceByIdUseCase: GetSourceByIdUseCase,
-    private readonly sourceDtoMapper: SourceDtoMapper,
+    private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
     private readonly getThreadDtoMapper: GetThreadDtoMapper,
     private readonly getThreadsDtoMapper: GetThreadsDtoMapper,
+    private readonly getThreadPiiMasksUseCase: GetThreadPiiMasksUseCase,
   ) {}
 
   @Post()
@@ -122,7 +86,6 @@ export class ThreadsController {
     const thread = await this.createThreadUseCase.execute(
       new CreateThreadCommand({
         modelId: createThreadDto.modelId,
-        agentId: createThreadDto.agentId,
         isAnonymous: createThreadDto.isAnonymous,
       }),
     );
@@ -137,12 +100,6 @@ export class ThreadsController {
     required: false,
     type: String,
     description: 'Search threads by title',
-  })
-  @ApiQuery({
-    name: 'agentId',
-    required: false,
-    type: String,
-    description: 'Filter threads by agent ID',
   })
   @ApiQuery({
     name: 'limit',
@@ -174,7 +131,6 @@ export class ThreadsController {
         undefined,
         {
           search: queryParams.search,
-          agentId: queryParams.agentId,
         },
         {
           limit: queryParams.limit,
@@ -207,7 +163,15 @@ export class ThreadsController {
     const result = await this.findThreadUseCase.execute(
       new FindThreadQuery(id),
     );
-    return this.getThreadDtoMapper.toDto(result);
+    const piiMasks = result.thread.isAnonymous
+      ? await this.getThreadPiiMasksUseCase.execute(
+          new GetThreadPiiMasksQuery(id),
+        )
+      : [];
+    const mcpIntegrations = await this.getMcpIntegrationsByIdsUseCase.execute(
+      new GetMcpIntegrationsByIdsQuery(result.thread.mcpIntegrationIds),
+    );
+    return this.getThreadDtoMapper.toDto(result, piiMasks, mcpIntegrations);
   }
 
   @Delete(':id')
@@ -258,241 +222,5 @@ export class ThreadsController {
         title: updateThreadTitleDto.title,
       }),
     );
-  }
-
-  @Get(':id/sources')
-  @ApiOperation({ summary: 'Get all sources for a thread' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the thread',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns all sources for the thread',
-    schema: {
-      type: 'array',
-      items: {
-        oneOf: [
-          { $ref: getSchemaPath(FileSourceResponseDto) },
-          { $ref: getSchemaPath(UrlSourceResponseDto) },
-          { $ref: getSchemaPath(CSVDataSourceResponseDto) },
-        ],
-      },
-    },
-  })
-  @ApiResponse({ status: 404, description: 'Thread not found' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
-  @ApiExtraModels(
-    FileSourceResponseDto,
-    UrlSourceResponseDto,
-    CSVDataSourceResponseDto,
-  )
-  async getThreadSources(
-    @Param('id', ParseUUIDPipe) threadId: UUID,
-  ): Promise<
-    (FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto)[]
-  > {
-    this.logger.log('getThreadSources', { threadId });
-    const sources = await this.getThreadSourcesUseCase.execute(
-      new FindThreadSourcesQuery(threadId),
-    );
-    return sources.map((source) =>
-      this.sourceDtoMapper.toDto(source, threadId),
-    );
-  }
-
-  @Post(':id/sources/file')
-  @ApiOperation({ summary: 'Add a file source to a thread' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the thread',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-          description: 'The file to upload',
-        },
-        name: {
-          type: 'string',
-          description: 'The display name for the file source',
-        },
-        description: {
-          type: 'string',
-          description: 'A description of the file source',
-        },
-      },
-      required: ['file'],
-    },
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'The file source has been successfully added to the thread',
-  })
-  @UseInterceptors(
-    /* eslint-disable sonarjs/content-length -- file size validated downstream */
-    FileInterceptor('file', {
-      storage: diskStorage({
-        // eslint-disable-next-line sonarjs/todo-tag -- pre-existing, tracked separately
-        // TODO: Move this to a separate service
-        destination: './uploads',
-        filename: (req, file, cb) => {
-          const randomName = randomUUID();
-          cb(null, `${randomName}${extname(file.originalname)}`);
-        },
-      }),
-    }),
-    /* eslint-enable sonarjs/content-length */
-  )
-  async addFileSource(
-    @Param('id', ParseUUIDPipe) threadId: UUID,
-    @Body() addFileSourceDto: AddFileSourceToThreadDto,
-    @UploadedFile()
-    file: {
-      fieldname: string;
-      originalname: string;
-      encoding: string;
-      mimetype: string;
-      size: number;
-      buffer: Buffer;
-      path: string;
-    },
-  ): Promise<void> {
-    this.logger.log('addFileSource', { threadId, fileName: file.originalname });
-    try {
-      const sources = await createSourcesFromFile(file as Express.Multer.File, {
-        createTextSource: (cmd) => this.createTextSourceUseCase.execute(cmd),
-        createDataSource: (cmd) => this.createDataSourceUseCase.execute(cmd),
-        throwEmptyFileError: (fileName) => {
-          throw new EmptyFileDataError(fileName);
-        },
-        throwUnsupportedTypeError: (type) => {
-          throw new UnsupportedFileTypeError(type, [
-            'PDF',
-            'DOCX',
-            'PPTX',
-            'TXT',
-            'CSV',
-            'XLSX',
-            'XLS',
-          ]);
-        },
-      });
-
-      const { thread } = await this.findThreadUseCase.execute(
-        new FindThreadQuery(threadId),
-      );
-
-      for (const source of sources) {
-        await this.addSourceToThreadUseCase.execute(
-          new AddSourceCommand(thread, source),
-        );
-      }
-
-      fs.unlinkSync(file.path);
-      return;
-    } catch (error: unknown) {
-      this.logger.error('addFileSource', { error });
-      fs.unlinkSync(file.path);
-      throw error;
-    }
-  }
-
-  @Delete(':id/sources/:sourceId')
-  @ApiOperation({ summary: 'Remove a source from a thread' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the thread',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiParam({
-    name: 'sourceId',
-    description: 'The UUID of the source to remove',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: 204,
-    description: 'The source has been successfully removed from the thread',
-  })
-  @ApiResponse({ status: 404, description: 'Thread or source not found' })
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async removeSource(
-    @Param('id', ParseUUIDPipe) threadId: UUID,
-    @Param('sourceId', ParseUUIDPipe) sourceId: UUID,
-  ): Promise<void> {
-    this.logger.log('removeSource', { threadId, sourceId });
-
-    const { thread } = await this.findThreadUseCase.execute(
-      new FindThreadQuery(threadId),
-    );
-    await this.removeSourceFromThreadUseCase.execute(
-      new RemoveSourceCommand(thread, sourceId),
-    );
-  }
-
-  @Get(':id/sources/:sourceId/download')
-  @ApiOperation({ summary: 'Download a data source as CSV' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the thread',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiParam({
-    name: 'sourceId',
-    description: 'The UUID of the source to download',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns the source as a CSV file',
-    content: {
-      'text/csv': {
-        schema: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
-  @ApiResponse({ status: 404, description: 'Thread or source not found' })
-  @ApiResponse({
-    status: 400,
-    description: 'Source is not a CSV data source',
-  })
-  async downloadSource(
-    @Param('id', ParseUUIDPipe) threadId: UUID,
-    @Param('sourceId', ParseUUIDPipe) sourceId: UUID,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<StreamableFile> {
-    this.logger.log('downloadSource', { threadId, sourceId });
-
-    await this.findThreadUseCase.execute(new FindThreadQuery(threadId));
-    const source = await this.getSourceByIdUseCase.execute(
-      new GetSourceByIdQuery(sourceId),
-    );
-
-    if (!(source instanceof CSVDataSource)) {
-      throw new Error('Source is not a CSV data source');
-    }
-
-    const csvString = convertCSVToString(source.data);
-    res.set({
-      'Content-Type': 'text/csv',
-      'Content-Disposition': `attachment; filename="${source.name}.csv"`,
-    });
-
-    return new StreamableFile(Buffer.from(csvString, 'utf-8'));
   }
 }

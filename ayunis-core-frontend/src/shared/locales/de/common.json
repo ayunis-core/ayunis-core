@@ -1,12 +1,13 @@
 {
+  "passwordPolicy": "Passwort muss mindestens 8 Zeichen lang sein und einen Großbuchstaben, einen Kleinbuchstaben und eine Zahl enthalten.",
   "sidebar": {
     "appName": "Ayunis Core",
     "appTagline": "whoop whoop",
     "newChat": "Neuer Chat",
-    "prompts": "Prompts",
-    "agents": "Agenten",
     "skills": "Fähigkeiten",
     "knowledge": "Wissen",
+    "marketplace": "Marketplace",
+    "academy": "Academy",
     "accountSettings": "Konto-Einstellungen",
     "adminSettings": "Admin-Einstellungen",
     "superAdminSettings": "Super Admin-Einstellungen",
@@ -39,44 +40,36 @@
   },
   "chatInput": {
     "placeholder": "Wie kann ich heute helfen?",
-    "selectPrompt": "Fügen Sie einen Prompt aus Ihrer Bibliothek hinzu",
-    "promptsLoadError": "Fehler beim Laden der Prompts",
-    "promptsEmptyState": "Noch kein Prompt erstellt",
-    "createFirstPrompt": "Prompt erstellen",
-    "noPromptsAvailable": "Keine Prompts verfügbar",
     "addButtonTooltip": "Hinzufügen",
-    "createFirstAgent": "Agent erstellen",
-    "agentButtonTooltip": "Agenten",
-    "agentsEmptyState": "Noch kein Agent erstellt",
     "fileSourceUploadError": "Fehler beim Hochladen der Datei",
     "fileSourceEmptyDataError": "Die hochgeladene Datei enthält keine verarbeitbaren Daten",
     "invalidFileTypeError": "Dieser Dateityp wird derzeit nicht unterstützt.",
-    "fileSourceTooLargeError": "Datei ist zu groß. Maximale Dateigröße ist 50MB.",
+    "fileSourceTooLargeError": "Datei ist zu groß. Maximale Dateigröße ist 25MB.",
     "fileSourceTooManyPagesError": "Dokument hat zu viele Seiten zur Verarbeitung.",
     "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist beschäftigt. Bitte versuchen Sie es später erneut.",
     "fileSourceTimeoutError": "Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex.",
+    "documentTooLargeForChat": "Dieses Dokument ist zu groß für die Verarbeitung im Chat. Bitte laden Sie es stattdessen in eine Wissenssammlung hoch.",
     "fileSourceDeleteError": "Fehler beim Löschen der Datei",
     "sourceNotFound": "Datei nicht gefunden. Sie wurde möglicherweise gelöscht.",
-    "uploadDocument": "Dokument hochladen",
-    "uploadImage": "Bild hochladen",
+    "uploadFile": "Datei hochladen",
     "imageLimitExceeded": "Maximal {{max}} Bilder erlaubt. Einige Bilder wurden nicht hinzugefügt.",
-    "addPrompt": "Prompt hinzufügen",
     "addKnowledgeBase": "Wissenssammlung hinzufügen",
     "knowledgeBasesLoadError": "Fehler beim Laden der Wissenssammlungen",
     "knowledgeBasesEmptyState": "Noch keine Wissenssammlung erstellt",
     "knowledgeBasesAllAttached": "Alle Wissenssammlungen bereits angehängt",
+    "addIntegration": "Integration hinzufügen",
+    "integrationsLoadError": "Fehler beim Laden der Integrationen",
+    "integrationsEmptyState": "Keine Integrationen verfügbar",
+    "integrationsAllAttached": "Alle Integrationen bereits angehängt",
+    "integrationNotAuthorized": "Autorisieren Sie diese Integration zuerst unter Einstellungen → Integrationen",
     "shared": "Freigegeben",
     "createKnowledgeBase": "Wissenssammlung erstellen",
     "noEmbeddingModelEnabled": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein.",
-    "modelChangeDisabledTooltip": "Das Modell kann nicht geändert werden, wenn ein Agent ausgewählt ist.",
     "cancelTooltip": "Abbrechen",
     "sendTooltip": "Senden",
     "anonymousModeEnabled": "Anonymen Modus deaktivieren",
     "anonymousModeDisabled": "Anonymen Modus aktivieren",
     "anonymousModeEnforced": "Datenschutzmodus ist für dieses Modell erforderlich",
-    "agents": {
-      "title": "Agenten"
-    },
     "tools": {
       "title": "Tools",
       "internet_search": "Internet Recherche",
@@ -92,10 +85,13 @@
     "microphonePermissionDenied": "Mikrofonzugriff verweigert",
     "recordingNotSupported": "Sprachaufnahme wird in diesem Browser nicht unterstützt",
     "transcriptionFailed": "Transkription fehlgeschlagen",
-    "modelSelectorAriaLabel": "KI-Modell auswählen"
+    "modelSelectorAriaLabel": "KI-Modell auswählen",
+    "modelChangeDisabledTooltip": "Das Modell kann in einem bestehenden Chat nicht mehr gewechselt werden.",
+    "deactivateSkillTooltip": "Fähigkeit deaktivieren"
   },
   "pinnedSkills": {
-    "empty": "Keine angehefteten Fähigkeiten"
+    "empty": "Keine angehefteten Fähigkeiten",
+    "activateTooltip": "Fähigkeit aktivieren"
   },
   "common": {
     "loading": "Laden...",
@@ -110,5 +106,63 @@
     "description": "Ein unerwarteter Fehler ist aufgetreten. Bitte laden Sie die Seite neu, um fortzufahren.",
     "reloadPage": "Seite neu laden",
     "tryAgain": "Erneut versuchen"
+  },
+  "sources": {
+    "failedToAdd": "Fehler beim Hochladen der Datei",
+    "invalidFileTypeError": "Dieser Dateityp wird derzeit nicht unterstützt.",
+    "fileSourceEmptyDataError": "Die hochgeladene Datei enthält keine verarbeitbaren Daten.",
+    "fileSourceTooLargeError": "Datei ist zu groß. Maximale Dateigröße ist 25MB.",
+    "fileSourceTooManyPagesError": "Dokument hat zu viele Seiten zur Verarbeitung.",
+    "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist beschäftigt. Bitte versuchen Sie es später erneut.",
+    "fileSourceTimeoutError": "Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex.",
+    "sourceLimitExceededError": "Ein Chat kann maximal 20 Quellen enthalten. Bitte entfernen Sie eine, bevor Sie eine weitere hinzufügen."
+  },
+  "models": {
+    "availableHeading": "Verfügbare Modelle",
+    "category": {
+      "zero": "Schnell",
+      "low": "Schnell",
+      "medium": "Ausgewogen",
+      "high": "Leistungsstark"
+    },
+    "usage": {
+      "zero": "Unbegrenzt nutzbar",
+      "low": "Geringer Verbrauch",
+      "medium": "Mittlerer Verbrauch",
+      "high": "Hoher Verbrauch"
+    },
+    "providerHosting": {
+      "openai": "Gehostet in den USA von OpenAI.",
+      "anthropic": "Gehostet in den USA von Anthropic.",
+      "gemini": "Gehostet in den USA von Google.",
+      "azure": "Gehostet in der EU bei Microsoft Azure.",
+      "bedrock": "Gehostet in der EU bei AWS Bedrock.",
+      "mistral": "Gehostet in der EU bei Mistral.",
+      "scaleway": "Gehostet in der EU bei Scaleway.",
+      "otc": "Gehostet in Deutschland in der Open Telekom Cloud.",
+      "stackit": "Gehostet in Deutschland bei Stackit.",
+      "synaforce": "Gehostet in Deutschland in der souveränen Cloud von Ayunis.",
+      "ayunis": "Gehostet in Deutschland in der souveränen Cloud von Ayunis.",
+      "ollama": "Selbst gehostet über Ollama."
+    },
+    "descriptions": {
+      "fallback": "Geeignet für allgemeine Aufgaben wie Texte verfassen, Zusammenfassen und Fragen beantworten.",
+      "gpt-5": "Geeignet für Recherche, längere Texte und mehrstufige Aufgaben.",
+      "gpt-5_1": "Geeignet für Standardaufgaben wie Mails, Zusammenfassungen und einfache Recherche.",
+      "gpt-5_2": "Geeignet für komplexere Aufgaben, ausführliche Texte und Analysen.",
+      "gpt-5_4": "Geeignet für sehr komplexe Aufgaben, längere Recherchen und mehrstufige Analysen.",
+      "gpt-5-mini": "Geeignet für kurze Antworten und einfache Aufgaben.",
+      "gpt-4o": "Geeignet für alltägliche Aufgaben wie Texte verfassen, Zusammenfassen und Fragen beantworten.",
+      "gpt-4": "Älteres Modell für einfache Aufgaben wie kurze Texte und das Beantworten von Fragen.",
+      "claude-opus-4-7": "Geeignet für sehr komplexe Aufgaben, gründliche Analysen und längere Recherchen.",
+      "claude-sonnet-4-6": "Solide Wahl für längere Texte, Recherche und komplexere Aufgaben.",
+      "claude-haiku-4-5": "Geeignet für kurze Antworten und einfache Aufgaben.",
+      "claude-3-5-sonnet": "Geeignet für allgemeine Aufgaben und längere Texte.",
+      "claude-3": "Älteres Modell für einfache Aufgaben wie kurze Texte und das Beantworten von Fragen.",
+      "mistral-large": "Geeignet für anspruchsvolle Aufgaben und längere Texte.",
+      "mistral-small": "Geeignet für kurze Antworten und einfache Aufgaben.",
+      "gemini-3-5-flash": "Geeignet für kurze Antworten und einfache Aufgaben.",
+      "gemini-2-5-pro": "Geeignet für komplexere Aufgaben und längere Texte."
+    }
   }
 }

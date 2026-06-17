@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
-import { ConfigField } from '../../domain/value-objects/integration-config-schema';
+import {
+  ConfigField,
+  fieldRequiresInput,
+  isConfigValuePresent,
+  isSystemFixedField,
+} from '../../domain/value-objects/integration-config-schema';
 import { McpMissingRequiredConfigError } from '../mcp.errors';
 
 /**
@@ -24,23 +29,28 @@ export class MarketplaceConfigService {
   ): Record<string, string> {
     const merged = { ...userProvided };
     for (const field of orgFields) {
-      if (field.value !== undefined) {
-        merged[field.key] = field.value;
+      if (isSystemFixedField(field)) {
+        merged[field.key] = field.value as string;
       }
     }
     return merged;
   }
 
   /**
-   * Validates that all required fields have non-empty values.
-   * Throws McpMissingRequiredConfigError if any required fields are missing.
+   * Validates that every field requiring actor input has a present (non-empty,
+   * non-whitespace) value. System-fixed fields are satisfied by the schema and
+   * are never required from the actor. Throws McpMissingRequiredConfigError if
+   * any required input is missing.
    */
   validateRequiredFields(
-    orgFields: ConfigField[],
+    fields: ConfigField[],
     values: Record<string, string>,
   ): void {
-    const missing = orgFields
-      .filter((field) => field.required && !values[field.key])
+    const missing = fields
+      .filter(
+        (field) =>
+          fieldRequiresInput(field) && !isConfigValuePresent(values[field.key]),
+      )
       .map((field) => field.key);
 
     if (missing.length > 0) {
@@ -112,26 +122,26 @@ export class MarketplaceConfigService {
     const merged: Record<string, string> = {};
 
     for (const field of orgFields) {
-      if (field.value !== undefined) {
-        merged[field.key] = field.value;
+      if (isSystemFixedField(field)) {
+        merged[field.key] = field.value as string;
         continue;
       }
 
       const provided = providedValues[field.key];
-      const existing = existingValues[field.key];
+      const hasProvided = field.key in providedValues;
+      const hasExisting = field.key in existingValues;
 
       if (field.type === 'secret') {
-        if (provided !== undefined && provided !== '') {
+        // Ignore empty secret input so the existing encrypted value is kept.
+        if (provided) {
           merged[field.key] = provided;
-        } else if (existing !== undefined) {
-          merged[field.key] = existing;
+        } else if (hasExisting) {
+          merged[field.key] = existingValues[field.key];
         }
-      } else {
-        if (provided !== undefined) {
-          merged[field.key] = provided;
-        } else if (existing !== undefined) {
-          merged[field.key] = existing;
-        }
+      } else if (hasProvided) {
+        merged[field.key] = provided;
+      } else if (hasExisting) {
+        merged[field.key] = existingValues[field.key];
       }
     }
 
@@ -150,10 +160,8 @@ export class MarketplaceConfigService {
     for (const field of orgFields) {
       if (field.type !== 'secret') continue;
 
-      const isFixed = field.value !== undefined;
-      const isNewlyProvided =
-        providedValues[field.key] !== undefined &&
-        providedValues[field.key] !== '';
+      const isFixed = isSystemFixedField(field);
+      const isNewlyProvided = Boolean(providedValues[field.key]);
 
       if (isFixed || isNewlyProvided) {
         merged[field.key] = await this.credentialEncryption.encrypt(

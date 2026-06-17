@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
 import { CollectUsageCommand } from './collect-usage.command';
 import { Usage } from '../../../domain/usage.entity';
@@ -8,9 +9,11 @@ import {
   UsageCollectionFailedError,
   UnexpectedUsageError,
 } from '../../usage.errors';
+import { UsageCollectedEvent } from '../../events/usage-collected.event';
 import { ApplicationError } from '../../../../../common/errors/base.error';
 import { ContextService } from '../../../../../common/context/services/context.service';
-import { Currency } from '../../../../models/domain/value-objects/currency.enum';
+import { GetCreditsPerEuroUseCase } from '../../../../../iam/platform-config/application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
+import { PlatformConfigNotFoundError } from '../../../../../iam/platform-config/application/platform-config.errors';
 
 @Injectable()
 export class CollectUsageUseCase {
@@ -19,18 +22,28 @@ export class CollectUsageUseCase {
   constructor(
     private readonly usageRepository: UsageRepository,
     private readonly contextService: ContextService,
+    private readonly getCreditsPerEuroUseCase: GetCreditsPerEuroUseCase,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: CollectUsageCommand): Promise<void> {
     const userId = this.contextService.get('userId');
+    const apiKeyId = this.contextService.get('apiKeyId');
     const organizationId = this.contextService.get('orgId');
 
-    if (!userId || !organizationId) {
+    // Enforce XOR on the principal: exactly one of userId or apiKeyId must
+    // be set. The DB `CHK_usage_principal_not_both` constraint rejects
+    // "both set" as a safety net; we reject both "neither" and "both" here
+    // so the failure is synchronous and the error type is meaningful.
+    const hasUserId = !!userId;
+    const hasApiKeyId = !!apiKeyId;
+    if (hasUserId === hasApiKeyId || !organizationId) {
       throw new UsageCollectionFailedError(
-        'User ID or Organization ID not available in context',
+        'Exactly one of userId or apiKeyId must be set in context, and Organization ID is required',
         {
-          userId: userId || undefined,
-          organizationId: organizationId || undefined,
+          userId: userId ?? undefined,
+          apiKeyId: apiKeyId ?? undefined,
+          organizationId: organizationId ?? undefined,
           modelId: command.modelId,
         },
       );
@@ -38,6 +51,7 @@ export class CollectUsageUseCase {
 
     this.logger.log('CollectUsageUseCase.execute called', {
       userId,
+      apiKeyId,
       organizationId,
       modelId: command.modelId,
       provider: command.provider,
@@ -47,10 +61,12 @@ export class CollectUsageUseCase {
     try {
       this.validateCommand(command);
 
-      const { cost, currency } = this.calculateCost(command);
+      const cost = this.calculateCost(command);
+      const creditsConsumed = await this.calculateCredits(cost);
 
       const usage = new Usage({
-        userId,
+        userId: userId ?? null,
+        apiKeyId: apiKeyId ?? null,
         organizationId,
         modelId: command.modelId,
         provider: command.provider,
@@ -58,14 +74,31 @@ export class CollectUsageUseCase {
         outputTokens: command.outputTokens,
         totalTokens: command.totalTokens,
         cost,
-        currency,
-        requestId: command.requestId || randomUUID(),
+        creditsConsumed,
+        requestId: command.requestId ?? randomUUID(),
       });
 
       await this.usageRepository.save(usage);
 
+      // Fire-and-forget: notify downstream listeners (webhook dispatch,
+      // metrics, sync services) that a usage row has been persisted.
+      // We do this AFTER save() resolves so receivers never observe
+      // usage that did not actually make it to the database.
+      this.eventEmitter
+        .emitAsync(
+          UsageCollectedEvent.EVENT_NAME,
+          new UsageCollectedEvent(usage, command.model.name),
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit UsageCollectedEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            usageId: usage.id,
+          });
+        });
+
       this.logger.log('Usage collected successfully', {
         userId,
+        apiKeyId,
         organizationId,
         modelId: command.modelId,
         provider: command.provider,
@@ -110,32 +143,52 @@ export class CollectUsageUseCase {
     }
   }
 
-  private calculateCost(command: CollectUsageCommand): {
-    cost?: number;
-    currency?: Currency;
-  } {
-    const model = command.model;
-
-    if (
-      model.inputTokenCost === undefined ||
-      model.outputTokenCost === undefined ||
-      model.currency === undefined
-    ) {
-      this.logger.debug('No cost information available for model', {
-        modelId: model.id,
-        hasInputCost: model.inputTokenCost !== undefined,
-        hasOutputCost: model.outputTokenCost !== undefined,
-        hasCurrency: model.currency !== undefined,
-      });
-
-      return { cost: undefined, currency: undefined };
+  private async calculateCredits(
+    cost: number | undefined,
+  ): Promise<number | undefined> {
+    if (cost === undefined) {
+      return undefined;
     }
 
-    const inputCost = (command.inputTokens / 1000) * model.inputTokenCost;
-    const outputCost = (command.outputTokens / 1000) * model.outputTokenCost;
+    try {
+      const creditsPerEuro = await this.getCreditsPerEuroUseCase.execute();
+      return cost * creditsPerEuro;
+    } catch (error) {
+      if (error instanceof PlatformConfigNotFoundError) {
+        this.logger.warn('Could not calculate credits consumed', {
+          error: error.message,
+        });
+        return undefined;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Calculates cost in EUR based on the model's per-million-token pricing.
+   * Returns undefined if the model has no cost information configured.
+   */
+  private calculateCost(command: CollectUsageCommand): number | undefined {
+    const model = command.model;
+
+    const inputTokenCost = model.inputTokenCost;
+    const outputTokenCost = model.outputTokenCost;
+
+    if (inputTokenCost === undefined || outputTokenCost === undefined) {
+      this.logger.debug('No cost information available for model', {
+        modelId: model.id,
+        hasInputCost: inputTokenCost !== undefined,
+        hasOutputCost: outputTokenCost !== undefined,
+      });
+
+      return undefined;
+    }
+
+    const inputCost = (command.inputTokens / 1_000_000) * inputTokenCost;
+    const outputCost = (command.outputTokens / 1_000_000) * outputTokenCost;
     const totalCost = inputCost + outputCost;
 
-    this.logger.debug('Cost calculated for usage', {
+    this.logger.debug('Cost calculated for usage (EUR)', {
       modelId: model.id,
       inputTokens: command.inputTokens,
       outputTokens: command.outputTokens,
@@ -144,12 +197,8 @@ export class CollectUsageUseCase {
       inputCost,
       outputCost,
       totalCost,
-      currency: model.currency,
     });
 
-    return {
-      cost: totalCost,
-      currency: model.currency,
-    };
+    return totalCost;
   }
 }

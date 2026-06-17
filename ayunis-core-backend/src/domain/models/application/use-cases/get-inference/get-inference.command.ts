@@ -1,19 +1,19 @@
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import type { Tool } from '../../../../tools/domain/tool.entity';
 import type { ModelToolChoice } from '../../../domain/value-objects/model-tool-choice.enum';
 import type { Message } from 'src/domain/messages/domain/message.entity';
+import type { ToolSchema } from '../../../domain/value-objects/tool-schema';
 
 export class GetInferenceCommand {
   model: LanguageModel;
   messages: Message[];
-  tools: Tool[];
+  tools: ToolSchema[];
   toolChoice: ModelToolChoice;
   instructions?: string;
 
   constructor(params: {
     model: LanguageModel;
     messages: Message[];
-    tools: Tool[];
+    tools: ToolSchema[];
     toolChoice: ModelToolChoice;
     instructions?: string;
   }) {

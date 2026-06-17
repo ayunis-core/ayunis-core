@@ -13,6 +13,7 @@ export class UserMapper {
       passwordHash: entity.passwordHash,
       name: entity.name,
       hasAcceptedMarketing: entity.hasAcceptedMarketing,
+      department: entity.department,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     });
@@ -29,6 +30,7 @@ export class UserMapper {
     entity.passwordHash = domain.passwordHash;
     entity.name = domain.name;
     entity.hasAcceptedMarketing = domain.hasAcceptedMarketing;
+    entity.department = domain.department;
     entity.updatedAt = domain.updatedAt;
     entity.createdAt = domain.createdAt;
     return entity;

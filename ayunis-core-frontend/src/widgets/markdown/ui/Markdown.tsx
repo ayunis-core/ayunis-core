@@ -3,10 +3,22 @@ import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import CodeBlock from './Codeblock';
+import PiiMaskInline from './PiiMaskInline';
+import { rehypePiiMasks } from '../lib/rehype-pii-masks';
+
+// Module constants so react-markdown doesn't re-parse on every render.
+const REMARK_PLUGINS = [remarkGfm];
+const REHYPE_PLUGINS = [rehypePiiMasks];
 
 interface MarkdownProps {
   children: string;
   className?: string;
+}
+
+interface SpanComponentProps {
+  children?: ReactNode;
+  // react-markdown delivers hast data attributes in kebab-case.
+  'data-pii-token'?: string;
 }
 
 interface CodeComponentProps {
@@ -19,14 +31,27 @@ interface TableComponentProps {
   children?: ReactNode;
 }
 
+interface AnchorComponentProps {
+  href?: string;
+  children?: ReactNode;
+}
+
 function Markdown({ children, className = '' }: Readonly<MarkdownProps>) {
   return (
     <div
       className={`text leading-relaxed prose prose-sm max-w-none dark:prose-invert ${className}`}
     >
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={REMARK_PLUGINS}
+        rehypePlugins={REHYPE_PLUGINS}
         components={{
+          span: (props: SpanComponentProps) => {
+            const token = props['data-pii-token'];
+            if (typeof token === 'string') {
+              return <PiiMaskInline token={token} />;
+            }
+            return <span>{props.children}</span>;
+          },
           code: ({ inline, className, children }: CodeComponentProps) => {
             // Convert children to string safely
             const childrenStr =
@@ -85,6 +110,11 @@ function Markdown({ children, className = '' }: Readonly<MarkdownProps>) {
           ),
           td: ({ children }: TableComponentProps) => (
             <td className="px-2 py-2 text-foreground">{children}</td>
+          ),
+          a: ({ href, children }: AnchorComponentProps) => (
+            <a href={href} target="_blank" rel="noopener noreferrer">
+              {children}
+            </a>
           ),
         }}
       >

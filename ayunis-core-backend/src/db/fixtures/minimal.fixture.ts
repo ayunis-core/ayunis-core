@@ -3,24 +3,35 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
-
-/**
- * Minimal fixture for development and E2E testing
- * Contains: 1 org, 1 admin user, 1 language model, 1 embedding model, 1 subscription
- */
 export const minimalFixture = {
   org: {
     name: 'Demo Org',
   },
 
+  usageOrg: {
+    name: 'Usage Org',
+  },
+
   user: {
     email: 'admin@demo.local',
-    password: 'admin', // Will be hashed by seed runner
+
+    password: 'admin',
     name: 'Admin',
     role: UserRole.ADMIN,
     systemRole: SystemRole.SUPER_ADMIN,
     emailVerified: true,
     hasAcceptedMarketing: true,
+  },
+
+  usageUser: {
+    email: 'admin@usage.local',
+
+    password: 'admin',
+    name: 'Usage Admin',
+    role: UserRole.ADMIN,
+    systemRole: SystemRole.CUSTOMER,
+    emailVerified: true,
+    hasAcceptedMarketing: false,
   },
 
   languageModel: {
@@ -32,13 +43,36 @@ export const minimalFixture = {
     isArchived: false,
     canUseTools: true,
     canVision: true,
+    inputTokenCost: 3,
+    outputTokenCost: 15,
+  },
+
+  azureLanguageModel: {
+    name: 'gpt-5.4',
+    displayName: 'GPT-5.4 (Azure)',
+    provider: ModelProvider.AZURE,
+    canStream: true,
+    isReasoning: false,
+    isArchived: false,
+    canUseTools: true,
+    canVision: true,
+    inputTokenCost: 3,
+    outputTokenCost: 15,
   },
 
   embeddingModel: {
-    name: 'text-embedding-3-large',
-    displayName: 'Text Embedding 3 Large',
-    provider: ModelProvider.OPENAI,
-    dimensions: EmbeddingDimensions.DIMENSION_1536,
+    name: 'mistral-embed',
+    displayName: 'Mistral Embed',
+    provider: ModelProvider.MISTRAL,
+    dimensions: EmbeddingDimensions.DIMENSION_1024,
+  },
+
+  imageGenerationModel: {
+    name: 'gpt-image-1',
+    displayName: 'GPT Image 1 (Azure)',
+    provider: ModelProvider.AZURE,
+    inputTokenCost: 5,
+    outputTokenCost: 40,
   },
 
   subscription: {
@@ -55,6 +89,22 @@ export const minimalFixture = {
     },
   },
 
+  usageSubscription: {
+    monthlyCredits: 10000,
+    billingInfo: {
+      companyName: 'Usage Company',
+      street: 'Credit Lane',
+      houseNumber: '42',
+      postalCode: '54321',
+      city: 'Usage City',
+      country: 'Germany',
+    },
+  },
+
+  platformConfig: {
+    creditsPerEuro: 100,
+  },
+
   permittedModels: [
     {
       // Language model as default
@@ -63,9 +113,20 @@ export const minimalFixture = {
       anonymousOnly: false,
     },
     {
-      // Embedding model (not default)
-      modelKey: 'embeddingModel',
+      modelKey: 'azureLanguageModel',
       isDefault: false,
+      anonymousOnly: false,
+    },
+    {
+      // Embedding model as default
+      modelKey: 'embeddingModel',
+      isDefault: true,
+      anonymousOnly: false,
+    },
+    {
+      // Image-generation model (always single-per-org, default-by-construction)
+      modelKey: 'imageGenerationModel',
+      isDefault: true,
       anonymousOnly: false,
     },
   ],
@@ -73,5 +134,8 @@ export const minimalFixture = {
 
 export type ModelKey = keyof Pick<
   typeof minimalFixture,
-  'languageModel' | 'embeddingModel'
+  | 'languageModel'
+  | 'azureLanguageModel'
+  | 'embeddingModel'
+  | 'imageGenerationModel'
 >;

@@ -37,6 +37,7 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import {
   detectFileType,
+  isAudioFile,
   isDocumentFile,
   isPlainTextFile,
   getCanonicalMimeType,
@@ -70,6 +71,7 @@ import {
   KnowledgeBaseDocumentListResponseDto,
 } from './dto/knowledge-base-document-response.dto';
 import { MissingFileError } from '../../application/knowledge-bases.errors';
+import { KnowledgeBasesConstants } from '../../domain/knowledge-bases.constants';
 import { KnowledgeBaseDtoMapper } from './mappers/knowledge-base-dto.mapper';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
@@ -279,18 +281,24 @@ export class KnowledgeBasesController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'The file to upload (PDF, DOCX, PPTX, TXT)',
+          description: 'The file to upload (PDF, DOCX, PPTX, TXT, max 25 MB)',
         },
       },
       required: ['file'],
     },
   })
+  @HttpCode(HttpStatus.ACCEPTED)
   @ApiResponse({
-    status: 201,
-    description: 'The document has been added to the knowledge base',
+    status: 202,
+    description:
+      'The document has been accepted and is being processed in the background',
     type: KnowledgeBaseDocumentResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Knowledge base not found' })
+  @ApiResponse({
+    status: 413,
+    description: 'File exceeds the 25 MB upload limit',
+  })
   /* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP Content-Length */
   @UseInterceptors(
     FileInterceptor('file', {
@@ -301,7 +309,7 @@ export class KnowledgeBasesController {
           cb(null, `${randomName}${extname(file.originalname)}`);
         },
       }),
-      limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
+      limits: { fileSize: KnowledgeBasesConstants.MAX_FILE_SIZE_BYTES },
     }),
   )
   /* eslint-enable sonarjs/content-length */
@@ -329,10 +337,14 @@ export class KnowledgeBasesController {
     });
 
     const detectedType = detectFileType(file.mimetype, file.originalname);
-    if (!isDocumentFile(detectedType) && !isPlainTextFile(detectedType)) {
+    if (
+      !isDocumentFile(detectedType) &&
+      !isPlainTextFile(detectedType) &&
+      !isAudioFile(detectedType)
+    ) {
       await this.cleanupTempFile(file.path);
       throw new BadRequestException(
-        `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, and TXT files.`,
+        `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, TXT, and audio files (MP3, M4A, WAV, WebM).`,
       );
     }
 
@@ -372,9 +384,11 @@ export class KnowledgeBasesController {
     format: 'uuid',
   })
   @ApiBody({ type: AddUrlToKnowledgeBaseDto })
+  @HttpCode(HttpStatus.ACCEPTED)
   @ApiResponse({
-    status: 201,
-    description: 'The URL source has been added to the knowledge base',
+    status: 202,
+    description:
+      'The URL source has been accepted and is being processed in the background',
     type: KnowledgeBaseDocumentResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Knowledge base not found' })
@@ -386,6 +400,7 @@ export class KnowledgeBasesController {
     this.logger.log('addUrl', {
       knowledgeBaseId: id,
       url: dto.url,
+      maxDepth: dto.maxDepth,
     });
 
     const source = await this.addUrlUseCase.execute(
@@ -393,6 +408,7 @@ export class KnowledgeBasesController {
         knowledgeBaseId: id,
         userId,
         url: dto.url,
+        maxDepth: dto.maxDepth,
       }),
     );
 

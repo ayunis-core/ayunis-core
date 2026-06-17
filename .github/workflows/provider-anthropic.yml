@@ -1,0 +1,56 @@
+name: Provider Anthropic
+
+on:
+  pull_request:
+    paths:
+      - 'packages/provider-anthropic/**'
+      - '.github/workflows/provider-anthropic.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'packages/provider-anthropic/**'
+
+jobs:
+  check:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: packages/provider-anthropic
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Workspace deps (e.g. @ayunis/inference) resolve via their built `dist`,
+      # which `pnpm install` does not produce — build the dep closure first.
+      - name: Build workspace dependencies
+        run: pnpm --filter "@ayunis/provider-anthropic^..." build
+
+      - name: Run TypeScript type check
+        run: pnpm run typecheck
+
+      - name: Run linter
+        run: pnpm run lint
+
+      - name: Run tests
+        run: pnpm run test
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Check circular dependencies
+        run: pnpm run deps:check

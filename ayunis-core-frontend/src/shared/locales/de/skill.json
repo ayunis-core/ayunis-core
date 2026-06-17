@@ -1,6 +1,10 @@
 {
+  "breadcrumb": {
+    "skills": "Fähigkeiten"
+  },
   "shared": {
-    "badge": "Freigegeben"
+    "badge": "Freigegeben",
+    "by": "Geteilt von {{name}}"
   },
   "tabs": {
     "configuration": "Konfiguration",
@@ -82,7 +86,11 @@
     "description": "Dokumente direkt zu dieser Fähigkeit hochladen",
     "adding": "Wird hinzugefügt...",
     "addSource": "Quelle hinzufügen",
-    "disabledTooltip": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein."
+    "disabledTooltip": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein.",
+    "statusProcessing": "wird verarbeitet… Sie können diese Seite verlassen.",
+    "statusProcessingSlow": "wird noch verarbeitet… Sie können diese Seite verlassen.",
+    "statusFailed": "fehlgeschlagen",
+    "retryUpload": "Versuchen Sie, die Datei erneut hochzuladen."
   },
   "knowledgeBases": {
     "title": "Wissenssammlungen",
@@ -107,16 +115,18 @@
     "failedToAdd": "Quelle konnte nicht hinzugefügt werden",
     "invalidFileTypeError": "Dieser Dateityp wird derzeit nicht unterstützt.",
     "fileSourceEmptyDataError": "Die hochgeladene Datei enthält keine verarbeitbaren Daten.",
-    "fileSourceTooLargeError": "Datei ist zu groß. Maximale Dateigröße beträgt 50 MB.",
+    "fileSourceTooLargeError": "Datei ist zu groß. Maximale Dateigröße beträgt 25 MB.",
     "fileSourceTooManyPagesError": "Dokument hat zu viele Seiten zur Verarbeitung.",
     "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist ausgelastet. Bitte versuchen Sie es später erneut.",
-    "fileSourceTimeoutError": "Die Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex."
+    "fileSourceTimeoutError": "Die Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex.",
+    "sourceLimitExceededError": "Ein Skill kann maximal 20 Quellen enthalten. Bitte entfernen Sie eine, bevor Sie eine weitere hinzufügen."
   },
   "mcpIntegrations": {
     "title": "Integrationen",
     "description": "Verbinden Sie externe MCP-Server, um die Fähigkeiten zu erweitern",
     "toggleAriaLabel": "{{name}} Integration umschalten",
     "retryButton": "Erneut versuchen",
+    "configRequiredBadge": "Konfiguration erforderlich",
     "success": {
       "connected": "Integration verbunden",
       "disconnected": "Integration getrennt"

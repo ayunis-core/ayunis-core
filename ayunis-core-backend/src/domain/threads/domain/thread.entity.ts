@@ -10,7 +10,6 @@ export class Thread {
   id: UUID;
   userId: UUID;
   model?: PermittedLanguageModel;
-  agentId?: UUID;
   sourceAssignments?: SourceAssignment[];
   mcpIntegrationIds: UUID[];
   knowledgeBaseAssignments?: KnowledgeBaseAssignment[];
@@ -24,7 +23,6 @@ export class Thread {
     id?: UUID;
     userId: UUID;
     model?: PermittedLanguageModel;
-    agentId?: UUID;
     sourceAssignments?: SourceAssignment[];
     mcpIntegrationIds?: UUID[];
     knowledgeBaseAssignments?: KnowledgeBaseAssignment[];
@@ -37,7 +35,6 @@ export class Thread {
     this.id = params.id ?? randomUUID();
     this.userId = params.userId;
     this.model = params.model;
-    this.agentId = params.agentId;
     this.sourceAssignments = params.sourceAssignments;
     this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
     this.knowledgeBaseAssignments = params.knowledgeBaseAssignments;

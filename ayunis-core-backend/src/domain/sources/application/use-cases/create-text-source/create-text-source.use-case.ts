@@ -22,9 +22,9 @@ import { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/applica
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { UUID } from 'crypto';
-import { IngestContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.command';
+import { IngestBulkContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.command';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
-import { IngestContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.use-case';
+import { IngestBulkContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.use-case';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
 import { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
 import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
@@ -33,6 +33,12 @@ import { SourceRepository } from '../../ports/source.repository';
 import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
 import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
 import { MIME_TYPES } from 'src/common/util/file-type';
+
+interface TextSourceWithContent {
+  source: TextSource;
+  text: string;
+  chunks: TextSourceContentChunk[];
+}
 
 @Injectable()
 export class CreateTextSourceUseCase {
@@ -43,7 +49,7 @@ export class CreateTextSourceUseCase {
     private readonly contextService: ContextService,
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
     private readonly splitTextUseCase: SplitTextUseCase,
-    private readonly ingestContentUseCase: IngestContentUseCase,
+    private readonly ingestBulkContentUseCase: IngestBulkContentUseCase,
     private readonly deleteContentUseCase: DeleteContentUseCase,
     private readonly sourceRepository: SourceRepository,
   ) {}
@@ -58,18 +64,25 @@ export class CreateTextSourceUseCase {
       if (!orgId) {
         throw new UnauthorizedException('User not authenticated');
       }
-      let source: TextSource;
+      let result: TextSourceWithContent;
       if (command instanceof CreateFileSourceCommand) {
-        source = await this.createFileSource(command);
+        result = await this.createFileSource(command);
       } else if (command instanceof CreateUrlSourceCommand) {
-        source = await this.createUrlSource(command);
+        result = await this.createUrlSource(command, orgId);
       } else {
         throw new InvalidSourceTypeError(command.constructor.name);
       }
-      this.logger.debug('Saving source', { sourceId: source.id });
-      await this.sourceRepository.save(source);
-      await this.indexSourceContentChunks({ source, orgId });
-      return source;
+      this.logger.debug('Saving source', { sourceId: result.source.id });
+      const saved = await this.sourceRepository.saveTextSource(result.source, {
+        text: result.text,
+        chunks: result.chunks,
+      });
+      await this.indexSourceContentChunks({
+        sourceId: saved.id,
+        chunks: result.chunks,
+        orgId,
+      });
+      return saved;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Error creating text source', {
@@ -83,7 +96,7 @@ export class CreateTextSourceUseCase {
 
   private async createFileSource(
     command: CreateFileSourceCommand,
-  ): Promise<FileSource> {
+  ): Promise<TextSourceWithContent> {
     const fileRetrieverResult = await this.retrieveFileContentUseCase.execute(
       new RetrieveFileContentCommand({
         fileData: command.fileData,
@@ -92,36 +105,38 @@ export class CreateTextSourceUseCase {
       }),
     );
     const text = fileRetrieverResult.pages.map((page) => page.text).join('\n');
-    const contentChunks = this.getChunksFromText(text, {
+    const chunks = this.getChunksFromText(text, {
       fileName: command.fileName,
     });
 
-    return new FileSource({
+    const source = new FileSource({
       fileType: this.getFileType(command.fileType),
       name: command.fileName,
-      text,
-      contentChunks,
       type: TextType.FILE,
     });
+
+    return { source, text, chunks };
   }
 
   private async createUrlSource(
     command: CreateUrlSourceCommand,
-  ): Promise<UrlSource> {
+    orgId: UUID,
+  ): Promise<TextSourceWithContent> {
     const urlRetrieverResult = await this.retrieveUrlUseCase.execute(
-      new RetrieveUrlCommand(command.url),
+      new RetrieveUrlCommand(command.url, orgId),
     );
 
-    const sourceContents = this.getChunksFromText(urlRetrieverResult.content, {
+    const chunks = this.getChunksFromText(urlRetrieverResult.content, {
       url: command.url,
     });
-    return new UrlSource({
-      contentChunks: sourceContents,
-      text: urlRetrieverResult.content,
+
+    const source = new UrlSource({
       name: urlRetrieverResult.websiteTitle,
       type: TextType.WEB,
       url: command.url,
     });
+
+    return { source, text: urlRetrieverResult.content, chunks };
   }
 
   private getFileType(mimeType: string): FileType {
@@ -134,11 +149,16 @@ export class CreateTextSourceUseCase {
         return FileType.PPTX;
       case MIME_TYPES.TXT:
         return FileType.TXT;
+      case MIME_TYPES.MP3:
+      case MIME_TYPES.M4A:
+      case MIME_TYPES.WAV:
+      case MIME_TYPES.WEBM:
+        return FileType.AUDIO;
       default:
         // This is a programming error - caller should validate/route file types before calling this use case
         throw new Error(
           `CreateTextSourceUseCase received unsupported file type: ${mimeType}. ` +
-            `This use case only handles PDF, DOCX, PPTX, and TXT. Spreadsheets should be routed to CreateDataSourceUseCase.`,
+            `This use case only handles PDF, DOCX, PPTX, TXT, and audio. Spreadsheets should be routed to CreateDataSourceUseCase.`,
         );
     }
   }
@@ -161,8 +181,6 @@ export class CreateTextSourceUseCase {
     );
 
     for (const contentBlock of contentBlocks.chunks) {
-      // Create source content for each content block
-      // Merge source metadata (fileName, URL) with splitter metadata (index, line numbers)
       const chunk = new TextSourceContentChunk({
         content: contentBlock.text,
         meta: {
@@ -179,39 +197,39 @@ export class CreateTextSourceUseCase {
 
   /**
    * Index source content using the indexers module.
-   * Uses delete-once-then-parallel-ingest pattern to avoid race conditions
-   * while maintaining performance for parallel chunk processing.
+   * Uses bulk ingestion to minimize embedding API calls and DB round-trips:
+   * - Embedding model is resolved once (not per chunk)
+   * - All child chunk texts are embedded in batched API calls
+   * - All parent chunks are saved in a single DB write
    */
   private async indexSourceContentChunks(params: {
-    source: TextSource;
+    sourceId: UUID;
+    chunks: TextSourceContentChunk[];
     orgId: UUID;
   }): Promise<void> {
-    this.logger.debug(`Indexing content for source: ${params.source.id}`);
+    this.logger.debug(`Indexing content for source: ${params.sourceId}`);
 
-    // Step 1: Delete any existing index entries for this source ONCE
+    // Step 1: Delete any existing index entries for this source
     // (handles re-upload/re-index scenarios, no-op for new sources)
     await this.deleteContentUseCase.execute(
-      new DeleteContentCommand({ documentId: params.source.id }),
+      new DeleteContentCommand({ documentId: params.sourceId }),
     );
 
-    // Step 2: Ingest all chunks in PARALLEL
-    // Safe because deletion is handled above, not in the ingest use case
-    await Promise.all(
-      params.source.contentChunks.map(async (chunk) => {
-        const ingestCommand = new IngestContentCommand({
-          orgId: params.orgId,
-          documentId: params.source.id,
+    // Step 2: Bulk ingest all chunks in one operation
+    await this.ingestBulkContentUseCase.execute(
+      new IngestBulkContentCommand({
+        orgId: params.orgId,
+        entries: params.chunks.map((chunk) => ({
+          documentId: params.sourceId,
           chunkId: chunk.id,
           content: chunk.content,
-          type: IndexType.PARENT_CHILD,
-        });
-
-        await this.ingestContentUseCase.execute(ingestCommand);
+        })),
+        type: IndexType.PARENT_CHILD,
       }),
     );
 
     this.logger.debug(
-      `Successfully indexed ${params.source.contentChunks.length} content blocks for source: ${params.source.id}`,
+      `Successfully indexed ${params.chunks.length} content blocks for source: ${params.sourceId}`,
     );
   }
 }

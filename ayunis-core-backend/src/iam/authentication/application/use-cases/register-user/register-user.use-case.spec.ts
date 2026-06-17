@@ -24,7 +24,6 @@ import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/applicat
 import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
 import { CreateTrialUseCase } from 'src/iam/trials/application/use-cases/create-trial/create-trial.use-case';
 import { ConfigService } from '@nestjs/config';
-import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { FindUserByEmailUseCase } from '../../../../users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 
 describe('RegisterUserUseCase', () => {
@@ -77,7 +76,6 @@ describe('RegisterUserUseCase', () => {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue(false) },
         },
-        { provide: SendWebhookUseCase, useValue: { execute: jest.fn() } },
       ],
     }).compile();
 
@@ -136,6 +134,40 @@ describe('RegisterUserUseCase', () => {
         password: 'validPassword123',
         orgId: 'org-id',
       }),
+    );
+  });
+
+  it('should pass department to create-admin-user command', async () => {
+    const command = new RegisterUserCommand({
+      userName: 'test',
+      email: 'dept@example.com',
+      password: 'validPassword123',
+      orgName: 'Test Org',
+      hasAcceptedMarketing: false,
+      department: 'bauamt',
+    });
+    const mockOrg = new Org({ id: 'org-id' as UUID, name: 'Test Org' });
+    const mockUser = new User({
+      id: 'user-id' as UUID,
+      email: 'dept@example.com',
+      emailVerified: false,
+      passwordHash: 'hashedPassword',
+      role: UserRole.ADMIN,
+      orgId: 'org-id' as UUID,
+      name: 'test',
+      hasAcceptedMarketing: false,
+    });
+
+    jest.spyOn(mockIsValidPasswordUseCase, 'execute').mockResolvedValue(true);
+    jest.spyOn(mockCreateOrgUseCase, 'execute').mockResolvedValue(mockOrg);
+    jest
+      .spyOn(mockCreateAdminUserUseCase, 'execute')
+      .mockResolvedValue(mockUser);
+
+    await useCase.execute(command);
+
+    expect(mockCreateAdminUserUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ department: 'bauamt' }),
     );
   });
 

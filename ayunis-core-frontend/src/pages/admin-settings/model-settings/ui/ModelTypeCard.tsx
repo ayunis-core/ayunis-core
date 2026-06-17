@@ -5,7 +5,7 @@ import { useUpdatePermittedModel } from '../api/useUpdatePermittedModel';
 import { useEnableModel } from '../api/useEnableModel';
 
 interface ModelTypeCardProps {
-  readonly type: 'language' | 'embedding';
+  readonly type: 'language' | 'embedding' | 'image-generation';
   readonly models: ModelWithConfigResponseDto[];
 }
 

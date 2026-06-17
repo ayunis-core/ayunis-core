@@ -27,7 +27,7 @@ export class GetPresignedUrlUseCase {
     );
 
     try {
-      const bucketName = command.bucket || this.getDefaultBucket();
+      const bucketName = command.bucket ?? this.getDefaultBucket();
 
       // Check if object exists before generating URL
       const exists = await this.objectExists(command.objectName, bucketName);
@@ -38,9 +38,18 @@ export class GetPresignedUrlUseCase {
         });
       }
 
+      const responseOverrides =
+        command.responseContentType || command.responseContentDisposition
+          ? {
+              contentType: command.responseContentType,
+              contentDisposition: command.responseContentDisposition,
+            }
+          : undefined;
+
       const url = await this.objectStorage.getPresignedUrl(
         new StorageUrl(command.objectName, bucketName),
         command.expiresIn,
+        responseOverrides,
       );
 
       this.logger.debug(
@@ -73,7 +82,7 @@ export class GetPresignedUrlUseCase {
     bucket?: string,
   ): Promise<boolean> {
     try {
-      const bucketName = bucket || this.getDefaultBucket();
+      const bucketName = bucket ?? this.getDefaultBucket();
       return this.objectStorage.exists(new StorageUrl(objectName, bucketName));
     } catch (error) {
       this.logger.error(

@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddAnonymousOnlyToPermittedModel1764339508793
-  implements MigrationInterface
-{
+export class AddAnonymousOnlyToPermittedModel1764339508793 implements MigrationInterface {
   name = 'AddAnonymousOnlyToPermittedModel1764339508793';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

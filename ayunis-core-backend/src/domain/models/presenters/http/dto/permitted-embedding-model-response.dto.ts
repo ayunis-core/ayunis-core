@@ -1,39 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
+import { BasePermittedModelResponseDto } from './base-permitted-model-response.dto';
 
-export class PermittedEmbeddingModelResponseDto {
+export class PermittedEmbeddingModelResponseDto extends BasePermittedModelResponseDto {
   @ApiProperty({
     type: 'string',
-    description: 'The id of the permitted model',
+    description: 'The catalog model UUID',
   })
-  id: UUID;
-
-  @ApiProperty({
-    type: 'string',
-    description: 'The name of the model',
-  })
-  name: string;
-
-  @ApiProperty({
-    type: 'string',
-    enum: Object.values(ModelProvider),
-    description: 'The provider of the model',
-  })
-  provider: ModelProvider;
-
-  @ApiProperty({
-    type: 'string',
-    description: 'The display name of the provider',
-  })
-  providerDisplayName: string;
-
-  @ApiProperty({
-    type: 'string',
-    description: 'The display name of the model',
-  })
-  displayName: string;
+  modelId: UUID;
 
   @ApiProperty({
     type: 'string',
@@ -43,15 +18,15 @@ export class PermittedEmbeddingModelResponseDto {
   type: ModelType.EMBEDDING;
 
   @ApiProperty({
-    type: 'boolean',
-    description: 'Whether the model is archived',
-  })
-  isArchived: boolean;
-
-  @ApiProperty({
     type: 'number',
     description: 'The number of dimensions for embeddings',
     nullable: true,
   })
   dimensions?: number;
+
+  @ApiProperty({
+    type: 'boolean',
+    description: 'Whether this model enforces anonymous mode',
+  })
+  anonymousOnly: boolean;
 }

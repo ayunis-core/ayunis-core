@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ExecuteRunAndSetTitleCommand } from './execute-run-and-set-title.command';
 import { ExecuteRunUseCase } from '../execute-run/execute-run.use-case';
 import { ExecuteRunCommand } from '../execute-run/execute-run.command';
@@ -8,27 +8,25 @@ import { GenerateAndSetThreadTitleUseCase } from '../../../../threads/applicatio
 import { GenerateAndSetThreadTitleCommand } from '../../../../threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.command';
 import {
   RunEvent,
+  RunMasksEvent,
   RunMessageEvent,
   RunThreadEvent,
   RunErrorEvent,
   RunSessionEvent,
 } from '../../run-events';
+import { RunPiiMasksUpdate } from '../../../domain/run-pii-masks-update.entity';
+import type { Message } from 'src/domain/messages/domain/message.entity';
 import {
   RunInput,
   RunUserInput,
 } from 'src/domain/runs/domain/run-input.entity';
 import { RunNoModelFoundError } from '../../runs.errors';
 import { Thread } from '../../../../threads/domain/thread.entity';
-import { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
-import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.query';
-import { Agent } from 'src/domain/agents/domain/agent.entity';
-import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
-import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
+import { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
+import { AnonymizeTextForOrgCommand } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
-import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
-import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
+import { RunAnonymizationUnavailableError } from '../../runs.errors';
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
@@ -37,26 +35,15 @@ export class ExecuteRunAndSetTitleUseCase {
   constructor(
     private readonly executeRunUseCase: ExecuteRunUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
-    private readonly findOneAgentUseCase: FindOneAgentUseCase,
     private readonly generateAndSetThreadTitleUseCase: GenerateAndSetThreadTitleUseCase,
-    private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
+    private readonly anonymizeTextForOrgUseCase: AnonymizeTextForOrgUseCase,
     private readonly contextService: ContextService,
-    private readonly checkQuotaUseCase: CheckQuotaUseCase,
   ) {}
 
   async *execute(
     command: ExecuteRunAndSetTitleCommand,
   ): AsyncGenerator<RunEvent> {
     try {
-      // Fair use quota check - throws QuotaExceededError if limit exceeded
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
-      await this.checkQuotaUseCase.execute(
-        new CheckQuotaQuery(userId, QuotaType.FAIR_USE_MESSAGES),
-      );
-
       const streamingStartEvent: RunSessionEvent = {
         type: 'session',
         streaming: true,
@@ -72,7 +59,9 @@ export class ExecuteRunAndSetTitleUseCase {
       // If thread has no messages, we should generate a title after the first message
       const shouldGenerateTitle = thread.messages.length === 0;
 
-      // Execute the run and stream messages
+      // Execute the run and stream messages. Tier-aware fair-use + credit
+      // budget gates are enforced inside `ExecuteRunUseCase` after the model
+      // is resolved — see the call to `checkQuotaUseCase.execute` there.
       const messageGenerator = await this.executeRunUseCase.execute(
         new ExecuteRunCommand({
           threadId: command.threadId,
@@ -81,15 +70,8 @@ export class ExecuteRunAndSetTitleUseCase {
         }),
       );
 
-      for await (const message of messageGenerator) {
-        // Yield message event with domain entity
-        const messageEvent: RunMessageEvent = {
-          type: 'message',
-          message,
-          threadId: command.threadId,
-          timestamp: new Date().toISOString(),
-        };
-        yield messageEvent;
+      for await (const item of messageGenerator) {
+        yield this.toStreamEvent(item, command.threadId);
       }
       if (shouldGenerateTitle) {
         const titleEvent = await this.generateTitle(command, thread);
@@ -100,7 +82,9 @@ export class ExecuteRunAndSetTitleUseCase {
     } catch (error) {
       this.logger.error('Error in executeRunAndSetTitle', error);
 
-      // Preserve error code from domain errors (e.g., RUN_NO_MODEL_FOUND)
+      // Preserve error code from domain errors (e.g., RUN_NO_MODEL_FOUND,
+      // QUOTA_EXCEEDED) so the SSE consumer can branch on it. The metadata
+      // spread below also forwards `retryAfterSeconds` for QuotaExceededError.
       const errorCode =
         error instanceof ApplicationError ? error.code : 'EXECUTION_ERROR';
 
@@ -134,6 +118,30 @@ export class ExecuteRunAndSetTitleUseCase {
     }
   }
 
+  private toStreamEvent(
+    item: Message | RunPiiMasksUpdate,
+    threadId: string,
+  ): RunMasksEvent | RunMessageEvent {
+    if (item instanceof RunPiiMasksUpdate) {
+      return {
+        type: 'masks',
+        threadId,
+        masks: item.masks.map((mask) => ({
+          token: mask.token,
+          value: mask.value,
+          category: mask.category,
+        })),
+        timestamp: new Date().toISOString(),
+      };
+    }
+    return {
+      type: 'message',
+      message: item,
+      threadId,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   private async generateTitle(
     command: ExecuteRunAndSetTitleCommand,
     thread: Thread,
@@ -156,17 +164,7 @@ export class ExecuteRunAndSetTitleUseCase {
         isAnonymous: thread.isAnonymous,
       });
 
-      // Fetch agent if thread has agentId
-      let agent: Agent | undefined;
-      if (thread.agentId) {
-        agent = (
-          await this.findOneAgentUseCase.execute(
-            new FindOneAgentQuery(thread.agentId),
-          )
-        ).agent;
-      }
-
-      const model = thread.model ?? agent?.model;
+      const model = thread.model;
       if (!model) {
         throw new RunNoModelFoundError({
           threadId: command.threadId,
@@ -208,24 +206,26 @@ export class ExecuteRunAndSetTitleUseCase {
     return undefined;
   }
 
+  // Throws when anonymization is unavailable: generateTitle's catch then
+  // skips the title instead of sending raw PII to the model.
   private async anonymizeText(text: string): Promise<string> {
-    try {
-      const result = await this.anonymizeTextUseCase.execute(
-        new AnonymizeTextCommand(text, 'de'),
-      );
-      if (result.replacements.length > 0) {
-        this.logger.log('Anonymized text for title generation', {
-          originalLength: text.length,
-          anonymizedLength: result.anonymizedText.length,
-          replacementsCount: result.replacements.length,
-        });
-      }
-      return result.anonymizedText;
-    } catch (error) {
-      this.logger.error('Failed to anonymize text, returning original', {
-        error: error as Error,
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new RunAnonymizationUnavailableError({
+        originalError: 'No org context available for anonymization',
       });
-      return text;
     }
+
+    const result = await this.anonymizeTextForOrgUseCase.execute(
+      new AnonymizeTextForOrgCommand(text, orgId),
+    );
+    if (result.replacements.length > 0) {
+      this.logger.log('Anonymized text for title generation', {
+        originalLength: text.length,
+        anonymizedLength: result.anonymizedText.length,
+        replacementsCount: result.replacements.length,
+      });
+    }
+    return result.anonymizedText;
   }
 }

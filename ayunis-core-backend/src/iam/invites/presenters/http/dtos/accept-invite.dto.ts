@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class AcceptInviteDto {
   @ApiProperty({
@@ -29,4 +29,13 @@ export class AcceptInviteDto {
   })
   @IsBoolean()
   hasAcceptedMarketing: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Department within the municipality',
+    example: 'hauptamt',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  department?: string;
 }

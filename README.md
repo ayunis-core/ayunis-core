@@ -2,15 +2,14 @@
 
 > An open-source AI gateway for public administrations
 
-Ayunis Core is a comprehensive AI platform that enables intelligent conversations with customizable agents, advanced prompt management, and extensible tool integration. Built with ❤️ for public administrations.
+Ayunis Core is a comprehensive AI platform that enables intelligent conversations with customizable skills, knowledge bases, and extensible tool integration. Built with ❤️ for public administrations.
 
 ## ✨ Features
 
 ### 🤖 AI Conversations
 
 - **Multiple LLM providers** - Seamlessly connect to Ollama, Mistral, Anthropic or OpenAI without configuration overhead
-- **Prompt Library** - Organize prompts for easy reuse
-- **Agent Builder** - Create your personalized AI assistants to help with your tasks. Share the best with your entire team.
+- **Skills** - Package reusable instructions, tools, and knowledge sources into named skills. Share the best with your entire team.
 - **RAG Pipeline** - Enhance model context with your own data & documents. Use our pipeline in your own services.
 
 ### 🛠️ Advanced Capabilities
@@ -32,20 +31,20 @@ Ayunis Core is a comprehensive AI platform that enables intelligent conversation
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js (v24 or higher)
 - npm
 - Docker and Docker Compose
 - `pipx` (or Python `pip`) — used by the pre-commit complexity check to install `lizard`
 
 ### Installation
 
-**Clone the repository and navigate to the project root**
+#### Clone the repository and navigate to the project root
 
 ```bash
 cd /path/to/ayunis-core
 ```
 
-**Create your production environment file**
+#### Create your production environment file
 
 > [!] You must create each env file, even if you don't change variables
 
@@ -55,28 +54,28 @@ cp ./ayunis-core-backend/.env.example ./ayunis-core-backend/.env
 cp ./ayunis-core-frontend/.env.example ./ayunis-core-frontend/.env
 ```
 
-**Edit the backend environment file with your production values**
+#### Edit the backend environment file with your production values
 
 ```bash
 nano ./ayunis-core-backend/.env
 ```
 
-**Build and start the production stack**
+#### Build and start the production stack
 
 ```bash
 docker compose up -d --build
 ```
 
-**Change application port**
+#### Change application port
 
 Change `HOST_PORT` in the `.env` file in the project root
 
-**Access the application**
+#### Access the application
 
-- Application: http://localhost:3000
-- Backend Base URL: http://localhost:3000/api
-- SwaggerUI: http://localhost:3000/api/docs
-- OpenAPI JSON: http://localhost:3000/api/docs-json
+- Application: <http://localhost:3000>
+- Backend Base URL: <http://localhost:3000/api>
+- SwaggerUI: <http://localhost:3000/api/docs>
+- OpenAPI JSON: <http://localhost:3000/api/docs-json>
 
 ## ⚙️ Configuration
 
@@ -97,16 +96,20 @@ MCP integration enables Ayunis Core to connect to external data sources through 
 #### Required Configuration
 
 **MCP_ENCRYPTION_KEY** (Required):
+
 - Encrypts all MCP integration credentials (API keys, bearer tokens) at rest in the database
 - Uses AES-256-GCM encryption
 - Must be a 64-character hexadecimal string (32 bytes)
 - Generate a secure key with:
+
   ```bash
   openssl rand -hex 32
   ```
+
 - The application will fail to start if this variable is not set or is invalid
 
 **LOCABOO_4_URL** (Required for Locaboo 4 integration):
+
 - Base URL of the Locaboo 4 MCP server instance
 - Example values:
   - Local development: `http://localhost:8080`
@@ -139,6 +142,7 @@ Ayunis Core uses a simplified authentication system for MCP integrations:
 #### Configuration Validation
 
 The application validates MCP configuration on startup:
+
 - `MCP_ENCRYPTION_KEY` must be set and valid (64 hex characters)
 - If validation fails, the application will not start
 - Check application logs for specific error messages if startup fails
@@ -152,7 +156,7 @@ Admins can create MCP integrations through the admin UI or API:
 3. Select integration type (e.g., "Locaboo 4")
 4. Provide server URL and authentication credentials
 5. Test connection before saving
-6. Once saved, organization users can use the integration in agents
+6. Once saved, organization users can use the integration in skills
 
 For API-based creation, see the MCP integration endpoints in the OpenAPI documentation.
 
@@ -184,6 +188,7 @@ Then use the authenticated API to manage the model catalog. See the full endpoin
 > [!ATTENTION] The embedding model dimension must match the model's required dimensions. If you need other dimensions, create a Github Issue and we will take care of it.
 
 See also:
+
 - `/src/domain/models/domain/models/language.model.ts`
 - `/src/domain/models/domain/models/embedding.model.ts`
 - `/src/domain/models/domain/value-objects/embedding-dimensions.enum.ts`
@@ -205,9 +210,8 @@ This creates **Demo Org** with `admin@demo.local` / `admin` (super admin) and pe
 - As a super admin, add models to the catalog and permit them for your organization (see [Model Configuration](#model-configuration))
 - Go to Admin Settings → Models and enable at least one language model and one embedding model
 - Invite users
-- Go to the Prompt Library and add some prompts for easy access
-- Create some agents for your most important use cases
-- Chat with your enabled models, add prompts via the book icon button below the chat input
+- Create some skills for your most important use cases
+- Chat with your enabled models, activate skills as needed
 
 ## 💻 Development
 
@@ -241,11 +245,12 @@ This installs Husky and configures Git to use the hooks in the `.husky/` directo
 
 Commit messages must follow this format:
 
-```
+```text
 <type>: <description> (AYC-<task-id>)
 ```
 
 Examples:
+
 - `feat: add new chart widget (AYC-123)`
 - `fix: correct date validation (AYC-456)`
 - `chore: update dependencies (AYC-789)`

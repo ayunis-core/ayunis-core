@@ -1,0 +1,55 @@
+{
+  "title": "Plattform-Konfiguration",
+  "creditsPerEuro": {
+    "title": "Credits pro Euro",
+    "description": "Globaler Umrechnungskurs, der definiert, wie viele Credits ein Euro an Token-Kosten entspricht. Gilt für alle nutzungsbasierten Abonnements.",
+    "label": "Credits pro Euro",
+    "loading": "Wird geladen…",
+    "loadError": "Credits-pro-Euro-Konfiguration konnte nicht geladen werden.",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "updateSuccess": "Credits pro Euro erfolgreich aktualisiert.",
+    "updateError": "Credits pro Euro konnte nicht aktualisiert werden.",
+    "validationError": "Bitte geben Sie eine positive Zahl ein.",
+    "hint": "Änderungen an diesem Wert betreffen nur zukünftige Nutzungseinträge. Historische Einträge behalten ihre ursprünglichen Credits-Werte.",
+    "notConfigured": "Es wurde noch kein Wert konfiguriert. Bitte legen Sie einen initialen Wert fest."
+  },
+  "fairUseLimits": {
+    "title": "Fair-Use-Limits",
+    "description": "Pro Stufe gleitende Zeitfenster-Kontingente für Chat-Nachrichten. Jede Stufe hat ihren eigenen Zähler, sodass Nutzer mehr Nachrichten in der günstigen Stufe senden können, ohne das Kontingent der teuren Stufe zu verbrauchen.",
+    "loading": "Wird geladen…",
+    "loadError": "Fair-Use-Limits konnten nicht geladen werden.",
+    "tier": {
+      "zero": "Unbegrenzte Stufe",
+      "low": "Niedrige Stufe",
+      "medium": "Mittlere Stufe",
+      "high": "Hohe Stufe"
+    },
+    "limit": "Nachrichten",
+    "windowHours": "Zeitfenster (Stunden)",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "updateSuccess": "Fair-Use-Limit erfolgreich aktualisiert.",
+    "updateError": "Fair-Use-Limit konnte nicht aktualisiert werden.",
+    "validationError": {
+      "limit": "Nachrichten müssen eine positive Ganzzahl sein.",
+      "windowHours": "Zeitfenster muss mindestens 0,01 Stunden betragen."
+    }
+  },
+  "imageFairUseLimit": {
+    "title": "Fair-Use-Limit für Bildgenerierung",
+    "description": "Globales gleitendes Zeitfenster-Kontingent für die Bildgenerierung über alle Nutzer hinweg.",
+    "loading": "Wird geladen…",
+    "loadError": "Fair-Use-Limit für Bildgenerierung konnte nicht geladen werden.",
+    "limit": "Bilder",
+    "windowHours": "Zeitfenster (Stunden)",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "updateSuccess": "Fair-Use-Limit für Bildgenerierung erfolgreich aktualisiert.",
+    "updateError": "Fair-Use-Limit für Bildgenerierung konnte nicht aktualisiert werden.",
+    "validationError": {
+      "limit": "Bilder müssen eine positive Ganzzahl sein.",
+      "windowHours": "Zeitfenster muss mindestens 0,01 Stunden betragen."
+    }
+  }
+}

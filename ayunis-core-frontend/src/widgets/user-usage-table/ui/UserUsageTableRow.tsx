@@ -1,7 +1,6 @@
 import type { UserUsageDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useTranslation } from 'react-i18next';
 import { TableCell, TableRow } from '@/shared/ui/shadcn/table';
-import { Badge } from '@/shared/ui/shadcn/badge';
 import { formatCompactNumber } from '@/shared/lib/formatCompactNumber';
 import { formatRelativeDate } from '@/shared/lib/format-relative-date';
 
@@ -24,9 +23,9 @@ export function UserUsageTableRow({ user }: Readonly<UserUsageTableRowProps>) {
         </div>
       </TableCell>
       <TableCell>
-        <div className="font-medium">{formatCompact(user.tokens)}</div>
+        <div className="font-medium">{formatCompact(user.credits)}</div>
         <div className="text-xs text-muted-foreground">
-          {t('userUsage.tokens')}
+          {t('userUsage.credits')}
         </div>
       </TableCell>
       <TableCell>
@@ -40,19 +39,11 @@ export function UserUsageTableRow({ user }: Readonly<UserUsageTableRowProps>) {
           <span className="text-sm">
             {/* eslint-disable-next-line sonarjs/todo-tag -- DTO typing issue: lastActivity has incorrect type in the generated DTO */}
             {/* TODO: Fix typing issue on the dto level */}
-            {formatRelativeDate(
-              user.lastActivity as unknown as string,
-              i18n.language,
-            )}
+            {formatRelativeDate(user.lastActivity, i18n.language)}
           </span>
         ) : (
           <span className="text-sm text-muted-foreground">-</span>
         )}
-      </TableCell>
-      <TableCell>
-        <Badge variant={user.isActive ? 'default' : 'secondary'}>
-          {user.isActive ? t('userUsage.active') : t('userUsage.inactive')}
-        </Badge>
       </TableCell>
     </TableRow>
   );

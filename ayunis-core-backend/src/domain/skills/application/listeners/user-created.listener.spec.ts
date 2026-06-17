@@ -1,10 +1,25 @@
 import { UserCreatedListener } from './user-created.listener';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
 import type { MarketplaceSkillInstallationService } from '../services/marketplace-skill-installation.service';
+import { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
 
 const USER_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 const ORG_ID = '00000000-0000-0000-0000-000000000002' as UUID;
+
+function makeUser(): User {
+  return new User({
+    id: USER_ID,
+    email: 'test@example.com',
+    emailVerified: true,
+    passwordHash: 'hashed',
+    role: UserRole.USER,
+    orgId: ORG_ID,
+    name: 'Test User',
+    hasAcceptedMarketing: false,
+  });
+}
 
 describe('UserCreatedListener', () => {
   let listener: UserCreatedListener;
@@ -20,7 +35,9 @@ describe('UserCreatedListener', () => {
   });
 
   it('should delegate to installAllPreInstalled with the user ID from the event', async () => {
-    await listener.handleUserCreated(new UserCreatedEvent(USER_ID, ORG_ID));
+    await listener.handleUserCreated(
+      new UserCreatedEvent(USER_ID, ORG_ID, makeUser()),
+    );
 
     expect(
       skillInstallationService.installAllPreInstalled,
@@ -36,7 +53,9 @@ describe('UserCreatedListener', () => {
     );
 
     await expect(
-      listener.handleUserCreated(new UserCreatedEvent(USER_ID, ORG_ID)),
+      listener.handleUserCreated(
+        new UserCreatedEvent(USER_ID, ORG_ID, makeUser()),
+      ),
     ).resolves.toBeUndefined();
   });
 });

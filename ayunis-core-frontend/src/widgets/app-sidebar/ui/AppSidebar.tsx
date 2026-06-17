@@ -1,14 +1,14 @@
 import React from 'react';
 import {
   User2,
-  BookOpen,
   ChevronUp,
   Settings2,
   LogOut,
   Plus,
-  Bot,
   Brain,
   Sparkles,
+  Store,
+  GraduationCap,
 } from 'lucide-react';
 
 import {
@@ -30,7 +30,7 @@ import {
 import { ChatsSidebarGroup } from './ChatsSidebarGroup';
 import { useMe } from '../api/useMe';
 import { useLogout } from '../api/useLogout';
-import { Link } from '@tanstack/react-router';
+import { Link, useLocation } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useNavigate } from '@tanstack/react-router';
@@ -42,6 +42,8 @@ import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.sc
 import config from '@/shared/config';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { useFeatureToggles } from '@/features/feature-toggles';
+import { useMarketplaceConfig } from '@/features/marketplace';
+import { useAcademyActive } from '@/features/academy';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
@@ -51,6 +53,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navigate = useNavigate();
   const { closeMobileWithCleanup } = useSidebar();
   const featureToggles = useFeatureToggles();
+  const marketplace = useMarketplaceConfig();
+  const academyActive = useAcademyActive();
+  const location = useLocation();
   useKeyboardShortcut(['j', 'Meta'], () => {
     void navigate({ to: '/chat' });
   });
@@ -62,24 +67,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: '/chat',
       icon: Plus,
     },
-    ...(featureToggles.promptsEnabled
-      ? [
-          {
-            title: t('sidebar.prompts'),
-            url: '/prompts',
-            icon: BookOpen,
-          },
-        ]
-      : []),
-    ...(featureToggles.agentsEnabled
-      ? [
-          {
-            title: t('sidebar.agents'),
-            url: '/agents',
-            icon: Bot,
-          },
-        ]
-      : []),
     ...(featureToggles.skillsEnabled
       ? [
           {
@@ -126,7 +113,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenu>
             {items.map((item) => (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton
+                  asChild
+                  isActive={
+                    item.url === '/chat'
+                      ? location.pathname === '/chat'
+                      : location.pathname.startsWith(item.url)
+                  }
+                >
                   <Link to={item.url}>
                     <item.icon />
                     <span>{item.title}</span>
@@ -134,6 +128,33 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
+            {marketplace.enabled && marketplace.url && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a
+                    href={marketplace.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Store />
+                    <span>{t('sidebar.marketplace')}</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+            {academyActive && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={location.pathname.startsWith('/academy')}
+                >
+                  <Link to="/academy">
+                    <GraduationCap />
+                    <span>{t('sidebar.academy')}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
           </SidebarMenu>
         </SidebarGroup>
 

@@ -95,7 +95,6 @@ export class ResetPasswordUseCase {
           throw new InvalidPasswordError('Password hashing failed');
         });
 
-      // Update the user's password
       user.passwordHash = newHashedPassword;
       await this.usersRepository.update(user);
 

@@ -4,6 +4,7 @@ import type { Tool } from 'src/domain/tools/domain/tool.entity';
 export interface ToolExecutionContext {
   orgId: UUID;
   threadId: UUID;
+  isAnonymous?: boolean;
 }
 
 export abstract class ToolExecutionHandler {

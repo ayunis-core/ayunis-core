@@ -70,6 +70,26 @@ module.exports = {
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // CROSS-MODULE BOUNDARY — Use cases, not ports
+    // Module A may import use cases from module B, but NOT B's ports.
+    // Ports are internal contracts between a module's application and
+    // infrastructure layers.
+    // ═══════════════════════════════════════════════════════════════════════════
+    {
+      name: 'no-cross-module-port-imports',
+      comment:
+        'Modules must not import ports from other modules — use exported use cases instead',
+      severity: 'error',
+      from: {
+        path: '^src/(domain|iam)/([^/]+)/',
+      },
+      to: {
+        path: '^src/(domain|iam)/[^/]+/application/ports/',
+        pathNot: '^src/$1/$2/application/ports/',
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // PORTS — Abstract interfaces for INFRASTRUCTURE (repos, external APIs)
     // Ports define contracts that infrastructure adapters implement.
     // Cross-module communication goes through USE CASES, not ports.

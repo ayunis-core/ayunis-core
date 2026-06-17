@@ -42,7 +42,7 @@ export function EditSkillTemplateDialog({
     }
   }, [template, form]);
 
-  const { updateSkillTemplate } = useUpdateSkillTemplate(() => {
+  const { updateSkillTemplate } = useUpdateSkillTemplate(form, () => {
     onOpenChange(false);
   });
 

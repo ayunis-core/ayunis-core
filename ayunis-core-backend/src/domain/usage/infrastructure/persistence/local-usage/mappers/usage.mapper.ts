@@ -8,6 +8,7 @@ export class UsageMapper {
     const record = new UsageRecord();
     record.id = usage.id;
     record.userId = usage.userId;
+    record.apiKeyId = usage.apiKeyId;
     record.organizationId = usage.organizationId;
     record.modelId = usage.modelId;
     record.provider = usage.provider;
@@ -15,7 +16,7 @@ export class UsageMapper {
     record.outputTokens = usage.outputTokens;
     record.totalTokens = usage.totalTokens;
     record.cost = usage.cost ?? null;
-    record.currency = usage.currency ?? null;
+    record.creditsConsumed = usage.creditsConsumed ?? null;
     record.requestId = usage.requestId;
     record.createdAt = usage.createdAt;
     return record;
@@ -25,6 +26,7 @@ export class UsageMapper {
     return new Usage({
       id: record.id,
       userId: record.userId,
+      apiKeyId: record.apiKeyId,
       organizationId: record.organizationId,
       modelId: record.modelId,
       provider: record.provider,
@@ -32,7 +34,7 @@ export class UsageMapper {
       outputTokens: record.outputTokens,
       totalTokens: record.totalTokens,
       cost: record.cost ?? undefined,
-      currency: record.currency ?? undefined,
+      creditsConsumed: record.creditsConsumed ?? undefined,
       requestId: record.requestId,
       createdAt: record.createdAt,
     });

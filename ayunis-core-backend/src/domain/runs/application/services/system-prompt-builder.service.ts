@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
-import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import {
   TextSource,
   FileSource,
@@ -16,26 +16,28 @@ import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/kno
 import type { SkillEntry } from 'src/common/util/skill-slug';
 
 export interface SystemPromptBuildParams {
-  agent?: Agent;
   tools: Tool[];
   currentTime: Date;
   sources?: Source[];
   skills?: SkillEntry[];
   knowledgeBases?: KnowledgeBaseSummary[];
+  orgSystemPrompt?: string;
   userSystemPrompt?: string;
+  isAnonymous?: boolean;
 }
 
 @Injectable()
 export class SystemPromptBuilderService {
   build(params: SystemPromptBuildParams): string {
     const {
-      agent,
       tools,
       currentTime,
       sources = [],
       skills = [],
       knowledgeBases = [],
+      orgSystemPrompt,
       userSystemPrompt,
+      isAnonymous = false,
     } = params;
 
     const sections = [
@@ -46,11 +48,10 @@ export class SystemPromptBuilderService {
       this.buildFilesSection(sources),
       this.buildKnowledgeBasesSection(knowledgeBases),
       this.buildDataHandlingSection(),
+      isAnonymous ? this.buildAnonymizationSection() : '',
       this.buildResponseGuidelines(),
       this.buildPlatformSection(),
-      agent?.instructions
-        ? this.buildAgentInstructionsSection(agent.instructions)
-        : '',
+      orgSystemPrompt ? this.buildOrgInstructionsSection(orgSystemPrompt) : '',
       userSystemPrompt
         ? this.buildUserInstructionsSection(userSystemPrompt)
         : '',
@@ -64,7 +65,7 @@ export class SystemPromptBuilderService {
     return `You are an AI assistant powered by Ayunis Core, an open-source AI gateway platform designed for public administrations.
 
 <application_details>
-Ayunis Core is an AI platform that enables intelligent conversations with customizable AI agents, advanced prompt management, and extensible tool integration. It is built for public sector organizations that need sovereign AI solutions with full control over data, models, and integrations.
+Ayunis Core is an AI platform that enables intelligent conversations, customizable skills, and extensible tool integration. It is built for public sector organizations that need sovereign AI solutions with full control over data, models, and integrations.
 </application_details>
 
 <context>
@@ -119,7 +120,7 @@ When tools are available (such as source queries or web access), use them to pro
     return `<tool_usage>
 
 <available_tools>
-Your capabilities depend on which tools have been assigned to this agent. Use tools when they help answer the user's question or complete their task. Don't use tools unnecessarily.
+Your capabilities depend on which tools are available in this conversation. Use tools when they help answer the user's question or complete their task. Don't use tools unnecessarily.
 </available_tools>
 
 <tool_guidelines>
@@ -130,6 +131,20 @@ When using tools:
 3. **Respect rate limits and resources** — Don't make excessive requests
 4. **Verify before actions** — For consequential actions (sending emails, creating events), confirm with the user first
 </tool_guidelines>
+
+<document_usage>
+**Default to inline responses.** Respond directly in the chat for questions, explanations, summaries, brainstorming, code snippets, and general conversation — even if the response is long or uses formatting.
+
+Only use create_document when the user explicitly asks for a document they intend to edit, export, or download — for example: "Write me a letter", "Create a report I can export as PDF", "Draft a formal document". Keywords like "document", "letter", "report", "draft", "Schreiben", "Dokument", "Brief", or "Vorlage" are strong signals.
+
+If in doubt, respond inline. The user can always ask you to turn a response into a document.
+</document_usage>
+
+<diagram_usage>
+Use create_diagram when the user asks for a visual — a flowchart, sequence diagram, entity-relationship diagram, class diagram, state diagram, or similar. The content must be valid mermaid source (e.g. starting with "flowchart TD", "sequenceDiagram", "erDiagram"). Do not wrap the source in code fences or markdown.
+
+Prefer create_diagram over inline mermaid code blocks when the user explicitly asks for a diagram they want to view, iterate on, or export. For a quick sketch in the middle of a conversation, an inline mermaid code block is fine.
+</diagram_usage>
 
 ${toolSpecificSections}
 
@@ -163,6 +178,19 @@ Ayunis Core is multi-tenant. You operate within the context of a specific organi
 
 If users ask about platform-wide information you don't have access to, explain that your context is scoped to their organization.
 </multi_tenant_context>`;
+  }
+
+  private buildAnonymizationSection(): string {
+    return `<anonymized_data>
+This conversation runs in anonymous mode: personally identifiable information in user messages and tool results has been replaced with placeholder tokens of the form {{pii:CATEGORY_NUMBER}} before reaching you (e.g. {{pii:PERSON_NAME_1}}, {{pii:EMAIL_ADDRESS_2}}).
+
+Rules for handling these placeholders:
+
+- Each placeholder consistently refers to the same real entity throughout the conversation.
+- When referring to such an entity, copy its placeholder verbatim — exact braces, spelling, and number (e.g. {{pii:PERSON_NAME_1}}).
+- Never invent new placeholders, alter existing ones, or guess the hidden values.
+- Do not mention this anonymization mechanism unless the user asks about it.
+</anonymized_data>`;
   }
 
   private buildResponseGuidelines(): string {
@@ -202,7 +230,7 @@ If users ask about Ayunis Core itself:
 Ayunis Core is an open-source AI gateway platform. Key features include:
 
 - Multi-LLM support (various AI model providers)
-- Customizable agents with specific instructions and tools
+- Customizable skills with specific instructions and tools
 - Document processing and semantic search (RAG)
 - Tool integrations for external services
 - Multi-tenant organization management
@@ -220,11 +248,13 @@ For technical questions about the platform, configuration, or deployment, users 
     return toolSections;
   }
 
-  private buildAgentInstructionsSection(instructions: string): string {
+  private buildOrgInstructionsSection(orgSystemPrompt: string): string {
     return `
-<agent_instructions>
-${instructions}
-</agent_instructions>
+<organization_instructions>
+The following instructions were set by the user's organization administrator and apply to all members of the organization:
+
+${orgSystemPrompt}
+</organization_instructions>
 `;
   }
 
@@ -261,6 +291,43 @@ ${skillEntries}
       return '';
     }
 
+    // Only TextSources are searchable via source_query — DataSources are
+    // handled by the code_execution tool and listed separately.
+    const readyTextSources = sources.filter(
+      (s) => s.status === SourceStatus.READY && s instanceof TextSource,
+    );
+    const readyDataSources = sources.filter(
+      (s) => s.status === SourceStatus.READY && s instanceof DataSource,
+    );
+    const processingSources = sources.filter(
+      (s) => s.status === SourceStatus.PROCESSING,
+    );
+    const failedSources = sources.filter(
+      (s) => s.status === SourceStatus.FAILED,
+    );
+
+    const sections: string[] = [];
+
+    if (readyTextSources.length > 0) {
+      sections.push(this.buildAvailableFilesSection(readyTextSources));
+    }
+
+    if (readyDataSources.length > 0) {
+      sections.push(this.buildDataSourcesSection(readyDataSources));
+    }
+
+    if (processingSources.length > 0) {
+      sections.push(this.buildPendingFilesSection(processingSources));
+    }
+
+    if (failedSources.length > 0) {
+      sections.push(this.buildFailedFilesSection(failedSources));
+    }
+
+    return sections.join('\n\n');
+  }
+
+  private buildAvailableFilesSection(sources: Source[]): string {
     const userFiles = sources.filter((s) => s.createdBy === SourceCreator.USER);
     const systemFiles = sources.filter(
       (s) => s.createdBy === SourceCreator.SYSTEM,
@@ -304,6 +371,49 @@ ${systemFiles.map(formatFile).join('\n')}
 </available_files>`;
 
     return section;
+  }
+
+  private buildDataSourcesSection(sources: Source[]): string {
+    const formatFile = (source: Source): string => {
+      const type = this.getFileTypeLabel(source);
+      return `<file id="${source.id}" name="${this.escapeXml(source.name)}" type="${type}" />`;
+    };
+
+    return `<available_data_sources>
+The following data sources are available for analysis using the code_execution tool.
+These are structured data files (e.g., CSV) and cannot be searched with source_query.
+
+${sources.map(formatFile).join('\n')}
+</available_data_sources>`;
+  }
+
+  private buildPendingFilesSection(sources: Source[]): string {
+    const files = sources
+      .map(
+        (s) =>
+          `<file id="${s.id}" name="${this.escapeXml(s.name)}" status="processing" />`,
+      )
+      .join('\n');
+
+    return `<pending_files>
+The following files are currently being processed and are NOT yet available for search.
+If the user asks about these files, let them know the upload is still processing.
+${files}
+</pending_files>`;
+  }
+
+  private buildFailedFilesSection(sources: Source[]): string {
+    const files = sources
+      .map(
+        (s) =>
+          `<file id="${s.id}" name="${this.escapeXml(s.name)}" error="${this.escapeXml(s.processingError ?? 'Unknown error')}" />`,
+      )
+      .join('\n');
+
+    return `<failed_files>
+The following file uploads failed. Let the user know if they ask about them.
+${files}
+</failed_files>`;
   }
 
   private getFileTypeLabel(source: Source): string {

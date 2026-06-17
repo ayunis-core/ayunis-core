@@ -31,14 +31,21 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
     await this.parentChunkRepository.save(parentChunkRecord);
   }
 
+  async saveMany(parentChunks: ParentChunk[]) {
+    if (parentChunks.length === 0) return;
+    const records = parentChunks.map((chunk) =>
+      this.parentChildIndexerMapper.toParentChunkRecord(chunk),
+    );
+    await this.parentChunkRepository.save(records);
+  }
+
   async delete(relatedDocumentId: UUID) {
-    const parentChunks = await this.parentChunkRepository.find({
-      where: { relatedDocumentId },
-    });
-    if (parentChunks.length === 0) {
-      return;
-    }
-    await this.parentChunkRepository.remove(parentChunks);
+    await this.parentChunkRepository
+      .createQueryBuilder()
+      .delete()
+      .from(ParentChunkRecord)
+      .where('relatedDocumentId = :relatedDocumentId', { relatedDocumentId })
+      .execute();
   }
 
   async deleteMany(relatedDocumentIds: UUID[]): Promise<void> {

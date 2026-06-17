@@ -114,6 +114,8 @@ jobs:
             sed 's/^### \(.*\)/*\1*/g' | \
             # Convert markdown links [text](url) to Slack format <url|text>
             sed 's/\[\([^]]*\)\](\([^)]*\))/<\2|\1>/g' | \
+            # Convert **bold** (GitHub Markdown) to *bold* (Slack mrkdwn)
+            sed 's/\*\*\([^*]*\)\*\*/\*\1\*/g' | \
             # Convert bullet points to proper bullets
             sed 's/^\* /• /g' | \
             # Remove empty lines at the start
@@ -178,8 +180,23 @@ jobs:
     if: ${{ needs.release-please.outputs.releases_created == 'true' }}
     steps:
       - name: Trigger docs update workflow
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.DOCS_REPO_PAT }}
-          repository: ayunis/ayunis-core-docs
+          repository: ayunis-core/ayunis-core-docs
           event-type: release-published
+
+  linear-release:
+    name: Linear Release
+    runs-on: ubuntu-latest
+    needs: [release-please, deploy-internal, deploy-production]
+    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: linear/linear-release-action@v0
+        with:
+          access_key: ${{ secrets.LINEAR_ACCESS_KEY }}
+          name: ${{ needs.release-please.outputs.tag_name }}
+          version: ${{ needs.release-please.outputs.tag_name }}

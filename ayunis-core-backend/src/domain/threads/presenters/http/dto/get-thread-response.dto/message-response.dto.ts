@@ -42,7 +42,7 @@ export class ToolUseIntegrationDto {
 
   @ApiPropertyOptional({
     description: 'Integration logo URL',
-    example: 'https://marketplace.ayunis.de/logos/weather.png',
+    example: 'https://marketplace.ayunis.com/logos/weather.png',
     type: 'string',
     nullable: true,
   })

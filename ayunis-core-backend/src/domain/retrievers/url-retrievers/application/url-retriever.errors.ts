@@ -4,6 +4,7 @@ import {
   NotFoundException,
   InternalServerErrorException,
   RequestTimeoutException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 
 /**
@@ -15,6 +16,8 @@ export enum UrlRetrieverErrorCode {
   TIMEOUT = 'TIMEOUT',
   HTTP_ERROR = 'HTTP_ERROR',
   PARSING_ERROR = 'PARSING_ERROR',
+  UNSUPPORTED_CONTENT_TYPE = 'UNSUPPORTED_CONTENT_TYPE',
+  TOO_MANY_REDIRECTS = 'TOO_MANY_REDIRECTS',
 }
 
 /**
@@ -47,6 +50,12 @@ export abstract class UrlRetrieverError extends ApplicationError {
           message: this.message,
           ...(this.metadata && { metadata: this.metadata }),
         });
+      case 422:
+        return new UnprocessableEntityException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
       default:
         return new InternalServerErrorException({
           code: this.code,
@@ -59,7 +68,7 @@ export abstract class UrlRetrieverError extends ApplicationError {
 
 export class UrlRetrieverRetrievalError extends UrlRetrieverError {
   constructor(message: string, metadata?: ErrorMetadata) {
-    super(message, UrlRetrieverErrorCode.RETRIEVAL_FAILED, 500, metadata);
+    super(message, UrlRetrieverErrorCode.RETRIEVAL_FAILED, 422, metadata);
     this.name = 'UrlRetrieverRetrievalError';
   }
 }
@@ -93,7 +102,7 @@ export class UrlRetrieverHttpError extends UrlRetrieverError {
     super(
       `HTTP error when retrieving '${url}': ${statusCode}`,
       UrlRetrieverErrorCode.HTTP_ERROR,
-      500,
+      422,
       metadata,
     );
     this.name = 'UrlRetrieverHttpError';
@@ -105,9 +114,33 @@ export class UrlRetrieverParsingError extends UrlRetrieverError {
     super(
       `Failed to parse content from '${url}': ${message}`,
       UrlRetrieverErrorCode.PARSING_ERROR,
-      500,
+      422,
       metadata,
     );
     this.name = 'UrlRetrieverParsingError';
+  }
+}
+
+export class UrlRetrieverUnsupportedContentTypeError extends UrlRetrieverError {
+  constructor(url: string, contentType: string, metadata?: ErrorMetadata) {
+    super(
+      `Unsupported content type '${contentType}' for URL '${url}'`,
+      UrlRetrieverErrorCode.UNSUPPORTED_CONTENT_TYPE,
+      422,
+      metadata,
+    );
+    this.name = 'UrlRetrieverUnsupportedContentTypeError';
+  }
+}
+
+export class UrlRetrieverTooManyRedirectsError extends UrlRetrieverError {
+  constructor(url: string, maxRedirects: number, metadata?: ErrorMetadata) {
+    super(
+      `Too many redirects (>${maxRedirects}) when retrieving '${url}'`,
+      UrlRetrieverErrorCode.TOO_MANY_REDIRECTS,
+      422,
+      metadata,
+    );
+    this.name = 'UrlRetrieverTooManyRedirectsError';
   }
 }

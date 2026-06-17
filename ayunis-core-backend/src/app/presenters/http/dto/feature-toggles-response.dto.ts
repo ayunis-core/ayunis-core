@@ -2,22 +2,16 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class FeatureTogglesResponseDto {
   @ApiProperty({
-    description: 'Whether the agents feature is enabled',
-    example: true,
-  })
-  agentsEnabled: boolean;
-
-  @ApiProperty({
     description: 'Whether the standalone knowledge bases feature is enabled',
     example: true,
   })
   knowledgeBasesEnabled: boolean;
 
   @ApiProperty({
-    description: 'Whether the prompts feature is enabled',
-    example: true,
+    description: 'Whether the letterheads feature is enabled',
+    example: false,
   })
-  promptsEnabled: boolean;
+  letterheadsEnabled: boolean;
 
   @ApiProperty({
     description: 'Whether the skills feature is enabled',

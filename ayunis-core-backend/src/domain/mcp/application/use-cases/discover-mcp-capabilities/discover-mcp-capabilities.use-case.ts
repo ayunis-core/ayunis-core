@@ -149,7 +149,7 @@ export class DiscoverMcpCapabilitiesUseCase {
     return new McpTool(
       sdkTool.name,
       sdkTool.description,
-      sdkTool.inputSchema as Record<string, unknown>,
+      sdkTool.inputSchema,
       integrationId,
     );
   }
@@ -182,7 +182,7 @@ export class DiscoverMcpCapabilitiesUseCase {
     integrationId: UUID,
   ): McpPrompt {
     // Map arguments with required flag
-    const args: PromptArgument[] = (sdkPrompt.arguments || []).map((arg) => ({
+    const args: PromptArgument[] = (sdkPrompt.arguments ?? []).map((arg) => ({
       name: arg.name,
       required: arg.required ?? false,
     }));

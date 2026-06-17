@@ -1,0 +1,446 @@
+import type { UUID } from 'crypto';
+import { WebhookDispatchListener } from './webhook-dispatch.listener';
+import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
+import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
+import { UserDeletedEvent } from 'src/iam/users/application/events/user-deleted.event';
+import { OrgCreatedEvent } from 'src/iam/orgs/application/events/org-created.event';
+import { SubscriptionCreatedEvent } from 'src/iam/subscriptions/application/events/subscription-created.event';
+import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/events/subscription-cancelled.event';
+import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/events/subscription-uncancelled.event';
+import { SubscriptionSeatsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-seats-updated.event';
+import { SubscriptionBillingInfoUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-billing-info-updated.event';
+import { UsageCollectedEvent } from 'src/domain/usage/application/events/usage-collected.event';
+import { AddonActivatedEvent } from 'src/iam/addons/application/events/addon-activated.event';
+import { AddonDeactivatedEvent } from 'src/iam/addons/application/events/addon-deactivated.event';
+import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
+import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/user-message-created.event';
+import { Usage } from 'src/domain/usage/domain/usage.entity';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { WebhookEventType } from '../domain/value-objects/webhook-event-type.enum';
+import { User } from 'src/iam/users/domain/user.entity';
+import { Org } from 'src/iam/orgs/domain/org.entity';
+import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
+import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import type { SendWebhookUseCase } from '../application/use-cases/send-webhook/send-webhook.use-case';
+import type { UsageCollectedWebhookPayload } from '../domain/webhook-events/usage-collected.webhook-event';
+import type { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
+import type { ConfigService } from '@nestjs/config';
+import type { SeatBasedSubscriptionEventData } from 'src/iam/subscriptions/application/events/subscription-event-data.types';
+
+const USER_ID = '00000000-0000-0000-0000-000000000001' as UUID;
+const ORG_ID = '00000000-0000-0000-0000-000000000002' as UUID;
+const SUB_ID = '00000000-0000-0000-0000-000000000003' as UUID;
+const THREAD_ID = '00000000-0000-0000-0000-000000000004' as UUID;
+const MESSAGE_ID = '00000000-0000-0000-0000-000000000005' as UUID;
+
+function makeUser(): User {
+  return new User({
+    id: USER_ID,
+    email: 'test@example.com',
+    emailVerified: true,
+    passwordHash: 'hashed',
+    role: UserRole.ADMIN,
+    orgId: ORG_ID,
+    name: 'Test User',
+    hasAcceptedMarketing: false,
+  });
+}
+
+function makeOrg(): Org {
+  return new Org({
+    id: ORG_ID,
+    name: 'Test Org',
+  });
+}
+
+function makeSeatBasedPayload(): SeatBasedSubscriptionEventData {
+  return {
+    id: SUB_ID,
+    orgId: ORG_ID,
+    type: SubscriptionType.SEAT_BASED,
+    cancelledAt: null,
+    startsAt: new Date('2025-01-01T00:00:00Z'),
+    createdAt: new Date('2025-01-01T00:00:00Z'),
+    updatedAt: new Date('2025-01-02T00:00:00Z'),
+    noOfSeats: 10,
+    pricePerSeat: 25,
+    renewalCycle: RenewalCycle.MONTHLY,
+    renewalCycleAnchor: new Date('2025-01-01T00:00:00Z'),
+  };
+}
+
+describe('WebhookDispatchListener', () => {
+  let listener: WebhookDispatchListener;
+  let sendWebhookUseCase: jest.Mocked<SendWebhookUseCase>;
+  let findUserByIdUseCase: jest.Mocked<FindUserByIdUseCase>;
+  let configService: jest.Mocked<ConfigService>;
+
+  beforeEach(() => {
+    sendWebhookUseCase = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<SendWebhookUseCase>;
+    findUserByIdUseCase = {
+      execute: jest.fn().mockResolvedValue(makeUser()),
+    } as unknown as jest.Mocked<FindUserByIdUseCase>;
+    configService = {
+      get: jest.fn().mockReturnValue('https://connect.example.com/webhooks'),
+    } as unknown as jest.Mocked<ConfigService>;
+
+    listener = new WebhookDispatchListener(
+      sendWebhookUseCase,
+      findUserByIdUseCase,
+      configService,
+    );
+  });
+
+  describe('handleUserCreated', () => {
+    it('should dispatch UserCreatedWebhookEvent', async () => {
+      const user = makeUser();
+      await listener.handleUserCreated(
+        new UserCreatedEvent(USER_ID, ORG_ID, user),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.USER_CREATED);
+    });
+  });
+
+  describe('handleUserUpdated', () => {
+    it('should dispatch UserUpdatedWebhookEvent', async () => {
+      const user = makeUser();
+      await listener.handleUserUpdated(
+        new UserUpdatedEvent(USER_ID, ORG_ID, user),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.USER_UPDATED);
+    });
+  });
+
+  describe('handleUserDeleted', () => {
+    it('should dispatch UserDeletedWebhookEvent', async () => {
+      await listener.handleUserDeleted(new UserDeletedEvent(USER_ID, ORG_ID));
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.USER_DELETED);
+    });
+  });
+
+  describe('handleOrgCreated', () => {
+    it('should dispatch OrgCreatedWebhookEvent with the bare Org payload', async () => {
+      const org = makeOrg();
+      await listener.handleOrgCreated(new OrgCreatedEvent(ORG_ID, org));
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.ORG_CREATED);
+      expect(command.event.data).toBe(org);
+      // No userEmail / userName leaked from the previous payload shape.
+      expect(command.event.data).not.toHaveProperty('userEmail');
+      expect(command.event.data).not.toHaveProperty('userName');
+    });
+  });
+
+  describe('handleSubscriptionCreated', () => {
+    it('should dispatch SubscriptionCreatedWebhookEvent with mapped payload', async () => {
+      await listener.handleSubscriptionCreated(
+        new SubscriptionCreatedEvent(ORG_ID, makeSeatBasedPayload()),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(
+        WebhookEventType.SUBSCRIPTION_CREATED,
+      );
+      expect(command.event.data).toEqual(
+        expect.objectContaining({
+          type: 'SEAT_BASED',
+          startsAt: '2025-01-01T00:00:00.000Z',
+          createdAt: '2025-01-01T00:00:00.000Z',
+        }),
+      );
+    });
+  });
+
+  describe('handleSubscriptionCancelled', () => {
+    it('should dispatch SubscriptionCancelledWebhookEvent', async () => {
+      await listener.handleSubscriptionCancelled(
+        new SubscriptionCancelledEvent(ORG_ID, makeSeatBasedPayload()),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(
+        WebhookEventType.SUBSCRIPTION_CANCELLED,
+      );
+    });
+  });
+
+  describe('handleSubscriptionUncancelled', () => {
+    it('should dispatch SubscriptionUncancelledWebhookEvent', async () => {
+      await listener.handleSubscriptionUncancelled(
+        new SubscriptionUncancelledEvent(ORG_ID, makeSeatBasedPayload()),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(
+        WebhookEventType.SUBSCRIPTION_UNCANCELLED,
+      );
+    });
+  });
+
+  describe('handleSubscriptionSeatsUpdated', () => {
+    it('should dispatch SubscriptionSeatsUpdatedWebhookEvent', async () => {
+      await listener.handleSubscriptionSeatsUpdated(
+        new SubscriptionSeatsUpdatedEvent(ORG_ID, makeSeatBasedPayload()),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(
+        WebhookEventType.SUBSCRIPTION_SEATS_UPDATED,
+      );
+    });
+  });
+
+  describe('handleSubscriptionBillingInfoUpdated', () => {
+    it('should dispatch SubscriptionBillingInfoUpdatedWebhookEvent with mapped payload', async () => {
+      await listener.handleSubscriptionBillingInfoUpdated(
+        new SubscriptionBillingInfoUpdatedEvent(ORG_ID, {
+          companyName: 'Acme',
+          street: 'Main St',
+          houseNumber: '1',
+          postalCode: '12345',
+          city: 'Berlin',
+          country: 'DE',
+          vatNumber: 'DE123456789',
+          subText: 'Dept. Finance',
+          orgId: ORG_ID,
+          subscriptionId: SUB_ID,
+        }),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(
+        WebhookEventType.SUBSCRIPTION_BILLING_INFO_UPDATED,
+      );
+      expect(command.event.data).toEqual({
+        companyName: 'Acme',
+        street: 'Main St',
+        houseNumber: '1',
+        postalCode: '12345',
+        city: 'Berlin',
+        country: 'DE',
+        vatNumber: 'DE123456789',
+        subText: 'Dept. Finance',
+        orgId: ORG_ID,
+        subscriptionId: SUB_ID,
+      });
+    });
+  });
+
+  describe('handleUsageCollected', () => {
+    function makeUsage(userId: UUID | null = USER_ID): Usage {
+      return new Usage({
+        id: '00000000-0000-0000-0000-000000000099',
+        userId,
+        organizationId: ORG_ID,
+        modelId: '00000000-0000-0000-0000-0000000000aa',
+        provider: ModelProvider.OPENAI,
+        inputTokens: 100,
+        outputTokens: 50,
+        totalTokens: 150,
+        cost: 0.0012,
+        creditsConsumed: 0.12,
+        requestId: '00000000-0000-0000-0000-0000000000bb',
+        createdAt: new Date('2026-04-07T12:00:00.000Z'),
+      });
+    }
+
+    it('should dispatch UsageCollectedWebhookEvent with the model name and ISO createdAt', async () => {
+      const usage = makeUsage();
+
+      await listener.handleUsageCollected(
+        new UsageCollectedEvent(usage, 'gpt-4o-mini'),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.USAGE_COLLECTED);
+      expect(command.event.data).toEqual(
+        expect.objectContaining({
+          id: usage.id,
+          userId: USER_ID,
+          organizationId: ORG_ID,
+          modelId: usage.modelId,
+          modelName: 'gpt-4o-mini',
+          provider: ModelProvider.OPENAI,
+          inputTokens: 100,
+          outputTokens: 50,
+          totalTokens: 150,
+          cost: 0.0012,
+          creditsConsumed: 0.12,
+          requestId: usage.requestId,
+          createdAt: '2026-04-07T12:00:00.000Z',
+        }),
+      );
+    });
+
+    it('should enrich the payload with user email and name', async () => {
+      await listener.handleUsageCollected(
+        new UsageCollectedEvent(makeUsage(), 'gpt-4o-mini'),
+      );
+
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.data).toEqual(
+        expect.objectContaining({
+          userEmail: 'test@example.com',
+          userName: 'Test User',
+        }),
+      );
+    });
+
+    it('should dispatch unenriched without a user lookup for API-key usage (null userId)', async () => {
+      await listener.handleUsageCollected(
+        new UsageCollectedEvent(makeUsage(null), 'gpt-4o-mini'),
+      );
+
+      expect(findUserByIdUseCase.execute).not.toHaveBeenCalled();
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      const data = command.event.data as UsageCollectedWebhookPayload;
+      expect(data.userId).toBeNull();
+      expect(data.userEmail).toBeUndefined();
+      expect(data.userName).toBeUndefined();
+    });
+
+    it('should dispatch unenriched when the user lookup fails', async () => {
+      findUserByIdUseCase.execute.mockRejectedValue(
+        new Error('User not found'),
+      );
+
+      await listener.handleUsageCollected(
+        new UsageCollectedEvent(makeUsage(), 'gpt-4o-mini'),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      const data = command.event.data as UsageCollectedWebhookPayload;
+      expect(data.userEmail).toBeUndefined();
+      expect(data.userName).toBeUndefined();
+    });
+
+    it('should skip the user lookup when no webhook url is configured', async () => {
+      configService.get.mockReturnValue(undefined);
+
+      await listener.handleUsageCollected(
+        new UsageCollectedEvent(makeUsage(), 'gpt-4o-mini'),
+      );
+
+      expect(findUserByIdUseCase.execute).not.toHaveBeenCalled();
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('handleUserMessageCreated', () => {
+    function makeEvent(): UserMessageCreatedEvent {
+      return new UserMessageCreatedEvent(
+        USER_ID,
+        ORG_ID,
+        THREAD_ID,
+        MESSAGE_ID,
+      );
+    }
+
+    it('should dispatch ChatSentWebhookEvent enriched with user email and name', async () => {
+      await listener.handleUserMessageCreated(makeEvent());
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.CHAT_SENT);
+      expect(command.event.data).toEqual({
+        userId: USER_ID,
+        orgId: ORG_ID,
+        threadId: THREAD_ID,
+        messageId: MESSAGE_ID,
+        userEmail: 'test@example.com',
+        userName: 'Test User',
+      });
+    });
+
+    it('should skip dispatch and user lookup when no webhook url is configured', async () => {
+      configService.get.mockReturnValue(undefined);
+
+      await listener.handleUserMessageCreated(makeEvent());
+
+      expect(findUserByIdUseCase.execute).not.toHaveBeenCalled();
+      expect(sendWebhookUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it('should skip dispatch when the user lookup fails', async () => {
+      findUserByIdUseCase.execute.mockRejectedValue(
+        new Error('User not found'),
+      );
+
+      await listener.handleUserMessageCreated(makeEvent());
+
+      expect(sendWebhookUseCase.execute).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('handleAddonActivated', () => {
+    it('should dispatch AddonActivatedWebhookEvent with org, addon type, and actor', async () => {
+      await listener.handleAddonActivated(
+        new AddonActivatedEvent(ORG_ID, AddonType.AYUNIS_CORE_ACADEMY, USER_ID),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.ADDON_ACTIVATED);
+      expect(command.event.data).toEqual({
+        orgId: ORG_ID,
+        addonType: AddonType.AYUNIS_CORE_ACADEMY,
+        actorUserId: USER_ID,
+      });
+    });
+  });
+
+  describe('handleAddonDeactivated', () => {
+    it('should dispatch AddonDeactivatedWebhookEvent with org, addon type, and actor', async () => {
+      await listener.handleAddonDeactivated(
+        new AddonDeactivatedEvent(
+          ORG_ID,
+          AddonType.AYUNIS_CORE_ACADEMY,
+          USER_ID,
+        ),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.ADDON_DEACTIVATED);
+      expect(command.event.data).toEqual({
+        orgId: ORG_ID,
+        addonType: AddonType.AYUNIS_CORE_ACADEMY,
+        actorUserId: USER_ID,
+      });
+    });
+  });
+
+  describe('error handling', () => {
+    it('should not throw when SendWebhookUseCase fails', async () => {
+      sendWebhookUseCase.execute.mockRejectedValue(
+        new Error('Network failure'),
+      );
+
+      await expect(
+        listener.handleUserDeleted(new UserDeletedEvent(USER_ID, ORG_ID)),
+      ).resolves.toBeUndefined();
+    });
+  });
+});

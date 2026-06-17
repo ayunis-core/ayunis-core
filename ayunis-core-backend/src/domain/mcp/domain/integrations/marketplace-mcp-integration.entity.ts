@@ -2,7 +2,14 @@ import type { UUID } from 'crypto';
 import { McpIntegration } from '../mcp-integration.entity';
 import type { McpIntegrationAuth } from '../auth/mcp-integration-auth.entity';
 import { McpIntegrationKind } from '../value-objects/mcp-integration-kind.enum';
-import type { IntegrationConfigSchema } from '../value-objects/integration-config-schema';
+import type {
+  ConfigField,
+  IntegrationConfigSchema,
+} from '../value-objects/integration-config-schema';
+import {
+  fieldRequiresInput,
+  isConfigValuePresent,
+} from '../value-objects/integration-config-schema';
 
 /**
  * MCP integration installed from the Ayunis marketplace.
@@ -72,5 +79,30 @@ export class MarketplaceMcpIntegration extends McpIntegration {
   updateOrgConfigValues(values: Record<string, string>): void {
     this._orgConfigValues = { ...values };
     this.touch();
+  }
+
+  /**
+   * Whether this integration requires each individual user to provide their own
+   * credentials before it can be used — i.e. it has at least one required
+   * user-level field that is not satisfied by a system-fixed value.
+   */
+  get requiresUserAuthorization(): boolean {
+    return this.userFieldsRequiringInput.length > 0;
+  }
+
+  /**
+   * Whether the given user-level config values satisfy every required user
+   * field. Returns true when the integration requires no user authorization.
+   *
+   * @param userConfigValues The user's stored config values, or null if none
+   */
+  isUserAuthorized(userConfigValues: Record<string, string> | null): boolean {
+    return this.userFieldsRequiringInput.every((field) =>
+      isConfigValuePresent(userConfigValues?.[field.key]),
+    );
+  }
+
+  private get userFieldsRequiringInput(): ConfigField[] {
+    return this.configSchema.userFields.filter(fieldRequiresInput);
   }
 }

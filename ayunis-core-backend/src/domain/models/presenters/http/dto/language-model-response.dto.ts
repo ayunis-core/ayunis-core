@@ -1,6 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
 
 export class LanguageModelResponseDto {
@@ -89,4 +90,26 @@ export class LanguageModelResponseDto {
     description: 'The date the model was last updated',
   })
   updatedAt: Date;
+
+  @ApiPropertyOptional({
+    type: 'number',
+    description: 'Cost per million input tokens in EUR',
+    example: 3,
+  })
+  inputTokenCost?: number;
+
+  @ApiPropertyOptional({
+    type: 'number',
+    description: 'Cost per million output tokens in EUR',
+    example: 15,
+  })
+  outputTokenCost?: number;
+
+  @ApiPropertyOptional({
+    enum: ModelTier,
+    description:
+      'Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109.',
+    example: ModelTier.MEDIUM,
+  })
+  tier?: ModelTier;
 }

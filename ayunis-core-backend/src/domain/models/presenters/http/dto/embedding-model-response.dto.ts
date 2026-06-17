@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
@@ -51,7 +51,9 @@ export class EmbeddingModelResponseDto {
 
   @ApiProperty({
     type: 'number',
-    enum: Object.values(EmbeddingDimensions),
+    enum: Object.values(EmbeddingDimensions).filter(
+      (value): value is EmbeddingDimensions => typeof value === 'number',
+    ),
     description: 'The dimensions of the embedding',
     example: EmbeddingDimensions.DIMENSION_1536,
   })
@@ -70,4 +72,18 @@ export class EmbeddingModelResponseDto {
     description: 'The date the model was last updated',
   })
   updatedAt: Date;
+
+  @ApiPropertyOptional({
+    type: 'number',
+    description: 'Cost per million input tokens in EUR',
+    example: 0.13,
+  })
+  inputTokenCost?: number;
+
+  @ApiPropertyOptional({
+    type: 'number',
+    description: 'Cost per million output tokens in EUR',
+    example: 0,
+  })
+  outputTokenCost?: number;
 }

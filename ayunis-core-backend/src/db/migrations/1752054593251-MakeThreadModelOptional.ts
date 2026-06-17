@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class MakeThreadModelOptional1752054593251
-  implements MigrationInterface
-{
+export class MakeThreadModelOptional1752054593251 implements MigrationInterface {
   name = 'MakeThreadModelOptional1752054593251';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

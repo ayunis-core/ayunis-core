@@ -47,8 +47,10 @@ import {
   RunMessageResponseDto,
   RunErrorResponseDto,
   RunThreadResponseDto,
+  RunMasksResponseDto,
   RunResponse,
 } from './dto/run-response.dto';
+import { PiiMaskResponseDto } from 'src/domain/thread-pii-masks/presenters/http/dtos/pii-mask-response.dto';
 import { ExecuteRunAndSetTitleUseCase } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
 import { ExecuteRunAndSetTitleCommand } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.command';
 import { RunEvent } from '../../application/run-events';
@@ -87,6 +89,8 @@ const ALLOWED_IMAGE_TYPES = [
   RunMessageResponseDto,
   RunErrorResponseDto,
   RunThreadResponseDto,
+  RunMasksResponseDto,
+  PiiMaskResponseDto,
   SendMessageDto,
   TextInput,
   ToolResultInput,
@@ -173,6 +177,7 @@ export class RunsController {
             { $ref: getSchemaPath(RunMessageResponseDto) },
             { $ref: getSchemaPath(RunErrorResponseDto) },
             { $ref: getSchemaPath(RunThreadResponseDto) },
+            { $ref: getSchemaPath(RunMasksResponseDto) },
           ],
           discriminator: {
             propertyName: 'type',
@@ -181,6 +186,7 @@ export class RunsController {
               message: getSchemaPath(RunMessageResponseDto),
               error: getSchemaPath(RunErrorResponseDto),
               thread: getSchemaPath(RunThreadResponseDto),
+              masks: getSchemaPath(RunMasksResponseDto),
             },
           },
         },
@@ -256,6 +262,12 @@ export class RunsController {
     response.setHeader('Content-Type', 'text/event-stream');
     response.setHeader('Cache-Control', 'no-cache');
     response.setHeader('Connection', 'keep-alive');
+    // Disable response buffering in nginx-style reverse proxies so SSE chunks
+    // reach the client immediately. Without this, buffered streams that get
+    // interrupted mid-flight surface as permanently truncated assistant
+    // messages because the server-side finally-block persists what it has.
+    response.setHeader('X-Accel-Buffering', 'no');
+    response.flushHeaders();
     // Send initial connection confirmation
     response.write(': connection established\n\n');
 
@@ -361,6 +373,13 @@ export class RunsController {
           threadId: event.threadId,
           timestamp: event.timestamp,
         };
+      case 'masks':
+        return {
+          type: 'masks',
+          threadId: event.threadId,
+          masks: event.masks,
+          timestamp: event.timestamp,
+        };
     }
   }
 
@@ -397,6 +416,17 @@ export class RunsController {
       // Listen for client disconnect
       params.response.on('close', disconnectHandler);
 
+      // Send periodic heartbeat comments to keep the connection alive
+      // through proxies (e.g. nginx proxy_read_timeout) and prevent
+      // the browser from treating the connection as dead during long
+      // pauses in the LLM stream (tool call generation, thinking, etc.).
+      // SSE comments (lines starting with ':') are ignored by clients.
+      const heartbeatInterval = setInterval(() => {
+        if (!connection.disconnected) {
+          params.response.write(': heartbeat\n\n');
+        }
+      }, 15_000);
+
       try {
         for await (const event of eventGenerator) {
           // Check if client disconnected before writing
@@ -423,6 +453,9 @@ export class RunsController {
             case 'session':
               eventId = 'session';
               break;
+            case 'masks':
+              eventId = `masks-${event.timestamp}`;
+              break;
             default:
               eventId = 'event';
           }
@@ -430,6 +463,7 @@ export class RunsController {
           this.writeSSEEvent(params.response, eventId, responseDto);
         }
       } finally {
+        clearInterval(heartbeatInterval);
         // Clean up disconnect listener
         params.response.off('close', disconnectHandler);
       }

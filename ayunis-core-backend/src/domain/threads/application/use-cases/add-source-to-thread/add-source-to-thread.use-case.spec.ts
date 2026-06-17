@@ -3,6 +3,13 @@ import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
+
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () => (_target: unknown, _prop: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import { AddSourceToThreadUseCase } from './add-source-to-thread.use-case';
 import { AddSourceCommand } from './add-source.command';
 import { ThreadsRepository } from '../../ports/threads.repository';
@@ -94,6 +101,29 @@ describe('AddSourceToThreadUseCase', () => {
     expect(savedAssignments).toHaveLength(1);
     expect(savedAssignments[0].source.id).toBe(source.id);
     expect(savedAssignments[0].originSkillId).toBeUndefined();
+  });
+
+  it('should pass survivors alongside the new assignment when the thread already has sources', async () => {
+    const existingSource = new ConcreteSource({ name: 'Existing.pdf' });
+    const existingAssignment = new SourceAssignment({ source: existingSource });
+    const newSource = new ConcreteSource({ name: 'New.pdf' });
+    const freshThread = new Thread({
+      userId: mockUserId,
+      messages: [],
+      sourceAssignments: [existingAssignment],
+    });
+    const command = new AddSourceCommand(freshThread, newSource);
+
+    threadsRepository.findOne.mockResolvedValue(freshThread);
+
+    await useCase.execute(command);
+
+    const savedAssignments =
+      threadsRepository.updateSourceAssignments.mock.calls[0][0]
+        .sourceAssignments;
+    expect(savedAssignments).toHaveLength(2);
+    expect(savedAssignments[0]).toBe(existingAssignment);
+    expect(savedAssignments[1].source.id).toBe(newSource.id);
   });
 
   it('should propagate originSkillId to the created SourceAssignment', async () => {

@@ -1,6 +1,10 @@
 {
+  "breadcrumb": {
+    "skills": "Skills"
+  },
   "shared": {
-    "badge": "Shared"
+    "badge": "Shared",
+    "by": "Shared by {{name}}"
   },
   "tabs": {
     "configuration": "Configuration",
@@ -82,7 +86,11 @@
     "description": "Upload documents directly to this skill",
     "adding": "Adding...",
     "addSource": "Add Source",
-    "disabledTooltip": "To upload documents, an embedding model must be enabled."
+    "disabledTooltip": "To upload documents, an embedding model must be enabled.",
+    "statusProcessing": "processing… You can safely navigate away.",
+    "statusProcessingSlow": "still processing… You can safely navigate away.",
+    "statusFailed": "failed",
+    "retryUpload": "Try uploading the file again."
   },
   "knowledgeBases": {
     "title": "Knowledge Bases",
@@ -107,16 +115,18 @@
     "failedToAdd": "Failed to add source",
     "invalidFileTypeError": "This file type is currently not supported.",
     "fileSourceEmptyDataError": "The uploaded file contains no processable data.",
-    "fileSourceTooLargeError": "File is too large. Maximum file size is 50MB.",
+    "fileSourceTooLargeError": "File is too large. Maximum file size is 25MB.",
     "fileSourceTooManyPagesError": "Document has too many pages to process.",
     "fileSourceServiceBusyError": "The document processing service is busy. Please try again later.",
-    "fileSourceTimeoutError": "Document processing timed out. The file may be too complex."
+    "fileSourceTimeoutError": "Document processing timed out. The file may be too complex.",
+    "sourceLimitExceededError": "A skill can have at most 20 sources. Please remove one before adding another."
   },
   "mcpIntegrations": {
     "title": "Integrations",
     "description": "Connect external MCP servers to extend skill capabilities",
     "toggleAriaLabel": "Toggle {{name}} integration",
     "retryButton": "Retry",
+    "configRequiredBadge": "Configuration required",
     "success": {
       "connected": "Integration connected",
       "disconnected": "Integration disconnected"

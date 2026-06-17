@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class MoveSourceVectorsToIndex1754056995759
-  implements MigrationInterface
-{
+export class MoveSourceVectorsToIndex1754056995759 implements MigrationInterface {
   name = 'MoveSourceVectorsToIndex1754056995759';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

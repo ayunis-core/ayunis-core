@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import {
   Card,
   CardAction,
@@ -20,19 +21,66 @@ interface SubscriptionCancellationSectionProps {
   readonly subscription: SubscriptionResponseDto;
   readonly actions: SubscriptionCancellationActions;
   readonly t: TFunction;
+  readonly renderStatusBadge?: (
+    subscription: SubscriptionResponseDto,
+  ) => ReactNode;
+  readonly renderActiveActions?: (cancelButton: ReactNode) => ReactNode;
+  readonly activeContent?: ReactNode;
+  readonly cancelledContent?: ReactNode;
+}
+
+function DefaultStatusBadge({
+  isCancelled,
+  t,
+}: Readonly<{
+  isCancelled: boolean;
+  t: TFunction;
+}>) {
+  if (isCancelled) {
+    return <Badge variant="destructive">{t('subscription.cancelled')}</Badge>;
+  }
+
+  return <Badge variant="secondary">{t('subscription.active')}</Badge>;
 }
 
 export default function SubscriptionCancellationSection({
   subscription,
   actions,
   t,
-}: SubscriptionCancellationSectionProps) {
+  renderStatusBadge,
+  renderActiveActions,
+  activeContent,
+  cancelledContent,
+}: Readonly<SubscriptionCancellationSectionProps>) {
   const { cancelSubscription, uncancelSubscription } = actions;
   const { confirm: confirmUncancel } = useConfirmation();
   const { confirm: confirmCancel } = useConfirmation();
 
   // eslint-disable-next-line eqeqeq -- intentional loose equality to catch both null and undefined from the API
   const isCancelled = subscription.cancelledAt != null;
+  const statusBadge = renderStatusBadge?.(subscription) ?? (
+    <DefaultStatusBadge isCancelled={isCancelled} t={t} />
+  );
+  const cancelButton = (
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={() => {
+        confirmCancel({
+          title: t('subscription.cancelSubscription'),
+          description: t('subscription.cancelSubscriptionDescription'),
+          confirmText: t('subscription.confirmCancel'),
+          cancelText: t('subscription.cancelCancel'),
+          variant: 'destructive',
+          onConfirm: () => {
+            cancelSubscription();
+          },
+        });
+      }}
+    >
+      {t('subscription.cancel')}
+    </Button>
+  );
 
   if (isCancelled) {
     return (
@@ -40,7 +88,7 @@ export default function SubscriptionCancellationSection({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             {t('subscription.title')}
-            <Badge variant="destructive">{t('subscription.cancelled')}</Badge>
+            {statusBadge}
           </CardTitle>
           <CardAction>
             <Button
@@ -66,9 +114,11 @@ export default function SubscriptionCancellationSection({
           </CardAction>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            {t('subscription.reactivateAnytime')}
-          </p>
+          {cancelledContent ?? (
+            <p className="text-sm text-muted-foreground">
+              {t('subscription.reactivateAnytime')}
+            </p>
+          )}
         </CardContent>
       </Card>
     );
@@ -79,35 +129,20 @@ export default function SubscriptionCancellationSection({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           {t('subscription.title')}
-          <Badge variant="secondary">{t('subscription.active')}</Badge>
+          {statusBadge}
         </CardTitle>
         <CardAction>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              confirmCancel({
-                title: t('subscription.cancelSubscription'),
-                description: t('subscription.cancelSubscriptionDescription'),
-                confirmText: t('subscription.confirmCancel'),
-                cancelText: t('subscription.cancelCancel'),
-                variant: 'destructive',
-                onConfirm: () => {
-                  cancelSubscription();
-                },
-              });
-            }}
-          >
-            {t('subscription.cancel')}
-          </Button>
+          {renderActiveActions?.(cancelButton) ?? cancelButton}
         </CardAction>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          {t('subscription.nextRenewalDate', {
-            date: new Date(subscription.nextRenewalDate).toLocaleDateString(),
-          })}
-        </p>
+        {activeContent ?? (
+          <p className="text-sm text-muted-foreground">
+            {t('subscription.nextRenewalDate', {
+              date: new Date(subscription.nextRenewalDate).toLocaleDateString(),
+            })}
+          </p>
+        )}
       </CardContent>
     </Card>
   );

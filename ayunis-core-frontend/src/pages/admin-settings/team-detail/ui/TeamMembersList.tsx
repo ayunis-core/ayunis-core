@@ -51,10 +51,11 @@ export function TeamMembersList({
               <Button
                 variant="ghost"
                 size="icon"
+                className="text-destructive hover:text-destructive"
                 onClick={() => removeTeamMember(member.userId)}
                 disabled={removingUserIds.has(member.userId)}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 />
               </Button>
             </TableCell>
           </TableRow>

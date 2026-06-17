@@ -100,14 +100,19 @@ export class GeneratePersonalizedSystemPromptUseCase {
   ): Promise<string> {
     const userInput = this.buildUserInputSummary(command);
 
-    const prompt = `Based on the user's preferences below, write personalized instructions for an AI assistant (2-4 sentences). The instructions should define the assistant's tone and communication style without restricting what topics the user can ask about. Write the instructions in the SAME LANGUAGE as the user's input.
+    const instructions =
+      'You are a helpful configuration assistant for a municipal workplace AI tool. ' +
+      'Your task is to write personalized instructions (2-4 sentences) that define ' +
+      "the assistant's tone and communication style based on user preferences. " +
+      'Do not restrict what topics the user can ask about. ' +
+      'Write the instructions in the SAME LANGUAGE as the user input. ' +
+      'Generate ONLY the instruction text, nothing else.';
 
-User preferences:
-${userInput}
-
-Generate ONLY the instruction text, nothing else.`;
-
-    const response = await this.callInference(prompt, model);
+    const response = await this.callInference(
+      `My preferences:\n${userInput}`,
+      model,
+      instructions,
+    );
     return this.extractTextFromResponse(response);
   }
 
@@ -116,14 +121,19 @@ Generate ONLY the instruction text, nothing else.`;
     preferredName: string,
     model: LanguageModel,
   ): Promise<string> {
-    const prompt = `Based on the following assistant instructions and the user's name, generate a short, warm welcome message (1-2 sentences). Write the welcome message in the SAME LANGUAGE as the instructions. Address the user by their name.
+    const instructions =
+      'You are a helpful configuration assistant for a municipal workplace AI tool. ' +
+      'Your task is to generate a short, warm welcome message (1-2 sentences) ' +
+      'based on assistant instructions and a user name. ' +
+      'Write the welcome message in the SAME LANGUAGE as the instructions. ' +
+      'Address the user by their name. ' +
+      'Generate ONLY the welcome message text, nothing else.';
 
-Assistant instructions: "${systemPrompt}"
-User's name: "${preferredName}"
+    const userMessage =
+      `Assistant instructions: "${systemPrompt}"\n` +
+      `User's name: "${preferredName}"`;
 
-Generate ONLY the welcome message text, nothing else.`;
-
-    const response = await this.callInference(prompt, model);
+    const response = await this.callInference(userMessage, model, instructions);
     return this.extractTextFromResponse(response);
   }
 
@@ -153,6 +163,7 @@ Generate ONLY the welcome message text, nothing else.`;
   private async callInference(
     prompt: string,
     model: LanguageModel,
+    instructions?: string,
   ): Promise<InferenceResponse> {
     return this.getInferenceUseCase.execute(
       new GetInferenceCommand({
@@ -165,6 +176,7 @@ Generate ONLY the welcome message text, nothing else.`;
         ],
         tools: [],
         toolChoice: ModelToolChoice.AUTO,
+        instructions,
       }),
     );
   }

@@ -1,35 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { BaseOpenAIChatStreamInferenceHandler } from './base-openai-chat.stream-inference';
 import { ConfigService } from '@nestjs/config';
-import { AzureOpenAI } from 'openai';
-import { Observable } from 'rxjs';
-import {
-  StreamInferenceInput,
-  StreamInferenceResponseChunk,
-} from '../../application/ports/stream-inference.handler';
+import { azure } from '@ayunis/provider-openai';
+import type { ModelProvider } from '@ayunis/inference';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
+import { RuntimeStreamInferenceHandler } from '../runtime/runtime-stream-inference.handler';
+import type { Model } from '../../domain/model.entity';
+import { INFERENCE_MAX_RETRIES } from '../runtime/inference-config';
 
 @Injectable()
-export class AzureStreamInferenceHandler extends BaseOpenAIChatStreamInferenceHandler {
-  constructor(private readonly configService: ConfigService) {
-    super();
+export class AzureStreamInferenceHandler extends RuntimeStreamInferenceHandler {
+  constructor(
+    private readonly configService: ConfigService,
+    imageContentService: ImageContentService,
+  ) {
+    super(imageContentService);
   }
 
-  private getClient(): AzureOpenAI {
-    if (!this.client) {
-      this.client = new AzureOpenAI({
-        apiKey: this.configService.get('models.azure.apiKey'),
-        endpoint: this.configService.get('models.azure.endpoint'),
-        apiVersion: this.configService.get('models.azure.apiVersion'),
-      });
-    }
-    return this.client as AzureOpenAI;
-  }
-
-  answer(
-    input: StreamInferenceInput,
-  ): Observable<StreamInferenceResponseChunk> {
-    // Ensure client is initialized before calling parent
-    this.getClient();
-    return super.answer(input);
+  protected createProvider(model: Model): ModelProvider {
+    return azure({
+      apiKey: this.configService.get<string>('models.azure.apiKey') ?? '',
+      endpoint: this.configService.get<string>('models.azure.endpoint') ?? '',
+      apiVersion:
+        this.configService.get<string>('models.azure.apiVersion') ?? '',
+      model: model.name,
+      maxRetries: INFERENCE_MAX_RETRIES,
+    });
   }
 }

@@ -1,41 +1,45 @@
 import { AnonymizationFailedError } from 'src/common/anonymization/application/anonymization.errors';
-import type { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
+import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { RunAnonymizationUnavailableError } from '../../runs.errors';
 import type { ContextService } from 'src/common/context/services/context.service';
-import type { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
-import type { CreateAssistantMessageUseCase } from 'src/domain/messages/application/use-cases/create-assistant-message/create-assistant-message.use-case';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
-import type { TrimMessagesForContextUseCase } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.use-case';
 
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import type { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ExecuteRunUseCase } from './execute-run.use-case';
 import { ExecuteRunCommand } from './execute-run.command';
 import { RunUserInput } from '../../../domain/run-input.entity';
+import type { CreditBudgetGuardService } from '../../services/credit-budget-guard.service';
+import type { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
+import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
 import type { CollectUsageAsyncService } from '../../services/collect-usage-async.service';
+import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
+import { RunErrorCode } from '../../runs.errors';
 import type { ToolAssemblyService } from '../../services/tool-assembly.service';
 import type { ToolResultCollectorService } from '../../services/tool-result-collector.service';
 import type { MessageCleanupService } from '../../services/message-cleanup.service';
-import type { StreamingInferenceService } from '../../services/streaming-inference.service';
-import type { NonStreamingInferenceService } from '../../services/non-streaming-inference.service';
+import type { InferenceOrchestratorService } from '../../services/inference-orchestrator.service';
 import type { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
-import type { Counter } from 'prom-client';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
+import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { randomUUID } from 'crypto';
 
 describe('ExecuteRunUseCase', () => {
   let useCase: ExecuteRunUseCase;
-  let anonymizeTextUseCase: jest.Mocked<AnonymizeTextUseCase>;
+  let anonymizeTextForThreadUseCase: jest.Mocked<AnonymizeTextForThreadUseCase>;
   let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
   let contextService: jest.Mocked<ContextService>;
   let toolAssemblyService: jest.Mocked<ToolAssemblyService>;
   let messageCleanupService: jest.Mocked<MessageCleanupService>;
+  let checkQuotaUseCase: jest.Mocked<CheckQuotaUseCase>;
+  let creditBudgetGuardService: jest.Mocked<CreditBudgetGuardService>;
 
   const userId = randomUUID();
   const orgId = randomUUID();
@@ -54,7 +58,6 @@ describe('ExecuteRunUseCase', () => {
     return {
       id: threadId,
       userId,
-      agentId: null,
       model,
       isAnonymous: false,
       messages: [],
@@ -64,13 +67,21 @@ describe('ExecuteRunUseCase', () => {
   }
 
   beforeEach(() => {
-    anonymizeTextUseCase = {
+    anonymizeTextForThreadUseCase = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<AnonymizeTextUseCase>;
+    } as unknown as jest.Mocked<AnonymizeTextForThreadUseCase>;
 
     findThreadUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<FindThreadUseCase>;
+
+    checkQuotaUseCase = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<CheckQuotaUseCase>;
+
+    creditBudgetGuardService = {
+      ensureBudgetAvailable: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<CreditBudgetGuardService>;
 
     contextService = {
       get: jest.fn(),
@@ -96,31 +107,41 @@ describe('ExecuteRunUseCase', () => {
       return undefined;
     });
 
+    const collectUsageAsyncService = {
+      collect: jest.fn(),
+    } as unknown as jest.Mocked<CollectUsageAsyncService>;
+
+    const inferenceUsageGuard = new InferenceUsageGuard(
+      checkQuotaUseCase,
+      creditBudgetGuardService,
+      collectUsageAsyncService,
+    );
+
     useCase = new ExecuteRunUseCase(
       { execute: jest.fn() } as unknown as CreateUserMessageUseCase,
-      { execute: jest.fn() } as unknown as CreateAssistantMessageUseCase,
       { execute: jest.fn() } as unknown as CreateToolResultMessageUseCase,
       findThreadUseCase,
-      { execute: jest.fn() } as unknown as FindOneAgentUseCase,
       { execute: jest.fn() } as unknown as AddMessageToThreadUseCase,
       contextService,
-      anonymizeTextUseCase,
-      { collect: jest.fn() } as unknown as CollectUsageAsyncService,
-      { execute: jest.fn() } as unknown as TrimMessagesForContextUseCase,
+      anonymizeTextForThreadUseCase,
+      inferenceUsageGuard,
       toolAssemblyService,
       {
-        collectToolResults: jest.fn().mockResolvedValue([]),
+        collectToolResults: jest
+          .fn()
+          .mockResolvedValue({ contents: [], piiMasks: null }),
         exitLoopAfterAgentResponse: jest.fn().mockReturnValue(true),
       } as unknown as ToolResultCollectorService,
       messageCleanupService,
       {
-        executeStreamingInference: jest.fn(),
-      } as unknown as StreamingInferenceService,
-      { execute: jest.fn() } as unknown as NonStreamingInferenceService,
+        runInference: jest.fn(),
+      } as unknown as InferenceOrchestratorService,
       {
         activateOnThread: jest.fn(),
       } as unknown as jest.Mocked<SkillActivationService>,
-      { inc: jest.fn() } as unknown as Counter<string>,
+      {
+        emitAsync: jest.fn().mockResolvedValue([]),
+      } as unknown as EventEmitter2,
     );
   });
 
@@ -143,19 +164,20 @@ describe('ExecuteRunUseCase', () => {
         skillName: 'Legal Research',
       });
 
-      const streamingInferenceService = (
+      const inferenceOrchestratorService = (
         useCase as unknown as {
-          streamingInferenceService: jest.Mocked<StreamingInferenceService>;
+          inferenceOrchestratorService: jest.Mocked<InferenceOrchestratorService>;
         }
-      ).streamingInferenceService;
+      ).inferenceOrchestratorService;
       const assistantMessage = {
         id: randomUUID(),
         content: [{ type: 'text', text: 'Response' }],
       } as unknown as AssistantMessage;
 
-      streamingInferenceService.executeStreamingInference.mockReturnValue(
+      inferenceOrchestratorService.runInference.mockReturnValue(
         (async function* () {
           yield assistantMessage;
+          return assistantMessage;
         })(),
       );
 
@@ -183,9 +205,7 @@ describe('ExecuteRunUseCase', () => {
       }
 
       // Verify the streaming inference was called with instructions containing the note
-      expect(
-        streamingInferenceService.executeStreamingInference,
-      ).toHaveBeenCalledWith(
+      expect(inferenceOrchestratorService.runInference).toHaveBeenCalledWith(
         expect.objectContaining({
           instructions: expect.stringContaining(
             'Skill "Legal Research" has already been activated on this thread. Do not call activate_skill for this skill.',
@@ -212,11 +232,11 @@ describe('ExecuteRunUseCase', () => {
         skillName: 'Legal Research',
       });
 
-      const streamingInferenceService = (
+      const inferenceOrchestratorService = (
         useCase as unknown as {
-          streamingInferenceService: jest.Mocked<StreamingInferenceService>;
+          inferenceOrchestratorService: jest.Mocked<InferenceOrchestratorService>;
         }
-      ).streamingInferenceService;
+      ).inferenceOrchestratorService;
 
       // First inference: assistant calls activate_skill tool
       const toolCallMessage = {
@@ -238,19 +258,19 @@ describe('ExecuteRunUseCase', () => {
       } as unknown as AssistantMessage;
 
       let inferenceCallCount = 0;
-      streamingInferenceService.executeStreamingInference.mockImplementation(
-        () => {
-          inferenceCallCount++;
-          if (inferenceCallCount === 1) {
-            return (async function* () {
-              yield toolCallMessage;
-            })();
-          }
+      inferenceOrchestratorService.runInference.mockImplementation(() => {
+        inferenceCallCount++;
+        if (inferenceCallCount === 1) {
           return (async function* () {
-            yield finalMessage;
+            yield toolCallMessage;
+            return toolCallMessage;
           })();
-        },
-      );
+        }
+        return (async function* () {
+          yield finalMessage;
+          return finalMessage;
+        })();
+      });
 
       const toolResultCollectorService = (
         useCase as unknown as {
@@ -264,16 +284,19 @@ describe('ExecuteRunUseCase', () => {
           collectCallCount++;
           if (collectCallCount === 1) {
             // First call: no pending results (initial processToolResults)
-            return [];
+            return { contents: [], piiMasks: null };
           }
           // Second call: activate_skill tool result
-          return [
-            new ToolResultMessageContent(
-              'tool-1',
-              ToolType.ACTIVATE_SKILL,
-              'Skill activated successfully',
-            ),
-          ];
+          return {
+            contents: [
+              new ToolResultMessageContent(
+                'tool-1',
+                ToolType.ACTIVATE_SKILL,
+                'Skill activated successfully',
+              ),
+            ],
+            piiMasks: null,
+          };
         },
       );
 
@@ -302,7 +325,7 @@ describe('ExecuteRunUseCase', () => {
       // The second inference call must still contain the note
       // (after refreshRunContext was called again in processToolResults)
       const secondCall =
-        streamingInferenceService.executeStreamingInference.mock.calls[1];
+        inferenceOrchestratorService.runInference.mock.calls[1];
       expect(secondCall).toBeDefined();
       const secondCallParams = secondCall[0] as { instructions?: string };
       expect(secondCallParams.instructions).toContain(
@@ -318,7 +341,7 @@ describe('ExecuteRunUseCase', () => {
         thread,
         isLongChat: false,
       });
-      anonymizeTextUseCase.execute.mockRejectedValue(
+      anonymizeTextForThreadUseCase.execute.mockRejectedValue(
         new AnonymizationFailedError('Connection refused'),
       );
 
@@ -352,7 +375,7 @@ describe('ExecuteRunUseCase', () => {
         thread,
         isLongChat: false,
       });
-      anonymizeTextUseCase.execute.mockRejectedValue(
+      anonymizeTextForThreadUseCase.execute.mockRejectedValue(
         new AnonymizationFailedError('Service timeout'),
       );
 
@@ -370,6 +393,153 @@ describe('ExecuteRunUseCase', () => {
       await expect(generator.next()).rejects.toThrow(
         RunAnonymizationUnavailableError,
       );
+    });
+  });
+
+  describe('tier-aware fair-use quota selection', () => {
+    function makeTieredModel(
+      tier: ModelTier | undefined,
+    ): PermittedLanguageModel {
+      return {
+        model: {
+          name: 'gpt-tier',
+          canUseTools: false,
+          canVision: false,
+          tier,
+        } as unknown as LanguageModel,
+        anonymousOnly: false,
+      } as PermittedLanguageModel;
+    }
+
+    function stubInferenceWithEmptyResponse() {
+      const inferenceOrchestratorService = (
+        useCase as unknown as {
+          inferenceOrchestratorService: jest.Mocked<InferenceOrchestratorService>;
+        }
+      ).inferenceOrchestratorService;
+      const assistantMessage = {
+        id: randomUUID(),
+        content: [{ type: 'text', text: 'ok' }],
+      } as unknown as AssistantMessage;
+      inferenceOrchestratorService.runInference.mockReturnValue(
+        (async function* () {
+          yield assistantMessage;
+          return assistantMessage;
+        })(),
+      );
+    }
+
+    async function drainGenerator(
+      generator: AsyncGenerator<unknown, void, void>,
+    ): Promise<void> {
+      let result = await generator.next();
+      while (!result.done) {
+        result = await generator.next();
+      }
+    }
+
+    it.each([
+      [ModelTier.LOW, QuotaType.FAIR_USE_MESSAGES_LOW],
+      [ModelTier.MEDIUM, QuotaType.FAIR_USE_MESSAGES_MEDIUM],
+      [ModelTier.HIGH, QuotaType.FAIR_USE_MESSAGES_HIGH],
+    ])(
+      'routes a thread on a %s-tier model to %s',
+      async (tier, expectedQuotaType) => {
+        const thread = createMockThread({ model: makeTieredModel(tier) });
+        findThreadUseCase.execute.mockResolvedValue({
+          thread,
+          isLongChat: false,
+        });
+        stubInferenceWithEmptyResponse();
+
+        const command = new ExecuteRunCommand({
+          threadId,
+          input: new RunUserInput('hello', []),
+          streaming: true,
+        });
+        await drainGenerator(await useCase.execute(command));
+
+        expect(checkQuotaUseCase.execute).toHaveBeenCalledTimes(1);
+        const query = checkQuotaUseCase.execute.mock.calls[0][0];
+        expect(query.userId).toBe(userId);
+        expect(query.orgId).toBe(orgId);
+        expect(query.quotaType).toBe(expectedQuotaType);
+        expect(
+          creditBudgetGuardService.ensureBudgetAvailable,
+        ).toHaveBeenCalledWith(orgId);
+      },
+    );
+
+    it('skips the fair-use quota check entirely for a ZERO-tier model', async () => {
+      const thread = createMockThread({
+        model: makeTieredModel(ModelTier.ZERO),
+      });
+      findThreadUseCase.execute.mockResolvedValue({
+        thread,
+        isLongChat: false,
+      });
+      stubInferenceWithEmptyResponse();
+
+      const command = new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('hello', []),
+        streaming: true,
+      });
+      await drainGenerator(await useCase.execute(command));
+
+      expect(checkQuotaUseCase.execute).not.toHaveBeenCalled();
+      // Credit budget enforcement still applies — only fair-use is bypassed.
+      expect(
+        creditBudgetGuardService.ensureBudgetAvailable,
+      ).toHaveBeenCalledWith(orgId);
+    });
+
+    it('falls back to FAIR_USE_MESSAGES_MEDIUM when the model has no tier', async () => {
+      const thread = createMockThread({ model: makeTieredModel(undefined) });
+      findThreadUseCase.execute.mockResolvedValue({
+        thread,
+        isLongChat: false,
+      });
+      stubInferenceWithEmptyResponse();
+
+      const command = new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('hello', []),
+        streaming: true,
+      });
+      await drainGenerator(await useCase.execute(command));
+
+      expect(checkQuotaUseCase.execute).toHaveBeenCalledTimes(1);
+      expect(checkQuotaUseCase.execute.mock.calls[0][0].quotaType).toBe(
+        QuotaType.FAIR_USE_MESSAGES_MEDIUM,
+      );
+    });
+
+    it('does NOT charge a quota when no model can be resolved', async () => {
+      const thread = createMockThread({
+        model: undefined as unknown as PermittedLanguageModel,
+      });
+      findThreadUseCase.execute.mockResolvedValue({
+        thread,
+        isLongChat: false,
+      });
+
+      const command = new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('hello', []),
+        streaming: true,
+      });
+
+      // `pickModel` throws synchronously — the outer try in `execute()`
+      // wraps it in `RunNoModelFoundError` (an `ApplicationError`) which is
+      // re-thrown unchanged. The wrapper turns it into a RunErrorEvent.
+      await expect(useCase.execute(command)).rejects.toMatchObject({
+        code: RunErrorCode.RUN_NO_MODEL_FOUND,
+      });
+      expect(checkQuotaUseCase.execute).not.toHaveBeenCalled();
+      expect(
+        creditBudgetGuardService.ensureBudgetAvailable,
+      ).not.toHaveBeenCalled();
     });
   });
 });

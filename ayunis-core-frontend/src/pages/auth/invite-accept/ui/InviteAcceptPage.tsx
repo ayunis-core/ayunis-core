@@ -15,6 +15,7 @@ import { useInviteAccept } from '../api';
 import { useTranslation } from 'react-i18next';
 import { Label } from '@/shared/ui/shadcn/label';
 import { Checkbox } from '@/shared/ui/shadcn/checkbox';
+import { DepartmentField } from '@/shared/ui/department-field';
 
 interface InviteAcceptPageProps {
   invite: Invite;
@@ -91,6 +92,13 @@ export default function InviteAcceptPage({
                 <FormMessage />
               </FormItem>
             )}
+          />
+          <DepartmentField
+            form={form}
+            departmentName="department"
+            departmentOtherName="departmentOther"
+            translationPrefix="inviteAccept"
+            t={t}
           />
           {isCloud && (
             <FormField

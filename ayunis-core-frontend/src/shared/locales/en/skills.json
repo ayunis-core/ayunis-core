@@ -1,13 +1,18 @@
 {
   "shared": {
-    "badge": "Shared"
+    "badge": "Shared",
+    "by": "Shared by {{name}}"
   },
   "page": {
-    "title": "My Skills"
+    "title": "Skills"
   },
   "tabs": {
     "personal": "Own Skills",
     "shared": "Shared Skills"
+  },
+  "marketplaceBanner": {
+    "title": "Discover more skills in the Ayunis Core Marketplace",
+    "description": "Browse curated skills and install new ones directly from the Ayunis Core Marketplace."
   },
   "emptyState": {
     "title": "No skills yet",
@@ -19,7 +24,8 @@
     "shared": {
       "title": "No shared skills yet",
       "description": "Skills shared with you by other members of your organization will appear here."
-    }
+    },
+    "browseMarketplace": "Or browse the Ayunis Core Marketplace"
   },
   "badge": {
     "active": "Active",
@@ -57,6 +63,7 @@
       "create": "Create Skill",
       "creating": "Creating..."
     },
+    "marketplaceHint": "Skills are not automatically published to the marketplace.",
     "validation": {
       "nameRequired": "Name is required",
       "shortDescriptionRequired": "Trigger is required",

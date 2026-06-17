@@ -1,6 +1,5 @@
 import type { UUID } from 'crypto';
 import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import type { Currency } from 'src/domain/models/domain/value-objects/currency.enum';
 
 export class UpdateEmbeddingModelCommand {
   id: UUID;
@@ -11,7 +10,6 @@ export class UpdateEmbeddingModelCommand {
   dimensions: number;
   inputTokenCost?: number;
   outputTokenCost?: number;
-  currency?: Currency;
 
   constructor(params: {
     id: UUID;
@@ -22,7 +20,6 @@ export class UpdateEmbeddingModelCommand {
     dimensions: number;
     inputTokenCost?: number;
     outputTokenCost?: number;
-    currency?: Currency;
   }) {
     this.id = params.id;
     this.name = params.name;
@@ -32,6 +29,5 @@ export class UpdateEmbeddingModelCommand {
     this.dimensions = params.dimensions;
     this.inputTokenCost = params.inputTokenCost;
     this.outputTokenCost = params.outputTokenCost;
-    this.currency = params.currency;
   }
 }

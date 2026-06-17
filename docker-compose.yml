@@ -48,8 +48,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    # Only expose console port externally if needed
+    # S3 API on loopback so a host-side proxy can front it for presigned URLs
     ports:
+      - "127.0.0.1:9000:9000"
       - "9001:9001"
     logging:
       driver: json-file
@@ -154,6 +155,9 @@ services:
     restart: unless-stopped
     networks:
       - ayunis-network
+    environment:
+      OMP_NUM_THREADS: "4"
+      MKL_NUM_THREADS: "4"
     healthcheck:
       test:
         [
@@ -172,10 +176,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2G
-          cpus: "2"
+          memory: 3G
+          cpus: "4"
         reservations:
-          memory: 1G
+          memory: 1500M
 
   app:
     build:
@@ -195,12 +199,18 @@ services:
         condition: service_healthy
       anonymize:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      gotenberg:
+        condition: service_healthy
     env_file:
       - ./ayunis-core-backend/.env
       - ./ayunis-core-frontend/.env
     environment:
       CODE_EXECUTION_SERVICE_URL: http://code-execution:8080
       ANONYMIZE_SERVICE_URL: http://anonymize:8000
+      GOTENBERG_URL: http://gotenberg:3000
+      REDIS_HOST: redis
     volumes:
       - app-uploads:/app/uploads
     networks:
@@ -225,7 +235,54 @@ services:
     deploy:
       resources:
         limits:
+          memory: 4G
+          cpus: "2"
+        reservations:
           memory: 1G
+
+  redis:
+    image: redis:7-alpine
+    container_name: ayunis-redis-prod
+    restart: unless-stopped
+    command: redis-server --maxmemory 128mb --maxmemory-policy noeviction
+    networks:
+      - ayunis-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.25"
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: ayunis-gotenberg-prod
+    restart: unless-stopped
+    networks:
+      - ayunis-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: 2G
           cpus: "2"
         reservations:
           memory: 512M

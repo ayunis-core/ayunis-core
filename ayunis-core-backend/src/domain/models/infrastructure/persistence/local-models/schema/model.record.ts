@@ -3,7 +3,6 @@ import { BaseRecord } from '../../../../../../common/db/base-record';
 import { ModelProvider } from '../../../../domain/value-objects/model-provider.enum';
 import { EmbeddingDimensions } from '../../../../domain/value-objects/embedding-dimensions.enum';
 import { Column, Entity, Index, TableInheritance, ChildEntity } from 'typeorm';
-import { Currency } from '../../../../domain/value-objects/currency.enum';
 
 const tokenCostColumnOptions = {
   type: 'decimal' as const,
@@ -12,7 +11,11 @@ const tokenCostColumnOptions = {
   nullable: true,
   transformer: {
     to: (value?: number | null) => value,
-    from: (value: string | null) => (value === null ? null : Number(value)),
+    // Normalize NULL rows to `undefined` so it matches the column's TS type
+    // (`number | undefined`) and downstream arithmetic cannot silently
+    // coerce `null` to 0.
+    from: (value: string | null) =>
+      value === null ? undefined : Number(value),
   },
 };
 
@@ -71,12 +74,14 @@ export class LanguageModelRecord extends ModelRecord {
   @Column(tokenCostColumnOptions)
   outputTokenCost?: number;
 
+  // Stored as varchar (not a Postgres enum) on purpose: adding new tiers later
+  // should not require an `ALTER TYPE` migration. The allow-list in
+  // ModelMapper.parseTier defends against stray values when reading.
   @Column({
-    type: 'enum',
-    enum: Currency,
+    type: 'varchar',
     nullable: true,
   })
-  currency?: Currency;
+  tier?: string | null;
 }
 
 @ChildEntity(ModelType.EMBEDDING)
@@ -91,11 +96,13 @@ export class EmbeddingModelRecord extends ModelRecord {
 
   @Column(tokenCostColumnOptions)
   outputTokenCost?: number;
+}
 
-  @Column({
-    type: 'enum',
-    enum: Currency,
-    nullable: true,
-  })
-  currency?: Currency;
+@ChildEntity(ModelType.IMAGE_GENERATION)
+export class ImageGenerationModelRecord extends ModelRecord {
+  @Column(tokenCostColumnOptions)
+  inputTokenCost?: number;
+
+  @Column(tokenCostColumnOptions)
+  outputTokenCost?: number;
 }

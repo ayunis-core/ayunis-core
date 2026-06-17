@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { AxiosRequestConfig, AxiosError } from 'axios';
+import { marketplaceConfig } from 'src/config/marketplace.config';
 
 /**
  * Custom error class that preserves HTTP status information from Axios errors.
@@ -25,9 +26,11 @@ export class MarketplaceHttpError extends Error {
   }
 }
 
-// Create axios instance for marketplace service with all configuration
+// Create axios instance for marketplace service with all configuration.
+// baseURL is undefined when MARKETPLACE_SERVICE_URL is not set — any request
+// will fail and be surfaced as a MarketplaceHttpError by the interceptor below.
 const marketplaceAxios = axios.create({
-  baseURL: process.env.MARKETPLACE_SERVICE_URL || 'http://localhost:3002',
+  baseURL: marketplaceConfig().serviceUrl,
   timeout: 10000, // 10 seconds timeout
   headers: {
     'Content-Type': 'application/json',

@@ -25,10 +25,13 @@ export function CreateSkillTemplateDialog({
     },
   });
 
-  const { createSkillTemplate, isCreating } = useCreateSkillTemplate(() => {
-    onOpenChange(false);
-    form.reset();
-  });
+  const { createSkillTemplate, isCreating } = useCreateSkillTemplate(
+    form,
+    () => {
+      onOpenChange(false);
+      form.reset();
+    },
+  );
 
   return (
     <SkillTemplateFormDialog

@@ -8,21 +8,23 @@ import {
 import { useTranslation } from 'react-i18next';
 
 interface SendButtonProps {
-  isStreaming: boolean;
+  /** True while a submit is in flight (submitting or streaming). Replaces
+   *  the send icon with a stop icon wired to {@link onCancel}. */
+  inFlight: boolean;
   canSend: boolean;
   onSend: () => void;
   onCancel: () => void;
 }
 
 export function SendButton({
-  isStreaming,
+  inFlight,
   canSend,
   onSend,
   onCancel,
 }: Readonly<SendButtonProps>) {
   const { t } = useTranslation('common');
 
-  if (isStreaming) {
+  if (inFlight) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>

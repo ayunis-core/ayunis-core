@@ -5,8 +5,8 @@ export class TimeSeriesPointDto {
   @ApiProperty({ description: 'Date of the data point' })
   date: Date;
 
-  @ApiProperty({ description: 'Number of tokens at this point' })
-  tokens: number;
+  @ApiProperty({ description: 'Number of credits at this point' })
+  credits: number;
 
   @ApiProperty({ description: 'Number of requests at this point' })
   requests: number;
@@ -16,8 +16,8 @@ export class ProviderUsageDto {
   @ApiProperty({ enum: ModelProvider, description: 'Model provider' })
   provider: ModelProvider;
 
-  @ApiProperty({ description: 'Total tokens for this provider' })
-  tokens: number;
+  @ApiProperty({ description: 'Total credits for this provider' })
+  credits: number;
 
   @ApiProperty({ description: 'Total requests for this provider' })
   requests: number;

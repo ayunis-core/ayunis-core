@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import OpenAI from 'openai';
-import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { Message } from 'src/domain/messages/domain/message.entity';
+import type { ToolSchema } from '../../domain/value-objects/tool-schema';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
@@ -22,7 +22,7 @@ import { normalizeSchemaForOpenAI } from '../util/normalize-schema-for-openai';
 export class OpenAIResponsesMessageConverter {
   constructor(private readonly imageContentService: ImageContentService) {}
 
-  convertTool(tool: Tool): OpenAI.Responses.Tool {
+  convertTool(tool: ToolSchema): OpenAI.Responses.Tool {
     return {
       type: 'function' as const,
       name: tool.name,

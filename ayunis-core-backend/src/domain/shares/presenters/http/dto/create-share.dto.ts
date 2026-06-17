@@ -15,34 +15,6 @@ export abstract class CreateShareDto {
 }
 
 /**
- * DTO for creating agent shares
- * If teamId is provided, the share will be scoped to the team
- * Otherwise, the share will be scoped to the user's organization
- */
-export class CreateAgentShareDto extends CreateShareDto {
-  @ApiProperty({
-    description: 'ID of the agent to share',
-    format: 'uuid',
-  })
-  @IsUUID()
-  agentId: string;
-
-  @ApiPropertyOptional({
-    description:
-      'ID of the team to share with (if not provided, shares with entire organization)',
-    format: 'uuid',
-  })
-  @IsUUID()
-  @IsOptional()
-  teamId?: string;
-
-  constructor() {
-    super();
-    this.entityType = SharedEntityType.AGENT;
-  }
-}
-
-/**
  * DTO for creating skill shares
  * If teamId is provided, the share will be scoped to the team
  * Otherwise, the share will be scoped to the user's organization

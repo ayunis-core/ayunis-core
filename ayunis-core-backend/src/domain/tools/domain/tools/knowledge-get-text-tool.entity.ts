@@ -11,7 +11,6 @@ interface KnowledgeGetTextToolParameters {
   numLines?: number;
 }
 
-// eslint-disable-next-line sonarjs/function-return-type -- returns a single JSON schema object literal
 function knowledgeGetTextToolParameters(
   knowledgeBases: KnowledgeBaseSummary[],
 ): JSONSchema {

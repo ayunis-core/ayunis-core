@@ -20,19 +20,19 @@ export async function getTopModels(
     )
     .select('usage.modelId', 'modelId')
     .addSelect('model.displayName', 'displayName')
-    .addSelect('SUM(usage.totalTokens)', 'tokens')
+    .addSelect('COALESCE(SUM(usage.creditsConsumed), 0)', 'credits')
     .where('usage.organizationId = :orgId', { orgId: organizationId });
 
   if (startDate) {
     qb.andWhere('usage.createdAt >= :startDate', { startDate });
   }
   if (endDate) {
-    qb.andWhere('usage.createdAt <= :endDate', { endDate });
+    qb.andWhere('usage.createdAt < :endDate', { endDate });
   }
 
   return await qb
     .groupBy('usage.modelId, model.displayName')
-    .orderBy('SUM(usage.totalTokens)', 'DESC')
+    .orderBy('SUM(usage.creditsConsumed)', 'DESC')
     .limit(limit)
     .getRawMany<TopModelRow>();
 }

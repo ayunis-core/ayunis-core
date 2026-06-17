@@ -29,57 +29,42 @@ export class OpenAIInferenceHandler extends InferenceHandler {
   }
 
   async answer(input: InferenceInput): Promise<InferenceResponse> {
-    this.logger.log('answer', {
+    const { messages, tools, toolChoice, orgId } = input;
+    const openAiTools = tools.map((t) => this.converter.convertTool(t));
+    const openAiMessages = await this.converter.convertMessages(
+      messages,
+      orgId,
+    );
+    const isGpt5 = input.model.name.startsWith('gpt-5');
+
+    const completionOptions: OpenAI.Responses.ResponseCreateParamsNonStreaming =
+      {
+        instructions: input.systemPrompt,
+        input: openAiMessages,
+        reasoning: isGpt5 ? { effort: 'low' } : undefined,
+        model: input.model.name,
+        stream: false,
+        store: false,
+        tools: openAiTools,
+        tool_choice: toolChoice
+          ? this.converter.convertToolChoice(toolChoice)
+          : undefined,
+      };
+    this.logger.debug('completionOptions prepared', {
       model: input.model.name,
-      messageCount: input.messages.length,
-      toolCount: input.tools.length,
-      toolChoice: input.toolChoice,
+      messageCount: openAiMessages.length,
+      toolCount: openAiTools.length,
+      hasSystem: Boolean(input.systemPrompt),
     });
-    try {
-      const { messages, tools, toolChoice, orgId } = input;
-      const openAiTools = tools.map((t) => this.converter.convertTool(t));
-      const openAiMessages = await this.converter.convertMessages(
-        messages,
-        orgId,
-      );
-      const isGpt5 = input.model.name.startsWith('gpt-5');
+    const completionFn = () => this.client.responses.create(completionOptions);
 
-      const completionOptions: OpenAI.Responses.ResponseCreateParamsNonStreaming =
-        {
-          instructions: input.systemPrompt,
-          input: openAiMessages,
-          reasoning: isGpt5 ? { effort: 'low' } : undefined,
-          model: input.model.name,
-          stream: false,
-          store: false,
-          tools: openAiTools,
-          tool_choice: toolChoice
-            ? this.converter.convertToolChoice(toolChoice)
-            : undefined,
-        };
-      this.logger.debug('completionOptions', completionOptions);
-      const completionFn = () =>
-        this.client.responses.create(completionOptions);
+    const response = await retryWithBackoff({
+      fn: completionFn,
+      maxRetries: 3,
+      delay: 1000,
+    });
 
-      const response = await retryWithBackoff({
-        fn: completionFn,
-        maxRetries: 3,
-        delay: 1000,
-      });
-      const modelResponse = this.parseCompletion(response);
-
-      return modelResponse;
-    } catch (error) {
-      this.logger.error('Failed to get response from OpenAI', error);
-      if (error instanceof InferenceFailedError) {
-        throw error;
-      }
-      throw new InferenceFailedError('OpenAI inference failed', {
-        source: 'openai',
-        originalError:
-          error instanceof Error ? error : new Error('Unknown error'),
-      });
-    }
+    return this.parseCompletion(response);
   }
 
   private parseCompletion = (

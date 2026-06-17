@@ -8,13 +8,11 @@ export class FindAllThreadsQuery extends PaginatedQuery {
     public readonly options?: {
       withSources?: boolean;
       withMessages?: boolean;
-      withAgent?: boolean;
       withModel?: boolean;
       withKnowledgeBases?: boolean;
     },
     public readonly filters?: {
       search?: string;
-      agentId?: string;
     },
     pagination?: { limit?: number; offset?: number },
   ) {

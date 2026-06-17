@@ -1,15 +1,25 @@
-import { User, Users, Brain, Plug, BarChart3 } from 'lucide-react';
+import {
+  User,
+  Users,
+  Brain,
+  Plug,
+  BarChart3,
+  Shield,
+  FileText,
+  Key,
+  ShieldCheck,
+  MessageSquareText,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useAppControllerIsCloud } from '@/shared/api';
 import {
   SettingsSidebarWidget,
   type SidebarMenuItem,
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
+import { useIsLetterheadsEnabled } from '@/features/feature-toggles';
 
 export function AdminSettingsSidebar() {
   const { t } = useTranslation('admin-settings-layout');
-  const { data: appConfig } = useAppControllerIsCloud();
-  const isCloud = appConfig?.isCloud ?? false;
+  const isLetterheadsEnabled = useIsLetterheadsEnabled();
 
   const menuItems: SidebarMenuItem[] = [
     {
@@ -32,15 +42,41 @@ export function AdminSettingsSidebar() {
       icon: <Plug />,
       label: t('layout.integrations'),
     },
-  ];
-
-  if (!isCloud) {
-    menuItems.push({
+    {
+      to: '/admin-settings/security',
+      icon: <Shield />,
+      label: t('layout.security'),
+    },
+    {
+      to: '/admin-settings/anonymization',
+      icon: <ShieldCheck />,
+      label: t('layout.anonymization'),
+    },
+    {
+      to: '/admin-settings/instructions',
+      icon: <MessageSquareText />,
+      label: t('layout.instructions'),
+    },
+    {
+      to: '/admin-settings/api-keys',
+      icon: <Key />,
+      label: t('layout.apiKeys'),
+    },
+    {
       to: '/admin-settings/usage',
       icon: <BarChart3 />,
       label: t('layout.usage'),
-    });
-  }
+    },
+    ...(isLetterheadsEnabled
+      ? [
+          {
+            to: '/admin-settings/letterheads' as const,
+            icon: <FileText />,
+            label: t('layout.letterheads'),
+          },
+        ]
+      : []),
+  ];
 
   return (
     <SettingsSidebarWidget

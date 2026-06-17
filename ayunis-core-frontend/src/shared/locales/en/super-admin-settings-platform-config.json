@@ -1,0 +1,55 @@
+{
+  "title": "Platform Configuration",
+  "creditsPerEuro": {
+    "title": "Credits Per Euro",
+    "description": "Global exchange rate that defines how many credits one euro of token cost equals. Applies to all usage-based subscriptions.",
+    "label": "Credits per Euro",
+    "loading": "Loading…",
+    "loadError": "Failed to load credits per euro configuration.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "updateSuccess": "Credits per euro updated successfully.",
+    "updateError": "Failed to update credits per euro.",
+    "validationError": "Please enter a positive number.",
+    "hint": "Changing this value only affects future usage records. Historical records retain their original credit values.",
+    "notConfigured": "No value has been configured yet. Please set an initial value."
+  },
+  "fairUseLimits": {
+    "title": "Fair Use Limits",
+    "description": "Per-tier sliding-window quotas applied to chat messages. Each tier has its own bucket so users can send more cheap-tier messages without exhausting expensive-tier capacity.",
+    "loading": "Loading…",
+    "loadError": "Failed to load fair-use limits.",
+    "tier": {
+      "zero": "Unrestricted tier",
+      "low": "Low tier",
+      "medium": "Medium tier",
+      "high": "High tier"
+    },
+    "limit": "Messages",
+    "windowHours": "Window (hours)",
+    "save": "Save",
+    "cancel": "Cancel",
+    "updateSuccess": "Fair-use limit updated successfully.",
+    "updateError": "Failed to update fair-use limit.",
+    "validationError": {
+      "limit": "Messages must be a positive integer.",
+      "windowHours": "Window must be at least 0.01 hours."
+    }
+  },
+  "imageFairUseLimit": {
+    "title": "Image Generation Fair Use Limit",
+    "description": "Single global sliding-window quota applied to image generation across all users.",
+    "loading": "Loading…",
+    "loadError": "Failed to load image-generation fair-use limit.",
+    "limit": "Images",
+    "windowHours": "Window (hours)",
+    "save": "Save",
+    "cancel": "Cancel",
+    "updateSuccess": "Image-generation fair-use limit updated successfully.",
+    "updateError": "Failed to update image-generation fair-use limit.",
+    "validationError": {
+      "limit": "Images must be a positive integer.",
+      "windowHours": "Window must be at least 0.01 hours."
+    }
+  }
+}

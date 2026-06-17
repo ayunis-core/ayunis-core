@@ -1,21 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UncancelSubscriptionCommand } from './uncancel-subscription.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import {
-  UnauthorizedSubscriptionAccessError,
   SubscriptionNotFoundError,
   SubscriptionNotCancelledError,
+  SubscriptionExpiredError,
   UnexpectedSubscriptionError,
 } from '../../subscription.errors';
-import { GetActiveSubscriptionUseCase } from '../get-active-subscription/get-active-subscription.use-case';
-import { GetActiveSubscriptionQuery } from '../get-active-subscription/get-active-subscription.query';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
-import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { SubscriptionUncancelledWebhookEvent } from 'src/common/webhooks/domain/webhook-events/subscription-uncancelled.webhook-event';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SubscriptionUncancelledEvent } from '../../events/subscription-uncancelled.event';
+import { toSubscriptionEventData } from '../../mappers/to-subscription-event-data.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
+import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
+import { isActive } from '../../util/is-active';
+import { isUsageBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
+import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 
 @Injectable()
 export class UncancelSubscriptionUseCase {
@@ -23,8 +23,7 @@ export class UncancelSubscriptionUseCase {
 
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
-    private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
-    private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
   ) {}
 
@@ -35,32 +34,22 @@ export class UncancelSubscriptionUseCase {
     });
 
     try {
-      const systemRole = this.contextService.get('systemRole');
-      const orgRole = this.contextService.get('role');
-      const orgId = this.contextService.get('orgId');
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === command.orgId;
-      if (!isSuperAdmin && !isOrgAdmin) {
-        throw new UnauthorizedSubscriptionAccessError(
-          command.requestingUserId,
-          command.orgId,
-        );
-      }
+      validateSubscriptionAccess(
+        this.contextService,
+        command.requestingUserId,
+        command.orgId,
+      );
 
       this.logger.debug('Finding subscription');
-      const result = await this.getActiveSubscriptionUseCase.execute(
-        new GetActiveSubscriptionQuery({
-          orgId: command.orgId,
-          requestingUserId: command.requestingUserId,
-        }),
+      const subscription = await this.subscriptionRepository.findLatestByOrgId(
+        command.orgId,
       );
-      if (!result) {
+      if (!subscription) {
         this.logger.warn('Subscription not found', {
           orgId: command.orgId,
         });
         throw new SubscriptionNotFoundError(command.orgId);
       }
-      const subscription = result.subscription;
 
       this.logger.debug('Checking if subscription is cancelled');
       if (!subscription.cancelledAt) {
@@ -68,6 +57,14 @@ export class UncancelSubscriptionUseCase {
           orgId: command.orgId,
         });
         throw new SubscriptionNotCancelledError(command.orgId);
+      }
+
+      this.logger.debug('Checking if subscription can still be uncancelled');
+      if (!this.canUncancel(subscription)) {
+        this.logger.warn('Subscription has expired and cannot be uncancelled', {
+          orgId: command.orgId,
+        });
+        throw new SubscriptionExpiredError(command.orgId);
       }
 
       subscription.cancelledAt = null;
@@ -80,15 +77,22 @@ export class UncancelSubscriptionUseCase {
         orgId: command.orgId,
       });
 
-      // Send webhook asynchronously (don't block the main operation)
-      void this.sendWebhookUseCase.execute(
-        new SendWebhookCommand(
-          new SubscriptionUncancelledWebhookEvent(subscription),
-        ),
-      );
+      this.eventEmitter
+        .emitAsync(
+          SubscriptionUncancelledEvent.EVENT_NAME,
+          new SubscriptionUncancelledEvent(
+            command.orgId,
+            toSubscriptionEventData(subscription),
+          ),
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit SubscriptionUncancelledEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            orgId: command.orgId,
+          });
+        });
     } catch (error) {
       if (error instanceof ApplicationError) {
-        // Already logged and properly typed error, just rethrow
         throw error;
       }
       this.logger.error('Subscription uncancellation failed', {
@@ -98,5 +102,22 @@ export class UncancelSubscriptionUseCase {
       });
       throw new UnexpectedSubscriptionError('Unexpected error');
     }
+  }
+
+  /**
+   * Seat-based: can uncancel while still within the billing period (isActive).
+   * Usage-based: can uncancel if cancelled in the current calendar month.
+   */
+  private canUncancel(subscription: Subscription): boolean {
+    if (isUsageBased(subscription)) {
+      const now = new Date();
+      const cancelledAt = subscription.cancelledAt!;
+      return (
+        cancelledAt.getUTCFullYear() === now.getUTCFullYear() &&
+        cancelledAt.getUTCMonth() === now.getUTCMonth()
+      );
+    }
+
+    return isActive(subscription);
   }
 }

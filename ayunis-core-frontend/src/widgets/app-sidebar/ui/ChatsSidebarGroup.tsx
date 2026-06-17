@@ -27,6 +27,7 @@ import {
 } from '@/shared/ui/shadcn/dropdown-menu';
 import { useThreads } from '../api';
 import { useDeleteThread } from '@/features/useDeleteThread';
+import { useChatsSidebarOpen } from '@/features/useChatsSidebarOpen';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
   Collapsible,
@@ -44,6 +45,8 @@ export function ChatsSidebarGroup() {
   const { deleteChat } = useDeleteThread({});
   const params = useParams({ strict: false });
   const navigate = useNavigate();
+
+  const [isOpen, setOpen] = useChatsSidebarOpen();
 
   // Rename dialog state
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -82,7 +85,11 @@ export function ChatsSidebarGroup() {
 
   if (isLoading) {
     return (
-      <Collapsible defaultOpen className="group/collapsible">
+      <Collapsible
+        open={isOpen}
+        onOpenChange={setOpen}
+        className="group/collapsible"
+      >
         <SidebarGroup>
           <SidebarGroupLabel asChild>
             <CollapsibleTrigger className="flex items-center w-full">
@@ -116,7 +123,11 @@ export function ChatsSidebarGroup() {
 
   if (threads.length === 0) {
     return (
-      <Collapsible defaultOpen className="group/collapsible">
+      <Collapsible
+        open={isOpen}
+        onOpenChange={setOpen}
+        className="group/collapsible"
+      >
         <SidebarGroup>
           <SidebarGroupLabel asChild>
             <CollapsibleTrigger className="flex items-center w-full">
@@ -158,7 +169,11 @@ export function ChatsSidebarGroup() {
 
   return (
     <>
-      <Collapsible defaultOpen className="group/collapsible">
+      <Collapsible
+        open={isOpen}
+        onOpenChange={setOpen}
+        className="group/collapsible"
+      >
         <SidebarGroup>
           <SidebarGroupLabel asChild>
             <CollapsibleTrigger className="flex items-center justify-between w-full">
@@ -177,7 +192,10 @@ export function ChatsSidebarGroup() {
               <SidebarMenu>
                 {threads.map((thread) => (
                   <SidebarMenuItem key={thread.id} data-testid="chat">
-                    <SidebarMenuButton asChild>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={params.threadId === thread.id}
+                    >
                       <Link
                         to={'/chats/$threadId'}
                         params={{ threadId: thread.id }}
@@ -201,7 +219,7 @@ export function ChatsSidebarGroup() {
                         </SidebarMenuAction>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
-                        className="w-48 rounded-lg"
+                        className="rounded-lg"
                         side="bottom"
                         align="end"
                         data-testid="chat-dropdown"
@@ -212,14 +230,15 @@ export function ChatsSidebarGroup() {
                           }
                           data-testid="rename"
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Pencil />
                           <span>{t('sidebar.renameChat')}</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
+                          variant="destructive"
                           onClick={() => handleDeleteClick(thread.id)}
                           data-testid="delete"
                         >
-                          <Trash className="text-destructive" />
+                          <Trash />
                           <span>{t('sidebar.deleteChat')}</span>
                         </DropdownMenuItem>
                       </DropdownMenuContent>

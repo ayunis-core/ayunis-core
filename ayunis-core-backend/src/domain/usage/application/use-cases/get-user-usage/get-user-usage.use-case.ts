@@ -1,19 +1,35 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { GetUserUsageQuery } from './get-user-usage.query';
-import { UsageRepository, UserUsageItem } from '../../ports/usage.repository';
-import { InvalidPaginationError } from '../../usage.errors';
+import {
+  UsageRepository,
+  type UserUsageResult,
+} from '../../ports/usage.repository';
+import {
+  InvalidPaginationError,
+  UnexpectedUsageError,
+} from '../../usage.errors';
 import { validateOptionalDateRange } from '../../usage.utils';
 import { UsageConstants } from '../../../domain/value-objects/usage.constants';
-import { Paginated } from 'src/common/pagination';
+import { ApplicationError } from '../../../../../common/errors/base.error';
 
 @Injectable()
 export class GetUserUsageUseCase {
+  private readonly logger = new Logger(GetUserUsageUseCase.name);
+
   constructor(private readonly usageRepository: UsageRepository) {}
 
-  async execute(query: GetUserUsageQuery): Promise<Paginated<UserUsageItem>> {
+  async execute(query: GetUserUsageQuery): Promise<UserUsageResult> {
     this.validateQuery(query);
 
-    return this.usageRepository.getUserUsage(query);
+    try {
+      return await this.usageRepository.getUserUsage(query);
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      this.logger.error('Failed to get user usage', error);
+      throw new UnexpectedUsageError(error as Error, {
+        organizationId: query.organizationId,
+      });
+    }
   }
 
   private validateQuery(query: GetUserUsageQuery): void {
@@ -39,7 +55,7 @@ export class GetUserUsageUseCase {
 
     // Validate sort parameters
     const validSortFields: Array<typeof query.sortBy> = [
-      'tokens',
+      'credits',
       'requests',
       'lastActivity',
       'userName',

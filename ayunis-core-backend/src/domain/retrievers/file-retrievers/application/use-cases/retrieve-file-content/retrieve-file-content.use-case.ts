@@ -17,11 +17,17 @@ import {
   FileRetrieverUnexpectedError,
   InvalidFileTypeError,
 } from '../../file-retriever.errors';
-import { detectFileType } from 'src/common/util/file-type';
+import {
+  detectFileType,
+  isAudioFile,
+  MIME_TYPES,
+} from 'src/common/util/file-type';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { FileRetrieverHandler } from '../../ports/file-retriever.handler';
+import { DocumentConverterPort } from '../../ports/document-converter.port';
 import retrievalConfig from 'src/config/retrieval.config';
+import { TranscribeUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.use-case';
+import { TranscribeCommand } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.command';
 
 @Injectable()
 export class RetrieveFileContentUseCase {
@@ -30,6 +36,8 @@ export class RetrieveFileContentUseCase {
   constructor(
     private readonly fileRetrieverRegistry: FileRetrieverRegistry,
     private readonly contextService: ContextService,
+    private readonly documentConverter: DocumentConverterPort,
+    private readonly transcribeUseCase: TranscribeUseCase,
     @Inject(retrievalConfig.KEY)
     private readonly config: ConfigType<typeof retrievalConfig>,
   ) {}
@@ -43,47 +51,38 @@ export class RetrieveFileContentUseCase {
       throw new UnauthorizedException('User not authenticated');
     }
     try {
-      let handler: FileRetrieverHandler;
       const fileType = detectFileType(command.fileType, command.fileName);
 
-      if (fileType === 'pdf') {
-        // PDF: Prefer Mistral, fallback to Docling, then NPM PDF Parse
-        if (this.config.mistral.apiKey) {
-          handler = this.fileRetrieverRegistry.getHandler(
-            FileRetrieverType.MISTRAL,
-          );
-        } else if (this.config.docling.serviceUrl) {
-          handler = this.fileRetrieverRegistry.getHandler(
-            FileRetrieverType.DOCLING,
-          );
-        } else {
-          handler = this.fileRetrieverRegistry.getHandler(
-            FileRetrieverType.NPM_PDF_PARSE,
-          );
-        }
-      } else if (fileType === 'txt') {
-        // TXT: Read directly as UTF-8, no external service needed
+      if (fileType === 'txt') {
+        // TXT/MD: Read directly as UTF-8, no external service needed
         const text = command.fileData.toString('utf8').replace(/^\uFEFF/, '');
         return new FileRetrieverResult([new FileRetrieverPage(text, 1)]);
-      } else if (fileType === 'docx' || fileType === 'pptx') {
-        // DOCX/PPTX: Require Docling
-        if (this.config.docling.serviceUrl) {
-          handler = this.fileRetrieverRegistry.getHandler(
-            FileRetrieverType.DOCLING,
-          );
-        } else {
-          throw new InvalidFileTypeError(fileType);
-        }
-      } else {
-        throw new InvalidFileTypeError(fileType);
       }
 
-      const file = new File(
-        command.fileData,
-        command.fileName,
-        command.fileType,
-      );
-      return handler.processFile(file);
+      if (fileType === 'pdf') {
+        return await this.processPdf(
+          command.fileData,
+          command.fileName,
+          command.fileType,
+        );
+      }
+
+      if (fileType === 'docx' || fileType === 'pptx') {
+        return await this.processOfficeDocument(
+          command.fileData,
+          command.fileName,
+        );
+      }
+
+      if (isAudioFile(fileType)) {
+        return await this.processAudio(
+          command.fileData,
+          command.fileName,
+          command.fileType,
+        );
+      }
+
+      throw new InvalidFileTypeError(fileType);
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
@@ -93,5 +92,56 @@ export class RetrieveFileContentUseCase {
       });
       throw new FileRetrieverUnexpectedError(error as Error);
     }
+  }
+
+  /**
+   * PDF: Prefer Mistral OCR, fallback to pdf-parse.
+   */
+  private async processPdf(
+    fileData: Buffer,
+    fileName: string,
+    mimeType: string,
+  ): Promise<FileRetrieverResult> {
+    const handler = this.config.mistral.apiKey
+      ? this.fileRetrieverRegistry.getHandler(FileRetrieverType.MISTRAL)
+      : this.fileRetrieverRegistry.getHandler(FileRetrieverType.NPM_PDF_PARSE);
+
+    const file = new File(fileData, fileName, mimeType);
+    return handler.processFile(file);
+  }
+
+  /**
+   * DOCX/PPTX: Convert to PDF via Gotenberg, then process as PDF.
+   */
+  private async processOfficeDocument(
+    fileData: Buffer,
+    fileName: string,
+  ): Promise<FileRetrieverResult> {
+    const pdfBuffer = await this.documentConverter.convertToPdf(
+      fileData,
+      fileName,
+    );
+    const pdfFileName = fileName.replace(/\.\w+$/, '.pdf');
+    return this.processPdf(pdfBuffer, pdfFileName, MIME_TYPES.PDF);
+  }
+
+  /**
+   * Audio: Transcribe via STT and wrap the transcript as a single page.
+   * The downstream chunking pipeline flattens pages with join('\n'), so a
+   * single-page result is shape-equivalent to a TXT extraction.
+   */
+  private async processAudio(
+    fileData: Buffer,
+    fileName: string,
+    mimeType: string,
+  ): Promise<FileRetrieverResult> {
+    const transcript = await this.transcribeUseCase.execute(
+      new TranscribeCommand({
+        file: fileData,
+        fileName,
+        mimeType,
+      }),
+    );
+    return new FileRetrieverResult([new FileRetrieverPage(transcript, 1)]);
   }
 }

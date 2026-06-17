@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class SplitChildChunkEmbeddingByDimension1755000000000
-  implements MigrationInterface
-{
+export class SplitChildChunkEmbeddingByDimension1755000000000 implements MigrationInterface {
   name = 'SplitChildChunkEmbeddingByDimension1755000000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

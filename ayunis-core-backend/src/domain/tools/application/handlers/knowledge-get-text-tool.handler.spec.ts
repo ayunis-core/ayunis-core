@@ -10,6 +10,7 @@ import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import toolsConfig from 'src/config/tools.config';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { ExtractTextLinesUseCase } from 'src/domain/sources/application/use-cases/extract-text-lines/extract-text-lines.use-case';
 
 function createMockTool(knowledgeBaseId: string, documentId: string) {
   return {
@@ -26,7 +27,11 @@ function createMockTool(knowledgeBaseId: string, documentId: string) {
 describe('KnowledgeGetTextToolHandler', () => {
   let handler: KnowledgeGetTextToolHandler;
   let mockGetDocTextUseCase: jest.Mocked<GetKnowledgeBaseDocumentTextUseCase>;
+  let mockExtractTextLines: jest.Mocked<ExtractTextLinesUseCase>;
   let mockContextService: jest.Mocked<ContextService>;
+  const mockToolsConfig = {
+    sourceGetText: { maxLines: 500, maxChars: 50000 },
+  };
 
   const mockKbId = randomUUID();
   const mockDocId = randomUUID();
@@ -38,6 +43,10 @@ describe('KnowledgeGetTextToolHandler', () => {
     mockGetDocTextUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetKnowledgeBaseDocumentTextUseCase>;
+
+    mockExtractTextLines = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<ExtractTextLinesUseCase>;
 
     mockContextService = {
       get: jest.fn().mockReturnValue(mockUserId),
@@ -51,14 +60,16 @@ describe('KnowledgeGetTextToolHandler', () => {
           useValue: mockGetDocTextUseCase,
         },
         {
+          provide: ExtractTextLinesUseCase,
+          useValue: mockExtractTextLines,
+        },
+        {
           provide: ContextService,
           useValue: mockContextService,
         },
         {
           provide: toolsConfig.KEY,
-          useValue: {
-            sourceGetText: { maxLines: 500, maxChars: 50000 },
-          },
+          useValue: mockToolsConfig,
         },
       ],
     }).compile();
@@ -71,19 +82,23 @@ describe('KnowledgeGetTextToolHandler', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockContextService.get.mockReturnValue(mockUserId);
+    mockToolsConfig.sourceGetText.maxLines = 500;
+    mockToolsConfig.sourceGetText.maxChars = 50000;
   });
 
   it('should return text content for a valid document', async () => {
     const mockSource = new FileSource({
       id: mockDocId,
       name: 'policy-document.pdf',
-      text: 'Line 1\nLine 2\nLine 3',
-      contentChunks: [],
       type: TextType.FILE,
       fileType: FileType.PDF,
     });
 
     mockGetDocTextUseCase.execute.mockResolvedValue(mockSource);
+    mockExtractTextLines.execute.mockResolvedValue({
+      totalLines: 3,
+      text: 'Line 1\nLine 2\nLine 3',
+    });
 
     const tool = createMockTool(mockKbId, mockDocId);
     const result = await handler.execute({
@@ -98,6 +113,13 @@ describe('KnowledgeGetTextToolHandler', () => {
     expect(parsed.documentName).toBe('policy-document.pdf');
     expect(parsed.totalLines).toBe(3);
     expect(parsed.text).toBe('Line 1\nLine 2\nLine 3');
+    expect(mockExtractTextLines.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceId: mockDocId,
+        startLine: 1,
+        endLine: 100,
+      }),
+    );
   });
 
   it('should throw when knowledge base is not found', async () => {
@@ -159,13 +181,15 @@ describe('KnowledgeGetTextToolHandler', () => {
     const mockSource = new FileSource({
       id: mockDocId,
       name: 'empty-doc.pdf',
-      text: '',
-      contentChunks: [],
       type: TextType.FILE,
       fileType: FileType.PDF,
     });
 
     mockGetDocTextUseCase.execute.mockResolvedValue(mockSource);
+    mockExtractTextLines.execute.mockResolvedValue({
+      totalLines: 0,
+      text: '',
+    });
 
     const tool = createMockTool(mockKbId, mockDocId);
     const result = await handler.execute({
@@ -177,6 +201,42 @@ describe('KnowledgeGetTextToolHandler', () => {
     const parsed = JSON.parse(result);
     expect(parsed.totalLines).toBe(0);
     expect(parsed.text).toBe('');
+  });
+
+  it('should include truncation metadata when text exceeds the char limit', async () => {
+    mockToolsConfig.sourceGetText.maxChars = 11;
+
+    const mockSource = new FileSource({
+      id: mockDocId,
+      name: 'policy-document.pdf',
+      type: TextType.FILE,
+      fileType: FileType.PDF,
+    });
+
+    mockGetDocTextUseCase.execute.mockResolvedValue(mockSource);
+    mockExtractTextLines.execute.mockResolvedValue({
+      totalLines: 3,
+      text: 'AAAAA\nBBBBB\nCCCCC',
+    });
+
+    const tool = createMockTool(mockKbId, mockDocId);
+    tool.validateParams = jest.fn().mockReturnValue({
+      knowledgeBaseId: mockKbId,
+      documentId: mockDocId,
+      startLine: 1,
+      numLines: 3,
+    });
+    const result = await handler.execute({
+      tool,
+      input: { knowledgeBaseId: mockKbId, documentId: mockDocId },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    const parsed = JSON.parse(result);
+    expect(parsed.actualEndLine).toBe(2);
+    expect(parsed.text).toBe('AAAAA\nBBBBB');
+    expect(parsed.truncated).toBe(true);
+    expect(parsed.truncationReasons).toEqual(['max_chars']);
   });
 
   it('should throw when user is not authenticated', async () => {

@@ -92,7 +92,7 @@ export default function InvitesSection({
             onClick={handleDeleteAllInvites}
             disabled={isDeleting || isDeletingInvite || totalInvites === 0}
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 />
             {t('users.deleteAll')}
           </Button>
         </CardAction>
@@ -157,16 +157,16 @@ export default function InvitesSection({
                             onClick={() => handleResendInvite(invite)}
                             disabled={isResending}
                           >
-                            <RefreshCw className="mr-2 h-4 w-4" />
+                            <RefreshCw />
                             {t('users.resend')}
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem
-                          className="text-red-600"
+                          variant="destructive"
                           onClick={() => handleDeleteInvite(invite)}
                           disabled={isDeletingInvite}
                         >
-                          <Trash2 className="mr-2 h-4 w-4" />
+                          <Trash2 />
                           {t('users.delete')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>

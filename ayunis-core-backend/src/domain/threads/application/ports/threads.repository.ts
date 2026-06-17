@@ -12,7 +12,6 @@ export interface ThreadsFindAllOptions {
 
 export interface ThreadsFindAllFilters {
   search?: string;
-  agentId?: string;
 }
 
 export interface ThreadsPagination {
@@ -31,10 +30,6 @@ export abstract class ThreadsRepository {
   ): Promise<Paginated<Thread>>;
   abstract findAllByModel(
     modelId: UUID,
-    options?: ThreadsFindAllOptions,
-  ): Promise<Thread[]>;
-  abstract findAllByAgent(
-    agentId: UUID,
     options?: ThreadsFindAllOptions,
   ): Promise<Thread[]>;
   abstract update(thread: Thread): Promise<Thread>;
@@ -85,4 +80,15 @@ export abstract class ThreadsRepository {
     knowledgeBaseId: UUID;
     userIds: UUID[];
   }): Promise<void>;
+  /**
+   * Returns source IDs where (a) at least one direct (non-skill) thread
+   * assignment exists and (b) every such direct assignment points to a
+   * thread whose messages are all older than `olderThan`. Empty threads do
+   * NOT count as stale — they keep the source alive. The caller is
+   * responsible for filtering out sources still referenced by other domains
+   * (skills, knowledge bases) before deletion.
+   */
+  abstract findSourceIdsWithOnlyStaleDirectAssignments(
+    olderThan: Date,
+  ): Promise<UUID[]>;
 }

@@ -68,8 +68,6 @@ describe('SourceQueryToolHandler', () => {
       const mockSource = new FileSource({
         id: mockSourceId,
         name: 'test-file.pdf',
-        text: 'Test content',
-        contentChunks: [],
         type: TextType.FILE,
         fileType: FileType.PDF,
       });
@@ -135,8 +133,6 @@ describe('SourceQueryToolHandler', () => {
       const mockSource = new FileSource({
         id: mockSourceId,
         name: 'Example Website',
-        text: 'Test content',
-        contentChunks: [],
         type: TextType.FILE,
         fileType: FileType.PDF,
       });
@@ -181,8 +177,6 @@ describe('SourceQueryToolHandler', () => {
       const mockSource = new FileSource({
         id: mockSourceId,
         name: 'old-file.pdf',
-        text: 'Test content',
-        contentChunks: [],
         type: TextType.FILE,
         fileType: FileType.PDF,
       });
@@ -225,8 +219,6 @@ describe('SourceQueryToolHandler', () => {
       const mockSource = new FileSource({
         id: mockSourceId,
         name: 'test.pdf',
-        text: 'Test content',
-        contentChunks: [],
         type: TextType.FILE,
         fileType: FileType.PDF,
       });
@@ -266,8 +258,6 @@ describe('SourceQueryToolHandler', () => {
       const mockSource = new FileSource({
         id: mockSourceId,
         name: 'test.pdf',
-        text: 'Test content',
-        contentChunks: [],
         type: TextType.FILE,
         fileType: FileType.PDF,
       });

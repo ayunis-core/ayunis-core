@@ -19,14 +19,13 @@ export interface SearchMultiInput {
   };
 }
 
-export interface IngestInput {
+export interface IngestBulkInput {
   orgId: UUID;
-  indexEntry: IndexEntry;
-  content: string;
+  entries: { indexEntry: IndexEntry; content: string }[];
 }
 
 export abstract class IndexerPort {
-  abstract ingest(input: IngestInput): Promise<void>;
+  abstract ingestBulk(input: IngestBulkInput): Promise<void>;
   abstract search(input: SearchInput): Promise<IndexEntry[]>;
   abstract searchMulti(input: SearchMultiInput): Promise<IndexEntry[]>;
   abstract delete(documentId: UUID): Promise<void>;

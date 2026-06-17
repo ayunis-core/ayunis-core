@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import { SourceRepository } from '../../ports/source.repository';
 import { DeleteSourcesCommand } from './delete-sources.command';
+import { SourceProcessingCleanupService } from '../../services/source-processing-cleanup.service';
+import { SourceStatus } from '../../../domain/source-status.enum';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedSourceError } from '../../sources.errors';
 import { Transactional } from '@nestjs-cls/transactional';
@@ -13,29 +16,31 @@ export class DeleteSourcesUseCase {
   constructor(
     private readonly indexRegistry: IndexRegistry,
     private readonly sourceRepository: SourceRepository,
+    private readonly sourceProcessingCleanupService: SourceProcessingCleanupService,
   ) {}
 
   @Transactional()
   async execute(command: DeleteSourcesCommand): Promise<void> {
-    if (command.sources.length === 0) {
+    if (command.sourceIds.length === 0) {
       return;
     }
 
-    this.logger.debug(`Deleting ${command.sources.length} sources`);
+    this.logger.debug(`Deleting ${command.sourceIds.length} sources`);
     try {
-      const sourceIds = command.sources.map((s) => s.id);
+      // Cancel jobs and clean MinIO for any processing sources
+      await this.cancelProcessingSources(command.sourceIds);
 
       // Batch delete indexed content from all indices
       const indices = this.indexRegistry.getAll();
       for (const index of indices) {
-        await index.deleteMany(sourceIds);
+        await index.deleteMany(command.sourceIds);
       }
 
       // Batch delete sources
-      await this.sourceRepository.deleteMany(sourceIds);
+      await this.sourceRepository.deleteMany(command.sourceIds);
 
       this.logger.debug(
-        `Successfully deleted ${command.sources.length} sources and their indexed content`,
+        `Successfully deleted ${command.sourceIds.length} sources and their indexed content`,
       );
     } catch (error) {
       if (error instanceof ApplicationError) {
@@ -47,6 +52,16 @@ export class DeleteSourcesUseCase {
       throw new UnexpectedSourceError('Error deleting sources', {
         error: error as Error,
       });
+    }
+  }
+
+  private async cancelProcessingSources(sourceIds: UUID[]): Promise<void> {
+    const sources = await this.sourceRepository.findByIds(sourceIds);
+    const processing = sources.filter(
+      (s) => s.status === SourceStatus.PROCESSING,
+    );
+    for (const source of processing) {
+      await this.sourceProcessingCleanupService.cancelAndCleanup(source.id);
     }
   }
 }

@@ -31,4 +31,18 @@ export class TeamResponseDto {
     example: '2024-01-15T10:30:00.000Z',
   })
   updatedAt: Date;
+
+  @ApiProperty({
+    description: 'Whether model access override is enabled for this team',
+    example: false,
+  })
+  modelOverrideEnabled: boolean;
+
+  @ApiProperty({
+    description:
+      'The number of members in the team. Only populated by the admin list endpoint (GET /teams).',
+    example: 5,
+    required: false,
+  })
+  memberCount?: number;
 }

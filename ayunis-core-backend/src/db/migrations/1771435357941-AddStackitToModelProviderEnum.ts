@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddStackitToModelProviderEnum1771435357941
-  implements MigrationInterface
-{
+export class AddStackitToModelProviderEnum1771435357941 implements MigrationInterface {
   name = 'AddStackitToModelProviderEnum1771435357941';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

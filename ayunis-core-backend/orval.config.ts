@@ -38,24 +38,6 @@ export default defineConfig({
       },
     },
   },
-  docling: {
-    input: {
-      target: 'https://docling.ayunis.de/openapi.json',
-    },
-    output: {
-      target: './src/common/clients/docling/generated',
-      client: 'axios',
-      mode: 'split',
-      mock: false,
-      clean: true,
-      override: {
-        mutator: {
-          path: 'src/common/clients/docling/client.ts',
-          name: 'doclingAxiosInstance',
-        },
-      },
-    },
-  },
   marketplace: {
     input: {
       target: 'http://localhost:3002/api/docs-json',

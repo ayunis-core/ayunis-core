@@ -7,6 +7,7 @@ import { SendPasswordResetEmailCommand } from '../send-password-reset-email/send
 import { PasswordResetJwtService } from '../../services/password-reset-jwt.service';
 import { UserNotFoundError } from 'src/iam/users/application/users.errors';
 import { UsersRepository } from '../../ports/users.repository';
+import type { User } from '../../../domain/user.entity';
 
 @Injectable()
 export class TriggerPasswordResetUseCase {
@@ -22,36 +23,16 @@ export class TriggerPasswordResetUseCase {
     try {
       this.logger.log('execute', { email: command.email });
 
-      // Find the user by email
       const user = await this.usersRepository.findOneByEmail(command.email);
       if (!user) {
         this.logger.debug('User not found', { email: command.email });
-        return; // Silently return without error for security reasons
+        return;
       }
 
-      // Generate password reset token
-      this.logger.debug('Generating password reset token', {
-        userId: user.id,
-        email: user.email,
-      });
-      const resetToken =
-        this.passwordResetJwtService.generatePasswordResetToken({
-          userId: user.id,
-          email: user.email,
-        });
-
-      // Send password reset email
-      await this.sendPasswordResetEmailUseCase.execute(
-        new SendPasswordResetEmailCommand(user.email, resetToken, user.name),
-      );
-
-      this.logger.debug('Password reset email sent successfully', {
-        userId: user.id,
-        email: user.email,
-      });
+      await this.sendResetEmail(user);
     } catch (error) {
       if (error instanceof UserNotFoundError) {
-        return; // Silently return without error for security reasons
+        return;
       }
       if (error instanceof ApplicationError) {
         throw error;
@@ -62,5 +43,21 @@ export class TriggerPasswordResetUseCase {
       });
       throw new UnexpectedAuthenticationError(error);
     }
+  }
+
+  private async sendResetEmail(user: User): Promise<void> {
+    const resetToken = this.passwordResetJwtService.generatePasswordResetToken({
+      userId: user.id,
+      email: user.email,
+    });
+
+    await this.sendPasswordResetEmailUseCase.execute(
+      new SendPasswordResetEmailCommand(user.email, resetToken, user.name),
+    );
+
+    this.logger.debug('Password reset email sent', {
+      userId: user.id,
+      email: user.email,
+    });
   }
 }

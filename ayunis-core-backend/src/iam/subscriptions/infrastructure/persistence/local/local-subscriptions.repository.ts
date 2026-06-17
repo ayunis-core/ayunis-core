@@ -1,10 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
-import { SubscriptionRecord } from './schema/subscription.record';
+import {
+  SeatBasedSubscriptionRecord,
+  SubscriptionRecord,
+} from './schema/subscription.record';
 import { SubscriptionMapper } from './mappers/subscription.mapper';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
 import { SubscriptionBillingInfoRecord } from './schema/subscription-billing-info.record';
@@ -21,6 +24,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
     private readonly subscriptionBillingInfoRepository: Repository<SubscriptionBillingInfoRecord>,
     private readonly subscriptionMapper: SubscriptionMapper,
     private readonly subscriptionBillingInfoMapper: SubscriptionBillingInfoMapper,
+    private readonly dataSource: DataSource,
   ) {
     super();
   }
@@ -43,6 +47,24 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
     }
   }
 
+  async findLatestByOrgId(orgId: UUID): Promise<Subscription | null> {
+    try {
+      const record = await this.subscriptionRepository.findOne({
+        where: { orgId },
+        relations: { billingInfo: true },
+        order: { createdAt: 'DESC' },
+      });
+
+      return record ? this.subscriptionMapper.toDomain(record) : null;
+    } catch (error) {
+      this.logger.error(
+        `Failed to find latest subscription by orgId ${orgId}`,
+        error,
+      );
+      throw error;
+    }
+  }
+
   async findAll(): Promise<Subscription[]> {
     try {
       const records = await this.subscriptionRepository.find();
@@ -56,7 +78,18 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
   async create(subscription: Subscription): Promise<Subscription> {
     try {
       const record = this.subscriptionMapper.toRecord(subscription);
-      await this.subscriptionRepository.save(record);
+
+      // Save subscription and billing info in a transaction to guarantee
+      // the subscription row exists before the billing info FK references it.
+      await this.dataSource.transaction(async (manager) => {
+        const billingInfo = record.billingInfo;
+        record.billingInfo =
+          undefined as unknown as SubscriptionBillingInfoRecord;
+        await manager.save(SubscriptionRecord, record);
+        await manager.save(SubscriptionBillingInfoRecord, billingInfo);
+        record.billingInfo = billingInfo;
+      });
+
       this.logger.log(`Created subscription with id ${subscription.id}`);
       return this.subscriptionMapper.toDomain(record);
     } catch (error) {
@@ -77,6 +110,45 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
     } catch (error) {
       this.logger.error(
         `Failed to update subscription with id ${subscription.id}`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  async updateStartDate(params: {
+    subscriptionId: UUID;
+    startsAt: Date;
+    renewalCycleAnchor?: Date;
+  }): Promise<Subscription> {
+    try {
+      const record = await this.subscriptionRepository.findOne({
+        where: { id: params.subscriptionId },
+        relations: { billingInfo: true },
+      });
+
+      if (!record) {
+        throw new Error(
+          `Subscription with id ${params.subscriptionId} not found`,
+        );
+      }
+
+      record.startsAt = params.startsAt;
+      if (
+        record instanceof SeatBasedSubscriptionRecord &&
+        params.renewalCycleAnchor
+      ) {
+        record.renewalCycleAnchor = params.renewalCycleAnchor;
+      }
+
+      const updatedRecord = await this.subscriptionRepository.save(record);
+      this.logger.log(
+        `Updated start date for subscription with id ${params.subscriptionId}`,
+      );
+      return this.subscriptionMapper.toDomain(updatedRecord);
+    } catch (error) {
+      this.logger.error(
+        `Failed to update start date for subscription with id ${params.subscriptionId}`,
         error,
       );
       throw error;

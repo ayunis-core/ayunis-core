@@ -2,7 +2,6 @@ import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscripti
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import {
   SubscriptionNotFoundError,
-  UnauthorizedSubscriptionAccessError,
   UnexpectedSubscriptionError,
 } from '../../subscription.errors';
 import { GetActiveSubscriptionQuery } from '../get-active-subscription/get-active-subscription.query';
@@ -10,12 +9,11 @@ import { GetActiveSubscriptionUseCase } from '../get-active-subscription/get-act
 import { UpdateBillingInfoCommand } from './update-billing-info.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { Injectable, Logger } from '@nestjs/common';
-import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { SubscriptionBillingInfoUpdatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/subscription-billing-info-updated.webhook-event';
-import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { SubscriptionBillingInfoUpdatedEvent } from '../../events/subscription-billing-info-updated.event';
+import type { BillingInfoEventData } from '../../events/subscription-event-data.types';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
 
 @Injectable()
 export class UpdateBillingInfoUseCase {
@@ -24,23 +22,17 @@ export class UpdateBillingInfoUseCase {
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
-    private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: UpdateBillingInfoCommand): Promise<void> {
     try {
-      const systemRole = this.contextService.get('systemRole');
-      const orgRole = this.contextService.get('role');
-      const orgId = this.contextService.get('orgId');
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === command.orgId;
-      if (!isSuperAdmin && !isOrgAdmin) {
-        throw new UnauthorizedSubscriptionAccessError(
-          command.requestingUserId,
-          command.orgId,
-        );
-      }
+      validateSubscriptionAccess(
+        this.contextService,
+        command.requestingUserId,
+        command.orgId,
+      );
       const subscription = await this.getActiveSubscriptionUseCase.execute(
         new GetActiveSubscriptionQuery({
           orgId: command.orgId,
@@ -64,13 +56,36 @@ export class UpdateBillingInfoUseCase {
 
       subscription.subscription.billingInfo = billingInfo;
 
-      void this.sendWebhookUseCase.execute(
-        new SendWebhookCommand(
-          new SubscriptionBillingInfoUpdatedWebhookEvent(
-            subscription.subscription,
+      const billingInfoEventData: BillingInfoEventData = {
+        companyName: billingInfo.companyName,
+        street: billingInfo.street,
+        houseNumber: billingInfo.houseNumber,
+        postalCode: billingInfo.postalCode,
+        city: billingInfo.city,
+        country: billingInfo.country,
+        vatNumber: billingInfo.vatNumber,
+        subText: billingInfo.subText,
+        orgId: command.orgId,
+        subscriptionId: subscription.subscription.id,
+      };
+
+      this.eventEmitter
+        .emitAsync(
+          SubscriptionBillingInfoUpdatedEvent.EVENT_NAME,
+          new SubscriptionBillingInfoUpdatedEvent(
+            command.orgId,
+            billingInfoEventData,
           ),
-        ),
-      );
+        )
+        .catch((err: unknown) => {
+          this.logger.error(
+            'Failed to emit SubscriptionBillingInfoUpdatedEvent',
+            {
+              error: err instanceof Error ? err.message : 'Unknown error',
+              orgId: command.orgId,
+            },
+          );
+        });
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error(error);

@@ -8,834 +8,567 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedInstallRouteImport } from './routes/_authenticated/install'
+import { Route as onboardingRegisterRouteImport } from './routes/(onboarding)/register'
+import { Route as onboardingLoginRouteImport } from './routes/(onboarding)/login'
+import { Route as onboardingIpBlockedRouteImport } from './routes/(onboarding)/ip-blocked'
+import { Route as onboardingEmailConfirmRouteImport } from './routes/(onboarding)/email-confirm'
+import { Route as onboardingConfirmEmailRouteImport } from './routes/(onboarding)/confirm-email'
+import { Route as onboardingAcceptInviteRouteImport } from './routes/(onboarding)/accept-invite'
+import { Route as AuthenticatedSuperAdminSettingsIndexRouteImport } from './routes/_authenticated/super-admin-settings.index'
+import { Route as AuthenticatedSkillsIndexRouteImport } from './routes/_authenticated/skills.index'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
+import { Route as AuthenticatedKnowledgeBasesIndexRouteImport } from './routes/_authenticated/knowledge-bases.index'
+import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats.index'
+import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
+import { Route as AuthenticatedAdminSettingsIndexRouteImport } from './routes/_authenticated/admin-settings.index'
+import { Route as AuthenticatedAcademyIndexRouteImport } from './routes/_authenticated/academy.index'
+import { Route as AuthenticatedSkillsIdRouteImport } from './routes/_authenticated/skills.$id'
+import { Route as AuthenticatedSettingsIntegrationsRouteImport } from './routes/_authenticated/settings.integrations'
+import { Route as AuthenticatedSettingsGeneralRouteImport } from './routes/_authenticated/settings.general'
+import { Route as AuthenticatedSettingsChatRouteImport } from './routes/_authenticated/settings.chat'
+import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings.account'
+import { Route as AuthenticatedKnowledgeBasesIdRouteImport } from './routes/_authenticated/knowledge-bases.$id'
+import { Route as AuthenticatedChatsThreadIdRouteImport } from './routes/_authenticated/chats.$threadId'
+import { Route as AuthenticatedAdminSettingsUsersRouteImport } from './routes/_authenticated/admin-settings.users'
+import { Route as AuthenticatedAdminSettingsUsageRouteImport } from './routes/_authenticated/admin-settings.usage'
+import { Route as AuthenticatedAdminSettingsSecurityRouteImport } from './routes/_authenticated/admin-settings.security'
+import { Route as AuthenticatedAdminSettingsModelsRouteImport } from './routes/_authenticated/admin-settings.models'
+import { Route as AuthenticatedAdminSettingsIntegrationsRouteImport } from './routes/_authenticated/admin-settings.integrations'
+import { Route as AuthenticatedAdminSettingsInstructionsRouteImport } from './routes/_authenticated/admin-settings.instructions'
+import { Route as AuthenticatedAdminSettingsApiKeysRouteImport } from './routes/_authenticated/admin-settings.api-keys'
+import { Route as AuthenticatedAdminSettingsAnonymizationRouteImport } from './routes/_authenticated/admin-settings.anonymization'
+import { Route as AuthenticatedAcademyChapterIdRouteImport } from './routes/_authenticated/academy.$chapterId'
+import { Route as onboardingPasswordResetRouteImport } from './routes/(onboarding)/password.reset'
+import { Route as onboardingPasswordForgotRouteImport } from './routes/(onboarding)/password.forgot'
+import { Route as onboardingAccountActivateRouteImport } from './routes/(onboarding)/account.activate'
+import { Route as AuthenticatedSuperAdminSettingsSuperAdminsIndexRouteImport } from './routes/_authenticated/super-admin-settings.super-admins.index'
+import { Route as AuthenticatedSuperAdminSettingsSkillsIndexRouteImport } from './routes/_authenticated/super-admin-settings.skills.index'
+import { Route as AuthenticatedSuperAdminSettingsPlatformConfigIndexRouteImport } from './routes/_authenticated/super-admin-settings.platform-config.index'
+import { Route as AuthenticatedSuperAdminSettingsOrgsIndexRouteImport } from './routes/_authenticated/super-admin-settings.orgs.index'
+import { Route as AuthenticatedSuperAdminSettingsModelsCatalogIndexRouteImport } from './routes/_authenticated/super-admin-settings.models-catalog.index'
+import { Route as AuthenticatedSuperAdminSettingsAcademyIndexRouteImport } from './routes/_authenticated/super-admin-settings.academy.index'
+import { Route as AuthenticatedAdminSettingsTeamsIndexRouteImport } from './routes/_authenticated/admin-settings.teams.index'
+import { Route as AuthenticatedAdminSettingsLetterheadsIndexRouteImport } from './routes/_authenticated/admin-settings.letterheads.index'
+import { Route as AuthenticatedSuperAdminSettingsOrgsIdRouteImport } from './routes/_authenticated/super-admin-settings.orgs.$id'
+import { Route as AuthenticatedAdminSettingsTeamsIdRouteImport } from './routes/_authenticated/admin-settings.teams.$id'
+import { Route as AuthenticatedAdminSettingsLetterheadsIdRouteImport } from './routes/_authenticated/admin-settings.letterheads.$id'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as AuthenticatedImport } from './routes/_authenticated'
-import { Route as IndexImport } from './routes/index'
-import { Route as AuthenticatedInstallImport } from './routes/_authenticated/install'
-import { Route as onboardingRegisterImport } from './routes/(onboarding)/register'
-import { Route as onboardingLoginImport } from './routes/(onboarding)/login'
-import { Route as onboardingEmailConfirmImport } from './routes/(onboarding)/email-confirm'
-import { Route as onboardingConfirmEmailImport } from './routes/(onboarding)/confirm-email'
-import { Route as onboardingAcceptInviteImport } from './routes/(onboarding)/accept-invite'
-import { Route as AuthenticatedSuperAdminSettingsIndexImport } from './routes/_authenticated/super-admin-settings.index'
-import { Route as AuthenticatedSkillsIndexImport } from './routes/_authenticated/skills.index'
-import { Route as AuthenticatedSettingsIndexImport } from './routes/_authenticated/settings.index'
-import { Route as AuthenticatedPromptsIndexImport } from './routes/_authenticated/prompts.index'
-import { Route as AuthenticatedKnowledgeBasesIndexImport } from './routes/_authenticated/knowledge-bases.index'
-import { Route as AuthenticatedChatsIndexImport } from './routes/_authenticated/chats.index'
-import { Route as AuthenticatedChatIndexImport } from './routes/_authenticated/chat.index'
-import { Route as AuthenticatedAgentsIndexImport } from './routes/_authenticated/agents.index'
-import { Route as AuthenticatedAdminSettingsIndexImport } from './routes/_authenticated/admin-settings.index'
-import { Route as AuthenticatedSkillsIdImport } from './routes/_authenticated/skills.$id'
-import { Route as AuthenticatedSettingsGeneralImport } from './routes/_authenticated/settings.general'
-import { Route as AuthenticatedSettingsChatImport } from './routes/_authenticated/settings.chat'
-import { Route as AuthenticatedSettingsAccountImport } from './routes/_authenticated/settings.account'
-import { Route as AuthenticatedKnowledgeBasesIdImport } from './routes/_authenticated/knowledge-bases.$id'
-import { Route as AuthenticatedChatsThreadIdImport } from './routes/_authenticated/chats.$threadId'
-import { Route as AuthenticatedAgentsIdImport } from './routes/_authenticated/agents.$id'
-import { Route as AuthenticatedAdminSettingsUsersImport } from './routes/_authenticated/admin-settings.users'
-import { Route as AuthenticatedAdminSettingsUsageImport } from './routes/_authenticated/admin-settings.usage'
-import { Route as AuthenticatedAdminSettingsModelsImport } from './routes/_authenticated/admin-settings.models'
-import { Route as AuthenticatedAdminSettingsIntegrationsImport } from './routes/_authenticated/admin-settings.integrations'
-import { Route as onboardingPasswordResetImport } from './routes/(onboarding)/password.reset'
-import { Route as onboardingPasswordForgotImport } from './routes/(onboarding)/password.forgot'
-import { Route as AuthenticatedSuperAdminSettingsUsageIndexImport } from './routes/_authenticated/super-admin-settings.usage.index'
-import { Route as AuthenticatedSuperAdminSettingsSkillsIndexImport } from './routes/_authenticated/super-admin-settings.skills.index'
-import { Route as AuthenticatedSuperAdminSettingsOrgsIndexImport } from './routes/_authenticated/super-admin-settings.orgs.index'
-import { Route as AuthenticatedSuperAdminSettingsModelsCatalogIndexImport } from './routes/_authenticated/super-admin-settings.models-catalog.index'
-import { Route as AuthenticatedAdminSettingsTeamsIndexImport } from './routes/_authenticated/admin-settings.teams.index'
-import { Route as AuthenticatedSuperAdminSettingsOrgsIdImport } from './routes/_authenticated/super-admin-settings.orgs.$id'
-import { Route as AuthenticatedAdminSettingsTeamsIdImport } from './routes/_authenticated/admin-settings.teams.$id'
-
-// Create/Update Routes
-
-const AuthenticatedRoute = AuthenticatedImport.update({
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const AuthenticatedInstallRoute = AuthenticatedInstallImport.update({
+const AuthenticatedInstallRoute = AuthenticatedInstallRouteImport.update({
   id: '/install',
   path: '/install',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-
-const onboardingRegisterRoute = onboardingRegisterImport.update({
+const onboardingRegisterRoute = onboardingRegisterRouteImport.update({
   id: '/(onboarding)/register',
   path: '/register',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const onboardingLoginRoute = onboardingLoginImport.update({
+const onboardingLoginRoute = onboardingLoginRouteImport.update({
   id: '/(onboarding)/login',
   path: '/login',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const onboardingEmailConfirmRoute = onboardingEmailConfirmImport.update({
+const onboardingIpBlockedRoute = onboardingIpBlockedRouteImport.update({
+  id: '/(onboarding)/ip-blocked',
+  path: '/ip-blocked',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const onboardingEmailConfirmRoute = onboardingEmailConfirmRouteImport.update({
   id: '/(onboarding)/email-confirm',
   path: '/email-confirm',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const onboardingConfirmEmailRoute = onboardingConfirmEmailImport.update({
+const onboardingConfirmEmailRoute = onboardingConfirmEmailRouteImport.update({
   id: '/(onboarding)/confirm-email',
   path: '/confirm-email',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const onboardingAcceptInviteRoute = onboardingAcceptInviteImport.update({
+const onboardingAcceptInviteRoute = onboardingAcceptInviteRouteImport.update({
   id: '/(onboarding)/accept-invite',
   path: '/accept-invite',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
 const AuthenticatedSuperAdminSettingsIndexRoute =
-  AuthenticatedSuperAdminSettingsIndexImport.update({
+  AuthenticatedSuperAdminSettingsIndexRouteImport.update({
     id: '/super-admin-settings/',
     path: '/super-admin-settings/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
-const AuthenticatedSkillsIndexRoute = AuthenticatedSkillsIndexImport.update({
-  id: '/skills/',
-  path: '/skills/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-
-const AuthenticatedSettingsIndexRoute = AuthenticatedSettingsIndexImport.update(
-  {
+const AuthenticatedSkillsIndexRoute =
+  AuthenticatedSkillsIndexRouteImport.update({
+    id: '/skills/',
+    path: '/skills/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
     id: '/settings/',
     path: '/settings/',
     getParentRoute: () => AuthenticatedRoute,
-  } as any,
-)
-
-const AuthenticatedPromptsIndexRoute = AuthenticatedPromptsIndexImport.update({
-  id: '/prompts/',
-  path: '/prompts/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-
+  } as any)
 const AuthenticatedKnowledgeBasesIndexRoute =
-  AuthenticatedKnowledgeBasesIndexImport.update({
+  AuthenticatedKnowledgeBasesIndexRouteImport.update({
     id: '/knowledge-bases/',
     path: '/knowledge-bases/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
-const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexImport.update({
+const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexRouteImport.update({
   id: '/chats/',
   path: '/chats/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-
-const AuthenticatedChatIndexRoute = AuthenticatedChatIndexImport.update({
+const AuthenticatedChatIndexRoute = AuthenticatedChatIndexRouteImport.update({
   id: '/chat/',
   path: '/chat/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-
-const AuthenticatedAgentsIndexRoute = AuthenticatedAgentsIndexImport.update({
-  id: '/agents/',
-  path: '/agents/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-
 const AuthenticatedAdminSettingsIndexRoute =
-  AuthenticatedAdminSettingsIndexImport.update({
+  AuthenticatedAdminSettingsIndexRouteImport.update({
     id: '/admin-settings/',
     path: '/admin-settings/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
-const AuthenticatedSkillsIdRoute = AuthenticatedSkillsIdImport.update({
+const AuthenticatedAcademyIndexRoute =
+  AuthenticatedAcademyIndexRouteImport.update({
+    id: '/academy/',
+    path: '/academy/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSkillsIdRoute = AuthenticatedSkillsIdRouteImport.update({
   id: '/skills/$id',
   path: '/skills/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-
+const AuthenticatedSettingsIntegrationsRoute =
+  AuthenticatedSettingsIntegrationsRouteImport.update({
+    id: '/settings/integrations',
+    path: '/settings/integrations',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSettingsGeneralRoute =
-  AuthenticatedSettingsGeneralImport.update({
+  AuthenticatedSettingsGeneralRouteImport.update({
     id: '/settings/general',
     path: '/settings/general',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
-const AuthenticatedSettingsChatRoute = AuthenticatedSettingsChatImport.update({
-  id: '/settings/chat',
-  path: '/settings/chat',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-
+const AuthenticatedSettingsChatRoute =
+  AuthenticatedSettingsChatRouteImport.update({
+    id: '/settings/chat',
+    path: '/settings/chat',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSettingsAccountRoute =
-  AuthenticatedSettingsAccountImport.update({
+  AuthenticatedSettingsAccountRouteImport.update({
     id: '/settings/account',
     path: '/settings/account',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
 const AuthenticatedKnowledgeBasesIdRoute =
-  AuthenticatedKnowledgeBasesIdImport.update({
+  AuthenticatedKnowledgeBasesIdRouteImport.update({
     id: '/knowledge-bases/$id',
     path: '/knowledge-bases/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
-const AuthenticatedChatsThreadIdRoute = AuthenticatedChatsThreadIdImport.update(
-  {
+const AuthenticatedChatsThreadIdRoute =
+  AuthenticatedChatsThreadIdRouteImport.update({
     id: '/chats/$threadId',
     path: '/chats/$threadId',
     getParentRoute: () => AuthenticatedRoute,
-  } as any,
-)
-
-const AuthenticatedAgentsIdRoute = AuthenticatedAgentsIdImport.update({
-  id: '/agents/$id',
-  path: '/agents/$id',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-
+  } as any)
 const AuthenticatedAdminSettingsUsersRoute =
-  AuthenticatedAdminSettingsUsersImport.update({
+  AuthenticatedAdminSettingsUsersRouteImport.update({
     id: '/admin-settings/users',
     path: '/admin-settings/users',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
 const AuthenticatedAdminSettingsUsageRoute =
-  AuthenticatedAdminSettingsUsageImport.update({
+  AuthenticatedAdminSettingsUsageRouteImport.update({
     id: '/admin-settings/usage',
     path: '/admin-settings/usage',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
+const AuthenticatedAdminSettingsSecurityRoute =
+  AuthenticatedAdminSettingsSecurityRouteImport.update({
+    id: '/admin-settings/security',
+    path: '/admin-settings/security',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminSettingsModelsRoute =
-  AuthenticatedAdminSettingsModelsImport.update({
+  AuthenticatedAdminSettingsModelsRouteImport.update({
     id: '/admin-settings/models',
     path: '/admin-settings/models',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
 const AuthenticatedAdminSettingsIntegrationsRoute =
-  AuthenticatedAdminSettingsIntegrationsImport.update({
+  AuthenticatedAdminSettingsIntegrationsRouteImport.update({
     id: '/admin-settings/integrations',
     path: '/admin-settings/integrations',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
-const onboardingPasswordResetRoute = onboardingPasswordResetImport.update({
-  id: '/(onboarding)/password/reset',
-  path: '/password/reset',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const onboardingPasswordForgotRoute = onboardingPasswordForgotImport.update({
-  id: '/(onboarding)/password/forgot',
-  path: '/password/forgot',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const AuthenticatedSuperAdminSettingsUsageIndexRoute =
-  AuthenticatedSuperAdminSettingsUsageIndexImport.update({
-    id: '/super-admin-settings/usage/',
-    path: '/super-admin-settings/usage/',
+const AuthenticatedAdminSettingsInstructionsRoute =
+  AuthenticatedAdminSettingsInstructionsRouteImport.update({
+    id: '/admin-settings/instructions',
+    path: '/admin-settings/instructions',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
+const AuthenticatedAdminSettingsApiKeysRoute =
+  AuthenticatedAdminSettingsApiKeysRouteImport.update({
+    id: '/admin-settings/api-keys',
+    path: '/admin-settings/api-keys',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminSettingsAnonymizationRoute =
+  AuthenticatedAdminSettingsAnonymizationRouteImport.update({
+    id: '/admin-settings/anonymization',
+    path: '/admin-settings/anonymization',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAcademyChapterIdRoute =
+  AuthenticatedAcademyChapterIdRouteImport.update({
+    id: '/academy/$chapterId',
+    path: '/academy/$chapterId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const onboardingPasswordResetRoute = onboardingPasswordResetRouteImport.update({
+  id: '/(onboarding)/password/reset',
+  path: '/password/reset',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const onboardingPasswordForgotRoute =
+  onboardingPasswordForgotRouteImport.update({
+    id: '/(onboarding)/password/forgot',
+    path: '/password/forgot',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const onboardingAccountActivateRoute =
+  onboardingAccountActivateRouteImport.update({
+    id: '/(onboarding)/account/activate',
+    path: '/account/activate',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute =
+  AuthenticatedSuperAdminSettingsSuperAdminsIndexRouteImport.update({
+    id: '/super-admin-settings/super-admins/',
+    path: '/super-admin-settings/super-admins/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSuperAdminSettingsSkillsIndexRoute =
-  AuthenticatedSuperAdminSettingsSkillsIndexImport.update({
+  AuthenticatedSuperAdminSettingsSkillsIndexRouteImport.update({
     id: '/super-admin-settings/skills/',
     path: '/super-admin-settings/skills/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
+const AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute =
+  AuthenticatedSuperAdminSettingsPlatformConfigIndexRouteImport.update({
+    id: '/super-admin-settings/platform-config/',
+    path: '/super-admin-settings/platform-config/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSuperAdminSettingsOrgsIndexRoute =
-  AuthenticatedSuperAdminSettingsOrgsIndexImport.update({
+  AuthenticatedSuperAdminSettingsOrgsIndexRouteImport.update({
     id: '/super-admin-settings/orgs/',
     path: '/super-admin-settings/orgs/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
 const AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute =
-  AuthenticatedSuperAdminSettingsModelsCatalogIndexImport.update({
+  AuthenticatedSuperAdminSettingsModelsCatalogIndexRouteImport.update({
     id: '/super-admin-settings/models-catalog/',
     path: '/super-admin-settings/models-catalog/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
+const AuthenticatedSuperAdminSettingsAcademyIndexRoute =
+  AuthenticatedSuperAdminSettingsAcademyIndexRouteImport.update({
+    id: '/super-admin-settings/academy/',
+    path: '/super-admin-settings/academy/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminSettingsTeamsIndexRoute =
-  AuthenticatedAdminSettingsTeamsIndexImport.update({
+  AuthenticatedAdminSettingsTeamsIndexRouteImport.update({
     id: '/admin-settings/teams/',
     path: '/admin-settings/teams/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
+const AuthenticatedAdminSettingsLetterheadsIndexRoute =
+  AuthenticatedAdminSettingsLetterheadsIndexRouteImport.update({
+    id: '/admin-settings/letterheads/',
+    path: '/admin-settings/letterheads/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSuperAdminSettingsOrgsIdRoute =
-  AuthenticatedSuperAdminSettingsOrgsIdImport.update({
+  AuthenticatedSuperAdminSettingsOrgsIdRouteImport.update({
     id: '/super-admin-settings/orgs/$id',
     path: '/super-admin-settings/orgs/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
 const AuthenticatedAdminSettingsTeamsIdRoute =
-  AuthenticatedAdminSettingsTeamsIdImport.update({
+  AuthenticatedAdminSettingsTeamsIdRouteImport.update({
     id: '/admin-settings/teams/$id',
     path: '/admin-settings/teams/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-
-// Populate the FileRoutesByPath interface
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof AuthenticatedImport
-      parentRoute: typeof rootRoute
-    }
-    '/(onboarding)/accept-invite': {
-      id: '/(onboarding)/accept-invite'
-      path: '/accept-invite'
-      fullPath: '/accept-invite'
-      preLoaderRoute: typeof onboardingAcceptInviteImport
-      parentRoute: typeof rootRoute
-    }
-    '/(onboarding)/confirm-email': {
-      id: '/(onboarding)/confirm-email'
-      path: '/confirm-email'
-      fullPath: '/confirm-email'
-      preLoaderRoute: typeof onboardingConfirmEmailImport
-      parentRoute: typeof rootRoute
-    }
-    '/(onboarding)/email-confirm': {
-      id: '/(onboarding)/email-confirm'
-      path: '/email-confirm'
-      fullPath: '/email-confirm'
-      preLoaderRoute: typeof onboardingEmailConfirmImport
-      parentRoute: typeof rootRoute
-    }
-    '/(onboarding)/login': {
-      id: '/(onboarding)/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof onboardingLoginImport
-      parentRoute: typeof rootRoute
-    }
-    '/(onboarding)/register': {
-      id: '/(onboarding)/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof onboardingRegisterImport
-      parentRoute: typeof rootRoute
-    }
-    '/_authenticated/install': {
-      id: '/_authenticated/install'
-      path: '/install'
-      fullPath: '/install'
-      preLoaderRoute: typeof AuthenticatedInstallImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/(onboarding)/password/forgot': {
-      id: '/(onboarding)/password/forgot'
-      path: '/password/forgot'
-      fullPath: '/password/forgot'
-      preLoaderRoute: typeof onboardingPasswordForgotImport
-      parentRoute: typeof rootRoute
-    }
-    '/(onboarding)/password/reset': {
-      id: '/(onboarding)/password/reset'
-      path: '/password/reset'
-      fullPath: '/password/reset'
-      preLoaderRoute: typeof onboardingPasswordResetImport
-      parentRoute: typeof rootRoute
-    }
-    '/_authenticated/admin-settings/integrations': {
-      id: '/_authenticated/admin-settings/integrations'
-      path: '/admin-settings/integrations'
-      fullPath: '/admin-settings/integrations'
-      preLoaderRoute: typeof AuthenticatedAdminSettingsIntegrationsImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/admin-settings/models': {
-      id: '/_authenticated/admin-settings/models'
-      path: '/admin-settings/models'
-      fullPath: '/admin-settings/models'
-      preLoaderRoute: typeof AuthenticatedAdminSettingsModelsImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/admin-settings/usage': {
-      id: '/_authenticated/admin-settings/usage'
-      path: '/admin-settings/usage'
-      fullPath: '/admin-settings/usage'
-      preLoaderRoute: typeof AuthenticatedAdminSettingsUsageImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/admin-settings/users': {
-      id: '/_authenticated/admin-settings/users'
-      path: '/admin-settings/users'
-      fullPath: '/admin-settings/users'
-      preLoaderRoute: typeof AuthenticatedAdminSettingsUsersImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/agents/$id': {
-      id: '/_authenticated/agents/$id'
-      path: '/agents/$id'
-      fullPath: '/agents/$id'
-      preLoaderRoute: typeof AuthenticatedAgentsIdImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/chats/$threadId': {
-      id: '/_authenticated/chats/$threadId'
-      path: '/chats/$threadId'
-      fullPath: '/chats/$threadId'
-      preLoaderRoute: typeof AuthenticatedChatsThreadIdImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/knowledge-bases/$id': {
-      id: '/_authenticated/knowledge-bases/$id'
-      path: '/knowledge-bases/$id'
-      fullPath: '/knowledge-bases/$id'
-      preLoaderRoute: typeof AuthenticatedKnowledgeBasesIdImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/settings/account': {
-      id: '/_authenticated/settings/account'
-      path: '/settings/account'
-      fullPath: '/settings/account'
-      preLoaderRoute: typeof AuthenticatedSettingsAccountImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/settings/chat': {
-      id: '/_authenticated/settings/chat'
-      path: '/settings/chat'
-      fullPath: '/settings/chat'
-      preLoaderRoute: typeof AuthenticatedSettingsChatImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/settings/general': {
-      id: '/_authenticated/settings/general'
-      path: '/settings/general'
-      fullPath: '/settings/general'
-      preLoaderRoute: typeof AuthenticatedSettingsGeneralImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/skills/$id': {
-      id: '/_authenticated/skills/$id'
-      path: '/skills/$id'
-      fullPath: '/skills/$id'
-      preLoaderRoute: typeof AuthenticatedSkillsIdImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/admin-settings/': {
-      id: '/_authenticated/admin-settings/'
-      path: '/admin-settings'
-      fullPath: '/admin-settings'
-      preLoaderRoute: typeof AuthenticatedAdminSettingsIndexImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/agents/': {
-      id: '/_authenticated/agents/'
-      path: '/agents'
-      fullPath: '/agents'
-      preLoaderRoute: typeof AuthenticatedAgentsIndexImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/chat/': {
-      id: '/_authenticated/chat/'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof AuthenticatedChatIndexImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/chats/': {
-      id: '/_authenticated/chats/'
-      path: '/chats'
-      fullPath: '/chats'
-      preLoaderRoute: typeof AuthenticatedChatsIndexImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/knowledge-bases/': {
-      id: '/_authenticated/knowledge-bases/'
-      path: '/knowledge-bases'
-      fullPath: '/knowledge-bases'
-      preLoaderRoute: typeof AuthenticatedKnowledgeBasesIndexImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/prompts/': {
-      id: '/_authenticated/prompts/'
-      path: '/prompts'
-      fullPath: '/prompts'
-      preLoaderRoute: typeof AuthenticatedPromptsIndexImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/settings/': {
-      id: '/_authenticated/settings/'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsIndexImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/skills/': {
-      id: '/_authenticated/skills/'
-      path: '/skills'
-      fullPath: '/skills'
-      preLoaderRoute: typeof AuthenticatedSkillsIndexImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/super-admin-settings/': {
-      id: '/_authenticated/super-admin-settings/'
-      path: '/super-admin-settings'
-      fullPath: '/super-admin-settings'
-      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsIndexImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/admin-settings/teams/$id': {
-      id: '/_authenticated/admin-settings/teams/$id'
-      path: '/admin-settings/teams/$id'
-      fullPath: '/admin-settings/teams/$id'
-      preLoaderRoute: typeof AuthenticatedAdminSettingsTeamsIdImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/super-admin-settings/orgs/$id': {
-      id: '/_authenticated/super-admin-settings/orgs/$id'
-      path: '/super-admin-settings/orgs/$id'
-      fullPath: '/super-admin-settings/orgs/$id'
-      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/admin-settings/teams/': {
-      id: '/_authenticated/admin-settings/teams/'
-      path: '/admin-settings/teams'
-      fullPath: '/admin-settings/teams'
-      preLoaderRoute: typeof AuthenticatedAdminSettingsTeamsIndexImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/super-admin-settings/models-catalog/': {
-      id: '/_authenticated/super-admin-settings/models-catalog/'
-      path: '/super-admin-settings/models-catalog'
-      fullPath: '/super-admin-settings/models-catalog'
-      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/super-admin-settings/orgs/': {
-      id: '/_authenticated/super-admin-settings/orgs/'
-      path: '/super-admin-settings/orgs'
-      fullPath: '/super-admin-settings/orgs'
-      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsOrgsIndexImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/super-admin-settings/skills/': {
-      id: '/_authenticated/super-admin-settings/skills/'
-      path: '/super-admin-settings/skills'
-      fullPath: '/super-admin-settings/skills'
-      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsSkillsIndexImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/super-admin-settings/usage/': {
-      id: '/_authenticated/super-admin-settings/usage/'
-      path: '/super-admin-settings/usage'
-      fullPath: '/super-admin-settings/usage'
-      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsUsageIndexImport
-      parentRoute: typeof AuthenticatedImport
-    }
-  }
-}
-
-// Create and export the route tree
-
-interface AuthenticatedRouteChildren {
-  AuthenticatedInstallRoute: typeof AuthenticatedInstallRoute
-  AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
-  AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
-  AuthenticatedAdminSettingsUsageRoute: typeof AuthenticatedAdminSettingsUsageRoute
-  AuthenticatedAdminSettingsUsersRoute: typeof AuthenticatedAdminSettingsUsersRoute
-  AuthenticatedAgentsIdRoute: typeof AuthenticatedAgentsIdRoute
-  AuthenticatedChatsThreadIdRoute: typeof AuthenticatedChatsThreadIdRoute
-  AuthenticatedKnowledgeBasesIdRoute: typeof AuthenticatedKnowledgeBasesIdRoute
-  AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
-  AuthenticatedSettingsChatRoute: typeof AuthenticatedSettingsChatRoute
-  AuthenticatedSettingsGeneralRoute: typeof AuthenticatedSettingsGeneralRoute
-  AuthenticatedSkillsIdRoute: typeof AuthenticatedSkillsIdRoute
-  AuthenticatedAdminSettingsIndexRoute: typeof AuthenticatedAdminSettingsIndexRoute
-  AuthenticatedAgentsIndexRoute: typeof AuthenticatedAgentsIndexRoute
-  AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
-  AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
-  AuthenticatedKnowledgeBasesIndexRoute: typeof AuthenticatedKnowledgeBasesIndexRoute
-  AuthenticatedPromptsIndexRoute: typeof AuthenticatedPromptsIndexRoute
-  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
-  AuthenticatedSkillsIndexRoute: typeof AuthenticatedSkillsIndexRoute
-  AuthenticatedSuperAdminSettingsIndexRoute: typeof AuthenticatedSuperAdminSettingsIndexRoute
-  AuthenticatedAdminSettingsTeamsIdRoute: typeof AuthenticatedAdminSettingsTeamsIdRoute
-  AuthenticatedSuperAdminSettingsOrgsIdRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
-  AuthenticatedAdminSettingsTeamsIndexRoute: typeof AuthenticatedAdminSettingsTeamsIndexRoute
-  AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
-  AuthenticatedSuperAdminSettingsOrgsIndexRoute: typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
-  AuthenticatedSuperAdminSettingsSkillsIndexRoute: typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
-  AuthenticatedSuperAdminSettingsUsageIndexRoute: typeof AuthenticatedSuperAdminSettingsUsageIndexRoute
-}
-
-const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedInstallRoute: AuthenticatedInstallRoute,
-  AuthenticatedAdminSettingsIntegrationsRoute:
-    AuthenticatedAdminSettingsIntegrationsRoute,
-  AuthenticatedAdminSettingsModelsRoute: AuthenticatedAdminSettingsModelsRoute,
-  AuthenticatedAdminSettingsUsageRoute: AuthenticatedAdminSettingsUsageRoute,
-  AuthenticatedAdminSettingsUsersRoute: AuthenticatedAdminSettingsUsersRoute,
-  AuthenticatedAgentsIdRoute: AuthenticatedAgentsIdRoute,
-  AuthenticatedChatsThreadIdRoute: AuthenticatedChatsThreadIdRoute,
-  AuthenticatedKnowledgeBasesIdRoute: AuthenticatedKnowledgeBasesIdRoute,
-  AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
-  AuthenticatedSettingsChatRoute: AuthenticatedSettingsChatRoute,
-  AuthenticatedSettingsGeneralRoute: AuthenticatedSettingsGeneralRoute,
-  AuthenticatedSkillsIdRoute: AuthenticatedSkillsIdRoute,
-  AuthenticatedAdminSettingsIndexRoute: AuthenticatedAdminSettingsIndexRoute,
-  AuthenticatedAgentsIndexRoute: AuthenticatedAgentsIndexRoute,
-  AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
-  AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
-  AuthenticatedKnowledgeBasesIndexRoute: AuthenticatedKnowledgeBasesIndexRoute,
-  AuthenticatedPromptsIndexRoute: AuthenticatedPromptsIndexRoute,
-  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
-  AuthenticatedSkillsIndexRoute: AuthenticatedSkillsIndexRoute,
-  AuthenticatedSuperAdminSettingsIndexRoute:
-    AuthenticatedSuperAdminSettingsIndexRoute,
-  AuthenticatedAdminSettingsTeamsIdRoute:
-    AuthenticatedAdminSettingsTeamsIdRoute,
-  AuthenticatedSuperAdminSettingsOrgsIdRoute:
-    AuthenticatedSuperAdminSettingsOrgsIdRoute,
-  AuthenticatedAdminSettingsTeamsIndexRoute:
-    AuthenticatedAdminSettingsTeamsIndexRoute,
-  AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute:
-    AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute,
-  AuthenticatedSuperAdminSettingsOrgsIndexRoute:
-    AuthenticatedSuperAdminSettingsOrgsIndexRoute,
-  AuthenticatedSuperAdminSettingsSkillsIndexRoute:
-    AuthenticatedSuperAdminSettingsSkillsIndexRoute,
-  AuthenticatedSuperAdminSettingsUsageIndexRoute:
-    AuthenticatedSuperAdminSettingsUsageIndexRoute,
-}
-
-const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
-  AuthenticatedRouteChildren,
-)
+const AuthenticatedAdminSettingsLetterheadsIdRoute =
+  AuthenticatedAdminSettingsLetterheadsIdRouteImport.update({
+    id: '/admin-settings/letterheads/$id',
+    path: '/admin-settings/letterheads/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '': typeof AuthenticatedRouteWithChildren
   '/accept-invite': typeof onboardingAcceptInviteRoute
   '/confirm-email': typeof onboardingConfirmEmailRoute
   '/email-confirm': typeof onboardingEmailConfirmRoute
+  '/ip-blocked': typeof onboardingIpBlockedRoute
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
   '/install': typeof AuthenticatedInstallRoute
+  '/account/activate': typeof onboardingAccountActivateRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
+  '/academy/$chapterId': typeof AuthenticatedAcademyChapterIdRoute
+  '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
+  '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
+  '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
-  '/agents/$id': typeof AuthenticatedAgentsIdRoute
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/skills/$id': typeof AuthenticatedSkillsIdRoute
-  '/admin-settings': typeof AuthenticatedAdminSettingsIndexRoute
-  '/agents': typeof AuthenticatedAgentsIndexRoute
-  '/chat': typeof AuthenticatedChatIndexRoute
-  '/chats': typeof AuthenticatedChatsIndexRoute
-  '/knowledge-bases': typeof AuthenticatedKnowledgeBasesIndexRoute
-  '/prompts': typeof AuthenticatedPromptsIndexRoute
-  '/settings': typeof AuthenticatedSettingsIndexRoute
-  '/skills': typeof AuthenticatedSkillsIndexRoute
-  '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsIndexRoute
+  '/academy/': typeof AuthenticatedAcademyIndexRoute
+  '/admin-settings/': typeof AuthenticatedAdminSettingsIndexRoute
+  '/chat/': typeof AuthenticatedChatIndexRoute
+  '/chats/': typeof AuthenticatedChatsIndexRoute
+  '/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
+  '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/skills/': typeof AuthenticatedSkillsIndexRoute
+  '/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
+  '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
-  '/admin-settings/teams': typeof AuthenticatedAdminSettingsTeamsIndexRoute
-  '/super-admin-settings/models-catalog': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
-  '/super-admin-settings/orgs': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
-  '/super-admin-settings/skills': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
-  '/super-admin-settings/usage': typeof AuthenticatedSuperAdminSettingsUsageIndexRoute
+  '/admin-settings/letterheads/': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
+  '/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
+  '/super-admin-settings/academy/': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
+  '/super-admin-settings/models-catalog/': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
+  '/super-admin-settings/orgs/': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
+  '/super-admin-settings/platform-config/': typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
+  '/super-admin-settings/skills/': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
+  '/super-admin-settings/super-admins/': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
 }
-
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '': typeof AuthenticatedRouteWithChildren
   '/accept-invite': typeof onboardingAcceptInviteRoute
   '/confirm-email': typeof onboardingConfirmEmailRoute
   '/email-confirm': typeof onboardingEmailConfirmRoute
+  '/ip-blocked': typeof onboardingIpBlockedRoute
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
   '/install': typeof AuthenticatedInstallRoute
+  '/account/activate': typeof onboardingAccountActivateRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
+  '/academy/$chapterId': typeof AuthenticatedAcademyChapterIdRoute
+  '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
+  '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
+  '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
-  '/agents/$id': typeof AuthenticatedAgentsIdRoute
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/skills/$id': typeof AuthenticatedSkillsIdRoute
+  '/academy': typeof AuthenticatedAcademyIndexRoute
   '/admin-settings': typeof AuthenticatedAdminSettingsIndexRoute
-  '/agents': typeof AuthenticatedAgentsIndexRoute
   '/chat': typeof AuthenticatedChatIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/knowledge-bases': typeof AuthenticatedKnowledgeBasesIndexRoute
-  '/prompts': typeof AuthenticatedPromptsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/skills': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsIndexRoute
+  '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/admin-settings/letterheads': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/admin-settings/teams': typeof AuthenticatedAdminSettingsTeamsIndexRoute
+  '/super-admin-settings/academy': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
   '/super-admin-settings/models-catalog': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   '/super-admin-settings/orgs': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
+  '/super-admin-settings/platform-config': typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   '/super-admin-settings/skills': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
-  '/super-admin-settings/usage': typeof AuthenticatedSuperAdminSettingsUsageIndexRoute
+  '/super-admin-settings/super-admins': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
 }
-
 export interface FileRoutesById {
-  __root__: typeof rootRoute
+  __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/(onboarding)/accept-invite': typeof onboardingAcceptInviteRoute
   '/(onboarding)/confirm-email': typeof onboardingConfirmEmailRoute
   '/(onboarding)/email-confirm': typeof onboardingEmailConfirmRoute
+  '/(onboarding)/ip-blocked': typeof onboardingIpBlockedRoute
   '/(onboarding)/login': typeof onboardingLoginRoute
   '/(onboarding)/register': typeof onboardingRegisterRoute
   '/_authenticated/install': typeof AuthenticatedInstallRoute
+  '/(onboarding)/account/activate': typeof onboardingAccountActivateRoute
   '/(onboarding)/password/forgot': typeof onboardingPasswordForgotRoute
   '/(onboarding)/password/reset': typeof onboardingPasswordResetRoute
+  '/_authenticated/academy/$chapterId': typeof AuthenticatedAcademyChapterIdRoute
+  '/_authenticated/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
+  '/_authenticated/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
+  '/_authenticated/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/_authenticated/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/_authenticated/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/_authenticated/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/_authenticated/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/_authenticated/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
-  '/_authenticated/agents/$id': typeof AuthenticatedAgentsIdRoute
   '/_authenticated/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/_authenticated/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/_authenticated/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/_authenticated/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/_authenticated/skills/$id': typeof AuthenticatedSkillsIdRoute
+  '/_authenticated/academy/': typeof AuthenticatedAcademyIndexRoute
   '/_authenticated/admin-settings/': typeof AuthenticatedAdminSettingsIndexRoute
-  '/_authenticated/agents/': typeof AuthenticatedAgentsIndexRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
-  '/_authenticated/prompts/': typeof AuthenticatedPromptsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/skills/': typeof AuthenticatedSkillsIndexRoute
   '/_authenticated/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
+  '/_authenticated/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/_authenticated/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/_authenticated/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/_authenticated/admin-settings/letterheads/': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/_authenticated/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
+  '/_authenticated/super-admin-settings/academy/': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
   '/_authenticated/super-admin-settings/models-catalog/': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   '/_authenticated/super-admin-settings/orgs/': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
+  '/_authenticated/super-admin-settings/platform-config/': typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   '/_authenticated/super-admin-settings/skills/': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
-  '/_authenticated/super-admin-settings/usage/': typeof AuthenticatedSuperAdminSettingsUsageIndexRoute
+  '/_authenticated/super-admin-settings/super-admins/': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
 }
-
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | ''
     | '/accept-invite'
     | '/confirm-email'
     | '/email-confirm'
+    | '/ip-blocked'
     | '/login'
     | '/register'
     | '/install'
+    | '/account/activate'
     | '/password/forgot'
     | '/password/reset'
+    | '/academy/$chapterId'
+    | '/admin-settings/anonymization'
+    | '/admin-settings/api-keys'
+    | '/admin-settings/instructions'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
+    | '/admin-settings/security'
     | '/admin-settings/usage'
     | '/admin-settings/users'
-    | '/agents/$id'
     | '/chats/$threadId'
     | '/knowledge-bases/$id'
     | '/settings/account'
     | '/settings/chat'
     | '/settings/general'
+    | '/settings/integrations'
     | '/skills/$id'
-    | '/admin-settings'
-    | '/agents'
-    | '/chat'
-    | '/chats'
-    | '/knowledge-bases'
-    | '/prompts'
-    | '/settings'
-    | '/skills'
-    | '/super-admin-settings'
+    | '/academy/'
+    | '/admin-settings/'
+    | '/chat/'
+    | '/chats/'
+    | '/knowledge-bases/'
+    | '/settings/'
+    | '/skills/'
+    | '/super-admin-settings/'
+    | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
-    | '/admin-settings/teams'
-    | '/super-admin-settings/models-catalog'
-    | '/super-admin-settings/orgs'
-    | '/super-admin-settings/skills'
-    | '/super-admin-settings/usage'
+    | '/admin-settings/letterheads/'
+    | '/admin-settings/teams/'
+    | '/super-admin-settings/academy/'
+    | '/super-admin-settings/models-catalog/'
+    | '/super-admin-settings/orgs/'
+    | '/super-admin-settings/platform-config/'
+    | '/super-admin-settings/skills/'
+    | '/super-admin-settings/super-admins/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | ''
     | '/accept-invite'
     | '/confirm-email'
     | '/email-confirm'
+    | '/ip-blocked'
     | '/login'
     | '/register'
     | '/install'
+    | '/account/activate'
     | '/password/forgot'
     | '/password/reset'
+    | '/academy/$chapterId'
+    | '/admin-settings/anonymization'
+    | '/admin-settings/api-keys'
+    | '/admin-settings/instructions'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
+    | '/admin-settings/security'
     | '/admin-settings/usage'
     | '/admin-settings/users'
-    | '/agents/$id'
     | '/chats/$threadId'
     | '/knowledge-bases/$id'
     | '/settings/account'
     | '/settings/chat'
     | '/settings/general'
+    | '/settings/integrations'
     | '/skills/$id'
+    | '/academy'
     | '/admin-settings'
-    | '/agents'
     | '/chat'
     | '/chats'
     | '/knowledge-bases'
-    | '/prompts'
     | '/settings'
     | '/skills'
     | '/super-admin-settings'
+    | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
+    | '/admin-settings/letterheads'
     | '/admin-settings/teams'
+    | '/super-admin-settings/academy'
     | '/super-admin-settings/models-catalog'
     | '/super-admin-settings/orgs'
+    | '/super-admin-settings/platform-config'
     | '/super-admin-settings/skills'
-    | '/super-admin-settings/usage'
+    | '/super-admin-settings/super-admins'
   id:
     | '__root__'
     | '/'
@@ -843,52 +576,497 @@ export interface FileRouteTypes {
     | '/(onboarding)/accept-invite'
     | '/(onboarding)/confirm-email'
     | '/(onboarding)/email-confirm'
+    | '/(onboarding)/ip-blocked'
     | '/(onboarding)/login'
     | '/(onboarding)/register'
     | '/_authenticated/install'
+    | '/(onboarding)/account/activate'
     | '/(onboarding)/password/forgot'
     | '/(onboarding)/password/reset'
+    | '/_authenticated/academy/$chapterId'
+    | '/_authenticated/admin-settings/anonymization'
+    | '/_authenticated/admin-settings/api-keys'
+    | '/_authenticated/admin-settings/instructions'
     | '/_authenticated/admin-settings/integrations'
     | '/_authenticated/admin-settings/models'
+    | '/_authenticated/admin-settings/security'
     | '/_authenticated/admin-settings/usage'
     | '/_authenticated/admin-settings/users'
-    | '/_authenticated/agents/$id'
     | '/_authenticated/chats/$threadId'
     | '/_authenticated/knowledge-bases/$id'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/chat'
     | '/_authenticated/settings/general'
+    | '/_authenticated/settings/integrations'
     | '/_authenticated/skills/$id'
+    | '/_authenticated/academy/'
     | '/_authenticated/admin-settings/'
-    | '/_authenticated/agents/'
     | '/_authenticated/chat/'
     | '/_authenticated/chats/'
     | '/_authenticated/knowledge-bases/'
-    | '/_authenticated/prompts/'
     | '/_authenticated/settings/'
     | '/_authenticated/skills/'
     | '/_authenticated/super-admin-settings/'
+    | '/_authenticated/admin-settings/letterheads/$id'
     | '/_authenticated/admin-settings/teams/$id'
     | '/_authenticated/super-admin-settings/orgs/$id'
+    | '/_authenticated/admin-settings/letterheads/'
     | '/_authenticated/admin-settings/teams/'
+    | '/_authenticated/super-admin-settings/academy/'
     | '/_authenticated/super-admin-settings/models-catalog/'
     | '/_authenticated/super-admin-settings/orgs/'
+    | '/_authenticated/super-admin-settings/platform-config/'
     | '/_authenticated/super-admin-settings/skills/'
-    | '/_authenticated/super-admin-settings/usage/'
+    | '/_authenticated/super-admin-settings/super-admins/'
   fileRoutesById: FileRoutesById
 }
-
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   onboardingAcceptInviteRoute: typeof onboardingAcceptInviteRoute
   onboardingConfirmEmailRoute: typeof onboardingConfirmEmailRoute
   onboardingEmailConfirmRoute: typeof onboardingEmailConfirmRoute
+  onboardingIpBlockedRoute: typeof onboardingIpBlockedRoute
   onboardingLoginRoute: typeof onboardingLoginRoute
   onboardingRegisterRoute: typeof onboardingRegisterRoute
+  onboardingAccountActivateRoute: typeof onboardingAccountActivateRoute
   onboardingPasswordForgotRoute: typeof onboardingPasswordForgotRoute
   onboardingPasswordResetRoute: typeof onboardingPasswordResetRoute
 }
+
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/install': {
+      id: '/_authenticated/install'
+      path: '/install'
+      fullPath: '/install'
+      preLoaderRoute: typeof AuthenticatedInstallRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/(onboarding)/register': {
+      id: '/(onboarding)/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof onboardingRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(onboarding)/login': {
+      id: '/(onboarding)/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof onboardingLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(onboarding)/ip-blocked': {
+      id: '/(onboarding)/ip-blocked'
+      path: '/ip-blocked'
+      fullPath: '/ip-blocked'
+      preLoaderRoute: typeof onboardingIpBlockedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(onboarding)/email-confirm': {
+      id: '/(onboarding)/email-confirm'
+      path: '/email-confirm'
+      fullPath: '/email-confirm'
+      preLoaderRoute: typeof onboardingEmailConfirmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(onboarding)/confirm-email': {
+      id: '/(onboarding)/confirm-email'
+      path: '/confirm-email'
+      fullPath: '/confirm-email'
+      preLoaderRoute: typeof onboardingConfirmEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(onboarding)/accept-invite': {
+      id: '/(onboarding)/accept-invite'
+      path: '/accept-invite'
+      fullPath: '/accept-invite'
+      preLoaderRoute: typeof onboardingAcceptInviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/super-admin-settings/': {
+      id: '/_authenticated/super-admin-settings/'
+      path: '/super-admin-settings'
+      fullPath: '/super-admin-settings/'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/skills/': {
+      id: '/_authenticated/skills/'
+      path: '/skills'
+      fullPath: '/skills/'
+      preLoaderRoute: typeof AuthenticatedSkillsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/knowledge-bases/': {
+      id: '/_authenticated/knowledge-bases/'
+      path: '/knowledge-bases'
+      fullPath: '/knowledge-bases/'
+      preLoaderRoute: typeof AuthenticatedKnowledgeBasesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/chats/': {
+      id: '/_authenticated/chats/'
+      path: '/chats'
+      fullPath: '/chats/'
+      preLoaderRoute: typeof AuthenticatedChatsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/chat/': {
+      id: '/_authenticated/chat/'
+      path: '/chat'
+      fullPath: '/chat/'
+      preLoaderRoute: typeof AuthenticatedChatIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin-settings/': {
+      id: '/_authenticated/admin-settings/'
+      path: '/admin-settings'
+      fullPath: '/admin-settings/'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/academy/': {
+      id: '/_authenticated/academy/'
+      path: '/academy'
+      fullPath: '/academy/'
+      preLoaderRoute: typeof AuthenticatedAcademyIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/skills/$id': {
+      id: '/_authenticated/skills/$id'
+      path: '/skills/$id'
+      fullPath: '/skills/$id'
+      preLoaderRoute: typeof AuthenticatedSkillsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/integrations': {
+      id: '/_authenticated/settings/integrations'
+      path: '/settings/integrations'
+      fullPath: '/settings/integrations'
+      preLoaderRoute: typeof AuthenticatedSettingsIntegrationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/general': {
+      id: '/_authenticated/settings/general'
+      path: '/settings/general'
+      fullPath: '/settings/general'
+      preLoaderRoute: typeof AuthenticatedSettingsGeneralRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/chat': {
+      id: '/_authenticated/settings/chat'
+      path: '/settings/chat'
+      fullPath: '/settings/chat'
+      preLoaderRoute: typeof AuthenticatedSettingsChatRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/account': {
+      id: '/_authenticated/settings/account'
+      path: '/settings/account'
+      fullPath: '/settings/account'
+      preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/knowledge-bases/$id': {
+      id: '/_authenticated/knowledge-bases/$id'
+      path: '/knowledge-bases/$id'
+      fullPath: '/knowledge-bases/$id'
+      preLoaderRoute: typeof AuthenticatedKnowledgeBasesIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/chats/$threadId': {
+      id: '/_authenticated/chats/$threadId'
+      path: '/chats/$threadId'
+      fullPath: '/chats/$threadId'
+      preLoaderRoute: typeof AuthenticatedChatsThreadIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin-settings/users': {
+      id: '/_authenticated/admin-settings/users'
+      path: '/admin-settings/users'
+      fullPath: '/admin-settings/users'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsUsersRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin-settings/usage': {
+      id: '/_authenticated/admin-settings/usage'
+      path: '/admin-settings/usage'
+      fullPath: '/admin-settings/usage'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsUsageRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin-settings/security': {
+      id: '/_authenticated/admin-settings/security'
+      path: '/admin-settings/security'
+      fullPath: '/admin-settings/security'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsSecurityRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin-settings/models': {
+      id: '/_authenticated/admin-settings/models'
+      path: '/admin-settings/models'
+      fullPath: '/admin-settings/models'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsModelsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin-settings/integrations': {
+      id: '/_authenticated/admin-settings/integrations'
+      path: '/admin-settings/integrations'
+      fullPath: '/admin-settings/integrations'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsIntegrationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin-settings/instructions': {
+      id: '/_authenticated/admin-settings/instructions'
+      path: '/admin-settings/instructions'
+      fullPath: '/admin-settings/instructions'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsInstructionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin-settings/api-keys': {
+      id: '/_authenticated/admin-settings/api-keys'
+      path: '/admin-settings/api-keys'
+      fullPath: '/admin-settings/api-keys'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsApiKeysRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin-settings/anonymization': {
+      id: '/_authenticated/admin-settings/anonymization'
+      path: '/admin-settings/anonymization'
+      fullPath: '/admin-settings/anonymization'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsAnonymizationRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/academy/$chapterId': {
+      id: '/_authenticated/academy/$chapterId'
+      path: '/academy/$chapterId'
+      fullPath: '/academy/$chapterId'
+      preLoaderRoute: typeof AuthenticatedAcademyChapterIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/(onboarding)/password/reset': {
+      id: '/(onboarding)/password/reset'
+      path: '/password/reset'
+      fullPath: '/password/reset'
+      preLoaderRoute: typeof onboardingPasswordResetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(onboarding)/password/forgot': {
+      id: '/(onboarding)/password/forgot'
+      path: '/password/forgot'
+      fullPath: '/password/forgot'
+      preLoaderRoute: typeof onboardingPasswordForgotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(onboarding)/account/activate': {
+      id: '/(onboarding)/account/activate'
+      path: '/account/activate'
+      fullPath: '/account/activate'
+      preLoaderRoute: typeof onboardingAccountActivateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/super-admin-settings/super-admins/': {
+      id: '/_authenticated/super-admin-settings/super-admins/'
+      path: '/super-admin-settings/super-admins'
+      fullPath: '/super-admin-settings/super-admins/'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/super-admin-settings/skills/': {
+      id: '/_authenticated/super-admin-settings/skills/'
+      path: '/super-admin-settings/skills'
+      fullPath: '/super-admin-settings/skills/'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsSkillsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/super-admin-settings/platform-config/': {
+      id: '/_authenticated/super-admin-settings/platform-config/'
+      path: '/super-admin-settings/platform-config'
+      fullPath: '/super-admin-settings/platform-config/'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/super-admin-settings/orgs/': {
+      id: '/_authenticated/super-admin-settings/orgs/'
+      path: '/super-admin-settings/orgs'
+      fullPath: '/super-admin-settings/orgs/'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsOrgsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/super-admin-settings/models-catalog/': {
+      id: '/_authenticated/super-admin-settings/models-catalog/'
+      path: '/super-admin-settings/models-catalog'
+      fullPath: '/super-admin-settings/models-catalog/'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/super-admin-settings/academy/': {
+      id: '/_authenticated/super-admin-settings/academy/'
+      path: '/super-admin-settings/academy'
+      fullPath: '/super-admin-settings/academy/'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsAcademyIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin-settings/teams/': {
+      id: '/_authenticated/admin-settings/teams/'
+      path: '/admin-settings/teams'
+      fullPath: '/admin-settings/teams/'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsTeamsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin-settings/letterheads/': {
+      id: '/_authenticated/admin-settings/letterheads/'
+      path: '/admin-settings/letterheads'
+      fullPath: '/admin-settings/letterheads/'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsLetterheadsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/super-admin-settings/orgs/$id': {
+      id: '/_authenticated/super-admin-settings/orgs/$id'
+      path: '/super-admin-settings/orgs/$id'
+      fullPath: '/super-admin-settings/orgs/$id'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin-settings/teams/$id': {
+      id: '/_authenticated/admin-settings/teams/$id'
+      path: '/admin-settings/teams/$id'
+      fullPath: '/admin-settings/teams/$id'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsTeamsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin-settings/letterheads/$id': {
+      id: '/_authenticated/admin-settings/letterheads/$id'
+      path: '/admin-settings/letterheads/$id'
+      fullPath: '/admin-settings/letterheads/$id'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsLetterheadsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+  }
+}
+
+interface AuthenticatedRouteChildren {
+  AuthenticatedInstallRoute: typeof AuthenticatedInstallRoute
+  AuthenticatedAcademyChapterIdRoute: typeof AuthenticatedAcademyChapterIdRoute
+  AuthenticatedAdminSettingsAnonymizationRoute: typeof AuthenticatedAdminSettingsAnonymizationRoute
+  AuthenticatedAdminSettingsApiKeysRoute: typeof AuthenticatedAdminSettingsApiKeysRoute
+  AuthenticatedAdminSettingsInstructionsRoute: typeof AuthenticatedAdminSettingsInstructionsRoute
+  AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
+  AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
+  AuthenticatedAdminSettingsSecurityRoute: typeof AuthenticatedAdminSettingsSecurityRoute
+  AuthenticatedAdminSettingsUsageRoute: typeof AuthenticatedAdminSettingsUsageRoute
+  AuthenticatedAdminSettingsUsersRoute: typeof AuthenticatedAdminSettingsUsersRoute
+  AuthenticatedChatsThreadIdRoute: typeof AuthenticatedChatsThreadIdRoute
+  AuthenticatedKnowledgeBasesIdRoute: typeof AuthenticatedKnowledgeBasesIdRoute
+  AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
+  AuthenticatedSettingsChatRoute: typeof AuthenticatedSettingsChatRoute
+  AuthenticatedSettingsGeneralRoute: typeof AuthenticatedSettingsGeneralRoute
+  AuthenticatedSettingsIntegrationsRoute: typeof AuthenticatedSettingsIntegrationsRoute
+  AuthenticatedSkillsIdRoute: typeof AuthenticatedSkillsIdRoute
+  AuthenticatedAcademyIndexRoute: typeof AuthenticatedAcademyIndexRoute
+  AuthenticatedAdminSettingsIndexRoute: typeof AuthenticatedAdminSettingsIndexRoute
+  AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
+  AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
+  AuthenticatedKnowledgeBasesIndexRoute: typeof AuthenticatedKnowledgeBasesIndexRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
+  AuthenticatedSkillsIndexRoute: typeof AuthenticatedSkillsIndexRoute
+  AuthenticatedSuperAdminSettingsIndexRoute: typeof AuthenticatedSuperAdminSettingsIndexRoute
+  AuthenticatedAdminSettingsLetterheadsIdRoute: typeof AuthenticatedAdminSettingsLetterheadsIdRoute
+  AuthenticatedAdminSettingsTeamsIdRoute: typeof AuthenticatedAdminSettingsTeamsIdRoute
+  AuthenticatedSuperAdminSettingsOrgsIdRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  AuthenticatedAdminSettingsLetterheadsIndexRoute: typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
+  AuthenticatedAdminSettingsTeamsIndexRoute: typeof AuthenticatedAdminSettingsTeamsIndexRoute
+  AuthenticatedSuperAdminSettingsAcademyIndexRoute: typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
+  AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
+  AuthenticatedSuperAdminSettingsOrgsIndexRoute: typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
+  AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute: typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
+  AuthenticatedSuperAdminSettingsSkillsIndexRoute: typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
+  AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute: typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedInstallRoute: AuthenticatedInstallRoute,
+  AuthenticatedAcademyChapterIdRoute: AuthenticatedAcademyChapterIdRoute,
+  AuthenticatedAdminSettingsAnonymizationRoute:
+    AuthenticatedAdminSettingsAnonymizationRoute,
+  AuthenticatedAdminSettingsApiKeysRoute:
+    AuthenticatedAdminSettingsApiKeysRoute,
+  AuthenticatedAdminSettingsInstructionsRoute:
+    AuthenticatedAdminSettingsInstructionsRoute,
+  AuthenticatedAdminSettingsIntegrationsRoute:
+    AuthenticatedAdminSettingsIntegrationsRoute,
+  AuthenticatedAdminSettingsModelsRoute: AuthenticatedAdminSettingsModelsRoute,
+  AuthenticatedAdminSettingsSecurityRoute:
+    AuthenticatedAdminSettingsSecurityRoute,
+  AuthenticatedAdminSettingsUsageRoute: AuthenticatedAdminSettingsUsageRoute,
+  AuthenticatedAdminSettingsUsersRoute: AuthenticatedAdminSettingsUsersRoute,
+  AuthenticatedChatsThreadIdRoute: AuthenticatedChatsThreadIdRoute,
+  AuthenticatedKnowledgeBasesIdRoute: AuthenticatedKnowledgeBasesIdRoute,
+  AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
+  AuthenticatedSettingsChatRoute: AuthenticatedSettingsChatRoute,
+  AuthenticatedSettingsGeneralRoute: AuthenticatedSettingsGeneralRoute,
+  AuthenticatedSettingsIntegrationsRoute:
+    AuthenticatedSettingsIntegrationsRoute,
+  AuthenticatedSkillsIdRoute: AuthenticatedSkillsIdRoute,
+  AuthenticatedAcademyIndexRoute: AuthenticatedAcademyIndexRoute,
+  AuthenticatedAdminSettingsIndexRoute: AuthenticatedAdminSettingsIndexRoute,
+  AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
+  AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
+  AuthenticatedKnowledgeBasesIndexRoute: AuthenticatedKnowledgeBasesIndexRoute,
+  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
+  AuthenticatedSkillsIndexRoute: AuthenticatedSkillsIndexRoute,
+  AuthenticatedSuperAdminSettingsIndexRoute:
+    AuthenticatedSuperAdminSettingsIndexRoute,
+  AuthenticatedAdminSettingsLetterheadsIdRoute:
+    AuthenticatedAdminSettingsLetterheadsIdRoute,
+  AuthenticatedAdminSettingsTeamsIdRoute:
+    AuthenticatedAdminSettingsTeamsIdRoute,
+  AuthenticatedSuperAdminSettingsOrgsIdRoute:
+    AuthenticatedSuperAdminSettingsOrgsIdRoute,
+  AuthenticatedAdminSettingsLetterheadsIndexRoute:
+    AuthenticatedAdminSettingsLetterheadsIndexRoute,
+  AuthenticatedAdminSettingsTeamsIndexRoute:
+    AuthenticatedAdminSettingsTeamsIndexRoute,
+  AuthenticatedSuperAdminSettingsAcademyIndexRoute:
+    AuthenticatedSuperAdminSettingsAcademyIndexRoute,
+  AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute:
+    AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute,
+  AuthenticatedSuperAdminSettingsOrgsIndexRoute:
+    AuthenticatedSuperAdminSettingsOrgsIndexRoute,
+  AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute:
+    AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute,
+  AuthenticatedSuperAdminSettingsSkillsIndexRoute:
+    AuthenticatedSuperAdminSettingsSkillsIndexRoute,
+  AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute:
+    AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -896,202 +1074,13 @@ const rootRouteChildren: RootRouteChildren = {
   onboardingAcceptInviteRoute: onboardingAcceptInviteRoute,
   onboardingConfirmEmailRoute: onboardingConfirmEmailRoute,
   onboardingEmailConfirmRoute: onboardingEmailConfirmRoute,
+  onboardingIpBlockedRoute: onboardingIpBlockedRoute,
   onboardingLoginRoute: onboardingLoginRoute,
   onboardingRegisterRoute: onboardingRegisterRoute,
+  onboardingAccountActivateRoute: onboardingAccountActivateRoute,
   onboardingPasswordForgotRoute: onboardingPasswordForgotRoute,
   onboardingPasswordResetRoute: onboardingPasswordResetRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/_authenticated",
-        "/(onboarding)/accept-invite",
-        "/(onboarding)/confirm-email",
-        "/(onboarding)/email-confirm",
-        "/(onboarding)/login",
-        "/(onboarding)/register",
-        "/(onboarding)/password/forgot",
-        "/(onboarding)/password/reset"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/_authenticated": {
-      "filePath": "_authenticated.tsx",
-      "children": [
-        "/_authenticated/install",
-        "/_authenticated/admin-settings/integrations",
-        "/_authenticated/admin-settings/models",
-        "/_authenticated/admin-settings/usage",
-        "/_authenticated/admin-settings/users",
-        "/_authenticated/agents/$id",
-        "/_authenticated/chats/$threadId",
-        "/_authenticated/knowledge-bases/$id",
-        "/_authenticated/settings/account",
-        "/_authenticated/settings/chat",
-        "/_authenticated/settings/general",
-        "/_authenticated/skills/$id",
-        "/_authenticated/admin-settings/",
-        "/_authenticated/agents/",
-        "/_authenticated/chat/",
-        "/_authenticated/chats/",
-        "/_authenticated/knowledge-bases/",
-        "/_authenticated/prompts/",
-        "/_authenticated/settings/",
-        "/_authenticated/skills/",
-        "/_authenticated/super-admin-settings/",
-        "/_authenticated/admin-settings/teams/$id",
-        "/_authenticated/super-admin-settings/orgs/$id",
-        "/_authenticated/admin-settings/teams/",
-        "/_authenticated/super-admin-settings/models-catalog/",
-        "/_authenticated/super-admin-settings/orgs/",
-        "/_authenticated/super-admin-settings/skills/",
-        "/_authenticated/super-admin-settings/usage/"
-      ]
-    },
-    "/(onboarding)/accept-invite": {
-      "filePath": "(onboarding)/accept-invite.tsx"
-    },
-    "/(onboarding)/confirm-email": {
-      "filePath": "(onboarding)/confirm-email.tsx"
-    },
-    "/(onboarding)/email-confirm": {
-      "filePath": "(onboarding)/email-confirm.tsx"
-    },
-    "/(onboarding)/login": {
-      "filePath": "(onboarding)/login.tsx"
-    },
-    "/(onboarding)/register": {
-      "filePath": "(onboarding)/register.tsx"
-    },
-    "/_authenticated/install": {
-      "filePath": "_authenticated/install.tsx",
-      "parent": "/_authenticated"
-    },
-    "/(onboarding)/password/forgot": {
-      "filePath": "(onboarding)/password.forgot.tsx"
-    },
-    "/(onboarding)/password/reset": {
-      "filePath": "(onboarding)/password.reset.tsx"
-    },
-    "/_authenticated/admin-settings/integrations": {
-      "filePath": "_authenticated/admin-settings.integrations.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/admin-settings/models": {
-      "filePath": "_authenticated/admin-settings.models.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/admin-settings/usage": {
-      "filePath": "_authenticated/admin-settings.usage.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/admin-settings/users": {
-      "filePath": "_authenticated/admin-settings.users.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/agents/$id": {
-      "filePath": "_authenticated/agents.$id.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/chats/$threadId": {
-      "filePath": "_authenticated/chats.$threadId.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/knowledge-bases/$id": {
-      "filePath": "_authenticated/knowledge-bases.$id.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/settings/account": {
-      "filePath": "_authenticated/settings.account.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/settings/chat": {
-      "filePath": "_authenticated/settings.chat.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/settings/general": {
-      "filePath": "_authenticated/settings.general.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/skills/$id": {
-      "filePath": "_authenticated/skills.$id.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/admin-settings/": {
-      "filePath": "_authenticated/admin-settings.index.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/agents/": {
-      "filePath": "_authenticated/agents.index.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/chat/": {
-      "filePath": "_authenticated/chat.index.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/chats/": {
-      "filePath": "_authenticated/chats.index.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/knowledge-bases/": {
-      "filePath": "_authenticated/knowledge-bases.index.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/prompts/": {
-      "filePath": "_authenticated/prompts.index.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/settings/": {
-      "filePath": "_authenticated/settings.index.ts",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/skills/": {
-      "filePath": "_authenticated/skills.index.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/super-admin-settings/": {
-      "filePath": "_authenticated/super-admin-settings.index.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/admin-settings/teams/$id": {
-      "filePath": "_authenticated/admin-settings.teams.$id.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/super-admin-settings/orgs/$id": {
-      "filePath": "_authenticated/super-admin-settings.orgs.$id.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/admin-settings/teams/": {
-      "filePath": "_authenticated/admin-settings.teams.index.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/super-admin-settings/models-catalog/": {
-      "filePath": "_authenticated/super-admin-settings.models-catalog.index.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/super-admin-settings/orgs/": {
-      "filePath": "_authenticated/super-admin-settings.orgs.index.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/super-admin-settings/skills/": {
-      "filePath": "_authenticated/super-admin-settings.skills.index.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/super-admin-settings/usage/": {
-      "filePath": "_authenticated/super-admin-settings.usage.index.tsx",
-      "parent": "/_authenticated"
-    }
-  }
-}
-ROUTE_MANIFEST_END */

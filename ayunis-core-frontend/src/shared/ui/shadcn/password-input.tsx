@@ -1,44 +1,43 @@
 import * as React from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import { Input } from './input';
-import { cn } from '@/shared/lib/shadcn/utils';
 
-interface PasswordInputProps extends React.ComponentProps<'input'> {
-  className?: string;
-}
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/shared/ui/shadcn/input-group';
 
-const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
-  ({ className, disabled, ...props }, ref) => {
-    const [showPassword, setShowPassword] = React.useState(false);
+function PasswordInput({
+  className,
+  disabled,
+  ...props
+}: React.ComponentProps<'input'>): React.ReactElement {
+  const [showPassword, setShowPassword] = React.useState(false);
 
-    return (
-      <div className="relative">
-        <Input
-          {...props}
-          type={showPassword ? 'text' : 'password'}
-          className={cn('pr-10', className)}
-          disabled={disabled}
-          ref={ref}
-        />
-        <button
-          type="button"
+  return (
+    <InputGroup data-disabled={disabled || undefined} className={className}>
+      <InputGroupInput
+        {...props}
+        type={showPassword ? 'text' : 'password'}
+        disabled={disabled}
+      />
+      <InputGroupAddon align="inline-end">
+        <InputGroupButton
+          size="icon-xs"
           onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
           aria-label={showPassword ? 'Hide password' : 'Show password'}
           disabled={disabled}
         >
           {showPassword ? (
-            <EyeOff className="h-4 w-4 text-muted-foreground" />
+            <EyeOff className="size-4" />
           ) : (
-            <Eye className="h-4 w-4 text-muted-foreground" />
+            <Eye className="size-4" />
           )}
-        </button>
-      </div>
-    );
-  },
-);
-
-// eslint-disable-next-line sonarjs/no-hardcoded-passwords -- False positive: this is a React component displayName, not a password
-PasswordInput.displayName = 'PasswordInput';
+        </InputGroupButton>
+      </InputGroupAddon>
+    </InputGroup>
+  );
+}
 
 export { PasswordInput };

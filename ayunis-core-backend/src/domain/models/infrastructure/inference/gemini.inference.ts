@@ -43,22 +43,13 @@ export class GeminiInferenceHandler extends InferenceHandler {
   }
 
   async answer(input: InferenceInput): Promise<InferenceResponse> {
-    this.logger.log('answer', {
-      model: input.model.name,
-      messageCount: input.messages.length,
-      toolCount: input.tools.length,
-      toolChoice: input.toolChoice,
+    const { messages, tools, toolChoice, orgId } = input;
+    const contents = await this.converter.convertMessages(messages, orgId);
+    const config = this.converter.buildConfig({
+      systemPrompt: input.systemPrompt,
+      tools,
+      toolChoice,
     });
-    try {
-      const { messages, tools, toolChoice, orgId } = input;
-      const contents = await this.converter.convertMessages(messages, orgId);
-      const config = this.converter.buildConfig({
-        systemPrompt: input.systemPrompt,
-        tools,
-        toolChoice,
-      });
-
-      this.logger.debug('generateContent config', { config });
 
       const completionFn = () =>
         this.getClient().models.generateContent({
@@ -66,25 +57,27 @@ export class GeminiInferenceHandler extends InferenceHandler {
           contents,
           config,
         });
+    this.logger.debug('generateContent config prepared', {
+      model: input.model.name,
+      messageCount: contents.length,
+      toolCount: tools.length,
+      hasSystem: Boolean(input.systemPrompt),
+    });
 
-      const response = await retryWithBackoff({
-        fn: completionFn,
-        maxRetries: 3,
-        delay: 1000,
+    const completionFn = () =>
+      this.client.models.generateContent({
+        model: input.model.name,
+        contents,
+        config,
       });
 
-      return this.parseResponse(response);
-    } catch (error) {
-      this.logger.error('Failed to get response from Gemini', error);
-      if (error instanceof InferenceFailedError) {
-        throw error;
-      }
-      throw new InferenceFailedError('Gemini inference failed', {
-        source: 'gemini',
-        originalError:
-          error instanceof Error ? error : new Error('Unknown error'),
-      });
-    }
+    const response = await retryWithBackoff({
+      fn: completionFn,
+      maxRetries: 3,
+      delay: 1000,
+    });
+
+    return this.parseResponse(response);
   }
 
   private parseResponse = (

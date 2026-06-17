@@ -9,21 +9,21 @@ import {
   FileRetrieverPage,
 } from '../../../domain/file-retriever-result.entity';
 import { ContextService } from 'src/common/context/services/context.service';
+import { DocumentConverterPort } from '../../ports/document-converter.port';
 import retrievalConfig from 'src/config/retrieval.config';
+import { TranscribeUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.use-case';
 
-describe('ProcessFileUseCase', () => {
+describe('RetrieveFileContentUseCase', () => {
   let useCase: RetrieveFileContentUseCase;
   let mockHandler: Partial<FileRetrieverHandler>;
   let mockRegistry: Partial<FileRetrieverRegistry>;
   let mockContextService: Partial<ContextService>;
+  let mockDocumentConverter: Partial<DocumentConverterPort>;
+  let mockTranscribeUseCase: Partial<TranscribeUseCase>;
 
   const mockRetrievalConfig = {
     mistral: {
-      apiKey: undefined,
-    },
-    docling: {
-      serviceUrl: undefined,
-      apiKey: undefined,
+      apiKey: 'test-mistral-key',
     },
   };
 
@@ -35,12 +35,20 @@ describe('ProcessFileUseCase', () => {
     mockContextService = {
       get: jest.fn().mockReturnValue('123e4567-e89b-12d3-a456-426614174000'),
     };
+    mockDocumentConverter = {
+      convertToPdf: jest.fn(),
+    };
+    mockTranscribeUseCase = {
+      execute: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RetrieveFileContentUseCase,
         { provide: FileRetrieverRegistry, useValue: mockRegistry },
         { provide: ContextService, useValue: mockContextService },
+        { provide: DocumentConverterPort, useValue: mockDocumentConverter },
+        { provide: TranscribeUseCase, useValue: mockTranscribeUseCase },
         { provide: retrievalConfig.KEY, useValue: mockRetrievalConfig },
       ],
     }).compile();
@@ -49,6 +57,7 @@ describe('ProcessFileUseCase', () => {
       RetrieveFileContentUseCase,
     );
   });
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -96,7 +105,7 @@ describe('ProcessFileUseCase', () => {
     expect(mockHandler.processFile).not.toHaveBeenCalled();
   });
 
-  it('should process file successfully', async () => {
+  it('should process PDF file successfully', async () => {
     const command = new RetrieveFileContentCommand({
       fileData: Buffer.from('test file content'),
       fileName: 'test.pdf',
@@ -118,5 +127,66 @@ describe('ProcessFileUseCase', () => {
         fileType: command.fileType,
       }),
     );
+  });
+
+  it('should transcribe audio and wrap the transcript as a single page', async () => {
+    const audioBuffer = Buffer.from('fake audio bytes');
+    const transcript = 'Hello world, this is the transcribed audio.';
+    jest.spyOn(mockTranscribeUseCase, 'execute').mockResolvedValue(transcript);
+
+    const command = new RetrieveFileContentCommand({
+      fileData: audioBuffer,
+      fileName: 'meeting.mp3',
+      fileType: 'audio/mpeg',
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(mockTranscribeUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        file: audioBuffer,
+        fileName: 'meeting.mp3',
+        mimeType: 'audio/mpeg',
+      }),
+    );
+    expect(result.pages).toHaveLength(1);
+    expect(result.pages[0].text).toBe(transcript);
+    expect(result.pages[0].number).toBe(1);
+    expect(mockHandler.processFile).not.toHaveBeenCalled();
+  });
+
+  it('should convert DOCX to PDF via Gotenberg then process with Mistral', async () => {
+    const docxBuffer = Buffer.from('fake docx content');
+    const pdfBuffer = Buffer.from('converted pdf content');
+    const expectedResult = new FileRetrieverResult([
+      new FileRetrieverPage('extracted text from converted docx', 1),
+    ]);
+
+    jest
+      .spyOn(mockDocumentConverter, 'convertToPdf')
+      .mockResolvedValue(pdfBuffer);
+    jest.spyOn(mockHandler, 'processFile').mockResolvedValue(expectedResult);
+
+    const command = new RetrieveFileContentCommand({
+      fileData: docxBuffer,
+      fileName: 'report.docx',
+      fileType:
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(mockDocumentConverter.convertToPdf).toHaveBeenCalledWith(
+      docxBuffer,
+      'report.docx',
+    );
+    expect(mockHandler.processFile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fileData: pdfBuffer,
+        filename: 'report.pdf',
+        fileType: 'application/pdf',
+      }),
+    );
+    expect(result).toBe(expectedResult);
   });
 });

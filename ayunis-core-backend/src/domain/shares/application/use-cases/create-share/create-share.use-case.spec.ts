@@ -2,13 +2,13 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { CreateShareUseCase } from './create-share.use-case';
-import { CreateOrgAgentShareCommand } from './create-share.command';
+import { CreateOrgSkillShareCommand } from './create-share.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SharesRepository } from '../../ports/shares-repository.port';
 import { ShareAuthorizationFactory } from '../../factories/share-authorization.factory';
 import type { ShareAuthorizationStrategy } from '../../ports/share-authorization-strategy.port';
 import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
-import { AgentShare, KnowledgeBaseShare } from '../../../domain/share.entity';
+import { SkillShare, KnowledgeBaseShare } from '../../../domain/share.entity';
 import { OrgShareScope } from '../../../domain/share-scope.entity';
 import { randomUUID } from 'crypto';
 import { CheckUserTeamMembershipUseCase } from 'src/iam/teams/application/use-cases/check-user-team-membership/check-user-team-membership.use-case';
@@ -28,7 +28,7 @@ describe('CreateShareUseCase', () => {
 
   const mockUserId = randomUUID();
   const mockOrgId = randomUUID();
-  const mockAgentId = randomUUID();
+  const mockSkillId = randomUUID();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -85,9 +85,9 @@ describe('CreateShareUseCase', () => {
   });
 
   describe('execute', () => {
-    it('should create an org-scoped share when user owns the agent', async () => {
+    it('should create an org-scoped share when user owns the skill', async () => {
       // Arrange
-      const command = new CreateOrgAgentShareCommand(mockAgentId);
+      const command = new CreateOrgSkillShareCommand(mockSkillId);
 
       (contextService.get as jest.Mock).mockImplementation((key: string) => {
         if (key === 'userId') return mockUserId;
@@ -109,28 +109,28 @@ describe('CreateShareUseCase', () => {
 
       // Assert
       expect(authorizationFactory.getStrategy).toHaveBeenCalledWith(
-        SharedEntityType.AGENT,
+        SharedEntityType.SKILL,
       );
       expect(authorizationStrategy.canCreateShare).toHaveBeenCalledWith(
-        mockAgentId,
+        mockSkillId,
         mockUserId,
       );
-      expect(repository.create).toHaveBeenCalledWith(expect.any(AgentShare));
+      expect(repository.create).toHaveBeenCalledWith(expect.any(SkillShare));
 
       const createdShare = (repository.create as jest.Mock).mock.calls[0][0];
-      expect(createdShare).toBeInstanceOf(AgentShare);
-      expect(createdShare.agentId).toBe(mockAgentId);
+      expect(createdShare).toBeInstanceOf(SkillShare);
+      expect(createdShare.skillId).toBe(mockSkillId);
       expect(createdShare.ownerId).toBe(mockUserId);
       expect(createdShare.scope).toBeInstanceOf(OrgShareScope);
 
-      expect(result).toBeInstanceOf(AgentShare);
-      expect((result as AgentShare).agentId).toBe(mockAgentId);
+      expect(result).toBeInstanceOf(SkillShare);
+      expect((result as SkillShare).skillId).toBe(mockSkillId);
       expect(result.ownerId).toBe(mockUserId);
     });
 
     it('should throw UnauthorizedException when user is not authenticated', async () => {
       // Arrange
-      const command = new CreateOrgAgentShareCommand(mockAgentId);
+      const command = new CreateOrgSkillShareCommand(mockSkillId);
 
       (contextService.get as jest.Mock).mockReturnValue(null);
 
@@ -145,7 +145,7 @@ describe('CreateShareUseCase', () => {
 
     it('should throw UnauthorizedException when org is not found', async () => {
       // Arrange
-      const command = new CreateOrgAgentShareCommand(mockAgentId);
+      const command = new CreateOrgSkillShareCommand(mockSkillId);
 
       (contextService.get as jest.Mock).mockImplementation((key: string) => {
         if (key === 'userId') return mockUserId;
@@ -162,9 +162,9 @@ describe('CreateShareUseCase', () => {
       );
     });
 
-    it('should throw ForbiddenException when user cannot create share for the agent', async () => {
+    it('should throw ForbiddenException when user cannot create share for the skill', async () => {
       // Arrange
-      const command = new CreateOrgAgentShareCommand(mockAgentId);
+      const command = new CreateOrgSkillShareCommand(mockSkillId);
 
       (contextService.get as jest.Mock).mockImplementation((key: string) => {
         if (key === 'userId') return mockUserId;
@@ -184,13 +184,13 @@ describe('CreateShareUseCase', () => {
         ForbiddenException,
       );
       await expect(useCase.execute(command)).rejects.toThrow(
-        'User cannot create share for this agent',
+        'User cannot create share for this skill',
       );
     });
 
     it('should throw Error for unsupported command type', async () => {
       // Arrange
-      const unsupportedCommand = {} as any; // Not an instance of CreateOrgAgentShareCommand
+      const unsupportedCommand = {} as any;
 
       (contextService.get as jest.Mock).mockImplementation((key: string) => {
         if (key === 'userId') return mockUserId;
@@ -206,7 +206,7 @@ describe('CreateShareUseCase', () => {
 
     it('should handle repository errors', async () => {
       // Arrange
-      const command = new CreateOrgAgentShareCommand(mockAgentId);
+      const command = new CreateOrgSkillShareCommand(mockSkillId);
       const repositoryError = new Error('Database connection failed');
 
       (contextService.get as jest.Mock).mockImplementation((key: string) => {
@@ -230,9 +230,9 @@ describe('CreateShareUseCase', () => {
 
     it('should throw ShareAlreadyExistsError when share already exists for org scope', async () => {
       // Arrange
-      const command = new CreateOrgAgentShareCommand(mockAgentId);
-      const existingShare = new AgentShare({
-        agentId: mockAgentId,
+      const command = new CreateOrgSkillShareCommand(mockSkillId);
+      const existingShare = new SkillShare({
+        skillId: mockSkillId,
         scope: new OrgShareScope({ orgId: mockOrgId }),
         ownerId: mockUserId,
       });

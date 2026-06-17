@@ -1,39 +1,34 @@
-import { useSuperAdminUsersControllerTriggerPasswordReset } from '@/shared/api/generated/ayunisCoreAPI';
-import { showError, showSuccess } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
+import { showError } from '@/shared/lib/toast';
+import { useSuperAdminUsersControllerTriggerPasswordReset } from '@/shared/api/generated/ayunisCoreAPI';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 interface UseSuperAdminTriggerPasswordResetOptions {
-  onSuccessCallback?: () => void;
+  onSuccess?: (resetUrl: string) => void;
 }
 
 export function useSuperAdminTriggerPasswordReset(
   options?: UseSuperAdminTriggerPasswordResetOptions,
 ) {
   const { t } = useTranslation('super-admin-settings-org');
-  const triggerPasswordResetMutation =
-    useSuperAdminUsersControllerTriggerPasswordReset({
-      mutation: {
-        onSuccess: () => {
-          showSuccess(t('triggerPasswordReset.success'));
-          if (options?.onSuccessCallback) {
-            options.onSuccessCallback();
-          }
-        },
-        onError: (err) => {
-          console.error('Error triggering password reset', err);
-          showError(t('triggerPasswordReset.error'));
-        },
+
+  return useSuperAdminUsersControllerTriggerPasswordReset({
+    mutation: {
+      onSuccess: (data) => {
+        options?.onSuccess?.(data.resetUrl);
       },
-    });
-
-  function triggerPasswordReset(userId: string) {
-    triggerPasswordResetMutation.mutate({ userId });
-  }
-
-  return {
-    triggerPasswordReset,
-    isLoading: triggerPasswordResetMutation.isPending,
-    isError: triggerPasswordResetMutation.isError,
-    error: triggerPasswordResetMutation.error,
-  };
+      onError: (error) => {
+        try {
+          const { code } = extractErrorData(error);
+          if (code === 'USER_NOT_FOUND') {
+            showError(t('triggerPasswordReset.notFound'));
+          } else {
+            showError(t('triggerPasswordReset.error'));
+          }
+        } catch {
+          showError(t('triggerPasswordReset.error'));
+        }
+      },
+    },
+  });
 }

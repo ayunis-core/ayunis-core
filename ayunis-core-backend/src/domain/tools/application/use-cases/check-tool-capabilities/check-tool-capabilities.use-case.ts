@@ -26,8 +26,10 @@ export class CheckToolCapabilitiesUseCase {
   }
 
   isExecutable(tool: Tool): boolean {
-    // TODO: This is a temporary solution until we
-    // introduce tools which are both displayable and executable
-    return !this.isDisplayable(tool);
+    if (!this.isDisplayable(tool)) {
+      return true;
+    }
+    // Displayable tools can opt into backend execution
+    return (tool as DisplayableTool).isExecutable === true;
   }
 }

@@ -1,26 +1,38 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useIsMutating, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { showSuccess, showError } from '@/shared/lib/toast';
+import { showSuccess, showInfo, showError } from '@/shared/lib/toast';
 import {
   useKnowledgeBasesControllerAddDocument,
   getKnowledgeBasesControllerListDocumentsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { KnowledgeBaseDocumentResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 
 export function useUploadDocument(knowledgeBaseId: string) {
   const { t } = useTranslation('knowledge-bases');
   const queryClient = useQueryClient();
+  const mutationKey = ['knowledgeBasesAddDocument', knowledgeBaseId];
 
   const mutation = useKnowledgeBasesControllerAddDocument({
     mutation: {
-      onSuccess: () => {
+      mutationKey,
+      onSuccess: (data) => {
         void queryClient.invalidateQueries({
           queryKey:
             getKnowledgeBasesControllerListDocumentsQueryKey(knowledgeBaseId),
         });
-        showSuccess(t('detail.documents.uploadSuccess'));
+        if (data.status === KnowledgeBaseDocumentResponseDtoStatus.processing) {
+          showInfo(t('detail.documents.uploadAccepted'));
+        } else if (
+          data.status === KnowledgeBaseDocumentResponseDtoStatus.failed
+        ) {
+          showError(data.processingError ?? t('detail.documents.statusFailed'));
+        } else {
+          showSuccess(t('detail.documents.uploadSuccess'));
+        }
       },
-      onError: () => {
-        showError(t('detail.documents.uploadError'));
+      onError: (error: unknown) => {
+        handleSourceUploadError(error, t);
       },
     },
   });
@@ -32,5 +44,7 @@ export function useUploadDocument(knowledgeBaseId: string) {
     });
   };
 
-  return { uploadDocument, isUploading: mutation.isPending };
+  const activeUploads = useIsMutating({ mutationKey });
+
+  return { uploadDocument, isUploading: activeUploads > 0 };
 }

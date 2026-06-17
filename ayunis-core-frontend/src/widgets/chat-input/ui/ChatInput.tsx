@@ -1,22 +1,20 @@
 import { useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
-import AgentButton from './AgentButton';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useTranslation } from 'react-i18next';
 import type {
+  FileSourceResponseDtoFileType,
   SourceResponseDtoCreatedBy,
+  SourceResponseDtoStatus,
   SourceResponseDtoType,
 } from '@/shared/api';
 import PlusButton from './PlusButton';
 import ModelSelector from './ModelSelector';
-import { useAgents } from '../../../features/useAgents';
 import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import { SendButton } from './SendButton';
 import { AnonymousButton } from './AnonymousButton';
-import { AgentBadge } from './AgentBadge';
 import { SkillBadge } from './SkillBadge';
-import { useIsAgentsEnabled } from '@/features/feature-toggles';
 import {
   usePendingImages,
   type PendingImage,
@@ -29,41 +27,66 @@ import { cn } from '@/shared/lib/shadcn/utils';
 import { SourcesList } from './SourcesList';
 import { showError } from '@/shared/lib/toast';
 import { MicrophoneButton } from './MicrophoneButton';
-import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
+import type {
+  IntegrationSummary,
+  KnowledgeBaseSummary,
+} from '@/shared/contexts/chat/chatContext';
+
+/**
+ * Lifecycle of an in-flight submit. The input behaves differently in each:
+ *
+ * - `idle`     — fully editable, send button visible, can submit if `canSend`.
+ * - `submitting` — message is being delivered (upload + processing pipeline
+ *                  on the new-chat page). Textarea is read-only, plus button
+ *                  disabled, send button replaced with a cancel button. Local
+ *                  message state is preserved so it survives a cancellation
+ *                  or a failure.
+ * - `streaming`  — assistant response is streaming. Textarea remains editable
+ *                  (so the user can prepare a follow-up), but the send button
+ *                  is replaced with a cancel button.
+ */
+export type ChatInputSubmissionState = 'idle' | 'submitting' | 'streaming';
 
 interface ChatInputProps {
   modelId: string | undefined;
-  agentId: string | undefined;
   sources: {
     id: string;
     name: string;
     type: SourceResponseDtoType;
+    fileType?: FileSourceResponseDtoFileType;
     createdBy?: SourceResponseDtoCreatedBy;
+    status?: SourceResponseDtoStatus;
+    processingError?: string;
   }[];
   knowledgeBases?: KnowledgeBaseSummary[];
-  isStreaming?: boolean;
-  isCreatingFileSource?: boolean;
-  isModelChangeDisabled: boolean;
-  isAgentChangeDisabled?: boolean;
+  mcpIntegrations?: IntegrationSummary[];
+  /** Default `'idle'`. See {@link ChatInputSubmissionState}. */
+  submissionState?: ChatInputSubmissionState;
+  /**
+   * Extra reason to disable the send button even when `submissionState` is
+   * `'idle'` — e.g. existing-chat sources still processing server-side.
+   */
+  isSendDisabled?: boolean;
+  isModelChangeDisabled?: boolean;
   isAnonymousChangeDisabled?: boolean;
   onModelChange: (modelId: string) => void;
-  onAgentChange: (agentId: string) => void;
-  onAgentRemove: (agentId: string) => void;
-  onFileUpload: (file: File) => void;
+  onFileUpload: (files: File[]) => void;
   onRemoveSource: (sourceId: string) => void;
   onDownloadSource: (sourceId: string) => void;
   onAddKnowledgeBase?: (knowledgeBase: KnowledgeBaseSummary) => void;
   onRemoveKnowledgeBase?: (knowledgeBaseId: string) => void;
+  onAddIntegration?: (integration: IntegrationSummary) => void;
+  onRemoveIntegration?: (integrationId: string) => void;
   onSend: (
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
     skillId?: string,
   ) => void;
-  onSendCancelled: () => void;
+  /** Fired when the user clicks the cancel button while in-flight. */
+  onCancel: () => void;
   selectedSkillId?: string;
   selectedSkillName?: string;
   onSkillRemove?: () => void;
-  prefilledPrompt?: string;
   isEmbeddingModelEnabled: boolean;
   /** Whether anonymous mode is enabled (PII redaction). Only shown for new chats. */
   isAnonymous: boolean;
@@ -84,25 +107,23 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
   (
     {
       modelId,
-      agentId,
       sources,
       knowledgeBases,
-      isStreaming,
-      isCreatingFileSource,
+      mcpIntegrations,
+      submissionState = 'idle',
+      isSendDisabled,
       isModelChangeDisabled,
-      isAgentChangeDisabled,
       isAnonymousChangeDisabled,
       onModelChange,
-      onAgentChange,
-      onAgentRemove,
       onFileUpload,
       onRemoveSource,
       onDownloadSource,
       onAddKnowledgeBase,
       onRemoveKnowledgeBase,
+      onAddIntegration,
+      onRemoveIntegration,
       onSend,
-      onSendCancelled,
-      prefilledPrompt,
+      onCancel,
       isEmbeddingModelEnabled,
       isAnonymous,
       onAnonymousChange,
@@ -115,10 +136,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     ref,
   ) => {
     const [isFocused, setIsFocused] = useState<boolean>(false);
-    const [message, setMessage] = useState(prefilledPrompt ?? '');
+    const [message, setMessage] = useState('');
+    const isSubmitting = submissionState === 'submitting';
+    const inFlight = submissionState !== 'idle';
     const { t } = useTranslation('common');
-    const isAgentsEnabled = useIsAgentsEnabled();
-    const { agents } = useAgents({ enabled: isAgentsEnabled });
     const containerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -148,7 +169,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
           showError(t('chatInput.imageLimitExceeded', { max: MAX_IMAGES }));
         }
       },
-      isDocumentUploadEnabled: isEmbeddingModelEnabled && !isCreatingFileSource,
+      isDocumentUploadEnabled: isEmbeddingModelEnabled && !inFlight,
       isImageUploadEnabled: isVisionEnabled,
       acceptedDocumentExtensions: [
         '.pdf',
@@ -164,7 +185,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     useImperativeHandle(ref, () => ({
       setMessage,
       sendMessage: (text: string) => {
-        if (!text.trim() || !(modelId || agentId)) return;
+        if (!text.trim() || !modelId) return;
         onSend(text);
       },
     }));
@@ -172,7 +193,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const handleSend = () => {
       if (
         (!message.trim() && pendingImages.length === 0 && !selectedSkillId) ||
-        !(modelId || agentId)
+        !modelId ||
+        inFlight ||
+        isSendDisabled
       ) {
         return;
       }
@@ -188,7 +211,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         imageFiles.length > 0 ? imageFiles : undefined,
         selectedSkillId,
       );
-      setMessage('');
+      // Note: we deliberately do NOT clear `message` here. Parents can call
+      // `chatInputRef.current.setMessage('')` once the submit has actually
+      // committed (e.g. after navigation). This way the typed text survives
+      // the upload pipeline and any cancellation/error.
       clearImages();
     };
 
@@ -203,10 +229,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         exclusive: true,
       },
     );
-
-    const handlePromptSelect = (promptContent: string) => {
-      setMessage((prev) => (prev ? `${prev} ${promptContent}` : promptContent));
-    };
 
     const handleImageSelect = (files: FileList | null) => {
       if (!files) return;
@@ -223,8 +245,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
 
     const canSend =
       (message.trim() || pendingImages.length > 0 || selectedSkillId) &&
-      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: empty string should use fallback
-      (modelId || agentId);
+      modelId &&
+      !inFlight &&
+      !isSendDisabled;
 
     function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
       // Ensure emojis are preserved when pasting
@@ -272,8 +295,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               <SourcesList
                 sources={sources}
                 knowledgeBases={knowledgeBases}
+                mcpIntegrations={mcpIntegrations}
                 onRemove={onRemoveSource}
                 onRemoveKnowledgeBase={onRemoveKnowledgeBase}
+                onRemoveIntegration={onRemoveIntegration}
                 onDownload={onDownloadSource}
               />
 
@@ -294,13 +319,17 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                 maxRows={10}
                 value={message}
                 autoFocus
+                readOnly={isSubmitting}
                 onChange={(e) => setMessage(e.target.value)}
                 onPaste={handlePaste}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 placeholder={t('chatInput.placeholder')}
                 aria-label={t('chatInput.placeholder')}
-                className="border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0"
+                className={cn(
+                  'border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0',
+                  isSubmitting && 'opacity-60 cursor-not-allowed',
+                )}
                 data-testid="input"
               />
 
@@ -310,36 +339,25 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                   <PlusButton
                     onFileUpload={onFileUpload}
                     onImageSelect={handleImageSelect}
-                    isFileSourceDisabled={!isEmbeddingModelEnabled}
-                    isCreatingFileSource={isCreatingFileSource}
-                    onPromptSelect={handlePromptSelect}
-                    isImageUploadDisabled={!isVisionEnabled}
+                    isFileSourceDisabled={
+                      !isEmbeddingModelEnabled || isSubmitting
+                    }
+                    isImageUploadDisabled={!isVisionEnabled || isSubmitting}
                     onKnowledgeBaseSelect={onAddKnowledgeBase}
                     attachedKnowledgeBaseIds={knowledgeBases?.map(
                       (kb) => kb.id,
                     )}
+                    onIntegrationSelect={onAddIntegration}
+                    attachedIntegrationIds={mcpIntegrations?.map(
+                      (integration) => integration.id,
+                    )}
                   />
-                  {isAgentsEnabled && (
-                    <AgentButton
-                      selectedAgentId={agentId}
-                      onAgentChange={onAgentChange}
-                      isDisabled={isAgentChangeDisabled}
-                    />
-                  )}
                   <AnonymousButton
                     isAnonymous={isAnonymous}
                     onAnonymousChange={onAnonymousChange}
                     isDisabled={isAnonymousChangeDisabled}
                     isEnforced={isAnonymousEnforced}
                   />
-                  {isAgentsEnabled && agentId && (
-                    <AgentBadge
-                      agentId={agentId}
-                      agent={agents.find((a) => a.id === agentId)}
-                      isDisabled={isAgentChangeDisabled ?? false}
-                      onRemove={onAgentRemove}
-                    />
-                  )}
                   {selectedSkillId && selectedSkillName && onSkillRemove && (
                     <SkillBadge
                       skillName={selectedSkillName}
@@ -350,11 +368,11 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
 
                 <div className="flex-shrink-0 flex space-x-2">
                   <TooltipIf
-                    condition={isModelChangeDisabled}
+                    condition={isModelChangeDisabled ?? false}
                     tooltip={t('chatInput.modelChangeDisabledTooltip')}
                   >
                     <ModelSelector
-                      isDisabled={isModelChangeDisabled}
+                      isDisabled={isModelChangeDisabled ?? false}
                       selectedModelId={modelId}
                       onModelChange={onModelChange}
                     />
@@ -374,10 +392,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     }}
                   />
                   <SendButton
-                    isStreaming={!!isStreaming}
+                    inFlight={inFlight}
                     canSend={!!canSend}
                     onSend={handleSend}
-                    onCancel={onSendCancelled}
+                    onCancel={onCancel}
                   />
                 </div>
               </div>

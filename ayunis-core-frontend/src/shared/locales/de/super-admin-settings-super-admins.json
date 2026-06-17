@@ -1,0 +1,48 @@
+{
+  "header": {
+    "title": "Super-Admins",
+    "description": "Benutzer mit Super-Admin-Zugriff plattformweit verwalten."
+  },
+  "actions": {
+    "addSuperAdmin": "Super-Admin hinzufügen",
+    "remove": "Entfernen"
+  },
+  "dialog": {
+    "title": "Super-Admin hinzufügen",
+    "description": "Geben Sie die E-Mail-Adresse eines bestehenden Benutzers ein, um Super-Admin-Zugriff zu gewähren.",
+    "emailLabel": "E-Mail-Adresse",
+    "emailPlaceholder": "benutzer@beispiel.de",
+    "emailRequired": "E-Mail-Adresse ist erforderlich",
+    "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+    "cancel": "Abbrechen",
+    "add": "Super-Admin hinzufügen",
+    "adding": "Wird hinzugefügt..."
+  },
+  "table": {
+    "name": "Name",
+    "email": "E-Mail"
+  },
+  "empty": {
+    "title": "Keine Super-Admins",
+    "description": "Super-Admins, die Sie hinzufügen, werden hier angezeigt."
+  },
+  "addSuperAdmin": {
+    "success": "Benutzer zum Super-Admin befördert",
+    "error": "Super-Admin konnte nicht hinzugefügt werden. Stellen Sie sicher, dass die E-Mail einem bestehenden Benutzer gehört.",
+    "errorNotFound": "Kein Benutzer mit dieser E-Mail-Adresse gefunden."
+  },
+  "confirmRemove": {
+    "title": "Super-Admin entfernen",
+    "description": "Möchten Sie den Super-Admin-Zugriff von {{name}} wirklich entfernen?",
+    "confirmText": "Entfernen",
+    "cancelText": "Abbrechen"
+  },
+  "removeSuperAdmin": {
+    "success": "Super-Admin-Status entfernt",
+    "error": "Super-Admin-Status konnte nicht entfernt werden.",
+    "errorSelfDemotion": "Sie können Ihren eigenen Super-Admin-Status nicht entfernen.",
+    "errorLastAdmin": "Der letzte Super-Admin kann nicht entfernt werden.",
+    "errorNotSuperAdmin": "Dieser Benutzer ist kein Super-Admin.",
+    "errorNotFound": "Benutzer nicht gefunden."
+  }
+}

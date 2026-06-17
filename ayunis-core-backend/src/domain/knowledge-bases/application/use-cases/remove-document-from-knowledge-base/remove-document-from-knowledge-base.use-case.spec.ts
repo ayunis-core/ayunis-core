@@ -40,7 +40,8 @@ describe('RemoveDocumentFromKnowledgeBaseUseCase', () => {
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
-    } as jest.Mocked<KnowledgeBaseRepository>;
+      countSourcesByKnowledgeBaseId: jest.fn(),
+    };
 
     mockDeleteSourceUseCase = {
       execute: jest.fn(),
@@ -74,8 +75,6 @@ describe('RemoveDocumentFromKnowledgeBaseUseCase', () => {
       url: 'https://stadt.de/protokoll',
       name: 'Protokoll März 2025',
       type: TextType.WEB,
-      text: 'Protokoll Inhalt',
-      contentChunks: [],
     });
     mockRepository.findSourceByIdAndKnowledgeBaseId.mockResolvedValue(source);
     mockDeleteSourceUseCase.execute.mockResolvedValue(undefined);

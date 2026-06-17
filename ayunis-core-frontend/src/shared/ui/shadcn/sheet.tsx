@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/prefer-read-only-props */
 import * as React from 'react';
 import * as SheetPrimitive from '@radix-ui/react-dialog';
 import { XIcon } from 'lucide-react';
@@ -6,9 +7,7 @@ import { cn } from '@/shared/lib/shadcn/utils';
 
 function Sheet({
   ...props
-}: Readonly<
-  React.ComponentProps<typeof SheetPrimitive.Root>
->): React.ReactElement {
+}: React.ComponentProps<typeof SheetPrimitive.Root>): React.ReactElement {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
 }
 
@@ -26,9 +25,7 @@ function SheetClose({
 
 function SheetPortal({
   ...props
-}: Readonly<
-  React.ComponentProps<typeof SheetPrimitive.Portal>
->): React.ReactElement {
+}: React.ComponentProps<typeof SheetPrimitive.Portal>): React.ReactElement {
   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
 }
 

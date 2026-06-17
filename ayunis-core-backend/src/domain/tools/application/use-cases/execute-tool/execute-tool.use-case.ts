@@ -1,10 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-//import Ajv from 'ajv';
 import { ToolHandlerRegistry } from '../../tool-handler.registry';
-import {
-  ToolExecutionFailedError,
-  //ToolInvalidInputError,
-} from '../../tools.errors';
+import { ToolExecutionFailedError } from '../../tools.errors';
 import { ExecuteToolCommand } from './execute-tool.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 
@@ -20,19 +16,6 @@ export class ExecuteToolUseCase {
       input: command.input,
       parameters: command.tool.parameters,
     });
-
-    // Validate the input against the tool's parameters schema
-    // const ajv = new Ajv();
-    // const validate = ajv.compile(command.tool.parameters);
-    // if (!validate(command.input)) {
-    //   this.logger.error('Invalid input', command.input);
-    //   throw new ToolInvalidInputError({
-    //     toolName: command.tool.name,
-    //     metadata: {
-    //       errors: validate.errors,
-    //     },
-    //   });
-    // }
 
     try {
       const handler = this.toolHandlerRegistry.getHandler(command.tool);

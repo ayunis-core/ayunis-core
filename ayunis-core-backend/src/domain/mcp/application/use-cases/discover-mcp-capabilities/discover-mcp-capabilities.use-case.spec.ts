@@ -128,7 +128,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         description: 'Tool description',
         inputSchema: { type: 'object', properties: {}, required: [] },
       },
-    ] as any);
+    ]);
     mcpClientService.listResources.mockResolvedValue([
       {
         uri: 'file://static.txt',
@@ -136,7 +136,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         description: 'Static description',
         mimeType: 'text/plain',
       },
-    ] as any);
+    ]);
     mcpClientService.listResourceTemplates.mockResolvedValue([
       {
         uri: 'dynamic://{id}',
@@ -144,14 +144,14 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         description: 'Dynamic description',
         mimeType: 'application/json',
       },
-    ] as any);
+    ]);
     mcpClientService.listPrompts.mockResolvedValue([
       {
         name: 'test_prompt',
         description: 'Prompt description',
         arguments: [{ name: 'arg', required: true }],
       },
-    ] as any);
+    ]);
   };
 
   describe('execute', () => {

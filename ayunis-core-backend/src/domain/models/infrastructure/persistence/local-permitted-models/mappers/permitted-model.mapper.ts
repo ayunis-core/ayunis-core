@@ -1,5 +1,6 @@
 import {
   PermittedEmbeddingModel,
+  PermittedImageGenerationModel,
   PermittedLanguageModel,
   PermittedModel,
 } from '../../../../domain/permitted-model.entity';
@@ -8,6 +9,7 @@ import { Injectable } from '@nestjs/common';
 import { ModelMapper } from '../../local-models/mappers/model.mapper';
 import {
   EmbeddingModelRecord,
+  ImageGenerationModelRecord,
   LanguageModelRecord,
 } from '../../local-models/schema/model.record';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
@@ -25,6 +27,8 @@ export class PermittedModelMapper {
         orgId: record.orgId,
         isDefault: record.isDefault,
         anonymousOnly: record.anonymousOnly,
+        scope: record.scope,
+        scopeId: record.scopeId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       });
@@ -36,6 +40,21 @@ export class PermittedModelMapper {
         orgId: record.orgId,
         isDefault: record.isDefault,
         anonymousOnly: record.anonymousOnly,
+        scope: record.scope,
+        scopeId: record.scopeId,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+      });
+    }
+    if (record.model instanceof ImageGenerationModelRecord) {
+      return new PermittedImageGenerationModel({
+        id: record.id,
+        model: this.modelMapper.toDomain(record.model),
+        orgId: record.orgId,
+        isDefault: record.isDefault,
+        anonymousOnly: record.anonymousOnly,
+        scope: record.scope,
+        scopeId: record.scopeId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       });
@@ -51,6 +70,8 @@ export class PermittedModelMapper {
     record.orgId = domain.orgId;
     record.isDefault = domain.isDefault;
     record.anonymousOnly = domain.anonymousOnly;
+    record.scope = domain.scope;
+    record.scopeId = domain.scopeId;
     record.createdAt = domain.createdAt;
     record.updatedAt = domain.updatedAt;
     return record;

@@ -3,11 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { Usage } from '../../../domain/usage.entity';
-import { UsageConstants } from '../../../domain/value-objects/usage.constants';
 import {
   UsageRepository,
   ProviderUsage,
   ModelDistribution,
+  type UserUsageResult,
 } from '../../../application/ports/usage.repository';
 import { GetProviderUsageQuery } from '../../../application/use-cases/get-provider-usage/get-provider-usage.query';
 import { GetModelDistributionQuery } from '../../../application/use-cases/get-model-distribution/get-model-distribution.query';
@@ -23,11 +23,9 @@ import { getProviderStats } from './queries/get-provider-stats.db-query';
 import { getModelStats } from './queries/get-model-stats.db-query';
 import { getTopModels } from './queries/get-top-models.db-query';
 import { getProviderTimeSeries as queryProviderTimeSeries } from './queries/get-provider-time-series.db-query';
-import { getGlobalProviderStats } from './queries/get-global-provider-stats.db-query';
-import { getGlobalProviderTimeSeries } from './queries/get-global-provider-time-series.db-query';
-import { getGlobalModelStats } from './queries/get-global-model-stats.db-query';
 import { getUserUsageRows } from './queries/get-user-usage-rows.db-query';
 import { countUsersForUserUsage } from './queries/count-users-for-user-usage.db-query';
+import { sumCreditsForOrg } from './queries/sum-credits-for-org.db-query';
 import { findUsageRecordsByOrganization } from './queries/find-usage-records-by-organization.db-query';
 import { findUsageRecordsByUser } from './queries/find-usage-records-by-user.db-query';
 import { findUsageRecordsByModel } from './queries/find-usage-records-by-model.db-query';
@@ -35,11 +33,6 @@ import { getUsageAggregateStats } from './queries/get-usage-aggregate-stats.db-q
 import { countActiveUsersSince } from './queries/count-active-users-since.db-query';
 import { countUsagesInRange } from './queries/count-usages-in-range.db-query';
 import { UsageQueryMapper } from './mappers/usage-query.mapper';
-import { GetGlobalProviderUsageQuery } from '../../../application/use-cases/get-global-provider-usage/get-global-provider-usage.query';
-import { GetGlobalModelDistributionQuery } from '../../../application/use-cases/get-global-model-distribution/get-global-model-distribution.query';
-import { GetGlobalUserUsageQuery } from '../../../application/use-cases/get-global-user-usage/get-global-user-usage.query';
-import { GlobalUserUsageItem } from '../../../domain/global-user-usage-item.entity';
-import { getGlobalUserUsageRows } from './queries/get-global-user-usage-rows.db-query';
 
 @Injectable()
 export class LocalUsageRepository extends UsageRepository {
@@ -112,39 +105,39 @@ export class LocalUsageRepository extends UsageRepository {
     query: GetProviderUsageQuery,
   ): Promise<ProviderUsage[]> {
     // Get aggregated provider usage
-    const providerStats = await getProviderStats(
-      this.usageRepository,
-      query.organizationId,
-      query.startDate,
-      query.endDate,
-      query.provider,
-      query.modelId,
-    );
+    const providerStats = await getProviderStats({
+      usageRepository: this.usageRepository,
+      organizationId: query.organizationId,
+      startDate: query.startDate,
+      endDate: query.endDate,
+      provider: query.provider,
+      modelId: query.modelId,
+    });
 
-    const totalTokens = providerStats.reduce(
-      (sum, stat) => sum + parseInt(stat.tokens, 10),
+    const totalCredits = providerStats.reduce(
+      (sum, stat) => sum + (Number(stat.credits) || 0),
       0,
     );
 
     const results: ProviderUsage[] = [];
     for (const stat of providerStats) {
       const timeSeriesRows = query.includeTimeSeriesData
-        ? await queryProviderTimeSeries(
-            this.usageRepository,
-            query.organizationId,
-            String(stat.provider),
-            query.startDate,
-            query.endDate,
-            query.modelId,
-          )
+        ? await queryProviderTimeSeries({
+            usageRepository: this.usageRepository,
+            organizationId: query.organizationId,
+            provider: String(stat.provider),
+            startDate: query.startDate,
+            endDate: query.endDate,
+            modelId: query.modelId,
+          })
         : [];
       const timeSeries =
         this.usageQueryMapper.mapTimeSeriesRows(timeSeriesRows);
       results.push(
-        this.usageQueryMapper.mapProviderRow(stat, totalTokens, timeSeries),
+        this.usageQueryMapper.mapProviderRow(stat, totalCredits, timeSeries),
       );
     }
-    return results.sort((a, b) => b.tokens - a.tokens);
+    return results.sort((a, b) => b.credits - a.credits);
   }
 
   async getModelDistribution(
@@ -161,17 +154,13 @@ export class LocalUsageRepository extends UsageRepository {
     return this.usageQueryMapper.mapModelStatsToDistribution(modelStats).items;
   }
 
-  async getUserUsage(
-    query: GetUserUsageQuery,
-  ): Promise<Paginated<UserUsageItem>> {
+  async getUserUsage(query: GetUserUsageQuery): Promise<UserUsageResult> {
     // Determine sort field and order
-    const sortField = this.mapSortFieldForUsers(query.sortBy || 'tokens');
-    const sortOrder = (query.sortOrder || 'desc').toUpperCase() as
-      | 'ASC'
-      | 'DESC';
+    const sortField = this.mapSortFieldForUsers(query.sortBy);
+    const sortOrder = query.sortOrder.toUpperCase() as 'ASC' | 'DESC';
 
-    // Fetch total count for pagination and rows via query helpers
-    const [total, userStats] = await Promise.all([
+    // Fetch total count, credit sum, and rows in parallel
+    const [total, totalCredits, userStats] = await Promise.all([
       countUsersForUserUsage({
         userRepository: this.userRepository,
         organizationId: query.organizationId,
@@ -179,6 +168,13 @@ export class LocalUsageRepository extends UsageRepository {
         endDate: query.endDate,
         searchTerm: query.searchTerm,
       }),
+
+      sumCreditsForOrg(
+        this.usageRepository,
+        query.organizationId,
+        query.startDate,
+        query.endDate,
+      ),
 
       getUserUsageRows({
         userRepository: this.userRepository,
@@ -194,25 +190,28 @@ export class LocalUsageRepository extends UsageRepository {
     ]);
 
     const users = userStats.map((stat) => {
-      const { tokens, requests, lastActivity } = this.mapUsageRow(stat);
+      const { credits, requests, lastActivity } = this.mapUsageRow(stat);
 
       return new UserUsageItem({
         userId: stat.userId as unknown as UUID,
-        userName: stat.userName || '',
-        userEmail: stat.userEmail || '',
-        tokens,
+        userName: stat.userName ?? '',
+        userEmail: stat.userEmail ?? '',
+        credits,
         requests,
         lastActivity,
         isActive: UserUsageItem.computeIsActive(lastActivity),
       });
     });
 
-    return new Paginated<UserUsageItem>({
-      data: users,
-      limit: query.limit,
-      offset: query.offset,
-      total,
-    });
+    return {
+      users: new Paginated<UserUsageItem>({
+        data: users,
+        limit: query.limit,
+        offset: query.offset,
+        total,
+      }),
+      totalCredits,
+    };
   }
 
   async getUsageStats(query: GetUsageStatsQuery): Promise<UsageStats> {
@@ -222,7 +221,7 @@ export class LocalUsageRepository extends UsageRepository {
       query.startDate,
       query.endDate,
     )) ?? {
-      totalTokens: '0',
+      totalCredits: '0',
       totalRequests: '0',
       totalUsers: '0',
     };
@@ -247,8 +246,7 @@ export class LocalUsageRepository extends UsageRepository {
     const topModels = this.usageQueryMapper.mapTopModelRows(topModelsResult);
 
     return new UsageStats({
-      totalTokens:
-        (stats.totalTokens ? parseInt(stats.totalTokens, 10) : 0) || 0,
+      totalCredits: (stats.totalCredits ? Number(stats.totalCredits) : 0) || 0,
       totalRequests: parseInt(stats.totalRequests, 10) || 0,
       activeUsers,
       totalUsers: parseInt(stats.totalUsers, 10) || 0,
@@ -269,89 +267,27 @@ export class LocalUsageRepository extends UsageRepository {
     );
   }
 
-  async getGlobalProviderUsage(
-    query: GetGlobalProviderUsageQuery,
-  ): Promise<ProviderUsage[]> {
-    const providerStats = await getGlobalProviderStats(
-      this.usageRepository,
-      query.startDate,
-      query.endDate,
-      query.provider,
-      query.modelId,
-    );
+  async getMonthlyCreditUsage(
+    organizationId: UUID,
+    monthStart: Date,
+  ): Promise<number> {
+    const result = await this.usageRepository
+      .createQueryBuilder('usage')
+      .select('COALESCE(SUM(usage.creditsConsumed), 0)', 'total')
+      .where('usage.organizationId = :organizationId', { organizationId })
+      .andWhere('usage.createdAt >= :monthStart', { monthStart })
+      .getRawOne<{ total: string }>();
 
-    const totalTokens = providerStats.reduce(
-      (sum, stat) => sum + parseInt(stat.tokens, 10),
-      0,
-    );
-
-    const results: ProviderUsage[] = [];
-    for (const stat of providerStats) {
-      const timeSeriesRows = query.includeTimeSeriesData
-        ? await getGlobalProviderTimeSeries(
-            this.usageRepository,
-            String(stat.provider),
-            query.startDate,
-            query.endDate,
-            query.modelId,
-          )
-        : [];
-      const timeSeries =
-        this.usageQueryMapper.mapTimeSeriesRows(timeSeriesRows);
-      results.push(
-        this.usageQueryMapper.mapProviderRow(stat, totalTokens, timeSeries),
-      );
-    }
-    return results.sort((a, b) => b.tokens - a.tokens);
-  }
-
-  async getGlobalModelDistribution(
-    query: GetGlobalModelDistributionQuery,
-  ): Promise<ModelDistribution[]> {
-    const modelStats = await getGlobalModelStats(
-      this.usageRepository,
-      query.startDate,
-      query.endDate,
-      query.modelId,
-    );
-
-    return this.usageQueryMapper.mapModelStatsToDistribution(modelStats).items;
-  }
-
-  async getGlobalUserUsage(
-    query: GetGlobalUserUsageQuery,
-  ): Promise<GlobalUserUsageItem[]> {
-    const rows = await getGlobalUserUsageRows({
-      usageRepository: this.usageRepository,
-      userRepository: this.userRepository,
-      startDate: query.startDate,
-      endDate: query.endDate,
-      limit: UsageConstants.GLOBAL_USER_USAGE_LIMIT,
-    });
-
-    return rows.map((row) => {
-      const { tokens, requests, lastActivity } = this.mapUsageRow(row);
-
-      return new GlobalUserUsageItem({
-        userId: row.userId as unknown as UUID,
-        userName: row.userName || '',
-        userEmail: row.userEmail || '',
-        tokens,
-        requests,
-        lastActivity,
-        isActive: UserUsageItem.computeIsActive(lastActivity),
-        organizationName: row.organizationName || '',
-      });
-    });
+    return parseFloat(result?.total ?? '0') || 0;
   }
 
   private mapUsageRow(row: {
-    tokens?: string | null;
+    credits?: string | null;
     requests?: string | null;
     lastActivity?: Date | string | null;
-  }): { tokens: number; requests: number; lastActivity: Date | null } {
+  }): { credits: number; requests: number; lastActivity: Date | null } {
     return {
-      tokens: row.tokens ? parseInt(row.tokens, 10) : 0,
+      credits: row.credits ? Math.round(parseFloat(row.credits)) : 0,
       requests: row.requests ? parseInt(row.requests, 10) : 0,
       lastActivity: row.lastActivity ? new Date(row.lastActivity) : null,
     };
@@ -359,8 +295,8 @@ export class LocalUsageRepository extends UsageRepository {
 
   private mapSortFieldForUsers(sortBy: string): string {
     switch (sortBy) {
-      case 'tokens':
-        return 'COALESCE(SUM(usage.totalTokens), 0)';
+      case 'credits':
+        return 'COALESCE(SUM(usage.creditsConsumed), 0)';
       case 'requests':
         return 'COUNT(usage.id)';
       case 'lastActivity':
@@ -368,7 +304,7 @@ export class LocalUsageRepository extends UsageRepository {
       case 'userName':
         return 'user.name';
       default:
-        return 'COALESCE(SUM(usage.totalTokens), 0)';
+        return 'COALESCE(SUM(usage.creditsConsumed), 0)';
     }
   }
 }

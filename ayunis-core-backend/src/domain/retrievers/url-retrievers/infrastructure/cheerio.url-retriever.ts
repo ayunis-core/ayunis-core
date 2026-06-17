@@ -11,8 +11,13 @@ import {
   UrlRetrieverTimeoutError,
   UrlRetrieverHttpError,
   UrlRetrieverParsingError,
-  UrlRetrieverError,
+  UrlRetrieverUnsupportedContentTypeError,
+  UrlRetrieverTooManyRedirectsError,
 } from '../application/url-retriever.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
+
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+const MAX_REDIRECTS = 5;
 
 @Injectable()
 export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
@@ -21,95 +26,178 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
 
   constructor(private readonly configService: ConfigService) {
     super();
-    this.defaultTimeout = this.configService.get<number>('url.timeout') || 5000;
+    this.defaultTimeout = this.configService.get<number>('url.timeout') ?? 5000;
   }
 
   async retrieveUrl(input: UrlRetrieverInput): Promise<UrlRetrieverResult> {
     try {
-      this.logger.debug(`Retrieving URL: ${input.url} with Cheerio handler`);
-
-      // Create AbortController for timeout handling
-      const timeout = (input.options?.timeout as number) || this.defaultTimeout;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-      try {
-        // Make the HTTP request with fetch
-        const response = await fetch(input.url, {
-          signal: controller.signal,
-          headers: {
-            'User-Agent': 'Ayunis/1.0',
-          },
-        });
-
-        // Clear the timeout
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          throw new UrlRetrieverHttpError(input.url, response.status, {
-            statusText: response.statusText,
-          });
-        }
-
-        // Get HTML content
-        const html = await response.text();
-
-        try {
-          // Extract text content from HTML using cheerio
-          const $ = cheerio.load(html);
-
-          // Remove script and style elements that contain non-readable content
-          $('script, style, meta, link').remove();
-
-          // Get the text content
-          const textContent = $('body').text();
-
-          // Clean up the text (remove extra whitespace)
-          const cleanedText = textContent.replace(/\s+/g, ' ').trim();
-
-          // Get the website title
-          const websiteTitle = $('title').text();
-
-          return new UrlRetrieverResult(cleanedText, input.url, websiteTitle);
-        } catch (error) {
-          throw new UrlRetrieverParsingError(
-            input.url,
-            error instanceof Error ? error.message : 'Unknown error',
-            {
-              error: error instanceof Error ? error.stack : 'Unknown error',
-            },
-          );
-        }
-      } catch (error) {
-        // Clear the timeout if not already cleared
-        clearTimeout(timeoutId);
-
-        if (error instanceof Error && error.name === 'AbortError') {
-          throw new UrlRetrieverTimeoutError(input.url, timeout, {
-            originalError:
-              error instanceof Error ? error.message : 'Unknown error',
-          });
-        }
-        throw error; // Re-throw for the outer catch block
-      }
+      return await this.fetchAndParse(input);
     } catch (error) {
-      // Log the error with appropriate details
-      this.logger.error(
-        `HTTP URL retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error instanceof Error ? error.stack : 'Unknown error',
-      );
+      return this.handleTopLevelError(error, input.url);
+    }
+  }
 
-      // If error is already one of our domain errors, rethrow it
-      if (error instanceof UrlRetrieverError) {
-        throw error;
+  private async fetchAndParse(
+    input: UrlRetrieverInput,
+  ): Promise<UrlRetrieverResult> {
+    this.logger.debug(`Retrieving URL: ${input.url} with Cheerio handler`);
+
+    const timeout =
+      (input.options?.timeout as number | undefined) ?? this.defaultTimeout;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const { response, finalUrl } = await this.fetchFollowingRedirects(
+        input,
+        controller.signal,
+      );
+      clearTimeout(timeoutId);
+
+      this.validateResponse(response, finalUrl);
+
+      const contentType =
+        response.headers.get('content-type')?.toLowerCase() ?? '';
+      const body = await response.text();
+
+      if (contentType.includes('text/plain')) {
+        return new UrlRetrieverResult(body.trim(), finalUrl, '');
       }
 
-      // Otherwise wrap in a generic retrieval error
-      throw new UrlRetrieverRetrievalError(`Failed to retrieve URL with HTTP`, {
-        url: input.url,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : 'Unknown error',
+      return this.parseHtml(body, finalUrl);
+    } catch (error) {
+      clearTimeout(timeoutId);
+
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new UrlRetrieverTimeoutError(input.url, timeout, {
+          originalError: error.message,
+        });
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Follows HTTP redirects manually (redirect: 'manual') so the org crawl gate
+   * can re-assert access on each hop BEFORE the target is contacted — otherwise
+   * a crawl could be bounced onto a host bound to another org (AYC-190).
+   */
+  private async fetchFollowingRedirects(
+    input: UrlRetrieverInput,
+    signal: AbortSignal,
+  ): Promise<{ response: Response; finalUrl: string }> {
+    let currentUrl = input.url;
+
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      const response = await fetch(currentUrl, {
+        signal,
+        headers: { 'User-Agent': 'Ayunis/1.0' },
+        redirect: 'manual',
+      });
+
+      const location = response.headers.get('location');
+      if (!REDIRECT_STATUSES.has(response.status) || !location) {
+        return { response, finalUrl: currentUrl };
+      }
+
+      const nextUrl = new URL(location, currentUrl).href;
+      // Re-assert the gate before following; throwing rejects the redirect.
+      await input.onRedirect?.(nextUrl);
+      currentUrl = nextUrl;
+    }
+
+    throw new UrlRetrieverTooManyRedirectsError(input.url, MAX_REDIRECTS);
+  }
+
+  private validateResponse(response: Response, url: string): void {
+    if (!response.ok) {
+      throw new UrlRetrieverHttpError(url, response.status, {
+        statusText: response.statusText,
       });
     }
+
+    const contentType =
+      response.headers.get('content-type')?.toLowerCase() ?? '';
+    if (
+      contentType &&
+      !contentType.includes('text/html') &&
+      !contentType.includes('text/plain') &&
+      !contentType.includes('xhtml')
+    ) {
+      throw new UrlRetrieverUnsupportedContentTypeError(
+        url,
+        contentType.split(';')[0].trim(),
+      );
+    }
+  }
+
+  private parseHtml(html: string, url: string): UrlRetrieverResult {
+    try {
+      const $ = cheerio.load(html);
+
+      // Extract links before stripping tags — anchors live in the body.
+      const links = this.extractLinks($, url);
+
+      $('script, style, meta, link').remove();
+
+      const textContent = $('body').text();
+      const cleanedText = textContent.replace(/\s+/g, ' ').trim();
+      const websiteTitle = $('title').text();
+
+      return new UrlRetrieverResult(cleanedText, url, websiteTitle, {}, links);
+    } catch (error) {
+      throw new UrlRetrieverParsingError(
+        url,
+        error instanceof Error ? error.message : 'Unknown error',
+        { error: error instanceof Error ? error.stack : 'Unknown error' },
+      );
+    }
+  }
+
+  /**
+   * Collect absolute http(s) links from anchor tags, resolving relative hrefs
+   * against the page URL. Fragments are stripped and duplicates removed so the
+   * crawler sees each target page once.
+   */
+  private extractLinks($: cheerio.CheerioAPI, baseUrl: string): string[] {
+    const links = new Set<string>();
+
+    $('a[href]').each((_, element) => {
+      const href = $(element).attr('href');
+      if (!href) return;
+
+      try {
+        const resolved = new URL(href, baseUrl);
+        if (resolved.protocol !== 'http:' && resolved.protocol !== 'https:') {
+          return;
+        }
+        resolved.hash = '';
+        links.add(resolved.toString());
+      } catch {
+        // Malformed href — skip it.
+      }
+    });
+
+    return [...links];
+  }
+
+  private handleTopLevelError(error: unknown, url: string): never {
+    this.logger.error(
+      `HTTP URL retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      error instanceof Error ? error.stack : 'Unknown error',
+    );
+
+    // Preserve domain errors (UrlRetrieverError) AND gate denials
+    // (CrawlDomainAccessDeniedError, 404) — both extend ApplicationError and
+    // must keep their own status rather than being rewritten to a 422.
+    if (error instanceof ApplicationError) {
+      throw error;
+    }
+
+    throw new UrlRetrieverRetrievalError('Failed to retrieve URL with HTTP', {
+      url,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'Unknown error',
+    });
   }
 }

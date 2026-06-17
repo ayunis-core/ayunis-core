@@ -12,6 +12,10 @@ import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/
 import { SendInvitationEmailUseCase } from '../send-invitation-email/send-invitation-email.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
+import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
+import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
+import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
+import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import {
   BulkInviteValidationFailedError,
   InvalidSeatsError,
@@ -410,24 +414,66 @@ describe('CreateBulkInvitesUseCase', () => {
     ) => ({
       availableSeats,
       nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      subscription: {
+      subscription: new SeatBasedSubscription({
         id: 'sub-id' as any,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        cancelledAt: null,
         orgId: mockOrgId,
         noOfSeats,
         pricePerSeat: 0,
-        renewalCycle: 'monthly' as any,
+        renewalCycle: RenewalCycle.MONTHLY,
         renewalCycleAnchor: new Date(),
-        billingInfo: {
-          id: 'bill',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          currency: 'USD',
-          status: 'active',
-        } as any,
-      },
+        billingInfo: new SubscriptionBillingInfo({
+          companyName: 'Test',
+          street: 'Test St',
+          houseNumber: '1',
+          postalCode: '12345',
+          city: 'Test',
+          country: 'DE',
+        }),
+      }),
+    });
+
+    it('should skip seat management for usage-based subscription in cloud instance', async () => {
+      const command = new CreateBulkInvitesCommand({
+        invites: [
+          { email: 'user1@example.com', role: UserRole.USER },
+          { email: 'user2@example.com', role: UserRole.USER },
+        ],
+        orgId: mockOrgId,
+        userId: mockUserId,
+      });
+
+      const mockUsageSubscription = {
+        availableSeats: null,
+        nextRenewalDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        subscription: new UsageBasedSubscription({
+          id: 'sub-id' as any,
+          orgId: mockOrgId,
+          monthlyCredits: 500,
+          billingInfo: new SubscriptionBillingInfo({
+            companyName: 'Gemeinde Musterstadt',
+            street: 'Hauptstraße',
+            houseNumber: '1',
+            postalCode: '12345',
+            city: 'Musterstadt',
+            country: 'DE',
+          }),
+        }),
+      };
+
+      setupDefaultConfigMocks({ isCloudHosted: true });
+      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
+      inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
+      getActiveSubscriptionUseCase.execute.mockResolvedValue(
+        mockUsageSubscription,
+      );
+
+      const result = await useCase.execute(command);
+
+      expect(result.totalCount).toBe(2);
+      expect(result.successCount).toBe(2);
+      expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
+      expect(invitesRepository.createMany).toHaveBeenCalledTimes(1);
     });
 
     it('should not check subscription for self-hosted instance', async () => {

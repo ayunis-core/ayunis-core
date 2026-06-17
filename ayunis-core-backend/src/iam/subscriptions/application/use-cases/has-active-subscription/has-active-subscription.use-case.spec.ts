@@ -6,6 +6,7 @@ import { HasActiveSubscriptionUseCase } from './has-active-subscription.use-case
 import { HasActiveSubscriptionQuery } from './has-active-subscription.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { SubscriptionError } from '../../subscription.errors';
+import { SubscriptionType } from '../../../domain/value-objects/subscription-type.enum';
 import { isActive } from '../../util/is-active';
 
 // Mock the isActive utility
@@ -60,7 +61,7 @@ describe('HasActiveSubscriptionUseCase', () => {
   });
 
   describe('execute', () => {
-    it('should return true for self-hosted instances', async () => {
+    it('should return true with null type for self-hosted instances', async () => {
       // Arrange
       const query = new HasActiveSubscriptionQuery(mockOrgId);
       configService.get.mockReturnValue(true);
@@ -69,7 +70,10 @@ describe('HasActiveSubscriptionUseCase', () => {
       const result = await useCase.execute(query);
 
       // Assert
-      expect(result).toBe(true);
+      expect(result).toEqual({
+        hasActiveSubscription: true,
+        subscriptionType: null,
+      });
       expect(configService.get).toHaveBeenCalledWith('app.isSelfHosted');
       expect(subscriptionRepository.findByOrgId).not.toHaveBeenCalled();
     });
@@ -84,20 +88,23 @@ describe('HasActiveSubscriptionUseCase', () => {
       const result = await useCase.execute(query);
 
       // Assert
-      expect(result).toBe(false);
+      expect(result).toEqual({
+        hasActiveSubscription: false,
+        subscriptionType: null,
+      });
       expect(subscriptionRepository.findByOrgId).toHaveBeenCalledWith(
         mockOrgId,
       );
     });
 
-    it('should return true when at least one active subscription exists', async () => {
+    it('should return true with subscription type when active subscription exists', async () => {
       // Arrange
       const query = new HasActiveSubscriptionQuery(mockOrgId);
       configService.get.mockReturnValue(false);
 
       const mockSubscriptions = [
-        { id: '1', orgId: mockOrgId } as any,
-        { id: '2', orgId: mockOrgId } as any,
+        { id: '1', orgId: mockOrgId, type: 'USAGE_BASED' } as any,
+        { id: '2', orgId: mockOrgId, type: 'SEAT_BASED' } as any,
       ];
 
       subscriptionRepository.findByOrgId.mockResolvedValue(
@@ -109,7 +116,10 @@ describe('HasActiveSubscriptionUseCase', () => {
       const result = await useCase.execute(query);
 
       // Assert
-      expect(result).toBe(true);
+      expect(result).toEqual({
+        hasActiveSubscription: true,
+        subscriptionType: 'USAGE_BASED',
+      });
       expect(subscriptionRepository.findByOrgId).toHaveBeenCalledWith(
         mockOrgId,
       );
@@ -135,7 +145,10 @@ describe('HasActiveSubscriptionUseCase', () => {
       const result = await useCase.execute(query);
 
       // Assert
-      expect(result).toBe(false);
+      expect(result).toEqual({
+        hasActiveSubscription: false,
+        subscriptionType: null,
+      });
       expect(subscriptionRepository.findByOrgId).toHaveBeenCalledWith(
         mockOrgId,
       );
@@ -220,6 +233,59 @@ describe('HasActiveSubscriptionUseCase', () => {
           orgId: mockOrgId,
         },
       );
+    });
+
+    it('returns the matching subscription when a type filter is supplied', async () => {
+      const query = new HasActiveSubscriptionQuery(
+        mockOrgId,
+        SubscriptionType.USAGE_BASED,
+      );
+      configService.get.mockReturnValue(false);
+
+      const mockSubscriptions = [
+        { id: '1', orgId: mockOrgId, type: SubscriptionType.SEAT_BASED } as any,
+        {
+          id: '2',
+          orgId: mockOrgId,
+          type: SubscriptionType.USAGE_BASED,
+        } as any,
+      ];
+
+      subscriptionRepository.findByOrgId.mockResolvedValue(
+        mockSubscriptions as any,
+      );
+      mockIsActive.mockReturnValue(true);
+
+      const result = await useCase.execute(query);
+
+      expect(result).toEqual({
+        hasActiveSubscription: true,
+        subscriptionType: SubscriptionType.USAGE_BASED,
+      });
+    });
+
+    it('returns false when no active subscription matches the type filter', async () => {
+      const query = new HasActiveSubscriptionQuery(
+        mockOrgId,
+        SubscriptionType.USAGE_BASED,
+      );
+      configService.get.mockReturnValue(false);
+
+      const mockSubscriptions = [
+        { id: '1', orgId: mockOrgId, type: SubscriptionType.SEAT_BASED } as any,
+      ];
+
+      subscriptionRepository.findByOrgId.mockResolvedValue(
+        mockSubscriptions as any,
+      );
+      mockIsActive.mockReturnValue(true);
+
+      const result = await useCase.execute(query);
+
+      expect(result).toEqual({
+        hasActiveSubscription: false,
+        subscriptionType: null,
+      });
     });
 
     it('should handle unknown error types', async () => {

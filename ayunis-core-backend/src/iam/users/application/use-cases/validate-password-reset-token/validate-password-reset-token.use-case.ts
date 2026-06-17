@@ -3,7 +3,11 @@ import { ValidatePasswordResetTokenQuery } from './validate-password-reset-token
 import { PasswordResetJwtService } from '../../services/password-reset-jwt.service';
 import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedUserError } from '../../users.errors';
+import { UserUnexpectedError } from '../../users.errors';
+
+export interface TokenValidationResult {
+  valid: boolean;
+}
 
 @Injectable()
 export class ValidatePasswordResetTokenUseCase {
@@ -13,17 +17,18 @@ export class ValidatePasswordResetTokenUseCase {
     private readonly passwordResetJwtService: PasswordResetJwtService,
   ) {}
 
-  execute(query: ValidatePasswordResetTokenQuery): boolean {
+  execute(query: ValidatePasswordResetTokenQuery): TokenValidationResult {
     this.logger.log('validatePasswordResetToken', { hasToken: !!query.token });
     try {
-      // verifyPasswordResetToken throws InvalidTokenError if token is expired or invalid
       this.passwordResetJwtService.verifyPasswordResetToken(query.token);
-      return true;
+      return { valid: true };
     } catch (error) {
-      if (error instanceof InvalidTokenError) return false;
+      if (error instanceof InvalidTokenError) {
+        return { valid: false };
+      }
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Error validating password');
-      throw new UnexpectedUserError(error as Error);
+      throw new UserUnexpectedError(error as Error);
     }
   }
 }

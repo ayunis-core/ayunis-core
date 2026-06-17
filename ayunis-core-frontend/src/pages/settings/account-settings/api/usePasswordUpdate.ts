@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useUserControllerUpdatePassword } from '@/shared/api/generated/ayunisCoreAPI';
 import {
-  updatePasswordFormSchema,
+  createUpdatePasswordSchema,
   type UpdatePasswordFormValues,
 } from '../model/updatePasswordSchema';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -14,7 +14,7 @@ export function usePasswordUpdate() {
   const updateMutation = useUserControllerUpdatePassword();
 
   const form = useForm<UpdatePasswordFormValues>({
-    resolver: zodResolver(updatePasswordFormSchema),
+    resolver: zodResolver(createUpdatePasswordSchema(t)),
     defaultValues: {
       currentPassword: '',
       newPassword: '',

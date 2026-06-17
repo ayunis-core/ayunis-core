@@ -4,8 +4,7 @@ import { QueryTextSourceCommand } from './query-text-source.command';
 import { SearchContentUseCase } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.use-case';
 import { SearchContentQuery } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.query';
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
-import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
-import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 
 @Injectable()
 export class QueryTextSourceUseCase {
@@ -46,40 +45,20 @@ export class QueryTextSourceUseCase {
         `Found ${indexEntries.length} index entries for query: "${command.query}" in source: ${command.filter.sourceId}`,
       );
 
-      // Fetch the actual source content for each index entry
-      const sourceContentMatches: TextSourceContentChunk[] = [];
-
-      for (const indexEntry of indexEntries) {
-        // Get the source first to access its content
-        const source = await this.sourceRepository.findById(
-          indexEntry.relatedDocumentId,
-        );
-
-        if (source && source instanceof TextSource && source.contentChunks) {
-          // Find the specific content chunk by ID
-          const sourceContent = source.contentChunks.find(
-            (content) => content.id === indexEntry.relatedChunkId,
-          );
-
-          if (sourceContent) {
-            sourceContentMatches.push(sourceContent);
-          } else {
-            this.logger.warn(
-              `Source content with ID ${indexEntry.relatedChunkId} not found in source ${indexEntry.relatedDocumentId}`,
-            );
-          }
-        } else {
-          this.logger.warn(
-            `Source with ID ${indexEntry.relatedDocumentId} not found or has no content`,
-          );
-        }
+      if (indexEntries.length === 0) {
+        return [];
       }
 
+      // Fetch all matched chunks in a single query
+      const chunkIds = indexEntries.map((entry) => entry.relatedChunkId);
+      const chunkResults =
+        await this.sourceRepository.findContentChunksByIds(chunkIds);
+
       this.logger.debug(
-        `Successfully matched ${sourceContentMatches.length} source content items for query: "${command.query}" in source: ${command.filter.sourceId}`,
+        `Successfully matched ${chunkResults.length} source content items for query: "${command.query}" in source: ${command.filter.sourceId}`,
       );
 
-      return sourceContentMatches;
+      return chunkResults.map((r) => r.chunk);
     } catch (error) {
       this.logger.error(
         `Error during vector search for query "${command.query}":`,

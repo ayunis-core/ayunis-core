@@ -19,9 +19,7 @@ import { ImageContentService } from 'src/domain/messages/application/services/im
 import { OllamaMessageConverter } from '../converters/ollama-message.converter';
 
 @Injectable()
-export class BaseOllamaStreamInferenceHandler
-  implements StreamInferenceHandler
-{
+export class BaseOllamaStreamInferenceHandler implements StreamInferenceHandler {
   private readonly logger = new Logger(BaseOllamaStreamInferenceHandler.name);
   private readonly thinkingParser = new ThinkingContentParser();
   protected client: Ollama;
@@ -47,7 +45,6 @@ export class BaseOllamaStreamInferenceHandler
     try {
       this.thinkingParser.reset();
       const completionOptions = await this.buildCompletionOptions(input);
-      this.logger.debug('completionOptions', completionOptions);
 
       const completionFn = () => this.client.chat(completionOptions);
       const response = await retryWithBackoff({
@@ -91,7 +88,7 @@ export class BaseOllamaStreamInferenceHandler
       ? this.converter.convertSystemPrompt(input.systemPrompt)
       : undefined;
 
-    return {
+    const completionOptions: ChatRequest & { stream: true } = {
       model: input.model.name,
       messages: systemPrompt
         ? [systemPrompt, ...ollamaMessages]
@@ -100,6 +97,13 @@ export class BaseOllamaStreamInferenceHandler
       stream: true as const,
       options: { num_ctx: 30000 },
     };
+    this.logger.debug('completionOptions prepared', {
+      model: input.model.name,
+      messageCount: completionOptions.messages?.length ?? 0,
+      toolCount: completionOptions.tools?.length ?? 0,
+      hasSystem: Boolean(input.systemPrompt),
+    });
+    return completionOptions;
   };
 
   private convertChunk = (
@@ -107,7 +111,7 @@ export class BaseOllamaStreamInferenceHandler
   ): StreamInferenceResponseChunk => {
     const delta = chunk.message;
     const { thinkingDelta, textContentDelta } = this.parseChunkContent(delta);
-    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- thinking may be empty string at runtime
+
     const thinkingContent = delta.thinking || null;
 
     return new StreamInferenceResponseChunk({

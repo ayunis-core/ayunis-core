@@ -2,7 +2,7 @@ import { PermittedEmbeddingModel } from 'src/domain/models/domain/permitted-mode
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { GetPermittedEmbeddingModelQuery } from './get-permitted-embedding-model.query';
 import {
-  ModelNotFoundByIdError,
+  PermittedEmbeddingModelNotFoundForOrgError,
   UnexpectedModelError,
 } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -39,7 +39,7 @@ export class GetPermittedEmbeddingModelUseCase {
         query.orgId,
       );
       if (!model || !(model instanceof PermittedEmbeddingModel)) {
-        throw new ModelNotFoundByIdError(query.orgId);
+        throw new PermittedEmbeddingModelNotFoundForOrgError(query.orgId);
       }
       return model;
     } catch (error) {

@@ -9,7 +9,6 @@ interface SourceQueryToolParameters {
   query: string;
 }
 
-// eslint-disable-next-line sonarjs/function-return-type -- false positive: function always returns JSONSchema
 function sourceQueryToolParameters(sources: Source[]): JSONSchema {
   return {
     type: 'object' as const,

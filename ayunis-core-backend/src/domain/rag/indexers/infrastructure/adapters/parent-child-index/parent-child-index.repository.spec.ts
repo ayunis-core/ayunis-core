@@ -34,9 +34,7 @@ describe('ParentChildIndexerRepository', () => {
     it('should return empty array when queryVector is empty', async () => {
       const result = await repository.findByDocumentIds(
         [],
-        [
-          '11111111-1111-1111-1111-111111111111' as `${string}-${string}-${string}-${string}-${string}`,
-        ],
+        ['11111111-1111-1111-1111-111111111111'],
       );
 
       expect(result).toEqual([]);
@@ -51,7 +49,7 @@ describe('ParentChildIndexerRepository', () => {
     it('should return empty array for unsupported vector dimensions', async () => {
       const unsupportedVector = new Array(512).fill(0.1) as number[];
       const result = await repository.findByDocumentIds(unsupportedVector, [
-        '11111111-1111-1111-1111-111111111111' as `${string}-${string}-${string}-${string}-${string}`,
+        '11111111-1111-1111-1111-111111111111',
       ]);
 
       expect(result).toEqual([]);

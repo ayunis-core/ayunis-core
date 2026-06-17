@@ -6,7 +6,6 @@ import type {
   RunUserInput,
   RunToolResultInput,
 } from '../../../domain/run-input.entity';
-import type { Agent } from 'src/domain/agents/domain/agent.entity';
 import type { Skill } from 'src/domain/skills/domain/skill.entity';
 
 export interface RunParams {
@@ -18,7 +17,6 @@ export interface RunParams {
   streaming?: boolean;
   orgId: UUID;
   isAnonymous: boolean;
-  agent?: Agent;
   activeSkills: Skill[];
   skillId?: UUID;
   skillInstructions?: string;

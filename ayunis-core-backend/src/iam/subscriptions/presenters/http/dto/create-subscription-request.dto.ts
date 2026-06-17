@@ -1,80 +1,70 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsDateString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateIf,
+} from 'class-validator';
+import { BillingInfoFieldsDto } from './billing-info-fields.dto';
+import { SubscriptionType } from '../../../domain/value-objects/subscription-type.enum';
 
-export class CreateSubscriptionRequestDto {
-  @ApiProperty({
-    description: 'Number of seats for the subscription',
+export class CreateSubscriptionRequestDto extends BillingInfoFieldsDto {
+  @ApiPropertyOptional({
+    description: 'Subscription type. Defaults to SEAT_BASED if not specified.',
+    enum: SubscriptionType,
+    example: SubscriptionType.SEAT_BASED,
+    default: SubscriptionType.SEAT_BASED,
+  })
+  @IsOptional()
+  @IsEnum(SubscriptionType)
+  type?: SubscriptionType;
+
+  @ApiPropertyOptional({
+    description: 'Number of seats for the subscription (seat-based only)',
     example: 10,
     minimum: 1,
-    required: false,
     default: 1,
   })
+  @ValidateIf(
+    (o: CreateSubscriptionRequestDto) =>
+      !o.type || o.type === SubscriptionType.SEAT_BASED,
+  )
   @IsOptional()
   @IsNumber()
   @Min(1)
   noOfSeats?: number;
 
-  @ApiProperty({
-    description: 'Company name for the subscription',
-    example: 'Acme Inc.',
-    required: true,
+  @ApiPropertyOptional({
+    description: 'Monthly credit budget (usage-based only)',
+    example: 1000,
+    minimum: 1,
   })
-  @IsString()
-  companyName: string;
+  @ValidateIf(
+    (o: CreateSubscriptionRequestDto) =>
+      o.type === SubscriptionType.USAGE_BASED,
+  )
+  @IsNumber()
+  @Min(1)
+  monthlyCredits?: number;
 
   @ApiProperty({
     description: 'Sub text for the subscription',
     example: 'Sub text',
     required: false,
   })
+  @IsOptional()
   @IsString()
   subText?: string;
 
-  @ApiProperty({
-    description: 'Street for the subscription',
-    example: '123 Main St',
-    required: true,
+  @ApiPropertyOptional({
+    description:
+      'Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately.',
+    example: '2026-07-01T00:00:00.000Z',
   })
-  @IsString()
-  street: string;
-
-  @ApiProperty({
-    description: 'House number for the subscription',
-    example: '123',
-    required: true,
-  })
-  @IsString()
-  houseNumber: string;
-
-  @ApiProperty({
-    description: 'Postal code for the subscription',
-    example: '12345',
-    required: true,
-  })
-  @IsString()
-  postalCode: string;
-
-  @ApiProperty({
-    description: 'City for the subscription',
-    example: 'New York',
-    required: true,
-  })
-  @IsString()
-  city: string;
-
-  @ApiProperty({
-    description: 'Country for the subscription',
-    example: 'United States',
-    required: true,
-  })
-  @IsString()
-  country: string;
-
-  @ApiProperty({
-    description: 'VAT number for the subscription',
-    example: '1234567890',
-    required: false,
-  })
-  @IsString()
-  vatNumber?: string;
+  @IsOptional()
+  @IsDateString()
+  startsAt?: string;
 }

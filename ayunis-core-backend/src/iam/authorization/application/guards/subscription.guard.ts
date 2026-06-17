@@ -6,12 +6,18 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
+import type { UUID } from 'crypto';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
+import type { ApiKeyPrincipal } from 'src/iam/authentication/application/strategies/api-key.strategy';
 import { HasActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import { HasActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.query';
 import { GetTrialUseCase } from 'src/iam/trials/application/use-cases/get-trial/get-trial.use-case';
 import { GetTrialQuery } from 'src/iam/trials/application/use-cases/get-trial/get-trial.query';
-import { REQUIRE_SUBSCRIPTION_KEY } from '../decorators/subscription.decorator';
+import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
+import {
+  REQUIRE_SUBSCRIPTION_KEY,
+  RequireSubscriptionOptions,
+} from '../decorators/subscription.decorator';
 
 export interface SubscriptionContext {
   hasActiveSubscription: boolean;
@@ -19,8 +25,14 @@ export interface SubscriptionContext {
 }
 
 export interface RequestWithSubscriptionContext extends Request {
-  user: ActiveUser;
+  user: ActiveUser | ApiKeyPrincipal;
   subscriptionContext?: SubscriptionContext;
+}
+
+interface GuardPrincipal {
+  orgId: UUID;
+  userId?: UUID;
+  apiKeyId?: UUID;
 }
 
 @Injectable()
@@ -34,40 +46,55 @@ export class SubscriptionGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiresSubscription = this.reflector.getAllAndOverride<boolean>(
-      REQUIRE_SUBSCRIPTION_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const options = this.reflector.getAllAndOverride<
+      RequireSubscriptionOptions | undefined
+    >(REQUIRE_SUBSCRIPTION_KEY, [context.getHandler(), context.getClass()]);
 
-    if (!requiresSubscription) {
+    if (!options) {
       return true;
     }
 
     const request = context
       .switchToHttp()
       .getRequest<RequestWithSubscriptionContext>();
-    const user = request.user;
 
-    if (!user) {
-      this.logger.warn('User not found in request context');
+    const principal = this.resolvePrincipal(request);
+    if (!principal) {
+      // On @Public() routes the global JwtAuthGuard skips, so the global
+      // SubscriptionGuard binding runs before any controller-level auth (e.g.
+      // AuthGuard('api-key')) populates `request.user`. Defer in that case —
+      // the controller is expected to bind SubscriptionGuard locally AFTER
+      // its auth guard so this re-runs with a principal in place.
+      const isPublic = this.reflector.getAllAndOverride<boolean>(
+        IS_PUBLIC_KEY,
+        [context.getHandler(), context.getClass()],
+      );
+      if (isPublic) {
+        return true;
+      }
+      this.logger.warn(
+        'No principal found on request when checking subscription',
+      );
       return false;
     }
 
     this.logger.debug('Checking subscription for organization', {
-      orgId: user.orgId,
-      userId: user.id,
+      orgId: principal.orgId,
+      userId: principal.userId,
+      apiKeyId: principal.apiKeyId,
+      requiredType: options.type,
     });
 
     try {
-      const hasActiveSubscription =
+      const { hasActiveSubscription } =
         await this.hasActiveSubscriptionUseCase.execute(
-          new HasActiveSubscriptionQuery(user.orgId),
+          new HasActiveSubscriptionQuery(principal.orgId, options.type),
         );
 
       if (hasActiveSubscription) {
         this.logger.debug('Access granted: active subscription found', {
-          orgId: user.orgId,
-          userId: user.id,
+          orgId: principal.orgId,
+          requiredType: options.type,
         });
 
         request.subscriptionContext = {
@@ -78,19 +105,18 @@ export class SubscriptionGuard implements CanActivate {
         return true;
       }
 
-      this.logger.debug('No active subscription, checking trial capacity', {
-        orgId: user.orgId,
-        userId: user.id,
+      this.logger.debug('No matching subscription, checking trial capacity', {
+        orgId: principal.orgId,
       });
 
       const trial = await this.getTrialUseCase.execute(
-        new GetTrialQuery(user.orgId),
+        new GetTrialQuery(principal.orgId),
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive guard for runtime safety
       if (!trial) {
         this.logger.warn('Access denied: no trial found', {
-          orgId: user.orgId,
-          userId: user.id,
+          orgId: principal.orgId,
         });
 
         return false;
@@ -101,8 +127,7 @@ export class SubscriptionGuard implements CanActivate {
 
       if (hasRemainingMessages) {
         this.logger.debug('Access granted: trial has remaining messages', {
-          orgId: user.orgId,
-          userId: user.id,
+          orgId: principal.orgId,
           messagesSent: trial.messagesSent,
           maxMessages: trial.maxMessages,
           remainingMessages,
@@ -117,8 +142,7 @@ export class SubscriptionGuard implements CanActivate {
       }
 
       this.logger.warn('Access denied: trial exhausted', {
-        orgId: user.orgId,
-        userId: user.id,
+        orgId: principal.orgId,
         messagesSent: trial.messagesSent,
         maxMessages: trial.maxMessages,
       });
@@ -127,11 +151,34 @@ export class SubscriptionGuard implements CanActivate {
     } catch (error) {
       this.logger.error('Error checking subscription/trial', {
         error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: user.orgId,
-        userId: user.id,
+        orgId: principal.orgId,
       });
 
       return false;
     }
+  }
+
+  private resolvePrincipal(
+    request: RequestWithSubscriptionContext,
+  ): GuardPrincipal | null {
+    const user = request.user as unknown;
+    if (!user || typeof user !== 'object') {
+      return null;
+    }
+    if ('apiKeyId' in user) {
+      const apiKeyPrincipal = user as ApiKeyPrincipal;
+      return {
+        orgId: apiKeyPrincipal.orgId,
+        apiKeyId: apiKeyPrincipal.apiKeyId,
+      };
+    }
+    if ('orgId' in user && 'id' in user) {
+      const activeUser = user as ActiveUser;
+      return {
+        orgId: activeUser.orgId,
+        userId: activeUser.id,
+      };
+    }
+    return null;
   }
 }

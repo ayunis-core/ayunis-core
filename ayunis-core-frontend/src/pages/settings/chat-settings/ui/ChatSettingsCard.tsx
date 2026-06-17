@@ -15,7 +15,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useUserDefaultModel } from '../api/useUserDefaultModel';
-import { getFlagByProvider } from '@/shared/lib/getFlagByProvider';
+import { ModelSelectOptions } from '@/widgets/model-select-options';
 
 export function ChatSettingsCard() {
   const { t } = useTranslation('settings');
@@ -34,39 +34,6 @@ export function ChatSettingsCard() {
       manageUserDefaultModel(value);
     }
   };
-
-  // Sort models by flag priority (DE → EU → US) then alphabetically
-  const flagPriority: Record<string, number> = {
-    '🇩🇪': 0,
-    '🇪🇺': 1,
-    '🇺🇸': 2,
-  };
-
-  const sortedModels = [...permittedModels].sort((a, b) => {
-    const flagA = getFlagByProvider(a.provider);
-    const flagB = getFlagByProvider(b.provider);
-    const priorityA = flagPriority[flagA] ?? 3;
-    const priorityB = flagPriority[flagB] ?? 3;
-
-    if (priorityA !== priorityB) {
-      return priorityA - priorityB;
-    }
-
-    return (a.displayName || a.name).localeCompare(b.displayName || b.name);
-  });
-
-  // Create options including null option and all sorted permitted models with flags
-  const defaultSettingsOptions = [
-    { id: 'null', label: t('chat.none') },
-    ...sortedModels.map((model) => {
-      const flag = getFlagByProvider(model.provider);
-      const displayName = model.displayName || model.name;
-      return {
-        id: model.id,
-        label: flag ? `${flag} ${displayName}` : displayName,
-      };
-    }),
-  ];
 
   // Get current selected value
   const selectedValue = userDefaultModel?.id ?? 'null';
@@ -98,12 +65,13 @@ export function ChatSettingsCard() {
                 }
               />
             </SelectTrigger>
-            <SelectContent>
-              {defaultSettingsOptions.map((option) => (
-                <SelectItem key={option.id} value={option.id}>
-                  {option.label}
-                </SelectItem>
-              ))}
+            <SelectContent position="popper" sideOffset={4} align="end">
+              <SelectItem value="null">{t('chat.none')}</SelectItem>
+              <ModelSelectOptions
+                models={permittedModels}
+                showFlag
+                showHeading={false}
+              />
             </SelectContent>
           </Select>
         </div>

@@ -319,6 +319,7 @@ export class InvitesController {
         userName: acceptInviteDto.userName,
         password: acceptInviteDto.password,
         hasAcceptedMarketing: acceptInviteDto.hasAcceptedMarketing,
+        department: acceptInviteDto.department,
       }),
     );
 

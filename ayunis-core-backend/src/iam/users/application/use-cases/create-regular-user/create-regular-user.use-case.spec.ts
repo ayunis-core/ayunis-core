@@ -80,6 +80,42 @@ describe('CreateRegularUserUseCase', () => {
     expect(mockCreateUserUseCase.execute).toHaveBeenCalled();
   });
 
+  it('should pass department from command to create-user use case', async () => {
+    const command = new CreateRegularUserCommand({
+      email: 'test@example.com',
+      password: 'password123',
+      orgId: 'org-id' as UUID,
+      name: 'Regular User',
+      emailVerified: false,
+      hasAcceptedMarketing: false,
+      department: 'jugendamt',
+    });
+    const mockUser = new User({
+      id: 'user-id' as UUID,
+      email: 'test@example.com',
+      emailVerified: false,
+      passwordHash: 'hashedPassword',
+      role: UserRole.USER,
+      orgId: 'org-id' as UUID,
+      name: 'Regular User',
+      hasAcceptedMarketing: false,
+      department: 'jugendamt',
+    });
+
+    jest.spyOn(mockUsersRepository, 'findOneByEmail').mockResolvedValue(null);
+    jest
+      .spyOn(mockHashTextUseCase, 'execute')
+      .mockResolvedValue('hashedPassword');
+    jest.spyOn(mockCreateUserUseCase, 'execute').mockResolvedValue(mockUser);
+
+    const result = await useCase.execute(command);
+
+    expect(result.department).toBe('jugendamt');
+    expect(mockCreateUserUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ department: 'jugendamt' }),
+    );
+  });
+
   it('should throw UserAlreadyExistsError if user exists', async () => {
     const command = new CreateRegularUserCommand({
       email: 'test@example.com',

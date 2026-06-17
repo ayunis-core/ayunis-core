@@ -1,0 +1,60 @@
+import { createAjv } from 'src/common/validators/ajv.factory';
+import { ToolType } from '../value-objects/tool-type.enum';
+import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import { DisplayableTool } from '../displayable-tool.entity';
+
+const createDocumentToolParameters = {
+  type: 'object' as const,
+  properties: {
+    title: {
+      type: 'string' as const,
+      description: 'The title of the document to create',
+    },
+    content: {
+      type: 'string' as const,
+      description:
+        'The full HTML content of the document. Use semantic HTML tags (h1, h2, p, ul, ol, li, strong, em, etc.)',
+    },
+    letterhead_id: {
+      type: 'string' as const,
+      description:
+        'Optional UUID of the letterhead (Briefpapier) to apply as background when exporting to PDF. Only include when the user requests a specific letterhead.',
+    },
+  },
+  required: ['title', 'content'],
+  additionalProperties: false,
+} as const satisfies JSONSchema;
+
+type CreateDocumentToolParameters = FromSchema<
+  typeof createDocumentToolParameters
+>;
+
+export class CreateDocumentTool extends DisplayableTool {
+  override isExecutable: boolean = true;
+
+  constructor() {
+    super({
+      name: ToolType.CREATE_DOCUMENT,
+      description:
+        'Create a new document that the user can view and edit in a WYSIWYG editor. Only use this when the user explicitly asks for a document they can edit, export, or download — for example a letter, report, or formal text. Do not use this for regular conversational answers.',
+      parameters: createDocumentToolParameters,
+      type: ToolType.CREATE_DOCUMENT,
+    });
+  }
+
+  validateParams(
+    params: Record<string, unknown>,
+  ): CreateDocumentToolParameters {
+    const ajv = createAjv();
+    const validate = ajv.compile(this.parameters);
+    const valid = validate(params);
+    if (!valid) {
+      throw new Error(JSON.stringify(validate.errors));
+    }
+    return params as CreateDocumentToolParameters;
+  }
+
+  get returnsPii(): boolean {
+    return false;
+  }
+}

@@ -1,14 +1,27 @@
 {
   "models": {
+    "teamHint": {
+      "title": "Team-specific model restrictions",
+      "description": "You can restrict which models are available to specific teams in the <teamsLink>Teams settings</teamsLink>."
+    },
     "loading": "Loading models...",
+    "loadErrorTitle": "Unable to load model data",
+    "loadErrorDescription": "Model data could not be loaded right now. Please refresh and try again.",
     "noModelsAvailable": "No models available. Please check your configuration.",
     "noModelsForProvider": "No models available for this provider.",
     "languageModels": "Language Models",
     "embeddingModels": "Embedding Models",
+    "imageGenerationModels": "Image Generation Models",
     "languageModelsDescription": "Models for text generation and conversation.",
     "embeddingModelsDescription": "Models for document analysis and search.",
+    "imageGenerationModelsDescription": "Models for image generation and visual creation.",
     "noLanguageModels": "No language models available.",
     "noEmbeddingModels": "No embedding models available.",
+    "noImageGenerationModels": "No image generation models available.",
+    "partialData": {
+      "title": "Some model data is unavailable",
+      "someUnavailable": "Some model data could not be loaded. Showing only the data that is currently available."
+    },
     "streaming": "Streaming",
     "streamingTooltip": "The model sends answers as a stream. This way, the answer is delivered step by step",
     "reasoning": "Reasoning",
@@ -37,6 +50,7 @@
     },
     "createPermittedModel": {
       "multipleEmbeddingModelsNotAllowed": "Only one embedding model can be created per organization.",
+      "multipleImageGenerationModelsNotAllowed": "Only one image-generation model per organization is allowed.",
       "modelNotFound": "The model not found.",
       "error": "An error occurred while creating the permitted model."
     },
@@ -46,6 +60,15 @@
     },
     "anonymousOnly": "Anonymous mode",
     "permitted": "Permitted",
+    "tier": {
+      "label": "Tier",
+      "unset": "Unset",
+      "zero": "Unrestricted",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "tooltip": "Performance & Credit Consumption: {{label}}"
+    },
     "defaultModel": {
       "title": "Organization default model",
       "description": "Choose which permitted model should be used as the default for your organization.",

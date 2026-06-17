@@ -378,7 +378,7 @@ describe('McpIntegrationsController', () => {
       getUseCase.execute.mockResolvedValue(mockIntegration);
 
       const result = await controller.getById(
-        '123e4567-e89b-12d3-a456-426614174000' as any,
+        '123e4567-e89b-12d3-a456-426614174000',
       );
 
       expect(getUseCase.execute).toHaveBeenCalledWith(
@@ -410,10 +410,7 @@ describe('McpIntegrationsController', () => {
 
       updateUseCase.execute.mockResolvedValue(mockIntegration);
 
-      await controller.update(
-        '123e4567-e89b-12d3-a456-426614174000' as any,
-        dto,
-      );
+      await controller.update('123e4567-e89b-12d3-a456-426614174000', dto);
 
       expect(updateUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -445,10 +442,7 @@ describe('McpIntegrationsController', () => {
         }),
       );
 
-      await controller.update(
-        '123e4567-e89b-12d3-a456-426614174000' as any,
-        dto,
-      );
+      await controller.update('123e4567-e89b-12d3-a456-426614174000', dto);
 
       expect(updateUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -465,7 +459,7 @@ describe('McpIntegrationsController', () => {
       deleteUseCase.execute.mockResolvedValue(undefined);
 
       const result = await controller.delete(
-        '123e4567-e89b-12d3-a456-426614174000' as any,
+        '123e4567-e89b-12d3-a456-426614174000',
       );
 
       expect(deleteUseCase.execute).toHaveBeenCalledWith(
@@ -494,7 +488,7 @@ describe('McpIntegrationsController', () => {
       enableUseCase.execute.mockResolvedValue(mockIntegration);
 
       const result = await controller.enable(
-        '123e4567-e89b-12d3-a456-426614174000' as any,
+        '123e4567-e89b-12d3-a456-426614174000',
       );
 
       expect(enableUseCase.execute).toHaveBeenCalledWith(
@@ -523,7 +517,7 @@ describe('McpIntegrationsController', () => {
       disableUseCase.execute.mockResolvedValue(mockIntegration);
 
       const result = await controller.disable(
-        '123e4567-e89b-12d3-a456-426614174000' as any,
+        '123e4567-e89b-12d3-a456-426614174000',
       );
 
       expect(disableUseCase.execute).toHaveBeenCalledWith(
@@ -547,7 +541,7 @@ describe('McpIntegrationsController', () => {
       validateUseCase.execute.mockResolvedValue(mockValidationResult);
 
       const result = await controller.validate(
-        '123e4567-e89b-12d3-a456-426614174000' as any,
+        '123e4567-e89b-12d3-a456-426614174000',
       );
 
       expect(validateUseCase.execute).toHaveBeenCalledWith(
@@ -575,7 +569,7 @@ describe('McpIntegrationsController', () => {
       validateUseCase.execute.mockResolvedValue(mockValidationResult);
 
       const result = await controller.validate(
-        '123e4567-e89b-12d3-a456-426614174000' as any,
+        '123e4567-e89b-12d3-a456-426614174000',
       );
 
       expect(result).toEqual({

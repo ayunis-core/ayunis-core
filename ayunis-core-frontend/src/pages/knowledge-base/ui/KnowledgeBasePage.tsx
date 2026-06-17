@@ -97,7 +97,10 @@ export function KnowledgeBasePage({
       <ContentAreaLayout
         contentHeader={
           <ContentAreaHeader
-            title={knowledgeBase.name}
+            breadcrumbs={[
+              { label: t('page.title'), href: '/knowledge-bases' },
+              { label: knowledgeBase.name },
+            ]}
             badge={
               isReadOnly ? (
                 <Badge variant="secondary">{t('shared.badge')}</Badge>
@@ -110,11 +113,12 @@ export function KnowledgeBasePage({
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="text-destructive hover:text-destructive"
                       onClick={handleDelete}
                       disabled={deleteKnowledgeBase.isPending}
                       aria-label={t('detail.deleteLabel')}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>{t('detail.deleteLabel')}</TooltipContent>

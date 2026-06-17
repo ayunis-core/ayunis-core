@@ -37,6 +37,7 @@ export default function SkillMcpIntegrationsCard({
         retryButton: t('mcpIntegrations.retryButton'),
         toggleAriaLabel: (name: string) =>
           t('mcpIntegrations.toggleAriaLabel', { name }),
+        configRequiredBadge: t('mcpIntegrations.configRequiredBadge'),
       }}
       hook={{
         ...data,

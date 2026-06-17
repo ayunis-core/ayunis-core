@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import ModelsCatalogPage from '@/pages/super-admin-settings/models-catalog';
 import {
-  getSuperAdminModelsControllerGetAllCatalogModelsQueryKey,
-  superAdminModelsControllerGetAllCatalogModels,
+  getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey,
+  superAdminCatalogModelsControllerGetAllCatalogModels,
 } from '@/shared/api';
 
 export const Route = createFileRoute(
@@ -12,8 +12,9 @@ export const Route = createFileRoute(
   loader: async ({ context: { queryClient } }) => {
     return {
       models: await queryClient.fetchQuery({
-        queryKey: getSuperAdminModelsControllerGetAllCatalogModelsQueryKey(),
-        queryFn: () => superAdminModelsControllerGetAllCatalogModels(),
+        queryKey:
+          getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey(),
+        queryFn: () => superAdminCatalogModelsControllerGetAllCatalogModels(),
       }),
     };
   },

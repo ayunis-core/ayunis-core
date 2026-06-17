@@ -5,7 +5,7 @@ export class UserUsageItem {
   public readonly userId: UUID;
   public readonly userName: string;
   public readonly userEmail: string;
-  public readonly tokens: number;
+  public readonly credits: number;
   public readonly requests: number;
   public readonly lastActivity: Date | null;
   public readonly isActive: boolean;
@@ -14,7 +14,7 @@ export class UserUsageItem {
     userId: UUID;
     userName: string;
     userEmail: string;
-    tokens: number;
+    credits: number;
     requests: number;
     lastActivity: Date | null;
     isActive: boolean;
@@ -22,7 +22,7 @@ export class UserUsageItem {
     this.userId = params.userId;
     this.userName = params.userName;
     this.userEmail = params.userEmail;
-    this.tokens = params.tokens;
+    this.credits = params.credits;
     this.requests = params.requests;
     this.lastActivity = params.lastActivity;
     this.isActive = params.isActive;

@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
-import { UUID } from 'crypto';
+import { LessThan, Repository } from 'typeorm';
+import type { UUID } from 'crypto';
+import { SourceStatus } from '../../../domain/source-status.enum';
 import { TextSource } from '../../../domain/sources/text-source.entity';
 import { DataSource } from '../../../domain/sources/data-source.entity';
 import { SourceRepository } from '../../../application/ports/source.repository';
@@ -15,6 +16,8 @@ import {
 import { DataSourceDetailsRecord } from './schema/data-source-details.record';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceContentChunkRecord } from './schema/source-content-chunk.record';
+import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
+import { SourceContentChunkMapper } from './mappers/source-content-chunk.mapper';
 
 @Injectable()
 export class LocalSourceRepository extends SourceRepository {
@@ -30,6 +33,7 @@ export class LocalSourceRepository extends SourceRepository {
     @InjectRepository(SourceContentChunkRecord)
     private readonly sourceContentChunkRepository: Repository<SourceContentChunkRecord>,
     private readonly mapper: SourceMapper,
+    private readonly chunkMapper: SourceContentChunkMapper,
   ) {
     super();
   }
@@ -43,18 +47,19 @@ export class LocalSourceRepository extends SourceRepository {
       return null;
     }
     if (record instanceof TextSourceRecord) {
-      const textSourceDetails = await this.textSourceDetailsRepository.findOne({
-        where: { source: { id } },
-        relations: {
-          contentChunks: true,
-        },
-      });
-      if (!textSourceDetails) {
-        return null;
+      // Processing sources don't have details yet — the async pipeline
+      // creates them. Skip the check so the consumer can load the source.
+      if (record.status !== SourceStatus.PROCESSING) {
+        // Only check that the details row exists — never load the `text`
+        // column, which can be very large, into application memory.
+        const detailsExist = await this.textSourceDetailsRepository.exists({
+          where: { source: { id } },
+        });
+        if (!detailsExist) {
+          return null;
+        }
       }
-      record.textSourceDetails = textSourceDetails;
-      const source = this.mapper.toDomain(record);
-      return source;
+      return this.mapper.toDomain(record);
     }
     if (record instanceof DataSourceRecord) {
       const dataSourceDetails = await this.dataSourceDetailsRepository.findOne({
@@ -64,8 +69,7 @@ export class LocalSourceRepository extends SourceRepository {
         return null;
       }
       record.dataSourceDetails = dataSourceDetails;
-      const source = this.mapper.toDomain(record);
-      return source;
+      return this.mapper.toDomain(record);
     }
 
     return null;
@@ -76,16 +80,65 @@ export class LocalSourceRepository extends SourceRepository {
     if (ids.length === 0) {
       return [];
     }
-    const records = await this.sourceRepository.find({
-      where: { id: In(ids) },
-    });
+    const records = await this.sourceRepository
+      .createQueryBuilder('source')
+      .leftJoinAndSelect(
+        'source.dataSourceDetails',
+        'dataSourceDetails',
+        'source.type = :dataType',
+        { dataType: 'data' },
+      )
+      .where('source.id IN (:...ids)', { ids })
+      .getMany();
     return records.map((record) => this.mapper.toDomain(record));
   }
 
   async findByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<Source[]> {
     this.logger.log('findByKnowledgeBaseId', { knowledgeBaseId });
+    const records = await this.sourceRepository
+      .createQueryBuilder('source')
+      .leftJoinAndSelect(
+        'source.dataSourceDetails',
+        'dataSourceDetails',
+        'source.type = :dataType',
+        { dataType: 'data' },
+      )
+      .where('source.knowledgeBaseId = :knowledgeBaseId', { knowledgeBaseId })
+      .getMany();
+    return records.map((record) => this.mapper.toDomain(record));
+  }
+
+  async saveTextSource(
+    source: TextSource,
+    content: { text: string; chunks: TextSourceContentChunk[] },
+  ): Promise<TextSource> {
+    this.logger.log('saveTextSource', { sourceId: source.id });
+    const {
+      source: sourceRecord,
+      details,
+      contentChunks,
+    } = this.mapper.toTextSourceRecord(source, content);
+    this.logger.debug('Saving text source record', {
+      sourceId: sourceRecord.id,
+      chunksCount: contentChunks.length,
+    });
+    const savedSource = await this.sourceRepository.save(sourceRecord);
+    this.logger.debug('Saved source record with id', { id: savedSource.id });
+    const savedDetails = await this.textSourceDetailsRepository.save(details);
+    const savedContentChunks =
+      await this.sourceContentChunkRepository.save(contentChunks);
+    savedSource.textSourceDetails = savedDetails;
+    savedDetails.contentChunks = savedContentChunks;
+    return this.mapper.toDomain(savedSource);
+  }
+
+  async findStaleProcessingSources(threshold: Date): Promise<Source[]> {
+    this.logger.log('findStaleProcessingSources', { threshold });
     const records = await this.sourceRepository.find({
-      where: { knowledgeBaseId },
+      where: {
+        status: SourceStatus.PROCESSING,
+        processingStartedAt: LessThan(threshold),
+      },
     });
     return records.map((record) => this.mapper.toDomain(record));
   }
@@ -96,23 +149,10 @@ export class LocalSourceRepository extends SourceRepository {
   async save(source: Source): Promise<Source> {
     this.logger.log('save', { sourceId: source.id });
     if (source instanceof TextSource) {
-      const {
-        source: sourceRecord,
-        details,
-        contentChunks,
-      } = this.mapper.toRecord(source);
-      this.logger.debug('Saving source record', {
-        sourceId: sourceRecord.id,
-        chunksCount: contentChunks.length,
-      });
+      const { source: sourceRecord } = this.mapper.toRecord(source);
       const savedSource = await this.sourceRepository.save(sourceRecord);
       this.logger.debug('Saved source record with id', { id: savedSource.id });
-      const savedDetails = await this.textSourceDetailsRepository.save(details);
-      const savedContentChunks =
-        await this.sourceContentChunkRepository.save(contentChunks);
-      savedSource.textSourceDetails = savedDetails;
-      savedDetails.contentChunks = savedContentChunks;
-      return this.mapper.toDomain(savedSource);
+      return this.mapper.toDomain(savedSource as TextSourceRecord);
     }
     if (source instanceof DataSource) {
       const { source: sourceRecord, details } = this.mapper.toRecord(source);
@@ -123,13 +163,95 @@ export class LocalSourceRepository extends SourceRepository {
       savedSource.dataSourceDetails = savedDetails;
       return this.mapper.toDomain(savedSource);
     }
-    throw new Error('Invalid source type');
+    throw new Error('Unsupported source type');
   }
 
-  async delete(source: Source): Promise<void> {
-    this.logger.log('delete', { sourceId: source.id });
-    const { source: record } = this.mapper.toRecord(source);
-    await this.sourceRepository.remove(record);
+  async updateStatusConditionally(
+    sourceId: UUID,
+    fromStatus: SourceStatus,
+    toStatus: SourceStatus,
+    updates?: Partial<{ processingError: string | null }>,
+  ): Promise<boolean> {
+    this.logger.log('updateStatusConditionally', {
+      sourceId,
+      fromStatus,
+      toStatus,
+    });
+    const qb = this.sourceRepository
+      .createQueryBuilder()
+      .update()
+      .set({
+        status: toStatus,
+        ...(updates?.processingError !== undefined
+          ? { processingError: updates.processingError }
+          : {}),
+      })
+      .where('id = :id AND status = :fromStatus', {
+        id: sourceId,
+        fromStatus,
+      });
+    const result = await qb.execute();
+    return (result.affected ?? 0) > 0;
+  }
+
+  async extractTextLines(
+    sourceId: UUID,
+    startLine: number,
+    endLine: number,
+  ): Promise<{ totalLines: number; text: string } | null> {
+    this.logger.log('extractTextLines', { sourceId, startLine, endLine });
+    const result: { totalLines: string; text: string }[] =
+      await this.textSourceDetailsRepository.query(
+        `SELECT
+          array_length(string_to_array(text, E'\\n'), 1) AS "totalLines",
+          array_to_string(
+            (string_to_array(text, E'\\n'))[$1:$2],
+            E'\\n'
+          ) AS "text"
+        FROM text_source_details_record
+        WHERE "sourceId" = $3`,
+        [startLine, endLine, sourceId],
+      );
+    if (result.length === 0) {
+      return null;
+    }
+    return {
+      totalLines: parseInt(result[0].totalLines, 10),
+      text: result[0].text,
+    };
+  }
+
+  async findContentChunksByIds(
+    chunkIds: UUID[],
+  ): Promise<
+    { chunk: TextSourceContentChunk; sourceId: UUID; sourceName: string }[]
+  > {
+    this.logger.log('findContentChunksByIds', { count: chunkIds.length });
+    if (chunkIds.length === 0) {
+      return [];
+    }
+    const records = await this.sourceContentChunkRepository
+      .createQueryBuilder('chunk')
+      .innerJoinAndSelect('chunk.source', 'details')
+      .innerJoin('details.source', 'source')
+      .addSelect(['source.id', 'source.name'])
+      .where('chunk.id IN (:...ids)', { ids: chunkIds })
+      .getMany();
+
+    return records.map((record) => ({
+      chunk: this.chunkMapper.toDomain(record),
+      sourceId: record.source.source.id,
+      sourceName: record.source.source.name,
+    }));
+  }
+
+  async delete(sourceId: UUID): Promise<void> {
+    this.logger.log('delete', { sourceId });
+    await this.sourceRepository
+      .createQueryBuilder()
+      .delete()
+      .where('id = :id', { id: sourceId })
+      .execute();
   }
 
   async deleteMany(sourceIds: UUID[]): Promise<void> {
@@ -142,5 +264,35 @@ export class LocalSourceRepository extends SourceRepository {
       .delete()
       .where('id IN (:...ids)', { ids: sourceIds })
       .execute();
+  }
+
+  async findUnreferencedIds(
+    candidateIds: UUID[],
+    olderThan: Date,
+  ): Promise<UUID[]> {
+    this.logger.log('findUnreferencedIds', {
+      candidateCount: candidateIds.length,
+      olderThan,
+    });
+
+    if (candidateIds.length === 0) {
+      return [];
+    }
+
+    const rows = await this.sourceRepository
+      .createQueryBuilder('s')
+      .select('s.id', 'id')
+      .where('s.id IN (:...candidateIds)', { candidateIds })
+      .andWhere('s."knowledgeBaseId" IS NULL')
+      .andWhere('s."createdAt" < :olderThan', { olderThan })
+      .andWhere(
+        `NOT EXISTS (SELECT 1 FROM skill_sources ss WHERE ss."sourcesId" = s.id)`,
+      )
+      .andWhere(
+        `NOT EXISTS (SELECT 1 FROM agent_source_assignments asa WHERE asa."sourceId" = s.id)`,
+      )
+      .getRawMany<{ id: UUID }>();
+
+    return rows.map((row) => row.id);
   }
 }

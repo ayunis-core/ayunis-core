@@ -28,12 +28,6 @@ import enSettings from './shared/locales/en/settings.json';
 import deSettings from './shared/locales/de/settings.json';
 import enChat from './shared/locales/en/chat.json';
 import deChat from './shared/locales/de/chat.json';
-import enPrompts from './shared/locales/en/prompts.json';
-import dePrompts from './shared/locales/de/prompts.json';
-import enAgents from './shared/locales/en/agents.json';
-import deAgents from './shared/locales/de/agents.json';
-import enAgent from './shared/locales/en/agent.json';
-import deAgent from './shared/locales/de/agent.json';
 import enChats from './shared/locales/en/chats.json';
 import deChats from './shared/locales/de/chats.json';
 import enInstall from './shared/locales/en/install.json';
@@ -48,6 +42,28 @@ import enKnowledgeBases from './shared/locales/en/knowledge-bases.json';
 import deKnowledgeBases from './shared/locales/de/knowledge-bases.json';
 import enSuperAdminSettingsSkills from './shared/locales/en/super-admin-settings-skills.json';
 import deSuperAdminSettingsSkills from './shared/locales/de/super-admin-settings-skills.json';
+import enSuperAdminSettingsSuperAdmins from './shared/locales/en/super-admin-settings-super-admins.json';
+import deSuperAdminSettingsSuperAdmins from './shared/locales/de/super-admin-settings-super-admins.json';
+import enSuperAdminSettingsAcademy from './shared/locales/en/super-admin-settings-academy.json';
+import deSuperAdminSettingsAcademy from './shared/locales/de/super-admin-settings-academy.json';
+import enAcademy from './shared/locales/en/academy.json';
+import deAcademy from './shared/locales/de/academy.json';
+import enArtifacts from './shared/locales/en/artifacts.json';
+import deArtifacts from './shared/locales/de/artifacts.json';
+import enSuperAdminSettingsPlatformConfig from './shared/locales/en/super-admin-settings-platform-config.json';
+import deSuperAdminSettingsPlatformConfig from './shared/locales/de/super-admin-settings-platform-config.json';
+import enAdminSettingsSecurity from './shared/locales/en/admin-settings-security.json';
+import deAdminSettingsSecurity from './shared/locales/de/admin-settings-security.json';
+import enAdminSettingsAnonymization from './shared/locales/en/admin-settings-anonymization.json';
+import deAdminSettingsAnonymization from './shared/locales/de/admin-settings-anonymization.json';
+import enAdminSettingsLetterheads from './shared/locales/en/admin-settings-letterheads.json';
+import deAdminSettingsLetterheads from './shared/locales/de/admin-settings-letterheads.json';
+import enAdminSettingsApiKeys from './shared/locales/en/admin-settings-api-keys.json';
+import deAdminSettingsApiKeys from './shared/locales/de/admin-settings-api-keys.json';
+import enMcpUserConfig from './shared/locales/en/mcp-user-config.json';
+import deMcpUserConfig from './shared/locales/de/mcp-user-config.json';
+import enAdminSettingsInstructions from './shared/locales/en/admin-settings-instructions.json';
+import deAdminSettingsInstructions from './shared/locales/de/admin-settings-instructions.json';
 
 const resources = {
   en: {
@@ -65,15 +81,23 @@ const resources = {
     settings: enSettings,
     chat: enChat,
     chats: enChats,
-    prompts: enPrompts,
-    agents: enAgents,
-    agent: enAgent,
     install: enInstall,
     'install-integration': enInstallIntegration,
     skills: enSkills,
     skill: enSkill,
     'knowledge-bases': enKnowledgeBases,
     'super-admin-settings-skills': enSuperAdminSettingsSkills,
+    'super-admin-settings-super-admins': enSuperAdminSettingsSuperAdmins,
+    'super-admin-settings-academy': enSuperAdminSettingsAcademy,
+    academy: enAcademy,
+    artifacts: enArtifacts,
+    'super-admin-settings-platform-config': enSuperAdminSettingsPlatformConfig,
+    'admin-settings-security': enAdminSettingsSecurity,
+    'admin-settings-anonymization': enAdminSettingsAnonymization,
+    'admin-settings-letterheads': enAdminSettingsLetterheads,
+    'admin-settings-api-keys': enAdminSettingsApiKeys,
+    'mcp-user-config': enMcpUserConfig,
+    'admin-settings-instructions': enAdminSettingsInstructions,
   },
   de: {
     auth: deAuth,
@@ -90,15 +114,23 @@ const resources = {
     settings: deSettings,
     chat: deChat,
     chats: deChats,
-    prompts: dePrompts,
-    agents: deAgents,
-    agent: deAgent,
     install: deInstall,
     'install-integration': deInstallIntegration,
     skills: deSkills,
     skill: deSkill,
     'knowledge-bases': deKnowledgeBases,
     'super-admin-settings-skills': deSuperAdminSettingsSkills,
+    'super-admin-settings-super-admins': deSuperAdminSettingsSuperAdmins,
+    'super-admin-settings-academy': deSuperAdminSettingsAcademy,
+    academy: deAcademy,
+    artifacts: deArtifacts,
+    'super-admin-settings-platform-config': deSuperAdminSettingsPlatformConfig,
+    'admin-settings-security': deAdminSettingsSecurity,
+    'admin-settings-anonymization': deAdminSettingsAnonymization,
+    'admin-settings-letterheads': deAdminSettingsLetterheads,
+    'admin-settings-api-keys': deAdminSettingsApiKeys,
+    'mcp-user-config': deMcpUserConfig,
+    'admin-settings-instructions': deAdminSettingsInstructions,
   },
 };
 
@@ -116,6 +148,13 @@ const resources = {
 //   // only detect languages that are defined in our resources
 //   checkWhitelist: true,
 // };
+
+// Keep <html lang> in sync with the active locale. A mismatched lang
+// (e.g. lang="en" on German content) triggers Chrome auto-translate,
+// which rewrites DOM text nodes and corrupts streamed assistant messages.
+i18n.on('languageChanged', (lng) => {
+  document.documentElement.lang = lng;
+});
 
 void i18n
   // detect user language

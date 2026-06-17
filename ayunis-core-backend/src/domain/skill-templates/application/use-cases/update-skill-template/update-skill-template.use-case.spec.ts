@@ -101,6 +101,59 @@ describe('UpdateSkillTemplateUseCase', () => {
     expect(result.isActive).toBe(false);
   });
 
+  it('should pass defaultActive and defaultPinned when updating a pre-created copy template', async () => {
+    const existing = new PreCreatedCopySkillTemplate({
+      id: mockId,
+      name: 'Template',
+      shortDescription: 'Description',
+      instructions: 'Instructions.',
+      defaultActive: false,
+      defaultPinned: false,
+    });
+
+    const command = new UpdateSkillTemplateCommand({
+      skillTemplateId: mockId,
+      defaultActive: true,
+      defaultPinned: true,
+    });
+
+    repository.findOne.mockResolvedValue(existing);
+    repository.update.mockImplementation(async (t) => t);
+
+    const result = await useCase.execute(command);
+
+    expect(result).toBeInstanceOf(PreCreatedCopySkillTemplate);
+    const preCreated = result as PreCreatedCopySkillTemplate;
+    expect(preCreated.defaultActive).toBe(true);
+    expect(preCreated.defaultPinned).toBe(true);
+  });
+
+  it('should preserve existing defaultActive and defaultPinned when not provided in update', async () => {
+    const existing = new PreCreatedCopySkillTemplate({
+      id: mockId,
+      name: 'Template',
+      shortDescription: 'Description',
+      instructions: 'Instructions.',
+      defaultActive: true,
+      defaultPinned: true,
+    });
+
+    const command = new UpdateSkillTemplateCommand({
+      skillTemplateId: mockId,
+      shortDescription: 'Updated description',
+    });
+
+    repository.findOne.mockResolvedValue(existing);
+    repository.update.mockImplementation(async (t) => t);
+
+    const result = await useCase.execute(command);
+
+    expect(result).toBeInstanceOf(PreCreatedCopySkillTemplate);
+    const preCreated = result as PreCreatedCopySkillTemplate;
+    expect(preCreated.defaultActive).toBe(true);
+    expect(preCreated.defaultPinned).toBe(true);
+  });
+
   it('should check name uniqueness when name changes', async () => {
     const existing = new AlwaysOnSkillTemplate({
       id: mockId,

@@ -2,7 +2,6 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService, ConfigType } from '@nestjs/config';
 import { UUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
@@ -18,6 +17,7 @@ import { FindActiveSkillsUseCase } from 'src/domain/skills/application/use-cases
 import { FindActiveSkillsQuery } from 'src/domain/skills/application/use-cases/find-active-skills/find-active-skills.query';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { GetUserSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-user-system-prompt/get-user-system-prompt.use-case';
+import { GetOrgSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-org-system-prompt/get-org-system-prompt.use-case';
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
@@ -33,6 +33,10 @@ import {
   type SkillPrefix,
 } from 'src/common/util/skill-slug';
 import type { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
+import { assembleImageGenerationTools } from './image-generation-tool-assembly.helper';
+import { ContextService } from 'src/common/context/services/context.service';
+import { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
+import { ArtifactToolAssemblerService } from './artifact-tool-assembler.service';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -45,10 +49,14 @@ export class ToolAssemblyService {
     private readonly systemPromptBuilderService: SystemPromptBuilderService,
     private readonly findActiveSkillsUseCase: FindActiveSkillsUseCase,
     private readonly getUserSystemPromptUseCase: GetUserSystemPromptUseCase,
+    private readonly getOrgSystemPromptUseCase: GetOrgSystemPromptUseCase,
     private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
     private readonly findActiveAlwaysOnTemplatesUseCase: FindActiveAlwaysOnTemplatesUseCase,
     @Inject(featuresConfig.KEY)
     private readonly features: ConfigType<typeof featuresConfig>,
+    private readonly contextService: ContextService,
+    private readonly getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase,
+    private readonly artifactToolAssembler: ArtifactToolAssemblerService,
   ) {}
 
   async findActiveSkills(): Promise<Skill[]> {
@@ -57,9 +65,9 @@ export class ToolAssemblyService {
 
   async buildRunContext(
     thread: Thread,
-    agent: Agent | undefined,
     activeSkills: Skill[],
     canUseTools: boolean,
+    isAnonymous: boolean,
   ): Promise<{ tools: Tool[]; instructions: string }> {
     // Fetch always-on skill templates (cached, 60s TTL)
     let alwaysOnTemplates: SkillTemplate[] = [];
@@ -80,35 +88,33 @@ export class ToolAssemblyService {
     );
 
     const tools = canUseTools
-      ? await this.assembleTools(thread, agent, activeSkills, slugMap)
+      ? await this.assembleTools(thread, activeSkills, slugMap)
       : [];
 
-    // Collect all sources from thread and agent for the system prompt
-    // Filter to only TextSources since DataSources (e.g., CSV) can only be used
-    // with code_execution tool, not source_query or source_get_text
-    const allSources = [
-      ...(thread.sourceAssignments?.map((a) => a.source) ?? []),
-      ...(agent?.sourceAssignments.map((a) => a.source) ?? []),
-    ];
-    const textSources = allSources.filter(
-      (s): s is TextSource => s instanceof TextSource,
-    );
+    // Collect all sources from thread for the system prompt.
+    // All types and statuses are passed — the system prompt builder partitions
+    // them into ready / processing / failed sections.
+    const allSources = thread.sourceAssignments?.map((a) => a.source) ?? [];
 
-    // Fetch user's custom system prompt (returns null if not configured)
+    // Fetch org-wide and user's custom system prompts (null if not configured)
+    const orgSystemPromptEntity =
+      await this.getOrgSystemPromptUseCase.execute();
+    const orgSystemPrompt = orgSystemPromptEntity?.systemPrompt ?? undefined;
     const userSystemPromptEntity =
       await this.getUserSystemPromptUseCase.execute();
     const userSystemPrompt = userSystemPromptEntity?.systemPrompt ?? undefined;
 
     const instructions = this.systemPromptBuilderService.build({
-      agent,
       tools,
       currentTime: new Date(),
-      sources: textSources,
+      sources: allSources,
       // Only include skills in prompt when tools are enabled and skills feature is on,
       // otherwise the prompt would instruct the model to use activate_skill which isn't available
       skills: canUseTools && this.features.skillsEnabled ? skillEntries : [],
       knowledgeBases: canUseTools ? thread.getUniqueKnowledgeBases() : [],
+      orgSystemPrompt,
       userSystemPrompt,
+      isAnonymous,
     });
 
     return { tools, instructions };
@@ -126,21 +132,26 @@ export class ToolAssemblyService {
     const slugMap = new Map<string, string>();
     const skillEntries: SkillEntry[] = [];
 
-    const allInputs: {
+    type SkillInput = {
       name: string;
       prefix: SkillPrefix;
       description: string;
-    }[] = [
-      ...activeSkills.map((s) => ({
-        name: s.name,
-        prefix: USER_PREFIX as SkillPrefix,
-        description: s.shortDescription,
-      })),
-      ...alwaysOnTemplates.map((t) => ({
-        name: t.name,
-        prefix: SYSTEM_PREFIX as SkillPrefix,
-        description: t.shortDescription,
-      })),
+    };
+    const allInputs: SkillInput[] = [
+      ...activeSkills.map(
+        (s): SkillInput => ({
+          name: s.name,
+          prefix: USER_PREFIX,
+          description: s.shortDescription,
+        }),
+      ),
+      ...alwaysOnTemplates.map(
+        (t): SkillInput => ({
+          name: t.name,
+          prefix: SYSTEM_PREFIX,
+          description: t.shortDescription,
+        }),
+      ),
     ];
 
     for (const input of allInputs) {
@@ -167,118 +178,22 @@ export class ToolAssemblyService {
 
   async assembleTools(
     thread: Thread,
-    agent: Agent | undefined,
-    activeSkills: Skill[],
+    _activeSkills: Skill[],
     slugMap: Map<string, string>,
   ): Promise<Tool[]> {
     const skillsEnabled = this.features.skillsEnabled;
     const tools: Tool[] = [];
 
-    // Collect MCP integration IDs from agent and thread (skill-injected)
-    const mcpIntegrationIds = new Set<UUID>();
-    if (agent) {
-      agent.mcpIntegrationIds.forEach((id) => mcpIntegrationIds.add(id));
-    }
-    thread.mcpIntegrationIds.forEach((id) => mcpIntegrationIds.add(id));
-
-    // Discover MCP capabilities from all integration IDs
-    if (mcpIntegrationIds.size > 0) {
-      const integrationIdList = [...mcpIntegrationIds];
-
-      // Fetch integration entities for metadata (name, logoUrl)
-      const integrations = await this.getMcpIntegrationsByIdsUseCase.execute(
-        new GetMcpIntegrationsByIdsQuery(integrationIdList),
-      );
-      const integrationMetaMap = new Map<
-        UUID,
-        { name: string; logoUrl: string | null }
-      >();
-      for (const integration of integrations) {
-        integrationMetaMap.set(integration.id, {
-          name: integration.name,
-          logoUrl:
-            integration instanceof MarketplaceMcpIntegration
-              ? integration.logoUrl
-              : null,
-        });
-      }
-
-      const mcpResults = await Promise.allSettled(
-        integrationIdList.map((integrationId) =>
-          this.discoverMcpCapabilitiesUseCase.execute(
-            new DiscoverMcpCapabilitiesQuery(integrationId),
-          ),
-        ),
-      );
-
-      // Filter successful results, log and skip failures
-      const mcpCapabilities = mcpResults
-        .map((result, index) => {
-          if (result.status === 'fulfilled') {
-            return result.value;
-          }
-          const failedId = integrationIdList[index];
-          const meta = integrationMetaMap.get(failedId);
-          this.logger.warn(
-            `MCP integration '${meta?.name ?? failedId}' unavailable, skipping`,
-            {
-              integrationId: failedId,
-              error:
-                result.reason instanceof Error
-                  ? result.reason.message
-                  : 'Unknown error',
-            },
-          );
-          return null;
-        })
-        .filter((cap): cap is NonNullable<typeof cap> => cap !== null);
-
-      // Add MCP tools and resources
-      tools.push(
-        ...mcpCapabilities.flatMap((capability) =>
-          capability.tools.map((tool) => {
-            const meta = integrationMetaMap.get(tool.integrationId);
-            return new McpIntegrationTool(
-              tool,
-              capability.returnsPii,
-              meta?.name ?? 'Unknown',
-              meta?.logoUrl ?? null,
-            );
-          }),
-        ),
-        ...mcpCapabilities.flatMap((capability) =>
-          capability.resources.map(
-            (resource) =>
-              new McpIntegrationResource(resource, capability.returnsPii),
-          ),
-        ),
-      );
-    }
-
-    if (agent) {
-      // Add native tools from the agent (excluding always-available tools)
-      tools.push(
-        ...agent.tools.filter(
-          (tool) =>
-            tool.type !== ToolType.INTERNET_SEARCH &&
-            tool.type !== ToolType.BAR_CHART &&
-            tool.type !== ToolType.LINE_CHART &&
-            tool.type !== ToolType.PIE_CHART,
-        ),
-      );
-    }
+    // Discover and add MCP tools/resources from thread integrations
+    const mcpTools = await this.assembleMcpTools(thread);
+    tools.push(...mcpTools);
 
     // Code execution tool is always available
-    const threadSources = thread.sourceAssignments?.map(
-      (assignment) => assignment.source,
+    const threadSources =
+      thread.sourceAssignments?.map((assignment) => assignment.source) ?? [];
+    const codeExecutionSources = threadSources.filter(
+      (source) => source.type === SourceType.DATA,
     );
-    const agentSources = agent?.sourceAssignments.map(
-      (assignment) => assignment.source,
-    );
-    const codeExecutionSources = [
-      ...(threadSources ?? []),
-      ...(agentSources ?? []),
-    ].filter((source) => source.type === SourceType.DATA);
     tools.push(
       await this.assembleToolsUseCase.execute(
         new AssembleToolCommand({
@@ -288,143 +203,104 @@ export class ToolAssemblyService {
       ),
     );
 
-    // Website content tool is always available
+    // Always-available tools
+    const alwaysOnTypes = [
+      ToolType.WEBSITE_CONTENT,
+      ToolType.SEND_EMAIL,
+      ToolType.CREATE_CALENDAR_EVENT,
+      ToolType.BAR_CHART,
+      ToolType.LINE_CHART,
+      ToolType.PIE_CHART,
+    ];
+    for (const type of alwaysOnTypes) {
+      tools.push(
+        await this.assembleToolsUseCase.execute(
+          new AssembleToolCommand({ type }),
+        ),
+      );
+    }
+
+    // Artifact-related always-on tools (document create/update/edit/read +
+    // diagram create/update). Handles letterhead suffix + artifact context
+    // injection internally.
     tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.WEBSITE_CONTENT,
-        }),
-      ),
+      ...(await this.artifactToolAssembler.assembleDocumentAndDiagramTools(
+        thread,
+      )),
     );
 
-    // E-Mail tool is always available
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.SEND_EMAIL,
-        }),
-      ),
-    );
-
-    // Calendar event tool is always available
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.CREATE_CALENDAR_EVENT,
-        }),
-      ),
-    );
-
-    // Chart tools are always available
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.BAR_CHART,
-        }),
-      ),
-    );
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.LINE_CHART,
-        }),
-      ),
-    );
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.PIE_CHART,
-        }),
-      ),
-    );
-
-    // Product knowledge tool is always available
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.PRODUCT_KNOWLEDGE,
-        }),
-      ),
-    );
-
-    // Create skill tool is available when skills feature is enabled
     if (skillsEnabled) {
       tools.push(
         await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({
-            type: ToolType.CREATE_SKILL,
-          }),
+          new AssembleToolCommand({ type: ToolType.CREATE_SKILL }),
         ),
       );
+      const userSlugs = [...slugMap.keys()].filter((s) =>
+        s.startsWith(`${USER_PREFIX}__`),
+      );
+      if (userSlugs.length > 0) {
+        tools.push(
+          await this.assembleToolsUseCase.execute(
+            new AssembleToolCommand({
+              type: ToolType.EDIT_SKILL,
+              context: userSlugs,
+            }),
+          ),
+        );
+      }
     }
 
-    // Internet search tool is available when Brave Search credentials are configured
     if (this.configService.get<boolean>('internetSearch.isAvailable')) {
       tools.push(
         await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({
-            type: ToolType.INTERNET_SEARCH,
-          }),
+          new AssembleToolCommand({ type: ToolType.INTERNET_SEARCH }),
         ),
       );
     }
 
-    // Collect text sources from both thread and agent
+    // Image generation tool — available when org has a permitted image model
+    tools.push(
+      ...(await assembleImageGenerationTools({
+        orgId: this.contextService.get('orgId'),
+        getPermittedImageGenerationModelUseCase:
+          this.getPermittedImageGenerationModelUseCase,
+        assembleToolsUseCase: this.assembleToolsUseCase,
+        logger: this.logger,
+      })),
+    );
+
+    // Collect text sources from thread
     const threadTextSources = (thread.sourceAssignments ?? [])
       .map((assignment) => assignment.source)
       .filter((source): source is TextSource => source instanceof TextSource);
 
-    const agentTextSources = (agent?.sourceAssignments ?? [])
-      .map((assignment) => assignment.source)
-      .filter((source): source is TextSource => source instanceof TextSource);
-
-    const allTextSources = [...threadTextSources, ...agentTextSources];
-
-    // Source query and source get text tools are available if there are text sources
-    if (allTextSources.length > 0) {
-      tools.push(
-        await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({
-            type: ToolType.SOURCE_QUERY,
-            context: allTextSources,
-          }),
-        ),
-      );
-
-      tools.push(
-        await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({
-            type: ToolType.SOURCE_GET_TEXT,
-            context: allTextSources,
-          }),
-        ),
-      );
+    // Source query/get tools — available when there are text sources
+    if (threadTextSources.length > 0) {
+      for (const type of [ToolType.SOURCE_QUERY, ToolType.SOURCE_GET_TEXT]) {
+        tools.push(
+          await this.assembleToolsUseCase.execute(
+            new AssembleToolCommand({ type, context: threadTextSources }),
+          ),
+        );
+      }
     }
 
-    // Knowledge base tools are available if the thread has knowledge bases
+    // Knowledge base tools — available when the thread has knowledge bases
     const knowledgeBases = thread.getUniqueKnowledgeBases();
-
     if (knowledgeBases.length > 0) {
-      tools.push(
-        await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({
-            type: ToolType.KNOWLEDGE_QUERY,
-            context: knowledgeBases,
-          }),
-        ),
-      );
-
-      tools.push(
-        await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({
-            type: ToolType.KNOWLEDGE_GET_TEXT,
-            context: knowledgeBases,
-          }),
-        ),
-      );
+      for (const type of [
+        ToolType.KNOWLEDGE_QUERY,
+        ToolType.KNOWLEDGE_GET_TEXT,
+      ]) {
+        tools.push(
+          await this.assembleToolsUseCase.execute(
+            new AssembleToolCommand({ type, context: knowledgeBases }),
+          ),
+        );
+      }
     }
 
-    // Activate skill tool is available if there are activatable skills (user or system) and skills feature is enabled
+    // Activate skill tool is available if there are activatable skills and skills feature is enabled
     if (skillsEnabled && slugMap.size > 0) {
       tools.push(
         await this.assembleToolsUseCase.execute(
@@ -437,5 +313,80 @@ export class ToolAssemblyService {
     }
 
     return tools;
+  }
+
+  private async assembleMcpTools(thread: Thread): Promise<Tool[]> {
+    const mcpIntegrationIds = new Set<UUID>();
+    thread.mcpIntegrationIds.forEach((id) => mcpIntegrationIds.add(id));
+
+    if (mcpIntegrationIds.size === 0) return [];
+
+    const integrationIdList = [...mcpIntegrationIds];
+
+    const integrations = await this.getMcpIntegrationsByIdsUseCase.execute(
+      new GetMcpIntegrationsByIdsQuery(integrationIdList),
+    );
+    const integrationMetaMap = new Map<
+      UUID,
+      { name: string; logoUrl: string | null }
+    >();
+    for (const integration of integrations) {
+      integrationMetaMap.set(integration.id, {
+        name: integration.name,
+        logoUrl:
+          integration instanceof MarketplaceMcpIntegration
+            ? integration.logoUrl
+            : null,
+      });
+    }
+
+    const mcpResults = await Promise.allSettled(
+      integrationIdList.map((integrationId) =>
+        this.discoverMcpCapabilitiesUseCase.execute(
+          new DiscoverMcpCapabilitiesQuery(integrationId),
+        ),
+      ),
+    );
+
+    const mcpCapabilities = mcpResults
+      .map((result, index) => {
+        if (result.status === 'fulfilled') {
+          return result.value;
+        }
+        const failedId = integrationIdList[index];
+        const meta = integrationMetaMap.get(failedId);
+        this.logger.warn(
+          `MCP integration '${meta?.name ?? failedId}' unavailable, skipping`,
+          {
+            integrationId: failedId,
+            error:
+              result.reason instanceof Error
+                ? result.reason.message
+                : 'Unknown error',
+          },
+        );
+        return null;
+      })
+      .filter((cap): cap is NonNullable<typeof cap> => cap !== null);
+
+    return [
+      ...mcpCapabilities.flatMap((capability) =>
+        capability.tools.map((tool) => {
+          const meta = integrationMetaMap.get(tool.integrationId);
+          return new McpIntegrationTool(
+            tool,
+            capability.returnsPii,
+            meta?.name ?? 'Unknown',
+            meta?.logoUrl ?? null,
+          );
+        }),
+      ),
+      ...mcpCapabilities.flatMap((capability) =>
+        capability.resources.map(
+          (resource) =>
+            new McpIntegrationResource(resource, capability.returnsPii),
+        ),
+      ),
+    ];
   }
 }

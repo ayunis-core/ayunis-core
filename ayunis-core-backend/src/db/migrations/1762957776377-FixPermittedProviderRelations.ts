@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class FixPermittedProviderRelations1762957776377
-  implements MigrationInterface
-{
+export class FixPermittedProviderRelations1762957776377 implements MigrationInterface {
   name = 'FixPermittedProviderRelations1762957776377';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

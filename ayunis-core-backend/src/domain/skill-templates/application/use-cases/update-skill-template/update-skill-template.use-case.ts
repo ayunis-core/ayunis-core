@@ -57,7 +57,19 @@ export class UpdateSkillTemplateUseCase {
       const updated: SkillTemplate =
         distributionMode === DistributionMode.ALWAYS_ON
           ? new AlwaysOnSkillTemplate(baseParams)
-          : new PreCreatedCopySkillTemplate(baseParams);
+          : new PreCreatedCopySkillTemplate({
+              ...baseParams,
+              defaultActive:
+                command.defaultActive ??
+                (existing instanceof PreCreatedCopySkillTemplate
+                  ? existing.defaultActive
+                  : false),
+              defaultPinned:
+                command.defaultPinned ??
+                (existing instanceof PreCreatedCopySkillTemplate
+                  ? existing.defaultPinned
+                  : false),
+            });
 
       return await this.skillTemplateRepository.update(updated);
     } catch (error) {

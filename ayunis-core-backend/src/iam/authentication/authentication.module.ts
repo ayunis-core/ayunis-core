@@ -6,12 +6,13 @@ import { PassportModule } from '@nestjs/passport';
 
 import { JwtStrategy } from './application/strategies/jwt.strategy';
 import { LocalStrategy } from './application/strategies/local.strategy';
+import { ApiKeyStrategy } from './application/strategies/api-key.strategy';
 import { AuthenticationController } from './presenters/http/authentication.controller';
 import { AuthProvider } from '../../config/authentication.config';
 import { LocalAuthenticationRepository } from './infrastructure/repositories/local/local-authentication.repository';
 import { AUTHENTICATION_REPOSITORY } from './application/tokens/authentication-repository.token';
 import { JwtAuthGuard } from './application/guards/jwt-auth.guard';
-import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { UsersModule } from '../users/users.module';
 import { OrgsModule } from '../orgs/orgs.module';
 import { UnauthorizedExceptionFilter } from './application/filters/unauthorized-exception.filter';
@@ -28,7 +29,7 @@ import { EmailTemplatesModule } from 'src/common/email-templates/email-templates
 import { HashingModule } from '../hashing/hashing.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { TrialsModule } from '../trials/trials.module';
-import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
+import { ApiKeysModule } from '../api-keys/api-keys.module';
 import { ClsModule } from 'nestjs-cls';
 import { UserContextInterceptor } from './application/interceptors/user-context.interceptor';
 
@@ -51,7 +52,7 @@ export class AuthenticationModule {
         HashingModule,
         SubscriptionsModule,
         TrialsModule,
-        WebhooksModule,
+        ApiKeysModule,
         JwtModule.registerAsync({
           imports: [ConfigModule],
           inject: [ConfigService],
@@ -106,10 +107,10 @@ export class AuthenticationModule {
         // Strategies and Guards
         LocalStrategy,
         JwtStrategy,
-        {
-          provide: APP_GUARD,
-          useClass: JwtAuthGuard,
-        },
+        ApiKeyStrategy,
+        // JwtAuthGuard is a regular provider; IamModule owns the APP_GUARD
+        // binding so global guard order stays explicit in one place.
+        JwtAuthGuard,
         {
           provide: APP_FILTER,
           useClass: UnauthorizedExceptionFilter,
@@ -126,6 +127,7 @@ export class AuthenticationModule {
         RefreshTokenUseCase,
         RegisterUserUseCase,
         GetCurrentUserUseCase,
+        JwtAuthGuard,
       ],
     };
   }

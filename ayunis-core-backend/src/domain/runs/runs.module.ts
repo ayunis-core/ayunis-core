@@ -4,26 +4,32 @@ import { ToolsModule } from 'src/domain/tools/tools.module';
 import { MessagesModule } from 'src/domain/messages/messages.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { RunsController } from './presenters/http/runs.controller';
-import { AgentsModule } from 'src/domain/agents/agents.module';
 import { ExecuteRunUseCase } from './application/use-cases/execute-run/execute-run.use-case';
 import { ExecuteRunAndSetTitleUseCase } from './application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
 import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
 import { ToolAssemblyService } from './application/services/tool-assembly.service';
+import { ArtifactToolAssemblerService } from './application/services/artifact-tool-assembler.service';
 import { ToolResultCollectorService } from './application/services/tool-result-collector.service';
 import { MessageCleanupService } from './application/services/message-cleanup.service';
 import { StreamingInferenceService } from './application/services/streaming-inference.service';
 import { NonStreamingInferenceService } from './application/services/non-streaming-inference.service';
-import { CollectUsageAsyncService } from './application/services/collect-usage-async.service';
+import { CreditBudgetGuardService } from './application/services/credit-budget-guard.service';
+import { InferenceOrchestratorService } from './application/services/inference-orchestrator.service';
+import { InferenceUsageGuard } from './application/services/inference-usage-guard.service';
+
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 import { TrialsModule } from 'src/iam/trials/trials.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
 import { SourcesModule } from 'src/domain/sources/sources.module';
-import { AnonymizationModule } from 'src/common/anonymization/anonymization.module';
+import { AnonymizationSettingsModule } from 'src/domain/anonymization-settings/anonymization-settings.module';
+import { ThreadPiiMasksModule } from 'src/domain/thread-pii-masks/thread-pii-masks.module';
 import { UsageModule } from 'src/domain/usage/usage.module';
 import { QuotasModule } from 'src/iam/quotas/quotas.module';
 import { SkillsModule } from 'src/domain/skills/skills.module';
 import { SkillTemplatesModule } from 'src/domain/skill-templates/skill-templates.module';
 import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.module';
+import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
+import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
 
 @Module({
   imports: [
@@ -31,17 +37,19 @@ import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.modul
     ThreadsModule,
     MessagesModule,
     ToolsModule,
-    AgentsModule,
     SubscriptionsModule,
     TrialsModule,
     McpModule,
     SourcesModule,
-    AnonymizationModule,
+    AnonymizationSettingsModule,
+    ThreadPiiMasksModule,
     UsageModule,
     QuotasModule,
     SkillsModule,
     SkillTemplatesModule,
     ChatSettingsModule,
+    ArtifactsModule,
+    LetterheadsModule,
   ],
   controllers: [RunsController],
   providers: [
@@ -49,12 +57,19 @@ import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.modul
     ExecuteRunAndSetTitleUseCase,
     SystemPromptBuilderService,
     ToolAssemblyService,
+    ArtifactToolAssemblerService,
     ToolResultCollectorService,
     MessageCleanupService,
     StreamingInferenceService,
     NonStreamingInferenceService,
-    CollectUsageAsyncService,
+    CreditBudgetGuardService,
+    InferenceOrchestratorService,
+    InferenceUsageGuard,
   ],
-  exports: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],
+  exports: [
+    ExecuteRunUseCase,
+    ExecuteRunAndSetTitleUseCase,
+    InferenceUsageGuard,
+  ],
 })
 export class RunsModule {}

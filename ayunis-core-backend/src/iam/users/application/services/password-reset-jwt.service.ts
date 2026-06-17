@@ -20,6 +20,28 @@ export class PasswordResetJwtService {
   ) {}
 
   generatePasswordResetToken(params: { userId: UUID; email: string }): string {
+    const expiresIn = this.configService.get<StringValue>(
+      'auth.jwt.passwordResetExpiresIn',
+      '2h',
+    );
+    return this.generateToken(params, expiresIn);
+  }
+
+  generateInitialPasswordToken(params: {
+    userId: UUID;
+    email: string;
+  }): string {
+    const expiresIn = this.configService.get<StringValue>(
+      'auth.jwt.initialPasswordExpiresIn',
+      '7d',
+    );
+    return this.generateToken(params, expiresIn);
+  }
+
+  private generateToken(
+    params: { userId: UUID; email: string },
+    expiresIn: StringValue,
+  ): string {
     this.logger.log('generatePasswordResetToken', {
       userId: params.userId,
       email: params.email,
@@ -29,11 +51,6 @@ export class PasswordResetJwtService {
       userId: params.userId,
       email: params.email,
     };
-
-    const expiresIn = this.configService.get<StringValue>(
-      'auth.jwt.passwordResetExpiresIn',
-      '2h',
-    );
 
     return this.jwtService.sign(payload, { expiresIn });
   }

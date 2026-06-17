@@ -26,9 +26,6 @@ import { CreateTrialCommand } from 'src/iam/trials/application/use-cases/create-
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
 import { UserAlreadyExistsError } from 'src/iam/users/application/users.errors';
-import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
-import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { OrgCreatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/org-created.webhook-event';
 import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
@@ -44,7 +41,6 @@ export class RegisterUserUseCase {
     private readonly sendConfirmationEmailUseCase: SendConfirmationEmailUseCase,
     private readonly createTrialUseCase: CreateTrialUseCase,
     private readonly configService: ConfigService,
-    private readonly sendWebhookUseCase: SendWebhookUseCase,
   ) {}
 
   @Transactional()
@@ -107,6 +103,7 @@ export class RegisterUserUseCase {
           name: command.userName,
           emailVerified: shouldConfirmEmail ? false : true,
           hasAcceptedMarketing: command.hasAcceptedMarketing,
+          department: command.department,
         }),
       );
 
@@ -132,11 +129,6 @@ export class RegisterUserUseCase {
           new SendConfirmationEmailCommand(user),
         );
       }
-
-      // Send webhooks asynchronously (don't block the main operation)
-      void this.sendWebhookUseCase.execute(
-        new SendWebhookCommand(new OrgCreatedWebhookEvent(org, user)),
-      );
 
       this.logger.debug('Registration successful, logging in user', {
         userId: user.id,

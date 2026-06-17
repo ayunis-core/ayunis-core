@@ -39,4 +39,7 @@ export class UserRecord extends BaseRecord {
 
   @Column({ default: false })
   hasAcceptedMarketing: boolean;
+
+  @Column({ nullable: true })
+  department?: string;
 }

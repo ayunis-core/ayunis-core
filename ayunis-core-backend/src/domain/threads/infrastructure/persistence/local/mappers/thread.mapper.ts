@@ -27,7 +27,6 @@ export class ThreadMapper {
     record.model = thread.model
       ? this.permittedModelMapper.toRecord(thread.model)
       : undefined;
-    record.agentId = thread.agentId;
     record.title = thread.title;
     record.isAnonymous = thread.isAnonymous;
     record.messages = thread.messages.map((message) =>
@@ -54,7 +53,6 @@ export class ThreadMapper {
       id: threadEntity.id,
       userId: threadEntity.userId,
       model: this.mapModel(threadEntity),
-      agentId: threadEntity.agentId,
       sourceAssignments: this.mapSourceAssignments(threadEntity),
       mcpIntegrationIds: this.mapMcpIntegrationIds(threadEntity),
       knowledgeBaseAssignments: this.mapKnowledgeBaseAssignments(threadEntity),

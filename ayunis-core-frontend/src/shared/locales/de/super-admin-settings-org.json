@@ -50,10 +50,33 @@
     "createErrorCityRequired": "Stadt ist erforderlich",
     "createErrorCountryRequired": "Land ist erforderlich",
     "createErrorNoOfSeatsRequired": "Anzahl der Plätze ist erforderlich",
+    "createErrorMonthlyCreditsRequired": "Monatliche Credits sind erforderlich",
     "cancelErrorSubscriptionNotFound": "Abonnement nicht gefunden",
     "cancelError": "Ein unerwarteter Fehler ist aufgetreten",
     "uncancelErrorSubscriptionNotFound": "Abonnement nicht gefunden",
-    "uncancelError": "Ein unerwarteter Fehler ist aufgetreten"
+    "uncancelError": "Ein unerwarteter Fehler ist aufgetreten",
+    "edit": "Bearbeiten",
+    "startsAtLabel": "Startdatum",
+    "startsAtPlaceholder": "Startdatum auswählen",
+    "startsAtDescription": "Wählen Sie das Datum, an dem dieses Abonnement starten soll.",
+    "updateStartDateTitle": "Startdatum bearbeiten",
+    "updateStartDateDescription": "Passen Sie an, wann dieses Abonnement aktiv wird.",
+    "updateStartDateAction": "Startdatum speichern",
+    "updatingStartDate": "Wird gespeichert...",
+    "updateStartDateSuccess": "Startdatum erfolgreich aktualisiert",
+    "updateStartDateErrorSubscriptionNotFound": "Abonnement nicht gefunden",
+    "updateStartDateErrorSubscriptionAlreadyCancelled": "Gekündigte Abonnements können nicht bearbeitet werden",
+    "updateStartDateErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten",
+    "scheduled": "Geplant",
+    "scheduledDescription": "Dieses Abonnement startet am {{date}}.",
+    "validation": {
+      "startsAt": {
+        "required": "Startdatum ist erforderlich",
+        "isDateString": "Startdatum ist ungültig",
+        "invalid": "Startdatum ist ungültig"
+      },
+      "invalid": "Ungültige Eingabe"
+    }
   },
   "licenseSeats": {
     "title": "Lizenzplätze",
@@ -113,7 +136,17 @@
     "description": "Bitte geben Sie die Unternehmensdaten ein, um das Abonnement für diese Organisation einzurichten.",
     "createSubscription": "Abonnement erstellen",
     "creating": "Wird erstellt...",
-    "noOfSeatsDescription": "Sie können die Anzahl der Plätze jederzeit ändern."
+    "typeLabel": "Abonnement-Typ",
+    "typePlaceholder": "Typ auswählen",
+    "typeSeatBased": "Platzbasiert",
+    "typeUsageBased": "Nutzungsbasiert",
+    "noOfSeatsDescription": "Sie können die Anzahl der Plätze jederzeit ändern.",
+    "monthlyCreditsLabel": "Monatliche Credits",
+    "monthlyCreditsPlaceholder": "1000",
+    "monthlyCreditsDescription": "Das monatliche Credits-Budget für diese Organisation. Wird am 1. jedes Monats zurückgesetzt.",
+    "startsAtLabel": "Startdatum",
+    "startsAtPlaceholder": "Startet sofort",
+    "startsAtDescription": "Leer lassen, damit das Abonnement sofort startet, oder ein zukünftiges Datum wählen."
   },
   "trialDialog": {
     "title": "Trial erstellen",
@@ -148,7 +181,17 @@
   },
   "triggerPasswordReset": {
     "success": "Passwort-Reset-E-Mail erfolgreich gesendet",
-    "error": "Passwort-Reset-E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es erneut."
+    "error": "Passwort-Reset-E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Benutzer nicht gefunden."
+  },
+  "passwordResetSuccess": {
+    "title": "Passwort-Reset-E-Mail gesendet",
+    "description": "Eine Passwort-Reset-E-Mail wurde an {{email}} gesendet. Sie können den Reset-Link auch direkt teilen.",
+    "urlLabel": "Passwort-Reset-Link",
+    "copyButton": "Kopieren",
+    "copiedButton": "Kopiert",
+    "copied": "Link in Zwischenablage kopiert",
+    "close": "Schließen"
   },
   "confirmPasswordReset": {
     "title": "Passwort-Reset-E-Mail senden",
@@ -159,7 +202,7 @@
   "createUser": {
     "button": "Benutzer hinzufügen",
     "title": "Neuen Benutzer erstellen",
-    "description": "Erstellen Sie einen neuen Benutzer in dieser Organisation. Ein zufälliges Passwort wird generiert und eine Passwort-Reset-E-Mail kann optional an den Benutzer gesendet werden.",
+    "description": "Erstellen Sie einen neuen Benutzer in dieser Organisation. Ein zufälliges Passwort wird generiert und eine Aktivierungs-E-Mail kann optional an den Benutzer gesendet werden.",
     "nameLabel": "Name",
     "namePlaceholder": "Benutzernamen eingeben",
     "nameRequired": "Name ist erforderlich",
@@ -175,11 +218,29 @@
     "create": "Benutzer erstellen",
     "creating": "Wird erstellt...",
     "cancel": "Abbrechen",
-    "sendPasswordResetEmailLabel": "Passwort-Reset-E-Mail an Benutzer senden",
+    "sendActivationEmailLabel": "Aktivierungs-E-Mail an Benutzer senden",
     "success": "Benutzer erfolgreich erstellt.",
     "error": "Benutzer konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
     "emailProviderBlacklisted": "Dieser E-Mail-Anbieter ist nicht erlaubt.",
     "userAlreadyExists": "Ein Benutzer mit dieser E-Mail existiert bereits."
+  },
+  "creditBudget": {
+    "title": "Credits-Budget",
+    "budget": "Monatliches Budget",
+    "used": "Verbrauchte Credits",
+    "remaining": "Verbleibende Credits",
+    "usageProgress": "Nutzung",
+    "error": "Credits-Nutzungsdaten konnten nicht geladen werden.",
+    "edit": "Bearbeiten",
+    "updateTitle": "Monatliche Credits bearbeiten",
+    "updateDescription": "Passen Sie das monatliche Credits-Budget für diese Organisation an. Das neue Budget gilt für den aktuellen Abrechnungsmonat.",
+    "updateLabel": "Monatliche Credits",
+    "save": "Speichern",
+    "updateSuccess": "Monatliche Credits erfolgreich aktualisiert",
+    "updateErrorSubscriptionNotFound": "Abonnement nicht gefunden",
+    "updateErrorInvalidType": "Monatliche Credits können nur für nutzungsbasierte Abonnements festgelegt werden",
+    "updateErrorInvalidData": "Ungültiger Wert für monatliche Credits",
+    "updateErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten"
   },
   "noSubscription": {
     "title": "Noch kein Abonnement",
@@ -192,7 +253,69 @@
     "subscriptions": "Abonnement",
     "trials": "Trial",
     "models": "Modelle",
-    "usage": "Nutzung"
+    "usage": "Nutzung",
+    "crawlDomains": "Crawl-Domains",
+    "addons": "Add-ons"
+  },
+  "addons": {
+    "title": "Add-ons",
+    "description": "Optionale Produktmodule, die für diese Organisation aktiviert werden können.",
+    "error": "Add-ons konnten nicht geladen werden.",
+    "activate": {
+      "success": "Add-on aktiviert.",
+      "error": "Das Add-on konnte nicht aktiviert werden."
+    },
+    "deactivate": {
+      "success": "Add-on deaktiviert.",
+      "error": "Das Add-on konnte nicht deaktiviert werden."
+    },
+    "items": {
+      "ayunis_core_academy": {
+        "title": "Ayunis Core Academy",
+        "description": "Lernplattform mit Schulungsinhalten für die Arbeit mit Ayunis Core."
+      }
+    }
+  },
+  "crawlDomains": {
+    "title": "Crawl-Domains",
+    "description": "Hosts, die nur diese Organisation crawlen darf, jeweils exklusiv einer Organisation zugeordnet.",
+    "empty": "Dieser Organisation sind keine Crawl-Domains zugewiesen.",
+    "error": "Crawl-Domains konnten nicht geladen werden.",
+    "table": {
+      "host": "Host",
+      "createdAt": "Hinzugefügt",
+      "actions": "Aktionen"
+    },
+    "createDomain": {
+      "button": "Domain hinzufügen",
+      "title": "Crawl-Domain hinzufügen",
+      "description": "Autorisiere einen Host, den nur diese Organisation crawlen darf. Eine vollständige URL wird akzeptiert und auf ihren Host reduziert.",
+      "label": "Host",
+      "placeholder": "z. B. intranet.kunde.de",
+      "required": "Bitte einen Host eingeben.",
+      "cancel": "Abbrechen",
+      "create": "Hinzufügen",
+      "creating": "Wird hinzugefügt…"
+    },
+    "add": {
+      "success": "Crawl-Domain hinzugefügt.",
+      "error": "Crawl-Domain konnte nicht hinzugefügt werden.",
+      "errorAlreadyAssigned": "Diese Domain ist bereits einer anderen Organisation zugewiesen.",
+      "errorInvalid": "Bitte einen gültigen Host oder eine gültige URL eingeben."
+    },
+    "remove": {
+      "button": "Entfernen",
+      "title": "Crawl-Domain entfernen",
+      "description": "\"{{domain}}\" entfernen? Diese Organisation kann sie dann nicht mehr crawlen.",
+      "confirmText": "Entfernen",
+      "cancelText": "Abbrechen",
+      "success": "Crawl-Domain entfernt.",
+      "error": "Crawl-Domain konnte nicht entfernt werden."
+    }
+  },
+  "orgDetails": {
+    "name": "Name",
+    "id": "ID"
   },
   "trial": {
     "title": "Trial-Informationen",
@@ -235,6 +358,40 @@
       "archived": "Archiviert"
     },
     "emptyArchived": "Keine archivierten Modelle",
-    "emptyArchivedDescription": "Archivierte Modelle werden hier angezeigt."
+    "emptyArchivedDescription": "Archivierte Modelle werden hier angezeigt.",
+    "catalog": {
+      "createButton": "Modell erstellen",
+      "createLanguageModel": "Sprachmodell",
+      "createEmbeddingModel": "Embedding-Modell",
+      "createImageGenerationModel": "Bilderzeugungsmodell",
+      "languageModels": "Sprachmodelle",
+      "embeddingModels": "Embedding-Modelle",
+      "imageGenerationModels": "Bilderzeugungsmodelle",
+      "languageModelsDescription": "Modelle für Textgenerierung und Konversation.",
+      "embeddingModelsDescription": "Modelle für Text-Embeddings und semantische Suche.",
+      "imageGenerationModelsDescription": "Modelle für Bilderzeugung.",
+      "languageModelType": "Sprache",
+      "embeddingModelType": "Embedding",
+      "imageGenerationModelType": "Bilderzeugung",
+      "noLanguageModels": "Keine Sprachmodelle",
+      "noLanguageModelsEmpty": "Es wurden noch keine Sprachmodelle zum Katalog hinzugefügt.",
+      "noLanguageModelsArchived": "Keine Sprachmodelle wurden archiviert.",
+      "noEmbeddingModels": "Keine Embedding-Modelle",
+      "noEmbeddingModelsEmpty": "Es wurden noch keine Embedding-Modelle zum Katalog hinzugefügt.",
+      "noEmbeddingModelsArchived": "Keine Embedding-Modelle wurden archiviert.",
+      "noImageGenerationModels": "Keine Bilderzeugungsmodelle",
+      "noImageGenerationModelsEmpty": "Es wurden noch keine Bilderzeugungsmodelle zum Katalog hinzugefügt.",
+      "noImageGenerationModelsArchived": "Keine Bilderzeugungsmodelle wurden archiviert.",
+      "archivedBadge": "Archiviert",
+      "streamingBadge": "Streaming",
+      "toolsBadge": "Tools",
+      "reasoningBadge": "Reasoning",
+      "deleteModel": {
+        "title": "Modell löschen",
+        "description": "Sind Sie sicher, dass Sie {{displayName}} löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+        "confirmText": "Löschen",
+        "cancelText": "Abbrechen"
+      }
+    }
   }
 }

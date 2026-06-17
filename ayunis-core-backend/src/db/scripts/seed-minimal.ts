@@ -3,7 +3,8 @@ import { randomUUID } from 'crypto';
 import dataSource from 'src/db/datasource';
 import { SeedRunner } from './utils/seed-runner';
 import { minimalFixture, type ModelKey } from '../fixtures/minimal.fixture';
-import { IsNull } from 'typeorm';
+import { IsNull, MoreThanOrEqual } from 'typeorm';
+import type { UUID } from 'crypto';
 
 // Entity records
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
@@ -11,10 +12,18 @@ import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/sche
 import {
   LanguageModelRecord,
   EmbeddingModelRecord,
+  ImageGenerationModelRecord,
 } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
-import { SubscriptionRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription.record';
+import {
+  SeatBasedSubscriptionRecord,
+  UsageBasedSubscriptionRecord,
+} from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription.record';
 import { SubscriptionBillingInfoRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription-billing-info.record';
 import { PermittedModelRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
+import { PlatformConfigRecord } from 'src/iam/platform-config/infrastructure/persistence/postgres/schema/platform-config.record';
+import { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-config-keys.enum';
+import { UsageRecord } from 'src/domain/usage/infrastructure/persistence/local-usage/schema/usage.record';
+import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 const fixture = minimalFixture;
 
@@ -32,23 +41,25 @@ function log(entity: string, name: string, created: boolean): void {
 // Seed steps
 // ---------------------------------------------------------------------------
 
-async function seedOrg(): Promise<OrgRecord> {
+async function seedOrgByName(name: string): Promise<OrgRecord> {
   const repo = dataSource.getRepository(OrgRecord);
-  const existing = await repo.findOne({ where: { name: fixture.org.name } });
+  const existing = await repo.findOne({ where: { name } });
   if (existing) {
     log('Org', existing.name, false);
     return existing;
   }
 
-  const record = repo.create({ id: randomUUID(), name: fixture.org.name });
+  const record = repo.create({ id: randomUUID(), name });
   await repo.save(record);
   log('Org', record.name, true);
   return record;
 }
 
-async function seedLanguageModel(): Promise<LanguageModelRecord> {
+async function seedLanguageModelFromFixture(
+  entry: typeof fixture.languageModel | typeof fixture.azureLanguageModel,
+): Promise<LanguageModelRecord> {
   const repo = dataSource.getRepository(LanguageModelRecord);
-  const { name, displayName, provider, ...flags } = fixture.languageModel;
+  const { name, displayName, provider, ...flags } = entry;
   const existing = await repo.findOne({ where: { name, provider } });
   if (existing) {
     log('Language model', existing.name, false);
@@ -88,14 +99,52 @@ async function seedEmbeddingModel(): Promise<EmbeddingModelRecord> {
   return record;
 }
 
+async function seedImageGenerationModel(): Promise<ImageGenerationModelRecord> {
+  const repo = dataSource.getRepository(ImageGenerationModelRecord);
+  const { name, displayName, provider, inputTokenCost, outputTokenCost } =
+    fixture.imageGenerationModel;
+  const existing = await repo.findOne({ where: { name, provider } });
+  if (existing) {
+    // Backfill pricing on envs seeded before image-gen cost fields existed,
+    // so credit accounting produces non-zero credits for gpt-image-1.
+    let dirty = false;
+    if (existing.inputTokenCost === undefined) {
+      existing.inputTokenCost = inputTokenCost;
+      dirty = true;
+    }
+    if (existing.outputTokenCost === undefined) {
+      existing.outputTokenCost = outputTokenCost;
+      dirty = true;
+    }
+    if (dirty) {
+      await repo.save(existing);
+    }
+    log('Image generation model', existing.name, dirty);
+    return existing;
+  }
+
+  const record = repo.create({
+    id: randomUUID(),
+    name,
+    displayName,
+    provider,
+    inputTokenCost,
+    outputTokenCost,
+  });
+  await repo.save(record);
+  log('Image generation model', record.name, true);
+  return record;
+}
+
 // Manual find-or-create because password must be hashed before insert.
 async function seedUser(
   orgId: string,
   runner: SeedRunner,
+  userData: typeof fixture.user | typeof fixture.usageUser,
 ): Promise<UserRecord> {
   const repo = dataSource.getRepository(UserRecord);
   const existing = await repo.findOne({
-    where: { email: fixture.user.email },
+    where: { email: userData.email },
   });
 
   if (existing) {
@@ -103,25 +152,27 @@ async function seedUser(
     return existing;
   }
 
-  const passwordHash = await runner.hashPassword(fixture.user.password);
+  const passwordHash = await runner.hashPassword(userData.password);
   const record = repo.create({
     id: randomUUID(),
-    email: fixture.user.email,
+    email: userData.email,
     passwordHash,
     orgId,
-    name: fixture.user.name,
-    role: fixture.user.role,
-    systemRole: fixture.user.systemRole,
-    emailVerified: fixture.user.emailVerified,
-    hasAcceptedMarketing: fixture.user.hasAcceptedMarketing,
+    name: userData.name,
+    role: userData.role,
+    systemRole: userData.systemRole,
+    emailVerified: userData.emailVerified,
+    hasAcceptedMarketing: userData.hasAcceptedMarketing,
   } as Partial<UserRecord>);
   await repo.save(record);
   log('User', record.email, true);
   return record;
 }
 
-async function seedSubscription(orgId: string): Promise<SubscriptionRecord> {
-  const subRepo = dataSource.getRepository(SubscriptionRecord);
+async function seedSubscription(
+  orgId: string,
+): Promise<SeatBasedSubscriptionRecord> {
+  const subRepo = dataSource.getRepository(SeatBasedSubscriptionRecord);
   const billingRepo = dataSource.getRepository(SubscriptionBillingInfoRecord);
 
   const existing = await subRepo.findOne({
@@ -137,24 +188,71 @@ async function seedSubscription(orgId: string): Promise<SubscriptionRecord> {
   }
 
   const subscriptionId = randomUUID();
-  const billingInfo = billingRepo.create({
-    id: randomUUID(),
-    subscriptionId,
-    ...fixture.subscription.billingInfo,
-  } as Partial<SubscriptionBillingInfoRecord>);
 
+  // Insert subscription first (FK target), then billing info
   const record = subRepo.create({
     id: subscriptionId,
     orgId,
     noOfSeats: fixture.subscription.noOfSeats,
     pricePerSeat: fixture.subscription.pricePerSeat,
     renewalCycle: fixture.subscription.renewalCycle,
+    startsAt: new Date(),
     renewalCycleAnchor: new Date(),
-    billingInfo,
     cancelledAt: null,
-  } as Partial<SubscriptionRecord>);
+  } as Partial<SeatBasedSubscriptionRecord>);
   await subRepo.save(record);
+
+  const billingInfo = billingRepo.create({
+    id: randomUUID(),
+    subscriptionId,
+    ...fixture.subscription.billingInfo,
+  } as Partial<SubscriptionBillingInfoRecord>);
+  await billingRepo.save(billingInfo);
+
+  record.billingInfo = billingInfo;
   log('Subscription', `org=${orgId}`, true);
+  return record;
+}
+
+async function seedUsageSubscription(
+  orgId: string,
+): Promise<UsageBasedSubscriptionRecord> {
+  const subRepo = dataSource.getRepository(UsageBasedSubscriptionRecord);
+  const billingRepo = dataSource.getRepository(SubscriptionBillingInfoRecord);
+
+  const existing = await subRepo.findOne({
+    where: {
+      orgId: orgId as `${string}-${string}-${string}-${string}-${string}`,
+      cancelledAt: IsNull(),
+    },
+  });
+
+  if (existing) {
+    log('Usage subscription', `org=${orgId}`, false);
+    return existing;
+  }
+
+  const subscriptionId = randomUUID();
+
+  // Insert subscription first (FK target), then billing info
+  const record = subRepo.create({
+    id: subscriptionId,
+    orgId,
+    monthlyCredits: fixture.usageSubscription.monthlyCredits,
+    startsAt: new Date(),
+    cancelledAt: null,
+  } as Partial<UsageBasedSubscriptionRecord>);
+  await subRepo.save(record);
+
+  const billingInfo = billingRepo.create({
+    id: randomUUID(),
+    subscriptionId,
+    ...fixture.usageSubscription.billingInfo,
+  } as Partial<SubscriptionBillingInfoRecord>);
+  await billingRepo.save(billingInfo);
+
+  record.billingInfo = billingInfo;
+  log('Usage subscription', `org=${orgId}`, true);
   return record;
 }
 
@@ -204,9 +302,166 @@ async function seedPermittedModels(
   }
 }
 
+async function seedPlatformConfig(): Promise<void> {
+  const repo = dataSource.getRepository(PlatformConfigRecord);
+  const key = PlatformConfigKey.CREDITS_PER_EURO;
+  const existing = await repo.findOne({ where: { key } });
+
+  if (existing) {
+    log('Platform config', key, false);
+    return;
+  }
+
+  const record = repo.create({
+    key,
+    value: String(fixture.platformConfig.creditsPerEuro),
+  });
+  await repo.save(record);
+  log('Platform config', key, true);
+}
+
+interface UsageSeedModel {
+  id: string;
+  provider: ModelProvider;
+  inputTokenCost?: number | null;
+  outputTokenCost?: number | null;
+}
+
+/**
+ * Seeds usage records across the current calendar month so the credit-based
+ * usage views (admin + super admin) show non-empty charts and tables.
+ * Idempotent: skips if the org already has usage in the current month.
+ */
+async function seedUsageRecords(
+  orgId: string,
+  userId: string,
+  usageModels: UsageSeedModel[],
+): Promise<void> {
+  const repo = dataSource.getRepository(UsageRecord);
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const existing = await repo.count({
+    where: {
+      organizationId: orgId as UUID,
+      createdAt: MoreThanOrEqual(monthStart),
+    },
+  });
+  if (existing > 0) {
+    log('Usage records', `org=${orgId}`, false);
+    return;
+  }
+
+  const creditsPerEuro = fixture.platformConfig.creditsPerEuro;
+  const today = now.getDate();
+  const rows: Record<string, unknown>[] = [];
+
+  let index = 0;
+  // One record every other day up to today, cycling through models/providers.
+  for (let day = 1; day <= today; day += 2) {
+    const model = usageModels[index % usageModels.length];
+    // Deterministic but varied token counts.
+    const inputTokens = 40_000 + ((index * 7919) % 120_000);
+    const outputTokens = 20_000 + ((index * 5003) % 80_000);
+    const totalTokens = inputTokens + outputTokens;
+    const cost =
+      (inputTokens / 1_000_000) * (model.inputTokenCost ?? 0) +
+      (outputTokens / 1_000_000) * (model.outputTokenCost ?? 0);
+    const creditsConsumed = cost * creditsPerEuro;
+    const createdAt = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      day,
+      10,
+      0,
+      0,
+    );
+
+    rows.push({
+      id: randomUUID(),
+      userId: userId,
+      apiKeyId: null,
+      organizationId: orgId,
+      modelId: model.id,
+      provider: model.provider,
+      inputTokens,
+      outputTokens,
+      totalTokens,
+      cost,
+      creditsConsumed,
+      requestId: randomUUID(),
+      createdAt,
+      updatedAt: createdAt,
+    });
+    index += 1;
+  }
+
+  if (rows.length === 0) {
+    log('Usage records', `org=${orgId} (none — day 1)`, true);
+    return;
+  }
+
+  // QueryBuilder insert honors the explicit createdAt (CreateDateColumn would
+  // otherwise overwrite it with the current timestamp).
+  await dataSource
+    .createQueryBuilder()
+    .insert()
+    .into(UsageRecord)
+    .values(rows)
+    .execute();
+  log('Usage records', `org=${orgId} (${rows.length})`, true);
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
+
+async function seedAllFixtures(runner: SeedRunner): Promise<void> {
+  console.log('🌱 Starting minimal seed…\n'); // eslint-disable-line no-console
+
+  const [
+    org,
+    usageOrg,
+    languageModel,
+    azureLanguageModel,
+    embeddingModel,
+    imageGenerationModel,
+  ] = await Promise.all([
+    seedOrgByName(fixture.org.name),
+    seedOrgByName(fixture.usageOrg.name),
+    seedLanguageModelFromFixture(fixture.languageModel),
+    seedLanguageModelFromFixture(fixture.azureLanguageModel),
+    seedEmbeddingModel(),
+    seedImageGenerationModel(),
+  ]);
+
+  const models = {
+    languageModel,
+    azureLanguageModel,
+    embeddingModel,
+    imageGenerationModel,
+  };
+
+  const adminUser = await seedUser(org.id, runner, fixture.user);
+  await seedSubscription(org.id);
+  await seedPermittedModels(org.id, models);
+
+  const usageAdminUser = await seedUser(usageOrg.id, runner, fixture.usageUser);
+  await seedUsageSubscription(usageOrg.id);
+  await seedPermittedModels(usageOrg.id, models);
+
+  await seedPlatformConfig();
+
+  const usageModels: UsageSeedModel[] = [
+    languageModel,
+    azureLanguageModel,
+    imageGenerationModel,
+  ];
+  await seedUsageRecords(org.id, adminUser.id, usageModels);
+  await seedUsageRecords(usageOrg.id, usageAdminUser.id, usageModels);
+
+  console.log('\n🎉 Minimal seed completed successfully!'); // eslint-disable-line no-console
+}
 
 async function seedMinimal(): Promise<void> {
   const runner = new SeedRunner();
@@ -221,21 +476,7 @@ async function seedMinimal(): Promise<void> {
       await runner.truncateAll();
     }
 
-    console.log('🌱 Starting minimal seed…\n'); // eslint-disable-line no-console
-
-    // Seed independent entities first
-    const [org, languageModel, embeddingModel] = await Promise.all([
-      seedOrg(),
-      seedLanguageModel(),
-      seedEmbeddingModel(),
-    ]);
-
-    // Seed entities that depend on org
-    await seedUser(org.id, runner);
-    await seedSubscription(org.id);
-    await seedPermittedModels(org.id, { languageModel, embeddingModel });
-
-    console.log('\n🎉 Minimal seed completed successfully!'); // eslint-disable-line no-console
+    await seedAllFixtures(runner);
   } catch (error) {
     console.error('\n❌ Seed failed:', error);
     exitCode = 1;

@@ -9,7 +9,6 @@ interface KnowledgeQueryToolParameters {
   query: string;
 }
 
-// eslint-disable-next-line sonarjs/function-return-type -- false positive: function always returns JSONSchema
 function knowledgeQueryToolParameters(
   knowledgeBases: KnowledgeBaseSummary[],
 ): JSONSchema {

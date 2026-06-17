@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddToolUseFlagToLanguageModels1756802599643
-  implements MigrationInterface
-{
+export class AddToolUseFlagToLanguageModels1756802599643 implements MigrationInterface {
   name = 'AddToolUseFlagToLanguageModels1756802599643';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

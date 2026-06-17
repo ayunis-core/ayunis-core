@@ -21,6 +21,9 @@ export interface InvitationTemplateContent {
   productName: string;
   currentYear: string;
   adminName: string | null;
+  logoUrl: string;
+  teamUrl: string;
+  bannerUrl: string;
 }
 
 export interface PasswordResetTemplateContent {
@@ -30,7 +33,21 @@ export interface PasswordResetTemplateContent {
   companyName: string;
   productName: string;
   currentYear: string;
+  logoUrl: string;
+  teamUrl: string;
   userName?: string;
+}
+
+export interface SetInitialPasswordTemplateContent {
+  resetUrl: string;
+  userEmail: string;
+  invitingCompanyName: string;
+  userName: string;
+  productName: string;
+  currentYear: string;
+  logoUrl: string;
+  teamUrl: string;
+  bannerUrl: string;
 }
 
 export class EmailConfirmationTemplate extends EmailTemplate {
@@ -67,6 +84,19 @@ export class PasswordResetTemplate extends EmailTemplate {
       productName: content.productName,
       currentYear: content.currentYear,
       userName: content.userName || '',
+    });
+  }
+}
+
+export class SetInitialPasswordTemplate extends EmailTemplate {
+  constructor(public readonly content: SetInitialPasswordTemplateContent) {
+    super(EmailTemplateType.SET_INITIAL_PASSWORD, {
+      resetUrl: content.resetUrl,
+      userEmail: content.userEmail,
+      invitingCompanyName: content.invitingCompanyName,
+      userName: content.userName,
+      productName: content.productName,
+      currentYear: content.currentYear,
     });
   }
 }

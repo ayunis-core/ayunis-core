@@ -1,24 +1,41 @@
-import { Entity, Column, Index, ManyToOne } from 'typeorm';
+import { Entity, Column, Index, ManyToOne, Check } from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { UUID } from 'crypto';
 import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
 import { OrgRecord } from '../../../../../../iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { ModelRecord } from '../../../../../models/infrastructure/persistence/local-models/schema/model.record';
+import { ApiKeyRecord } from '../../../../../../iam/api-keys/infrastructure/repositories/local/schema/api-key.record';
 import { ModelProvider } from '../../../../../models/domain/value-objects/model-provider.enum';
-import { Currency } from '../../../../../models/domain/value-objects/currency.enum';
 
+const decimalTransformer = {
+  to: (value?: number | null) => value,
+  from: (value?: string | null) =>
+    value === null || value === undefined ? null : Number(value),
+};
+
+/**
+ * All costs are stored in EUR.
+ */
 @Entity('usage')
 @Index(['organizationId', 'createdAt'])
 @Index(['userId', 'createdAt'])
+@Index(['apiKeyId', 'createdAt'])
 @Index(['modelId', 'createdAt'])
 @Index(['provider', 'createdAt'])
 @Index(['organizationId', 'provider', 'createdAt'])
+@Check('CHK_usage_principal_not_both', `"userId" IS NULL OR "apiKeyId" IS NULL`)
 export class UsageRecord extends BaseRecord {
-  @Column('uuid')
-  userId: UUID;
+  @Column({ nullable: true })
+  userId: UUID | null;
 
-  @ManyToOne(() => UserRecord, { nullable: false, onDelete: 'CASCADE' })
-  user: UserRecord;
+  @ManyToOne(() => UserRecord, { nullable: true, onDelete: 'SET NULL' })
+  user: UserRecord | null;
+
+  @Column({ nullable: true })
+  apiKeyId: UUID | null;
+
+  @ManyToOne(() => ApiKeyRecord, { nullable: true, onDelete: 'SET NULL' })
+  apiKey: ApiKeyRecord | null;
 
   @Column('uuid')
   organizationId: UUID;
@@ -47,15 +64,22 @@ export class UsageRecord extends BaseRecord {
   @Column('integer')
   totalTokens: number;
 
-  @Column('decimal', { precision: 10, scale: 6, nullable: true })
+  /** Cost in EUR */
+  @Column('decimal', {
+    precision: 10,
+    scale: 6,
+    nullable: true,
+    transformer: decimalTransformer,
+  })
   cost: number | null;
 
-  @Column({
-    type: 'enum',
-    enum: Currency,
+  @Column('decimal', {
+    precision: 16,
+    scale: 6,
     nullable: true,
+    transformer: decimalTransformer,
   })
-  currency: Currency | null;
+  creditsConsumed: number | null;
 
   @Column('uuid')
   requestId: UUID;

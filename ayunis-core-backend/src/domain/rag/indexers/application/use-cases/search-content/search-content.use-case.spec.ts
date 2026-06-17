@@ -23,10 +23,10 @@ describe('SearchContentUseCase', () => {
     mockIndexer = {
       search: jest.fn(),
       searchMulti: jest.fn(),
-      ingest: jest.fn(),
+      ingestBulk: jest.fn(),
       delete: jest.fn(),
       deleteMany: jest.fn(),
-    } as jest.Mocked<IndexerPort>;
+    };
 
     mockRegistry = {
       get: jest.fn().mockReturnValue(mockIndexer),

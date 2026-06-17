@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddAgentSourceAssignments1756382448075
-  implements MigrationInterface
-{
+export class AddAgentSourceAssignments1756382448075 implements MigrationInterface {
   name = 'AddAgentSourceAssignments1756382448075';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

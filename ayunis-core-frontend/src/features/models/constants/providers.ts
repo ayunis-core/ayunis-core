@@ -1,13 +1,15 @@
 import {
   CreateLanguageModelRequestDtoProvider,
   CreateEmbeddingModelRequestDtoProvider,
+  CreateImageGenerationModelRequestDtoProvider,
+  type ModelProviderInfoResponseDtoProvider as ModelProvider,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 /**
  * Provider display labels derived from generated schema types.
  * Single source of truth for provider dropdown options.
  */
-const PROVIDER_LABELS: Record<string, string> = {
+const PROVIDER_LABELS: Record<ModelProvider, string> = {
   otc: 'OTC',
   openai: 'OpenAI',
   anthropic: 'Anthropic',
@@ -29,7 +31,7 @@ export const LANGUAGE_MODEL_PROVIDERS = Object.values(
   CreateLanguageModelRequestDtoProvider,
 ).map((value) => ({
   value,
-  label: PROVIDER_LABELS[value] ?? value,
+  label: PROVIDER_LABELS[value],
 }));
 
 /**
@@ -39,5 +41,16 @@ export const EMBEDDING_MODEL_PROVIDERS = Object.values(
   CreateEmbeddingModelRequestDtoProvider,
 ).map((value) => ({
   value,
-  label: PROVIDER_LABELS[value] ?? value,
+  label: PROVIDER_LABELS[value],
+}));
+
+/**
+ * Image generation model providers derived from OpenAPI schema.
+ * V1 is Azure-only by backend contract.
+ */
+export const IMAGE_GENERATION_MODEL_PROVIDERS = Object.values(
+  CreateImageGenerationModelRequestDtoProvider,
+).map((value) => ({
+  value,
+  label: PROVIDER_LABELS[value],
 }));

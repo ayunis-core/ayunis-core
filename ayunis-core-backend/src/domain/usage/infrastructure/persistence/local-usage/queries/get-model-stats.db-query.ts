@@ -22,7 +22,7 @@ export async function getModelStats(
     .addSelect('usage.provider', 'provider')
     .addSelect('model.name', 'modelName')
     .addSelect('model.displayName', 'displayName')
-    .addSelect('SUM(usage.totalTokens)', 'tokens')
+    .addSelect('COALESCE(SUM(usage.creditsConsumed), 0)', 'credits')
     .addSelect('COUNT(*)', 'requests')
     .where('usage.organizationId = :orgId', { orgId: organizationId });
 
@@ -30,7 +30,7 @@ export async function getModelStats(
     qb.andWhere('usage.createdAt >= :startDate', { startDate });
   }
   if (endDate) {
-    qb.andWhere('usage.createdAt <= :endDate', { endDate });
+    qb.andWhere('usage.createdAt < :endDate', { endDate });
   }
   if (modelId) {
     qb.andWhere('usage.modelId = :modelId', { modelId });
@@ -38,6 +38,6 @@ export async function getModelStats(
 
   return await qb
     .groupBy('usage.modelId, usage.provider, model.name, model.displayName')
-    .orderBy('SUM(usage.totalTokens)', 'DESC')
+    .orderBy('SUM(usage.creditsConsumed)', 'DESC')
     .getRawMany<ModelStatsRow>();
 }

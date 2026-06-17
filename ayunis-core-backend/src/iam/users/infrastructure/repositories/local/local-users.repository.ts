@@ -5,8 +5,9 @@ import {
   UsersFilters,
 } from 'src/iam/users/application/ports/users.repository';
 import { User } from 'src/iam/users/domain/user.entity';
+import type { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UUID } from 'crypto';
-import { Repository, ILike } from 'typeorm';
+import { Repository, ILike, In } from 'typeorm';
 import { UserRecord } from './schema/user.record';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserMapper } from './mappers/user.mapper';
@@ -39,6 +40,20 @@ export class LocalUsersRepository extends UsersRepository {
     return UserMapper.toDomain(userEntity);
   }
 
+  async findManyByIdsAndOrgId(ids: UUID[], orgId: UUID): Promise<User[]> {
+    this.logger.log('findManyByIdsAndOrgId', { idCount: ids.length, orgId });
+
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const userRecords = await this.userRepository.find({
+      where: { id: In(ids), orgId },
+    });
+
+    return userRecords.map((record) => UserMapper.toDomain(record));
+  }
+
   async findOneByEmail(email: string): Promise<User | null> {
     this.logger.log('findOneByEmail', { email });
     const userRecord = await this.userRepository.findOne({
@@ -69,6 +84,17 @@ export class LocalUsersRepository extends UsersRepository {
     this.logger.debug('Found users by emails', {
       requestedCount: emails.length,
       foundCount: userRecords.length,
+    });
+
+    return userRecords.map((record) => UserMapper.toDomain(record));
+  }
+
+  async findManyBySystemRole(role: SystemRole): Promise<User[]> {
+    this.logger.log('findManyBySystemRole', { role });
+
+    const userRecords = await this.userRepository.find({
+      where: { systemRole: role },
+      order: { createdAt: 'DESC' },
     });
 
     return userRecords.map((record) => UserMapper.toDomain(record));
@@ -157,7 +183,7 @@ export class LocalUsersRepository extends UsersRepository {
       this.logger.warn('Attempted to update non-existent user', {
         userId: user.id,
       });
-      throw new UserNotFoundError(`User with ID ${user.id} not found`);
+      throw new UserNotFoundError(user.id);
     }
 
     const userEntity = UserMapper.toEntity(user);
@@ -177,7 +203,7 @@ export class LocalUsersRepository extends UsersRepository {
       this.logger.warn('Attempted to delete non-existent user', {
         userId: id,
       });
-      throw new UserNotFoundError(`User with ID ${id} not found`);
+      throw new UserNotFoundError(id);
     }
 
     await this.userRepository.delete(id);
@@ -190,7 +216,7 @@ export class LocalUsersRepository extends UsersRepository {
     const user = await this.findOneByEmail(email);
     if (!user) {
       this.logger.warn('User not found during validation', { email });
-      throw new UserNotFoundError(`User with email ${email} not found`);
+      throw new UserNotFoundError(email);
     }
 
     // In a real implementation, this would validate the password hash

@@ -8,9 +8,7 @@ import { SkillRepository } from '../ports/skill.repository';
  * Validates that users can only manage shares for skills they own.
  */
 @Injectable()
-export class SkillShareAuthorizationStrategy
-  implements ShareAuthorizationStrategy
-{
+export class SkillShareAuthorizationStrategy implements ShareAuthorizationStrategy {
   private readonly logger = new Logger(SkillShareAuthorizationStrategy.name);
 
   constructor(

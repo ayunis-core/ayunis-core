@@ -29,7 +29,7 @@ export default function ChatsEmptyState({
       action={
         <Button asChild>
           <Link to="/chat">
-            <MessageCircle className="mr-2 h-4 w-4" />
+            <MessageCircle />
             {t('emptyState.startChat')}
           </Link>
         </Button>

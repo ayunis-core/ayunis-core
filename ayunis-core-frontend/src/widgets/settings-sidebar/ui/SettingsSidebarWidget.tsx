@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/shared/ui/shadcn/sidebar';
-import { Link } from '@tanstack/react-router';
+import { Link, useLocation } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import type { ReactElement } from 'react';
 
@@ -30,6 +30,7 @@ export function SettingsSidebarWidget({
   menuItems,
 }: Readonly<SettingsSidebarWidgetProps>) {
   const { t } = useTranslation(translationNamespace);
+  const location = useLocation();
 
   return (
     <Sidebar collapsible="icon" variant="inset">
@@ -59,7 +60,10 @@ export function SettingsSidebarWidget({
           <SidebarMenu>
             {menuItems.map((item) => (
               <SidebarMenuItem key={item.to}>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton
+                  asChild
+                  isActive={location.pathname.startsWith(item.to)}
+                >
                   <Link to={item.to}>
                     {item.icon}
                     <span>{item.label}</span>

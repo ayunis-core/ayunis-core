@@ -1,8 +1,9 @@
 import {
   Card,
+  CardAction,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardContent,
 } from '@/shared/ui/shadcn/card';
 import {
@@ -15,14 +16,23 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Users } from 'lucide-react';
 
-export function UserUsageTableEmpty() {
+interface UserUsageTableEmptyProps {
+  headerAction?: React.ReactNode;
+  description?: React.ReactNode;
+}
+
+export function UserUsageTableEmpty({
+  headerAction,
+  description,
+}: Readonly<UserUsageTableEmptyProps>) {
   const { t } = useTranslation('admin-settings-usage');
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>{t('userUsage.title')}</CardTitle>
-        <CardDescription>{t('userUsage.subtitle')}</CardDescription>
+        {description && <CardDescription>{description}</CardDescription>}
+        {headerAction && <CardAction>{headerAction}</CardAction>}
       </CardHeader>
       <CardContent>
         <Empty>

@@ -1,0 +1,45 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { PlatformConfigRepositoryPort } from '../../../application/ports/platform-config.repository';
+import type { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
+import { PlatformConfig } from '../../../domain/platform-config.entity';
+import { PlatformConfigRecord } from './schema/platform-config.record';
+
+@Injectable()
+export class PlatformConfigRepository extends PlatformConfigRepositoryPort {
+  constructor(
+    @InjectRepository(PlatformConfigRecord)
+    private readonly repository: Repository<PlatformConfigRecord>,
+    private readonly dataSource: DataSource,
+  ) {
+    super();
+  }
+
+  async get(key: PlatformConfigKey): Promise<PlatformConfig | null> {
+    const record = await this.repository.findOne({ where: { key } });
+
+    if (!record) {
+      return null;
+    }
+
+    return new PlatformConfig({ key: record.key, value: record.value });
+  }
+
+  async set(key: PlatformConfigKey, value: string): Promise<void> {
+    await this.repository.upsert({ key, value }, ['key']);
+  }
+
+  async setMany(entries: Map<PlatformConfigKey, string>): Promise<void> {
+    if (entries.size === 0) {
+      return;
+    }
+
+    const rows = Array.from(entries, ([key, value]) => ({ key, value }));
+
+    await this.dataSource.transaction(async (manager) => {
+      const repo = manager.getRepository(PlatformConfigRecord);
+      await repo.upsert(rows, ['key']);
+    });
+  }
+}

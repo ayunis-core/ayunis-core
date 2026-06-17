@@ -16,21 +16,21 @@ describe('getHelpCenterUrl', () => {
   it('returns English URL when language is en', () => {
     mockLanguage.value = 'en';
     expect(getHelpCenterUrl('skills/')).toBe(
-      'https://docs.ayunis.com/en/skills/',
+      'https://help.ayunis.com/en/skills/',
     );
   });
 
   it('returns German URL when language is de', () => {
     mockLanguage.value = 'de';
     expect(getHelpCenterUrl('skills/')).toBe(
-      'https://docs.ayunis.com/de/skills/',
+      'https://help.ayunis.com/de/skills/',
     );
   });
 
   it('defaults to de for unknown languages', () => {
     mockLanguage.value = 'fr';
     expect(getHelpCenterUrl('skills/')).toBe(
-      'https://docs.ayunis.com/de/skills/',
+      'https://help.ayunis.com/de/skills/',
     );
   });
 });

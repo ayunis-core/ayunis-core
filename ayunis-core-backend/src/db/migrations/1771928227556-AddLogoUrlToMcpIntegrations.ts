@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddLogoUrlToMcpIntegrations1771928227556
-  implements MigrationInterface
-{
+export class AddLogoUrlToMcpIntegrations1771928227556 implements MigrationInterface {
   name = 'AddLogoUrlToMcpIntegrations1771928227556';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

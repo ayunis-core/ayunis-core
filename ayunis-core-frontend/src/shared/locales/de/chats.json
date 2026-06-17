@@ -1,12 +1,9 @@
 {
   "page": {
-    "title": "Chat-Verlauf"
+    "title": "Chats"
   },
   "filters": {
-    "searchPlaceholder": "Chats durchsuchen...",
-    "agentFilterLabel": "Nach Agent filtern",
-    "agentFilterAll": "Alle Agenten",
-    "noAgent": "Kein Agent"
+    "searchPlaceholder": "Chats durchsuchen..."
   },
   "emptyState": {
     "title": "Noch keine Chats",

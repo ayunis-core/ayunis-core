@@ -1,14 +1,14 @@
+/* eslint-disable sonarjs/prefer-read-only-props */
 import * as React from 'react';
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 
 import { cn } from '@/shared/lib/shadcn/utils';
 import { buttonVariants } from '@/shared/ui/shadcn/button';
+import type { VariantProps } from 'class-variance-authority';
 
 function AlertDialog({
   ...props
-}: Readonly<
-  React.ComponentProps<typeof AlertDialogPrimitive.Root>
->): React.ReactElement {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Root>): React.ReactElement {
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
 }
 
@@ -24,8 +24,8 @@ function AlertDialogTrigger({
 
 function AlertDialogPortal({
   ...props
-}: Readonly<
-  React.ComponentProps<typeof AlertDialogPrimitive.Portal>
+}: React.ComponentProps<
+  typeof AlertDialogPrimitive.Portal
 >): React.ReactElement {
   return (
     <AlertDialogPrimitive.Portal data-slot="alert-dialog-portal" {...props} />
@@ -52,17 +52,22 @@ function AlertDialogOverlay({
 
 function AlertDialogContent({
   className,
+  size = 'md',
   ...props
-}: React.ComponentProps<
-  typeof AlertDialogPrimitive.Content
->): React.ReactElement {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Content> & {
+  size?: 'sm' | 'md' | 'lg';
+}): React.ReactElement {
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
       <AlertDialogPrimitive.Content
         data-slot="alert-dialog-content"
+        data-size={size}
         className={cn(
-          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg',
+          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-4 shadow-lg duration-200',
+          size === 'sm' && 'sm:max-w-sm',
+          size === 'md' && 'sm:max-w-lg',
+          size === 'lg' && 'sm:max-w-xl',
           className,
         )}
         {...props}
@@ -130,15 +135,35 @@ function AlertDialogDescription({
   );
 }
 
-function AlertDialogAction({
+function AlertDialogMedia({
   className,
   ...props
-}: React.ComponentProps<
-  typeof AlertDialogPrimitive.Action
->): React.ReactElement {
+}: React.ComponentProps<'div'>): React.ReactElement {
+  return (
+    <div
+      data-slot="alert-dialog-media"
+      className={cn(
+        'bg-muted flex size-10 items-center justify-center rounded-full [&>svg]:size-5',
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+function AlertDialogAction({
+  className,
+  variant = 'default',
+  size,
+  ...props
+}: React.ComponentProps<typeof AlertDialogPrimitive.Action> &
+  Pick<
+    VariantProps<typeof buttonVariants>,
+    'variant' | 'size'
+  >): React.ReactElement {
   return (
     <AlertDialogPrimitive.Action
-      className={cn(buttonVariants(), className)}
+      className={cn(buttonVariants({ variant, size }), className)}
       {...props}
     />
   );
@@ -146,13 +171,17 @@ function AlertDialogAction({
 
 function AlertDialogCancel({
   className,
+  variant = 'outline',
+  size,
   ...props
-}: React.ComponentProps<
-  typeof AlertDialogPrimitive.Cancel
->): React.ReactElement {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Cancel> &
+  Pick<
+    VariantProps<typeof buttonVariants>,
+    'variant' | 'size'
+  >): React.ReactElement {
   return (
     <AlertDialogPrimitive.Cancel
-      className={cn(buttonVariants({ variant: 'outline' }), className)}
+      className={cn(buttonVariants({ variant, size }), className)}
       {...props}
     />
   );
@@ -168,6 +197,7 @@ export {
   AlertDialogFooter,
   AlertDialogTitle,
   AlertDialogDescription,
+  AlertDialogMedia,
   AlertDialogAction,
   AlertDialogCancel,
 };

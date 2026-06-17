@@ -18,7 +18,7 @@ export class ProviderUsageResponseDtoMapper {
   private toProviderDto(provider: ProviderUsage): ProviderUsageDto {
     return {
       provider: provider.provider,
-      tokens: provider.tokens,
+      credits: provider.credits,
       requests: provider.requests,
       percentage: provider.percentage,
       timeSeriesData: provider.timeSeriesData.map((point) =>
@@ -30,7 +30,7 @@ export class ProviderUsageResponseDtoMapper {
   private toTimeSeriesDto(point: TimeSeriesPoint): TimeSeriesPointDto {
     return {
       date: point.date,
-      tokens: point.tokens,
+      credits: point.credits,
       requests: point.requests,
     };
   }

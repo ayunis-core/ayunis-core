@@ -3,8 +3,10 @@ import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enu
 import { LanguageModelResponseDto } from '../dto/language-model-response.dto';
 import { EmbeddingModelResponseDto } from '../dto/embedding-model-response.dto';
 import { ModelResponseDto } from '../dto/model-response.dto';
+import { ImageGenerationModelResponseDto } from '../dto/image-generation-model-response.dto';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { Model } from 'src/domain/models/domain/model.entity';
 
 @Injectable()
@@ -23,6 +25,9 @@ export class CatalogModelResponseDtoMapper {
       canVision: model.canVision,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+      inputTokenCost: model.inputTokenCost,
+      outputTokenCost: model.outputTokenCost,
+      tier: model.tier,
     };
   }
 
@@ -37,6 +42,25 @@ export class CatalogModelResponseDtoMapper {
       dimensions: model.dimensions,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+      inputTokenCost: model.inputTokenCost,
+      outputTokenCost: model.outputTokenCost,
+    };
+  }
+
+  toImageGenerationModelDto(
+    model: ImageGenerationModel,
+  ): ImageGenerationModelResponseDto {
+    return {
+      id: model.id,
+      name: model.name,
+      provider: model.provider,
+      displayName: model.displayName,
+      type: ModelType.IMAGE_GENERATION,
+      isArchived: model.isArchived,
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt,
+      inputTokenCost: model.inputTokenCost,
+      outputTokenCost: model.outputTokenCost,
     };
   }
 
@@ -45,6 +69,8 @@ export class CatalogModelResponseDtoMapper {
       return this.toLanguageModelDto(model);
     } else if (model instanceof EmbeddingModel) {
       return this.toEmbeddingModelDto(model);
+    } else if (model instanceof ImageGenerationModel) {
+      return this.toImageGenerationModelDto(model);
     }
     throw new Error(`Unknown model type: ${model.constructor.name}`);
   }

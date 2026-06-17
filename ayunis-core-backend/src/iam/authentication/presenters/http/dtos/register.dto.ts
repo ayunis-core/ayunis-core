@@ -1,5 +1,11 @@
-import { IsEmail, IsNotEmpty } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class RegisterDto {
   @ApiProperty({
@@ -36,4 +42,13 @@ export class RegisterDto {
     example: true,
   })
   marketingAcceptance: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Department within the municipality',
+    example: 'hauptamt',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  department?: string;
 }

@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
-import type { RenewalCycle } from './value-objects/renewal-cycle.enum';
+import type { SubscriptionType } from './value-objects/subscription-type.enum';
 import type { SubscriptionBillingInfo } from './subscription-billing-info.entity';
 
 export interface SubscriptionParams {
@@ -8,36 +8,28 @@ export interface SubscriptionParams {
   createdAt?: Date;
   updatedAt?: Date;
   cancelledAt?: Date | null;
+  startsAt?: Date;
   orgId: UUID;
-  noOfSeats: number;
-  pricePerSeat: number;
-  renewalCycle: RenewalCycle;
-  renewalCycleAnchor: Date;
   billingInfo: SubscriptionBillingInfo;
 }
 
-export class Subscription {
+export abstract class Subscription {
   id: UUID;
   createdAt: Date;
   updatedAt: Date;
   cancelledAt: Date | null;
+  startsAt: Date;
   orgId: UUID;
-  noOfSeats: number;
-  pricePerSeat: number;
-  renewalCycle: RenewalCycle;
-  renewalCycleAnchor: Date;
   billingInfo: SubscriptionBillingInfo;
+  abstract readonly type: SubscriptionType;
 
-  constructor(params: SubscriptionParams) {
+  protected constructor(params: SubscriptionParams) {
     this.id = params.id ?? randomUUID();
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
     this.cancelledAt = params.cancelledAt ?? null;
+    this.startsAt = params.startsAt ?? new Date();
     this.orgId = params.orgId;
-    this.noOfSeats = params.noOfSeats;
-    this.pricePerSeat = params.pricePerSeat;
-    this.renewalCycle = params.renewalCycle;
-    this.renewalCycleAnchor = params.renewalCycleAnchor;
     this.billingInfo = params.billingInfo;
   }
 }

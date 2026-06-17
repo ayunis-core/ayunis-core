@@ -8,24 +8,22 @@ import {
 import {
   Select,
   SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/shadcn/select';
 import { useTranslation } from 'react-i18next';
 import type { Control, FieldPath, FieldValues } from 'react-hook-form';
-
-interface Model {
-  id: string;
-  displayName: string;
-}
+import {
+  ModelSelectOptions,
+  type ModelOption,
+} from '@/widgets/model-select-options';
 
 interface ModelSelectorFieldProps<TFieldValues extends FieldValues> {
   control: Control<TFieldValues>;
   name: FieldPath<TFieldValues>;
   translationNamespace: string;
   translationPrefix?: string;
-  models: Model[];
+  models: ModelOption[];
   disabled?: boolean;
 }
 
@@ -58,12 +56,8 @@ export default function ModelSelectorField<TFieldValues extends FieldValues>({
                 />
               </SelectTrigger>
             </FormControl>
-            <SelectContent>
-              {models.map((model) => (
-                <SelectItem key={model.id} value={model.id}>
-                  {model.displayName}
-                </SelectItem>
-              ))}
+            <SelectContent position="popper" sideOffset={4}>
+              <ModelSelectOptions models={models} />
             </SelectContent>
           </Select>
           <FormMessage />

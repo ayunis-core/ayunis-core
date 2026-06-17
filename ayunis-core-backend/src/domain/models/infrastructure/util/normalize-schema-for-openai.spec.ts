@@ -232,6 +232,104 @@ describe('normalizeSchemaForOpenAI', () => {
     });
   });
 
+  describe('format stripping', () => {
+    it('should strip unsupported format values like uri', () => {
+      const schema = {
+        type: 'object',
+        properties: {
+          page_url: { type: 'string', format: 'uri', description: 'A URL' },
+        },
+      };
+
+      const result = normalizeSchemaForOpenAI(schema);
+
+      expect(result).toEqual({
+        type: 'object',
+        additionalProperties: false,
+        required: ['page_url'],
+        properties: {
+          page_url: { type: 'string', description: 'A URL' },
+        },
+      });
+    });
+
+    it('should preserve supported format values', () => {
+      const schema = {
+        type: 'object',
+        properties: {
+          email: { type: 'string', format: 'email' },
+          created: { type: 'string', format: 'date-time' },
+          id: { type: 'string', format: 'uuid' },
+          birthday: { type: 'string', format: 'date' },
+        },
+      };
+
+      const result = normalizeSchemaForOpenAI(schema);
+      const props = result!.properties as Record<
+        string,
+        Record<string, unknown>
+      >;
+
+      expect(props.email.format).toBe('email');
+      expect(props.created.format).toBe('date-time');
+      expect(props.id.format).toBe('uuid');
+      expect(props.birthday.format).toBe('date');
+    });
+
+    it('should strip unsupported formats from nested properties', () => {
+      const schema = {
+        type: 'object',
+        properties: {
+          config: {
+            type: 'object',
+            properties: {
+              email: { type: 'string', format: 'email' },
+              website: { type: 'string', format: 'uri' },
+            },
+          },
+        },
+      };
+
+      const result = normalizeSchemaForOpenAI(schema);
+      const config = (
+        result!.properties as Record<string, Record<string, unknown>>
+      ).config;
+      const nested = config.properties as Record<
+        string,
+        Record<string, unknown>
+      >;
+
+      expect(nested.email.format).toBe('email');
+      expect(nested.website).not.toHaveProperty('format');
+    });
+
+    it('should strip unsupported formats from array item properties', () => {
+      const schema = {
+        type: 'object',
+        properties: {
+          links: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                href: { type: 'string', format: 'uri' },
+              },
+            },
+          },
+        },
+      };
+
+      const result = normalizeSchemaForOpenAI(schema);
+
+      const links = (
+        result!.properties as Record<string, Record<string, unknown>>
+      ).links;
+      const items = links.items as Record<string, unknown>;
+      const props = items.properties as Record<string, Record<string, unknown>>;
+      expect(props.href).not.toHaveProperty('format');
+    });
+  });
+
   describe('edge cases', () => {
     it('should handle schema without properties', () => {
       const schema = {

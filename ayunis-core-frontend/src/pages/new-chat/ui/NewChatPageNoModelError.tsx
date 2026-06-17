@@ -15,7 +15,9 @@ export default function NewChatPageNoModelError() {
   const { t } = useTranslation('chat');
 
   return (
-    <NewChatPageLayout header={<ContentAreaHeader title="New Chat" />}>
+    <NewChatPageLayout
+      header={<ContentAreaHeader breadcrumbs={[{ label: 'New Chat' }]} />}
+    >
       <Card className="text-center">
         <CardHeader>
           <CardTitle>{t('newChat.noModelTitle')}</CardTitle>

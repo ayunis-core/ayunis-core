@@ -1,4 +1,9 @@
-import { detectFileType, MIME_TYPES } from './file-type';
+import {
+  detectFileType,
+  getCanonicalMimeType,
+  isAudioFile,
+  MIME_TYPES,
+} from './file-type';
 
 describe('detectFileType', () => {
   describe('PDF detection', () => {
@@ -142,6 +147,84 @@ describe('detectFileType', () => {
       expect(detectFileType('application/octet-stream', 'NOTES.TXT')).toBe(
         'txt',
       );
+    });
+  });
+
+  describe('Audio detection', () => {
+    it('returns "mp3" when MIME type is audio/mpeg', () => {
+      expect(detectFileType(MIME_TYPES.MP3, 'voice.mp3')).toBe('mp3');
+    });
+
+    it('returns "mp3" when extension is .mp3 but MIME type is application/octet-stream', () => {
+      expect(detectFileType('application/octet-stream', 'voice.mp3')).toBe(
+        'mp3',
+      );
+    });
+
+    it('returns "mp3" when extension is .MP3 (case insensitive)', () => {
+      expect(detectFileType('application/octet-stream', 'VOICE.MP3')).toBe(
+        'mp3',
+      );
+    });
+
+    it('returns "m4a" when MIME type is audio/x-m4a', () => {
+      expect(detectFileType(MIME_TYPES.M4A, 'voice.m4a')).toBe('m4a');
+    });
+
+    it('returns "m4a" when MIME type is audio/mp4 (alias)', () => {
+      expect(detectFileType(MIME_TYPES.M4A_ALT, 'voice.m4a')).toBe('m4a');
+    });
+
+    it('returns "m4a" when extension is .m4a but MIME type is application/octet-stream', () => {
+      expect(detectFileType('application/octet-stream', 'voice.m4a')).toBe(
+        'm4a',
+      );
+    });
+
+    it('returns "wav" when MIME type is audio/wav', () => {
+      expect(detectFileType(MIME_TYPES.WAV, 'voice.wav')).toBe('wav');
+    });
+
+    it('returns "wav" when extension is .wav but MIME type is application/octet-stream', () => {
+      expect(detectFileType('application/octet-stream', 'voice.wav')).toBe(
+        'wav',
+      );
+    });
+
+    it('returns "webm" when MIME type is audio/webm', () => {
+      expect(detectFileType(MIME_TYPES.WEBM, 'voice.webm')).toBe('webm');
+    });
+
+    it('returns "webm" when extension is .webm but MIME type is application/octet-stream', () => {
+      expect(detectFileType('application/octet-stream', 'voice.webm')).toBe(
+        'webm',
+      );
+    });
+  });
+
+  describe('isAudioFile', () => {
+    it('returns true for all audio detected types', () => {
+      expect(isAudioFile('mp3')).toBe(true);
+      expect(isAudioFile('m4a')).toBe(true);
+      expect(isAudioFile('wav')).toBe(true);
+      expect(isAudioFile('webm')).toBe(true);
+    });
+
+    it('returns false for non-audio detected types', () => {
+      expect(isAudioFile('pdf')).toBe(false);
+      expect(isAudioFile('docx')).toBe(false);
+      expect(isAudioFile('txt')).toBe(false);
+      expect(isAudioFile('csv')).toBe(false);
+      expect(isAudioFile('unknown')).toBe(false);
+    });
+  });
+
+  describe('getCanonicalMimeType for audio', () => {
+    it('maps audio detected types to STT-compatible canonical MIMEs', () => {
+      expect(getCanonicalMimeType('mp3')).toBe('audio/mpeg');
+      expect(getCanonicalMimeType('m4a')).toBe('audio/x-m4a');
+      expect(getCanonicalMimeType('wav')).toBe('audio/wav');
+      expect(getCanonicalMimeType('webm')).toBe('audio/webm');
     });
   });
 

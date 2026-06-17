@@ -13,609 +13,12 @@ export interface IsCloudResponseDto {
 }
 
 export interface FeatureTogglesResponseDto {
-  /** Whether the agents feature is enabled */
-  agentsEnabled: boolean;
   /** Whether the standalone knowledge bases feature is enabled */
   knowledgeBasesEnabled: boolean;
-  /** Whether the prompts feature is enabled */
-  promptsEnabled: boolean;
+  /** Whether the letterheads feature is enabled */
+  letterheadsEnabled: boolean;
   /** Whether the skills feature is enabled */
   skillsEnabled: boolean;
-}
-
-/**
- * The provider of the model
- */
-export type ModelWithConfigResponseDtoProvider = typeof ModelWithConfigResponseDtoProvider[keyof typeof ModelWithConfigResponseDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelWithConfigResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-export interface ModelWithConfigResponseDto {
-  /** The id of the model */
-  modelId: string;
-  /**
-   * The id of the model. Null if the model is not permitted.
-   * @nullable
-   */
-  permittedModelId: string | null;
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: ModelWithConfigResponseDtoProvider;
-  /** The display name of the model */
-  displayName: string;
-  /** Whether the model can stream */
-  canStream: boolean;
-  /** Whether the model can reason */
-  isReasoning: boolean;
-  /** Whether the model can use tools */
-  canUseTools: boolean;
-  /** Whether the model supports vision (image processing) */
-  canVision: boolean;
-  /** Whether the model is permitted to be used */
-  isPermitted: boolean;
-  /** Whether the model is the default model */
-  isDefault: boolean;
-  /** Whether the model is an embedding model */
-  isEmbedding: boolean;
-  /**
-   * Whether this model enforces anonymous mode. Null if not permitted.
-   * @nullable
-   */
-  anonymousOnly: boolean | null;
-}
-
-/**
- * The model provider identifier
- */
-export type ModelProviderInfoResponseDtoProvider = typeof ModelProviderInfoResponseDtoProvider[keyof typeof ModelProviderInfoResponseDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelProviderInfoResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-/**
- * The location where the provider hosts their services
- */
-export type ModelProviderInfoResponseDtoHostedIn = typeof ModelProviderInfoResponseDtoHostedIn[keyof typeof ModelProviderInfoResponseDtoHostedIn];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelProviderInfoResponseDtoHostedIn = {
-  DE: 'DE',
-  EU: 'EU',
-  US: 'US',
-  SELF_HOSTED: 'SELF_HOSTED',
-  AYUNIS: 'AYUNIS',
-} as const;
-
-export interface ModelProviderInfoResponseDto {
-  /** The model provider identifier */
-  provider: ModelProviderInfoResponseDtoProvider;
-  /** The display name of the model provider */
-  displayName: string;
-  /** The location where the provider hosts their services */
-  hostedIn: ModelProviderInfoResponseDtoHostedIn;
-}
-
-export interface CreatePermittedModelDto {
-  /** The id of the model */
-  modelId: string;
-  /** Whether this model should enforce anonymous mode */
-  anonymousOnly?: boolean;
-}
-
-export interface UpdatePermittedModelDto {
-  /** Whether this model should enforce anonymous mode */
-  anonymousOnly: boolean;
-}
-
-/**
- * The provider of the model
- */
-export type PermittedLanguageModelResponseDtoProvider = typeof PermittedLanguageModelResponseDtoProvider[keyof typeof PermittedLanguageModelResponseDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PermittedLanguageModelResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-/**
- * The type of the model (always language)
- */
-export type PermittedLanguageModelResponseDtoType = typeof PermittedLanguageModelResponseDtoType[keyof typeof PermittedLanguageModelResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PermittedLanguageModelResponseDtoType = {
-  language: 'language',
-} as const;
-
-export interface PermittedLanguageModelResponseDto {
-  /** The id of the permitted model */
-  id: string;
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: PermittedLanguageModelResponseDtoProvider;
-  /** The display name of the provider */
-  providerDisplayName: string;
-  /** The display name of the model */
-  displayName: string;
-  /** The type of the model (always language) */
-  type: PermittedLanguageModelResponseDtoType;
-  /** Whether the model is archived */
-  isArchived: boolean;
-  /** Whether the model can stream */
-  canStream: boolean;
-  /** Whether the model can reason */
-  isReasoning: boolean;
-  /** Whether the model supports vision (image processing) */
-  canVision: boolean;
-  /** Whether this model enforces anonymous mode */
-  anonymousOnly: boolean;
-}
-
-/**
- * The permitted language model
- * @nullable
- */
-export type PermittedLanguageModelResponseDtoNullablePermittedLanguageModel = PermittedLanguageModelResponseDto | null;
-
-export interface PermittedLanguageModelResponseDtoNullable {
-  /**
-   * The permitted language model
-   * @nullable
-   */
-  permittedLanguageModel: PermittedLanguageModelResponseDtoNullablePermittedLanguageModel;
-}
-
-export interface SetUserDefaultModelDto {
-  /** The ID of the permitted model to set as default */
-  permittedModelId: string;
-}
-
-export interface SetOrgDefaultModelDto {
-  /** The ID of the permitted model to set as organization default */
-  permittedModelId: string;
-}
-
-export interface EmbeddingModelEnabledResponseDto {
-  /** Whether the organization has an embedding model enabled */
-  isEmbeddingModelEnabled: boolean;
-}
-
-/**
- * The provider of the model
- */
-export type PermittedEmbeddingModelResponseDtoProvider = typeof PermittedEmbeddingModelResponseDtoProvider[keyof typeof PermittedEmbeddingModelResponseDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PermittedEmbeddingModelResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-/**
- * The type of the model (always embedding)
- */
-export type PermittedEmbeddingModelResponseDtoType = typeof PermittedEmbeddingModelResponseDtoType[keyof typeof PermittedEmbeddingModelResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PermittedEmbeddingModelResponseDtoType = {
-  embedding: 'embedding',
-} as const;
-
-export interface PermittedEmbeddingModelResponseDto {
-  /** The id of the permitted model */
-  id: string;
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: PermittedEmbeddingModelResponseDtoProvider;
-  /** The display name of the provider */
-  providerDisplayName: string;
-  /** The display name of the model */
-  displayName: string;
-  /** The type of the model (always embedding) */
-  type: PermittedEmbeddingModelResponseDtoType;
-  /** Whether the model is archived */
-  isArchived: boolean;
-  /**
-   * The number of dimensions for embeddings
-   * @nullable
-   */
-  dimensions: number | null;
-}
-
-/**
- * The provider of the model
- */
-export type CreateLanguageModelRequestDtoProvider = typeof CreateLanguageModelRequestDtoProvider[keyof typeof CreateLanguageModelRequestDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateLanguageModelRequestDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-export interface CreateLanguageModelRequestDto {
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: CreateLanguageModelRequestDtoProvider;
-  /** The display name of the model */
-  displayName: string;
-  /** Whether the model supports streaming */
-  canStream: boolean;
-  /** Whether the model supports tool use */
-  canUseTools: boolean;
-  /** Whether the model has reasoning capabilities */
-  isReasoning: boolean;
-  /** Whether the model supports vision (image processing) */
-  canVision: boolean;
-  /** Whether the model is archived */
-  isArchived: boolean;
-}
-
-/**
- * The provider of the model
- */
-export type UpdateLanguageModelRequestDtoProvider = typeof UpdateLanguageModelRequestDtoProvider[keyof typeof UpdateLanguageModelRequestDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateLanguageModelRequestDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-export interface UpdateLanguageModelRequestDto {
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: UpdateLanguageModelRequestDtoProvider;
-  /** The display name of the model */
-  displayName: string;
-  /** Whether the model supports streaming */
-  canStream: boolean;
-  /** Whether the model supports tool use */
-  canUseTools: boolean;
-  /** Whether the model has reasoning capabilities */
-  isReasoning: boolean;
-  /** Whether the model supports vision (image processing) */
-  canVision: boolean;
-  /** Whether the model is archived */
-  isArchived: boolean;
-}
-
-/**
- * The provider of the model
- */
-export type CreateEmbeddingModelRequestDtoProvider = typeof CreateEmbeddingModelRequestDtoProvider[keyof typeof CreateEmbeddingModelRequestDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateEmbeddingModelRequestDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-/**
- * The dimensions of the embedding
- */
-export type CreateEmbeddingModelRequestDtoDimensions = typeof CreateEmbeddingModelRequestDtoDimensions[keyof typeof CreateEmbeddingModelRequestDtoDimensions];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateEmbeddingModelRequestDtoDimensions = {
-  NUMBER_1024: 1024,
-  NUMBER_1536: 1536,
-  NUMBER_2560: 2560,
-} as const;
-
-export interface CreateEmbeddingModelRequestDto {
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: CreateEmbeddingModelRequestDtoProvider;
-  /** The display name of the model */
-  displayName: string;
-  /** The dimensions of the embedding */
-  dimensions: CreateEmbeddingModelRequestDtoDimensions;
-  /** Whether the model is archived */
-  isArchived: boolean;
-}
-
-/**
- * The provider of the model
- */
-export type UpdateEmbeddingModelRequestDtoProvider = typeof UpdateEmbeddingModelRequestDtoProvider[keyof typeof UpdateEmbeddingModelRequestDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateEmbeddingModelRequestDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-/**
- * The dimensions of the embedding
- */
-export type UpdateEmbeddingModelRequestDtoDimensions = typeof UpdateEmbeddingModelRequestDtoDimensions[keyof typeof UpdateEmbeddingModelRequestDtoDimensions];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateEmbeddingModelRequestDtoDimensions = {
-  NUMBER_1024: 1024,
-  NUMBER_1536: 1536,
-  NUMBER_2560: 2560,
-} as const;
-
-export interface UpdateEmbeddingModelRequestDto {
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: UpdateEmbeddingModelRequestDtoProvider;
-  /** The display name of the model */
-  displayName: string;
-  /** The dimensions of the embedding */
-  dimensions: UpdateEmbeddingModelRequestDtoDimensions;
-  /** Whether the model is archived */
-  isArchived: boolean;
-}
-
-/**
- * The provider of the model
- */
-export type LanguageModelResponseDtoProvider = typeof LanguageModelResponseDtoProvider[keyof typeof LanguageModelResponseDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const LanguageModelResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-/**
- * The type of the model (always language)
- */
-export type LanguageModelResponseDtoType = typeof LanguageModelResponseDtoType[keyof typeof LanguageModelResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const LanguageModelResponseDtoType = {
-  language: 'language',
-} as const;
-
-export interface LanguageModelResponseDto {
-  /** The unique identifier of the model */
-  id: string;
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: LanguageModelResponseDtoProvider;
-  /** The display name of the model */
-  displayName: string;
-  /** The type of the model (always language) */
-  type: LanguageModelResponseDtoType;
-  /** Whether the model is archived */
-  isArchived: boolean;
-  /** Whether the model supports streaming */
-  canStream: boolean;
-  /** Whether the model supports tool use */
-  canUseTools: boolean;
-  /** Whether the model has reasoning capabilities */
-  isReasoning: boolean;
-  /** Whether the model supports vision (image processing) */
-  canVision: boolean;
-  /** The date the model was created */
-  createdAt: string;
-  /** The date the model was last updated */
-  updatedAt: string;
-}
-
-/**
- * The provider of the model
- */
-export type EmbeddingModelResponseDtoProvider = typeof EmbeddingModelResponseDtoProvider[keyof typeof EmbeddingModelResponseDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const EmbeddingModelResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-/**
- * The type of the model (always embedding)
- */
-export type EmbeddingModelResponseDtoType = typeof EmbeddingModelResponseDtoType[keyof typeof EmbeddingModelResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const EmbeddingModelResponseDtoType = {
-  embedding: 'embedding',
-} as const;
-
-/**
- * The dimensions of the embedding
- */
-export type EmbeddingModelResponseDtoDimensions = typeof EmbeddingModelResponseDtoDimensions[keyof typeof EmbeddingModelResponseDtoDimensions];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const EmbeddingModelResponseDtoDimensions = {
-  DIMENSION_1024: 'DIMENSION_1024',
-  DIMENSION_1536: 'DIMENSION_1536',
-  DIMENSION_2560: 'DIMENSION_2560',
-  NUMBER_1024: 1024,
-  NUMBER_1536: 1536,
-  NUMBER_2560: 2560,
-} as const;
-
-export interface EmbeddingModelResponseDto {
-  /** The unique identifier of the model */
-  id: string;
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: EmbeddingModelResponseDtoProvider;
-  /** The display name of the model */
-  displayName: string;
-  /** The type of the model (always embedding) */
-  type: EmbeddingModelResponseDtoType;
-  /** Whether the model is archived */
-  isArchived: boolean;
-  /** The dimensions of the embedding */
-  dimensions: EmbeddingModelResponseDtoDimensions;
-  /** The date the model was created */
-  createdAt: string;
-  /** The date the model was last updated */
-  updatedAt: string;
-}
-
-export interface CreateOrgRequestDto {
-  /** Organization display name */
-  name: string;
-}
-
-export interface SuperAdminOrgResponseDto {
-  /** Organization unique identifier */
-  id: string;
-  /** Organization display name */
-  name: string;
-  /** Date when the organization was created */
-  createdAt: string;
-}
-
-export interface PaginationDto {
-  /** Maximum number of items per page */
-  limit: number;
-  /** Number of items to skip */
-  offset: number;
-  /** Total number of items available */
-  total?: number;
-}
-
-export interface SuperAdminOrgListResponseDto {
-  /** Array of organizations for the current page */
-  data: SuperAdminOrgResponseDto[];
-  /** Pagination metadata */
-  pagination: PaginationDto;
 }
 
 /**
@@ -641,8 +44,22 @@ export interface UserResponseDto {
   role: UserResponseDtoRole;
   /** Organization ID the user belongs to */
   orgId: string;
+  /**
+   * Department the user belongs to
+   * @nullable
+   */
+  department?: string | null;
   /** Date when the user was created */
   createdAt: string;
+}
+
+export interface PaginationDto {
+  /** Maximum number of items per page */
+  limit: number;
+  /** Number of items to skip */
+  offset: number;
+  /** Total number of items available */
+  total?: number;
 }
 
 export interface PaginatedUsersListResponseDto {
@@ -726,6 +143,22 @@ export interface ResetPasswordDto {
   newPasswordConfirmation: string;
 }
 
+export interface AdminUpdateUserDto {
+  /**
+   * New name for the user
+   * @minLength 1
+   * @maxLength 100
+   */
+  name?: string;
+  /** New email address for the user */
+  email?: string;
+}
+
+export interface TriggerPasswordResetResponseDto {
+  /** The password reset URL sent to the user */
+  resetUrl: string;
+}
+
 /**
  * Role for the user
  */
@@ -745,8 +178,59 @@ export interface CreateUserDto {
   name: string;
   /** Role for the user */
   role: CreateUserDtoRole;
-  /** Send password reset email */
-  sendPasswordResetEmail: boolean;
+  /** Send the account activation (welcome) email to the new user */
+  sendActivationEmail: boolean;
+}
+
+/**
+ * User role
+ */
+export type SuperAdminUserResponseDtoRole = typeof SuperAdminUserResponseDtoRole[keyof typeof SuperAdminUserResponseDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SuperAdminUserResponseDtoRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+/**
+ * System-level role of the user
+ */
+export type SuperAdminUserResponseDtoSystemRole = typeof SuperAdminUserResponseDtoSystemRole[keyof typeof SuperAdminUserResponseDtoSystemRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SuperAdminUserResponseDtoSystemRole = {
+  customer: 'customer',
+  super_admin: 'super_admin',
+} as const;
+
+export interface SuperAdminUserResponseDto {
+  /** User unique identifier */
+  id: string;
+  /** User name */
+  name: string;
+  /** User email address */
+  email: string;
+  /** User role */
+  role: SuperAdminUserResponseDtoRole;
+  /** Organization ID the user belongs to */
+  orgId: string;
+  /**
+   * Department the user belongs to
+   * @nullable
+   */
+  department?: string | null;
+  /** Date when the user was created */
+  createdAt: string;
+  /** System-level role of the user */
+  systemRole: SuperAdminUserResponseDtoSystemRole;
+}
+
+export interface PromoteToSuperAdminDto {
+  /** Email address of the user to promote to super admin */
+  email: string;
 }
 
 /**
@@ -953,6 +437,8 @@ export interface AcceptInviteDto {
   password: string;
   /** Marketing acceptance */
   hasAcceptedMarketing: boolean;
+  /** Department within the municipality */
+  department?: string;
 }
 
 export interface AcceptInviteResponseDto {
@@ -969,9 +455,48 @@ export interface DeleteAllPendingInvitesResponseDto {
   deletedCount: number;
 }
 
+export interface CreateOrgRequestDto {
+  /** Organization display name */
+  name: string;
+}
+
+export interface SuperAdminOrgResponseDto {
+  /** Organization unique identifier */
+  id: string;
+  /** Organization display name */
+  name: string;
+  /** Date when the organization was created */
+  createdAt: string;
+}
+
+export interface SuperAdminOrgListResponseDto {
+  /** Array of organizations for the current page */
+  data: SuperAdminOrgResponseDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+}
+
+/**
+ * Type of the active subscription. Null when there is no active subscription or on self-hosted deployments.
+ * @nullable
+ */
+export type ActiveSubscriptionResponseDtoSubscriptionType = typeof ActiveSubscriptionResponseDtoSubscriptionType[keyof typeof ActiveSubscriptionResponseDtoSubscriptionType] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ActiveSubscriptionResponseDtoSubscriptionType = {
+  SEAT_BASED: 'SEAT_BASED',
+  USAGE_BASED: 'USAGE_BASED',
+} as const;
+
 export interface ActiveSubscriptionResponseDto {
   /** Whether the organization has an active subscription */
   hasActiveSubscription: boolean;
+  /**
+   * Type of the active subscription. Null when there is no active subscription or on self-hosted deployments.
+   * @nullable
+   */
+  subscriptionType: ActiveSubscriptionResponseDtoSubscriptionType;
 }
 
 export interface PriceResponseDto {
@@ -1002,7 +527,19 @@ export interface SubscriptionBillingInfoResponseDto {
 export type SubscriptionResponseDtoCancelledAt = { [key: string]: unknown };
 
 /**
- * Renewal cycle of the subscription
+ * Subscription type
+ */
+export type SubscriptionResponseDtoType = typeof SubscriptionResponseDtoType[keyof typeof SubscriptionResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SubscriptionResponseDtoType = {
+  SEAT_BASED: 'SEAT_BASED',
+  USAGE_BASED: 'USAGE_BASED',
+} as const;
+
+/**
+ * Renewal cycle of the subscription (seat-based only)
  */
 export type SubscriptionResponseDtoRenewalCycle = typeof SubscriptionResponseDtoRenewalCycle[keyof typeof SubscriptionResponseDtoRenewalCycle];
 
@@ -1022,18 +559,27 @@ export interface SubscriptionResponseDto {
   updatedAt: string;
   /** Date when the subscription was cancelled (if applicable) */
   cancelledAt?: SubscriptionResponseDtoCancelledAt;
+  /** Date when the subscription becomes active */
+  startsAt: string;
   /** Organization ID associated with the subscription */
   orgId: string;
-  /** Number of seats in the subscription */
-  noOfSeats: number;
-  /** Price per seat in the subscription */
-  pricePerSeat: number;
-  /** Renewal cycle of the subscription */
-  renewalCycle: SubscriptionResponseDtoRenewalCycle;
-  /** Date that serves as the anchor for renewal cycles */
-  renewalCycleAnchor: string;
-  /** Number of available seats (total seats minus invites) */
-  availableSeats: number;
+  /** Subscription type */
+  type: SubscriptionResponseDtoType;
+  /** Number of seats in the subscription (seat-based only) */
+  noOfSeats?: number;
+  /** Price per seat in the subscription (seat-based only) */
+  pricePerSeat?: number;
+  /** Renewal cycle of the subscription (seat-based only) */
+  renewalCycle?: SubscriptionResponseDtoRenewalCycle;
+  /** Date that serves as the anchor for renewal cycles (seat-based only) */
+  renewalCycleAnchor?: string;
+  /** Monthly credit budget (usage-based only) */
+  monthlyCredits?: number;
+  /**
+   * Number of available seats (total seats minus invites, seat-based only)
+   * @nullable
+   */
+  availableSeats?: number | null;
   /** Date of the next renewal */
   nextRenewalDate: string;
   /** Billing information */
@@ -1045,16 +591,21 @@ export interface SubscriptionResponseDtoNullable {
   subscription?: SubscriptionResponseDto;
 }
 
+/**
+ * Subscription type. Defaults to SEAT_BASED if not specified.
+ */
+export type CreateSubscriptionRequestDtoType = typeof CreateSubscriptionRequestDtoType[keyof typeof CreateSubscriptionRequestDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateSubscriptionRequestDtoType = {
+  SEAT_BASED: 'SEAT_BASED',
+  USAGE_BASED: 'USAGE_BASED',
+} as const;
+
 export interface CreateSubscriptionRequestDto {
-  /**
-   * Number of seats for the subscription
-   * @minimum 1
-   */
-  noOfSeats?: number;
   /** Company name for the subscription */
   companyName: string;
-  /** Sub text for the subscription */
-  subText?: string;
   /** Street for the subscription */
   street: string;
   /** House number for the subscription */
@@ -1067,6 +618,22 @@ export interface CreateSubscriptionRequestDto {
   country: string;
   /** VAT number for the subscription */
   vatNumber?: string;
+  /** Subscription type. Defaults to SEAT_BASED if not specified. */
+  type?: CreateSubscriptionRequestDtoType;
+  /**
+   * Number of seats for the subscription (seat-based only)
+   * @minimum 1
+   */
+  noOfSeats?: number;
+  /**
+   * Monthly credit budget (usage-based only)
+   * @minimum 1
+   */
+  monthlyCredits?: number;
+  /** Sub text for the subscription */
+  subText?: string;
+  /** Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately. */
+  startsAt?: string;
 }
 
 export interface UpdateBillingInfoDto {
@@ -1086,7 +653,979 @@ export interface UpdateBillingInfoDto {
   vatNumber?: string;
 }
 
+export interface UpdateStartDateDto {
+  /** New subscription start date (ISO 8601) */
+  startsAt: string;
+}
+
+export interface UpdateMonthlyCreditsDto { [key: string]: unknown }
+
 export interface UpdateSeatsDto { [key: string]: unknown }
+
+/**
+ * The provider of the model
+ */
+export type ModelWithConfigResponseDtoProvider = typeof ModelWithConfigResponseDtoProvider[keyof typeof ModelWithConfigResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelWithConfigResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+/**
+ * The type of the model
+ */
+export type ModelWithConfigResponseDtoType = typeof ModelWithConfigResponseDtoType[keyof typeof ModelWithConfigResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelWithConfigResponseDtoType = {
+  language: 'language',
+  embedding: 'embedding',
+  'image-generation': 'image-generation',
+} as const;
+
+/**
+ * Fair-use tier label assigned by super admins; drives quota bucket selection. Undefined for embedding models and untiered language models.
+ */
+export type ModelWithConfigResponseDtoTier = typeof ModelWithConfigResponseDtoTier[keyof typeof ModelWithConfigResponseDtoTier];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelWithConfigResponseDtoTier = {
+  zero: 'zero',
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface ModelWithConfigResponseDto {
+  /** The id of the model */
+  modelId: string;
+  /**
+   * The id of the model. Null if the model is not permitted.
+   * @nullable
+   */
+  permittedModelId: string | null;
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: ModelWithConfigResponseDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** The type of the model */
+  type: ModelWithConfigResponseDtoType;
+  /** Whether the model can stream */
+  canStream: boolean;
+  /** Whether the model can reason */
+  isReasoning: boolean;
+  /** Whether the model can use tools */
+  canUseTools: boolean;
+  /** Whether the model supports vision (image processing) */
+  canVision: boolean;
+  /** Whether the model is permitted to be used */
+  isPermitted: boolean;
+  /** Whether the model is the default model */
+  isDefault: boolean;
+  /**
+   * Whether this model enforces anonymous mode. Null if not permitted.
+   * @nullable
+   */
+  anonymousOnly: boolean | null;
+  /** Fair-use tier label assigned by super admins; drives quota bucket selection. Undefined for embedding models and untiered language models. */
+  tier?: ModelWithConfigResponseDtoTier;
+}
+
+/**
+ * The model provider identifier
+ */
+export type ModelProviderInfoResponseDtoProvider = typeof ModelProviderInfoResponseDtoProvider[keyof typeof ModelProviderInfoResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelProviderInfoResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+/**
+ * The location where the provider hosts their services
+ */
+export type ModelProviderInfoResponseDtoHostedIn = typeof ModelProviderInfoResponseDtoHostedIn[keyof typeof ModelProviderInfoResponseDtoHostedIn];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelProviderInfoResponseDtoHostedIn = {
+  DE: 'DE',
+  EU: 'EU',
+  US: 'US',
+  SELF_HOSTED: 'SELF_HOSTED',
+  AYUNIS: 'AYUNIS',
+} as const;
+
+export interface ModelProviderInfoResponseDto {
+  /** The model provider identifier */
+  provider: ModelProviderInfoResponseDtoProvider;
+  /** The display name of the model provider */
+  displayName: string;
+  /** The location where the provider hosts their services */
+  hostedIn: ModelProviderInfoResponseDtoHostedIn;
+}
+
+export interface CreatePermittedModelDto {
+  /** The id of the model */
+  modelId: string;
+  /** Whether this model should enforce anonymous mode */
+  anonymousOnly?: boolean;
+}
+
+export interface UpdatePermittedModelDto {
+  /** Whether this model should enforce anonymous mode */
+  anonymousOnly: boolean;
+}
+
+/**
+ * The provider of the model
+ */
+export type PermittedLanguageModelResponseDtoProvider = typeof PermittedLanguageModelResponseDtoProvider[keyof typeof PermittedLanguageModelResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PermittedLanguageModelResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+/**
+ * The type of the model (always language)
+ */
+export type PermittedLanguageModelResponseDtoType = typeof PermittedLanguageModelResponseDtoType[keyof typeof PermittedLanguageModelResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PermittedLanguageModelResponseDtoType = {
+  language: 'language',
+} as const;
+
+/**
+ * Resource-usage tier of the model, used to categorise models for the user (e.g. fast vs. powerful)
+ * @nullable
+ */
+export type PermittedLanguageModelResponseDtoTier = typeof PermittedLanguageModelResponseDtoTier[keyof typeof PermittedLanguageModelResponseDtoTier] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PermittedLanguageModelResponseDtoTier = {
+  zero: 'zero',
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface PermittedLanguageModelResponseDto {
+  /** The id of the permitted model */
+  id: string;
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: PermittedLanguageModelResponseDtoProvider;
+  /** The display name of the provider */
+  providerDisplayName: string;
+  /** The display name of the model */
+  displayName: string;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /** The catalog model UUID */
+  modelId: string;
+  /** The type of the model (always language) */
+  type: PermittedLanguageModelResponseDtoType;
+  /** Whether the model can stream */
+  canStream: boolean;
+  /** Whether the model can reason */
+  isReasoning: boolean;
+  /** Whether the model supports vision (image processing) */
+  canVision: boolean;
+  /** Whether this is the default model */
+  isDefault: boolean;
+  /** Whether this model enforces anonymous mode */
+  anonymousOnly: boolean;
+  /**
+   * Resource-usage tier of the model, used to categorise models for the user (e.g. fast vs. powerful)
+   * @nullable
+   */
+  tier?: PermittedLanguageModelResponseDtoTier;
+}
+
+/**
+ * The provider of the model
+ */
+export type PermittedEmbeddingModelResponseDtoProvider = typeof PermittedEmbeddingModelResponseDtoProvider[keyof typeof PermittedEmbeddingModelResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PermittedEmbeddingModelResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+/**
+ * The type of the model (always embedding)
+ */
+export type PermittedEmbeddingModelResponseDtoType = typeof PermittedEmbeddingModelResponseDtoType[keyof typeof PermittedEmbeddingModelResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PermittedEmbeddingModelResponseDtoType = {
+  embedding: 'embedding',
+} as const;
+
+export interface PermittedEmbeddingModelResponseDto {
+  /** The id of the permitted model */
+  id: string;
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: PermittedEmbeddingModelResponseDtoProvider;
+  /** The display name of the provider */
+  providerDisplayName: string;
+  /** The display name of the model */
+  displayName: string;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /** The catalog model UUID */
+  modelId: string;
+  /** The type of the model (always embedding) */
+  type: PermittedEmbeddingModelResponseDtoType;
+  /**
+   * The number of dimensions for embeddings
+   * @nullable
+   */
+  dimensions: number | null;
+  /** Whether this model enforces anonymous mode */
+  anonymousOnly: boolean;
+}
+
+/**
+ * The provider of the model
+ */
+export type PermittedImageGenerationModelResponseDtoProvider = typeof PermittedImageGenerationModelResponseDtoProvider[keyof typeof PermittedImageGenerationModelResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PermittedImageGenerationModelResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+/**
+ * The type of the model (always image-generation)
+ */
+export type PermittedImageGenerationModelResponseDtoType = typeof PermittedImageGenerationModelResponseDtoType[keyof typeof PermittedImageGenerationModelResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PermittedImageGenerationModelResponseDtoType = {
+  'image-generation': 'image-generation',
+} as const;
+
+export interface PermittedImageGenerationModelResponseDto {
+  /** The id of the permitted model */
+  id: string;
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: PermittedImageGenerationModelResponseDtoProvider;
+  /** The display name of the provider */
+  providerDisplayName: string;
+  /** The display name of the model */
+  displayName: string;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /** The catalog model UUID */
+  modelId: string;
+  /** The type of the model (always image-generation) */
+  type: PermittedImageGenerationModelResponseDtoType;
+  /** Whether this model enforces anonymous mode */
+  anonymousOnly: boolean;
+}
+
+export interface EmbeddingModelEnabledResponseDto {
+  /** Whether the organization has an embedding model enabled */
+  isEmbeddingModelEnabled: boolean;
+}
+
+/**
+ * The permitted language model
+ * @nullable
+ */
+export type PermittedLanguageModelResponseDtoNullablePermittedLanguageModel = PermittedLanguageModelResponseDto | null;
+
+export interface PermittedLanguageModelResponseDtoNullable {
+  /**
+   * The permitted language model
+   * @nullable
+   */
+  permittedLanguageModel: PermittedLanguageModelResponseDtoNullablePermittedLanguageModel;
+}
+
+export interface SetUserDefaultModelDto {
+  /** The ID of the permitted model to set as default */
+  permittedModelId: string;
+}
+
+export interface SetOrgDefaultModelDto {
+  /** The ID of the permitted model to set as organization default */
+  permittedModelId: string;
+}
+
+export interface CreateTeamPermittedModelDto {
+  /** The ID of the catalog model to permit for the team */
+  modelId: string;
+  /** Whether this model should enforce anonymous mode */
+  anonymousOnly?: boolean;
+}
+
+export interface SetTeamDefaultModelDto {
+  /** The ID of the team-scoped permitted model to set as the team default */
+  permittedModelId: string;
+}
+
+/**
+ * The provider of the model
+ */
+export type LanguageModelResponseDtoProvider = typeof LanguageModelResponseDtoProvider[keyof typeof LanguageModelResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const LanguageModelResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+/**
+ * The type of the model (always language)
+ */
+export type LanguageModelResponseDtoType = typeof LanguageModelResponseDtoType[keyof typeof LanguageModelResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const LanguageModelResponseDtoType = {
+  language: 'language',
+} as const;
+
+/**
+ * Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109.
+ */
+export type LanguageModelResponseDtoTier = typeof LanguageModelResponseDtoTier[keyof typeof LanguageModelResponseDtoTier];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const LanguageModelResponseDtoTier = {
+  zero: 'zero',
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface LanguageModelResponseDto {
+  /** The unique identifier of the model */
+  id: string;
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: LanguageModelResponseDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** The type of the model (always language) */
+  type: LanguageModelResponseDtoType;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /** Whether the model supports streaming */
+  canStream: boolean;
+  /** Whether the model supports tool use */
+  canUseTools: boolean;
+  /** Whether the model has reasoning capabilities */
+  isReasoning: boolean;
+  /** Whether the model supports vision (image processing) */
+  canVision: boolean;
+  /** The date the model was created */
+  createdAt: string;
+  /** The date the model was last updated */
+  updatedAt: string;
+  /** Cost per million input tokens in EUR */
+  inputTokenCost?: number;
+  /** Cost per million output tokens in EUR */
+  outputTokenCost?: number;
+  /** Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109. */
+  tier?: LanguageModelResponseDtoTier;
+}
+
+/**
+ * The provider of the model
+ */
+export type EmbeddingModelResponseDtoProvider = typeof EmbeddingModelResponseDtoProvider[keyof typeof EmbeddingModelResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EmbeddingModelResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+/**
+ * The type of the model (always embedding)
+ */
+export type EmbeddingModelResponseDtoType = typeof EmbeddingModelResponseDtoType[keyof typeof EmbeddingModelResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EmbeddingModelResponseDtoType = {
+  embedding: 'embedding',
+} as const;
+
+/**
+ * The dimensions of the embedding
+ */
+export type EmbeddingModelResponseDtoDimensions = typeof EmbeddingModelResponseDtoDimensions[keyof typeof EmbeddingModelResponseDtoDimensions];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EmbeddingModelResponseDtoDimensions = {
+  NUMBER_1024: 1024,
+  NUMBER_1536: 1536,
+  NUMBER_2560: 2560,
+} as const;
+
+export interface EmbeddingModelResponseDto {
+  /** The unique identifier of the model */
+  id: string;
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: EmbeddingModelResponseDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** The type of the model (always embedding) */
+  type: EmbeddingModelResponseDtoType;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /** The dimensions of the embedding */
+  dimensions: EmbeddingModelResponseDtoDimensions;
+  /** The date the model was created */
+  createdAt: string;
+  /** The date the model was last updated */
+  updatedAt: string;
+  /** Cost per million input tokens in EUR */
+  inputTokenCost?: number;
+  /** Cost per million output tokens in EUR */
+  outputTokenCost?: number;
+}
+
+/**
+ * The provider of the model
+ */
+export type ImageGenerationModelResponseDtoProvider = typeof ImageGenerationModelResponseDtoProvider[keyof typeof ImageGenerationModelResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ImageGenerationModelResponseDtoProvider = {
+  azure: 'azure',
+} as const;
+
+/**
+ * The type of the model (always image-generation)
+ */
+export type ImageGenerationModelResponseDtoType = typeof ImageGenerationModelResponseDtoType[keyof typeof ImageGenerationModelResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ImageGenerationModelResponseDtoType = {
+  'image-generation': 'image-generation',
+} as const;
+
+export interface ImageGenerationModelResponseDto {
+  /** The unique identifier of the model */
+  id: string;
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: ImageGenerationModelResponseDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** The type of the model (always image-generation) */
+  type: ImageGenerationModelResponseDtoType;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /** The date the model was created */
+  createdAt: string;
+  /** The date the model was last updated */
+  updatedAt: string;
+  /** Cost per million input tokens in EUR */
+  inputTokenCost?: number;
+  /** Cost per million output tokens in EUR */
+  outputTokenCost?: number;
+}
+
+/**
+ * The provider of the model
+ */
+export type CreateLanguageModelRequestDtoProvider = typeof CreateLanguageModelRequestDtoProvider[keyof typeof CreateLanguageModelRequestDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateLanguageModelRequestDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+/**
+ * Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109.
+ */
+export type CreateLanguageModelRequestDtoTier = typeof CreateLanguageModelRequestDtoTier[keyof typeof CreateLanguageModelRequestDtoTier];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateLanguageModelRequestDtoTier = {
+  zero: 'zero',
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface CreateLanguageModelRequestDto {
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: CreateLanguageModelRequestDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** Whether the model supports streaming */
+  canStream: boolean;
+  /** Whether the model supports tool use */
+  canUseTools: boolean;
+  /** Whether the model has reasoning capabilities */
+  isReasoning: boolean;
+  /** Whether the model supports vision (image processing) */
+  canVision: boolean;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /**
+   * Cost per million input tokens in EUR
+   * @minimum 0
+   */
+  inputTokenCost?: number;
+  /**
+   * Cost per million output tokens in EUR
+   * @minimum 0
+   */
+  outputTokenCost?: number;
+  /** Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109. */
+  tier?: CreateLanguageModelRequestDtoTier;
+}
+
+/**
+ * The provider of the model
+ */
+export type UpdateLanguageModelRequestDtoProvider = typeof UpdateLanguageModelRequestDtoProvider[keyof typeof UpdateLanguageModelRequestDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateLanguageModelRequestDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+/**
+ * Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109.
+ */
+export type UpdateLanguageModelRequestDtoTier = typeof UpdateLanguageModelRequestDtoTier[keyof typeof UpdateLanguageModelRequestDtoTier];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateLanguageModelRequestDtoTier = {
+  zero: 'zero',
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface UpdateLanguageModelRequestDto {
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: UpdateLanguageModelRequestDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** Whether the model supports streaming */
+  canStream: boolean;
+  /** Whether the model supports tool use */
+  canUseTools: boolean;
+  /** Whether the model has reasoning capabilities */
+  isReasoning: boolean;
+  /** Whether the model supports vision (image processing) */
+  canVision: boolean;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /**
+   * Cost per million input tokens in EUR
+   * @minimum 0
+   */
+  inputTokenCost?: number;
+  /**
+   * Cost per million output tokens in EUR
+   * @minimum 0
+   */
+  outputTokenCost?: number;
+  /** Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109. */
+  tier?: UpdateLanguageModelRequestDtoTier;
+}
+
+/**
+ * The provider of the model
+ */
+export type CreateEmbeddingModelRequestDtoProvider = typeof CreateEmbeddingModelRequestDtoProvider[keyof typeof CreateEmbeddingModelRequestDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateEmbeddingModelRequestDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+/**
+ * The dimensions of the embedding
+ */
+export type CreateEmbeddingModelRequestDtoDimensions = typeof CreateEmbeddingModelRequestDtoDimensions[keyof typeof CreateEmbeddingModelRequestDtoDimensions];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateEmbeddingModelRequestDtoDimensions = {
+  NUMBER_1024: 1024,
+  NUMBER_1536: 1536,
+  NUMBER_2560: 2560,
+} as const;
+
+export interface CreateEmbeddingModelRequestDto {
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: CreateEmbeddingModelRequestDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** The dimensions of the embedding */
+  dimensions: CreateEmbeddingModelRequestDtoDimensions;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /**
+   * Cost per million input tokens in EUR
+   * @minimum 0
+   */
+  inputTokenCost?: number;
+  /**
+   * Cost per million output tokens in EUR
+   * @minimum 0
+   */
+  outputTokenCost?: number;
+}
+
+/**
+ * The provider of the model
+ */
+export type UpdateEmbeddingModelRequestDtoProvider = typeof UpdateEmbeddingModelRequestDtoProvider[keyof typeof UpdateEmbeddingModelRequestDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateEmbeddingModelRequestDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+/**
+ * The dimensions of the embedding
+ */
+export type UpdateEmbeddingModelRequestDtoDimensions = typeof UpdateEmbeddingModelRequestDtoDimensions[keyof typeof UpdateEmbeddingModelRequestDtoDimensions];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateEmbeddingModelRequestDtoDimensions = {
+  NUMBER_1024: 1024,
+  NUMBER_1536: 1536,
+  NUMBER_2560: 2560,
+} as const;
+
+export interface UpdateEmbeddingModelRequestDto {
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: UpdateEmbeddingModelRequestDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** The dimensions of the embedding */
+  dimensions: UpdateEmbeddingModelRequestDtoDimensions;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /**
+   * Cost per million input tokens in EUR
+   * @minimum 0
+   */
+  inputTokenCost?: number;
+  /**
+   * Cost per million output tokens in EUR
+   * @minimum 0
+   */
+  outputTokenCost?: number;
+}
+
+/**
+ * The provider of the model. Image-generation models are Azure-only in v1.
+ */
+export type CreateImageGenerationModelRequestDtoProvider = typeof CreateImageGenerationModelRequestDtoProvider[keyof typeof CreateImageGenerationModelRequestDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateImageGenerationModelRequestDtoProvider = {
+  azure: 'azure',
+} as const;
+
+export interface CreateImageGenerationModelRequestDto {
+  /** The name of the model */
+  name: string;
+  /** The provider of the model. Image-generation models are Azure-only in v1. */
+  provider: CreateImageGenerationModelRequestDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /**
+   * Cost per million input tokens in EUR
+   * @minimum 0
+   */
+  inputTokenCost?: number;
+  /**
+   * Cost per million output tokens in EUR
+   * @minimum 0
+   */
+  outputTokenCost?: number;
+}
+
+/**
+ * The provider of the model. Image-generation models are Azure-only in v1.
+ */
+export type UpdateImageGenerationModelRequestDtoProvider = typeof UpdateImageGenerationModelRequestDtoProvider[keyof typeof UpdateImageGenerationModelRequestDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateImageGenerationModelRequestDtoProvider = {
+  azure: 'azure',
+} as const;
+
+export interface UpdateImageGenerationModelRequestDto {
+  /** The name of the model */
+  name: string;
+  /** The provider of the model. Image-generation models are Azure-only in v1. */
+  provider: UpdateImageGenerationModelRequestDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /**
+   * Cost per million input tokens in EUR
+   * @minimum 0
+   */
+  inputTokenCost?: number;
+  /**
+   * Cost per million output tokens in EUR
+   * @minimum 0
+   */
+  outputTokenCost?: number;
+}
+
+export interface CreateTeamDto {
+  /** The name of the team */
+  name: string;
+}
+
+export interface UpdateTeamDto {
+  /** The new name of the team */
+  name: string;
+  /** Whether model access override is enabled for this team */
+  modelOverrideEnabled?: boolean;
+}
+
+export interface TeamResponseDto {
+  /** The unique identifier of the team */
+  id: string;
+  /** The name of the team */
+  name: string;
+  /** The organization ID the team belongs to */
+  orgId: string;
+  /** The date and time when the team was created */
+  createdAt: string;
+  /** The date and time when the team was last updated */
+  updatedAt: string;
+  /** Whether model access override is enabled for this team */
+  modelOverrideEnabled: boolean;
+  /** The number of members in the team. Only populated by the admin list endpoint (GET /teams). */
+  memberCount?: number;
+}
+
+/**
+ * The role of the team member in the organization
+ */
+export type TeamMemberResponseDtoUserRole = typeof TeamMemberResponseDtoUserRole[keyof typeof TeamMemberResponseDtoUserRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TeamMemberResponseDtoUserRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+export interface TeamMemberResponseDto {
+  /** The unique identifier of the team member */
+  id: string;
+  /** The user ID of the team member */
+  userId: string;
+  /** The name of the team member */
+  userName: string;
+  /** The email of the team member */
+  userEmail: string;
+  /** The role of the team member in the organization */
+  userRole: TeamMemberResponseDtoUserRole;
+  /** The date when the user joined the team */
+  joinedAt: string;
+}
+
+export interface PaginatedTeamMembersResponseDto {
+  /** Array of team members for the current page */
+  data: TeamMemberResponseDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+}
+
+export interface AddTeamMemberDto {
+  /** The user ID to add to the team */
+  userId: string;
+}
+
+export interface ListTeamMembersQueryDto {
+  /** Maximum number of items per page */
+  limit?: number;
+  /** Number of items to skip */
+  offset?: number;
+}
 
 export interface UploadFileResponseDto {
   /** Name of the uploaded object */
@@ -1101,16 +1640,26 @@ export interface UploadFileResponseDto {
   lastModified?: string;
 }
 
-export interface RetrieveUrlDto {
-  /** URL to retrieve content from */
-  url: string;
+export interface TranscriptionResponseDto {
+  /** The transcribed text from the audio file */
+  text: string;
+}
+
+export interface CrawlDomainGrantResponseDto {
+  id: string;
+  orgId: string;
+  domain: string;
+  createdAt: string;
+}
+
+export interface GrantCrawlDomainRequestDto {
+  /** The exact host to authorize for crawling by this organization. A full URL is accepted and reduced to its host. */
+  domain: string;
 }
 
 export interface CreateThreadDto {
   /** The id of the model */
   modelId?: string;
-  /** The id of the agent */
-  agentId?: string;
   /** Enable anonymous mode for this thread */
   isAnonymous?: boolean;
 }
@@ -1356,19 +1905,41 @@ export interface ImageMessageContentResponseDto {
   altText?: string;
 }
 
+/**
+ * The provider of the model
+ */
+export type ModelResponseDtoProvider = typeof ModelResponseDtoProvider[keyof typeof ModelResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
 export interface ModelResponseDto {
-  /** The unique identifier of the model */
+  /** The ID of the model */
   id: string;
   /** The name of the model */
   name: string;
   /** The provider of the model */
-  provider: string;
+  provider: ModelResponseDtoProvider;
   /** The display name of the model */
   displayName: string;
-  /** Whether this model requires anonymous mode (PII redaction) */
-  anonymousOnly: boolean;
-  /** Whether the model supports vision (image processing) */
-  canVision: boolean;
+  /** Whether the model can stream */
+  canStream: boolean;
+  /** Whether the model can reason */
+  isReasoning: boolean;
 }
 
 /**
@@ -1396,6 +1967,19 @@ export const SourceResponseDtoCreatedBy = {
   system: 'system',
 } as const;
 
+/**
+ * Processing status of the source
+ */
+export type SourceResponseDtoStatus = typeof SourceResponseDtoStatus[keyof typeof SourceResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SourceResponseDtoStatus = {
+  processing: 'processing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
 export interface SourceResponseDto {
   /** Unique identifier for the source */
   id: string;
@@ -1407,6 +1991,10 @@ export interface SourceResponseDto {
   type: SourceResponseDtoType;
   /** Creator of the source */
   createdBy: SourceResponseDtoCreatedBy;
+  /** Processing status of the source */
+  status: SourceResponseDtoStatus;
+  /** Error message if processing failed */
+  processingError?: string;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -1439,6 +2027,19 @@ export const FileSourceResponseDtoCreatedBy = {
 } as const;
 
 /**
+ * Processing status of the source
+ */
+export type FileSourceResponseDtoStatus = typeof FileSourceResponseDtoStatus[keyof typeof FileSourceResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FileSourceResponseDtoStatus = {
+  processing: 'processing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+/**
  * Type of text
  */
 export type FileSourceResponseDtoTextType = typeof FileSourceResponseDtoTextType[keyof typeof FileSourceResponseDtoTextType];
@@ -1462,6 +2063,7 @@ export const FileSourceResponseDtoFileType = {
   docx: 'docx',
   pptx: 'pptx',
   txt: 'txt',
+  audio: 'audio',
 } as const;
 
 export interface FileSourceResponseDto {
@@ -1475,6 +2077,10 @@ export interface FileSourceResponseDto {
   type: FileSourceResponseDtoType;
   /** Creator of the source */
   createdBy: FileSourceResponseDtoCreatedBy;
+  /** Processing status of the source */
+  status: FileSourceResponseDtoStatus;
+  /** Error message if processing failed */
+  processingError?: string;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -1511,6 +2117,19 @@ export const UrlSourceResponseDtoCreatedBy = {
 } as const;
 
 /**
+ * Processing status of the source
+ */
+export type UrlSourceResponseDtoStatus = typeof UrlSourceResponseDtoStatus[keyof typeof UrlSourceResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UrlSourceResponseDtoStatus = {
+  processing: 'processing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+/**
  * Type of text
  */
 export type UrlSourceResponseDtoTextType = typeof UrlSourceResponseDtoTextType[keyof typeof UrlSourceResponseDtoTextType];
@@ -1533,6 +2152,10 @@ export interface UrlSourceResponseDto {
   type: UrlSourceResponseDtoType;
   /** Creator of the source */
   createdBy: UrlSourceResponseDtoCreatedBy;
+  /** Processing status of the source */
+  status: UrlSourceResponseDtoStatus;
+  /** Error message if processing failed */
+  processingError?: string;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -1569,6 +2192,19 @@ export const CSVDataSourceResponseDtoCreatedBy = {
 } as const;
 
 /**
+ * Processing status of the source
+ */
+export type CSVDataSourceResponseDtoStatus = typeof CSVDataSourceResponseDtoStatus[keyof typeof CSVDataSourceResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CSVDataSourceResponseDtoStatus = {
+  processing: 'processing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+/**
  * Type of data
  */
 export type CSVDataSourceResponseDtoDataType = typeof CSVDataSourceResponseDtoDataType[keyof typeof CSVDataSourceResponseDtoDataType];
@@ -1600,6 +2236,10 @@ export interface CSVDataSourceResponseDto {
   type: CSVDataSourceResponseDtoType;
   /** Creator of the source */
   createdBy: CSVDataSourceResponseDtoCreatedBy;
+  /** Processing status of the source */
+  status: CSVDataSourceResponseDtoStatus;
+  /** Error message if processing failed */
+  processingError?: string;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -1617,6 +2257,48 @@ export interface KnowledgeBaseSummaryResponseDto {
   name: string;
 }
 
+/**
+ * PII category of the masked value
+ */
+export type PiiCategory = typeof PiiCategory[keyof typeof PiiCategory];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PiiCategory = {
+  person_name: 'person_name',
+  organization: 'organization',
+  location: 'location',
+  email_address: 'email_address',
+  phone_number: 'phone_number',
+  url_or_ip: 'url_or_ip',
+  date_time: 'date_time',
+  financial_account: 'financial_account',
+  government_id: 'government_id',
+  nationality_religion_politics: 'nationality_religion_politics',
+  other: 'other',
+} as const;
+
+export interface PiiMaskResponseDto {
+  /** The placeholder token as it appears in message text, e.g. {{pii:PERSON_NAME_1}} */
+  token: string;
+  /** The original value the token stands in for */
+  value: string;
+  /** PII category of the masked value */
+  category: PiiCategory;
+}
+
+export interface McpIntegrationSummaryResponseDto {
+  /** Unique identifier for the MCP integration */
+  id: string;
+  /** Name of the MCP integration */
+  name: string;
+  /**
+   * Logo URL for marketplace integrations
+   * @nullable
+   */
+  logoUrl?: string | null;
+}
+
 export type GetThreadResponseDtoMessagesItem = UserMessageResponseDto | SystemMessageResponseDto | AssistantMessageResponseDto | ToolResultMessageResponseDto;
 
 export interface GetThreadResponseDto {
@@ -1626,8 +2308,6 @@ export interface GetThreadResponseDto {
   userId: string;
   /** Permitted model ID */
   permittedModelId: string;
-  /** Agent ID */
-  agentId: string;
   /** Title of the thread */
   title?: string;
   /** Array of messages in the thread (role-specific types) */
@@ -1644,6 +2324,10 @@ export interface GetThreadResponseDto {
   isLongChat: boolean;
   /** Knowledge bases attached to this thread */
   knowledgeBases: KnowledgeBaseSummaryResponseDto[];
+  /** PII mask dictionary for anonymous threads — resolves {{pii:...}} tokens in message text to their original values. Empty for non-anonymous threads. */
+  piiMasks: PiiMaskResponseDto[];
+  /** MCP integrations attached to this thread */
+  mcpIntegrations: McpIntegrationSummaryResponseDto[];
 }
 
 export interface GetThreadsResponseDtoItem {
@@ -1675,150 +2359,332 @@ export interface UpdateThreadTitleDto {
   title: string;
 }
 
-/**
- * The type of tool to assign
- */
-export type ToolAssignmentDtoType = typeof ToolAssignmentDtoType[keyof typeof ToolAssignmentDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ToolAssignmentDtoType = {
-  http: 'http',
-  source_query: 'source_query',
-  source_get_text: 'source_get_text',
-  internet_search: 'internet_search',
-  website_content: 'website_content',
-  send_email: 'send_email',
-  create_calendar_event: 'create_calendar_event',
-  code_execution: 'code_execution',
-  bar_chart: 'bar_chart',
-  line_chart: 'line_chart',
-  pie_chart: 'pie_chart',
-  mcp_tool: 'mcp_tool',
-  mcp_resource: 'mcp_resource',
-  mcp_prompt: 'mcp_prompt',
-  product_knowledge: 'product_knowledge',
-  activate_skill: 'activate_skill',
-  create_skill: 'create_skill',
-  knowledge_query: 'knowledge_query',
-  knowledge_get_text: 'knowledge_get_text',
-} as const;
-
-export interface ToolAssignmentDto {
-  /** The type of tool to assign */
-  type: ToolAssignmentDtoType;
-  /** The ID of the tool configuration to assign */
-  toolConfigId?: string;
+export interface GeneratedImageUrlResponseDto {
+  /** Presigned URL to access the generated image */
+  url: string;
+  /** ISO 8601 timestamp when the URL expires */
+  expiresAt: string;
 }
 
-export interface CreateAgentDto {
+export interface CreateKnowledgeBaseDto {
   /**
-   * The name of the agent
+   * The name of the knowledge base
    * @minLength 1
    * @maxLength 255
    */
   name: string;
-  /** The instructions for the agent */
-  instructions: string;
-  /** The ID of the permitted model to use for this agent */
-  modelId: string;
-  /** The tools to assign to the agent */
-  toolAssignments: ToolAssignmentDto[];
+  /**
+   * An optional description of the knowledge base
+   * @maxLength 2000
+   */
+  description?: string;
 }
 
-/**
- * The type of the tool
- */
-export type ToolResponseDtoType = typeof ToolResponseDtoType[keyof typeof ToolResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ToolResponseDtoType = {
-  http: 'http',
-  source_query: 'source_query',
-  source_get_text: 'source_get_text',
-  internet_search: 'internet_search',
-  website_content: 'website_content',
-  send_email: 'send_email',
-  create_calendar_event: 'create_calendar_event',
-  code_execution: 'code_execution',
-  bar_chart: 'bar_chart',
-  line_chart: 'line_chart',
-  pie_chart: 'pie_chart',
-  mcp_tool: 'mcp_tool',
-  mcp_resource: 'mcp_resource',
-  mcp_prompt: 'mcp_prompt',
-  product_knowledge: 'product_knowledge',
-  activate_skill: 'activate_skill',
-  create_skill: 'create_skill',
-  knowledge_query: 'knowledge_query',
-  knowledge_get_text: 'knowledge_get_text',
-} as const;
-
-export interface ToolResponseDto {
-  /** The type of the tool */
-  type: ToolResponseDtoType;
-}
-
-/**
- * The type of source
- */
-export type AgentSourceResponseDtoType = typeof AgentSourceResponseDtoType[keyof typeof AgentSourceResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const AgentSourceResponseDtoType = {
-  file: 'file',
-  url: 'url',
-} as const;
-
-export interface AgentSourceResponseDto {
-  /** The unique identifier of the source assignment */
+export interface KnowledgeBaseResponseDto {
+  /** The unique identifier of the knowledge base */
   id: string;
+  /** The name of the knowledge base */
+  name: string;
+  /** The description of the knowledge base */
+  description: string;
+  /** The date and time when the knowledge base was created */
+  createdAt: string;
+  /** The date and time when the knowledge base was last updated */
+  updatedAt: string;
+  /** Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases). */
+  isShared?: boolean;
+}
+
+export interface KnowledgeBaseListResponseDto {
+  /** The list of knowledge bases */
+  data: KnowledgeBaseResponseDto[];
+}
+
+export interface UpdateKnowledgeBaseDto {
+  /**
+   * The name of the knowledge base
+   * @minLength 1
+   * @maxLength 255
+   */
+  name?: string;
+  /**
+   * The description of the knowledge base
+   * @maxLength 2000
+   */
+  description?: string;
+}
+
+/**
+ * The type of the source
+ */
+export type KnowledgeBaseDocumentResponseDtoType = typeof KnowledgeBaseDocumentResponseDtoType[keyof typeof KnowledgeBaseDocumentResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const KnowledgeBaseDocumentResponseDtoType = {
+  text: 'text',
+  data: 'data',
+} as const;
+
+/**
+ * Who created the source
+ */
+export type KnowledgeBaseDocumentResponseDtoCreatedBy = typeof KnowledgeBaseDocumentResponseDtoCreatedBy[keyof typeof KnowledgeBaseDocumentResponseDtoCreatedBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const KnowledgeBaseDocumentResponseDtoCreatedBy = {
+  user: 'user',
+  llm: 'llm',
+  system: 'system',
+} as const;
+
+/**
+ * The processing status of the document
+ */
+export type KnowledgeBaseDocumentResponseDtoStatus = typeof KnowledgeBaseDocumentResponseDtoStatus[keyof typeof KnowledgeBaseDocumentResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const KnowledgeBaseDocumentResponseDtoStatus = {
+  processing: 'processing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+/**
+ * The text source subtype (e.g. file, web)
+ */
+export type KnowledgeBaseDocumentResponseDtoTextType = typeof KnowledgeBaseDocumentResponseDtoTextType[keyof typeof KnowledgeBaseDocumentResponseDtoTextType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const KnowledgeBaseDocumentResponseDtoTextType = {
+  file: 'file',
+  web: 'web',
+} as const;
+
+export interface KnowledgeBaseDocumentResponseDto {
+  /** The unique identifier of the document */
+  id: string;
+  /** The name of the document */
+  name: string;
+  /** The type of the source */
+  type: KnowledgeBaseDocumentResponseDtoType;
+  /** Who created the source */
+  createdBy: KnowledgeBaseDocumentResponseDtoCreatedBy;
+  /** The date and time when the document was added */
+  createdAt: string;
+  /** The date and time when the document was last updated */
+  updatedAt: string;
+  /** The processing status of the document */
+  status: KnowledgeBaseDocumentResponseDtoStatus;
+  /** Error message if processing failed (only present when status is failed) */
+  processingError?: string;
+  /** The text source subtype (e.g. file, web) */
+  textType?: KnowledgeBaseDocumentResponseDtoTextType;
+  /** The URL of the source (only for web sources) */
+  url?: string;
+}
+
+export interface KnowledgeBaseDocumentListResponseDto {
+  /** The list of documents in the knowledge base */
+  data: KnowledgeBaseDocumentResponseDto[];
+}
+
+export interface AddUrlToKnowledgeBaseDto {
+  /** The URL to crawl and add to the knowledge base */
+  url: string;
+  /**
+   * How many links deep to follow from the URL when crawling (0 = just this page, 1 = + linked pages, 2 = + their links). Only same-domain links are followed. Defaults to 0.
+   * @minimum 0
+   * @maximum 2
+   */
+  maxDepth?: number;
+}
+
+/**
+ * Type of entity being shared
+ */
+export type CreateSkillShareDtoEntityType = typeof CreateSkillShareDtoEntityType[keyof typeof CreateSkillShareDtoEntityType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateSkillShareDtoEntityType = {
+  prompt: 'prompt',
+  skill: 'skill',
+  knowledge_base: 'knowledge_base',
+} as const;
+
+export interface CreateSkillShareDto {
+  /** Type of entity being shared */
+  entityType: CreateSkillShareDtoEntityType;
+  /** ID of the skill to share */
+  skillId: string;
+  /** ID of the team to share with (if not provided, shares with entire organization) */
+  teamId?: string;
+}
+
+/**
+ * Type of entity being shared
+ */
+export type ShareResponseDtoEntityType = typeof ShareResponseDtoEntityType[keyof typeof ShareResponseDtoEntityType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ShareResponseDtoEntityType = {
+  prompt: 'prompt',
+  skill: 'skill',
+  knowledge_base: 'knowledge_base',
+} as const;
+
+/**
+ * Type of share scope (organization, user, or team)
+ */
+export type ShareResponseDtoScopeType = typeof ShareResponseDtoScopeType[keyof typeof ShareResponseDtoScopeType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ShareResponseDtoScopeType = {
+  org: 'org',
+  team: 'team',
+} as const;
+
+export interface ShareResponseDto {
+  /** Unique identifier of the share */
+  id: string;
+  /** Type of entity being shared */
+  entityType: ShareResponseDtoEntityType;
+  /** ID of the entity being shared */
+  entityId: string;
+  /** Type of share scope (organization, user, or team) */
+  scopeType: ShareResponseDtoScopeType;
+  /** ID of the user who created the share */
+  ownerId: string;
+  /** ID of the team (only present for team-scoped shares) */
+  teamId?: string;
+  /** Name of the team (only present for team-scoped shares) */
+  teamName?: string;
+  /** When the share was created */
+  createdAt: string;
+  /** When the share was last updated */
+  updatedAt: string;
+}
+
+/**
+ * Type of entity being shared
+ */
+export type CreateKnowledgeBaseShareDtoEntityType = typeof CreateKnowledgeBaseShareDtoEntityType[keyof typeof CreateKnowledgeBaseShareDtoEntityType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateKnowledgeBaseShareDtoEntityType = {
+  prompt: 'prompt',
+  skill: 'skill',
+  knowledge_base: 'knowledge_base',
+} as const;
+
+export interface CreateKnowledgeBaseShareDto {
+  /** Type of entity being shared */
+  entityType: CreateKnowledgeBaseShareDtoEntityType;
+  /** ID of the knowledge base to share */
+  knowledgeBaseId: string;
+  /** ID of the team to share with (if not provided, shares with entire organization) */
+  teamId?: string;
+}
+
+export interface InstallSkillFromMarketplaceDto {
+  /** The unique identifier (slug) of the marketplace skill */
+  identifier: string;
+}
+
+export interface SkillResponseDto {
+  /** The unique identifier of the skill */
+  id: string;
+  /** The name of the skill */
+  name: string;
+  /** A short description of the skill */
+  shortDescription: string;
+  /** Detailed instructions for the skill */
+  instructions: string;
+  /**
+   * The marketplace identifier if this skill was installed from the marketplace
+   * @nullable
+   */
+  marketplaceIdentifier: string | null;
+  /** Whether the skill is active and available for use in chats */
+  isActive: boolean;
+  /** The unique identifier of the user who owns this skill */
+  userId: string;
+  /** The date and time when the skill was created */
+  createdAt: string;
+  /** The date and time when the skill was last updated */
+  updatedAt: string;
+  /** Whether the skill is shared with the current user (not owned) */
+  isShared: boolean;
+  /** Whether the skill is pinned for quick access in chat */
+  isPinned: boolean;
+  /**
+   * Display name of the user who shared this skill with the current user. Non-null only for shared skills whose creator can be resolved within the caller’s organisation; otherwise null.
+   * @nullable
+   */
+  creatorName: string | null;
+}
+
+export interface CreateSkillDto {
+  /**
+   * The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
+   * @minLength 1
+   * @maxLength 100
+   */
+  name: string;
+  /** A short description of the skill (shown in system prompt for LLM to decide activation) */
+  shortDescription: string;
+  /** Detailed instructions for the skill (injected when the skill is activated) */
+  instructions: string;
+  /** Whether the skill is active (defaults to true) */
+  isActive?: boolean;
+}
+
+export interface UpdateSkillDto {
+  /**
+   * The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
+   * @minLength 1
+   * @maxLength 100
+   */
+  name: string;
+  /** A short description of the skill (shown in system prompt for LLM to decide activation) */
+  shortDescription: string;
+  /** Detailed instructions for the skill (injected when the skill is activated) */
+  instructions: string;
+}
+
+/**
+ * Processing status of the source
+ */
+export type SkillSourceResponseDtoStatus = typeof SkillSourceResponseDtoStatus[keyof typeof SkillSourceResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SkillSourceResponseDtoStatus = {
+  processing: 'processing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+export interface SkillSourceResponseDto {
   /** The unique identifier of the source */
-  sourceId: string;
+  id: string;
   /** The name of the source */
   name: string;
   /** The type of source */
-  type: AgentSourceResponseDtoType;
-}
-
-export interface AgentResponseDto {
-  /** The unique identifier of the agent */
-  id: string;
-  /** The name of the agent */
-  name: string;
-  /** The instructions for the agent */
-  instructions: string;
-  /** The unique identifier of the user who owns this agent */
-  userId: string;
-  /** The date and time when the agent was created */
+  type: string;
+  /** Processing status of the source */
+  status: SkillSourceResponseDtoStatus;
+  /** Error message if processing failed */
+  processingError?: string;
+  /** The date and time when the source was created */
   createdAt: string;
-  /** The date and time when the agent was last updated */
-  updatedAt: string;
-  /** The model configuration for this agent */
-  model: ModelResponseDto;
-  /** The tools assigned to this agent */
-  tools: ToolResponseDto[];
-  /** The sources assigned to this agent */
-  sources: AgentSourceResponseDto[];
-  /** Whether this agent is shared with the current user (vs. owned by them) */
-  isShared: boolean;
-  /** The unique identifier of the user who owns this agent (same as userId) */
-  ownerId: string;
-}
-
-export interface UpdateAgentDto {
-  /**
-   * The name of the agent
-   * @minLength 1
-   * @maxLength 255
-   */
-  name: string;
-  /** The instructions for the agent */
-  instructions: string;
-  /** The ID of the permitted model to use for this agent */
-  modelId: string;
 }
 
 /**
@@ -1911,6 +2777,10 @@ export interface McpIntegrationResponseDto {
   configSchema?: McpIntegrationResponseDtoConfigSchema;
   /** Whether this marketplace integration has user-level config fields */
   hasUserFields?: boolean;
+  /** Whether this marketplace integration requires each individual user to provide their own credentials before they can use it (has required user-level fields). */
+  userAuthorizationRequired?: boolean;
+  /** Whether the current user has satisfied the per-user authorization requirement. Only populated on per-user endpoints (e.g. the available integrations list); undefined elsewhere. */
+  userAuthorized?: boolean;
   /** Current org-level config values for marketplace integrations. Non-secret fields contain plaintext values. Secret fields are masked with "••••••". */
   orgConfigValues?: McpIntegrationResponseDtoOrgConfigValues;
   /**
@@ -1920,191 +2790,6 @@ export interface McpIntegrationResponseDto {
   logoUrl?: string | null;
   /** Human-readable description of the integration (populated from marketplace shortDescription or predefined config description) */
   description?: string;
-}
-
-/**
- * Type of entity being shared
- */
-export type CreateAgentShareDtoEntityType = typeof CreateAgentShareDtoEntityType[keyof typeof CreateAgentShareDtoEntityType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateAgentShareDtoEntityType = {
-  agent: 'agent',
-  prompt: 'prompt',
-  skill: 'skill',
-  knowledge_base: 'knowledge_base',
-} as const;
-
-export interface CreateAgentShareDto {
-  /** Type of entity being shared */
-  entityType: CreateAgentShareDtoEntityType;
-  /** ID of the agent to share */
-  agentId: string;
-  /** ID of the team to share with (if not provided, shares with entire organization) */
-  teamId?: string;
-}
-
-/**
- * Type of entity being shared
- */
-export type ShareResponseDtoEntityType = typeof ShareResponseDtoEntityType[keyof typeof ShareResponseDtoEntityType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ShareResponseDtoEntityType = {
-  agent: 'agent',
-  prompt: 'prompt',
-  skill: 'skill',
-  knowledge_base: 'knowledge_base',
-} as const;
-
-/**
- * Type of share scope (organization, user, or team)
- */
-export type ShareResponseDtoScopeType = typeof ShareResponseDtoScopeType[keyof typeof ShareResponseDtoScopeType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ShareResponseDtoScopeType = {
-  org: 'org',
-  team: 'team',
-} as const;
-
-export interface ShareResponseDto {
-  /** Unique identifier of the share */
-  id: string;
-  /** Type of entity being shared */
-  entityType: ShareResponseDtoEntityType;
-  /** ID of the entity being shared */
-  entityId: string;
-  /** Type of share scope (organization, user, or team) */
-  scopeType: ShareResponseDtoScopeType;
-  /** ID of the user who created the share */
-  ownerId: string;
-  /** ID of the team (only present for team-scoped shares) */
-  teamId?: string;
-  /** Name of the team (only present for team-scoped shares) */
-  teamName?: string;
-  /** When the share was created */
-  createdAt: string;
-  /** When the share was last updated */
-  updatedAt: string;
-}
-
-/**
- * Type of entity being shared
- */
-export type CreateSkillShareDtoEntityType = typeof CreateSkillShareDtoEntityType[keyof typeof CreateSkillShareDtoEntityType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateSkillShareDtoEntityType = {
-  agent: 'agent',
-  prompt: 'prompt',
-  skill: 'skill',
-  knowledge_base: 'knowledge_base',
-} as const;
-
-export interface CreateSkillShareDto {
-  /** Type of entity being shared */
-  entityType: CreateSkillShareDtoEntityType;
-  /** ID of the skill to share */
-  skillId: string;
-  /** ID of the team to share with (if not provided, shares with entire organization) */
-  teamId?: string;
-}
-
-/**
- * Type of entity being shared
- */
-export type CreateKnowledgeBaseShareDtoEntityType = typeof CreateKnowledgeBaseShareDtoEntityType[keyof typeof CreateKnowledgeBaseShareDtoEntityType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateKnowledgeBaseShareDtoEntityType = {
-  agent: 'agent',
-  prompt: 'prompt',
-  skill: 'skill',
-  knowledge_base: 'knowledge_base',
-} as const;
-
-export interface CreateKnowledgeBaseShareDto {
-  /** Type of entity being shared */
-  entityType: CreateKnowledgeBaseShareDtoEntityType;
-  /** ID of the knowledge base to share */
-  knowledgeBaseId: string;
-  /** ID of the team to share with (if not provided, shares with entire organization) */
-  teamId?: string;
-}
-
-export interface CreateTeamDto {
-  /** The name of the team */
-  name: string;
-}
-
-export interface UpdateTeamDto {
-  /** The new name of the team */
-  name: string;
-}
-
-export interface TeamResponseDto {
-  /** The unique identifier of the team */
-  id: string;
-  /** The name of the team */
-  name: string;
-  /** The organization ID the team belongs to */
-  orgId: string;
-  /** The date and time when the team was created */
-  createdAt: string;
-  /** The date and time when the team was last updated */
-  updatedAt: string;
-}
-
-/**
- * The role of the team member in the organization
- */
-export type TeamMemberResponseDtoUserRole = typeof TeamMemberResponseDtoUserRole[keyof typeof TeamMemberResponseDtoUserRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const TeamMemberResponseDtoUserRole = {
-  admin: 'admin',
-  user: 'user',
-} as const;
-
-export interface TeamMemberResponseDto {
-  /** The unique identifier of the team member */
-  id: string;
-  /** The user ID of the team member */
-  userId: string;
-  /** The name of the team member */
-  userName: string;
-  /** The email of the team member */
-  userEmail: string;
-  /** The role of the team member in the organization */
-  userRole: TeamMemberResponseDtoUserRole;
-  /** The date when the user joined the team */
-  joinedAt: string;
-}
-
-export interface PaginatedTeamMembersResponseDto {
-  /** Array of team members for the current page */
-  data: TeamMemberResponseDto[];
-  /** Pagination metadata */
-  pagination: PaginationDto;
-}
-
-export interface AddTeamMemberDto {
-  /** The user ID to add to the team */
-  userId: string;
-}
-
-export interface ListTeamMembersQueryDto {
-  /** Maximum number of items per page */
-  limit?: number;
-  /** Number of items to skip */
-  offset?: number;
 }
 
 /**
@@ -2311,6 +2996,16 @@ export interface ValidationResponseDto {
   error?: string;
 }
 
+export interface MarketplaceConfigResponseDto {
+  /** Whether the marketplace feature is enabled */
+  enabled: boolean;
+  /**
+   * URL of the marketplace service, exposed so the frontend can link to it. Null when the feature is disabled.
+   * @nullable
+   */
+  url?: string | null;
+}
+
 export interface MarketplaceSkillResponseDto {
   /** Skill UUID */
   id: string;
@@ -2451,188 +3146,28 @@ export interface MarketplaceIntegrationResponseDto {
   updatedAt: string;
 }
 
-export interface CreateKnowledgeBaseDto {
+export interface PiiWhitelistEntryDto {
+  /** PII category exempt from anonymization */
+  category: PiiCategory;
   /**
-   * The name of the knowledge base
-   * @minLength 1
-   * @maxLength 255
-   */
-  name: string;
-  /**
-   * An optional description of the knowledge base
-   * @maxLength 2000
-   */
-  description?: string;
-}
-
-export interface KnowledgeBaseResponseDto {
-  /** The unique identifier of the knowledge base */
-  id: string;
-  /** The name of the knowledge base */
-  name: string;
-  /** The description of the knowledge base */
-  description: string;
-  /** The date and time when the knowledge base was created */
-  createdAt: string;
-  /** The date and time when the knowledge base was last updated */
-  updatedAt: string;
-  /** Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases). */
-  isShared?: boolean;
-}
-
-export interface KnowledgeBaseListResponseDto {
-  /** The list of knowledge bases */
-  data: KnowledgeBaseResponseDto[];
-}
-
-export interface UpdateKnowledgeBaseDto {
-  /**
-   * The name of the knowledge base
-   * @minLength 1
-   * @maxLength 255
-   */
-  name?: string;
-  /**
-   * The description of the knowledge base
-   * @maxLength 2000
-   */
-  description?: string;
-}
-
-/**
- * The type of the source
- */
-export type KnowledgeBaseDocumentResponseDtoType = typeof KnowledgeBaseDocumentResponseDtoType[keyof typeof KnowledgeBaseDocumentResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const KnowledgeBaseDocumentResponseDtoType = {
-  text: 'text',
-  data: 'data',
-} as const;
-
-/**
- * Who created the source
- */
-export type KnowledgeBaseDocumentResponseDtoCreatedBy = typeof KnowledgeBaseDocumentResponseDtoCreatedBy[keyof typeof KnowledgeBaseDocumentResponseDtoCreatedBy];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const KnowledgeBaseDocumentResponseDtoCreatedBy = {
-  user: 'user',
-  llm: 'llm',
-  system: 'system',
-} as const;
-
-/**
- * The text source subtype (e.g. file, web)
- */
-export type KnowledgeBaseDocumentResponseDtoTextType = typeof KnowledgeBaseDocumentResponseDtoTextType[keyof typeof KnowledgeBaseDocumentResponseDtoTextType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const KnowledgeBaseDocumentResponseDtoTextType = {
-  file: 'file',
-  web: 'web',
-} as const;
-
-export interface KnowledgeBaseDocumentResponseDto {
-  /** The unique identifier of the document */
-  id: string;
-  /** The name of the document */
-  name: string;
-  /** The type of the source */
-  type: KnowledgeBaseDocumentResponseDtoType;
-  /** Who created the source */
-  createdBy: KnowledgeBaseDocumentResponseDtoCreatedBy;
-  /** The date and time when the document was added */
-  createdAt: string;
-  /** The date and time when the document was last updated */
-  updatedAt: string;
-  /** The text source subtype (e.g. file, web) */
-  textType?: KnowledgeBaseDocumentResponseDtoTextType;
-  /** The URL of the source (only for web sources) */
-  url?: string;
-}
-
-export interface KnowledgeBaseDocumentListResponseDto {
-  /** The list of documents in the knowledge base */
-  data: KnowledgeBaseDocumentResponseDto[];
-}
-
-export interface AddUrlToKnowledgeBaseDto {
-  /** The URL to crawl and add to the knowledge base */
-  url: string;
-}
-
-export interface InstallSkillFromMarketplaceDto {
-  /** The unique identifier (slug) of the marketplace skill */
-  identifier: string;
-}
-
-export interface SkillResponseDto {
-  /** The unique identifier of the skill */
-  id: string;
-  /** The name of the skill */
-  name: string;
-  /** A short description of the skill */
-  shortDescription: string;
-  /** Detailed instructions for the skill */
-  instructions: string;
-  /**
-   * The marketplace identifier if this skill was installed from the marketplace
+   * Optional regex; when set, only values fully matching it (case-insensitive) are exempt. Null exempts the whole category.
+   * @maxLength 200
    * @nullable
    */
-  marketplaceIdentifier: string | null;
-  /** Whether the skill is active and available for use in chats */
-  isActive: boolean;
-  /** The unique identifier of the user who owns this skill */
-  userId: string;
-  /** The date and time when the skill was created */
-  createdAt: string;
-  /** The date and time when the skill was last updated */
-  updatedAt: string;
-  /** Whether the skill is shared with the current user (not owned) */
-  isShared: boolean;
-  /** Whether the skill is pinned for quick access in chat */
-  isPinned: boolean;
+  pattern: string | null;
 }
 
-export interface CreateSkillDto {
+export interface PiiWhitelistResponseDto {
+  /** Current whitelist entries for the org */
+  entries: PiiWhitelistEntryDto[];
+}
+
+export interface UpdatePiiWhitelistRequestDto {
   /**
-   * The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
-   * @minLength 1
-   * @maxLength 100
+   * Full replacement whitelist; an empty array removes all entries
+   * @maxItems 50
    */
-  name: string;
-  /** A short description of the skill (shown in system prompt for LLM to decide activation) */
-  shortDescription: string;
-  /** Detailed instructions for the skill (injected when the skill is activated) */
-  instructions: string;
-  /** Whether the skill is active (defaults to true) */
-  isActive?: boolean;
-}
-
-export interface UpdateSkillDto {
-  /**
-   * The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
-   * @minLength 1
-   * @maxLength 100
-   */
-  name: string;
-  /** A short description of the skill (shown in system prompt for LLM to decide activation) */
-  shortDescription: string;
-  /** Detailed instructions for the skill (injected when the skill is activated) */
-  instructions: string;
-}
-
-export interface SkillSourceResponseDto {
-  /** The unique identifier of the source */
-  id: string;
-  /** The name of the source */
-  name: string;
-  /** The type of source */
-  type: string;
+  entries: PiiWhitelistEntryDto[];
 }
 
 /**
@@ -2740,6 +3275,447 @@ export interface UpdateSkillTemplateDto {
   defaultActive?: boolean;
   /** Whether copied skills should be pinned by default (only for pre_created_copy mode) */
   defaultPinned?: boolean;
+}
+
+/**
+ * Who authored this version
+ */
+export type CreateArtifactDtoAuthorType = typeof CreateArtifactDtoAuthorType[keyof typeof CreateArtifactDtoAuthorType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateArtifactDtoAuthorType = {
+  USER: 'USER',
+  ASSISTANT: 'ASSISTANT',
+} as const;
+
+export interface CreateArtifactDto {
+  /** Title of the document */
+  title: string;
+  /** HTML content of the document */
+  content: string;
+  /** The thread this artifact belongs to */
+  threadId: string;
+  /** Who authored this version */
+  authorType: CreateArtifactDtoAuthorType;
+  /** Optional letterhead to apply to this artifact */
+  letterheadId?: string;
+}
+
+/**
+ * Who authored this version
+ */
+export type ArtifactVersionResponseDtoAuthorType = typeof ArtifactVersionResponseDtoAuthorType[keyof typeof ArtifactVersionResponseDtoAuthorType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ArtifactVersionResponseDtoAuthorType = {
+  USER: 'USER',
+  ASSISTANT: 'ASSISTANT',
+} as const;
+
+/**
+ * ID of the author (user ID if authored by user, null if AI)
+ * @nullable
+ */
+export type ArtifactVersionResponseDtoAuthorId = { [key: string]: unknown } | null;
+
+export interface ArtifactVersionResponseDto {
+  /** Unique identifier of the version */
+  id: string;
+  /** The artifact this version belongs to */
+  artifactId: string;
+  /** Sequential version number */
+  versionNumber: number;
+  /** HTML content of this version */
+  content: string;
+  /** Who authored this version */
+  authorType: ArtifactVersionResponseDtoAuthorType;
+  /**
+   * ID of the author (user ID if authored by user, null if AI)
+   * @nullable
+   */
+  authorId?: ArtifactVersionResponseDtoAuthorId;
+  /** When this version was created */
+  createdAt: string;
+}
+
+/**
+ * The kind of artifact — document (HTML) or diagram (mermaid)
+ */
+export type ArtifactResponseDtoType = typeof ArtifactResponseDtoType[keyof typeof ArtifactResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ArtifactResponseDtoType = {
+  document: 'document',
+  diagram: 'diagram',
+} as const;
+
+export interface ArtifactResponseDto {
+  /** Unique identifier of the artifact */
+  id: string;
+  /** The kind of artifact — document (HTML) or diagram (mermaid) */
+  type: ArtifactResponseDtoType;
+  /** The thread this artifact belongs to */
+  threadId: string;
+  /** The user who owns this artifact */
+  userId: string;
+  /** Title of the document */
+  title: string;
+  /**
+   * The letterhead applied to this artifact
+   * @nullable
+   */
+  letterheadId?: string | null;
+  /** Current version number */
+  currentVersionNumber: number;
+  /** All versions of this artifact (included when fetching by ID) */
+  versions?: ArtifactVersionResponseDto[];
+  /** When the artifact was created */
+  createdAt: string;
+  /** When the artifact was last updated */
+  updatedAt: string;
+}
+
+/**
+ * Who authored this version. Required when content is provided.
+ */
+export type UpdateArtifactDtoAuthorType = typeof UpdateArtifactDtoAuthorType[keyof typeof UpdateArtifactDtoAuthorType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateArtifactDtoAuthorType = {
+  USER: 'USER',
+  ASSISTANT: 'ASSISTANT',
+} as const;
+
+export interface UpdateArtifactDto {
+  /** Updated HTML content of the document. When omitted, no new version is created. */
+  content?: string;
+  /** Who authored this version. Required when content is provided. */
+  authorType?: UpdateArtifactDtoAuthorType;
+  /**
+   * Optional letterhead to apply to this artifact (null to remove)
+   * @nullable
+   */
+  letterheadId?: string | null;
+}
+
+export interface RevertArtifactDto {
+  /** The version number to revert to */
+  versionNumber: number;
+}
+
+export interface CreateLetterheadDto {
+  /** Name of the letterhead */
+  name: string;
+  /** Description of the letterhead (used by AI for context) */
+  description?: string;
+  /** JSON string of { top, bottom, left, right } margins in mm */
+  firstPageMargins: string;
+  /** JSON string of { top, bottom, left, right } margins in mm */
+  continuationPageMargins: string;
+}
+
+export interface PageMarginsDto {
+  /** Top margin in mm */
+  top: number;
+  /** Bottom margin in mm */
+  bottom: number;
+  /** Left margin in mm */
+  left: number;
+  /** Right margin in mm */
+  right: number;
+}
+
+export interface LetterheadResponseDto {
+  /** Unique identifier of the letterhead */
+  id: string;
+  /** Name of the letterhead */
+  name: string;
+  /**
+   * Description of the letterhead
+   * @nullable
+   */
+  description?: string | null;
+  /** Margins for the first page in mm */
+  firstPageMargins: PageMarginsDto;
+  /** Margins for continuation pages in mm */
+  continuationPageMargins: PageMarginsDto;
+  /** Whether a continuation page PDF is configured */
+  hasContinuationPage: boolean;
+  /** When the letterhead was created */
+  createdAt: string;
+  /** When the letterhead was last updated */
+  updatedAt: string;
+}
+
+export interface UpdateLetterheadDto {
+  /** Name of the letterhead */
+  name?: string;
+  /** Description of the letterhead */
+  description?: string;
+  /** JSON string of { top, bottom, left, right } margins in mm */
+  firstPageMargins?: string;
+  /** JSON string of { top, bottom, left, right } margins in mm */
+  continuationPageMargins?: string;
+  /** Set to "true" to remove the continuation page PDF. Ignored if a new continuationPagePdf file is uploaded. */
+  removeContinuationPage?: string;
+}
+
+export interface UsageConfigResponseDto {
+  /** Whether the deployment is self-hosted. Determines feature availability. */
+  isSelfHosted: boolean;
+}
+
+export interface CreditUsageResponseDto {
+  /**
+   * Monthly credit budget from the usage-based subscription. Null if the org does not have a usage-based subscription.
+   * @nullable
+   */
+  monthlyCredits: number | null;
+  /** Total credits consumed in the current calendar month. */
+  creditsUsed: number;
+  /**
+   * Credits remaining this month (monthlyCredits - creditsUsed). Null if the org does not have a usage-based subscription.
+   * @nullable
+   */
+  creditsRemaining: number | null;
+}
+
+export interface UserUsageDto {
+  /** User ID */
+  userId: string;
+  /** User name */
+  userName: string;
+  /** User email */
+  userEmail: string;
+  /** Total credits consumed by this user */
+  credits: number;
+  /** Total requests for this user */
+  requests: number;
+  /**
+   * Last activity date (null if no activity)
+   * @nullable
+   */
+  lastActivity: string | null;
+  /** Whether the user is considered active */
+  isActive: boolean;
+}
+
+export interface UserUsageResponseDto {
+  /** User usage statistics */
+  data: UserUsageDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+  /** Total credits consumed across all users in the filtered period */
+  totalCredits: number;
+}
+
+export interface UsageStatsResponseDto {
+  /** Total credits consumed across all users and models in the specified period */
+  totalCredits: number;
+  /** Total number of API requests made in the specified period */
+  totalRequests: number;
+  /** Number of users who made requests within the active user threshold (last 30 days) */
+  activeUsers: number;
+  /** Total number of unique users who made requests in the specified period */
+  totalUsers: number;
+  /** List of the most frequently used model names, ordered by usage */
+  topModels: string[];
+}
+
+/**
+ * Model provider
+ */
+export type ModelDistributionDtoProvider = typeof ModelDistributionDtoProvider[keyof typeof ModelDistributionDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelDistributionDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+export interface ModelDistributionDto {
+  /** Model ID */
+  modelId: string;
+  /** Model name */
+  modelName: string;
+  /** Model display name */
+  displayName: string;
+  /** Model provider */
+  provider: ModelDistributionDtoProvider;
+  /** Total credits for this model */
+  credits: number;
+  /** Total requests for this model */
+  requests: number;
+  /** Percentage of total usage */
+  percentage: number;
+}
+
+export interface ModelDistributionResponseDto {
+  /** Model distribution statistics */
+  models: ModelDistributionDto[];
+}
+
+export interface ProviderValuesDto {
+  /** Credits for OpenAI */
+  openai?: number;
+  /** Credits for Anthropic */
+  anthropic?: number;
+  /** Credits for Mistral */
+  mistral?: number;
+  /** Credits for Ollama */
+  ollama?: number;
+  /** Credits for Synaforce */
+  synaforce?: number;
+  /** Credits for Ayunis (internal) */
+  ayunis?: number;
+}
+
+export interface ProviderTimeSeriesRowDto {
+  /** Date of the data point */
+  date: string;
+  /** Credits per provider for this date */
+  values: ProviderValuesDto;
+}
+
+export interface ProviderUsageChartResponseDto {
+  /** Aligned time series rows by date with provider credit values */
+  timeSeries: ProviderTimeSeriesRowDto[];
+}
+
+export interface TimeSeriesPointDto {
+  /** Date of the data point */
+  date: string;
+  /** Number of credits at this point */
+  credits: number;
+  /** Number of requests at this point */
+  requests: number;
+}
+
+/**
+ * Model provider
+ */
+export type ProviderUsageDtoProvider = typeof ProviderUsageDtoProvider[keyof typeof ProviderUsageDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ProviderUsageDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+  gemini: 'gemini',
+  stackit: 'stackit',
+  scaleway: 'scaleway',
+} as const;
+
+export interface ProviderUsageDto {
+  /** Model provider */
+  provider: ProviderUsageDtoProvider;
+  /** Total credits for this provider */
+  credits: number;
+  /** Total requests for this provider */
+  requests: number;
+  /** Percentage of total usage */
+  percentage: number;
+  /** Time series data for this provider */
+  timeSeriesData: TimeSeriesPointDto[];
+}
+
+export interface ProviderUsageResponseDto {
+  /** Provider usage statistics */
+  providers: ProviderUsageDto[];
+}
+
+export interface CreditsPerEuroResponseDto {
+  /** Number of credits per euro of token cost */
+  creditsPerEuro: number;
+}
+
+export interface SetCreditsPerEuroRequestDto {
+  /** Number of credits per euro of token cost. Must be positive. */
+  creditsPerEuro: number;
+}
+
+export interface FairUseTierLimitDto {
+  /** Maximum number of messages allowed within the window */
+  limit: number;
+  /** Sliding window duration in milliseconds */
+  windowMs: number;
+}
+
+export interface FairUseLimitsResponseDto {
+  /** Fair-use limit configured for zero-tier (unrestricted) models. Stored for UI symmetry only — runtime quota enforcement skips ZERO-tier models entirely, so this value is never consulted. */
+  zero: FairUseTierLimitDto;
+  /** Fair-use limit for low-tier (cheap) language models */
+  low: FairUseTierLimitDto;
+  /** Fair-use limit for medium-tier language models */
+  medium: FairUseTierLimitDto;
+  /** Fair-use limit for high-tier (expensive) language models */
+  high: FairUseTierLimitDto;
+  /** Fair-use limit for image generation. Single global bucket (no tiering). */
+  images: FairUseTierLimitDto;
+}
+
+/**
+ * Model tier whose fair-use limit is being updated
+ */
+export type SetFairUseLimitRequestDtoTier = typeof SetFairUseLimitRequestDtoTier[keyof typeof SetFairUseLimitRequestDtoTier];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SetFairUseLimitRequestDtoTier = {
+  zero: 'zero',
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface SetFairUseLimitRequestDto {
+  /** Model tier whose fair-use limit is being updated */
+  tier: SetFairUseLimitRequestDtoTier;
+  /**
+   * Maximum number of messages allowed within the sliding window. Must be a positive integer.
+   * @minimum 1
+   */
+  limit: number;
+  /**
+   * Sliding window duration in milliseconds. Must be a positive integer.
+   * @minimum 1
+   */
+  windowMs: number;
+}
+
+export interface SetImageFairUseLimitRequestDto {
+  /**
+   * Maximum number of images allowed within the sliding window. Must be a positive integer.
+   * @minimum 1
+   */
+  limit: number;
+  /**
+   * Sliding window duration in milliseconds. Must be a positive integer.
+   * @minimum 1
+   */
+  windowMs: number;
 }
 
 /**
@@ -2880,6 +3856,28 @@ export interface RunThreadResponseDto {
 }
 
 /**
+ * Response type identifier
+ */
+export type RunMasksResponseDtoType = typeof RunMasksResponseDtoType[keyof typeof RunMasksResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RunMasksResponseDtoType = {
+  masks: 'masks',
+} as const;
+
+export interface RunMasksResponseDto {
+  /** Response type identifier */
+  type: RunMasksResponseDtoType;
+  /** Thread ID the mask dictionary belongs to */
+  threadId: string;
+  /** Full PII mask dictionary of the thread (idempotent to re-apply) */
+  masks: PiiMaskResponseDto[];
+  /** Event timestamp */
+  timestamp: string;
+}
+
+/**
  * The type of input
  */
 export type TextInputType = typeof TextInputType[keyof typeof TextInputType];
@@ -2983,198 +3981,6 @@ export interface UpdateTrialRequestDto {
   messagesSent?: number;
 }
 
-export interface UsageConfigResponseDto {
-  /** Whether the deployment is self-hosted. Determines feature availability. */
-  isSelfHosted: boolean;
-}
-
-export interface UsageStatsResponseDto {
-  /** Total tokens consumed across all users and models in the specified period */
-  totalTokens: number;
-  /** Total number of API requests made in the specified period */
-  totalRequests: number;
-  /** Number of users who made requests within the active user threshold (last 30 days) */
-  activeUsers: number;
-  /** Total number of unique users who made requests in the specified period */
-  totalUsers: number;
-  /** List of the most frequently used model names, ordered by usage */
-  topModels: string[];
-}
-
-export interface TimeSeriesPointDto {
-  /** Date of the data point */
-  date: string;
-  /** Number of tokens at this point */
-  tokens: number;
-  /** Number of requests at this point */
-  requests: number;
-}
-
-/**
- * Model provider
- */
-export type ProviderUsageDtoProvider = typeof ProviderUsageDtoProvider[keyof typeof ProviderUsageDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ProviderUsageDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-export interface ProviderUsageDto {
-  /** Model provider */
-  provider: ProviderUsageDtoProvider;
-  /** Total tokens for this provider */
-  tokens: number;
-  /** Total requests for this provider */
-  requests: number;
-  /** Percentage of total usage */
-  percentage: number;
-  /** Time series data for this provider */
-  timeSeriesData: TimeSeriesPointDto[];
-}
-
-export interface ProviderUsageResponseDto {
-  /** Provider usage statistics */
-  providers: ProviderUsageDto[];
-}
-
-export interface ProviderValuesDto {
-  /** Tokens for OpenAI */
-  openai?: number;
-  /** Tokens for Anthropic */
-  anthropic?: number;
-  /** Tokens for Mistral */
-  mistral?: number;
-  /** Tokens for Ollama */
-  ollama?: number;
-  /** Tokens for Synaforce */
-  synaforce?: number;
-  /** Tokens for Ayunis (internal) */
-  ayunis?: number;
-}
-
-export interface ProviderTimeSeriesRowDto {
-  /** Date of the data point */
-  date: string;
-  /** Tokens per provider for this date */
-  values: ProviderValuesDto;
-}
-
-export interface ProviderUsageChartResponseDto {
-  /** Aligned time series rows by date with provider token values */
-  timeSeries: ProviderTimeSeriesRowDto[];
-}
-
-/**
- * Model provider
- */
-export type ModelDistributionDtoProvider = typeof ModelDistributionDtoProvider[keyof typeof ModelDistributionDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelDistributionDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-  gemini: 'gemini',
-  stackit: 'stackit',
-  scaleway: 'scaleway',
-} as const;
-
-export interface ModelDistributionDto {
-  /** Model ID */
-  modelId: string;
-  /** Model name */
-  modelName: string;
-  /** Model display name */
-  displayName: string;
-  /** Model provider */
-  provider: ModelDistributionDtoProvider;
-  /** Total tokens for this model */
-  tokens: number;
-  /** Total requests for this model */
-  requests: number;
-  /** Percentage of total usage */
-  percentage: number;
-}
-
-export interface ModelDistributionResponseDto {
-  /** Model distribution statistics */
-  models: ModelDistributionDto[];
-}
-
-export interface UserUsageDto {
-  /** User ID */
-  userId: string;
-  /** User name */
-  userName: string;
-  /** User email */
-  userEmail: string;
-  /** Total tokens for this user */
-  tokens: number;
-  /** Total requests for this user */
-  requests: number;
-  /**
-   * Last activity date (null if no activity)
-   * @nullable
-   */
-  lastActivity: string | null;
-  /** Whether the user is considered active */
-  isActive: boolean;
-}
-
-export interface UserUsageResponseDto {
-  /** User usage statistics */
-  data: UserUsageDto[];
-  /** Pagination metadata */
-  pagination: PaginationDto;
-}
-
-export interface GlobalUserUsageDto {
-  /** User ID */
-  userId: string;
-  /** User name */
-  userName: string;
-  /** User email */
-  userEmail: string;
-  /** Total tokens for this user */
-  tokens: number;
-  /** Total requests for this user */
-  requests: number;
-  /**
-   * Last activity date (null if no activity)
-   * @nullable
-   */
-  lastActivity: string | null;
-  /** Whether the user is considered active */
-  isActive: boolean;
-  /** Name of the organization the user belongs to */
-  organizationName: string;
-}
-
-export interface GlobalUserUsageResponseDto {
-  /** Top users by token usage across all organizations */
-  data: GlobalUserUsageDto[];
-}
-
 export interface UserSystemPromptResponseDto {
   /**
    * The custom system prompt for the user, or null if not set
@@ -3216,46 +4022,151 @@ export interface GeneratePersonalizedSystemPromptResponseDto {
   welcomeMessage: string;
 }
 
-export interface CreatePromptDto {
+export interface OrgSystemPromptResponseDto {
   /**
-   * The title of the prompt
-   * @minLength 1
-   * @maxLength 255
+   * The organization-wide system prompt, or null if not set
+   * @nullable
    */
-  title: string;
-  /** The content of the prompt */
-  content: string;
+  systemPrompt: string | null;
 }
 
-export interface PromptResponseDto {
-  /** The unique identifier of the prompt */
+export interface UpsertOrgSystemPromptDto {
+  /**
+   * The organization-wide system prompt
+   * @maxLength 10000
+   */
+  systemPrompt: string;
+}
+
+export interface AcademyLessonResponseDto {
+  /** The unique identifier of the lesson */
   id: string;
-  /** The title of the prompt */
+  /** The id of the chapter the lesson belongs to */
+  chapterId: string;
+  /** The title of the lesson */
   title: string;
-  /** The content of the prompt */
-  content: string;
-  /** The unique identifier of the user who owns this prompt */
-  userId: string;
-  /** The date and time when the prompt was created */
+  /**
+   * An optional description of the lesson
+   * @nullable
+   */
+  description: string | null;
+  /** The Loom share or embed link of the lesson video */
+  loomUrl: string;
+  /** The position of the lesson within its chapter (0-based) */
+  position: number;
+  /** The date the lesson was created */
   createdAt: string;
-  /** The date and time when the prompt was last updated */
+  /** The date the lesson was last updated */
   updatedAt: string;
 }
 
-export interface UpdatePromptDto {
+export interface AcademyChapterResponseDto {
+  /** The unique identifier of the chapter */
+  id: string;
+  /** The title of the chapter */
+  title: string;
+  /** A description of what the chapter covers */
+  description: string;
+  /** The position of the chapter (0-based) */
+  position: number;
+  /** The lessons of the chapter, ordered by position */
+  lessons: AcademyLessonResponseDto[];
+  /** The date the chapter was created */
+  createdAt: string;
+  /** The date the chapter was last updated */
+  updatedAt: string;
+}
+
+export interface CreateChapterRequestDto {
   /**
-   * The title of the prompt
-   * @minLength 1
+   * The title of the chapter
    * @maxLength 255
    */
   title: string;
-  /** The content of the prompt */
-  content: string;
+  /**
+   * A description of what the chapter covers
+   * @maxLength 2000
+   */
+  description: string;
 }
 
-export interface TranscriptionResponseDto {
-  /** The transcribed text from the audio file */
-  text: string;
+export interface ReorderChaptersRequestDto {
+  /** All chapter ids in their new order. Must contain exactly the ids of all existing chapters. */
+  chapterIds: string[];
+}
+
+export interface UpdateChapterRequestDto {
+  /**
+   * The title of the chapter
+   * @maxLength 255
+   */
+  title: string;
+  /**
+   * A description of what the chapter covers
+   * @maxLength 2000
+   */
+  description: string;
+}
+
+export interface CreateLessonRequestDto {
+  /**
+   * The title of the lesson
+   * @maxLength 255
+   */
+  title: string;
+  /**
+   * An optional description of the lesson
+   * @maxLength 2000
+   */
+  description?: string;
+  /**
+   * The Loom share or embed link of the lesson video
+   * @maxLength 500
+   */
+  loomUrl: string;
+}
+
+export interface ReorderLessonsRequestDto {
+  /** All lesson ids of the chapter in their new order. Must contain exactly the ids of all lessons in the chapter. */
+  lessonIds: string[];
+}
+
+export interface UpdateLessonRequestDto {
+  /**
+   * The title of the lesson
+   * @maxLength 255
+   */
+  title: string;
+  /**
+   * An optional description of the lesson
+   * @maxLength 2000
+   */
+  description?: string;
+  /**
+   * The Loom share or embed link of the lesson video
+   * @maxLength 500
+   */
+  loomUrl: string;
+}
+
+export interface ChatCompletionRequestDto { [key: string]: unknown }
+
+/**
+ * The add-on this status entry refers to
+ */
+export type AddonType = typeof AddonType[keyof typeof AddonType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AddonType = {
+  ayunis_core_academy: 'ayunis_core_academy',
+} as const;
+
+export interface AddonStatusResponseDto {
+  /** The add-on this status entry refers to */
+  type: AddonType;
+  /** Whether the add-on is active for the organization */
+  active: boolean;
 }
 
 export interface LoginDto {
@@ -3286,6 +4197,8 @@ export interface RegisterDto {
   userName: string;
   /** Marketing acceptance */
   marketingAcceptance: boolean;
+  /** Department within the municipality */
+  department?: string;
 }
 
 /**
@@ -3323,28 +4236,79 @@ export interface MeResponseDto {
   name: string;
 }
 
-export type SuperAdminModelsControllerGetCatalogModelById200 = LanguageModelResponseDto | EmbeddingModelResponseDto;
+export interface IpAllowlistResponseDto {
+  /** List of allowed CIDR ranges */
+  cidrs: string[];
+}
 
-export type SuperAdminModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
+export interface UpdateIpAllowlistRequestDto {
+  /** List of CIDR ranges to allow (e.g. "192.168.1.0/24") */
+  cidrs: string[];
+}
 
-export type SuperAdminModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
+export interface CreateApiKeyDto {
+  /**
+   * Human-readable name for the API key
+   * @maxLength 100
+   */
+  name: string;
+  /** Optional expiration date for the API key (ISO 8601). If omitted, the key never expires. */
+  expiresAt?: string;
+}
 
-export type SuperAdminModelsControllerGetAllCatalogModels200Item = LanguageModelResponseDto | EmbeddingModelResponseDto;
+export interface ApiKeyResponseDto {
+  /** Unique identifier of the API key */
+  id: string;
+  /** Human-readable name for the API key */
+  name: string;
+  /** Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time. */
+  prefixPreview: string;
+  /**
+   * Expiration date of the API key, or null if it never expires
+   * @nullable
+   */
+  expiresAt: string | null;
+  /**
+   * Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.
+   * @nullable
+   */
+  revokedAt: string | null;
+  /**
+   * ID of the user who created the key. May be null if that user has been deleted.
+   * @nullable
+   */
+  createdByUserId: string | null;
+  /** When the key was created */
+  createdAt: string;
+}
 
-export type SuperAdminOrgsControllerGetAllOrgsParams = {
-/**
- * Search organizations by name.
- */
-search?: string;
-/**
- * Maximum number of organizations to return (default: 50).
- */
-limit?: number;
-/**
- * Number of organizations to skip (default: 0).
- */
-offset?: number;
-};
+export interface CreateApiKeyResponseDto {
+  /** Unique identifier of the API key */
+  id: string;
+  /** Human-readable name for the API key */
+  name: string;
+  /** Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time. */
+  prefixPreview: string;
+  /**
+   * Expiration date of the API key, or null if it never expires
+   * @nullable
+   */
+  expiresAt: string | null;
+  /**
+   * Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.
+   * @nullable
+   */
+  revokedAt: string | null;
+  /**
+   * ID of the user who created the key. May be null if that user has been deleted.
+   * @nullable
+   */
+  createdByUserId: string | null;
+  /** When the key was created */
+  createdAt: string;
+  /** The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later. */
+  secret: string;
+}
 
 export type UserControllerGetUsersInOrganizationParams = {
 /**
@@ -3361,14 +4325,14 @@ limit?: number;
 offset?: number;
 };
 
-export type UserControllerValidateResetTokenParams = {
+export type UserPasswordResetControllerValidateResetTokenParams = {
 /**
  * Password reset token from email
  */
 token: string;
 };
 
-export type UserControllerValidateResetToken200 = {
+export type UserPasswordResetControllerValidateResetToken200 = {
   valid?: boolean;
 };
 
@@ -3402,9 +4366,52 @@ limit?: number;
 offset?: number;
 };
 
+export type SuperAdminOrgsControllerGetAllOrgsParams = {
+/**
+ * Search organizations by name.
+ */
+search?: string;
+/**
+ * Maximum number of organizations to return (default: 50).
+ */
+limit?: number;
+/**
+ * Number of organizations to skip (default: 0).
+ */
+offset?: number;
+};
+
+export type ModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto | PermittedImageGenerationModelResponseDto;
+
+export type SuperAdminPermittedModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto | PermittedImageGenerationModelResponseDto;
+
+export type SuperAdminPermittedModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto | PermittedImageGenerationModelResponseDto;
+
+export type SuperAdminCatalogModelsControllerGetAllCatalogModels200Item = LanguageModelResponseDto | EmbeddingModelResponseDto | ImageGenerationModelResponseDto;
+
+export type SuperAdminCatalogModelsControllerGetCatalogModelById200 = LanguageModelResponseDto | EmbeddingModelResponseDto | ImageGenerationModelResponseDto;
+
+export type TeamsControllerListTeamMembersParams = {
+/**
+ * Maximum number of items per page
+ */
+limit?: number;
+/**
+ * Number of items to skip
+ */
+offset?: number;
+};
+
 export type StorageControllerUploadFileBody = {
   /** The file to upload */
   file: Blob;
+};
+
+export type TranscriptionsControllerTranscribeBody = {
+  /** The audio file to transcribe */
+  file: Blob;
+  /** Optional language hint (e.g., "en", "de") */
+  language?: string;
 };
 
 export type ThreadsControllerFindAllParams = {
@@ -3412,10 +4419,6 @@ export type ThreadsControllerFindAllParams = {
  * Search threads by title
  */
 search?: string;
-/**
- * Filter threads by agent ID
- */
-agentId?: string;
 /**
  * Maximum number of threads to return (default: 50)
  */
@@ -3426,19 +4429,17 @@ limit?: number;
 offset?: number;
 };
 
-export type ThreadsControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
+export type ThreadSourcesControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 
-export type ThreadsControllerAddFileSourceBody = {
-  /** The file to upload */
+export type ThreadSourcesControllerAddFileSourceBody = {
+  /** The file to upload (max 25 MB) */
   file: Blob;
-  /** The display name for the file source */
-  name?: string;
-  /** A description of the file source */
-  description?: string;
 };
 
-export type AgentsControllerAddFileSourceBody = {
-  /** The file to upload */
+export type ThreadSourcesControllerAddFileSource201Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
+
+export type KnowledgeBasesControllerAddDocumentBody = {
+  /** The file to upload (PDF, DOCX, PPTX, TXT, max 25 MB) */
   file: Blob;
 };
 
@@ -3458,115 +4459,31 @@ export type SharesControllerGetSharesEntityType = typeof SharesControllerGetShar
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const SharesControllerGetSharesEntityType = {
-  agent: 'agent',
   prompt: 'prompt',
   skill: 'skill',
   knowledge_base: 'knowledge_base',
 } as const;
 
-export type TeamsControllerListTeamMembersParams = {
-/**
- * Maximum number of items per page
- */
-limit?: number;
-/**
- * Number of items to skip
- */
-offset?: number;
-};
-
-export type KnowledgeBasesControllerAddDocumentBody = {
-  /** The file to upload (PDF, DOCX, PPTX, TXT) */
-  file: Blob;
-};
-
 export type SkillSourcesControllerAddFileSourceBody = {
-  /** The file to upload */
+  /** The file to upload (max 25 MB) */
   file: Blob;
 };
 
-export type RunsControllerSendMessageBody = {
-  threadId: string;
-  /** Message text (optional if images provided) */
-  text?: string;
-  /** Image files to attach (max 10, max 10MB each, 50MB total) */
-  images?: Blob[];
-  /** JSON array of alt texts matching image order */
-  imageAltTexts?: string;
-  /** JSON object for tool result input */
-  toolResult?: string;
-  /** Skill ID to activate for this message */
-  skillId?: string;
-  streaming?: boolean;
+export type ArtifactsControllerExportParams = {
+/**
+ * Export format
+ */
+format: ArtifactsControllerExportFormat;
 };
 
-export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;
+export type ArtifactsControllerExportFormat = typeof ArtifactsControllerExportFormat[keyof typeof ArtifactsControllerExportFormat];
 
-export type UsageControllerGetUsageStatsParams = {
-/**
- * Start date in ISO format. If provided, must be used with endDate.
- */
-startDate?: string;
-/**
- * End date in ISO format. If provided, must be used with startDate.
- */
-endDate?: string;
-};
 
-export type UsageControllerGetProviderUsageParams = {
-/**
- * Start date in ISO format
- */
-startDate?: string;
-/**
- * End date in ISO format
- */
-endDate?: string;
-/**
- * Whether to include time series data for trend charts. Defaults to true.
- */
-includeTimeSeries?: boolean;
-/**
- * Filter by provider (e.g., openai, anthropic)
- */
-provider?: string;
-/**
- * Filter by model ID
- */
-modelId?: string;
-};
-
-export type UsageControllerGetProviderUsageChartParams = {
-startDate?: string;
-endDate?: string;
-/**
- * Filter by provider (e.g., openai, anthropic)
- */
-provider?: string;
-/**
- * Filter by model ID
- */
-modelId?: string;
-};
-
-export type UsageControllerGetModelDistributionParams = {
-/**
- * Start date in ISO format
- */
-startDate?: string;
-/**
- * End date in ISO format
- */
-endDate?: string;
-/**
- * Maximum number of models to return. Defaults to 10. Frontend can decide how to handle aggregation if needed.
- */
-maxModels?: number;
-/**
- * Filter by model ID
- */
-modelId?: string;
-};
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ArtifactsControllerExportFormat = {
+  docx: 'docx',
+  pdf: 'pdf',
+} as const;
 
 export type UsageControllerGetUserUsageParams = {
 /**
@@ -3590,7 +4507,7 @@ offset?: number;
  */
 search?: string;
 /**
- * Field to sort users by. Defaults to tokens.
+ * Field to sort users by. Defaults to credits.
  */
 sortBy?: UsageControllerGetUserUsageSortBy;
 /**
@@ -3604,7 +4521,7 @@ export type UsageControllerGetUserUsageSortBy = typeof UsageControllerGetUserUsa
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UsageControllerGetUserUsageSortBy = {
-  tokens: 'tokens',
+  credits: 'credits',
   requests: 'requests',
   lastActivity: 'lastActivity',
   userName: 'userName',
@@ -3618,6 +4535,25 @@ export const UsageControllerGetUserUsageSortOrder = {
   asc: 'asc',
   desc: 'desc',
 } as const;
+
+export type UsageControllerGetUsageStatsParams = {
+startDate?: string;
+endDate?: string;
+};
+
+export type UsageControllerGetModelDistributionParams = {
+startDate?: string;
+endDate?: string;
+maxModels?: number;
+modelId?: string;
+};
+
+export type UsageControllerGetProviderUsageChartParams = {
+startDate?: string;
+endDate?: string;
+provider?: string;
+modelId?: string;
+};
 
 export type SuperAdminUsageControllerGetUsageStatsParams = {
 startDate?: string;
@@ -3661,7 +4597,7 @@ export type SuperAdminUsageDataControllerGetUserUsageSortBy = typeof SuperAdminU
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const SuperAdminUsageDataControllerGetUserUsageSortBy = {
-  tokens: 'tokens',
+  credits: 'credits',
   requests: 'requests',
   lastActivity: 'lastActivity',
   userName: 'userName',
@@ -3676,28 +4612,20 @@ export const SuperAdminUsageDataControllerGetUserUsageSortOrder = {
   desc: 'desc',
 } as const;
 
-export type SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartParams = {
-startDate?: string;
-endDate?: string;
-provider?: string;
-modelId?: string;
+export type RunsControllerSendMessageBody = {
+  threadId: string;
+  /** Message text (optional if images provided) */
+  text?: string;
+  /** Image files to attach (max 10, max 10MB each, 50MB total) */
+  images?: Blob[];
+  /** JSON array of alt texts matching image order */
+  imageAltTexts?: string;
+  /** JSON object for tool result input */
+  toolResult?: string;
+  /** Skill ID to activate for this message */
+  skillId?: string;
+  streaming?: boolean;
 };
 
-export type SuperAdminGlobalUsageControllerGetGlobalModelDistributionParams = {
-startDate?: string;
-endDate?: string;
-modelId?: string;
-};
-
-export type SuperAdminGlobalUsageControllerGetGlobalUserUsageParams = {
-startDate?: string;
-endDate?: string;
-};
-
-export type TranscriptionsControllerTranscribeBody = {
-  /** The audio file to transcribe */
-  file: Blob;
-  /** Optional language hint (e.g., "en", "de") */
-  language?: string;
-};
+export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto;
 

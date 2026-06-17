@@ -1,16 +1,10 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQueryClient } from '@tanstack/react-query';
 import type { RunErrorResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import {
-  getThreadsControllerFindOneQueryKey,
-  getAgentsControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
 import { showError } from '@/shared/lib/toast';
 
-export function useRunErrorHandler(threadId: string) {
-  const { t } = useTranslation();
-  const queryClient = useQueryClient();
+export function useRunErrorHandler(_threadId: string) {
+  const { t } = useTranslation('chat');
 
   return useCallback(
     (error: RunErrorResponseDto) => {
@@ -30,15 +24,6 @@ export function useRunErrorHandler(threadId: string) {
         case 'RUN_ANONYMIZATION_UNAVAILABLE':
           showError(t('chat.errorAnonymizationUnavailable'));
           break;
-        case 'THREAD_AGENT_NO_LONGER_ACCESSIBLE':
-          void queryClient.invalidateQueries({
-            queryKey: getAgentsControllerFindAllQueryKey(),
-          });
-          void queryClient.invalidateQueries({
-            queryKey: getThreadsControllerFindOneQueryKey(threadId),
-          });
-          showError(t('chat.unavailableAgentWarningTitle'));
-          break;
         case 'QUOTA_EXCEEDED': {
           const retryMinutes = error.details?.retryAfterSeconds
             ? Math.ceil(Number(error.details.retryAfterSeconds) / 60)
@@ -50,11 +35,14 @@ export function useRunErrorHandler(threadId: string) {
           );
           break;
         }
+        case 'CREDIT_BUDGET_EXCEEDED':
+          showError(t('chat.errorCreditBudgetExceeded'));
+          break;
         case undefined:
         default:
           showError(t('chat.errorUnexpected'));
       }
     },
-    [t, queryClient, threadId],
+    [t],
   );
 }

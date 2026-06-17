@@ -32,59 +32,46 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
   }
 
   async answer(input: InferenceInput): Promise<InferenceResponse> {
-    this.logger.log('answer', {
+    const { messages, tools, orgId } = input;
+    const ollamaTools = tools
+      .map((t) => this.converter.convertTool(t))
+      .map((tool) => ({
+        ...tool,
+        function: { ...tool.function, strict: true },
+      }));
+    const ollamaMessages = await this.converter.convertMessages(
+      messages,
+      orgId,
+    );
+    const systemPrompt = input.systemPrompt
+      ? this.converter.convertSystemPrompt(input.systemPrompt)
+      : undefined;
+    const completionOptions: ChatRequest & { stream: false } = {
       model: input.model.name,
-      messageCount: input.messages.length,
-      toolCount: input.tools.length,
+      messages: systemPrompt
+        ? [systemPrompt, ...ollamaMessages]
+        : ollamaMessages,
+      tools: ollamaTools,
+      stream: false,
+      options: {
+        num_ctx: 30000,
+      },
+    };
+    this.logger.debug('completionOptions prepared', {
+      model: input.model.name,
+      messageCount: ollamaMessages.length,
+      toolCount: ollamaTools.length,
+      hasSystem: Boolean(systemPrompt),
     });
-    try {
-      const { messages, tools, orgId } = input;
-      const ollamaTools = tools
-        .map((t) => this.converter.convertTool(t))
-        .map((tool) => ({
-          ...tool,
-          function: { ...tool.function, strict: true },
-        }));
-      const ollamaMessages = await this.converter.convertMessages(
-        messages,
-        orgId,
-      );
-      const systemPrompt = input.systemPrompt
-        ? this.converter.convertSystemPrompt(input.systemPrompt)
-        : undefined;
-      const completionOptions: ChatRequest & { stream: false } = {
-        model: input.model.name,
-        messages: systemPrompt
-          ? [systemPrompt, ...ollamaMessages]
-          : ollamaMessages,
-        tools: ollamaTools,
-        stream: false,
-        options: {
-          num_ctx: 30000,
-        },
-      };
-      this.logger.debug('completionOptions', completionOptions);
-      const completionFn = () => this.client.chat(completionOptions);
+    const completionFn = () => this.client.chat(completionOptions);
 
-      const response = await retryWithBackoff({
-        fn: completionFn,
-        maxRetries: 3,
-        delay: 1000,
-      });
+    const response = await retryWithBackoff({
+      fn: completionFn,
+      maxRetries: 3,
+      delay: 1000,
+    });
 
-      const modelResponse = this.parseCompletion(response);
-      return modelResponse;
-    } catch (error) {
-      this.logger.error('Failed to get response from Ollama', error);
-      if (error instanceof InferenceFailedError) {
-        throw error;
-      }
-      throw new InferenceFailedError('Ollama inference failed', {
-        source: 'ollama',
-        originalError:
-          error instanceof Error ? error : new Error('Unknown error'),
-      });
-    }
+    return this.parseCompletion(response);
   }
 
   private parseCompletion = (response: ChatResponse): InferenceResponse => {

@@ -12,6 +12,7 @@ import {
   RateLimitOptions,
 } from '../decorators/rate-limit.decorator';
 import { RateLimitExceededError } from '../authorization.errors';
+import { getClientIp } from '../../../../common/util/ip.util';
 
 interface RateLimitRecord {
   count: number;
@@ -45,7 +46,7 @@ export class RateLimitGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<Request>();
-    const clientIp = this.getClientIp(request);
+    const clientIp = getClientIp(request);
 
     if (!clientIp) {
       this.logger.warn('Unable to determine client IP address');
@@ -114,32 +115,6 @@ export class RateLimitGuard implements CanActivate {
     });
 
     return true;
-  }
-
-  /**
-   * Extract client IP address from request
-   */
-  private getClientIp(request: Request): string | null {
-    // Check various headers that might contain the real IP
-    const forwardedFor = request.headers['x-forwarded-for'];
-    if (forwardedFor) {
-      // x-forwarded-for can contain multiple IPs, take the first one
-      const ips = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor;
-      return ips.split(',')[0].trim();
-    }
-
-    const realIp = request.headers['x-real-ip'];
-    if (realIp && typeof realIp === 'string') {
-      return realIp;
-    }
-
-    const cfConnectingIp = request.headers['cf-connecting-ip'];
-    if (cfConnectingIp && typeof cfConnectingIp === 'string') {
-      return cfConnectingIp;
-    }
-
-    // Fallback to connection remote address
-    return request.socket.remoteAddress || request.ip || null;
   }
 
   /**

@@ -38,6 +38,10 @@ export class SendPasswordResetEmailUseCase {
       );
       const resetUrl = `${frontendBaseUrl}${passwordResetEndpoint}?token=${command.resetToken}`;
       const forgotPasswordUrl = `${frontendBaseUrl}${forgotPasswordEndpoint}`;
+      const emailAssetsPath = this.configService.get<string>(
+        'app.frontend.emailAssetsPath',
+      );
+      const assetBase = `${frontendBaseUrl}${emailAssetsPath}`;
 
       // Create password reset email template
       this.logger.debug('Creating password reset email template', {
@@ -51,6 +55,8 @@ export class SendPasswordResetEmailUseCase {
         productName: 'Ayunis Core',
         currentYear: new Date().getFullYear().toString(),
         userName: command.userName,
+        logoUrl: `${assetBase}/logo.png`,
+        teamUrl: `${assetBase}/team.png`,
       });
 
       // Render email content
@@ -65,7 +71,7 @@ export class SendPasswordResetEmailUseCase {
       await this.sendEmailUseCase.execute(
         new SendEmailCommand({
           to: command.userEmail,
-          subject: 'Passwort zurücksetzen',
+          subject: 'Passwort zurücksetzen für Ayunis Core',
           html: emailContent.html,
           text: emailContent.text,
         }),

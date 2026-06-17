@@ -28,10 +28,16 @@ describe('GetSourcesByIdsUseCase', () => {
       findById: jest.fn(),
       findByIds: jest.fn(),
       findByKnowledgeBaseId: jest.fn(),
+      saveTextSource: jest.fn(),
+      findStaleProcessingSources: jest.fn(),
       save: jest.fn(),
+      extractTextLines: jest.fn(),
+      findContentChunksByIds: jest.fn(),
       delete: jest.fn(),
       deleteMany: jest.fn(),
-    } as jest.Mocked<SourceRepository>;
+      updateStatusConditionally: jest.fn(),
+      findUnreferencedIds: jest.fn(),
+    };
 
     useCase = new GetSourcesByIdsUseCase(sourceRepository);
   });

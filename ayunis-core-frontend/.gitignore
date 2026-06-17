@@ -7,3 +7,6 @@ dist-ssr
 
 # Generated API files
 src/lib/api/generated/
+
+# TypeScript incremental build cache
+*.tsbuildinfo

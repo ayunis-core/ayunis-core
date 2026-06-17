@@ -14,9 +14,11 @@ export enum UserErrorCode {
   USER_EMAIL_MISMATCH = 'USER_EMAIL_MISMATCH',
   INVALID_EMAIL_CONFIRMATION_TOKEN = 'INVALID_EMAIL_CONFIRMATION_TOKEN',
   EMAIL_ALREADY_VERIFIED = 'EMAIL_ALREADY_VERIFIED',
-  UNEXPECTED_USER_ERROR = 'UNEXPECTED_USER_ERROR',
   PASSWORD_RESET_EMAIL_SENDING_FAILED = 'PASSWORD_RESET_EMAIL_SENDING_FAILED',
   USER_EMAIL_PROVIDER_BLACKLISTED = 'USER_EMAIL_PROVIDER_BLACKLISTED',
+  USER_NOT_SUPER_ADMIN = 'USER_NOT_SUPER_ADMIN',
+  USER_SELF_DEMOTION_NOT_ALLOWED = 'USER_SELF_DEMOTION_NOT_ALLOWED',
+  USER_LAST_SUPER_ADMIN = 'USER_LAST_SUPER_ADMIN',
 }
 
 /**
@@ -34,9 +36,11 @@ export abstract class UserError extends ApplicationError {
 }
 
 export class UserUnexpectedError extends UserError {
-  constructor(error: Error, metadata?: ErrorMetadata) {
+  constructor(error: Error, context?: string, metadata?: ErrorMetadata) {
     super(
-      'An unexpected error occurred while updating user role',
+      context
+        ? `An unexpected error occurred: ${context}`
+        : 'An unexpected error occurred',
       UserErrorCode.USER_UNEXPECTED_ERROR,
       500,
       {
@@ -51,9 +55,9 @@ export class UserUnexpectedError extends UserError {
  * Error thrown when a user is not found
  */
 export class UserNotFoundError extends UserError {
-  constructor(userId: string, metadata?: ErrorMetadata) {
+  constructor(identifier: string, metadata?: ErrorMetadata) {
     super(
-      `User with ID '${userId}' not found`,
+      `User '${identifier}' not found`,
       UserErrorCode.USER_NOT_FOUND,
       404,
       metadata,
@@ -170,15 +174,34 @@ export class PasswordResetEmailSendingFailedError extends UserError {
   }
 }
 
-/**
- * Error thrown when an unexpected error occurs
- */
-export class UnexpectedUserError extends UserError {
-  constructor(error: Error, metadata?: ErrorMetadata) {
+export class UserNotSuperAdminError extends UserError {
+  constructor(userId: string, metadata?: ErrorMetadata) {
     super(
-      `Unexpected user error: ${error.message}`,
-      UserErrorCode.UNEXPECTED_USER_ERROR,
-      500,
+      `User '${userId}' is not a super admin`,
+      UserErrorCode.USER_NOT_SUPER_ADMIN,
+      422,
+      metadata,
+    );
+  }
+}
+
+export class UserSelfDemotionNotAllowedError extends UserError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Cannot remove your own super admin status',
+      UserErrorCode.USER_SELF_DEMOTION_NOT_ALLOWED,
+      403,
+      metadata,
+    );
+  }
+}
+
+export class UserLastSuperAdminError extends UserError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Cannot demote the last super admin',
+      UserErrorCode.USER_LAST_SUPER_ADMIN,
+      409,
       metadata,
     );
   }

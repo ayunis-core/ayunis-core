@@ -10,8 +10,12 @@ import { InternetSearchTool } from '../domain/tools/internet-search-tool.entity'
 import { SourceQueryTool } from '../domain/tools/source-query-tool.entity';
 import { WebsiteContentTool } from '../domain/tools/website-content-tool.entity';
 import { CreateSkillTool } from '../domain/tools/create-skill-tool.entity';
+import { EditSkillTool } from '../domain/tools/edit-skill-tool.entity';
 import { KnowledgeQueryTool } from '../domain/tools/knowledge-query-tool.entity';
 import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.entity';
+import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
+import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
+import { GenerateImageTool } from '../domain/tools/generate-image-tool.entity';
 import { randomUUID } from 'crypto';
 
 describe('ToolFactory', () => {
@@ -64,6 +68,14 @@ describe('ToolFactory', () => {
       expect(tool).toBeInstanceOf(CreateSkillTool);
     });
 
+    it('should create an EditSkillTool', () => {
+      const tool = factory.createTool({
+        type: ToolType.EDIT_SKILL,
+        context: ['user__my-skill'],
+      });
+      expect(tool).toBeInstanceOf(EditSkillTool);
+    });
+
     it('should create a KnowledgeQueryTool', () => {
       const context = [{ id: randomUUID(), name: 'Test KB' }];
       const tool = factory.createTool({
@@ -80,6 +92,24 @@ describe('ToolFactory', () => {
         context,
       });
       expect(tool).toBeInstanceOf(KnowledgeGetTextTool);
+    });
+
+    it('should create a CreateDocumentTool', () => {
+      const tool = factory.createTool({ type: ToolType.CREATE_DOCUMENT });
+      expect(tool).toBeInstanceOf(CreateDocumentTool);
+      expect(tool.name).toBe(ToolType.CREATE_DOCUMENT);
+    });
+
+    it('should create an UpdateDocumentTool', () => {
+      const tool = factory.createTool({ type: ToolType.UPDATE_DOCUMENT });
+      expect(tool).toBeInstanceOf(UpdateDocumentTool);
+      expect(tool.name).toBe(ToolType.UPDATE_DOCUMENT);
+    });
+
+    it('should create a GenerateImageTool', () => {
+      const tool = factory.createTool({ type: ToolType.GENERATE_IMAGE });
+      expect(tool).toBeInstanceOf(GenerateImageTool);
+      expect(tool.name).toBe(ToolType.GENERATE_IMAGE);
     });
 
     it('should throw error for unsupported tool type', () => {
@@ -126,14 +156,21 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.BAR_CHART);
       expect(types).toContain(ToolType.LINE_CHART);
       expect(types).toContain(ToolType.PIE_CHART);
-      expect(types).toContain(ToolType.PRODUCT_KNOWLEDGE);
 
       expect(types).toContain(ToolType.ACTIVATE_SKILL);
       expect(types).toContain(ToolType.CREATE_SKILL);
+      expect(types).toContain(ToolType.EDIT_SKILL);
       expect(types).toContain(ToolType.KNOWLEDGE_QUERY);
       expect(types).toContain(ToolType.KNOWLEDGE_GET_TEXT);
+      expect(types).toContain(ToolType.CREATE_DOCUMENT);
+      expect(types).toContain(ToolType.UPDATE_DOCUMENT);
+      expect(types).toContain(ToolType.EDIT_DOCUMENT);
+      expect(types).toContain(ToolType.READ_DOCUMENT);
+      expect(types).toContain(ToolType.GENERATE_IMAGE);
+      expect(types).toContain(ToolType.CREATE_DIAGRAM);
+      expect(types).toContain(ToolType.UPDATE_DIAGRAM);
 
-      expect(types.length).toBe(19);
+      expect(types.length).toBe(26);
     });
   });
 });

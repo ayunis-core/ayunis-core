@@ -1,8 +1,5 @@
-import type {
-  EmbeddingModelResponseDto,
-  LanguageModelResponseDto,
-  SuperAdminModelsControllerGetAllCatalogModels200Item,
-} from '@/shared/api';
+import type { SuperAdminCatalogModelsControllerGetAllCatalogModels200Item } from '@/shared/api';
+import { isLanguageModel, isEmbeddingModel } from '@/features/models';
 import {
   Item,
   ItemContent,
@@ -13,21 +10,10 @@ import {
 import { Badge } from '@/shared/ui/shadcn/badge';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Pencil, Trash2 } from 'lucide-react';
-
-function isLanguageModel(
-  model: SuperAdminModelsControllerGetAllCatalogModels200Item,
-): model is LanguageModelResponseDto {
-  return model.type === 'language';
-}
-
-function isEmbeddingModel(
-  model: SuperAdminModelsControllerGetAllCatalogModels200Item,
-): model is EmbeddingModelResponseDto {
-  return model.type === 'embedding';
-}
+import { useTranslation } from 'react-i18next';
 
 interface ModelItemProps {
-  model: SuperAdminModelsControllerGetAllCatalogModels200Item;
+  model: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item;
   onEdit: () => void;
   onDelete: () => void;
   isDeleting: boolean;
@@ -39,8 +25,14 @@ export function ModelItem({
   onDelete,
   isDeleting,
 }: Readonly<ModelItemProps>) {
+  const { t } = useTranslation('super-admin-settings-org');
   const isLanguage = isLanguageModel(model);
   const isEmbedding = isEmbeddingModel(model);
+  const typeLabels = {
+    language: t('models.catalog.languageModelType'),
+    embedding: t('models.catalog.embeddingModelType'),
+    'image-generation': t('models.catalog.imageGenerationModelType'),
+  } as const;
 
   return (
     <Item>
@@ -49,7 +41,7 @@ export function ModelItem({
           {model.displayName}
           {model.isArchived && (
             <Badge variant="secondary" className="ml-2">
-              Archived
+              {t('models.catalog.archivedBadge')}
             </Badge>
           )}
         </ItemTitle>
@@ -59,12 +51,24 @@ export function ModelItem({
       </ItemContent>
       <ItemContent>
         <div className="flex flex-wrap gap-1.5">
-          <Badge variant="outline">{model.type}</Badge>
+          <Badge variant="outline">{typeLabels[model.type]}</Badge>
           {isLanguage && (
             <>
-              {model.canStream && <Badge variant="outline">Streaming</Badge>}
-              {model.canUseTools && <Badge variant="outline">Tools</Badge>}
-              {model.isReasoning && <Badge variant="outline">Reasoning</Badge>}
+              {model.canStream && (
+                <Badge variant="outline">
+                  {t('models.catalog.streamingBadge')}
+                </Badge>
+              )}
+              {model.canUseTools && (
+                <Badge variant="outline">
+                  {t('models.catalog.toolsBadge')}
+                </Badge>
+              )}
+              {model.isReasoning && (
+                <Badge variant="outline">
+                  {t('models.catalog.reasoningBadge')}
+                </Badge>
+              )}
             </>
           )}
           {isEmbedding && <Badge variant="outline">{model.dimensions}d</Badge>}

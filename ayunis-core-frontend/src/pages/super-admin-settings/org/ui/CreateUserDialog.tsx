@@ -40,7 +40,7 @@ interface CreateUserFormData {
   email: string;
   name: string;
   role: CreateUserDto['role'];
-  sendPasswordResetEmail: boolean;
+  sendActivationEmail: boolean;
 }
 
 export default function CreateUserDialog({
@@ -61,7 +61,7 @@ export default function CreateUserDialog({
       email: '',
       name: '',
       role: 'user',
-      sendPasswordResetEmail: true,
+      sendActivationEmail: true,
     },
   });
 
@@ -70,7 +70,7 @@ export default function CreateUserDialog({
       email: data.email,
       name: data.name,
       role: data.role,
-      sendPasswordResetEmail: data.sendPasswordResetEmail,
+      sendActivationEmail: data.sendActivationEmail,
     });
   }
 
@@ -179,22 +179,22 @@ export default function CreateUserDialog({
             />
             <FormField
               control={form.control}
-              name="sendPasswordResetEmail"
+              name="sendActivationEmail"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
                     <div className="flex items-center gap-2">
                       <Checkbox
-                        id="sendPasswordResetEmail"
+                        id="sendActivationEmail"
                         checked={field.value}
                         onCheckedChange={field.onChange}
                         disabled={isLoading}
                       />
                       <Label
-                        htmlFor="sendPasswordResetEmail"
+                        htmlFor="sendActivationEmail"
                         className="block font-normal leading-5 cursor-pointer"
                       >
-                        {t('createUser.sendPasswordResetEmailLabel')}
+                        {t('createUser.sendActivationEmailLabel')}
                       </Label>
                     </div>
                   </FormControl>
