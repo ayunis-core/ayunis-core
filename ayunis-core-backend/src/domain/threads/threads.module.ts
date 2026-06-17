@@ -42,6 +42,7 @@ import { GeneratedImagesController } from './presenters/http/generated-images.co
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { ThreadActivityListener } from './application/listeners/thread-activity.listener';
 import { RecordThreadActivityUseCase } from './application/use-cases/record-thread-activity/record-thread-activity.use-case';
+import { FindExpiredThreadRefsByOrgUseCase } from './application/use-cases/find-expired-thread-refs-by-org/find-expired-thread-refs-by-org.use-case';
 import { CleanupStaleThreadSourcesUseCase } from './application/use-cases/cleanup-stale-thread-sources/cleanup-stale-thread-sources.use-case';
 import { StaleThreadSourcesCleanupTask } from './infrastructure/tasks/stale-thread-sources-cleanup.task';
 import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
@@ -103,6 +104,7 @@ import { McpModule } from '../mcp/mcp.module';
     ResolveGeneratedImageUseCase,
     CleanupStaleThreadSourcesUseCase,
     RecordThreadActivityUseCase,
+    FindExpiredThreadRefsByOrgUseCase,
     // Listeners
     ShareDeletedListener,
     ThreadActivityListener,
@@ -135,6 +137,7 @@ import { McpModule } from '../mcp/mcp.module';
     RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase,
     RemoveDirectKnowledgeBaseFromThreadsUseCase,
     SaveGeneratedImageUseCase,
+    FindExpiredThreadRefsByOrgUseCase,
     // Export mappers
     GetThreadDtoMapper,
     GetThreadsDtoMapper,
