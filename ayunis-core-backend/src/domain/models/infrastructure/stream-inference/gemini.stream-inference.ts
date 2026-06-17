@@ -28,7 +28,9 @@ export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
     // Construct lazily: GoogleGenAI throws if the API key is missing, and this
     // handler is instantiated at boot regardless of whether Gemini is
     // configured. Only build the client when it is actually used.
-    this.apiKey = this.configService.get<string>('models.gemini.apiKey')?.trim();
+    this.apiKey = this.configService
+      .get<string>('models.gemini.apiKey')
+      ?.trim();
     this.converter = new GeminiMessageConverter(imageContentService);
   }
 
@@ -38,7 +40,8 @@ export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
         source: 'gemini',
       });
     }
-    return (this.client ??= new GoogleGenAI({ apiKey: this.apiKey }));
+    this.client ??= new GoogleGenAI({ apiKey: this.apiKey });
+    return this.client;
   }
 
   answer(

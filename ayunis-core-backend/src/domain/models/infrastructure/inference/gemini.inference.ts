@@ -41,7 +41,8 @@ export class GeminiInferenceHandler extends InferenceHandler {
         source: 'gemini',
       });
     }
-    return (this.client ??= new GoogleGenAI({ apiKey: this.apiKey }));
+    this.client ??= new GoogleGenAI({ apiKey: this.apiKey });
+    return this.client;
   }
 
   async answer(input: InferenceInput): Promise<InferenceResponse> {
