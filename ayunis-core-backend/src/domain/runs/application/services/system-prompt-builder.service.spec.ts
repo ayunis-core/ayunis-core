@@ -44,6 +44,19 @@ describe('SystemPromptBuilderService', () => {
     });
   });
 
+  describe('knowledge boundaries section', () => {
+    it('instructs the model to verify time-sensitive facts against external sources', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+      });
+
+      expect(result).toContain('<knowledge_boundaries>');
+      expect(result).toContain('time-sensitive facts');
+      expect(result).toContain('web search');
+    });
+  });
+
   describe('skills section', () => {
     it('should include available_skills section when active skills are provided', () => {
       const skills: SkillEntry[] = [
