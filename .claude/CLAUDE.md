@@ -81,7 +81,7 @@ The following rules are enforced by ESLint, pre-commit hooks, and CI. Violations
 - **Strict TypeScript** — Backend uses `strict: true` (no implicit any, strict null checks, strict bind/call/apply). Frontend uses strict null checks.
 - **`no-explicit-any: error`** — Both backend and frontend. Use `unknown` or specific types. If `any` is truly unavoidable (e.g., TypeORM pgvector), add a targeted `eslint-disable` comment with a justification.
 - **sonarjs** — Both packages use `eslint-plugin-sonarjs` (recommended config). Cognitive complexity threshold: 15.
-- **Complexity thresholds** — Enforced by pre-commit hooks and CI: cyclomatic complexity (CCN) ≤ 10, function length ≤ 50 lines, arguments ≤ 5. If a function exceeds these limits, split it into smaller units before committing.
+- **Complexity thresholds** — Enforced via ESLint (AST-accurate) in the pre-commit hook: cyclomatic complexity (`complexity`) ≤ 10 and function length (`max-lines-per-function`) ≤ 50 lines block on changed files (the staged ESLint run uses `--max-warnings=0`). The rules live at `warn` in `eslint.config.mjs` so the repo-wide backlog stays visible without failing CI lint. `max-params` ≤ 5 is `warn`-only and not gated (NestJS DI constructors legitimately need >5 injected deps). If a function exceeds the gated limits, split it into smaller units before committing.
 - **File size limit** — 500 lines per file (excluding tests, migrations, records, generated code). Enforced by `scripts/check-file-size.sh` in pre-commit.
 - **No `console.*`** — Use NestJS `Logger` on the backend. `console.warn` and `console.error` are allowed in specific infrastructure code.
 - **Circular dependency detection** — `madge` runs in pre-commit and CI.

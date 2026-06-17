@@ -52,6 +52,18 @@ export default tseslint.config(
       '@typescript-eslint/no-duplicate-enum-values': 'error',
       eqeqeq: 'error',
       'unused-imports/no-unused-imports': 'error',
+
+      // Complexity gate (AST-accurate replacement for the old lizard tool).
+      // Kept at `warn` for visibility; the pre-commit `--max-warnings=0` staged
+      // run turns `complexity`/`max-lines-per-function` into a blocking gate on
+      // changed files. `max-params` stays `warn`-only (suppressed in pre-commit).
+      complexity: ['warn', 10],
+      'max-lines-per-function': [
+        'warn',
+        { max: 50, skipBlankLines: true, skipComments: true },
+      ],
+      'max-params': ['warn', 5],
+
       '@typescript-eslint/no-unnecessary-condition': 'warn',
       '@typescript-eslint/prefer-nullish-coalescing': [
         'warn',
@@ -79,6 +91,9 @@ export default tseslint.config(
       '@typescript-eslint/require-await': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'off',
       'no-console': 'off',
+      complexity: 'off',
+      'max-lines-per-function': 'off',
+      'max-params': 'off',
     },
   },
 );

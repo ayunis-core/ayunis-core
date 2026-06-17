@@ -61,7 +61,6 @@ FE_ESLINT_STATUS_FILE="$STATUS_DIR/fe_eslint.status"
 BE_ESLINT_STATUS_FILE="$STATUS_DIR/be_eslint.status"
 BE_PRETTIER_STATUS_FILE="$STATUS_DIR/be_prettier.status"
 BE_TSC_STATUS_FILE="$STATUS_DIR/be_tsc.status"
-COMPLEXITY_STATUS_FILE="$STATUS_DIR/complexity.status"
 DEPCRUISE_STATUS_FILE="$STATUS_DIR/depcruise.status"
 FE_DEPCRUISE_STATUS_FILE="$STATUS_DIR/fe_depcruise.status"
 BE_DUPLICATION_STATUS_FILE="$STATUS_DIR/be_duplication.status"
@@ -140,10 +139,15 @@ run_be_eslint() {
   set +e
   (
     cd ayunis-core-backend >/dev/null 2>&1
+    # --max-warnings=0 turns the warn-level complexity rules (complexity,
+    # max-lines-per-function) into a blocking gate on changed files, replacing
+    # the old lizard check. max-params is suppressed here: NestJS DI constructors
+    # legitimately need >5 params, so it stays a non-blocking warn (see
+    # eslint.config.mjs).
     printf "%s" "$BE_TS_STAGED" \
       | sed 's#^ayunis-core-backend/##' \
       | tr '\n' '\0' \
-      | xargs -0 pnpm exec eslint --format stylish --max-warnings=0 $ESLINT_FIX_ARGS
+      | xargs -0 pnpm exec eslint --format stylish --max-warnings=0 --rule '{"max-params":"off"}' $ESLINT_FIX_ARGS
   )
   STATUS=$?
   set -e
@@ -201,8 +205,10 @@ run_pkg_checks() {
   st=0
   (
     cd "$pkg_dir" >/dev/null 2>&1
+    # --max-warnings=0 makes the warn-level complexity rules a blocking gate on
+    # changed files (replaces lizard); max-params stays a non-blocking warn.
     printf "%s" "$pkg_rel" | tr '\n' '\0' \
-      | xargs -0 pnpm exec eslint --format stylish --max-warnings=0 $ESLINT_FIX_ARGS
+      | xargs -0 pnpm exec eslint --format stylish --max-warnings=0 --rule '{"max-params":"off"}' $ESLINT_FIX_ARGS
   ) || st=1
   (
     cd "$pkg_dir" >/dev/null 2>&1
@@ -214,7 +220,6 @@ run_pkg_checks() {
     printf "%s" "$pkg_rel" | tr '\n' '\0' \
       | xargs -0 pnpm dlx tsc-files --noEmit -p tsconfig.json
   ) || st=1
-  printf "%s" "$pkg_staged" | tr '\n' ' ' | xargs ./scripts/check-complexity.sh || st=1
   (
     cd "$pkg_dir" >/dev/null 2>&1
     pnpm run --silent deps:check
@@ -225,17 +230,6 @@ run_pkg_checks() {
   # shellcheck disable=SC2086
   ./scripts/check-duplication.sh "$pkg_dir" $pkg_src_staged || st=1
   printf "%s" "$st" > "$STATUS_FILE"
-}
-
-run_complexity() {
-  STATUS_FILE="$1"
-  print_section "Complexity • Lizard (staged backend TS)"
-  printf "%s\n" "$BE_TS_STAGED" | sed 's#^# - #'
-  set +e
-  printf "%s" "$BE_TS_STAGED" | tr '\n' ' ' | xargs ./scripts/check-complexity.sh
-  STATUS=$?
-  set -e
-  printf "%s" "$STATUS" > "$STATUS_FILE"
 }
 
 run_depcruise() {
@@ -326,9 +320,10 @@ if [ -n "$BE_TS_STAGED" ]; then
   run_be_tsc "$BE_TSC_STATUS_FILE" &
 fi
 
-# Complexity + architecture + duplication checks (backend TS only — lizard/jscpd don't handle JSX well)
+# Architecture + duplication checks (backend TS only — jscpd doesn't handle JSX
+# well). Complexity is enforced by the backend ESLint run above (complexity /
+# max-lines-per-function as a --max-warnings=0 gate).
 if [ -n "$BE_TS_STAGED" ]; then
-  run_complexity "$COMPLEXITY_STATUS_FILE" &
   run_depcruise "$DEPCRUISE_STATUS_FILE" &
   run_be_duplication "$BE_DUPLICATION_STATUS_FILE" &
 fi
@@ -363,7 +358,6 @@ FE_ESLINT_STATUS=$(cat "$FE_ESLINT_STATUS_FILE" 2>/dev/null || printf "0")
 ESLINT_STATUS=$(cat "$BE_ESLINT_STATUS_FILE" 2>/dev/null || printf "0")
 PRETTIER_STATUS=$(cat "$BE_PRETTIER_STATUS_FILE" 2>/dev/null || printf "0")
 BE_TSC_STATUS=$(cat "$BE_TSC_STATUS_FILE" 2>/dev/null || printf "0")
-COMPLEXITY_STATUS=$(cat "$COMPLEXITY_STATUS_FILE" 2>/dev/null || printf "0")
 DEPCRUISE_STATUS=$(cat "$DEPCRUISE_STATUS_FILE" 2>/dev/null || printf "0")
 FE_DEPCRUISE_STATUS=$(cat "$FE_DEPCRUISE_STATUS_FILE" 2>/dev/null || printf "0")
 BE_DUPLICATION_STATUS=$(cat "$BE_DUPLICATION_STATUS_FILE" 2>/dev/null || printf "0")
@@ -428,14 +422,9 @@ if [ -n "$BE_TS_STAGED" ]; then
   fi
 fi
 
-# Complexity check result (backend only)
+# Architecture + duplication results (backend only). Complexity is reported as
+# part of the "Backend ESLint" result above.
 if [ -n "$BE_TS_STAGED" ]; then
-  if [ "$COMPLEXITY_STATUS" -ne 0 ]; then
-    printf "%b\n" "${RED}❌ Complexity check failed (CCN>10, length>50, or args>5)${NC}"
-    FAILED=1
-  else
-    printf "%b\n" "${GREEN}✅ Complexity check passed${NC}"
-  fi
   if [ "$DEPCRUISE_STATUS" -ne 0 ]; then
     printf "%b\n" "${RED}❌ Dependency check failed (architecture violations)${NC}"
     FAILED=1
