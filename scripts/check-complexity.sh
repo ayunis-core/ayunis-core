@@ -5,6 +5,11 @@
 
 set -e
 
+if [ "${SKIP_COMPLEXITY:-0}" = "1" ]; then
+    echo "SKIP_COMPLEXITY is set – skipping complexity check."
+    exit 0
+fi
+
 # Thresholds (from Tweag/Modus experiment)
 CCN_THRESHOLD=10      # Cyclomatic complexity
 LENGTH_THRESHOLD=50   # Function length in lines
@@ -30,7 +35,7 @@ if ! command -v lizard &> /dev/null; then
         echo -e "${RED}Could not install lizard: no pipx/pip3/pip found.${NC}"
         echo -e "${YELLOW}Install it manually (e.g. 'pipx install lizard' or 'brew install pipx && pipx install lizard'), then re-commit.${NC}"
         echo -e "${YELLOW}To bypass this check for now: SKIP_COMPLEXITY=1 git commit …${NC}"
-        [ "${SKIP_COMPLEXITY:-0}" = "1" ] && exit 0 || exit 1
+        exit 1
     fi
 fi
 
