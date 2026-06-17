@@ -4,10 +4,11 @@ on:
   pull_request:
     paths:
       - 'ayunis-core-backend/**/*.ts'
+      - 'packages/**/*.ts'
 
 jobs:
   complexity:
-    name: Backend
+    name: Backend & packages
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -27,36 +28,38 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Get changed backend TypeScript files
+      - name: Get changed TypeScript files
         id: changed-files
         uses: tj-actions/changed-files@v47
         with:
           files: |
             ayunis-core-backend/**/*.ts
+            packages/**/*.ts
 
       # AST-accurate complexity gate (replaces the old lizard step). Mirrors the
-      # changed-files scope lizard used, but uses ESLint so it understands TS
-      # syntax and segments functions correctly. The dedicated config enables
-      # only `complexity` (<=10) and `max-lines-per-function` (<=50) as errors —
-      # the same thresholds as eslint.config.mjs — and applies the same exclusion
-      # set via its `ignores`, so the gate stays scoped to complexity and never
-      # blocks generated code, entities, migrations, etc.
+      # changed-files scope lizard used (backend + workspace packages, frontend
+      # excluded), but uses ESLint so it understands TS syntax and segments
+      # functions correctly. The dedicated config enables only `complexity`
+      # (<=10) and `max-lines-per-function` (<=50) as errors — the same
+      # thresholds as eslint.config.mjs — and applies the same exclusion set via
+      # its `ignores`, so the gate stays scoped to complexity and never blocks
+      # generated code, entities, migrations, etc. ESLint is run from the repo
+      # root (via the backend-installed binary) so the config's glob patterns
+      # resolve against repo-relative paths for both backend and package files.
       - name: Check complexity of changed files
         if: steps.changed-files.outputs.any_changed == 'true'
-        working-directory: ayunis-core-backend
         run: |
-          echo "Checking complexity (ESLint) for changed backend files:"
+          echo "Checking complexity (ESLint) for changed files:"
           echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' | sed 's/^/  - /'
           echo ""
           echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' \
-            | sed 's#^ayunis-core-backend/##' \
             | sed '/^$/d' \
             | tr '\n' '\0' \
-            | xargs -0 --no-run-if-empty pnpm exec eslint \
+            | xargs -0 --no-run-if-empty ayunis-core-backend/node_modules/.bin/eslint \
                 --no-config-lookup \
-                --config eslint.complexity.config.mjs \
+                --config ayunis-core-backend/eslint.complexity.config.mjs \
                 --no-warn-ignored
 
-      - name: No backend TypeScript files changed
+      - name: No TypeScript files changed
         if: steps.changed-files.outputs.any_changed != 'true'
-        run: echo "No backend TypeScript files changed, skipping complexity check."
+        run: echo "No TypeScript files changed, skipping complexity check."
