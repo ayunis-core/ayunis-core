@@ -34,7 +34,10 @@ export const convertChunk = (chunk: ChatResponse): ProviderChunk | null => {
     carriesSomething = true;
   }
   if (chunk.done) {
-    result.finishReason = mapFinishReason(chunk.done_reason);
+    result.finishReason = mapFinishReason(
+      chunk.done_reason,
+      toolCallDeltas.length > 0,
+    );
     result.usage = {
       inputTokens: chunk.prompt_eval_count,
       outputTokens: chunk.eval_count,
@@ -56,6 +59,14 @@ const extractToolCallDeltas = (
   })) ?? [];
 
 // Ollama reports `done_reason` as a free-form string; `done` already signals
-// completion, so an unrecognized reason falls back to a plain stop.
-const mapFinishReason = (reason: string | undefined): FinishReason =>
-  reason === 'length' ? 'length' : 'stop';
+// completion, so an unrecognized reason falls back to a plain stop. Tool calls
+// on the final chunk (or a tool-related reason) take precedence so callers can
+// distinguish tool-terminated completions from a normal stop.
+const mapFinishReason = (
+  reason: string | undefined,
+  hasToolCalls: boolean,
+): FinishReason => {
+  if (reason === 'length') return 'length';
+  if (hasToolCalls || reason === 'tool_calls') return 'tool_calls';
+  return 'stop';
+};
