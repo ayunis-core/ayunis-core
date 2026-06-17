@@ -40,6 +40,8 @@ import { SaveGeneratedImageUseCase } from './application/use-cases/save-generate
 import { ResolveGeneratedImageUseCase } from './application/use-cases/resolve-generated-image/resolve-generated-image.use-case';
 import { GeneratedImagesController } from './presenters/http/generated-images.controller';
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
+import { ThreadActivityListener } from './application/listeners/thread-activity.listener';
+import { RecordThreadActivityUseCase } from './application/use-cases/record-thread-activity/record-thread-activity.use-case';
 import { CleanupStaleThreadSourcesUseCase } from './application/use-cases/cleanup-stale-thread-sources/cleanup-stale-thread-sources.use-case';
 import { StaleThreadSourcesCleanupTask } from './infrastructure/tasks/stale-thread-sources-cleanup.task';
 import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
@@ -100,8 +102,10 @@ import { McpModule } from '../mcp/mcp.module';
     SaveGeneratedImageUseCase,
     ResolveGeneratedImageUseCase,
     CleanupStaleThreadSourcesUseCase,
+    RecordThreadActivityUseCase,
     // Listeners
     ShareDeletedListener,
+    ThreadActivityListener,
     // Tasks
     StaleThreadSourcesCleanupTask,
     // Mappers
@@ -114,6 +118,7 @@ import { McpModule } from '../mcp/mcp.module';
     // Export use cases
     FindThreadUseCase,
     FindAllThreadsUseCase,
+    DeleteThreadUseCase,
     AddMessageToThreadUseCase,
     AddSourceToThreadUseCase,
     RemoveSourceFromThreadUseCase,
