@@ -9,6 +9,7 @@ import {
   Key,
   ShieldCheck,
   MessageSquareText,
+  Trash2,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -51,6 +52,11 @@ export function AdminSettingsSidebar() {
       to: '/admin-settings/anonymization',
       icon: <ShieldCheck />,
       label: t('layout.anonymization'),
+    },
+    {
+      to: '/admin-settings/retention',
+      icon: <Trash2 />,
+      label: t('layout.retention'),
     },
     {
       to: '/admin-settings/instructions',

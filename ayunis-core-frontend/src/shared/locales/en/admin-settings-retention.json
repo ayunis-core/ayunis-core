@@ -1,0 +1,27 @@
+{
+  "retention": {
+    "heading": "Data retention",
+    "description": "Automatically delete conversations after a period of inactivity. This permanently removes the chat, its messages, generated images, and documents created in it. Knowledge bases, skills, and other settings are not affected.",
+    "periodLabel": "Delete conversations inactive for longer than",
+    "keepForever": "Keep forever (no automatic deletion)",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "months": "{{count}} months",
+    "year_one": "{{count}} year",
+    "year_other": "{{count}} years",
+    "currentlyDisabled": "Retention is disabled. Conversations are kept until deleted manually.",
+    "saveButton": "Save",
+    "saving": "Saving…",
+    "saveSuccess": "Data retention settings saved.",
+    "saveError": "Saving the data retention settings failed.",
+    "invalidPeriod": "The selected retention period is not allowed.",
+    "loadError": "The data retention settings could not be loaded.",
+    "retry": "Retry",
+    "confirm": {
+      "title": "Permanently delete old conversations?",
+      "body": "Conversations with no activity for more than {{period}} will be permanently deleted on the next nightly run, and on an ongoing basis. This cannot be undone. Knowledge bases and skills are not affected.",
+      "cancel": "Cancel",
+      "confirm": "Enable retention"
+    }
+  }
+}

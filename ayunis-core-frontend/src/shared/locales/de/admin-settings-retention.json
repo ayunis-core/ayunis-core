@@ -1,0 +1,27 @@
+{
+  "retention": {
+    "heading": "Datenaufbewahrung",
+    "description": "Unterhaltungen nach einer Zeit der Inaktivität automatisch löschen. Dabei werden der Chat, seine Nachrichten, generierte Bilder und darin erstellte Dokumente unwiderruflich entfernt. Wissensdatenbanken, Skills und andere Einstellungen sind nicht betroffen.",
+    "periodLabel": "Unterhaltungen löschen, die länger inaktiv sind als",
+    "keepForever": "Dauerhaft behalten (keine automatische Löschung)",
+    "days_one": "{{count}} Tag",
+    "days_other": "{{count}} Tage",
+    "months": "{{count}} Monate",
+    "year_one": "{{count}} Jahr",
+    "year_other": "{{count}} Jahre",
+    "currentlyDisabled": "Die Aufbewahrung ist deaktiviert. Unterhaltungen bleiben erhalten, bis sie manuell gelöscht werden.",
+    "saveButton": "Speichern",
+    "saving": "Speichern…",
+    "saveSuccess": "Einstellungen zur Datenaufbewahrung gespeichert.",
+    "saveError": "Das Speichern der Einstellungen zur Datenaufbewahrung ist fehlgeschlagen.",
+    "invalidPeriod": "Der gewählte Aufbewahrungszeitraum ist nicht zulässig.",
+    "loadError": "Die Einstellungen zur Datenaufbewahrung konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "confirm": {
+      "title": "Alte Unterhaltungen dauerhaft löschen?",
+      "body": "Unterhaltungen ohne Aktivität seit mehr als {{period}} werden beim nächsten nächtlichen Lauf und fortlaufend dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden. Wissensdatenbanken und Skills sind nicht betroffen.",
+      "cancel": "Abbrechen",
+      "confirm": "Aufbewahrung aktivieren"
+    }
+  }
+}
