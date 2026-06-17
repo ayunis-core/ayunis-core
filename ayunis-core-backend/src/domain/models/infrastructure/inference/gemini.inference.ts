@@ -29,7 +29,9 @@ export class GeminiInferenceHandler extends InferenceHandler {
     // Construct lazily: GoogleGenAI throws if the API key is missing, and this
     // handler is instantiated at boot regardless of whether Gemini is
     // configured. Only build the client when it is actually used.
-    this.apiKey = this.configService.get<string>('models.gemini.apiKey')?.trim();
+    this.apiKey = this.configService
+      .get<string>('models.gemini.apiKey')
+      ?.trim();
     this.converter = new GeminiMessageConverter(imageContentService);
   }
 
@@ -51,12 +53,6 @@ export class GeminiInferenceHandler extends InferenceHandler {
       toolChoice,
     });
 
-      const completionFn = () =>
-        this.getClient().models.generateContent({
-          model: input.model.name,
-          contents,
-          config,
-        });
     this.logger.debug('generateContent config prepared', {
       model: input.model.name,
       messageCount: contents.length,
@@ -65,7 +61,7 @@ export class GeminiInferenceHandler extends InferenceHandler {
     });
 
     const completionFn = () =>
-      this.client.models.generateContent({
+      this.getClient().models.generateContent({
         model: input.model.name,
         contents,
         config,
