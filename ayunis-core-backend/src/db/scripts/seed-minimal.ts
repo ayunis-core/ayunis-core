@@ -2,7 +2,11 @@ import 'src/config/env';
 import { randomUUID } from 'crypto';
 import dataSource from 'src/db/datasource';
 import { SeedRunner } from './utils/seed-runner';
-import { minimalFixture, type ModelKey } from '../fixtures/minimal.fixture';
+import {
+  minimalFixture,
+  LANGUAGE_MODEL_KEYS,
+  type ModelKey,
+} from '../fixtures/minimal.fixture';
 import { IsNull, MoreThanOrEqual } from 'typeorm';
 import type { UUID } from 'crypto';
 
@@ -27,19 +31,11 @@ import type { ModelProvider } from 'src/domain/models/domain/value-objects/model
 
 const fixture = minimalFixture;
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function log(entity: string, name: string, created: boolean): void {
   const icon = created ? '✅' : '⏭️ ';
   const verb = created ? 'Created' : 'Exists';
   console.log(`${icon} ${verb}: ${entity} (${name})`); // eslint-disable-line no-console
 }
-
-// ---------------------------------------------------------------------------
-// Seed steps
-// ---------------------------------------------------------------------------
 
 async function seedOrgByName(name: string): Promise<OrgRecord> {
   const repo = dataSource.getRepository(OrgRecord);
@@ -56,7 +52,7 @@ async function seedOrgByName(name: string): Promise<OrgRecord> {
 }
 
 async function seedLanguageModelFromFixture(
-  entry: typeof fixture.languageModel | typeof fixture.azureLanguageModel,
+  entry: (typeof fixture)[LanguageModelKey],
 ): Promise<LanguageModelRecord> {
   const repo = dataSource.getRepository(LanguageModelRecord);
   const { name, displayName, provider, ...flags } = entry;
@@ -327,11 +323,8 @@ interface UsageSeedModel {
   outputTokenCost?: number | null;
 }
 
-/**
- * Seeds usage records across the current calendar month so the credit-based
- * usage views (admin + super admin) show non-empty charts and tables.
- * Idempotent: skips if the org already has usage in the current month.
- */
+// Seeds usage records across the current calendar month so the credit-based
+// usage views show non-empty charts. Idempotent per org per month.
 async function seedUsageRecords(
   orgId: string,
   userId: string,
@@ -412,32 +405,36 @@ async function seedUsageRecords(
   log('Usage records', `org=${orgId} (${rows.length})`, true);
 }
 
-// ---------------------------------------------------------------------------
-// Main
-// ---------------------------------------------------------------------------
+type LanguageModelKey = (typeof LANGUAGE_MODEL_KEYS)[number];
+
+async function seedLanguageModels(): Promise<
+  Record<LanguageModelKey, LanguageModelRecord>
+> {
+  const entries = await Promise.all(
+    LANGUAGE_MODEL_KEYS.map(
+      async (key) =>
+        [key, await seedLanguageModelFromFixture(fixture[key])] as const,
+    ),
+  );
+  return Object.fromEntries(entries) as Record<
+    LanguageModelKey,
+    LanguageModelRecord
+  >;
+}
 
 async function seedAllFixtures(runner: SeedRunner): Promise<void> {
   console.log('🌱 Starting minimal seed…\n'); // eslint-disable-line no-console
 
-  const [
-    org,
-    usageOrg,
-    languageModel,
-    azureLanguageModel,
-    embeddingModel,
-    imageGenerationModel,
-  ] = await Promise.all([
-    seedOrgByName(fixture.org.name),
-    seedOrgByName(fixture.usageOrg.name),
-    seedLanguageModelFromFixture(fixture.languageModel),
-    seedLanguageModelFromFixture(fixture.azureLanguageModel),
-    seedEmbeddingModel(),
-    seedImageGenerationModel(),
-  ]);
+  const [org, usageOrg, embeddingModel, imageGenerationModel] =
+    await Promise.all([
+      seedOrgByName(fixture.org.name),
+      seedOrgByName(fixture.usageOrg.name),
+      seedEmbeddingModel(),
+      seedImageGenerationModel(),
+    ]);
 
   const models = {
-    languageModel,
-    azureLanguageModel,
+    ...(await seedLanguageModels()),
     embeddingModel,
     imageGenerationModel,
   };
@@ -453,9 +450,9 @@ async function seedAllFixtures(runner: SeedRunner): Promise<void> {
   await seedPlatformConfig();
 
   const usageModels: UsageSeedModel[] = [
-    languageModel,
-    azureLanguageModel,
-    imageGenerationModel,
+    models.languageModel,
+    models.azureLanguageModel,
+    models.imageGenerationModel,
   ];
   await seedUsageRecords(org.id, adminUser.id, usageModels);
   await seedUsageRecords(usageOrg.id, usageAdminUser.id, usageModels);
