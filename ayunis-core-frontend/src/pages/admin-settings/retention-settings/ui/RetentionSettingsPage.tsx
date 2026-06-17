@@ -64,6 +64,7 @@ export function RetentionSettingsPage() {
   const selected = draft === undefined ? serverValue : draft;
   const isDirty = draft !== undefined && draft !== serverValue;
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingValue, setPendingValue] = useState<number | null>(null);
 
   function persist(retentionDays: number | null) {
     updateMutation.mutate(
@@ -95,6 +96,7 @@ export function RetentionSettingsPage() {
   function handleSave() {
     // Confirm only when the change starts or intensifies deletion.
     if (isMoreAggressive(serverValue, selected)) {
+      setPendingValue(selected);
       setConfirmOpen(true);
       return;
     }
@@ -103,7 +105,7 @@ export function RetentionSettingsPage() {
 
   function handleConfirm() {
     setConfirmOpen(false);
-    persist(selected);
+    persist(pendingValue);
   }
 
   function handleMutationError(error: unknown) {
@@ -213,7 +215,9 @@ export function RetentionSettingsPage() {
             <AlertDialogDescription>
               {t('retention.confirm.body', {
                 period:
-                  selected === null ? '' : formatRetentionPeriod(selected, t),
+                  pendingValue === null
+                    ? ''
+                    : formatRetentionPeriod(pendingValue, t),
               })}
             </AlertDialogDescription>
           </AlertDialogHeader>
