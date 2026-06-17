@@ -110,8 +110,13 @@ export class LocalInvitesRepository implements InvitesRepository {
 
   async findOneByEmail(email: string): Promise<Invite | null> {
     this.logger.log('findOneByEmail', { email });
+    // Match the single invite row for this email regardless of acceptance
+    // state. invites.email is globally unique, so there is at most one row.
+    // Deletion paths (delete-user, delete-invite-by-email) rely on this to
+    // clean up already-accepted invites; filtering on acceptedAt would leave
+    // them orphaned and block re-inviting the same email (AYC-299).
     const entity = await this.inviteRepository.findOne({
-      where: { email: ILike(email), acceptedAt: IsNull() },
+      where: { email: ILike(email) },
     });
     if (!entity) {
       this.logger.debug('Invite not found by email', { email });
