@@ -10,6 +10,7 @@ export default tseslint.config(
   {
     ignores: [
       'eslint.config.mjs',
+      'eslint.complexity.config.mjs',
       '.dependency-cruiser.cjs',
       'jest.setup.js',
       'src/config/env-register.js',
