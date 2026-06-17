@@ -35,6 +35,7 @@ Ayunis Core is a comprehensive AI platform that enables intelligent conversation
 - Node.js (v18 or higher)
 - npm
 - Docker and Docker Compose
+- `pipx` (or Python `pip`) — used by the pre-commit complexity check to install `lizard`
 
 ### Installation
 
@@ -229,6 +230,7 @@ This installs Husky and configures Git to use the hooks in the `.husky/` directo
 - **pre-commit**: Runs linting and formatting checks on staged files
   - Frontend: ESLint, Prettier, and TypeScript type checking
   - Backend: ESLint, Prettier, and TypeScript type checking
+  - Complexity check (`lizard`, via `pipx`/`pip`); set `SKIP_COMPLEXITY=1` to bypass
   - Auto-fixes issues when possible (set `PRECOMMIT_NO_FIX=1` to disable auto-fix)
 
 - **commit-msg**: Validates commit message format
