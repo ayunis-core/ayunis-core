@@ -18,7 +18,7 @@ export class OpenAIInferenceHandler extends RuntimeInferenceHandler {
 
   protected createProvider(model: Model): ModelProvider {
     return openai({
-      apiKey: this.configService.get<string>('openai.apiKey') ?? '',
+      apiKey: this.configService.get<string>('models.openai.apiKey') ?? '',
       model: model.name,
       maxRetries: INFERENCE_MAX_RETRIES,
     });
