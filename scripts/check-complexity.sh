@@ -21,12 +21,24 @@ GREEN="\033[32m"
 YELLOW="\033[33m"
 NC="\033[0m"
 
+# pipx/pip install to a user bin dir (e.g. ~/.local/bin) that Git hooks often
+# don't have on PATH. Add the common locations up front so both the check below
+# and the later `lizard` invocation can find it.
+PIPX_BIN_DIR="$(pipx environment --value PIPX_BIN_DIR 2>/dev/null || true)"
+for dir in "$PIPX_BIN_DIR" "$HOME/.local/bin" "$(python3 -m site --user-base 2>/dev/null)/bin"; do
+    [ -n "$dir" ] && case ":$PATH:" in *":$dir:"*) ;; *) PATH="$dir:$PATH" ;; esac
+done
+export PATH
+
 # Check if lizard is installed. Try the available Python installer; many
 # machines (e.g. fresh macOS) ship pip3/pipx but not a bare `pip`.
 if ! command -v lizard &> /dev/null; then
     echo -e "${YELLOW}lizard not found; attempting install…${NC}"
     if command -v pipx &> /dev/null; then
         pipx install lizard
+        # Re-resolve in case pipx created the bin dir during this install
+        PIPX_BIN_DIR="$(pipx environment --value PIPX_BIN_DIR 2>/dev/null || echo "$HOME/.local/bin")"
+        case ":$PATH:" in *":$PIPX_BIN_DIR:"*) ;; *) export PATH="$PIPX_BIN_DIR:$PATH" ;; esac
     elif command -v pip3 &> /dev/null; then
         pip3 install lizard --quiet
     elif command -v pip &> /dev/null; then
@@ -37,6 +49,14 @@ if ! command -v lizard &> /dev/null; then
         echo -e "${YELLOW}To bypass this check for now: SKIP_COMPLEXITY=1 git commit …${NC}"
         exit 1
     fi
+fi
+
+# Verify lizard is actually runnable now — install can succeed while its bin
+# dir stays off PATH, which would otherwise fail `xargs lizard` under `set -e`.
+if ! command -v lizard &> /dev/null; then
+    echo -e "${RED}lizard was installed but is not on PATH.${NC}"
+    echo -e "${YELLOW}Add its install dir (e.g. ~/.local/bin) to PATH, or set SKIP_COMPLEXITY=1 to bypass.${NC}"
+    exit 1
 fi
 
 # Get files to check
