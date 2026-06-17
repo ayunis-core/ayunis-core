@@ -13,34 +13,6 @@ export class BedrockInferenceHandler extends RuntimeInferenceHandler {
     private readonly configService: ConfigService,
     imageContentService: ImageContentService,
   ) {
-    super();
-    const awsRegion =
-      this.configService.get<string>('models.bedrock.awsRegion')?.trim() ||
-      'us-east-1';
-    const awsAccessKeyId = this.configService.get<string>(
-      'models.bedrock.awsAccessKeyId',
-    );
-    const awsSecretAccessKey = this.configService.get<string>(
-      'models.bedrock.awsSecretAccessKey',
-    );
-
-    this.logger.log('Initializing Bedrock client', {
-      awsRegion,
-      hasAccessKey: !!awsAccessKeyId,
-      hasSecretKey: !!awsSecretAccessKey,
-    });
-
-    this.client = new BedrockRuntimeClient({
-      region: awsRegion,
-      credentials:
-        awsAccessKeyId && awsSecretAccessKey
-          ? {
-              accessKeyId: awsAccessKeyId,
-              secretAccessKey: awsSecretAccessKey,
-            }
-          : undefined,
-    });
-    this.converter = new BedrockMessageConverter(imageContentService);
     super(imageContentService);
   }
 
