@@ -17,7 +17,8 @@ import { GeminiMessageConverter } from '../converters/gemini-message.converter';
 @Injectable()
 export class GeminiInferenceHandler extends InferenceHandler {
   private readonly logger = new Logger(GeminiInferenceHandler.name);
-  private readonly client: GoogleGenAI;
+  private readonly apiKey?: string;
+  private client?: GoogleGenAI;
   private readonly converter: GeminiMessageConverter;
 
   constructor(
@@ -25,10 +26,20 @@ export class GeminiInferenceHandler extends InferenceHandler {
     private readonly imageContentService: ImageContentService,
   ) {
     super();
-    this.client = new GoogleGenAI({
-      apiKey: this.configService.get<string>('models.gemini.apiKey'),
-    });
+    // Construct lazily: GoogleGenAI throws if the API key is missing, and this
+    // handler is instantiated at boot regardless of whether Gemini is
+    // configured. Only build the client when it is actually used.
+    this.apiKey = this.configService.get<string>('models.gemini.apiKey')?.trim();
     this.converter = new GeminiMessageConverter(imageContentService);
+  }
+
+  private getClient(): GoogleGenAI {
+    if (!this.apiKey) {
+      throw new InferenceFailedError('Gemini API key is not configured', {
+        source: 'gemini',
+      });
+    }
+    return (this.client ??= new GoogleGenAI({ apiKey: this.apiKey }));
   }
 
   async answer(input: InferenceInput): Promise<InferenceResponse> {
@@ -50,7 +61,7 @@ export class GeminiInferenceHandler extends InferenceHandler {
       this.logger.debug('generateContent config', { config });
 
       const completionFn = () =>
-        this.client.models.generateContent({
+        this.getClient().models.generateContent({
           model: input.model.name,
           contents,
           config,

@@ -111,9 +111,9 @@ export class BedrockStreamInferenceHandler implements StreamInferenceHandler {
     private readonly configService: ConfigService,
     private readonly imageContentService: ImageContentService,
   ) {
-    const awsRegion = this.configService.get<string>(
-      'models.bedrock.awsRegion',
-    );
+    const awsRegion =
+      this.configService.get<string>('models.bedrock.awsRegion')?.trim() ||
+      'us-east-1';
     const awsAccessKeyId = this.configService.get<string>(
       'models.bedrock.awsAccessKeyId',
     );
@@ -128,7 +128,7 @@ export class BedrockStreamInferenceHandler implements StreamInferenceHandler {
     });
 
     this.client = new BedrockRuntimeClient({
-      region: awsRegion ?? 'us-east-1',
+      region: awsRegion,
       credentials:
         awsAccessKeyId && awsSecretAccessKey
           ? {

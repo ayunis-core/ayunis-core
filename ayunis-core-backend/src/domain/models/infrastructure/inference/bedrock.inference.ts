@@ -52,9 +52,9 @@ export class BedrockInferenceHandler extends InferenceHandler {
     private readonly imageContentService: ImageContentService,
   ) {
     super();
-    const awsRegion = this.configService.get<string>(
-      'models.bedrock.awsRegion',
-    );
+    const awsRegion =
+      this.configService.get<string>('models.bedrock.awsRegion')?.trim() ||
+      'us-east-1';
     const awsAccessKeyId = this.configService.get<string>(
       'models.bedrock.awsAccessKeyId',
     );
@@ -69,7 +69,7 @@ export class BedrockInferenceHandler extends InferenceHandler {
     });
 
     this.client = new BedrockRuntimeClient({
-      region: awsRegion ?? 'us-east-1',
+      region: awsRegion,
       credentials:
         awsAccessKeyId && awsSecretAccessKey
           ? {
