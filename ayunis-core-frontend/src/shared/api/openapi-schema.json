@@ -8008,6 +8008,57 @@
         "tags": ["Chat Settings"]
       }
     },
+    "/retention-policies/org": {
+      "get": {
+        "operationId": "RetentionPoliciesController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current retention policy (disabled if never configured)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionPolicyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the data-retention policy for the current org",
+        "tags": ["retention-policies"]
+      },
+      "put": {
+        "operationId": "RetentionPoliciesController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRetentionPolicyRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated retention policy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionPolicyResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Retention period is not one of the allowed windows"
+          }
+        },
+        "summary": "Set or clear the data-retention policy for the current org",
+        "tags": ["retention-policies"]
+      }
+    },
     "/academy/chapters": {
       "get": {
         "description": "Retrieve all chapters with nested lessons, ordered by position. Requires the academy add-on to be active for the organization.",
@@ -14930,6 +14981,44 @@
           }
         },
         "required": ["systemPrompt"]
+      },
+      "RetentionPolicyResponseDto": {
+        "type": "object",
+        "properties": {
+          "retentionDays": {
+            "type": "number",
+            "description": "Configured retention window in days, or null when retention is disabled (data kept forever).",
+            "nullable": true,
+            "example": 90
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether retention is currently enabled for the org.",
+            "example": true
+          },
+          "allowedRetentionDays": {
+            "description": "Retention windows (in days) the admin may choose from. Lets the UI render the selector without hardcoding the allowlist.",
+            "example": [30, 90, 180, 365, 730],
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "required": ["retentionDays", "enabled", "allowedRetentionDays"]
+      },
+      "UpdateRetentionPolicyRequestDto": {
+        "type": "object",
+        "properties": {
+          "retentionDays": {
+            "type": "number",
+            "description": "Days of inactivity after which conversation data is permanently deleted. Null disables retention (keep data forever). Must be one of the allowed windows.",
+            "enum": [30, 90, 180, 365, 730],
+            "nullable": true,
+            "example": 90
+          }
+        },
+        "required": ["retentionDays"]
       },
       "AcademyLessonResponseDto": {
         "type": "object",

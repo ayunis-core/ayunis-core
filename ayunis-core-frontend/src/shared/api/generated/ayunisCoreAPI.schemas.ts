@@ -4038,6 +4038,42 @@ export interface UpsertOrgSystemPromptDto {
   systemPrompt: string;
 }
 
+export interface RetentionPolicyResponseDto {
+  /**
+   * Configured retention window in days, or null when retention is disabled (data kept forever).
+   * @nullable
+   */
+  retentionDays: number | null;
+  /** Whether retention is currently enabled for the org. */
+  enabled: boolean;
+  /** Retention windows (in days) the admin may choose from. Lets the UI render the selector without hardcoding the allowlist. */
+  allowedRetentionDays: number[];
+}
+
+/**
+ * Days of inactivity after which conversation data is permanently deleted. Null disables retention (keep data forever). Must be one of the allowed windows.
+ * @nullable
+ */
+export type UpdateRetentionPolicyRequestDtoRetentionDays = typeof UpdateRetentionPolicyRequestDtoRetentionDays[keyof typeof UpdateRetentionPolicyRequestDtoRetentionDays] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateRetentionPolicyRequestDtoRetentionDays = {
+  NUMBER_30: 30,
+  NUMBER_90: 90,
+  NUMBER_180: 180,
+  NUMBER_365: 365,
+  NUMBER_730: 730,
+} as const;
+
+export interface UpdateRetentionPolicyRequestDto {
+  /**
+   * Days of inactivity after which conversation data is permanently deleted. Null disables retention (keep data forever). Must be one of the allowed windows.
+   * @nullable
+   */
+  retentionDays: UpdateRetentionPolicyRequestDtoRetentionDays;
+}
+
 export interface AcademyLessonResponseDto {
   /** The unique identifier of the lesson */
   id: string;
