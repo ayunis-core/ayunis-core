@@ -98,7 +98,6 @@ import { TeamPermittedModelValidator } from './application/services/team-permitt
 import { ModelPolicyService } from './application/services/model-policy.service';
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
-import { OpenAIResponsesMessageConverter } from './infrastructure/converters/openai-responses-message.converter';
 
 @Module({
   imports: [
@@ -125,7 +124,6 @@ import { OpenAIResponsesMessageConverter } from './infrastructure/converters/ope
   ],
   providers: [
     ModelProviderInfoRegistry,
-    OpenAIResponsesMessageConverter,
     ModelResponseDtoMapper,
     ModelWithConfigResponseDtoMapper,
     CatalogModelResponseDtoMapper,
