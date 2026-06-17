@@ -52,7 +52,16 @@ export class EnforceRetentionUseCase {
 
     const perOrg: OrgRetentionResult[] = [];
     for (const policy of policies) {
-      perOrg.push(await this.enforceForOrg(policy, now, dryRun));
+      // Isolate failures per org so a transient error loading or deleting one
+      // org's expired threads can't abort enforcement for the remaining orgs.
+      try {
+        perOrg.push(await this.enforceForOrg(policy, now, dryRun));
+      } catch (error) {
+        this.logger.error('Retention enforcement failed for org; skipping', {
+          orgId: policy.orgId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
     }
 
     const result: EnforceRetentionResult = {
