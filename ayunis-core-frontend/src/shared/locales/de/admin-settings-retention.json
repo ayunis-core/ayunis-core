@@ -21,7 +21,7 @@
       "title": "Alte Unterhaltungen dauerhaft löschen?",
       "body": "Unterhaltungen ohne Aktivität seit mehr als {{period}} werden beim nächsten nächtlichen Lauf und fortlaufend dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden. Wissensdatenbanken und Skills sind nicht betroffen.",
       "cancel": "Abbrechen",
-      "confirm": "Aufbewahrung aktivieren"
+      "confirm": "Alte Unterhaltungen löschen"
     }
   }
 }

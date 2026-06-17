@@ -21,7 +21,7 @@
       "title": "Permanently delete old conversations?",
       "body": "Conversations with no activity for more than {{period}} will be permanently deleted on the next nightly run, and on an ongoing basis. This cannot be undone. Knowledge bases and skills are not affected.",
       "cancel": "Cancel",
-      "confirm": "Enable retention"
+      "confirm": "Delete old conversations"
     }
   }
 }
