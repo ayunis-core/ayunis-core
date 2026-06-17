@@ -18,7 +18,7 @@ export class MistralStreamInferenceHandler extends RuntimeStreamInferenceHandler
 
   protected createProvider(model: Model): ModelProvider {
     return mistral({
-      apiKey: this.configService.get<string>('mistral.apiKey') ?? '',
+      apiKey: this.configService.get<string>('models.mistral.apiKey') ?? '',
       model: model.name,
       maxRetries: INFERENCE_MAX_RETRIES,
     });
