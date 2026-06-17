@@ -9,7 +9,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "build:deps": "pnpm --filter @ayunis/inference --filter @ayunis/provider-anthropic --filter @ayunis/provider-openai --filter @ayunis/provider-mistral --filter @ayunis/provider-gemini run build",
+    "build:deps": "pnpm --filter @ayunis/inference --filter @ayunis/provider-anthropic --filter @ayunis/provider-openai --filter @ayunis/provider-mistral --filter @ayunis/provider-gemini --filter @ayunis/provider-ollama run build",
     "prebuild": "pnpm run build:deps",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -54,6 +54,7 @@
     "@ayunis/provider-anthropic": "workspace:*",
     "@ayunis/provider-gemini": "workspace:*",
     "@ayunis/provider-mistral": "workspace:*",
+    "@ayunis/provider-ollama": "workspace:*",
     "@ayunis/provider-openai": "workspace:*",
     "@mistralai/mistralai": "^1.14.0",
     "@modelcontextprotocol/sdk": "^1.20.2",
