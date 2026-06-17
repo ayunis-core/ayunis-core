@@ -451,18 +451,25 @@ export class StreamingInferenceService {
   extractUsageFromChunks(
     chunks: StreamInferenceResponseChunk[],
   ): { inputTokens: number; outputTokens: number } | undefined {
-    let inputTokens = 0;
-    let outputTokens = 0;
-    let hasUsageData = false;
+    // Providers report cumulative usage on every chunk (Gemini repeats
+    // promptTokenCount on each chunk; candidatesTokenCount only appears on the
+    // final one). Summing across chunks would over-count, so take last-wins per
+    // field, matching the non-streaming accumulator (response-accumulator.ts).
+    let inputTokens: number | undefined;
+    let outputTokens: number | undefined;
 
     for (const chunk of chunks) {
-      if (chunk.usage) {
-        inputTokens += chunk.usage.inputTokens ?? 0;
-        outputTokens += chunk.usage.outputTokens ?? 0;
-        hasUsageData = true;
+      if (!chunk.usage) continue;
+      if (chunk.usage.inputTokens !== undefined) {
+        inputTokens = chunk.usage.inputTokens;
+      }
+      if (chunk.usage.outputTokens !== undefined) {
+        outputTokens = chunk.usage.outputTokens;
       }
     }
 
-    return hasUsageData ? { inputTokens, outputTokens } : undefined;
+    return inputTokens === undefined && outputTokens === undefined
+      ? undefined
+      : { inputTokens: inputTokens ?? 0, outputTokens: outputTokens ?? 0 };
   }
 }

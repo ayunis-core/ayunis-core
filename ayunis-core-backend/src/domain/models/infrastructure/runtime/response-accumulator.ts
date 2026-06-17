@@ -1,6 +1,7 @@
 import type {
   FinishReason,
   ProviderChunk,
+  ProviderMetadata,
   ToolCallDelta,
   Usage,
 } from '@ayunis/inference';
@@ -14,6 +15,7 @@ interface ToolCallAccumulator {
   id: string;
   name: string;
   args: string;
+  providerMetadata: ProviderMetadata;
 }
 
 type ResponseContent =
@@ -41,6 +43,7 @@ export async function accumulateResponse(
 
 class StreamResponseAccumulator {
   private text = '';
+  private textProviderMetadata: ProviderMetadata = null;
   private thinking = '';
   private thinkingId: string | null = null;
   private thinkingSignature: string | null = null;
@@ -60,6 +63,8 @@ class StreamResponseAccumulator {
 
   private apply(chunk: ProviderChunk): void {
     if (chunk.textDelta) this.text += chunk.textDelta;
+    if (chunk.textProviderMetadata)
+      this.textProviderMetadata = chunk.textProviderMetadata;
     if (chunk.thinkingDelta) this.thinking += chunk.thinkingDelta;
     if (chunk.thinkingId) this.thinkingId = chunk.thinkingId;
     if (chunk.thinkingSignature)
@@ -75,13 +80,20 @@ class StreamResponseAccumulator {
       if (delta.id) call.id = delta.id;
       if (delta.name) call.name = delta.name;
       if (delta.argumentsDelta) call.args += delta.argumentsDelta;
+      if (delta.providerMetadata)
+        call.providerMetadata = delta.providerMetadata;
     }
   }
 
   private getOrCreateCall(index: number): ToolCallAccumulator {
     const existing = this.toolCalls.get(index);
     if (existing) return existing;
-    const created: ToolCallAccumulator = { id: '', name: '', args: '' };
+    const created: ToolCallAccumulator = {
+      id: '',
+      name: '',
+      args: '',
+      providerMetadata: null,
+    };
     this.toolCalls.set(index, created);
     return created;
   }
@@ -113,13 +125,20 @@ class StreamResponseAccumulator {
       );
     }
     if (this.text) {
-      content.push(new TextMessageContent(this.text));
+      content.push(
+        new TextMessageContent(this.text, this.textProviderMetadata),
+      );
     }
     // Map preserves insertion order, which matches the tool-call index order
     // in which deltas stream in.
     for (const call of this.toolCalls.values()) {
       content.push(
-        new ToolUseMessageContent(call.id, call.name, parseArgs(call.args)),
+        new ToolUseMessageContent(
+          call.id,
+          call.name,
+          parseArgs(call.args),
+          call.providerMetadata,
+        ),
       );
     }
     return new InferenceResponse(content, this.buildMeta());
