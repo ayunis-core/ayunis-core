@@ -1,0 +1,1 @@
+export { GettingStartedTour } from './GettingStartedTour';
