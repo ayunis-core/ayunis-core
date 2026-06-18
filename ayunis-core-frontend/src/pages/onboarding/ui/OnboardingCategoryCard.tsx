@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ExternalLink } from 'lucide-react';
 import { Progress } from '@/shared/ui/shadcn/progress';
+import { Button } from '@/shared/ui/shadcn/button';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { getHelpCenterUrl } from '@/shared/lib/help-center';
 import type { OnboardingCategory } from '@/entities/onboarding';
@@ -35,10 +36,12 @@ export default function OnboardingCategoryCard({
 
   return (
     <div className="border rounded-xl bg-card">
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        className="w-full justify-start gap-4 px-5 py-3.5 text-left"
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-4 w-full px-5 py-3.5 text-left"
+        aria-expanded={expanded}
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2">
@@ -60,7 +63,7 @@ export default function OnboardingCategoryCard({
             expanded && 'rotate-180',
           )}
         />
-      </button>
+      </Button>
 
       {expanded && (
         <div className="px-5 pb-3">

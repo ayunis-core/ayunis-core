@@ -111,13 +111,16 @@ export default function OnboardingStepItem({
           />
         )}
 
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => !locked && setExpanded(!expanded)}
           className={cn(
-            'flex-1 min-w-0 flex items-center justify-between text-left',
+            'flex-1 min-w-0 justify-between text-left',
             locked && 'cursor-default',
           )}
+          disabled={locked}
+          aria-expanded={expanded}
         >
           <span
             className={cn(
@@ -136,7 +139,7 @@ export default function OnboardingStepItem({
               )}
             />
           )}
-        </button>
+        </Button>
       </div>
 
       {expanded && !locked && (
