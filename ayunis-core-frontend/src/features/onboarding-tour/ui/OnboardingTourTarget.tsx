@@ -1,12 +1,15 @@
-import type { TourTargetName } from './tour-targets';
+import type { TourTargetName } from '@/entities/onboarding';
 import { useLayoutEffect, useRef } from 'react';
 
-interface TourTargetProps {
+interface OnboardingTourTargetProps {
   name: TourTargetName;
   children: React.ReactNode;
 }
 
-export function TourTarget({ name, children }: Readonly<TourTargetProps>) {
+export function OnboardingTourTarget({
+  name,
+  children,
+}: Readonly<OnboardingTourTargetProps>) {
   const ref = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { SettingsGettingStartedPage } from '@/pages/getting-started';
+import { OnboardingSettingsPage } from '@/pages/onboarding';
 
 export const Route = createFileRoute(
   '/_authenticated/settings/getting-started',
@@ -8,5 +8,5 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  return <SettingsGettingStartedPage />;
+  return <OnboardingSettingsPage />;
 }
