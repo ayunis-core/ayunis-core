@@ -66,6 +66,8 @@ import enMcpUserConfig from './shared/locales/en/mcp-user-config.json';
 import deMcpUserConfig from './shared/locales/de/mcp-user-config.json';
 import enAdminSettingsInstructions from './shared/locales/en/admin-settings-instructions.json';
 import deAdminSettingsInstructions from './shared/locales/de/admin-settings-instructions.json';
+import enGettingStarted from './shared/locales/en/getting-started.json';
+import deGettingStarted from './shared/locales/de/getting-started.json';
 
 const resources = {
   en: {
@@ -101,6 +103,7 @@ const resources = {
     'admin-settings-api-keys': enAdminSettingsApiKeys,
     'mcp-user-config': enMcpUserConfig,
     'admin-settings-instructions': enAdminSettingsInstructions,
+    'getting-started': enGettingStarted,
   },
   de: {
     auth: deAuth,
@@ -135,6 +138,7 @@ const resources = {
     'admin-settings-api-keys': deAdminSettingsApiKeys,
     'mcp-user-config': deMcpUserConfig,
     'admin-settings-instructions': deAdminSettingsInstructions,
+    'getting-started': deGettingStarted,
   },
 };
 
