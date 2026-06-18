@@ -1,8 +1,8 @@
 import { useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
-import { TourTarget } from '@/features/getting-started/lib/TourTarget';
-import { TOUR_TARGET } from '@/features/getting-started/lib/tour-targets';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
+import { TOUR_TARGET } from '@/entities/onboarding';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useTranslation } from 'react-i18next';
 import type {
@@ -341,7 +341,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               <div className="flex items-center justify-between">
                 {/* Left side */}
                 <div className="flex-shrink-0 flex items-center space-x-2">
-                  <TourTarget name={TOUR_TARGET.chatUpload}>
+                  <OnboardingTourTarget name={TOUR_TARGET.chatUpload}>
                     <PlusButton
                       onFileUpload={onFileUpload}
                       onImageSelect={handleImageSelect}
@@ -358,15 +358,15 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                         (integration) => integration.id,
                       )}
                     />
-                  </TourTarget>
-                  <TourTarget name={TOUR_TARGET.anonymousMode}>
+                  </OnboardingTourTarget>
+                  <OnboardingTourTarget name={TOUR_TARGET.anonymousMode}>
                     <AnonymousButton
                       isAnonymous={isAnonymous}
                       onAnonymousChange={onAnonymousChange}
                       isDisabled={isAnonymousChangeDisabled}
                       isEnforced={isAnonymousEnforced}
                     />
-                  </TourTarget>
+                  </OnboardingTourTarget>
                   {selectedSkillId && selectedSkillName && onSkillRemove && (
                     <SkillBadge
                       skillName={selectedSkillName}
@@ -380,15 +380,15 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     condition={isModelChangeDisabled ?? false}
                     tooltip={t('chatInput.modelChangeDisabledTooltip')}
                   >
-                    <TourTarget name={TOUR_TARGET.modelSelector}>
+                    <OnboardingTourTarget name={TOUR_TARGET.modelSelector}>
                       <ModelSelector
                         isDisabled={isModelChangeDisabled ?? false}
                         selectedModelId={modelId}
                         onModelChange={onModelChange}
                       />
-                    </TourTarget>
+                    </OnboardingTourTarget>
                   </TooltipIf>
-                  <TourTarget name={TOUR_TARGET.voiceInput}>
+                  <OnboardingTourTarget name={TOUR_TARGET.voiceInput}>
                     <MicrophoneButton
                       onTranscriptionComplete={(text) => {
                         setMessage((prev) => (prev ? `${prev} ${text}` : text));
@@ -403,15 +403,15 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                         }, 0);
                       }}
                     />
-                  </TourTarget>
-                  <TourTarget name={TOUR_TARGET.sendMessage}>
+                  </OnboardingTourTarget>
+                  <OnboardingTourTarget name={TOUR_TARGET.sendMessage}>
                     <SendButton
                       inFlight={inFlight}
                       canSend={!!canSend}
                       onSend={handleSend}
                       onCancel={onCancel}
                     />
-                  </TourTarget>
+                  </OnboardingTourTarget>
                 </div>
               </div>
             </div>

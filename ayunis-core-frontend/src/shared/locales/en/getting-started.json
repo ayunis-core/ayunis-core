@@ -12,7 +12,7 @@
   },
   "stepCompleted": "Step completed! ✓",
   "spotlightDismiss": "Got it",
-  "returnPill": "Back to Getting Started",
+  "returnButton": "Back to Getting Started",
   "milestones": {
     "goodStart": "Good start! Keep going.",
     "halfWay": "Halfway there!",

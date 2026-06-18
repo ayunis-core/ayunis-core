@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import SettingsLayout from '../../admin-settings-layout';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { TourTarget } from '@/features/getting-started/lib/TourTarget';
-import { TOUR_TARGET } from '@/features/getting-started/lib/tour-targets';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
+import { TOUR_TARGET } from '@/entities/onboarding';
 import InviteMenuButton from './InviteMenuButton';
 import InvitesSection from './InvitesSection';
 import InvitesSearch from './InvitesSearch';
@@ -51,9 +51,9 @@ export default function UsersSettingsPage({
       action={
         <div className="flex gap-2">
           <HelpLink path="settings/admin/users/" />
-          <TourTarget name={TOUR_TARGET.inviteUsers}>
+          <OnboardingTourTarget name={TOUR_TARGET.inviteUsers}>
             <InviteMenuButton />
-          </TourTarget>
+          </OnboardingTourTarget>
         </div>
       }
       title={t('layout.users')}

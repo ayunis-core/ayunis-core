@@ -4,22 +4,22 @@ import { ChevronDown, ExternalLink } from 'lucide-react';
 import { Progress } from '@/shared/ui/shadcn/progress';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { getHelpCenterUrl } from '@/shared/lib/help-center';
-import type { GettingStartedCategory } from '@/features/getting-started/model/types';
-import StepItem from './StepItem';
+import type { OnboardingCategory } from '@/entities/onboarding';
+import OnboardingStepItem from './OnboardingStepItem';
 
-interface CategoryCardProps {
-  category: GettingStartedCategory;
+interface OnboardingCategoryCardProps {
+  category: OnboardingCategory;
   completedSteps: Set<string>;
   onCompleteStep: (stepId: string) => void;
   defaultExpanded?: boolean;
 }
 
-export default function CategoryCard({
+export default function OnboardingCategoryCard({
   category,
   completedSteps,
   onCompleteStep,
   defaultExpanded = false,
-}: Readonly<CategoryCardProps>) {
+}: Readonly<OnboardingCategoryCardProps>) {
   const { t } = useTranslation('getting-started');
   const [expanded, setExpanded] = useState(defaultExpanded);
 
@@ -83,7 +83,7 @@ export default function CategoryCard({
           )}
           <div className="divide-y divide-border/50">
             {category.steps.map((step, index) => (
-              <StepItem
+              <OnboardingStepItem
                 key={step.id}
                 step={step}
                 completed={completedSteps.has(step.id)}

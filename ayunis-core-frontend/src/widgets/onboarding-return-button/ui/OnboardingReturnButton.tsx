@@ -3,15 +3,15 @@ import { useNavigate, useLocation } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/shared/ui/shadcn/button';
-import { subscribeTourActive } from '@/features/getting-started/lib/tour';
+import { subscribeTourActive } from '@/features/onboarding-tour';
 import {
   clearPendingStep,
   usePendingStep,
-} from '@/features/getting-started/storage';
+} from '@/features/onboarding-progress';
 
 const REVEAL_DELAY_MS = 300;
 
-export function GettingStartedPill() {
+export function OnboardingReturnButton() {
   const { t } = useTranslation('getting-started');
   const navigate = useNavigate();
   const location = useLocation();
@@ -74,7 +74,7 @@ export function GettingStartedPill() {
         }
       >
         <ArrowLeft />
-        {t('returnPill')}
+        {t('returnButton')}
       </Button>
       <Button
         size="icon"
