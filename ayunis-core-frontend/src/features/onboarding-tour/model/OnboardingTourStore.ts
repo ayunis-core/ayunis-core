@@ -1,5 +1,5 @@
 export interface TourRequest {
-  /** `data-tour` name set by <TourTarget>; resolved to a `[data-tour="…"]` selector. */
+  /** `data-tour` name set by <OnboardingTourTarget>; resolved to a `[data-tour="…"]` selector. */
   target: string;
   title?: string;
   description?: string;

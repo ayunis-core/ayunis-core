@@ -10,7 +10,7 @@ import {
   subscribeTour,
   destroyTour,
   type TourRequest,
-} from '@/features/getting-started/lib/tour';
+} from '@/features/onboarding-tour';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Card, CardDescription, CardTitle } from '@/shared/ui/shadcn/card';
 
@@ -58,7 +58,7 @@ function TourTooltip({
  * Mounts react-joyride and drives it from the tour store. Rendered once in the
  * app layout; the library handles spotlight, scrolling and positioning.
  */
-export function GettingStartedTour() {
+export function OnboardingTour() {
   const [request, setRequest] = useState<TourRequest | null>(null);
   const [spotlightRadius, setSpotlightRadius] = useState(SPOTLIGHT_PADDING);
 

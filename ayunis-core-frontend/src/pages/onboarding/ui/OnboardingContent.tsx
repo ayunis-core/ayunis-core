@@ -6,7 +6,7 @@ import { Progress } from '@/shared/ui/shadcn/progress';
 import { Button } from '@/shared/ui/shadcn/button';
 import { useMe } from '@/widgets/app-sidebar/api/useMe';
 import { MeResponseDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { useGettingStartedProgress } from '@/features/getting-started/lib/useGettingStartedProgress';
+import { useOnboardingProgress } from '@/features/onboarding-progress';
 import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
 import { showSuccess } from '@/shared/lib/toast';
 import {
@@ -15,10 +15,10 @@ import {
   saveCompletedSteps,
   showGettingStarted,
   useGettingStartedHidden,
-} from '@/features/getting-started/storage';
+} from '@/features/onboarding-progress';
 import brandIconDark from '@/shared/assets/brand/brand-icon-round-dark.svg';
 import CenteredContentLayout from '@/layouts/centered-content-layout/ui/CenteredContentLayout';
-import CategoryCard from './CategoryCard';
+import OnboardingCategoryCard from './OnboardingCategoryCard';
 
 function getMilestoneMessage(
   percent: number,
@@ -36,7 +36,7 @@ interface Props {
   showRestoreOption?: boolean;
 }
 
-export default function GettingStartedContent({
+export default function OnboardingContent({
   showHideOption = false,
   showRestoreOption = false,
 }: Readonly<Props>) {
@@ -52,7 +52,7 @@ export default function GettingStartedContent({
     overallProgress,
     firstIncompleteCategoryIndex,
     completedSteps,
-  } = useGettingStartedProgress(isAdmin);
+  } = useOnboardingProgress(isAdmin);
 
   const milestone = getMilestoneMessage(overallProgress, t);
 
@@ -111,7 +111,7 @@ export default function GettingStartedContent({
           <AlertDescription>{t('page.checkboxHint')}</AlertDescription>
         </Alert>
         {visibleCategories.map((category, index) => (
-          <CategoryCard
+          <OnboardingCategoryCard
             key={category.id}
             category={category}
             completedSteps={completedSteps}
