@@ -22,12 +22,14 @@ import { Route as AuthenticatedSuperAdminSettingsIndexRouteImport } from './rout
 import { Route as AuthenticatedSkillsIndexRouteImport } from './routes/_authenticated/skills.index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedKnowledgeBasesIndexRouteImport } from './routes/_authenticated/knowledge-bases.index'
+import { Route as AuthenticatedGettingStartedIndexRouteImport } from './routes/_authenticated/getting-started.index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats.index'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedAdminSettingsIndexRouteImport } from './routes/_authenticated/admin-settings.index'
 import { Route as AuthenticatedAcademyIndexRouteImport } from './routes/_authenticated/academy.index'
 import { Route as AuthenticatedSkillsIdRouteImport } from './routes/_authenticated/skills.$id'
 import { Route as AuthenticatedSettingsIntegrationsRouteImport } from './routes/_authenticated/settings.integrations'
+import { Route as AuthenticatedSettingsGettingStartedRouteImport } from './routes/_authenticated/settings.getting-started'
 import { Route as AuthenticatedSettingsGeneralRouteImport } from './routes/_authenticated/settings.general'
 import { Route as AuthenticatedSettingsChatRouteImport } from './routes/_authenticated/settings.chat'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings.account'
@@ -128,6 +130,12 @@ const AuthenticatedKnowledgeBasesIndexRoute =
     path: '/knowledge-bases/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedGettingStartedIndexRoute =
+  AuthenticatedGettingStartedIndexRouteImport.update({
+    id: '/getting-started/',
+    path: '/getting-started/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexRouteImport.update({
   id: '/chats/',
   path: '/chats/',
@@ -159,6 +167,12 @@ const AuthenticatedSettingsIntegrationsRoute =
   AuthenticatedSettingsIntegrationsRouteImport.update({
     id: '/settings/integrations',
     path: '/settings/integrations',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSettingsGettingStartedRoute =
+  AuthenticatedSettingsGettingStartedRouteImport.update({
+    id: '/settings/getting-started',
+    path: '/settings/getting-started',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedSettingsGeneralRoute =
@@ -374,12 +388,14 @@ export interface FileRoutesByFullPath {
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/settings/getting-started': typeof AuthenticatedSettingsGettingStartedRoute
   '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/skills/$id': typeof AuthenticatedSkillsIdRoute
   '/academy/': typeof AuthenticatedAcademyIndexRoute
   '/admin-settings/': typeof AuthenticatedAdminSettingsIndexRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
   '/chats/': typeof AuthenticatedChatsIndexRoute
+  '/getting-started/': typeof AuthenticatedGettingStartedIndexRoute
   '/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/skills/': typeof AuthenticatedSkillsIndexRoute
@@ -425,12 +441,14 @@ export interface FileRoutesByTo {
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/settings/getting-started': typeof AuthenticatedSettingsGettingStartedRoute
   '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/skills/$id': typeof AuthenticatedSkillsIdRoute
   '/academy': typeof AuthenticatedAcademyIndexRoute
   '/admin-settings': typeof AuthenticatedAdminSettingsIndexRoute
   '/chat': typeof AuthenticatedChatIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
+  '/getting-started': typeof AuthenticatedGettingStartedIndexRoute
   '/knowledge-bases': typeof AuthenticatedKnowledgeBasesIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/skills': typeof AuthenticatedSkillsIndexRoute
@@ -478,12 +496,14 @@ export interface FileRoutesById {
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/_authenticated/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/_authenticated/settings/getting-started': typeof AuthenticatedSettingsGettingStartedRoute
   '/_authenticated/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/_authenticated/skills/$id': typeof AuthenticatedSkillsIdRoute
   '/_authenticated/academy/': typeof AuthenticatedAcademyIndexRoute
   '/_authenticated/admin-settings/': typeof AuthenticatedAdminSettingsIndexRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
+  '/_authenticated/getting-started/': typeof AuthenticatedGettingStartedIndexRoute
   '/_authenticated/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/skills/': typeof AuthenticatedSkillsIndexRoute
@@ -531,12 +551,14 @@ export interface FileRouteTypes {
     | '/settings/account'
     | '/settings/chat'
     | '/settings/general'
+    | '/settings/getting-started'
     | '/settings/integrations'
     | '/skills/$id'
     | '/academy/'
     | '/admin-settings/'
     | '/chat/'
     | '/chats/'
+    | '/getting-started/'
     | '/knowledge-bases/'
     | '/settings/'
     | '/skills/'
@@ -582,12 +604,14 @@ export interface FileRouteTypes {
     | '/settings/account'
     | '/settings/chat'
     | '/settings/general'
+    | '/settings/getting-started'
     | '/settings/integrations'
     | '/skills/$id'
     | '/academy'
     | '/admin-settings'
     | '/chat'
     | '/chats'
+    | '/getting-started'
     | '/knowledge-bases'
     | '/settings'
     | '/skills'
@@ -634,12 +658,14 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/chat'
     | '/_authenticated/settings/general'
+    | '/_authenticated/settings/getting-started'
     | '/_authenticated/settings/integrations'
     | '/_authenticated/skills/$id'
     | '/_authenticated/academy/'
     | '/_authenticated/admin-settings/'
     | '/_authenticated/chat/'
     | '/_authenticated/chats/'
+    | '/_authenticated/getting-started/'
     | '/_authenticated/knowledge-bases/'
     | '/_authenticated/settings/'
     | '/_authenticated/skills/'
@@ -766,6 +792,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKnowledgeBasesIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/getting-started/': {
+      id: '/_authenticated/getting-started/'
+      path: '/getting-started'
+      fullPath: '/getting-started/'
+      preLoaderRoute: typeof AuthenticatedGettingStartedIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/chats/': {
       id: '/_authenticated/chats/'
       path: '/chats'
@@ -806,6 +839,13 @@ declare module '@tanstack/react-router' {
       path: '/settings/integrations'
       fullPath: '/settings/integrations'
       preLoaderRoute: typeof AuthenticatedSettingsIntegrationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/getting-started': {
+      id: '/_authenticated/settings/getting-started'
+      path: '/settings/getting-started'
+      fullPath: '/settings/getting-started'
+      preLoaderRoute: typeof AuthenticatedSettingsGettingStartedRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/settings/general': {
@@ -1045,12 +1085,14 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
   AuthenticatedSettingsChatRoute: typeof AuthenticatedSettingsChatRoute
   AuthenticatedSettingsGeneralRoute: typeof AuthenticatedSettingsGeneralRoute
+  AuthenticatedSettingsGettingStartedRoute: typeof AuthenticatedSettingsGettingStartedRoute
   AuthenticatedSettingsIntegrationsRoute: typeof AuthenticatedSettingsIntegrationsRoute
   AuthenticatedSkillsIdRoute: typeof AuthenticatedSkillsIdRoute
   AuthenticatedAcademyIndexRoute: typeof AuthenticatedAcademyIndexRoute
   AuthenticatedAdminSettingsIndexRoute: typeof AuthenticatedAdminSettingsIndexRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
+  AuthenticatedGettingStartedIndexRoute: typeof AuthenticatedGettingStartedIndexRoute
   AuthenticatedKnowledgeBasesIndexRoute: typeof AuthenticatedKnowledgeBasesIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedSkillsIndexRoute: typeof AuthenticatedSkillsIndexRoute
@@ -1093,6 +1135,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
   AuthenticatedSettingsChatRoute: AuthenticatedSettingsChatRoute,
   AuthenticatedSettingsGeneralRoute: AuthenticatedSettingsGeneralRoute,
+  AuthenticatedSettingsGettingStartedRoute:
+    AuthenticatedSettingsGettingStartedRoute,
   AuthenticatedSettingsIntegrationsRoute:
     AuthenticatedSettingsIntegrationsRoute,
   AuthenticatedSkillsIdRoute: AuthenticatedSkillsIdRoute,
@@ -1100,6 +1144,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminSettingsIndexRoute: AuthenticatedAdminSettingsIndexRoute,
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
+  AuthenticatedGettingStartedIndexRoute: AuthenticatedGettingStartedIndexRoute,
   AuthenticatedKnowledgeBasesIndexRoute: AuthenticatedKnowledgeBasesIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedSkillsIndexRoute: AuthenticatedSkillsIndexRoute,

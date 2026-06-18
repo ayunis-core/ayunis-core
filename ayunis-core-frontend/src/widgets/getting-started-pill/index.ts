@@ -1,0 +1,1 @@
+export { GettingStartedPill } from './GettingStartedPill';

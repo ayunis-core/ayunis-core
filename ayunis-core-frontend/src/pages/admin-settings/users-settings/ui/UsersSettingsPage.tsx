@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import SettingsLayout from '../../admin-settings-layout';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import { TourTarget } from '@/features/getting-started/lib/TourTarget';
+import { TOUR_TARGET } from '@/features/getting-started/lib/tour-targets';
 import InviteMenuButton from './InviteMenuButton';
 import InvitesSection from './InvitesSection';
 import InvitesSearch from './InvitesSearch';
@@ -49,13 +51,15 @@ export default function UsersSettingsPage({
       action={
         <div className="flex gap-2">
           <HelpLink path="settings/admin/users/" />
-          <InviteMenuButton />
+          <TourTarget name={TOUR_TARGET.inviteUsers}>
+            <InviteMenuButton />
+          </TourTarget>
         </div>
       }
       title={t('layout.users')}
     >
       <div className="space-y-4">
-        {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- boolean OR */}
+        {}
         {(invites.length > 0 || invitesSearch || invitesTotal > 0) && (
           <InvitesSection
             invites={invites}
