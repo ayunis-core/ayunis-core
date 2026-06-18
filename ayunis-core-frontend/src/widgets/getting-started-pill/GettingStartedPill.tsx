@@ -15,7 +15,9 @@ export function GettingStartedPill() {
   const { t } = useTranslation('getting-started');
   const navigate = useNavigate();
   const location = useLocation();
-  const [dismissed, setDismissed] = useState(false);
+  // Track which step+path key was dismissed so subsequent, different steps
+  // still show the return pill without needing an effect reset.
+  const [dismissedKey, setDismissedKey] = useState<string | null>(null);
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [tourActive, setTourActive] = useState(false);
   const pendingStep = usePendingStep();
@@ -44,7 +46,7 @@ export function GettingStartedPill() {
     return () => clearTimeout(id);
   }, [showKey]);
 
-  const mounted = !dismissed && !tourActive && onTargetPath;
+  const mounted = dismissedKey !== showKey && !tourActive && onTargetPath;
 
   if (!mounted) {
     return null;
@@ -52,7 +54,7 @@ export function GettingStartedPill() {
 
   const handleDismiss = () => {
     clearPendingStep();
-    setDismissed(true);
+    setDismissedKey(showKey);
   };
 
   return (

@@ -30,6 +30,11 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
     .filter((skill) => !skill.isShared)
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  // Determine the first active personal skill for tour pin highlight
+  const firstActivePersonalIndex = personalSkills.findIndex(
+    (skill) => skill.isActive,
+  );
+
   const sharedSkills = skills
     .filter((skill) => skill.isShared)
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -95,7 +100,10 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
                     <SkillCard
                       key={skill.id}
                       skill={skill}
-                      highlightPin={index === 0}
+                      highlightPin={
+                        firstActivePersonalIndex !== -1 &&
+                        index === firstActivePersonalIndex
+                      }
                     />
                   ))}
                 </div>

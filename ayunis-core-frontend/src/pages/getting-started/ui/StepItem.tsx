@@ -33,7 +33,11 @@ export default function StepItem({
   const origin = location.pathname;
   const [expanded, setExpanded] = useState(defaultExpanded);
   const isAddDocumentsStep = step.id === 'addDocuments';
-  const { data: kbResponse } = useKnowledgeBasesControllerFindAll({
+  const {
+    data: kbResponse,
+    isLoading: kbLoading,
+    isFetching: kbFetching,
+  } = useKnowledgeBasesControllerFindAll({
     query: { enabled: isAddDocumentsStep && !locked },
   });
   const firstKnowledgeBase = kbResponse?.data[0];
@@ -56,6 +60,8 @@ export default function StepItem({
 
   const handleAction = () => {
     if (!step.action) return;
+    // Avoid misrouting while knowledge bases are still loading
+    if (isAddDocumentsStep && (kbLoading || kbFetching)) return;
     if (step.action.type === 'prompt') {
       setPendingStep(step.id, '/chat', origin);
       void navigate({
@@ -148,7 +154,11 @@ export default function StepItem({
           {(step.action ?? step.secondaryAction) && (
             <div className="flex items-center gap-2">
               {step.action && (
-                <Button size="sm" onClick={handleAction}>
+                <Button
+                  size="sm"
+                  onClick={handleAction}
+                  disabled={isAddDocumentsStep && (kbLoading || kbFetching)}
+                >
                   {t(`steps.${step.translationKey}.action`)}
                   <ArrowRight className="size-3" />
                 </Button>
