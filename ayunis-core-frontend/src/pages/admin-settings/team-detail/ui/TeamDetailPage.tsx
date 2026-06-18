@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Users } from 'lucide-react';
 import { Badge } from '@/shared/ui/shadcn/badge';
 import { Button } from '@/shared/ui/shadcn/button';
-import { TourTarget } from '@/features/getting-started/lib/TourTarget';
-import { TOUR_TARGET } from '@/features/getting-started/lib/tour-targets';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
+import { TOUR_TARGET } from '@/entities/onboarding';
 import {
   Card,
   CardContent,
@@ -42,11 +42,11 @@ export function TeamDetailPage({
 
   const headerActions =
     activeTab === 'members' ? (
-      <TourTarget name={TOUR_TARGET.addTeamMember}>
+      <OnboardingTourTarget name={TOUR_TARGET.addTeamMember}>
         <Button size="sm" onClick={() => setAddMemberDialogOpen(true)}>
           {t('teamDetail.addMember.button')}
         </Button>
-      </TourTarget>
+      </OnboardingTourTarget>
     ) : null;
 
   return (

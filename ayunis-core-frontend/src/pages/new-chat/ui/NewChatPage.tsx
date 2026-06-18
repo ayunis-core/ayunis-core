@@ -9,9 +9,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { TourTarget } from '@/features/getting-started/lib/TourTarget';
-import { TOUR_TARGET } from '@/features/getting-started/lib/tour-targets';
-import { launchTour } from '@/features/getting-started/lib/tour';
+import { OnboardingTourTarget, launchTour } from '@/features/onboarding-tour';
+import { TOUR_TARGET } from '@/entities/onboarding';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
 import {
@@ -310,12 +309,12 @@ export default function NewChatPage({
           selectedSkillName={selectedSkillName}
           onSkillRemove={handleSkillRemove}
         />
-        <TourTarget name={TOUR_TARGET.pinnedSkills}>
+        <OnboardingTourTarget name={TOUR_TARGET.pinnedSkills}>
           <PinnedSkills
             onSkillSelect={handleSkillSelect}
             selectedSkillId={selectedSkillId}
           />
-        </TourTarget>
+        </OnboardingTourTarget>
         <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
           <Lock className="h-3 w-3" />
           <span>{t('newChat.privacyHint')}</span>

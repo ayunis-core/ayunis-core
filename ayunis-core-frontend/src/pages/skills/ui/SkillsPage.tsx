@@ -1,8 +1,8 @@
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
-import { TourTarget } from '@/features/getting-started/lib/TourTarget';
-import { TOUR_TARGET } from '@/features/getting-started/lib/tour-targets';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
+import { TOUR_TARGET } from '@/entities/onboarding';
 import CreateSkillDialog from './CreateSkillDialog';
 import MarketplacePromoCard from './MarketplacePromoCard';
 import SkillCard from './SkillCard';
@@ -37,9 +37,9 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
   const headerAction = (
     <div className="flex gap-2">
       <HelpLink path="skills/" />
-      <TourTarget name={TOUR_TARGET.createSkill}>
+      <OnboardingTourTarget name={TOUR_TARGET.createSkill}>
         <CreateSkillDialog />
-      </TourTarget>
+      </OnboardingTourTarget>
     </div>
   );
 

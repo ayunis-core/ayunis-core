@@ -23,13 +23,13 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
-import { TourTarget } from '@/features/getting-started/lib/TourTarget';
-import { TOUR_TARGET } from '@/features/getting-started/lib/tour-targets';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
+import { TOUR_TARGET } from '@/entities/onboarding';
 
 interface SkillCardProps {
   skill: Skill;
   /**
-   * If true, wraps the pin button with a TourTarget so the onboarding
+   * If true, wraps the pin button with a OnboardingTourTarget so the onboarding
    * step "Fähigkeit anheften" can highlight it. Optional — default behaviour
    * is unchanged.
    */
@@ -130,9 +130,9 @@ export default function SkillCard({
               <Tooltip>
                 <TooltipTrigger asChild>
                   {highlightPin ? (
-                    <TourTarget name={TOUR_TARGET.pinSkill}>
+                    <OnboardingTourTarget name={TOUR_TARGET.pinSkill}>
                       {pinButton}
-                    </TourTarget>
+                    </OnboardingTourTarget>
                   ) : (
                     pinButton
                   )}

@@ -1,6 +1,6 @@
-import type { TourTargetName } from '../lib/tour-targets';
+import type { TourTargetName } from '../config/OnboardingTourTargets';
 
-export interface GettingStartedStep {
+export interface OnboardingStep {
   id: string;
   translationKey: string;
   dependsOn?: string;
@@ -13,10 +13,10 @@ export interface GettingStartedStep {
     | { type: 'help-center'; path: string };
 }
 
-export interface GettingStartedCategory {
+export interface OnboardingCategory {
   id: string;
   translationKey: string;
-  steps: GettingStartedStep[];
+  steps: OnboardingStep[];
   adminOnly?: boolean;
   helpPath?: string;
 }
