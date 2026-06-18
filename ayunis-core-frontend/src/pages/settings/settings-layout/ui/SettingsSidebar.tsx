@@ -1,4 +1,4 @@
-import { MessageSquare, Plug, Settings, User } from 'lucide-react';
+import { Compass, MessageSquare, Plug, Settings, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   SettingsSidebarWidget,
@@ -7,6 +7,7 @@ import {
 
 export function SettingsSidebar() {
   const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
 
   const menuItems: SidebarMenuItem[] = [
     {
@@ -28,6 +29,11 @@ export function SettingsSidebar() {
       to: '/settings/account',
       icon: <User />,
       label: t('layout.account'),
+    },
+    {
+      to: '/settings/getting-started',
+      icon: <Compass />,
+      label: tCommon('sidebar.gettingStarted'),
     },
   ];
 

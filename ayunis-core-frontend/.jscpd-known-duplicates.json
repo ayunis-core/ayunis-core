@@ -12,5 +12,9 @@
       "src/pages/admin-settings/team-detail/ui/SetTeamCreditLimitDialog.tsx",
       "src/pages/admin-settings/users-settings/ui/SetUserCreditLimitDialog.tsx"
     ]
+  },
+  {
+    "comment": "TanStack Router generates structurally identical entries per route — file is auto-generated and should be ignored",
+    "files": ["src/app/routeTree.gen.ts", "src/app/routeTree.gen.ts"]
   }
 ]

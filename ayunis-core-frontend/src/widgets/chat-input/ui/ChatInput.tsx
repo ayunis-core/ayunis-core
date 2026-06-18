@@ -1,6 +1,8 @@
 import { useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
+import { TourTarget } from '@/features/getting-started/lib/TourTarget';
+import { TOUR_TARGET } from '@/features/getting-started/lib/tour-targets';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useTranslation } from 'react-i18next';
 import type {
@@ -97,6 +99,7 @@ interface ChatInputProps {
   isAnonymousEnforced?: boolean;
   /** Whether the selected model supports vision (image upload) */
   isVisionEnabled?: boolean;
+  initialMessage?: string;
 }
 
 export interface ChatInputRef {
@@ -133,11 +136,12 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       selectedSkillId,
       selectedSkillName,
       onSkillRemove,
+      initialMessage,
     },
     ref,
   ) => {
     const [isFocused, setIsFocused] = useState<boolean>(false);
-    const [message, setMessage] = useState('');
+    const [message, setMessage] = useState(initialMessage ?? '');
     const isSubmitting = submissionState === 'submitting';
     const inFlight = submissionState !== 'idle';
     const { t } = useTranslation('common');
@@ -337,28 +341,32 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               <div className="flex items-center justify-between">
                 {/* Left side */}
                 <div className="flex-shrink-0 flex items-center space-x-2">
-                  <PlusButton
-                    onFileUpload={onFileUpload}
-                    onImageSelect={handleImageSelect}
-                    isFileSourceDisabled={
-                      !isEmbeddingModelEnabled || isSubmitting
-                    }
-                    isImageUploadDisabled={!isVisionEnabled || isSubmitting}
-                    onKnowledgeBaseSelect={onAddKnowledgeBase}
-                    attachedKnowledgeBaseIds={knowledgeBases?.map(
-                      (kb) => kb.id,
-                    )}
-                    onIntegrationSelect={onAddIntegration}
-                    attachedIntegrationIds={mcpIntegrations?.map(
-                      (integration) => integration.id,
-                    )}
-                  />
-                  <AnonymousButton
-                    isAnonymous={isAnonymous}
-                    onAnonymousChange={onAnonymousChange}
-                    isDisabled={isAnonymousChangeDisabled}
-                    isEnforced={isAnonymousEnforced}
-                  />
+                  <TourTarget name={TOUR_TARGET.chatUpload}>
+                    <PlusButton
+                      onFileUpload={onFileUpload}
+                      onImageSelect={handleImageSelect}
+                      isFileSourceDisabled={
+                        !isEmbeddingModelEnabled || isSubmitting
+                      }
+                      isImageUploadDisabled={!isVisionEnabled || isSubmitting}
+                      onKnowledgeBaseSelect={onAddKnowledgeBase}
+                      attachedKnowledgeBaseIds={knowledgeBases?.map(
+                        (kb) => kb.id,
+                      )}
+                      onIntegrationSelect={onAddIntegration}
+                      attachedIntegrationIds={mcpIntegrations?.map(
+                        (integration) => integration.id,
+                      )}
+                    />
+                  </TourTarget>
+                  <TourTarget name={TOUR_TARGET.anonymousMode}>
+                    <AnonymousButton
+                      isAnonymous={isAnonymous}
+                      onAnonymousChange={onAnonymousChange}
+                      isDisabled={isAnonymousChangeDisabled}
+                      isEnforced={isAnonymousEnforced}
+                    />
+                  </TourTarget>
                   {selectedSkillId && selectedSkillName && onSkillRemove && (
                     <SkillBadge
                       skillName={selectedSkillName}
@@ -372,32 +380,38 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     condition={isModelChangeDisabled ?? false}
                     tooltip={t('chatInput.modelChangeDisabledTooltip')}
                   >
-                    <ModelSelector
-                      isDisabled={isModelChangeDisabled ?? false}
-                      selectedModelId={modelId}
-                      onModelChange={onModelChange}
-                    />
+                    <TourTarget name={TOUR_TARGET.modelSelector}>
+                      <ModelSelector
+                        isDisabled={isModelChangeDisabled ?? false}
+                        selectedModelId={modelId}
+                        onModelChange={onModelChange}
+                      />
+                    </TourTarget>
                   </TooltipIf>
-                  <MicrophoneButton
-                    onTranscriptionComplete={(text) => {
-                      setMessage((prev) => (prev ? `${prev} ${text}` : text));
-                      // Focus textarea and place cursor at end after transcription
-                      setTimeout(() => {
-                        const textarea = textareaRef.current;
-                        if (textarea) {
-                          textarea.focus();
-                          const length = textarea.value.length;
-                          textarea.setSelectionRange(length, length);
-                        }
-                      }, 0);
-                    }}
-                  />
-                  <SendButton
-                    inFlight={inFlight}
-                    canSend={!!canSend}
-                    onSend={handleSend}
-                    onCancel={onCancel}
-                  />
+                  <TourTarget name={TOUR_TARGET.voiceInput}>
+                    <MicrophoneButton
+                      onTranscriptionComplete={(text) => {
+                        setMessage((prev) => (prev ? `${prev} ${text}` : text));
+                        // Focus textarea and place cursor at end after transcription
+                        setTimeout(() => {
+                          const textarea = textareaRef.current;
+                          if (textarea) {
+                            textarea.focus();
+                            const length = textarea.value.length;
+                            textarea.setSelectionRange(length, length);
+                          }
+                        }, 0);
+                      }}
+                    />
+                  </TourTarget>
+                  <TourTarget name={TOUR_TARGET.sendMessage}>
+                    <SendButton
+                      inFlight={inFlight}
+                      canSend={!!canSend}
+                      onSend={handleSend}
+                      onCancel={onCancel}
+                    />
+                  </TourTarget>
                 </div>
               </div>
             </div>
