@@ -44,7 +44,7 @@ import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { useFeatureToggles } from '@/features/feature-toggles';
 import { useMarketplaceConfig } from '@/features/marketplace';
 import { useAcademyActive } from '@/features/academy';
-import { GettingStartedCard } from './GettingStartedCard';
+import { OnboardingCard } from './OnboardingCard';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
@@ -163,7 +163,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
 
       <SidebarFooter>
-        <GettingStartedCard />
+        <OnboardingCard />
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
