@@ -6,27 +6,26 @@ import { Button } from '@/shared/ui/shadcn/button';
 import { Checkbox } from '@/shared/ui/shadcn/checkbox';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { getHelpCenterUrl } from '@/shared/lib/help-center';
-import { launchTour } from '@/features/getting-started/lib/tour';
-import { TOUR_TARGET } from '@/features/getting-started/lib/tour-targets';
-import { setPendingStep } from '@/features/getting-started/storage';
+import { launchTour } from '@/features/onboarding-tour';
+import { TOUR_TARGET, type OnboardingStep } from '@/entities/onboarding';
+import { setPendingStep } from '@/features/onboarding-progress';
 import { useKnowledgeBasesControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
-import type { GettingStartedStep } from '@/features/getting-started/model/types';
 
-interface StepItemProps {
-  step: GettingStartedStep;
+interface OnboardingStepItemProps {
+  step: OnboardingStep;
   completed: boolean;
   locked: boolean;
   defaultExpanded?: boolean;
   onComplete: (stepId: string) => void;
 }
 
-export default function StepItem({
+export default function OnboardingStepItem({
   step,
   completed,
   locked,
   defaultExpanded = false,
   onComplete,
-}: Readonly<StepItemProps>) {
+}: Readonly<OnboardingStepItemProps>) {
   const { t } = useTranslation('getting-started');
   const navigate = useNavigate();
   const location = useLocation();

@@ -1,8 +1,9 @@
-import { GETTING_STARTED_SAMPLE } from '@/features/getting-started/lib/samples';
-import { TOUR_TARGET } from './tour-targets';
-import type { GettingStartedCategory } from '../model/types';
+import type { OnboardingCategory } from '../model/OnboardingTypes';
 
-export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
+import { ONBOARDING_SAMPLES } from './OnboardingSamples';
+import { TOUR_TARGET } from './OnboardingTourTargets';
+
+export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
   {
     id: 'workspace',
     translationKey: 'workspace',
@@ -174,7 +175,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
         translationKey: 'summarizeDocument',
         action: {
           type: 'prompt',
-          attachment: GETTING_STARTED_SAMPLE.protokoll,
+          attachment: ONBOARDING_SAMPLES.protokoll,
         },
       },
       {
@@ -182,7 +183,7 @@ export const GETTING_STARTED_CATEGORIES: GettingStartedCategory[] = [
         translationKey: 'analyzeData',
         action: {
           type: 'prompt',
-          attachment: GETTING_STARTED_SAMPLE.stadtlauf,
+          attachment: ONBOARDING_SAMPLES.stadtlauf,
         },
       },
       {
