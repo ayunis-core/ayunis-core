@@ -1,14 +1,17 @@
 import { Lock } from 'lucide-react';
 import NewChatPageLayout from './NewChatPageLayout';
-import ChatInput from '@/widgets/chat-input';
+import ChatInput, { type ChatInputRef } from '@/widgets/chat-input';
 import {
   useInitiateChat,
   type SourceUploadStatus,
 } from '../api/useInitiateChat';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import { TourTarget } from '@/features/getting-started/lib/TourTarget';
+import { TOUR_TARGET } from '@/features/getting-started/lib/tour-targets';
+import { launchTour } from '@/features/getting-started/lib/tour';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
 import {
@@ -33,11 +36,15 @@ import { useRouter } from '@tanstack/react-router';
 interface NewChatPageProps {
   selectedModelId?: string;
   isEmbeddingModelEnabled: boolean;
+  initialPrompt?: string;
+  initialAttachmentUrl?: string;
 }
 
 export default function NewChatPage({
   selectedModelId,
   isEmbeddingModelEnabled,
+  initialPrompt,
+  initialAttachmentUrl,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
   const { initiateChat, cancel, isCreating } = useInitiateChat();
@@ -58,6 +65,27 @@ export default function NewChatPage({
   }, [isSystemPromptError, t]);
   const queryClient = useQueryClient();
   const router = useRouter();
+  const chatInputRef = useRef<ChatInputRef>(null);
+
+  useEffect(() => {
+    if (initialPrompt) {
+      chatInputRef.current?.setMessage(initialPrompt);
+    }
+  }, [initialPrompt]);
+
+  // Highlight the Send button when the chat was opened with a prefilled
+  // prompt — gives the user a clear next step.
+  useEffect(() => {
+    if (!initialPrompt) return;
+    const timeoutId = setTimeout(() => {
+      launchTour({
+        target: TOUR_TARGET.sendMessage,
+        dismissLabel: t('newChat.dismiss', { defaultValue: 'Got it' }),
+      });
+    }, 600);
+    return () => clearTimeout(timeoutId);
+  }, [initialPrompt, t]);
+
   const [modelId, setModelId] = useState(selectedModelId);
   const [isAnonymous, setIsAnonymous] = useState(false);
   type LocalSource = {
@@ -96,6 +124,41 @@ export default function NewChatPage({
   const [selectedSkillId, setSelectedSkillId] = useState<string>();
   const [selectedSkillName, setSelectedSkillName] = useState<string>();
   const selectedModel = models.find((m) => m.id === modelId);
+
+  useEffect(() => {
+    if (!initialAttachmentUrl) return;
+    const controller = new AbortController();
+    void (async () => {
+      try {
+        const res = await fetch(initialAttachmentUrl, {
+          signal: controller.signal,
+        });
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const filename = initialAttachmentUrl.split('/').pop() ?? 'file';
+        const file = new File([blob], filename, {
+          type: blob.type || 'application/octet-stream',
+        });
+        const isCsvFile = filename.endsWith('.csv');
+        setSources((prev) => [
+          ...prev,
+          {
+            id: generateUUID(),
+            name: file.name,
+            type: isCsvFile
+              ? SourceResponseDtoType.data
+              : SourceResponseDtoType.text,
+            file,
+          },
+        ]);
+      } catch {
+        // Sample attachment is optional — ignore fetch failures silently.
+      }
+    })();
+    return () => {
+      controller.abort();
+    };
+  }, [initialAttachmentUrl]);
 
   const isAnonymousEnforced = selectedModel?.anonymousOnly ?? false;
   const isVisionEnabled = selectedModel?.canVision ?? false;
@@ -210,6 +273,7 @@ export default function NewChatPage({
       </div>
       <div className="w-full flex flex-col gap-4 mt-2">
         <ChatInput
+          ref={chatInputRef}
           modelId={modelId}
           sources={sources}
           knowledgeBases={selectedKnowledgeBases}
@@ -246,10 +310,12 @@ export default function NewChatPage({
           selectedSkillName={selectedSkillName}
           onSkillRemove={handleSkillRemove}
         />
-        <PinnedSkills
-          onSkillSelect={handleSkillSelect}
-          selectedSkillId={selectedSkillId}
-        />
+        <TourTarget name={TOUR_TARGET.pinnedSkills}>
+          <PinnedSkills
+            onSkillSelect={handleSkillSelect}
+            selectedSkillId={selectedSkillId}
+          />
+        </TourTarget>
         <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
           <Lock className="h-3 w-3" />
           <span>{t('newChat.privacyHint')}</span>

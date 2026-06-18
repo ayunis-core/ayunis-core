@@ -5,5 +5,9 @@
       "src/pages/knowledge-bases/ui/KnowledgeBasesPage.tsx",
       "src/pages/skills/ui/SkillsPage.tsx"
     ]
+  },
+  {
+    "comment": "TanStack Router generates structurally identical entries per route — file is auto-generated and should be ignored",
+    "files": ["src/app/routeTree.gen.ts", "src/app/routeTree.gen.ts"]
   }
 ]
