@@ -66,7 +66,9 @@ export class WebhookDispatchListener {
 
   @OnEvent(UserDeletedEvent.EVENT_NAME)
   async handleUserDeleted(event: UserDeletedEvent): Promise<void> {
-    await this.dispatch(new UserDeletedWebhookEvent(event.userId));
+    await this.dispatch(
+      new UserDeletedWebhookEvent({ id: event.userId, email: event.email }),
+    );
   }
 
   @OnEvent(OrgCreatedEvent.EVENT_NAME)

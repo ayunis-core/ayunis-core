@@ -11,6 +11,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { Transactional } from '@nestjs-cls/transactional';
 import { InviteNotFoundError } from 'src/iam/invites/application/invites.errors';
 import { UserDeletedEvent } from '../../events/user-deleted.event';
+import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class DeleteUserUseCase {
@@ -64,15 +65,19 @@ export class DeleteUserUseCase {
         }
         throw error;
       });
+    this.emitUserDeleted(userToDelete);
+  }
+
+  private emitUserDeleted(user: User): void {
     this.eventEmitter
       .emitAsync(
         UserDeletedEvent.EVENT_NAME,
-        new UserDeletedEvent(command.userId, userToDelete.orgId),
+        new UserDeletedEvent(user.id, user.orgId, user.email),
       )
       .catch((err: unknown) => {
         this.logger.error('Failed to emit UserDeletedEvent', {
           error: err instanceof Error ? err.message : 'Unknown error',
-          userId: command.userId,
+          userId: user.id,
         });
       });
   }

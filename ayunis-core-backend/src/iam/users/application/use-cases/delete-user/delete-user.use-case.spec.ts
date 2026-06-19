@@ -125,6 +125,7 @@ describe('DeleteUserUseCase', () => {
       expect.objectContaining({
         userId: command.userId,
         orgId: mockUser.orgId,
+        email: mockUser.email,
       }),
     );
   });

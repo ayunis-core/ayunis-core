@@ -4,13 +4,13 @@ import { WebhookEvent } from '../webhook-event.entity';
 
 export class UserDeletedWebhookEvent extends WebhookEvent {
   readonly eventType: WebhookEventType = WebhookEventType.USER_DELETED;
-  readonly data: UUID;
+  readonly data: { id: UUID; email: string };
   readonly timestamp: Date;
 
-  constructor(userId: UUID) {
+  constructor(params: { id: UUID; email: string }) {
     super();
     this.eventType = WebhookEventType.USER_DELETED;
-    this.data = userId;
+    this.data = { id: params.id, email: params.email };
     this.timestamp = new Date();
   }
 }
