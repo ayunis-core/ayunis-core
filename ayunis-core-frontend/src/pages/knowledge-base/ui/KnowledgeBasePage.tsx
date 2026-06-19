@@ -8,7 +8,7 @@ import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeade
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import { SharesTab } from '@/widgets/shares-tab';
 import { OnboardingTourTarget } from '@/features/onboarding-tour';
-import { TOUR_TARGET } from '@/entities/onboarding';
+import { TOUR_TARGET } from '@/shared/config/tour-targets';
 import {
   Tabs,
   TabsList,
