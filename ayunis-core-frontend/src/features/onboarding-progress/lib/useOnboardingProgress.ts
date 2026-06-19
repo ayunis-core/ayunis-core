@@ -3,7 +3,6 @@ import {
   ONBOARDING_CATEGORIES,
   type OnboardingCategory,
 } from '@/entities/onboarding';
-import { useCompletedSteps } from '../model/OnboardingStorage';
 
 export interface OnboardingProgress {
   visibleCategories: OnboardingCategory[];
@@ -18,16 +17,25 @@ export interface OnboardingProgress {
 /**
  * Progress hook for the onboarding feature.
  *
- * `isAdmin` is passed in (rather than reading it via `useMe`) so this feature
- * doesn't depend on the widgets/ layer where `useMe` currently lives. The
- * caller (page or widget) already has access to the user role.
+ * Both `isAdmin` and `completedStepIds` are passed in (rather than reading them
+ * via `useMe`) so this feature doesn't depend on the widgets/ layer where
+ * `useMe` currently lives. The caller (page or widget) already fetches the
+ * user via `useMe` and supplies the role and persisted completed step IDs.
  */
-export function useOnboardingProgress(isAdmin: boolean): OnboardingProgress {
-  const completedSteps = useCompletedSteps();
+export function useOnboardingProgress(
+  isAdmin: boolean,
+  completedStepIds: string[],
+): OnboardingProgress {
+  const completedSteps = useMemo(
+    () => new Set(completedStepIds),
+    [completedStepIds],
+  );
+
+  const categories: readonly OnboardingCategory[] = ONBOARDING_CATEGORIES;
 
   const visibleCategories = useMemo(
-    () => ONBOARDING_CATEGORIES.filter((cat) => !cat.adminOnly || isAdmin),
-    [isAdmin],
+    () => categories.filter((cat) => !cat.adminOnly || isAdmin),
+    [categories, isAdmin],
   );
 
   const totalSteps = visibleCategories.reduce(

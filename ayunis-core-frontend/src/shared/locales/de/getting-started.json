@@ -11,6 +11,7 @@
     "completed": "{{count}} von {{total}} erledigt"
   },
   "stepCompleted": "Schritt erledigt! ✓",
+  "saveError": "Dein Fortschritt konnte nicht gespeichert werden. Bitte versuche es erneut.",
   "spotlightDismiss": "Alles klar",
   "returnButton": "Zurück zu Erste Schritte",
   "milestones": {

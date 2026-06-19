@@ -10,6 +10,8 @@ export class ActiveUser {
   readonly systemRole: SystemRole;
   readonly orgId: UUID;
   readonly name: string;
+  readonly onboardingCompletedStepIds: string[];
+  readonly onboardingHidden: boolean;
 
   constructor(params: {
     id: UUID;
@@ -19,6 +21,8 @@ export class ActiveUser {
     systemRole: SystemRole;
     orgId: UUID;
     name: string;
+    onboardingCompletedStepIds?: string[];
+    onboardingHidden?: boolean;
   }) {
     this.id = params.id;
     this.email = params.email;
@@ -27,5 +31,7 @@ export class ActiveUser {
     this.systemRole = params.systemRole;
     this.orgId = params.orgId;
     this.name = params.name;
+    this.onboardingCompletedStepIds = params.onboardingCompletedStepIds ?? [];
+    this.onboardingHidden = params.onboardingHidden ?? false;
   }
 }

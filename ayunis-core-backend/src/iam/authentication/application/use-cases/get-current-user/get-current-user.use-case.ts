@@ -10,14 +10,18 @@ import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user
 import { ApplicationError } from 'src/common/errors/base.error';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
+// Claims on a decoded token are untrusted until validated below, so the
+// fields the runtime guard checks are typed as optional. This also keeps the
+// guard meaningful to the type checker (otherwise non-nullable claim types
+// make the `!payload.x` checks look redundant).
 interface JwtPayload {
-  sub: UUID;
-  email: string;
+  sub?: UUID;
+  email?: string;
   emailVerified: boolean;
-  role: UserRole;
+  role?: UserRole;
   systemRole: SystemRole;
-  orgId: UUID;
-  name: string;
+  orgId?: UUID;
+  name?: string;
 }
 
 @Injectable()
@@ -64,6 +68,8 @@ export class GetCurrentUserUseCase {
         systemRole: user.systemRole,
         orgId: user.orgId,
         name: user.name,
+        onboardingCompletedStepIds: user.onboardingCompletedStepIds,
+        onboardingHidden: user.onboardingHidden,
       });
     } catch (error: unknown) {
       if (error instanceof ApplicationError) {

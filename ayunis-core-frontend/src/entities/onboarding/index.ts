@@ -1,6 +1,7 @@
 export type {
   OnboardingStep,
   OnboardingCategory,
+  OnboardingStepId,
 } from './model/OnboardingTypes';
 export { ONBOARDING_CATEGORIES } from './config/OnboardingCategories';
 export { ONBOARDING_SAMPLES } from './config/OnboardingSamples';
