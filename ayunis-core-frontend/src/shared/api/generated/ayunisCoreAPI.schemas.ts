@@ -4358,6 +4358,20 @@ export interface MeResponseDto {
   name: string;
 }
 
+export interface OnboardingResponseDto {
+  /** IDs of the onboarding steps the user has completed */
+  completedStepIds: string[];
+  /** Whether the user has hidden the onboarding checklist */
+  hidden: boolean;
+}
+
+export interface UpdateOnboardingDto {
+  /** IDs of the onboarding steps the user has completed */
+  completedStepIds: string[];
+  /** Whether the user has hidden the onboarding checklist */
+  hidden: boolean;
+}
+
 export interface IpAllowlistResponseDto {
   /** List of allowed CIDR ranges */
   cidrs: string[];

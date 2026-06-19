@@ -1,8 +1,6 @@
+export { OnboardingTourProvider } from './ui/OnboardingTourProvider';
 export {
-  launchTour,
-  subscribeTour,
-  subscribeTourActive,
-  destroyTour,
+  useOnboardingTour,
   type TourRequest,
-} from './model/OnboardingTourStore';
+} from './model/onboardingTourContext';
 export { OnboardingTourTarget } from './ui/OnboardingTourTarget';

@@ -2,7 +2,7 @@ import { useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
 import { OnboardingTourTarget } from '@/features/onboarding-tour';
-import { TOUR_TARGET } from '@/entities/onboarding';
+import { TOUR_TARGET } from '@/shared/config/tour-targets';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useTranslation } from 'react-i18next';
 import type {
@@ -341,7 +341,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               <div className="flex items-center justify-between">
                 {/* Left side */}
                 <div className="flex-shrink-0 flex items-center space-x-2">
-                  <OnboardingTourTarget name={TOUR_TARGET.chatUpload}>
+                  <OnboardingTourTarget
+                    name={TOUR_TARGET.chatUpload}
+                    settleMs={900}
+                  >
                     <PlusButton
                       onFileUpload={onFileUpload}
                       onImageSelect={handleImageSelect}
@@ -359,7 +362,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                       )}
                     />
                   </OnboardingTourTarget>
-                  <OnboardingTourTarget name={TOUR_TARGET.anonymousMode}>
+                  <OnboardingTourTarget
+                    name={TOUR_TARGET.anonymousMode}
+                    settleMs={900}
+                  >
                     <AnonymousButton
                       isAnonymous={isAnonymous}
                       onAnonymousChange={onAnonymousChange}
@@ -388,30 +394,26 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                       />
                     </OnboardingTourTarget>
                   </TooltipIf>
-                  <OnboardingTourTarget name={TOUR_TARGET.voiceInput}>
-                    <MicrophoneButton
-                      onTranscriptionComplete={(text) => {
-                        setMessage((prev) => (prev ? `${prev} ${text}` : text));
-                        // Focus textarea and place cursor at end after transcription
-                        setTimeout(() => {
-                          const textarea = textareaRef.current;
-                          if (textarea) {
-                            textarea.focus();
-                            const length = textarea.value.length;
-                            textarea.setSelectionRange(length, length);
-                          }
-                        }, 0);
-                      }}
-                    />
-                  </OnboardingTourTarget>
-                  <OnboardingTourTarget name={TOUR_TARGET.sendMessage}>
-                    <SendButton
-                      inFlight={inFlight}
-                      canSend={!!canSend}
-                      onSend={handleSend}
-                      onCancel={onCancel}
-                    />
-                  </OnboardingTourTarget>
+                  <MicrophoneButton
+                    onTranscriptionComplete={(text) => {
+                      setMessage((prev) => (prev ? `${prev} ${text}` : text));
+                      // Focus textarea and place cursor at end after transcription
+                      setTimeout(() => {
+                        const textarea = textareaRef.current;
+                        if (textarea) {
+                          textarea.focus();
+                          const length = textarea.value.length;
+                          textarea.setSelectionRange(length, length);
+                        }
+                      }, 0);
+                    }}
+                  />
+                  <SendButton
+                    inFlight={inFlight}
+                    canSend={!!canSend}
+                    onSend={handleSend}
+                    onCancel={onCancel}
+                  />
                 </div>
               </div>
             </div>
