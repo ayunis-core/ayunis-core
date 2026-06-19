@@ -6,18 +6,14 @@ import { Progress } from '@/shared/ui/shadcn/progress';
 import { Button } from '@/shared/ui/shadcn/button';
 import { useMe } from '@/widgets/app-sidebar/api/useMe';
 import { MeResponseDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { useOnboardingProgress } from '@/features/onboarding-progress';
 import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
 import { showSuccess } from '@/shared/lib/toast';
 import {
   clearPendingStep,
-  hideGettingStarted,
-  saveCompletedSteps,
-  showGettingStarted,
-  useGettingStartedHidden,
+  useOnboardingProgress,
+  useUpdateOnboarding,
 } from '@/features/onboarding-progress';
 import brandIconDark from '@/shared/assets/brand/brand-icon-round-dark.svg';
-import CenteredContentLayout from '@/layouts/centered-content-layout/ui/CenteredContentLayout';
 import OnboardingCategoryCard from './OnboardingCategoryCard';
 
 function getMilestoneMessage(
@@ -44,7 +40,9 @@ export default function OnboardingContent({
   const navigate = useNavigate();
   const { user } = useMe();
   const isAdmin = user?.role === MeResponseDtoRole.admin;
-  const hidden = useGettingStartedHidden();
+  const hidden = user?.onboardingHidden ?? false;
+  const completedStepIds = user?.onboardingCompletedStepIds ?? [];
+  const { updateOnboarding } = useUpdateOnboarding();
   const {
     visibleCategories,
     totalSteps,
@@ -52,22 +50,23 @@ export default function OnboardingContent({
     overallProgress,
     firstIncompleteCategoryIndex,
     completedSteps,
-  } = useOnboardingProgress(isAdmin);
+  } = useOnboardingProgress(isAdmin, completedStepIds);
 
   const milestone = getMilestoneMessage(overallProgress, t);
 
   const handleToggleStep = useCallback(
     (stepId: string) => {
       const next = new Set(completedSteps);
+
       if (next.has(stepId)) {
         next.delete(stepId);
       } else {
         next.add(stepId);
         showSuccess(t('stepCompleted'));
       }
-      saveCompletedSteps(next);
+      updateOnboarding({ completedStepIds: [...next], hidden });
     },
-    [completedSteps, t],
+    [completedSteps, hidden, updateOnboarding, t],
   );
 
   useEffect(() => {
@@ -77,7 +76,7 @@ export default function OnboardingContent({
   const isAllComplete = overallProgress >= 100;
 
   return (
-    <CenteredContentLayout>
+    <div className="relative z-10 max-w-2xl mx-auto py-8 space-y-6">
       <div className="text-center space-y-3">
         <div className="flex items-center justify-center">
           <img
@@ -128,7 +127,7 @@ export default function OnboardingContent({
             size="sm"
             className="text-muted-foreground"
             onClick={() => {
-              hideGettingStarted();
+              updateOnboarding({ completedStepIds, hidden: true });
               void navigate({ to: '/chat' });
             }}
           >
@@ -145,13 +144,15 @@ export default function OnboardingContent({
             variant="ghost"
             size="sm"
             className="text-muted-foreground"
-            onClick={showGettingStarted}
+            onClick={() =>
+              updateOnboarding({ completedStepIds, hidden: false })
+            }
           >
             <Eye className="size-3.5" />
             {t('page.show')}
           </Button>
         </div>
       )}
-    </CenteredContentLayout>
+    </div>
   );
 }

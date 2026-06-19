@@ -4,17 +4,17 @@ import { useTranslation } from 'react-i18next';
 import { Progress } from '@/shared/ui/shadcn/progress';
 import { useMe } from '../api/useMe';
 import { MeResponseDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import {
-  useOnboardingProgress,
-  useGettingStartedHidden,
-} from '@/features/onboarding-progress';
+import { useOnboardingProgress } from '@/features/onboarding-progress';
 
 export function OnboardingCard() {
   const { t } = useTranslation('common');
   const { user } = useMe();
   const isAdmin = user?.role === MeResponseDtoRole.admin;
-  const { progressPercent } = useOnboardingProgress(isAdmin);
-  const hidden = useGettingStartedHidden();
+  const hidden = user?.onboardingHidden ?? false;
+  const { progressPercent } = useOnboardingProgress(
+    isAdmin,
+    user?.onboardingCompletedStepIds ?? [],
+  );
 
   if (hidden || progressPercent >= 100) {
     return null;

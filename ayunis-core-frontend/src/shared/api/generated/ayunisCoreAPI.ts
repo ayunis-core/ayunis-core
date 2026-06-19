@@ -196,6 +196,7 @@ import type {
   UpdateThreadTitleDto,
   UpdateTrialRequestDto,
   UpdateUserNameDto,
+  UpdateUserOnboardingDto,
   UpdateUserRoleDto,
   UploadFileResponseDto,
   UpsertOrgSystemPromptDto,
@@ -1048,6 +1049,71 @@ export const useAdminUserControllerAdminUpdateUser = <TError = void,
       > => {
 
       const mutationOptions = getAdminUserControllerAdminUpdateUserMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Persist the current user's onboarding progress: the IDs of completed steps and whether the checklist is hidden.
+ * @summary Update onboarding progress
+ */
+export const userOnboardingControllerUpdateUserOnboarding = (
+    updateUserOnboardingDto: UpdateUserOnboardingDto,
+ ) => {
+      
+      
+      return customAxiosInstance<UserResponseDto>(
+      {url: `/users/me/onboarding`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateUserOnboardingDto
+    },
+      );
+    }
+  
+
+
+export const getUserOnboardingControllerUpdateUserOnboardingMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userOnboardingControllerUpdateUserOnboarding>>, TError,{data: UpdateUserOnboardingDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userOnboardingControllerUpdateUserOnboarding>>, TError,{data: UpdateUserOnboardingDto}, TContext> => {
+
+const mutationKey = ['userOnboardingControllerUpdateUserOnboarding'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userOnboardingControllerUpdateUserOnboarding>>, {data: UpdateUserOnboardingDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userOnboardingControllerUpdateUserOnboarding(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserOnboardingControllerUpdateUserOnboardingMutationResult = NonNullable<Awaited<ReturnType<typeof userOnboardingControllerUpdateUserOnboarding>>>
+    export type UserOnboardingControllerUpdateUserOnboardingMutationBody = UpdateUserOnboardingDto
+    export type UserOnboardingControllerUpdateUserOnboardingMutationError = void
+
+    /**
+ * @summary Update onboarding progress
+ */
+export const useUserOnboardingControllerUpdateUserOnboarding = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userOnboardingControllerUpdateUserOnboarding>>, TError,{data: UpdateUserOnboardingDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userOnboardingControllerUpdateUserOnboarding>>,
+        TError,
+        {data: UpdateUserOnboardingDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUserOnboardingControllerUpdateUserOnboardingMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

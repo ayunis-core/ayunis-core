@@ -33,7 +33,9 @@ export class GetCurrentUserUseCase {
     this.logger.log('getCurrentUser');
 
     try {
-      const payload = this.jwtService.verify<JwtPayload>(command.accessToken);
+      const payload = this.jwtService.verify<Partial<JwtPayload>>(
+        command.accessToken,
+      );
 
       if (
         !payload.sub ||
@@ -64,6 +66,8 @@ export class GetCurrentUserUseCase {
         systemRole: user.systemRole,
         orgId: user.orgId,
         name: user.name,
+        onboardingCompletedStepIds: user.onboardingCompletedStepIds,
+        onboardingHidden: user.onboardingHidden,
       });
     } catch (error: unknown) {
       if (error instanceof ApplicationError) {

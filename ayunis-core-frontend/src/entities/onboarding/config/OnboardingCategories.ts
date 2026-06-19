@@ -1,9 +1,8 @@
-import type { OnboardingCategory } from '../model/OnboardingTypes';
-
+import { ACTION_TYPE, SECONDARY_ACTION_TYPE } from './OnboardingActions';
 import { ONBOARDING_SAMPLES } from './OnboardingSamples';
 import { TOUR_TARGET } from './OnboardingTourTargets';
 
-export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
+export const ONBOARDING_CATEGORIES = [
   {
     id: 'workspace',
     translationKey: 'workspace',
@@ -13,7 +12,7 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
         id: 'configureModels',
         translationKey: 'configureModels',
         action: {
-          type: 'link',
+          type: ACTION_TYPE.link,
           to: '/admin-settings/models',
           spotlight: TOUR_TARGET.configureModelsLanguage,
         },
@@ -22,7 +21,7 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
         id: 'inviteColleagues',
         translationKey: 'inviteColleagues',
         action: {
-          type: 'link',
+          type: ACTION_TYPE.link,
           to: '/admin-settings/users',
           spotlight: TOUR_TARGET.inviteUsers,
         },
@@ -31,7 +30,7 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
         id: 'createTeams',
         translationKey: 'createTeams',
         action: {
-          type: 'link',
+          type: ACTION_TYPE.link,
           to: '/admin-settings/teams',
           spotlight: TOUR_TARGET.createTeam,
         },
@@ -45,13 +44,13 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
       {
         id: 'sendFirstMessage',
         translationKey: 'sendFirstMessage',
-        action: { type: 'prompt' },
+        action: { type: ACTION_TYPE.prompt },
       },
       {
         id: 'uploadDocument',
         translationKey: 'uploadDocument',
         action: {
-          type: 'link',
+          type: ACTION_TYPE.link,
           to: '/chat',
           spotlight: TOUR_TARGET.chatUpload,
         },
@@ -60,7 +59,7 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
         id: 'anonymousMode',
         translationKey: 'anonymousMode',
         action: {
-          type: 'link',
+          type: ACTION_TYPE.link,
           to: '/chat',
           spotlight: TOUR_TARGET.anonymousMode,
         },
@@ -74,9 +73,9 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
       {
         id: 'whatAreSkills',
         translationKey: 'whatAreSkills',
-        action: { type: 'prompt' },
+        action: { type: ACTION_TYPE.prompt },
         secondaryAction: {
-          type: 'help-center',
+          type: SECONDARY_ACTION_TYPE.helpCenter,
           path: 'skills/',
         },
       },
@@ -84,7 +83,7 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
         id: 'installSkill',
         translationKey: 'installSkill',
         action: {
-          type: 'external',
+          type: ACTION_TYPE.external,
           url: 'https://marketplace.ayunis.com/',
         },
       },
@@ -92,7 +91,7 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
         id: 'createSkill',
         translationKey: 'createSkill',
         action: {
-          type: 'link',
+          type: ACTION_TYPE.link,
           to: '/skills',
           spotlight: TOUR_TARGET.createSkill,
         },
@@ -101,7 +100,7 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
         id: 'useSkillInChat',
         translationKey: 'useSkillInChat',
         action: {
-          type: 'link',
+          type: ACTION_TYPE.link,
           to: '/skills',
           spotlight: TOUR_TARGET.pinSkill,
         },
@@ -110,7 +109,7 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
         id: 'activateSkillInChat',
         translationKey: 'activateSkillInChat',
         action: {
-          type: 'link',
+          type: ACTION_TYPE.link,
           to: '/chat',
           spotlight: TOUR_TARGET.pinnedSkills,
         },
@@ -125,12 +124,12 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
         id: 'createKnowledgeBase',
         translationKey: 'createKnowledgeBase',
         action: {
-          type: 'link',
+          type: ACTION_TYPE.link,
           to: '/knowledge-bases',
           spotlight: TOUR_TARGET.createKnowledgeBase,
         },
         secondaryAction: {
-          type: 'help-center',
+          type: SECONDARY_ACTION_TYPE.helpCenter,
           path: 'knowledge-collections/',
         },
       },
@@ -139,7 +138,7 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
         translationKey: 'addDocuments',
         dependsOn: 'createKnowledgeBase',
         action: {
-          type: 'link',
+          type: ACTION_TYPE.link,
           to: '/knowledge-bases',
           spotlight: TOUR_TARGET.addDocuments,
         },
@@ -149,7 +148,7 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
         translationKey: 'useKnowledgeBaseInChat',
         dependsOn: 'addDocuments',
         action: {
-          type: 'link',
+          type: ACTION_TYPE.link,
           to: '/chat',
           spotlight: TOUR_TARGET.chatUpload,
         },
@@ -163,18 +162,18 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
       {
         id: 'writeEmail',
         translationKey: 'writeEmail',
-        action: { type: 'prompt' },
+        action: { type: ACTION_TYPE.prompt },
       },
       {
         id: 'createDocument',
         translationKey: 'createDocument',
-        action: { type: 'prompt' },
+        action: { type: ACTION_TYPE.prompt },
       },
       {
         id: 'summarizeDocument',
         translationKey: 'summarizeDocument',
         action: {
-          type: 'prompt',
+          type: ACTION_TYPE.prompt,
           attachment: ONBOARDING_SAMPLES.protokoll,
         },
       },
@@ -182,24 +181,24 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
         id: 'analyzeData',
         translationKey: 'analyzeData',
         action: {
-          type: 'prompt',
+          type: ACTION_TYPE.prompt,
           attachment: ONBOARDING_SAMPLES.stadtlauf,
         },
       },
       {
         id: 'createFlowchart',
         translationKey: 'createFlowchart',
-        action: { type: 'prompt' },
+        action: { type: ACTION_TYPE.prompt },
       },
       {
         id: 'createCalendarEntry',
         translationKey: 'createCalendarEntry',
-        action: { type: 'prompt' },
+        action: { type: ACTION_TYPE.prompt },
       },
       {
         id: 'webResearch',
         translationKey: 'webResearch',
-        action: { type: 'prompt' },
+        action: { type: ACTION_TYPE.prompt },
       },
     ],
   },
@@ -211,7 +210,7 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
         id: 'tryVoiceInput',
         translationKey: 'tryVoiceInput',
         action: {
-          type: 'link',
+          type: ACTION_TYPE.link,
           to: '/chat',
           spotlight: TOUR_TARGET.voiceInput,
         },
@@ -220,7 +219,7 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
         id: 'customInstructions',
         translationKey: 'customInstructions',
         action: {
-          type: 'link',
+          type: ACTION_TYPE.link,
           to: '/settings/chat',
           spotlight: TOUR_TARGET.systemPrompt,
         },
@@ -228,17 +227,17 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
       {
         id: 'generateImage',
         translationKey: 'generateImage',
-        action: { type: 'prompt' },
+        action: { type: ACTION_TYPE.prompt },
       },
       {
         id: 'switchTheme',
         translationKey: 'switchTheme',
         action: {
-          type: 'link',
+          type: ACTION_TYPE.link,
           to: '/settings/general',
           spotlight: TOUR_TARGET.themeSettings,
         },
       },
     ],
   },
-];
+] as const;

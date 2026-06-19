@@ -1,14 +1,11 @@
-import { createFileRoute, Navigate } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 import { OnboardingPage } from '@/pages/onboarding';
-import { isGettingStartedHidden } from '@/features/onboarding-progress';
 
 export const Route = createFileRoute('/_authenticated/getting-started/')({
-  component: RouteComponent,
+  beforeLoad: ({ context: { user } }) => {
+    if (user.onboardingHidden) {
+      throw redirect({ to: '/chat' });
+    }
+  },
+  component: OnboardingPage,
 });
-
-function RouteComponent() {
-  if (isGettingStartedHidden()) {
-    return <Navigate to="/chat" />;
-  }
-  return <OnboardingPage />;
-}

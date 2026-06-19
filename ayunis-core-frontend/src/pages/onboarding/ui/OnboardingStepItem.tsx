@@ -7,7 +7,12 @@ import { Checkbox } from '@/shared/ui/shadcn/checkbox';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { getHelpCenterUrl } from '@/shared/lib/help-center';
 import { launchTour } from '@/features/onboarding-tour';
-import { TOUR_TARGET, type OnboardingStep } from '@/entities/onboarding';
+import {
+  TOUR_TARGET,
+  ACTION_TYPE,
+  SECONDARY_ACTION_TYPE,
+  type OnboardingStep,
+} from '@/entities/onboarding';
 import { setPendingStep } from '@/features/onboarding-progress';
 import { useKnowledgeBasesControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
 
@@ -38,7 +43,7 @@ export default function OnboardingStepItem({
   const firstKnowledgeBase = kbResponse?.data[0];
 
   const prompt =
-    step.action?.type === 'prompt'
+    step.action?.type === ACTION_TYPE.prompt
       ? t(`steps.${step.translationKey}.prompt`)
       : null;
 
@@ -55,7 +60,7 @@ export default function OnboardingStepItem({
 
   const handleAction = () => {
     if (!step.action) return;
-    if (step.action.type === 'prompt') {
+    if (step.action.type === ACTION_TYPE.prompt) {
       setPendingStep(step.id, '/chat', origin);
       void navigate({
         to: '/chat',
@@ -66,11 +71,11 @@ export default function OnboardingStepItem({
       });
       return;
     }
-    if (step.action.type === 'external') {
+    if (step.action.type === ACTION_TYPE.external) {
       window.open(step.action.url, '_blank', 'noopener,noreferrer');
       return;
     }
-    // type === 'link'
+    // type === ACTION_TYPE.link
     const spotlight = step.action.spotlight;
     if (isAddDocumentsStep && firstKnowledgeBase) {
       // Deep-link straight into the first KB and highlight the upload area.
@@ -161,7 +166,7 @@ export default function OnboardingStepItem({
                     variant="ghost"
                     onClick={() => {
                       const url =
-                        secondary.type === 'help-center'
+                        secondary.type === SECONDARY_ACTION_TYPE.helpCenter
                           ? getHelpCenterUrl(secondary.path)
                           : secondary.url;
                       window.open(url, '_blank', 'noopener,noreferrer');
