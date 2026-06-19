@@ -24,6 +24,7 @@ import { CreateRegularUserUseCase } from './application/use-cases/create-regular
 import { ValidateUserUseCase } from './application/use-cases/validate-user/validate-user.use-case';
 import { IsValidPasswordUseCase } from './application/use-cases/is-valid-password/is-valid-password.use-case';
 import { UpdateUserNameUseCase } from './application/use-cases/update-user-name/update-user-name.use-case';
+import { UpdateUserOnboardingUseCase } from './application/use-cases/update-user-onboarding/update-user-onboarding.use-case';
 import { AdminUpdateUserUseCase } from './application/use-cases/admin-update-user/admin-update-user.use-case';
 import { UpdatePasswordUseCase } from './application/use-cases/update-password/update-password.use-case';
 import { ConfirmEmailUseCase } from './application/use-cases/confirm-email/confirm-email.use-case';
@@ -32,6 +33,7 @@ import { EmailConfirmationJwtService } from './application/services/email-confir
 
 // Import controllers and mappers
 import { UserController } from './presenters/http/user.controller';
+import { UserOnboardingController } from './presenters/http/user-onboarding.controller';
 import { UserPasswordResetController } from './presenters/http/user-password-reset.controller';
 import { AdminUserController } from './presenters/http/admin-user.controller';
 import { UserResponseDtoMapper } from './presenters/http/mappers/user-response-dto.mapper';
@@ -83,6 +85,7 @@ import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from
   ],
   controllers: [
     UserController,
+    UserOnboardingController,
     UserPasswordResetController,
     AdminUserController,
     SuperAdminUsersController,
@@ -109,6 +112,7 @@ import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from
     ValidateUserUseCase,
     IsValidPasswordUseCase,
     UpdateUserNameUseCase,
+    UpdateUserOnboardingUseCase,
     AdminUpdateUserUseCase,
     UpdatePasswordUseCase,
     ConfirmEmailUseCase,

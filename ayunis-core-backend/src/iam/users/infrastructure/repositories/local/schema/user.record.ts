@@ -42,4 +42,10 @@ export class UserRecord extends BaseRecord {
 
   @Column({ nullable: true })
   department?: string;
+
+  @Column({ type: 'text', array: true, default: () => "'{}'" })
+  onboardingCompletedStepIds: string[];
+
+  @Column({ default: false })
+  onboardingHidden: boolean;
 }

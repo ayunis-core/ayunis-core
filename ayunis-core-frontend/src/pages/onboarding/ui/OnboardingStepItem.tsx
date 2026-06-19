@@ -6,10 +6,19 @@ import { Button } from '@/shared/ui/shadcn/button';
 import { Checkbox } from '@/shared/ui/shadcn/checkbox';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { getHelpCenterUrl } from '@/shared/lib/help-center';
-import { launchTour } from '@/features/onboarding-tour';
-import { TOUR_TARGET, type OnboardingStep } from '@/entities/onboarding';
+import { useOnboardingTour } from '@/features/onboarding-tour';
+import {
+  TOUR_TARGET,
+  ACTION_TYPE,
+  SECONDARY_ACTION_TYPE,
+  type OnboardingStep,
+  type TourTargetName,
+} from '@/entities/onboarding';
 import { setPendingStep } from '@/features/onboarding-progress';
-import { useKnowledgeBasesControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
+import {
+  useKnowledgeBasesControllerFindAll,
+  useSkillsControllerFindAll,
+} from '@/shared/api/generated/ayunisCoreAPI';
 
 interface OnboardingStepItemProps {
   step: OnboardingStep;
@@ -29,6 +38,7 @@ export default function OnboardingStepItem({
   const { t } = useTranslation('getting-started');
   const navigate = useNavigate();
   const location = useLocation();
+  const { launchTour } = useOnboardingTour();
   const origin = location.pathname;
   const [expanded, setExpanded] = useState(defaultExpanded);
   const isAddDocumentsStep = step.id === 'addDocuments';
@@ -37,8 +47,14 @@ export default function OnboardingStepItem({
   });
   const firstKnowledgeBase = kbResponse?.data[0];
 
+  const isPinSkillStep = step.id === 'useSkillInChat';
+  const { data: skills } = useSkillsControllerFindAll({
+    query: { enabled: isPinSkillStep && !locked },
+  });
+  const hasPersonalSkill = skills?.some((skill) => !skill.isShared) ?? false;
+
   const prompt =
-    step.action?.type === 'prompt'
+    step.action?.type === ACTION_TYPE.prompt
       ? t(`steps.${step.translationKey}.prompt`)
       : null;
 
@@ -53,47 +69,63 @@ export default function OnboardingStepItem({
     });
   };
 
+  // A couple of steps resolve their spotlight at runtime, since the configured
+  // target only exists once the user has the relevant data:
+  // - addDocuments: deep-link into the first knowledge base if one exists,
+  //   otherwise open the list and spotlight "create knowledge base".
+  // - useSkillInChat (pin): if there's no personal skill to pin yet, spotlight
+  //   "create skill" instead of the (absent) pin button.
+  // Every other link uses its configured target.
+  const resolveLinkTarget = (
+    to: string,
+    spotlight?: TourTargetName,
+  ): { to: string; spotlight?: TourTargetName } => {
+    if (isAddDocumentsStep && firstKnowledgeBase) {
+      return { to: `/knowledge-bases/${firstKnowledgeBase.id}`, spotlight };
+    }
+    if (isAddDocumentsStep) {
+      return { to, spotlight: TOUR_TARGET.createKnowledgeBase };
+    }
+    if (isPinSkillStep && !hasPersonalSkill) {
+      return { to, spotlight: TOUR_TARGET.createSkill };
+    }
+    return { to, spotlight };
+  };
+
   const handleAction = () => {
-    if (!step.action) return;
-    if (step.action.type === 'prompt') {
+    const action = step.action;
+    if (!action) return;
+
+    if (action.type === ACTION_TYPE.external) {
+      window.open(action.url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    if (action.type === ACTION_TYPE.prompt) {
       setPendingStep(step.id, '/chat', origin);
       void navigate({
         to: '/chat',
-        search: {
-          prompt: prompt ?? undefined,
-          attachment: step.action.attachment,
-        },
+        search: { prompt: prompt ?? undefined, attachment: action.attachment },
       });
       return;
     }
-    if (step.action.type === 'external') {
-      window.open(step.action.url, '_blank', 'noopener,noreferrer');
-      return;
-    }
-    // type === 'link'
-    const spotlight = step.action.spotlight;
-    if (isAddDocumentsStep && firstKnowledgeBase) {
-      // Deep-link straight into the first KB and highlight the upload area.
-      const target = `/knowledge-bases/${firstKnowledgeBase.id}`;
-      setPendingStep(step.id, target, origin);
-      void navigate({ to: target }).then(() => {
-        if (spotlight) triggerSpotlight(spotlight);
-      });
-      return;
-    }
-    if (isAddDocumentsStep && !firstKnowledgeBase) {
-      // No KB exists yet — nudge the user to create one first by spotlighting
-      // the create button on the empty KB list page.
-      setPendingStep(step.id, step.action.to, origin);
-      void navigate({ to: step.action.to }).then(() => {
-        triggerSpotlight(TOUR_TARGET.createKnowledgeBase);
-      });
-      return;
-    }
-    setPendingStep(step.id, step.action.to, origin);
-    void navigate({ to: step.action.to }).then(() => {
+
+    // link
+    const { to, spotlight } = resolveLinkTarget(action.to, action.spotlight);
+    setPendingStep(step.id, to, origin);
+    void navigate({ to }).then(() => {
       if (spotlight) triggerSpotlight(spotlight);
     });
+  };
+
+  const handleSecondaryAction = () => {
+    const secondary = step.secondaryAction;
+    if (!secondary) return;
+    const url =
+      secondary.type === SECONDARY_ACTION_TYPE.helpCenter
+        ? getHelpCenterUrl(secondary.path)
+        : secondary.url;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -152,25 +184,15 @@ export default function OnboardingStepItem({
                   <ArrowRight className="size-3" />
                 </Button>
               )}
-              {(() => {
-                const secondary = step.secondaryAction;
-                if (!secondary) return null;
-                return (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      const url =
-                        secondary.type === 'help-center'
-                          ? getHelpCenterUrl(secondary.path)
-                          : secondary.url;
-                      window.open(url, '_blank', 'noopener,noreferrer');
-                    }}
-                  >
-                    {t(`steps.${step.translationKey}.secondaryAction`)}
-                  </Button>
-                );
-              })()}
+              {step.secondaryAction && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleSecondaryAction}
+                >
+                  {t(`steps.${step.translationKey}.secondaryAction`)}
+                </Button>
+              )}
             </div>
           )}
         </div>

@@ -9,7 +9,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { OnboardingTourTarget, launchTour } from '@/features/onboarding-tour';
+import {
+  OnboardingTourTarget,
+  useOnboardingTour,
+} from '@/features/onboarding-tour';
 import { TOUR_TARGET } from '@/entities/onboarding';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
@@ -46,6 +49,7 @@ export default function NewChatPage({
   initialAttachmentUrl,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
+  const { launchTour } = useOnboardingTour();
   const { initiateChat, cancel, isCreating } = useInitiateChat();
   const { models } = usePermittedModels();
   const greeting = useTimeBasedGreeting();
@@ -79,11 +83,13 @@ export default function NewChatPage({
     const timeoutId = setTimeout(() => {
       launchTour({
         target: TOUR_TARGET.sendMessage,
-        dismissLabel: t('newChat.dismiss', { defaultValue: 'Got it' }),
+        title: t('newChat.tourTitle'),
+        description: t('newChat.tourDescription'),
+        dismissLabel: t('newChat.dismiss'),
       });
     }, 600);
     return () => clearTimeout(timeoutId);
-  }, [initialPrompt, t]);
+  }, [initialPrompt, t, launchTour]);
 
   const [modelId, setModelId] = useState(selectedModelId);
   const [isAnonymous, setIsAnonymous] = useState(false);

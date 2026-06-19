@@ -19,7 +19,7 @@ export default function OnboardingPage() {
             action={<HelpLink path="getting-started/" />}
           />
         }
-        contentArea={<OnboardingContent showHideOption />}
+        contentArea={<OnboardingContent />}
       />
     </AppLayout>
   );

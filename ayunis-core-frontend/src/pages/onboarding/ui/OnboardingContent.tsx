@@ -1,23 +1,17 @@
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from '@tanstack/react-router';
 import { Eye, EyeOff, Info, PartyPopper } from 'lucide-react';
 import { Progress } from '@/shared/ui/shadcn/progress';
 import { Button } from '@/shared/ui/shadcn/button';
 import { useMe } from '@/widgets/app-sidebar/api/useMe';
 import { MeResponseDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { useOnboardingProgress } from '@/features/onboarding-progress';
 import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
-import { showSuccess } from '@/shared/lib/toast';
 import {
   clearPendingStep,
-  hideGettingStarted,
-  saveCompletedSteps,
-  showGettingStarted,
-  useGettingStartedHidden,
+  useOnboardingProgress,
+  useUpdateOnboarding,
 } from '@/features/onboarding-progress';
 import brandIconDark from '@/shared/assets/brand/brand-icon-round-dark.svg';
-import CenteredContentLayout from '@/layouts/centered-content-layout/ui/CenteredContentLayout';
 import OnboardingCategoryCard from './OnboardingCategoryCard';
 
 function getMilestoneMessage(
@@ -31,20 +25,13 @@ function getMilestoneMessage(
   return null;
 }
 
-interface Props {
-  showHideOption?: boolean;
-  showRestoreOption?: boolean;
-}
-
-export default function OnboardingContent({
-  showHideOption = false,
-  showRestoreOption = false,
-}: Readonly<Props>) {
+export default function OnboardingContent() {
   const { t } = useTranslation('getting-started');
-  const navigate = useNavigate();
   const { user } = useMe();
   const isAdmin = user?.role === MeResponseDtoRole.admin;
-  const hidden = useGettingStartedHidden();
+  const hidden = user?.onboardingHidden ?? false;
+  const completedStepIds = user?.onboardingCompletedStepIds ?? [];
+  const { updateOnboarding } = useUpdateOnboarding();
   const {
     visibleCategories,
     totalSteps,
@@ -52,22 +39,22 @@ export default function OnboardingContent({
     overallProgress,
     firstIncompleteCategoryIndex,
     completedSteps,
-  } = useOnboardingProgress(isAdmin);
+  } = useOnboardingProgress(isAdmin, completedStepIds);
 
   const milestone = getMilestoneMessage(overallProgress, t);
 
   const handleToggleStep = useCallback(
     (stepId: string) => {
       const next = new Set(completedSteps);
+
       if (next.has(stepId)) {
         next.delete(stepId);
       } else {
         next.add(stepId);
-        showSuccess(t('stepCompleted'));
       }
-      saveCompletedSteps(next);
+      updateOnboarding({ completedStepIds: [...next], hidden });
     },
-    [completedSteps, t],
+    [completedSteps, hidden, updateOnboarding],
   );
 
   useEffect(() => {
@@ -77,7 +64,7 @@ export default function OnboardingContent({
   const isAllComplete = overallProgress >= 100;
 
   return (
-    <CenteredContentLayout>
+    <div className="relative z-10 max-w-2xl mx-auto py-8 space-y-6">
       <div className="text-center space-y-3">
         <div className="flex items-center justify-center">
           <img
@@ -121,37 +108,26 @@ export default function OnboardingContent({
         ))}
       </div>
 
-      {showHideOption && (
-        <div className="text-center pt-2 pb-4 space-y-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground"
-            onClick={() => {
-              hideGettingStarted();
-              void navigate({ to: '/chat' });
-            }}
-          >
-            <EyeOff className="size-3.5" />
-            {t('page.hide')}
-          </Button>
-          <p className="text-xs text-muted-foreground">{t('page.hideHint')}</p>
-        </div>
-      )}
-
-      {showRestoreOption && hidden && (
-        <div className="text-center pt-2 pb-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground"
-            onClick={showGettingStarted}
-          >
+      <div className="text-center pt-2 pb-4 space-y-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground"
+          onClick={() =>
+            updateOnboarding({ completedStepIds, hidden: !hidden })
+          }
+        >
+          {hidden ? (
             <Eye className="size-3.5" />
-            {t('page.show')}
-          </Button>
-        </div>
-      )}
-    </CenteredContentLayout>
+          ) : (
+            <EyeOff className="size-3.5" />
+          )}
+          {hidden ? t('page.show') : t('page.hide')}
+        </Button>
+        {!hidden && (
+          <p className="text-xs text-muted-foreground">{t('page.hideHint')}</p>
+        )}
+      </div>
+    </div>
   );
 }

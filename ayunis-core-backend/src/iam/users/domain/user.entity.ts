@@ -15,6 +15,8 @@ export class User {
   public name: string;
   public hasAcceptedMarketing: boolean;
   public department?: string;
+  public onboardingCompletedStepIds: string[];
+  public onboardingHidden: boolean;
   public createdAt: Date;
   public updatedAt: Date;
 
@@ -30,6 +32,8 @@ export class User {
     name: string;
     hasAcceptedMarketing: boolean;
     department?: string;
+    onboardingCompletedStepIds?: string[];
+    onboardingHidden?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -43,6 +47,8 @@ export class User {
     this.name = params.name;
     this.hasAcceptedMarketing = params.hasAcceptedMarketing;
     this.department = params.department;
+    this.onboardingCompletedStepIds = params.onboardingCompletedStepIds ?? [];
+    this.onboardingHidden = params.onboardingHidden ?? false;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

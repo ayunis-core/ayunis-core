@@ -17,6 +17,8 @@ export class UserResponseDtoMapper {
       role: user.role,
       orgId: user.orgId,
       department: user.department,
+      onboardingCompletedStepIds: user.onboardingCompletedStepIds,
+      onboardingHidden: user.onboardingHidden,
       createdAt: user.createdAt,
     };
   }
