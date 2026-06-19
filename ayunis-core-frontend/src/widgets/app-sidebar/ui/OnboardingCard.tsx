@@ -5,18 +5,18 @@ import { Progress } from '@/shared/ui/shadcn/progress';
 import { useMe } from '../api/useMe';
 import { MeResponseDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import {
+  useOnboarding,
   useOnboardingProgress,
-  useGettingStartedHidden,
 } from '@/features/onboarding-progress';
 
 export function OnboardingCard() {
   const { t } = useTranslation('common');
   const { user } = useMe();
   const isAdmin = user?.role === MeResponseDtoRole.admin;
-  const { progressPercent } = useOnboardingProgress(isAdmin);
-  const hidden = useGettingStartedHidden();
+  const { completedStepIds, hidden, isLoading } = useOnboarding();
+  const { progressPercent } = useOnboardingProgress(isAdmin, completedStepIds);
 
-  if (hidden || progressPercent >= 100) {
+  if (isLoading || hidden || progressPercent >= 100) {
     return null;
   }
 
