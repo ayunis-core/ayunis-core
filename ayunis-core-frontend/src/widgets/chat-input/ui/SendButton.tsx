@@ -6,6 +6,8 @@ import {
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
 import { useTranslation } from 'react-i18next';
+import { TOUR_TARGET } from '@/entities/onboarding';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
 
 interface SendButtonProps {
   /** True while a submit is in flight (submitting or streaming). Replaces
@@ -48,16 +50,18 @@ export function SendButton({
     <Tooltip>
       <TooltipTrigger asChild>
         <div>
-          <Button
-            disabled={!canSend}
-            className="rounded-full border border-transparent"
-            size="icon"
-            data-testid="send"
-            onClick={onSend}
-            aria-label={t('chatInput.sendTooltip')}
-          >
-            <ArrowUp className="h-4 w-4" />
-          </Button>
+          <OnboardingTourTarget name={TOUR_TARGET.sendMessage}>
+            <Button
+              disabled={!canSend}
+              className="rounded-full border border-transparent"
+              size="icon"
+              data-testid="send"
+              onClick={onSend}
+              aria-label={t('chatInput.sendTooltip')}
+            >
+              <ArrowUp className="h-4 w-4" />
+            </Button>
+          </OnboardingTourTarget>
         </div>
       </TooltipTrigger>
       <TooltipContent>{t('chatInput.sendTooltip')}</TooltipContent>

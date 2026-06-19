@@ -387,30 +387,26 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                       />
                     </OnboardingTourTarget>
                   </TooltipIf>
-                  <OnboardingTourTarget name={TOUR_TARGET.voiceInput}>
-                    <MicrophoneButton
-                      onTranscriptionComplete={(text) => {
-                        setMessage((prev) => (prev ? `${prev} ${text}` : text));
-                        // Focus textarea and place cursor at end after transcription
-                        setTimeout(() => {
-                          const textarea = textareaRef.current;
-                          if (textarea) {
-                            textarea.focus();
-                            const length = textarea.value.length;
-                            textarea.setSelectionRange(length, length);
-                          }
-                        }, 0);
-                      }}
-                    />
-                  </OnboardingTourTarget>
-                  <OnboardingTourTarget name={TOUR_TARGET.sendMessage}>
-                    <SendButton
-                      inFlight={inFlight}
-                      canSend={!!canSend}
-                      onSend={handleSend}
-                      onCancel={onCancel}
-                    />
-                  </OnboardingTourTarget>
+                  <MicrophoneButton
+                    onTranscriptionComplete={(text) => {
+                      setMessage((prev) => (prev ? `${prev} ${text}` : text));
+                      // Focus textarea and place cursor at end after transcription
+                      setTimeout(() => {
+                        const textarea = textareaRef.current;
+                        if (textarea) {
+                          textarea.focus();
+                          const length = textarea.value.length;
+                          textarea.setSelectionRange(length, length);
+                        }
+                      }, 0);
+                    }}
+                  />
+                  <SendButton
+                    inFlight={inFlight}
+                    canSend={!!canSend}
+                    onSend={handleSend}
+                    onCancel={onCancel}
+                  />
                 </div>
               </div>
             </div>

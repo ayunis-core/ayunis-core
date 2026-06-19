@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/shared/ui/shadcn/button';
-import { subscribeTourActive } from '@/features/onboarding-tour';
+import { useOnboardingTour } from '@/features/onboarding-tour';
 import {
   clearPendingStep,
   usePendingStep,
@@ -17,10 +17,8 @@ export function OnboardingReturnButton() {
   const location = useLocation();
   const [dismissed, setDismissed] = useState(false);
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
-  const [tourActive, setTourActive] = useState(false);
+  const { isTourActive } = useOnboardingTour();
   const pendingStep = usePendingStep();
-
-  useEffect(() => subscribeTourActive(setTourActive), []);
 
   // Hold off the pill for a beat after the destination page mounts so it
   // doesn't pop in at the same instant as the route transition.
@@ -44,7 +42,7 @@ export function OnboardingReturnButton() {
     return () => clearTimeout(id);
   }, [showKey]);
 
-  const mounted = !dismissed && !tourActive && onTargetPath;
+  const mounted = !dismissed && !isTourActive && onTargetPath;
 
   if (!mounted) {
     return null;
@@ -65,13 +63,7 @@ export function OnboardingReturnButton() {
     >
       <Button
         size="sm"
-        onClick={() =>
-          void navigate(
-            originPath === '/settings/getting-started'
-              ? { to: '/settings/getting-started' }
-              : { to: '/getting-started' },
-          )
-        }
+        onClick={() => void navigate({ to: '/getting-started' })}
       >
         <ArrowLeft />
         {t('returnButton')}
