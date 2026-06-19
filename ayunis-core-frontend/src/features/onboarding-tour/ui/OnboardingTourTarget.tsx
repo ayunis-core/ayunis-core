@@ -1,4 +1,4 @@
-import type { TourTargetName } from '@/entities/onboarding';
+import type { TourTargetName } from '@/shared/config/onboarding';
 import { useLayoutEffect, useRef } from 'react';
 
 interface OnboardingTourTargetProps {

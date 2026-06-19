@@ -205,6 +205,9 @@
     "systemPromptLoadError": "Could not load personalization status. Personalization may have been skipped.",
     "noDefaultModelError": "No default model configured. Please contact your administrator.",
     "privacyHint": "Only you can see your chats.",
+    "tourTitle": "Send your first message",
+    "tourDescription": "When you're ready, send your message to start the conversation.",
+    "dismiss": "Got it",
     "personalization": {
       "stepperName": "Name",
       "stepperStyle": "Style",

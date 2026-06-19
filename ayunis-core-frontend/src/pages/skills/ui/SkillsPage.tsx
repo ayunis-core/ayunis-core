@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { OnboardingTourTarget } from '@/features/onboarding-tour';
-import { TOUR_TARGET } from '@/entities/onboarding';
+import { TOUR_TARGET } from '@/shared/config/onboarding';
 import CreateSkillDialog from './CreateSkillDialog';
 import MarketplacePromoCard from './MarketplacePromoCard';
 import SkillCard from './SkillCard';
