@@ -121,7 +121,7 @@ describe('WebhookDispatchListener', () => {
   });
 
   describe('handleUserDeleted', () => {
-    it('should dispatch UserDeletedWebhookEvent with id and email', async () => {
+    it('should dispatch UserDeletedWebhookEvent with id, email and orgId', async () => {
       await listener.handleUserDeleted(
         new UserDeletedEvent(USER_ID, ORG_ID, 'test@example.com'),
       );
@@ -132,6 +132,7 @@ describe('WebhookDispatchListener', () => {
       expect(command.event.data).toEqual({
         id: USER_ID,
         email: 'test@example.com',
+        orgId: ORG_ID,
       });
     });
   });
