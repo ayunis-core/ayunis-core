@@ -36,4 +36,7 @@ export class InviteRecord extends BaseRecord {
 
   @Column()
   expiresAt: Date;
+
+  @Column({ default: false })
+  prepared: boolean;
 }

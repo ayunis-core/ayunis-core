@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsEnum } from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsOptional } from 'class-validator';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
 
 export class CreateInviteDto {
@@ -17,4 +17,16 @@ export class CreateInviteDto {
   })
   @IsEnum(UserRole)
   role: UserRole;
+
+  @ApiProperty({
+    description:
+      'When true, the invite is created without sending the invitation email. ' +
+      'The invitation can be dispatched later via the send-prepared endpoint.',
+    example: false,
+    required: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  prepared?: boolean;
 }

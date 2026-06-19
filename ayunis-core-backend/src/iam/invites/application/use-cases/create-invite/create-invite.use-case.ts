@@ -65,6 +65,7 @@ export class CreateInviteUseCase {
         role: command.role,
         inviterId: command.userId,
         expiresAt: getInviteExpiresAt(validDuration),
+        prepared: command.prepared,
       });
       this.logger.debug('Invite to be created', { invite });
 

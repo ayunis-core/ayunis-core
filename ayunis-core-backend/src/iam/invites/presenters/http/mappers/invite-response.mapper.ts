@@ -67,6 +67,8 @@ export class InviteResponseMapper {
   private calculateStatus(invite: Invite): InviteStatus {
     if (invite.acceptedAt) {
       return InviteStatus.ACCEPTED;
+    } else if (invite.prepared) {
+      return InviteStatus.PREPARED;
     } else if (invite.expiresAt < new Date()) {
       return InviteStatus.EXPIRED;
     } else {

@@ -32,7 +32,9 @@ export abstract class InvitesRepository {
     emails: string[],
     orgId: string,
   ): Promise<Invite[]>;
+  abstract findPreparedByOrg(orgId: UUID): Promise<Invite[]>;
   abstract accept(id: UUID): Promise<void>;
+  abstract markAsSent(id: UUID, expiresAt: Date): Promise<void>;
   abstract delete(id: UUID): Promise<void>;
   abstract deleteAllPendingByOrg(orgId: UUID): Promise<number>;
 }

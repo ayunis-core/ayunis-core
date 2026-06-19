@@ -166,6 +166,22 @@ export class LocalInvitesRepository implements InvitesRepository {
     return entities.map((entity) => this.inviteMapper.toDomain(entity));
   }
 
+  async findPreparedByOrg(orgId: UUID): Promise<Invite[]> {
+    this.logger.log('findPreparedByOrg', { orgId });
+
+    const entities = await this.inviteRepository.find({
+      where: { orgId, prepared: true, acceptedAt: IsNull() },
+      order: { createdAt: 'ASC' },
+    });
+
+    this.logger.debug('Found prepared invites', {
+      orgId,
+      count: entities.length,
+    });
+
+    return entities.map((entity) => this.inviteMapper.toDomain(entity));
+  }
+
   async accept(id: UUID): Promise<void> {
     this.logger.log('accept', { id });
 
@@ -174,6 +190,17 @@ export class LocalInvitesRepository implements InvitesRepository {
     });
 
     this.logger.debug('Invite accepted successfully', { id });
+  }
+
+  async markAsSent(id: UUID, expiresAt: Date): Promise<void> {
+    this.logger.log('markAsSent', { id });
+
+    await this.inviteRepository.update(id, {
+      prepared: false,
+      expiresAt,
+    });
+
+    this.logger.debug('Invite marked as sent successfully', { id });
   }
 
   async delete(id: UUID): Promise<void> {

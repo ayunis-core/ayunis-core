@@ -68,6 +68,10 @@ import { CreateInviteResponseDto } from './dtos/create-invite-response.dto';
 import { DeleteAllPendingInvitesResponseDto } from './dtos/delete-all-pending-invites-response.dto';
 import { DeleteAllPendingInvitesUseCase } from '../../application/use-cases/delete-all-pending-invites/delete-all-pending-invites.use-case';
 import { DeleteAllPendingInvitesCommand } from '../../application/use-cases/delete-all-pending-invites/delete-all-pending-invites.command';
+import { SendPreparedInvitesUseCase } from '../../application/use-cases/send-prepared-invites/send-prepared-invites.use-case';
+import { SendPreparedInvitesCommand } from '../../application/use-cases/send-prepared-invites/send-prepared-invites.command';
+import { SendPreparedInvitesResponseDto } from './dtos/send-prepared-invites-response.dto';
+import { Invite } from '../../domain/invite.entity';
 
 @ApiTags('invites')
 @Controller('invites')
@@ -86,6 +90,7 @@ export class InvitesController {
     private readonly inviteResponseMapper: InviteResponseMapper,
     private readonly configService: ConfigService,
     private readonly sendInvitationEmailUseCase: SendInvitationEmailUseCase,
+    private readonly sendPreparedInvitesUseCase: SendPreparedInvitesUseCase,
   ) {}
 
   @Post()
@@ -114,6 +119,7 @@ export class InvitesController {
       email: createInviteDto.email,
       orgId,
       role: createInviteDto.role,
+      prepared: createInviteDto.prepared ?? false,
     });
 
     const { invite, token } = await this.createInviteUseCase.execute(
@@ -122,9 +128,31 @@ export class InvitesController {
         orgId,
         role: createInviteDto.role,
         userId,
+        prepared: createInviteDto.prepared,
       }),
     );
-    // Build invitation link
+
+    // Prepared invites are stored without dispatching an email. The admin
+    // triggers delivery later via the send-prepared endpoint.
+    if (invite.prepared) {
+      this.logger.debug('Invite prepared without sending email', {
+        inviteId: invite.id,
+        email: invite.email,
+      });
+      return { url: null };
+    }
+
+    return this.dispatchInviteEmail(invite, token);
+  }
+
+  /**
+   * Send the invitation email when email is configured, otherwise return the
+   * accept URL so the admin can share it manually. Shared by create and resend.
+   */
+  private async dispatchInviteEmail(
+    invite: Invite,
+    token: string,
+  ): Promise<CreateInviteResponseDto> {
     const frontendBaseUrl = this.configService.get<string>(
       'app.frontend.baseUrl',
     );
@@ -133,34 +161,23 @@ export class InvitesController {
     );
     const inviteAcceptUrl = `${frontendBaseUrl}${inviteAcceptEndpoint}?token=${token}`;
 
-    // Send invitation email if email configuration is available
     const hasEmailConfig = this.configService.get<boolean>('emails.hasConfig');
-    if (hasEmailConfig) {
-      this.logger.debug('Sending invitation email', {
+    if (!hasEmailConfig) {
+      this.logger.debug('Email configuration not available, returning URL', {
         inviteId: invite.id,
         email: invite.email,
       });
-
-      await this.sendInvitationEmailUseCase.execute(
-        new SendInvitationEmailCommand(invite, inviteAcceptUrl),
-      );
-
-      this.logger.debug('Invitation email sent successfully', {
-        inviteId: invite.id,
-        email: invite.email,
-      });
-      return { url: null };
-    } else {
-      // Return the invitation URL to the frontend
-      this.logger.debug(
-        'Email configuration not available, skipping email send',
-        {
-          inviteId: invite.id,
-          email: invite.email,
-        },
-      );
       return { url: inviteAcceptUrl };
     }
+
+    this.logger.debug('Sending invitation email', {
+      inviteId: invite.id,
+      email: invite.email,
+    });
+    await this.sendInvitationEmailUseCase.execute(
+      new SendInvitationEmailCommand(invite, inviteAcceptUrl),
+    );
+    return { url: null };
   }
 
   @Post('bulk')
@@ -203,6 +220,37 @@ export class InvitesController {
     );
 
     return result;
+  }
+
+  @Post('send-prepared')
+  @RateLimit({ limit: 10, windowMs: 15 * 60 * 1000 })
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Send all prepared invites',
+    description:
+      'Dispatch invitation emails for every prepared invite of the ' +
+      "organization that hasn't been sent yet, refreshing their expiry.",
+  })
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({
+    status: 200,
+    description: 'The prepared invites have been processed',
+    type: SendPreparedInvitesResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Unauthorized - Admin role required',
+  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  async sendPrepared(
+    @CurrentUser(UserProperty.ID) userId: UUID,
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  ): Promise<SendPreparedInvitesResponseDto> {
+    this.logger.log('sendPrepared', { userId, orgId });
+
+    return this.sendPreparedInvitesUseCase.execute(
+      new SendPreparedInvitesCommand({ orgId, userId }),
+    );
   }
 
   @Get()
@@ -361,39 +409,7 @@ export class InvitesController {
       new ResendExpiredInviteCommand(inviteId),
     );
 
-    // Build invitation link
-    const frontendBaseUrl = this.configService.get<string>(
-      'app.frontend.baseUrl',
-    );
-    const inviteAcceptEndpoint = this.configService.get<string>(
-      'app.frontend.inviteAcceptEndpoint',
-    );
-    const inviteAcceptUrl = `${frontendBaseUrl}${inviteAcceptEndpoint}?token=${token}`;
-
-    // Send invitation email if email configuration is available
-    const hasEmailConfig = this.configService.get<boolean>('emails.hasConfig');
-    if (hasEmailConfig) {
-      this.logger.debug('Sending invitation email for resent invite', {
-        inviteId: invite.id,
-        email: invite.email,
-      });
-
-      await this.sendInvitationEmailUseCase.execute(
-        new SendInvitationEmailCommand(invite, inviteAcceptUrl),
-      );
-
-      this.logger.debug('Invitation email sent successfully', {
-        inviteId: invite.id,
-        email: invite.email,
-      });
-      return { url: null };
-    } else {
-      this.logger.debug('Email configuration not available, returning URL', {
-        inviteId: invite.id,
-        email: invite.email,
-      });
-      return { url: inviteAcceptUrl };
-    }
+    return this.dispatchInviteEmail(invite, token);
   }
 
   @Delete('all')

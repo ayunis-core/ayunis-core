@@ -14,6 +14,7 @@ export class InviteMapper {
       createdAt: entity.createdAt,
       acceptedAt: entity.acceptedAt,
       expiresAt: entity.expiresAt,
+      prepared: entity.prepared,
     });
   }
 
@@ -27,6 +28,7 @@ export class InviteMapper {
     entity.createdAt = domain.createdAt;
     entity.acceptedAt = domain.acceptedAt;
     entity.expiresAt = domain.expiresAt;
+    entity.prepared = domain.prepared;
     return entity;
   }
 }

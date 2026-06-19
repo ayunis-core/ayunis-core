@@ -481,6 +481,62 @@ describe('CreateInviteUseCase', () => {
       });
     });
 
+    it('should create a prepared invite flagged as prepared', async () => {
+      // Arrange
+      const command = new CreateInviteCommand({
+        email: mockEmail,
+        orgId: mockOrgId,
+        role: UserRole.USER,
+        userId: mockUserId,
+        prepared: true,
+      });
+
+      findUserByEmailUseCase.execute.mockResolvedValue(null);
+      configService.get
+        .mockReturnValueOnce([]) // auth.emailProviderBlacklist
+        .mockReturnValueOnce(false) // app.isCloudHosted
+        .mockReturnValueOnce('7d'); // auth.jwt.inviteExpiresIn
+
+      inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
+
+      // Act
+      const result = await useCase.execute(command);
+
+      // Assert
+      expect(result.invite.prepared).toBe(true);
+      expect(invitesRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: mockEmail,
+          orgId: mockOrgId,
+          prepared: true,
+        }),
+      );
+    });
+
+    it('should default prepared to false when not specified', async () => {
+      // Arrange
+      const command = new CreateInviteCommand({
+        email: mockEmail,
+        orgId: mockOrgId,
+        role: UserRole.USER,
+        userId: mockUserId,
+      });
+
+      findUserByEmailUseCase.execute.mockResolvedValue(null);
+      configService.get
+        .mockReturnValueOnce([]) // auth.emailProviderBlacklist
+        .mockReturnValueOnce(false) // app.isCloudHosted
+        .mockReturnValueOnce('7d'); // auth.jwt.inviteExpiresIn
+
+      inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
+
+      // Act
+      const result = await useCase.execute(command);
+
+      // Assert
+      expect(result.invite.prepared).toBe(false);
+    });
+
     it('should parse different time formats correctly', async () => {
       // Test private method indirectly by checking expiration dates
       const command = new CreateInviteCommand({
