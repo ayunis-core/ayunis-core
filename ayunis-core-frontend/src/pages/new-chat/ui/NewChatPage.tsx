@@ -9,8 +9,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { OnboardingTourTarget, launchTour } from '@/features/onboarding-tour';
-import { TOUR_TARGET } from '@/entities/onboarding';
+import {
+  OnboardingTourTarget,
+  useOnboardingTour,
+} from '@/features/onboarding-tour';
+import { TOUR_TARGET } from '@/shared/config/onboarding';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
 import {
@@ -19,6 +22,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
+import { useFileFromUrl } from '@/shared/hooks/useFileFromUrl';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import type {
   IntegrationSummary,
@@ -46,6 +50,7 @@ export default function NewChatPage({
   initialAttachmentUrl,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
+  const { launchTour } = useOnboardingTour();
   const { initiateChat, cancel, isCreating } = useInitiateChat();
   const { models } = usePermittedModels();
   const greeting = useTimeBasedGreeting();
@@ -79,11 +84,13 @@ export default function NewChatPage({
     const timeoutId = setTimeout(() => {
       launchTour({
         target: TOUR_TARGET.sendMessage,
-        dismissLabel: t('newChat.dismiss', { defaultValue: 'Got it' }),
+        title: t('newChat.tourTitle'),
+        description: t('newChat.tourDescription'),
+        dismissLabel: t('newChat.dismiss'),
       });
     }, 600);
     return () => clearTimeout(timeoutId);
-  }, [initialPrompt, t]);
+  }, [initialPrompt, t, launchTour]);
 
   const [modelId, setModelId] = useState(selectedModelId);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -124,40 +131,8 @@ export default function NewChatPage({
   const [selectedSkillName, setSelectedSkillName] = useState<string>();
   const selectedModel = models.find((m) => m.id === modelId);
 
-  useEffect(() => {
-    if (!initialAttachmentUrl) return;
-    const controller = new AbortController();
-    void (async () => {
-      try {
-        const res = await fetch(initialAttachmentUrl, {
-          signal: controller.signal,
-        });
-        if (!res.ok) return;
-        const blob = await res.blob();
-        const filename = initialAttachmentUrl.split('/').pop() ?? 'file';
-        const file = new File([blob], filename, {
-          type: blob.type || 'application/octet-stream',
-        });
-        const isCsvFile = filename.endsWith('.csv');
-        setSources((prev) => [
-          ...prev,
-          {
-            id: generateUUID(),
-            name: file.name,
-            type: isCsvFile
-              ? SourceResponseDtoType.data
-              : SourceResponseDtoType.text,
-            file,
-          },
-        ]);
-      } catch {
-        // Sample attachment is optional — ignore fetch failures silently.
-      }
-    })();
-    return () => {
-      controller.abort();
-    };
-  }, [initialAttachmentUrl]);
+  // Attach the prefilled sample file (if any) once it has downloaded.
+  useFileFromUrl(initialAttachmentUrl, (file) => handleFileUpload([file]));
 
   const isAnonymousEnforced = selectedModel?.anonymousOnly ?? false;
   const isVisionEnabled = selectedModel?.canVision ?? false;
@@ -171,7 +146,7 @@ export default function NewChatPage({
         : SourceResponseDtoType.text,
       file,
     }));
-    setSources([...sources, ...newSources]);
+    setSources((prev) => [...prev, ...newSources]);
   }
 
   function handleRemoveSource(sourceId: string) {

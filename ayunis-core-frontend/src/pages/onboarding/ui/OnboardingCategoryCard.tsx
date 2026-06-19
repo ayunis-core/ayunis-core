@@ -4,7 +4,7 @@ import { ChevronDown, ExternalLink } from 'lucide-react';
 import { Progress } from '@/shared/ui/shadcn/progress';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { getHelpCenterUrl } from '@/shared/lib/help-center';
-import type { OnboardingCategory } from '@/entities/onboarding';
+import type { OnboardingCategory } from '@/shared/config/onboarding';
 import OnboardingStepItem from './OnboardingStepItem';
 
 interface OnboardingCategoryCardProps {

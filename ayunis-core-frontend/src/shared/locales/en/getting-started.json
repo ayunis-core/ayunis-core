@@ -10,7 +10,7 @@
   "progress": {
     "completed": "{{count}} of {{total}} completed"
   },
-  "stepCompleted": "Step completed! ✓",
+  "saveError": "Could not save your progress. Please try again.",
   "spotlightDismiss": "Got it",
   "returnButton": "Back to Getting Started",
   "milestones": {
