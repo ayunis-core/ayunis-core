@@ -140,7 +140,7 @@ function drawEdgeFade(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.fillRect(w - fade, 0, fade, h);
 }
 
-export default function OnboardingShimmerDots() {
+export default function OnboardingPageBg() {
   const ref = useRef<HTMLCanvasElement>(null);
   const running = useRef(true);
 

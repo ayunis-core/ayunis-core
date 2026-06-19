@@ -205,6 +205,9 @@
     "systemPromptLoadError": "Personalisierungsstatus konnte nicht geladen werden. Die Personalisierung wurde möglicherweise übersprungen.",
     "noDefaultModelError": "Kein Standardmodell konfiguriert. Bitte wenden Sie sich an Ihren Administrator.",
     "privacyHint": "Nur Sie sehen Ihre Chats.",
+    "tourTitle": "Senden Sie Ihre erste Nachricht",
+    "tourDescription": "Wenn Sie bereit sind, senden Sie Ihre Nachricht, um das Gespräch zu starten.",
+    "dismiss": "Alles klar",
     "personalization": {
       "stepperName": "Name",
       "stepperStyle": "Stil",
