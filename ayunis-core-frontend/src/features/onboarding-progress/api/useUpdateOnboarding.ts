@@ -4,7 +4,10 @@ import {
   userOnboardingControllerUpdateUserOnboarding,
   getAuthenticationControllerMeQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import type { UpdateUserOnboardingDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type {
+  MeResponseDto,
+  UpdateUserOnboardingDto,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { showError } from '@/shared/lib/toast';
 import extractErrorData from '@/shared/api/extract-error-data';
 
@@ -21,12 +24,37 @@ export function useUpdateOnboarding() {
     mutationFn: async (data: UpdateUserOnboardingDto) => {
       return await userOnboardingControllerUpdateUserOnboarding(data);
     },
+    // Optimistically reflect onboarding changes in the `/auth/me` cache so the
+    // progress bar and checkboxes update immediately.
+    onMutate: async (data: UpdateUserOnboardingDto) => {
+      const queryKey = getAuthenticationControllerMeQueryKey();
+      await queryClient.cancelQueries({ queryKey });
+      const previousUser = queryClient.getQueryData<MeResponseDto>(queryKey);
+
+      queryClient.setQueryData<MeResponseDto | undefined>(
+        queryKey,
+        (oldUser) =>
+          oldUser
+            ? {
+                ...oldUser,
+                onboardingCompletedStepIds: data.completedStepIds,
+                onboardingHidden: data.hidden,
+              }
+            : oldUser,
+      );
+
+      return { previousUser, queryKey };
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: getAuthenticationControllerMeQueryKey(),
       });
     },
-    onError: (error) => {
+    onError: (error, _vars, context) => {
+      // Roll back optimistic update if the request failed.
+      if (context?.previousUser) {
+        queryClient.setQueryData(context.queryKey, context.previousUser);
+      }
       // The onboarding write has no field-specific error codes worth mapping;
       // extractErrorData still narrows Axios vs. non-Axios failures, but every
       // outcome shows the same generic retry message.

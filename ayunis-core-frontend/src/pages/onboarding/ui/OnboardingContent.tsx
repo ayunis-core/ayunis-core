@@ -127,7 +127,7 @@ export default function OnboardingContent({
             size="sm"
             className="text-muted-foreground"
             onClick={() => {
-              updateOnboarding({ completedStepIds, hidden: true });
+              updateOnboarding({ completedStepIds: [...completedSteps], hidden: true });
               void navigate({ to: '/chat' });
             }}
           >
@@ -145,7 +145,7 @@ export default function OnboardingContent({
             size="sm"
             className="text-muted-foreground"
             onClick={() =>
-              updateOnboarding({ completedStepIds, hidden: false })
+              updateOnboarding({ completedStepIds: [...completedSteps], hidden: false })
             }
           >
             <Eye className="size-3.5" />
