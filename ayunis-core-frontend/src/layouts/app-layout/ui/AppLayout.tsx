@@ -2,8 +2,6 @@ import React from 'react';
 import { useRouterState } from '@tanstack/react-router';
 import { SidebarProvider, SidebarInset } from '@/shared/ui/shadcn/sidebar';
 import AppSidebar from '@/widgets/app-sidebar';
-import { OnboardingReturnButton } from '@/widgets/onboarding-return-button';
-import { OnboardingTour } from '@/widgets/onboarding-tour';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -24,8 +22,6 @@ export default function AppLayout({
           {children}
         </div>
       </SidebarInset>
-      <OnboardingReturnButton />
-      <OnboardingTour />
     </SidebarProvider>
   );
 }

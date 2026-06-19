@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { OnboardingTourTarget } from '@/features/onboarding-tour';
-import { TOUR_TARGET } from '@/entities/onboarding';
+import { TOUR_TARGET } from '@/shared/config/onboarding';
 import CreateSkillDialog from './CreateSkillDialog';
 import MarketplacePromoCard from './MarketplacePromoCard';
 import SkillCard from './SkillCard';
@@ -91,13 +91,18 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
                 />
               ) : (
                 <div className="space-y-3">
-                  {personalSkills.map((skill, index) => (
-                    <SkillCard
-                      key={skill.id}
-                      skill={skill}
-                      highlightPin={index === 0}
-                    />
-                  ))}
+                  {personalSkills.map((skill, index) =>
+                    index === 0 ? (
+                      <OnboardingTourTarget
+                        key={skill.id}
+                        name={TOUR_TARGET.pinSkill}
+                      >
+                        <SkillCard skill={skill} />
+                      </OnboardingTourTarget>
+                    ) : (
+                      <SkillCard key={skill.id} skill={skill} />
+                    ),
+                  )}
                 </div>
               )}
             </TabsContent>

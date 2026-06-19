@@ -10,7 +10,7 @@
   "progress": {
     "completed": "{{count}} von {{total}} erledigt"
   },
-  "stepCompleted": "Schritt erledigt! ✓",
+  "saveError": "Dein Fortschritt konnte nicht gespeichert werden. Bitte versuche es erneut.",
   "spotlightDismiss": "Alles klar",
   "returnButton": "Zurück zu Erste Schritte",
   "milestones": {
@@ -72,7 +72,9 @@
       "title": "Starten Sie Ihren ersten Chat",
       "description": "Schreiben Sie Ihre erste Nachricht und erleben Sie, wie Ayunis Core Sie unterstützt — von Texten über Analysen bis hin zu Übersetzungen.",
       "prompt": "Hallo Ayunis Core! Wobei kannst du mir in meinem Arbeitsalltag in der Verwaltung helfen? Bitte mit konkreten Beispielen.",
-      "action": "Chat starten"
+      "action": "Chat starten",
+      "spotlightTitle": "Senden Sie Ihre erste Nachricht",
+      "spotlightDescription": "Wenn Sie bereit sind, senden Sie Ihre Nachricht, um das Gespräch zu starten."
     },
     "uploadDocument": {
       "title": "Laden Sie ein Dokument hoch",
@@ -100,7 +102,9 @@
       "description": "Fähigkeiten sind spezialisierte Experten für bestimmte Aufgaben — z. B. ein Daten-Analyst oder ein Dokumenten-Zusammenfasser. Lassen Sie sich die Details direkt von Ayunis Core erklären oder lesen Sie in der Dokumentation nach.",
       "prompt": "Erkläre mir bitte, was Fähigkeiten in Ayunis Core sind. Wofür kann ich sie verwenden, welche Beispiele gibt es und wie helfen sie mir im Alltag? Gib mir eine kompakte, verständliche Übersicht.",
       "action": "Jetzt erklären lassen",
-      "secondaryAction": "Zum Hilfecenter"
+      "secondaryAction": "Zum Hilfecenter",
+      "spotlightTitle": "Senden Sie Ihre Nachricht",
+      "spotlightDescription": "Wenn Sie bereit sind, senden Sie Ihre Nachricht, um das Gespräch zu starten."
     },
     "installSkill": {
       "title": "Fähigkeit aus dem Marketplace installieren",
