@@ -23,23 +23,12 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
-import { OnboardingTourTarget } from '@/features/onboarding-tour';
-import { TOUR_TARGET } from '@/entities/onboarding';
 
 interface SkillCardProps {
   skill: Skill;
-  /**
-   * If true, wraps the pin button with a OnboardingTourTarget so the onboarding
-   * step "Fähigkeit anheften" can highlight it. Optional — default behaviour
-   * is unchanged.
-   */
-  highlightPin?: boolean;
 }
 
-export default function SkillCard({
-  skill,
-  highlightPin = false,
-}: Readonly<SkillCardProps>) {
+export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
   const { t } = useTranslation('skills');
   const deleteSkill = useDeleteSkill();
   const toggleActive = useToggleSkillActive();
@@ -106,9 +95,9 @@ export default function SkillCard({
             onClick={(e) => e.stopPropagation()}
           />
         </div>
-        {skill.isActive &&
-          (() => {
-            const pinButton = (
+        {skill.isActive && (
+          <Tooltip>
+            <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
@@ -125,24 +114,12 @@ export default function SkillCard({
                   className={`h-4 w-4 ${skill.isPinned ? 'fill-current' : ''}`}
                 />
               </Button>
-            );
-            return (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  {highlightPin ? (
-                    <OnboardingTourTarget name={TOUR_TARGET.pinSkill}>
-                      {pinButton}
-                    </OnboardingTourTarget>
-                  ) : (
-                    pinButton
-                  )}
-                </TooltipTrigger>
-                <TooltipContent>
-                  {skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')}
-                </TooltipContent>
-              </Tooltip>
-            );
-          })()}
+            </TooltipTrigger>
+            <TooltipContent>
+              {skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')}
+            </TooltipContent>
+          </Tooltip>
+        )}
         {!skill.isShared && (
           <Tooltip>
             <TooltipTrigger asChild>
