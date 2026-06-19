@@ -108,6 +108,7 @@ import type {
   ModelProviderInfoResponseDto,
   ModelWithConfigResponseDto,
   ModelsControllerUpdatePermittedModel200,
+  OnboardingResponseDto,
   OrgSystemPromptResponseDto,
   PaginatedInvitesListResponseDto,
   PaginatedTeamMembersResponseDto,
@@ -184,6 +185,7 @@ import type {
   UpdateLetterheadDto,
   UpdateMcpIntegrationDto,
   UpdateMonthlyCreditsDto,
+  UpdateOnboardingDto,
   UpdatePasswordDto,
   UpdatePermittedModelDto,
   UpdatePiiWhitelistRequestDto,
@@ -17934,6 +17936,165 @@ export const useAuthenticationControllerLogout = <TError = unknown,
       > => {
 
       const mutationOptions = getAuthenticationControllerLogoutMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Get the current user's onboarding progress: the IDs of completed steps and whether the checklist is hidden.
+ * @summary Get onboarding progress
+ */
+export const onboardingControllerGetOnboarding = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<OnboardingResponseDto>(
+      {url: `/onboarding`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getOnboardingControllerGetOnboardingQueryKey = () => {
+    return [
+    `/onboarding`
+    ] as const;
+    }
+
+    
+export const getOnboardingControllerGetOnboardingQueryOptions = <TData = Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getOnboardingControllerGetOnboardingQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>> = ({ signal }) => onboardingControllerGetOnboarding(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type OnboardingControllerGetOnboardingQueryResult = NonNullable<Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>>
+export type OnboardingControllerGetOnboardingQueryError = void
+
+
+export function useOnboardingControllerGetOnboarding<TData = Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>,
+          TError,
+          Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useOnboardingControllerGetOnboarding<TData = Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>,
+          TError,
+          Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useOnboardingControllerGetOnboarding<TData = Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get onboarding progress
+ */
+
+export function useOnboardingControllerGetOnboarding<TData = Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof onboardingControllerGetOnboarding>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getOnboardingControllerGetOnboardingQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Persist the current user's onboarding progress: the IDs of completed steps and whether the checklist is hidden.
+ * @summary Update onboarding progress
+ */
+export const onboardingControllerUpdateOnboarding = (
+    updateOnboardingDto: UpdateOnboardingDto,
+ ) => {
+      
+      
+      return customAxiosInstance<OnboardingResponseDto>(
+      {url: `/onboarding`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateOnboardingDto
+    },
+      );
+    }
+  
+
+
+export const getOnboardingControllerUpdateOnboardingMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof onboardingControllerUpdateOnboarding>>, TError,{data: UpdateOnboardingDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof onboardingControllerUpdateOnboarding>>, TError,{data: UpdateOnboardingDto}, TContext> => {
+
+const mutationKey = ['onboardingControllerUpdateOnboarding'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof onboardingControllerUpdateOnboarding>>, {data: UpdateOnboardingDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  onboardingControllerUpdateOnboarding(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OnboardingControllerUpdateOnboardingMutationResult = NonNullable<Awaited<ReturnType<typeof onboardingControllerUpdateOnboarding>>>
+    export type OnboardingControllerUpdateOnboardingMutationBody = UpdateOnboardingDto
+    export type OnboardingControllerUpdateOnboardingMutationError = void
+
+    /**
+ * @summary Update onboarding progress
+ */
+export const useOnboardingControllerUpdateOnboarding = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof onboardingControllerUpdateOnboarding>>, TError,{data: UpdateOnboardingDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof onboardingControllerUpdateOnboarding>>,
+        TError,
+        {data: UpdateOnboardingDto},
+        TContext
+      > => {
+
+      const mutationOptions = getOnboardingControllerUpdateOnboardingMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
