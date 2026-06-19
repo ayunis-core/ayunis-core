@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddPreparedToInvites1781866172818 implements MigrationInterface {
   name = 'AddPreparedToInvites1781866172818';
