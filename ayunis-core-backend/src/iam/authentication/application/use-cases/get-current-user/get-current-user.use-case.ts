@@ -33,7 +33,9 @@ export class GetCurrentUserUseCase {
     this.logger.log('getCurrentUser');
 
     try {
-      const payload = this.jwtService.verify<JwtPayload>(command.accessToken);
+      const payload = this.jwtService.verify<Partial<JwtPayload>>(
+        command.accessToken,
+      );
 
       if (
         !payload.sub ||

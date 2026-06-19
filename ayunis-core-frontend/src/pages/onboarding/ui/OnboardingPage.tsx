@@ -4,14 +4,14 @@ import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayou
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import OnboardingContent from './OnboardingContent';
-import OnboardingShimmerDots from './OnboardingShimmerDots';
+import OnboardingPageBg from './OnboardingPageBg';
 
 export default function OnboardingPage() {
   const { t } = useTranslation('getting-started');
 
   return (
     <AppLayout>
-      <OnboardingShimmerDots />
+      <OnboardingPageBg />
       <ContentAreaLayout
         contentHeader={
           <ContentAreaHeader
@@ -19,7 +19,7 @@ export default function OnboardingPage() {
             action={<HelpLink path="getting-started/" />}
           />
         }
-        contentArea={<OnboardingContent showHideOption />}
+        contentArea={<OnboardingContent />}
       />
     </AppLayout>
   );

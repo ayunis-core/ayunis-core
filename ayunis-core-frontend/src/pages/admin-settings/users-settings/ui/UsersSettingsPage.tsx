@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import SettingsLayout from '../../admin-settings-layout';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { OnboardingTourTarget } from '@/features/onboarding-tour';
-import { TOUR_TARGET } from '@/entities/onboarding';
+import { TOUR_TARGET } from '@/shared/config/tour-targets';
 import InviteMenuButton from './InviteMenuButton';
 import InvitesSection from './InvitesSection';
 import InvitesSearch from './InvitesSearch';
