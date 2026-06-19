@@ -31,7 +31,7 @@ export function SettingsSidebar() {
       label: t('layout.account'),
     },
     {
-      to: '/settings/getting-started',
+      to: '/getting-started',
       icon: <Compass />,
       label: tCommon('sidebar.gettingStarted'),
     },

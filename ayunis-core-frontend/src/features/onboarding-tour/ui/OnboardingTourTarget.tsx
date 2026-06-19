@@ -1,4 +1,4 @@
-import type { TourTargetName } from '@/entities/onboarding';
+import type { TourTargetName } from '@/shared/config/onboarding';
 import { useLayoutEffect, useRef } from 'react';
 
 interface OnboardingTourTargetProps {
@@ -26,7 +26,7 @@ export function OnboardingTourTarget({
     return () => {
       delete el.dataset.tour;
     };
-  });
+  }, [name]);
 
   return <div ref={ref}>{children}</div>;
 }

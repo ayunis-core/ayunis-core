@@ -10,7 +10,7 @@
   "progress": {
     "completed": "{{count}} of {{total}} completed"
   },
-  "stepCompleted": "Step completed! ✓",
+  "saveError": "Could not save your progress. Please try again.",
   "spotlightDismiss": "Got it",
   "returnButton": "Back to Getting Started",
   "milestones": {
@@ -72,7 +72,9 @@
       "title": "Start your first chat",
       "description": "Send your first message and see how Ayunis Core can help — from writing texts to analysis and translations.",
       "prompt": "Hello Ayunis Core! How can you help me in my daily work? Please give concrete examples.",
-      "action": "Start chat"
+      "action": "Start chat",
+      "spotlightTitle": "Send your first message",
+      "spotlightDescription": "When you're ready, send your message to start the conversation."
     },
     "uploadDocument": {
       "title": "Upload a document",
@@ -100,7 +102,9 @@
       "description": "Skills are specialized experts for specific tasks — like a data analyst or a document summarizer. Have the details explained directly by Ayunis Core or check the documentation.",
       "prompt": "Please explain what skills are in Ayunis Core. What can I use them for, what examples are there, and how do they help me in my daily work? Give me a concise, easy-to-understand overview.",
       "action": "Explain in chat",
-      "secondaryAction": "Help center"
+      "secondaryAction": "Help center",
+      "spotlightTitle": "Send your message",
+      "spotlightDescription": "When you're ready, send your message to start the conversation."
     },
     "installSkill": {
       "title": "Install a skill from the marketplace",
