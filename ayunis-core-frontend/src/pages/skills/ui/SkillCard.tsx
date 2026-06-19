@@ -24,22 +24,13 @@ import {
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
 import { OnboardingTourTarget } from '@/features/onboarding-tour';
-import { TOUR_TARGET } from '@/entities/onboarding';
+import { TOUR_TARGET } from '@/shared/config/onboarding';
 
 interface SkillCardProps {
   skill: Skill;
-  /**
-   * If true, wraps the pin button with a OnboardingTourTarget so the onboarding
-   * step "Fähigkeit anheften" can highlight it. Optional — default behaviour
-   * is unchanged.
-   */
-  highlightPin?: boolean;
 }
 
-export default function SkillCard({
-  skill,
-  highlightPin = false,
-}: Readonly<SkillCardProps>) {
+export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
   const { t } = useTranslation('skills');
   const deleteSkill = useDeleteSkill();
   const toggleActive = useToggleSkillActive();
@@ -129,13 +120,9 @@ export default function SkillCard({
             return (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  {highlightPin ? (
-                    <OnboardingTourTarget name={TOUR_TARGET.pinSkill}>
-                      {pinButton}
-                    </OnboardingTourTarget>
-                  ) : (
-                    pinButton
-                  )}
+                  <OnboardingTourTarget name={TOUR_TARGET.pinSkill}>
+                    {pinButton}
+                  </OnboardingTourTarget>
                 </TooltipTrigger>
                 <TooltipContent>
                   {skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')}

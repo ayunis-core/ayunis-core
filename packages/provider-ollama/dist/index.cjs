@@ -56,8 +56,8 @@ var convertChunk = (chunk) => {
   }
   return carriesSomething ? result : null;
 };
-var extractToolCallDeltas = (toolCalls) => toolCalls?.map((toolCall, index) => ({
-  index,
+var extractToolCallDeltas = (toolCalls) => toolCalls?.map((toolCall) => ({
+  index: 0,
   id: (0, import_node_crypto.randomUUID)(),
   name: toolCall.function.name,
   argumentsDelta: JSON.stringify(toolCall.function.arguments)
