@@ -250,6 +250,8 @@ export interface CreateInviteDto {
   email: string;
   /** Role to assign to the invited user */
   role: CreateInviteDtoRole;
+  /** When true, the invite is created without sending the invitation email. The invitation can be dispatched later via the send-prepared endpoint. */
+  prepared?: boolean;
 }
 
 export interface CreateInviteResponseDto {
@@ -335,6 +337,17 @@ export interface CreateBulkInvitesResponseDto {
   results: BulkInviteResultDto[];
 }
 
+export interface SendPreparedInvitesResponseDto {
+  /** Total number of prepared invites that were processed */
+  totalCount: number;
+  /** Number of prepared invites sent successfully */
+  successCount: number;
+  /** Number of prepared invites that failed to send */
+  failureCount: number;
+  /** Individual results for each prepared invite */
+  results: BulkInviteResultDto[];
+}
+
 /**
  * Role assigned to the invited user
  */
@@ -355,6 +368,7 @@ export type InviteResponseDtoStatus = typeof InviteResponseDtoStatus[keyof typeo
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const InviteResponseDtoStatus = {
+  prepared: 'prepared',
   pending: 'pending',
   accepted: 'accepted',
   expired: 'expired',
@@ -404,6 +418,7 @@ export type InviteDetailResponseDtoStatus = typeof InviteDetailResponseDtoStatus
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const InviteDetailResponseDtoStatus = {
+  prepared: 'prepared',
   pending: 'pending',
   accepted: 'accepted',
   expired: 'expired',

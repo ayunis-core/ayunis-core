@@ -56,6 +56,7 @@ export function useInviteCreate(
     const inviteData: InviteCreateData = {
       email: data.email,
       role: data.role,
+      prepared: data.prepared,
     };
 
     createInviteMutation.mutate({ data: inviteData });

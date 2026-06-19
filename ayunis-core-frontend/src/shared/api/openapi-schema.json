@@ -982,6 +982,33 @@
         "tags": ["invites"]
       }
     },
+    "/invites/send-prepared": {
+      "post": {
+        "description": "Dispatch invitation emails for every prepared invite of the organization that hasn't been sent yet, refreshing their expiry.",
+        "operationId": "InvitesController_sendPrepared",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The prepared invites have been processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendPreparedInvitesResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Unauthorized - Admin role required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Send all prepared invites",
+        "tags": ["invites"]
+      }
+    },
     "/invites/{token}": {
       "get": {
         "description": "Retrieve invite details including organization name by token",
@@ -9368,6 +9395,12 @@
             "description": "Role to assign to the invited user",
             "enum": ["admin", "user"],
             "example": "user"
+          },
+          "prepared": {
+            "type": "boolean",
+            "description": "When true, the invite is created without sending the invitation email. The invitation can be dispatched later via the send-prepared endpoint.",
+            "example": false,
+            "default": false
           }
         },
         "required": ["email", "role"]
@@ -9491,6 +9524,34 @@
         },
         "required": ["totalCount", "successCount", "failureCount", "results"]
       },
+      "SendPreparedInvitesResponseDto": {
+        "type": "object",
+        "properties": {
+          "totalCount": {
+            "type": "number",
+            "description": "Total number of prepared invites that were processed",
+            "example": 10
+          },
+          "successCount": {
+            "type": "number",
+            "description": "Number of prepared invites sent successfully",
+            "example": 9
+          },
+          "failureCount": {
+            "type": "number",
+            "description": "Number of prepared invites that failed to send",
+            "example": 1
+          },
+          "results": {
+            "description": "Individual results for each prepared invite",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BulkInviteResultDto"
+            }
+          }
+        },
+        "required": ["totalCount", "successCount", "failureCount", "results"]
+      },
       "InviteResponseDto": {
         "type": "object",
         "properties": {
@@ -9514,7 +9575,7 @@
           "status": {
             "type": "string",
             "description": "Current status of the invite",
-            "enum": ["pending", "accepted", "expired"],
+            "enum": ["prepared", "pending", "accepted", "expired"],
             "example": "pending"
           },
           "sentDate": {
@@ -9582,7 +9643,7 @@
           "status": {
             "type": "string",
             "description": "Current status of the invite",
-            "enum": ["pending", "accepted", "expired"],
+            "enum": ["prepared", "pending", "accepted", "expired"],
             "example": "pending"
           },
           "sentDate": {

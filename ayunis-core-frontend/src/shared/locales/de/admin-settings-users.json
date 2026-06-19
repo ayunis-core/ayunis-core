@@ -17,6 +17,7 @@
     "status": "Status",
     "sentDate": "Sendedatum",
     "name": "Name",
+    "prepared": "vorbereitet",
     "pending": "ausstehend",
     "accepted": "akzeptiert",
     "rejected": "abgelehnt",
@@ -25,6 +26,7 @@
     "edit": "Bearbeiten",
     "delete": "Löschen",
     "deleteAll": "Alle löschen",
+    "sendPrepared": "Vorbereitete Einladungen senden",
     "changeRole": "Zu Rolle '{{role}}' ändern",
     "user": "Benutzer",
     "admin": "Administrator",
@@ -50,6 +52,10 @@
     "cancel": "Abbrechen",
     "sendInvitation": "Einladung senden",
     "sending": "Wird gesendet...",
+    "prepareLabel": "Erstellen, ohne die Einladung schon zu senden",
+    "prepareDescription": "Der Benutzer wird jetzt angelegt und kann Teams zugeordnet werden. Senden Sie die Einladung später über \"Vorbereitete Einladungen senden\".",
+    "prepareInvitation": "Einladung vorbereiten",
+    "preparing": "Wird vorbereitet...",
     "invitationCreatedTitle": "Einladung erfolgreich erstellt",
     "invitationCreatedDescription": "Die Einladung wurde erstellt. Bitte senden Sie diesen Einladungslink an den Benutzer, damit er Ihrer Organisation beitreten kann.",
     "inviteToken": "Einladungslink",
@@ -79,11 +85,19 @@
     "deleteAllInvitesDescription": "Sind Sie sicher, dass Sie alle {{count}} ausstehenden Einladungen löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "resendInviteTitle": "Einladung erneut senden",
     "resendInviteDescription": "Sind Sie sicher, dass Sie die Einladung für {{email}} erneut senden möchten? Die abgelaufene Einladung wird gelöscht und eine neue erstellt.",
-    "resendText": "Erneut senden"
+    "resendText": "Erneut senden",
+    "sendPreparedInvitesTitle": "Vorbereitete Einladungen senden",
+    "sendPreparedInvitesDescription": "Dadurch wird die Einladungs-E-Mail an alle vorbereiteten Benutzer gesendet, die noch nicht eingeladen wurden. Fortfahren?",
+    "sendText": "Senden"
   },
   "deleteAllInvites": {
     "success": "{{count}} ausstehende Einladung(en) erfolgreich gelöscht",
     "error": "Fehler beim Löschen der Einladungen. Bitte versuchen Sie es erneut."
+  },
+  "sendPreparedInvites": {
+    "success": "{{count}} vorbereitete Einladung(en) erfolgreich gesendet",
+    "partialSuccess": "{{success}} von {{total}} vorbereiteten Einladungen wurden gesendet",
+    "error": "Fehler beim Senden der vorbereiteten Einladungen. Bitte versuchen Sie es erneut."
   },
   "inviteCreate": {
     "success": "Einladung erfolgreich erstellt",

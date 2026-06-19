@@ -129,6 +129,7 @@ import type {
   RevertArtifactDto,
   RunsControllerSendMessage200,
   RunsControllerSendMessageBody,
+  SendPreparedInvitesResponseDto,
   SetCreditsPerEuroRequestDto,
   SetFairUseLimitRequestDto,
   SetImageFairUseLimitRequestDto,
@@ -2085,6 +2086,70 @@ export const useInvitesControllerCreateBulk = <TError = void,
       > => {
 
       const mutationOptions = getInvitesControllerCreateBulkMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Dispatch invitation emails for every prepared invite of the organization that hasn't been sent yet, refreshing their expiry.
+ * @summary Send all prepared invites
+ */
+export const invitesControllerSendPrepared = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SendPreparedInvitesResponseDto>(
+      {url: `/invites/send-prepared`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getInvitesControllerSendPreparedMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerSendPrepared>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof invitesControllerSendPrepared>>, TError,void, TContext> => {
+
+const mutationKey = ['invitesControllerSendPrepared'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof invitesControllerSendPrepared>>, void> = () => {
+          
+
+          return  invitesControllerSendPrepared()
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InvitesControllerSendPreparedMutationResult = NonNullable<Awaited<ReturnType<typeof invitesControllerSendPrepared>>>
+    
+    export type InvitesControllerSendPreparedMutationError = void
+
+    /**
+ * @summary Send all prepared invites
+ */
+export const useInvitesControllerSendPrepared = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerSendPrepared>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof invitesControllerSendPrepared>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getInvitesControllerSendPreparedMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

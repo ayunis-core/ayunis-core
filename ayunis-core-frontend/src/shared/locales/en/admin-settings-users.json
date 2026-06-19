@@ -17,6 +17,7 @@
     "status": "Status",
     "sentDate": "Sent Date",
     "name": "Name",
+    "prepared": "prepared",
     "pending": "pending",
     "accepted": "accepted",
     "rejected": "rejected",
@@ -25,6 +26,7 @@
     "edit": "Edit",
     "delete": "Delete",
     "deleteAll": "Delete All",
+    "sendPrepared": "Send Prepared Invites",
     "changeRole": "Change to role '{{role}}'",
     "user": "User",
     "admin": "Admin",
@@ -51,6 +53,10 @@
     "cancel": "Cancel",
     "sendInvitation": "Send Invitation",
     "sending": "Sending...",
+    "prepareLabel": "Create without sending the invitation yet",
+    "prepareDescription": "The user is set up now and can be added to teams. Send the invitation later with \"Send Prepared Invites\".",
+    "prepareInvitation": "Prepare Invitation",
+    "preparing": "Preparing...",
     "invitationCreatedTitle": "Invitation Created Successfully",
     "invitationCreatedDescription": "The invitation has been created. Please send this invitation link to the user so they can join your organization.",
     "inviteToken": "Invitation Link",
@@ -78,11 +84,19 @@
     "deleteAllInvitesDescription": "Are you sure you want to delete all {{count}} pending invites? This action cannot be undone.",
     "resendInviteTitle": "Resend Invite",
     "resendInviteDescription": "Are you sure you want to resend the invite for {{email}}? The expired invite will be deleted and a new one will be created.",
-    "resendText": "Resend"
+    "resendText": "Resend",
+    "sendPreparedInvitesTitle": "Send Prepared Invites",
+    "sendPreparedInvitesDescription": "This will send the invitation email to all prepared users who haven't been invited yet. Continue?",
+    "sendText": "Send"
   },
   "deleteAllInvites": {
     "success": "{{count}} pending invite(s) deleted successfully",
     "error": "Failed to delete invites. Please try again."
+  },
+  "sendPreparedInvites": {
+    "success": "{{count}} prepared invite(s) sent successfully",
+    "partialSuccess": "{{success}} of {{total}} prepared invites were sent",
+    "error": "Failed to send prepared invites. Please try again."
   },
   "inviteCreate": {
     "success": "Invite created successfully!",

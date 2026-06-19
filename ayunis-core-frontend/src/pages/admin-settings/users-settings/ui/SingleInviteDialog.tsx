@@ -16,6 +16,7 @@ import {
   FormMessage,
 } from '@/shared/ui/shadcn/form';
 import { Input } from '@/shared/ui/shadcn/input';
+import { Checkbox } from '@/shared/ui/shadcn/checkbox';
 import {
   Select,
   SelectContent,
@@ -24,7 +25,7 @@ import {
   SelectValue,
 } from '@/shared/ui/shadcn/select';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import type { InviteRole } from '../model/openapi';
 import { useInviteCreate } from '../api/useInviteCreate';
 import { useTranslation } from 'react-i18next';
@@ -36,6 +37,7 @@ import { Label } from '@/shared/ui/shadcn/label';
 interface InviteFormData {
   email: string;
   role: InviteRole;
+  prepared: boolean;
 }
 
 interface SingleInviteDialogProps {
@@ -55,8 +57,10 @@ export default function SingleInviteDialog({
     defaultValues: {
       email: '',
       role: undefined,
+      prepared: false,
     },
   });
+  const isPrepared = useWatch({ control: form.control, name: 'prepared' });
 
   function handleClose() {
     onOpenChange(false);
@@ -82,6 +86,17 @@ export default function SingleInviteDialog({
 
   function handleCancel() {
     handleClose();
+  }
+
+  function getSubmitLabel() {
+    if (isCreatingInvite) {
+      return isPrepared
+        ? t('inviteDialog.preparing')
+        : t('inviteDialog.sending');
+    }
+    return isPrepared
+      ? t('inviteDialog.prepareInvitation')
+      : t('inviteDialog.sendInvitation');
   }
 
   /* eslint-disable sonarjs/no-selector-parameter -- Required by Radix Dialog's onOpenChange callback signature */
@@ -166,6 +181,26 @@ export default function SingleInviteDialog({
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="prepared"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start gap-3 space-y-0">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel>{t('inviteDialog.prepareLabel')}</FormLabel>
+                <p className="text-sm text-muted-foreground">
+                  {t('inviteDialog.prepareDescription')}
+                </p>
+              </div>
+            </FormItem>
+          )}
+        />
         <DialogFooter>
           <Button
             type="button"
@@ -176,9 +211,7 @@ export default function SingleInviteDialog({
             {t('inviteDialog.cancel')}
           </Button>
           <Button type="submit" disabled={isCreatingInvite}>
-            {isCreatingInvite
-              ? t('inviteDialog.sending')
-              : t('inviteDialog.sendInvitation')}
+            {getSubmitLabel()}
           </Button>
         </DialogFooter>
       </form>

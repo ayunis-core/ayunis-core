@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/dropdown-menu';
 import { Button } from '@/shared/ui/shadcn/button';
-import { MoreHorizontal, RefreshCw, Trash2 } from 'lucide-react';
+import { MoreHorizontal, RefreshCw, Send, Trash2 } from 'lucide-react';
 import {
   Card,
   CardAction,
@@ -20,6 +20,7 @@ import { Table, TableHeader } from '@/shared/ui/shadcn/table';
 import { useInviteDelete } from '../api/useInviteDelete';
 import { useDeleteAllInvites } from '../api/useDeleteAllInvites';
 import { useInviteResend } from '../api/useInviteResend';
+import { useSendPreparedInvites } from '../api/useSendPreparedInvites';
 import type { Invite } from '../model/openapi';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
@@ -41,7 +42,12 @@ export default function InvitesSection({
   const { deleteInvite, isLoading: isDeletingInvite } = useInviteDelete();
   const { deleteAllInvites, isDeleting } = useDeleteAllInvites();
   const { resendInvite, isResending } = useInviteResend();
+  const { sendPreparedInvites, isSending } = useSendPreparedInvites();
   const { confirm } = useConfirmation();
+
+  const hasPreparedInvites = invites.some(
+    (invite) => invite.status === 'prepared',
+  );
 
   const handleDeleteInvite = (invite: Invite) => {
     confirm({
@@ -68,6 +74,16 @@ export default function InvitesSection({
     });
   };
 
+  const handleSendPreparedInvites = () => {
+    confirm({
+      title: t('confirmations.sendPreparedInvitesTitle'),
+      description: t('confirmations.sendPreparedInvitesDescription'),
+      confirmText: t('confirmations.sendText'),
+      cancelText: t('confirmations.cancelText'),
+      onConfirm: () => sendPreparedInvites(),
+    });
+  };
+
   const handleDeleteAllInvites = () => {
     confirm({
       title: t('confirmations.deleteAllInvitesTitle'),
@@ -85,7 +101,18 @@ export default function InvitesSection({
     <Card>
       <CardHeader>
         <CardTitle>{t('users.invites')}</CardTitle>
-        <CardAction>
+        <CardAction className="flex gap-2">
+          {hasPreparedInvites && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSendPreparedInvites}
+              disabled={isSending}
+            >
+              <Send />
+              {t('users.sendPrepared')}
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -126,6 +153,7 @@ export default function InvitesSection({
                   <TableCell>
                     {(() => {
                       const statusColorMap: Record<string, string> = {
+                        prepared: 'bg-blue-100 text-blue-800',
                         pending: 'bg-yellow-100 text-yellow-800',
                         accepted: 'bg-green-100 text-green-800',
                       };
