@@ -4,6 +4,8 @@ import {
   redirect,
   isRedirect,
 } from '@tanstack/react-router';
+import { OnboardingReturnButton } from '@/widgets/onboarding-return-button';
+import { OnboardingTourProvider } from '@/features/onboarding-tour';
 import {
   authenticationControllerMe,
   getAuthenticationControllerMeQueryKey,
@@ -21,8 +23,17 @@ const meQueryOptions = () =>
     queryFn: () => authenticationControllerMe(),
   });
 
+function AuthenticatedLayout() {
+  return (
+    <OnboardingTourProvider>
+      <Outlet />
+      <OnboardingReturnButton />
+    </OnboardingTourProvider>
+  );
+}
+
 export const Route = createFileRoute('/_authenticated')({
-  component: Outlet,
+  component: AuthenticatedLayout,
   beforeLoad: async ({ context: { queryClient } }) => {
     try {
       const user = await queryClient.fetchQuery(meQueryOptions());

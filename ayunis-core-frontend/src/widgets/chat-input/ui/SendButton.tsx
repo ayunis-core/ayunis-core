@@ -6,6 +6,8 @@ import {
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
 import { useTranslation } from 'react-i18next';
+import { TOUR_TARGET } from '@/shared/config/tour-targets';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
 
 interface SendButtonProps {
   inFlight: boolean;
@@ -49,16 +51,18 @@ export function SendButton({
     <Tooltip>
       <TooltipTrigger asChild>
         <div>
-          <Button
-            disabled={!canSend}
-            className={brandIconButtonClasses}
-            size="icon"
-            data-testid="send"
-            onClick={onSend}
-            aria-label={t('chatInput.sendTooltip')}
-          >
-            <ArrowUp className="h-4 w-4" />
-          </Button>
+          <OnboardingTourTarget name={TOUR_TARGET.sendMessage}>
+            <Button
+              disabled={!canSend}
+              className={brandIconButtonClasses}
+              size="icon"
+              data-testid="send"
+              onClick={onSend}
+              aria-label={t('chatInput.sendTooltip')}
+            >
+              <ArrowUp className="h-4 w-4" />
+            </Button>
+          </OnboardingTourTarget>
         </div>
       </TooltipTrigger>
       <TooltipContent>{t('chatInput.sendTooltip')}</TooltipContent>

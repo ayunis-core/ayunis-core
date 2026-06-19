@@ -10,6 +10,8 @@ import { useVoiceRecording } from '../hooks/useVoiceRecording';
 import { useTranscribe } from '../api/useTranscribe';
 import { showError } from '@/shared/lib/toast';
 import { cn } from '@/shared/lib/shadcn/utils';
+import { TOUR_TARGET } from '@/shared/config/tour-targets';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
 
 interface MicrophoneButtonProps {
   onTranscriptionComplete: (text: string) => void;
@@ -62,20 +64,22 @@ export function MicrophoneButton({
     <Tooltip>
       <TooltipTrigger asChild>
         <div>
-          <Button
-            variant={isRecording ? 'destructive' : 'outline'}
-            size="icon"
-            className={cn('rounded-full', isRecording && 'animate-pulse')}
-            onClick={handleClick}
-            disabled={busy}
-            aria-label={tooltipText}
-          >
-            {busy ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Mic className="h-4 w-4" />
-            )}
-          </Button>
+          <OnboardingTourTarget name={TOUR_TARGET.voiceInput}>
+            <Button
+              variant={isRecording ? 'destructive' : 'outline'}
+              size="icon"
+              className={cn('rounded-full', isRecording && 'animate-pulse')}
+              onClick={handleClick}
+              disabled={busy}
+              aria-label={tooltipText}
+            >
+              {busy ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+            </Button>
+          </OnboardingTourTarget>
         </div>
       </TooltipTrigger>
       <TooltipContent>{tooltipText}</TooltipContent>
