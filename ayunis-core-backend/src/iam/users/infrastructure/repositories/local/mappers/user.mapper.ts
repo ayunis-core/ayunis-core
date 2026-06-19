@@ -14,6 +14,8 @@ export class UserMapper {
       name: entity.name,
       hasAcceptedMarketing: entity.hasAcceptedMarketing,
       department: entity.department,
+      onboardingCompletedStepIds: entity.onboardingCompletedStepIds,
+      onboardingHidden: entity.onboardingHidden,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     });
@@ -31,6 +33,8 @@ export class UserMapper {
     entity.name = domain.name;
     entity.hasAcceptedMarketing = domain.hasAcceptedMarketing;
     entity.department = domain.department;
+    entity.onboardingCompletedStepIds = domain.onboardingCompletedStepIds;
+    entity.onboardingHidden = domain.onboardingHidden;
     entity.updatedAt = domain.updatedAt;
     entity.createdAt = domain.createdAt;
     return entity;

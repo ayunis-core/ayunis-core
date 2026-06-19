@@ -49,6 +49,10 @@ export interface UserResponseDto {
    * @nullable
    */
   department?: string | null;
+  /** IDs of the onboarding steps the user has completed */
+  onboardingCompletedStepIds: string[];
+  /** Whether the user has hidden the onboarding checklist */
+  onboardingHidden: boolean;
   /** Date when the user was created */
   createdAt: string;
 }
@@ -121,6 +125,13 @@ export interface ConfirmEmailDto {
 export interface ResendEmailConfirmationDto {
   /** Email address to resend confirmation to */
   email: string;
+}
+
+export interface UpdateUserOnboardingDto {
+  /** IDs of the onboarding steps the user has completed */
+  completedStepIds: string[];
+  /** Whether the user has hidden the onboarding checklist */
+  hidden: boolean;
 }
 
 export interface ForgotPasswordDto {
@@ -222,6 +233,10 @@ export interface SuperAdminUserResponseDto {
    * @nullable
    */
   department?: string | null;
+  /** IDs of the onboarding steps the user has completed */
+  onboardingCompletedStepIds: string[];
+  /** Whether the user has hidden the onboarding checklist */
+  onboardingHidden: boolean;
   /** Date when the user was created */
   createdAt: string;
   /** System-level role of the user */
@@ -4270,6 +4285,10 @@ export interface MeResponseDto {
   systemRole: MeResponseDtoSystemRole;
   /** User name */
   name: string;
+  /** IDs of the onboarding steps the user has completed */
+  onboardingCompletedStepIds: string[];
+  /** Whether the user has hidden the onboarding checklist */
+  onboardingHidden: boolean;
 }
 
 export interface IpAllowlistResponseDto {

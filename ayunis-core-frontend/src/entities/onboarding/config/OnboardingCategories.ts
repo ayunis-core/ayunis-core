@@ -1,9 +1,7 @@
-import type { OnboardingCategory } from '../model/OnboardingTypes';
-
 import { ONBOARDING_SAMPLES } from './OnboardingSamples';
 import { TOUR_TARGET } from './OnboardingTourTargets';
 
-export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
+export const ONBOARDING_CATEGORIES = [
   {
     id: 'workspace',
     translationKey: 'workspace',
@@ -241,4 +239,4 @@ export const ONBOARDING_CATEGORIES: OnboardingCategory[] = [
       },
     ],
   },
-];
+] as const;

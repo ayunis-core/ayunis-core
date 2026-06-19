@@ -10,6 +10,8 @@ export class MeResponseDtoMapper {
       role: user.role,
       systemRole: user.systemRole,
       name: user.name,
+      onboardingCompletedStepIds: user.onboardingCompletedStepIds,
+      onboardingHidden: user.onboardingHidden,
     };
   }
 }

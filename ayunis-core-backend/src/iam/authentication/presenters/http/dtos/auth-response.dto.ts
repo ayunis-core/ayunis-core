@@ -36,6 +36,19 @@ export class MeResponseDto {
     example: 'John Doe',
   })
   name: string;
+
+  @ApiProperty({
+    description: 'IDs of the onboarding steps the user has completed',
+    example: ['create-assistant', 'start-chat'],
+    type: [String],
+  })
+  onboardingCompletedStepIds: string[];
+
+  @ApiProperty({
+    description: 'Whether the user has hidden the onboarding checklist',
+    example: false,
+  })
+  onboardingHidden: boolean;
 }
 
 export class ErrorResponseDto {

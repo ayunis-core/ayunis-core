@@ -402,6 +402,50 @@
         "tags": ["Users"]
       }
     },
+    "/users/me/onboarding": {
+      "put": {
+        "description": "Persist the current user's onboarding progress: the IDs of completed steps and whether the checklist is hidden.",
+        "operationId": "UserOnboardingController_updateUserOnboarding",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Onboarding progress to persist",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserOnboardingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Onboarding progress successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid onboarding payload"
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while updating onboarding"
+          }
+        },
+        "summary": "Update onboarding progress",
+        "tags": ["Users"]
+      }
+    },
     "/users/{id}/trigger-password-reset": {
       "post": {
         "description": "Send a password reset email to a user in your organization. Only organization admins can use this endpoint.",
@@ -9068,6 +9112,19 @@
             "example": "hauptamt",
             "nullable": true
           },
+          "onboardingCompletedStepIds": {
+            "description": "IDs of the onboarding steps the user has completed",
+            "example": ["create-assistant", "start-chat"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "onboardingHidden": {
+            "type": "boolean",
+            "description": "Whether the user has hidden the onboarding checklist",
+            "example": false
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string",
@@ -9075,7 +9132,16 @@
             "example": "2024-01-15T10:30:00Z"
           }
         },
-        "required": ["id", "name", "email", "role", "orgId", "createdAt"]
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role",
+          "orgId",
+          "onboardingCompletedStepIds",
+          "onboardingHidden",
+          "createdAt"
+        ]
       },
       "PaginationDto": {
         "type": "object",
@@ -9194,6 +9260,25 @@
           }
         },
         "required": ["email"]
+      },
+      "UpdateUserOnboardingDto": {
+        "type": "object",
+        "properties": {
+          "completedStepIds": {
+            "description": "IDs of the onboarding steps the user has completed",
+            "example": ["create-assistant", "start-chat"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hidden": {
+            "type": "boolean",
+            "description": "Whether the user has hidden the onboarding checklist",
+            "example": false
+          }
+        },
+        "required": ["completedStepIds", "hidden"]
       },
       "ForgotPasswordDto": {
         "type": "object",
@@ -9321,6 +9406,19 @@
             "example": "hauptamt",
             "nullable": true
           },
+          "onboardingCompletedStepIds": {
+            "description": "IDs of the onboarding steps the user has completed",
+            "example": ["create-assistant", "start-chat"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "onboardingHidden": {
+            "type": "boolean",
+            "description": "Whether the user has hidden the onboarding checklist",
+            "example": false
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string",
@@ -9340,6 +9438,8 @@
           "email",
           "role",
           "orgId",
+          "onboardingCompletedStepIds",
+          "onboardingHidden",
           "createdAt",
           "systemRole"
         ]
@@ -15370,9 +15470,29 @@
             "type": "string",
             "description": "User name",
             "example": "John Doe"
+          },
+          "onboardingCompletedStepIds": {
+            "description": "IDs of the onboarding steps the user has completed",
+            "example": ["create-assistant", "start-chat"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "onboardingHidden": {
+            "type": "boolean",
+            "description": "Whether the user has hidden the onboarding checklist",
+            "example": false
           }
         },
-        "required": ["email", "role", "systemRole", "name"]
+        "required": [
+          "email",
+          "role",
+          "systemRole",
+          "name",
+          "onboardingCompletedStepIds",
+          "onboardingHidden"
+        ]
       },
       "IpAllowlistResponseDto": {
         "type": "object",

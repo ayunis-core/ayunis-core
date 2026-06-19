@@ -2,15 +2,10 @@ export {
   setPendingStep,
   clearPendingStep,
   usePendingStep,
-  saveCompletedSteps,
-  useCompletedSteps,
-  isGettingStartedHidden,
-  hideGettingStarted,
-  showGettingStarted,
-  useGettingStartedHidden,
   type PendingStep,
-} from './model/OnboardingStorage';
+} from './model/PendingStepStore';
 export {
   useOnboardingProgress,
   type OnboardingProgress,
 } from './lib/useOnboardingProgress';
+export { useUpdateOnboarding } from './api/useUpdateOnboarding';
