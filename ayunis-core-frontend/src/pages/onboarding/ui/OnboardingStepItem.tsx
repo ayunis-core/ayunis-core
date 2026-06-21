@@ -40,7 +40,9 @@ export default function OnboardingStepItem({
   const { data: kbResponse } = useKnowledgeBasesControllerFindAll({
     query: { enabled: isAddDocumentsStep && !locked },
   });
-  const firstKnowledgeBase = kbResponse?.data[0];
+  // Prefer an owned knowledge base for add-documents deep link.
+  // If only shared KBs exist, we should not deep-link into a read-only KB.
+  const firstOwnedKnowledgeBase = kbResponse?.data?.find((kb) => !kb.isShared);
 
   const prompt =
     step.action?.type === ACTION_TYPE.prompt
@@ -77,16 +79,16 @@ export default function OnboardingStepItem({
     }
     // type === ACTION_TYPE.link
     const spotlight = step.action.spotlight;
-    if (isAddDocumentsStep && firstKnowledgeBase) {
-      // Deep-link straight into the first KB and highlight the upload area.
-      const target = `/knowledge-bases/${firstKnowledgeBase.id}`;
+    if (isAddDocumentsStep && firstOwnedKnowledgeBase) {
+      // Deep-link straight into the first OWNED KB and highlight the upload area.
+      const target = `/knowledge-bases/${firstOwnedKnowledgeBase.id}`;
       setPendingStep(step.id, target, origin);
       void navigate({ to: target }).then(() => {
         if (spotlight) triggerSpotlight(spotlight);
       });
       return;
     }
-    if (isAddDocumentsStep && !firstKnowledgeBase) {
+    if (isAddDocumentsStep && !firstOwnedKnowledgeBase) {
       // No KB exists yet — nudge the user to create one first by spotlighting
       // the create button on the empty KB list page.
       setPendingStep(step.id, step.action.to, origin);
