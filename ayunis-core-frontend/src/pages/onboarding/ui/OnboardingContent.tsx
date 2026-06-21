@@ -43,7 +43,7 @@ export default function OnboardingContent({
   const isAdmin = user?.role === MeResponseDtoRole.admin;
   const hidden = user?.onboardingHidden ?? false;
   const completedStepIds = user?.onboardingCompletedStepIds ?? [];
-  const { updateOnboarding } = useUpdateOnboarding();
+  const { updateOnboarding, updateOnboardingAsync } = useUpdateOnboarding();
   const {
     visibleCategories,
     totalSteps,
@@ -127,8 +127,12 @@ export default function OnboardingContent({
             size="sm"
             className="text-muted-foreground"
             onClick={() => {
-              updateOnboarding({ completedStepIds, hidden: true });
-              void navigate({ to: '/chat' });
+              void updateOnboardingAsync({
+                completedStepIds,
+                hidden: true,
+              }).then(() => {
+                void navigate({ to: '/chat' });
+              });
             }}
           >
             <EyeOff className="size-3.5" />

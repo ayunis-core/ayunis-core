@@ -41,6 +41,8 @@ export function useUpdateOnboarding() {
 
   return {
     updateOnboarding: (data: UpdateUserOnboardingDto) => mutation.mutate(data),
+    updateOnboardingAsync: (data: UpdateUserOnboardingDto) =>
+      mutation.mutateAsync(data),
     isLoading: mutation.isPending,
   };
 }

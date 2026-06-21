@@ -25,10 +25,19 @@ export function OnboardingReturnButton() {
   // Hold off the pill for a beat after the destination page mounts so it
   // doesn't pop in at the same instant as the route transition.
   const originPath = pendingStep?.originPath ?? '/getting-started';
+  const normalizePath = (path: string): string => {
+    if (path === '/') return '/';
+    return path.replace(/\/+$/, '');
+  };
+  const currentPath = normalizePath(location.pathname);
+  const normalizedOrigin = normalizePath(originPath);
+  const normalizedTarget = pendingStep?.targetPath
+    ? normalizePath(pendingStep.targetPath)
+    : null;
   const onTargetPath =
     !!pendingStep &&
-    location.pathname !== originPath &&
-    (!pendingStep.targetPath || location.pathname === pendingStep.targetPath);
+    currentPath !== normalizedOrigin &&
+    (!normalizedTarget || currentPath === normalizedTarget);
 
   // Reveal key changes per step+path; the timeout flips revealedKey to match,
   // and `revealed` is derived from the comparison. Avoids syncing state inside
