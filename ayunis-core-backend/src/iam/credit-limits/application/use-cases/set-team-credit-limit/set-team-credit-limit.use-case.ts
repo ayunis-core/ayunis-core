@@ -9,6 +9,8 @@ import {
   UnexpectedCreditLimitError,
 } from '../../credit-limits.errors';
 import { SetTeamCreditLimitCommand } from './set-team-credit-limit.command';
+import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
+import { GetTeamQuery } from 'src/iam/teams/application/use-cases/get-team/get-team.query';
 
 // Upserts by (orgId, teamId), reusing the existing row's id so re-setting a
 // limit updates rather than violates the unique index.
@@ -19,6 +21,7 @@ export class SetTeamCreditLimitUseCase {
   constructor(
     private readonly creditLimitRepository: CreditLimitRepository,
     private readonly contextService: ContextService,
+    private readonly getTeamUseCase: GetTeamUseCase,
   ) {}
 
   async execute(command: SetTeamCreditLimitCommand): Promise<CreditLimit> {
@@ -43,6 +46,9 @@ export class SetTeamCreditLimitUseCase {
           { monthlyCredits: command.monthlyCredits },
         );
       }
+
+      // Verify the target team exists and belongs to the same organization
+      await this.getTeamUseCase.execute(new GetTeamQuery(command.targetTeamId));
 
       const existing = await this.creditLimitRepository.findByTeamId(
         orgId,

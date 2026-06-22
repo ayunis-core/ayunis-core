@@ -9,6 +9,8 @@ import {
   UnexpectedCreditLimitError,
 } from '../../credit-limits.errors';
 import { SetUserCreditLimitCommand } from './set-user-credit-limit.command';
+import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
+import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
 
 // Upserts by (orgId, userId), reusing the existing row's id so re-setting a
 // limit updates rather than violates the unique index.
@@ -19,6 +21,7 @@ export class SetUserCreditLimitUseCase {
   constructor(
     private readonly creditLimitRepository: CreditLimitRepository,
     private readonly contextService: ContextService,
+    private readonly findUserByIdUseCase: FindUserByIdUseCase,
   ) {}
 
   async execute(command: SetUserCreditLimitCommand): Promise<CreditLimit> {
@@ -41,6 +44,17 @@ export class SetUserCreditLimitUseCase {
         throw new InvalidCreditLimitError(
           'monthlyCredits must be a number greater than or equal to 0',
           { monthlyCredits: command.monthlyCredits },
+        );
+      }
+
+      // Verify the target user exists and belongs to the same organization
+      const targetUser = await this.findUserByIdUseCase.execute(
+        new FindUserByIdQuery(command.targetUserId),
+      );
+      if (targetUser.orgId !== orgId) {
+        throw new InvalidCreditLimitError(
+          'Target user does not belong to this organization',
+          { targetUserId: command.targetUserId, orgId },
         );
       }
 

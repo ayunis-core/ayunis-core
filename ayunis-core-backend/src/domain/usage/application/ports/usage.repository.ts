@@ -61,11 +61,13 @@ export abstract class UsageRepository {
   ): Promise<number>;
 
   abstract getMonthlyCreditUsageForUser(
+    organizationId: UUID,
     userId: UUID,
     monthStart: Date,
   ): Promise<number>;
 
   abstract getMonthlyCreditUsageForUsers(
+    organizationId: UUID,
     userIds: UUID[],
     monthStart: Date,
   ): Promise<number>;

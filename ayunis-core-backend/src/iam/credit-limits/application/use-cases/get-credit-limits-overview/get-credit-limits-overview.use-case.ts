@@ -74,6 +74,8 @@ export class GetCreditLimitsOverviewUseCase {
       return [];
     }
 
+    const orgId = this.contextService.get('orgId');
+
     const userIds = userLimits.map((limit) => limit.targetUserId as UUID);
     const users = await this.findUsersByIdsUseCase.execute(
       new FindUsersByIdsQuery(userIds),
@@ -85,7 +87,7 @@ export class GetCreditLimitsOverviewUseCase {
         const userId = limit.targetUserId as UUID;
         const { creditsUsed } =
           await this.getMonthlyCreditUsageForUserUseCase.execute(
-            new GetMonthlyCreditUsageForUserQuery(userId),
+            new GetMonthlyCreditUsageForUserQuery(orgId as UUID, userId),
           );
         const user = usersById.get(userId);
         return {
@@ -106,6 +108,8 @@ export class GetCreditLimitsOverviewUseCase {
       return [];
     }
 
+    const orgId = this.contextService.get('orgId');
+
     const teams = await this.listTeamsUseCase.execute();
     const nameByTeamId = new Map(
       teams.map((team) => [team.team.id, team.team.name]),
@@ -116,7 +120,7 @@ export class GetCreditLimitsOverviewUseCase {
         const teamId = limit.targetTeamId as UUID;
         const { creditsUsed } =
           await this.getMonthlyCreditUsageForTeamUseCase.execute(
-            new GetMonthlyCreditUsageForTeamQuery(teamId),
+            new GetMonthlyCreditUsageForTeamQuery(orgId as UUID, teamId),
           );
         return {
           teamId,

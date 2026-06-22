@@ -39,11 +39,12 @@ export class CreditLimitGuardService {
     }
 
     if (userLimit !== null) {
-      await this.ensureUserWithinLimit(userId, userLimit);
+      await this.ensureUserWithinLimit(orgId, userId, userLimit);
     }
 
     for (const teamLimit of teamLimits) {
       await this.ensureTeamWithinLimit(
+        orgId,
         teamLimit.teamId,
         teamLimit.monthlyCredits,
       );
@@ -51,12 +52,13 @@ export class CreditLimitGuardService {
   }
 
   private async ensureUserWithinLimit(
+    orgId: UUID,
     userId: UUID,
     limit: number,
   ): Promise<void> {
     const { creditsUsed } =
       await this.getMonthlyCreditUsageForUserUseCase.execute(
-        new GetMonthlyCreditUsageForUserQuery(userId),
+        new GetMonthlyCreditUsageForUserQuery(orgId, userId),
       );
 
     if (creditsUsed >= limit) {
@@ -70,12 +72,13 @@ export class CreditLimitGuardService {
   }
 
   private async ensureTeamWithinLimit(
+    orgId: UUID,
     teamId: UUID,
     limit: number,
   ): Promise<void> {
     const { creditsUsed } =
       await this.getMonthlyCreditUsageForTeamUseCase.execute(
-        new GetMonthlyCreditUsageForTeamQuery(teamId),
+        new GetMonthlyCreditUsageForTeamQuery(orgId, teamId),
       );
 
     if (creditsUsed >= limit) {

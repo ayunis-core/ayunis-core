@@ -19,6 +19,7 @@ export class GetMonthlyCreditUsageForUserUseCase {
     const effectiveStart = getEffectiveMonthStart(query.since);
 
     this.logger.log('Getting monthly credit usage for user', {
+      orgId: query.orgId,
       userId: query.userId,
       effectiveStart: effectiveStart.toISOString(),
     });
@@ -26,6 +27,7 @@ export class GetMonthlyCreditUsageForUserUseCase {
     try {
       const creditsUsed =
         await this.usageRepository.getMonthlyCreditUsageForUser(
+          query.orgId,
           query.userId,
           effectiveStart,
         );

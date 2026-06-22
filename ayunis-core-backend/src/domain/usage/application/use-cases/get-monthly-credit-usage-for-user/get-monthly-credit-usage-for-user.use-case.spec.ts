@@ -10,6 +10,7 @@ describe('GetMonthlyCreditUsageForUserUseCase', () => {
   let repository: { getMonthlyCreditUsageForUser: jest.Mock };
 
   const userId = '22222222-2222-2222-2222-222222222222' as UUID;
+  const orgId = '11111111-1111-1111-1111-111111111111' as UUID;
 
   beforeEach(async () => {
     repository = { getMonthlyCreditUsageForUser: jest.fn() };
@@ -28,7 +29,7 @@ describe('GetMonthlyCreditUsageForUserUseCase', () => {
     repository.getMonthlyCreditUsageForUser.mockResolvedValue(1240);
 
     const result = await useCase.execute(
-      new GetMonthlyCreditUsageForUserQuery(userId),
+      new GetMonthlyCreditUsageForUserQuery(orgId, userId),
     );
 
     expect(result.creditsUsed).toBe(1240);
@@ -37,9 +38,9 @@ describe('GetMonthlyCreditUsageForUserUseCase', () => {
   it('measures from the calendar-month start when no subscription anchor is given', async () => {
     repository.getMonthlyCreditUsageForUser.mockResolvedValue(0);
 
-    await useCase.execute(new GetMonthlyCreditUsageForUserQuery(userId));
+    await useCase.execute(new GetMonthlyCreditUsageForUserQuery(orgId, userId));
 
-    const [, monthStart] =
+    const [, , monthStart] =
       repository.getMonthlyCreditUsageForUser.mock.calls[0];
     const now = new Date();
     expect(monthStart.getUTCFullYear()).toBe(now.getUTCFullYear());
@@ -54,11 +55,9 @@ describe('GetMonthlyCreditUsageForUserUseCase', () => {
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 15),
     );
 
-    await useCase.execute(
-      new GetMonthlyCreditUsageForUserQuery(userId, anchor),
-    );
+    await useCase.execute(new GetMonthlyCreditUsageForUserQuery(orgId, userId, anchor));
 
-    const [, effectiveStart] =
+    const [, , effectiveStart] =
       repository.getMonthlyCreditUsageForUser.mock.calls[0];
     expect(effectiveStart).toEqual(anchor);
   });

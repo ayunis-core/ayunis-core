@@ -14,6 +14,7 @@ describe('GetMonthlyCreditUsageForTeamUseCase', () => {
   const teamId = '33333333-3333-3333-3333-333333333333' as UUID;
   const memberA = '11111111-1111-1111-1111-111111111111' as UUID;
   const memberB = '22222222-2222-2222-2222-222222222222' as UUID;
+  const orgId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' as UUID;
 
   beforeEach(async () => {
     repository = { getMonthlyCreditUsageForUsers: jest.fn() };
@@ -35,11 +36,12 @@ describe('GetMonthlyCreditUsageForTeamUseCase', () => {
     repository.getMonthlyCreditUsageForUsers.mockResolvedValue(750);
 
     const result = await useCase.execute(
-      new GetMonthlyCreditUsageForTeamQuery(teamId),
+      new GetMonthlyCreditUsageForTeamQuery(orgId, teamId),
     );
 
     expect(result.creditsUsed).toBe(750);
     expect(repository.getMonthlyCreditUsageForUsers).toHaveBeenCalledWith(
+      orgId,
       [memberA, memberB],
       expect.any(Date),
     );
@@ -50,7 +52,7 @@ describe('GetMonthlyCreditUsageForTeamUseCase', () => {
     repository.getMonthlyCreditUsageForUsers.mockResolvedValue(0);
 
     const result = await useCase.execute(
-      new GetMonthlyCreditUsageForTeamQuery(teamId),
+      new GetMonthlyCreditUsageForTeamQuery(orgId, teamId),
     );
 
     expect(result.creditsUsed).toBe(0);

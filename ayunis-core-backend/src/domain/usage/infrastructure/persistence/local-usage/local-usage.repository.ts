@@ -293,13 +293,15 @@ export class LocalUsageRepository extends UsageRepository {
   }
 
   async getMonthlyCreditUsageForUser(
+    organizationId: UUID,
     userId: UUID,
     monthStart: Date,
   ): Promise<number> {
     const result = await this.usageRepository
       .createQueryBuilder('usage')
       .select('COALESCE(SUM(usage.creditsConsumed), 0)', 'total')
-      .where('usage.userId = :userId', { userId })
+      .where('usage.organizationId = :organizationId', { organizationId })
+      .andWhere('usage.userId = :userId', { userId })
       .andWhere('usage.createdAt >= :monthStart', { monthStart })
       .getRawOne<{ total: string }>();
 
@@ -307,6 +309,7 @@ export class LocalUsageRepository extends UsageRepository {
   }
 
   async getMonthlyCreditUsageForUsers(
+    organizationId: UUID,
     userIds: UUID[],
     monthStart: Date,
   ): Promise<number> {
@@ -317,7 +320,8 @@ export class LocalUsageRepository extends UsageRepository {
     const result = await this.usageRepository
       .createQueryBuilder('usage')
       .select('COALESCE(SUM(usage.creditsConsumed), 0)', 'total')
-      .where('usage.userId IN (:...userIds)', { userIds })
+      .where('usage.organizationId = :organizationId', { organizationId })
+      .andWhere('usage.userId IN (:...userIds)', { userIds })
       .andWhere('usage.createdAt >= :monthStart', { monthStart })
       .getRawOne<{ total: string }>();
 
