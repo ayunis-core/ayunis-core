@@ -70,6 +70,7 @@ BE_ESLINT_STATUS_FILE="$STATUS_DIR/be_eslint.status"
 COMPLEXITY_STATUS_FILE="$STATUS_DIR/complexity.status"
 BE_PRETTIER_STATUS_FILE="$STATUS_DIR/be_prettier.status"
 BE_TSC_STATUS_FILE="$STATUS_DIR/be_tsc.status"
+BE_JEST_STATUS_FILE="$STATUS_DIR/be_jest.status"
 DEPCRUISE_STATUS_FILE="$STATUS_DIR/depcruise.status"
 FE_DEPCRUISE_STATUS_FILE="$STATUS_DIR/fe_depcruise.status"
 BE_DUPLICATION_STATUS_FILE="$STATUS_DIR/be_duplication.status"
@@ -226,6 +227,29 @@ run_be_tsc() {
   printf "%s" "$STATUS" > "$STATUS_FILE"
 }
 
+run_be_jest() {
+  STATUS_FILE="$1"
+  print_section "Backend • Jest (tests related to staged TS)"
+  printf "%s\n" "$BE_TS_STAGED" \
+    | sed 's#^ayunis-core-backend/##' \
+    | sed 's#^# - #'
+  set +e
+  (
+    cd ayunis-core-backend >/dev/null 2>&1
+    # --findRelatedTests runs only the *.spec.ts that import the staged files
+    # (plus any staged spec files themselves), so this stays fast and scoped to
+    # the change. --passWithNoTests keeps commits that touch no covered code
+    # green; --bail stops at the first failing suite.
+    printf "%s" "$BE_TS_STAGED" \
+      | sed 's#^ayunis-core-backend/##' \
+      | tr '\n' '\0' \
+      | xargs -0 pnpm exec jest --bail --passWithNoTests --findRelatedTests
+  )
+  STATUS=$?
+  set -e
+  printf "%s" "$STATUS" > "$STATUS_FILE"
+}
+
 # Generic checks for one workspace package under packages/* (eslint, prettier,
 # typecheck, complexity, circular deps, duplication). Runs as a single parallel
 # job per touched package, so new packages need no edits to this hook.
@@ -354,6 +378,7 @@ if [ -n "$BE_TS_STAGED" ]; then
   run_be_eslint "$BE_ESLINT_STATUS_FILE" &
   run_be_prettier "$BE_PRETTIER_STATUS_FILE" &
   run_be_tsc "$BE_TSC_STATUS_FILE" &
+  run_be_jest "$BE_JEST_STATUS_FILE" &
 fi
 
 # Complexity gate (backend + workspace packages) — same check as CI.
@@ -400,6 +425,7 @@ ESLINT_STATUS=$(cat "$BE_ESLINT_STATUS_FILE" 2>/dev/null || printf "0")
 COMPLEXITY_STATUS=$(cat "$COMPLEXITY_STATUS_FILE" 2>/dev/null || printf "0")
 PRETTIER_STATUS=$(cat "$BE_PRETTIER_STATUS_FILE" 2>/dev/null || printf "0")
 BE_TSC_STATUS=$(cat "$BE_TSC_STATUS_FILE" 2>/dev/null || printf "0")
+BE_JEST_STATUS=$(cat "$BE_JEST_STATUS_FILE" 2>/dev/null || printf "0")
 DEPCRUISE_STATUS=$(cat "$DEPCRUISE_STATUS_FILE" 2>/dev/null || printf "0")
 FE_DEPCRUISE_STATUS=$(cat "$FE_DEPCRUISE_STATUS_FILE" 2>/dev/null || printf "0")
 BE_DUPLICATION_STATUS=$(cat "$BE_DUPLICATION_STATUS_FILE" 2>/dev/null || printf "0")
@@ -461,6 +487,12 @@ if [ -n "$BE_TS_STAGED" ]; then
     FAILED=1
   else
     printf "%b\n" "${GREEN}✅ Backend TypeScript typecheck passed${NC}"
+  fi
+  if [ "$BE_JEST_STATUS" -ne 0 ]; then
+    printf "%b\n" "${RED}❌ Backend Jest (related tests) failed${NC}"
+    FAILED=1
+  else
+    printf "%b\n" "${GREEN}✅ Backend Jest (related tests) passed${NC}"
   fi
 fi
 
