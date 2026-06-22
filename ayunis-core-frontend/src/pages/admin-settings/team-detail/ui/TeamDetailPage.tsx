@@ -18,7 +18,9 @@ import {
 import { TeamMembersList } from './TeamMembersList';
 import { AddTeamMemberDialog } from './AddTeamMemberDialog';
 import { TeamModelsTab } from './TeamModelsTab';
+import { TeamCreditLimitCard } from './TeamCreditLimitCard';
 import SettingsLayout from '../../admin-settings-layout';
+import { useHasCreditBudget } from '@/features/credit-limits';
 import type { TeamDetail, PaginatedTeamMembers } from '../model/types';
 
 interface TeamDetailPageProps {
@@ -31,8 +33,10 @@ export function TeamDetailPage({
   membersResponse,
 }: Readonly<TeamDetailPageProps>) {
   const { t } = useTranslation('admin-settings-teams');
+  const { t: tCredit } = useTranslation('admin-settings-credit-limits');
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('members');
+  const hasCreditBudget = useHasCreditBudget();
 
   const headerActions =
     activeTab === 'members' ? (
@@ -43,7 +47,7 @@ export function TeamDetailPage({
 
   return (
     <SettingsLayout action={headerActions} title={team.name}>
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs className="gap-4" value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="members">
             {t('teamDetail.tabs.members')}
@@ -51,6 +55,11 @@ export function TeamDetailPage({
           <TabsTrigger value="models">
             {t('teamDetail.tabs.models')}
           </TabsTrigger>
+          {hasCreditBudget && (
+            <TabsTrigger value="credit-limit">
+              {tCredit('creditLimits.teamCard.title')}
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="members">
@@ -84,6 +93,12 @@ export function TeamDetailPage({
             modelOverrideEnabled={team.modelOverrideEnabled}
           />
         </TabsContent>
+
+        {hasCreditBudget && (
+          <TabsContent value="credit-limit">
+            <TeamCreditLimitCard teamId={team.id} teamName={team.name} />
+          </TabsContent>
+        )}
       </Tabs>
 
       <AddTeamMemberDialog

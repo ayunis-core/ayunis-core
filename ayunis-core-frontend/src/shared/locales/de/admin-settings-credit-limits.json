@@ -1,0 +1,36 @@
+{
+  "creditLimits": {
+    "menu": {
+      "set": "Guthaben-Limit festlegen",
+      "edit": "Guthaben-Limit bearbeiten",
+      "remove": "Guthaben-Limit entfernen"
+    },
+    "teamCard": {
+      "title": "Guthaben-Limit",
+      "current": "{{used}} / {{limit}} Credits diesen Monat verbraucht",
+      "none": "Kein Guthaben-Limit gesetzt — es gilt nur das Organisationsbudget."
+    },
+    "set": {
+      "success": "Guthaben-Limit gespeichert",
+      "notFound": "Dieser Benutzer oder dieses Team existiert nicht mehr",
+      "invalid": "Das Guthaben-Limit muss null oder größer sein",
+      "error": "Guthaben-Limit konnte nicht gespeichert werden"
+    },
+    "remove": {
+      "success": "Guthaben-Limit entfernt",
+      "notFound": "Dieses Guthaben-Limit existiert nicht mehr",
+      "error": "Guthaben-Limit konnte nicht entfernt werden"
+    },
+    "dialog": {
+      "userTitle": "Nutzer-Guthaben-Limit",
+      "teamTitle": "Team-Guthaben-Limit",
+      "description": "Monatliches Guthaben für {{name}}. 0 blockiert jegliche Nutzung; entfernen Sie das Limit, um es innerhalb des Organisationsbudgets unbegrenzt zu lassen.",
+      "creditsLabel": "Monatliche Credits",
+      "creditsRequired": "Bitte einen Credit-Betrag eingeben",
+      "creditsMin": "Muss 0 oder größer sein",
+      "creditsHint": "Credits pro Kalendermonat. 0 sperrt das Ziel vollständig.",
+      "cancel": "Abbrechen",
+      "save": "Speichern"
+    }
+  }
+}

@@ -59,4 +59,19 @@ export abstract class UsageRepository {
     organizationId: UUID,
     monthStart: Date,
   ): Promise<number>;
+
+  abstract getTotalMonthlyCreditUsageForUser(
+    userId: UUID,
+    monthStart: Date,
+  ): Promise<number>;
+
+  abstract getTotalMonthlyCreditUsageForUsers(
+    userIds: UUID[],
+    monthStart: Date,
+  ): Promise<number>;
+
+  abstract getMonthlyCreditUsagePerUser(
+    userIds: UUID[],
+    monthStart: Date,
+  ): Promise<Map<UUID, number>>;
 }

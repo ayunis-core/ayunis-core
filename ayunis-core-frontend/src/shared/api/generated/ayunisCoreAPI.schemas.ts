@@ -3998,6 +3998,50 @@ export interface UpdateTrialRequestDto {
   messagesSent?: number;
 }
 
+export interface UserCreditLimitItemDto {
+  userId: string;
+  name: string;
+  email: string;
+  /** Configured monthly credit limit */
+  monthlyCredits: number;
+  /** Credits consumed in the current calendar month */
+  creditsUsed: number;
+}
+
+export interface TeamCreditLimitItemDto {
+  teamId: string;
+  name: string;
+  /** Configured monthly credit limit */
+  monthlyCredits: number;
+  /** Credits consumed by all current team members in the current month */
+  creditsUsed: number;
+}
+
+export interface SetCreditLimitDto {
+  /**
+   * The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.
+   * @minimum 0
+   */
+  monthlyCredits: number;
+}
+
+export type CreditLimitResponseDtoScope = typeof CreditLimitResponseDtoScope[keyof typeof CreditLimitResponseDtoScope];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreditLimitResponseDtoScope = {
+  USER: 'USER',
+  TEAM: 'TEAM',
+} as const;
+
+export interface CreditLimitResponseDto {
+  id: string;
+  scope: CreditLimitResponseDtoScope;
+  /** The user or team the limit applies to, per `scope` */
+  targetId: string;
+  monthlyCredits: number;
+}
+
 export interface UserSystemPromptResponseDto {
   /**
    * The custom system prompt for the user, or null if not set

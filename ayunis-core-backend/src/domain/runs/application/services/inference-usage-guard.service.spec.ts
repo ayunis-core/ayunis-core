@@ -1,8 +1,10 @@
 import { randomUUID } from 'crypto';
 import type { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
 import type { CreditBudgetGuardService } from './credit-budget-guard.service';
+import type { CreditLimitGuardService } from './credit-limit-guard.service';
 import type { CollectUsageAsyncService } from './collect-usage-async.service';
 import { InferenceUsageGuard } from './inference-usage-guard.service';
+import { UserCreditLimitExceededError } from 'src/iam/credit-limits/application/credit-limits.errors';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
@@ -14,6 +16,7 @@ describe('InferenceUsageGuard', () => {
   let guard: InferenceUsageGuard;
   let checkQuotaUseCase: jest.Mocked<CheckQuotaUseCase>;
   let creditBudgetGuardService: jest.Mocked<CreditBudgetGuardService>;
+  let creditLimitGuardService: jest.Mocked<CreditLimitGuardService>;
   let collectUsageAsyncService: jest.Mocked<CollectUsageAsyncService>;
 
   const userId = randomUUID();
@@ -40,6 +43,9 @@ describe('InferenceUsageGuard', () => {
     creditBudgetGuardService = {
       ensureBudgetAvailable: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<CreditBudgetGuardService>;
+    creditLimitGuardService = {
+      ensureWithinLimits: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<CreditLimitGuardService>;
     collectUsageAsyncService = {
       collect: jest.fn(),
     } as unknown as jest.Mocked<CollectUsageAsyncService>;
@@ -47,6 +53,7 @@ describe('InferenceUsageGuard', () => {
     guard = new InferenceUsageGuard(
       checkQuotaUseCase,
       creditBudgetGuardService,
+      creditLimitGuardService,
       collectUsageAsyncService,
     );
   });
@@ -66,6 +73,24 @@ describe('InferenceUsageGuard', () => {
       expect(
         creditBudgetGuardService.ensureBudgetAvailable,
       ).toHaveBeenCalledWith(orgId);
+      expect(creditLimitGuardService.ensureWithinLimits).toHaveBeenCalledWith(
+        orgId,
+        userId,
+      );
+    });
+
+    it('propagates UserCreditLimitExceededError from the credit-limit guard', async () => {
+      creditLimitGuardService.ensureWithinLimits.mockRejectedValue(
+        new UserCreditLimitExceededError({
+          userId,
+          creditsUsed: 100,
+          limit: 50,
+        }),
+      );
+
+      await expect(
+        guard.preflight({ userId, orgId }, makeModel(ModelTier.MEDIUM)),
+      ).rejects.toBeInstanceOf(UserCreditLimitExceededError);
     });
 
     it('skips fair-use for a ZERO-tier model but still runs credit-budget', async () => {
@@ -118,6 +143,7 @@ describe('InferenceUsageGuard', () => {
       expect(
         creditBudgetGuardService.ensureBudgetAvailable,
       ).toHaveBeenCalledWith(orgId);
+      expect(creditLimitGuardService.ensureWithinLimits).not.toHaveBeenCalled();
     });
   });
 
