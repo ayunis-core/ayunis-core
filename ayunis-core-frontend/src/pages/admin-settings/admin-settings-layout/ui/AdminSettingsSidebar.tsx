@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   MessageSquareText,
   Trash2,
+  CreditCard,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -17,10 +18,14 @@ import {
   type SidebarMenuItem,
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
 import { useIsLetterheadsEnabled } from '@/features/feature-toggles';
+import { useSubscriptionsControllerHasActiveSubscription } from '@/shared/api/generated/ayunisCoreAPI';
 
 export function AdminSettingsSidebar() {
   const { t } = useTranslation('admin-settings-layout');
   const isLetterheadsEnabled = useIsLetterheadsEnabled();
+  const { data: subscription } =
+    useSubscriptionsControllerHasActiveSubscription();
+  const isUsageBased = subscription?.subscriptionType === 'USAGE_BASED';
 
   const menuItems: SidebarMenuItem[] = [
     {
@@ -73,6 +78,15 @@ export function AdminSettingsSidebar() {
       icon: <BarChart3 />,
       label: t('layout.usage'),
     },
+    ...(isUsageBased
+      ? [
+          {
+            to: '/admin-settings/credit-limits' as const,
+            icon: <CreditCard />,
+            label: t('layout.creditLimits'),
+          },
+        ]
+      : []),
     ...(isLetterheadsEnabled
       ? [
           {

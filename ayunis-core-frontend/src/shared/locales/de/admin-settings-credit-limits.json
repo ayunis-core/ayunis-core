@@ -1,0 +1,45 @@
+{
+  "creditLimits": {
+    "intro": "Legen Sie ein monatliches Guthaben-Limit für einzelne Nutzer oder Teams fest. Diese Limits gelten zusätzlich zum Gesamtbudget Ihrer Organisation. Ohne Limit ist ein Nutzer oder Team nur durch das Organisationsbudget begrenzt.",
+    "usage": "{{used}} / {{limit}} Credits diesen Monat verbraucht",
+    "edit": "Bearbeiten",
+    "status": {
+      "atLimit": "Limit erreicht",
+      "nearLimit": "Limit fast erreicht"
+    },
+    "users": {
+      "title": "Nutzer",
+      "add": "Nutzer-Limit hinzufügen",
+      "empty": "Keine Nutzer-Limits konfiguriert."
+    },
+    "teams": {
+      "title": "Teams",
+      "add": "Team-Limit hinzufügen",
+      "empty": "Keine Team-Limits konfiguriert."
+    },
+    "set": {
+      "success": "Guthaben-Limit gespeichert",
+      "error": "Guthaben-Limit konnte nicht gespeichert werden"
+    },
+    "remove": {
+      "action": "Entfernen",
+      "success": "Guthaben-Limit entfernt",
+      "error": "Guthaben-Limit konnte nicht entfernt werden"
+    },
+    "dialog": {
+      "userTitle": "Nutzer-Guthaben-Limit",
+      "teamTitle": "Team-Guthaben-Limit",
+      "description": "Legen Sie das monatliche Guthaben fest. 0 blockiert jegliche Nutzung; entfernen Sie das Limit, um den Nutzer bzw. das Team innerhalb des Organisationsbudgets unbegrenzt zu lassen.",
+      "userLabel": "Nutzer",
+      "teamLabel": "Team",
+      "targetPlaceholder": "Auswählen…",
+      "targetRequired": "Bitte ein Ziel auswählen",
+      "creditsLabel": "Monatliche Credits",
+      "creditsRequired": "Bitte einen Credit-Betrag eingeben",
+      "creditsMin": "Muss 0 oder größer sein",
+      "creditsHint": "Credits pro Kalendermonat. 0 sperrt das Ziel vollständig.",
+      "cancel": "Abbrechen",
+      "save": "Speichern"
+    }
+  }
+}

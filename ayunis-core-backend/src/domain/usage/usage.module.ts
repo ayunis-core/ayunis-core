@@ -6,6 +6,8 @@ import { GetModelDistributionUseCase } from './application/use-cases/get-model-d
 import { GetUserUsageUseCase } from './application/use-cases/get-user-usage/get-user-usage.use-case';
 import { GetUsageStatsUseCase } from './application/use-cases/get-usage-stats/get-usage-stats.use-case';
 import { GetMonthlyCreditUsageUseCase } from './application/use-cases/get-monthly-credit-usage/get-monthly-credit-usage.use-case';
+import { GetMonthlyCreditUsageForUserUseCase } from './application/use-cases/get-monthly-credit-usage-for-user/get-monthly-credit-usage-for-user.use-case';
+import { GetMonthlyCreditUsageForTeamUseCase } from './application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.use-case';
 import { GetCreditUsageUseCase } from './application/use-cases/get-credit-usage/get-credit-usage.use-case';
 import { UsageController } from './presenters/http/usage.controller';
 import { SuperAdminUsageController } from './presenters/http/super-admin-usage.controller';
@@ -20,12 +22,14 @@ import { UsageResponseMapper } from './presenters/http/mappers/usage-response.ma
 import { UsageUseCasesFacade } from './presenters/http/usage-use-cases.facade';
 import { PlatformConfigModule } from '../../iam/platform-config/platform-config.module';
 import { SubscriptionsModule } from '../../iam/subscriptions/subscriptions.module';
+import { TeamsModule } from '../../iam/teams/teams.module';
 
 @Module({
   imports: [
     LocalUsageRepositoryModule,
     PlatformConfigModule,
     SubscriptionsModule,
+    TeamsModule,
   ],
   controllers: [
     UsageController,
@@ -42,6 +46,8 @@ import { SubscriptionsModule } from '../../iam/subscriptions/subscriptions.modul
     GetUserUsageUseCase,
     GetUsageStatsUseCase,
     GetMonthlyCreditUsageUseCase,
+    GetMonthlyCreditUsageForUserUseCase,
+    GetMonthlyCreditUsageForTeamUseCase,
     GetCreditUsageUseCase,
 
     // Mappers
@@ -61,6 +67,8 @@ import { SubscriptionsModule } from '../../iam/subscriptions/subscriptions.modul
     GetUserUsageUseCase,
     GetUsageStatsUseCase,
     GetMonthlyCreditUsageUseCase,
+    GetMonthlyCreditUsageForUserUseCase,
+    GetMonthlyCreditUsageForTeamUseCase,
     GetCreditUsageUseCase,
   ],
 })
