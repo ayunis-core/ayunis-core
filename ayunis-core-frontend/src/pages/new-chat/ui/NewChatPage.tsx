@@ -145,17 +145,30 @@ export default function NewChatPage({
           type: blob.type || 'application/octet-stream',
         });
         const isCsvFile = filename.endsWith('.csv');
-        setSources((prev) => [
-          ...prev,
-          {
-            id: generateUUID(),
-            name: file.name,
-            type: isCsvFile
-              ? SourceResponseDtoType.data
-              : SourceResponseDtoType.text,
-            file,
-          },
-        ]);
+        setSources((prev) => {
+          // Idempotency guard: avoid adding the same sample multiple times
+          const duplicateExists = prev.some(
+            (s) =>
+              s.name === file.name &&
+              s.file.size === file.size &&
+              s.type ===
+                (isCsvFile
+                  ? SourceResponseDtoType.data
+                  : SourceResponseDtoType.text),
+          );
+          if (duplicateExists) return prev;
+          return [
+            ...prev,
+            {
+              id: generateUUID(),
+              name: file.name,
+              type: isCsvFile
+                ? SourceResponseDtoType.data
+                : SourceResponseDtoType.text,
+              file,
+            },
+          ];
+        });
       } catch {
         // Sample attachment is optional — ignore fetch failures silently.
       }

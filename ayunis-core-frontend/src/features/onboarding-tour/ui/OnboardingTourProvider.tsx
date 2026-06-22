@@ -8,6 +8,7 @@ import {
 } from 'react-joyride';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Card, CardDescription, CardTitle } from '@/shared/ui/shadcn/card';
+import { cn } from '@/shared/lib/shadcn/utils';
 import {
   OnboardingTourContext,
   type TourRequest,
@@ -43,13 +44,17 @@ function TourTooltip({
     (step.data as TourStepData | undefined)?.dismissLabel ?? '';
 
   return (
-    <Card {...tooltipProps} className="w-80 gap-3 p-4">
-      {step.title && <CardTitle>{step.title}</CardTitle>}
-      {step.content && <CardDescription>{step.content}</CardDescription>}
-      <Button size="sm" className="self-start" {...closeProps}>
-        {dismissLabel}
-      </Button>
-    </Card>
+    <div {...tooltipProps} className={cn('w-80', tooltipProps.className)}>
+      <Card>
+        <div className="p-4 flex flex-col gap-3">
+          {step.title && <CardTitle>{step.title}</CardTitle>}
+          {step.content && <CardDescription>{step.content}</CardDescription>}
+          <Button size="sm" className="self-start" {...closeProps}>
+            {dismissLabel}
+          </Button>
+        </div>
+      </Card>
+    </div>
   );
 }
 
