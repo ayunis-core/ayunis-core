@@ -38,6 +38,12 @@ export function useRunErrorHandler(_threadId: string) {
         case 'CREDIT_BUDGET_EXCEEDED':
           showError(t('chat.errorCreditBudgetExceeded'));
           break;
+        case 'USER_CREDIT_LIMIT_EXCEEDED':
+          showError(t('chat.errorUserCreditLimitExceeded'));
+          break;
+        case 'TEAM_CREDIT_LIMIT_EXCEEDED':
+          showError(t('chat.errorTeamCreditLimitExceeded'));
+          break;
         case undefined:
         default:
           showError(t('chat.errorUnexpected'));

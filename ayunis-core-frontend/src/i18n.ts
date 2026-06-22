@@ -18,6 +18,8 @@ import enAdminSettingsUsage from './shared/locales/en/admin-settings-usage.json'
 import deAdminSettingsUsage from './shared/locales/de/admin-settings-usage.json';
 import enAdminSettingsTeams from './shared/locales/en/admin-settings-teams.json';
 import deAdminSettingsTeams from './shared/locales/de/admin-settings-teams.json';
+import enAdminSettingsCreditLimits from './shared/locales/en/admin-settings-credit-limits.json';
+import deAdminSettingsCreditLimits from './shared/locales/de/admin-settings-credit-limits.json';
 import enSuperAdminSettingsLayout from './shared/locales/en/super-admin-settings-layout.json';
 import deSuperAdminSettingsLayout from './shared/locales/de/super-admin-settings-layout.json';
 import enSuperAdminSettingsOrgs from './shared/locales/en/super-admin-settings-orgs.json';
@@ -79,6 +81,7 @@ const resources = {
     'admin-settings-integrations': enAdminSettingsIntegrations,
     'admin-settings-usage': enAdminSettingsUsage,
     'admin-settings-teams': enAdminSettingsTeams,
+    'admin-settings-credit-limits': enAdminSettingsCreditLimits,
     'super-admin-settings-layout': enSuperAdminSettingsLayout,
     'super-admin-settings-orgs': enSuperAdminSettingsOrgs,
     'super-admin-settings-org': enSuperAdminSettingsOrg,
@@ -114,6 +117,7 @@ const resources = {
     'admin-settings-integrations': deAdminSettingsIntegrations,
     'admin-settings-usage': deAdminSettingsUsage,
     'admin-settings-teams': deAdminSettingsTeams,
+    'admin-settings-credit-limits': deAdminSettingsCreditLimits,
     'super-admin-settings-layout': deSuperAdminSettingsLayout,
     'super-admin-settings-orgs': deSuperAdminSettingsOrgs,
     'super-admin-settings-org': deSuperAdminSettingsOrg,

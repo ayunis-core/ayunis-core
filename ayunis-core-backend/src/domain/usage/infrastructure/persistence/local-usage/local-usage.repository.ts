@@ -189,11 +189,32 @@ export class LocalUsageRepository extends UsageRepository {
       }),
     ]);
 
-    const users = userStats.map((stat) => {
+    return {
+      users: new Paginated<UserUsageItem>({
+        data: this.mapUserStatsToItems(userStats),
+        limit: query.limit,
+        offset: query.offset,
+        total,
+      }),
+      totalCredits,
+    };
+  }
+
+  private mapUserStatsToItems(
+    userStats: Array<{
+      userId: unknown;
+      userName?: string | null;
+      userEmail?: string | null;
+      credits?: string | null;
+      requests?: string | null;
+      lastActivity?: Date | string | null;
+    }>,
+  ): UserUsageItem[] {
+    return userStats.map((stat) => {
       const { credits, requests, lastActivity } = this.mapUsageRow(stat);
 
       return new UserUsageItem({
-        userId: stat.userId as unknown as UUID,
+        userId: stat.userId as UUID,
         userName: stat.userName ?? '',
         userEmail: stat.userEmail ?? '',
         credits,
@@ -202,16 +223,6 @@ export class LocalUsageRepository extends UsageRepository {
         isActive: UserUsageItem.computeIsActive(lastActivity),
       });
     });
-
-    return {
-      users: new Paginated<UserUsageItem>({
-        data: users,
-        limit: query.limit,
-        offset: query.offset,
-        total,
-      }),
-      totalCredits,
-    };
   }
 
   async getUsageStats(query: GetUsageStatsQuery): Promise<UsageStats> {
@@ -279,6 +290,58 @@ export class LocalUsageRepository extends UsageRepository {
       .getRawOne<{ total: string }>();
 
     return parseFloat(result?.total ?? '0') || 0;
+  }
+
+  async getTotalMonthlyCreditUsageForUser(
+    userId: UUID,
+    monthStart: Date,
+  ): Promise<number> {
+    const result = await this.usageRepository
+      .createQueryBuilder('usage')
+      .select('COALESCE(SUM(usage.creditsConsumed), 0)', 'total')
+      .where('usage.userId = :userId', { userId })
+      .andWhere('usage.createdAt >= :monthStart', { monthStart })
+      .getRawOne<{ total: string }>();
+
+    return parseFloat(result?.total ?? '0') || 0;
+  }
+
+  async getTotalMonthlyCreditUsageForUsers(
+    userIds: UUID[],
+    monthStart: Date,
+  ): Promise<number> {
+    if (userIds.length === 0) {
+      return 0;
+    }
+
+    const result = await this.usageRepository
+      .createQueryBuilder('usage')
+      .select('COALESCE(SUM(usage.creditsConsumed), 0)', 'total')
+      .where('usage.userId IN (:...userIds)', { userIds })
+      .andWhere('usage.createdAt >= :monthStart', { monthStart })
+      .getRawOne<{ total: string }>();
+
+    return parseFloat(result?.total ?? '0') || 0;
+  }
+
+  async getMonthlyCreditUsagePerUser(
+    userIds: UUID[],
+    monthStart: Date,
+  ): Promise<Map<UUID, number>> {
+    if (userIds.length === 0) {
+      return new Map();
+    }
+
+    const rows = await this.usageRepository
+      .createQueryBuilder('usage')
+      .select('usage.userId', 'userId')
+      .addSelect('COALESCE(SUM(usage.creditsConsumed), 0)', 'total')
+      .where('usage.userId IN (:...userIds)', { userIds })
+      .andWhere('usage.createdAt >= :monthStart', { monthStart })
+      .groupBy('usage.userId')
+      .getRawMany<{ userId: UUID; total: string }>();
+
+    return new Map(rows.map((row) => [row.userId, parseFloat(row.total) || 0]));
   }
 
   private mapUsageRow(row: {
