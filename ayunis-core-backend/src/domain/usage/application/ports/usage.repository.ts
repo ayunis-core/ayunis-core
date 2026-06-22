@@ -59,4 +59,20 @@ export abstract class UsageRepository {
     organizationId: UUID,
     monthStart: Date,
   ): Promise<number>;
+
+  abstract getMonthlyCreditUsageForUser(
+    userId: UUID,
+    monthStart: Date,
+  ): Promise<number>;
+
+  // Pooled total for the set. Rename candidate: getTotalMonthlyCreditUsageForUsers.
+  abstract getMonthlyCreditUsageForUsers(
+    userIds: UUID[],
+    monthStart: Date,
+  ): Promise<number>;
+
+  abstract getMonthlyCreditUsagePerUser(
+    userIds: UUID[],
+    monthStart: Date,
+  ): Promise<Map<UUID, number>>;
 }
