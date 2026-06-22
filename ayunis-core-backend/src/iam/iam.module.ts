@@ -16,6 +16,7 @@ import { TrialsModule } from './trials/trials.module';
 import { LegalAcceptancesModule } from './legal-acceptances/legal-acceptances.module';
 import { QuotasModule } from './quotas/quotas.module';
 import { TeamsModule } from './teams/teams.module';
+import { CreditLimitsModule } from './credit-limits/credit-limits.module';
 import { PlatformConfigModule } from './platform-config/platform-config.module';
 import { AddonsModule } from './addons/addons.module';
 import { IpAllowlistModule } from './ip-allowlist/ip-allowlist.module';
@@ -28,6 +29,7 @@ import { SystemRolesGuard } from './authorization/application/guards/system-role
 import { SubscriptionGuard } from './authorization/application/guards/subscription.guard';
 import { RateLimitGuard } from './authorization/application/guards/rate-limit.guard';
 import { AddonGuard } from './authorization/application/guards/addon.guard';
+import { UsageBasedSubscriptionGuard } from './authorization/application/guards/usage-based-subscription.guard';
 
 // Feature modules re-exported by IamModule. Listed once and spread into both
 // `imports` and `exports` so the two cannot drift out of sync.
@@ -42,6 +44,7 @@ const IAM_FEATURE_MODULES = [
   LegalAcceptancesModule,
   QuotasModule,
   TeamsModule,
+  CreditLimitsModule,
   PlatformConfigModule,
   IpAllowlistModule,
   ApiKeysModule,
@@ -74,6 +77,7 @@ const GLOBAL_GUARD_PROVIDERS = [
   { provide: APP_GUARD, useExisting: SystemRolesGuard },
   { provide: APP_GUARD, useExisting: AddonGuard },
   { provide: APP_GUARD, useExisting: SubscriptionGuard },
+  { provide: APP_GUARD, useExisting: UsageBasedSubscriptionGuard },
   { provide: APP_GUARD, useExisting: RateLimitGuard },
 ];
 

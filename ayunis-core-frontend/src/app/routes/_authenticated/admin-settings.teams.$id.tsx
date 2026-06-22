@@ -7,6 +7,8 @@ import {
   getTeamsControllerListTeamMembersQueryKey,
   teamPermittedModelsControllerListTeamPermittedModels,
   getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey,
+  usageControllerGetCreditUsage,
+  getUsageControllerGetCreditUsageQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
 export const Route = createFileRoute(
@@ -18,6 +20,11 @@ export const Route = createFileRoute(
       queryKey:
         getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey(id),
       queryFn: () => teamPermittedModelsControllerListTeamPermittedModels(id),
+    });
+
+    void queryClient.prefetchQuery({
+      queryKey: getUsageControllerGetCreditUsageQueryKey(),
+      queryFn: () => usageControllerGetCreditUsage(),
     });
 
     const [team, membersResponse] = await Promise.all([

@@ -4057,6 +4057,45 @@ export interface UpdateTrialRequestDto {
   messagesSent?: number;
 }
 
+export interface UserCreditLimitItemDto {
+  userId: string;
+  name: string;
+  email: string;
+  /** Configured monthly credit limit */
+  monthlyCredits: number;
+  /** Credits consumed in the current calendar month */
+  creditsUsed: number;
+}
+
+export interface TeamCreditLimitItemDto {
+  teamId: string;
+  name: string;
+  /** Configured monthly credit limit */
+  monthlyCredits: number;
+  /** Credits consumed by all current team members in the current month */
+  creditsUsed: number;
+}
+
+export interface SetCreditLimitDto {
+  /**
+   * The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.
+   * @minimum 0
+   */
+  monthlyCredits: number;
+}
+
+export interface UserCreditLimitResponseDto {
+  id: string;
+  monthlyCredits: number;
+  userId: string;
+}
+
+export interface TeamCreditLimitResponseDto {
+  id: string;
+  monthlyCredits: number;
+  teamId: string;
+}
+
 export interface UserSystemPromptResponseDto {
   /**
    * The custom system prompt for the user, or null if not set
