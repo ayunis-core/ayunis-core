@@ -1,0 +1,41 @@
+{
+  "creditLimits": {
+    "menu": {
+      "set": "Set credit limit",
+      "edit": "Edit credit limit",
+      "remove": "Remove credit limit"
+    },
+    "teamCard": {
+      "title": "Credit limit",
+      "current": "{{used}} / {{limit}} credits used this month",
+      "none": "No credit limit set — only the organization budget applies."
+    },
+    "column": {
+      "header": "Credit limit",
+      "value": "{{used}} / {{limit}}",
+      "none": "No limit"
+    },
+    "set": {
+      "success": "Credit limit saved",
+      "notFound": "That user or team no longer exists",
+      "invalid": "The credit limit must be zero or greater",
+      "error": "Could not save the credit limit"
+    },
+    "remove": {
+      "success": "Credit limit removed",
+      "notFound": "That credit limit no longer exists",
+      "error": "Could not remove the credit limit"
+    },
+    "dialog": {
+      "userTitle": "User credit limit",
+      "teamTitle": "Team credit limit",
+      "description": "Monthly credit allowance for {{name}}. 0 blocks all usage; remove the limit to make it unlimited within the organization budget.",
+      "creditsLabel": "Monthly credits",
+      "creditsRequired": "Please enter a credit amount",
+      "creditsMin": "Must be 0 or greater",
+      "creditsHint": "Credits per calendar month. 0 freezes the target entirely.",
+      "cancel": "Cancel",
+      "save": "Save"
+    }
+  }
+}
