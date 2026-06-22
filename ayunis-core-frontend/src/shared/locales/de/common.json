@@ -51,7 +51,7 @@
     "documentTooLargeForChat": "Dieses Dokument ist zu groß für die Verarbeitung im Chat. Bitte laden Sie es stattdessen in eine Wissenssammlung hoch.",
     "fileSourceDeleteError": "Fehler beim Löschen der Datei",
     "sourceNotFound": "Datei nicht gefunden. Sie wurde möglicherweise gelöscht.",
-    "uploadFile": "Datei hochladen",
+    "uploadFile": "Datei oder Bild hochladen",
     "imageLimitExceeded": "Maximal {{max}} Bilder erlaubt. Einige Bilder wurden nicht hinzugefügt.",
     "addKnowledgeBase": "Wissenssammlung hinzufügen",
     "knowledgeBasesLoadError": "Fehler beim Laden der Wissenssammlungen",

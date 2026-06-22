@@ -51,7 +51,7 @@
     "documentTooLargeForChat": "This document is too large to process in a chat. Please add it to a knowledge base instead.",
     "fileSourceDeleteError": "Error deleting file",
     "sourceNotFound": "File not found. It may have been deleted.",
-    "uploadFile": "Upload File",
+    "uploadFile": "Upload File or Image",
     "imageLimitExceeded": "Maximum {{max}} images allowed. Some images were not added.",
     "addKnowledgeBase": "Add Knowledge Base",
     "knowledgeBasesLoadError": "Error loading knowledge bases",
