@@ -7917,6 +7917,144 @@
         "tags": ["Super Admin Trials"]
       }
     },
+    "/credit-limits": {
+      "get": {
+        "operationId": "CreditLimitsController_getOverview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditLimitsOverviewResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List configured credit limits with current consumption",
+        "tags": ["credit-limits"]
+      }
+    },
+    "/credit-limits/users/{userId}": {
+      "put": {
+        "operationId": "CreditLimitsController_setUserLimit",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCreditLimitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditLimitResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set a monthly credit limit for a user",
+        "tags": ["credit-limits"]
+      },
+      "delete": {
+        "operationId": "CreditLimitsController_removeUserLimit",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Remove a user credit limit (back to unlimited)",
+        "tags": ["credit-limits"]
+      }
+    },
+    "/credit-limits/teams/{teamId}": {
+      "put": {
+        "operationId": "CreditLimitsController_setTeamLimit",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCreditLimitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditLimitResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set a monthly credit limit for a team",
+        "tags": ["credit-limits"]
+      },
+      "delete": {
+        "operationId": "CreditLimitsController_removeTeamLimit",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Remove a team credit limit (back to unlimited)",
+        "tags": ["credit-limits"]
+      }
+    },
     "/chat-settings/system-prompt": {
       "get": {
         "description": "Returns the custom system prompt for the authenticated user, or null if not set.",
@@ -15073,6 +15211,125 @@
             "minimum": 0
           }
         }
+      },
+      "UserCreditLimitItemDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "name": {
+            "type": "string",
+            "example": "Jane Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "jane.doe@example.com"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Configured monthly credit limit",
+            "example": 5000
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Credits consumed in the current calendar month",
+            "example": 1240
+          }
+        },
+        "required": ["userId", "name", "email", "monthlyCredits", "creditsUsed"]
+      },
+      "TeamCreditLimitItemDto": {
+        "type": "object",
+        "properties": {
+          "teamId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440002"
+          },
+          "name": {
+            "type": "string",
+            "example": "Engineering"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Configured monthly credit limit",
+            "example": 20000
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Credits consumed by all current team members in the current month",
+            "example": 8300
+          }
+        },
+        "required": ["teamId", "name", "monthlyCredits", "creditsUsed"]
+      },
+      "CreditLimitsOverviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserCreditLimitItemDto"
+            }
+          },
+          "teams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamCreditLimitItemDto"
+            }
+          }
+        },
+        "required": ["users", "teams"]
+      },
+      "SetCreditLimitDto": {
+        "type": "object",
+        "properties": {
+          "monthlyCredits": {
+            "type": "number",
+            "description": "The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.",
+            "example": 5000,
+            "minimum": 0
+          }
+        },
+        "required": ["monthlyCredits"]
+      },
+      "CreditLimitResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "scope": {
+            "type": "string",
+            "enum": ["USER", "TEAM"],
+            "example": "USER"
+          },
+          "targetUserId": {
+            "type": "object",
+            "description": "Set when scope is USER",
+            "example": "550e8400-e29b-41d4-a716-446655440001",
+            "nullable": true
+          },
+          "targetTeamId": {
+            "type": "object",
+            "description": "Set when scope is TEAM",
+            "example": "550e8400-e29b-41d4-a716-446655440002",
+            "nullable": true
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "example": 5000
+          }
+        },
+        "required": [
+          "id",
+          "scope",
+          "targetUserId",
+          "targetTeamId",
+          "monthlyCredits"
+        ]
       },
       "UserSystemPromptResponseDto": {
         "type": "object",
