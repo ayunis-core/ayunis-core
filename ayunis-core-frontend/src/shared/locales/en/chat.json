@@ -24,6 +24,8 @@
     "errorQuotaExceeded": "You have reached the message limit. Please try again later.",
     "errorQuotaExceededWithTime": "You have reached the message limit. Please try again in {{minutes}} minutes.",
     "errorCreditBudgetExceeded": "You have reached the credit limit for this month.",
+    "errorUserCreditLimitExceeded": "You have reached your monthly credit limit.",
+    "errorTeamCreditLimitExceeded": "Your team has reached its monthly credit limit.",
     "errorAddKnowledgeBase": "Failed to add knowledge base. Please try again.",
     "errorRemoveKnowledgeBase": "Failed to remove knowledge base. Please try again.",
     "errorAddIntegration": "Failed to add integration",

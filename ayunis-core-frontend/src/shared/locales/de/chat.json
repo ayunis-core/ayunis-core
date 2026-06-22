@@ -24,6 +24,8 @@
     "errorQuotaExceeded": "Sie haben das Nachrichtenlimit erreicht. Bitte versuchen Sie es später erneut.",
     "errorQuotaExceededWithTime": "Sie haben das Nachrichtenlimit erreicht. Bitte versuchen Sie es in {{minutes}} Minuten erneut.",
     "errorCreditBudgetExceeded": "Sie haben das Credits-Limit für diesen Monat erreicht.",
+    "errorUserCreditLimitExceeded": "Sie haben Ihr monatliches Guthaben-Limit erreicht.",
+    "errorTeamCreditLimitExceeded": "Ihr Team hat sein monatliches Guthaben-Limit erreicht.",
     "errorAddKnowledgeBase": "Wissenssammlung konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut.",
     "errorRemoveKnowledgeBase": "Wissenssammlung konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
     "errorAddIntegration": "Integration konnte nicht hinzugefügt werden",

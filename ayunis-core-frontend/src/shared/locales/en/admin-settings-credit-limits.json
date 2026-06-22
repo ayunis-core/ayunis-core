@@ -1,0 +1,45 @@
+{
+  "creditLimits": {
+    "intro": "Set a monthly credit allowance for individual users or teams. These limits apply on top of your organization's overall credit budget. Without a limit, a user or team is only bound by the organization budget.",
+    "usage": "{{used}} / {{limit}} credits used this month",
+    "edit": "Edit",
+    "status": {
+      "atLimit": "Limit reached",
+      "nearLimit": "Near limit"
+    },
+    "users": {
+      "title": "Users",
+      "add": "Add user limit",
+      "empty": "No user limits configured."
+    },
+    "teams": {
+      "title": "Teams",
+      "add": "Add team limit",
+      "empty": "No team limits configured."
+    },
+    "set": {
+      "success": "Credit limit saved",
+      "error": "Could not save the credit limit"
+    },
+    "remove": {
+      "action": "Remove",
+      "success": "Credit limit removed",
+      "error": "Could not remove the credit limit"
+    },
+    "dialog": {
+      "userTitle": "User credit limit",
+      "teamTitle": "Team credit limit",
+      "description": "Set the monthly credit allowance. 0 blocks all usage; remove the limit to make the target unlimited within the organization budget.",
+      "userLabel": "User",
+      "teamLabel": "Team",
+      "targetPlaceholder": "Select…",
+      "targetRequired": "Please select a target",
+      "creditsLabel": "Monthly credits",
+      "creditsRequired": "Please enter a credit amount",
+      "creditsMin": "Must be 0 or greater",
+      "creditsHint": "Credits per calendar month. 0 freezes the target entirely.",
+      "cancel": "Cancel",
+      "save": "Save"
+    }
+  }
+}
