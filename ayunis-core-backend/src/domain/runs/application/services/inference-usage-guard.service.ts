@@ -5,6 +5,7 @@ import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-qu
 import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
 import { tierToFairUseQuotaType } from 'src/iam/quotas/domain/tier-to-quota-type';
 import { CreditBudgetGuardService } from './credit-budget-guard.service';
+import { CreditLimitGuardService } from './credit-limit-guard.service';
 import { CollectUsageAsyncService } from './collect-usage-async.service';
 
 /**
@@ -30,6 +31,7 @@ export class InferenceUsageGuard {
   constructor(
     private readonly checkQuotaUseCase: CheckQuotaUseCase,
     private readonly creditBudgetGuardService: CreditBudgetGuardService,
+    private readonly creditLimitGuardService: CreditLimitGuardService,
     private readonly collectUsageAsyncService: CollectUsageAsyncService,
   ) {}
 
@@ -50,6 +52,14 @@ export class InferenceUsageGuard {
       }
     }
     await this.creditBudgetGuardService.ensureBudgetAvailable(principal.orgId);
+    // Per-user / per-team allowances are user-scoped; api-key principals skip
+    // (matching fair-use) but still pay the org-scoped credit budget above.
+    if (principal.userId) {
+      await this.creditLimitGuardService.ensureWithinLimits(
+        principal.orgId,
+        principal.userId,
+      );
+    }
   }
 
   collectUsage(

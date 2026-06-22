@@ -16,6 +16,7 @@ import { TrialsModule } from './trials/trials.module';
 import { LegalAcceptancesModule } from './legal-acceptances/legal-acceptances.module';
 import { QuotasModule } from './quotas/quotas.module';
 import { TeamsModule } from './teams/teams.module';
+import { CreditLimitsModule } from './credit-limits/credit-limits.module';
 import { PlatformConfigModule } from './platform-config/platform-config.module';
 import { AddonsModule } from './addons/addons.module';
 import { IpAllowlistModule } from './ip-allowlist/ip-allowlist.module';
@@ -42,6 +43,7 @@ const IAM_FEATURE_MODULES = [
   LegalAcceptancesModule,
   QuotasModule,
   TeamsModule,
+  CreditLimitsModule,
   PlatformConfigModule,
   IpAllowlistModule,
   ApiKeysModule,
