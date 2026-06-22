@@ -8,6 +8,7 @@ import { AddonsModule } from '../addons/addons.module';
 import { EmailConfirmGuard } from './application/guards/email-confirm.guard';
 import { SystemRolesGuard } from './application/guards/system-roles.guard';
 import { AddonGuard } from './application/guards/addon.guard';
+import { UsageBasedSubscriptionGuard } from './application/guards/usage-based-subscription.guard';
 
 /**
  * Authorization guards live here as regular providers and are exported for
@@ -30,6 +31,7 @@ import { AddonGuard } from './application/guards/addon.guard';
     SubscriptionGuard,
     RateLimitGuard,
     AddonGuard,
+    UsageBasedSubscriptionGuard,
   ],
   exports: [
     EmailConfirmGuard,
@@ -38,6 +40,7 @@ import { AddonGuard } from './application/guards/addon.guard';
     SubscriptionGuard,
     RateLimitGuard,
     AddonGuard,
+    UsageBasedSubscriptionGuard,
     SubscriptionsModule,
     TrialsModule,
     AddonsModule,

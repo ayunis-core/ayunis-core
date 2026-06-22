@@ -5,5 +5,12 @@
       "src/pages/knowledge-bases/ui/KnowledgeBasesPage.tsx",
       "src/pages/skills/ui/SkillsPage.tsx"
     ]
+  },
+  {
+    "comment": "Per-scope credit-limit dialogs are intentionally page-local copies (user vs team) differing only in the title copy — kept separate rather than a shared widget by design",
+    "files": [
+      "src/pages/admin-settings/team-detail/ui/SetTeamCreditLimitDialog.tsx",
+      "src/pages/admin-settings/users-settings/ui/SetUserCreditLimitDialog.tsx"
+    ]
   }
 ]
