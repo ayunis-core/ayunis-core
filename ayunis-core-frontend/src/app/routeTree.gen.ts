@@ -40,6 +40,7 @@ import { Route as AuthenticatedAdminSettingsRetentionRouteImport } from './route
 import { Route as AuthenticatedAdminSettingsModelsRouteImport } from './routes/_authenticated/admin-settings.models'
 import { Route as AuthenticatedAdminSettingsIntegrationsRouteImport } from './routes/_authenticated/admin-settings.integrations'
 import { Route as AuthenticatedAdminSettingsInstructionsRouteImport } from './routes/_authenticated/admin-settings.instructions'
+import { Route as AuthenticatedAdminSettingsCreditLimitsRouteImport } from './routes/_authenticated/admin-settings.credit-limits'
 import { Route as AuthenticatedAdminSettingsApiKeysRouteImport } from './routes/_authenticated/admin-settings.api-keys'
 import { Route as AuthenticatedAdminSettingsAnonymizationRouteImport } from './routes/_authenticated/admin-settings.anonymization'
 import { Route as AuthenticatedAcademyChapterIdRouteImport } from './routes/_authenticated/academy.$chapterId'
@@ -231,6 +232,12 @@ const AuthenticatedAdminSettingsInstructionsRoute =
     path: '/admin-settings/instructions',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminSettingsCreditLimitsRoute =
+  AuthenticatedAdminSettingsCreditLimitsRouteImport.update({
+    id: '/admin-settings/credit-limits',
+    path: '/admin-settings/credit-limits',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminSettingsApiKeysRoute =
   AuthenticatedAdminSettingsApiKeysRouteImport.update({
     id: '/admin-settings/api-keys',
@@ -348,6 +355,7 @@ export interface FileRoutesByFullPath {
   '/academy/$chapterId': typeof AuthenticatedAcademyChapterIdRoute
   '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
+  '/admin-settings/credit-limits': typeof AuthenticatedAdminSettingsCreditLimitsRoute
   '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
@@ -397,6 +405,7 @@ export interface FileRoutesByTo {
   '/academy/$chapterId': typeof AuthenticatedAcademyChapterIdRoute
   '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
+  '/admin-settings/credit-limits': typeof AuthenticatedAdminSettingsCreditLimitsRoute
   '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
@@ -448,6 +457,7 @@ export interface FileRoutesById {
   '/_authenticated/academy/$chapterId': typeof AuthenticatedAcademyChapterIdRoute
   '/_authenticated/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/_authenticated/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
+  '/_authenticated/admin-settings/credit-limits': typeof AuthenticatedAdminSettingsCreditLimitsRoute
   '/_authenticated/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/_authenticated/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/_authenticated/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
@@ -499,6 +509,7 @@ export interface FileRouteTypes {
     | '/academy/$chapterId'
     | '/admin-settings/anonymization'
     | '/admin-settings/api-keys'
+    | '/admin-settings/credit-limits'
     | '/admin-settings/instructions'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
@@ -548,6 +559,7 @@ export interface FileRouteTypes {
     | '/academy/$chapterId'
     | '/admin-settings/anonymization'
     | '/admin-settings/api-keys'
+    | '/admin-settings/credit-limits'
     | '/admin-settings/instructions'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
@@ -598,6 +610,7 @@ export interface FileRouteTypes {
     | '/_authenticated/academy/$chapterId'
     | '/_authenticated/admin-settings/anonymization'
     | '/_authenticated/admin-settings/api-keys'
+    | '/_authenticated/admin-settings/credit-limits'
     | '/_authenticated/admin-settings/instructions'
     | '/_authenticated/admin-settings/integrations'
     | '/_authenticated/admin-settings/models'
@@ -866,6 +879,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsInstructionsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin-settings/credit-limits': {
+      id: '/_authenticated/admin-settings/credit-limits'
+      path: '/admin-settings/credit-limits'
+      fullPath: '/admin-settings/credit-limits'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsCreditLimitsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin-settings/api-keys': {
       id: '/_authenticated/admin-settings/api-keys'
       path: '/admin-settings/api-keys'
@@ -993,6 +1013,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAcademyChapterIdRoute: typeof AuthenticatedAcademyChapterIdRoute
   AuthenticatedAdminSettingsAnonymizationRoute: typeof AuthenticatedAdminSettingsAnonymizationRoute
   AuthenticatedAdminSettingsApiKeysRoute: typeof AuthenticatedAdminSettingsApiKeysRoute
+  AuthenticatedAdminSettingsCreditLimitsRoute: typeof AuthenticatedAdminSettingsCreditLimitsRoute
   AuthenticatedAdminSettingsInstructionsRoute: typeof AuthenticatedAdminSettingsInstructionsRoute
   AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
   AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
@@ -1035,6 +1056,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedAdminSettingsAnonymizationRoute,
   AuthenticatedAdminSettingsApiKeysRoute:
     AuthenticatedAdminSettingsApiKeysRoute,
+  AuthenticatedAdminSettingsCreditLimitsRoute:
+    AuthenticatedAdminSettingsCreditLimitsRoute,
   AuthenticatedAdminSettingsInstructionsRoute:
     AuthenticatedAdminSettingsInstructionsRoute,
   AuthenticatedAdminSettingsIntegrationsRoute:
