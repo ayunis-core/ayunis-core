@@ -9,6 +9,7 @@ import { CreditLimitScope } from '../../../domain/value-objects/credit-limit-sco
 import { InvalidCreditLimitError } from '../../credit-limits.errors';
 import { SetUserCreditLimitUseCase } from './set-user-credit-limit.use-case';
 import { SetUserCreditLimitCommand } from './set-user-credit-limit.command';
+import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 
 describe('SetUserCreditLimitUseCase', () => {
   let useCase: SetUserCreditLimitUseCase;
@@ -35,6 +36,12 @@ describe('SetUserCreditLimitUseCase', () => {
         SetUserCreditLimitUseCase,
         { provide: CreditLimitRepository, useValue: repository },
         { provide: ContextService, useValue: context },
+        {
+          provide: FindUserByIdUseCase,
+          useValue: {
+            execute: jest.fn().mockResolvedValue({ id: targetUserId, orgId }),
+          },
+        },
       ],
     }).compile();
 

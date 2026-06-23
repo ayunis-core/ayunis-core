@@ -9,6 +9,7 @@ import { CreditLimitScope } from '../../../domain/value-objects/credit-limit-sco
 import { InvalidCreditLimitError } from '../../credit-limits.errors';
 import { SetTeamCreditLimitUseCase } from './set-team-credit-limit.use-case';
 import { SetTeamCreditLimitCommand } from './set-team-credit-limit.command';
+import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 
 describe('SetTeamCreditLimitUseCase', () => {
   let useCase: SetTeamCreditLimitUseCase;
@@ -35,6 +36,12 @@ describe('SetTeamCreditLimitUseCase', () => {
         SetTeamCreditLimitUseCase,
         { provide: CreditLimitRepository, useValue: repository },
         { provide: ContextService, useValue: context },
+        {
+          provide: GetTeamUseCase,
+          useValue: {
+            execute: jest.fn().mockResolvedValue({ id: targetTeamId, orgId }),
+          },
+        },
       ],
     }).compile();
 

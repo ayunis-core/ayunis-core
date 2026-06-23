@@ -9,12 +9,14 @@ import {
 import { GetMonthlyCreditUsageForUserUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-user/get-monthly-credit-usage-for-user.use-case';
 import { GetMonthlyCreditUsageForTeamUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.use-case';
 import { CreditLimitGuardService } from './credit-limit-guard.service';
+import { GetMonthlyCreditLimitUseCase } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
 
 describe('CreditLimitGuardService', () => {
   let service: CreditLimitGuardService;
   let getLimits: { execute: jest.Mock };
   let getUserUsage: { execute: jest.Mock };
   let getTeamUsage: { execute: jest.Mock };
+  let getMonthlyCreditLimit: { execute: jest.Mock };
 
   const orgId = 'org-1' as UUID;
   const userId = 'user-1' as UUID;
@@ -26,6 +28,12 @@ describe('CreditLimitGuardService', () => {
     };
     getUserUsage = { execute: jest.fn().mockResolvedValue({ creditsUsed: 0 }) };
     getTeamUsage = { execute: jest.fn().mockResolvedValue({ creditsUsed: 0 }) };
+    getMonthlyCreditLimit = {
+      execute: jest.fn().mockResolvedValue({
+        monthlyCredits: null,
+        startsAt: null,
+      }),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -38,6 +46,10 @@ describe('CreditLimitGuardService', () => {
         {
           provide: GetMonthlyCreditUsageForTeamUseCase,
           useValue: getTeamUsage,
+        },
+        {
+          provide: GetMonthlyCreditLimitUseCase,
+          useValue: getMonthlyCreditLimit,
         },
       ],
     }).compile();

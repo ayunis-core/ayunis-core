@@ -10,10 +10,14 @@ import { GetMonthlyCreditUsageForUserUseCase } from 'src/domain/usage/applicatio
 import { GetMonthlyCreditUsageForUserQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-user/get-monthly-credit-usage-for-user.query';
 import { GetMonthlyCreditUsageForTeamUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.use-case';
 import { GetMonthlyCreditUsageForTeamQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.query';
+import { GetMonthlyCreditLimitUseCase } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
+import { GetMonthlyCreditLimitQuery } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.query';
 
 /**
  * Most-restrictive-wins: blocks a run if the acting user's personal limit OR
- * any team they belong to is exhausted, over the current calendar month (UTC).
+ * any team they belong to is exhausted, over the current billing period
+ * (anchored to the organization's subscription start date when available,
+ * otherwise the current calendar month in UTC).
  *
  * Lives in the runs module because it spans three domains that must not depend
  * on each other — credit-limits config, usage measurement, and teams.
@@ -26,9 +30,15 @@ export class CreditLimitGuardService {
     private readonly getCreditLimitsForUserUseCase: GetCreditLimitsForUserUseCase,
     private readonly getMonthlyCreditUsageForUserUseCase: GetMonthlyCreditUsageForUserUseCase,
     private readonly getMonthlyCreditUsageForTeamUseCase: GetMonthlyCreditUsageForTeamUseCase,
+    private readonly getMonthlyCreditLimitUseCase: GetMonthlyCreditLimitUseCase,
   ) {}
 
   async ensureWithinLimits(orgId: UUID, userId: UUID): Promise<void> {
+    // Align personal/team usage window with the organization's subscription window
+    const { startsAt } = await this.getMonthlyCreditLimitUseCase.execute(
+      new GetMonthlyCreditLimitQuery(orgId),
+    );
+
     const { userLimit, teamLimits } =
       await this.getCreditLimitsForUserUseCase.execute(
         new GetCreditLimitsForUserQuery(orgId, userId),
@@ -39,13 +49,18 @@ export class CreditLimitGuardService {
     }
 
     if (userLimit !== null) {
-      await this.ensureUserWithinLimit(userId, userLimit);
+      await this.ensureUserWithinLimit(
+        userId,
+        userLimit,
+        startsAt ?? undefined,
+      );
     }
 
     for (const teamLimit of teamLimits) {
       await this.ensureTeamWithinLimit(
         teamLimit.teamId,
         teamLimit.monthlyCredits,
+        startsAt ?? undefined,
       );
     }
   }
@@ -53,10 +68,11 @@ export class CreditLimitGuardService {
   private async ensureUserWithinLimit(
     userId: UUID,
     limit: number,
+    anchor?: Date,
   ): Promise<void> {
     const { creditsUsed } =
       await this.getMonthlyCreditUsageForUserUseCase.execute(
-        new GetMonthlyCreditUsageForUserQuery(userId),
+        new GetMonthlyCreditUsageForUserQuery(userId, anchor),
       );
 
     if (creditsUsed >= limit) {
@@ -72,10 +88,11 @@ export class CreditLimitGuardService {
   private async ensureTeamWithinLimit(
     teamId: UUID,
     limit: number,
+    anchor?: Date,
   ): Promise<void> {
     const { creditsUsed } =
       await this.getMonthlyCreditUsageForTeamUseCase.execute(
-        new GetMonthlyCreditUsageForTeamQuery(teamId),
+        new GetMonthlyCreditUsageForTeamQuery(teamId, anchor),
       );
 
     if (creditsUsed >= limit) {

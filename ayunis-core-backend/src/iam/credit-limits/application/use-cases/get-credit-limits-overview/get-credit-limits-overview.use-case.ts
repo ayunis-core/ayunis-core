@@ -10,6 +10,8 @@ import { GetMonthlyCreditUsageForUserUseCase } from 'src/domain/usage/applicatio
 import { GetMonthlyCreditUsageForUserQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-user/get-monthly-credit-usage-for-user.query';
 import { GetMonthlyCreditUsageForTeamUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.use-case';
 import { GetMonthlyCreditUsageForTeamQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.query';
+import { GetMonthlyCreditLimitUseCase } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
+import { GetMonthlyCreditLimitQuery } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.query';
 import { CreditLimitRepository } from '../../ports/credit-limit.repository';
 import { CreditLimit } from '../../../domain/credit-limit.entity';
 import { CreditLimitScope } from '../../../domain/value-objects/credit-limit-scope.enum';
@@ -33,6 +35,7 @@ export class GetCreditLimitsOverviewUseCase {
     private readonly listTeamsUseCase: ListTeamsUseCase,
     private readonly getMonthlyCreditUsageForUserUseCase: GetMonthlyCreditUsageForUserUseCase,
     private readonly getMonthlyCreditUsageForTeamUseCase: GetMonthlyCreditUsageForTeamUseCase,
+    private readonly getMonthlyCreditLimitUseCase: GetMonthlyCreditLimitUseCase,
   ) {}
 
   async execute(): Promise<CreditLimitsOverview> {
@@ -44,6 +47,11 @@ export class GetCreditLimitsOverviewUseCase {
     this.logger.log('Building credit limits overview', { orgId });
 
     try {
+      // Align usage windows with the organization's subscription billing anchor when available
+      const { startsAt } = await this.getMonthlyCreditLimitUseCase.execute(
+        new GetMonthlyCreditLimitQuery(orgId),
+      );
+
       const limits = await this.creditLimitRepository.findByOrg(orgId);
       const userLimits = limits.filter(
         (limit) => limit.scope === CreditLimitScope.USER,
@@ -53,8 +61,8 @@ export class GetCreditLimitsOverviewUseCase {
       );
 
       const [users, teams] = await Promise.all([
-        this.buildUserItems(userLimits),
-        this.buildTeamItems(teamLimits),
+        this.buildUserItems(userLimits, startsAt ?? undefined),
+        this.buildTeamItems(teamLimits, startsAt ?? undefined),
       ]);
 
       return { users, teams };
@@ -69,6 +77,7 @@ export class GetCreditLimitsOverviewUseCase {
 
   private async buildUserItems(
     userLimits: CreditLimit[],
+    anchor?: Date,
   ): Promise<UserCreditLimitOverviewItem[]> {
     if (userLimits.length === 0) {
       return [];
@@ -85,7 +94,7 @@ export class GetCreditLimitsOverviewUseCase {
         const userId = limit.targetUserId as UUID;
         const { creditsUsed } =
           await this.getMonthlyCreditUsageForUserUseCase.execute(
-            new GetMonthlyCreditUsageForUserQuery(userId),
+            new GetMonthlyCreditUsageForUserQuery(userId, anchor),
           );
         const user = usersById.get(userId);
         return {
@@ -101,6 +110,7 @@ export class GetCreditLimitsOverviewUseCase {
 
   private async buildTeamItems(
     teamLimits: CreditLimit[],
+    anchor?: Date,
   ): Promise<TeamCreditLimitOverviewItem[]> {
     if (teamLimits.length === 0) {
       return [];
@@ -116,7 +126,7 @@ export class GetCreditLimitsOverviewUseCase {
         const teamId = limit.targetTeamId as UUID;
         const { creditsUsed } =
           await this.getMonthlyCreditUsageForTeamUseCase.execute(
-            new GetMonthlyCreditUsageForTeamQuery(teamId),
+            new GetMonthlyCreditUsageForTeamQuery(teamId, anchor),
           );
         return {
           teamId,
