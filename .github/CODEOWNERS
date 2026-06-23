@@ -1,0 +1,33 @@
+# Broad default ownership would request reviews on unrelated changes.
+# Add top-level paths here explicitly when ownership should be enforced.
+
+# Repository automation and release management.
+/.github/ @devbydaniel
+/Dockerfile @devbydaniel
+/docker-compose.yml @devbydaniel
+
+# AI assistant configuration and instructions.
+/.cursor/ @devbydaniel
+/.codex/ @devbydaniel
+/.claude/ @devbydaniel
+
+# Ayunis Core applications.
+/ayunis-core-backend/ @devbydaniel
+/ayunis-core-frontend/ @devbydaniel
+/ayunis-core-anonymize/ @devbydaniel
+/ayunis-core-code-execution/ @devbydaniel
+
+# Workspace packages.
+/packages/ @devbydaniel
+
+# Dependabot-managed files - no auto-review.
+/package.json
+/package-lock.json
+/pnpm-lock.yaml
+/ayunis-core-backend/package.json
+/ayunis-core-frontend/package.json
+/ayunis-core-anonymize/pyproject.toml
+/ayunis-core-anonymize/uv.lock
+/ayunis-core-code-execution/requirements.txt
+/ayunis-core-code-execution/pyproject.toml
+/.github/dependabot.yml

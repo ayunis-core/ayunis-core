@@ -10,7 +10,14 @@ updates:
       prefix: "chore(deps)"
     labels:
       - "dependencies"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
+    groups:
+      root-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   # Backend (NestJS)
   - package-ecosystem: "npm"
@@ -23,21 +30,36 @@ updates:
     labels:
       - "dependencies"
       - "backend"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 8
     groups:
       nest:
         patterns:
           - "@nestjs/*"
+        update-types:
+          - "minor"
+          - "patch"
       typescript:
         patterns:
           - "typescript"
           - "ts-*"
           - "@types/*"
+        update-types:
+          - "minor"
+          - "patch"
       testing:
         patterns:
           - "jest"
           - "@jest/*"
           - "supertest"
+        update-types:
+          - "minor"
+          - "patch"
+      other:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   # Frontend (React/Vite)
   - package-ecosystem: "npm"
@@ -50,23 +72,41 @@ updates:
     labels:
       - "dependencies"
       - "frontend"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 8
     groups:
       react:
         patterns:
           - "react"
           - "react-dom"
           - "@types/react*"
+        update-types:
+          - "minor"
+          - "patch"
       tanstack:
         patterns:
           - "@tanstack/*"
+        update-types:
+          - "minor"
+          - "patch"
       radix:
         patterns:
           - "@radix-ui/*"
+        update-types:
+          - "minor"
+          - "patch"
       vite:
         patterns:
           - "vite"
           - "@vitejs/*"
+        update-types:
+          - "minor"
+          - "patch"
+      other:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   # Anonymize service (Python/uv)
   - package-ecosystem: "uv"
@@ -105,6 +145,13 @@ updates:
     labels:
       - "dependencies"
       - "docker"
+    groups:
+      docker-images:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "docker"
     directory: "/ayunis-core-anonymize"
@@ -139,3 +186,10 @@ updates:
     labels:
       - "dependencies"
       - "ci"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
