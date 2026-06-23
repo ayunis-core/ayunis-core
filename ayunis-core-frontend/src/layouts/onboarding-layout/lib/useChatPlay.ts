@@ -46,5 +46,8 @@ export function useChatPlay(prompt: string, active: boolean, startDelayMs = 0) {
     return () => window.clearTimeout(timer.current);
   }, [active, prompt, reduced, startDelayMs]);
 
+  if (reduced) {
+    return { stage: 'sent' as const, typed: prompt };
+  }
   return { stage, typed };
 }

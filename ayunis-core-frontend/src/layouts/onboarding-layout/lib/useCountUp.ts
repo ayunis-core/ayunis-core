@@ -37,5 +37,5 @@ export function useCountUp(
     };
   }, [active, reduced, target, startDelayMs, durationMs]);
 
-  return value;
+  return reduced ? target : value;
 }
