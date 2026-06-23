@@ -11,6 +11,24 @@ describe('appConfig', () => {
     process.env = originalEnv;
   });
 
+  describe('NODE_ENV normalization', () => {
+    it('defaults blank NODE_ENV to development', () => {
+      process.env.NODE_ENV = '';
+
+      expect(appConfig().isDevelopment).toBe(true);
+      expect(appConfig().isTest).toBe(false);
+      expect(appConfig().isProduction).toBe(false);
+    });
+
+    it('defaults whitespace-only NODE_ENV to development', () => {
+      process.env.NODE_ENV = '   ';
+
+      expect(appConfig().isDevelopment).toBe(true);
+      expect(appConfig().isTest).toBe(false);
+      expect(appConfig().isProduction).toBe(false);
+    });
+  });
+
   describe('isProduction', () => {
     it('is true when NODE_ENV is production', () => {
       process.env.NODE_ENV = 'production';
