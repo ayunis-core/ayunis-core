@@ -17,11 +17,11 @@ const decimalTransformer = {
  * partial indexes guarantee at most one limit per user and per team.
  */
 @Entity('credit_limits')
-@Index('UQ_credit_limit_user', ['orgId', 'targetUserId'], {
+@Index(['orgId', 'targetUserId'], {
   unique: true,
   where: '"target_user_id" IS NOT NULL',
 })
-@Index('UQ_credit_limit_team', ['orgId', 'targetTeamId'], {
+@Index(['orgId', 'targetTeamId'], {
   unique: true,
   where: '"target_team_id" IS NOT NULL',
 })
