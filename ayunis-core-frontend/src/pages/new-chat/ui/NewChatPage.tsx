@@ -75,7 +75,7 @@ export default function NewChatPage({
     if (initialPrompt) {
       chatInputRef.current?.setMessage(initialPrompt);
     }
-  }, [initialPrompt]);
+  }, [initialPrompt, hasSystemPrompt]);
 
   // Highlight the Send button when the chat was opened with a prefilled
   // prompt — gives the user a clear next step.
@@ -90,7 +90,7 @@ export default function NewChatPage({
       });
     }, 600);
     return () => clearTimeout(timeoutId);
-  }, [initialPrompt, t, launchTour]);
+  }, [initialPrompt, hasSystemPrompt, t, launchTour]);
 
   const [modelId, setModelId] = useState(selectedModelId);
   const [isAnonymous, setIsAnonymous] = useState(false);
