@@ -59,10 +59,14 @@ export function OnboardingReturnButton() {
       style={{
         opacity: revealed ? 1 : 0,
         transform: revealed ? 'translateY(0)' : 'translateY(8px)',
+        // Prevent accidental clicks while hidden during the reveal delay window
+        pointerEvents: revealed ? 'auto' : 'none',
       }}
+      aria-hidden={!revealed}
     >
       <Button
         size="sm"
+        disabled={!revealed}
         onClick={() => void navigate({ to: '/getting-started' })}
       >
         <ArrowLeft />
@@ -71,6 +75,7 @@ export function OnboardingReturnButton() {
       <Button
         size="icon"
         variant="ghost"
+        disabled={!revealed}
         onClick={handleDismiss}
         aria-label="Dismiss"
       >

@@ -37,13 +37,15 @@ function TourTooltip({
     (step.data as TourStepData | undefined)?.dismissLabel ?? '';
 
   return (
-    <Card {...tooltipProps} className="w-80 gap-3 p-4">
-      {step.title && <CardTitle>{step.title}</CardTitle>}
-      {step.content && <CardDescription>{step.content}</CardDescription>}
-      <Button size="sm" className="self-start" {...closeProps}>
-        {dismissLabel}
-      </Button>
-    </Card>
+    <div {...tooltipProps} className="w-80">
+      <Card>
+        {step.title && <CardTitle>{step.title}</CardTitle>}
+        {step.content && <CardDescription>{step.content}</CardDescription>}
+        <Button size="sm" {...closeProps}>
+          {dismissLabel}
+        </Button>
+      </Card>
+    </div>
   );
 }
 

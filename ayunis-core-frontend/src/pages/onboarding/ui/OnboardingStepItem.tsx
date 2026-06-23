@@ -113,7 +113,14 @@ export default function OnboardingStepItem({
     // link
     const { to, spotlight } = resolveLinkTarget(action.to, action.spotlight);
     setPendingStep(step.id, to, origin);
-    void navigate({ to }).then(() => {
+    const navPromise =
+      isAddDocumentsStep && firstKnowledgeBase
+        ? navigate({
+            to: '/knowledge-bases/$id',
+            params: { id: firstKnowledgeBase.id },
+          })
+        : navigate({ to });
+    void navPromise.then(() => {
       if (spotlight) triggerSpotlight(spotlight);
     });
   };
