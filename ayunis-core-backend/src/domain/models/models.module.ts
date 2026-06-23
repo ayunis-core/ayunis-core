@@ -98,9 +98,6 @@ import { TeamPermittedModelValidator } from './application/services/team-permitt
 import { ModelPolicyService } from './application/services/model-policy.service';
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
-import { OpenAIResponsesMessageConverter } from './infrastructure/converters/openai-responses-message.converter';
-import { GeminiMessageConverter } from './infrastructure/converters/gemini-message.converter';
-import { MistralMessageConverter } from './infrastructure/converters/mistral-message.converter';
 
 @Module({
   imports: [
@@ -127,9 +124,6 @@ import { MistralMessageConverter } from './infrastructure/converters/mistral-mes
   ],
   providers: [
     ModelProviderInfoRegistry,
-    OpenAIResponsesMessageConverter,
-    GeminiMessageConverter,
-    MistralMessageConverter,
     ModelResponseDtoMapper,
     ModelWithConfigResponseDtoMapper,
     CatalogModelResponseDtoMapper,

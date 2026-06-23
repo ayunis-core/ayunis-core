@@ -10,6 +10,7 @@ export default tseslint.config(
   {
     ignores: [
       'eslint.config.mjs',
+      'eslint.complexity.config.mjs',
       '.dependency-cruiser.cjs',
       'jest.setup.js',
       'src/config/env-register.js',
@@ -61,6 +62,22 @@ export default tseslint.config(
       '@typescript-eslint/no-duplicate-enum-values': 'error',
       eqeqeq: 'error',
       'unused-imports/no-unused-imports': 'error',
+
+      // Complexity gate (AST-accurate replacement for the old lizard tool).
+      // Thresholds mirror the previous lizard config. Kept at `warn` so the
+      // existing repo-wide backlog stays visible (editor + `pnpm lint`) without
+      // failing CI lint, while the pre-commit `--max-warnings=0` staged run
+      // turns them into a blocking gate on changed files only — same
+      // enforcement scope as lizard, but without its TS segmentation bug.
+      // `max-params` is intentionally NOT gated on changed files (it is
+      // suppressed in the pre-commit run): NestJS DI constructors legitimately
+      // need >5 injected dependencies. It stays `warn` purely for visibility.
+      complexity: ['warn', 10],
+      'max-lines-per-function': [
+        'warn',
+        { max: 50, skipBlankLines: true, skipComments: true },
+      ],
+      'max-params': ['warn', 5],
 
       // Rules set to warn (many existing violations — tighten later)
       '@typescript-eslint/no-unnecessary-condition': 'warn',
@@ -116,6 +133,35 @@ export default tseslint.config(
       '@typescript-eslint/no-unnecessary-condition': 'off',
       'no-console': 'off',
       'sonarjs/no-hardcoded-passwords': 'off',
+      // Tests legitimately have long setup blocks and many params.
+      complexity: 'off',
+      'max-lines-per-function': 'off',
+      'max-params': 'off',
+    },
+  },
+  // Files excluded from the complexity gate. Mirrors the exclusion set the old
+  // lizard check applied: generated API clients, TypeORM entities/records
+  // (decorator-heavy), DB migrations (auto-generated, long up()/down()), MJML
+  // email templates (long template strings), CQRS data carriers
+  // (command/query/event constructors with many params), raw SQL query builders,
+  // and the unicode sanitizer (long flat `.replace()` chains).
+  {
+    files: [
+      '**/generated/**',
+      '**/*.entity.ts',
+      '**/*.record.ts',
+      '**/db/migrations/**',
+      '**/email-templates/**',
+      '**/*.command.ts',
+      '**/*.query.ts',
+      '**/*.db-query.ts',
+      '**/*.event.ts',
+      '**/unicode-sanitizer.ts',
+    ],
+    rules: {
+      complexity: 'off',
+      'max-lines-per-function': 'off',
+      'max-params': 'off',
     },
   },
 );

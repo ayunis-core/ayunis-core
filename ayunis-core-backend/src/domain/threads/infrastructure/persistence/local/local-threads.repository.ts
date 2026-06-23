@@ -1,5 +1,7 @@
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
+  ExpiredThreadRef,
+  FindExpiredThreadRefsParams,
   ThreadsFindAllFilters,
   ThreadsFindAllOptions,
   ThreadsPagination,
@@ -216,6 +218,17 @@ export class LocalThreadsRepository extends ThreadsRepository {
     }
   }
 
+  async updateLastActivityAt(params: {
+    threadId: UUID;
+    lastActivityAt: Date;
+  }): Promise<void> {
+    // Best-effort, fire-and-forget driven: no throw if the thread is gone.
+    await this.threadRepository.update(
+      { id: params.threadId },
+      { lastActivityAt: params.lastActivityAt },
+    );
+  }
+
   async updateSourceAssignments(params: {
     threadId: UUID;
     userId: UUID;
@@ -322,5 +335,41 @@ export class LocalThreadsRepository extends ThreadsRepository {
       .where('user.orgId = :orgId', { orgId })
       .getMany();
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
+  }
+
+  async findExpiredThreadRefsByOrg(
+    params: FindExpiredThreadRefsParams,
+  ): Promise<ExpiredThreadRef[]> {
+    this.logger.log('findExpiredThreadRefsByOrg', {
+      orgId: params.orgId,
+      activeBefore: params.activeBefore,
+      limit: params.limit,
+      offset: params.offset,
+    });
+    // Select only id + owner (no message/source hydration) — enforcement
+    // deletes via DeleteThreadUseCase by id, so the full entity is unneeded.
+    // COALESCE(lastActivityAt, createdAt) defends against any null slipping
+    // through; ASC ordering keeps the oldest threads first so a paging offset
+    // can step past threads that failed to delete on a previous iteration.
+    // thread.id is a stable secondary key: enforcement advances the offset
+    // only past failed deletes, so rows with equal activity timestamps must
+    // keep a deterministic order across queries or expired threads could be
+    // skipped for the rest of the run.
+    const rows = await this.threadRepository
+      .createQueryBuilder('thread')
+      .innerJoin('users', 'user', 'user.id = thread.userId')
+      .select('thread.id', 'id')
+      .addSelect('thread.userId', 'userId')
+      .where('user.orgId = :orgId', { orgId: params.orgId })
+      .andWhere(
+        'COALESCE(thread.lastActivityAt, thread.createdAt) < :activeBefore',
+        { activeBefore: params.activeBefore },
+      )
+      .orderBy('COALESCE(thread.lastActivityAt, thread.createdAt)', 'ASC')
+      .addOrderBy('thread.id', 'ASC')
+      .limit(params.limit)
+      .offset(params.offset)
+      .getRawMany<ExpiredThreadRef>();
+    return rows.map((row) => ({ id: row.id, userId: row.userId }));
   }
 }

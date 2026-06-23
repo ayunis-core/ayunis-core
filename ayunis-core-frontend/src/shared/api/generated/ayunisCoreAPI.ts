@@ -125,6 +125,7 @@ import type {
   ReorderLessonsRequestDto,
   ResendEmailConfirmationDto,
   ResetPasswordDto,
+  RetentionPolicyResponseDto,
   RevertArtifactDto,
   RunsControllerSendMessage200,
   RunsControllerSendMessageBody,
@@ -186,6 +187,7 @@ import type {
   UpdatePasswordDto,
   UpdatePermittedModelDto,
   UpdatePiiWhitelistRequestDto,
+  UpdateRetentionPolicyRequestDto,
   UpdateSeatsDto,
   UpdateSkillDto,
   UpdateSkillTemplateDto,
@@ -16339,6 +16341,163 @@ export const useOrgSystemPromptControllerDeleteOrgSystemPrompt = <TError = void,
       > => {
 
       const mutationOptions = getOrgSystemPromptControllerDeleteOrgSystemPromptMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Get the data-retention policy for the current org
+ */
+export const retentionPoliciesControllerGet = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<RetentionPolicyResponseDto>(
+      {url: `/retention-policies/org`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getRetentionPoliciesControllerGetQueryKey = () => {
+    return [
+    `/retention-policies/org`
+    ] as const;
+    }
+
+    
+export const getRetentionPoliciesControllerGetQueryOptions = <TData = Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRetentionPoliciesControllerGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>> = ({ signal }) => retentionPoliciesControllerGet(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RetentionPoliciesControllerGetQueryResult = NonNullable<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>>
+export type RetentionPoliciesControllerGetQueryError = unknown
+
+
+export function useRetentionPoliciesControllerGet<TData = Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof retentionPoliciesControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof retentionPoliciesControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRetentionPoliciesControllerGet<TData = Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof retentionPoliciesControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof retentionPoliciesControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRetentionPoliciesControllerGet<TData = Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the data-retention policy for the current org
+ */
+
+export function useRetentionPoliciesControllerGet<TData = Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof retentionPoliciesControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRetentionPoliciesControllerGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Set or clear the data-retention policy for the current org
+ */
+export const retentionPoliciesControllerUpdate = (
+    updateRetentionPolicyRequestDto: UpdateRetentionPolicyRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<RetentionPolicyResponseDto>(
+      {url: `/retention-policies/org`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateRetentionPolicyRequestDto
+    },
+      );
+    }
+  
+
+
+export const getRetentionPoliciesControllerUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>, TError,{data: UpdateRetentionPolicyRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>, TError,{data: UpdateRetentionPolicyRequestDto}, TContext> => {
+
+const mutationKey = ['retentionPoliciesControllerUpdate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>, {data: UpdateRetentionPolicyRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  retentionPoliciesControllerUpdate(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RetentionPoliciesControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>>
+    export type RetentionPoliciesControllerUpdateMutationBody = UpdateRetentionPolicyRequestDto
+    export type RetentionPoliciesControllerUpdateMutationError = void
+
+    /**
+ * @summary Set or clear the data-retention policy for the current org
+ */
+export const useRetentionPoliciesControllerUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>, TError,{data: UpdateRetentionPolicyRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof retentionPoliciesControllerUpdate>>,
+        TError,
+        {data: UpdateRetentionPolicyRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getRetentionPoliciesControllerUpdateMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

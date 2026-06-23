@@ -41,6 +41,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { cn } from '@/shared/lib/shadcn/utils';
+import { formatDate } from '@/shared/lib/format-date';
 import { useDocumentDrop } from '@/shared/hooks/useDocumentDrop';
 import {
   useKnowledgeBaseDocuments,
@@ -311,6 +312,11 @@ function DocumentItem({
           processingError={doc.processingError}
           t={t}
         />
+        <ItemDescription>
+          {t('detail.documents.addedAt', {
+            date: formatDate(doc.createdAt),
+          })}
+        </ItemDescription>
       </ItemContent>
       {!disabled && (
         <ItemActions>

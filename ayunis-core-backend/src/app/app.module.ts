@@ -23,6 +23,7 @@ import { UsageModule } from '../domain/usage/usage.module';
 import { TranscriptionsModule } from '../domain/transcriptions/transcriptions.module';
 import { ChatSettingsModule } from '../domain/chat-settings/chat-settings.module';
 import { AnonymizationSettingsModule } from '../domain/anonymization-settings/anonymization-settings.module';
+import { RetentionPoliciesModule } from '../domain/retention-policies/retention-policies.module';
 import { KnowledgeBasesModule } from '../domain/knowledge-bases/knowledge-bases.module';
 import { CrawlDomainGrantsModule } from '../domain/crawl-domain-grants/crawl-domain-grants.module';
 import { SkillTemplatesModule } from '../domain/skill-templates/skill-templates.module';
@@ -59,6 +60,7 @@ import { featuresConfig } from '../config/features.config';
 import { metricsConfig } from '../config/metrics.config';
 import { redisConfig, type RedisConfig } from '../config/redis.config';
 import { gotenbergConfig } from '../config/gotenberg.config';
+import { retentionConfig } from '../config/retention.config';
 import { BullModule } from '@nestjs/bullmq';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 import { IsRegistrationDisabledUseCase } from './application/use-cases/is-registration-disabled/is-registration-disabled.use-case';
@@ -94,6 +96,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
         metricsConfig,
         redisConfig,
         gotenbergConfig,
+        retentionConfig,
       ],
     }),
     ClsModule.forRoot({
@@ -166,6 +169,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     TranscriptionsModule,
     ChatSettingsModule,
     AnonymizationSettingsModule,
+    RetentionPoliciesModule,
     KnowledgeBasesModule,
     CrawlDomainGrantsModule,
     SkillTemplatesModule,

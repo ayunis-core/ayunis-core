@@ -60,6 +60,45 @@ export const minimalFixture = {
     outputTokenCost: 15,
   },
 
+  openaiLanguageModel: {
+    name: 'gpt-4o',
+    displayName: 'GPT-4o (OpenAI)',
+    provider: ModelProvider.OPENAI,
+    canStream: true,
+    isReasoning: false,
+    isArchived: false,
+    canUseTools: true,
+    canVision: true,
+    inputTokenCost: 2.5,
+    outputTokenCost: 10,
+  },
+
+  mistralLanguageModel: {
+    name: 'mistral-large-latest',
+    displayName: 'Mistral Large (Mistral)',
+    provider: ModelProvider.MISTRAL,
+    canStream: true,
+    isReasoning: false,
+    isArchived: false,
+    canUseTools: true,
+    canVision: false,
+    inputTokenCost: 2,
+    outputTokenCost: 6,
+  },
+
+  geminiLanguageModel: {
+    name: 'gemini-2.5-pro',
+    displayName: 'Gemini 2.5 Pro (Gemini)',
+    provider: ModelProvider.GEMINI,
+    canStream: true,
+    isReasoning: false,
+    isArchived: false,
+    canUseTools: true,
+    canVision: true,
+    inputTokenCost: 1.25,
+    outputTokenCost: 10,
+  },
+
   embeddingModel: {
     name: 'mistral-embed',
     displayName: 'Mistral Embed',
@@ -118,6 +157,21 @@ export const minimalFixture = {
       anonymousOnly: false,
     },
     {
+      modelKey: 'openaiLanguageModel',
+      isDefault: false,
+      anonymousOnly: false,
+    },
+    {
+      modelKey: 'mistralLanguageModel',
+      isDefault: false,
+      anonymousOnly: false,
+    },
+    {
+      modelKey: 'geminiLanguageModel',
+      isDefault: false,
+      anonymousOnly: false,
+    },
+    {
       // Embedding model as default
       modelKey: 'embeddingModel',
       isDefault: true,
@@ -132,10 +186,17 @@ export const minimalFixture = {
   ],
 } as const;
 
+export const LANGUAGE_MODEL_KEYS = [
+  'languageModel',
+  'azureLanguageModel',
+  'openaiLanguageModel',
+  'mistralLanguageModel',
+  'geminiLanguageModel',
+] as const;
+
 export type ModelKey = keyof Pick<
   typeof minimalFixture,
-  | 'languageModel'
-  | 'azureLanguageModel'
+  | (typeof LANGUAGE_MODEL_KEYS)[number]
   | 'embeddingModel'
   | 'imageGenerationModel'
 >;

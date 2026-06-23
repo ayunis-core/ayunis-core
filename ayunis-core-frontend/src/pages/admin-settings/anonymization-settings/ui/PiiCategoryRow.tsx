@@ -34,6 +34,8 @@ export function PiiCategoryRow({
   const { t } = useTranslation('admin-settings-anonymization');
 
   const label = t(`piiWhitelist.categories.${category}.label`);
+  const placeholder = t(`piiWhitelist.categories.${category}.placeholder`);
+  const example = t(`piiWhitelist.categories.${category}.example`);
   const errorMessage =
     error === 'too_long'
       ? t('piiWhitelist.patternTooLong', { max: MAX_PATTERN_LENGTH })
@@ -69,8 +71,8 @@ export function PiiCategoryRow({
               id={`pii-pattern-${category}`}
               value={row.pattern}
               disabled={disabled}
-              placeholder={t('piiWhitelist.patternPlaceholder')}
-              className="font-mono text-sm"
+              placeholder={placeholder}
+              className="text-sm"
               onChange={(e) => onChange({ ...row, pattern: e.target.value })}
             />
             {error ? (
@@ -79,9 +81,15 @@ export function PiiCategoryRow({
                 <span>{errorMessage}</span>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground">
-                {t('piiWhitelist.patternHint')}
-              </p>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <p>
+                  {t('piiWhitelist.exampleLabel')}{' '}
+                  <span className="text-foreground">{placeholder}</span>
+                  {' – '}
+                  {example}
+                </p>
+                <p>{t('piiWhitelist.patternHint')}</p>
+              </div>
             )}
           </div>
         </ItemFooter>

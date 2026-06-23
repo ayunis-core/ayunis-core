@@ -18,7 +18,7 @@ export class AnthropicInferenceHandler extends RuntimeInferenceHandler {
 
   protected createProvider(model: Model): ModelProvider {
     return anthropic({
-      apiKey: this.configService.get<string>('anthropic.apiKey') ?? '',
+      apiKey: this.configService.get<string>('models.anthropic.apiKey') ?? '',
       model: model.name,
       maxRetries: INFERENCE_MAX_RETRIES,
     });

@@ -121,12 +121,19 @@ describe('WebhookDispatchListener', () => {
   });
 
   describe('handleUserDeleted', () => {
-    it('should dispatch UserDeletedWebhookEvent', async () => {
-      await listener.handleUserDeleted(new UserDeletedEvent(USER_ID, ORG_ID));
+    it('should dispatch UserDeletedWebhookEvent with id, email and orgId', async () => {
+      await listener.handleUserDeleted(
+        new UserDeletedEvent(USER_ID, ORG_ID, 'test@example.com'),
+      );
 
       expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
       const command = sendWebhookUseCase.execute.mock.calls[0][0];
       expect(command.event.eventType).toBe(WebhookEventType.USER_DELETED);
+      expect(command.event.data).toEqual({
+        id: USER_ID,
+        email: 'test@example.com',
+        orgId: ORG_ID,
+      });
     });
   });
 
@@ -439,7 +446,9 @@ describe('WebhookDispatchListener', () => {
       );
 
       await expect(
-        listener.handleUserDeleted(new UserDeletedEvent(USER_ID, ORG_ID)),
+        listener.handleUserDeleted(
+          new UserDeletedEvent(USER_ID, ORG_ID, 'test@example.com'),
+        ),
       ).resolves.toBeUndefined();
     });
   });

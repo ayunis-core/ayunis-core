@@ -34,6 +34,18 @@ export class ThreadRecord extends BaseRecord {
   @Column({ default: false })
   isAnonymous: boolean;
 
+  /**
+   * Timestamp of the most recent conversation activity (last message added).
+   * Drives admin-defined data-retention deletion, which keys off inactivity
+   * rather than creation date. Distinct from `updatedAt`, which is bumped by
+   * any row write (rename, model change) and would let incidental edits
+   * silently extend retention. Nullable for backfill safety; the mapper always
+   * sets it and retention queries COALESCE to `createdAt` defensively.
+   */
+  @Column({ type: 'timestamp', nullable: true })
+  @Index()
+  lastActivityAt?: Date;
+
   @OneToMany(() => MessageRecord, (message) => message.thread)
   messages?: MessageRecord[];
 
