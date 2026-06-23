@@ -46,6 +46,8 @@
     "seed:minimal": "node -r ./src/config/env-register dist/src/db/scripts/seed-minimal.js",
     "seed:clean:ts": "ts-node -r tsconfig-paths/register src/db/scripts/seed-minimal.ts --clean",
     "seed:clean": "node -r ./src/config/env-register dist/src/db/scripts/seed-minimal.js --clean",
+    "seed:demo:ts": "ts-node -r tsconfig-paths/register src/db/scripts/seed-demo.ts",
+    "seed:demo": "node -r ./src/config/env-register dist/src/db/scripts/seed-demo.js",
     "seed:ts": "pnpm run seed:minimal:ts",
     "seed": "pnpm run seed:minimal"
   },
