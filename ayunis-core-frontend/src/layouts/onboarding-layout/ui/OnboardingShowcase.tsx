@@ -8,7 +8,10 @@ export function OnboardingShowcase() {
   const { t } = useTranslation('auth');
 
   return (
-    <div className="onboarding-aurora relative h-full w-full min-w-0 flex-1 overflow-hidden rounded-xl">
+    <div
+      aria-hidden="true"
+      className="onboarding-aurora relative h-full w-full min-w-0 flex-1 overflow-hidden rounded-xl"
+    >
       <div className="absolute inset-0">
         <img
           src={peoplePhoto}
