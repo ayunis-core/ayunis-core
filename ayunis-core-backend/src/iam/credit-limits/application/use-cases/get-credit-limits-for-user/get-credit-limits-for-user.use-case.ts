@@ -36,7 +36,10 @@ export class GetCreditLimitsForUserUseCase {
       const teams = await this.findTeamsByUserIdUseCase.execute(
         new FindTeamsByUserIdQuery(query.userId),
       );
-      const teamIds = teams.map((team) => team.id);
+      // Only consider teams that belong to the queried organization.
+      const teamIds = teams
+        .filter((team) => team.orgId === query.orgId)
+        .map((team) => team.id);
       const teamLimitEntities = await this.creditLimitRepository.findByTeamIds(
         query.orgId,
         teamIds,
