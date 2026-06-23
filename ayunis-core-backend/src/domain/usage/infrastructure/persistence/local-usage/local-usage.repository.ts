@@ -316,8 +316,12 @@ export class LocalUsageRepository extends UsageRepository {
 
     const result = await this.usageRepository
       .createQueryBuilder('usage')
+      .leftJoin('usage.apiKey', 'apiKey')
       .select('COALESCE(SUM(usage.creditsConsumed), 0)', 'total')
-      .where('usage.userId IN (:...userIds)', { userIds })
+      .where(
+        '(usage.userId IN (:...userIds) OR apiKey.createdByUserId IN (:...userIds))',
+        { userIds },
+      )
       .andWhere('usage.createdAt >= :monthStart', { monthStart })
       .getRawOne<{ total: string }>();
 
