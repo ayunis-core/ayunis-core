@@ -1,7 +1,7 @@
 # Multi-stage build for production deployment (pnpm workspaces)
 
 # ---- Stage 1: Build — install workspace, build FE + BE, create prod bundle ----
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 
 # pnpm via corepack (version pinned by root package.json "packageManager")
 RUN corepack enable
@@ -52,7 +52,7 @@ RUN pnpm --filter core-backend run build
 RUN pnpm --filter=core-backend --prod --legacy deploy /prod/backend
 
 # ---- Stage 2: Production runtime ----
-FROM node:24-alpine AS production
+FROM node:26-alpine AS production
 
 # Chromium for Puppeteer PDF export
 RUN apk add --no-cache chromium
