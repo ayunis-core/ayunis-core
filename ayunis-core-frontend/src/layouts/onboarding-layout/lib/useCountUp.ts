@@ -16,8 +16,8 @@ export function useCountUp(
     if (reduced || !active) {
       return;
     }
+    const resetFrame = requestAnimationFrame(() => setValue(0));
     timer.current = window.setTimeout(() => {
-      setValue(0);
       let start: number | null = null;
       const tick = (now: number) => {
         start ??= now;
@@ -32,6 +32,7 @@ export function useCountUp(
     }, startDelayMs);
 
     return () => {
+      cancelAnimationFrame(resetFrame);
       window.clearTimeout(timer.current);
       cancelAnimationFrame(frame.current);
     };

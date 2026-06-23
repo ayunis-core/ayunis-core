@@ -38,12 +38,15 @@ export function useChatPlay(prompt: string, active: boolean, startDelayMs = 0) {
       }
     };
 
-    timer.current = window.setTimeout(() => {
+    const resetFrame = requestAnimationFrame(() => {
       setStage('typing');
       setTyped('');
-      run();
-    }, startDelayMs);
-    return () => window.clearTimeout(timer.current);
+    });
+    timer.current = window.setTimeout(run, startDelayMs);
+    return () => {
+      cancelAnimationFrame(resetFrame);
+      window.clearTimeout(timer.current);
+    };
   }, [active, prompt, reduced, startDelayMs]);
 
   if (reduced) {
