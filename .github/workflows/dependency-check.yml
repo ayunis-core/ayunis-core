@@ -19,7 +19,7 @@ jobs:
         working-directory: ayunis-core-backend
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -62,7 +62,7 @@ jobs:
         working-directory: ayunis-core-frontend
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
