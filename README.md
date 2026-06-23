@@ -176,7 +176,10 @@ All super admin endpoints require JWT authentication with a user that has the `S
 
 ```bash
 cd ayunis-core-backend
-npx nestjs-command make:super-admin <email>
+# Look up the user's ID by email
+npm run cli:ts -- users:get --email <email>
+# Promote that user to super admin
+npm run cli:ts -- users:make-super-admin --userId <userId>
 ```
 
 Then use the authenticated API to manage the model catalog. See the full endpoint documentation at `/api/docs` under the **Super Admin Models** tag.
@@ -188,6 +191,17 @@ See also:
 - `/src/domain/models/domain/models/language.model.ts`
 - `/src/domain/models/domain/models/embedding.model.ts`
 - `/src/domain/models/domain/value-objects/embedding-dimensions.enum.ts`
+
+#### Seed demo data (local dev)
+
+To skip manual setup locally, seed a demo org, a super admin, and standard models:
+
+```bash
+cd ayunis-core-backend
+npm run seed:minimal:ts
+```
+
+This creates **Demo Org** with `admin@demo.local` / `admin` (super admin) and permits a default language + embedding model. Models only appear once a credential for their provider is set in `.env` (e.g. `AWS_BEDROCK_REGION` for the default Bedrock model, or `OPENAI_API_KEY`); restart the backend after setting it.
 
 ## 🎯 First steps
 
@@ -219,6 +233,7 @@ This installs Husky and configures Git to use the hooks in the `.husky/` directo
 - **pre-commit**: Runs linting and formatting checks on staged files
   - Frontend: ESLint, Prettier, and TypeScript type checking
   - Backend: ESLint, Prettier, and TypeScript type checking
+  - Complexity check (ESLint `complexity` / `max-lines-per-function` on staged backend and package `.ts` files, same rules as CI)
   - Auto-fixes issues when possible (set `PRECOMMIT_NO_FIX=1` to disable auto-fix)
 
 - **commit-msg**: Validates commit message format
