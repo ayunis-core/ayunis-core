@@ -14,6 +14,7 @@ import { UsageRecord } from 'src/domain/usage/infrastructure/persistence/local-u
 import { LanguageModelRecord } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { getEffectiveMonthStart } from 'src/domain/usage/application/util/get-effective-month-start';
 
 /* eslint-disable no-console */
 function log(entity: string, name: string, created: boolean): void {
@@ -135,7 +136,7 @@ async function seedUserUsage(
 ): Promise<void> {
   const repo = dataSource.getRepository(UsageRecord);
   const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthStart = getEffectiveMonthStart();
 
   // Per-user guard so this is independent of the admin's minimal-seed records.
   const existing = await repo.count({
