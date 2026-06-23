@@ -19,6 +19,128 @@ body {
   @apply h-full overflow-hidden;
 }
 
+.onboarding-aurora {
+  background:
+    radial-gradient(70% 70% at 30% 22%, #e7e3f7 0%, transparent 55%),
+    radial-gradient(60% 60% at 82% 18%, #f3f1fb 0%, transparent 50%),
+    radial-gradient(95% 95% at 78% 88%, #7a70bf 0%, transparent 60%),
+    linear-gradient(140deg, #8b82cc 0%, #a59cda 52%, #c2bbe8 100%);
+  background-size: 170% 170%;
+  animation: onboarding-aurora 24s ease-in-out infinite alternate;
+}
+
+.onboarding-aurora::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+@keyframes onboarding-aurora {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-onboarding-marquee {
+  animation: onboarding-marquee 32s linear infinite;
+}
+
+@keyframes onboarding-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.onboarding-kenburns {
+  animation: onboarding-kenburns 28s ease-in-out infinite alternate;
+}
+
+@keyframes onboarding-kenburns {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.onboarding-rise {
+  animation: onboarding-rise 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.onboarding-fade {
+  animation: onboarding-fade 0.85s ease-out both;
+}
+
+@keyframes onboarding-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes onboarding-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.onboarding-shimmer {
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.5) 30%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0.5) 70%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: onboarding-shimmer 1.8s linear infinite;
+}
+
+@keyframes onboarding-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-aurora,
+  .animate-onboarding-marquee,
+  .onboarding-rise,
+  .onboarding-fade,
+  .onboarding-kenburns,
+  .onboarding-shimmer {
+    animation: none;
+  }
+  .onboarding-shimmer {
+    color: rgba(255, 255, 255, 0.85);
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.85);
+  }
+}
+
 code {
   font-family:
     source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
