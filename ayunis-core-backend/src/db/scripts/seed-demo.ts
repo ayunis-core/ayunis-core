@@ -54,6 +54,11 @@ async function seedUser(
   const repo = dataSource.getRepository(UserRecord);
   const existing = await repo.findOne({ where: { email: user.email } });
   if (existing) {
+    if (existing.orgId !== orgId) {
+      throw new MissingPrerequisiteError(
+        `User "${user.email}" exists in a different org; delete it or use a different email.`,
+      );
+    }
     log('User', existing.email, false);
     return existing;
   }
@@ -175,7 +180,14 @@ async function seedDemo(runner: SeedRunner): Promise<void> {
   const admin = await dataSource
     .getRepository(UserRecord)
     .findOne({ where: { email: demoFixture.usageAdminEmail } });
-  if (admin) usersByEmail.set(admin.email, admin);
+  if (admin) {
+    if (admin.orgId !== org.id) {
+      throw new MissingPrerequisiteError(
+        `Admin "${demoFixture.usageAdminEmail}" exists in a different org; delete it or adjust demo config.`,
+      );
+    }
+    usersByEmail.set(admin.email, admin);
+  }
 
   const teamsByName = new Map<string, TeamRecord>();
   for (const name of demoFixture.teams) {
