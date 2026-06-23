@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   onboardingControllerUpdateOnboarding,
@@ -15,6 +16,8 @@ import { showError } from '@/shared/lib/toast';
 export function useUpdateOnboarding() {
   const { t } = useTranslation('getting-started');
   const queryClient = useQueryClient();
+  const queueRef = useRef<UpdateOnboardingDto | null>(null);
+  const flushingRef = useRef(false);
 
   const mutation = useMutation({
     mutationFn: async (data: UpdateOnboardingDto) => {
@@ -30,8 +33,32 @@ export function useUpdateOnboarding() {
     },
   });
 
+  const flush = useCallback(async () => {
+    if (flushingRef.current) return;
+    if (!queueRef.current) return;
+    flushingRef.current = true;
+    try {
+      // Process the latest desired state; coalesce intermediate updates
+      // by always reading and clearing the queue before sending.
+      // If another update is queued while the request is in flight,
+      // loop and send the most recent one next.
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const next = queueRef.current;
+        if (!next) break;
+        queueRef.current = null;
+        await mutation.mutateAsync(next);
+      }
+    } finally {
+      flushingRef.current = false;
+    }
+  }, [mutation]);
+
   return {
-    updateOnboarding: (data: UpdateOnboardingDto) => mutation.mutate(data),
-    isLoading: mutation.isPending,
+    updateOnboarding: (data: UpdateOnboardingDto) => {
+      queueRef.current = data;
+      void flush();
+    },
+    isLoading: mutation.isPending || flushingRef.current,
   };
 }

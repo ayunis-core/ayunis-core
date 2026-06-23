@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Info, PartyPopper } from 'lucide-react';
 import { Progress } from '@/shared/ui/shadcn/progress';
@@ -43,18 +43,26 @@ export default function OnboardingContent() {
 
   const milestone = getMilestoneMessage(overallProgress, t);
 
+  // Keep a local desired snapshot so rapid toggles coalesce before re-render
+  const desiredCompletedRef = useRef<Set<string>>(new Set(completedSteps));
+  useEffect(() => {
+    desiredCompletedRef.current = new Set(completedSteps);
+  }, [completedSteps]);
+
   const handleToggleStep = useCallback(
     (stepId: string) => {
-      const next = new Set(completedSteps);
+      const next = new Set(desiredCompletedRef.current);
 
       if (next.has(stepId)) {
         next.delete(stepId);
       } else {
         next.add(stepId);
       }
+      // Update desired snapshot immediately so subsequent rapid clicks build on it
+      desiredCompletedRef.current = next;
       updateOnboarding({ completedStepIds: [...next], hidden });
     },
-    [completedSteps, hidden, updateOnboarding],
+    [hidden, updateOnboarding],
   );
 
   useEffect(() => {
@@ -114,9 +122,10 @@ export default function OnboardingContent() {
           size="sm"
           className="text-muted-foreground"
           disabled={isLoading}
-          onClick={() =>
-            updateOnboarding({ completedStepIds, hidden: !hidden })
-          }
+          onClick={() => {
+            const nextCompleted = [...desiredCompletedRef.current];
+            updateOnboarding({ completedStepIds: nextCompleted, hidden: !hidden });
+          }}
         >
           {hidden ? (
             <Eye className="size-3.5" />
