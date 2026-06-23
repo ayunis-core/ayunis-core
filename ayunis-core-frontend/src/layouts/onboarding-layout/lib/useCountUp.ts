@@ -9,16 +9,15 @@ export function useCountUp(
 ): number {
   const reduced = prefersReducedMotion();
   const [value, setValue] = useState(reduced ? target : 0);
-  const started = useRef(false);
   const frame = useRef<number>(0);
   const timer = useRef<number>(0);
 
   useEffect(() => {
-    if (reduced || !active || started.current) {
+    if (reduced || !active) {
       return;
     }
     timer.current = window.setTimeout(() => {
-      started.current = true;
+      setValue(0);
       let start: number | null = null;
       const tick = (now: number) => {
         start ??= now;
