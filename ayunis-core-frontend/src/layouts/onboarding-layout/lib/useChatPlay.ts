@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { prefersReducedMotion } from './prefersReducedMotion';
+import { useReducedMotion } from './useReducedMotion';
 
 export type ChatStage = 'typing' | 'thinking' | 'answer' | 'sent';
 
 export function useChatPlay(prompt: string, active: boolean, startDelayMs = 0) {
-  const reduced = prefersReducedMotion();
+  const reduced = useReducedMotion();
   const [stage, setStage] = useState<ChatStage>(reduced ? 'sent' : 'typing');
   const [typed, setTyped] = useState(reduced ? prompt : '');
   const timer = useRef<number>(0);
