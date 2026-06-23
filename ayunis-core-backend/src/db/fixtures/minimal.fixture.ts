@@ -3,37 +3,9 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
+import type { SeedFixture } from './minimal-fixture.types';
+
 export const minimalFixture = {
-  org: {
-    name: 'Demo Org',
-  },
-
-  usageOrg: {
-    name: 'Usage Org',
-  },
-
-  user: {
-    email: 'admin@demo.local',
-
-    password: 'admin',
-    name: 'Admin',
-    role: UserRole.ADMIN,
-    systemRole: SystemRole.SUPER_ADMIN,
-    emailVerified: true,
-    hasAcceptedMarketing: true,
-  },
-
-  usageUser: {
-    email: 'admin@usage.local',
-
-    password: 'admin',
-    name: 'Usage Admin',
-    role: UserRole.ADMIN,
-    systemRole: SystemRole.CUSTOMER,
-    emailVerified: true,
-    hasAcceptedMarketing: false,
-  },
-
   languageModel: {
     name: 'eu.anthropic.claude-sonnet-4-6',
     displayName: 'Claude Sonnet 4 (Bedrock)',
@@ -114,35 +86,102 @@ export const minimalFixture = {
     outputTokenCost: 40,
   },
 
-  subscription: {
-    noOfSeats: 5,
-    pricePerSeat: 10,
-    renewalCycle: RenewalCycle.MONTHLY,
-    billingInfo: {
-      companyName: 'Demo Company',
-      street: 'Main Street',
-      houseNumber: '123',
-      postalCode: '12345',
-      city: 'Demo City',
-      country: 'Germany',
-    },
-  },
-
-  usageSubscription: {
-    monthlyCredits: 10000,
-    billingInfo: {
-      companyName: 'Usage Company',
-      street: 'Credit Lane',
-      houseNumber: '42',
-      postalCode: '54321',
-      city: 'Usage City',
-      country: 'Germany',
-    },
-  },
-
   platformConfig: {
     creditsPerEuro: 100,
   },
+
+  orgs: [
+    {
+      key: 'demo',
+      name: 'Demo Org',
+      admin: {
+        email: 'admin@demo.local',
+        password: 'admin',
+        name: 'Admin',
+        role: UserRole.ADMIN,
+        systemRole: SystemRole.SUPER_ADMIN,
+        emailVerified: true,
+        hasAcceptedMarketing: true,
+      },
+      subscription: {
+        type: 'seat',
+        noOfSeats: 5,
+        pricePerSeat: 10,
+        renewalCycle: RenewalCycle.MONTHLY,
+        billingInfo: {
+          companyName: 'Demo Company',
+          street: 'Main Street',
+          houseNumber: '123',
+          postalCode: '12345',
+          city: 'Demo City',
+          country: 'Germany',
+        },
+      },
+      members: [],
+      teams: [],
+      memberships: {},
+    },
+    {
+      key: 'usage',
+      name: 'Usage Org',
+      admin: {
+        email: 'admin@usage.local',
+        password: 'admin',
+        name: 'Usage Admin',
+        role: UserRole.ADMIN,
+        systemRole: SystemRole.CUSTOMER,
+        emailVerified: true,
+        hasAcceptedMarketing: false,
+      },
+      subscription: {
+        type: 'usage',
+        monthlyCredits: 10000,
+        billingInfo: {
+          companyName: 'Usage Company',
+          street: 'Credit Lane',
+          houseNumber: '42',
+          postalCode: '54321',
+          city: 'Usage City',
+          country: 'Germany',
+        },
+      },
+      members: [
+        {
+          email: 'anna@usage.local',
+          name: 'Anna Schmidt',
+          consumedCredits: 1800,
+          creditLimit: 2000,
+        },
+        {
+          email: 'ben@usage.local',
+          name: 'Ben Müller',
+          consumedCredits: 300,
+          creditLimit: 320,
+        },
+        {
+          email: 'carla@usage.local',
+          name: 'Carla Rossi',
+          consumedCredits: 250,
+        },
+        {
+          email: 'dan@usage.local',
+          name: 'Dan Becker',
+          consumedCredits: 1200,
+          creditLimit: 1000,
+        },
+      ],
+      teams: ['Marketing', 'Engineering', 'Project-X'],
+      // Anna is in two teams on purpose, to demonstrate most-restrictive-wins.
+      memberships: {
+        Marketing: ['anna@usage.local', 'ben@usage.local'],
+        Engineering: ['carla@usage.local', 'admin@usage.local'],
+        'Project-X': ['anna@usage.local', 'dan@usage.local'],
+      },
+      teamLimits: {
+        Engineering: 5000,
+      },
+    },
+  ],
 
   permittedModels: [
     {
@@ -184,7 +223,7 @@ export const minimalFixture = {
       anonymousOnly: false,
     },
   ],
-} as const;
+} as const satisfies SeedFixture;
 
 export const LANGUAGE_MODEL_KEYS = [
   'languageModel',
@@ -193,10 +232,3 @@ export const LANGUAGE_MODEL_KEYS = [
   'mistralLanguageModel',
   'geminiLanguageModel',
 ] as const;
-
-export type ModelKey = keyof Pick<
-  typeof minimalFixture,
-  | (typeof LANGUAGE_MODEL_KEYS)[number]
-  | 'embeddingModel'
-  | 'imageGenerationModel'
->;
