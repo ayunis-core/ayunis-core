@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as cheerio from 'cheerio';
 import {
+  RawUrlResponse,
   UrlRetrieverHandler,
   UrlRetrieverInput,
 } from '../application/ports/url-retriever.handler';
@@ -11,35 +12,41 @@ import {
   UrlRetrieverTimeoutError,
   UrlRetrieverHttpError,
   UrlRetrieverParsingError,
-  UrlRetrieverUnsupportedContentTypeError,
   UrlRetrieverTooManyRedirectsError,
+  UrlRetrieverContentTooLargeError,
 } from '../application/url-retriever.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const MAX_REDIRECTS = 5;
+// Hard cap on how many bytes we buffer from a fetched URL. Pointing the crawler
+// at a very large PDF (or any oversized payload) would otherwise buffer the whole
+// response in memory and risk an OOM across shared infrastructure (AYC-266).
+const DEFAULT_MAX_DOWNLOAD_BYTES = 25 * 1024 * 1024; // 25 MB
 
 @Injectable()
 export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
   private readonly logger = new Logger(CheerioUrlRetrieverHandler.name);
   private readonly defaultTimeout: number;
+  private readonly maxDownloadBytes: number;
 
   constructor(private readonly configService: ConfigService) {
     super();
     this.defaultTimeout = this.configService.get<number>('url.timeout') ?? 5000;
+    this.maxDownloadBytes =
+      this.configService.get<number>('url.maxDownloadBytes') ??
+      DEFAULT_MAX_DOWNLOAD_BYTES;
   }
 
-  async retrieveUrl(input: UrlRetrieverInput): Promise<UrlRetrieverResult> {
+  async fetch(input: UrlRetrieverInput): Promise<RawUrlResponse> {
     try {
-      return await this.fetchAndParse(input);
+      return await this.fetchRaw(input);
     } catch (error) {
       return this.handleTopLevelError(error, input.url);
     }
   }
 
-  private async fetchAndParse(
-    input: UrlRetrieverInput,
-  ): Promise<UrlRetrieverResult> {
+  private async fetchRaw(input: UrlRetrieverInput): Promise<RawUrlResponse> {
     this.logger.debug(`Retrieving URL: ${input.url} with Cheerio handler`);
 
     const timeout =
@@ -54,17 +61,16 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
       );
       clearTimeout(timeoutId);
 
-      this.validateResponse(response, finalUrl);
+      this.assertHttpOk(response, finalUrl);
 
       const contentType =
         response.headers.get('content-type')?.toLowerCase() ?? '';
-      const body = await response.text();
+      // Reject unsupported types from headers alone, before buffering the body.
+      input.assertContentType?.(contentType, finalUrl);
+      this.assertContentLengthWithinCap(response, finalUrl);
+      const body = await this.readBodyWithCap(response, finalUrl);
 
-      if (contentType.includes('text/plain')) {
-        return new UrlRetrieverResult(body.trim(), finalUrl, '');
-      }
-
-      return this.parseHtml(body, finalUrl);
+      return { contentType, finalUrl, body };
     } catch (error) {
       clearTimeout(timeoutId);
 
@@ -109,29 +115,68 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     throw new UrlRetrieverTooManyRedirectsError(input.url, MAX_REDIRECTS);
   }
 
-  private validateResponse(response: Response, url: string): void {
+  private assertHttpOk(response: Response, url: string): void {
     if (!response.ok) {
       throw new UrlRetrieverHttpError(url, response.status, {
         statusText: response.statusText,
       });
     }
+  }
 
-    const contentType =
-      response.headers.get('content-type')?.toLowerCase() ?? '';
-    if (
-      contentType &&
-      !contentType.includes('text/html') &&
-      !contentType.includes('text/plain') &&
-      !contentType.includes('xhtml')
-    ) {
-      throw new UrlRetrieverUnsupportedContentTypeError(
-        url,
-        contentType.split(';')[0].trim(),
-      );
+  /**
+   * Reject an oversized payload from the `Content-Length` header before reading
+   * a single byte. The header can be absent or wrong, so this is only a fast
+   * pre-check — {@link readBodyWithCap} enforces the real limit while streaming.
+   */
+  private assertContentLengthWithinCap(response: Response, url: string): void {
+    const declared = Number(response.headers.get('content-length'));
+    if (Number.isFinite(declared) && declared > this.maxDownloadBytes) {
+      throw new UrlRetrieverContentTooLargeError(url, this.maxDownloadBytes, {
+        declaredBytes: declared,
+      });
     }
   }
 
-  private parseHtml(html: string, url: string): UrlRetrieverResult {
+  /**
+   * Stream the response body, aborting as soon as the accumulated size exceeds
+   * the cap so a huge response never gets fully buffered into memory. Falls back
+   * to `arrayBuffer()` when the runtime exposes no readable stream.
+   */
+  private async readBodyWithCap(
+    response: Response,
+    url: string,
+  ): Promise<Buffer> {
+    const reader = response.body?.getReader();
+    if (!reader) {
+      const body = Buffer.from(await response.arrayBuffer());
+      this.assertSizeWithinCap(body.byteLength, url);
+      return body;
+    }
+
+    const chunks: Buffer[] = [];
+    let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > this.maxDownloadBytes) {
+        await reader.cancel();
+        this.assertSizeWithinCap(total, url);
+      }
+      chunks.push(Buffer.from(value));
+    }
+    return Buffer.concat(chunks);
+  }
+
+  private assertSizeWithinCap(size: number, url: string): void {
+    if (size > this.maxDownloadBytes) {
+      throw new UrlRetrieverContentTooLargeError(url, this.maxDownloadBytes, {
+        readBytes: size,
+      });
+    }
+  }
+
+  parseHtml(html: string, url: string): UrlRetrieverResult {
     try {
       const $ = cheerio.load(html);
 

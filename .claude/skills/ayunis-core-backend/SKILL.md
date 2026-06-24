@@ -26,6 +26,8 @@ The backend enforces strict bounded contexts:
 
 Cross-module communication uses **exported use cases**, not ports/adapters. When module A needs functionality from module B, module A imports B's module and injects B's use case directly — do NOT create a port in A with an adapter that wraps B. Ports (abstract interfaces) are only for **infrastructure boundaries within a module** (e.g., a repository port implemented by a persistence adapter).
 
+**The injection point must be module A's application layer (a use case or service) — never an infrastructure adapter. Infrastructure must not import use cases** (enforced by the `adapters-no-use-cases` dependency-cruiser rule; inbound/driving adapters like queue consumers and scheduled tasks are exempt). If an adapter seems to need another module's functionality because the relevant data only appears mid-fetch, restructure so the adapter returns raw data and the application layer makes the cross-module call (e.g. the Cheerio URL adapter returns raw bytes, and `RetrieveUrlUseCase` decides whether to delegate PDFs to the file-retrieval use case).
+
 **Persistence records are an exception to the cross-module rule.** TypeORM schema records (`*.record.ts`) may reference records from other modules via `@ManyToOne` / `@OneToOne` + `@JoinColumn` to declare foreign-key relationships — this is required for referential integrity (see the `typeorm-migrations` skill). The "don't cross modules" guidance applies to application-layer code (use cases, services), not to schema records, which are infrastructure that must mirror the DB.
 
 Before modifying any module, read its `SUMMARY.md`. See [ARCHITECTURE.md](../../ARCHITECTURE.md) for the complete module index.

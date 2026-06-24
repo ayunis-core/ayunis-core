@@ -10,13 +10,43 @@ export interface UrlRetrieverInput {
    * the redirect; the thrown error propagates unchanged.
    */
   onRedirect?: (url: string) => Promise<void>;
+  /**
+   * Invoked with the response's `content-type` (and the final URL after
+   * redirects) once the headers are available but BEFORE the body is read. Lets
+   * the application layer reject unsupported content types without buffering the
+   * payload into memory. Throwing aborts the download; the thrown error
+   * propagates unchanged. Interpreting the content type is an application
+   * concern, so the policy lives in the use case, not the adapter.
+   */
+  assertContentType?: (contentType: string, finalUrl: string) => void;
+}
+
+/**
+ * The raw result of fetching a URL, before any content-type-specific parsing.
+ * The application layer inspects `contentType` to decide whether to parse the
+ * bytes as HTML (via this handler) or hand them to the file-retrieval pipeline
+ * (e.g. PDFs). This keeps the infrastructure adapter ignorant of other modules.
+ */
+export interface RawUrlResponse {
+  /** Lowercased `content-type` header value, or `''` when none was sent. */
+  contentType: string;
+  /** The URL the content actually came from, after following redirects. */
+  finalUrl: string;
+  /** The raw response body. */
+  body: Buffer;
 }
 
 export abstract class UrlRetrieverHandler {
   /**
-   * Retrieve content from a URL
-   * @param input The URL and options for retrieval
-   * @returns The retrieved content and metadata
+   * Fetch a URL's raw bytes, following redirects (re-asserting the org gate on
+   * each hop via `input.onRedirect`). Throws domain errors for HTTP failures,
+   * timeouts, and redirect loops. It does NOT interpret the content type — that
+   * decision belongs to the application layer.
    */
-  abstract retrieveUrl(input: UrlRetrieverInput): Promise<UrlRetrieverResult>;
+  abstract fetch(input: UrlRetrieverInput): Promise<RawUrlResponse>;
+
+  /**
+   * Parse an HTML document into cleaned text, title, and discovered links.
+   */
+  abstract parseHtml(html: string, url: string): UrlRetrieverResult;
 }
