@@ -30,6 +30,9 @@ export function PinnedSkills({
   if (!skillsEnabled) {
     return null;
   }
+  if (pinnedSkills.length === 0) {
+    return null;
+  }
 
   return (
     <div className="flex justify-center items-center gap-2 flex-wrap">
