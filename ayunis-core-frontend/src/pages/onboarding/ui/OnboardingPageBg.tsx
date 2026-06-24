@@ -240,9 +240,19 @@ export default function OnboardingPageBg() {
         drawStaticFrame();
       };
       window.addEventListener('resize', onResize);
+      // Keep static rendering in sync with theme changes (dark/light)
+      const themeObserver = new MutationObserver(() => {
+        rebuildAll();
+        drawStaticFrame();
+      });
+      themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class'],
+      });
       return () => {
         running.current = false;
         window.removeEventListener('resize', onResize);
+        themeObserver.disconnect();
       };
     }
 
