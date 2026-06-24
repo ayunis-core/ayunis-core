@@ -71,6 +71,7 @@ export class SourceMapper {
           url: record.url!,
           name: record.name,
           type: TextType.WEB,
+          maxDepth: record.maxDepth ?? 0,
           knowledgeBaseId: record.knowledgeBaseId,
           status: record.status,
           processingError: record.processingError,
@@ -160,6 +161,7 @@ export class SourceMapper {
     record.textType = source.textType;
     record.fileType = source instanceof FileSource ? source.fileType : null;
     record.url = source instanceof UrlSource ? source.url : null;
+    record.maxDepth = source instanceof UrlSource ? source.maxDepth : null;
     record.createdAt = source.createdAt;
     record.updatedAt = source.updatedAt;
     return record;

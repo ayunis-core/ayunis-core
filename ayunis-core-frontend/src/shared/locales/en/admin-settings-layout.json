@@ -10,6 +10,10 @@
     "integrations": "Integrations",
     "usage": "Usage",
     "security": "Security",
-    "letterheads": "Letterheads"
+    "anonymization": "Anonymization",
+    "retention": "Data retention",
+    "instructions": "Instructions",
+    "letterheads": "Letterheads",
+    "apiKeys": "API Keys"
   }
 }

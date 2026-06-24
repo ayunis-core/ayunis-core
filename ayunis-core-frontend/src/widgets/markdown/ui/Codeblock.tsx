@@ -1,9 +1,18 @@
+import { useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import {
   oneDark,
   oneLight,
 } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Check, Copy } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/features/theme';
+import { Button } from '@/shared/ui/shadcn/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/shared/ui/shadcn/tooltip';
 
 interface CodeBlockProps {
   language?: string;
@@ -19,6 +28,8 @@ export default function CodeBlock({
   className = '',
 }: Readonly<CodeBlockProps>) {
   const { theme } = useTheme();
+  const { t } = useTranslation('chat');
+  const [copied, setCopied] = useState(false);
 
   if (inline) {
     return (
@@ -30,8 +41,20 @@ export default function CodeBlock({
     );
   }
 
+  const code = children.replace(/\n$/, '');
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy code block:', error);
+    }
+  };
+
   return (
-    <div className="overflow-x-auto my-4 max-w-full">
+    <div className="relative my-4 max-w-full">
       <SyntaxHighlighter
         style={theme === 'dark' ? oneDark : oneLight}
         language={language ?? 'text'}
@@ -43,8 +66,26 @@ export default function CodeBlock({
           overflow: 'auto',
         }}
       >
-        {children.replace(/\n$/, '')}
+        {code}
       </SyntaxHighlighter>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="absolute top-1 right-1"
+            onClick={() => void handleCopy()}
+            aria-label={t('chat.copyToClipboard')}
+          >
+            {copied ? (
+              <Check className="h-3.5 w-3.5" />
+            ) : (
+              <Copy className="h-3.5 w-3.5" />
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{t('chat.copyToClipboard')}</TooltipContent>
+      </Tooltip>
     </div>
   );
 }

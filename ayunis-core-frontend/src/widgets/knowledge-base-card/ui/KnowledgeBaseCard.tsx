@@ -90,7 +90,8 @@ export default function KnowledgeBaseCard({
 
   const { isDragging } = useDocumentDrop({
     containerRef: cardRef,
-    onDrop: (file) => addFileSource({ id: entity.id, data: { file } }),
+    onDrop: (files) =>
+      addFileSource({ id: entity.id, data: { file: files[0] } }),
     acceptedExtensions: ACCEPTED_EXTENSIONS,
     disabled: disabled || !isEnabled,
   });

@@ -1,18 +1,27 @@
+import { Lock } from 'lucide-react';
 import NewChatPageLayout from './NewChatPageLayout';
 import ChatInput from '@/widgets/chat-input';
-import { useInitiateChat } from '../api/useInitiateChat';
+import {
+  useInitiateChat,
+  type SourceUploadStatus,
+} from '../api/useInitiateChat';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
-import type { AgentResponseDto } from '@/shared/api';
-import { SourceResponseDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import {
+  SourceResponseDtoStatus,
+  SourceResponseDtoType,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
-import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
+import type {
+  IntegrationSummary,
+  KnowledgeBaseSummary,
+} from '@/shared/contexts/chat/chatContext';
 import { PinnedSkills } from './PinnedSkills';
 import { PersonalizationCard } from './PersonalizationCard';
 import { useUserSystemPromptStatus } from '../api/useUserSystemPromptStatus';
@@ -23,23 +32,18 @@ import { useRouter } from '@tanstack/react-router';
 
 interface NewChatPageProps {
   selectedModelId?: string;
-  selectedAgentId?: string;
-  agents: AgentResponseDto[];
   isEmbeddingModelEnabled: boolean;
 }
 
 export default function NewChatPage({
   selectedModelId,
-  selectedAgentId,
   isEmbeddingModelEnabled,
-  agents,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
-  const { initiateChat } = useInitiateChat();
+  const { initiateChat, cancel, isCreating } = useInitiateChat();
   const { models } = usePermittedModels();
   const greeting = useTimeBasedGreeting();
-  const { setPendingImages, setPendingKnowledgeBases, setPendingSkillId } =
-    useChatContext();
+  const { setPendingImages, setPendingSkillId } = useChatContext();
   const {
     hasSystemPrompt,
     isLoading: isSystemPromptLoading,
@@ -55,47 +59,57 @@ export default function NewChatPage({
   const queryClient = useQueryClient();
   const router = useRouter();
   const [modelId, setModelId] = useState(selectedModelId);
-  const [agentId, setAgentId] = useState(selectedAgentId);
   const [isAnonymous, setIsAnonymous] = useState(false);
-  const [sources, setSources] = useState<
-    Array<{
-      id: string;
-      name: string;
-      type: SourceResponseDtoType;
-      file: File;
-    }>
-  >([]);
+  type LocalSource = {
+    id: string;
+    name: string;
+    type: SourceResponseDtoType;
+    file: File;
+    status?: SourceResponseDtoStatus;
+    processingError?: string;
+  };
+  const [sources, setSources] = useState<LocalSource[]>([]);
+
+  function applySourceStatus(
+    source: LocalSource,
+    status: SourceUploadStatus,
+  ): LocalSource {
+    if (status.kind === 'failed') {
+      return {
+        ...source,
+        status: SourceResponseDtoStatus.failed,
+        processingError: status.message,
+      };
+    }
+    return {
+      ...source,
+      status: SourceResponseDtoStatus.processing,
+      processingError: undefined,
+    };
+  }
   const [selectedKnowledgeBases, setSelectedKnowledgeBases] = useState<
     KnowledgeBaseSummary[]
   >([]);
+  const [selectedIntegrations, setSelectedIntegrations] = useState<
+    IntegrationSummary[]
+  >([]);
   const [selectedSkillId, setSelectedSkillId] = useState<string>();
   const [selectedSkillName, setSelectedSkillName] = useState<string>();
-  const selectedAgent = agents.find((agent) => agent.id === agentId);
   const selectedModel = models.find((m) => m.id === modelId);
 
-  // Determine if anonymous mode is enforced by the selected model
-  const isAnonymousEnforced = agentId
-    ? (selectedAgent?.model.anonymousOnly ?? false)
-    : (selectedModel?.anonymousOnly ?? false);
+  const isAnonymousEnforced = selectedModel?.anonymousOnly ?? false;
+  const isVisionEnabled = selectedModel?.canVision ?? false;
 
-  // Determine if vision is enabled by the selected model
-  const isVisionEnabled = agentId
-    ? (selectedAgent?.model.canVision ?? false)
-    : (selectedModel?.canVision ?? false);
-
-  function handleFileUpload(file: File) {
-    const isCsvFile = file.name.endsWith('.csv');
-    setSources([
-      ...sources,
-      {
-        id: generateUUID(),
-        name: file.name,
-        type: isCsvFile
-          ? SourceResponseDtoType.data
-          : SourceResponseDtoType.text,
-        file,
-      },
-    ]);
+  function handleFileUpload(files: File[]) {
+    const newSources: LocalSource[] = files.map((file) => ({
+      id: generateUUID(),
+      name: file.name,
+      type: file.name.endsWith('.csv')
+        ? SourceResponseDtoType.data
+        : SourceResponseDtoType.text,
+      file,
+    }));
+    setSources([...sources, ...newSources]);
   }
 
   function handleRemoveSource(sourceId: string) {
@@ -104,12 +118,6 @@ export default function NewChatPage({
 
   function handleModelChange(modelId: string) {
     setModelId(modelId);
-    setAgentId(undefined);
-  }
-
-  function handleAgentChange(agentId: string) {
-    setAgentId(agentId);
-    setModelId(undefined);
   }
 
   function handleSkillSelect(skillId: string, skillName: string) {
@@ -127,9 +135,10 @@ export default function NewChatPage({
     setSelectedSkillName(undefined);
   }
 
-  function handleAgentRemove() {
-    setAgentId(undefined);
-    setModelId(selectedModelId);
+  function handleSourceStatus(sourceId: string, status: SourceUploadStatus) {
+    setSources((prev) =>
+      prev.map((s) => (s.id === sourceId ? applySourceStatus(s, status) : s)),
+    );
   }
 
   function handleSend(
@@ -137,23 +146,34 @@ export default function NewChatPage({
     imageFiles?: Array<{ file: File; altText?: string }>,
     skillId?: string,
   ) {
-    if (!modelId && !agentId) {
+    if (!modelId) {
       showError(t('newChat.noModelOrAgentError'));
       return;
     }
 
-    // Store images in context for ChatPage to upload after thread creation
-    if (imageFiles && imageFiles.length > 0) {
-      setPendingImages(imageFiles);
-    }
-
-    // Store selected KBs in context for ChatPage to attach after thread creation
-    // Always set — even when empty — to clear stale KBs from a previous failed attempt
-    setPendingKnowledgeBases(selectedKnowledgeBases);
-
+    setPendingImages(imageFiles && imageFiles.length > 0 ? imageFiles : []);
     setPendingSkillId(skillId);
 
-    initiateChat(message, modelId, agentId, sources, isAnonymous);
+    void initiateChat({
+      message,
+      modelId,
+      sources,
+      knowledgeBases: selectedKnowledgeBases,
+      mcpIntegrations: selectedIntegrations,
+      isAnonymous,
+      onSourceStatus: handleSourceStatus,
+    });
+  }
+
+  function handleCancel() {
+    cancel();
+    setSources((prev) =>
+      prev.map((s) => ({
+        ...s,
+        status: undefined,
+        processingError: undefined,
+      })),
+    );
   }
 
   if (!isSystemPromptLoading && !isSystemPromptError && !hasSystemPrompt) {
@@ -190,19 +210,14 @@ export default function NewChatPage({
       </div>
       <div className="w-full flex flex-col gap-4 mt-2">
         <ChatInput
-          // If an agent is selected, use the agent's model,
-          // but disable the model selection
-          // to only show the model that the agent uses
-          modelId={agentId ? selectedAgent?.model.id : modelId}
-          isModelChangeDisabled={!!agentId}
-          agentId={agentId}
+          modelId={modelId}
           sources={sources}
           knowledgeBases={selectedKnowledgeBases}
+          mcpIntegrations={selectedIntegrations}
+          submissionState={isCreating ? 'submitting' : 'idle'}
           onModelChange={handleModelChange}
-          onAgentChange={handleAgentChange}
-          onAgentRemove={handleAgentRemove}
           onSend={handleSend}
-          onSendCancelled={() => null}
+          onCancel={handleCancel}
           onFileUpload={handleFileUpload}
           onRemoveSource={handleRemoveSource}
           onDownloadSource={() => null}
@@ -212,6 +227,14 @@ export default function NewChatPage({
           onRemoveKnowledgeBase={(kbId) => {
             setSelectedKnowledgeBases((prev) =>
               prev.filter((kb) => kb.id !== kbId),
+            );
+          }}
+          onAddIntegration={(integration) => {
+            setSelectedIntegrations((prev) => [...prev, integration]);
+          }}
+          onRemoveIntegration={(integrationId) => {
+            setSelectedIntegrations((prev) =>
+              prev.filter((integration) => integration.id !== integrationId),
             );
           }}
           isEmbeddingModelEnabled={isEmbeddingModelEnabled}
@@ -227,6 +250,10 @@ export default function NewChatPage({
           onSkillSelect={handleSkillSelect}
           selectedSkillId={selectedSkillId}
         />
+        <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
+          <Lock className="h-3 w-3" />
+          <span>{t('newChat.privacyHint')}</span>
+        </div>
       </div>
     </NewChatPageLayout>
   );

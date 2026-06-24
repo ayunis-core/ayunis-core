@@ -7,7 +7,7 @@ import { SharesRepository } from '../../ports/shares-repository.port';
 import { ShareAuthorizationFactory } from '../../factories/share-authorization.factory';
 import type { ShareAuthorizationStrategy } from '../../ports/share-authorization-strategy.port';
 import { ContextService } from 'src/common/context/services/context.service';
-import { AgentShare } from '../../../domain/share.entity';
+import { SkillShare } from '../../../domain/share.entity';
 import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
 import { OrgShareScope } from '../../../domain/share-scope.entity';
 import { randomUUID } from 'crypto';
@@ -73,7 +73,7 @@ describe('GetSharesUseCase', () => {
       // Arrange
       const userId = randomUUID();
       const entityId = randomUUID();
-      const entityType = SharedEntityType.AGENT;
+      const entityType = SharedEntityType.SKILL;
       const query = new GetSharesQuery(entityId, entityType);
 
       contextService.get.mockReturnValue(userId);
@@ -84,16 +84,16 @@ describe('GetSharesUseCase', () => {
         orgId: randomUUID(),
       });
 
-      const mockShares: AgentShare[] = [
-        new AgentShare({
+      const mockShares: SkillShare[] = [
+        new SkillShare({
           id: randomUUID(),
-          agentId: entityId,
+          skillId: entityId,
           scope: mockScope,
           ownerId: userId,
         }),
-        new AgentShare({
+        new SkillShare({
           id: randomUUID(),
-          agentId: entityId,
+          skillId: entityId,
           scope: mockScope,
           ownerId: userId,
         }),
@@ -118,7 +118,7 @@ describe('GetSharesUseCase', () => {
     it('should throw UnauthorizedException when user is not authenticated', async () => {
       // Arrange
       const entityId = randomUUID();
-      const entityType = SharedEntityType.AGENT;
+      const entityType = SharedEntityType.SKILL;
       const query = new GetSharesQuery(entityId, entityType);
 
       contextService.get.mockReturnValue(null);
@@ -136,7 +136,7 @@ describe('GetSharesUseCase', () => {
       // Arrange
       const userId = randomUUID();
       const entityId = randomUUID();
-      const entityType = SharedEntityType.AGENT;
+      const entityType = SharedEntityType.SKILL;
       const query = new GetSharesQuery(entityId, entityType);
 
       contextService.get.mockReturnValue(userId);
@@ -154,7 +154,7 @@ describe('GetSharesUseCase', () => {
       // Arrange
       const userId = randomUUID();
       const entityId = randomUUID();
-      const entityType = SharedEntityType.AGENT;
+      const entityType = SharedEntityType.SKILL;
       const query = new GetSharesQuery(entityId, entityType);
 
       contextService.get.mockReturnValue(userId);
@@ -176,7 +176,7 @@ describe('GetSharesUseCase', () => {
       // Arrange
       const userId = randomUUID();
       const entityId = randomUUID();
-      const entityType = SharedEntityType.AGENT;
+      const entityType = SharedEntityType.SKILL;
       const query = new GetSharesQuery(entityId, entityType);
 
       contextService.get.mockReturnValue(userId);
@@ -188,7 +188,7 @@ describe('GetSharesUseCase', () => {
 
       // Assert
       expect(authFactory.getStrategy).toHaveBeenCalledWith(
-        SharedEntityType.AGENT,
+        SharedEntityType.SKILL,
       );
       expect(authFactory.getStrategy).toHaveBeenCalledTimes(1);
     });

@@ -14,6 +14,7 @@ import { EmailTemplatesModule } from 'src/common/email-templates/email-templates
 
 // Import use cases
 import { FindUserByIdUseCase } from './application/use-cases/find-user-by-id/find-user-by-id.use-case';
+import { FindUsersByIdsUseCase } from './application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
 import { FindUsersByOrgIdUseCase } from './application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { DeleteUserUseCase } from './application/use-cases/delete-user/delete-user.use-case';
 import { UpdateUserRoleUseCase } from './application/use-cases/update-user-role/update-user-role.use-case';
@@ -23,6 +24,7 @@ import { CreateRegularUserUseCase } from './application/use-cases/create-regular
 import { ValidateUserUseCase } from './application/use-cases/validate-user/validate-user.use-case';
 import { IsValidPasswordUseCase } from './application/use-cases/is-valid-password/is-valid-password.use-case';
 import { UpdateUserNameUseCase } from './application/use-cases/update-user-name/update-user-name.use-case';
+import { AdminUpdateUserUseCase } from './application/use-cases/admin-update-user/admin-update-user.use-case';
 import { UpdatePasswordUseCase } from './application/use-cases/update-password/update-password.use-case';
 import { ConfirmEmailUseCase } from './application/use-cases/confirm-email/confirm-email.use-case';
 import { ResendEmailConfirmationUseCase } from './application/use-cases/resend-email-confirmation/resend-email-confirmation.use-case';
@@ -30,6 +32,8 @@ import { EmailConfirmationJwtService } from './application/services/email-confir
 
 // Import controllers and mappers
 import { UserController } from './presenters/http/user.controller';
+import { UserPasswordResetController } from './presenters/http/user-password-reset.controller';
+import { AdminUserController } from './presenters/http/admin-user.controller';
 import { UserResponseDtoMapper } from './presenters/http/mappers/user-response-dto.mapper';
 import { SuperAdminUserResponseDtoMapper } from './presenters/http/mappers/super-admin-user-response-dto.mapper';
 import { SendConfirmationEmailUseCase } from './application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
@@ -43,6 +47,9 @@ import { FindAllUserIdsByOrgIdUseCase } from './application/use-cases/find-all-u
 import { AdminTriggerPasswordResetUseCase } from './application/use-cases/admin-trigger-password-reset/admin-trigger-password-reset.use-case';
 import { SuperAdminTriggerPasswordResetUseCase } from './application/use-cases/super-admin-trigger-password-reset/super-admin-trigger-password-reset.use-case';
 import { InvitesModule } from '../invites/invites.module';
+import { OrgsModule } from '../orgs/orgs.module';
+import { SendSetInitialPasswordEmailUseCase } from './application/use-cases/send-set-initial-password-email/send-set-initial-password-email.use-case';
+import { TriggerSetInitialPasswordUseCase } from './application/use-cases/trigger-set-initial-password/trigger-set-initial-password.use-case';
 import { SuperAdminUsersController } from './presenters/http/super-admin-users.controller';
 import { SuperAdminManagementController } from './presenters/http/super-admin-management.controller';
 import { FindSuperAdminsUseCase } from './application/use-cases/find-super-admins/find-super-admins.use-case';
@@ -53,6 +60,7 @@ import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from
   imports: [
     TypeOrmModule.forFeature([UserRecord]),
     InvitesModule,
+    OrgsModule,
     HashingModule,
     EmailsModule,
     EmailTemplatesModule,
@@ -75,6 +83,8 @@ import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from
   ],
   controllers: [
     UserController,
+    UserPasswordResetController,
+    AdminUserController,
     SuperAdminUsersController,
     SuperAdminManagementController,
   ],
@@ -89,6 +99,7 @@ import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from
     },
     // Use cases
     FindUserByIdUseCase,
+    FindUsersByIdsUseCase,
     FindUsersByOrgIdUseCase,
     DeleteUserUseCase,
     UpdateUserRoleUseCase,
@@ -98,6 +109,7 @@ import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from
     ValidateUserUseCase,
     IsValidPasswordUseCase,
     UpdateUserNameUseCase,
+    AdminUpdateUserUseCase,
     UpdatePasswordUseCase,
     ConfirmEmailUseCase,
     ResendEmailConfirmationUseCase,
@@ -111,6 +123,8 @@ import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from
     FindAllUserIdsByOrgIdUseCase,
     AdminTriggerPasswordResetUseCase,
     SuperAdminTriggerPasswordResetUseCase,
+    SendSetInitialPasswordEmailUseCase,
+    TriggerSetInitialPasswordUseCase,
     FindSuperAdminsUseCase,
     PromoteToSuperAdminUseCase,
     DemoteFromSuperAdminUseCase,
@@ -126,6 +140,7 @@ import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from
     SendConfirmationEmailUseCase,
     ValidateUserUseCase,
     FindUserByIdUseCase,
+    FindUsersByIdsUseCase,
     FindUsersByOrgIdUseCase,
     IsValidPasswordUseCase,
     EmailConfirmationJwtService,

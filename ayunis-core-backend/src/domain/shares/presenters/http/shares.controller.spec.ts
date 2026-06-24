@@ -6,19 +6,18 @@ import { DeleteShareUseCase } from '../../application/use-cases/delete-share/del
 import { GetSharesUseCase } from '../../application/use-cases/get-shares/get-shares.use-case';
 import { ShareDtoMapper } from './mappers/share-dto.mapper';
 import {
-  CreateAgentShareDto,
+  CreateSkillShareDto,
   CreateKnowledgeBaseShareDto,
 } from './dto/create-share.dto';
 import type { ShareResponseDto } from './dto/share-response.dto';
 import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
 import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
-import { AgentShare, KnowledgeBaseShare } from '../../domain/share.entity';
+import { SkillShare, KnowledgeBaseShare } from '../../domain/share.entity';
 import { OrgShareScope } from '../../domain/share-scope.entity';
 import {
-  CreateOrgAgentShareCommand,
+  CreateOrgSkillShareCommand,
   CreateOrgKnowledgeBaseShareCommand,
 } from '../../application/use-cases/create-share/create-share.command';
-import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 
@@ -29,7 +28,7 @@ describe('SharesController', () => {
   let getSharesUseCase: GetSharesUseCase;
   let shareDtoMapper: ShareDtoMapper;
 
-  const mockAgentId = randomUUID();
+  const mockSkillId = randomUUID();
   const mockUserId = randomUUID();
   const mockShareId = randomUUID();
   const mockOrgId = randomUUID();
@@ -82,23 +81,22 @@ describe('SharesController', () => {
     jest.clearAllMocks();
   });
 
-  describe('createShare', () => {
-    it('should create an agent share successfully', async () => {
-      // Arrange
-      const createShareDto = new CreateAgentShareDto();
-      createShareDto.agentId = mockAgentId;
-      createShareDto.entityType = SharedEntityType.AGENT;
+  describe('createSkillShare', () => {
+    it('should create a skill share successfully', async () => {
+      const dto = new CreateSkillShareDto();
+      dto.skillId = mockSkillId;
+      dto.entityType = SharedEntityType.SKILL;
 
-      const mockShare = new AgentShare({
-        agentId: mockAgentId,
+      const mockShare = new SkillShare({
+        skillId: mockSkillId,
         scope: new OrgShareScope({ orgId: mockOrgId }),
         ownerId: mockUserId,
       });
 
       const expectedResponseDto: ShareResponseDto = {
         id: mockShareId,
-        entityType: SharedEntityType.AGENT,
-        entityId: mockAgentId,
+        entityType: SharedEntityType.SKILL,
+        entityId: mockSkillId,
         scopeType: ShareScopeType.ORG,
         ownerId: mockUserId,
         createdAt: new Date(),
@@ -108,100 +106,21 @@ describe('SharesController', () => {
       (createShareUseCase.execute as jest.Mock).mockResolvedValue(mockShare);
       (shareDtoMapper.toDto as jest.Mock).mockReturnValue(expectedResponseDto);
 
-      // Act
-      const result = await controller.createShare(createShareDto);
+      const result = await controller.createSkillShare(dto);
 
-      // Assert
       expect(createShareUseCase.execute).toHaveBeenCalledWith(
-        expect.any(CreateOrgAgentShareCommand),
+        expect.any(CreateOrgSkillShareCommand),
       );
       const command = (createShareUseCase.execute as jest.Mock).mock
         .calls[0][0];
-      expect(command.agentId).toBe(mockAgentId);
+      expect(command.skillId).toBe(mockSkillId);
       expect(shareDtoMapper.toDto).toHaveBeenCalledWith(mockShare);
       expect(result).toEqual(expectedResponseDto);
-    });
-
-    it('should handle UnauthorizedException from use case', async () => {
-      // Arrange
-      const createShareDto = new CreateAgentShareDto();
-      createShareDto.agentId = mockAgentId;
-      createShareDto.entityType = SharedEntityType.AGENT;
-
-      const error = new UnauthorizedException('User not authenticated');
-      (createShareUseCase.execute as jest.Mock).mockRejectedValue(error);
-
-      // Act & Assert
-      await expect(controller.createShare(createShareDto)).rejects.toThrow(
-        UnauthorizedException,
-      );
-      await expect(controller.createShare(createShareDto)).rejects.toThrow(
-        'User not authenticated',
-      );
-    });
-
-    it('should handle ForbiddenException from use case', async () => {
-      // Arrange
-      const createShareDto = new CreateAgentShareDto();
-      createShareDto.agentId = mockAgentId;
-      createShareDto.entityType = SharedEntityType.AGENT;
-
-      const error = new ForbiddenException(
-        'User cannot create share for this agent',
-      );
-      (createShareUseCase.execute as jest.Mock).mockRejectedValue(error);
-
-      // Act & Assert
-      await expect(controller.createShare(createShareDto)).rejects.toThrow(
-        ForbiddenException,
-      );
-      await expect(controller.createShare(createShareDto)).rejects.toThrow(
-        'User cannot create share for this agent',
-      );
-    });
-
-    it('should log the create share request', async () => {
-      // Arrange
-      const createShareDto = new CreateAgentShareDto();
-      createShareDto.agentId = mockAgentId;
-      createShareDto.entityType = SharedEntityType.AGENT;
-
-      const mockShare = new AgentShare({
-        agentId: mockAgentId,
-        scope: new OrgShareScope({ orgId: mockOrgId }),
-        ownerId: mockUserId,
-      });
-
-      const expectedResponseDto: ShareResponseDto = {
-        id: mockShareId,
-        entityType: SharedEntityType.AGENT,
-        entityId: mockAgentId,
-        scopeType: ShareScopeType.ORG,
-        ownerId: mockUserId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      (createShareUseCase.execute as jest.Mock).mockResolvedValue(mockShare);
-      (shareDtoMapper.toDto as jest.Mock).mockReturnValue(expectedResponseDto);
-
-      // Spy on logger
-      const logSpy = jest.spyOn(controller['logger'], 'log');
-
-      // Act
-      await controller.createShare(createShareDto);
-
-      // Assert
-      expect(logSpy).toHaveBeenCalledWith('createShare', {
-        entityType: SharedEntityType.AGENT,
-        agentId: mockAgentId,
-      });
     });
   });
 
   describe('createKnowledgeBaseShare', () => {
     it('should create a knowledge base share successfully', async () => {
-      // Arrange
       const mockKnowledgeBaseId = randomUUID();
       const dto = new CreateKnowledgeBaseShareDto();
       dto.knowledgeBaseId = mockKnowledgeBaseId;
@@ -226,10 +145,8 @@ describe('SharesController', () => {
       (createShareUseCase.execute as jest.Mock).mockResolvedValue(mockShare);
       (shareDtoMapper.toDto as jest.Mock).mockReturnValue(expectedResponseDto);
 
-      // Act
       const result = await controller.createKnowledgeBaseShare(dto);
 
-      // Assert
       expect(createShareUseCase.execute).toHaveBeenCalledWith(
         expect.any(CreateOrgKnowledgeBaseShareCommand),
       );
@@ -243,13 +160,12 @@ describe('SharesController', () => {
 
   describe('getShares', () => {
     it('should retrieve shares for an entity', async () => {
-      // Arrange
-      const entityId = mockAgentId;
-      const entityType = SharedEntityType.AGENT;
+      const entityId = mockSkillId;
+      const entityType = SharedEntityType.SKILL;
 
       const mockShares = [
-        new AgentShare({
-          agentId: mockAgentId,
+        new SkillShare({
+          skillId: mockSkillId,
           scope: new OrgShareScope({ orgId: mockOrgId }),
           ownerId: mockUserId,
         }),
@@ -258,8 +174,8 @@ describe('SharesController', () => {
       const expectedResponseDtos: ShareResponseDto[] = [
         {
           id: mockShareId,
-          entityType: SharedEntityType.AGENT,
-          entityId: mockAgentId,
+          entityType: SharedEntityType.SKILL,
+          entityId: mockSkillId,
           scopeType: ShareScopeType.ORG,
           ownerId: mockUserId,
           createdAt: new Date(),
@@ -272,10 +188,8 @@ describe('SharesController', () => {
         expectedResponseDtos,
       );
 
-      // Act
       const result = await controller.getShares(entityId, entityType);
 
-      // Assert
       expect(getSharesUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           entityId,
@@ -292,14 +206,11 @@ describe('SharesController', () => {
 
   describe('deleteShare', () => {
     it('should delete a share successfully', async () => {
-      // Arrange
       const shareId = mockShareId;
       (deleteShareUseCase.execute as jest.Mock).mockResolvedValue(undefined);
 
-      // Act
       await controller.deleteShare(shareId);
 
-      // Assert
       expect(deleteShareUseCase.execute).toHaveBeenCalledWith(shareId);
     });
   });

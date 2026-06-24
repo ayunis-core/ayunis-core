@@ -154,7 +154,7 @@ describe('GetPermittedImageGenerationModelUseCase', () => {
       orgId,
     });
     permittedModelsRepository.findOneImageGeneration.mockResolvedValue(
-      nonImage as unknown as PermittedImageGenerationModel,
+      nonImage,
     );
 
     await expect(

@@ -51,7 +51,9 @@ export class EmbeddingModelResponseDto {
 
   @ApiProperty({
     type: 'number',
-    enum: Object.values(EmbeddingDimensions),
+    enum: Object.values(EmbeddingDimensions).filter(
+      (value): value is EmbeddingDimensions => typeof value === 'number',
+    ),
     description: 'The dimensions of the embedding',
     example: EmbeddingDimensions.DIMENSION_1536,
   })

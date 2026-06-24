@@ -26,13 +26,44 @@
     "errorCreditBudgetExceeded": "Sie haben das Credits-Limit für diesen Monat erreicht.",
     "errorAddKnowledgeBase": "Wissenssammlung konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut.",
     "errorRemoveKnowledgeBase": "Wissenssammlung konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
+    "errorAddIntegration": "Integration konnte nicht hinzugefügt werden",
+    "errorRemoveIntegration": "Integration konnte nicht entfernt werden",
+    "errorIntegrationNotFound": "Diese Integration existiert nicht mehr",
     "errorDownloadSource": "Quelle konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
     "errorUpdateModel": "Modell konnte nicht aktualisiert werden",
     "errorUpdateAgent": "Agent konnte nicht aktualisiert werden",
     "errorRemoveAgent": "Agent konnte nicht entfernt werden",
-    "thinking": "Nachdenken",
     "skillInstructions": "Fähigkeits-Anweisungen",
     "copyToClipboard": "In die Zwischenablage kopieren",
+    "timeline": {
+      "working": "Arbeite…",
+      "thoughtProcess": "Gedankengang",
+      "summary_one": "{{count}} Schritt",
+      "summary_other": "{{count}} Schritte",
+      "errorStep": "Abgebrochen",
+      "actions": {
+        "create_document": "Dokument erstellt",
+        "update_document": "Dokument aktualisiert",
+        "edit_document": "Dokument bearbeitet",
+        "read_document": "Dokument gelesen",
+        "create_diagram": "Diagramm erstellt",
+        "update_diagram": "Diagramm aktualisiert",
+        "chart": "Diagramm erstellt",
+        "generate_image": "Bild generiert",
+        "send_email": "E-Mail entworfen",
+        "create_calendar_event": "Kalendereintrag erstellt",
+        "create_skill": "Fähigkeit erstellt",
+        "edit_skill": "Fähigkeit bearbeitet",
+        "activate_skill": "Fähigkeit aktiviert",
+        "internet_search": "Im Internet gesucht",
+        "website_content": "Website abgerufen",
+        "source_query": "Dateien durchsucht",
+        "knowledge_query": "Wissenssammlung durchsucht",
+        "code_execution": "Berechnung ausgeführt",
+        "http": "HTTP-Anfrage ausgeführt",
+        "use_tool": "{{tool}} verwendet"
+      }
+    },
     "tools": {
       "internet_search": "Im Internet suchen",
       "website_content": "Website abfragen",
@@ -144,9 +175,23 @@
     },
     "longChatWarningTitle": "Konversation zu lang",
     "longChatWarningDescription": "Für bessere Ergebnisse sollten Sie einen neuen Chat starten.",
-    "unavailableAgentWarningTitle": "Agent nicht mehr verfügbar",
-    "unavailableAgentWarningDescription": "Der Agent oder das Modell dieser Unterhaltung ist nicht mehr verfügbar. Sie können die Nachrichtenhistorie noch einsehen, aber die Unterhaltung nicht fortsetzen.",
-    "inputDisclaimer": "Eingaben werden nicht für Training verwendet. KI kann Fehler machen—Antworten prüfen."
+    "inputDisclaimer": "Eingaben werden nicht für Training verwendet. KI kann Fehler machen—Antworten prüfen.",
+    "piiMask": {
+      "tooltip": "{{category}} — vor dem Senden an das KI-Modell anonymisiert",
+      "categories": {
+        "person_name": "Personenname",
+        "organization": "Organisation",
+        "location": "Ort oder Adresse",
+        "email_address": "E-Mail-Adresse",
+        "phone_number": "Telefonnummer",
+        "url_or_ip": "URL oder IP-Adresse",
+        "date_time": "Datum oder Uhrzeit",
+        "financial_account": "Finanzkonto",
+        "government_id": "Amtliche Kennung",
+        "nationality_religion_politics": "Nationalität, Religion oder Politik",
+        "other": "Personenbezogene Daten"
+      }
+    }
   },
   "newChat": {
     "newChat": "Neuer Chat",
@@ -159,6 +204,7 @@
     "personalizedPromptError": "Personalisierter System-Prompt konnte nicht erstellt werden",
     "systemPromptLoadError": "Personalisierungsstatus konnte nicht geladen werden. Die Personalisierung wurde möglicherweise übersprungen.",
     "noDefaultModelError": "Kein Standardmodell konfiguriert. Bitte wenden Sie sich an Ihren Administrator.",
+    "privacyHint": "Nur Sie sehen Ihre Chats.",
     "personalization": {
       "stepperName": "Name",
       "stepperStyle": "Stil",

@@ -1,3 +1,7 @@
+// Load env (.env.dev → .env) before typeorm.config reads process.env. This
+// makes the datasource self-sufficient for CLI runners (typeorm-ts-node-commonjs)
+// that don't preload env-register.
+import '../config/env';
 import { typeormConfigRaw } from '../config/typeorm.config';
 import { DataSource } from 'typeorm';
 import type { WithLengthColumnType } from 'typeorm/driver/types/ColumnTypes';

@@ -9,7 +9,7 @@ import { TrimMessagesForContextUseCase } from 'src/domain/messages/application/u
 import { TrimMessagesForContextCommand } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.command';
 import { StreamingInferenceService } from './streaming-inference.service';
 import { NonStreamingInferenceService } from './non-streaming-inference.service';
-import { CollectUsageAsyncService } from './collect-usage-async.service';
+import { InferenceUsageGuard } from './inference-usage-guard.service';
 import { enrichContentWithIntegration } from '../helpers/resolve-integration.helper';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { RunExecutionFailedError } from '../runs.errors';
@@ -27,7 +27,7 @@ export class InferenceOrchestratorService {
     private readonly trimMessagesForContextUseCase: TrimMessagesForContextUseCase,
     private readonly streamingInferenceService: StreamingInferenceService,
     private readonly nonStreamingInferenceService: NonStreamingInferenceService,
-    private readonly collectUsageAsyncService: CollectUsageAsyncService,
+    private readonly inferenceUsageGuard: InferenceUsageGuard,
   ) {}
 
   async *runInference(
@@ -111,10 +111,12 @@ export class InferenceOrchestratorService {
       inferenceResponse.meta.inputTokens !== undefined &&
       inferenceResponse.meta.outputTokens !== undefined
     ) {
-      this.collectUsageAsyncService.collect(
+      this.inferenceUsageGuard.collectUsage(
         params.model,
-        inferenceResponse.meta.inputTokens,
-        inferenceResponse.meta.outputTokens,
+        {
+          inputTokens: inferenceResponse.meta.inputTokens,
+          outputTokens: inferenceResponse.meta.outputTokens,
+        },
         assistantMessage.id,
       );
     }

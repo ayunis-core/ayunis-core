@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateAdminUserUseCase } from '../../../../users/application/use-cases/create-admin-user/create-admin-user.use-case';
 import { CreateAdminUserCommand } from '../../../../users/application/use-cases/create-admin-user/create-admin-user.command';
 import { IsValidPasswordUseCase } from '../../../../users/application/use-cases/is-valid-password/is-valid-password.use-case';
@@ -27,7 +26,6 @@ import { CreateTrialCommand } from 'src/iam/trials/application/use-cases/create-
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
 import { UserAlreadyExistsError } from 'src/iam/users/application/users.errors';
-import { OrgCreatedEvent } from 'src/iam/orgs/application/events/org-created.event';
 import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
@@ -43,7 +41,6 @@ export class RegisterUserUseCase {
     private readonly sendConfirmationEmailUseCase: SendConfirmationEmailUseCase,
     private readonly createTrialUseCase: CreateTrialUseCase,
     private readonly configService: ConfigService,
-    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   @Transactional()
@@ -132,18 +129,6 @@ export class RegisterUserUseCase {
           new SendConfirmationEmailCommand(user),
         );
       }
-
-      this.eventEmitter
-        .emitAsync(
-          OrgCreatedEvent.EVENT_NAME,
-          new OrgCreatedEvent(org.id, org, user),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit OrgCreatedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            orgId: org.id,
-          });
-        });
 
       this.logger.debug('Registration successful, logging in user', {
         userId: user.id,

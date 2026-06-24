@@ -10,11 +10,13 @@ import { GotenbergConverterService } from './infrastructure/adapters/gotenberg-c
 import { DocumentConverterPort } from './application/ports/document-converter.port';
 import retrievalConfig from 'src/config/retrieval.config';
 import { gotenbergConfig } from 'src/config/gotenberg.config';
+import { TranscriptionsModule } from 'src/domain/transcriptions/transcriptions.module';
 
 @Module({
   imports: [
     ConfigModule.forFeature(retrievalConfig),
     ConfigModule.forFeature(gotenbergConfig),
+    TranscriptionsModule,
   ],
   providers: [
     FileRetrieverRegistry,

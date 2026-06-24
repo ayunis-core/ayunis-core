@@ -46,7 +46,7 @@ describe('GetModelDistributionUseCase', () => {
           modelName: 'model-1',
           displayName: 'Model 1',
           provider: ModelProvider.OPENAI,
-          tokens: 1000,
+          credits: 1000,
           requests: 10,
           percentage: 50,
         }),
@@ -55,7 +55,7 @@ describe('GetModelDistributionUseCase', () => {
           modelName: 'model-2',
           displayName: 'Model 2',
           provider: ModelProvider.ANTHROPIC,
-          tokens: 1000,
+          credits: 1000,
           requests: 10,
           percentage: 50,
         }),
@@ -80,7 +80,7 @@ describe('GetModelDistributionUseCase', () => {
           modelName: 'model-1',
           displayName: 'Model 1',
           provider: ModelProvider.OPENAI,
-          tokens: 400,
+          credits: 400,
           requests: 4,
           percentage: 0,
         }),
@@ -89,7 +89,7 @@ describe('GetModelDistributionUseCase', () => {
           modelName: 'model-2',
           displayName: 'Model 2',
           provider: ModelProvider.ANTHROPIC,
-          tokens: 600,
+          credits: 600,
           requests: 6,
           percentage: 0,
         }),
@@ -102,8 +102,8 @@ describe('GetModelDistributionUseCase', () => {
       const query = new GetModelDistributionQuery({ organizationId: orgId });
       const result = await useCase.execute(query);
 
-      expect(result[0].tokens).toBe(600);
-      expect(result[1].tokens).toBe(400);
+      expect(result[0].credits).toBe(600);
+      expect(result[1].credits).toBe(400);
     });
 
     it('should limit models to maxModels when specified', async () => {
@@ -113,7 +113,7 @@ describe('GetModelDistributionUseCase', () => {
           modelName: 'model-1',
           displayName: 'Model 1',
           provider: ModelProvider.OPENAI,
-          tokens: 300,
+          credits: 300,
           requests: 3,
           percentage: 0,
         }),
@@ -122,7 +122,7 @@ describe('GetModelDistributionUseCase', () => {
           modelName: 'model-2',
           displayName: 'Model 2',
           provider: ModelProvider.ANTHROPIC,
-          tokens: 250,
+          credits: 250,
           requests: 2,
           percentage: 0,
         }),
@@ -131,7 +131,7 @@ describe('GetModelDistributionUseCase', () => {
           modelName: 'model-3',
           displayName: 'Model 3',
           provider: ModelProvider.OPENAI,
-          tokens: 200,
+          credits: 200,
           requests: 2,
           percentage: 0,
         }),
@@ -140,7 +140,7 @@ describe('GetModelDistributionUseCase', () => {
           modelName: 'model-4',
           displayName: 'Model 4',
           provider: ModelProvider.ANTHROPIC,
-          tokens: 150,
+          credits: 150,
           requests: 1,
           percentage: 0,
         }),
@@ -149,7 +149,7 @@ describe('GetModelDistributionUseCase', () => {
           modelName: 'model-5',
           displayName: 'Model 5',
           provider: ModelProvider.OPENAI,
-          tokens: 100,
+          credits: 100,
           requests: 1,
           percentage: 0,
         }),
@@ -189,7 +189,7 @@ describe('GetModelDistributionUseCase', () => {
           modelName: 'model-1',
           displayName: 'Model 1',
           provider: ModelProvider.OPENAI,
-          tokens: 500,
+          credits: 500,
           requests: 5,
           percentage: 0,
         }),
@@ -198,7 +198,7 @@ describe('GetModelDistributionUseCase', () => {
           modelName: 'model-2',
           displayName: 'Model 2',
           provider: ModelProvider.ANTHROPIC,
-          tokens: 500,
+          credits: 500,
           requests: 5,
           percentage: 0,
         }),

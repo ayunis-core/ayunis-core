@@ -6,6 +6,7 @@ import type { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 export interface MyClsStore extends ClsStore {
   userId?: UUID;
+  apiKeyId?: UUID;
   orgId?: UUID;
   systemRole?: SystemRole;
   role?: UserRole;

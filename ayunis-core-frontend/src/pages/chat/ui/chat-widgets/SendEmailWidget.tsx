@@ -7,6 +7,7 @@ import { Textarea } from '@/shared/ui/shadcn/textarea';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Mail } from 'lucide-react';
 import { cn } from '@/shared/lib/shadcn/utils';
+import { usePiiMasks, resolvePiiTokens } from '@/widgets/markdown';
 
 export default function SendEmailWidget({
   content,
@@ -32,6 +33,9 @@ export default function SendEmailWidget({
   const [body, setBody] = useState<string>(initialBody);
   const [to, setTo] = useState<string>(initialTo);
   const [copied, setCopied] = useState<boolean>(false);
+  // Mask dictionary so egress (clipboard, mailto) emits original values while
+  // the on-screen fields keep showing `{{pii:...}}` tokens.
+  const masks = usePiiMasks();
 
   // Update state when params change (for streaming updates)
   useEffect(() => {
@@ -44,24 +48,27 @@ export default function SendEmailWidget({
   }, [params.subject, params.body, params.to, content.id]);
 
   const mailtoHref = useMemo(() => {
-    const mailtoPath = to ? encodeURIComponent(to) : '';
+    const resolvedTo = resolvePiiTokens(to, masks);
+    const resolvedSubject = resolvePiiTokens(subject, masks);
+    const resolvedBody = resolvePiiTokens(body, masks);
+    const mailtoPath = resolvedTo ? encodeURIComponent(resolvedTo) : '';
 
     // Normalize line breaks, then force CRLF in the percent-encoded output for maximum client compatibility
-    const normalizedBody = (body || '').replace(/\r\n|\r|\n/g, '\n');
+    const normalizedBody = (resolvedBody || '').replace(/\r\n|\r|\n/g, '\n');
     const encodedBodyWithCrlf = encodeURIComponent(normalizedBody).replace(
       /%0A/g,
       '%0D%0A',
     );
     const queryParams: string[] = [];
-    if ((subject || '').length > 0) {
-      queryParams.push(`subject=${encodeURIComponent(subject)}`);
+    if ((resolvedSubject || '').length > 0) {
+      queryParams.push(`subject=${encodeURIComponent(resolvedSubject)}`);
     }
     if (normalizedBody.length > 0) {
       queryParams.push(`body=${encodedBodyWithCrlf}`);
     }
     const query = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
     return `mailto:${mailtoPath}${query}`;
-  }, [subject, body, to]);
+  }, [subject, body, to, masks]);
 
   return (
     <div
@@ -126,7 +133,9 @@ export default function SendEmailWidget({
           onClick={() => {
             void (async () => {
               try {
-                await navigator.clipboard.writeText(body);
+                await navigator.clipboard.writeText(
+                  resolvePiiTokens(body, masks),
+                );
                 setCopied(true);
                 setTimeout(() => setCopied(false), 1200);
               } catch {

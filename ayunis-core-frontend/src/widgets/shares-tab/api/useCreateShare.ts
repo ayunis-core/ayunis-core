@@ -1,17 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  useSharesControllerCreateShare,
   useSharesControllerCreateSkillShare,
   useSharesControllerCreateKnowledgeBaseShare,
   getSharesControllerGetSharesQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type {
-  CreateAgentShareDto,
   CreateSkillShareDto,
   CreateKnowledgeBaseShareDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import {
-  CreateAgentShareDtoEntityType,
   CreateSkillShareDtoEntityType,
   CreateKnowledgeBaseShareDtoEntityType,
   SharesControllerGetSharesEntityType,
@@ -20,10 +17,9 @@ import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
-type EntityType = 'agent' | 'skill' | 'knowledge_base';
+type EntityType = 'skill' | 'knowledge_base';
 
 const translationNsMap: Record<EntityType, string> = {
-  agent: 'agent',
   skill: 'skill',
   knowledge_base: 'knowledge-bases',
 };
@@ -32,7 +28,6 @@ const sharesEntityTypeMap: Record<
   EntityType,
   SharesControllerGetSharesEntityType
 > = {
-  agent: SharesControllerGetSharesEntityType.agent,
   skill: SharesControllerGetSharesEntityType.skill,
   knowledge_base: SharesControllerGetSharesEntityType.knowledge_base,
 };
@@ -62,20 +57,12 @@ export function useCreateShare(entityType: EntityType, entityId: string) {
     },
   };
 
-  const agentMutation = useSharesControllerCreateShare(mutationOptions);
   const skillMutation = useSharesControllerCreateSkillShare(mutationOptions);
   const kbMutation =
     useSharesControllerCreateKnowledgeBaseShare(mutationOptions);
 
   function createShare(teamId?: string) {
-    if (entityType === 'agent') {
-      const data: CreateAgentShareDto = {
-        entityType: CreateAgentShareDtoEntityType.agent,
-        agentId: entityId,
-        ...(teamId && { teamId }),
-      };
-      agentMutation.mutate({ data });
-    } else if (entityType === 'skill') {
+    if (entityType === 'skill') {
       const data: CreateSkillShareDto = {
         entityType: CreateSkillShareDtoEntityType.skill,
         skillId: entityId,
@@ -94,9 +81,6 @@ export function useCreateShare(entityType: EntityType, entityId: string) {
 
   return {
     createShare,
-    isCreating:
-      agentMutation.isPending ||
-      skillMutation.isPending ||
-      kbMutation.isPending,
+    isCreating: skillMutation.isPending || kbMutation.isPending,
   };
 }

@@ -18,6 +18,9 @@ import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 import { LetterheadNotFoundError } from 'src/domain/letterheads/application/letterheads.errors';
+import { GetThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
+import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
+import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 
 function createBufferStream(buf: Buffer): NodeJS.ReadableStream {
   const readable = new Readable();
@@ -32,6 +35,7 @@ describe('ExportArtifactUseCase', () => {
   let documentExportPort: jest.Mocked<DocumentExportPort>;
   let findLetterheadUseCase: jest.Mocked<FindLetterheadUseCase>;
   let downloadObjectUseCase: jest.Mocked<DownloadObjectUseCase>;
+  let getThreadPiiMasksUseCase: jest.Mocked<GetThreadPiiMasksUseCase>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockOrgId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -71,6 +75,10 @@ describe('ExportArtifactUseCase', () => {
       execute: jest.fn(),
     };
 
+    const mockGetThreadPiiMasks = {
+      execute: jest.fn().mockResolvedValue([]),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ExportArtifactUseCase,
@@ -79,6 +87,7 @@ describe('ExportArtifactUseCase', () => {
         { provide: ContextService, useValue: mockContextService },
         { provide: FindLetterheadUseCase, useValue: mockFindLetterhead },
         { provide: DownloadObjectUseCase, useValue: mockDownloadObject },
+        { provide: GetThreadPiiMasksUseCase, useValue: mockGetThreadPiiMasks },
       ],
     }).compile();
 
@@ -87,6 +96,7 @@ describe('ExportArtifactUseCase', () => {
     documentExportPort = module.get(DocumentExportPort);
     findLetterheadUseCase = module.get(FindLetterheadUseCase);
     downloadObjectUseCase = module.get(DownloadObjectUseCase);
+    getThreadPiiMasksUseCase = module.get(GetThreadPiiMasksUseCase);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'warn').mockImplementation();
@@ -376,6 +386,10 @@ describe('ExportArtifactUseCase', () => {
         { provide: ContextService, useValue: mockContextService },
         { provide: FindLetterheadUseCase, useValue: findLetterheadUseCase },
         { provide: DownloadObjectUseCase, useValue: downloadObjectUseCase },
+        {
+          provide: GetThreadPiiMasksUseCase,
+          useValue: getThreadPiiMasksUseCase,
+        },
       ],
     }).compile();
 
@@ -390,6 +404,68 @@ describe('ExportArtifactUseCase', () => {
 
     await expect(useCaseNoAuth.execute(command)).rejects.toThrow(
       UnauthorizedAccessError,
+    );
+  });
+
+  it('should de-anonymize PII tokens in the content before DOCX export', async () => {
+    const artifact = new DocumentArtifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Anonymous Notes',
+      currentVersionNumber: 1,
+      versions: [
+        new ArtifactVersion({
+          artifactId: mockArtifactId,
+          versionNumber: 1,
+          content:
+            '<p>Kontaktieren Sie {{pii:PERSON_NAME_1}} unter {{pii:EMAIL_ADDRESS_1}}</p>',
+          authorType: AuthorType.ASSISTANT,
+        }),
+      ],
+    });
+
+    artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
+    documentExportPort.exportToDocx.mockResolvedValue(Buffer.from('docx'));
+    getThreadPiiMasksUseCase.execute.mockResolvedValue([
+      new ThreadPiiMask({
+        threadId: mockThreadId,
+        category: PiiCategory.PERSON_NAME,
+        maskIndex: 1,
+        value: 'Max Mustermann',
+      }),
+      new ThreadPiiMask({
+        threadId: mockThreadId,
+        category: PiiCategory.EMAIL_ADDRESS,
+        maskIndex: 1,
+        value: 'max@example.de',
+      }),
+    ]);
+
+    await useCase.execute(
+      new ExportArtifactCommand({ artifactId: mockArtifactId, format: 'docx' }),
+    );
+
+    expect(getThreadPiiMasksUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ threadId: mockThreadId }),
+    );
+    expect(documentExportPort.exportToDocx).toHaveBeenCalledWith(
+      '<p>Kontaktieren Sie Max Mustermann unter max@example.de</p>',
+    );
+  });
+
+  it('should leave content unchanged when the thread has no PII masks', async () => {
+    const artifact = createArtifact();
+    artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
+    documentExportPort.exportToDocx.mockResolvedValue(Buffer.from('docx'));
+    getThreadPiiMasksUseCase.execute.mockResolvedValue([]);
+
+    await useCase.execute(
+      new ExportArtifactCommand({ artifactId: mockArtifactId, format: 'docx' }),
+    );
+
+    expect(documentExportPort.exportToDocx).toHaveBeenCalledWith(
+      '<p>Meeting notes content</p>',
     );
   });
 

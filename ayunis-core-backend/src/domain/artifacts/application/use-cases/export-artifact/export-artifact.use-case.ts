@@ -21,6 +21,9 @@ import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-case
 import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import type { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
+import { GetThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
+import { GetThreadPiiMasksQuery } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.query';
+import { deanonymizeText } from 'src/common/anonymization/domain/deanonymize-text';
 
 export interface ExportResult {
   buffer: Buffer;
@@ -38,6 +41,7 @@ export class ExportArtifactUseCase {
     private readonly contextService: ContextService,
     private readonly findLetterheadUseCase: FindLetterheadUseCase,
     private readonly downloadObjectUseCase: DownloadObjectUseCase,
+    private readonly getThreadPiiMasksUseCase: GetThreadPiiMasksUseCase,
   ) {}
 
   async execute(command: ExportArtifactCommand): Promise<ExportResult> {
@@ -58,12 +62,16 @@ export class ExportArtifactUseCase {
       );
       const currentVersion = this.requireCurrentVersion(artifact);
       const safeTitle = this.buildSafeTitle(artifact.title);
+      const content = await this.deanonymizeContent(
+        artifact.threadId,
+        currentVersion.content,
+      );
 
       if (command.format === 'docx') {
-        return await this.exportDocx(currentVersion.content, safeTitle);
+        return await this.exportDocx(content, safeTitle);
       }
 
-      return await this.exportPdf(artifact, currentVersion.content, safeTitle);
+      return await this.exportPdf(artifact, content, safeTitle);
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
@@ -107,6 +115,25 @@ export class ExportArtifactUseCase {
       );
     }
     return currentVersion;
+  }
+
+  /**
+   * Replaces `{{pii:...}}` tokens in the artifact content with the thread's
+   * original values so the exported file is de-anonymized. Stored content stays
+   * masked; this resolution happens only at export egress.
+   */
+  private async deanonymizeContent(
+    threadId: UUID,
+    content: string,
+  ): Promise<string> {
+    const masks = await this.getThreadPiiMasksUseCase.execute(
+      new GetThreadPiiMasksQuery(threadId),
+    );
+    if (masks.length === 0) {
+      return content;
+    }
+    const tokenToValue = new Map(masks.map((mask) => [mask.token, mask.value]));
+    return deanonymizeText(content, tokenToValue);
   }
 
   private buildSafeTitle(title: string): string {

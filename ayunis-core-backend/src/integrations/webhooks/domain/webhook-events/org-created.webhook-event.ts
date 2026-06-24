@@ -1,17 +1,16 @@
 import { WebhookEvent } from '../webhook-event.entity';
 import { WebhookEventType } from '../value-objects/webhook-event-type.enum';
 import type { Org } from 'src/iam/orgs/domain/org.entity';
-import type { User } from 'src/iam/users/domain/user.entity';
 
-export class OrgCreatedWebhookEvent extends WebhookEvent {
+export class OrgCreatedWebhookEvent extends WebhookEvent<Org> {
   readonly eventType: WebhookEventType;
-  readonly data: Org & { userEmail: string; userName: string };
+  readonly data: Org;
   readonly timestamp: Date;
 
-  constructor(org: Org, user: User) {
+  constructor(org: Org) {
     super();
     this.eventType = WebhookEventType.ORG_CREATED;
-    this.data = { ...org, userEmail: user.email, userName: user.name };
-    this.timestamp = new Date(); // Is only created
+    this.data = org;
+    this.timestamp = new Date();
   }
 }

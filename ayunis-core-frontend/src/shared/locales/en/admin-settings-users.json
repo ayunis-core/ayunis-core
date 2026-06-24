@@ -17,8 +17,6 @@
     "status": "Status",
     "sentDate": "Sent Date",
     "name": "Name",
-    "joinDate": "Join Date",
-    "active": "Active",
     "pending": "pending",
     "accepted": "accepted",
     "rejected": "rejected",
@@ -116,6 +114,26 @@
     "success": "User role updated successfully!",
     "error": "Failed to update user role. Please try again.",
     "notFound": "User not found. They may have been removed."
+  },
+  "editUserDialog": {
+    "title": "Edit User",
+    "description": "Update the user's name and email address.",
+    "nameLabel": "Name",
+    "namePlaceholder": "Full name",
+    "nameRequired": "Name is required",
+    "emailLabel": "Email",
+    "emailPlaceholder": "user@example.com",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Please enter a valid email address",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving..."
+  },
+  "userUpdate": {
+    "success": "User updated successfully",
+    "error": "Failed to update user. Please try again.",
+    "notFound": "User not found. They may have been removed.",
+    "emailInUse": "This email address is already in use by another user."
   },
   "triggerPasswordReset": {
     "success": "Password reset email sent successfully",

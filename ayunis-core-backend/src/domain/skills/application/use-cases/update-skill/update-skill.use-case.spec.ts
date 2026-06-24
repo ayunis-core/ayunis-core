@@ -111,7 +111,7 @@ describe('UpdateSkillUseCase', () => {
     });
 
     const conflictingSkill = new Skill({
-      id: '660e8400-e29b-41d4-a716-446655440000' as UUID,
+      id: '660e8400-e29b-41d4-a716-446655440000',
       name: 'Data Analysis',
       shortDescription: 'Analyze data.',
       instructions: 'Data analysis instructions.',

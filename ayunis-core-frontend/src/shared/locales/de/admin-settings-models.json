@@ -63,6 +63,7 @@
     "tier": {
       "label": "Stufe",
       "unset": "Nicht festgelegt",
+      "zero": "Unbegrenzt",
       "low": "Niedrig",
       "medium": "Mittel",
       "high": "Hoch",

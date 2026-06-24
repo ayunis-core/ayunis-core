@@ -1,0 +1,87 @@
+{
+  "piiWhitelist": {
+    "heading": "Ausnahmen von der Anonymisierung",
+    "description": "Im anonymen Modus ersetzt Ayunis Core erkannte personenbezogene Daten durch Platzhalter, bevor sie an das Sprachmodell gesendet werden. Hier können Sie einzelne Daten-Arten (z. B. Namen oder E-Mails) von der Anonymisierung ausnehmen – entweder vollständig oder nur für bestimmte Werte, die Sie angeben. Alles andere wird weiterhin maskiert.",
+    "patternLabel": "Nur bestimmte Werte ausnehmen (optional)",
+    "exampleLabel": "Beispiel:",
+    "patternHint": "Das Muster ist ein regulärer Ausdruck – der Wert muss vollständig dazu passen, Groß- und Kleinschreibung spielt keine Rolle. Leer lassen, um die ganze Kategorie auszunehmen.",
+    "invalidPattern": "Dieses Muster ist kein gültiger regulärer Ausdruck.",
+    "patternTooLong": "Das Muster darf höchstens {{max}} Zeichen lang sein.",
+    "unsafePattern": "Dieses Muster wurde abgelehnt, da es zu übermäßiger Verarbeitungszeit führen könnte.",
+    "saveButton": "Speichern",
+    "saving": "Wird gespeichert…",
+    "saveSuccess": "Ausnahmen von der Anonymisierung gespeichert.",
+    "saveError": "Speichern der Ausnahmen ist fehlgeschlagen.",
+    "loadError": "Die Ausnahmen konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "exemptBadge": "Nicht maskiert",
+    "categories": {
+      "person_name": {
+        "label": "Personennamen",
+        "description": "Vor- und Nachnamen natürlicher Personen",
+        "placeholder": "Erika Mustermann",
+        "example": "nimmt genau diesen Namen aus. Mit der Tastatureingabe | mehrere Namen angeben."
+      },
+      "organization": {
+        "label": "Organisationen",
+        "description": "Namen von Unternehmen, Institutionen und Behörden",
+        "placeholder": "Stadt Musterstadt",
+        "example": "nimmt genau diese Organisation aus. Mit der Tastatureingabe | mehrere Organisationen angeben."
+      },
+      "location": {
+        "label": "Orte & Adressen",
+        "description": "Städte, Länder, Straßen und Adressen",
+        "placeholder": "Musterstadt",
+        "example": "nimmt genau diesen Ort aus. Mit der Tastatureingabe | mehrere Orte angeben."
+      },
+      "email_address": {
+        "label": "E-Mail-Adressen",
+        "description": "Persönliche und organisatorische E-Mail-Adressen",
+        "placeholder": ".*@muster-stadt\\.de",
+        "example": "nimmt alle E-Mail-Adressen aus, die auf @muster-stadt.de enden. Mit der Tastatureingabe | mehrere Adressen angeben."
+      },
+      "phone_number": {
+        "label": "Telefonnummern",
+        "description": "Festnetz- und Mobilfunknummern",
+        "placeholder": "0681 .*",
+        "example": "nimmt alle Telefonnummern mit der Vorwahl 0681 aus. Mit der Tastatureingabe | mehrere Nummern angeben."
+      },
+      "url_or_ip": {
+        "label": "URLs & IP-Adressen",
+        "description": "Webadressen und IP-Adressen",
+        "placeholder": ".*muster-stadt\\.de.*",
+        "example": "nimmt alle Adressen aus, die muster-stadt.de enthalten. Mit der Tastatureingabe | mehrere Adressen angeben."
+      },
+      "date_time": {
+        "label": "Datums- & Zeitangaben",
+        "description": "Konkrete Daten und Uhrzeiten, z. B. Geburtsdaten",
+        "placeholder": "\\d{4}",
+        "example": "nimmt alle vierstelligen Zahlen aus, z. B. Jahreszahlen. Mit der Tastatureingabe | mehrere Angaben angeben."
+      },
+      "financial_account": {
+        "label": "Finanzdaten",
+        "description": "Kreditkartennummern, IBANs und Kontonummern",
+        "placeholder": "DE12 .*",
+        "example": "nimmt alle IBANs aus, die mit DE12 beginnen. Mit der Tastatureingabe | mehrere Angaben angeben."
+      },
+      "government_id": {
+        "label": "Amtliche Kennnummern",
+        "description": "Sozialversicherungs-, Pass-, Führerschein- und Approbationsnummern",
+        "placeholder": ".*muster.*",
+        "example": "nimmt alle Werte aus, die „muster“ enthalten. Mit der Tastatureingabe | mehrere Werte angeben."
+      },
+      "nationality_religion_politics": {
+        "label": "Nationalität, Religion & Politik",
+        "description": "Hinweise auf Nationalität, religiöse oder politische Zugehörigkeit",
+        "placeholder": ".*muster.*",
+        "example": "nimmt alle Werte aus, die „muster“ enthalten. Mit der Tastatureingabe | mehrere Werte angeben."
+      },
+      "other": {
+        "label": "Sonstige / nicht zugeordnet",
+        "description": "Von der Erkennung gefundene personenbezogene Daten ohne bekannte Kategorie",
+        "placeholder": ".*muster.*",
+        "example": "nimmt alle Werte aus, die „muster“ enthalten. Mit der Tastatureingabe | mehrere Werte angeben."
+      }
+    }
+  }
+}

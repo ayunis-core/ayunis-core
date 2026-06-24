@@ -202,7 +202,7 @@
   "createUser": {
     "button": "Add User",
     "title": "Create New User",
-    "description": "Create a new user in this organization. A random password will be generated and a password reset email can optionally be sent to the user.",
+    "description": "Create a new user in this organization. A random password will be generated and an activation email can optionally be sent to the user.",
     "nameLabel": "Name",
     "namePlaceholder": "Enter user name",
     "nameRequired": "Name is required",
@@ -218,7 +218,7 @@
     "create": "Create User",
     "creating": "Creating...",
     "cancel": "Cancel",
-    "sendPasswordResetEmailLabel": "Send password reset email to user",
+    "sendActivationEmailLabel": "Send activation email to user",
     "success": "User created successfully.",
     "error": "Failed to create user. Please try again.",
     "emailProviderBlacklisted": "This email provider is not allowed.",
@@ -230,7 +230,17 @@
     "used": "Credits Used",
     "remaining": "Credits Remaining",
     "usageProgress": "Usage",
-    "error": "Failed to load credit usage data."
+    "error": "Failed to load credit usage data.",
+    "edit": "Edit",
+    "updateTitle": "Edit Monthly Credits",
+    "updateDescription": "Adjust the monthly credit budget for this organization. The new budget applies to the current billing month.",
+    "updateLabel": "Monthly credits",
+    "save": "Save",
+    "updateSuccess": "Monthly credits updated successfully",
+    "updateErrorSubscriptionNotFound": "Subscription not found",
+    "updateErrorInvalidType": "Monthly credits can only be set for usage-based subscriptions",
+    "updateErrorInvalidData": "Invalid monthly credits value",
+    "updateErrorUnexpected": "An unexpected error occurred"
   },
   "noSubscription": {
     "title": "No subscription yet",
@@ -243,7 +253,65 @@
     "subscriptions": "Subscriptions",
     "trials": "Trials",
     "models": "Models",
-    "usage": "Usage"
+    "usage": "Usage",
+    "crawlDomains": "Crawl Domains",
+    "addons": "Add-ons"
+  },
+  "addons": {
+    "title": "Add-ons",
+    "description": "Optional product modules that can be activated for this organization.",
+    "error": "Could not load add-ons.",
+    "activate": {
+      "success": "Add-on activated.",
+      "error": "Could not activate the add-on."
+    },
+    "deactivate": {
+      "success": "Add-on deactivated.",
+      "error": "Could not deactivate the add-on."
+    },
+    "items": {
+      "ayunis_core_academy": {
+        "title": "Ayunis Core Academy",
+        "description": "Learning platform with training content for working with Ayunis Core."
+      }
+    }
+  },
+  "crawlDomains": {
+    "title": "Crawl Domains",
+    "description": "Hosts that only this organization may crawl, each exclusive to one organization.",
+    "empty": "No crawl domains assigned to this organization.",
+    "error": "Could not load crawl domains.",
+    "table": {
+      "host": "Host",
+      "createdAt": "Added",
+      "actions": "Actions"
+    },
+    "createDomain": {
+      "button": "Add domain",
+      "title": "Add crawl domain",
+      "description": "Authorize a host that only this organization may crawl. A full URL is accepted and reduced to its host.",
+      "label": "Host",
+      "placeholder": "e.g. intranet.customer.de",
+      "required": "Please enter a host.",
+      "cancel": "Cancel",
+      "create": "Add",
+      "creating": "Adding…"
+    },
+    "add": {
+      "success": "Crawl domain added.",
+      "error": "Could not add the crawl domain.",
+      "errorAlreadyAssigned": "This domain is already assigned to another organization.",
+      "errorInvalid": "Please enter a valid host or URL."
+    },
+    "remove": {
+      "button": "Remove",
+      "title": "Remove crawl domain",
+      "description": "Remove \"{{domain}}\"? This organization will no longer be able to crawl it.",
+      "confirmText": "Remove",
+      "cancelText": "Cancel",
+      "success": "Crawl domain removed.",
+      "error": "Could not remove the crawl domain."
+    }
   },
   "orgDetails": {
     "name": "Name",

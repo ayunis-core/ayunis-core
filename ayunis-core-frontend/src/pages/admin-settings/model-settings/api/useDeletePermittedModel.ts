@@ -5,7 +5,6 @@ import {
   getModelsControllerGetAvailableEmbeddingModelsQueryKey,
   getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey,
   getModelsControllerGetPermittedLanguageModelsQueryKey,
-  getAgentsControllerFindAllQueryKey,
   getThreadsControllerFindAllQueryKey,
   type ModelWithConfigResponseDto,
 } from '@/shared/api';
@@ -64,7 +63,6 @@ export function useDeletePermittedModel() {
           ...availabilityQueryKeys,
           getModelsControllerGetPermittedLanguageModelsQueryKey(),
           getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey(),
-          getAgentsControllerFindAllQueryKey(),
           getThreadsControllerFindAllQueryKey(),
         ];
         queryKeys.forEach((qk) => {

@@ -24,8 +24,6 @@ import {
 // Import use cases
 import { CreateShareUseCase } from '../../application/use-cases/create-share/create-share.use-case';
 import {
-  CreateOrgAgentShareCommand,
-  CreateTeamAgentShareCommand,
   CreateOrgSkillShareCommand,
   CreateTeamSkillShareCommand,
   CreateOrgKnowledgeBaseShareCommand,
@@ -40,7 +38,6 @@ import { GetTeamQuery } from 'src/iam/teams/application/use-cases/get-team/get-t
 // Import DTOs and mappers
 import { ShareResponseDto } from './dto/share-response.dto';
 import {
-  CreateAgentShareDto,
   CreateSkillShareDto,
   CreateKnowledgeBaseShareDto,
 } from './dto/create-share.dto';
@@ -61,56 +58,6 @@ export class SharesController {
     private readonly shareDtoMapper: ShareDtoMapper,
     private readonly getTeamUseCase: GetTeamUseCase,
   ) {}
-
-  @Post()
-  @ApiOperation({ summary: 'Create a share for an agent' })
-  @ApiBody({
-    description: 'Share creation data',
-    type: CreateAgentShareDto,
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'Share created successfully',
-    type: ShareResponseDto,
-  })
-  @ApiResponse({ status: 401, description: 'User not authenticated' })
-  @ApiResponse({
-    status: 403,
-    description: 'User cannot create share for this entity',
-  })
-  @ApiResponse({ status: 400, description: 'Invalid request data' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
-  async createShare(
-    @Body() createShareDto: CreateAgentShareDto,
-  ): Promise<ShareResponseDto> {
-    this.logger.log('createShare', {
-      entityType: createShareDto.entityType,
-      agentId: createShareDto.agentId,
-      teamId: createShareDto.teamId,
-    });
-
-    // Create command based on whether teamId is provided
-    const command = createShareDto.teamId
-      ? new CreateTeamAgentShareCommand(
-          createShareDto.agentId as UUID,
-          createShareDto.teamId as UUID,
-        )
-      : new CreateOrgAgentShareCommand(createShareDto.agentId as UUID);
-
-    // Execute use case
-    const share = await this.createShareUseCase.execute(command);
-
-    // Map to response DTO with team name if applicable
-    if (share.scope.scopeType === ShareScopeType.TEAM) {
-      const teamScope = share.scope as TeamShareScope;
-      const team = await this.getTeamUseCase.execute(
-        new GetTeamQuery(teamScope.teamId),
-      );
-      return this.shareDtoMapper.toDto(share, team.name);
-    }
-
-    return this.shareDtoMapper.toDto(share);
-  }
 
   @Post('skills')
   @ApiOperation({ summary: 'Create a share for a skill' })

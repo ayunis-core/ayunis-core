@@ -6,5 +6,6 @@ export class UserDeletedEvent {
   constructor(
     public readonly userId: UUID,
     public readonly orgId: UUID,
+    public readonly email: string,
   ) {}
 }

@@ -15,6 +15,6 @@ import { ContextModule } from 'src/common/context/context.module';
       useClass: MistralTranscriptionService,
     },
   ],
-  exports: [TranscriptionPort],
+  exports: [TranscriptionPort, TranscribeUseCase],
 })
 export class TranscriptionsModule {}

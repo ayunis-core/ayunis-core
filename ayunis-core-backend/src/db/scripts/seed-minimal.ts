@@ -2,8 +2,13 @@ import 'src/config/env';
 import { randomUUID } from 'crypto';
 import dataSource from 'src/db/datasource';
 import { SeedRunner } from './utils/seed-runner';
-import { minimalFixture, type ModelKey } from '../fixtures/minimal.fixture';
-import { IsNull } from 'typeorm';
+import {
+  minimalFixture,
+  LANGUAGE_MODEL_KEYS,
+  type ModelKey,
+} from '../fixtures/minimal.fixture';
+import { IsNull, MoreThanOrEqual } from 'typeorm';
+import type { UUID } from 'crypto';
 
 // Entity records
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
@@ -21,22 +26,16 @@ import { SubscriptionBillingInfoRecord } from 'src/iam/subscriptions/infrastruct
 import { PermittedModelRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
 import { PlatformConfigRecord } from 'src/iam/platform-config/infrastructure/persistence/postgres/schema/platform-config.record';
 import { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-config-keys.enum';
+import { UsageRecord } from 'src/domain/usage/infrastructure/persistence/local-usage/schema/usage.record';
+import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 const fixture = minimalFixture;
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 function log(entity: string, name: string, created: boolean): void {
   const icon = created ? '✅' : '⏭️ ';
   const verb = created ? 'Created' : 'Exists';
   console.log(`${icon} ${verb}: ${entity} (${name})`); // eslint-disable-line no-console
 }
-
-// ---------------------------------------------------------------------------
-// Seed steps
-// ---------------------------------------------------------------------------
 
 async function seedOrgByName(name: string): Promise<OrgRecord> {
   const repo = dataSource.getRepository(OrgRecord);
@@ -53,7 +52,7 @@ async function seedOrgByName(name: string): Promise<OrgRecord> {
 }
 
 async function seedLanguageModelFromFixture(
-  entry: typeof fixture.languageModel | typeof fixture.azureLanguageModel,
+  entry: (typeof fixture)[LanguageModelKey],
 ): Promise<LanguageModelRecord> {
   const repo = dataSource.getRepository(LanguageModelRecord);
   const { name, displayName, provider, ...flags } = entry;
@@ -317,45 +316,146 @@ async function seedPlatformConfig(): Promise<void> {
   log('Platform config', key, true);
 }
 
-// ---------------------------------------------------------------------------
-// Main
-// ---------------------------------------------------------------------------
+interface UsageSeedModel {
+  id: string;
+  provider: ModelProvider;
+  inputTokenCost?: number | null;
+  outputTokenCost?: number | null;
+}
+
+// Seeds usage records across the current calendar month so the credit-based
+// usage views show non-empty charts. Idempotent per org per month.
+async function seedUsageRecords(
+  orgId: string,
+  userId: string,
+  usageModels: UsageSeedModel[],
+): Promise<void> {
+  const repo = dataSource.getRepository(UsageRecord);
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const existing = await repo.count({
+    where: {
+      organizationId: orgId as UUID,
+      createdAt: MoreThanOrEqual(monthStart),
+    },
+  });
+  if (existing > 0) {
+    log('Usage records', `org=${orgId}`, false);
+    return;
+  }
+
+  const creditsPerEuro = fixture.platformConfig.creditsPerEuro;
+  const today = now.getDate();
+  const rows: Record<string, unknown>[] = [];
+
+  let index = 0;
+  // One record every other day up to today, cycling through models/providers.
+  for (let day = 1; day <= today; day += 2) {
+    const model = usageModels[index % usageModels.length];
+    // Deterministic but varied token counts.
+    const inputTokens = 40_000 + ((index * 7919) % 120_000);
+    const outputTokens = 20_000 + ((index * 5003) % 80_000);
+    const totalTokens = inputTokens + outputTokens;
+    const cost =
+      (inputTokens / 1_000_000) * (model.inputTokenCost ?? 0) +
+      (outputTokens / 1_000_000) * (model.outputTokenCost ?? 0);
+    const creditsConsumed = cost * creditsPerEuro;
+    const createdAt = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      day,
+      10,
+      0,
+      0,
+    );
+
+    rows.push({
+      id: randomUUID(),
+      userId: userId,
+      apiKeyId: null,
+      organizationId: orgId,
+      modelId: model.id,
+      provider: model.provider,
+      inputTokens,
+      outputTokens,
+      totalTokens,
+      cost,
+      creditsConsumed,
+      requestId: randomUUID(),
+      createdAt,
+      updatedAt: createdAt,
+    });
+    index += 1;
+  }
+
+  if (rows.length === 0) {
+    log('Usage records', `org=${orgId} (none — day 1)`, true);
+    return;
+  }
+
+  // QueryBuilder insert honors the explicit createdAt (CreateDateColumn would
+  // otherwise overwrite it with the current timestamp).
+  await dataSource
+    .createQueryBuilder()
+    .insert()
+    .into(UsageRecord)
+    .values(rows)
+    .execute();
+  log('Usage records', `org=${orgId} (${rows.length})`, true);
+}
+
+type LanguageModelKey = (typeof LANGUAGE_MODEL_KEYS)[number];
+
+async function seedLanguageModels(): Promise<
+  Record<LanguageModelKey, LanguageModelRecord>
+> {
+  const entries = await Promise.all(
+    LANGUAGE_MODEL_KEYS.map(
+      async (key) =>
+        [key, await seedLanguageModelFromFixture(fixture[key])] as const,
+    ),
+  );
+  return Object.fromEntries(entries) as Record<
+    LanguageModelKey,
+    LanguageModelRecord
+  >;
+}
 
 async function seedAllFixtures(runner: SeedRunner): Promise<void> {
   console.log('🌱 Starting minimal seed…\n'); // eslint-disable-line no-console
 
-  const [
-    org,
-    usageOrg,
-    languageModel,
-    azureLanguageModel,
-    embeddingModel,
-    imageGenerationModel,
-  ] = await Promise.all([
-    seedOrgByName(fixture.org.name),
-    seedOrgByName(fixture.usageOrg.name),
-    seedLanguageModelFromFixture(fixture.languageModel),
-    seedLanguageModelFromFixture(fixture.azureLanguageModel),
-    seedEmbeddingModel(),
-    seedImageGenerationModel(),
-  ]);
+  const [org, usageOrg, embeddingModel, imageGenerationModel] =
+    await Promise.all([
+      seedOrgByName(fixture.org.name),
+      seedOrgByName(fixture.usageOrg.name),
+      seedEmbeddingModel(),
+      seedImageGenerationModel(),
+    ]);
 
   const models = {
-    languageModel,
-    azureLanguageModel,
+    ...(await seedLanguageModels()),
     embeddingModel,
     imageGenerationModel,
   };
 
-  await seedUser(org.id, runner, fixture.user);
+  const adminUser = await seedUser(org.id, runner, fixture.user);
   await seedSubscription(org.id);
   await seedPermittedModels(org.id, models);
 
-  await seedUser(usageOrg.id, runner, fixture.usageUser);
+  const usageAdminUser = await seedUser(usageOrg.id, runner, fixture.usageUser);
   await seedUsageSubscription(usageOrg.id);
   await seedPermittedModels(usageOrg.id, models);
 
   await seedPlatformConfig();
+
+  const usageModels: UsageSeedModel[] = [
+    models.languageModel,
+    models.azureLanguageModel,
+    models.imageGenerationModel,
+  ];
+  await seedUsageRecords(org.id, adminUser.id, usageModels);
+  await seedUsageRecords(usageOrg.id, usageAdminUser.id, usageModels);
 
   console.log('\n🎉 Minimal seed completed successfully!'); // eslint-disable-line no-console
 }

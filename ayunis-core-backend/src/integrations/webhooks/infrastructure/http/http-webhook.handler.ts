@@ -1,3 +1,4 @@
+import { createHmac } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WebhookHandler } from '../../application/ports/webhook.handler';
@@ -91,6 +92,23 @@ export class HttpWebhookHandler extends WebhookHandler {
       data: event.data,
     };
 
+    // Serialize the body exactly once. The signature must be computed
+    // over the same bytes that are sent on the wire.
+    const body = JSON.stringify(payload);
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'User-Agent': 'Ayunis-Core-Webhook/1.0',
+      'X-Webhook-Event-Id': event.id,
+      'X-Webhook-Event-Type': event.eventType,
+      'X-Webhook-Timestamp': event.timestamp.toISOString(),
+    };
+
+    const signature = this.signBody(body);
+    if (signature) {
+      headers['X-Webhook-Signature'] = signature;
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();
@@ -99,14 +117,8 @@ export class HttpWebhookHandler extends WebhookHandler {
     try {
       const response = await fetch(webhookUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'Ayunis-Core-Webhook/1.0',
-          'X-Webhook-Event-Id': event.id,
-          'X-Webhook-Event-Type': event.eventType,
-          'X-Webhook-Timestamp': event.timestamp.toISOString(),
-        },
-        body: JSON.stringify(payload),
+        headers,
+        body,
         signal: controller.signal,
       });
 
@@ -127,5 +139,35 @@ export class HttpWebhookHandler extends WebhookHandler {
     } finally {
       clearTimeout(timeoutId);
     }
+  }
+
+  /**
+   * Compute a Stripe-style HMAC-SHA256 signature header for the raw body.
+   *
+   * Format: `t=<unix_seconds>,v1=<hex_signature>`
+   * The signed payload is `<unix_seconds>.<raw_body>`, which lets the
+   * receiver reject replays whose timestamp is outside a tolerance window.
+   *
+   * Returns `null` when no signing secret is configured. The fail-loud check
+   * in {@link WebhooksModule.onModuleInit} guarantees this only happens
+   * outside production.
+   *
+   * The timestamp is regenerated for every retry attempt, which is the
+   * desired behavior: a slow retry should not produce a stale signature
+   * that the receiver would reject as a replay.
+   */
+  private signBody(body: string): string | null {
+    const secret = this.configService.get<string>('app.webhookSigningSecret');
+    if (!secret) {
+      return null;
+    }
+
+    const timestampSeconds = Math.floor(Date.now() / 1000);
+    const signedPayload = `${timestampSeconds}.${body}`;
+    const signature = createHmac('sha256', secret)
+      .update(signedPayload)
+      .digest('hex');
+
+    return `t=${timestampSeconds},v1=${signature}`;
   }
 }

@@ -11,6 +11,28 @@ interface LogInfo {
 }
 
 /**
+ * Keys whose values may carry user prompt content or raw provider SDK
+ * payloads. Provider SDKs (OpenAI/Anthropic/Gemini/Bedrock) routinely echo
+ * prompt fragments in error bodies and response payloads; our own internal
+ * names cover messages, tools, and completion options. Values under these
+ * keys are replaced with REDACTED_PLACEHOLDER before reaching Sentry.
+ */
+const REDACTED_KEYS = new Set([
+  'messages',
+  'tools',
+  'body',
+  'prompt',
+  'input',
+  'system',
+  'request',
+  'response',
+  'completionOptions',
+  'error',
+]);
+
+const REDACTED_PLACEHOLDER = '[redacted]';
+
+/**
  * Winston transport that forwards log entries to Sentry Structured Logs.
  *
  * Sentry Logs are a separate product from Sentry Issues/Errors — they give
@@ -56,7 +78,7 @@ export class SentryLogTransport extends Transport {
   }
 }
 
-function buildAttributes(
+export function buildAttributes(
   context: string | undefined,
   rest: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -78,8 +100,13 @@ function buildAttributes(
 
   // Forward any structured metadata (NestJS Logger passes extra args as
   // object properties on the info object). Skip internal Winston symbols.
+  // Redact known-unsafe keys and Error instances — both may carry prompt
+  // content from provider SDKs.
   for (const [key, value] of Object.entries(rest)) {
-    if (typeof key === 'string' && !key.startsWith('Symbol(')) {
+    if (typeof key !== 'string' || key.startsWith('Symbol(')) continue;
+    if (REDACTED_KEYS.has(key) || value instanceof Error) {
+      attrs[key] = REDACTED_PLACEHOLDER;
+    } else {
       attrs[key] = value;
     }
   }

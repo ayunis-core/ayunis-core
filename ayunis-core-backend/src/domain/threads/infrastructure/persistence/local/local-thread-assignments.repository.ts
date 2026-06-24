@@ -234,6 +234,41 @@ export class LocalThreadAssignmentsRepository {
       .execute();
   }
 
+  async findSourceIdsWithOnlyStaleDirectAssignments(
+    olderThan: Date,
+  ): Promise<UUID[]> {
+    this.logger.log('findSourceIdsWithOnlyStaleDirectAssignments', {
+      olderThan,
+    });
+
+    const rows = await this.threadSourceAssignmentRepository
+      .createQueryBuilder('tsa')
+      .select('DISTINCT tsa.sourceId', 'sourceId')
+      .where('tsa.originSkillId IS NULL')
+      .andWhere(
+        `NOT EXISTS (
+          SELECT 1
+          FROM thread_source_assignments tsa2
+          WHERE tsa2."sourceId" = tsa."sourceId"
+            AND tsa2."originSkillId" IS NULL
+            AND (
+              NOT EXISTS (
+                SELECT 1 FROM messages m WHERE m."threadId" = tsa2."threadId"
+              )
+              OR EXISTS (
+                SELECT 1 FROM messages m
+                WHERE m."threadId" = tsa2."threadId"
+                  AND m."createdAt" >= :cutoff
+              )
+            )
+        )`,
+      )
+      .setParameter('cutoff', olderThan)
+      .getRawMany<{ sourceId: UUID }>();
+
+    return rows.map((row) => row.sourceId);
+  }
+
   async removeDirectKnowledgeBaseAssignments(params: {
     knowledgeBaseId: UUID;
     userIds: UUID[];

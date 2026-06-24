@@ -5,6 +5,7 @@ import { RetrieverModule } from '../retrievers/retriever.module';
 import { IndexersModule } from '../rag/indexers/indexers.module';
 import { StorageModule } from '../storage/storage.module';
 import { DocumentProcessingModule } from './infrastructure/queue/document-processing.module';
+import { UrlCrawlModule } from './infrastructure/queue/url-crawl.module';
 
 // Import all use cases
 import { GetTextSourceByIdUseCase } from './application/use-cases/get-text-source-by-id/get-text-source-by-id.use-case';
@@ -24,6 +25,10 @@ import { MarkSourceFailedUseCase } from './application/use-cases/mark-source-fai
 import { EnqueueDocumentProcessingUseCase } from './application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
 import { SourceProcessingCleanupService } from './application/services/source-processing-cleanup.service';
 import { StartDocumentProcessingUseCase } from './application/use-cases/start-document-processing/start-document-processing.use-case';
+import { FindUnreferencedSourceIdsUseCase } from './application/use-cases/find-unreferenced-source-ids/find-unreferenced-source-ids.use-case';
+import { CreateProcessingUrlSourceUseCase } from './application/use-cases/create-processing-url-source/create-processing-url-source.use-case';
+import { EnqueueUrlCrawlUseCase } from './application/use-cases/enqueue-url-crawl/enqueue-url-crawl.use-case';
+import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/start-url-crawl.use-case';
 
 @Module({
   imports: [
@@ -33,6 +38,7 @@ import { StartDocumentProcessingUseCase } from './application/use-cases/start-do
     IndexersModule,
     StorageModule,
     DocumentProcessingModule,
+    UrlCrawlModule,
   ],
   providers: [
     SourceProcessingCleanupService,
@@ -52,10 +58,15 @@ import { StartDocumentProcessingUseCase } from './application/use-cases/start-do
     MarkSourceFailedUseCase,
     EnqueueDocumentProcessingUseCase,
     StartDocumentProcessingUseCase,
+    FindUnreferencedSourceIdsUseCase,
+    CreateProcessingUrlSourceUseCase,
+    EnqueueUrlCrawlUseCase,
+    StartUrlCrawlUseCase,
   ],
   exports: [
     LocalSourceRepositoryModule,
     DocumentProcessingModule,
+    UrlCrawlModule,
     GetTextSourceByIdUseCase,
     GetSourceByIdUseCase,
     DeleteSourceUseCase,
@@ -72,6 +83,10 @@ import { StartDocumentProcessingUseCase } from './application/use-cases/start-do
     MarkSourceFailedUseCase,
     EnqueueDocumentProcessingUseCase,
     StartDocumentProcessingUseCase,
+    FindUnreferencedSourceIdsUseCase,
+    CreateProcessingUrlSourceUseCase,
+    EnqueueUrlCrawlUseCase,
+    StartUrlCrawlUseCase,
   ],
 })
 export class SourcesModule {}

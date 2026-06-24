@@ -79,28 +79,20 @@ describe('ValidateMcpIntegrationUseCase', () => {
     );
   });
 
-  it('should pass userId to MCP client when collecting capabilities', async () => {
+  it('validates org-level connectivity without a userId (no per-user credentials or enforcement)', async () => {
     const command = new ValidateMcpIntegrationCommand(integrationId);
     const integration = buildIntegration();
     repository.findById.mockResolvedValue(integration);
 
     await useCase.execute(command);
 
-    expect(mcpClientService.listTools).toHaveBeenCalledWith(
-      integration,
-      userId,
-    );
-    expect(mcpClientService.listResources).toHaveBeenCalledWith(
-      integration,
-      userId,
-    );
+    // Validation is an org-level connectivity check: the per-user authorization
+    // guard and per-user credential merge must not apply, so no userId is passed.
+    expect(mcpClientService.listTools).toHaveBeenCalledWith(integration);
+    expect(mcpClientService.listResources).toHaveBeenCalledWith(integration);
     expect(mcpClientService.listResourceTemplates).toHaveBeenCalledWith(
       integration,
-      userId,
     );
-    expect(mcpClientService.listPrompts).toHaveBeenCalledWith(
-      integration,
-      userId,
-    );
+    expect(mcpClientService.listPrompts).toHaveBeenCalledWith(integration);
   });
 });

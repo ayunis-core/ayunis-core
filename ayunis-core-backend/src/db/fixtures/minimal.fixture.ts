@@ -3,10 +3,6 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
-/**
- * Minimal fixture for development and E2E testing
- * Contains: 2 orgs (seat-based + usage-based), admin users, models, subscriptions
- */
 export const minimalFixture = {
   org: {
     name: 'Demo Org',
@@ -18,7 +14,7 @@ export const minimalFixture = {
 
   user: {
     email: 'admin@demo.local',
-    // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- dev-only seed credential
+
     password: 'admin',
     name: 'Admin',
     role: UserRole.ADMIN,
@@ -29,7 +25,7 @@ export const minimalFixture = {
 
   usageUser: {
     email: 'admin@usage.local',
-    // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- dev-only seed credential
+
     password: 'admin',
     name: 'Usage Admin',
     role: UserRole.ADMIN,
@@ -62,6 +58,45 @@ export const minimalFixture = {
     canVision: true,
     inputTokenCost: 3,
     outputTokenCost: 15,
+  },
+
+  openaiLanguageModel: {
+    name: 'gpt-4o',
+    displayName: 'GPT-4o (OpenAI)',
+    provider: ModelProvider.OPENAI,
+    canStream: true,
+    isReasoning: false,
+    isArchived: false,
+    canUseTools: true,
+    canVision: true,
+    inputTokenCost: 2.5,
+    outputTokenCost: 10,
+  },
+
+  mistralLanguageModel: {
+    name: 'mistral-large-latest',
+    displayName: 'Mistral Large (Mistral)',
+    provider: ModelProvider.MISTRAL,
+    canStream: true,
+    isReasoning: false,
+    isArchived: false,
+    canUseTools: true,
+    canVision: false,
+    inputTokenCost: 2,
+    outputTokenCost: 6,
+  },
+
+  geminiLanguageModel: {
+    name: 'gemini-2.5-pro',
+    displayName: 'Gemini 2.5 Pro (Gemini)',
+    provider: ModelProvider.GEMINI,
+    canStream: true,
+    isReasoning: false,
+    isArchived: false,
+    canUseTools: true,
+    canVision: true,
+    inputTokenCost: 1.25,
+    outputTokenCost: 10,
   },
 
   embeddingModel: {
@@ -122,6 +157,21 @@ export const minimalFixture = {
       anonymousOnly: false,
     },
     {
+      modelKey: 'openaiLanguageModel',
+      isDefault: false,
+      anonymousOnly: false,
+    },
+    {
+      modelKey: 'mistralLanguageModel',
+      isDefault: false,
+      anonymousOnly: false,
+    },
+    {
+      modelKey: 'geminiLanguageModel',
+      isDefault: false,
+      anonymousOnly: false,
+    },
+    {
       // Embedding model as default
       modelKey: 'embeddingModel',
       isDefault: true,
@@ -136,10 +186,17 @@ export const minimalFixture = {
   ],
 } as const;
 
+export const LANGUAGE_MODEL_KEYS = [
+  'languageModel',
+  'azureLanguageModel',
+  'openaiLanguageModel',
+  'mistralLanguageModel',
+  'geminiLanguageModel',
+] as const;
+
 export type ModelKey = keyof Pick<
   typeof minimalFixture,
-  | 'languageModel'
-  | 'azureLanguageModel'
+  | (typeof LANGUAGE_MODEL_KEYS)[number]
   | 'embeddingModel'
   | 'imageGenerationModel'
 >;

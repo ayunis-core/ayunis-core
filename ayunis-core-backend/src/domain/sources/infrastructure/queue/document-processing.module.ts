@@ -7,6 +7,7 @@ import { StorageModule } from 'src/domain/storage/storage.module';
 import { ContextModule } from 'src/common/context/context.module';
 import { LocalSourceRepositoryModule } from '../persistence/local/local-source-repository.module';
 import { MarkSourceFailedUseCase } from '../../application/use-cases/mark-source-failed/mark-source-failed.use-case';
+import { SourceProcessingHelper } from '../../application/services/source-processing-helper.service';
 import { DocumentProcessingPort } from '../../application/ports/document-processing.port';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { DocumentProcessingProducer } from './document-processing.producer';
@@ -34,6 +35,7 @@ import { StaleProcessingCleanupService } from './stale-processing-cleanup.servic
     DocumentProcessingConsumer,
     StaleProcessingCleanupService,
     MarkSourceFailedUseCase,
+    SourceProcessingHelper,
   ],
   exports: [DocumentProcessingPort],
 })

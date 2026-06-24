@@ -221,10 +221,11 @@ export class McpIntegrationsController {
   async listAvailable(): Promise<McpIntegrationResponseDto[]> {
     this.logger.log('listAvailableMcpIntegrations');
 
-    const integrations =
-      await this.listAvailableMcpIntegrationsUseCase.execute();
+    const available = await this.listAvailableMcpIntegrationsUseCase.execute();
 
-    return this.mcpIntegrationDtoMapper.toDtoArray(integrations);
+    return available.map(({ integration, userAuthorized }) =>
+      this.mcpIntegrationDtoMapper.toDto(integration, userAuthorized),
+    );
   }
 
   @Get(':id')

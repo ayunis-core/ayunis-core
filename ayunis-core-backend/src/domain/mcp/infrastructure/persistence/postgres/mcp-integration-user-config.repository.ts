@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { McpIntegrationUserConfigRepositoryPort } from '../../../application/ports/mcp-integration-user-config.repository.port';
 import { McpIntegrationUserConfig } from '../../../domain/mcp-integration-user-config.entity';
@@ -50,6 +50,26 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
     }
 
     return this.toDomain(record);
+  }
+
+  async findByIntegrationIdsAndUser(
+    integrationIds: UUID[],
+    userId: UUID,
+  ): Promise<McpIntegrationUserConfig[]> {
+    this.logger.log('findByIntegrationIdsAndUser', {
+      count: integrationIds.length,
+      userId,
+    });
+
+    if (integrationIds.length === 0) {
+      return [];
+    }
+
+    const records = await this.repository.find({
+      where: { integrationId: In(integrationIds), userId },
+    });
+
+    return records.map((record) => this.toDomain(record));
   }
 
   async deleteByIntegrationId(integrationId: UUID): Promise<void> {

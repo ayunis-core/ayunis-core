@@ -7,7 +7,7 @@ import {
 import { User } from 'src/iam/users/domain/user.entity';
 import type { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UUID } from 'crypto';
-import { Repository, ILike } from 'typeorm';
+import { Repository, ILike, In } from 'typeorm';
 import { UserRecord } from './schema/user.record';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserMapper } from './mappers/user.mapper';
@@ -38,6 +38,20 @@ export class LocalUsersRepository extends UsersRepository {
       return null;
     }
     return UserMapper.toDomain(userEntity);
+  }
+
+  async findManyByIdsAndOrgId(ids: UUID[], orgId: UUID): Promise<User[]> {
+    this.logger.log('findManyByIdsAndOrgId', { idCount: ids.length, orgId });
+
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const userRecords = await this.userRepository.find({
+      where: { id: In(ids), orgId },
+    });
+
+    return userRecords.map((record) => UserMapper.toDomain(record));
   }
 
   async findOneByEmail(email: string): Promise<User | null> {

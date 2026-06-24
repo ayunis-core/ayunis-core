@@ -26,13 +26,44 @@
     "errorCreditBudgetExceeded": "You have reached the credit limit for this month.",
     "errorAddKnowledgeBase": "Failed to add knowledge base. Please try again.",
     "errorRemoveKnowledgeBase": "Failed to remove knowledge base. Please try again.",
+    "errorAddIntegration": "Failed to add integration",
+    "errorRemoveIntegration": "Failed to remove integration",
+    "errorIntegrationNotFound": "This integration no longer exists",
     "errorDownloadSource": "Failed to download source. Please try again.",
     "errorUpdateModel": "Model could not be updated",
     "errorUpdateAgent": "Agent could not be updated",
     "errorRemoveAgent": "Agent could not be removed",
-    "thinking": "Thinking",
     "skillInstructions": "Skill instructions",
     "copyToClipboard": "Copy to clipboard",
+    "timeline": {
+      "working": "Working…",
+      "thoughtProcess": "Thought process",
+      "summary_one": "{{count}} step",
+      "summary_other": "{{count}} steps",
+      "errorStep": "Stopped",
+      "actions": {
+        "create_document": "Created document",
+        "update_document": "Updated document",
+        "edit_document": "Edited document",
+        "read_document": "Read document",
+        "create_diagram": "Created diagram",
+        "update_diagram": "Updated diagram",
+        "chart": "Created chart",
+        "generate_image": "Generated image",
+        "send_email": "Drafted email",
+        "create_calendar_event": "Created calendar event",
+        "create_skill": "Created skill",
+        "edit_skill": "Edited skill",
+        "activate_skill": "Activated skill",
+        "internet_search": "Searched the internet",
+        "website_content": "Fetched website",
+        "source_query": "Searched files",
+        "knowledge_query": "Searched knowledge base",
+        "code_execution": "Calculated",
+        "http": "Made HTTP request",
+        "use_tool": "Used {{tool}}"
+      }
+    },
     "tools": {
       "internet_search": "Search the internet",
       "website_content": "Query website",
@@ -144,9 +175,23 @@
     },
     "longChatWarningTitle": "Conversation too long",
     "longChatWarningDescription": "For better results, consider starting a new chat.",
-    "unavailableAgentWarningTitle": "Agent no longer available",
-    "unavailableAgentWarningDescription": "The agent or model used in this conversation is no longer accessible. You can still view your message history, but you cannot continue this conversation.",
-    "inputDisclaimer": "Input not used for training. AI can make mistakes—verify answers."
+    "inputDisclaimer": "Input not used for training. AI can make mistakes—verify answers.",
+    "piiMask": {
+      "tooltip": "{{category}} — anonymized before being sent to the AI model",
+      "categories": {
+        "person_name": "Person name",
+        "organization": "Organization",
+        "location": "Location or address",
+        "email_address": "Email address",
+        "phone_number": "Phone number",
+        "url_or_ip": "URL or IP address",
+        "date_time": "Date or time",
+        "financial_account": "Financial account",
+        "government_id": "Government ID",
+        "nationality_religion_politics": "Nationality, religion, or politics",
+        "other": "Personal data"
+      }
+    }
   },
   "newChat": {
     "newChat": "New Chat",
@@ -159,6 +204,7 @@
     "personalizedPromptError": "Failed to generate personalized system prompt",
     "systemPromptLoadError": "Could not load personalization status. Personalization may have been skipped.",
     "noDefaultModelError": "No default model configured. Please contact your administrator.",
+    "privacyHint": "Only you can see your chats.",
     "personalization": {
       "stepperName": "Name",
       "stepperStyle": "Style",

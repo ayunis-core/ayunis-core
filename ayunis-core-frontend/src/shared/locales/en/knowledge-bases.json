@@ -149,10 +149,16 @@
       "urlDialogTitle": "Add Website URL",
       "urlDialogDescription": "Enter the URL of a website to import its content into the knowledge base.",
       "urlLabel": "Website URL",
+      "urlDepthLabel": "Link depth",
+      "urlDepthOption0": "Just this page",
+      "urlDepthOption1": "This page + linked pages",
+      "urlDepthOption2": "This page + 2 levels of links",
+      "urlDepthHint": "Follows links on the same website. Higher depths import more pages and take longer.",
       "addUrlSuccess": "URL added successfully! The website content is being processed.",
       "addUrlError": "Failed to add URL. Please check the URL and try again.",
       "addUrlRetrievalFailed": "The website could not be reached. Please check that the URL is correct and the website is accessible.",
       "addUrlUnsupportedContentType": "This URL points to a file (e.g. PDF) instead of a website. Please download the file and upload it directly.",
+      "addedAt": "Added {{date}}",
       "statusProcessing": "Processing… You can safely navigate away.",
       "statusProcessingSlow": "Taking longer than expected… You can safely navigate away.",
       "statusFailed": "Failed",
@@ -166,9 +172,10 @@
     "failedToAdd": "Failed to upload document. Please try again.",
     "invalidFileTypeError": "This file type is currently not supported.",
     "fileSourceEmptyDataError": "The uploaded file contains no processable data.",
-    "fileSourceTooLargeError": "File is too large. Maximum file size is 50MB.",
+    "fileSourceTooLargeError": "File is too large. Maximum file size is 25MB.",
     "fileSourceTooManyPagesError": "Document has too many pages to process.",
     "fileSourceServiceBusyError": "The document processing service is busy. Please try again later.",
-    "fileSourceTimeoutError": "Document processing timed out. The file may be too complex."
+    "fileSourceTimeoutError": "Document processing timed out. The file may be too complex.",
+    "sourceLimitExceededError": "A knowledge base can have at most 500 documents. Please remove one before adding another."
   }
 }

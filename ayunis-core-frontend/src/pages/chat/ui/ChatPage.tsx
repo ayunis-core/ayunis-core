@@ -1,20 +1,13 @@
-import {
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-  useMemo,
-  lazy,
-  Suspense,
-} from 'react';
+import { useState, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
 import ChatMessage from '@/pages/chat/ui/ChatMessage';
-import StreamingLoadingIndicator from '@/pages/chat/ui/StreamingLoadingIndicator';
+import AssistantRunBlock from '@/pages/chat/ui/AssistantRunBlock';
+import LoadingAssistantBlock from '@/pages/chat/ui/LoadingAssistantBlock';
+import { groupMessagesIntoRuns } from '@/pages/chat/ui/agent-run-timeline';
 import ChatInput from '@/widgets/chat-input';
 import { useMessageSend } from '../api/useMessageSend';
 import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
-import UnavailableAgentWarning from './UnavailableAgentWarning';
 import type { Thread, Message } from '../model/openapi';
 import { showError } from '@/shared/lib/toast';
 import config from '@/shared/config';
@@ -25,10 +18,13 @@ import { useDeleteThread } from '@/features/useDeleteThread';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import type {
+  PiiMaskResponseDto,
+  RunMasksResponseDto,
   RunMessageResponseDtoMessage,
   RunSessionResponseDto,
   RunThreadResponseDto,
 } from '@/shared/api';
+import { PiiMaskProvider } from '@/widgets/markdown';
 import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useRunErrorHandler } from '../hooks/useRunErrorHandler';
 import { useLetterheadChange } from '../hooks/useLetterheadChange';
@@ -39,8 +35,6 @@ import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
 import { useDeleteFileSource } from '../api/useDeleteFileSource';
 import { useArtifactActions } from '../hooks/useArtifactActions';
-import { useAgents } from '@/features/useAgents';
-import { useIsAgentsEnabled } from '@/features/feature-toggles';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import {
@@ -49,6 +43,7 @@ import {
   threadsControllerFindOne,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useKnowledgeBaseAttachment } from '../api/useKnowledgeBaseAttachment';
+import { useMcpIntegrationAttachment } from '../api/useMcpIntegrationAttachment';
 import { useDownloadSource } from '../api/useDownloadSource';
 import type { PendingImage } from '../api/useMessageSend';
 
@@ -78,11 +73,8 @@ export default function ChatPage({
   const { t } = useTranslation('chat');
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
-  const isAgentsEnabled = useIsAgentsEnabled();
-  const { agents, isLoading: isLoadingAgents } = useAgents({
-    enabled: isAgentsEnabled,
-  });
   const { models, isLoading: isLoadingModels } = usePermittedModels();
+  const [isStreaming, setIsStreaming] = useState(false);
   const { data: thread = initialThread } = useQuery({
     queryKey: getThreadsControllerFindOneQueryKey(initialThread.id),
     queryFn: () => threadsControllerFindOne(initialThread.id),
@@ -90,6 +82,10 @@ export default function ChatPage({
     staleTime: 0,
     // eslint-disable-next-line sonarjs/function-return-type -- React Query's refetchInterval expects number | false
     refetchInterval: (query) => {
+      // Pause polling while streaming so a poll started before stream end
+      // can't land in the cache afterwards and shorten the displayed text
+      // via the thread reconciliation pass.
+      if (isStreaming) return false;
       const data = query.state.data;
       if (!data) return false;
       const hasProcessing = data.sources.some(
@@ -99,27 +95,15 @@ export default function ChatPage({
     },
   });
 
-  const selectedAgent = agents.find((agent) => agent.id === thread.agentId);
-
   const selectedModel = models.find((m) => m.id === thread.permittedModelId);
-  const isVisionEnabled = thread.agentId
-    ? (selectedAgent?.model.canVision ?? false)
-    : (selectedModel?.canVision ?? false);
+  const isVisionEnabled = selectedModel?.canVision ?? false;
 
-  // Detect if the agent or model used in this thread is no longer accessible.
+  // Detect if the model used in this thread is no longer accessible.
   // Only flagged after loading completes to avoid flashing the warning.
-  const isAgentUnavailable = useMemo(() => {
-    if (thread.agentId) return !isLoadingAgents && !selectedAgent;
+  const isModelUnavailable = useMemo(() => {
     if (thread.permittedModelId) return !isLoadingModels && !selectedModel;
     return false;
-  }, [
-    thread.agentId,
-    thread.permittedModelId,
-    selectedAgent,
-    selectedModel,
-    isLoadingAgents,
-    isLoadingModels,
-  ]);
+  }, [thread.permittedModelId, selectedModel, isLoadingModels]);
 
   const queryClient = useQueryClient();
   const chatInputRef = useRef<ChatInputRef>(null);
@@ -128,7 +112,24 @@ export default function ChatPage({
     thread.title,
   );
   const [messages, setMessages] = useState<Message[]>(thread.messages);
-  const [isStreaming, setIsStreaming] = useState(false);
+  const [piiMasks, setPiiMasks] = useState<PiiMaskResponseDto[]>(
+    thread.piiMasks,
+  );
+
+  // Reconcile local message/title state whenever the thread reference changes
+  // (navigating to another thread, or a refetch returning fresh server data).
+  // Done during render rather than in an effect to avoid the extra commit pass
+  // flagged by react-hooks/set-state-in-effect.
+  const [reconciledThread, setReconciledThread] = useState(thread);
+  if (thread !== reconciledThread) {
+    setReconciledThread(thread);
+    setMessages(thread.messages);
+    setThreadTitle(thread.title);
+    setPiiMasks(thread.piiMasks);
+  }
+  const [pendingSubmission, setPendingSubmission] = useState<string | null>(
+    null,
+  );
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const {
     openArtifact,
@@ -172,23 +173,24 @@ export default function ChatPage({
     },
   });
 
-  const {
-    createFileSource,
-    createFileSourceAsync,
-    isLoading: isCreatingFileSource,
-    reset: resetCreateFileSourceMutation,
-  } = useCreateFileSource({
-    threadId: thread.id,
-  });
+  const { createFileSource, isLoading: isCreatingFileSource } =
+    useCreateFileSource({
+      threadId: thread.id,
+    });
   const { deleteFileSource } = useDeleteFileSource({
     threadId: thread.id,
   });
 
-  const { addKnowledgeBase, addKnowledgeBaseAsync, removeKnowledgeBase } =
-    useKnowledgeBaseAttachment({ threadId: thread.id });
+  const { addKnowledgeBase, removeKnowledgeBase } = useKnowledgeBaseAttachment({
+    threadId: thread.id,
+  });
+  const { addIntegration, removeIntegration } = useMcpIntegrationAttachment({
+    threadId: thread.id,
+  });
   const { downloadSource } = useDownloadSource(thread);
 
   const handleMessage = useCallback((message: RunMessageResponseDtoMessage) => {
+    setPendingSubmission(null);
     setMessages((prev) => {
       const exists = prev.some((m) => m.id === message.id);
       if (exists) return prev.map((m) => (m.id === message.id ? message : m));
@@ -196,12 +198,20 @@ export default function ChatPage({
     });
   }, []);
 
-  const handleFileUpload = useCallback(
-    (file: File) => {
-      createFileSource({ file });
-    },
-    [createFileSource],
-  );
+  const handleMasks = useCallback((data: RunMasksResponseDto) => {
+    // Events carry the thread's full dictionary — replace-by-token merge is
+    // idempotent and keeps any entries from earlier events.
+    setPiiMasks((prev) => {
+      const byToken = new Map(prev.map((mask) => [mask.token, mask]));
+      for (const mask of data.masks) {
+        byToken.set(mask.token, mask);
+      }
+      return [...byToken.values()];
+    });
+  }, []);
+
+  const handleFileUpload = (files: File[]) =>
+    files.forEach((file) => createFileSource({ file }));
 
   const handleError = useRunErrorHandler(thread.id);
 
@@ -234,6 +244,7 @@ export default function ChatPage({
     onErrorEvent: handleError,
     onSessionEvent: handleSession,
     onThreadEvent: handleThread,
+    onMasksEvent: handleMasks,
     onError: (error) => {
       console.error('Error in useMessageSend:', error);
       showError(t('chat.errorSendMessage'));
@@ -242,25 +253,33 @@ export default function ChatPage({
       // eslint-disable-next-line no-console
       console.log('Message sending completed');
       setIsStreaming(false);
+      setPendingSubmission(null);
     },
   });
 
-  const { isProcessingPendingSources } = usePendingMessage({
+  const hasProcessingSources = thread.sources.some(
+    (s) => s.status === SourceResponseDtoStatus.processing,
+  );
+
+  usePendingMessage({
     sendTextMessage,
-    createFileSourceAsync,
-    resetCreateFileSourceMutation,
-    addKnowledgeBaseAsync,
-    chatInputRef,
+    onSendStart: (text) => {
+      setPendingSubmission(text);
+      setIsStreaming(true);
+    },
   });
 
-  const isTotallyCreatingFileSource =
-    isCreatingFileSource || isProcessingPendingSources;
+  // Send is gated while a fresh upload is in flight or while server-side
+  // processing of an attached source hasn't finished — both are reasons we
+  // want the user to wait before they can submit a message.
+  const isSendDisabled = isCreatingFileSource || hasProcessingSources;
 
   async function handleSend(
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
   ) {
     try {
+      setPendingSubmission(message);
       setIsStreaming(true);
       chatInputRef.current?.setMessage('');
 
@@ -280,6 +299,7 @@ export default function ChatPage({
     } catch (error) {
       chatInputRef.current?.setMessage(message);
       setIsStreaming(false);
+      setPendingSubmission(null);
       if (error instanceof AxiosError && error.response?.status === 403) {
         showError(t('chat.upgradeToProError'));
       } else {
@@ -292,6 +312,7 @@ export default function ChatPage({
   function handleSendCancelled() {
     abort();
     setIsStreaming(false);
+    setPendingSubmission(null);
 
     // Immediately remove tool calls from the last assistant message in local state
     // This provides instant feedback matching what the backend will save
@@ -338,11 +359,6 @@ export default function ChatPage({
     }
   }
 
-  useEffect(() => {
-    setMessages(thread.messages);
-    setThreadTitle(thread.title);
-  }, [thread]);
-
   const chatHeader = (
     <ChatHeader
       threadTitle={threadTitle}
@@ -352,45 +368,53 @@ export default function ChatPage({
     />
   );
 
-  // Show loading indicator when streaming and no assistant content has arrived yet
-  const lastMessage = sortedMessages[sortedMessages.length - 1];
-  /* eslint-disable eqeqeq, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain -- lastMessage may be undefined if sortedMessages is empty; content may be undefined during streaming even if typed as required */
-  const lastAssistantHasEmptyContent =
-    lastMessage != null &&
-    lastMessage.role === 'assistant' &&
-    (lastMessage.content == null || lastMessage.content.length === 0);
-  const showLoadingMessage =
-    isStreaming &&
-    (lastMessage == null ||
-      lastMessage.role !== 'assistant' ||
-      lastAssistantHasEmptyContent);
-  /* eslint-enable eqeqeq, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain */
+  const renderUnits = useMemo(
+    () =>
+      groupMessagesIntoRuns(sortedMessages, {
+        isStreaming,
+        toolResultsByToolId,
+      }),
+    [sortedMessages, isStreaming, toolResultsByToolId],
+  );
+
+  const lastUnitKind =
+    renderUnits.length > 0
+      ? renderUnits[renderUnits.length - 1].kind
+      : undefined;
+  const showPendingUserBubble = pendingSubmission !== null;
+  const showLoadingPlaceholder =
+    pendingSubmission !== null || (isStreaming && lastUnitKind === 'user');
 
   const chatContent = (
     <div className="p-4 pb-8">
-      {sortedMessages.map((message, i) => (
+      {renderUnits.map((unit, i) => {
+        if (unit.kind === 'user') {
+          return <ChatMessage key={unit.key} message={unit.message} />;
+        }
+        const previousUnit = i > 0 ? renderUnits[i - 1] : undefined;
+        const hideAvatar = previousUnit?.kind === 'agent-run';
+        return (
+          <AssistantRunBlock
+            key={unit.key}
+            unit={unit}
+            hideAvatar={hideAvatar}
+            threadId={thread.id}
+            onOpenArtifact={handleOpenArtifact}
+          />
+        );
+      })}
+      {showPendingUserBubble && (
         <ChatMessage
-          key={message.id}
-          message={message}
-          hideAvatar={i > 0 && sortedMessages[i - 1].role !== 'user'}
-          isStreaming={
-            isStreaming &&
-            i === sortedMessages.length - 1 &&
-            message.role === 'assistant'
-          }
-          threadId={thread.id}
-          onOpenArtifact={handleOpenArtifact}
-          toolResultsByToolId={toolResultsByToolId}
+          key="pending-user"
+          message={makePendingUserMessage(pendingSubmission)}
         />
-      ))}
-      {showLoadingMessage && <StreamingLoadingIndicator />}
+      )}
+      {showLoadingPlaceholder && <LoadingAssistantBlock />}
     </div>
   );
 
   // Controls are always disabled — thread already has messages
-  const chatInput = isAgentUnavailable ? (
-    <UnavailableAgentWarning />
-  ) : (
+  const chatInput = isModelUnavailable ? null : (
     <>
       <p className="text-xs text-muted-foreground text-center mb-2">
         {t('chat.inputDisclaimer')}
@@ -399,28 +423,25 @@ export default function ChatPage({
       <ChatInput
         key={thread.id}
         ref={chatInputRef}
-        modelId={
-          thread.agentId ? selectedAgent?.model.id : thread.permittedModelId
-        }
+        modelId={thread.permittedModelId}
         isModelChangeDisabled={true}
-        isAgentChangeDisabled={true}
         isAnonymousChangeDisabled={true}
-        agentId={thread.agentId}
         sources={thread.sources}
         knowledgeBases={thread.knowledgeBases}
+        mcpIntegrations={thread.mcpIntegrations}
         isAnonymous={thread.isAnonymous}
-        isStreaming={isStreaming}
-        isCreatingFileSource={isTotallyCreatingFileSource}
+        submissionState={isStreaming ? 'streaming' : 'idle'}
+        isSendDisabled={isSendDisabled}
         onModelChange={() => {}}
-        onAgentChange={() => {}}
-        onAgentRemove={() => {}}
         onFileUpload={handleFileUpload}
         onRemoveSource={deleteFileSource}
         onDownloadSource={(sourceId) => void downloadSource(sourceId)}
         onAddKnowledgeBase={(kb) => addKnowledgeBase(kb.id)}
         onRemoveKnowledgeBase={removeKnowledgeBase}
+        onAddIntegration={(integration) => addIntegration(integration.id)}
+        onRemoveIntegration={removeIntegration}
         onSend={(m, imageFiles) => void handleSend(m, imageFiles)}
-        onSendCancelled={handleSendCancelled}
+        onCancel={handleSendCancelled}
         isEmbeddingModelEnabled={isEmbeddingModelEnabled}
         isVisionEnabled={isVisionEnabled}
       />
@@ -429,33 +450,35 @@ export default function ChatPage({
 
   return (
     <AppLayout>
-      <ChatInterfaceLayout
-        chatHeader={chatHeader}
-        chatContent={chatContent}
-        chatInput={chatInput}
-        sidePanel={
-          openArtifact ? (
-            <Suspense fallback={null}>
-              {openArtifact.type === 'diagram' ? (
-                <LazyDiagramViewer
-                  artifact={openArtifact}
-                  onClose={handleCloseArtifact}
-                />
-              ) : (
-                <LazyArtifactEditor
-                  artifact={openArtifact}
-                  onSave={handleSaveArtifact}
-                  onRevert={handleRevertArtifact}
-                  onExport={handleExportArtifact}
-                  onClose={handleCloseArtifact}
-                  onLetterheadChange={handleLetterheadChange}
-                  isExporting={isExporting}
-                />
-              )}
-            </Suspense>
-          ) : undefined
-        }
-      />
+      <PiiMaskProvider masks={piiMasks}>
+        <ChatInterfaceLayout
+          chatHeader={chatHeader}
+          chatContent={chatContent}
+          chatInput={chatInput}
+          sidePanel={
+            openArtifact ? (
+              <Suspense fallback={null}>
+                {openArtifact.type === 'diagram' ? (
+                  <LazyDiagramViewer
+                    artifact={openArtifact}
+                    onClose={handleCloseArtifact}
+                  />
+                ) : (
+                  <LazyArtifactEditor
+                    artifact={openArtifact}
+                    onSave={handleSaveArtifact}
+                    onRevert={handleRevertArtifact}
+                    onExport={handleExportArtifact}
+                    onClose={handleCloseArtifact}
+                    onLetterheadChange={handleLetterheadChange}
+                    isExporting={isExporting}
+                  />
+                )}
+              </Suspense>
+            ) : undefined
+          }
+        />
+      </PiiMaskProvider>
       <RenameThreadDialog
         open={renameDialogOpen}
         onOpenChange={setRenameDialogOpen}
@@ -464,4 +487,13 @@ export default function ChatPage({
       />
     </AppLayout>
   );
+}
+
+function makePendingUserMessage(text: string): Message {
+  return {
+    id: 'pending-user-message',
+    role: 'user',
+    content: [{ type: 'text', text }],
+    createdAt: new Date().toISOString(),
+  } as unknown as Message;
 }

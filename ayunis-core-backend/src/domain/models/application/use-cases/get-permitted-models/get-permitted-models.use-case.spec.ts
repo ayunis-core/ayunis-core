@@ -63,7 +63,7 @@ describe('GetPermittedModelsUseCase', () => {
 
       const mockPermittedModels = [
         {
-          id: '123e4567-e89b-12d3-a456-426614174001' as any,
+          id: '123e4567-e89b-12d3-a456-426614174001',
           model: {
             id: 'model-1' as any,
             name: 'gpt-4',
@@ -75,7 +75,7 @@ describe('GetPermittedModelsUseCase', () => {
           updatedAt: new Date(),
         },
         {
-          id: '123e4567-e89b-12d3-a456-426614174002' as any,
+          id: '123e4567-e89b-12d3-a456-426614174002',
           model: {
             id: 'model-2' as any,
             name: 'claude-3-sonnet',
@@ -86,7 +86,7 @@ describe('GetPermittedModelsUseCase', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         },
-      ] as PermittedModel[];
+      ] as unknown as PermittedModel[];
 
       permittedModelsRepository.findAll.mockResolvedValue(mockPermittedModels);
 
@@ -109,7 +109,7 @@ describe('GetPermittedModelsUseCase', () => {
 
       const mockPermittedModels = [
         {
-          id: '123e4567-e89b-12d3-a456-426614174001' as any,
+          id: '123e4567-e89b-12d3-a456-426614174001',
           model: {
             id: 'model-1' as any,
             name: 'gpt-4',
@@ -120,7 +120,7 @@ describe('GetPermittedModelsUseCase', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         },
-      ] as PermittedModel[];
+      ] as unknown as PermittedModel[];
 
       permittedModelsRepository.findAll.mockResolvedValue(mockPermittedModels);
 

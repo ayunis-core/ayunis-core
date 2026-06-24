@@ -68,7 +68,7 @@ describe('ResolveGeneratedImageUseCase', () => {
 
       const mockImage = new GeneratedImage(
         mockImageId,
-        '00000000-0000-0000-0000-000000000000' as UUID,
+        '00000000-0000-0000-0000-000000000000',
         mockUserId,
         mockThreadId,
         'image/png',

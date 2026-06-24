@@ -1,16 +1,16 @@
 import type { Message } from 'src/domain/messages/domain/message.entity';
-import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import type { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import type { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import type { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import type { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 import type { Model } from '../../domain/model.entity';
+import type { ToolSchema } from '../../domain/value-objects/tool-schema';
 
 export class InferenceInput {
   public readonly model: Model;
   public readonly messages: Message[];
   public readonly systemPrompt?: string;
-  public readonly tools: Tool[];
+  public readonly tools: ToolSchema[];
   public readonly toolChoice?: ModelToolChoice;
   public readonly orgId: string;
 
@@ -18,7 +18,7 @@ export class InferenceInput {
     model: Model;
     messages: Message[];
     systemPrompt?: string;
-    tools: Tool[];
+    tools: ToolSchema[];
     toolChoice: ModelToolChoice;
     orgId: string;
   }) {

@@ -29,7 +29,7 @@ describe('FindActivePreCreatedTemplatesUseCase', () => {
       findOne: jest.fn(),
       findAll: jest.fn(),
       findByName: jest.fn(),
-    } as unknown as jest.Mocked<SkillTemplateRepository>;
+    };
 
     useCase = new FindActivePreCreatedTemplatesUseCase(repository);
   });

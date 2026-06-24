@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import ResetPasswordPage from '@/pages/auth/reset-password';
 import { TokenExpiredPage } from '@/pages/auth/reset-password/ui/TokenExpiredPage';
 import { z } from 'zod';
-import { userControllerValidateResetToken } from '@/shared/api/generated/ayunisCoreAPI';
+import { userPasswordResetControllerValidateResetToken } from '@/shared/api/generated/ayunisCoreAPI';
 
 const searchSchema = z.object({
   token: z.string(),
@@ -14,16 +14,12 @@ export const Route = createFileRoute('/(onboarding)/password/reset')({
   loaderDeps: ({ search }) => search,
   loader: async ({ deps: { token } }) => {
     try {
-      const isValid = await userControllerValidateResetToken({ token });
-      return {
+      const { valid } = await userPasswordResetControllerValidateResetToken({
         token,
-        isValid,
-      };
+      });
+      return { token, isValid: valid ?? false };
     } catch {
-      return {
-        token,
-        isValid: false,
-      };
+      return { token, isValid: false };
     }
   },
 });
@@ -31,7 +27,7 @@ export const Route = createFileRoute('/(onboarding)/password/reset')({
 function RouteComponent() {
   const { token, isValid } = Route.useLoaderData();
   if (!isValid) {
-    return <TokenExpiredPage />;
+    return <TokenExpiredPage mode="reset" />;
   }
-  return <ResetPasswordPage token={token} />;
+  return <ResetPasswordPage token={token} mode="reset" />;
 }

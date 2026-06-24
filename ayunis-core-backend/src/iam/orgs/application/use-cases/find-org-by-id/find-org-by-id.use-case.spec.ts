@@ -53,7 +53,7 @@ describe('FindOrgByIdUseCase', () => {
 
     jest
       .spyOn(mockOrgsRepository, 'findById')
-      .mockRejectedValue(new OrgNotFoundError('org-id' as UUID));
+      .mockRejectedValue(new OrgNotFoundError('org-id'));
 
     await expect(useCase.execute(query)).rejects.toThrow(OrgNotFoundError);
   });

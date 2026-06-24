@@ -68,7 +68,7 @@ export class CreateTextSourceUseCase {
       if (command instanceof CreateFileSourceCommand) {
         result = await this.createFileSource(command);
       } else if (command instanceof CreateUrlSourceCommand) {
-        result = await this.createUrlSource(command);
+        result = await this.createUrlSource(command, orgId);
       } else {
         throw new InvalidSourceTypeError(command.constructor.name);
       }
@@ -120,9 +120,10 @@ export class CreateTextSourceUseCase {
 
   private async createUrlSource(
     command: CreateUrlSourceCommand,
+    orgId: UUID,
   ): Promise<TextSourceWithContent> {
     const urlRetrieverResult = await this.retrieveUrlUseCase.execute(
-      new RetrieveUrlCommand(command.url),
+      new RetrieveUrlCommand(command.url, orgId),
     );
 
     const chunks = this.getChunksFromText(urlRetrieverResult.content, {
@@ -148,11 +149,16 @@ export class CreateTextSourceUseCase {
         return FileType.PPTX;
       case MIME_TYPES.TXT:
         return FileType.TXT;
+      case MIME_TYPES.MP3:
+      case MIME_TYPES.M4A:
+      case MIME_TYPES.WAV:
+      case MIME_TYPES.WEBM:
+        return FileType.AUDIO;
       default:
         // This is a programming error - caller should validate/route file types before calling this use case
         throw new Error(
           `CreateTextSourceUseCase received unsupported file type: ${mimeType}. ` +
-            `This use case only handles PDF, DOCX, PPTX, and TXT. Spreadsheets should be routed to CreateDataSourceUseCase.`,
+            `This use case only handles PDF, DOCX, PPTX, TXT, and audio. Spreadsheets should be routed to CreateDataSourceUseCase.`,
         );
     }
   }

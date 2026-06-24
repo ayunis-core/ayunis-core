@@ -30,26 +30,6 @@ export abstract class Share {
   }
 }
 
-export class AgentShare extends Share {
-  agentId: UUID;
-
-  get entityId(): UUID {
-    return this.agentId;
-  }
-
-  constructor(params: {
-    id?: UUID;
-    scope: ShareScope;
-    agentId: UUID;
-    ownerId: UUID;
-    createdAt?: Date;
-    updatedAt?: Date;
-  }) {
-    super({ ...params, entityType: SharedEntityType.AGENT });
-    this.agentId = params.agentId;
-  }
-}
-
 export class SkillShare extends Share {
   skillId: UUID;
 

@@ -57,7 +57,11 @@ describe('GetMonthlyCreditUsageUseCase', () => {
   });
 
   it('should use since date when it is later than month start', async () => {
-    const since = new Date('2026-04-10T00:00:00.000Z');
+    const now = new Date();
+    const monthStart = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
+    );
+    const since = new Date(monthStart.getTime() + 24 * 60 * 60 * 1000);
     await useCase.execute(new GetMonthlyCreditUsageQuery(orgId, since));
 
     const startDate = mockUsageRepository.getMonthlyCreditUsage.mock

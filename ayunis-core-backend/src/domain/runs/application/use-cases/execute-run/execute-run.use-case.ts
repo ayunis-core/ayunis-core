@@ -13,7 +13,6 @@ import {
   RunInvalidInputError,
   RunMaxIterationsReachedError,
   RunNoModelFoundError,
-  ThreadAgentNoLongerAccessibleError,
 } from '../../runs.errors';
 import {
   RunUserInput,
@@ -28,16 +27,14 @@ import { UUID } from 'crypto';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
-import { Agent } from 'src/domain/agents/domain/agent.entity';
-import { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
-import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.query';
-import { AgentNotFoundError } from 'src/domain/agents/application/agents.errors';
-import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
-import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
-import { CreditBudgetGuardService } from '../../services/credit-budget-guard.service';
-import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
-import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
-import { tierToFairUseQuotaType } from 'src/iam/quotas/domain/tier-to-quota-type';
+import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
+import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
+import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
+import {
+  RunPiiMasksUpdate,
+  RunStreamItem,
+} from '../../../domain/run-pii-masks-update.entity';
+import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { ToolAssemblyService } from '../../services/tool-assembly.service';
 import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
@@ -54,12 +51,10 @@ export class ExecuteRunUseCase {
     private readonly createUserMessageUseCase: CreateUserMessageUseCase,
     private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
-    private readonly findOneAgentUseCase: FindOneAgentUseCase,
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
     private readonly contextService: ContextService,
-    private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
-    private readonly checkQuotaUseCase: CheckQuotaUseCase,
-    private readonly creditBudgetGuardService: CreditBudgetGuardService,
+    private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
+    private readonly inferenceUsageGuard: InferenceUsageGuard,
     private readonly toolAssemblyService: ToolAssemblyService,
     private readonly toolResultCollectorService: ToolResultCollectorService,
     private readonly messageCleanupService: MessageCleanupService,
@@ -70,67 +65,24 @@ export class ExecuteRunUseCase {
 
   async execute(
     command: ExecuteRunCommand,
-  ): Promise<AsyncGenerator<Message, void, void>> {
+  ): Promise<AsyncGenerator<RunStreamItem, void, void>> {
     this.logger.log('executeRun', {
       threadId: command.threadId,
       streaming: command.streaming,
       inputType: command.input.constructor.name,
     });
     try {
-      const userId = this.contextService.get('userId');
-      const orgId = this.contextService.get('orgId');
-      if (!userId || !orgId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
-
-      // Counts "attempted runs" — fires before run validity is established.
-      // This is intentional: it serves as the DAU (daily active users) metric.
-      this.eventEmitter
-        .emitAsync(
-          RunExecutedEvent.EVENT_NAME,
-          new RunExecutedEvent(userId, orgId),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit RunExecutedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            userId,
-          });
-        });
-
-      const { thread } = await this.findThreadUseCase.execute(
-        new FindThreadQuery(command.threadId),
-      );
-      const agent = await this.resolveThreadAgent(thread, command.threadId);
-      const model = this.pickModel(thread, agent);
-
-      // Enforce fair-use + credit budget AFTER pickModel so the tiered quota
-      // bucket matches the resolved model. Untiered models default to MEDIUM.
-      await this.checkQuotaUseCase.execute(
-        new CheckQuotaQuery(userId, tierToFairUseQuotaType(model.model.tier)),
-      );
-      await this.creditBudgetGuardService.ensureBudgetAvailable(orgId);
-
-      const effectiveIsAnonymous = thread.isAnonymous || model.anonymousOnly;
-      const activeSkills = await this.toolAssemblyService.findActiveSkills();
-      const { tools, instructions } =
-        await this.toolAssemblyService.buildRunContext(
-          thread,
-          agent,
-          activeSkills,
-          model.model.canUseTools,
-        );
-
+      const prepared = await this.prepareRun(command);
       return this.orchestrateRun({
-        thread,
-        tools,
-        model: model.model,
+        thread: prepared.thread,
+        tools: prepared.tools,
+        model: prepared.model.model,
         input: command.input as RunUserInput | RunToolResultInput,
-        instructions,
+        instructions: prepared.instructions,
         streaming: command.streaming,
-        orgId,
-        isAnonymous: effectiveIsAnonymous,
-        agent,
-        activeSkills,
+        orgId: prepared.orgId,
+        isAnonymous: prepared.isAnonymous,
+        activeSkills: prepared.activeSkills,
         skillId:
           command.input instanceof RunUserInput
             ? command.input.skillId
@@ -146,32 +98,72 @@ export class ExecuteRunUseCase {
     }
   }
 
-  /**
-   * Resolves the agent for a thread, throwing if it's no longer accessible.
-   */
-  private async resolveThreadAgent(
-    thread: Thread,
-    threadId: UUID,
-  ): Promise<Agent | undefined> {
-    if (!thread.agentId) return undefined;
-    try {
-      return (
-        await this.findOneAgentUseCase.execute(
-          new FindOneAgentQuery(thread.agentId),
-        )
-      ).agent;
-    } catch (error) {
-      if (error instanceof AgentNotFoundError) {
-        throw new ThreadAgentNoLongerAccessibleError(threadId, thread.agentId);
-      }
-      throw error;
+  private async prepareRun(command: ExecuteRunCommand): Promise<{
+    userId: UUID;
+    orgId: UUID;
+    thread: Thread;
+    model: PermittedLanguageModel;
+    isAnonymous: boolean;
+    tools: RunParams['tools'];
+    instructions?: string;
+    activeSkills: RunParams['activeSkills'];
+  }> {
+    const userId = this.contextService.get('userId');
+    const orgId = this.contextService.get('orgId');
+    if (!userId || !orgId) {
+      throw new UnauthorizedException('User not authenticated');
     }
+    this.emitRunExecuted(userId, orgId);
+
+    const { thread } = await this.findThreadUseCase.execute(
+      new FindThreadQuery(command.threadId),
+    );
+    const model = this.pickModel(thread);
+
+    // Enforce fair-use + credit budget AFTER pickModel so the tiered quota
+    // bucket matches the resolved model. Untiered models default to MEDIUM;
+    // ZERO-tier models return null and bypass the check entirely.
+    await this.inferenceUsageGuard.preflight({ userId, orgId }, model.model);
+
+    const isAnonymous = thread.isAnonymous || model.anonymousOnly;
+    const activeSkills = await this.toolAssemblyService.findActiveSkills();
+    const { tools, instructions } =
+      await this.toolAssemblyService.buildRunContext(
+        thread,
+        activeSkills,
+        model.model.canUseTools,
+        isAnonymous,
+      );
+
+    return {
+      userId,
+      orgId,
+      thread,
+      model,
+      isAnonymous,
+      tools,
+      instructions,
+      activeSkills,
+    };
   }
 
-  private pickModel(thread: Thread, agent?: Agent): PermittedLanguageModel {
-    if (agent) {
-      return agent.model;
-    }
+  // Counts "attempted runs" — fires before run validity is established.
+  // This is intentional: it serves as the DAU (daily active users) metric.
+  private emitRunExecuted(userId: UUID, orgId: UUID): void {
+    this.eventEmitter
+      .emitAsync(
+        RunExecutedEvent.EVENT_NAME,
+        new RunExecutedEvent(userId, orgId),
+      )
+      .catch((err: unknown) => {
+        this.logger.error('Failed to emit RunExecutedEvent', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+          userId,
+        });
+      });
+  }
+
+  private pickModel(thread: Thread): PermittedLanguageModel {
     if (thread.model) {
       return thread.model;
     }
@@ -183,7 +175,7 @@ export class ExecuteRunUseCase {
 
   private async *orchestrateRun(
     params: RunParams,
-  ): AsyncGenerator<Message, void, void> {
+  ): AsyncGenerator<RunStreamItem, void, void> {
     this.logger.log('orchestrateRun', { threadId: params.thread.id });
     const iterations = 20;
     let succeeded = false;
@@ -239,12 +231,20 @@ export class ExecuteRunUseCase {
   private async *handleFirstIteration(
     params: RunParams,
     userInput: RunUserInput | null,
-  ): AsyncGenerator<Message, void, void> {
+  ): AsyncGenerator<RunStreamItem, void, void> {
     if (params.skillId) {
       await this.activateSkillOnThread(params);
     }
     if (userInput) {
-      yield await this.processUserMessage(params, userInput);
+      const { message, piiMasks } = await this.processUserMessage(
+        params,
+        userInput,
+      );
+      // Masks first, so the client can resolve tokens in the message below.
+      if (piiMasks) {
+        yield new RunPiiMasksUpdate(piiMasks);
+      }
+      yield message;
     }
   }
 
@@ -263,8 +263,8 @@ export class ExecuteRunUseCase {
   private async *processToolResults(
     params: RunParams,
     toolResultInput: RunToolResultInput | null,
-  ): AsyncGenerator<Message, void, void> {
-    const toolResultMessageContent =
+  ): AsyncGenerator<RunStreamItem, void, void> {
+    const { contents: toolResultMessageContent, piiMasks } =
       await this.toolResultCollectorService.collectToolResults({
         thread: params.thread,
         tools: params.tools,
@@ -284,6 +284,10 @@ export class ExecuteRunUseCase {
     this.addMessageToThreadUseCase.execute(
       new AddMessageCommand(params.thread, toolResultMessage),
     );
+    // Masks first, so the client can resolve tokens in the message below.
+    if (piiMasks) {
+      yield new RunPiiMasksUpdate(piiMasks);
+    }
     yield toolResultMessage;
 
     const skillWasActivated = toolResultMessageContent.some(
@@ -325,9 +329,9 @@ Skill "${skillName}" has already been activated on this thread. Do not call acti
     params.thread = refreshedThread;
     const refreshed = await this.toolAssemblyService.buildRunContext(
       refreshedThread,
-      params.agent,
       params.activeSkills,
       params.model.canUseTools,
+      params.isAnonymous,
     );
     params.tools = refreshed.tools;
     params.instructions = refreshed.instructions;
@@ -343,7 +347,7 @@ Skill "${skillName}" has already been activated on this thread. Do not call acti
   private async processUserMessage(
     params: RunParams,
     userInput: RunUserInput,
-  ): Promise<Message> {
+  ): Promise<{ message: Message; piiMasks: ThreadPiiMask[] | null }> {
     const hasText = userInput.text && userInput.text.trim().length > 0;
     const hasImages = userInput.pendingImages.length > 0;
     const hasSkillInstructions =
@@ -360,10 +364,17 @@ Skill "${skillName}" has already been activated on this thread. Do not call acti
       );
     }
 
-    const messageText =
-      hasText && params.isAnonymous
-        ? await this.anonymizeText(userInput.text)
-        : userInput.text;
+    let messageText = userInput.text;
+    let piiMasks: ThreadPiiMask[] | null = null;
+    if (hasText && params.isAnonymous) {
+      const anonymized = await this.anonymizeText(
+        userInput.text,
+        params.orgId,
+        params.thread.id,
+      );
+      messageText = anonymized.anonymizedText;
+      piiMasks = anonymized.masks;
+    }
 
     const newUserMessage = await this.createUserMessageUseCase.execute(
       new CreateUserMessageCommand(
@@ -376,13 +387,17 @@ Skill "${skillName}" has already been activated on this thread. Do not call acti
     this.addMessageToThreadUseCase.execute(
       new AddMessageCommand(params.thread, newUserMessage),
     );
-    return newUserMessage;
+    return { message: newUserMessage, piiMasks };
   }
 
-  private async anonymizeText(text: string): Promise<string> {
+  private async anonymizeText(
+    text: string,
+    orgId: UUID,
+    threadId: UUID,
+  ): Promise<{ anonymizedText: string; masks: ThreadPiiMask[] }> {
     try {
-      const result = await this.anonymizeTextUseCase.execute(
-        new AnonymizeTextCommand(text),
+      const result = await this.anonymizeTextForThreadUseCase.execute(
+        new AnonymizeTextForThreadCommand(text, orgId, threadId),
       );
       if (result.replacements.length > 0) {
         this.logger.log('Anonymized text', {
@@ -391,7 +406,7 @@ Skill "${skillName}" has already been activated on this thread. Do not call acti
           replacementsCount: result.replacements.length,
         });
       }
-      return result.anonymizedText;
+      return { anonymizedText: result.anonymizedText, masks: result.masks };
     } catch (error) {
       this.logger.error('Anonymization service unavailable', {
         error: error as Error,

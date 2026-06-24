@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
+import type { UUID } from 'crypto';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
 import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
 import { UserDeletedEvent } from 'src/iam/users/application/events/user-deleted.event';
@@ -9,6 +11,13 @@ import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/ev
 import { SubscriptionUncancelledEvent } from 'src/iam/subscriptions/application/events/subscription-uncancelled.event';
 import { SubscriptionSeatsUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-seats-updated.event';
 import { SubscriptionBillingInfoUpdatedEvent } from 'src/iam/subscriptions/application/events/subscription-billing-info-updated.event';
+import { UsageCollectedEvent } from 'src/domain/usage/application/events/usage-collected.event';
+import { AddonActivatedEvent } from 'src/iam/addons/application/events/addon-activated.event';
+import { AddonDeactivatedEvent } from 'src/iam/addons/application/events/addon-deactivated.event';
+import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/user-message-created.event';
+import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
+import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
+import type { User } from 'src/iam/users/domain/user.entity';
 import { SendWebhookUseCase } from '../application/use-cases/send-webhook/send-webhook.use-case';
 import { SendWebhookCommand } from '../application/use-cases/send-webhook/send-webhook.command';
 import { UserCreatedWebhookEvent } from '../domain/webhook-events/user-created.webhook-event';
@@ -20,6 +29,10 @@ import { SubscriptionCancelledWebhookEvent } from '../domain/webhook-events/subs
 import { SubscriptionUncancelledWebhookEvent } from '../domain/webhook-events/subscription-uncancelled.webhook-event';
 import { SubscriptionSeatsUpdatedWebhookEvent } from '../domain/webhook-events/subscription-seats-updated.webhook-event';
 import { SubscriptionBillingInfoUpdatedWebhookEvent } from '../domain/webhook-events/subscription-billing-info-updated.webhook-event';
+import { UsageCollectedWebhookEvent } from '../domain/webhook-events/usage-collected.webhook-event';
+import { ChatSentWebhookEvent } from '../domain/webhook-events/chat-sent.webhook-event';
+import { AddonActivatedWebhookEvent } from '../domain/webhook-events/addon-activated.webhook-event';
+import { AddonDeactivatedWebhookEvent } from '../domain/webhook-events/addon-deactivated.webhook-event';
 import { mapSubscriptionToWebhookPayload } from './subscription-payload.mapper';
 import { mapBillingInfoToWebhookPayload } from './billing-info-payload.mapper';
 import type { WebhookEvent } from '../domain/webhook-event.entity';
@@ -33,7 +46,11 @@ import type { WebhookEvent } from '../domain/webhook-event.entity';
 export class WebhookDispatchListener {
   private readonly logger = new Logger(WebhookDispatchListener.name);
 
-  constructor(private readonly sendWebhookUseCase: SendWebhookUseCase) {}
+  constructor(
+    private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly findUserByIdUseCase: FindUserByIdUseCase,
+    private readonly configService: ConfigService,
+  ) {}
 
   @OnEvent(UserCreatedEvent.EVENT_NAME)
   async handleUserCreated(event: UserCreatedEvent): Promise<void> {
@@ -49,12 +66,18 @@ export class WebhookDispatchListener {
 
   @OnEvent(UserDeletedEvent.EVENT_NAME)
   async handleUserDeleted(event: UserDeletedEvent): Promise<void> {
-    await this.dispatch(new UserDeletedWebhookEvent(event.userId));
+    await this.dispatch(
+      new UserDeletedWebhookEvent({
+        id: event.userId,
+        email: event.email,
+        orgId: event.orgId,
+      }),
+    );
   }
 
   @OnEvent(OrgCreatedEvent.EVENT_NAME)
   async handleOrgCreated(event: OrgCreatedEvent): Promise<void> {
-    await this.dispatch(new OrgCreatedWebhookEvent(event.org, event.user));
+    await this.dispatch(new OrgCreatedWebhookEvent(event.org));
   }
 
   @OnEvent(SubscriptionCreatedEvent.EVENT_NAME)
@@ -110,6 +133,80 @@ export class WebhookDispatchListener {
         mapBillingInfoToWebhookPayload(event.payload),
       ),
     );
+  }
+
+  @OnEvent(UsageCollectedEvent.EVENT_NAME)
+  async handleUsageCollected(event: UsageCollectedEvent): Promise<void> {
+    // API-key usage has no user; the event is still dispatched unenriched —
+    // receivers decide whether unattributed usage is relevant to them.
+    const user =
+      event.usage.userId && this.webhookConfigured()
+        ? await this.resolveUser(event.usage.userId)
+        : null;
+    await this.dispatch(
+      new UsageCollectedWebhookEvent(event.usage, event.modelName, user),
+    );
+  }
+
+  @OnEvent(UserMessageCreatedEvent.EVENT_NAME)
+  async handleUserMessageCreated(
+    event: UserMessageCreatedEvent,
+  ): Promise<void> {
+    // Skip the per-message user lookup entirely when no webhook receiver is
+    // configured — this handler fires for every chat message.
+    if (!this.webhookConfigured()) {
+      return;
+    }
+    const user = await this.resolveUser(event.userId);
+    if (!user) {
+      return;
+    }
+    await this.dispatch(new ChatSentWebhookEvent(event, user));
+  }
+
+  @OnEvent(AddonActivatedEvent.EVENT_NAME)
+  async handleAddonActivated(event: AddonActivatedEvent): Promise<void> {
+    await this.dispatch(
+      new AddonActivatedWebhookEvent({
+        orgId: event.orgId,
+        addonType: event.addonType,
+        actorUserId: event.actorUserId,
+      }),
+    );
+  }
+
+  @OnEvent(AddonDeactivatedEvent.EVENT_NAME)
+  async handleAddonDeactivated(event: AddonDeactivatedEvent): Promise<void> {
+    await this.dispatch(
+      new AddonDeactivatedWebhookEvent({
+        orgId: event.orgId,
+        addonType: event.addonType,
+        actorUserId: event.actorUserId,
+      }),
+    );
+  }
+
+  private webhookConfigured(): boolean {
+    return !!this.configService.get<string>('app.orgEventsWebhookUrl');
+  }
+
+  /**
+   * Best-effort user lookup for payload enrichment. Returns null instead of
+   * throwing so a missing user (e.g. deleted in the same tick) degrades to a
+   * skipped enrichment, never a crashed listener.
+   */
+  private async resolveUser(userId: UUID): Promise<User | null> {
+    try {
+      return await this.findUserByIdUseCase.execute(
+        new FindUserByIdQuery(userId),
+      );
+    } catch (error) {
+      this.logger.error('Failed to resolve user for webhook enrichment', {
+        userId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return null;
+    }
   }
 
   private async dispatch(webhookEvent: WebhookEvent): Promise<void> {

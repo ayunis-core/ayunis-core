@@ -7,6 +7,7 @@ import {
 } from '../ports/execution.handler';
 import { WebsiteContentTool } from '../../domain/tools/website-content-tool.entity';
 import { ToolExecutionFailedError } from '../tools.errors';
+import { CrawlDomainAccessDeniedError } from 'src/domain/crawl-domain-grants/application/crawl-domain-grants.errors';
 
 @Injectable()
 export class WebsiteContentToolHandler extends ToolExecutionHandler {
@@ -21,16 +22,21 @@ export class WebsiteContentToolHandler extends ToolExecutionHandler {
     input: Record<string, unknown>;
     context: ToolExecutionContext;
   }): Promise<string> {
-    const { tool, input } = params;
+    const { tool, input, context } = params;
     this.logger.log('execute', tool, input);
     try {
       const validatedInput = tool.validateParams(input);
       const content = await this.retrieveUrlUseCase.execute(
-        new RetrieveUrlCommand(validatedInput.url),
+        new RetrieveUrlCommand(validatedInput.url, context.orgId),
       );
       return JSON.stringify(content);
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
+        throw error;
+      }
+      // Preserve the crawl access-denial as-is so it stays a neutral 404
+      // (hide-existence) outcome and its message is not exposed to the LLM.
+      if (error instanceof CrawlDomainAccessDeniedError) {
         throw error;
       }
       this.logger.error('execute', error);

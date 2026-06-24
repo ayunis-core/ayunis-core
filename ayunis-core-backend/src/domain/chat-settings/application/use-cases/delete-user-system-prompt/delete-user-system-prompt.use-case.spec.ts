@@ -15,7 +15,7 @@ describe('DeleteUserSystemPromptUseCase', () => {
       findByUserId: jest.fn(),
       upsert: jest.fn(),
       deleteByUserId: jest.fn(),
-    } as jest.Mocked<UserSystemPromptsRepository>;
+    };
 
     contextService = {
       get: jest.fn().mockReturnValue(userId),

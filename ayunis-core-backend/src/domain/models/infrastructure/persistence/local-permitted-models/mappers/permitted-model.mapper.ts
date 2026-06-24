@@ -14,7 +14,6 @@ import {
 } from '../../local-models/schema/model.record';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
-import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 
 @Injectable()
 export class PermittedModelMapper {
@@ -50,7 +49,7 @@ export class PermittedModelMapper {
     if (record.model instanceof ImageGenerationModelRecord) {
       return new PermittedImageGenerationModel({
         id: record.id,
-        model: this.modelMapper.toDomain(record.model) as ImageGenerationModel,
+        model: this.modelMapper.toDomain(record.model),
         orgId: record.orgId,
         isDefault: record.isDefault,
         anonymousOnly: record.anonymousOnly,

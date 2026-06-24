@@ -1,6 +1,7 @@
 {
   "shared": {
-    "badge": "Freigegeben"
+    "badge": "Freigegeben",
+    "by": "Geteilt von {{name}}"
   },
   "page": {
     "title": "Fähigkeiten"
@@ -62,6 +63,7 @@
       "create": "Fähigkeit erstellen",
       "creating": "Wird erstellt..."
     },
+    "marketplaceHint": "Fähigkeiten werden nicht automatisch im Marketplace veröffentlicht.",
     "validation": {
       "nameRequired": "Name ist erforderlich",
       "shortDescriptionRequired": "Auslöser ist erforderlich",

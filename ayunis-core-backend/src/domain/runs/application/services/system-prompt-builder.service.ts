@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
-import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
@@ -17,26 +16,28 @@ import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/kno
 import type { SkillEntry } from 'src/common/util/skill-slug';
 
 export interface SystemPromptBuildParams {
-  agent?: Agent;
   tools: Tool[];
   currentTime: Date;
   sources?: Source[];
   skills?: SkillEntry[];
   knowledgeBases?: KnowledgeBaseSummary[];
+  orgSystemPrompt?: string;
   userSystemPrompt?: string;
+  isAnonymous?: boolean;
 }
 
 @Injectable()
 export class SystemPromptBuilderService {
   build(params: SystemPromptBuildParams): string {
     const {
-      agent,
       tools,
       currentTime,
       sources = [],
       skills = [],
       knowledgeBases = [],
+      orgSystemPrompt,
       userSystemPrompt,
+      isAnonymous = false,
     } = params;
 
     const sections = [
@@ -47,11 +48,10 @@ export class SystemPromptBuilderService {
       this.buildFilesSection(sources),
       this.buildKnowledgeBasesSection(knowledgeBases),
       this.buildDataHandlingSection(),
+      isAnonymous ? this.buildAnonymizationSection() : '',
       this.buildResponseGuidelines(),
       this.buildPlatformSection(),
-      agent?.instructions
-        ? this.buildAgentInstructionsSection(agent.instructions)
-        : '',
+      orgSystemPrompt ? this.buildOrgInstructionsSection(orgSystemPrompt) : '',
       userSystemPrompt
         ? this.buildUserInstructionsSection(userSystemPrompt)
         : '',
@@ -65,7 +65,7 @@ export class SystemPromptBuilderService {
     return `You are an AI assistant powered by Ayunis Core, an open-source AI gateway platform designed for public administrations.
 
 <application_details>
-Ayunis Core is an AI platform that enables intelligent conversations with customizable AI agents, advanced prompt management, and extensible tool integration. It is built for public sector organizations that need sovereign AI solutions with full control over data, models, and integrations.
+Ayunis Core is an AI platform that enables intelligent conversations, customizable skills, and extensible tool integration. It is built for public sector organizations that need sovereign AI solutions with full control over data, models, and integrations.
 </application_details>
 
 <context>
@@ -109,6 +109,8 @@ For German responses:
 Be honest about what you know and don't know. If asked about information that requires current data you don't have access to, say so clearly.
 
 When tools are available (such as source queries or web access), use them to provide accurate, up-to-date information rather than relying on training data alone.
+
+Do not assume that time-sensitive facts from your training data are still accurate. For questions whose answer can change over time — for example who currently holds a political office, current prices, recent events, or the latest version of something — confirm the answer against an external source such as web search before responding whenever a suitable tool is available. Only fall back to your training knowledge when no such tool is available, and clearly note that the information may be outdated.
 </knowledge_boundaries>
 
 </behavior_instructions>`;
@@ -120,7 +122,7 @@ When tools are available (such as source queries or web access), use them to pro
     return `<tool_usage>
 
 <available_tools>
-Your capabilities depend on which tools have been assigned to this agent. Use tools when they help answer the user's question or complete their task. Don't use tools unnecessarily.
+Your capabilities depend on which tools are available in this conversation. Use tools when they help answer the user's question or complete their task. Don't use tools unnecessarily.
 </available_tools>
 
 <tool_guidelines>
@@ -180,6 +182,19 @@ If users ask about platform-wide information you don't have access to, explain t
 </multi_tenant_context>`;
   }
 
+  private buildAnonymizationSection(): string {
+    return `<anonymized_data>
+This conversation runs in anonymous mode: personally identifiable information in user messages and tool results has been replaced with placeholder tokens of the form {{pii:CATEGORY_NUMBER}} before reaching you (e.g. {{pii:PERSON_NAME_1}}, {{pii:EMAIL_ADDRESS_2}}).
+
+Rules for handling these placeholders:
+
+- Each placeholder consistently refers to the same real entity throughout the conversation.
+- When referring to such an entity, copy its placeholder verbatim — exact braces, spelling, and number (e.g. {{pii:PERSON_NAME_1}}).
+- Never invent new placeholders, alter existing ones, or guess the hidden values.
+- Do not mention this anonymization mechanism unless the user asks about it.
+</anonymized_data>`;
+  }
+
   private buildResponseGuidelines(): string {
     return `<response_guidelines>
 
@@ -217,7 +232,7 @@ If users ask about Ayunis Core itself:
 Ayunis Core is an open-source AI gateway platform. Key features include:
 
 - Multi-LLM support (various AI model providers)
-- Customizable agents with specific instructions and tools
+- Customizable skills with specific instructions and tools
 - Document processing and semantic search (RAG)
 - Tool integrations for external services
 - Multi-tenant organization management
@@ -235,11 +250,13 @@ For technical questions about the platform, configuration, or deployment, users 
     return toolSections;
   }
 
-  private buildAgentInstructionsSection(instructions: string): string {
+  private buildOrgInstructionsSection(orgSystemPrompt: string): string {
     return `
-<agent_instructions>
-${instructions}
-</agent_instructions>
+<organization_instructions>
+The following instructions were set by the user's organization administrator and apply to all members of the organization:
+
+${orgSystemPrompt}
+</organization_instructions>
 `;
   }
 

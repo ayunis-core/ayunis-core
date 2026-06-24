@@ -17,11 +17,17 @@ import {
   FileRetrieverUnexpectedError,
   InvalidFileTypeError,
 } from '../../file-retriever.errors';
-import { detectFileType, MIME_TYPES } from 'src/common/util/file-type';
+import {
+  detectFileType,
+  isAudioFile,
+  MIME_TYPES,
+} from 'src/common/util/file-type';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { DocumentConverterPort } from '../../ports/document-converter.port';
 import retrievalConfig from 'src/config/retrieval.config';
+import { TranscribeUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.use-case';
+import { TranscribeCommand } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.command';
 
 @Injectable()
 export class RetrieveFileContentUseCase {
@@ -31,6 +37,7 @@ export class RetrieveFileContentUseCase {
     private readonly fileRetrieverRegistry: FileRetrieverRegistry,
     private readonly contextService: ContextService,
     private readonly documentConverter: DocumentConverterPort,
+    private readonly transcribeUseCase: TranscribeUseCase,
     @Inject(retrievalConfig.KEY)
     private readonly config: ConfigType<typeof retrievalConfig>,
   ) {}
@@ -64,6 +71,14 @@ export class RetrieveFileContentUseCase {
         return await this.processOfficeDocument(
           command.fileData,
           command.fileName,
+        );
+      }
+
+      if (isAudioFile(fileType)) {
+        return await this.processAudio(
+          command.fileData,
+          command.fileName,
+          command.fileType,
         );
       }
 
@@ -108,5 +123,25 @@ export class RetrieveFileContentUseCase {
     );
     const pdfFileName = fileName.replace(/\.\w+$/, '.pdf');
     return this.processPdf(pdfBuffer, pdfFileName, MIME_TYPES.PDF);
+  }
+
+  /**
+   * Audio: Transcribe via STT and wrap the transcript as a single page.
+   * The downstream chunking pipeline flattens pages with join('\n'), so a
+   * single-page result is shape-equivalent to a TXT extraction.
+   */
+  private async processAudio(
+    fileData: Buffer,
+    fileName: string,
+    mimeType: string,
+  ): Promise<FileRetrieverResult> {
+    const transcript = await this.transcribeUseCase.execute(
+      new TranscribeCommand({
+        file: fileData,
+        fileName,
+        mimeType,
+      }),
+    );
+    return new FileRetrieverResult([new FileRetrieverPage(transcript, 1)]);
   }
 }

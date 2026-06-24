@@ -73,13 +73,14 @@ describe('SetUserMcpConfigUseCase', () => {
     userConfigRepository = {
       save: jest.fn(),
       findByIntegrationAndUser: jest.fn(),
+      findByIntegrationIdsAndUser: jest.fn(),
       deleteByIntegrationId: jest.fn(),
-    } as jest.Mocked<McpIntegrationUserConfigRepositoryPort>;
+    };
 
     credentialEncryption = {
       encrypt: jest.fn(),
       decrypt: jest.fn(),
-    } as jest.Mocked<McpCredentialEncryptionPort>;
+    };
 
     contextService = {
       get: jest.fn(),

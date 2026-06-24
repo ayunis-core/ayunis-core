@@ -72,8 +72,8 @@ describe('DeleteUserUseCase', () => {
 
   it('should delete user successfully', async () => {
     const command = new DeleteUserCommand({
-      userId: '123e4567-e89b-12d3-a456-426614174000' as UUID,
-      orgId: '123e4567-e89b-12d3-a456-426614174000' as UUID,
+      userId: '123e4567-e89b-12d3-a456-426614174000',
+      orgId: '123e4567-e89b-12d3-a456-426614174000',
     });
 
     const mockUser = new User({
@@ -82,7 +82,7 @@ describe('DeleteUserUseCase', () => {
       emailVerified: true,
       passwordHash: 'hash',
       role: UserRole.ADMIN,
-      orgId: '123e4567-e89b-12d3-a456-426614174000' as UUID,
+      orgId: '123e4567-e89b-12d3-a456-426614174000',
       name: 'Test User',
       hasAcceptedMarketing: false,
     });
@@ -100,8 +100,8 @@ describe('DeleteUserUseCase', () => {
 
   it('should emit UserDeletedEvent after successful deletion', async () => {
     const command = new DeleteUserCommand({
-      userId: '123e4567-e89b-12d3-a456-426614174000' as UUID,
-      orgId: '123e4567-e89b-12d3-a456-426614174000' as UUID,
+      userId: '123e4567-e89b-12d3-a456-426614174000',
+      orgId: '123e4567-e89b-12d3-a456-426614174000',
     });
 
     const mockUser = new User({
@@ -110,7 +110,7 @@ describe('DeleteUserUseCase', () => {
       emailVerified: true,
       passwordHash: 'hash',
       role: UserRole.ADMIN,
-      orgId: '123e4567-e89b-12d3-a456-426614174000' as UUID,
+      orgId: '123e4567-e89b-12d3-a456-426614174000',
       name: 'Test User',
       hasAcceptedMarketing: false,
     });
@@ -125,6 +125,7 @@ describe('DeleteUserUseCase', () => {
       expect.objectContaining({
         userId: command.userId,
         orgId: mockUser.orgId,
+        email: mockUser.email,
       }),
     );
   });
@@ -132,7 +133,7 @@ describe('DeleteUserUseCase', () => {
   it('should handle repository errors', async () => {
     const command = new DeleteUserCommand({
       userId: 'user-id' as UUID,
-      orgId: '123e4567-e89b-12d3-a456-426614174000' as UUID,
+      orgId: '123e4567-e89b-12d3-a456-426614174000',
     });
 
     const mockUser = new User({
@@ -141,7 +142,7 @@ describe('DeleteUserUseCase', () => {
       emailVerified: true,
       passwordHash: 'hash',
       role: UserRole.ADMIN,
-      orgId: '123e4567-e89b-12d3-a456-426614174000' as UUID,
+      orgId: '123e4567-e89b-12d3-a456-426614174000',
       name: 'Test User',
       hasAcceptedMarketing: false,
     });

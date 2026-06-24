@@ -1,19 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { BaseOpenAIChatInferenceHandler } from './base-openai-chat.inference';
 import { ConfigService } from '@nestjs/config';
-import OpenAI from 'openai';
+import { openai } from '@ayunis/provider-openai';
+import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
+import { ThinkingTagInferenceHandler } from '../runtime/thinking-tag-inference.handler';
+import type { Model } from '../../domain/model.entity';
+import { INFERENCE_MAX_RETRIES } from '../runtime/inference-config';
 
 @Injectable()
-export class OtcInferenceHandler extends BaseOpenAIChatInferenceHandler {
+export class OtcInferenceHandler extends ThinkingTagInferenceHandler {
   constructor(
     private readonly configService: ConfigService,
     imageContentService: ImageContentService,
   ) {
     super(imageContentService);
-    this.client = new OpenAI({
-      apiKey: this.configService.get('models.otc.apiKey'),
-      baseURL: this.configService.get('models.otc.baseURL'),
+  }
+
+  protected createProvider(model: Model): ModelProvider {
+    return openai({
+      apiKey: this.configService.get<string>('models.otc.apiKey') ?? '',
+      baseUrl: this.configService.get<string>('models.otc.baseURL'),
+      model: model.name,
+      maxRetries: INFERENCE_MAX_RETRIES,
     });
   }
 }

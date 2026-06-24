@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
 import { CollectUsageCommand } from './collect-usage.command';
 import { Usage } from '../../../domain/usage.entity';
@@ -8,6 +9,7 @@ import {
   UsageCollectionFailedError,
   UnexpectedUsageError,
 } from '../../usage.errors';
+import { UsageCollectedEvent } from '../../events/usage-collected.event';
 import { ApplicationError } from '../../../../../common/errors/base.error';
 import { ContextService } from '../../../../../common/context/services/context.service';
 import { GetCreditsPerEuroUseCase } from '../../../../../iam/platform-config/application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
@@ -21,17 +23,26 @@ export class CollectUsageUseCase {
     private readonly usageRepository: UsageRepository,
     private readonly contextService: ContextService,
     private readonly getCreditsPerEuroUseCase: GetCreditsPerEuroUseCase,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: CollectUsageCommand): Promise<void> {
     const userId = this.contextService.get('userId');
+    const apiKeyId = this.contextService.get('apiKeyId');
     const organizationId = this.contextService.get('orgId');
 
-    if (!userId || !organizationId) {
+    // Enforce XOR on the principal: exactly one of userId or apiKeyId must
+    // be set. The DB `CHK_usage_principal_not_both` constraint rejects
+    // "both set" as a safety net; we reject both "neither" and "both" here
+    // so the failure is synchronous and the error type is meaningful.
+    const hasUserId = !!userId;
+    const hasApiKeyId = !!apiKeyId;
+    if (hasUserId === hasApiKeyId || !organizationId) {
       throw new UsageCollectionFailedError(
-        'User ID or Organization ID not available in context',
+        'Exactly one of userId or apiKeyId must be set in context, and Organization ID is required',
         {
           userId: userId ?? undefined,
+          apiKeyId: apiKeyId ?? undefined,
           organizationId: organizationId ?? undefined,
           modelId: command.modelId,
         },
@@ -40,6 +51,7 @@ export class CollectUsageUseCase {
 
     this.logger.log('CollectUsageUseCase.execute called', {
       userId,
+      apiKeyId,
       organizationId,
       modelId: command.modelId,
       provider: command.provider,
@@ -53,7 +65,8 @@ export class CollectUsageUseCase {
       const creditsConsumed = await this.calculateCredits(cost);
 
       const usage = new Usage({
-        userId,
+        userId: userId ?? null,
+        apiKeyId: apiKeyId ?? null,
         organizationId,
         modelId: command.modelId,
         provider: command.provider,
@@ -67,8 +80,25 @@ export class CollectUsageUseCase {
 
       await this.usageRepository.save(usage);
 
+      // Fire-and-forget: notify downstream listeners (webhook dispatch,
+      // metrics, sync services) that a usage row has been persisted.
+      // We do this AFTER save() resolves so receivers never observe
+      // usage that did not actually make it to the database.
+      this.eventEmitter
+        .emitAsync(
+          UsageCollectedEvent.EVENT_NAME,
+          new UsageCollectedEvent(usage, command.model.name),
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit UsageCollectedEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            usageId: usage.id,
+          });
+        });
+
       this.logger.log('Usage collected successfully', {
         userId,
+        apiKeyId,
         organizationId,
         modelId: command.modelId,
         provider: command.provider,

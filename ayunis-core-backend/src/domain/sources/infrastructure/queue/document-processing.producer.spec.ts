@@ -8,8 +8,8 @@ const SOURCE_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 function makeJobData(): DocumentProcessingJobData {
   return {
     sourceId: SOURCE_ID,
-    orgId: '00000000-0000-0000-0000-000000000010' as UUID,
-    userId: '00000000-0000-0000-0000-000000000020' as UUID,
+    orgId: '00000000-0000-0000-0000-000000000010',
+    userId: '00000000-0000-0000-0000-000000000020',
     minioPath: 'org/processing/src/doc.pdf',
     fileName: 'doc.pdf',
     fileType: 'application/pdf',

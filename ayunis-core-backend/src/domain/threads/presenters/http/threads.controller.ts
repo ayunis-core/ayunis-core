@@ -45,6 +45,10 @@ import { GetThreadsResponseDto } from './dto/get-threads-response.dto';
 import { FindAllThreadsQueryParamsDto } from './dto/find-all-threads-query-params.dto';
 import { GetThreadDtoMapper } from './mappers/get-thread.mapper';
 import { GetThreadsDtoMapper } from './mappers/get-threads.mapper';
+import { GetThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
+import { GetThreadPiiMasksQuery } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.query';
+import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
+import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 
 @ApiTags('threads')
 @Controller('threads')
@@ -57,8 +61,10 @@ export class ThreadsController {
     private readonly findAllThreadsUseCase: FindAllThreadsUseCase,
     private readonly deleteThreadUseCase: DeleteThreadUseCase,
     private readonly updateThreadTitleUseCase: UpdateThreadTitleUseCase,
+    private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
     private readonly getThreadDtoMapper: GetThreadDtoMapper,
     private readonly getThreadsDtoMapper: GetThreadsDtoMapper,
+    private readonly getThreadPiiMasksUseCase: GetThreadPiiMasksUseCase,
   ) {}
 
   @Post()
@@ -80,7 +86,6 @@ export class ThreadsController {
     const thread = await this.createThreadUseCase.execute(
       new CreateThreadCommand({
         modelId: createThreadDto.modelId,
-        agentId: createThreadDto.agentId,
         isAnonymous: createThreadDto.isAnonymous,
       }),
     );
@@ -95,12 +100,6 @@ export class ThreadsController {
     required: false,
     type: String,
     description: 'Search threads by title',
-  })
-  @ApiQuery({
-    name: 'agentId',
-    required: false,
-    type: String,
-    description: 'Filter threads by agent ID',
   })
   @ApiQuery({
     name: 'limit',
@@ -132,7 +131,6 @@ export class ThreadsController {
         undefined,
         {
           search: queryParams.search,
-          agentId: queryParams.agentId,
         },
         {
           limit: queryParams.limit,
@@ -165,7 +163,15 @@ export class ThreadsController {
     const result = await this.findThreadUseCase.execute(
       new FindThreadQuery(id),
     );
-    return this.getThreadDtoMapper.toDto(result);
+    const piiMasks = result.thread.isAnonymous
+      ? await this.getThreadPiiMasksUseCase.execute(
+          new GetThreadPiiMasksQuery(id),
+        )
+      : [];
+    const mcpIntegrations = await this.getMcpIntegrationsByIdsUseCase.execute(
+      new GetMcpIntegrationsByIdsQuery(result.thread.mcpIntegrationIds),
+    );
+    return this.getThreadDtoMapper.toDto(result, piiMasks, mcpIntegrations);
   }
 
   @Delete(':id')

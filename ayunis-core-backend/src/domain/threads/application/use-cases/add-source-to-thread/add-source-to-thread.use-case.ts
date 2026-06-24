@@ -6,7 +6,11 @@ import { SourceAdditionError } from '../../threads.errors';
 import { SourceAssignment } from '../../../domain/thread-source-assignment.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SourceAlreadyAssignedError } from '../../threads.errors';
+import {
+  SourceAlreadyAssignedError,
+  ThreadSourceLimitExceededError,
+} from '../../threads.errors';
+import { ThreadsConstants } from '../../../domain/threads.constants';
 
 @Injectable()
 export class AddSourceToThreadUseCase {
@@ -50,6 +54,10 @@ export class AddSourceToThreadUseCase {
 
       if (sourceExists) {
         throw new SourceAlreadyAssignedError(command.source.id);
+      }
+
+      if (currentAssignments.length >= ThreadsConstants.MAX_SOURCES) {
+        throw new ThreadSourceLimitExceededError(ThreadsConstants.MAX_SOURCES);
       }
 
       const sourceAssignment = new SourceAssignment({

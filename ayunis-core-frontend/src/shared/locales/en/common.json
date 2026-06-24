@@ -1,12 +1,13 @@
 {
+  "passwordPolicy": "Password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number.",
   "sidebar": {
     "appName": "Ayunis Core",
     "appTagline": "whoop whoop",
     "newChat": "New Chat",
-    "agents": "Agents",
     "skills": "Skills",
     "knowledge": "Knowledge",
     "marketplace": "Marketplace",
+    "academy": "Academy",
     "accountSettings": "Account Settings",
     "adminSettings": "Admin Settings",
     "superAdminSettings": "Super Admin Settings",
@@ -39,10 +40,7 @@
   },
   "chatInput": {
     "placeholder": "How can I help today?",
-    "createFirstAgent": "Create agent",
     "addButtonTooltip": "Add",
-    "agentButtonTooltip": "Agents",
-    "agentsEmptyState": "No agent created yet",
     "fileSourceUploadError": "Error uploading file",
     "fileSourceEmptyDataError": "The uploaded file contains no processable data",
     "invalidFileTypeError": "This file type is currently not supported.",
@@ -53,25 +51,25 @@
     "documentTooLargeForChat": "This document is too large to process in a chat. Please add it to a knowledge base instead.",
     "fileSourceDeleteError": "Error deleting file",
     "sourceNotFound": "File not found. It may have been deleted.",
-    "uploadDocument": "Upload Document",
-    "uploadImage": "Upload Image",
+    "uploadFile": "Upload File or Image",
     "imageLimitExceeded": "Maximum {{max}} images allowed. Some images were not added.",
     "addKnowledgeBase": "Add Knowledge Base",
     "knowledgeBasesLoadError": "Error loading knowledge bases",
     "knowledgeBasesEmptyState": "No knowledge bases created yet",
     "knowledgeBasesAllAttached": "All knowledge bases already attached",
+    "addIntegration": "Add Integration",
+    "integrationsLoadError": "Error loading integrations",
+    "integrationsEmptyState": "No integrations available",
+    "integrationsAllAttached": "All integrations already attached",
+    "integrationNotAuthorized": "Authorize this integration in Settings → Integrations first",
     "shared": "Shared",
     "createKnowledgeBase": "Create knowledge base",
     "noEmbeddingModelEnabled": "To upload documents, an embedding model must be enabled.",
-    "modelChangeDisabledTooltip": "The model cannot be changed when an agent is selected.",
     "cancelTooltip": "Cancel",
     "sendTooltip": "Send",
     "anonymousModeEnabled": "Deactivate Anonymous Mode",
     "anonymousModeDisabled": "Activate Anonymous Mode",
     "anonymousModeEnforced": "Privacy mode is required by this model",
-    "agents": {
-      "title": "Agents"
-    },
     "tools": {
       "title": "Tools",
       "internet_search": "Internet Search",
@@ -87,10 +85,13 @@
     "microphonePermissionDenied": "Microphone access denied",
     "recordingNotSupported": "Voice recording is not supported in this browser",
     "transcriptionFailed": "Transcription failed",
-    "modelSelectorAriaLabel": "Select AI model"
+    "modelSelectorAriaLabel": "Select AI model",
+    "modelChangeDisabledTooltip": "The model can't be changed in an existing chat.",
+    "deactivateSkillTooltip": "Deactivate skill"
   },
   "pinnedSkills": {
-    "empty": "No pinned skills"
+    "empty": "No pinned skills",
+    "activateTooltip": "Activate skill"
   },
   "common": {
     "loading": "Loading...",
@@ -113,6 +114,55 @@
     "fileSourceTooLargeError": "File is too large. Maximum file size is 25MB.",
     "fileSourceTooManyPagesError": "Document has too many pages to process.",
     "fileSourceServiceBusyError": "The document processing service is busy. Please try again later.",
-    "fileSourceTimeoutError": "Document processing timed out. The file may be too complex."
+    "fileSourceTimeoutError": "Document processing timed out. The file may be too complex.",
+    "sourceLimitExceededError": "A chat can have at most 20 sources. Please remove one before adding another."
+  },
+  "models": {
+    "availableHeading": "Available models",
+    "category": {
+      "zero": "Fast",
+      "low": "Fast",
+      "medium": "Balanced",
+      "high": "Powerful"
+    },
+    "usage": {
+      "zero": "Unlimited use",
+      "low": "Low usage",
+      "medium": "Medium usage",
+      "high": "High usage"
+    },
+    "providerHosting": {
+      "openai": "Hosted in the US by OpenAI.",
+      "anthropic": "Hosted in the US by Anthropic.",
+      "gemini": "Hosted in the US by Google.",
+      "azure": "Hosted in the EU on Microsoft Azure.",
+      "bedrock": "Hosted in the EU on AWS Bedrock.",
+      "mistral": "Hosted in the EU by Mistral.",
+      "scaleway": "Hosted in the EU by Scaleway.",
+      "otc": "Hosted in Germany on Open Telekom Cloud.",
+      "stackit": "Hosted in Germany by Stackit.",
+      "synaforce": "Hosted in Germany on Ayunis sovereign cloud.",
+      "ayunis": "Hosted in Germany on Ayunis sovereign cloud.",
+      "ollama": "Self-hosted via Ollama."
+    },
+    "descriptions": {
+      "fallback": "Suitable for general tasks such as writing, summarising, and answering questions.",
+      "gpt-5": "Suitable for research, longer texts and multi-step tasks.",
+      "gpt-5_1": "Suitable for everyday tasks like emails, summaries and simple research.",
+      "gpt-5_2": "Suitable for more complex tasks, longer texts and analyses.",
+      "gpt-5_4": "Suitable for very complex tasks, longer research and multi-step analyses.",
+      "gpt-5-mini": "Suitable for short answers and simple tasks.",
+      "gpt-4o": "Suitable for everyday tasks such as writing, summarising and answering questions.",
+      "gpt-4": "Older model for simple tasks such as short texts and answering questions.",
+      "claude-opus-4-7": "Suitable for very complex tasks, thorough analyses and longer research.",
+      "claude-sonnet-4-6": "A solid choice for longer texts, research and more complex tasks.",
+      "claude-haiku-4-5": "Suitable for short answers and simple tasks.",
+      "claude-3-5-sonnet": "Suitable for general tasks and longer texts.",
+      "claude-3": "Older model for simple tasks such as short texts and answering questions.",
+      "mistral-large": "Suitable for demanding tasks and longer texts.",
+      "mistral-small": "Suitable for short answers and simple tasks.",
+      "gemini-3-5-flash": "Suitable for short answers and simple tasks.",
+      "gemini-2-5-pro": "Suitable for more complex tasks and longer texts."
+    }
   }
 }

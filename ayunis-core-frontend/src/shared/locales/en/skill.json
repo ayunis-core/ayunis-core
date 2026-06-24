@@ -3,7 +3,8 @@
     "skills": "Skills"
   },
   "shared": {
-    "badge": "Shared"
+    "badge": "Shared",
+    "by": "Shared by {{name}}"
   },
   "tabs": {
     "configuration": "Configuration",
@@ -117,13 +118,15 @@
     "fileSourceTooLargeError": "File is too large. Maximum file size is 25MB.",
     "fileSourceTooManyPagesError": "Document has too many pages to process.",
     "fileSourceServiceBusyError": "The document processing service is busy. Please try again later.",
-    "fileSourceTimeoutError": "Document processing timed out. The file may be too complex."
+    "fileSourceTimeoutError": "Document processing timed out. The file may be too complex.",
+    "sourceLimitExceededError": "A skill can have at most 20 sources. Please remove one before adding another."
   },
   "mcpIntegrations": {
     "title": "Integrations",
     "description": "Connect external MCP servers to extend skill capabilities",
     "toggleAriaLabel": "Toggle {{name}} integration",
     "retryButton": "Retry",
+    "configRequiredBadge": "Configuration required",
     "success": {
       "connected": "Integration connected",
       "disconnected": "Integration disconnected"

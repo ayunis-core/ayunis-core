@@ -5,7 +5,11 @@ import {
 import type { ThreadSourcesControllerAddFileSourceBody } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { useTranslation } from 'react-i18next';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useIsMutating,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 
 const UPLOAD_TIMEOUT_MS = 60_000;
@@ -22,7 +26,9 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
   const { t } = useTranslation('common');
   const router = useRouter();
   const queryClient = useQueryClient();
+  const mutationKey = ['createFileSource', threadId];
   const createFileSourceMutation = useMutation({
+    mutationKey,
     retry: 0,
     mutationFn: ({
       id,
@@ -68,10 +74,12 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
     return createFileSourceMutation.mutateAsync({ id: threadId, data });
   }
 
+  const activeUploads = useIsMutating({ mutationKey });
+
   return {
     createFileSource,
     createFileSourceAsync,
-    isLoading: createFileSourceMutation.isPending,
+    isLoading: activeUploads > 0,
     error: createFileSourceMutation.error,
     reset: createFileSourceMutation.reset,
   };

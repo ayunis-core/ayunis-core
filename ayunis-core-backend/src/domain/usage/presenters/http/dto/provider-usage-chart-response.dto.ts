@@ -10,7 +10,7 @@ export class ProviderTimeSeriesRowDto {
   date: Date;
 
   @ApiProperty({
-    description: 'Tokens per provider for this date',
+    description: 'Credits per provider for this date',
     type: ProviderValuesDto,
   })
   values: ProviderValuesDto;
@@ -18,7 +18,7 @@ export class ProviderTimeSeriesRowDto {
 
 export class ProviderUsageChartResponseDto {
   @ApiProperty({
-    description: 'Aligned time series rows by date with provider token values',
+    description: 'Aligned time series rows by date with provider credit values',
     type: [ProviderTimeSeriesRowDto],
   })
   timeSeries: ProviderTimeSeriesRowDto[];

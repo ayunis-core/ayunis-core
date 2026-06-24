@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs';
+import { Observable, catchError, throwError } from 'rxjs';
 import { Injectable, Logger } from '@nestjs/common';
 import { StreamInferenceHandlerRegistry } from '../../registry/stream-inference-handler.registry';
 import {
@@ -9,6 +9,7 @@ import { StreamInferenceResponseChunk } from '../../ports/stream-inference.handl
 import { Model } from 'src/domain/models/domain/model.entity';
 import { InferenceFailedError } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { extractUpstreamStatus } from '../../helpers/extract-upstream-status.helper';
 
 @Injectable()
 export class StreamInferenceUseCase {
@@ -21,22 +22,34 @@ export class StreamInferenceUseCase {
     input: StreamInferenceInput,
   ): Observable<StreamInferenceResponseChunk> {
     try {
-      return this.getHandler(input.model).answer(input);
+      return this.getHandler(input.model)
+        .answer(input)
+        .pipe(
+          catchError((error: unknown) =>
+            throwError(() => this.handleInferenceError(error, input)),
+          ),
+        );
     } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Stream inference failed', {
-        error: error as Error,
-        input: input,
-      });
-      throw new InferenceFailedError(
-        error instanceof Error ? error.message : 'Unknown error',
-        {
-          error: error as Error,
-        },
-      );
+      throw this.handleInferenceError(error, input);
     }
+  }
+
+  private handleInferenceError(
+    error: unknown,
+    input: StreamInferenceInput,
+  ): Error {
+    if (error instanceof ApplicationError) return error;
+    const status = extractUpstreamStatus(error);
+    this.logger.error('Provider stream inference failed', {
+      model: input.model.name,
+      provider: input.model.provider,
+      messageCount: input.messages.length,
+      toolCount: input.tools.length,
+      toolChoice: input.toolChoice,
+      errorName: error instanceof Error ? error.name : 'Unknown',
+      status,
+    });
+    return new InferenceFailedError('Provider inference failed', { status });
   }
 
   private getHandler(model: Model): StreamInferenceHandler {

@@ -13,7 +13,6 @@ import { ThreadSourceAssignmentMapper } from './mappers/thread-source-assignment
 import { ThreadKnowledgeBaseAssignmentMapper } from './mappers/thread-knowledge-base-assignment.mapper';
 import { GeneratedImageMapper } from './mappers/generated-image.mapper';
 import { LocalPermittedModelsRepositoryModule } from 'src/domain/models/infrastructure/persistence/local-permitted-models/local-permitted-models-repository.module';
-import { LocalAgentsRepositoryModule } from 'src/domain/agents/infrastructure/persistence/local/local-agent-repository.module';
 import { LocalSourceRepositoryModule } from 'src/domain/sources/infrastructure/persistence/local/local-source-repository.module';
 
 @Module({
@@ -26,7 +25,6 @@ import { LocalSourceRepositoryModule } from 'src/domain/sources/infrastructure/p
     ]),
     LocalMessagesRepositoryModule,
     LocalPermittedModelsRepositoryModule,
-    LocalAgentsRepositoryModule,
     LocalSourceRepositoryModule,
   ],
   providers: [

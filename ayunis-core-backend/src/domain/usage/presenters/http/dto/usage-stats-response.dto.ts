@@ -3,10 +3,10 @@ import { ApiProperty } from '@nestjs/swagger';
 export class UsageStatsResponseDto {
   @ApiProperty({
     description:
-      'Total tokens consumed across all users and models in the specified period',
-    example: 1250000,
+      'Total credits consumed across all users and models in the specified period',
+    example: 1250.5,
   })
-  totalTokens: number;
+  totalCredits: number;
 
   @ApiProperty({
     description: 'Total number of API requests made in the specified period',

@@ -11,30 +11,30 @@ export class ProviderUsageChartResponseDtoMapper {
   toDto(providerUsage: ProviderUsage[]): ProviderUsageChartResponseDto {
     const dateSet = new Set<string>();
 
-    // Index tokens by provider/date for fast lookup
-    const providerToDateTokens: Record<string, Record<string, number>> = {};
+    // Index credits by provider/date for fast lookup
+    const providerToDateCredits: Record<string, Record<string, number>> = {};
 
     for (const p of providerUsage) {
-      providerToDateTokens[p.provider] = {};
+      providerToDateCredits[p.provider] = {};
       for (const pt of p.timeSeriesData) {
         const iso =
           pt.date instanceof Date
             ? pt.date.toISOString()
             : new Date(pt.date).toISOString();
         dateSet.add(iso);
-        providerToDateTokens[p.provider][iso] =
-          (providerToDateTokens[p.provider][iso] || 0) + (pt.tokens || 0);
+        providerToDateCredits[p.provider][iso] =
+          (providerToDateCredits[p.provider][iso] || 0) + (pt.credits || 0);
       }
     }
 
-    const dates = Array.from(dateSet).sort();
-    const providers = Object.keys(providerToDateTokens);
+    const dates = Array.from(dateSet).sort((a, b) => a.localeCompare(b));
+    const providers = Object.keys(providerToDateCredits);
 
     const rows: ProviderTimeSeriesRowDto[] = dates.map((iso) => {
       const values: ProviderValuesDto = {};
       for (const provider of providers) {
         (values as Record<string, number>)[provider] =
-          providerToDateTokens[provider][iso] || 0;
+          providerToDateCredits[provider][iso] || 0;
       }
       return { date: new Date(iso), values };
     });

@@ -45,23 +45,21 @@ trap 'rm -rf "$REPORT_DIR"' EXIT
 
 # ── Run jscpd on full src/ ───────────────────────────────────────────────────
 # Ignore patterns:
-# - generated/** & migrations/**: auto-generated code
+# - generated/**, *.gen.ts & migrations/**: auto-generated code (e.g. route tree)
 # - *.spec/test.*: test files
 # - *.entity.ts & *.record.ts: TypeORM entities/records (constructor param forwarding is intentional)
+#
+# Pin to jscpd@4: v5 (2026-06-08) is a Rust rewrite with an incompatible CLI
+# (renamed to `cpd`, dropped --ignore/--reporters/--output/--silent), which
+# breaks this invocation. Unpin once the script is migrated to the v5 flags.
 (
   cd "$PROJECT_DIR"
-  npx --yes jscpd src \
+  pnpm dlx jscpd@4 src \
     --threshold 100 \
     --min-lines "$MIN_LINES" \
     --min-tokens "$MIN_TOKENS" \
     --format "typescript,tsx" \
-    --ignore '**/generated/**' \
-    --ignore '**/migrations/**' \
-    --ignore '**/*.spec.ts' \
-    --ignore '**/*.test.ts' \
-    --ignore '**/*.test.tsx' \
-    --ignore '**/*.entity.ts' \
-    --ignore '**/*.record.ts' \
+    --ignore '**/generated/**,**/*.gen.ts,**/migrations/**,**/*.spec.ts,**/*.test.ts,**/*.test.tsx,**/*.entity.ts,**/*.record.ts' \
     --reporters json \
     --output "$REPORT_DIR" \
     --silent >/dev/null 2>&1
@@ -75,14 +73,15 @@ fi
 
 # ── Filter clones to those involving staged files ────────────────────────────
 # Build a jq filter array from staged file paths (relative to project src/)
-# Staged files come in as e.g. "ayunis-core-backend/src/domain/foo.ts"
+# Staged files come in as e.g. "ayunis-core-backend/src/domain/foo.ts" or
+# "packages/agent-runtime/src/engine/loop.ts"
 # jscpd report paths are e.g. "src/domain/foo.ts"
-PROJECT_BASENAME=$(basename "$PROJECT_DIR")
 JQ_PATTERNS="["
 FIRST=true
 for f in "${STAGED_FILES[@]}"; do
-  # Strip the project dir prefix: "ayunis-core-backend/src/..." -> "src/..."
-  REL="${f#"$PROJECT_BASENAME"/}"
+  # Strip the project dir prefix: "<project-dir>/src/..." -> "src/..."
+  # (PROJECT_DIR may be nested, e.g. "packages/agent-runtime")
+  REL="${f#"$PROJECT_DIR"/}"
   if [ "$FIRST" = true ]; then
     FIRST=false
   else

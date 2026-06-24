@@ -26,16 +26,17 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
   const frontendBaseUrl = 'http://localhost:3001';
   const passwordResetEndpoint = '/password/reset';
 
-  const mockUser = new User({
-    id: userId,
-    name: userName,
-    email: userEmail,
-    emailVerified: true,
-    passwordHash: 'hashed-password',
-    role: UserRole.USER,
-    orgId,
-    hasAcceptedMarketing: false,
-  });
+  const buildUser = () =>
+    new User({
+      id: userId,
+      name: userName,
+      email: userEmail,
+      emailVerified: true,
+      passwordHash: 'hashed-password',
+      role: UserRole.USER,
+      orgId,
+      hasAcceptedMarketing: false,
+    });
 
   beforeAll(async () => {
     mockUsersRepository = {
@@ -44,6 +45,7 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
 
     mockPasswordResetJwtService = {
       generatePasswordResetToken: jest.fn(),
+      generateInitialPasswordToken: jest.fn(),
     };
 
     mockSendPasswordResetEmailUseCase = {
@@ -78,7 +80,6 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
     jest
       .spyOn(mockPasswordResetJwtService, 'generatePasswordResetToken')
       .mockReturnValue(resetToken);
@@ -93,15 +94,17 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
     });
   });
 
-  it('should send password reset email and return the reset URL', async () => {
-    const command = new SuperAdminTriggerPasswordResetCommand(userId);
+  it('should send the password reset email and return the reset url', async () => {
+    jest
+      .spyOn(mockUsersRepository, 'findOneById')
+      .mockResolvedValue(buildUser());
 
+    const command = new SuperAdminTriggerPasswordResetCommand(userId);
     const result = await useCase.execute(command);
 
     expect(result.resetUrl).toBe(
       `${frontendBaseUrl}${passwordResetEndpoint}?token=${resetToken}`,
     );
-    expect(mockUsersRepository.findOneById).toHaveBeenCalledWith(userId);
     expect(
       mockPasswordResetJwtService.generatePasswordResetToken,
     ).toHaveBeenCalledWith({ userId, email: userEmail });

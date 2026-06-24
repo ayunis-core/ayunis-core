@@ -56,9 +56,7 @@ describe('UpdateUserNameUseCase', () => {
     const updatedUser = { ...mockUser, name: 'New Name' };
 
     jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
-    jest
-      .spyOn(mockUsersRepository, 'update')
-      .mockResolvedValue(updatedUser as User);
+    jest.spyOn(mockUsersRepository, 'update').mockResolvedValue(updatedUser);
 
     const result = await useCase.execute(command);
 

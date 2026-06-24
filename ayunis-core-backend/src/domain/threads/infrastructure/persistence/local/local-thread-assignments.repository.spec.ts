@@ -49,7 +49,7 @@ describe('LocalThreadAssignmentsRepository', () => {
   beforeEach(() => {
     threadRepo = {
       findOne: jest.fn(),
-    } as jest.Mocked<Pick<Repository<ThreadRecord>, 'findOne'>>;
+    };
     sourceAssignmentRepo = {
       remove: jest.fn(),
       save: jest.fn(),

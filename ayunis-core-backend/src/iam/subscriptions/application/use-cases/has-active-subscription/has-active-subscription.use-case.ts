@@ -43,12 +43,12 @@ export class HasActiveSubscriptionUseCase {
       }
 
       for (const subscription of subscriptions) {
-        if (isActive(subscription)) {
-          return {
-            hasActiveSubscription: true,
-            subscriptionType: subscription.type,
-          };
-        }
+        if (!isActive(subscription)) continue;
+        if (query.type && subscription.type !== query.type) continue;
+        return {
+          hasActiveSubscription: true,
+          subscriptionType: subscription.type,
+        };
       }
 
       return { hasActiveSubscription: false, subscriptionType: null };

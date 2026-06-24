@@ -8,7 +8,12 @@ import {
 } from '@/shared/ui/shadcn/dropdown-menu';
 import { Switch } from '@/shared/ui/shadcn/switch';
 import { Badge } from '@/shared/ui/shadcn/badge';
-import { MoreVertical, Loader2, User } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/shared/ui/shadcn/tooltip';
+import { MoreVertical, Loader2 } from 'lucide-react';
 import type { McpIntegration } from '../model/types';
 import { getIntegrationTypeLabel } from '../lib/helpers';
 import {
@@ -25,7 +30,6 @@ interface IntegrationCardProps {
   onDelete: (integration: McpIntegration) => void;
   onToggleEnabled: (integration: McpIntegration, enabled: boolean) => void;
   onValidate: (integration: McpIntegration) => void;
-  onUserConfig?: (integration: McpIntegration) => void;
   isTogglingEnabled?: boolean;
   isValidating?: boolean;
 }
@@ -36,13 +40,16 @@ export function IntegrationCard({
   onDelete,
   onToggleEnabled,
   onValidate,
-  onUserConfig,
   isTogglingEnabled = false,
   isValidating = false,
 }: Readonly<IntegrationCardProps>) {
   const { t } = useTranslation('admin-settings-integrations');
   const isMarketplace = integration.type === 'marketplace';
-  const hasUserFields = integration.hasUserFields === true;
+  // Marketplace integrations that need each user to supply their own
+  // credentials can't be validated by the org-level test — see
+  // TestConnectionButton.
+  const requiresUserConfig =
+    isMarketplace && integration.userAuthorizationRequired === true;
 
   return (
     <Item variant="outline">
@@ -54,39 +61,29 @@ export function IntegrationCard({
               {t('integrations.card.marketplace')}
             </Badge>
           )}
+          {requiresUserConfig && (
+            <Badge variant="outline" className="ml-2">
+              {t('integrations.card.userConfigNeeded')}
+            </Badge>
+          )}
         </ItemTitle>
         <ItemDescription>
           <IntegrationDescription integration={integration} />
         </ItemDescription>
       </ItemContent>
       <ItemActions>
-        {isMarketplace && hasUserFields && onUserConfig && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onUserConfig(integration)}
-          >
-            <User className="h-4 w-4" />
-            {t('integrations.card.userConfig')}
-          </Button>
-        )}
         <Switch
           id={`integration-${integration.id}`}
           checked={integration.enabled}
           onCheckedChange={(checked) => onToggleEnabled(integration, checked)}
           disabled={isTogglingEnabled}
         />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onValidate(integration)}
-          disabled={isValidating}
-        >
-          {isValidating && <Loader2 className="h-4 w-4 animate-spin" />}
-          {isValidating
-            ? t('integrations.card.testing')
-            : t('integrations.card.testConnection')}
-        </Button>
+        <TestConnectionButton
+          integration={integration}
+          onValidate={onValidate}
+          isValidating={isValidating}
+          requiresUserConfig={requiresUserConfig}
+        />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm">
@@ -100,7 +97,7 @@ export function IntegrationCard({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onDelete(integration)}
-              className="text-red-600"
+              variant="destructive"
             >
               {t('integrations.card.delete')}
             </DropdownMenuItem>
@@ -108,6 +105,51 @@ export function IntegrationCard({
         </DropdownMenu>
       </ItemActions>
     </Item>
+  );
+}
+
+function TestConnectionButton({
+  integration,
+  onValidate,
+  isValidating,
+  requiresUserConfig,
+}: Readonly<{
+  integration: McpIntegration;
+  onValidate: (integration: McpIntegration) => void;
+  isValidating: boolean;
+  requiresUserConfig: boolean;
+}>) {
+  const { t } = useTranslation('admin-settings-integrations');
+
+  const button = (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => onValidate(integration)}
+      disabled={isValidating || requiresUserConfig}
+    >
+      {isValidating && <Loader2 className="h-4 w-4 animate-spin" />}
+      {isValidating
+        ? t('integrations.card.testing')
+        : t('integrations.card.testConnection')}
+    </Button>
+  );
+
+  if (!requiresUserConfig) {
+    return button;
+  }
+
+  // The disabled button suppresses pointer events, so wrap it in a focusable
+  // span that owns the tooltip trigger.
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span tabIndex={0}>{button}</span>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs">
+        {t('integrations.card.testConnectionUserConfigTooltip')}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 

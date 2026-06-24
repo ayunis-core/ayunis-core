@@ -17,6 +17,7 @@ import {
   Item,
   ItemActions,
   ItemContent,
+  ItemDescription,
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
 import {
@@ -26,10 +27,13 @@ import {
 } from '@/shared/ui/shadcn/tooltip';
 import { Star } from 'lucide-react';
 import { cn } from '@/shared/lib/shadcn/utils';
-import { getFlagByProvider } from '@/shared/lib/getFlagByProvider';
-import { getHostingPriority } from '@/features/models';
+import {
+  getFlagByProvider,
+  getHostingPriority,
+} from '@/shared/lib/model-provider-metadata';
 
 const TIER_FILLED_COUNT: Record<ModelWithConfigResponseDtoTier, number> = {
+  [ModelWithConfigResponseDtoTier.zero]: 0,
   [ModelWithConfigResponseDtoTier.low]: 1,
   [ModelWithConfigResponseDtoTier.medium]: 2,
   [ModelWithConfigResponseDtoTier.high]: 3,
@@ -204,6 +208,9 @@ export default function ModelTypeCard({
                       {model.displayName || model.name}
                       {model.tier && <ModelTierStars tier={model.tier} />}
                     </ItemTitle>
+                    {model.displayName && (
+                      <ItemDescription>{model.name}</ItemDescription>
+                    )}
                   </ItemContent>
                   <ItemActions>
                     {model.isPermitted && updatePermittedModel && (

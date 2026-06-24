@@ -7,6 +7,7 @@ import { EmbedTextUseCase } from './application/use-cases/embed-text/embed-text.
 import { GetAvailableProvidersUseCase } from './application/use-cases/get-available-providers/get-available-providers.use-case';
 import { MistralEmbeddingsHandler } from './infrastructure/handler/mistral-embeddings.handler';
 import { AyunisOllamaEmbeddingsHandler } from './infrastructure/handler/ayunis-ollama-embeddings.handler';
+import { EmbeddingsThrottleService } from './application/services/embeddings-throttle.service';
 
 @Module({
   imports: [ConfigModule],
@@ -33,6 +34,7 @@ import { AyunisOllamaEmbeddingsHandler } from './infrastructure/handler/ayunis-o
     MistralEmbeddingsHandler,
     OpenAIEmbeddingsHandler,
     AyunisOllamaEmbeddingsHandler,
+    EmbeddingsThrottleService,
     // Use Cases
     EmbedTextUseCase,
     GetAvailableProvidersUseCase,

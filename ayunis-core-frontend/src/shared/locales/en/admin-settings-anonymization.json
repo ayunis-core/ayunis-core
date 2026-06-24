@@ -1,0 +1,87 @@
+{
+  "piiWhitelist": {
+    "heading": "Anonymization exceptions",
+    "description": "In anonymous mode, Ayunis Core replaces detected personal data with placeholders before it is sent to the language model. Here you can exempt individual data types (e.g. names or emails) from anonymization — either entirely or only for specific values you define. Everything else is still masked.",
+    "patternLabel": "Only exempt specific values (optional)",
+    "exampleLabel": "Example:",
+    "patternHint": "The pattern is a regular expression — the value must fully match it, case-insensitive. Leave empty to exempt the whole category.",
+    "invalidPattern": "This pattern is not a valid regular expression.",
+    "patternTooLong": "The pattern must not exceed {{max}} characters.",
+    "unsafePattern": "This pattern was rejected because it could cause excessive processing time.",
+    "saveButton": "Save",
+    "saving": "Saving…",
+    "saveSuccess": "Anonymization exceptions saved.",
+    "saveError": "Saving the anonymization exceptions failed.",
+    "loadError": "The anonymization exceptions could not be loaded.",
+    "retry": "Retry",
+    "exemptBadge": "Not masked",
+    "categories": {
+      "person_name": {
+        "label": "Person names",
+        "description": "First and last names of natural persons",
+        "placeholder": "Erika Mustermann",
+        "example": "exempts exactly this name. Use the | key to list several names."
+      },
+      "organization": {
+        "label": "Organizations",
+        "description": "Names of companies, institutions, and public bodies",
+        "placeholder": "Stadt Musterstadt",
+        "example": "exempts exactly this organization. Use the | key to list several organizations."
+      },
+      "location": {
+        "label": "Locations & addresses",
+        "description": "Cities, countries, streets, and addresses",
+        "placeholder": "Musterstadt",
+        "example": "exempts exactly this location. Use the | key to list several locations."
+      },
+      "email_address": {
+        "label": "Email addresses",
+        "description": "Personal and organizational email addresses",
+        "placeholder": ".*@muster-stadt\\.de",
+        "example": "exempts all email addresses ending in @muster-stadt.de. Use the | key to list several addresses."
+      },
+      "phone_number": {
+        "label": "Phone numbers",
+        "description": "Landline and mobile numbers",
+        "placeholder": "0681 .*",
+        "example": "exempts all phone numbers with the area code 0681. Use the | key to list several numbers."
+      },
+      "url_or_ip": {
+        "label": "URLs & IP addresses",
+        "description": "Web addresses and IP addresses",
+        "placeholder": ".*muster-stadt\\.de.*",
+        "example": "exempts all addresses containing muster-stadt.de. Use the | key to list several addresses."
+      },
+      "date_time": {
+        "label": "Dates & times",
+        "description": "Specific dates and times, e.g. dates of birth",
+        "placeholder": "\\d{4}",
+        "example": "exempts all four-digit numbers, e.g. years. Use the | key to list several values."
+      },
+      "financial_account": {
+        "label": "Financial accounts",
+        "description": "Credit card numbers, IBANs, and bank account numbers",
+        "placeholder": "DE12 .*",
+        "example": "exempts all IBANs starting with DE12. Use the | key to list several values."
+      },
+      "government_id": {
+        "label": "Government IDs",
+        "description": "Social security, passport, driver's license, and medical license numbers",
+        "placeholder": ".*muster.*",
+        "example": "exempts all values containing “muster”. Use the | key to list several values."
+      },
+      "nationality_religion_politics": {
+        "label": "Nationality, religion & politics",
+        "description": "References to nationality, religious, or political affiliation",
+        "placeholder": ".*muster.*",
+        "example": "exempts all values containing “muster”. Use the | key to list several values."
+      },
+      "other": {
+        "label": "Other / unrecognized",
+        "description": "Personal data detected by the engine that does not fit a known category",
+        "placeholder": ".*muster.*",
+        "example": "exempts all values containing “muster”. Use the | key to list several values."
+      }
+    }
+  }
+}

@@ -5,7 +5,6 @@ import { useUpdateArtifact } from '../api/useUpdateArtifact';
 import { useRevertArtifact } from '../api/useRevertArtifact';
 import { useExportArtifact } from '../api/useExportArtifact';
 import { UpdateArtifactDtoAuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { showSuccess } from '@/shared/lib/toast';
 
 export function useArtifactActions(threadId: string) {
@@ -60,7 +59,7 @@ export function useArtifactActions(threadId: string) {
             authorType: UpdateArtifactDtoAuthorType.USER,
           });
         }
-        await exportArtifact(format as ArtifactsControllerExportFormat);
+        await exportArtifact(format);
       };
       void doExport();
     },

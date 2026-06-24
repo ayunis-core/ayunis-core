@@ -3,9 +3,14 @@
     "page": {
       "add": "Team hinzufügen"
     },
+    "filters": {
+      "searchPlaceholder": "Teams suchen..."
+    },
     "list": {
       "emptyTitle": "Noch keine Teams",
       "emptyDescription": "Erstellen Sie Ihr erstes Team, um Ihre Benutzer zu organisieren.",
+      "noMatchesTitle": "Keine Teams gefunden",
+      "noMatchesDescription": "Keine Teams entsprechen Ihrer Suche.",
       "createdAt": "Erstellt am {{date}}",
       "memberCount_one": "{{count}} Mitglied",
       "memberCount_other": "{{count}} Mitglieder"

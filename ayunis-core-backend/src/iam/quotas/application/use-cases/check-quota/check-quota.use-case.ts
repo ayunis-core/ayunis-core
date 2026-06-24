@@ -3,6 +3,8 @@ import { UsageQuotaRepositoryPort } from '../../ports/usage-quota.repository.por
 import { QuotaLimitResolverService } from '../../services/quota-limit-resolver.service';
 import { CheckQuotaQuery } from './check-quota.query';
 import { QuotaExceededError } from '../../quotas.errors';
+import { IsUsageBasedSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/is-usage-based-subscription/is-usage-based-subscription.use-case';
+import { IsUsageBasedSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/is-usage-based-subscription/is-usage-based-subscription.query';
 
 @Injectable()
 export class CheckQuotaUseCase {
@@ -11,9 +13,25 @@ export class CheckQuotaUseCase {
   constructor(
     private readonly usageQuotaRepository: UsageQuotaRepositoryPort,
     private readonly limitResolver: QuotaLimitResolverService,
+    private readonly isUsageBasedSubscriptionUseCase: IsUsageBasedSubscriptionUseCase,
   ) {}
 
   async execute(query: CheckQuotaQuery): Promise<void> {
+    // Fair-use is the protection of last resort for flat-fee plans.
+    // Usage-based orgs already self-limit via their purchased credit budget
+    // (enforced by CreditBudgetGuardService), so applying fair-use on top
+    // would double-cap them.
+    const isUsageBased = await this.isUsageBasedSubscriptionUseCase.execute(
+      new IsUsageBasedSubscriptionQuery(query.orgId),
+    );
+    if (isUsageBased) {
+      this.logger.debug('Skipping fair-use quota for usage-based org', {
+        orgId: query.orgId,
+        quotaType: query.quotaType,
+      });
+      return;
+    }
+
     const { limit, windowMs } = await this.limitResolver.resolve(
       query.quotaType,
     );

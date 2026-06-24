@@ -2,7 +2,6 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService, ConfigType } from '@nestjs/config';
 import { UUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
@@ -18,6 +17,7 @@ import { FindActiveSkillsUseCase } from 'src/domain/skills/application/use-cases
 import { FindActiveSkillsQuery } from 'src/domain/skills/application/use-cases/find-active-skills/find-active-skills.query';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { GetUserSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-user-system-prompt/get-user-system-prompt.use-case';
+import { GetOrgSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-org-system-prompt/get-org-system-prompt.use-case';
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
@@ -49,6 +49,7 @@ export class ToolAssemblyService {
     private readonly systemPromptBuilderService: SystemPromptBuilderService,
     private readonly findActiveSkillsUseCase: FindActiveSkillsUseCase,
     private readonly getUserSystemPromptUseCase: GetUserSystemPromptUseCase,
+    private readonly getOrgSystemPromptUseCase: GetOrgSystemPromptUseCase,
     private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
     private readonly findActiveAlwaysOnTemplatesUseCase: FindActiveAlwaysOnTemplatesUseCase,
     @Inject(featuresConfig.KEY)
@@ -64,9 +65,9 @@ export class ToolAssemblyService {
 
   async buildRunContext(
     thread: Thread,
-    agent: Agent | undefined,
     activeSkills: Skill[],
     canUseTools: boolean,
+    isAnonymous: boolean,
   ): Promise<{ tools: Tool[]; instructions: string }> {
     // Fetch always-on skill templates (cached, 60s TTL)
     let alwaysOnTemplates: SkillTemplate[] = [];
@@ -87,24 +88,23 @@ export class ToolAssemblyService {
     );
 
     const tools = canUseTools
-      ? await this.assembleTools(thread, agent, activeSkills, slugMap)
+      ? await this.assembleTools(thread, activeSkills, slugMap)
       : [];
 
-    // Collect all sources from thread and agent for the system prompt.
+    // Collect all sources from thread for the system prompt.
     // All types and statuses are passed — the system prompt builder partitions
     // them into ready / processing / failed sections.
-    const allSources = [
-      ...(thread.sourceAssignments?.map((a) => a.source) ?? []),
-      ...(agent?.sourceAssignments.map((a) => a.source) ?? []),
-    ];
+    const allSources = thread.sourceAssignments?.map((a) => a.source) ?? [];
 
-    // Fetch user's custom system prompt (returns null if not configured)
+    // Fetch org-wide and user's custom system prompts (null if not configured)
+    const orgSystemPromptEntity =
+      await this.getOrgSystemPromptUseCase.execute();
+    const orgSystemPrompt = orgSystemPromptEntity?.systemPrompt ?? undefined;
     const userSystemPromptEntity =
       await this.getUserSystemPromptUseCase.execute();
     const userSystemPrompt = userSystemPromptEntity?.systemPrompt ?? undefined;
 
     const instructions = this.systemPromptBuilderService.build({
-      agent,
       tools,
       currentTime: new Date(),
       sources: allSources,
@@ -112,7 +112,9 @@ export class ToolAssemblyService {
       // otherwise the prompt would instruct the model to use activate_skill which isn't available
       skills: canUseTools && this.features.skillsEnabled ? skillEntries : [],
       knowledgeBases: canUseTools ? thread.getUniqueKnowledgeBases() : [],
+      orgSystemPrompt,
       userSystemPrompt,
+      isAnonymous,
     });
 
     return { tools, instructions };
@@ -130,21 +132,26 @@ export class ToolAssemblyService {
     const slugMap = new Map<string, string>();
     const skillEntries: SkillEntry[] = [];
 
-    const allInputs: {
+    type SkillInput = {
       name: string;
       prefix: SkillPrefix;
       description: string;
-    }[] = [
-      ...activeSkills.map((s) => ({
-        name: s.name,
-        prefix: USER_PREFIX as SkillPrefix,
-        description: s.shortDescription,
-      })),
-      ...alwaysOnTemplates.map((t) => ({
-        name: t.name,
-        prefix: SYSTEM_PREFIX as SkillPrefix,
-        description: t.shortDescription,
-      })),
+    };
+    const allInputs: SkillInput[] = [
+      ...activeSkills.map(
+        (s): SkillInput => ({
+          name: s.name,
+          prefix: USER_PREFIX,
+          description: s.shortDescription,
+        }),
+      ),
+      ...alwaysOnTemplates.map(
+        (t): SkillInput => ({
+          name: t.name,
+          prefix: SYSTEM_PREFIX,
+          description: t.shortDescription,
+        }),
+      ),
     ];
 
     for (const input of allInputs) {
@@ -171,41 +178,22 @@ export class ToolAssemblyService {
 
   async assembleTools(
     thread: Thread,
-    agent: Agent | undefined,
     _activeSkills: Skill[],
     slugMap: Map<string, string>,
   ): Promise<Tool[]> {
     const skillsEnabled = this.features.skillsEnabled;
     const tools: Tool[] = [];
 
-    // Discover and add MCP tools/resources from agent and thread integrations
-    const mcpTools = await this.assembleMcpTools(thread, agent);
+    // Discover and add MCP tools/resources from thread integrations
+    const mcpTools = await this.assembleMcpTools(thread);
     tools.push(...mcpTools);
 
-    if (agent) {
-      // Add native tools from the agent (excluding always-available tools)
-      tools.push(
-        ...agent.tools.filter(
-          (tool) =>
-            tool.type !== ToolType.INTERNET_SEARCH &&
-            tool.type !== ToolType.BAR_CHART &&
-            tool.type !== ToolType.LINE_CHART &&
-            tool.type !== ToolType.PIE_CHART,
-        ),
-      );
-    }
-
     // Code execution tool is always available
-    const threadSources = thread.sourceAssignments?.map(
-      (assignment) => assignment.source,
+    const threadSources =
+      thread.sourceAssignments?.map((assignment) => assignment.source) ?? [];
+    const codeExecutionSources = threadSources.filter(
+      (source) => source.type === SourceType.DATA,
     );
-    const agentSources = agent?.sourceAssignments.map(
-      (assignment) => assignment.source,
-    );
-    const codeExecutionSources = [
-      ...(threadSources ?? []),
-      ...(agentSources ?? []),
-    ].filter((source) => source.type === SourceType.DATA);
     tools.push(
       await this.assembleToolsUseCase.execute(
         new AssembleToolCommand({
@@ -281,21 +269,17 @@ export class ToolAssemblyService {
       })),
     );
 
-    // Collect text sources from both thread and agent
+    // Collect text sources from thread
     const threadTextSources = (thread.sourceAssignments ?? [])
       .map((assignment) => assignment.source)
       .filter((source): source is TextSource => source instanceof TextSource);
-    const agentTextSources = (agent?.sourceAssignments ?? [])
-      .map((assignment) => assignment.source)
-      .filter((source): source is TextSource => source instanceof TextSource);
-    const allTextSources = [...threadTextSources, ...agentTextSources];
 
     // Source query/get tools — available when there are text sources
-    if (allTextSources.length > 0) {
+    if (threadTextSources.length > 0) {
       for (const type of [ToolType.SOURCE_QUERY, ToolType.SOURCE_GET_TEXT]) {
         tools.push(
           await this.assembleToolsUseCase.execute(
-            new AssembleToolCommand({ type, context: allTextSources }),
+            new AssembleToolCommand({ type, context: threadTextSources }),
           ),
         );
       }
@@ -331,14 +315,8 @@ export class ToolAssemblyService {
     return tools;
   }
 
-  private async assembleMcpTools(
-    thread: Thread,
-    agent: Agent | undefined,
-  ): Promise<Tool[]> {
+  private async assembleMcpTools(thread: Thread): Promise<Tool[]> {
     const mcpIntegrationIds = new Set<UUID>();
-    if (agent) {
-      agent.mcpIntegrationIds.forEach((id) => mcpIntegrationIds.add(id));
-    }
     thread.mcpIntegrationIds.forEach((id) => mcpIntegrationIds.add(id));
 
     if (mcpIntegrationIds.size === 0) return [];

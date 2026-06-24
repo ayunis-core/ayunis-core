@@ -12,10 +12,23 @@ export interface ThreadsFindAllOptions {
 
 export interface ThreadsFindAllFilters {
   search?: string;
-  agentId?: string;
 }
 
 export interface ThreadsPagination {
+  limit: number;
+  offset: number;
+}
+
+/** Minimal thread reference used by data-retention enforcement. */
+export interface ExpiredThreadRef {
+  id: UUID;
+  userId: UUID;
+}
+
+export interface FindExpiredThreadRefsParams {
+  orgId: UUID;
+  /** Threads whose last activity is strictly before this are expired. */
+  activeBefore: Date;
   limit: number;
   offset: number;
 }
@@ -33,10 +46,6 @@ export abstract class ThreadsRepository {
     modelId: UUID,
     options?: ThreadsFindAllOptions,
   ): Promise<Thread[]>;
-  abstract findAllByAgent(
-    agentId: UUID,
-    options?: ThreadsFindAllOptions,
-  ): Promise<Thread[]>;
   abstract update(thread: Thread): Promise<Thread>;
   abstract updateModel(params: {
     threadId: UUID;
@@ -47,6 +56,15 @@ export abstract class ThreadsRepository {
     threadId: UUID;
     userId: UUID;
     title: string;
+  }): Promise<void>;
+  /**
+   * Bumps the thread's last-activity timestamp. Best-effort and scoped by
+   * threadId only (no userId): it is driven by the message-added event, which
+   * carries no per-call ownership guarantee. A no-op if the thread is gone.
+   */
+  abstract updateLastActivityAt(params: {
+    threadId: UUID;
+    lastActivityAt: Date;
   }): Promise<void>;
   abstract updateSourceAssignments(params: {
     threadId: UUID;
@@ -72,6 +90,14 @@ export abstract class ThreadsRepository {
   }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
   abstract findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]>;
+  /**
+   * Returns a page of expired thread references (id + owner) for an org,
+   * oldest-activity first. Activity is `lastActivityAt`, falling back to
+   * `createdAt` defensively. Used by data-retention enforcement.
+   */
+  abstract findExpiredThreadRefsByOrg(
+    params: FindExpiredThreadRefsParams,
+  ): Promise<ExpiredThreadRef[]>;
   abstract removeSourceAssignmentsByOriginSkill(params: {
     originSkillId: UUID;
     userIds: UUID[];
@@ -85,4 +111,15 @@ export abstract class ThreadsRepository {
     knowledgeBaseId: UUID;
     userIds: UUID[];
   }): Promise<void>;
+  /**
+   * Returns source IDs where (a) at least one direct (non-skill) thread
+   * assignment exists and (b) every such direct assignment points to a
+   * thread whose messages are all older than `olderThan`. Empty threads do
+   * NOT count as stale — they keep the source alive. The caller is
+   * responsible for filtering out sources still referenced by other domains
+   * (skills, knowledge bases) before deletion.
+   */
+  abstract findSourceIdsWithOnlyStaleDirectAssignments(
+    olderThan: Date,
+  ): Promise<UUID[]>;
 }

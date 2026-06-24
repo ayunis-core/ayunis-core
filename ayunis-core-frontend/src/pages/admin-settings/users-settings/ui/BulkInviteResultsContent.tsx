@@ -72,7 +72,7 @@ export default function BulkInviteResultsContent({
       <DialogFooter>
         {hasUrls && (
           <Button type="button" variant="outline" onClick={onDownloadUrls}>
-            <Download className="mr-2 h-4 w-4" />
+            <Download />
             {t('bulkInvite.downloadUrls')}
           </Button>
         )}

@@ -21,6 +21,10 @@ The models module is the central registry for AI model configuration. The abstra
 - **ModelPolicyService** (`application/services/model-policy.service.ts`): Enforces provider constraints on models. Currently validates that image-generation models only use supported providers (Azure).
 - **TeamPermittedModelValidatorService** (`application/services/team-permitted-model-validator.service.ts`): Validates team ownership and org-scoping for team-scoped permitted model operations.
 
+## Domain Value Objects
+
+- **ToolSchema** (`domain/value-objects/tool-schema.ts`): Schema-shaped view of a tool (`{ name, description, parameters }`) decoupled from the executable `Tool` entity. Inference ports and provider converters accept `ToolSchema` so callers without server-executable tools — e.g. the `openai-compat` surface, where the client owns execution — can advertise tools to the LLM without constructing a full `Tool`. `Tool` is structurally assignable to `ToolSchema`.
+
 ## Use Cases
 
 - **CreateLanguageModelUseCase** (`application/use-cases/create-language-model`): Creates a new language model in the catalog.

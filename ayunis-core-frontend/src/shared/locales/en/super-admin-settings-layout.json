@@ -6,8 +6,8 @@
     "settings": "Settings",
     "orgs": "Organizations",
     "modelsCatalog": "Models Catalog",
-    "usage": "Usage",
     "skills": "Skill Templates",
+    "academy": "Academy",
     "superAdmins": "Super Admins",
     "platformConfig": "Platform Config"
   }

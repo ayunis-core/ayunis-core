@@ -3,10 +3,7 @@
     "title": "Chats"
   },
   "filters": {
-    "searchPlaceholder": "Search chats...",
-    "agentFilterLabel": "Filter by Agent",
-    "agentFilterAll": "All Agents",
-    "noAgent": "No Agent"
+    "searchPlaceholder": "Search chats..."
   },
   "emptyState": {
     "title": "No chats yet",

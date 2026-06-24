@@ -44,7 +44,7 @@ describe('LocalPermittedModelsRepository', () => {
 
     queryService = new PermittedModelQueryService(
       permittedModelRepository,
-      permittedModelMapper as unknown as PermittedModelMapper,
+      permittedModelMapper,
     );
 
     repository = new LocalPermittedModelsRepository(
@@ -117,9 +117,7 @@ describe('LocalPermittedModelsRepository', () => {
 
     expect(permittedModelRepository.save).toHaveBeenCalledWith(savedRecord);
     expect(result).toBeInstanceOf(PermittedImageGenerationModel);
-    expect((result as PermittedImageGenerationModel).model.provider).toBe(
-      ModelProvider.AZURE,
-    );
+    expect(result.model.provider).toBe(ModelProvider.AZURE);
   });
 
   it('rejects creating a second org-scoped image-generation permitted model', async () => {

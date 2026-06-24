@@ -1,16 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { bedrock } from '@ayunis/provider-anthropic/bedrock';
+import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import { BaseAnthropicStreamInferenceHandler } from './base-anthropic.stream-inference';
-import { createBedrockClient } from '../helpers/bedrock-client-options.helper';
+import { RuntimeStreamInferenceHandler } from '../runtime/runtime-stream-inference.handler';
+import type { Model } from '../../domain/model.entity';
+import { INFERENCE_MAX_RETRIES } from '../runtime/inference-config';
 
 @Injectable()
-export class BedrockStreamInferenceHandler extends BaseAnthropicStreamInferenceHandler {
+export class BedrockStreamInferenceHandler extends RuntimeStreamInferenceHandler {
   constructor(
     private readonly configService: ConfigService,
     imageContentService: ImageContentService,
   ) {
     super(imageContentService);
-    this.client = createBedrockClient(this.configService);
+  }
+
+  protected createProvider(model: Model): ModelProvider {
+    return bedrock({
+      model: model.name,
+      maxRetries: INFERENCE_MAX_RETRIES,
+      awsRegion: this.configService.get<string>('models.bedrock.awsRegion'),
+      awsAccessKey: this.configService.get<string>(
+        'models.bedrock.awsAccessKeyId',
+      ),
+      awsSecretKey: this.configService.get<string>(
+        'models.bedrock.awsSecretAccessKey',
+      ),
+    });
   }
 }

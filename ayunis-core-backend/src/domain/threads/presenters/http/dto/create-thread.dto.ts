@@ -14,16 +14,6 @@ export class CreateThreadDto {
   modelId?: UUID;
 
   @ApiPropertyOptional({
-    description: 'The id of the agent',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    type: 'string',
-    format: 'uuid',
-  })
-  @IsUUID()
-  @IsOptional()
-  agentId?: UUID;
-
-  @ApiPropertyOptional({
     description: 'Enable anonymous mode for this thread',
     example: false,
     default: false,

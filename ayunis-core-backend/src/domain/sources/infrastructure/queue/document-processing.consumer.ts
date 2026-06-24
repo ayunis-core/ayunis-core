@@ -7,27 +7,18 @@ import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retriever
 import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
 import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
-import { IngestContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.use-case';
-import { IngestContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.command';
-import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
-import { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
 import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
-import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
-import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
+import { SourceProcessingHelper } from 'src/domain/sources/application/services/source-processing-helper.service';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
-import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import type { DocumentProcessingJobData } from '../../application/ports/document-processing.port';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
-
-/** Max concurrent embedding API calls to avoid rate limits */
-const EMBEDDING_CONCURRENCY = 20;
 
 @Processor(DOCUMENT_PROCESSING_QUEUE, { concurrency: 2 })
 export class DocumentProcessingConsumer extends WorkerHost {
@@ -37,12 +28,10 @@ export class DocumentProcessingConsumer extends WorkerHost {
     private readonly contextService: ContextService,
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
     private readonly splitTextUseCase: SplitTextUseCase,
-    private readonly ingestContentUseCase: IngestContentUseCase,
-    private readonly deleteContentUseCase: DeleteContentUseCase,
     private readonly downloadObjectUseCase: DownloadObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly sourceRepository: SourceRepository,
-    private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
+    private readonly helper: SourceProcessingHelper,
   ) {
     super();
   }
@@ -71,7 +60,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
         if (!(await this.isSourceStillProcessing(sourceId, minioPath))) return;
 
         await this.updateSourceWithContent(source, text, chunks);
-        await this.indexChunks(sourceId, orgId, chunks);
+        await this.helper.index(sourceId, orgId, chunks);
         await this.markSourceReady(sourceId, minioPath);
 
         this.logger.log('Document processing complete', {
@@ -86,11 +75,11 @@ export class DocumentProcessingConsumer extends WorkerHost {
 
         const isLastAttempt = job.attemptsMade >= (job.opts.attempts ?? 3) - 1;
         if (isLastAttempt) {
-          await this.markSourceFailed(
+          await this.helper.markFailed(
             sourceId,
             error instanceof Error ? error.message : 'Unknown processing error',
           );
-          await this.cleanupPartialIndex(sourceId);
+          await this.helper.cleanupIndex(sourceId);
           await this.cleanupMinioFile(minioPath);
         }
         throw error; // Re-throw so BullMQ handles retries
@@ -206,7 +195,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
         'Conditional update to READY failed — source was deleted or status changed',
         { sourceId },
       );
-      await this.cleanupPartialIndex(sourceId);
+      await this.helper.cleanupIndex(sourceId);
     }
     await this.cleanupMinioFile(minioPath);
   }
@@ -224,65 +213,6 @@ export class DocumentProcessingConsumer extends WorkerHost {
       chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
     }
     return Buffer.concat(chunks);
-  }
-
-  private async indexChunks(
-    sourceId: UUID,
-    orgId: UUID,
-    chunks: TextSourceContentChunk[],
-  ): Promise<void> {
-    // Delete any existing index entries (handles re-processing)
-    await this.deleteContentUseCase.execute(
-      new DeleteContentCommand({ documentId: sourceId }),
-    );
-
-    // Dynamic import required: p-limit is ESM-only, our codebase uses CJS
-    const { default: pLimit } = await import('p-limit');
-    const limit = pLimit(EMBEDDING_CONCURRENCY);
-    await Promise.all(
-      chunks.map((chunk) =>
-        limit(async () => {
-          await this.ingestContentUseCase.execute(
-            new IngestContentCommand({
-              orgId,
-              documentId: sourceId,
-              chunkId: chunk.id,
-              content: chunk.content,
-              type: IndexType.PARENT_CHILD,
-            }),
-          );
-        }),
-      ),
-    );
-  }
-
-  private async markSourceFailed(
-    sourceId: UUID,
-    errorMessage: string,
-  ): Promise<void> {
-    try {
-      await this.markSourceFailedUseCase.execute(
-        new MarkSourceFailedCommand({ sourceId, errorMessage }),
-      );
-    } catch (err) {
-      this.logger.error('Failed to mark source as failed', {
-        sourceId,
-        error: err as Error,
-      });
-    }
-  }
-
-  private async cleanupPartialIndex(sourceId: UUID): Promise<void> {
-    try {
-      await this.deleteContentUseCase.execute(
-        new DeleteContentCommand({ documentId: sourceId }),
-      );
-    } catch (err) {
-      this.logger.warn('Failed to clean up partial vector index entries', {
-        sourceId,
-        error: err as Error,
-      });
-    }
   }
 
   private async cleanupMinioFile(minioPath: string): Promise<void> {

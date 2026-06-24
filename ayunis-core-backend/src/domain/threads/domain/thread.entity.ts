@@ -10,13 +10,13 @@ export class Thread {
   id: UUID;
   userId: UUID;
   model?: PermittedLanguageModel;
-  agentId?: UUID;
   sourceAssignments?: SourceAssignment[];
   mcpIntegrationIds: UUID[];
   knowledgeBaseAssignments?: KnowledgeBaseAssignment[];
   title?: string;
   messages: Message[];
   isAnonymous: boolean;
+  lastActivityAt: Date;
   createdAt: Date;
   updatedAt: Date;
 
@@ -24,20 +24,19 @@ export class Thread {
     id?: UUID;
     userId: UUID;
     model?: PermittedLanguageModel;
-    agentId?: UUID;
     sourceAssignments?: SourceAssignment[];
     mcpIntegrationIds?: UUID[];
     knowledgeBaseAssignments?: KnowledgeBaseAssignment[];
     title?: string;
     messages: Message[];
     isAnonymous?: boolean;
+    lastActivityAt?: Date;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
     this.id = params.id ?? randomUUID();
     this.userId = params.userId;
     this.model = params.model;
-    this.agentId = params.agentId;
     this.sourceAssignments = params.sourceAssignments;
     this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
     this.knowledgeBaseAssignments = params.knowledgeBaseAssignments;
@@ -46,6 +45,9 @@ export class Thread {
     this.isAnonymous = params.isAnonymous ?? false;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
+    // A freshly created thread's last activity is its creation time; it is
+    // bumped whenever a message is added (see RecordThreadActivityUseCase).
+    this.lastActivityAt = params.lastActivityAt ?? this.createdAt;
   }
 
   getLastMessage(): Message | undefined {

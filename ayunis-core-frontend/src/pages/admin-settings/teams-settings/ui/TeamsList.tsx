@@ -10,7 +10,6 @@ import {
   ItemTitle,
   ItemDescription,
 } from '@/shared/ui/shadcn/item';
-import { TeamsEmptyState } from './TeamsEmptyState';
 import { useDeleteTeam } from '../api/useDeleteTeam';
 import type { Team } from '../model/types';
 
@@ -22,10 +21,6 @@ interface TeamsListProps {
 export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const { deleteTeam, isDeleting } = useDeleteTeam();
-
-  if (teams.length === 0) {
-    return <TeamsEmptyState />;
-  }
 
   return (
     <div className="space-y-3">
@@ -69,13 +64,14 @@ export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
             <Button
               variant="ghost"
               size="icon"
+              className="text-destructive hover:text-destructive"
               onClick={(e) => {
                 e.stopPropagation();
                 deleteTeam(team.id);
               }}
               disabled={isDeleting}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 />
             </Button>
             <Link
               to="/admin-settings/teams/$id"

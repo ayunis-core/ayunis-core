@@ -19,30 +19,36 @@ jobs:
         working-directory: ayunis-core-backend
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: ayunis-core-backend/package-lock.json
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace packages
+        run: pnpm run build:deps
 
       - name: Run dependency check
-        run: npm run deps:check
+        run: pnpm run deps:check
 
       - name: Generate violation report (on failure)
         if: failure()
         run: |
-          npm run deps:check -- --output-type err-html > dependency-violations.html || true
+          pnpm exec dependency-cruiser src --config .dependency-cruiser.cjs --ignore-known --output-type err-html > dependency-violations.html || true
           echo "::error::Backend architecture violations detected. See artifact for details."
 
       - name: Upload violation report
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: backend-dependency-violations
           path: ayunis-core-backend/dependency-violations.html
@@ -56,30 +62,33 @@ jobs:
         working-directory: ayunis-core-frontend
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: ayunis-core-frontend/package-lock.json
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Run dependency check
-        run: npm run deps:check
+        run: pnpm run deps:check
 
       - name: Generate violation report (on failure)
         if: failure()
         run: |
-          npm run deps:check -- --output-type err-html > dependency-violations.html || true
+          pnpm exec dependency-cruiser src --config .dependency-cruiser.cjs --ignore-known --output-type err-html > dependency-violations.html || true
           echo "::error::Frontend FSD violations detected. See artifact for details."
 
       - name: Upload violation report
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-dependency-violations
           path: ayunis-core-frontend/dependency-violations.html

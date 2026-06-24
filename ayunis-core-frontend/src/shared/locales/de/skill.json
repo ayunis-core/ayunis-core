@@ -3,7 +3,8 @@
     "skills": "Fähigkeiten"
   },
   "shared": {
-    "badge": "Freigegeben"
+    "badge": "Freigegeben",
+    "by": "Geteilt von {{name}}"
   },
   "tabs": {
     "configuration": "Konfiguration",
@@ -117,13 +118,15 @@
     "fileSourceTooLargeError": "Datei ist zu groß. Maximale Dateigröße beträgt 25 MB.",
     "fileSourceTooManyPagesError": "Dokument hat zu viele Seiten zur Verarbeitung.",
     "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist ausgelastet. Bitte versuchen Sie es später erneut.",
-    "fileSourceTimeoutError": "Die Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex."
+    "fileSourceTimeoutError": "Die Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex.",
+    "sourceLimitExceededError": "Ein Skill kann maximal 20 Quellen enthalten. Bitte entfernen Sie eine, bevor Sie eine weitere hinzufügen."
   },
   "mcpIntegrations": {
     "title": "Integrationen",
     "description": "Verbinden Sie externe MCP-Server, um die Fähigkeiten zu erweitern",
     "toggleAriaLabel": "{{name}} Integration umschalten",
     "retryButton": "Erneut versuchen",
+    "configRequiredBadge": "Konfiguration erforderlich",
     "success": {
       "connected": "Integration verbunden",
       "disconnected": "Integration getrennt"

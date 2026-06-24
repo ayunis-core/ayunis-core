@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/prefer-read-only-props */
 import * as React from 'react';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import { CheckIcon, ChevronRightIcon, CircleIcon } from 'lucide-react';
@@ -6,16 +7,16 @@ import { cn } from '@/shared/lib/shadcn/utils';
 
 function DropdownMenu({
   ...props
-}: Readonly<
-  React.ComponentProps<typeof DropdownMenuPrimitive.Root>
+}: React.ComponentProps<
+  typeof DropdownMenuPrimitive.Root
 >): React.ReactElement {
   return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
 }
 
 function DropdownMenuPortal({
   ...props
-}: Readonly<
-  React.ComponentProps<typeof DropdownMenuPrimitive.Portal>
+}: React.ComponentProps<
+  typeof DropdownMenuPrimitive.Portal
 >): React.ReactElement {
   return (
     <DropdownMenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
@@ -169,7 +170,7 @@ function DropdownMenuLabel({
       data-slot="dropdown-menu-label"
       data-inset={inset}
       className={cn(
-        'px-2 py-1.5 text-sm font-medium data-[inset]:pl-8',
+        'text-muted-foreground px-2 py-1.5 text-xs font-medium data-[inset]:pl-8',
         className,
       )}
       {...props}
@@ -210,9 +211,7 @@ function DropdownMenuShortcut({
 
 function DropdownMenuSub({
   ...props
-}: Readonly<
-  React.ComponentProps<typeof DropdownMenuPrimitive.Sub>
->): React.ReactElement {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Sub>): React.ReactElement {
   return <DropdownMenuPrimitive.Sub data-slot="dropdown-menu-sub" {...props} />;
 }
 

@@ -27,11 +27,11 @@ export default function InviteMenuButton() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setSingleInviteOpen(true)}>
-            <UserPlus className="mr-2 h-4 w-4" />
+            <UserPlus />
             {t('inviteMenu.inviteOne')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setBulkInviteOpen(true)}>
-            <Users className="mr-2 h-4 w-4" />
+            <Users />
             {t('inviteMenu.inviteMany')}
           </DropdownMenuItem>
         </DropdownMenuContent>

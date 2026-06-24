@@ -46,7 +46,8 @@ describe('DeleteKnowledgeBaseUseCase', () => {
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
-    } as jest.Mocked<KnowledgeBaseRepository>;
+      countSourcesByKnowledgeBaseId: jest.fn(),
+    };
 
     mockGetSourcesByKbId = {
       execute: jest.fn(),
@@ -81,13 +82,13 @@ describe('DeleteKnowledgeBaseUseCase', () => {
 
     const sources = [
       new UrlSource({
-        id: '44444444-4444-4444-4444-444444444444' as UUID,
+        id: '44444444-4444-4444-4444-444444444444',
         url: 'https://gemeinde-musterstadt.de/protokoll-01.pdf',
         name: 'Protokoll Januar',
         type: TextType.WEB,
       }),
       new UrlSource({
-        id: '55555555-5555-5555-5555-555555555555' as UUID,
+        id: '55555555-5555-5555-5555-555555555555',
         url: 'https://gemeinde-musterstadt.de/protokoll-02.pdf',
         name: 'Protokoll Februar',
         type: TextType.WEB,

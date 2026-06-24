@@ -34,6 +34,7 @@ import { RemoveSourceFromSkillCommand } from '../../application/use-cases/remove
 import { ListSkillSourcesQuery } from '../../application/use-cases/list-skill-sources/list-skill-sources.query';
 
 import { SkillAccessService } from '../../application/services/skill-access.service';
+import { SkillCreatorNameService } from '../../application/services/skill-creator-name.service';
 
 import {
   SkillResponseDto,
@@ -55,6 +56,7 @@ import { Skill } from '../../domain/skill.entity';
 import {
   detectFileType,
   getCanonicalMimeType,
+  isAudioFile,
   isDocumentFile,
   isPlainTextFile,
   isSpreadsheetFile,
@@ -86,6 +88,7 @@ export class SkillSourcesController {
     private readonly startDocumentProcessingUseCase: StartDocumentProcessingUseCase,
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
     private readonly skillAccessService: SkillAccessService,
+    private readonly skillCreatorNameService: SkillCreatorNameService,
   ) {}
 
   @Get(':id/sources')
@@ -195,7 +198,10 @@ export class SkillSourcesController {
 
       fs.unlinkSync(file.path);
       const context = await this.skillAccessService.resolveUserContext(skillId);
-      return this.skillDtoMapper.toDto(updatedSkill, context);
+      const creatorName = context.isShared
+        ? await this.skillCreatorNameService.resolveOne(updatedSkill.userId)
+        : null;
+      return this.skillDtoMapper.toDto(updatedSkill, context, creatorName);
     } catch (error: unknown) {
       this.logger.error('addFileSource', { error: error as Error });
       fs.unlinkSync(file.path);
@@ -244,7 +250,11 @@ export class SkillSourcesController {
   ): Promise<Skill> {
     const detectedType = detectFileType(file.mimetype, file.originalname);
 
-    if (isDocumentFile(detectedType) || isPlainTextFile(detectedType)) {
+    if (
+      isDocumentFile(detectedType) ||
+      isPlainTextFile(detectedType) ||
+      isAudioFile(detectedType)
+    ) {
       const fileData = fs.readFileSync(file.path);
       const canonicalMimeType = getCanonicalMimeType(detectedType);
       if (!canonicalMimeType) {
@@ -269,7 +279,19 @@ export class SkillSourcesController {
     } else {
       throw new UnsupportedFileTypeError(
         detectedType === 'unknown' ? file.originalname : detectedType,
-        ['PDF', 'DOCX', 'PPTX', 'TXT', 'CSV', 'XLSX', 'XLS'],
+        [
+          'PDF',
+          'DOCX',
+          'PPTX',
+          'TXT',
+          'CSV',
+          'XLSX',
+          'XLS',
+          'MP3',
+          'M4A',
+          'WAV',
+          'WEBM',
+        ],
       );
     }
   }
