@@ -283,7 +283,7 @@ A page **cannot** import from:
 3. **Regenerate route tree**:
 
    ```bash
-   npx tsr generate
+   pnpm exec tsr generate
    ```
 
    This updates `src/app/routeTree.gen.ts` automatically.
@@ -291,9 +291,9 @@ A page **cannot** import from:
 4. **Validate**:
 
    ```bash
-   npm run lint
-   npx tsc --noEmit
-   npm run build
+   pnpm run lint
+   pnpm exec tsc --noEmit
+   pnpm run build
    ```
 
 5. **Visual check**: Navigate to the new route in the browser and verify it renders.

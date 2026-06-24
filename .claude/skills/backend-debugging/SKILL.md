@@ -73,7 +73,7 @@ A mapper's `instanceof` or `switch` doesn't cover all cases. Check what the data
 ```bash
 # Quick database query through the dev stack:
 cd ayunis-core-backend
-npx ts-node -r tsconfig-paths/register -e "
+pnpm exec ts-node -r tsconfig-paths/register -e "
 import './src/config/env';
 import { DataSource } from 'typeorm';
 // ... query the relevant table
@@ -90,5 +90,5 @@ import { DataSource } from 'typeorm';
 
 ```bash
 cd ayunis-core-backend
-npm run lint && npx tsc --noEmit && npm run test
+pnpm run lint && pnpm exec tsc --noEmit && pnpm run test
 ```

@@ -35,9 +35,18 @@ Parse out:
 
 If anything material is unclear or the premise looks off, stop and ask Daniel before starting. Don't invent scope.
 
-### 3. Mark In Progress
+### 3. Mark started
+
+Move the ticket to the team's "started" state. **The state name is not the same
+across teams** — see the per-team state-names table in the `manage-linear` skill
+and use the team's actual started-state name. For AYC tickets this is
+`"In Development"`, not `"In Progress"`:
 
 ```bash
+# AYC ticket
+linear issue update <ID> --state "In Development"
+
+# Other teams (default until proven otherwise)
 linear issue update <ID> --state "In Progress"
 ```
 
@@ -95,7 +104,12 @@ If validation passes, no blockers remain, and Daniel is satisfied with the summa
 linear issue update <ID> --state "Done"
 ```
 
-If a blocker follow-up was created, leave the ticket In Progress and call that out instead.
+(`Done` is the standard closed-state name and currently shared across the AYC
+team — check `manage-linear`'s per-team state-names table if working in a team
+that diverges.)
+
+If a blocker follow-up was created, leave the ticket in the started state and
+call that out instead.
 
 ## Rules
 
