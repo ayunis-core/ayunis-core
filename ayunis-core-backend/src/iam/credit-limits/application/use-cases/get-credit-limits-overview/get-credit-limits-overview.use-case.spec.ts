@@ -6,6 +6,7 @@ import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-
 import { ListTeamsUseCase } from 'src/iam/teams/application/use-cases/list-teams/list-teams.use-case';
 import { GetMonthlyCreditUsageForUserUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-user/get-monthly-credit-usage-for-user.use-case';
 import { GetMonthlyCreditUsageForTeamUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.use-case';
+import { GetMonthlyCreditLimitUseCase } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
 import { CreditLimitRepository } from '../../ports/credit-limit.repository';
 import { CreditLimit } from '../../../domain/credit-limit.entity';
 import { GetCreditLimitsOverviewUseCase } from './get-credit-limits-overview.use-case';
@@ -17,6 +18,7 @@ describe('GetCreditLimitsOverviewUseCase', () => {
   let listTeams: { execute: jest.Mock };
   let getUserUsage: { execute: jest.Mock };
   let getTeamUsage: { execute: jest.Mock };
+  let getMonthlyLimit: { execute: jest.Mock };
 
   const orgId = '11111111-1111-1111-1111-111111111111' as UUID;
   const userId = '22222222-2222-2222-2222-222222222222' as UUID;
@@ -36,6 +38,12 @@ describe('GetCreditLimitsOverviewUseCase', () => {
     listTeams = { execute: jest.fn().mockResolvedValue([]) };
     getUserUsage = { execute: jest.fn().mockResolvedValue({ creditsUsed: 0 }) };
     getTeamUsage = { execute: jest.fn().mockResolvedValue({ creditsUsed: 0 }) };
+    getMonthlyLimit = {
+      execute: jest.fn().mockResolvedValue({
+        monthlyCredits: null,
+        startsAt: null,
+      }),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -51,6 +59,10 @@ describe('GetCreditLimitsOverviewUseCase', () => {
         {
           provide: GetMonthlyCreditUsageForTeamUseCase,
           useValue: getTeamUsage,
+        },
+        {
+          provide: GetMonthlyCreditLimitUseCase,
+          useValue: getMonthlyLimit,
         },
       ],
     }).compile();

@@ -19,6 +19,7 @@ import { CreditLimitDtoMapper } from './presenters/http/mappers/credit-limit-dto
 import { TeamsModule } from '../teams/teams.module';
 import { UsersModule } from '../users/users.module';
 import { UsageModule } from '../../domain/usage/usage.module';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { UsageModule } from '../../domain/usage/usage.module';
     TeamsModule,
     UsersModule,
     UsageModule,
+    SubscriptionsModule,
   ],
   controllers: [CreditLimitsController],
   providers: [
