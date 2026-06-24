@@ -19,9 +19,11 @@ Every change follows red-green TDD. Do NOT write production code without a faili
 
 ```bash
 # During each cycle:
-npm run test -- --testPathPattern=<module>   # Run focused tests (red → green)
-npm run lint && npx tsc --noEmit && npm run test  # Full validation (refactor step)
+pnpm run test -- --testPathPatterns=<module>  # Run focused tests (red → green)
+pnpm exec eslint <touched-files> && pnpm exec tsc --noEmit && pnpm run test  # Full validation (refactor step)
 ```
+
+> The Jest flag is `--testPathPatterns` (plural). The singular `--testPathPattern` was removed and now errors out: `Option testPathPattern was replaced by --testPathPatterns`.
 
 ### What Makes a Meaningful Test
 
@@ -57,9 +59,17 @@ it("should work", async () => {
 ## Validation Sequence
 
 ```bash
-npm run lint                    # Must pass
-npx tsc --noEmit               # 0 type errors
-npm run test                   # All tests pass
+pnpm exec eslint <touched-files>     # Lint without rewriting unrelated files
+pnpm exec tsc --noEmit               # 0 type errors
+pnpm run test                        # All tests pass
+```
+
+> ⚠ **`pnpm run lint` is wired with `--fix`** in `ayunis-core-backend/package.json` — running it as a verification step will auto-rewrite unrelated files (migrations, fixtures, entities) and leave them in the working tree. Prefer `pnpm exec eslint <paths>` for verification. If you do run `pnpm run lint`, immediately check `git status --short` and `git restore` any files outside your change set.
+
+For an architecture cross-check before declaring done (catches the no-cross-module-port-imports / no-domain-imports-presenters rules that the pre-commit hook enforces), also run dep-cruiser:
+
+```bash
+pnpm exec depcruise src        # or whatever the project's depcheck script is
 ```
 
 ## Backend-Specific TypeScript Rules
@@ -70,9 +80,11 @@ npm run test                   # All tests pass
 
 ## Module Structure (Hexagonal)
 
+Every domain module ships a `SUMMARY.md`. Read it first when editing an existing module, and **create one when you scaffold a new module** — don't submit a PR for a new module without it. The repo convention is uniform: ~96% of existing modules have one, and Bugbot will flag any new module that lands without it.
+
 ```text
 [module]/
-├── SUMMARY.md           # ← Read this first
+├── SUMMARY.md           # ← Read this first; required for every module
 ├── domain/              # Pure entities, no decorators
 ├── application/
 │   ├── use-cases/       # Business operations
@@ -118,12 +130,15 @@ For schema changes, use the `typeorm-migrations` skill. Never write migrations b
 
 ## Completion Checklist
 
-- [ ] `npm run lint` passes
-- [ ] `npx tsc --noEmit` shows 0 errors
-- [ ] `npm run test` all pass
+- [ ] `pnpm exec eslint <touched-files>` passes (avoid `pnpm run lint` — it's wired with `--fix`)
+- [ ] `pnpm exec tsc --noEmit` shows 0 errors
+- [ ] `pnpm run test` all pass
+- [ ] `pnpm exec depcruise src` reports no new violations (catches cross-module port/presenter imports the pre-commit hook will reject)
+- [ ] `git status --short` shows only files you intended to change
 - [ ] No `any` types introduced
 - [ ] DTOs have validation decorators
 - [ ] New entities have proper mappers
+- [ ] New module has a `SUMMARY.md` at its root (the repo convention; missing files are flagged by Bugbot)
 
 ## Anti-Patterns
 

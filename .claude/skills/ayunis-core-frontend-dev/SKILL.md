@@ -18,8 +18,8 @@ Before modifying any layer, read its `SUMMARY.md` in `src/[layer]/SUMMARY.md`. T
 ## Validation Sequence
 
 ```bash
-npm run build                  # Must succeed
-npm run lint                   # Must pass
+pnpm run build                 # Must succeed
+pnpm run lint                  # Must pass
 ```
 
 ## Architecture (Feature-Sliced Design)
@@ -55,7 +55,7 @@ Keep `ui/` components focused on component logic. Extract pure functions that do
 After backend API changes, regenerate the client:
 
 ```bash
-npm run openapi:update  # Regenerates src/shared/api/generated/
+pnpm run openapi:update  # Regenerates src/shared/api/generated/
 ```
 
 **Never edit generated code manually** — it will be overwritten.
@@ -68,8 +68,8 @@ For hooks that back a form (create/update dialogs), load the **frontend-form-pat
 
 ## Completion Checklist
 
-- [ ] `npm run build` succeeds
-- [ ] `npm run lint` passes
+- [ ] `pnpm run build` succeeds
+- [ ] `pnpm run lint` passes
 - [ ] Page renders without console errors
 - [ ] No `any` types introduced
 - [ ] Import rules respected (no upward imports)

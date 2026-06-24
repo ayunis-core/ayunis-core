@@ -14,3 +14,4 @@ AGENTS.md
 .agentfiles.lock
 .claude/worktrees/
 .claude/**/*.local.*
+.claude/scheduled_tasks.lock

@@ -96,9 +96,9 @@ If more conflicts arise on the next commit, repeat from step 1.
 Don't manually resolve. Accept either side and regenerate:
 
 ```bash
-git checkout --theirs package-lock.json
-npm install
-git add package-lock.json
+git checkout --theirs pnpm-lock.yaml   # or package-lock.json for npm repos
+pnpm install                           # use the repo's package manager: pnpm for ayunis-core, npm otherwise
+git add pnpm-lock.yaml
 ```
 
 ### Auto-generated files (migrations, GraphQL schema)

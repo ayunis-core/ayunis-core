@@ -21,11 +21,11 @@ description: Add, modify, or remove feature toggles. Use when gating new feature
 2. Add property to `FeatureTogglesResponseDto` with `@ApiProperty`.
 3. Return it in `AppController.featureToggles()`.
 4. Apply `@RequireFeature(FeatureFlag.Xxx)` to the controller(s). Controller-level = gates all routes. The decorator composes `UseGuards` internally — do not add `@UseGuards(FeatureGuard)` separately.
-5. Run guard tests: `npm run test -- --testPathPattern=feature.guard`
+5. Run guard tests: `pnpm run test -- --testPathPattern=feature.guard`
 
 ### Frontend
 
-1. Regenerate API client: `VITE_API_BASE_URL=http://localhost:<backend-port>/api npm run openapi:update` from `ayunis-core-frontend/`.
+1. Regenerate API client: `VITE_API_BASE_URL=http://localhost:<backend-port>/api pnpm run openapi:update` from `ayunis-core-frontend/`.
 1. Add convenience hook in `useIsFeatureEnabled.ts` (follow `useIsSkillsEnabled` pattern).
 1. Gate sidebar item in `AppSidebar.tsx` — add to the conditional spread pattern.
 1. Gate route loaders — `throw redirect({ to: '/chat' })` when disabled (see `skills.index.tsx`).
