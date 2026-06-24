@@ -3,8 +3,10 @@
 # ---- Stage 1: Build — install workspace, build FE + BE, create prod bundle ----
 FROM node:26-alpine AS build
 
-# pnpm via corepack (version pinned by root package.json "packageManager")
-RUN corepack enable
+# pnpm via corepack (version pinned by root package.json "packageManager").
+# node:26-alpine no longer bundles corepack, so install it explicitly before
+# enabling. `corepack enable` still honors the root "packageManager" pin.
+RUN npm install -g corepack@latest && corepack enable
 # Native build deps for bcrypt (node-pre-gyp builds from source on musl/alpine)
 RUN apk add --no-cache python3 make g++ gcc
 
