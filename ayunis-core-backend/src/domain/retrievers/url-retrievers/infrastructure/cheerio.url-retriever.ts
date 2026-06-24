@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as cheerio from 'cheerio';
 import {
+  RawUrlResponse,
   UrlRetrieverHandler,
   UrlRetrieverInput,
 } from '../application/ports/url-retriever.handler';
@@ -11,7 +12,6 @@ import {
   UrlRetrieverTimeoutError,
   UrlRetrieverHttpError,
   UrlRetrieverParsingError,
-  UrlRetrieverUnsupportedContentTypeError,
   UrlRetrieverTooManyRedirectsError,
 } from '../application/url-retriever.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -29,17 +29,15 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     this.defaultTimeout = this.configService.get<number>('url.timeout') ?? 5000;
   }
 
-  async retrieveUrl(input: UrlRetrieverInput): Promise<UrlRetrieverResult> {
+  async fetch(input: UrlRetrieverInput): Promise<RawUrlResponse> {
     try {
-      return await this.fetchAndParse(input);
+      return await this.fetchRaw(input);
     } catch (error) {
       return this.handleTopLevelError(error, input.url);
     }
   }
 
-  private async fetchAndParse(
-    input: UrlRetrieverInput,
-  ): Promise<UrlRetrieverResult> {
+  private async fetchRaw(input: UrlRetrieverInput): Promise<RawUrlResponse> {
     this.logger.debug(`Retrieving URL: ${input.url} with Cheerio handler`);
 
     const timeout =
@@ -54,17 +52,13 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
       );
       clearTimeout(timeoutId);
 
-      this.validateResponse(response, finalUrl);
+      this.assertHttpOk(response, finalUrl);
 
       const contentType =
         response.headers.get('content-type')?.toLowerCase() ?? '';
-      const body = await response.text();
+      const body = Buffer.from(await response.arrayBuffer());
 
-      if (contentType.includes('text/plain')) {
-        return new UrlRetrieverResult(body.trim(), finalUrl, '');
-      }
-
-      return this.parseHtml(body, finalUrl);
+      return { contentType, finalUrl, body };
     } catch (error) {
       clearTimeout(timeoutId);
 
@@ -109,29 +103,15 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     throw new UrlRetrieverTooManyRedirectsError(input.url, MAX_REDIRECTS);
   }
 
-  private validateResponse(response: Response, url: string): void {
+  private assertHttpOk(response: Response, url: string): void {
     if (!response.ok) {
       throw new UrlRetrieverHttpError(url, response.status, {
         statusText: response.statusText,
       });
     }
-
-    const contentType =
-      response.headers.get('content-type')?.toLowerCase() ?? '';
-    if (
-      contentType &&
-      !contentType.includes('text/html') &&
-      !contentType.includes('text/plain') &&
-      !contentType.includes('xhtml')
-    ) {
-      throw new UrlRetrieverUnsupportedContentTypeError(
-        url,
-        contentType.split(';')[0].trim(),
-      );
-    }
   }
 
-  private parseHtml(html: string, url: string): UrlRetrieverResult {
+  parseHtml(html: string, url: string): UrlRetrieverResult {
     try {
       const $ = cheerio.load(html);
 

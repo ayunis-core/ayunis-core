@@ -25,7 +25,7 @@ function makeResponse({
     ok: status >= 200 && status < 300,
     statusText: 'STATUS',
     headers: { get: (name: string) => lower.get(name.toLowerCase()) ?? null },
-    text: async () => body,
+    arrayBuffer: async () => new TextEncoder().encode(body).buffer,
   } as unknown as Response;
 }
 
@@ -39,23 +39,17 @@ function redirect(location: string, status = 302): Response {
   return makeResponse({ status, headers: { location } });
 }
 
-function htmlResponse(body: string): Response {
-  return {
-    ok: true,
-    status: 200,
-    statusText: 'OK',
-    headers: { get: () => 'text/html; charset=utf-8' },
-    text: () => Promise.resolve(body),
-  } as unknown as Response;
+function makeHandler(): CheerioUrlRetrieverHandler {
+  const config = { get: () => 5000 } as unknown as ConfigService;
+  return new CheerioUrlRetrieverHandler(config);
 }
 
-describe('CheerioUrlRetrieverHandler', () => {
+describe('CheerioUrlRetrieverHandler.fetch', () => {
   let handler: CheerioUrlRetrieverHandler;
   let fetchSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    const config = { get: () => 5000 } as unknown as ConfigService;
-    handler = new CheerioUrlRetrieverHandler(config);
+    handler = makeHandler();
     fetchSpy = jest.spyOn(global, 'fetch');
     // Silence the expected error logging in handleTopLevelError.
     jest.spyOn(handler['logger'], 'error').mockImplementation(() => undefined);
@@ -65,17 +59,18 @@ describe('CheerioUrlRetrieverHandler', () => {
     jest.restoreAllMocks();
   });
 
-  it('returns parsed content without invoking onRedirect when there is no redirect', async () => {
+  it('returns the raw body and content type without invoking onRedirect when there is no redirect', async () => {
     fetchSpy.mockResolvedValueOnce(HTML_200);
     const onRedirect = jest.fn().mockResolvedValue(undefined);
 
-    const result = await handler.retrieveUrl({
+    const raw = await handler.fetch({
       url: 'https://example.com',
       onRedirect,
     });
 
-    expect(result.content).toBe('Hello');
-    expect(result.url).toBe('https://example.com');
+    expect(raw.finalUrl).toBe('https://example.com');
+    expect(raw.contentType).toContain('text/html');
+    expect(raw.body.toString('utf8')).toContain('Hello');
     expect(onRedirect).not.toHaveBeenCalled();
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     // The fetch must use manual redirect handling so the gate sees each hop.
@@ -88,15 +83,14 @@ describe('CheerioUrlRetrieverHandler', () => {
       .mockResolvedValueOnce(HTML_200);
     const onRedirect = jest.fn().mockResolvedValue(undefined);
 
-    const result = await handler.retrieveUrl({
+    const raw = await handler.fetch({
       url: 'https://start.example.com',
       onRedirect,
     });
 
     expect(onRedirect).toHaveBeenCalledTimes(1);
     expect(onRedirect).toHaveBeenCalledWith('https://target.example.org/page');
-    expect(result.content).toBe('Hello');
-    expect(result.url).toBe('https://target.example.org/page');
+    expect(raw.finalUrl).toBe('https://target.example.org/page');
   });
 
   it('resolves a relative Location against the current URL', async () => {
@@ -105,7 +99,7 @@ describe('CheerioUrlRetrieverHandler', () => {
       .mockResolvedValueOnce(HTML_200);
     const onRedirect = jest.fn().mockResolvedValue(undefined);
 
-    await handler.retrieveUrl({
+    await handler.fetch({
       url: 'https://start.example.com/a/b',
       onRedirect,
     });
@@ -120,7 +114,7 @@ describe('CheerioUrlRetrieverHandler', () => {
       .mockRejectedValue(new CrawlDomainAccessDeniedError());
 
     await expect(
-      handler.retrieveUrl({ url: 'https://start.example.com', onRedirect }),
+      handler.fetch({ url: 'https://start.example.com', onRedirect }),
     ).rejects.toBeInstanceOf(CrawlDomainAccessDeniedError);
   });
 
@@ -129,7 +123,7 @@ describe('CheerioUrlRetrieverHandler', () => {
     const onRedirect = jest.fn().mockResolvedValue(undefined);
 
     await expect(
-      handler.retrieveUrl({ url: 'https://start.example.com', onRedirect }),
+      handler.fetch({ url: 'https://start.example.com', onRedirect }),
     ).rejects.toBeInstanceOf(UrlRetrieverTooManyRedirectsError);
   });
 
@@ -137,31 +131,29 @@ describe('CheerioUrlRetrieverHandler', () => {
     fetchSpy.mockRejectedValueOnce(new Error('network down'));
 
     await expect(
-      handler.retrieveUrl({ url: 'https://example.com' }),
+      handler.fetch({ url: 'https://example.com' }),
     ).rejects.toBeInstanceOf(UrlRetrieverRetrievalError);
   });
 });
 
-describe('CheerioUrlRetrieverHandler link extraction', () => {
-  let handler: CheerioUrlRetrieverHandler;
-  const fetchMock = jest.fn();
+describe('CheerioUrlRetrieverHandler.parseHtml', () => {
+  const handler = makeHandler();
 
-  beforeAll(() => {
-    global.fetch = fetchMock;
-    const config = { get: () => 5000 } as unknown as ConfigService;
-    handler = new CheerioUrlRetrieverHandler(config);
-  });
-
-  beforeEach(() => jest.clearAllMocks());
-
-  it('resolves relative links against the page URL', async () => {
-    fetchMock.mockResolvedValue(
-      htmlResponse('<a href="/about">About</a><a href="team">Team</a>'),
+  it('extracts cleaned body text and the page title', () => {
+    const result = handler.parseHtml(
+      '<html><head><title>Hi</title></head><body>  Hello   world </body></html>',
+      'https://acme.test/',
     );
 
-    const result = await handler.retrieveUrl({
-      url: 'https://acme.test/docs/',
-    });
+    expect(result.content).toBe('Hello world');
+    expect(result.websiteTitle).toBe('Hi');
+  });
+
+  it('resolves relative links against the page URL', () => {
+    const result = handler.parseHtml(
+      '<a href="/about">About</a><a href="team">Team</a>',
+      'https://acme.test/docs/',
+    );
 
     expect(result.links).toEqual([
       'https://acme.test/about',
@@ -169,35 +161,18 @@ describe('CheerioUrlRetrieverHandler link extraction', () => {
     ]);
   });
 
-  it('keeps only http(s) links and strips fragments and duplicates', async () => {
-    fetchMock.mockResolvedValue(
-      htmlResponse(
-        [
-          '<a href="https://acme.test/a#section">A</a>',
-          '<a href="https://acme.test/a">A again</a>',
-          '<a href="mailto:hi@acme.test">Mail</a>',
-          '<a href="javascript:void(0)">JS</a>',
-          '<a href="tel:+49123">Call</a>',
-        ].join(''),
-      ),
+  it('keeps only http(s) links and strips fragments and duplicates', () => {
+    const result = handler.parseHtml(
+      [
+        '<a href="https://acme.test/a#section">A</a>',
+        '<a href="https://acme.test/a">A again</a>',
+        '<a href="mailto:hi@acme.test">Mail</a>',
+        '<a href="javascript:void(0)">JS</a>',
+        '<a href="tel:+49123">Call</a>',
+      ].join(''),
+      'https://acme.test/',
     );
 
-    const result = await handler.retrieveUrl({ url: 'https://acme.test/' });
-
     expect(result.links).toEqual(['https://acme.test/a']);
-  });
-
-  it('returns no links for plain-text responses', async () => {
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      statusText: 'OK',
-      headers: { get: () => 'text/plain' },
-      text: () => Promise.resolve('just text https://acme.test/x'),
-    });
-
-    const result = await handler.retrieveUrl({ url: 'https://acme.test/' });
-
-    expect(result.links).toEqual([]);
   });
 });
