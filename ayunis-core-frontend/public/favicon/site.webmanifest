@@ -1,6 +1,6 @@
 {
-  "name": "MyWebSite",
-  "short_name": "MySite",
+  "name": "Ayunis Core",
+  "short_name": "Ayunis",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
