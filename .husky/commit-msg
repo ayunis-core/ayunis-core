@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 # Validate commit message for required conventions
-# - Must include the prefix "LOC-" somewhere (e.g., LOC-123)
+# - Must include a task ID with an AYC-, ALO-, or LOC- prefix somewhere (e.g., AYC-123, ALO-45, LOC-7)
 # - Must start with a type prefix like feat/fix/feature/chore/etc. (Conventional Commit style)
 # Husky passes the commit message file path as $1
 
@@ -18,10 +18,10 @@ echo "$SUBJECT" | grep -qiE '^(feat|feature|fix|chore|refactor|docs|style|perf|t
   exit 1
 }
 
-# 2) Require AYC- anywhere in the message (exclude commented lines)
-if ! grep -vE '^\s*#' "$MSG_FILE" | grep -qi 'AYC-'; then
-  printf "\033[31mCommit message must include task ID with AYC- prefix (e.g., AYC-123).\033[0m\n" >&2
-  printf "Example: git commit --amend -m 'feat: validate input (AYC-123)'\n" >&2
+# 2) Require an AYC-, ALO-, or LOC- task ID anywhere in the message (exclude commented lines)
+if ! grep -vE '^\s*#' "$MSG_FILE" | grep -qiE '(AYC|ALO|LOC)-'; then
+  printf "\033[31mCommit message must include a task ID with an AYC-, ALO-, or LOC- prefix (e.g., AYC-123, ALO-45, LOC-7).\033[0m\n" >&2
+  printf "Example: git commit --amend -m 'feat: validate input (ALO-45)'\n" >&2
   exit 1
 fi
 
