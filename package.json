@@ -9,5 +9,19 @@
     "knip": "^5.86.0",
     "madge": "^8.0.0",
     "markdownlint-cli2": "^0.22.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "basic-ftp": ">=5.2.0 <6",
+      "protobufjs": ">=7.5.5 <8",
+      "puppeteer-core": "24.37.5",
+      "@types/mjml-core": "4.15.2"
+    }
+  },
+  "overridesNotes": {
+    "basic-ftp": "Patches GHSA-5rq4-664w-9x2c (path traversal). Transitive via puppeteer-core → @puppeteer/browsers → proxy-agent → pac-proxy-agent → get-uri. Not reachable in our code (html-document-export.service.ts uses system Chromium via executablePath, never downloads browsers, no proxy config), but blocks the CI security audit. Remove when @puppeteer/browsers bumps get-uri past the vulnerable range — verify with `pnpm why basic-ftp` after any puppeteer-core upgrade.",
+    "protobufjs": "Patches GHSA-xq3m-2v4x-88gg (arbitrary code execution, fixed in 7.5.5). Transitive via @google/genai. @google/genai declares `^7.5.4`, so this floor stays within its range. Remove when @google/genai's declared range moves past 7.5.5 — verify with `pnpm why protobufjs` after any @google/genai upgrade.",
+    "puppeteer-core": "Pinned to 24.37.5 (the version the npm lockfile resolved pre-pnpm-migration) to keep the workspace migration behavior-neutral. puppeteer-core 24.4x narrowed Page.setContent's waitUntil to exclude 'networkidle0'/'networkidle2'; absorbing that upgrade + adjusting PDF wait behavior belongs in its own reviewed PR. Remove this pin when intentionally upgrading puppeteer-core (see html-document-export.service.ts).",
+    "@types/mjml-core": "Pinned to 4.15.2 to match the mjml@4 runtime (sync mjml2html). @types/mjml declares @types/mjml-core:'*', which otherwise resolves to 5.0.0 (the async mjml v5 API) and breaks the sync `.html` usage in mjml.handler.ts. Remove when upgrading to mjml v5."
   }
 }
