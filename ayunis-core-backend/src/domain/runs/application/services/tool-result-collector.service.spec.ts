@@ -1,5 +1,5 @@
 import { AnonymizationFailedError } from 'src/common/anonymization/application/anonymization.errors';
-import type { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
+import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { RunAnonymizationUnavailableError } from '../runs.errors';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
@@ -13,7 +13,6 @@ import type { ContextService } from 'src/common/context/services/context.service
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { ToolResultCollectorService } from './tool-result-collector.service';
 import { randomUUID } from 'crypto';
-import type { JSONSchema } from 'json-schema-to-ts';
 
 // --- Helpers ---
 
@@ -22,7 +21,7 @@ class MockTool extends Tool {
     super({
       name,
       description: 'mock',
-      parameters: {} as JSONSchema,
+      parameters: {},
       type,
     });
   }
@@ -61,7 +60,7 @@ describe('ToolResultCollectorService', () => {
   let service: ToolResultCollectorService;
   let executeToolUseCase: jest.Mocked<ExecuteToolUseCase>;
   let checkToolCapabilitiesUseCase: jest.Mocked<CheckToolCapabilitiesUseCase>;
-  let anonymizeTextUseCase: jest.Mocked<AnonymizeTextUseCase>;
+  let anonymizeTextForThreadUseCase: jest.Mocked<AnonymizeTextForThreadUseCase>;
   let contextService: jest.Mocked<ContextService>;
 
   const orgId = randomUUID();
@@ -77,9 +76,9 @@ describe('ToolResultCollectorService', () => {
       execute: jest.fn(),
     } as unknown as jest.Mocked<CheckToolCapabilitiesUseCase>;
 
-    anonymizeTextUseCase = {
+    anonymizeTextForThreadUseCase = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<AnonymizeTextUseCase>;
+    } as unknown as jest.Mocked<AnonymizeTextForThreadUseCase>;
 
     contextService = {
       get: jest.fn().mockReturnValue(randomUUID()),
@@ -92,7 +91,7 @@ describe('ToolResultCollectorService', () => {
     service = new ToolResultCollectorService(
       executeToolUseCase,
       checkToolCapabilitiesUseCase,
-      anonymizeTextUseCase,
+      anonymizeTextForThreadUseCase,
       contextService,
       mockEventEmitter as never,
     );
@@ -109,7 +108,7 @@ describe('ToolResultCollectorService', () => {
         isExecutable: false,
       });
 
-      const results = await service.collectToolResults({
+      const { contents: results } = await service.collectToolResults({
         thread,
         tools: [tool],
         input: null,
@@ -134,7 +133,7 @@ describe('ToolResultCollectorService', () => {
 
       executeToolUseCase.execute.mockResolvedValue('backend result');
 
-      const results = await service.collectToolResults({
+      const { contents: results } = await service.collectToolResults({
         thread,
         tools: [tool],
         input: null,
@@ -162,7 +161,7 @@ describe('ToolResultCollectorService', () => {
 
       executeToolUseCase.execute.mockResolvedValue('artifact created');
 
-      const results = await service.collectToolResults({
+      const { contents: results } = await service.collectToolResults({
         thread,
         tools: [tool],
         input: null,
@@ -194,7 +193,7 @@ describe('ToolResultCollectorService', () => {
         new Error('DB constraint violation'),
       );
 
-      const results = await service.collectToolResults({
+      const { contents: results } = await service.collectToolResults({
         thread,
         tools: [tool],
         input: null,
@@ -274,7 +273,7 @@ describe('ToolResultCollectorService', () => {
         'Max Mustermann, Hauptstraße 42, 80331 München, Tel: 089-12345678',
       );
 
-      anonymizeTextUseCase.execute.mockRejectedValue(
+      anonymizeTextForThreadUseCase.execute.mockRejectedValue(
         new AnonymizationFailedError('Connection refused'),
       );
 
@@ -294,6 +293,62 @@ describe('ToolResultCollectorService', () => {
           isAnonymous: true,
         }),
       ).rejects.toThrow(RunAnonymizationUnavailableError);
+    });
+
+    it('should return anonymized text and the mask dictionary for PII-returning tools', async () => {
+      const toolName = 'search_citizens_database';
+      const tool = {
+        name: toolName,
+        type: 'search',
+        returnsPii: true,
+      } as unknown as Tool;
+
+      const toolUseContent = Object.assign(
+        Object.create(ToolUseMessageContent.prototype),
+        { id: toolUseId, name: toolName, params: { query: 'Mustermann' } },
+      );
+
+      checkToolCapabilitiesUseCase.execute.mockReturnValue({
+        isDisplayable: false,
+        isExecutable: true,
+      });
+
+      executeToolUseCase.execute.mockResolvedValue(
+        'Max Mustermann, Hauptstraße 42',
+      );
+
+      const mask = {
+        token: '{{pii:PERSON_NAME_1}}',
+        value: 'Max Mustermann',
+        category: 'person_name',
+      };
+      anonymizeTextForThreadUseCase.execute.mockResolvedValue({
+        originalText: 'Max Mustermann, Hauptstraße 42',
+        anonymizedText: '{{pii:PERSON_NAME_1}}, {{pii:LOCATION_1}}',
+        replacements: [],
+        newMasks: [],
+        masks: [mask],
+      } as never);
+
+      const thread = {
+        id: threadId,
+        getLastMessage: jest.fn().mockReturnValue({
+          content: [toolUseContent],
+        }),
+      } as unknown as Thread;
+
+      const { contents, piiMasks } = await service.collectToolResults({
+        thread,
+        tools: [tool],
+        input: null,
+        orgId,
+        isAnonymous: true,
+      });
+
+      expect(contents[0].result).toBe(
+        '{{pii:PERSON_NAME_1}}, {{pii:LOCATION_1}}',
+      );
+      expect(piiMasks).toEqual([mask]);
     });
 
     it('should not anonymize tool results when anonymous mode is disabled', async () => {
@@ -324,7 +379,7 @@ describe('ToolResultCollectorService', () => {
         }),
       } as unknown as Thread;
 
-      const results = await service.collectToolResults({
+      const { contents: results } = await service.collectToolResults({
         thread,
         tools: [tool],
         input: null,
@@ -335,7 +390,7 @@ describe('ToolResultCollectorService', () => {
       expect(results).toHaveLength(1);
       expect(results[0]).toBeInstanceOf(ToolResultMessageContent);
       expect(results[0].result).toBe(rawResult);
-      expect(anonymizeTextUseCase.execute).not.toHaveBeenCalled();
+      expect(anonymizeTextForThreadUseCase.execute).not.toHaveBeenCalled();
     });
   });
 });

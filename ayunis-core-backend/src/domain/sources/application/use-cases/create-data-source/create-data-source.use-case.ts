@@ -22,7 +22,16 @@ export class CreateDataSourceUseCase {
   async execute(command: CreateCSVDataSourceCommand): Promise<CSVDataSource>;
   async execute(command: CreateDataSourceCommand): Promise<DataSource>;
   async execute(command: CreateDataSourceCommand): Promise<DataSource> {
-    this.logger.log('execute', { command });
+    this.logger.log('execute', {
+      name:
+        command instanceof CreateCSVDataSourceCommand
+          ? command.name
+          : undefined,
+      rowCount:
+        command instanceof CreateCSVDataSourceCommand
+          ? command.data.rows.length
+          : undefined,
+    });
     try {
       if (command instanceof CreateCSVDataSourceCommand) {
         const dataSource = new CSVDataSource({

@@ -12,6 +12,8 @@ export enum ArtifactErrorCode {
   ARTIFACT_CONTENT_TOO_LARGE = 'ARTIFACT_CONTENT_TOO_LARGE',
   ARTIFACT_EDIT_NOT_FOUND = 'ARTIFACT_EDIT_NOT_FOUND',
   ARTIFACT_EDIT_AMBIGUOUS = 'ARTIFACT_EDIT_AMBIGUOUS',
+  ARTIFACT_LETTERHEAD_NOT_SUPPORTED = 'ARTIFACT_LETTERHEAD_NOT_SUPPORTED',
+  ARTIFACT_NOT_EXPORTABLE = 'ARTIFACT_NOT_EXPORTABLE',
   ARTIFACT_UNEXPECTED = 'ARTIFACT_UNEXPECTED',
 }
 
@@ -118,6 +120,28 @@ export class ArtifactEditAmbiguousError extends ArtifactError {
       ArtifactErrorCode.ARTIFACT_EDIT_AMBIGUOUS,
       400,
       { editIndex, ...metadata },
+    );
+  }
+}
+
+export class ArtifactLetterheadNotSupportedError extends ArtifactError {
+  constructor(artifactType: string, metadata?: ErrorMetadata) {
+    super(
+      `Letterheads are not supported for artifacts of type '${artifactType}'`,
+      ArtifactErrorCode.ARTIFACT_LETTERHEAD_NOT_SUPPORTED,
+      400,
+      { artifactType, ...metadata },
+    );
+  }
+}
+
+export class ArtifactNotExportableError extends ArtifactError {
+  constructor(artifactType: string, metadata?: ErrorMetadata) {
+    super(
+      `Artifacts of type '${artifactType}' cannot be exported server-side`,
+      ArtifactErrorCode.ARTIFACT_NOT_EXPORTABLE,
+      400,
+      { artifactType, ...metadata },
     );
   }
 }

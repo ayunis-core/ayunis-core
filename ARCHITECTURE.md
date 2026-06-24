@@ -2,7 +2,7 @@
 
 **2-word:** AI Gateway
 
-**8-word:** Multi-tenant AI gateway with agents, tools, and RAG.
+**8-word:** Multi-tenant AI gateway with skills, tools, and RAG.
 
 **32-word:** Ayunis Core is an open-source AI gateway enabling municipalities to run customizable AI assistants with multi-provider LLM support, tool integration, document retrieval (RAG), and organization-scoped access control. Hexagonal architecture separates domain logic from infrastructure.
 
@@ -10,7 +10,7 @@
 
 ## Repository Structure
 
-```
+```text
 ayunis-core/
 ├── ayunis-core-backend/       # NestJS API server
 ├── ayunis-core-frontend/      # React SPA (Feature-Sliced Design)
@@ -31,7 +31,6 @@ ayunis-core/
 
 | Module | Summary | Detail |
 |--------|---------|--------|
-| [agents](ayunis-core-backend/src/domain/agents/SUMMARY.md) | AI Assistants | Configurable AI agents with tools and sources |
 | [threads](ayunis-core-backend/src/domain/threads/SUMMARY.md) | Conversations | Chat session management with organization sharing |
 | [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md) | Chat History | Message storage and retrieval |
 | [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md) | AI Execution | LLM request tracking and streaming |
@@ -47,6 +46,9 @@ ayunis-core/
 | [transcriptions](ayunis-core-backend/src/domain/transcriptions/SUMMARY.md) | Voice | Audio transcription service |
 | [usage](ayunis-core-backend/src/domain/usage/SUMMARY.md) | Metering | Token and credit usage tracking |
 | [skill-templates](ayunis-core-backend/src/domain/skill-templates/SUMMARY.md) | Blueprints | Admin-managed skill templates with distribution modes |
+| [academy](ayunis-core-backend/src/domain/academy/SUMMARY.md) | Learning | Academy chapters and lessons managed by super admins |
+| [anonymization-settings](ayunis-core-backend/src/domain/anonymization-settings) | Privacy Config | Org-level PII whitelist for anonymous mode |
+| [thread-pii-masks](ayunis-core-backend/src/domain/thread-pii-masks/SUMMARY.md) | Privacy | Per-thread PII mask dictionary for anonymous mode |
 
 ### IAM Modules — Identity & Access Management
 
@@ -57,6 +59,7 @@ ayunis-core/
 | [users](ayunis-core-backend/src/iam/users/SUMMARY.md) | Accounts | User profiles and credentials |
 | [orgs](ayunis-core-backend/src/iam/orgs/SUMMARY.md) | Tenants | Multi-tenant organization management |
 | [subscriptions](ayunis-core-backend/src/iam/subscriptions/SUMMARY.md) | Billing | Package and subscription management |
+| [addons](ayunis-core-backend/src/iam/addons/SUMMARY.md) | Add-ons | Per-org add-on activation managed by super admins |
 | [quotas](ayunis-core-backend/src/iam/quotas/SUMMARY.md) | Limits | Usage quota enforcement |
 | [teams](ayunis-core-backend/src/iam/teams/SUMMARY.md) | Groups | Team-based access control |
 | [invites](ayunis-core-backend/src/iam/invites/SUMMARY.md) | Onboarding | User invitation flows |
@@ -85,7 +88,7 @@ ayunis-core/
 
 | Layer | Summary | Detail |
 |-------|---------|--------|
-| [pages](ayunis-core-frontend/src/pages/SUMMARY.md) | Routes | Auth, chat, agents, prompts, settings |
+| [pages](ayunis-core-frontend/src/pages/SUMMARY.md) | Routes | Auth, chat, skills, knowledge bases, settings |
 | [features](ayunis-core-frontend/src/features/SUMMARY.md) | Business Logic | Theme, language, models, usage tracking |
 | [widgets](ayunis-core-frontend/src/widgets/SUMMARY.md) | Composites | Sidebar, chat input, markdown renderer |
 | [shared](ayunis-core-frontend/src/shared/SUMMARY.md) | Primitives | UI components, generated API client, i18n |
@@ -96,7 +99,7 @@ ayunis-core/
 
 ### Hexagonal Architecture (Backend)
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────┐
 │                        Presenters                            │
 │                   (HTTP Controllers)                         │
@@ -119,7 +122,7 @@ ayunis-core/
 
 ### Feature-Sliced Design (Frontend)
 
-```
+```text
 pages → widgets → features → shared
   ↓        ↓         ↓          ↓
 Routes  Composites  Logic    Primitives
@@ -134,4 +137,4 @@ Import rules: layers only depend on layers to their right.
 - **Adding a backend feature**: Start at the relevant domain module's SUMMARY.md
 - **Adding a frontend page**: See [pages/SUMMARY.md](ayunis-core-frontend/src/pages/SUMMARY.md)
 - **Understanding auth**: [authentication](ayunis-core-backend/src/iam/authentication/SUMMARY.md) + [authorization](ayunis-core-backend/src/iam/authorization/SUMMARY.md)
-- **AI execution flow**: [agents](ayunis-core-backend/src/domain/agents/SUMMARY.md) → [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md) → [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md)
+- **AI execution flow**: [threads](ayunis-core-backend/src/domain/threads/SUMMARY.md) → [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md) → [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md)

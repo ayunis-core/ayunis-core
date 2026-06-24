@@ -1,9 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { authenticationControllerMe } from '@/shared/api';
 
 export const Route = createFileRoute('/_authenticated/admin-settings/')({
-  beforeLoad: async () => {
-    const user = await authenticationControllerMe();
+  beforeLoad: ({ context: { user } }) => {
     const isAdmin = user.role === 'admin';
     if (!isAdmin) {
       throw redirect({ to: '/' });

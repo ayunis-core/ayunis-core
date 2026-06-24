@@ -7,6 +7,7 @@ import { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
 import { ParentChildIndexerRepositoryPort } from '../../ports/parent-child-indexer-repository.port';
 import { EmbedTextUseCase } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.use-case';
 import { EmbedTextCommand } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.command';
+import { EmbeddingPriority } from 'src/domain/rag/embeddings/domain/embedding-priority.enum';
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
 import { GetPermittedEmbeddingModelQuery } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.query';
 import type { UUID } from 'crypto';
@@ -55,6 +56,8 @@ export class SearchContentUseCase {
         model: model.model,
         texts: [query],
         orgId,
+        // Chat-query embed — jump ahead of ingestion on the shared throttle.
+        priority: EmbeddingPriority.RETRIEVAL,
       }),
     );
     this.logger.debug('Embedded query', {

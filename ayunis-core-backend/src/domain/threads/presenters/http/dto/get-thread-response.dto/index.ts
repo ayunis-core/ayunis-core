@@ -26,6 +26,8 @@ import {
   UrlSourceResponseDto,
 } from './source-response.dto';
 import { KnowledgeBaseSummaryResponseDto } from '../knowledge-base-summary-response.dto';
+import { PiiMaskResponseDto } from 'src/domain/thread-pii-masks/presenters/http/dtos/pii-mask-response.dto';
+import { McpIntegrationSummaryResponseDto } from '../mcp-integration-summary-response.dto';
 
 @ApiExtraModels(
   UserMessageResponseDto,
@@ -62,12 +64,6 @@ export class GetThreadResponseDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   permittedModelId?: UUID;
-
-  @ApiProperty({
-    description: 'Agent ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  agentId?: UUID;
 
   @ApiPropertyOptional({
     description: 'Title of the thread',
@@ -127,4 +123,17 @@ export class GetThreadResponseDto {
     type: [KnowledgeBaseSummaryResponseDto],
   })
   knowledgeBases: KnowledgeBaseSummaryResponseDto[];
+
+  @ApiProperty({
+    description:
+      'PII mask dictionary for anonymous threads — resolves {{pii:...}} tokens in message text to their original values. Empty for non-anonymous threads.',
+    type: [PiiMaskResponseDto],
+  })
+  piiMasks: PiiMaskResponseDto[];
+
+  @ApiProperty({
+    description: 'MCP integrations attached to this thread',
+    type: [McpIntegrationSummaryResponseDto],
+  })
+  mcpIntegrations: McpIntegrationSummaryResponseDto[];
 }

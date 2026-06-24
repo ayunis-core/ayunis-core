@@ -9,8 +9,8 @@ tsconfig.?????????*.json
 .pi
 .agents/
 .pi/
-.claude/
 AGENTS.md
-CLAUDE.md
 .agentfiles
 .agentfiles.lock
+.claude/worktrees/
+.claude/**/*.local.*

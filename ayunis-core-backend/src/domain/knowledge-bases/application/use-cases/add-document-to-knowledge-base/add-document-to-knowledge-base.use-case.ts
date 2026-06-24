@@ -8,8 +8,10 @@ import { StartDocumentProcessingCommand } from 'src/domain/sources/application/u
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
 import {
   KnowledgeBaseNotFoundError,
+  KnowledgeBaseSourceLimitExceededError,
   UnexpectedKnowledgeBaseError,
 } from '../../knowledge-bases.errors';
+import { KnowledgeBasesConstants } from '../../../domain/knowledge-bases.constants';
 import { AddDocumentToKnowledgeBaseCommand } from './add-document-to-knowledge-base.command';
 
 @Injectable()
@@ -31,13 +33,23 @@ export class AddDocumentToKnowledgeBaseUseCase {
     });
 
     try {
-      // 1. Validate KB exists and belongs to user (in transaction)
+      // 1. Validate KB exists and belongs to user, enforce source limit
       await this.txHost.withTransaction(async () => {
         const knowledgeBase = await this.knowledgeBaseRepository.findById(
           command.knowledgeBaseId,
         );
         if (knowledgeBase?.userId !== command.userId) {
           throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
+        }
+
+        const sourceCount =
+          await this.knowledgeBaseRepository.countSourcesByKnowledgeBaseId(
+            command.knowledgeBaseId,
+          );
+        if (sourceCount >= KnowledgeBasesConstants.MAX_SOURCES) {
+          throw new KnowledgeBaseSourceLimitExceededError(
+            KnowledgeBasesConstants.MAX_SOURCES,
+          );
         }
       });
 

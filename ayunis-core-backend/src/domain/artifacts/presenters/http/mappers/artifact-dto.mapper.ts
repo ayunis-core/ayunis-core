@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Artifact } from '../../../domain/artifact.entity';
+import { Artifact, DocumentArtifact } from '../../../domain/artifact.entity';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import {
   ArtifactResponseDto,
@@ -11,15 +11,17 @@ export class ArtifactDtoMapper {
   toDto(artifact: Artifact): ArtifactResponseDto {
     const dto = new ArtifactResponseDto();
     dto.id = artifact.id;
+    dto.type = artifact.type;
     dto.threadId = artifact.threadId;
     dto.userId = artifact.userId;
     dto.title = artifact.title;
-    dto.letterheadId = artifact.letterheadId;
+    dto.letterheadId =
+      artifact instanceof DocumentArtifact ? artifact.letterheadId : null;
     dto.currentVersionNumber = artifact.currentVersionNumber;
     dto.createdAt = artifact.createdAt.toISOString();
     dto.updatedAt = artifact.updatedAt.toISOString();
 
-    if (artifact.versions && artifact.versions.length > 0) {
+    if (artifact.versions.length > 0) {
       dto.versions = artifact.versions.map((v) => this.toVersionDto(v));
     }
 

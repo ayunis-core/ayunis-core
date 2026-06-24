@@ -23,6 +23,7 @@ import { MoreHorizontal, Edit, Trash2, UserCheck, Mail } from 'lucide-react';
 import { useUserRoleUpdate } from '../api/useUserRoleUpdate';
 import { useUserDelete } from '../api/useUserDelete';
 import { useTriggerPasswordReset } from '../api/useTriggerPasswordReset';
+import EditUserDialog from './EditUserDialog';
 import { useState, type ReactNode } from 'react';
 import type { User } from '../model/openapi';
 import type { UserResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -44,6 +45,7 @@ export default function UsersSection({
 }: Readonly<UsersSectionProps>) {
   const { t } = useTranslation('admin-settings-users');
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const { updateUserRole, isLoading: isUpdatingRole } = useUserRoleUpdate({
     onSuccessCallback: () => setLoadingUserId(null),
   });
@@ -135,8 +137,6 @@ export default function UsersSection({
               <TableHead>{t('users.name')}</TableHead>
               <TableHead>{t('users.email')}</TableHead>
               <TableHead>{t('users.role')}</TableHead>
-              <TableHead>{t('users.status')}</TableHead>
-              <TableHead>{t('users.joinDate')}</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -147,14 +147,6 @@ export default function UsersSection({
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
                   {user.role === 'admin' ? t('users.admin') : t('users.user')}
-                </TableCell>
-                <TableCell>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    {t('users.active')}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  {new Date(user.createdAt).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -168,15 +160,18 @@ export default function UsersSection({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem disabled>
-                        <Edit className="mr-2 h-4 w-4" />
+                      <DropdownMenuItem
+                        onClick={() => setEditingUser(user)}
+                        disabled={isUserLoading(user.id)}
+                      >
+                        <Edit />
                         {t('users.edit')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleRoleToggle(user)}
                         disabled={isUserLoading(user.id)}
                       >
-                        <UserCheck className="mr-2 h-4 w-4" />
+                        <UserCheck />
                         {t('users.changeRole', {
                           role:
                             user.role === 'admin'
@@ -188,15 +183,15 @@ export default function UsersSection({
                         onClick={() => handleTriggerPasswordReset(user)}
                         disabled={isUserLoading(user.id)}
                       >
-                        <Mail className="mr-2 h-4 w-4" />
+                        <Mail />
                         {t('users.sendPasswordReset')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="text-red-600"
+                        variant="destructive"
                         onClick={() => handleDeleteUser(user)}
                         disabled={isUserLoading(user.id)}
                       >
-                        <Trash2 className="mr-2 h-4 w-4" />
+                        <Trash2 />
                         {t('users.delete')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -208,6 +203,7 @@ export default function UsersSection({
         </Table>
         {paginationSlot}
       </CardContent>
+      <EditUserDialog user={editingUser} onClose={() => setEditingUser(null)} />
     </Card>
   );
 }

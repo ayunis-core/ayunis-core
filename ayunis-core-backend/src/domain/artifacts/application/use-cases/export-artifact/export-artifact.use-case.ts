@@ -8,9 +8,11 @@ import {
 import { ExportArtifactCommand } from './export-artifact.command';
 import {
   ArtifactNotFoundError,
+  ArtifactNotExportableError,
   ArtifactVersionNotFoundError,
   UnexpectedArtifactError,
 } from '../../artifacts.errors';
+import { DocumentArtifact } from '../../../domain/artifact.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -19,6 +21,9 @@ import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-case
 import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import type { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
+import { GetThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
+import { GetThreadPiiMasksQuery } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.query';
+import { deanonymizeText } from 'src/common/anonymization/domain/deanonymize-text';
 
 export interface ExportResult {
   buffer: Buffer;
@@ -36,6 +41,7 @@ export class ExportArtifactUseCase {
     private readonly contextService: ContextService,
     private readonly findLetterheadUseCase: FindLetterheadUseCase,
     private readonly downloadObjectUseCase: DownloadObjectUseCase,
+    private readonly getThreadPiiMasksUseCase: GetThreadPiiMasksUseCase,
   ) {}
 
   async execute(command: ExportArtifactCommand): Promise<ExportResult> {
@@ -50,62 +56,22 @@ export class ExportArtifactUseCase {
         throw new UnauthorizedAccessError();
       }
 
-      const artifact = await this.artifactsRepository.findByIdWithVersions(
+      const artifact = await this.loadExportableArtifact(
         command.artifactId,
         userId,
       );
-      if (!artifact) {
-        throw new ArtifactNotFoundError(command.artifactId);
-      }
-
-      const currentVersion = artifact.versions.find(
-        (v) => v.versionNumber === artifact.currentVersionNumber,
+      const currentVersion = this.requireCurrentVersion(artifact);
+      const safeTitle = this.buildSafeTitle(artifact.title);
+      const content = await this.deanonymizeContent(
+        artifact.threadId,
+        currentVersion.content,
       );
-      if (!currentVersion) {
-        throw new ArtifactVersionNotFoundError(
-          command.artifactId,
-          artifact.currentVersionNumber,
-        );
-      }
-
-      const safeTitle =
-        artifact.title.replace(/[^a-zA-Z0-9-_ ]/g, '').trim() || 'artifact';
 
       if (command.format === 'docx') {
-        const buffer = await this.documentExportPort.exportToDocx(
-          currentVersion.content,
-        );
-        return {
-          buffer,
-          fileName: `${safeTitle}.docx`,
-          mimeType:
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        };
+        return await this.exportDocx(content, safeTitle);
       }
 
-      const letterheadConfig = await this.resolveLetterhead(artifact);
-
-      let buffer: Buffer;
-      try {
-        buffer = await this.documentExportPort.exportToPdf(
-          currentVersion.content,
-          letterheadConfig,
-        );
-      } catch (error) {
-        if (!letterheadConfig) throw error;
-        const reason = error instanceof Error ? error.message : 'Unknown error';
-        this.logger.warn(
-          `Letterhead compositing failed, exporting without letterhead: ${reason}`,
-        );
-        buffer = await this.documentExportPort.exportToPdf(
-          currentVersion.content,
-        );
-      }
-      return {
-        buffer,
-        fileName: `${safeTitle}.pdf`,
-        mimeType: 'application/pdf',
-      };
+      return await this.exportPdf(artifact, content, safeTitle);
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
@@ -119,6 +85,100 @@ export class ExportArtifactUseCase {
         error instanceof Error ? error.message : 'Unknown error',
       );
     }
+  }
+
+  private async loadExportableArtifact(
+    artifactId: UUID,
+    userId: UUID,
+  ): Promise<DocumentArtifact> {
+    const artifact = await this.artifactsRepository.findByIdWithVersions(
+      artifactId,
+      userId,
+    );
+    if (!artifact) {
+      throw new ArtifactNotFoundError(artifactId);
+    }
+    if (!(artifact instanceof DocumentArtifact)) {
+      throw new ArtifactNotExportableError(artifact.type);
+    }
+    return artifact;
+  }
+
+  private requireCurrentVersion(artifact: DocumentArtifact) {
+    const currentVersion = artifact.versions.find(
+      (v) => v.versionNumber === artifact.currentVersionNumber,
+    );
+    if (!currentVersion) {
+      throw new ArtifactVersionNotFoundError(
+        artifact.id,
+        artifact.currentVersionNumber,
+      );
+    }
+    return currentVersion;
+  }
+
+  /**
+   * Replaces `{{pii:...}}` tokens in the artifact content with the thread's
+   * original values so the exported file is de-anonymized. Stored content stays
+   * masked; this resolution happens only at export egress.
+   */
+  private async deanonymizeContent(
+    threadId: UUID,
+    content: string,
+  ): Promise<string> {
+    const masks = await this.getThreadPiiMasksUseCase.execute(
+      new GetThreadPiiMasksQuery(threadId),
+    );
+    if (masks.length === 0) {
+      return content;
+    }
+    const tokenToValue = new Map(masks.map((mask) => [mask.token, mask.value]));
+    return deanonymizeText(content, tokenToValue);
+  }
+
+  private buildSafeTitle(title: string): string {
+    return title.replace(/[^a-zA-Z0-9-_ ]/g, '').trim() || 'artifact';
+  }
+
+  private async exportDocx(
+    content: string,
+    safeTitle: string,
+  ): Promise<ExportResult> {
+    const buffer = await this.documentExportPort.exportToDocx(content);
+    return {
+      buffer,
+      fileName: `${safeTitle}.docx`,
+      mimeType:
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    };
+  }
+
+  private async exportPdf(
+    artifact: DocumentArtifact,
+    content: string,
+    safeTitle: string,
+  ): Promise<ExportResult> {
+    const letterheadConfig = await this.resolveLetterhead(artifact);
+
+    let buffer: Buffer;
+    try {
+      buffer = await this.documentExportPort.exportToPdf(
+        content,
+        letterheadConfig,
+      );
+    } catch (error) {
+      if (!letterheadConfig) throw error;
+      const reason = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(
+        `Letterhead compositing failed, exporting without letterhead: ${reason}`,
+      );
+      buffer = await this.documentExportPort.exportToPdf(content);
+    }
+    return {
+      buffer,
+      fileName: `${safeTitle}.pdf`,
+      mimeType: 'application/pdf',
+    };
   }
 
   private async resolveLetterhead(artifact: {

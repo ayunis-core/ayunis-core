@@ -8,9 +8,13 @@ describe('QuotaLimitResolverService', () => {
   let getFairUseLimitsUseCase: jest.Mocked<GetFairUseLimitsUseCase>;
 
   const limits: FairUseLimitsByTier = {
+    // `zero` is included for type completeness — the resolver never reads
+    // it because `tierToFairUseQuotaType` skips ZERO entirely.
+    zero: { limit: 1_000_000, windowMs: 99_999 },
     low: { limit: 1234, windowMs: 11_111 },
     medium: { limit: 567, windowMs: 22_222 },
     high: { limit: 89, windowMs: 33_333 },
+    images: { limit: 42, windowMs: 44_444 },
   };
 
   beforeEach(() => {
@@ -38,6 +42,12 @@ describe('QuotaLimitResolverService', () => {
     const result = await service.resolve(QuotaType.FAIR_USE_MESSAGES_HIGH);
 
     expect(result).toEqual(limits.high);
+  });
+
+  it('routes FAIR_USE_IMAGES to the images bucket from platform config', async () => {
+    const result = await service.resolve(QuotaType.FAIR_USE_IMAGES);
+
+    expect(result).toEqual(limits.images);
   });
 
   it('reads platform config on every call so super-admin updates take effect immediately', async () => {

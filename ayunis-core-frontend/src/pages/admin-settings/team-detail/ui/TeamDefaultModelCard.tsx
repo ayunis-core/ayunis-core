@@ -14,10 +14,11 @@ export function TeamDefaultModelCard({
   isLoading,
 }: TeamDefaultModelCardProps) {
   const { setTeamDefaultModel, isSetting } = useSetTeamDefaultModel(teamId);
+  const permittedModels = models.filter((model) => model.isPermitted);
 
   return (
     <OrgDefaultModelCardWidget
-      models={models}
+      models={permittedModels}
       isLoading={isLoading}
       isSaving={isSetting}
       onDefaultModelChange={setTeamDefaultModel}

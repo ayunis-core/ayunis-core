@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Form } from '@/shared/ui/shadcn/form';
 import { type CreateSkillData, useCreateSkill } from '../api/useCreateSkill';
 import {
@@ -23,6 +24,7 @@ export default function CreateSkillDialog({
   buttonClassName = '',
 }: Readonly<CreateSkillDialogProps>) {
   const translations = useCreateDialogTranslations('skills');
+  const { t } = useTranslation('skills');
   const [isOpen, setIsOpen] = useState(false);
   const {
     form,
@@ -51,6 +53,7 @@ export default function CreateSkillDialog({
       buttonText={buttonText}
       showIcon={showIcon}
       buttonClassName={buttonClassName}
+      footerHint={t('createDialog.marketplaceHint')}
     >
       <Form {...form}>
         <div className="space-y-6">

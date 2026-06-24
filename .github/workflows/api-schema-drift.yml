@@ -1,4 +1,4 @@
-name: API Schema Drift
+name: Schema Drift
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   check:
-    name: Check API client is up to date
+    name: Check database and API client are up to date
     runs-on: ubuntu-latest
 
     services:
@@ -27,7 +27,10 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
 
       - name: Start MinIO
         run: |
@@ -44,12 +47,11 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: ayunis-core-backend/package-lock.json
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install backend dependencies
-        working-directory: ayunis-core-backend
-        run: npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Create backend environment file
         working-directory: ayunis-core-backend
@@ -94,13 +96,37 @@ jobs:
 
       - name: Build backend
         working-directory: ayunis-core-backend
-        run: npm run build
+        run: pnpm run build
 
       - name: Run migrations
         working-directory: ayunis-core-backend
-        run: npm run typeorm migration:run -- -d src/db/datasource.ts
+        run: pnpm run migration:run:dev
         env:
           NODE_ENV: test
+
+      - name: Check for database schema drift
+        working-directory: ayunis-core-backend
+        run: |
+          set -o pipefail
+          TYPEORM_EXIT=0
+          pnpm run migration:generate:dev src/db/migrations/__DriftCheck 2>&1 | tee /tmp/drift-output.txt || TYPEORM_EXIT=$?
+          if grep -q "has been generated successfully" /tmp/drift-output.txt; then
+            echo ""
+            echo "❌ Database schema drift detected."
+            echo "Entities and migrations are out of sync. Run:"
+            echo "  pnpm run migration:generate:dev src/db/migrations/DescriptiveName"
+            echo ""
+            echo "Generated drift:"
+            cat src/db/migrations/*__DriftCheck.ts
+            exit 1
+          fi
+          if [ "$TYPEORM_EXIT" -ne 0 ] && ! grep -q "No changes in database schema were found" /tmp/drift-output.txt; then
+            echo ""
+            echo "❌ migration:generate failed unexpectedly (exit code $TYPEORM_EXIT):"
+            cat /tmp/drift-output.txt
+            exit 1
+          fi
+          echo "✅ No database schema drift"
 
       - name: Start backend
         working-directory: ayunis-core-backend
@@ -108,10 +134,6 @@ jobs:
           node dist/src/main.js &
           # Wait for backend to be ready
           timeout 60 bash -c 'until curl -sf http://localhost:3000/api/docs-json > /dev/null 2>&1; do sleep 2; done'
-
-      - name: Install frontend dependencies
-        working-directory: ayunis-core-frontend
-        run: npm ci
 
       - name: Create frontend environment file
         working-directory: ayunis-core-frontend
@@ -122,14 +144,14 @@ jobs:
 
       - name: Regenerate API client
         working-directory: ayunis-core-frontend
-        run: npm run openapi:update
+        run: pnpm run openapi:update
 
       - name: Check for drift
         run: |
           if ! git diff --exit-code ayunis-core-frontend/src/shared/api/generated/; then
             echo ""
             echo "❌ API client is out of date."
-            echo "Run 'npm run openapi:update' in ayunis-core-frontend and commit the changes."
+            echo "Run 'pnpm run openapi:update' in ayunis-core-frontend and commit the changes."
             exit 1
           fi
           echo "✅ API client is up to date"

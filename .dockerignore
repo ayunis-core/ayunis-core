@@ -1,0 +1,48 @@
+# Root .dockerignore — the production image builds from the repo-root context
+# (docker-compose `app` service, context: .). The backend's own .dockerignore is
+# NOT consulted from a root context, so everything excluded from the build image
+# must be listed here. Keep manifests + lockfile + source IN; keep installs,
+# build outputs, secrets, and the Python services OUT.
+
+# Dependencies / installs (re-created by `pnpm install` in the build stage)
+**/node_modules
+.pnpm-store
+
+# Build outputs
+**/dist
+**/build
+ayunis-core-backend/frontend
+ayunis-core-backend/coverage
+**/.nyc_output
+
+# Secrets & local env
+**/.env
+**/.env.*
+!**/.env.example
+# Exception: the frontend .env must enter the build context so Vite can inline its
+# VITE_* vars at build time. Being part of the context (vs a secret mount, whose
+# contents BuildKit excludes from the cache key) is what makes a changed value
+# correctly bust the frontend build layer. It only lands in the discarded build
+# stage — the production image copies the built dist, never the .env. The backend
+# .env stays excluded (the backend reads its env at runtime via compose env_file).
+!ayunis-core-frontend/.env
+
+# Python services (not part of the JS image; built by their own Dockerfiles)
+ayunis-core-code-execution
+ayunis-core-anonymize
+
+# VCS / tooling / local dev
+.git
+.github
+.husky
+.dev
+.claude
+.agents
+.pi
+scripts
+*.md
+
+# Logs & OS cruft
+**/*.log
+**/.DS_Store
+**/uploads

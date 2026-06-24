@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
+import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
 
 export class ModelWithConfigResponseDto {
   @ApiProperty({
@@ -35,6 +36,13 @@ export class ModelWithConfigResponseDto {
     description: 'The display name of the model',
   })
   displayName: string;
+
+  @ApiProperty({
+    type: 'string',
+    enum: Object.values(ModelType),
+    description: 'The type of the model',
+  })
+  type: ModelType;
 
   @ApiProperty({
     type: 'boolean',
@@ -71,12 +79,6 @@ export class ModelWithConfigResponseDto {
     description: 'Whether the model is the default model',
   })
   isDefault: boolean;
-
-  @ApiProperty({
-    type: 'boolean',
-    description: 'Whether the model is an embedding model',
-  })
-  isEmbedding: boolean;
 
   @ApiProperty({
     type: 'boolean',

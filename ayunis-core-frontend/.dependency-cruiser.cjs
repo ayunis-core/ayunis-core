@@ -133,22 +133,6 @@ module.exports = {
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // CROSS-WIDGET IMPORTS — Widgets importing other widgets
-    // This is a warning for now since it's sometimes needed (e.g., tooltip-if)
-    // Consider extracting shared logic to features/ or shared/
-    // ═══════════════════════════════════════════════════════════════════════════
-    {
-      name: 'widget-imports-widget',
-      comment: 'Widgets importing other widgets - consider extracting to features/shared',
-      severity: 'warn',
-      from: { path: '^src/widgets/([^/]+)/' },
-      to: { 
-        path: '^src/widgets/',
-        pathNot: '^src/widgets/$1/',  // Allow same-widget imports
-      },
-    },
-
-    // ═══════════════════════════════════════════════════════════════════════════
     // GENERAL RULES
     // ═══════════════════════════════════════════════════════════════════════════
     {

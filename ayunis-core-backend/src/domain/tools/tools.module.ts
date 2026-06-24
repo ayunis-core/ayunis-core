@@ -27,15 +27,22 @@ import { CreateDocumentToolHandler } from './application/handlers/create-documen
 import { UpdateDocumentToolHandler } from './application/handlers/update-document-tool.handler';
 import { EditDocumentToolHandler } from './application/handlers/edit-document-tool.handler';
 import { ReadDocumentToolHandler } from './application/handlers/read-document-tool.handler';
+import { CreateDiagramToolHandler } from './application/handlers/create-diagram-tool.handler';
+import { UpdateDiagramToolHandler } from './application/handlers/update-diagram-tool.handler';
 import { SkillsModule } from '../skills/skills.module';
 import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
 import { SkillTemplatesModule } from '../skill-templates/skill-templates.module';
 import { ArtifactsModule } from '../artifacts/artifacts.module';
+import { GenerateImageToolHandler } from './application/handlers/generate-image-tool.handler';
+import { ModelsModule } from '../models/models.module';
+import { UsageModule } from '../usage/usage.module';
+import { QuotasModule } from 'src/iam/quotas/quotas.module';
 
 @Module({
   imports: [
     SourcesModule,
     forwardRef(() => ThreadsModule),
+    forwardRef(() => ModelsModule),
     LocalToolConfigRepositoryModule,
     RetrieverModule,
     McpModule,
@@ -43,6 +50,8 @@ import { ArtifactsModule } from '../artifacts/artifacts.module';
     KnowledgeBasesModule,
     SkillTemplatesModule,
     ArtifactsModule,
+    UsageModule,
+    QuotasModule,
   ],
   providers: [
     // Use cases
@@ -66,6 +75,9 @@ import { ArtifactsModule } from '../artifacts/artifacts.module';
     UpdateDocumentToolHandler,
     EditDocumentToolHandler,
     ReadDocumentToolHandler,
+    GenerateImageToolHandler,
+    CreateDiagramToolHandler,
+    UpdateDiagramToolHandler,
     // Repositories and factories
     {
       provide: ToolConfigRepository,

@@ -9,6 +9,7 @@ import {
   AlignmentType,
   BorderStyle,
   WidthType,
+  TableLayoutType,
   UnderlineType,
   convertMillimetersToTwip,
   Packer,
@@ -67,6 +68,9 @@ const TABLE_BORDERS = {
   left: TABLE_BORDER,
   right: TABLE_BORDER,
 };
+
+// A4 portrait usable width = 210mm page − 2×25mm margins (see docx-document-config.ts).
+const TABLE_USABLE_WIDTH_TWIPS = convertMillimetersToTwip(210 - 2 * 25);
 
 /**
  * Converts TipTap-generated HTML into a DOCX buffer using the `docx` library.
@@ -273,10 +277,12 @@ function convertListItem(
 // ---------------------------------------------------------------------------
 
 function convertTable(node: HTMLElement): Table {
-  const rows = node
-    .querySelectorAll(
-      ':scope > tr, :scope > thead > tr, :scope > tbody > tr, :scope > tfoot > tr',
-    )
+  const rowElements = node.querySelectorAll(
+    ':scope > tr, :scope > thead > tr, :scope > tbody > tr, :scope > tfoot > tr',
+  );
+  const columnCount = Math.max(1, countTableColumns(rowElements));
+  const columnWidths = buildEqualColumnWidths(columnCount);
+  const rows = rowElements
     .map(convertTableRow)
     .filter((r): r is TableRow => r !== null);
 
@@ -291,10 +297,36 @@ function convertTable(node: HTMLElement): Table {
           ],
         }),
       ],
+      columnWidths,
+      layout: TableLayoutType.FIXED,
     });
   }
 
-  return new Table({ rows, width: { size: 100, type: WidthType.PERCENTAGE } });
+  return new Table({
+    rows,
+    columnWidths,
+    layout: TableLayoutType.FIXED,
+    width: { size: 100, type: WidthType.PERCENTAGE },
+  });
+}
+
+function countTableColumns(rowElements: HTMLElement[]): number {
+  let max = 0;
+  for (const tr of rowElements) {
+    const cells = tr.querySelectorAll(':scope > td, :scope > th');
+    let count = 0;
+    for (const cell of cells) {
+      const colspan = parseInt(cell.getAttribute('colspan') ?? '1', 10);
+      count += Number.isFinite(colspan) && colspan > 0 ? colspan : 1;
+    }
+    if (count > max) max = count;
+  }
+  return max;
+}
+
+function buildEqualColumnWidths(columnCount: number): number[] {
+  const width = Math.floor(TABLE_USABLE_WIDTH_TWIPS / columnCount);
+  return Array.from({ length: columnCount }, () => width);
 }
 
 function convertTableRow(tr: HTMLElement): TableRow | null {

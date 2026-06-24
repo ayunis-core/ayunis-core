@@ -13,7 +13,7 @@ interface ModelEntry {
   modelName: string;
   displayName: string;
   provider: string;
-  tokens: number;
+  credits: number;
   requests: number;
   percentage: number;
 }
@@ -21,7 +21,7 @@ interface ModelEntry {
 export interface ChartDataItem {
   name: string;
   value: number;
-  tokens: number;
+  credits: number;
   fill: string;
 }
 
@@ -54,9 +54,9 @@ export function buildModelDistributionChartData(
     return EMPTY_RESULT;
   }
 
-  const totalTokens = models.reduce((sum, model) => sum + model.tokens, 0);
+  const totalCredits = models.reduce((sum, model) => sum + model.credits, 0);
 
-  if (totalTokens === 0) {
+  if (totalCredits === 0) {
     return EMPTY_RESULT;
   }
 
@@ -69,12 +69,12 @@ export function buildModelDistributionChartData(
 
   topModels.forEach((model, index) => {
     const color = CHART_COLORS[index % CHART_COLORS.length];
-    const percentage = (model.tokens / totalTokens) * 100;
+    const percentage = (model.credits / totalCredits) * 100;
 
     chartData.push({
       name: model.displayName,
       value: percentage,
-      tokens: model.tokens,
+      credits: model.credits,
       fill: color,
     });
     chartConfig[model.displayName] = { label: model.displayName, color };
@@ -84,7 +84,7 @@ export function buildModelDistributionChartData(
   if (otherModels.length > 0) {
     appendOthersEntry(
       otherModels,
-      totalTokens,
+      totalCredits,
       topModels.length,
       t,
       chartData,
@@ -98,16 +98,16 @@ export function buildModelDistributionChartData(
 
 function appendOthersEntry(
   otherModels: ModelEntry[],
-  totalTokens: number,
+  totalCredits: number,
   topCount: number,
   t: (key: string, options?: Record<string, unknown>) => string,
   chartData: ChartDataItem[],
   chartConfig: Record<string, ChartConfigEntry>,
   modelBreakdown: ModelBreakdownItem[],
 ) {
-  const othersTokens = otherModels.reduce((sum, m) => sum + m.tokens, 0);
+  const othersCredits = otherModels.reduce((sum, m) => sum + m.credits, 0);
   const othersRequests = otherModels.reduce((sum, m) => sum + m.requests, 0);
-  const othersPercentage = (othersTokens / totalTokens) * 100;
+  const othersPercentage = (othersCredits / totalCredits) * 100;
   const othersColor = CHART_COLORS[topCount % CHART_COLORS.length];
   const othersDisplayName = t('charts.modelDistribution.othersWithCount', {
     count: otherModels.length,
@@ -116,7 +116,7 @@ function appendOthersEntry(
   chartData.push({
     name: othersDisplayName,
     value: othersPercentage,
-    tokens: othersTokens,
+    credits: othersCredits,
     fill: othersColor,
   });
   chartConfig[othersDisplayName] = {
@@ -128,7 +128,7 @@ function appendOthersEntry(
     modelName: t('charts.modelDistribution.others'),
     displayName: othersDisplayName,
     provider: otherModels[0]?.provider || 'openai',
-    tokens: othersTokens,
+    credits: othersCredits,
     requests: othersRequests,
     percentage: othersPercentage,
     color: othersColor,

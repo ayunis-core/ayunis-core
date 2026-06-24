@@ -221,10 +221,10 @@ When reporting issues, please include:
 
 ```bash
 # Generate migration
-npm run migration:generate:dev -- src/db/migrations/MigrationName
+pnpm run migration:generate:dev src/db/migrations/MigrationName
 
 # Run migrations
-npm run migration:run:dev
+pnpm run migration:run:dev
 ```
 
 Check `package.json` for all migration related scripts

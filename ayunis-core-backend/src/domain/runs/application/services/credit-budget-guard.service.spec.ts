@@ -4,6 +4,7 @@ import { CreditBudgetGuardService } from './credit-budget-guard.service';
 import { GetMonthlyCreditLimitUseCase } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
 import { GetMonthlyCreditUsageUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage/get-monthly-credit-usage.use-case';
 import { CreditBudgetExceededError } from 'src/iam/subscriptions/application/subscription.errors';
+import { GetMonthlyCreditUsageQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage/get-monthly-credit-usage.query';
 import type { UUID } from 'crypto';
 
 describe('CreditBudgetGuardService', () => {
@@ -90,6 +91,35 @@ describe('CreditBudgetGuardService', () => {
 
     await expect(service.ensureBudgetAvailable(orgId)).rejects.toThrow(
       CreditBudgetExceededError,
+    );
+  });
+
+  it('should pass startsAt as since to credit usage query', async () => {
+    const startsAt = new Date('2026-04-10T00:00:00.000Z');
+    mockGetMonthlyCreditLimit.execute.mockResolvedValue({
+      monthlyCredits: 1000,
+      startsAt,
+    });
+    mockGetMonthlyCreditUsage.execute.mockResolvedValue({ creditsUsed: 0 });
+
+    await service.ensureBudgetAvailable(orgId);
+
+    expect(mockGetMonthlyCreditUsage.execute).toHaveBeenCalledWith(
+      new GetMonthlyCreditUsageQuery(orgId, startsAt),
+    );
+  });
+
+  it('should pass undefined since when startsAt is null', async () => {
+    mockGetMonthlyCreditLimit.execute.mockResolvedValue({
+      monthlyCredits: 1000,
+      startsAt: null,
+    });
+    mockGetMonthlyCreditUsage.execute.mockResolvedValue({ creditsUsed: 0 });
+
+    await service.ensureBudgetAvailable(orgId);
+
+    expect(mockGetMonthlyCreditUsage.execute).toHaveBeenCalledWith(
+      new GetMonthlyCreditUsageQuery(orgId, undefined),
     );
   });
 });

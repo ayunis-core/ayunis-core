@@ -45,7 +45,7 @@ export default function SubscriptionStartDateField({
                   variant="outline"
                   className={cn('w-full justify-start font-normal')}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  <CalendarIcon />
                   {utcDateToLocal(field.value).toLocaleDateString()}
                 </Button>
               </FormControl>

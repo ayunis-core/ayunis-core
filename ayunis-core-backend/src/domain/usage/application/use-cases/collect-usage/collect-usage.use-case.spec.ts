@@ -1,5 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CollectUsageUseCase } from './collect-usage.use-case';
 import { CollectUsageCommand } from './collect-usage.command';
 import { UsageRepository } from '../../ports/usage.repository';
@@ -8,8 +9,10 @@ import {
   UsageCollectionFailedError,
   UnexpectedUsageError,
 } from '../../usage.errors';
+import { UsageCollectedEvent } from '../../events/usage-collected.event';
 import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
 import type { UUID } from 'crypto';
+import { ImageGenerationModel } from '../../../../models/domain/models/image-generation.model';
 import { LanguageModel } from '../../../../models/domain/models/language.model';
 import type { Usage } from '../../../domain/usage.entity';
 import { ContextService } from '../../../../../common/context/services/context.service';
@@ -17,13 +20,17 @@ import { GetCreditsPerEuroUseCase } from '../../../../../iam/platform-config/app
 import { PlatformConfigNotFoundError } from '../../../../../iam/platform-config/application/platform-config.errors';
 import { PlatformConfigKey } from '../../../../../iam/platform-config/domain/platform-config-keys.enum';
 
+type ContextKey = 'userId' | 'apiKeyId' | 'orgId';
+
 describe('CollectUsageUseCase', () => {
   let useCase: CollectUsageUseCase;
   let mockUsageRepository: Partial<UsageRepository>;
   let mockContextService: Partial<ContextService>;
   let mockGetCreditsPerEuroUseCase: { execute: jest.Mock };
+  let mockEventEmitter: { emitAsync: jest.Mock };
 
   const userId = 'user-id' as UUID;
+  const apiKeyId = 'api-key-id' as UUID;
   const orgId = 'org-id' as UUID;
   const modelId = 'model-id' as UUID;
   const requestId = 'request-id' as UUID;
@@ -51,7 +58,7 @@ describe('CollectUsageUseCase', () => {
     };
 
     mockContextService = {
-      get: jest.fn((key?: 'userId' | 'orgId') => {
+      get: jest.fn((key?: 'userId' | 'apiKeyId' | 'orgId') => {
         if (key === 'userId') return userId;
         if (key === 'orgId') return orgId;
         return undefined;
@@ -60,6 +67,10 @@ describe('CollectUsageUseCase', () => {
 
     mockGetCreditsPerEuroUseCase = {
       execute: jest.fn().mockResolvedValue(100),
+    };
+
+    mockEventEmitter = {
+      emitAsync: jest.fn().mockResolvedValue([]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -71,6 +82,7 @@ describe('CollectUsageUseCase', () => {
           provide: GetCreditsPerEuroUseCase,
           useValue: mockGetCreditsPerEuroUseCase,
         },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 
@@ -79,7 +91,7 @@ describe('CollectUsageUseCase', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (mockContextService.get as jest.Mock).mockImplementation(
-      (key?: 'userId' | 'orgId') => {
+      (key?: ContextKey) => {
         if (key === 'userId') return userId;
         if (key === 'orgId') return orgId;
         return undefined;
@@ -87,6 +99,7 @@ describe('CollectUsageUseCase', () => {
     );
     (mockUsageRepository.save as jest.Mock).mockResolvedValue(undefined);
     mockGetCreditsPerEuroUseCase.execute.mockResolvedValue(100);
+    mockEventEmitter.emitAsync.mockResolvedValue([]);
   });
 
   it('should be defined', () => {
@@ -108,6 +121,7 @@ describe('CollectUsageUseCase', () => {
       expect(mockUsageRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
           userId,
+          apiKeyId: null,
           organizationId: orgId,
           modelId,
           provider: ModelProvider.OPENAI,
@@ -116,6 +130,35 @@ describe('CollectUsageUseCase', () => {
           totalTokens: 150,
           cost: undefined,
           requestId,
+        }),
+      );
+    });
+
+    it('should attribute usage to apiKeyId when only apiKeyId is in context', async () => {
+      jest.spyOn(mockContextService, 'get').mockImplementation(((
+        key?: ContextKey,
+      ) => {
+        if (key === 'apiKeyId') return apiKeyId;
+        if (key === 'orgId') return orgId;
+        return undefined;
+      }) as any);
+
+      const model = createMockModel();
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: 50,
+        requestId,
+      });
+
+      await useCase.execute(command);
+
+      expect(mockUsageRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: null,
+          apiKeyId,
+          organizationId: orgId,
+          modelId,
         }),
       );
     });
@@ -175,6 +218,41 @@ describe('CollectUsageUseCase', () => {
       // outputCost = (1000/1_000_000) * 2 = 0.002
       // totalCost = 0.004
       expect(saveCall.cost).toBeCloseTo(0.004, 6);
+    });
+
+    it('should calculate cost for an image-generation model using the same per-million-token formula', async () => {
+      const model = new ImageGenerationModel({
+        id: modelId,
+        name: 'gpt-image-1',
+        provider: ModelProvider.AZURE,
+        displayName: 'GPT Image 1',
+        isArchived: false,
+        inputTokenCost: 5,
+        outputTokenCost: 40,
+      });
+
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 200,
+        outputTokens: 4096,
+        requestId,
+      });
+
+      await useCase.execute(command);
+
+      const saveMock = mockUsageRepository.save as jest.Mock<
+        Promise<void>,
+        [Usage]
+      >;
+      const saveCall = saveMock.mock.calls[0]?.[0];
+      if (!saveCall) {
+        throw new Error('save was not called');
+      }
+      // inputCost = (200 / 1_000_000) * 5 = 0.001
+      // outputCost = (4096 / 1_000_000) * 40 = 0.16384
+      // totalCost = 0.16484
+      expect(saveCall.cost).toBeCloseTo(0.16484, 6);
+      expect(saveCall.provider).toBe(ModelProvider.AZURE);
     });
 
     it('should calculate and store small costs correctly', async () => {
@@ -307,11 +385,10 @@ describe('CollectUsageUseCase', () => {
   });
 
   describe('error handling', () => {
-    it('should throw UsageCollectionFailedError when userId is missing from context', async () => {
+    it('should throw UsageCollectionFailedError when neither userId nor apiKeyId is in context', async () => {
       jest.spyOn(mockContextService, 'get').mockImplementation(((
-        key?: 'userId' | 'orgId',
+        key?: ContextKey,
       ) => {
-        if (key === 'userId') return undefined;
         if (key === 'orgId') return orgId;
         return undefined;
       }) as any);
@@ -332,7 +409,7 @@ describe('CollectUsageUseCase', () => {
 
     it('should throw UsageCollectionFailedError when orgId is missing from context', async () => {
       jest.spyOn(mockContextService, 'get').mockImplementation(((
-        key?: 'userId' | 'orgId',
+        key?: ContextKey,
       ) => {
         if (key === 'userId') return userId;
         if (key === 'orgId') return undefined;
@@ -503,6 +580,64 @@ describe('CollectUsageUseCase', () => {
       expect(saveCall.cost).toBeDefined();
       // But credits should be undefined (graceful fallback)
       expect(saveCall.creditsConsumed).toBeUndefined();
+    });
+  });
+
+  describe('UsageCollectedEvent emission', () => {
+    it('should emit UsageCollectedEvent after a successful save', async () => {
+      const model = createMockModel({ name: 'gpt-4o-mini' });
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: 50,
+        requestId,
+      });
+
+      await useCase.execute(command);
+
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledTimes(1);
+      const [eventName, payload] = mockEventEmitter.emitAsync.mock.calls[0];
+      expect(eventName).toBe(UsageCollectedEvent.EVENT_NAME);
+      expect(payload).toBeInstanceOf(UsageCollectedEvent);
+      expect((payload as UsageCollectedEvent).modelName).toBe('gpt-4o-mini');
+      expect((payload as UsageCollectedEvent).usage.userId).toBe(userId);
+      expect((payload as UsageCollectedEvent).usage.organizationId).toBe(orgId);
+      expect((payload as UsageCollectedEvent).usage.totalTokens).toBe(150);
+    });
+
+    it('should not emit UsageCollectedEvent when save fails', async () => {
+      jest
+        .spyOn(mockUsageRepository, 'save')
+        .mockRejectedValue(new Error('boom'));
+
+      const model = createMockModel();
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: 50,
+        requestId,
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        UnexpectedUsageError,
+      );
+      expect(mockEventEmitter.emitAsync).not.toHaveBeenCalled();
+    });
+
+    it('should not throw when emitAsync rejects', async () => {
+      mockEventEmitter.emitAsync.mockRejectedValue(
+        new Error('listener failed'),
+      );
+
+      const model = createMockModel();
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: 50,
+        requestId,
+      });
+
+      await expect(useCase.execute(command)).resolves.toBeUndefined();
     });
   });
 });

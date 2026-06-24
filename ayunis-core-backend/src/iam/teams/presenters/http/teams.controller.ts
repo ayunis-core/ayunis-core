@@ -106,7 +106,7 @@ export class TeamsController {
     const teams = await this.listTeamsUseCase.execute();
 
     this.logger.log(`Successfully retrieved ${teams.length} teams`);
-    return this.teamDtoMapper.toDtoList(teams);
+    return this.teamDtoMapper.toDtoListWithMemberCount(teams);
   }
 
   @Get('me')

@@ -17,6 +17,7 @@ import { ImageMessageContent } from 'src/domain/messages/domain/message-contents
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
 import { ObjectNotFoundError } from 'src/domain/storage/application/storage.errors';
+import { GeneratedImagesRepository } from '../../ports/generated-images.repository';
 
 @Injectable()
 export class DeleteThreadUseCase {
@@ -28,6 +29,7 @@ export class DeleteThreadUseCase {
     @Inject(MESSAGES_REPOSITORY)
     private readonly messagesRepository: MessagesRepository,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
+    private readonly generatedImagesRepository: GeneratedImagesRepository,
   ) {}
 
   async execute(command: DeleteThreadCommand): Promise<void> {
@@ -61,7 +63,10 @@ export class DeleteThreadUseCase {
       }
 
       // Delete associated images before deleting the thread
-      await this.deleteThreadImages(command.id, orgId);
+      await Promise.all([
+        this.deleteThreadImages(command.id, orgId),
+        this.deleteGeneratedImageBlobs(command.id),
+      ]);
 
       // Delete the thread
       await this.threadsRepository.delete(command.id, userId);
@@ -131,6 +136,63 @@ export class DeleteThreadUseCase {
     this.logger.log('Completed image cleanup for thread', {
       threadId,
       imageCount: imagePaths.length,
+    });
+  }
+
+  /**
+   * Deletes blobs for generated images associated with the thread from storage.
+   * Continues even if some image deletions fail to ensure operation proceeds.
+   */
+  private async deleteGeneratedImageBlobs(threadId: UUID): Promise<void> {
+    const images =
+      await this.generatedImagesRepository.findManyByThreadId(threadId);
+
+    if (images.length === 0) {
+      this.logger.debug('No generated images to delete for thread', {
+        threadId,
+      });
+      return;
+    }
+
+    this.logger.log('Deleting generated images associated with thread', {
+      threadId,
+      imageCount: images.length,
+    });
+
+    const deletePromises = images.map(async (image) => {
+      try {
+        await this.deleteObjectUseCase.execute(
+          new DeleteObjectCommand(image.storageKey),
+        );
+        this.logger.debug('Deleted generated image from storage', {
+          threadId,
+          storageKey: image.storageKey,
+        });
+      } catch (error) {
+        if (error instanceof ObjectNotFoundError) {
+          this.logger.warn(
+            'Generated image not found in storage, skipping deletion',
+            {
+              threadId,
+              storageKey: image.storageKey,
+              error: error.message,
+            },
+          );
+        } else {
+          this.logger.warn('Failed to delete generated image from storage', {
+            threadId,
+            storageKey: image.storageKey,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      }
+    });
+
+    await Promise.all(deletePromises);
+
+    this.logger.log('Completed generated image cleanup for thread', {
+      threadId,
+      imageCount: images.length,
     });
   }
 

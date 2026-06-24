@@ -13,7 +13,7 @@ import {
   StreamInferenceInput,
   StreamInferenceResponseChunk,
 } from 'src/domain/models/application/ports/stream-inference.handler';
-import { CollectUsageAsyncService } from './collect-usage-async.service';
+import { InferenceUsageGuard } from './inference-usage-guard.service';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import { Message } from 'src/domain/messages/domain/message.entity';
@@ -56,7 +56,7 @@ export class StreamingInferenceService {
   constructor(
     private readonly streamInferenceUseCase: StreamInferenceUseCase,
     private readonly saveAssistantMessageUseCase: SaveAssistantMessageUseCase,
-    private readonly collectUsageAsyncService: CollectUsageAsyncService,
+    private readonly inferenceUsageGuard: InferenceUsageGuard,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -144,10 +144,9 @@ export class StreamingInferenceService {
       if (streamCompletedSuccessfully && allChunks.length > 0) {
         const usage = this.extractUsageFromChunks(allChunks);
         if (usage) {
-          this.collectUsage(
+          this.inferenceUsageGuard.collectUsage(
             model,
-            usage.inputTokens,
-            usage.outputTokens,
+            usage,
             assistantMessage.id,
           );
         }
@@ -452,32 +451,25 @@ export class StreamingInferenceService {
   extractUsageFromChunks(
     chunks: StreamInferenceResponseChunk[],
   ): { inputTokens: number; outputTokens: number } | undefined {
-    let inputTokens = 0;
-    let outputTokens = 0;
-    let hasUsageData = false;
+    // Providers report cumulative usage on every chunk (Gemini repeats
+    // promptTokenCount on each chunk; candidatesTokenCount only appears on the
+    // final one). Summing across chunks would over-count, so take last-wins per
+    // field, matching the non-streaming accumulator (response-accumulator.ts).
+    let inputTokens: number | undefined;
+    let outputTokens: number | undefined;
 
     for (const chunk of chunks) {
-      if (chunk.usage) {
-        inputTokens += chunk.usage.inputTokens ?? 0;
-        outputTokens += chunk.usage.outputTokens ?? 0;
-        hasUsageData = true;
+      if (!chunk.usage) continue;
+      if (chunk.usage.inputTokens !== undefined) {
+        inputTokens = chunk.usage.inputTokens;
+      }
+      if (chunk.usage.outputTokens !== undefined) {
+        outputTokens = chunk.usage.outputTokens;
       }
     }
 
-    return hasUsageData ? { inputTokens, outputTokens } : undefined;
-  }
-
-  private collectUsage(
-    model: LanguageModel,
-    inputTokens: number,
-    outputTokens: number,
-    messageId?: UUID,
-  ): void {
-    this.collectUsageAsyncService.collect(
-      model,
-      inputTokens,
-      outputTokens,
-      messageId,
-    );
+    return inputTokens === undefined && outputTokens === undefined
+      ? undefined
+      : { inputTokens: inputTokens ?? 0, outputTokens: outputTokens ?? 0 };
   }
 }

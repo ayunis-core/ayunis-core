@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from '@tanstack/react-router';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
-import { useUserControllerForgotPassword } from '@/shared/api';
+import { useUserPasswordResetControllerForgotPassword } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
 import * as z from 'zod';
 
@@ -24,8 +24,8 @@ export function useForgotPassword() {
     },
   });
 
-  const { mutate: forgotPassword, isPending } = useUserControllerForgotPassword(
-    {
+  const { mutate: forgotPassword, isPending } =
+    useUserPasswordResetControllerForgotPassword({
       mutation: {
         onSuccess: () => {
           showSuccess(t('forgotPassword.success'));
@@ -41,8 +41,7 @@ export function useForgotPassword() {
           }
         },
       },
-    },
-  );
+    });
 
   function onSubmit(values: z.infer<typeof forgotPasswordFormSchema>) {
     forgotPassword({

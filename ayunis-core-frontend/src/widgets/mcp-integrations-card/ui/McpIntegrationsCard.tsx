@@ -15,6 +15,7 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
+import { Badge } from '@/shared/ui/shadcn/badge';
 import { cn } from '@/shared/lib/shadcn/utils';
 import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
@@ -36,6 +37,7 @@ interface McpIntegrationsCardProps {
     failedToLoad: string;
     retryButton: string;
     toggleAriaLabel: (name: string) => string;
+    configRequiredBadge: string;
   };
   hook: McpIntegrationsHook;
 }
@@ -117,6 +119,9 @@ export default function McpIntegrationsCard({
         <div className="space-y-4">
           {sortedIntegrations.map((integration, index) => {
             const assigned = isAssigned(integration.id);
+            const needsConfiguration =
+              (integration.userAuthorizationRequired ?? false) &&
+              !integration.userAuthorized;
 
             return (
               <div key={integration.id}>
@@ -129,7 +134,14 @@ export default function McpIntegrationsCard({
                   )}
                 >
                   <ItemContent>
-                    <ItemTitle>{integration.name}</ItemTitle>
+                    <ItemTitle>
+                      {integration.name}
+                      {needsConfiguration && (
+                        <Badge variant="outline" className="ml-2">
+                          {translations.configRequiredBadge}
+                        </Badge>
+                      )}
+                    </ItemTitle>
                     {integration.description && (
                       <ItemDescription>
                         {integration.description}

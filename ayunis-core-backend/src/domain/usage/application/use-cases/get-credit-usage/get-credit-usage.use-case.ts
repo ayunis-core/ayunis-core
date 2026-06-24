@@ -21,13 +21,13 @@ export class GetCreditUsageUseCase {
     this.logger.log('Getting credit usage', { orgId: query.orgId });
 
     try {
-      const { monthlyCredits } =
+      const { monthlyCredits, startsAt } =
         await this.getMonthlyCreditLimitUseCase.execute(
           new GetMonthlyCreditLimitQuery(query.orgId),
         );
 
       const { creditsUsed } = await this.getMonthlyCreditUsageUseCase.execute(
-        new GetMonthlyCreditUsageQuery(query.orgId),
+        new GetMonthlyCreditUsageQuery(query.orgId, startsAt ?? undefined),
       );
 
       const creditsRemaining =

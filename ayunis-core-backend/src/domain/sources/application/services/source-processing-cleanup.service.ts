@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { DocumentProcessingPort } from '../ports/document-processing.port';
+import { UrlCrawlProcessingPort } from '../ports/url-crawl-processing.port';
 import { ListObjectsUseCase } from 'src/domain/storage/application/use-cases/list-objects/list-objects.use-case';
 import { ListObjectsCommand } from 'src/domain/storage/application/use-cases/list-objects/list-objects.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
@@ -13,16 +14,27 @@ export class SourceProcessingCleanupService {
 
   constructor(
     private readonly documentProcessingPort: DocumentProcessingPort,
+    private readonly urlCrawlProcessingPort: UrlCrawlProcessingPort,
     private readonly listObjectsUseCase: ListObjectsUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly contextService: ContextService,
   ) {}
 
   async cancelAndCleanup(sourceId: UUID): Promise<void> {
+    // The cleanup service only knows the source id, not its type, so it cancels
+    // both pipelines best-effort — cancelling the wrong pipeline is a no-op.
     try {
       await this.documentProcessingPort.cancelJob(sourceId);
     } catch (err) {
-      this.logger.warn('Failed to cancel processing job', {
+      this.logger.warn('Failed to cancel document processing job', {
+        sourceId,
+        error: err as Error,
+      });
+    }
+    try {
+      await this.urlCrawlProcessingPort.cancelJob(sourceId);
+    } catch (err) {
+      this.logger.warn('Failed to cancel URL crawl job', {
         sourceId,
         error: err as Error,
       });

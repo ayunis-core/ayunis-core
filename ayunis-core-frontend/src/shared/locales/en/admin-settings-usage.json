@@ -1,16 +1,10 @@
 {
   "filters": {
-    "selectDateRange": "Select date range",
-    "last7Days": "Last 7 days",
-    "last30Days": "Last 30 days",
-    "last90Days": "Last 90 days",
-    "custom": "Custom",
-    "allTime": "All time",
     "allProviders": "All Providers",
     "allModels": "All Models"
   },
   "stats": {
-    "totalTokens": "Consumed Tokens",
+    "totalCredits": "Consumed Credits",
     "activeUsers": "Active Users",
     "estimatedCost": "Estimated Cost"
   },
@@ -25,32 +19,13 @@
       "models": "Models",
       "more": "more",
       "others": "Others",
-      "othersWithCount": "Others ({{count}} models)"
-    },
-    "tokenConsumption": {
-      "title": "Token Consumption",
-      "description": "Showing total tokens consumed"
+      "othersWithCount": "Others ({{count}} models)",
+      "creditsLabel": "credits"
     },
     "providerConsumption": {
       "title": "Consumption by Provider",
-      "description": "Showing total tokens consumed"
+      "description": "Showing total credits consumed"
     }
-  },
-  "globalTopUsers": {
-    "title": "Top Users by Credit Usage",
-    "description": "Top 20 users by credit consumption across all organizations",
-    "rank": "Rank",
-    "name": "Name",
-    "email": "Email",
-    "organization": "Organization",
-    "credits": "Credits",
-    "requests": "Requests",
-    "lastActivity": "Last Activity",
-    "lastActivityHint": "Shows overall last activity, not filtered by date range",
-    "empty": "No usage data available",
-    "active": "Active",
-    "inactive": "Inactive",
-    "allProvidersNote": "Across all providers and models"
   },
   "creditUsage": {
     "title": "Credit Budget",

@@ -7,6 +7,7 @@ import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum
 import { ChildChunk } from '../../../domain/child-chunk.entity';
 import { EmbedTextUseCase } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.use-case';
 import { EmbedTextCommand } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.command';
+import { EmbeddingPriority } from 'src/domain/rag/embeddings/domain/embedding-priority.enum';
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
 import { GetPermittedEmbeddingModelQuery } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.query';
 import { IngestBulkContentCommand } from './ingest-bulk-content.command';
@@ -106,7 +107,12 @@ export class IngestBulkContentUseCase {
     for (let i = 0; i < texts.length; i += EMBEDDING_BATCH_SIZE) {
       const batch = texts.slice(i, i + EMBEDDING_BATCH_SIZE);
       const embeddings = await this.embedTextUseCase.execute(
-        new EmbedTextCommand({ texts: batch, model, orgId }),
+        new EmbedTextCommand({
+          texts: batch,
+          model,
+          orgId,
+          priority: EmbeddingPriority.INGESTION,
+        }),
       );
       for (const embedding of embeddings) {
         allVectors.push(embedding.vector);

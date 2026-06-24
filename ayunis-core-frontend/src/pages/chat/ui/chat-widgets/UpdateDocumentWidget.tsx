@@ -4,6 +4,7 @@ import type { ToolUseMessageContent } from '../../model/openapi';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
 import { DocumentWidgetCard } from './DocumentWidgetCard';
+import { useUpdateArtifactWidget } from './useUpdateArtifactWidget';
 
 // eslint-disable-next-line sonarjs/function-return-type -- intentional: returns JSX or string, both valid ReactNode
 function getUpdateStatusLabel(
@@ -37,22 +38,10 @@ export default function UpdateDocumentWidget({
   onOpenArtifact,
 }: UpdateDocumentWidgetProps) {
   const { t } = useTranslation('chat');
-
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content.params may be undefined during streaming even if typed as required
-  const params = (content.params || {}) as {
-    artifact_id?: string;
-    content?: string;
-  };
-
-  const artifactId = params.artifact_id ?? '';
-
-  const handleOpen = () => {
-    if (artifactId && onOpenArtifact) {
-      onOpenArtifact(artifactId);
-    }
-  };
-
-  const statusLabel = getUpdateStatusLabel(artifactId, isStreaming, t);
+  const { artifactId, handleOpen } = useUpdateArtifactWidget(
+    content,
+    onOpenArtifact,
+  );
 
   return (
     <DocumentWidgetCard
@@ -60,7 +49,7 @@ export default function UpdateDocumentWidget({
       contentId={content.id}
       isStreaming={isStreaming}
       title={t('chat.tools.update_document.title')}
-      statusLabel={statusLabel}
+      statusLabel={getUpdateStatusLabel(artifactId, isStreaming, t)}
       buttonLabel={t('chat.tools.update_document.openInEditor')}
       artifactId={artifactId || null}
       onOpen={handleOpen}

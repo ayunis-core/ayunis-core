@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 import { ReadDocumentToolHandler } from './read-document-tool.handler';
 import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
 import { ReadDocumentTool } from '../../domain/tools/read-document-tool.entity';
-import { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
+import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ToolExecutionFailedError } from '../tools.errors';
@@ -47,7 +47,7 @@ describe('ReadDocumentToolHandler', () => {
   function createMockArtifact(
     versionNumber: number,
     content: string,
-  ): Artifact {
+  ): DocumentArtifact {
     const version = new ArtifactVersion({
       id: randomUUID(),
       artifactId: mockArtifactId,
@@ -57,7 +57,7 @@ describe('ReadDocumentToolHandler', () => {
       authorId: mockUserId,
     });
 
-    return new Artifact({
+    return new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -108,7 +108,7 @@ describe('ReadDocumentToolHandler', () => {
 
   it('should throw ToolExecutionFailedError when use case fails', async () => {
     mockFindArtifactUseCase.execute.mockRejectedValue(
-      new Error('Artifact not found'),
+      new Error('DocumentArtifact not found'),
     );
 
     const tool = new ReadDocumentTool();

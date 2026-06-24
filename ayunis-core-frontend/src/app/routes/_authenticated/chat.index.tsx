@@ -1,18 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { NewChatPage, NewChatPageNoModelError } from '@/pages/new-chat';
 import {
-  modelsControllerGetEffectiveDefaultModel,
-  promptsControllerFindOne,
+  modelsDefaultsControllerGetEffectiveDefaultModel,
   getSubscriptionsControllerHasActiveSubscriptionQueryKey,
   subscriptionsControllerHasActiveSubscription,
-  getPromptsControllerFindOneQueryKey,
-  getModelsControllerGetEffectiveDefaultModelQueryKey,
+  getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey,
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
   modelsControllerIsEmbeddingModelEnabled,
-  getAgentsControllerFindAllQueryKey,
-  agentsControllerFindAll,
-  appControllerFeatureToggles,
-  getAppControllerFeatureTogglesQueryKey,
   chatSettingsControllerGetSystemPrompt,
   getChatSettingsControllerGetSystemPromptQueryKey,
 } from '@/shared/api';
@@ -20,13 +14,8 @@ import extractErrorData from '@/shared/api/extract-error-data';
 import { z } from 'zod';
 
 const queryDefaultModelOptions = () => ({
-  queryKey: getModelsControllerGetEffectiveDefaultModelQueryKey(),
-  queryFn: () => modelsControllerGetEffectiveDefaultModel(),
-});
-
-const queryPromptOptions = (prompt: string) => ({
-  queryKey: getPromptsControllerFindOneQueryKey(prompt),
-  queryFn: () => promptsControllerFindOne(prompt),
+  queryKey: getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey(),
+  queryFn: () => modelsDefaultsControllerGetEffectiveDefaultModel(),
 });
 
 const queryHasActiveSubscriptionOptions = () => ({
@@ -39,34 +28,17 @@ const queryIsEmbeddingModelEnabledOptions = () => ({
   queryFn: () => modelsControllerIsEmbeddingModelEnabled(),
 });
 
-const queryAgentsOptions = () => ({
-  queryKey: getAgentsControllerFindAllQueryKey(),
-  queryFn: () => agentsControllerFindAll(),
-});
-
 const searchSchema = z.object({
-  prompt: z.string().optional(),
   modelId: z.string().optional(),
-  agentId: z.string().optional(),
 });
 
 export const Route = createFileRoute('/_authenticated/chat/')({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
-  loader: async ({
-    deps: { prompt: promptId, modelId, agentId },
-    context: { queryClient },
-  }) => {
-    const featureToggles = await queryClient.fetchQuery({
-      queryKey: getAppControllerFeatureTogglesQueryKey(),
-      queryFn: () => appControllerFeatureToggles(),
-    });
+  loader: async ({ deps: { modelId }, context: { queryClient } }) => {
     let selectedModelId: string | undefined;
-    let selectedAgentId: string | undefined;
     if (modelId) {
       selectedModelId = modelId;
-    } else if (agentId) {
-      selectedAgentId = agentId;
     } else {
       const defaultModelResponse = await queryClient.fetchQuery(
         queryDefaultModelOptions(),
@@ -80,13 +52,6 @@ export const Route = createFileRoute('/_authenticated/chat/')({
     const { hasActiveSubscription } = await queryClient.fetchQuery(
       queryHasActiveSubscriptionOptions(),
     );
-    const prompt =
-      promptId && featureToggles.promptsEnabled
-        ? await queryClient.fetchQuery(queryPromptOptions(promptId))
-        : undefined;
-    const agents = featureToggles.agentsEnabled
-      ? await queryClient.fetchQuery(queryAgentsOptions())
-      : [];
     // Await system prompt status so PersonalizationCard doesn't flash
     await queryClient.prefetchQuery({
       queryKey: getChatSettingsControllerGetSystemPromptQueryKey(),
@@ -94,11 +59,8 @@ export const Route = createFileRoute('/_authenticated/chat/')({
     });
     return {
       selectedModelId,
-      selectedAgentId,
-      prefilledPrompt: prompt?.content,
       hasActiveSubscription,
       isEmbeddingModelEnabled,
-      agents,
     };
   },
   errorComponent: ({ error }) => {
@@ -109,7 +71,6 @@ export const Route = createFileRoute('/_authenticated/chat/')({
       }
       return <NewChatPageNoModelError />;
     } catch {
-      // Non-AxiosError (network failure, request cancellation, etc.)
       return <NewChatPageNoModelError />;
     }
   },
@@ -117,20 +78,11 @@ export const Route = createFileRoute('/_authenticated/chat/')({
 });
 
 function RouteComponent() {
-  const {
-    selectedModelId,
-    selectedAgentId,
-    prefilledPrompt,
-    isEmbeddingModelEnabled,
-    agents,
-  } = Route.useLoaderData();
+  const { selectedModelId, isEmbeddingModelEnabled } = Route.useLoaderData();
   return (
     <NewChatPage
       selectedModelId={selectedModelId}
-      selectedAgentId={selectedAgentId}
-      prefilledPrompt={prefilledPrompt}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
-      agents={agents}
     />
   );
 }

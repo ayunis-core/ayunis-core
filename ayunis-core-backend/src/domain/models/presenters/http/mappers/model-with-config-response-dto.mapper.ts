@@ -3,7 +3,6 @@ import { ModelWithConfigResponseDto } from '../dto/model-with-config-response.dt
 import { Injectable } from '@nestjs/common';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 
 @Injectable()
 export class ModelWithConfigResponseDtoMapper {
@@ -24,13 +23,13 @@ export class ModelWithConfigResponseDtoMapper {
         name: model.name,
         provider: model.provider,
         displayName: model.displayName,
+        type: model.type,
         canStream: model instanceof LanguageModel ? model.canStream : false,
         isReasoning: model instanceof LanguageModel ? model.isReasoning : false,
         canUseTools: model instanceof LanguageModel ? model.canUseTools : false,
         canVision: model instanceof LanguageModel ? model.canVision : false,
         isPermitted,
         isDefault,
-        isEmbedding: model instanceof EmbeddingModel ? true : false,
         anonymousOnly: permittedModel?.anonymousOnly,
         tier: model instanceof LanguageModel ? model.tier : undefined,
       };

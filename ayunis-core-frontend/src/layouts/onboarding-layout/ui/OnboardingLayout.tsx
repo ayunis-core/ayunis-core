@@ -14,7 +14,7 @@ import {
 
 // Static
 import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';
-import authBg from '@/shared/assets/brand/auth-bg.jpg';
+import { OnboardingShowcase } from './OnboardingShowcase';
 
 interface OnboardingLayoutProps {
   children?: React.ReactNode;
@@ -87,47 +87,9 @@ export default function OnboardingLayout({
         </div>
       </div>
 
-      {/* Right side - Gradient background with chat mockup */}
-      <div className="hidden lg:flex flex-1 p-4">
-        <div
-          className="flex flex-col flex-1 relative overflow-hidden h-full w-full rounded-xl"
-          style={{
-            backgroundImage: `url(${authBg})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          {/* Title Text */}
-          <div className="flex justify-center my-auto translate-y-[90px]">
-            <h2 className="flex flex-col items-center justify-center gap-2 max-w-[550px] mx-auto text-center text-3xl font-medium text-white">
-              <span className="text-5xl font-bold">700</span>
-              {t('onboardingLayout.statTrustedText')}
-            </h2>
-          </div>
-
-          {/* Bottom text */}
-          <div className="z-1 flex justify-center gap-15 mb-12">
-            <div className="text-center">
-              <i className="text-4xl">🇩🇪</i>
-              <div className="text-lg font-medium text-white">
-                {t('onboardingLayout.madeInGermany')}
-              </div>
-              <div className="text-lg font-medium text-muted-foreground">
-                {t('onboardingLayout.headquarteredInMunich')}
-              </div>
-            </div>
-
-            <div className="text-center">
-              <i className="text-4xl">🇪🇺</i>
-              <div className="text-lg font-medium text-white">
-                {t('onboardingLayout.gdprCompliant')}
-              </div>
-              <div className="text-lg font-medium text-muted-foreground">
-                {t('onboardingLayout.hostedInEurope')}
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Right side - Brand showcase */}
+      <div className="hidden lg:flex flex-1 min-w-0 p-4">
+        <OnboardingShowcase />
       </div>
     </div>
   );

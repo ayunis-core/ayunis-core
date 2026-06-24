@@ -1,5 +1,5 @@
 import {
-  getSuperAdminPermittedModelsControllerGetAvailableModelsQueryKey,
+  getSuperAdminPermittedModelsControllerGetAvailableLanguageModelsQueryKey,
   getSuperAdminPermittedModelsControllerGetPermittedModelsQueryKey,
   type ModelWithConfigResponseDto,
   useSuperAdminPermittedModelsControllerManageOrgDefaultModel,
@@ -19,7 +19,7 @@ export function useSuperAdminManageOrgDefaultModel(orgId: string) {
       mutation: {
         onMutate: async ({ data }) => {
           const queryKey =
-            getSuperAdminPermittedModelsControllerGetAvailableModelsQueryKey(
+            getSuperAdminPermittedModelsControllerGetAvailableLanguageModelsQueryKey(
               orgId,
             );
           await queryClient.cancelQueries({ queryKey });
@@ -61,7 +61,7 @@ export function useSuperAdminManageOrgDefaultModel(orgId: string) {
         },
         onSettled: async () => {
           const queryKeys = [
-            getSuperAdminPermittedModelsControllerGetAvailableModelsQueryKey(
+            getSuperAdminPermittedModelsControllerGetAvailableLanguageModelsQueryKey(
               orgId,
             ),
             getSuperAdminPermittedModelsControllerGetPermittedModelsQueryKey(

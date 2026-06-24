@@ -82,6 +82,15 @@ export class SkillResponseDto {
     example: false,
   })
   isPinned: boolean;
+
+  @ApiProperty({
+    description:
+      'Display name of the user who shared this skill with the current user. Non-null only for shared skills whose creator can be resolved within the caller’s organisation; otherwise null.',
+    example: 'Florian Obermeier',
+    type: 'string',
+    nullable: true,
+  })
+  creatorName: string | null;
 }
 
 export class SkillSourceResponseDto {

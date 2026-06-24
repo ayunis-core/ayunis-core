@@ -5,6 +5,7 @@ import type { Source } from 'src/domain/sources/domain/source.entity';
 import {
   detectFileType,
   getCanonicalMimeType,
+  isAudioFile,
   isDocumentFile,
   isPlainTextFile,
   isSpreadsheetFile,
@@ -32,6 +33,10 @@ const SUPPORTED_FILE_TYPES = [
   'CSV',
   'XLSX',
   'XLS',
+  'MP3',
+  'M4A',
+  'WAV',
+  'WEBM',
 ];
 
 @Injectable()
@@ -54,7 +59,11 @@ export class CreateSourcesFromFileUseCase {
         command.originalName,
       );
 
-      if (isDocumentFile(detectedType) || isPlainTextFile(detectedType)) {
+      if (
+        isDocumentFile(detectedType) ||
+        isPlainTextFile(detectedType) ||
+        isAudioFile(detectedType)
+      ) {
         return [await this.createDocumentSource(command, detectedType)];
       }
 

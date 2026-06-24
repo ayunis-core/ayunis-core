@@ -28,7 +28,7 @@ export function ModelCheckboxField<T extends FieldValues>({
         <FormItem className="flex flex-row items-start space-x-3 space-y-0">
           <FormControl>
             <Checkbox
-              checked={field.value as boolean}
+              checked={field.value}
               onCheckedChange={field.onChange}
               disabled={disabled}
             />

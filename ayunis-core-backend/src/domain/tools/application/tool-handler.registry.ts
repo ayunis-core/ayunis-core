@@ -32,6 +32,12 @@ import { EditDocumentToolHandler } from './handlers/edit-document-tool.handler';
 import { EditDocumentTool } from '../domain/tools/edit-document-tool.entity';
 import { ReadDocumentToolHandler } from './handlers/read-document-tool.handler';
 import { ReadDocumentTool } from '../domain/tools/read-document-tool.entity';
+import { GenerateImageToolHandler } from './handlers/generate-image-tool.handler';
+import { GenerateImageTool } from '../domain/tools/generate-image-tool.entity';
+import { CreateDiagramToolHandler } from './handlers/create-diagram-tool.handler';
+import { CreateDiagramTool } from '../domain/tools/create-diagram-tool.entity';
+import { UpdateDiagramToolHandler } from './handlers/update-diagram-tool.handler';
+import { UpdateDiagramTool } from '../domain/tools/update-diagram-tool.entity';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- constructor types vary; used only as Map keys for instanceof matching
 type ToolConstructor = abstract new (...args: any[]) => Tool;
@@ -57,6 +63,9 @@ export class ToolHandlerRegistry {
     updateDocumentToolHandler: UpdateDocumentToolHandler,
     editDocumentToolHandler: EditDocumentToolHandler,
     readDocumentToolHandler: ReadDocumentToolHandler,
+    generateImageToolHandler: GenerateImageToolHandler,
+    createDiagramToolHandler: CreateDiagramToolHandler,
+    updateDiagramToolHandler: UpdateDiagramToolHandler,
   ) {
     this.handlers = [
       [HttpTool, httpToolHandler],
@@ -74,6 +83,9 @@ export class ToolHandlerRegistry {
       [UpdateDocumentTool, updateDocumentToolHandler],
       [EditDocumentTool, editDocumentToolHandler],
       [ReadDocumentTool, readDocumentToolHandler],
+      [GenerateImageTool, generateImageToolHandler],
+      [CreateDiagramTool, createDiagramToolHandler],
+      [UpdateDiagramTool, updateDiagramToolHandler],
     ];
   }
 

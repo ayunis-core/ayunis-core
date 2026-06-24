@@ -1,6 +1,7 @@
 {
   "shared": {
-    "badge": "Freigegeben"
+    "badge": "Freigegeben",
+    "by": "Geteilt von {{name}}"
   },
   "page": {
     "title": "Fähigkeiten"
@@ -8,6 +9,10 @@
   "tabs": {
     "personal": "Eigene Fähigkeiten",
     "shared": "Geteilte Fähigkeiten"
+  },
+  "marketplaceBanner": {
+    "title": "Weitere Fähigkeiten im Ayunis Core Marketplace entdecken",
+    "description": "Durchsuchen Sie kuratierte Fähigkeiten und installieren Sie neue direkt aus dem Ayunis Core Marketplace."
   },
   "emptyState": {
     "title": "Noch keine Fähigkeiten",
@@ -19,7 +24,8 @@
     "shared": {
       "title": "Noch keine geteilten Fähigkeiten",
       "description": "Fähigkeiten, die von anderen Mitgliedern Ihrer Organisation mit Ihnen geteilt werden, erscheinen hier."
-    }
+    },
+    "browseMarketplace": "Oder durchsuchen Sie den Ayunis Core Marketplace"
   },
   "badge": {
     "active": "Aktiv",
@@ -57,6 +63,7 @@
       "create": "Fähigkeit erstellen",
       "creating": "Wird erstellt..."
     },
+    "marketplaceHint": "Fähigkeiten werden nicht automatisch im Marketplace veröffentlicht.",
     "validation": {
       "nameRequired": "Name ist erforderlich",
       "shortDescriptionRequired": "Auslöser ist erforderlich",

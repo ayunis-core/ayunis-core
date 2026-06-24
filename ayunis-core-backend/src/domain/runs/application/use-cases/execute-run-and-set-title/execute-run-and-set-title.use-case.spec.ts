@@ -3,12 +3,21 @@ import { ExecuteRunAndSetTitleUseCase } from './execute-run-and-set-title.use-ca
 import { ExecuteRunAndSetTitleCommand } from './execute-run-and-set-title.command';
 import type { ExecuteRunUseCase } from '../execute-run/execute-run.use-case';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
-import type { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
 import type { GenerateAndSetThreadTitleUseCase } from 'src/domain/threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.use-case';
-import type { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
+import type { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
+import type { ContextService } from 'src/common/context/services/context.service';
 import { RunUserInput } from 'src/domain/runs/domain/run-input.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
-import type { RunEvent, RunErrorEvent } from '../../run-events';
+import type {
+  RunEvent,
+  RunErrorEvent,
+  RunMasksEvent,
+  RunMessageEvent,
+} from '../../run-events';
+import { RunPiiMasksUpdate } from '../../../domain/run-pii-masks-update.entity';
+import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
+import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
+import type { Message } from 'src/domain/messages/domain/message.entity';
 import {
   QuotaExceededError,
   QuotaErrorCode,
@@ -19,16 +28,15 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
   let useCase: ExecuteRunAndSetTitleUseCase;
   let executeRunUseCase: jest.Mocked<ExecuteRunUseCase>;
   let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
-  let findOneAgentUseCase: jest.Mocked<FindOneAgentUseCase>;
   let generateAndSetThreadTitleUseCase: jest.Mocked<GenerateAndSetThreadTitleUseCase>;
-  let anonymizeTextUseCase: jest.Mocked<AnonymizeTextUseCase>;
+  let anonymizeTextForOrgUseCase: jest.Mocked<AnonymizeTextForOrgUseCase>;
+  let contextService: jest.Mocked<ContextService>;
 
   let threadId: UUID;
 
   function makeThread(): Thread {
     return {
       id: threadId,
-      agentId: null,
       isAnonymous: false,
       messages: [],
     } as unknown as Thread;
@@ -58,25 +66,71 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
       }),
     } as unknown as jest.Mocked<FindThreadUseCase>;
 
-    findOneAgentUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<FindOneAgentUseCase>;
-
     generateAndSetThreadTitleUseCase = {
       execute: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<GenerateAndSetThreadTitleUseCase>;
 
-    anonymizeTextUseCase = {
+    anonymizeTextForOrgUseCase = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<AnonymizeTextUseCase>;
+    } as unknown as jest.Mocked<AnonymizeTextForOrgUseCase>;
+
+    contextService = {
+      get: jest.fn().mockReturnValue(randomUUID()),
+    } as unknown as jest.Mocked<ContextService>;
 
     useCase = new ExecuteRunAndSetTitleUseCase(
       executeRunUseCase,
       findThreadUseCase,
-      findOneAgentUseCase,
       generateAndSetThreadTitleUseCase,
-      anonymizeTextUseCase,
+      anonymizeTextForOrgUseCase,
+      contextService,
     );
+  });
+
+  describe('PII masks stream items', () => {
+    it('maps RunPiiMasksUpdate items to masks events before the message event', async () => {
+      const mask = new ThreadPiiMask({
+        threadId,
+        category: PiiCategory.PERSON_NAME,
+        maskIndex: 1,
+        value: 'Max Mustermann',
+      });
+      const userMessage = { id: randomUUID() } as unknown as Message;
+
+      executeRunUseCase.execute.mockResolvedValue(
+        (async function* () {
+          yield new RunPiiMasksUpdate([mask]);
+          yield userMessage;
+        })(),
+      );
+
+      const events = await drain(
+        useCase.execute(
+          new ExecuteRunAndSetTitleCommand({
+            threadId,
+            input: new RunUserInput('hello', []),
+            streaming: true,
+          }),
+        ),
+      );
+
+      const masksIndex = events.findIndex((e) => e.type === 'masks');
+      const messageIndex = events.findIndex((e) => e.type === 'message');
+      expect(masksIndex).toBeGreaterThan(-1);
+      expect(masksIndex).toBeLessThan(messageIndex);
+
+      const masksEvent = events[masksIndex] as RunMasksEvent;
+      expect(masksEvent.masks).toEqual([
+        {
+          token: '{{pii:PERSON_NAME_1}}',
+          value: 'Max Mustermann',
+          category: PiiCategory.PERSON_NAME,
+        },
+      ]);
+
+      const messageEvent = events[messageIndex] as RunMessageEvent;
+      expect(messageEvent.message).toBe(userMessage);
+    });
   });
 
   describe('SSE error event conversion', () => {
@@ -128,9 +182,11 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
         }),
       );
 
-      // And the user-facing message must NOT leak the raw enum identifier.
+      // The user-facing message must not leak super-admin-configurable
+      // implementation details — neither the raw enum identifier nor the
+      // configured limit. Numeric values stay in `details` for SSE consumers.
       expect(errorEvent.message).not.toContain(quotaType);
-      expect(errorEvent.message).toContain(String(limit));
+      expect(errorEvent.message).not.toContain(String(limit));
 
       // Session frame discipline: open -> error -> close.
       expect(events[0]).toEqual(

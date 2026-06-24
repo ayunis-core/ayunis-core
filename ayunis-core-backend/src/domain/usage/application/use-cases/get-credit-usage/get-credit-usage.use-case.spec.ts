@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { GetCreditUsageUseCase } from './get-credit-usage.use-case';
 import { GetCreditUsageQuery } from './get-credit-usage.query';
 import { GetMonthlyCreditUsageUseCase } from '../get-monthly-credit-usage/get-monthly-credit-usage.use-case';
+import { GetMonthlyCreditUsageQuery } from '../get-monthly-credit-usage/get-monthly-credit-usage.query';
 import { GetMonthlyCreditLimitUseCase } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
 import type { UUID } from 'crypto';
 
@@ -97,6 +98,21 @@ describe('GetCreditUsageUseCase', () => {
       creditsUsed: 0,
       creditsRemaining: 5000,
     });
+  });
+
+  it('should pass startsAt as since to credit usage query', async () => {
+    const startsAt = new Date('2026-04-10T00:00:00.000Z');
+    mockGetMonthlyCreditLimit.execute.mockResolvedValue({
+      monthlyCredits: 5000,
+      startsAt,
+    });
+    mockMonthlyCreditUsage.execute.mockResolvedValue({ creditsUsed: 100 });
+
+    await useCase.execute(new GetCreditUsageQuery(orgId));
+
+    expect(mockMonthlyCreditUsage.execute).toHaveBeenCalledWith(
+      new GetMonthlyCreditUsageQuery(orgId, startsAt),
+    );
   });
 
   it('should propagate errors from the credit limit use case', async () => {

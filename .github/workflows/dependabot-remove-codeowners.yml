@@ -1,0 +1,42 @@
+name: Remove CODEOWNERS from Dependabot PRs
+
+on:
+  pull_request_target:
+    types: [opened, ready_for_review, reopened]
+
+jobs:
+  remove-codeowner-reviews:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Remove CODEOWNERS review requests
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo, number } = context.issue;
+
+            const { data } = await github.rest.pulls.listRequestedReviewers({
+              owner,
+              repo,
+              pull_number: number,
+            });
+
+            const reviewers = data.users.map(u => u.login);
+            const teamReviewers = data.teams.map(t => t.slug);
+
+            if (reviewers.length === 0 && teamReviewers.length === 0) {
+              core.info('No review requests to remove.');
+              return;
+            }
+
+            await github.rest.pulls.removeRequestedReviewers({
+              owner,
+              repo,
+              pull_number: number,
+              reviewers,
+              team_reviewers: teamReviewers,
+            });
+
+            core.info(`Removed reviewers: ${reviewers.concat(teamReviewers).join(', ')}`);

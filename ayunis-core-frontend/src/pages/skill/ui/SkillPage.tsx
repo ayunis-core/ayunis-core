@@ -102,7 +102,14 @@ export function SkillPage({
             ]}
             badge={
               isReadOnly ? (
-                <Badge variant="secondary">{t('shared.badge')}</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{t('shared.badge')}</Badge>
+                  {skill.creatorName && (
+                    <span className="text-sm text-muted-foreground">
+                      {t('shared.by', { name: skill.creatorName })}
+                    </span>
+                  )}
+                </div>
               ) : undefined
             }
             action={
@@ -154,11 +161,12 @@ export function SkillPage({
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="text-destructive hover:text-destructive"
                         onClick={handleDelete}
                         disabled={deleteSkill.isPending}
                         aria-label={tSkills('card.deleteLabel')}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>

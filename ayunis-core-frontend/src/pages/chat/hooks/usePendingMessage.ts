@@ -1,10 +1,8 @@
-import type { RefObject } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { AxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import { showError } from '@/shared/lib/toast';
-import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import type { PendingImage } from '../api/useMessageSend';
 
 interface UsePendingMessageParams {
@@ -13,127 +11,71 @@ interface UsePendingMessageParams {
     images?: PendingImage[];
     skillId?: string;
   }) => Promise<void>;
-  createFileSourceAsync: (params: { file: File }) => unknown;
-  resetCreateFileSourceMutation: () => void;
-  addKnowledgeBaseAsync: (id: string) => Promise<unknown>;
-  chatInputRef: RefObject<ChatInputRef | null>;
+  onSendStart?: (text: string) => void;
 }
 
+/**
+ * After redirect from the new-chat page, ChatPage mounts with a pending
+ * message stashed in chat context. This hook fires once on mount, sends
+ * the message, and clears the context. Source uploads, knowledge-base
+ * attachment, and source-processing waits all happen *before* navigation
+ * (see useInitiateChat) — by the time we get here the thread is already
+ * fully prepared.
+ */
 export function usePendingMessage({
   sendTextMessage,
-  createFileSourceAsync,
-  resetCreateFileSourceMutation,
-  addKnowledgeBaseAsync,
-  chatInputRef,
+  onSendStart,
 }: UsePendingMessageParams) {
   const { t } = useTranslation('chat');
-  const processedPendingMessageRef = useRef<string | null>(null);
-  const [isProcessingPendingSources, setIsProcessingPendingSources] =
-    useState(false);
-
+  const sentRef = useRef(false);
   const {
     pendingMessage,
     setPendingMessage,
-    sources,
-    setSources,
     pendingImages,
     setPendingImages,
-    pendingKnowledgeBases,
-    setPendingKnowledgeBases,
     pendingSkillId,
     setPendingSkillId,
   } = useChatContext();
 
   useEffect(() => {
-    async function uploadPendingSources() {
-      if (sources.length === 0) return;
-      setIsProcessingPendingSources(true);
-      const promises = sources.map((source) =>
-        createFileSourceAsync({ file: source.file }),
-      );
-      await Promise.all(promises as Promise<unknown>[]);
-      resetCreateFileSourceMutation();
-    }
+    if (!pendingMessage || sentRef.current) return;
+    sentRef.current = true;
 
-    async function attachPendingKnowledgeBases() {
-      if (pendingKnowledgeBases.length === 0) return;
-      const results = await Promise.allSettled(
-        pendingKnowledgeBases.map((kb) => addKnowledgeBaseAsync(kb.id)),
-      );
-      const failed = results.filter((r) => r.status === 'rejected');
-      if (failed.length > 0) {
-        console.error(
-          `Failed to attach ${String(failed.length)} knowledge base(s)`,
-        );
-      }
-    }
+    const text = pendingMessage;
+    const images: PendingImage[] | undefined =
+      pendingImages.length > 0
+        ? pendingImages.map((img) => ({
+            file: img.file,
+            altText: img.altText ?? (img.file.name || 'Pasted image'),
+          }))
+        : undefined;
+    const skillId = pendingSkillId;
 
-    function buildPendingImages(): PendingImage[] | undefined {
-      if (pendingImages.length === 0) return undefined;
-      return pendingImages.map((img) => ({
-        file: img.file,
-        altText: img.altText ?? (img.file.name || 'Pasted image'),
-      }));
-    }
+    setPendingMessage('');
+    setPendingImages([]);
+    setPendingSkillId(undefined);
 
-    async function sendPendingMessage() {
-      if (
-        !pendingMessage ||
-        processedPendingMessageRef.current === pendingMessage
-      ) {
-        return;
-      }
-      processedPendingMessageRef.current = pendingMessage;
+    void (async () => {
       try {
-        await uploadPendingSources();
-        setSources([]);
-        await attachPendingKnowledgeBases();
-        await sendTextMessage({
-          text: pendingMessage,
-          images: buildPendingImages(),
-          skillId: pendingSkillId,
-        });
+        onSendStart?.(text);
+        await sendTextMessage({ text, images, skillId });
       } catch (error) {
         if (error instanceof AxiosError && error.response?.status === 403) {
           showError(t('chat.upgradeToProError'));
         } else {
           showError(t('chat.errorSendMessage'));
         }
-        chatInputRef.current?.setMessage(pendingMessage);
-      } finally {
-        setIsProcessingPendingSources(false);
-        setPendingMessage('');
-        setPendingImages([]);
-        setPendingKnowledgeBases([]);
-        setPendingSkillId(undefined);
       }
-    }
-    void sendPendingMessage();
+    })();
   }, [
     pendingMessage,
+    pendingImages,
+    pendingSkillId,
+    onSendStart,
     sendTextMessage,
     setPendingMessage,
-    sources,
-    createFileSourceAsync,
-    setSources,
-    pendingImages,
     setPendingImages,
-    pendingKnowledgeBases,
-    setPendingKnowledgeBases,
-    pendingSkillId,
     setPendingSkillId,
-    addKnowledgeBaseAsync,
-    chatInputRef,
     t,
-    resetCreateFileSourceMutation,
   ]);
-
-  return {
-    pendingMessage,
-    sources,
-    pendingImages,
-    pendingKnowledgeBases,
-    pendingSkillId,
-    isProcessingPendingSources,
-  };
 }

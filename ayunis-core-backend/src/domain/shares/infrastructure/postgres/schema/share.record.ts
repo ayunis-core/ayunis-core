@@ -9,7 +9,6 @@ import {
 import { BaseRecord } from '../../../../../common/db/base-record';
 import { SharedEntityType } from '../../../../../domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ShareScopeRecord } from './share-scope.record';
-import { AgentRecord } from '../../../../../domain/agents/infrastructure/persistence/local/schema/agent.record';
 import { SkillRecord } from '../../../../../domain/skills/infrastructure/persistence/local/schema/skill.record';
 import { KnowledgeBaseRecord } from '../../../../../domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { UUID } from 'crypto';
@@ -27,16 +26,6 @@ export class ShareRecord extends BaseRecord {
 
   @Column({ name: 'owner_id' })
   ownerId: UUID;
-}
-
-@ChildEntity(SharedEntityType.AGENT)
-export class AgentShareRecord extends ShareRecord {
-  @Column({ name: 'agent_id' })
-  agentId: UUID;
-
-  @ManyToOne(() => AgentRecord, { onDelete: 'CASCADE', nullable: false })
-  @JoinColumn({ name: 'agent_id' })
-  agent: AgentRecord;
 }
 
 @ChildEntity(SharedEntityType.SKILL)

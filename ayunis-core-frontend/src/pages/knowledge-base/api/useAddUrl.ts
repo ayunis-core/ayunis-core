@@ -37,10 +37,10 @@ export function useAddUrl(knowledgeBaseId: string) {
     },
   });
 
-  const addUrlAsync = async (url: string) => {
+  const addUrlAsync = async (url: string, maxDepth = 0) => {
     await mutation.mutateAsync({
       id: knowledgeBaseId,
-      data: { url },
+      data: { url, maxDepth },
     });
   };
 

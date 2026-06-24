@@ -11,7 +11,7 @@ import {
   ArtifactVersionConflictError,
   ArtifactVersionNotFoundError,
 } from '../../artifacts.errors';
-import { Artifact } from '../../../domain/artifact.entity';
+import { DocumentArtifact } from '../../../domain/artifact.entity';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -99,7 +99,7 @@ describe('RevertArtifactUseCase', () => {
       }),
     ];
 
-    const artifact = new Artifact({
+    const artifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -147,7 +147,7 @@ describe('RevertArtifactUseCase', () => {
       }),
     ];
 
-    const artifact = new Artifact({
+    const artifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -193,7 +193,7 @@ describe('RevertArtifactUseCase', () => {
   });
 
   it('should throw ArtifactVersionNotFoundError when target version does not exist', async () => {
-    const artifact = new Artifact({
+    const artifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
@@ -240,11 +240,11 @@ describe('RevertArtifactUseCase', () => {
       }),
     ];
 
-    const artifact = new Artifact({
+    const artifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
-      title: 'Test Artifact',
+      title: 'Test DocumentArtifact',
       currentVersionNumber: 2,
       versions,
     });
@@ -295,7 +295,7 @@ describe('RevertArtifactUseCase', () => {
 
   describe('retry on version conflict', () => {
     it('should retry and succeed when addVersionAndUpdateArtifact fails once with conflict', async () => {
-      const artifactV2 = new Artifact({
+      const artifactV2 = new DocumentArtifact({
         id: mockArtifactId,
         threadId: mockThreadId,
         userId: mockUserId,
@@ -304,7 +304,7 @@ describe('RevertArtifactUseCase', () => {
         versions: makeVersions(2),
       });
 
-      const artifactV3 = new Artifact({
+      const artifactV3 = new DocumentArtifact({
         id: mockArtifactId,
         threadId: mockThreadId,
         userId: mockUserId,
@@ -346,7 +346,7 @@ describe('RevertArtifactUseCase', () => {
     });
 
     it('should throw ArtifactVersionConflictError after exhausting all retries', async () => {
-      const artifact = new Artifact({
+      const artifact = new DocumentArtifact({
         id: mockArtifactId,
         threadId: mockThreadId,
         userId: mockUserId,
@@ -376,7 +376,7 @@ describe('RevertArtifactUseCase', () => {
     });
 
     it('should rethrow non-conflict errors without retrying', async () => {
-      const artifact = new Artifact({
+      const artifact = new DocumentArtifact({
         id: mockArtifactId,
         threadId: mockThreadId,
         userId: mockUserId,

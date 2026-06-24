@@ -6,7 +6,10 @@ import {
 import { UUID } from 'crypto';
 import { ToolExecutionFailedError } from '../tools.errors';
 import { getAyunisCodeExecutionService } from '../../../../common/clients/code-execution/generated/ayunisCodeExecutionService';
-import type { ExecutionRequest } from '../../../../common/clients/code-execution/generated/ayunisCodeExecutionService.schemas';
+import type {
+  ExecutionRequest,
+  ExecutionResponse,
+} from '../../../../common/clients/code-execution/generated/ayunisCodeExecutionService.schemas';
 import { Injectable, Logger } from '@nestjs/common';
 import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
 import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
@@ -40,136 +43,27 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
     const { tool, input, context } = params;
 
     try {
-      const validatedInput = tool.validateParams(input);
-      const { code, dataSourceIds } = validatedInput;
-      // Get the code execution service client
+      const { code, dataSourceIds } = tool.validateParams(input);
+
+      const executionFiles = await this.prepareExecutionFiles(
+        dataSourceIds,
+        tool.name,
+      );
+
       const codeExecutionService = getAyunisCodeExecutionService();
-
-      // Prepare files object
-      const executionFiles: Record<string, string> = {};
-
-      // Add CSV data sources as files
-      if (dataSourceIds && Array.isArray(dataSourceIds)) {
-        for (const sourceId of dataSourceIds) {
-          const csvSource = await this.getSourceByIdUseCase
-            .execute(new GetSourceByIdQuery(sourceId as UUID))
-            .catch((error) => {
-              this.logger.error('Error getting CSV data source', error);
-              throw new ToolExecutionFailedError({
-                toolName: tool.name,
-                message: `Error getting CSV data source: ${error instanceof Error ? error.message : 'Unknown error. Source ID: ' + sourceId}`,
-                exposeToLLM: true,
-              });
-            });
-          if (csvSource instanceof CSVDataSource) {
-            try {
-              const csvContent = convertCSVToString(csvSource.data);
-              executionFiles[`${sourceId}.csv`] =
-                Buffer.from(csvContent).toString('base64');
-            } catch (error) {
-              this.logger.error(
-                'Error converting CSV data source to string',
-                error,
-                { data: csvSource.data },
-              );
-              throw new ToolExecutionFailedError({
-                toolName: tool.name,
-                message: `Error converting CSV data source to string: ${error instanceof Error ? error.message : 'Unknown error'} Source data: ${JSON.stringify(csvSource.data)}`,
-                exposeToLLM: true,
-              });
-            }
-          }
-        }
-      }
-
-      // Prepare the execution request
       const executionRequest: ExecutionRequest = {
-        code: code,
+        code,
         files: executionFiles,
       };
-
-      // Execute the code using the generated client (returns data directly via custom mutator)
       const response =
         await codeExecutionService.executeCodeExecutePost(executionRequest);
 
-      // Handle output CSV files if present
-      const createdSources: string[] = [];
-      if (
-        response.output_files &&
-        Object.keys(response.output_files).length > 0
-      ) {
-        try {
-          const { thread } = await this.findThreadUseCase.execute(
-            new FindThreadQuery(context.threadId),
-          );
+      const createdSources = await this.processOutputFiles(
+        response.output_files,
+        context.threadId,
+      );
 
-          for (const [filename, content_b64] of Object.entries(
-            response.output_files,
-          )) {
-            try {
-              // Decode the base64 content
-              const csvContent = Buffer.from(content_b64, 'base64').toString(
-                'utf-8',
-              );
-
-              // Parse CSV
-              const { headers, data } = parseCSV(csvContent);
-
-              // Create data source
-              const sourceName = filename.replace('.csv', '');
-              const source = await this.createDataSourceUseCase.execute(
-                new CreateCSVDataSourceCommand({
-                  name: sourceName,
-                  data: { headers, rows: data },
-                  createdBy: SourceCreator.LLM,
-                }),
-              );
-
-              // Add source to thread
-              await this.addSourceToThreadUseCase.execute(
-                new AddSourceCommand(thread, source),
-              );
-
-              createdSources.push(`${sourceName} (ID: ${source.id})`);
-              this.logger.log(
-                `Created and attached CSV source: ${sourceName}`,
-                {
-                  sourceId: source.id,
-                  threadId: context.threadId,
-                },
-              );
-            } catch (error) {
-              this.logger.error(
-                `Failed to process output file ${filename}`,
-                error,
-              );
-              // Continue processing other files
-            }
-          }
-        } catch (error) {
-          this.logger.error('Failed to handle output files', error);
-          // Don't fail the entire execution if source creation fails
-        }
-      }
-
-      // Format the response for the LLM
-      if (response.success) {
-        let result = `Code executed successfully (ID: ${response.execution_id})\n`;
-        if (response.output) {
-          result += `Output:\n${response.output}\n`;
-        }
-        if (createdSources.length > 0) {
-          result += `\nCreated ${createdSources.length} CSV data source(s):\n${createdSources.map((s) => `- ${s}`).join('\n')}\n`;
-          result += `These sources are now available for analysis in this conversation.\n`;
-        }
-        if (response.error) {
-          result += `Warnings/Errors:\n${response.error}\n`;
-        }
-        result += `Exit code: ${response.exit_code}`;
-        return result;
-      } else {
-        return `Code execution failed (ID: ${response.execution_id})\nError: ${response.error}\nExit code: ${response.exit_code}`;
-      }
+      return this.formatLLMResponse(response, createdSources);
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
@@ -180,5 +74,161 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
         exposeToLLM: true,
       });
     }
+  }
+
+  private async prepareExecutionFiles(
+    dataSourceIds: unknown,
+    toolName: string,
+  ): Promise<Record<string, string>> {
+    const executionFiles: Record<string, string> = {};
+    if (!Array.isArray(dataSourceIds)) {
+      return executionFiles;
+    }
+
+    for (const sourceId of dataSourceIds) {
+      const csvSource = await this.loadCsvSource(sourceId as UUID, toolName);
+      if (csvSource instanceof CSVDataSource) {
+        executionFiles[`${sourceId}.csv`] = this.encodeCsvToBase64(
+          csvSource,
+          sourceId as UUID,
+          toolName,
+        );
+      }
+    }
+    return executionFiles;
+  }
+
+  private async loadCsvSource(sourceId: UUID, toolName: string) {
+    try {
+      return await this.getSourceByIdUseCase.execute(
+        new GetSourceByIdQuery(sourceId),
+      );
+    } catch (error) {
+      this.logger.error('Error getting CSV data source', error);
+      throw new ToolExecutionFailedError({
+        toolName,
+        message: `Error getting CSV data source: ${error instanceof Error ? error.message : 'Unknown error. Source ID: ' + sourceId}`,
+        exposeToLLM: true,
+      });
+    }
+  }
+
+  private encodeCsvToBase64(
+    csvSource: CSVDataSource,
+    sourceId: UUID,
+    toolName: string,
+  ): string {
+    try {
+      const csvContent = convertCSVToString(csvSource.data);
+      return Buffer.from(csvContent).toString('base64');
+    } catch (error) {
+      this.logger.error('Error converting CSV data source to string', error, {
+        sourceId,
+        rowCount: csvSource.data.rows.length,
+        headerCount: csvSource.data.headers.length,
+      });
+      throw new ToolExecutionFailedError({
+        toolName,
+        message: `Error converting CSV data source to string: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        exposeToLLM: true,
+      });
+    }
+  }
+
+  private async processOutputFiles(
+    outputFiles: ExecutionResponse['output_files'],
+    threadId: UUID,
+  ): Promise<string[]> {
+    const createdSources: string[] = [];
+    if (!outputFiles || Object.keys(outputFiles).length === 0) {
+      return createdSources;
+    }
+
+    try {
+      const { thread } = await this.findThreadUseCase.execute(
+        new FindThreadQuery(threadId),
+      );
+
+      for (const [filename, content_b64] of Object.entries(outputFiles)) {
+        const summary = await this.persistOutputFile(
+          filename,
+          content_b64,
+          thread,
+          threadId,
+        );
+        if (summary) {
+          createdSources.push(summary);
+        }
+      }
+    } catch (error) {
+      this.logger.error('Failed to handle output files', error);
+    }
+
+    return createdSources;
+  }
+
+  private async persistOutputFile(
+    filename: string,
+    contentBase64: string,
+    thread: Parameters<AddSourceToThreadUseCase['execute']>[0]['thread'],
+    threadId: UUID,
+  ): Promise<string | null> {
+    try {
+      const csvContent = Buffer.from(contentBase64, 'base64').toString('utf-8');
+      const { headers, data } = parseCSV(csvContent);
+      const sourceName = filename.replace('.csv', '');
+
+      const source = await this.createDataSourceUseCase.execute(
+        new CreateCSVDataSourceCommand({
+          name: sourceName,
+          data: { headers, rows: data },
+          createdBy: SourceCreator.LLM,
+        }),
+      );
+
+      await this.addSourceToThreadUseCase.execute(
+        new AddSourceCommand(thread, source),
+      );
+
+      this.logger.log(`Created and attached CSV source: ${sourceName}`, {
+        sourceId: source.id,
+        threadId,
+      });
+
+      return `${sourceName} (ID: ${source.id})`;
+    } catch (error) {
+      this.logger.error(`Failed to process output file ${filename}`, error);
+      return null;
+    }
+  }
+
+  private formatLLMResponse(
+    response: ExecutionResponse,
+    createdSources: string[],
+  ): string {
+    if (!response.success) {
+      return `Code execution failed (ID: ${response.execution_id})\nError: ${response.error}\nExit code: ${response.exit_code}`;
+    }
+
+    const lines: string[] = [
+      `Code executed successfully (ID: ${response.execution_id})`,
+    ];
+    if (response.output) {
+      lines.push(`Output:\n${response.output}`);
+    }
+    if (createdSources.length > 0) {
+      const sourceList = createdSources.map((s) => `- ${s}`).join('\n');
+      lines.push(
+        `\nCreated ${createdSources.length} CSV data source(s):\n${sourceList}`,
+      );
+      lines.push(
+        'These sources are now available for analysis in this conversation.',
+      );
+    }
+    if (response.error) {
+      lines.push(`Warnings/Errors:\n${response.error}`);
+    }
+    lines.push(`Exit code: ${response.exit_code}`);
+    return lines.join('\n');
   }
 }

@@ -1,10 +1,10 @@
 import {
   Building2,
   Brain,
-  BarChart3,
   Sparkles,
   ShieldCheck,
   Settings2,
+  GraduationCap,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -27,14 +27,14 @@ export function SuperAdminSettingsSidebar() {
       label: t('layout.modelsCatalog'),
     },
     {
-      to: '/super-admin-settings/usage',
-      icon: <BarChart3 />,
-      label: t('layout.usage'),
-    },
-    {
       to: '/super-admin-settings/skills',
       icon: <Sparkles />,
       label: t('layout.skills'),
+    },
+    {
+      to: '/super-admin-settings/academy',
+      icon: <GraduationCap />,
+      label: t('layout.academy'),
     },
     {
       to: '/super-admin-settings/super-admins',

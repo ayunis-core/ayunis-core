@@ -244,22 +244,6 @@ describe('ShareDeletedListener (threads)', () => {
     });
   });
 
-  it('should not remove anything when a non-skill/non-KB share is deleted', async () => {
-    const event = new ShareDeletedEvent(
-      SharedEntityType.AGENT,
-      randomUUID(),
-      randomUUID(),
-      randomUUID(),
-      [],
-    );
-
-    await listener.handleShareDeleted(event);
-
-    expect(removeSkillSources.execute).not.toHaveBeenCalled();
-    expect(removeKbAssignmentsByOriginSkill.execute).not.toHaveBeenCalled();
-    expect(removeDirectKbFromThreads.execute).not.toHaveBeenCalled();
-  });
-
   it('should not remove anything when a prompt share is deleted', async () => {
     const event = new ShareDeletedEvent(
       SharedEntityType.PROMPT,

@@ -12,8 +12,12 @@ import {
   UrlRetrieverHttpError,
   UrlRetrieverParsingError,
   UrlRetrieverUnsupportedContentTypeError,
-  UrlRetrieverError,
+  UrlRetrieverTooManyRedirectsError,
 } from '../application/url-retriever.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
+
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+const MAX_REDIRECTS = 5;
 
 @Injectable()
 export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
@@ -44,23 +48,23 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
-      const response = await fetch(input.url, {
-        signal: controller.signal,
-        headers: { 'User-Agent': 'Ayunis/1.0' },
-      });
+      const { response, finalUrl } = await this.fetchFollowingRedirects(
+        input,
+        controller.signal,
+      );
       clearTimeout(timeoutId);
 
-      this.validateResponse(response, input.url);
+      this.validateResponse(response, finalUrl);
 
       const contentType =
         response.headers.get('content-type')?.toLowerCase() ?? '';
       const body = await response.text();
 
       if (contentType.includes('text/plain')) {
-        return new UrlRetrieverResult(body.trim(), input.url, '');
+        return new UrlRetrieverResult(body.trim(), finalUrl, '');
       }
 
-      return this.parseHtml(body, input.url);
+      return this.parseHtml(body, finalUrl);
     } catch (error) {
       clearTimeout(timeoutId);
 
@@ -71,6 +75,38 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
       }
       throw error;
     }
+  }
+
+  /**
+   * Follows HTTP redirects manually (redirect: 'manual') so the org crawl gate
+   * can re-assert access on each hop BEFORE the target is contacted — otherwise
+   * a crawl could be bounced onto a host bound to another org (AYC-190).
+   */
+  private async fetchFollowingRedirects(
+    input: UrlRetrieverInput,
+    signal: AbortSignal,
+  ): Promise<{ response: Response; finalUrl: string }> {
+    let currentUrl = input.url;
+
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      const response = await fetch(currentUrl, {
+        signal,
+        headers: { 'User-Agent': 'Ayunis/1.0' },
+        redirect: 'manual',
+      });
+
+      const location = response.headers.get('location');
+      if (!REDIRECT_STATUSES.has(response.status) || !location) {
+        return { response, finalUrl: currentUrl };
+      }
+
+      const nextUrl = new URL(location, currentUrl).href;
+      // Re-assert the gate before following; throwing rejects the redirect.
+      await input.onRedirect?.(nextUrl);
+      currentUrl = nextUrl;
+    }
+
+    throw new UrlRetrieverTooManyRedirectsError(input.url, MAX_REDIRECTS);
   }
 
   private validateResponse(response: Response, url: string): void {
@@ -98,13 +134,17 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
   private parseHtml(html: string, url: string): UrlRetrieverResult {
     try {
       const $ = cheerio.load(html);
+
+      // Extract links before stripping tags — anchors live in the body.
+      const links = this.extractLinks($, url);
+
       $('script, style, meta, link').remove();
 
       const textContent = $('body').text();
       const cleanedText = textContent.replace(/\s+/g, ' ').trim();
       const websiteTitle = $('title').text();
 
-      return new UrlRetrieverResult(cleanedText, url, websiteTitle);
+      return new UrlRetrieverResult(cleanedText, url, websiteTitle, {}, links);
     } catch (error) {
       throw new UrlRetrieverParsingError(
         url,
@@ -114,13 +154,43 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     }
   }
 
+  /**
+   * Collect absolute http(s) links from anchor tags, resolving relative hrefs
+   * against the page URL. Fragments are stripped and duplicates removed so the
+   * crawler sees each target page once.
+   */
+  private extractLinks($: cheerio.CheerioAPI, baseUrl: string): string[] {
+    const links = new Set<string>();
+
+    $('a[href]').each((_, element) => {
+      const href = $(element).attr('href');
+      if (!href) return;
+
+      try {
+        const resolved = new URL(href, baseUrl);
+        if (resolved.protocol !== 'http:' && resolved.protocol !== 'https:') {
+          return;
+        }
+        resolved.hash = '';
+        links.add(resolved.toString());
+      } catch {
+        // Malformed href — skip it.
+      }
+    });
+
+    return [...links];
+  }
+
   private handleTopLevelError(error: unknown, url: string): never {
     this.logger.error(
       `HTTP URL retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       error instanceof Error ? error.stack : 'Unknown error',
     );
 
-    if (error instanceof UrlRetrieverError) {
+    // Preserve domain errors (UrlRetrieverError) AND gate denials
+    // (CrawlDomainAccessDeniedError, 404) — both extend ApplicationError and
+    // must keep their own status rather than being rewritten to a 422.
+    if (error instanceof ApplicationError) {
       throw error;
     }
 

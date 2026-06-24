@@ -25,16 +25,17 @@ export class CreditBudgetGuardService {
   ) {}
 
   async ensureBudgetAvailable(orgId: UUID): Promise<void> {
-    const { monthlyCredits } = await this.getMonthlyCreditLimitUseCase.execute(
-      new GetMonthlyCreditLimitQuery(orgId),
-    );
+    const { monthlyCredits, startsAt } =
+      await this.getMonthlyCreditLimitUseCase.execute(
+        new GetMonthlyCreditLimitQuery(orgId),
+      );
 
     if (monthlyCredits === null) {
       return;
     }
 
     const { creditsUsed } = await this.getMonthlyCreditUsageUseCase.execute(
-      new GetMonthlyCreditUsageQuery(orgId),
+      new GetMonthlyCreditUsageQuery(orgId, startsAt ?? undefined),
     );
 
     if (creditsUsed >= monthlyCredits) {

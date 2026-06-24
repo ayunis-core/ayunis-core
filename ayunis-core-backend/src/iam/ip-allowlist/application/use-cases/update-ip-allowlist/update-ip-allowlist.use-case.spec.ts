@@ -24,7 +24,7 @@ describe('UpdateIpAllowlistUseCase', () => {
       findByOrgId: jest.fn(),
       upsert: jest.fn(),
       deleteByOrgId: jest.fn(),
-    } as jest.Mocked<IpAllowlistRepository>;
+    };
 
     guard = {
       invalidateCache: jest.fn(),

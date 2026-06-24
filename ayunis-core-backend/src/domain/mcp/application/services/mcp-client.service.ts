@@ -13,11 +13,17 @@ import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.
 import { McpIntegrationUserConfigRepositoryPort } from '../ports/mcp-integration-user-config.repository.port';
 import { McpIntegration } from '../../domain/mcp-integration.entity';
 import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
-import { ConfigField } from '../../domain/value-objects/integration-config-schema';
+import {
+  ConfigField,
+  isSystemFixedField,
+} from '../../domain/value-objects/integration-config-schema';
 import { BearerMcpIntegrationAuth } from '../../domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { OAuthMcpIntegrationAuth } from '../../domain/auth/oauth-mcp-integration-auth.entity';
-import { McpAuthenticationError } from '../mcp.errors';
+import {
+  McpAuthenticationError,
+  McpUserAuthorizationRequiredError,
+} from '../mcp.errors';
 
 /**
  * Service for executing MCP operations with authentication.
@@ -64,9 +70,33 @@ export class McpClientService {
     integration: MarketplaceMcpIntegration,
     userId?: UUID,
   ): Promise<McpConnectionConfig> {
+    const { configSchema, orgConfigValues } = integration;
+
+    // Resolve the per-user config and enforce authorization *before* the
+    // header-building try/catch below, so the specific authorization error is
+    // not masked as a generic McpAuthenticationError. Enforcement only applies
+    // when acting on behalf of a user — org-level operations (userId
+    // undefined, e.g. admin connection validation) build with org config only.
+    const userConfig =
+      userId && configSchema.userFields.length > 0
+        ? await this.userConfigRepository.findByIntegrationAndUser(
+            integration.id,
+            userId,
+          )
+        : null;
+
+    if (
+      userId &&
+      !integration.isUserAuthorized(userConfig?.configValues ?? null)
+    ) {
+      throw new McpUserAuthorizationRequiredError(
+        integration.id,
+        integration.name,
+      );
+    }
+
     try {
       const headers: Record<string, string> = {};
-      const { configSchema, orgConfigValues } = integration;
 
       // Apply org-level fields to headers
       await this.applyConfigFieldHeaders(
@@ -75,21 +105,16 @@ export class McpClientService {
         orgConfigValues,
       );
 
-      // Apply user-level overrides if applicable
-      if (userId && configSchema.userFields.length > 0) {
-        const userConfig =
-          await this.userConfigRepository.findByIntegrationAndUser(
-            integration.id,
-            userId,
-          );
-
-        if (userConfig) {
-          await this.applyConfigFieldHeaders(
-            headers,
-            configSchema.userFields,
-            userConfig.configValues,
-          );
-        }
+      // Apply user-level fields when acting on behalf of a user. System-fixed
+      // user values come from the schema; per-user overrides come from the
+      // stored user config (which may be absent when every required user field
+      // has a fixed value).
+      if (userId) {
+        await this.applyConfigFieldHeaders(
+          headers,
+          configSchema.userFields,
+          userConfig?.configValues ?? {},
+        );
       }
 
       return { serverUrl: integration.serverUrl, headers };
@@ -116,17 +141,27 @@ export class McpClientService {
     values: Record<string, string>,
   ): Promise<void> {
     for (const field of fields) {
-      const rawValue = values[field.key];
-      if (!rawValue || !field.headerName) continue;
+      if (!field.headerName) continue;
 
-      const decryptedValue =
-        field.type === 'secret'
-          ? await this.credentialEncryption.decrypt(rawValue)
-          : rawValue;
+      // System-fixed values from the schema are plaintext and are never stored
+      // encrypted, so they are applied directly. Otherwise fall back to the
+      // stored value, decrypting secrets.
+      let resolvedValue: string;
+      if (isSystemFixedField(field)) {
+        resolvedValue = field.value as string;
+      } else {
+        const rawValue = values[field.key];
+        if (!rawValue) continue;
+
+        resolvedValue =
+          field.type === 'secret'
+            ? await this.credentialEncryption.decrypt(rawValue)
+            : rawValue;
+      }
 
       const headerValue = field.prefix
-        ? `${field.prefix}${decryptedValue}`
-        : decryptedValue;
+        ? `${field.prefix}${resolvedValue}`
+        : resolvedValue;
 
       headers[field.headerName] = headerValue;
     }

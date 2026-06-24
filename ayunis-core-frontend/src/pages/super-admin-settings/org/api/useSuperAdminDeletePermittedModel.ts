@@ -1,15 +1,21 @@
 import {
   useSuperAdminPermittedModelsControllerDeletePermittedModel,
-  getSuperAdminPermittedModelsControllerGetAvailableModelsQueryKey,
+  type ModelWithConfigResponseDto,
+  getSuperAdminPermittedModelsControllerGetAvailableLanguageModelsQueryKey,
+  getSuperAdminPermittedModelsControllerGetAvailableEmbeddingModelsQueryKey,
+  getSuperAdminPermittedModelsControllerGetAvailableImageGenerationModelsQueryKey,
 } from '@/shared/api';
+import extractErrorData from '@/shared/api/extract-error-data';
+import { showError } from '@/shared/lib/toast';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '@tanstack/react-router';
 import {
   prepareOptimisticUpdate,
-  handleMutationError,
+  rollbackOptimisticUpdate,
 } from '@/widgets/permitted-model-mutations/lib/createPermittedModelMutation';
+import { invalidatePermittedModelQueries } from './invalidatePermittedModelQueries';
 
 const DELETE_ERROR_MAP: Record<string, string> = {
   CANNOT_DELETE_DEFAULT_MODEL: 'models.deletePermittedModel.errorDefaultModel',
@@ -21,44 +27,49 @@ export function useSuperAdminDeletePermittedModel(orgId: string) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { confirm } = useConfirmation();
-  const queryKey =
-    getSuperAdminPermittedModelsControllerGetAvailableModelsQueryKey(orgId);
+  const availabilityQueryKeys = [
+    getSuperAdminPermittedModelsControllerGetAvailableLanguageModelsQueryKey(
+      orgId,
+    ),
+    getSuperAdminPermittedModelsControllerGetAvailableEmbeddingModelsQueryKey(
+      orgId,
+    ),
+    getSuperAdminPermittedModelsControllerGetAvailableImageGenerationModelsQueryKey(
+      orgId,
+    ),
+  ];
 
   const deletePermittedModelMutation =
     useSuperAdminPermittedModelsControllerDeletePermittedModel({
       mutation: {
-        onMutate: async ({ id }) =>
-          prepareOptimisticUpdate(queryClient, queryKey, (models) =>
+        onMutate: async ({ id }) => {
+          const updater = (models: ModelWithConfigResponseDto[]) =>
             models.map((model) =>
               model.permittedModelId === id
                 ? { ...model, isPermitted: false, permittedModelId: null }
                 : model,
+            );
+          return Promise.all(
+            availabilityQueryKeys.map((key) =>
+              prepareOptimisticUpdate(queryClient, key, updater),
             ),
-          ),
-        onSettled: () => {
-          void queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey;
-              return (
-                Array.isArray(key) &&
-                key.length > 0 &&
-                typeof key[0] === 'string' &&
-                key[0].includes('superAdminModels') &&
-                key[0].includes('permitted')
-              );
-            },
-          });
-          void router.invalidate();
-        },
-        onError: (error, _, context) => {
-          handleMutationError(
-            error,
-            queryClient,
-            context,
-            t,
-            DELETE_ERROR_MAP,
-            'models.deletePermittedModel.error',
           );
+        },
+        onSettled: () => {
+          invalidatePermittedModelQueries(queryClient, router, orgId);
+        },
+        onError: (error, _, contexts) => {
+          contexts?.forEach((ctx) =>
+            rollbackOptimisticUpdate(queryClient, ctx),
+          );
+          try {
+            const { code } = extractErrorData(error);
+            const key =
+              DELETE_ERROR_MAP[code] ?? 'models.deletePermittedModel.error';
+            showError(t(key));
+          } catch {
+            showError(t('models.deletePermittedModel.error'));
+          }
         },
       },
     });

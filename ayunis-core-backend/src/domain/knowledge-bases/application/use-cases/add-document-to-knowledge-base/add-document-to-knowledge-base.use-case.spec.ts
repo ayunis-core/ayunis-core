@@ -44,7 +44,8 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
-    } as jest.Mocked<KnowledgeBaseRepository>;
+      countSourcesByKnowledgeBaseId: jest.fn(),
+    };
 
     mockStartDocumentProcessingUseCase = {
       execute: jest.fn(),

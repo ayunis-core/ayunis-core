@@ -20,6 +20,8 @@ export class QuotaLimitResolverService {
         return limits.medium;
       case QuotaType.FAIR_USE_MESSAGES_HIGH:
         return limits.high;
+      case QuotaType.FAIR_USE_IMAGES:
+        return limits.images;
       default:
         // Defensive: when `QuotaType` grows a non-fair-use value, this throws
         // at the resolver instead of silently returning `undefined` and

@@ -5,7 +5,7 @@ import {
   useTeamsControllerAddTeamMember,
   getTeamsControllerListTeamMembersQueryKey,
   getTeamsControllerGetTeamQueryKey,
-  getAgentsControllerFindAllQueryKey,
+  getTeamsControllerListTeamsQueryKey,
   getTeamsControllerListMyTeamsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { showError, showSuccess } from '@/shared/lib/toast';
@@ -42,9 +42,8 @@ export function useAddTeamMember(teamId: string, onSuccess?: () => void) {
         void queryClient.invalidateQueries({
           queryKey: getTeamsControllerGetTeamQueryKey(teamId),
         });
-        // Invalidate agents cache since team membership affects access to shared agents
         void queryClient.invalidateQueries({
-          queryKey: getAgentsControllerFindAllQueryKey(),
+          queryKey: getTeamsControllerListTeamsQueryKey(),
         });
         // Invalidate my teams cache since membership changes affect shares tab
         void queryClient.invalidateQueries({

@@ -1,15 +1,6 @@
 import type { UUID } from 'crypto';
 import type { Job } from 'bullmq';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
-
-// p-limit is ESM-only — mock the dynamic import so Jest (CJS) doesn't choke.
-jest.mock('p-limit', () => ({
-  __esModule: true,
-  default:
-    () =>
-    <T>(fn: () => T) =>
-      fn(),
-}));
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { FileType } from 'src/domain/sources/domain/source-type.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -82,13 +73,6 @@ const splitTextUseCase = {
   }),
 };
 
-const ingestContentUseCase = {
-  execute: jest.fn().mockResolvedValue(undefined),
-};
-const deleteContentUseCase = {
-  execute: jest.fn().mockResolvedValue(undefined),
-};
-
 const downloadObjectUseCase = {
   execute: jest.fn().mockResolvedValue(
     (async function* () {
@@ -108,8 +92,10 @@ const sourceRepository = {
   updateStatusConditionally: jest.fn(),
 };
 
-const markSourceFailedUseCase = {
-  execute: jest.fn().mockResolvedValue(undefined),
+const helper = {
+  index: jest.fn().mockResolvedValue(undefined),
+  markFailed: jest.fn().mockResolvedValue(undefined),
+  cleanupIndex: jest.fn().mockResolvedValue(undefined),
 };
 
 /* ------------------------------------------------------------------ */
@@ -126,12 +112,10 @@ describe('DocumentProcessingConsumer', () => {
       contextService as never,
       retrieveFileContentUseCase as never,
       splitTextUseCase as never,
-      ingestContentUseCase as never,
-      deleteContentUseCase as never,
       downloadObjectUseCase as never,
       deleteObjectUseCase as never,
       sourceRepository as never,
-      markSourceFailedUseCase as never,
+      helper as never,
     );
   });
 
@@ -174,7 +158,7 @@ describe('DocumentProcessingConsumer', () => {
       { processingError: null },
     );
     // Partial index should be cleaned up since update failed
-    expect(deleteContentUseCase.execute).toHaveBeenCalled();
+    expect(helper.cleanupIndex).toHaveBeenCalledWith(SOURCE_ID);
   });
 
   it('should process normally when source exists throughout', async () => {
@@ -192,5 +176,13 @@ describe('DocumentProcessingConsumer', () => {
       SourceStatus.READY,
       { processingError: null },
     );
+    // Chunks are indexed via the shared helper (delete-then-bulk-ingest)
+    expect(helper.index).toHaveBeenCalledTimes(1);
+    const [indexedSourceId, indexedOrgId, indexedChunks] =
+      helper.index.mock.calls[0];
+    expect(indexedSourceId).toBe(SOURCE_ID);
+    expect(indexedOrgId).toBe(ORG_ID);
+    expect(indexedChunks).toHaveLength(1);
+    expect(indexedChunks[0].content).toBe('hello world');
   });
 });

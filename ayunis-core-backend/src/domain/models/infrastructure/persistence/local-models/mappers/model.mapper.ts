@@ -2,11 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Model } from '../../../../domain/model.entity';
 import { LanguageModel } from '../../../../domain/models/language.model';
 import { EmbeddingModel } from '../../../../domain/models/embedding.model';
+import { ImageGenerationModel } from '../../../../domain/models/image-generation.model';
 import { ModelTier } from '../../../../domain/value-objects/model-tier.enum';
 import {
   ModelRecord,
   LanguageModelRecord,
   EmbeddingModelRecord,
+  ImageGenerationModelRecord,
 } from '../schema/model.record';
 
 @Injectable()
@@ -69,6 +71,20 @@ export class ModelMapper {
       });
     }
 
+    if (record instanceof ImageGenerationModelRecord) {
+      return new ImageGenerationModel({
+        id: record.id,
+        name: record.name,
+        provider: record.provider,
+        displayName: record.displayName,
+        isArchived: record.isArchived,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+        inputTokenCost: record.inputTokenCost,
+        outputTokenCost: record.outputTokenCost,
+      });
+    }
+
     throw new Error(`Unknown model record type: ${record.constructor.name}`);
   }
 
@@ -99,6 +115,20 @@ export class ModelMapper {
       record.provider = domain.provider;
       record.displayName = domain.displayName;
       record.dimensions = domain.dimensions;
+      record.isArchived = domain.isArchived;
+      record.createdAt = domain.createdAt;
+      record.updatedAt = domain.updatedAt;
+      record.inputTokenCost = domain.inputTokenCost;
+      record.outputTokenCost = domain.outputTokenCost;
+      return record;
+    }
+
+    if (domain instanceof ImageGenerationModel) {
+      const record = new ImageGenerationModelRecord();
+      record.id = domain.id;
+      record.name = domain.name;
+      record.provider = domain.provider;
+      record.displayName = domain.displayName;
       record.isArchived = domain.isArchived;
       record.createdAt = domain.createdAt;
       record.updatedAt = domain.updatedAt;

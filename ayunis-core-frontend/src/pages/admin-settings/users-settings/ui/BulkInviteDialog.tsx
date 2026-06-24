@@ -291,7 +291,7 @@ export default function BulkInviteDialog({
           size="sm"
           onClick={handleDownloadTemplate}
         >
-          <Download className="mr-2 h-4 w-4" />
+          <Download />
           {t('bulkInvite.downloadTemplate')}
         </Button>
       </div>

@@ -11,7 +11,11 @@ const tokenCostColumnOptions = {
   nullable: true,
   transformer: {
     to: (value?: number | null) => value,
-    from: (value: string | null) => (value === null ? null : Number(value)),
+    // Normalize NULL rows to `undefined` so it matches the column's TS type
+    // (`number | undefined`) and downstream arithmetic cannot silently
+    // coerce `null` to 0.
+    from: (value: string | null) =>
+      value === null ? undefined : Number(value),
   },
 };
 
@@ -87,6 +91,15 @@ export class EmbeddingModelRecord extends ModelRecord {
   })
   dimensions: EmbeddingDimensions;
 
+  @Column(tokenCostColumnOptions)
+  inputTokenCost?: number;
+
+  @Column(tokenCostColumnOptions)
+  outputTokenCost?: number;
+}
+
+@ChildEntity(ModelType.IMAGE_GENERATION)
+export class ImageGenerationModelRecord extends ModelRecord {
   @Column(tokenCostColumnOptions)
   inputTokenCost?: number;
 

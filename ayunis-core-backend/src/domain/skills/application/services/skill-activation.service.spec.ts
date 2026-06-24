@@ -10,6 +10,7 @@ import { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases
 import { SourceAlreadyAssignedError } from 'src/domain/threads/application/threads.errors';
 import { SkillNotFoundError } from 'src/domain/skills/application/skills.errors';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -292,6 +293,53 @@ describe('SkillActivationService', () => {
       );
       expect(result.instructions).toBe(
         'Analyze the legal question thoroughly.',
+      );
+    });
+
+    it('should log a warning and continue when an MCP integration is not found (stale ID)', async () => {
+      const thread = makeThread();
+      const skill = makeSkill({
+        sourceIds: [],
+        mcpIntegrationIds: [mcpIntegrationId1, mcpIntegrationId2],
+        knowledgeBaseIds: [],
+      });
+
+      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      getSourcesByIdsUseCase.execute.mockResolvedValue([]);
+      addMcpIntegrationToThreadUseCase.execute
+        .mockRejectedValueOnce(
+          new McpIntegrationNotFoundError(mcpIntegrationId1),
+        )
+        .mockResolvedValueOnce(undefined);
+
+      const result = await service.activateOnThread(skillId, thread);
+
+      expect(addMcpIntegrationToThreadUseCase.execute).toHaveBeenCalledTimes(2);
+      expect(Logger.prototype.warn).toHaveBeenCalledWith(
+        'MCP integration not found, skipping (stale reference)',
+        expect.objectContaining({ mcpIntegrationId: mcpIntegrationId1 }),
+      );
+      expect(result.instructions).toBe(
+        'Analyze the legal question thoroughly.',
+      );
+    });
+
+    it('should rethrow unexpected errors from addMcpIntegrationToThread', async () => {
+      const thread = makeThread();
+      const skill = makeSkill({
+        sourceIds: [],
+        mcpIntegrationIds: [mcpIntegrationId1],
+        knowledgeBaseIds: [],
+      });
+
+      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      getSourcesByIdsUseCase.execute.mockResolvedValue([]);
+      addMcpIntegrationToThreadUseCase.execute.mockRejectedValue(
+        new Error('Database connection lost'),
+      );
+
+      await expect(service.activateOnThread(skillId, thread)).rejects.toThrow(
+        'Database connection lost',
       );
     });
 

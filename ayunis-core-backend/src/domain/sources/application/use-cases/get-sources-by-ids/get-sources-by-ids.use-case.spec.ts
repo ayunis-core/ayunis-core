@@ -36,7 +36,8 @@ describe('GetSourcesByIdsUseCase', () => {
       delete: jest.fn(),
       deleteMany: jest.fn(),
       updateStatusConditionally: jest.fn(),
-    } as jest.Mocked<SourceRepository>;
+      findUnreferencedIds: jest.fn(),
+    };
 
     useCase = new GetSourcesByIdsUseCase(sourceRepository);
   });

@@ -15,4 +15,5 @@ export abstract class TeamMembersRepository {
   abstract delete(id: UUID): Promise<void>;
   abstract deleteByTeamIdAndUserId(teamId: UUID, userId: UUID): Promise<void>;
   abstract findAllUserIdsByTeamId(teamId: UUID): Promise<UUID[]>;
+  abstract countByTeamIds(teamIds: UUID[]): Promise<Map<UUID, number>>;
 }

@@ -42,7 +42,8 @@ describe('QueryKnowledgeBaseUseCase', () => {
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
-    } as jest.Mocked<KnowledgeBaseRepository>;
+      countSourcesByKnowledgeBaseId: jest.fn(),
+    };
 
     mockFindChunks = {
       execute: jest.fn(),

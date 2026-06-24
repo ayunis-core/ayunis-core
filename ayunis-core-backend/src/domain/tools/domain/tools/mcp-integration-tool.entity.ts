@@ -43,7 +43,7 @@ export class McpIntegrationTool extends Tool {
     if (!valid) {
       throw new Error(JSON.stringify(validate.errors));
     }
-    return params as FromSchema<typeof this.parameters>;
+    return params;
   }
 
   get returnsPii(): boolean {

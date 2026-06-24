@@ -1,0 +1,94 @@
+{
+  "page": {
+    "title": "Academy",
+    "empty": "No chapters yet",
+    "emptyDescription": "Create your first chapter to start building the academy.",
+    "addChapter": "Add Chapter",
+    "addLesson": "Add Lesson",
+    "noLessons": "No lessons in this chapter yet.",
+    "dragChapter": "Drag to reorder chapter",
+    "dragLesson": "Drag to reorder lesson"
+  },
+  "chapterForm": {
+    "createTitle": "Create Chapter",
+    "editTitle": "Edit Chapter",
+    "title": "Title",
+    "titlePlaceholder": "e.g., Getting Started",
+    "titleRequired": "Title is required",
+    "titleTooLong": "Title must be 255 characters or fewer",
+    "description": "Description",
+    "descriptionPlaceholder": "What does this chapter cover?",
+    "descriptionRequired": "Description is required",
+    "descriptionTooLong": "Description must be 2,000 characters or fewer",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel"
+  },
+  "lessonForm": {
+    "createTitle": "Create Lesson",
+    "editTitle": "Edit Lesson",
+    "title": "Title",
+    "titlePlaceholder": "e.g., Creating your first chat",
+    "titleRequired": "Title is required",
+    "titleTooLong": "Title must be 255 characters or fewer",
+    "description": "Description (optional)",
+    "descriptionPlaceholder": "What does this lesson cover?",
+    "descriptionTooLong": "Description must be 2,000 characters or fewer",
+    "loomUrl": "Loom link",
+    "loomUrlPlaceholder": "https://www.loom.com/share/...",
+    "loomUrlRequired": "Loom link is required",
+    "loomUrlTooLong": "Loom link must be 500 characters or fewer",
+    "loomUrlInvalid": "Must be a Loom share or embed link (https://www.loom.com/share/...)",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel"
+  },
+  "deleteChapter": {
+    "title": "Delete Chapter",
+    "description": "Are you sure you want to delete \"{{title}}\" and all of its lessons? This action cannot be undone.",
+    "confirm": "Delete",
+    "cancel": "Cancel"
+  },
+  "deleteLesson": {
+    "title": "Delete Lesson",
+    "description": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
+    "confirm": "Delete",
+    "cancel": "Cancel"
+  },
+  "toast": {
+    "chapterCreateSuccess": "Chapter created successfully",
+    "chapterCreateError": "Failed to create chapter",
+    "chapterUpdateSuccess": "Chapter updated successfully",
+    "chapterUpdateError": "Failed to update chapter",
+    "chapterDeleteSuccess": "Chapter deleted successfully",
+    "chapterDeleteError": "Failed to delete chapter",
+    "chapterNotFound": "Chapter not found",
+    "lessonCreateSuccess": "Lesson created successfully",
+    "lessonCreateError": "Failed to create lesson",
+    "lessonUpdateSuccess": "Lesson updated successfully",
+    "lessonUpdateError": "Failed to update lesson",
+    "lessonDeleteSuccess": "Lesson deleted successfully",
+    "lessonDeleteError": "Failed to delete lesson",
+    "lessonNotFound": "Lesson not found",
+    "reorderError": "Failed to save the new order"
+  },
+  "validation": {
+    "title": {
+      "isNotEmpty": "Title is required",
+      "maxLength": "Title must be 255 characters or fewer",
+      "invalid": "Invalid title"
+    },
+    "description": {
+      "isNotEmpty": "Description is required",
+      "maxLength": "Description must be 2,000 characters or fewer",
+      "invalid": "Invalid description"
+    },
+    "loomUrl": {
+      "isUrl": "Must be a valid Loom URL",
+      "matches": "Must be a Loom share or embed link",
+      "maxLength": "Loom link must be 500 characters or fewer",
+      "invalid": "Invalid Loom link"
+    },
+    "invalid": "Invalid input"
+  }
+}

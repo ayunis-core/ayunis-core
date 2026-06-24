@@ -27,7 +27,6 @@ export class ThreadMapper {
     record.model = thread.model
       ? this.permittedModelMapper.toRecord(thread.model)
       : undefined;
-    record.agentId = thread.agentId;
     record.title = thread.title;
     record.isAnonymous = thread.isAnonymous;
     record.messages = thread.messages.map((message) =>
@@ -44,6 +43,7 @@ export class ThreadMapper {
         (assignment) => this.kbAssignmentMapper.toRecord(assignment, thread.id),
       );
     }
+    record.lastActivityAt = thread.lastActivityAt;
     record.createdAt = thread.createdAt;
     record.updatedAt = thread.updatedAt;
     return record;
@@ -54,13 +54,13 @@ export class ThreadMapper {
       id: threadEntity.id,
       userId: threadEntity.userId,
       model: this.mapModel(threadEntity),
-      agentId: threadEntity.agentId,
       sourceAssignments: this.mapSourceAssignments(threadEntity),
       mcpIntegrationIds: this.mapMcpIntegrationIds(threadEntity),
       knowledgeBaseAssignments: this.mapKnowledgeBaseAssignments(threadEntity),
       title: threadEntity.title,
       isAnonymous: threadEntity.isAnonymous,
       messages: this.mapMessages(threadEntity),
+      lastActivityAt: threadEntity.lastActivityAt ?? threadEntity.createdAt,
       createdAt: threadEntity.createdAt,
       updatedAt: threadEntity.updatedAt,
     });

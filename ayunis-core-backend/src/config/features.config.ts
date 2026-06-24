@@ -1,10 +1,8 @@
 import { registerAs } from '@nestjs/config';
 
 export enum FeatureFlag {
-  Agents = 'agentsEnabled',
   KnowledgeBases = 'knowledgeBasesEnabled',
   Letterheads = 'letterheadsEnabled',
-  Prompts = 'promptsEnabled',
   Skills = 'skillsEnabled',
 }
 
@@ -14,17 +12,15 @@ const parseBooleanWithDefault = (
   value: string | undefined,
   defaultValue: boolean,
 ): boolean => {
-  if (value === undefined) return defaultValue;
-  return value === 'true';
+  // Treat unset and empty/whitespace as "use default" — copying .env.example
+  // sets these to "" via dotenv, which must not flip a default-on flag off.
+  if (value === undefined || value.trim() === '') return defaultValue;
+  return value.trim() === 'true';
 };
 
 export const featuresConfig = registerAs(
   'features',
   (): FeaturesConfig => ({
-    agentsEnabled: parseBooleanWithDefault(
-      process.env.FEATURE_AGENTS_ENABLED,
-      true,
-    ),
     knowledgeBasesEnabled: parseBooleanWithDefault(
       process.env.FEATURE_KNOWLEDGE_BASES_ENABLED,
       true,
@@ -32,10 +28,6 @@ export const featuresConfig = registerAs(
     letterheadsEnabled: parseBooleanWithDefault(
       process.env.FEATURE_LETTERHEADS_ENABLED,
       false,
-    ),
-    promptsEnabled: parseBooleanWithDefault(
-      process.env.FEATURE_PROMPTS_ENABLED,
-      true,
     ),
     skillsEnabled: parseBooleanWithDefault(
       process.env.FEATURE_SKILLS_ENABLED,

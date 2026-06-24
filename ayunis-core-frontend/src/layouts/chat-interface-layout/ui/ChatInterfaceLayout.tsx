@@ -24,7 +24,7 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
   const { scrollRef, handleScroll } = useAutoScroll(chatContent);
 
   const chatPane = (
-    <div className={`flex flex-col h-full px-4 ${className}`}>
+    <div className={`flex flex-col h-full px-4 pb-4 ${className}`}>
       {/* Chat Header - sticky at top, not scrollable */}
       <div className="flex-shrink-0 sticky top-0 z-10">{chatHeader}</div>
 

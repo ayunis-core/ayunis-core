@@ -57,6 +57,7 @@ import { Source } from 'src/domain/sources/domain/source.entity';
 import {
   detectFileType,
   getCanonicalMimeType,
+  isAudioFile,
   isDocumentFile,
   isPlainTextFile,
   isSpreadsheetFile,
@@ -83,6 +84,10 @@ const SUPPORTED_FILE_TYPES = [
   'CSV',
   'XLSX',
   'XLS',
+  'MP3',
+  'M4A',
+  'WAV',
+  'WEBM',
 ];
 
 @ApiTags('threads')
@@ -160,7 +165,7 @@ export class ThreadSourcesController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'The file to upload',
+          description: 'The file to upload (max 25 MB)',
         },
       },
       required: ['file'],
@@ -180,13 +185,17 @@ export class ThreadSourcesController {
       },
     },
   })
+  @ApiResponse({
+    status: 413,
+    description: 'File exceeds the 25 MB upload limit',
+  })
   @ApiExtraModels(
     FileSourceResponseDto,
     UrlSourceResponseDto,
     CSVDataSourceResponseDto,
   )
   @UseInterceptors(
-    /* eslint-disable sonarjs/content-length -- file size validated downstream */
+    /* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP Content-Length */
     FileInterceptor('file', {
       storage: diskStorage({
         // eslint-disable-next-line sonarjs/todo-tag -- pre-existing, tracked separately
@@ -197,6 +206,7 @@ export class ThreadSourcesController {
           cb(null, `${randomName}${extname(file.originalname)}`);
         },
       }),
+      limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB
     }),
     /* eslint-enable sonarjs/content-length */
   )
@@ -363,7 +373,11 @@ export class ThreadSourcesController {
     file: { originalname: string; mimetype: string; path: string },
     detectedType: ReturnType<typeof detectFileType>,
   ): Promise<Source[]> {
-    if (isDocumentFile(detectedType) || isPlainTextFile(detectedType)) {
+    if (
+      isDocumentFile(detectedType) ||
+      isPlainTextFile(detectedType) ||
+      isAudioFile(detectedType)
+    ) {
       return this.processDocumentUpload(thread, file, detectedType);
     } else if (isCSVFile(detectedType)) {
       return this.processCSVUpload(thread, file);

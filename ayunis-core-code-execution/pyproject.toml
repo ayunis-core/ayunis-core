@@ -33,7 +33,7 @@ py-modules = ["main", "server", "executor", "models"]
 
 [project.optional-dependencies]
 dev = [
-    "mypy>=1.7.0",
+    "mypy>=1.19.1",
     "black>=23.11.0",
     "flake8>=6.1.0",
     "pytest>=7.4.3",
@@ -41,7 +41,7 @@ dev = [
     "types-docker>=7.1.0.20260109",  # Type stubs for docker library
 ]
 prod = [
-    "uvloop>=0.19.0",
+    "uvloop>=0.22.1",
 ]
 
 [project.scripts]

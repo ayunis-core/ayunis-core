@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import {
-  useSuperAdminCatalogModelsControllerUpdateEmbeddingModel,
+  useSuperAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel,
   getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey,
   type UpdateEmbeddingModelRequestDto,
 } from '@/shared/api';
@@ -12,35 +12,36 @@ export function useUpdateEmbeddingModel(onSuccess?: () => void) {
   const { t } = useTranslation('super-admin-settings-org');
   const queryClient = useQueryClient();
   const router = useRouter();
-  const mutation = useSuperAdminCatalogModelsControllerUpdateEmbeddingModel({
-    mutation: {
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey:
-            getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey(),
-        });
-        showSuccess(t('models.updateSuccess'));
-        onSuccess?.();
-      },
-      onError: (error: unknown) => {
-        console.error('Update embedding model failed:', error);
-        try {
-          const { code } = extractErrorData(error);
-          if (code === 'MODEL_NOT_FOUND') {
-            showError(t('models.notFound'));
-          } else {
+  const mutation =
+    useSuperAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel({
+      mutation: {
+        onSuccess: async () => {
+          await queryClient.invalidateQueries({
+            queryKey:
+              getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey(),
+          });
+          showSuccess(t('models.updateSuccess'));
+          onSuccess?.();
+        },
+        onError: (error: unknown) => {
+          console.error('Update embedding model failed:', error);
+          try {
+            const { code } = extractErrorData(error);
+            if (code === 'MODEL_NOT_FOUND') {
+              showError(t('models.notFound'));
+            } else {
+              showError(t('models.updateError'));
+            }
+          } catch {
+            // Non-AxiosError (network failure, request cancellation, etc.)
             showError(t('models.updateError'));
           }
-        } catch {
-          // Non-AxiosError (network failure, request cancellation, etc.)
-          showError(t('models.updateError'));
-        }
+        },
+        onSettled: async () => {
+          await router.invalidate();
+        },
       },
-      onSettled: async () => {
-        await router.invalidate();
-      },
-    },
-  });
+    });
 
   function updateEmbeddingModel(
     id: string,

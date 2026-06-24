@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 # Install Docker CLI and curl (for building sandbox images and health checks)
 RUN apt-get update && \

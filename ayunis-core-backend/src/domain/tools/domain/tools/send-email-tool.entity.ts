@@ -8,11 +8,12 @@ const sendEmailToolParameters = {
   properties: {
     subject: {
       type: 'string' as const,
-      description: 'The subject of the email',
+      description: 'The subject of the email as plain text (no Markdown).',
     },
     body: {
       type: 'string' as const,
-      description: 'The body of the email',
+      description:
+        'The body of the email as PLAIN TEXT only. Do NOT use Markdown formatting (no **bold**, _italics_, # headings, - bullet lists, [links](url), etc.). The widget renders the value verbatim, so any Markdown syntax would appear literally to the recipient. Use blank lines and plain punctuation for structure.',
     },
     to: {
       type: 'string' as const,
@@ -31,7 +32,7 @@ export class SendEmailTool extends DisplayableTool {
     super({
       name: ToolType.SEND_EMAIL,
       description:
-        'Display an email composition widget. The user reviews and controls the final send action.',
+        'Display an email composition widget. The user reviews and controls the final send action. Subject and body must be PLAIN TEXT only — do not use Markdown formatting; the widget renders the values verbatim and Markdown syntax would appear literally to the recipient.',
       parameters: sendEmailToolParameters,
       type: ToolType.SEND_EMAIL,
     });

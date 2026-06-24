@@ -6,7 +6,6 @@ import { getDataSourceToken, TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './presenters/http/app.controller';
 import { ModelsModule } from '../domain/models/models.module';
-import { AgentsModule } from '../domain/agents/agents.module';
 import { SkillsModule } from '../domain/skills/skills.module';
 import { MessagesModule } from '../domain/messages/messages.module';
 import { ToolsModule } from '../domain/tools/tools.module';
@@ -17,17 +16,21 @@ import { EmbeddingsModule } from '../domain/rag/embeddings/embeddings.module';
 import { RetrieverModule } from '../domain/retrievers/retriever.module';
 import { SourcesModule } from '../domain/sources/sources.module';
 import { StorageModule } from '../domain/storage/storage.module';
-import { PromptsModule } from '../domain/prompts/prompts.module';
 import { SharesModule } from '../domain/shares/shares.module';
 import { McpModule } from '../domain/mcp/mcp.module';
 import { MarketplaceModule } from '../domain/marketplace/marketplace.module';
 import { UsageModule } from '../domain/usage/usage.module';
 import { TranscriptionsModule } from '../domain/transcriptions/transcriptions.module';
 import { ChatSettingsModule } from '../domain/chat-settings/chat-settings.module';
+import { AnonymizationSettingsModule } from '../domain/anonymization-settings/anonymization-settings.module';
+import { RetentionPoliciesModule } from '../domain/retention-policies/retention-policies.module';
 import { KnowledgeBasesModule } from '../domain/knowledge-bases/knowledge-bases.module';
+import { CrawlDomainGrantsModule } from '../domain/crawl-domain-grants/crawl-domain-grants.module';
 import { SkillTemplatesModule } from '../domain/skill-templates/skill-templates.module';
+import { AcademyModule } from '../domain/academy/academy.module';
 import { ArtifactsModule } from '../domain/artifacts/artifacts.module';
 import { LetterheadsModule } from '../domain/letterheads/letterheads.module';
+import { OpenAICompatModule } from '../domain/openai-compat/openai-compat.module';
 import { IamModule } from '../iam/iam.module';
 
 import { modelsConfig } from '../config/models.config';
@@ -57,6 +60,7 @@ import { featuresConfig } from '../config/features.config';
 import { metricsConfig } from '../config/metrics.config';
 import { redisConfig, type RedisConfig } from '../config/redis.config';
 import { gotenbergConfig } from '../config/gotenberg.config';
+import { retentionConfig } from '../config/retention.config';
 import { BullModule } from '@nestjs/bullmq';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 import { IsRegistrationDisabledUseCase } from './application/use-cases/is-registration-disabled/is-registration-disabled.use-case';
@@ -66,6 +70,7 @@ import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-t
 import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { ApplicationErrorFilter } from 'src/common/filters/application-error.filter';
+import { PayloadTooLargeExceptionFilter } from 'src/common/filters/payload-too-large.filter';
 import { IntegrationsModule } from '../integrations/integrations.module';
 
 @Module({
@@ -91,6 +96,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
         metricsConfig,
         redisConfig,
         gotenbergConfig,
+        retentionConfig,
       ],
     }),
     ClsModule.forRoot({
@@ -146,7 +152,6 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     IntegrationsModule,
     ContextModule, // Global
     ModelsModule,
-    AgentsModule,
     SkillsModule,
     MessagesModule,
     ToolsModule,
@@ -157,17 +162,21 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     RetrieverModule,
     SourcesModule,
     StorageModule,
-    PromptsModule,
     SharesModule,
     McpModule,
     MarketplaceModule,
     UsageModule,
     TranscriptionsModule,
     ChatSettingsModule,
+    AnonymizationSettingsModule,
+    RetentionPoliciesModule,
     KnowledgeBasesModule,
+    CrawlDomainGrantsModule,
     SkillTemplatesModule,
+    AcademyModule,
     ArtifactsModule,
     LetterheadsModule,
+    OpenAICompatModule,
     IamModule.register({
       authProvider:
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- env var may be undefined at runtime despite type cast
@@ -181,6 +190,10 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     // - Everything else   → NestJS BaseExceptionFilter defaults
     // @SentryExceptionCaptured() on catch() reports unexpected errors to Sentry.
     // 4xx errors are dropped by the beforeSend hook in instrument.ts.
+    {
+      provide: APP_FILTER,
+      useClass: PayloadTooLargeExceptionFilter,
+    },
     {
       provide: APP_FILTER,
       useClass: ApplicationErrorFilter,

@@ -1,0 +1,94 @@
+{
+  "page": {
+    "title": "Academy",
+    "empty": "Noch keine Kapitel",
+    "emptyDescription": "Erstellen Sie Ihr erstes Kapitel, um die Academy aufzubauen.",
+    "addChapter": "Kapitel hinzufügen",
+    "addLesson": "Lektion hinzufügen",
+    "noLessons": "Noch keine Lektionen in diesem Kapitel.",
+    "dragChapter": "Kapitel per Drag & Drop sortieren",
+    "dragLesson": "Lektion per Drag & Drop sortieren"
+  },
+  "chapterForm": {
+    "createTitle": "Kapitel erstellen",
+    "editTitle": "Kapitel bearbeiten",
+    "title": "Titel",
+    "titlePlaceholder": "z. B. Erste Schritte",
+    "titleRequired": "Titel ist erforderlich",
+    "titleTooLong": "Titel darf höchstens 255 Zeichen lang sein",
+    "description": "Beschreibung",
+    "descriptionPlaceholder": "Worum geht es in diesem Kapitel?",
+    "descriptionRequired": "Beschreibung ist erforderlich",
+    "descriptionTooLong": "Beschreibung darf höchstens 2.000 Zeichen lang sein",
+    "save": "Speichern",
+    "saving": "Wird gespeichert...",
+    "cancel": "Abbrechen"
+  },
+  "lessonForm": {
+    "createTitle": "Lektion erstellen",
+    "editTitle": "Lektion bearbeiten",
+    "title": "Titel",
+    "titlePlaceholder": "z. B. Ihren ersten Chat erstellen",
+    "titleRequired": "Titel ist erforderlich",
+    "titleTooLong": "Titel darf höchstens 255 Zeichen lang sein",
+    "description": "Beschreibung (optional)",
+    "descriptionPlaceholder": "Worum geht es in dieser Lektion?",
+    "descriptionTooLong": "Beschreibung darf höchstens 2.000 Zeichen lang sein",
+    "loomUrl": "Loom-Link",
+    "loomUrlPlaceholder": "https://www.loom.com/share/...",
+    "loomUrlRequired": "Loom-Link ist erforderlich",
+    "loomUrlTooLong": "Loom-Link darf höchstens 500 Zeichen lang sein",
+    "loomUrlInvalid": "Muss ein Loom-Share- oder -Embed-Link sein (https://www.loom.com/share/...)",
+    "save": "Speichern",
+    "saving": "Wird gespeichert...",
+    "cancel": "Abbrechen"
+  },
+  "deleteChapter": {
+    "title": "Kapitel löschen",
+    "description": "Möchten Sie \"{{title}}\" und alle zugehörigen Lektionen wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirm": "Löschen",
+    "cancel": "Abbrechen"
+  },
+  "deleteLesson": {
+    "title": "Lektion löschen",
+    "description": "Möchten Sie \"{{title}}\" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirm": "Löschen",
+    "cancel": "Abbrechen"
+  },
+  "toast": {
+    "chapterCreateSuccess": "Kapitel erfolgreich erstellt",
+    "chapterCreateError": "Kapitel konnte nicht erstellt werden",
+    "chapterUpdateSuccess": "Kapitel erfolgreich aktualisiert",
+    "chapterUpdateError": "Kapitel konnte nicht aktualisiert werden",
+    "chapterDeleteSuccess": "Kapitel erfolgreich gelöscht",
+    "chapterDeleteError": "Kapitel konnte nicht gelöscht werden",
+    "chapterNotFound": "Kapitel nicht gefunden",
+    "lessonCreateSuccess": "Lektion erfolgreich erstellt",
+    "lessonCreateError": "Lektion konnte nicht erstellt werden",
+    "lessonUpdateSuccess": "Lektion erfolgreich aktualisiert",
+    "lessonUpdateError": "Lektion konnte nicht aktualisiert werden",
+    "lessonDeleteSuccess": "Lektion erfolgreich gelöscht",
+    "lessonDeleteError": "Lektion konnte nicht gelöscht werden",
+    "lessonNotFound": "Lektion nicht gefunden",
+    "reorderError": "Die neue Reihenfolge konnte nicht gespeichert werden"
+  },
+  "validation": {
+    "title": {
+      "isNotEmpty": "Titel ist erforderlich",
+      "maxLength": "Titel darf höchstens 255 Zeichen lang sein",
+      "invalid": "Ungültiger Titel"
+    },
+    "description": {
+      "isNotEmpty": "Beschreibung ist erforderlich",
+      "maxLength": "Beschreibung darf höchstens 2.000 Zeichen lang sein",
+      "invalid": "Ungültige Beschreibung"
+    },
+    "loomUrl": {
+      "isUrl": "Muss eine gültige Loom-URL sein",
+      "matches": "Muss ein Loom-Share- oder -Embed-Link sein",
+      "maxLength": "Loom-Link darf höchstens 500 Zeichen lang sein",
+      "invalid": "Ungültiger Loom-Link"
+    },
+    "invalid": "Ungültige Eingabe"
+  }
+}

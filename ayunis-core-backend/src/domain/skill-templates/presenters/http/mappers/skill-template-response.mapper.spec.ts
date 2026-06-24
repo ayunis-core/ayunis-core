@@ -97,7 +97,7 @@ describe('SkillTemplateResponseMapper', () => {
       });
 
       const preCreated = new PreCreatedCopySkillTemplate({
-        id: '223e4567-e89b-12d3-a456-426614174001' as UUID,
+        id: '223e4567-e89b-12d3-a456-426614174001',
         name: 'Legal Guidelines',
         shortDescription: 'Legal instructions',
         instructions: 'Be legal.',

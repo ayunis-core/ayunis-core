@@ -28,7 +28,8 @@ describe('MarkSourceFailedUseCase', () => {
       delete: jest.fn(),
       deleteMany: jest.fn(),
       updateStatusConditionally: jest.fn(),
-    } as jest.Mocked<SourceRepository>;
+      findUnreferencedIds: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

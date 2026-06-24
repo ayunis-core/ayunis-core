@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Users } from 'lucide-react';
+import { Badge } from '@/shared/ui/shadcn/badge';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
   Card,
@@ -54,7 +56,17 @@ export function TeamDetailPage({
         <TabsContent value="members">
           <Card>
             <CardHeader>
-              <CardTitle>{t('teamDetail.members.title')}</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                {t('teamDetail.members.title')}
+                {membersResponse.pagination.total !== undefined && (
+                  <Badge variant="secondary">
+                    <Users />
+                    {t('teams.list.memberCount', {
+                      count: membersResponse.pagination.total,
+                    })}
+                  </Badge>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <TeamMembersList

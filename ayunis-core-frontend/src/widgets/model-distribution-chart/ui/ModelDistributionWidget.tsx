@@ -12,7 +12,7 @@ interface ModelEntry {
   modelName: string;
   displayName: string;
   provider: string;
-  tokens: number;
+  credits: number;
   requests: number;
   percentage: number;
 }

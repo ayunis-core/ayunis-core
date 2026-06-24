@@ -22,6 +22,7 @@ export enum McpErrorCode {
   MCP_NOT_MARKETPLACE_INTEGRATION = 'MCP_NOT_MARKETPLACE_INTEGRATION',
   MCP_NO_USER_FIELDS = 'MCP_NO_USER_FIELDS',
   MCP_INVALID_CONFIG_KEYS = 'MCP_INVALID_CONFIG_KEYS',
+  MCP_USER_AUTHORIZATION_REQUIRED = 'MCP_USER_AUTHORIZATION_REQUIRED',
 }
 
 export abstract class McpError extends ApplicationError {
@@ -124,7 +125,10 @@ export class McpConnectionTimeoutError extends McpError {
     serverUrl: string,
     metadata?: ErrorMetadata,
   ) {
-    // Redact credentials from URL for logging
+    // Redact credentials from URL for logging.
+    // Single bounded quantifier with no nesting/alternation — linear, not
+    // backtracking-prone; the slow-regex heuristic is a false positive here.
+    // eslint-disable-next-line sonarjs/slow-regex
     const redactedUrl = serverUrl.replace(/\/\/[^@]+@/, '//***@');
     super(
       `Connection to MCP integration '${integrationName}' (ID: ${integrationId}) timed out. ` +
@@ -254,6 +258,24 @@ export class McpOAuthNotSupportedError extends McpError {
       'OAuth authentication is not yet supported for marketplace integrations. Please use a different authentication method.',
       McpErrorCode.MCP_OAUTH_NOT_SUPPORTED,
       400,
+      metadata,
+    );
+  }
+}
+
+export class McpUserAuthorizationRequiredError extends McpError {
+  constructor(
+    integrationId: string,
+    integrationName?: string,
+    metadata?: ErrorMetadata,
+  ) {
+    const target = integrationName
+      ? `the "${integrationName}" integration`
+      : `MCP integration ${integrationId}`;
+    super(
+      `You must provide your own credentials for ${target} before you can use it.`,
+      McpErrorCode.MCP_USER_AUTHORIZATION_REQUIRED,
+      403,
       metadata,
     );
   }

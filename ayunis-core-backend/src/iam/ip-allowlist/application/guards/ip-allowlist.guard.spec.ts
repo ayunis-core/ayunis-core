@@ -42,7 +42,7 @@ describe('IpAllowlistGuard', () => {
   const orgId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' as UUID;
 
   const activeUser: Partial<ActiveUser> = {
-    id: '11111111-2222-3333-4444-555555555555' as UUID,
+    id: '11111111-2222-3333-4444-555555555555',
     orgId,
     email: 'admin@example.gov',
   };
@@ -52,7 +52,7 @@ describe('IpAllowlistGuard', () => {
       findByOrgId: jest.fn(),
       upsert: jest.fn(),
       deleteByOrgId: jest.fn(),
-    } as jest.Mocked<IpAllowlistRepository>;
+    };
 
     repository.findByOrgId.mockResolvedValue(null);
   });

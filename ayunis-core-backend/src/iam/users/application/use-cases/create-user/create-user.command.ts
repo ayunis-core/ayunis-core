@@ -11,16 +11,7 @@ export class CreateUserCommand {
   public readonly hasAcceptedMarketing: boolean;
   public readonly department?: string;
 
-  constructor({
-    email,
-    password,
-    orgId,
-    name,
-    role,
-    emailVerified,
-    hasAcceptedMarketing,
-    department,
-  }: {
+  constructor(params: {
     email: string;
     password: string;
     orgId: UUID;
@@ -30,13 +21,13 @@ export class CreateUserCommand {
     hasAcceptedMarketing: boolean;
     department?: string;
   }) {
-    this.email = email;
-    this.password = password;
-    this.orgId = orgId;
-    this.name = name;
-    this.role = role;
-    this.emailVerified = emailVerified;
-    this.hasAcceptedMarketing = hasAcceptedMarketing;
-    this.department = department;
+    this.email = params.email;
+    this.password = params.password;
+    this.orgId = params.orgId;
+    this.name = params.name;
+    this.role = params.role;
+    this.emailVerified = params.emailVerified;
+    this.hasAcceptedMarketing = params.hasAcceptedMarketing;
+    this.department = params.department;
   }
 }

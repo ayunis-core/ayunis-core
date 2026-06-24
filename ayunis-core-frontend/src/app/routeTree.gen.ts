@@ -21,32 +21,37 @@ import { Route as onboardingAcceptInviteRouteImport } from './routes/(onboarding
 import { Route as AuthenticatedSuperAdminSettingsIndexRouteImport } from './routes/_authenticated/super-admin-settings.index'
 import { Route as AuthenticatedSkillsIndexRouteImport } from './routes/_authenticated/skills.index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
-import { Route as AuthenticatedPromptsIndexRouteImport } from './routes/_authenticated/prompts.index'
 import { Route as AuthenticatedKnowledgeBasesIndexRouteImport } from './routes/_authenticated/knowledge-bases.index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats.index'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
-import { Route as AuthenticatedAgentsIndexRouteImport } from './routes/_authenticated/agents.index'
 import { Route as AuthenticatedAdminSettingsIndexRouteImport } from './routes/_authenticated/admin-settings.index'
+import { Route as AuthenticatedAcademyIndexRouteImport } from './routes/_authenticated/academy.index'
 import { Route as AuthenticatedSkillsIdRouteImport } from './routes/_authenticated/skills.$id'
+import { Route as AuthenticatedSettingsIntegrationsRouteImport } from './routes/_authenticated/settings.integrations'
 import { Route as AuthenticatedSettingsGeneralRouteImport } from './routes/_authenticated/settings.general'
 import { Route as AuthenticatedSettingsChatRouteImport } from './routes/_authenticated/settings.chat'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings.account'
 import { Route as AuthenticatedKnowledgeBasesIdRouteImport } from './routes/_authenticated/knowledge-bases.$id'
 import { Route as AuthenticatedChatsThreadIdRouteImport } from './routes/_authenticated/chats.$threadId'
-import { Route as AuthenticatedAgentsIdRouteImport } from './routes/_authenticated/agents.$id'
 import { Route as AuthenticatedAdminSettingsUsersRouteImport } from './routes/_authenticated/admin-settings.users'
 import { Route as AuthenticatedAdminSettingsUsageRouteImport } from './routes/_authenticated/admin-settings.usage'
 import { Route as AuthenticatedAdminSettingsSecurityRouteImport } from './routes/_authenticated/admin-settings.security'
+import { Route as AuthenticatedAdminSettingsRetentionRouteImport } from './routes/_authenticated/admin-settings.retention'
 import { Route as AuthenticatedAdminSettingsModelsRouteImport } from './routes/_authenticated/admin-settings.models'
 import { Route as AuthenticatedAdminSettingsIntegrationsRouteImport } from './routes/_authenticated/admin-settings.integrations'
+import { Route as AuthenticatedAdminSettingsInstructionsRouteImport } from './routes/_authenticated/admin-settings.instructions'
+import { Route as AuthenticatedAdminSettingsApiKeysRouteImport } from './routes/_authenticated/admin-settings.api-keys'
+import { Route as AuthenticatedAdminSettingsAnonymizationRouteImport } from './routes/_authenticated/admin-settings.anonymization'
+import { Route as AuthenticatedAcademyChapterIdRouteImport } from './routes/_authenticated/academy.$chapterId'
 import { Route as onboardingPasswordResetRouteImport } from './routes/(onboarding)/password.reset'
 import { Route as onboardingPasswordForgotRouteImport } from './routes/(onboarding)/password.forgot'
-import { Route as AuthenticatedSuperAdminSettingsUsageIndexRouteImport } from './routes/_authenticated/super-admin-settings.usage.index'
+import { Route as onboardingAccountActivateRouteImport } from './routes/(onboarding)/account.activate'
 import { Route as AuthenticatedSuperAdminSettingsSuperAdminsIndexRouteImport } from './routes/_authenticated/super-admin-settings.super-admins.index'
 import { Route as AuthenticatedSuperAdminSettingsSkillsIndexRouteImport } from './routes/_authenticated/super-admin-settings.skills.index'
 import { Route as AuthenticatedSuperAdminSettingsPlatformConfigIndexRouteImport } from './routes/_authenticated/super-admin-settings.platform-config.index'
 import { Route as AuthenticatedSuperAdminSettingsOrgsIndexRouteImport } from './routes/_authenticated/super-admin-settings.orgs.index'
 import { Route as AuthenticatedSuperAdminSettingsModelsCatalogIndexRouteImport } from './routes/_authenticated/super-admin-settings.models-catalog.index'
+import { Route as AuthenticatedSuperAdminSettingsAcademyIndexRouteImport } from './routes/_authenticated/super-admin-settings.academy.index'
 import { Route as AuthenticatedAdminSettingsTeamsIndexRouteImport } from './routes/_authenticated/admin-settings.teams.index'
 import { Route as AuthenticatedAdminSettingsLetterheadsIndexRouteImport } from './routes/_authenticated/admin-settings.letterheads.index'
 import { Route as AuthenticatedSuperAdminSettingsOrgsIdRouteImport } from './routes/_authenticated/super-admin-settings.orgs.$id'
@@ -115,12 +120,6 @@ const AuthenticatedSettingsIndexRoute =
     path: '/settings/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedPromptsIndexRoute =
-  AuthenticatedPromptsIndexRouteImport.update({
-    id: '/prompts/',
-    path: '/prompts/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedKnowledgeBasesIndexRoute =
   AuthenticatedKnowledgeBasesIndexRouteImport.update({
     id: '/knowledge-bases/',
@@ -137,16 +136,16 @@ const AuthenticatedChatIndexRoute = AuthenticatedChatIndexRouteImport.update({
   path: '/chat/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedAgentsIndexRoute =
-  AuthenticatedAgentsIndexRouteImport.update({
-    id: '/agents/',
-    path: '/agents/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedAdminSettingsIndexRoute =
   AuthenticatedAdminSettingsIndexRouteImport.update({
     id: '/admin-settings/',
     path: '/admin-settings/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAcademyIndexRoute =
+  AuthenticatedAcademyIndexRouteImport.update({
+    id: '/academy/',
+    path: '/academy/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedSkillsIdRoute = AuthenticatedSkillsIdRouteImport.update({
@@ -154,6 +153,12 @@ const AuthenticatedSkillsIdRoute = AuthenticatedSkillsIdRouteImport.update({
   path: '/skills/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedSettingsIntegrationsRoute =
+  AuthenticatedSettingsIntegrationsRouteImport.update({
+    id: '/settings/integrations',
+    path: '/settings/integrations',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSettingsGeneralRoute =
   AuthenticatedSettingsGeneralRouteImport.update({
     id: '/settings/general',
@@ -184,11 +189,6 @@ const AuthenticatedChatsThreadIdRoute =
     path: '/chats/$threadId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedAgentsIdRoute = AuthenticatedAgentsIdRouteImport.update({
-  id: '/agents/$id',
-  path: '/agents/$id',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedAdminSettingsUsersRoute =
   AuthenticatedAdminSettingsUsersRouteImport.update({
     id: '/admin-settings/users',
@@ -207,6 +207,12 @@ const AuthenticatedAdminSettingsSecurityRoute =
     path: '/admin-settings/security',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminSettingsRetentionRoute =
+  AuthenticatedAdminSettingsRetentionRouteImport.update({
+    id: '/admin-settings/retention',
+    path: '/admin-settings/retention',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminSettingsModelsRoute =
   AuthenticatedAdminSettingsModelsRouteImport.update({
     id: '/admin-settings/models',
@@ -217,6 +223,30 @@ const AuthenticatedAdminSettingsIntegrationsRoute =
   AuthenticatedAdminSettingsIntegrationsRouteImport.update({
     id: '/admin-settings/integrations',
     path: '/admin-settings/integrations',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminSettingsInstructionsRoute =
+  AuthenticatedAdminSettingsInstructionsRouteImport.update({
+    id: '/admin-settings/instructions',
+    path: '/admin-settings/instructions',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminSettingsApiKeysRoute =
+  AuthenticatedAdminSettingsApiKeysRouteImport.update({
+    id: '/admin-settings/api-keys',
+    path: '/admin-settings/api-keys',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminSettingsAnonymizationRoute =
+  AuthenticatedAdminSettingsAnonymizationRouteImport.update({
+    id: '/admin-settings/anonymization',
+    path: '/admin-settings/anonymization',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAcademyChapterIdRoute =
+  AuthenticatedAcademyChapterIdRouteImport.update({
+    id: '/academy/$chapterId',
+    path: '/academy/$chapterId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const onboardingPasswordResetRoute = onboardingPasswordResetRouteImport.update({
@@ -230,11 +260,11 @@ const onboardingPasswordForgotRoute =
     path: '/password/forgot',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AuthenticatedSuperAdminSettingsUsageIndexRoute =
-  AuthenticatedSuperAdminSettingsUsageIndexRouteImport.update({
-    id: '/super-admin-settings/usage/',
-    path: '/super-admin-settings/usage/',
-    getParentRoute: () => AuthenticatedRoute,
+const onboardingAccountActivateRoute =
+  onboardingAccountActivateRouteImport.update({
+    id: '/(onboarding)/account/activate',
+    path: '/account/activate',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute =
   AuthenticatedSuperAdminSettingsSuperAdminsIndexRouteImport.update({
@@ -264,6 +294,12 @@ const AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute =
   AuthenticatedSuperAdminSettingsModelsCatalogIndexRouteImport.update({
     id: '/super-admin-settings/models-catalog/',
     path: '/super-admin-settings/models-catalog/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSuperAdminSettingsAcademyIndexRoute =
+  AuthenticatedSuperAdminSettingsAcademyIndexRouteImport.update({
+    id: '/super-admin-settings/academy/',
+    path: '/super-admin-settings/academy/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAdminSettingsTeamsIndexRoute =
@@ -306,26 +342,31 @@ export interface FileRoutesByFullPath {
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
   '/install': typeof AuthenticatedInstallRoute
+  '/account/activate': typeof onboardingAccountActivateRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
+  '/academy/$chapterId': typeof AuthenticatedAcademyChapterIdRoute
+  '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
+  '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
+  '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
-  '/agents/$id': typeof AuthenticatedAgentsIdRoute
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/skills/$id': typeof AuthenticatedSkillsIdRoute
+  '/academy/': typeof AuthenticatedAcademyIndexRoute
   '/admin-settings/': typeof AuthenticatedAdminSettingsIndexRoute
-  '/agents/': typeof AuthenticatedAgentsIndexRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
   '/chats/': typeof AuthenticatedChatsIndexRoute
   '/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
-  '/prompts/': typeof AuthenticatedPromptsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/skills/': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
@@ -334,12 +375,12 @@ export interface FileRoutesByFullPath {
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
   '/admin-settings/letterheads/': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
+  '/super-admin-settings/academy/': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
   '/super-admin-settings/models-catalog/': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   '/super-admin-settings/orgs/': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
   '/super-admin-settings/platform-config/': typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   '/super-admin-settings/skills/': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/super-admin-settings/super-admins/': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
-  '/super-admin-settings/usage/': typeof AuthenticatedSuperAdminSettingsUsageIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -350,26 +391,31 @@ export interface FileRoutesByTo {
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
   '/install': typeof AuthenticatedInstallRoute
+  '/account/activate': typeof onboardingAccountActivateRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
+  '/academy/$chapterId': typeof AuthenticatedAcademyChapterIdRoute
+  '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
+  '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
+  '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
-  '/agents/$id': typeof AuthenticatedAgentsIdRoute
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/skills/$id': typeof AuthenticatedSkillsIdRoute
+  '/academy': typeof AuthenticatedAcademyIndexRoute
   '/admin-settings': typeof AuthenticatedAdminSettingsIndexRoute
-  '/agents': typeof AuthenticatedAgentsIndexRoute
   '/chat': typeof AuthenticatedChatIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/knowledge-bases': typeof AuthenticatedKnowledgeBasesIndexRoute
-  '/prompts': typeof AuthenticatedPromptsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/skills': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsIndexRoute
@@ -378,12 +424,12 @@ export interface FileRoutesByTo {
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
   '/admin-settings/letterheads': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/admin-settings/teams': typeof AuthenticatedAdminSettingsTeamsIndexRoute
+  '/super-admin-settings/academy': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
   '/super-admin-settings/models-catalog': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   '/super-admin-settings/orgs': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
   '/super-admin-settings/platform-config': typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   '/super-admin-settings/skills': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/super-admin-settings/super-admins': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
-  '/super-admin-settings/usage': typeof AuthenticatedSuperAdminSettingsUsageIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -396,26 +442,31 @@ export interface FileRoutesById {
   '/(onboarding)/login': typeof onboardingLoginRoute
   '/(onboarding)/register': typeof onboardingRegisterRoute
   '/_authenticated/install': typeof AuthenticatedInstallRoute
+  '/(onboarding)/account/activate': typeof onboardingAccountActivateRoute
   '/(onboarding)/password/forgot': typeof onboardingPasswordForgotRoute
   '/(onboarding)/password/reset': typeof onboardingPasswordResetRoute
+  '/_authenticated/academy/$chapterId': typeof AuthenticatedAcademyChapterIdRoute
+  '/_authenticated/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
+  '/_authenticated/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
+  '/_authenticated/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/_authenticated/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/_authenticated/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/_authenticated/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
   '/_authenticated/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/_authenticated/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/_authenticated/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
-  '/_authenticated/agents/$id': typeof AuthenticatedAgentsIdRoute
   '/_authenticated/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/_authenticated/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/_authenticated/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/_authenticated/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/_authenticated/skills/$id': typeof AuthenticatedSkillsIdRoute
+  '/_authenticated/academy/': typeof AuthenticatedAcademyIndexRoute
   '/_authenticated/admin-settings/': typeof AuthenticatedAdminSettingsIndexRoute
-  '/_authenticated/agents/': typeof AuthenticatedAgentsIndexRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
-  '/_authenticated/prompts/': typeof AuthenticatedPromptsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/skills/': typeof AuthenticatedSkillsIndexRoute
   '/_authenticated/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
@@ -424,12 +475,12 @@ export interface FileRoutesById {
   '/_authenticated/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
   '/_authenticated/admin-settings/letterheads/': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/_authenticated/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
+  '/_authenticated/super-admin-settings/academy/': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
   '/_authenticated/super-admin-settings/models-catalog/': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   '/_authenticated/super-admin-settings/orgs/': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
   '/_authenticated/super-admin-settings/platform-config/': typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   '/_authenticated/super-admin-settings/skills/': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/_authenticated/super-admin-settings/super-admins/': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
-  '/_authenticated/super-admin-settings/usage/': typeof AuthenticatedSuperAdminSettingsUsageIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -442,26 +493,31 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/install'
+    | '/account/activate'
     | '/password/forgot'
     | '/password/reset'
+    | '/academy/$chapterId'
+    | '/admin-settings/anonymization'
+    | '/admin-settings/api-keys'
+    | '/admin-settings/instructions'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
+    | '/admin-settings/retention'
     | '/admin-settings/security'
     | '/admin-settings/usage'
     | '/admin-settings/users'
-    | '/agents/$id'
     | '/chats/$threadId'
     | '/knowledge-bases/$id'
     | '/settings/account'
     | '/settings/chat'
     | '/settings/general'
+    | '/settings/integrations'
     | '/skills/$id'
+    | '/academy/'
     | '/admin-settings/'
-    | '/agents/'
     | '/chat/'
     | '/chats/'
     | '/knowledge-bases/'
-    | '/prompts/'
     | '/settings/'
     | '/skills/'
     | '/super-admin-settings/'
@@ -470,12 +526,12 @@ export interface FileRouteTypes {
     | '/super-admin-settings/orgs/$id'
     | '/admin-settings/letterheads/'
     | '/admin-settings/teams/'
+    | '/super-admin-settings/academy/'
     | '/super-admin-settings/models-catalog/'
     | '/super-admin-settings/orgs/'
     | '/super-admin-settings/platform-config/'
     | '/super-admin-settings/skills/'
     | '/super-admin-settings/super-admins/'
-    | '/super-admin-settings/usage/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -486,26 +542,31 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/install'
+    | '/account/activate'
     | '/password/forgot'
     | '/password/reset'
+    | '/academy/$chapterId'
+    | '/admin-settings/anonymization'
+    | '/admin-settings/api-keys'
+    | '/admin-settings/instructions'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
+    | '/admin-settings/retention'
     | '/admin-settings/security'
     | '/admin-settings/usage'
     | '/admin-settings/users'
-    | '/agents/$id'
     | '/chats/$threadId'
     | '/knowledge-bases/$id'
     | '/settings/account'
     | '/settings/chat'
     | '/settings/general'
+    | '/settings/integrations'
     | '/skills/$id'
+    | '/academy'
     | '/admin-settings'
-    | '/agents'
     | '/chat'
     | '/chats'
     | '/knowledge-bases'
-    | '/prompts'
     | '/settings'
     | '/skills'
     | '/super-admin-settings'
@@ -514,12 +575,12 @@ export interface FileRouteTypes {
     | '/super-admin-settings/orgs/$id'
     | '/admin-settings/letterheads'
     | '/admin-settings/teams'
+    | '/super-admin-settings/academy'
     | '/super-admin-settings/models-catalog'
     | '/super-admin-settings/orgs'
     | '/super-admin-settings/platform-config'
     | '/super-admin-settings/skills'
     | '/super-admin-settings/super-admins'
-    | '/super-admin-settings/usage'
   id:
     | '__root__'
     | '/'
@@ -531,26 +592,31 @@ export interface FileRouteTypes {
     | '/(onboarding)/login'
     | '/(onboarding)/register'
     | '/_authenticated/install'
+    | '/(onboarding)/account/activate'
     | '/(onboarding)/password/forgot'
     | '/(onboarding)/password/reset'
+    | '/_authenticated/academy/$chapterId'
+    | '/_authenticated/admin-settings/anonymization'
+    | '/_authenticated/admin-settings/api-keys'
+    | '/_authenticated/admin-settings/instructions'
     | '/_authenticated/admin-settings/integrations'
     | '/_authenticated/admin-settings/models'
+    | '/_authenticated/admin-settings/retention'
     | '/_authenticated/admin-settings/security'
     | '/_authenticated/admin-settings/usage'
     | '/_authenticated/admin-settings/users'
-    | '/_authenticated/agents/$id'
     | '/_authenticated/chats/$threadId'
     | '/_authenticated/knowledge-bases/$id'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/chat'
     | '/_authenticated/settings/general'
+    | '/_authenticated/settings/integrations'
     | '/_authenticated/skills/$id'
+    | '/_authenticated/academy/'
     | '/_authenticated/admin-settings/'
-    | '/_authenticated/agents/'
     | '/_authenticated/chat/'
     | '/_authenticated/chats/'
     | '/_authenticated/knowledge-bases/'
-    | '/_authenticated/prompts/'
     | '/_authenticated/settings/'
     | '/_authenticated/skills/'
     | '/_authenticated/super-admin-settings/'
@@ -559,12 +625,12 @@ export interface FileRouteTypes {
     | '/_authenticated/super-admin-settings/orgs/$id'
     | '/_authenticated/admin-settings/letterheads/'
     | '/_authenticated/admin-settings/teams/'
+    | '/_authenticated/super-admin-settings/academy/'
     | '/_authenticated/super-admin-settings/models-catalog/'
     | '/_authenticated/super-admin-settings/orgs/'
     | '/_authenticated/super-admin-settings/platform-config/'
     | '/_authenticated/super-admin-settings/skills/'
     | '/_authenticated/super-admin-settings/super-admins/'
-    | '/_authenticated/super-admin-settings/usage/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -576,6 +642,7 @@ export interface RootRouteChildren {
   onboardingIpBlockedRoute: typeof onboardingIpBlockedRoute
   onboardingLoginRoute: typeof onboardingLoginRoute
   onboardingRegisterRoute: typeof onboardingRegisterRoute
+  onboardingAccountActivateRoute: typeof onboardingAccountActivateRoute
   onboardingPasswordForgotRoute: typeof onboardingPasswordForgotRoute
   onboardingPasswordResetRoute: typeof onboardingPasswordResetRoute
 }
@@ -666,13 +733,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/prompts/': {
-      id: '/_authenticated/prompts/'
-      path: '/prompts'
-      fullPath: '/prompts/'
-      preLoaderRoute: typeof AuthenticatedPromptsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/knowledge-bases/': {
       id: '/_authenticated/knowledge-bases/'
       path: '/knowledge-bases'
@@ -694,13 +754,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/agents/': {
-      id: '/_authenticated/agents/'
-      path: '/agents'
-      fullPath: '/agents/'
-      preLoaderRoute: typeof AuthenticatedAgentsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/admin-settings/': {
       id: '/_authenticated/admin-settings/'
       path: '/admin-settings'
@@ -708,11 +761,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/academy/': {
+      id: '/_authenticated/academy/'
+      path: '/academy'
+      fullPath: '/academy/'
+      preLoaderRoute: typeof AuthenticatedAcademyIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/skills/$id': {
       id: '/_authenticated/skills/$id'
       path: '/skills/$id'
       fullPath: '/skills/$id'
       preLoaderRoute: typeof AuthenticatedSkillsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/integrations': {
+      id: '/_authenticated/settings/integrations'
+      path: '/settings/integrations'
+      fullPath: '/settings/integrations'
+      preLoaderRoute: typeof AuthenticatedSettingsIntegrationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/settings/general': {
@@ -750,13 +817,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatsThreadIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/agents/$id': {
-      id: '/_authenticated/agents/$id'
-      path: '/agents/$id'
-      fullPath: '/agents/$id'
-      preLoaderRoute: typeof AuthenticatedAgentsIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/admin-settings/users': {
       id: '/_authenticated/admin-settings/users'
       path: '/admin-settings/users'
@@ -778,6 +838,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsSecurityRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin-settings/retention': {
+      id: '/_authenticated/admin-settings/retention'
+      path: '/admin-settings/retention'
+      fullPath: '/admin-settings/retention'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsRetentionRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin-settings/models': {
       id: '/_authenticated/admin-settings/models'
       path: '/admin-settings/models'
@@ -790,6 +857,34 @@ declare module '@tanstack/react-router' {
       path: '/admin-settings/integrations'
       fullPath: '/admin-settings/integrations'
       preLoaderRoute: typeof AuthenticatedAdminSettingsIntegrationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin-settings/instructions': {
+      id: '/_authenticated/admin-settings/instructions'
+      path: '/admin-settings/instructions'
+      fullPath: '/admin-settings/instructions'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsInstructionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin-settings/api-keys': {
+      id: '/_authenticated/admin-settings/api-keys'
+      path: '/admin-settings/api-keys'
+      fullPath: '/admin-settings/api-keys'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsApiKeysRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin-settings/anonymization': {
+      id: '/_authenticated/admin-settings/anonymization'
+      path: '/admin-settings/anonymization'
+      fullPath: '/admin-settings/anonymization'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsAnonymizationRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/academy/$chapterId': {
+      id: '/_authenticated/academy/$chapterId'
+      path: '/academy/$chapterId'
+      fullPath: '/academy/$chapterId'
+      preLoaderRoute: typeof AuthenticatedAcademyChapterIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/(onboarding)/password/reset': {
@@ -806,12 +901,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof onboardingPasswordForgotRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/super-admin-settings/usage/': {
-      id: '/_authenticated/super-admin-settings/usage/'
-      path: '/super-admin-settings/usage'
-      fullPath: '/super-admin-settings/usage/'
-      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsUsageIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/(onboarding)/account/activate': {
+      id: '/(onboarding)/account/activate'
+      path: '/account/activate'
+      fullPath: '/account/activate'
+      preLoaderRoute: typeof onboardingAccountActivateRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/super-admin-settings/super-admins/': {
       id: '/_authenticated/super-admin-settings/super-admins/'
@@ -846,6 +941,13 @@ declare module '@tanstack/react-router' {
       path: '/super-admin-settings/models-catalog'
       fullPath: '/super-admin-settings/models-catalog/'
       preLoaderRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/super-admin-settings/academy/': {
+      id: '/_authenticated/super-admin-settings/academy/'
+      path: '/super-admin-settings/academy'
+      fullPath: '/super-admin-settings/academy/'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsAcademyIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/admin-settings/teams/': {
@@ -888,24 +990,28 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedInstallRoute: typeof AuthenticatedInstallRoute
+  AuthenticatedAcademyChapterIdRoute: typeof AuthenticatedAcademyChapterIdRoute
+  AuthenticatedAdminSettingsAnonymizationRoute: typeof AuthenticatedAdminSettingsAnonymizationRoute
+  AuthenticatedAdminSettingsApiKeysRoute: typeof AuthenticatedAdminSettingsApiKeysRoute
+  AuthenticatedAdminSettingsInstructionsRoute: typeof AuthenticatedAdminSettingsInstructionsRoute
   AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
   AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
+  AuthenticatedAdminSettingsRetentionRoute: typeof AuthenticatedAdminSettingsRetentionRoute
   AuthenticatedAdminSettingsSecurityRoute: typeof AuthenticatedAdminSettingsSecurityRoute
   AuthenticatedAdminSettingsUsageRoute: typeof AuthenticatedAdminSettingsUsageRoute
   AuthenticatedAdminSettingsUsersRoute: typeof AuthenticatedAdminSettingsUsersRoute
-  AuthenticatedAgentsIdRoute: typeof AuthenticatedAgentsIdRoute
   AuthenticatedChatsThreadIdRoute: typeof AuthenticatedChatsThreadIdRoute
   AuthenticatedKnowledgeBasesIdRoute: typeof AuthenticatedKnowledgeBasesIdRoute
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
   AuthenticatedSettingsChatRoute: typeof AuthenticatedSettingsChatRoute
   AuthenticatedSettingsGeneralRoute: typeof AuthenticatedSettingsGeneralRoute
+  AuthenticatedSettingsIntegrationsRoute: typeof AuthenticatedSettingsIntegrationsRoute
   AuthenticatedSkillsIdRoute: typeof AuthenticatedSkillsIdRoute
+  AuthenticatedAcademyIndexRoute: typeof AuthenticatedAcademyIndexRoute
   AuthenticatedAdminSettingsIndexRoute: typeof AuthenticatedAdminSettingsIndexRoute
-  AuthenticatedAgentsIndexRoute: typeof AuthenticatedAgentsIndexRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedKnowledgeBasesIndexRoute: typeof AuthenticatedKnowledgeBasesIndexRoute
-  AuthenticatedPromptsIndexRoute: typeof AuthenticatedPromptsIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedSkillsIndexRoute: typeof AuthenticatedSkillsIndexRoute
   AuthenticatedSuperAdminSettingsIndexRoute: typeof AuthenticatedSuperAdminSettingsIndexRoute
@@ -914,36 +1020,45 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSuperAdminSettingsOrgsIdRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
   AuthenticatedAdminSettingsLetterheadsIndexRoute: typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   AuthenticatedAdminSettingsTeamsIndexRoute: typeof AuthenticatedAdminSettingsTeamsIndexRoute
+  AuthenticatedSuperAdminSettingsAcademyIndexRoute: typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
   AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   AuthenticatedSuperAdminSettingsOrgsIndexRoute: typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
   AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute: typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   AuthenticatedSuperAdminSettingsSkillsIndexRoute: typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute: typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
-  AuthenticatedSuperAdminSettingsUsageIndexRoute: typeof AuthenticatedSuperAdminSettingsUsageIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedInstallRoute: AuthenticatedInstallRoute,
+  AuthenticatedAcademyChapterIdRoute: AuthenticatedAcademyChapterIdRoute,
+  AuthenticatedAdminSettingsAnonymizationRoute:
+    AuthenticatedAdminSettingsAnonymizationRoute,
+  AuthenticatedAdminSettingsApiKeysRoute:
+    AuthenticatedAdminSettingsApiKeysRoute,
+  AuthenticatedAdminSettingsInstructionsRoute:
+    AuthenticatedAdminSettingsInstructionsRoute,
   AuthenticatedAdminSettingsIntegrationsRoute:
     AuthenticatedAdminSettingsIntegrationsRoute,
   AuthenticatedAdminSettingsModelsRoute: AuthenticatedAdminSettingsModelsRoute,
+  AuthenticatedAdminSettingsRetentionRoute:
+    AuthenticatedAdminSettingsRetentionRoute,
   AuthenticatedAdminSettingsSecurityRoute:
     AuthenticatedAdminSettingsSecurityRoute,
   AuthenticatedAdminSettingsUsageRoute: AuthenticatedAdminSettingsUsageRoute,
   AuthenticatedAdminSettingsUsersRoute: AuthenticatedAdminSettingsUsersRoute,
-  AuthenticatedAgentsIdRoute: AuthenticatedAgentsIdRoute,
   AuthenticatedChatsThreadIdRoute: AuthenticatedChatsThreadIdRoute,
   AuthenticatedKnowledgeBasesIdRoute: AuthenticatedKnowledgeBasesIdRoute,
   AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
   AuthenticatedSettingsChatRoute: AuthenticatedSettingsChatRoute,
   AuthenticatedSettingsGeneralRoute: AuthenticatedSettingsGeneralRoute,
+  AuthenticatedSettingsIntegrationsRoute:
+    AuthenticatedSettingsIntegrationsRoute,
   AuthenticatedSkillsIdRoute: AuthenticatedSkillsIdRoute,
+  AuthenticatedAcademyIndexRoute: AuthenticatedAcademyIndexRoute,
   AuthenticatedAdminSettingsIndexRoute: AuthenticatedAdminSettingsIndexRoute,
-  AuthenticatedAgentsIndexRoute: AuthenticatedAgentsIndexRoute,
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedKnowledgeBasesIndexRoute: AuthenticatedKnowledgeBasesIndexRoute,
-  AuthenticatedPromptsIndexRoute: AuthenticatedPromptsIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedSkillsIndexRoute: AuthenticatedSkillsIndexRoute,
   AuthenticatedSuperAdminSettingsIndexRoute:
@@ -958,6 +1073,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedAdminSettingsLetterheadsIndexRoute,
   AuthenticatedAdminSettingsTeamsIndexRoute:
     AuthenticatedAdminSettingsTeamsIndexRoute,
+  AuthenticatedSuperAdminSettingsAcademyIndexRoute:
+    AuthenticatedSuperAdminSettingsAcademyIndexRoute,
   AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute:
     AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute,
   AuthenticatedSuperAdminSettingsOrgsIndexRoute:
@@ -968,8 +1085,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedSuperAdminSettingsSkillsIndexRoute,
   AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute:
     AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute,
-  AuthenticatedSuperAdminSettingsUsageIndexRoute:
-    AuthenticatedSuperAdminSettingsUsageIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -985,6 +1100,7 @@ const rootRouteChildren: RootRouteChildren = {
   onboardingIpBlockedRoute: onboardingIpBlockedRoute,
   onboardingLoginRoute: onboardingLoginRoute,
   onboardingRegisterRoute: onboardingRegisterRoute,
+  onboardingAccountActivateRoute: onboardingAccountActivateRoute,
   onboardingPasswordForgotRoute: onboardingPasswordForgotRoute,
   onboardingPasswordResetRoute: onboardingPasswordResetRoute,
 }

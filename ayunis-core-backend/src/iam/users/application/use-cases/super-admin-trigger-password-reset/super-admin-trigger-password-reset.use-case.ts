@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { UUID } from 'crypto';
 import { SuperAdminTriggerPasswordResetCommand } from './super-admin-trigger-password-reset.command';
 import { SuperAdminTriggerPasswordResetResult } from './super-admin-trigger-password-reset.result';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -25,7 +26,7 @@ export class SuperAdminTriggerPasswordResetUseCase {
   async execute(
     command: SuperAdminTriggerPasswordResetCommand,
   ): Promise<SuperAdminTriggerPasswordResetResult> {
-    this.logger.log('Triggering password reset as super admin', {
+    this.logger.log('Triggering password reset email as super admin', {
       userId: command.userId,
     });
 
@@ -35,25 +36,9 @@ export class SuperAdminTriggerPasswordResetUseCase {
         throw new UserNotFoundError(command.userId);
       }
 
-      const resetToken =
-        this.passwordResetJwtService.generatePasswordResetToken({
-          userId: user.id,
-          email: user.email,
-        });
+      const resetUrl = await this.sendResetEmail(user);
 
-      const frontendBaseUrl = this.configService.get<string>(
-        'app.frontend.baseUrl',
-      );
-      const passwordResetEndpoint = this.configService.get<string>(
-        'app.frontend.passwordResetEndpoint',
-      );
-      const resetUrl = `${frontendBaseUrl}${passwordResetEndpoint}?token=${resetToken}`;
-
-      await this.sendPasswordResetEmailUseCase.execute(
-        new SendPasswordResetEmailCommand(user.email, resetToken, user.name),
-      );
-
-      this.logger.log('Password reset triggered for user', {
+      this.logger.log('Email triggered for user', {
         userId: command.userId,
         email: user.email,
       });
@@ -61,13 +46,42 @@ export class SuperAdminTriggerPasswordResetUseCase {
       return new SuperAdminTriggerPasswordResetResult(resetUrl);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error triggering password reset as super admin', {
-        error: error as Error,
+      this.logger.error('Error triggering email as super admin', {
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw new UserUnexpectedError(
-        error as Error,
-        'super admin trigger password reset',
+        error instanceof Error ? error : new Error('Unknown error'),
+        'super admin trigger password reset email',
       );
     }
+  }
+
+  private async sendResetEmail(user: {
+    id: UUID;
+    email: string;
+    name: string;
+  }): Promise<string> {
+    const resetToken = this.passwordResetJwtService.generatePasswordResetToken({
+      userId: user.id,
+      email: user.email,
+    });
+
+    const resetUrl = this.buildResetUrl(resetToken);
+
+    await this.sendPasswordResetEmailUseCase.execute(
+      new SendPasswordResetEmailCommand(user.email, resetToken, user.name),
+    );
+
+    return resetUrl;
+  }
+
+  private buildResetUrl(token: string): string {
+    const frontendBaseUrl = this.configService.get<string>(
+      'app.frontend.baseUrl',
+    );
+    const passwordResetEndpoint = this.configService.get<string>(
+      'app.frontend.passwordResetEndpoint',
+    );
+    return `${frontendBaseUrl}${passwordResetEndpoint}?token=${token}`;
   }
 }

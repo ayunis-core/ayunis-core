@@ -3,6 +3,7 @@ import type {
   RunMessageResponseDto,
   RunErrorResponseDto,
   RunThreadResponseDto,
+  RunMasksResponseDto,
 } from '@/shared/api';
 import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
@@ -37,6 +38,7 @@ interface UseMessageSendParams {
   onMessageEvent?: (data: RunMessageResponseDto) => void;
   onSessionEvent?: (data: RunSessionResponseDto) => void;
   onThreadEvent?: (data: RunThreadResponseDto) => void;
+  onMasksEvent?: (data: RunMasksResponseDto) => void;
   onErrorEvent?: (data: RunErrorResponseDto) => void;
   onError?: (error: Error) => void;
   onComplete?: () => void;
@@ -135,7 +137,36 @@ export function useMessageSend(params: UseMessageSendParams) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
-        let _eventCount = 0;
+
+        const dispatchLine = (line: string) => {
+          if (line.startsWith(':')) return;
+          if (!line.startsWith('data: ')) return;
+          try {
+            const data = JSON.parse(line.slice(6)) as { type?: string };
+            switch (data.type) {
+              case 'session':
+                params.onSessionEvent?.(data as RunSessionResponseDto);
+                break;
+              case 'message':
+                params.onMessageEvent?.(data as RunMessageResponseDto);
+                break;
+              case 'thread':
+                params.onThreadEvent?.(data as RunThreadResponseDto);
+                break;
+              case 'masks':
+                params.onMasksEvent?.(data as RunMasksResponseDto);
+                break;
+              case 'error':
+                params.onErrorEvent?.(data as RunErrorResponseDto);
+                break;
+              case undefined:
+              default:
+                console.warn('Unknown SSE event type:', data.type);
+            }
+          } catch (parseError) {
+            console.warn('Failed to parse SSE data:', line, parseError);
+          }
+        };
 
         try {
           // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -153,39 +184,7 @@ export function useMessageSend(params: UseMessageSendParams) {
             buffer = lines.pop() ?? '';
 
             for (const line of lines) {
-              // Handle SSE comment lines
-              if (line.startsWith(':')) {
-                continue;
-              }
-
-              // Handle SSE data lines
-              if (line.startsWith('data: ')) {
-                try {
-                  const jsonData = line.slice(6);
-                  const data = JSON.parse(jsonData) as { type?: string };
-                  _eventCount++;
-
-                  switch (data.type) {
-                    case 'session':
-                      params.onSessionEvent?.(data as RunSessionResponseDto);
-                      break;
-                    case 'message':
-                      params.onMessageEvent?.(data as RunMessageResponseDto);
-                      break;
-                    case 'thread':
-                      params.onThreadEvent?.(data as RunThreadResponseDto);
-                      break;
-                    case 'error':
-                      params.onErrorEvent?.(data as RunErrorResponseDto);
-                      break;
-                    case undefined:
-                    default:
-                      console.warn('Unknown SSE event type:', data.type);
-                  }
-                } catch (parseError) {
-                  console.warn('Failed to parse SSE data:', line, parseError);
-                }
-              }
+              dispatchLine(line);
             }
           }
         } catch (readerError) {
@@ -193,7 +192,17 @@ export function useMessageSend(params: UseMessageSendParams) {
           throw readerError;
         }
 
-        params.onComplete?.();
+        // Flush any bytes pending in the decoder (e.g. multi-byte UTF-8
+        // codepoint split across the last chunk) and process the final
+        // line in the buffer. Defensive: an upstream proxy may close the
+        // connection after delivering a complete `data: …` line but
+        // before its trailing `\n\n`, which would otherwise be dropped.
+        buffer += decoder.decode();
+        if (buffer.length > 0) {
+          for (const line of buffer.split('\n')) {
+            dispatchLine(line);
+          }
+        }
       } catch (error) {
         console.error('Error in sendMessage', error);
 
@@ -232,8 +241,24 @@ export function useMessageSend(params: UseMessageSendParams) {
         // When aborted, we keep the optimistic local state to avoid race conditions
         // with the backend's async save operation
         if (!wasAbortedRef.current) {
+          params.onComplete?.();
+          // Cancel any in-flight thread refetch (e.g. an active refetchInterval
+          // poll) so its older response can't land after ours and shorten the
+          // displayed assistant text. Then await the refetch so the cache
+          // holds the post-save server state before sendMessage resolves.
+          const threadQueryKey = getThreadsControllerFindOneQueryKey(
+            params.threadId,
+          );
+          await queryClient.cancelQueries({
+            queryKey: threadQueryKey,
+            exact: true,
+          });
+          await queryClient.refetchQueries({
+            queryKey: threadQueryKey,
+            exact: true,
+          });
+
           [
-            getThreadsControllerFindOneQueryKey(params.threadId),
             getThreadsControllerFindAllQueryKey(),
             getArtifactsControllerFindByThreadQueryKey(params.threadId),
           ].forEach((queryKey) => {
@@ -317,6 +342,5 @@ export function useMessageSend(params: UseMessageSendParams) {
     sendTextMessage,
     sendToolResult,
     abort,
-    isLoading: isLoadingRef.current,
   };
 }

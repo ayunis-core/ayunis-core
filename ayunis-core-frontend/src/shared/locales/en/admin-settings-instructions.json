@@ -1,0 +1,17 @@
+{
+  "instructions": {
+    "title": "Organization-wide Instructions",
+    "description": "Define instructions that are applied to all conversations of all users in your organization. Users do not see these instructions, but the AI assistant follows them in every chat.",
+    "label": "Instructions",
+    "placeholder": "e.g. All responses must comply with our communication guidelines. Always use formal language.",
+    "save": "Save",
+    "saving": "Saving...",
+    "delete": "Remove",
+    "deleting": "Removing...",
+    "saved": "Organization instructions saved.",
+    "deleted": "Organization instructions removed.",
+    "error": "Failed to update organization instructions.",
+    "loadError": "Failed to load organization instructions.",
+    "retry": "Retry"
+  }
+}

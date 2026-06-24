@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import * as React from 'react';
 import type * as LabelPrimitive from '@radix-ui/react-label';
 import { Slot } from '@radix-ui/react-slot';
@@ -56,6 +57,11 @@ const useFormField = (): {
   const { getFieldState } = useFormContext();
   const formState = useFormState({ name: fieldContext.name });
   const fieldState = getFieldState(fieldContext.name, formState);
+
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- fieldContext is null outside FormField
+  if (!fieldContext) {
+    throw new Error('useFormField should be used within <FormField>');
+  }
 
   const { id } = itemContext;
 
@@ -172,7 +178,6 @@ function FormMessage({
 }
 
 export {
-  // eslint-disable-next-line react-refresh/only-export-components
   useFormField,
   Form,
   FormItem,

@@ -9,6 +9,7 @@ import { ArtifactVersionConflictError } from '../../../application/artifacts.err
 import { Artifact } from '../../../domain/artifact.entity';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { ArtifactRecord } from './schema/artifact.record';
+import { DocumentArtifactRecord } from './schema/document-artifact.record';
 import { ArtifactVersionRecord } from './schema/artifact-version.record';
 import { ArtifactMapper } from './mappers/artifact.mapper';
 import { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
@@ -21,6 +22,8 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
   constructor(
     @InjectRepository(ArtifactRecord)
     private readonly artifactRepo: Repository<ArtifactRecord>,
+    @InjectRepository(DocumentArtifactRecord)
+    private readonly documentArtifactRepo: Repository<DocumentArtifactRecord>,
     @InjectRepository(ArtifactVersionRecord)
     private readonly versionRepo: Repository<ArtifactVersionRecord>,
     private readonly artifactMapper: ArtifactMapper,
@@ -30,7 +33,11 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
   }
 
   async create(artifact: Artifact): Promise<Artifact> {
-    this.logger.log('create', { id: artifact.id, title: artifact.title });
+    this.logger.log('create', {
+      id: artifact.id,
+      title: artifact.title,
+      type: artifact.type,
+    });
     const record = this.artifactMapper.toRecord(artifact);
     const saved = await this.artifactRepo.save(record);
     return this.artifactMapper.toDomain(saved);
@@ -84,7 +91,7 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     artifactId: UUID,
     letterheadId: UUID | null,
   ): Promise<void> {
-    await this.artifactRepo.update(
+    await this.documentArtifactRepo.update(
       { id: artifactId },
       { letterheadId, updatedAt: new Date() },
     );
@@ -122,7 +129,7 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
                 updatedAt: new Date(),
               },
             )
-          : await this.artifactRepo.update(
+          : await this.documentArtifactRepo.update(
               {
                 id: version.artifactId,
                 currentVersionNumber: expectedCurrentVersionNumber,

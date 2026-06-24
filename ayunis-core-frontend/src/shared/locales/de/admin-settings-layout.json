@@ -10,6 +10,10 @@
     "integrations": "Integrationen",
     "usage": "Nutzung",
     "security": "Sicherheit",
-    "letterheads": "Briefpapier"
+    "anonymization": "Anonymisierung",
+    "retention": "Datenaufbewahrung",
+    "instructions": "Anweisungen",
+    "letterheads": "Briefpapier",
+    "apiKeys": "API-Schlüssel"
   }
 }

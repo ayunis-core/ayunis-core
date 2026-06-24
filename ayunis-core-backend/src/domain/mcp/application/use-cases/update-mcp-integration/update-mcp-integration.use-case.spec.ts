@@ -48,7 +48,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
     encryption = {
       encrypt: jest.fn(),
       decrypt: jest.fn(),
-    } as unknown as jest.Mocked<McpCredentialEncryptionPort>;
+    };
 
     validateUseCase = {
       execute: jest.fn(),

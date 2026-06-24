@@ -9,7 +9,6 @@ import { CreatePredefinedDialog } from './create-predefined-dialog';
 import { CreateCustomDialog } from './create-custom-dialog';
 import { EditIntegrationDialog } from './edit-integration-dialog';
 import { DeleteConfirmationDialog } from './delete-confirmation-dialog';
-import { UserConfigDialog } from './user-config-dialog';
 import SettingsLayout from '../../admin-settings-layout';
 import { useMcpIntegrationsQueries } from '../api/useMcpIntegrationsQueries';
 import type { McpIntegration } from '../model/types';
@@ -26,6 +25,7 @@ import {
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
 import { ComingSoonDialog } from './coming-soon-dialog';
+import { useMarketplaceConfig } from '@/features/marketplace';
 
 export function McpIntegrationsPage({
   isCloud,
@@ -40,8 +40,6 @@ export function McpIntegrationsPage({
     null,
   );
   const [deleteIntegration, setDeleteIntegration] =
-    useState<McpIntegration | null>(null);
-  const [userConfigIntegration, setUserConfigIntegration] =
     useState<McpIntegration | null>(null);
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
 
@@ -127,7 +125,6 @@ export function McpIntegrationsPage({
           integrations={integrations}
           onEdit={setEditIntegration}
           onDelete={setDeleteIntegration}
-          onUserConfig={setUserConfigIntegration}
         />
 
         <CreatePredefinedDialog
@@ -154,12 +151,6 @@ export function McpIntegrationsPage({
           onOpenChange={(open) => !open && setDeleteIntegration(null)}
         />
 
-        <UserConfigDialog
-          integration={userConfigIntegration}
-          open={!!userConfigIntegration}
-          onOpenChange={(open) => !open && setUserConfigIntegration(null)}
-        />
-
         <ComingSoonDialog
           open={comingSoonOpen}
           onOpenChange={setComingSoonOpen}
@@ -180,19 +171,23 @@ function HeaderActions({
   onCreateCustom: () => void;
   t: (key: string) => string;
 }>) {
+  const marketplace = useMarketplaceConfig();
+
   return (
     <div className="flex gap-2">
       <HelpLink path="settings/admin/integrations/" />
-      <Button variant="outline" size="sm" asChild>
-        <a
-          href="https://marketplace.ayunis.de/integrations"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <ExternalLink className="h-4 w-4" />
-          {t('integrations.page.browseMarketplace')}
-        </a>
-      </Button>
+      {marketplace.enabled && marketplace.url && (
+        <Button variant="outline" size="sm" asChild>
+          <a
+            href={`${marketplace.url.replace(/\/$/, '')}/integrations`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <ExternalLink className="h-4 w-4" />
+            {t('integrations.page.browseMarketplace')}
+          </a>
+        </Button>
+      )}
       {isCloud ? (
         <Button variant="default" size="sm" onClick={onCreatePredefined}>
           <Plus className="h-4 w-4" />

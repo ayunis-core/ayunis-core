@@ -15,6 +15,48 @@ describe('SystemPromptBuilderService', () => {
     service = new SystemPromptBuilderService();
   });
 
+  describe('anonymization section', () => {
+    it('includes the anonymized_data section when isAnonymous is true', () => {
+      const prompt = service.build({
+        tools: [],
+        currentTime: new Date(),
+        isAnonymous: true,
+      });
+
+      expect(prompt).toContain('<anonymized_data>');
+      expect(prompt).toContain('{{pii:CATEGORY_NUMBER}}');
+      expect(prompt).toContain('copy its placeholder verbatim');
+    });
+
+    it('omits the anonymized_data section when isAnonymous is false or unset', () => {
+      const withFalse = service.build({
+        tools: [],
+        currentTime: new Date(),
+        isAnonymous: false,
+      });
+      const withUnset = service.build({
+        tools: [],
+        currentTime: new Date(),
+      });
+
+      expect(withFalse).not.toContain('<anonymized_data>');
+      expect(withUnset).not.toContain('<anonymized_data>');
+    });
+  });
+
+  describe('knowledge boundaries section', () => {
+    it('instructs the model to verify time-sensitive facts against external sources', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+      });
+
+      expect(result).toContain('<knowledge_boundaries>');
+      expect(result).toContain('time-sensitive facts');
+      expect(result).toContain('web search');
+    });
+  });
+
   describe('skills section', () => {
     it('should include available_skills section when active skills are provided', () => {
       const skills: SkillEntry[] = [
@@ -122,25 +164,6 @@ describe('SystemPromptBuilderService', () => {
       expect(result).not.toContain('<user_instructions>');
     });
 
-    it('should place user_instructions after agent_instructions', () => {
-      const agent = {
-        instructions: 'Agent-level instructions here',
-      } as any;
-
-      const result = service.build({
-        agent,
-        tools: [],
-        currentTime: new Date('2026-01-15T10:00:00Z'),
-        userSystemPrompt: 'User-level preferences here',
-      });
-
-      const agentPos = result.indexOf('<agent_instructions>');
-      const userPos = result.indexOf('<user_instructions>');
-      expect(agentPos).toBeGreaterThan(-1);
-      expect(userPos).toBeGreaterThan(-1);
-      expect(userPos).toBeGreaterThan(agentPos);
-    });
-
     it('should place user_instructions before the closing ready message', () => {
       const result = service.build({
         tools: [],
@@ -152,6 +175,69 @@ describe('SystemPromptBuilderService', () => {
       const readyPos = result.indexOf('You are now ready to assist the user.');
       expect(userPos).toBeGreaterThan(-1);
       expect(readyPos).toBeGreaterThan(userPos);
+    });
+  });
+
+  describe('organization instructions section', () => {
+    it('should include organization_instructions section when orgSystemPrompt is provided', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        orgSystemPrompt:
+          'All responses must comply with municipal communication guidelines.',
+      });
+
+      expect(result).toContain('<organization_instructions>');
+      expect(result).toContain(
+        'All responses must comply with municipal communication guidelines.',
+      );
+      expect(result).toContain('</organization_instructions>');
+    });
+
+    it('should not include organization_instructions section when orgSystemPrompt is undefined', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+      });
+
+      expect(result).not.toContain('<organization_instructions>');
+    });
+
+    it('should not include organization_instructions section when orgSystemPrompt is empty', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        orgSystemPrompt: '',
+      });
+
+      expect(result).not.toContain('<organization_instructions>');
+    });
+
+    it('should place organization_instructions before user_instructions when both are present', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        orgSystemPrompt: 'Org-wide instructions',
+        userSystemPrompt: 'My custom instructions',
+      });
+
+      const orgPos = result.indexOf('<organization_instructions>');
+      const userPos = result.indexOf('<user_instructions>');
+      expect(orgPos).toBeGreaterThan(-1);
+      expect(userPos).toBeGreaterThan(orgPos);
+    });
+
+    it('should place organization_instructions before the closing ready message', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        orgSystemPrompt: 'Org-wide instructions',
+      });
+
+      const orgPos = result.indexOf('<organization_instructions>');
+      const readyPos = result.indexOf('You are now ready to assist the user.');
+      expect(orgPos).toBeGreaterThan(-1);
+      expect(readyPos).toBeGreaterThan(orgPos);
     });
   });
 

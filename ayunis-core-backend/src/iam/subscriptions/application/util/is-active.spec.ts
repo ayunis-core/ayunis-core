@@ -52,6 +52,18 @@ function createUsageBased(
 }
 
 describe('isActive', () => {
+  // Pin the clock to a fixed mid-month instant so the relative dates used
+  // below (e.g. "cancelled yesterday", "anchor on the 1st of this month")
+  // stay consistent regardless of the calendar day the suite runs on.
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2025-06-15T12:00:00.000Z'));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it('should return true for a non-cancelled seat-based subscription', () => {
     expect(isActive(createSeatBased())).toBe(true);
   });

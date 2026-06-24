@@ -17,6 +17,7 @@ import {
   Item,
   ItemActions,
   ItemContent,
+  ItemDescription,
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
 import {
@@ -26,9 +27,13 @@ import {
 } from '@/shared/ui/shadcn/tooltip';
 import { Star } from 'lucide-react';
 import { cn } from '@/shared/lib/shadcn/utils';
-import { getFlagByProvider } from '@/shared/lib/getFlagByProvider';
+import {
+  getFlagByProvider,
+  getHostingPriority,
+} from '@/shared/lib/model-provider-metadata';
 
 const TIER_FILLED_COUNT: Record<ModelWithConfigResponseDtoTier, number> = {
+  [ModelWithConfigResponseDtoTier.zero]: 0,
   [ModelWithConfigResponseDtoTier.low]: 1,
   [ModelWithConfigResponseDtoTier.medium]: 2,
   [ModelWithConfigResponseDtoTier.high]: 3,
@@ -82,35 +87,31 @@ export interface ModelActions {
 }
 
 interface ModelTypeCardProps {
-  readonly type: 'language' | 'embedding';
+  readonly type: 'language' | 'embedding' | 'image-generation';
   readonly models: ModelWithConfigResponseDto[];
   readonly actions: ModelActions;
 }
 
-// Priority order: DE (0) -> EU (1) -> US (2) -> Unknown (3)
-function getHostingPriority(
-  provider: ModelWithConfigResponseDto['provider'],
-): number {
-  switch (provider) {
-    case 'otc':
-    case 'ayunis':
-    case 'synaforce':
-    case 'ollama':
-    case 'stackit':
-      return 0; // DE
-    case 'mistral':
-    case 'bedrock':
-    case 'azure':
-    case 'scaleway':
-      return 1; // EU
-    case 'openai':
-    case 'anthropic':
-    case 'gemini':
-      return 2; // US
-    default:
-      return 3;
-  }
-}
+const MODEL_TYPE_CONFIG = {
+  language: {
+    titleKey: 'models.languageModels',
+    descriptionKey: 'models.languageModelsDescription',
+    emptyKey: 'models.noLanguageModels',
+    defaultDescription: 'Models for text generation and conversation.',
+  },
+  embedding: {
+    titleKey: 'models.embeddingModels',
+    descriptionKey: 'models.embeddingModelsDescription',
+    emptyKey: 'models.noEmbeddingModels',
+    defaultDescription: 'Models for document analysis and search.',
+  },
+  'image-generation': {
+    titleKey: 'models.imageGenerationModels',
+    descriptionKey: 'models.imageGenerationModelsDescription',
+    emptyKey: 'models.noImageGenerationModels',
+    defaultDescription: 'Models for image generation and visual creation.',
+  },
+} as const;
 
 export default function ModelTypeCard({
   type,
@@ -126,15 +127,9 @@ export default function ModelTypeCard({
     isDisabling,
   } = actions;
 
-  const title =
-    type === 'language'
-      ? t('models.languageModels')
-      : t('models.embeddingModels');
-
-  const emptyMessage =
-    type === 'language'
-      ? t('models.noLanguageModels')
-      : t('models.noEmbeddingModels');
+  const config = MODEL_TYPE_CONFIG[type];
+  const title = t(config.titleKey);
+  const emptyMessage = t(config.emptyKey);
 
   function handleModelToggle(
     model: ModelWithConfigResponseDto,
@@ -188,13 +183,9 @@ export default function ModelTypeCard({
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>
-          {type === 'language'
-            ? t('models.languageModelsDescription', {
-                defaultValue: 'Models for text generation and conversation.',
-              })
-            : t('models.embeddingModelsDescription', {
-                defaultValue: 'Models for document analysis and search.',
-              })}
+          {t(config.descriptionKey, {
+            defaultValue: config.defaultDescription,
+          })}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -217,6 +208,9 @@ export default function ModelTypeCard({
                       {model.displayName || model.name}
                       {model.tier && <ModelTierStars tier={model.tier} />}
                     </ItemTitle>
+                    {model.displayName && (
+                      <ItemDescription>{model.name}</ItemDescription>
+                    )}
                   </ItemContent>
                   <ItemActions>
                     {model.isPermitted && updatePermittedModel && (

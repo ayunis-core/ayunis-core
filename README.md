@@ -2,15 +2,14 @@
 
 > An open-source AI gateway for public administrations
 
-Ayunis Core is a comprehensive AI platform that enables intelligent conversations with customizable agents, advanced prompt management, and extensible tool integration. Built with ❤️ for public administrations.
+Ayunis Core is a comprehensive AI platform that enables intelligent conversations with customizable skills, knowledge bases, and extensible tool integration. Built with ❤️ for public administrations.
 
 ## ✨ Features
 
 ### 🤖 AI Conversations
 
 - **Multiple LLM providers** - Seamlessly connect to Ollama, Mistral, Anthropic or OpenAI without configuration overhead
-- **Prompt Library** - Organize prompts for easy reuse
-- **Agent Builder** - Create your personalized AI assistants to help with your tasks. Share the best with your entire team.
+- **Skills** - Package reusable instructions, tools, and knowledge sources into named skills. Share the best with your entire team.
 - **RAG Pipeline** - Enhance model context with your own data & documents. Use our pipeline in your own services.
 
 ### 🛠️ Advanced Capabilities
@@ -156,7 +155,7 @@ Admins can create MCP integrations through the admin UI or API:
 3. Select integration type (e.g., "Locaboo 4")
 4. Provide server URL and authentication credentials
 5. Test connection before saving
-6. Once saved, organization users can use the integration in agents
+6. Once saved, organization users can use the integration in skills
 
 For API-based creation, see the MCP integration endpoints in the OpenAPI documentation.
 
@@ -177,7 +176,10 @@ All super admin endpoints require JWT authentication with a user that has the `S
 
 ```bash
 cd ayunis-core-backend
-npx nestjs-command make:super-admin <email>
+# Look up the user's ID by email
+npm run cli:ts -- users:get --email <email>
+# Promote that user to super admin
+npm run cli:ts -- users:make-super-admin --userId <userId>
 ```
 
 Then use the authenticated API to manage the model catalog. See the full endpoint documentation at `/api/docs` under the **Super Admin Models** tag.
@@ -190,15 +192,25 @@ See also:
 - `/src/domain/models/domain/models/embedding.model.ts`
 - `/src/domain/models/domain/value-objects/embedding-dimensions.enum.ts`
 
+#### Seed demo data (local dev)
+
+To skip manual setup locally, seed a demo org, a super admin, and standard models:
+
+```bash
+cd ayunis-core-backend
+npm run seed:minimal:ts
+```
+
+This creates **Demo Org** with `admin@demo.local` / `admin` (super admin) and permits a default language + embedding model. Models only appear once a credential for their provider is set in `.env` (e.g. `AWS_BEDROCK_REGION` for the default Bedrock model, or `OPENAI_API_KEY`); restart the backend after setting it.
+
 ## 🎯 First steps
 
 - Create an account
 - As a super admin, add models to the catalog and permit them for your organization (see [Model Configuration](#model-configuration))
 - Go to Admin Settings → Models and enable at least one language model and one embedding model
 - Invite users
-- Go to the Prompt Library and add some prompts for easy access
-- Create some agents for your most important use cases
-- Chat with your enabled models, add prompts via the book icon button below the chat input
+- Create some skills for your most important use cases
+- Chat with your enabled models, activate skills as needed
 
 ## 💻 Development
 
@@ -221,6 +233,7 @@ This installs Husky and configures Git to use the hooks in the `.husky/` directo
 - **pre-commit**: Runs linting and formatting checks on staged files
   - Frontend: ESLint, Prettier, and TypeScript type checking
   - Backend: ESLint, Prettier, and TypeScript type checking
+  - Complexity check (ESLint `complexity` / `max-lines-per-function` on staged backend and package `.ts` files, same rules as CI)
   - Auto-fixes issues when possible (set `PRECOMMIT_NO_FIX=1` to disable auto-fix)
 
 - **commit-msg**: Validates commit message format

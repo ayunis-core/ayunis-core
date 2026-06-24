@@ -2,9 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { CreateArtifactCommand } from './create-artifact.command';
-import { Artifact } from '../../../domain/artifact.entity';
+import {
+  Artifact,
+  DiagramArtifact,
+  DocumentArtifact,
+} from '../../../domain/artifact.entity';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
+import { ArtifactType } from '../../../domain/value-objects/artifact-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { sanitizeHtmlContent } from '../../helpers/sanitize-html-content';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
@@ -32,7 +37,10 @@ export class CreateArtifactUseCase {
 
   @Transactional()
   async execute(command: CreateArtifactCommand): Promise<Artifact> {
-    this.logger.log('Creating artifact', { title: command.title });
+    this.logger.log('Creating artifact', {
+      title: command.title,
+      type: command.type,
+    });
 
     try {
       const userId = this.contextService.get('userId');
@@ -51,37 +59,67 @@ export class CreateArtifactUseCase {
         new FindThreadQuery(command.threadId),
       );
 
-      if (command.letterheadId) {
+      const isDocument = command.type === ArtifactType.DOCUMENT;
+
+      if (isDocument && command.letterheadId) {
         await this.findLetterheadUseCase.execute(
           new FindLetterheadQuery({ letterheadId: command.letterheadId }),
         );
       }
 
-      const artifact = new Artifact({
-        threadId: command.threadId,
-        userId,
-        title: command.title,
-        letterheadId: command.letterheadId ?? null,
-        currentVersionNumber: 1,
-      });
+      const artifact: Artifact = isDocument
+        ? new DocumentArtifact({
+            threadId: command.threadId,
+            userId,
+            title: command.title,
+            letterheadId: command.letterheadId ?? null,
+            currentVersionNumber: 1,
+          })
+        : new DiagramArtifact({
+            threadId: command.threadId,
+            userId,
+            title: command.title,
+            currentVersionNumber: 1,
+          });
 
       const createdArtifact = await this.artifactsRepository.create(artifact);
 
-      const sanitizedContent = sanitizeHtmlContent(command.content);
+      const content = isDocument
+        ? sanitizeHtmlContent(command.content)
+        : command.content;
 
       const version = new ArtifactVersion({
         artifactId: createdArtifact.id,
         versionNumber: 1,
-        content: sanitizedContent,
+        content,
         authorType: command.authorType,
         authorId: command.authorType === AuthorType.USER ? userId : null,
       });
 
       await this.artifactsRepository.addVersion(version);
 
-      return new Artifact({
-        ...createdArtifact,
+      if (createdArtifact instanceof DocumentArtifact) {
+        return new DocumentArtifact({
+          id: createdArtifact.id,
+          threadId: createdArtifact.threadId,
+          userId: createdArtifact.userId,
+          title: createdArtifact.title,
+          letterheadId: createdArtifact.letterheadId,
+          currentVersionNumber: createdArtifact.currentVersionNumber,
+          versions: [version],
+          createdAt: createdArtifact.createdAt,
+          updatedAt: createdArtifact.updatedAt,
+        });
+      }
+      return new DiagramArtifact({
+        id: createdArtifact.id,
+        threadId: createdArtifact.threadId,
+        userId: createdArtifact.userId,
+        title: createdArtifact.title,
+        currentVersionNumber: createdArtifact.currentVersionNumber,
         versions: [version],
+        createdAt: createdArtifact.createdAt,
+        updatedAt: createdArtifact.updatedAt,
       });
     } catch (error) {
       if (error instanceof ApplicationError) {
