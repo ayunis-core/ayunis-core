@@ -17,6 +17,7 @@ import { AssertCrawlDomainAccessUseCase } from 'src/domain/crawl-domain-grants/a
 import { AssertCrawlDomainAccessCommand } from 'src/domain/crawl-domain-grants/application/use-cases/assert-crawl-domain-access/assert-crawl-domain-access.command';
 import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
 import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
+import { FileRetrieverError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 
 const PDF_MIME_TYPE = 'application/pdf';
 
@@ -73,7 +74,7 @@ export class RetrieveUrlUseCase {
 
     this.assertSupportedContentType(raw.contentType, raw.finalUrl);
 
-    const text = raw.body.toString('utf8');
+    const text = this.decodeBody(raw.body, raw.contentType);
     if (raw.contentType.includes('text/plain')) {
       return new UrlRetrieverResult(text.trim(), raw.finalUrl, '');
     }
@@ -89,6 +90,12 @@ export class RetrieveUrlUseCase {
 
     // Just rethrow if it's already a domain error
     if (error instanceof UrlRetrieverError) {
+      throw error;
+    }
+
+    // Preserve file-pipeline errors (e.g. FileTooLargeError, TooManyPagesError)
+    // so callers see the correct status code and error code from PDF processing.
+    if (error instanceof FileRetrieverError) {
       throw error;
     }
 
@@ -193,5 +200,19 @@ export class RetrieveUrlUseCase {
         contentType.split(';')[0].trim(),
       );
     }
+  }
+
+  private decodeBody(body: Buffer, contentType: string): string {
+    const charset = this.extractCharset(contentType);
+    try {
+      return new TextDecoder(charset).decode(body);
+    } catch {
+      return body.toString('utf8');
+    }
+  }
+
+  private extractCharset(contentType: string): string {
+    const match = /charset=([^\s;]+)/i.exec(contentType);
+    return match ? match[1].replace(/['"]/g, '') : 'utf-8';
   }
 }
