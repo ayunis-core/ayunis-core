@@ -12,6 +12,7 @@ import {
   useOnboardingProgress,
   useUpdateOnboarding,
 } from '@/features/onboarding-progress';
+import { ONBOARDING_CATEGORIES } from '@/shared/config/onboarding';
 import brandIconDark from '@/shared/assets/brand/brand-icon-round-dark.svg';
 import OnboardingCategoryCard from './OnboardingCategoryCard';
 
@@ -48,7 +49,20 @@ export default function OnboardingContent() {
       const next = new Set(completedSteps);
 
       if (next.has(stepId)) {
+        // Unchecking a step should also uncheck any dependents (transitively)
         next.delete(stepId);
+        const queue: string[] = [stepId];
+        while (queue.length > 0) {
+          const current = queue.shift() as string;
+          for (const category of ONBOARDING_CATEGORIES) {
+            for (const step of category.steps) {
+              if ('dependsOn' in step && step.dependsOn === current && next.has(step.id)) {
+                next.delete(step.id);
+                queue.push(step.id);
+              }
+            }
+          }
+        }
       } else {
         next.add(stepId);
       }

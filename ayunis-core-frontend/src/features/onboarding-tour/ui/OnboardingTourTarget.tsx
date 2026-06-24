@@ -26,7 +26,7 @@ export function OnboardingTourTarget({
     return () => {
       delete el.dataset.tour;
     };
-  });
+  }, [name]);
 
   return <div ref={ref}>{children}</div>;
 }
