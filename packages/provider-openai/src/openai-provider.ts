@@ -87,11 +87,24 @@ async function* streamChat(
     params,
     request.signal ? { signal: request.signal } : undefined,
   );
+  // With stream_options.include_usage the wire order is:
+  //   content… → finish_reason chunk → usage chunk → [DONE] → connection close.
+  // Once we have both the finish reason and the usage, the caller has
+  // everything it needs. Stop here instead of draining to [DONE]: reading
+  // through the connection teardown is what some egress proxies cut or
+  // idle-time-out, which the OpenAI SDK surfaces as a spurious
+  // APIConnectionError *after* an otherwise complete response. Breaking early
+  // closes the stream from our side and avoids that tail entirely.
+  let sawFinishReason = false;
   for await (const chunk of stream) {
+    // Track the finish from the *raw* chunk, not the mapped ProviderChunk:
+    // convertChunk maps unrecognized finish reasons to `null`, so keying off
+    // the mapped value would miss a genuine finish and never break.
+    if (chunk.choices.at(0)?.finish_reason) sawFinishReason = true;
     const converted = convertChunk(chunk);
-    if (converted) {
-      yield converted;
-    }
+    if (!converted) continue;
+    yield converted;
+    if (sawFinishReason && converted.usage) break;
   }
 }
 
