@@ -199,14 +199,7 @@ This is the only situation where `gt submit` without `--stack` is acceptable. Ou
 
 ### Force-submit safety
 
-If `gt submit --stack --force` prints `WARNING: Branch <name> has been updated remotely. Force submitting local version to remote...`, **do not silently proceed**. The remote has commits that the local branch is about to overwrite. Stop and reconcile:
-
-```bash
-git fetch
-git log HEAD..origin/<branch>          # show what would be overwritten
-```
-
-Surface the divergence to the user (paste the log) and confirm before re-running the force submit. If the SHAs are actually equivalent (only metadata drift), say so and proceed; otherwise rebase locally first.
+The Graphite `WARNING: Branch <name> has been updated remotely...` halt condition and the `git fetch` + `git log HEAD..origin/<branch>` reconciliation check are covered above in [Before force-pushing: check for remote-only commits](#before-force-pushing-check-for-remote-only-commits) and [During the push: read Graphite's warnings](#during-the-push-read-graphites-warnings). In addition to stopping and reconciling: surface the divergence to the user (paste the log) and confirm before re-running the force submit. If the SHAs are actually equivalent (only metadata drift), say so and proceed; otherwise rebase locally first.
 
 ### Pre-submit hygiene
 
