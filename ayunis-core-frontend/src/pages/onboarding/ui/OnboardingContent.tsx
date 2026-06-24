@@ -30,8 +30,9 @@ export default function OnboardingContent() {
   const { t } = useTranslation('getting-started');
   const { user } = useMe();
   const isAdmin = user?.role === MeResponseDtoRole.admin;
-  const { completedStepIds, hidden } = useOnboarding();
-  const { updateOnboarding, isLoading } = useUpdateOnboarding();
+  const { completedStepIds, hidden, isLoading: onboardingIsLoading } =
+    useOnboarding();
+  const { updateOnboarding, isLoading: isSaving } = useUpdateOnboarding();
   const {
     visibleCategories,
     totalSteps,
@@ -45,6 +46,8 @@ export default function OnboardingContent() {
 
   const handleToggleStep = useCallback(
     (stepId: string) => {
+      // Prevent accidental overwrites while onboarding data is still loading.
+      if (onboardingIsLoading) return;
       const next = new Set(completedSteps);
 
       if (next.has(stepId)) {
@@ -54,7 +57,7 @@ export default function OnboardingContent() {
       }
       updateOnboarding({ completedStepIds: [...next], hidden });
     },
-    [completedSteps, hidden, updateOnboarding],
+    [completedSteps, hidden, updateOnboarding, onboardingIsLoading],
   );
 
   useEffect(() => {
@@ -113,10 +116,11 @@ export default function OnboardingContent() {
           variant="ghost"
           size="sm"
           className="text-muted-foreground"
-          disabled={isLoading}
-          onClick={() =>
-            updateOnboarding({ completedStepIds, hidden: !hidden })
-          }
+          disabled={isSaving || onboardingIsLoading}
+          onClick={() => {
+            if (onboardingIsLoading) return;
+            updateOnboarding({ completedStepIds, hidden: !hidden });
+          }}
         >
           {hidden ? (
             <Eye className="size-3.5" />

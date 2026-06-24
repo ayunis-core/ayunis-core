@@ -114,7 +114,10 @@ export default function OnboardingStepItem({
     const { to, spotlight } = resolveLinkTarget(action.to, action.spotlight);
     setPendingStep(step.id, to, origin);
     void navigate({ to }).then(() => {
-      if (spotlight) triggerSpotlight(spotlight);
+      if (spotlight) {
+        // Delay to ensure destination view mounts and tour targets attach.
+        setTimeout(() => triggerSpotlight(spotlight), 600);
+      }
     });
   };
 
