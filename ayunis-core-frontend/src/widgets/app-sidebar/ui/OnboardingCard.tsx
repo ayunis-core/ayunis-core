@@ -13,10 +13,10 @@ export function OnboardingCard() {
   const { t } = useTranslation('common');
   const { user } = useMe();
   const isAdmin = user?.role === MeResponseDtoRole.admin;
-  const { completedStepIds, hidden } = useOnboarding();
+  const { completedStepIds, hidden, isLoading } = useOnboarding();
   const { progressPercent } = useOnboardingProgress(isAdmin, completedStepIds);
 
-  if (hidden || progressPercent >= 100) {
+  if (isLoading || hidden || progressPercent >= 100) {
     return null;
   }
 
