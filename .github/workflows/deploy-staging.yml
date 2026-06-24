@@ -26,8 +26,14 @@ jobs:
             cd /home/ayunis/apps/ayunis-core
             git fetch origin main
             git reset --hard origin/main
-            # Build with cache while old containers still serve traffic
-            docker compose build
+            # Build with cache while old containers still serve traffic. If the
+            # build fails, abort BEFORE touching running containers — otherwise a
+            # broken build would tear down the app and restart the stale image
+            # while the deploy still reports success (see AYC: corepack outage).
+            if ! docker compose build; then
+              echo "::error::docker compose build failed — keeping current containers, not deploying"
+              exit 1
+            fi
             # Quick swap — downtime is only the restart
             docker compose down
             docker compose up -d
