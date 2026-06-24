@@ -4,6 +4,12 @@ on:
   pull_request:
     paths:
       - 'pnpm-lock.yaml'
+      # Root manifest: the `pnpm install --frozen-lockfile` step below also
+      # acts as a lockfile-integrity gate. Triggering on package.json catches
+      # root-manifest changes that don't touch pnpm-lock.yaml — e.g. a
+      # dependency bump that drops pnpm.overrides or fails to relock, which
+      # otherwise slips through because no other workflow watches this file.
+      - 'package.json'
       - '.github/workflows/security-audit.yml'
   schedule:
     - cron: '0 9 * * 1'
