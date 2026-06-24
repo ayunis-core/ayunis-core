@@ -118,6 +118,36 @@ module.exports = {
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // DRIVEN ADAPTERS — Port implementations, repositories, external clients
+    // Infrastructure is called BY the application layer through ports, never the
+    // reverse — a driven adapter importing a use case inverts the dependency
+    // (AYC-266). Driving/inbound adapters (queue consumers, scheduled tasks) are
+    // entry points that legitimately orchestrate use cases, so they are exempt.
+    // ═══════════════════════════════════════════════════════════════════════════
+    {
+      name: 'adapters-no-use-cases',
+      comment:
+        'Driven infrastructure adapters must not import use cases — infrastructure is called BY the application layer via ports, not the reverse. Queue consumers and scheduled tasks (driving adapters) are exempt.',
+      severity: 'error',
+      from: {
+        // `(?:rag/|retrievers/)?` tolerates the nested module groups whose
+        // submodules sit one level deeper than flat modules (domain/rag/*,
+        // domain/retrievers/*). A literal alternation keeps the regex ReDoS-safe.
+        path: '^src/(domain|iam)/(?:rag/|retrievers/)?[^/]+/infrastructure/',
+        pathNot: [
+          '/infrastructure/queue/', // BullMQ consumers/services (driving)
+          '/infrastructure/tasks/', // scheduled cron tasks (driving)
+          '/infrastructure/adapters/[^/]+/application/', // nested sub-hexagons with their own app layer
+        ],
+      },
+      to: {
+        path: '^src/(domain|iam)/(?:rag/|retrievers/)?[^/]+/application/use-cases/',
+        // Don't count a nested sub-hexagon's own use cases as the forbidden target.
+        pathNot: '/infrastructure/.+/application/use-cases/',
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // INFRASTRUCTURE MAPPERS — Convert domain entities ↔ records
     // CAN import: entities, records, other mappers
     // CANNOT import: use cases, presenters

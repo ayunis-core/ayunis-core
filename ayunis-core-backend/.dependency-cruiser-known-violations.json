@@ -160,5 +160,41 @@
       "severity": "error",
       "name": "no-cross-module-port-imports"
     }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/usage/infrastructure/persistence/local-usage/local-usage.repository.ts",
+    "to": "src/domain/usage/application/use-cases/get-model-distribution/get-model-distribution.query.ts",
+    "rule": {
+      "severity": "error",
+      "name": "adapters-no-use-cases"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/usage/infrastructure/persistence/local-usage/local-usage.repository.ts",
+    "to": "src/domain/usage/application/use-cases/get-provider-usage/get-provider-usage.query.ts",
+    "rule": {
+      "severity": "error",
+      "name": "adapters-no-use-cases"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/usage/infrastructure/persistence/local-usage/local-usage.repository.ts",
+    "to": "src/domain/usage/application/use-cases/get-usage-stats/get-usage-stats.query.ts",
+    "rule": {
+      "severity": "error",
+      "name": "adapters-no-use-cases"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/usage/infrastructure/persistence/local-usage/local-usage.repository.ts",
+    "to": "src/domain/usage/application/use-cases/get-user-usage/get-user-usage.query.ts",
+    "rule": {
+      "severity": "error",
+      "name": "adapters-no-use-cases"
+    }
   }
 ]

@@ -176,3 +176,35 @@ npm run test
 # Generate test coverage report
 npm run test:cov
 ```
+
+### Manual QA: PDF parsing via web fetch (AYC-266)
+
+URLs that resolve to a PDF are parsed through the file-retrieval pipeline (Mistral
+OCR or `pdf-parse`) instead of being rejected. Two user-facing flows share the same
+URL retriever, so both can be checked from the running app — there is no direct
+fetch endpoint.
+
+| Flow | Where | Route |
+| ---- | ----- | ----- |
+| `website_content` tool (single fetch) | Chat — `/chats/$threadId`: ask the assistant to read/summarize a PDF link | `POST /api/runs/send-message` |
+| Knowledge-base URL crawl | KB detail — `/knowledge-bases/$id` → **Add URL** | `POST /api/knowledge-bases/{id}/urls` (`{ "url": "...", "maxDepth": 0 }`) |
+
+**Expected before/after** (run the old revision vs. this branch):
+
+- **KB, direct PDF URL, `maxDepth: 0`** — before: the source ends **FAILED** (the PDF
+  is rejected as an unsupported content type, and a root failure aborts the crawl);
+  after: the source reaches **READY** with the PDF text indexed. This is the clearest
+  check — the status flips in the documents list with no log digging.
+- **KB, an HTML page linking a same-site PDF, `maxDepth: 1`** — before: the PDF child
+  page is silently skipped; after: its text is indexed alongside the HTML.
+- **Chat** — before: the assistant reports it cannot read the link; after: it
+  summarizes the extracted PDF text.
+
+Test inputs: a small text PDF such as
+`https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf`; for the
+generic-content-type path, any URL whose path ends in `.pdf` but is served as
+`application/octet-stream`.
+
+To compare revisions side by side, run two dev slots (e.g. `./dev up --slot 0` on the
+base revision and `./dev up --slot 1` on this branch in a separate worktree) and hit
+`localhost:3000` vs. `localhost:3010`.
