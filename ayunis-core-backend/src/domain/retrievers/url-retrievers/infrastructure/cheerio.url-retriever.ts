@@ -56,6 +56,7 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
 
       const contentType =
         response.headers.get('content-type')?.toLowerCase() ?? '';
+      input.onHeaders?.(contentType, finalUrl);
       const body = Buffer.from(await response.arrayBuffer());
 
       return { contentType, finalUrl, body };

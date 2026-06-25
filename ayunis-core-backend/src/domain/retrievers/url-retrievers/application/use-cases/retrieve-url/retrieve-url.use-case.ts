@@ -50,6 +50,8 @@ export class RetrieveUrlUseCase {
           this.assertCrawlDomainAccessUseCase.execute(
             new AssertCrawlDomainAccessCommand(url, command.orgId),
           ),
+        onHeaders: (contentType, url) =>
+          this.assertContentTypeBeforeBody(contentType, url),
       });
       return await this.parseByContentType(raw);
     } catch (error) {
@@ -175,6 +177,15 @@ export class RetrieveUrlUseCase {
     } catch {
       return 'document.pdf';
     }
+  }
+
+  /**
+   * Reject clearly unsupported MIME types before the adapter reads the body,
+   * so large binaries discovered during crawls are never buffered.
+   */
+  private assertContentTypeBeforeBody(contentType: string, url: string): void {
+    if (this.isPdf(contentType, url)) return;
+    this.assertSupportedContentType(contentType, url);
   }
 
   private assertSupportedContentType(contentType: string, url: string): void {

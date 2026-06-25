@@ -10,6 +10,12 @@ export interface UrlRetrieverInput {
    * the redirect; the thrown error propagates unchanged.
    */
   onRedirect?: (url: string) => Promise<void>;
+  /**
+   * Invoked with the response content-type and final URL BEFORE the body is
+   * read. Throwing rejects the response without buffering the payload — lets
+   * the application layer reject unsupported MIME types early.
+   */
+  onHeaders?: (contentType: string, url: string) => void;
 }
 
 /**
