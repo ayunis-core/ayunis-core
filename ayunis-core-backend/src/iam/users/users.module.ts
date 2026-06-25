@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { UsersRepository } from './application/ports/users.repository';
+import { AdminUsersExportRepository } from './application/ports/admin-users-export.repository';
 import { LocalUsersRepository } from './infrastructure/repositories/local/local-users.repository';
+import { LocalAdminUsersExportRepository } from './infrastructure/repositories/local/local-admin-users-export.repository';
 import { ConfigService, ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserRecord } from './infrastructure/repositories/local/schema/user.record';
@@ -51,10 +53,12 @@ import { OrgsModule } from '../orgs/orgs.module';
 import { SendSetInitialPasswordEmailUseCase } from './application/use-cases/send-set-initial-password-email/send-set-initial-password-email.use-case';
 import { TriggerSetInitialPasswordUseCase } from './application/use-cases/trigger-set-initial-password/trigger-set-initial-password.use-case';
 import { SuperAdminUsersController } from './presenters/http/super-admin-users.controller';
+import { SuperAdminUserExportsController } from './presenters/http/super-admin-user-exports.controller';
 import { SuperAdminManagementController } from './presenters/http/super-admin-management.controller';
 import { FindSuperAdminsUseCase } from './application/use-cases/find-super-admins/find-super-admins.use-case';
 import { PromoteToSuperAdminUseCase } from './application/use-cases/promote-to-super-admin/promote-to-super-admin.use-case';
 import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from-super-admin/demote-from-super-admin.use-case';
+import { ExportAdminUsersUseCase } from './application/use-cases/export-admin-users/export-admin-users.use-case';
 
 @Module({
   imports: [
@@ -86,6 +90,7 @@ import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from
     UserPasswordResetController,
     AdminUserController,
     SuperAdminUsersController,
+    SuperAdminUserExportsController,
     SuperAdminManagementController,
   ],
   providers: [
@@ -96,6 +101,10 @@ import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from
         return new LocalUsersRepository(userRepository);
       },
       inject: [getRepositoryToken(UserRecord)],
+    },
+    {
+      provide: AdminUsersExportRepository,
+      useClass: LocalAdminUsersExportRepository,
     },
     // Use cases
     FindUserByIdUseCase,
@@ -128,6 +137,7 @@ import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from
     FindSuperAdminsUseCase,
     PromoteToSuperAdminUseCase,
     DemoteFromSuperAdminUseCase,
+    ExportAdminUsersUseCase,
     // Services
     EmailConfirmationJwtService,
     // Mappers

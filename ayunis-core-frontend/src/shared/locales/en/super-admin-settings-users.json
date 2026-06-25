@@ -1,0 +1,7 @@
+{
+  "export": {
+    "button": "Export admins CSV",
+    "loading": "Exporting...",
+    "error": "Admin export failed"
+  }
+}

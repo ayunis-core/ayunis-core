@@ -1,0 +1,7 @@
+{
+  "export": {
+    "button": "Admin-CSV exportieren",
+    "loading": "Exportiert...",
+    "error": "Admin-Export fehlgeschlagen"
+  }
+}

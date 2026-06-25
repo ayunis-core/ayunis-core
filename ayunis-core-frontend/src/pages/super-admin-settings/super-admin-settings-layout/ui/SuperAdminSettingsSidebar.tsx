@@ -5,6 +5,7 @@ import {
   ShieldCheck,
   Settings2,
   GraduationCap,
+  Users,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -20,6 +21,11 @@ export function SuperAdminSettingsSidebar() {
       to: '/super-admin-settings/orgs',
       icon: <Building2 />,
       label: t('layout.orgs'),
+    },
+    {
+      to: '/super-admin-settings/users',
+      icon: <Users />,
+      label: t('layout.users'),
     },
     {
       to: '/super-admin-settings/models-catalog',

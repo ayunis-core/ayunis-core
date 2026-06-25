@@ -46,6 +46,7 @@ import { Route as AuthenticatedAcademyChapterIdRouteImport } from './routes/_aut
 import { Route as onboardingPasswordResetRouteImport } from './routes/(onboarding)/password.reset'
 import { Route as onboardingPasswordForgotRouteImport } from './routes/(onboarding)/password.forgot'
 import { Route as onboardingAccountActivateRouteImport } from './routes/(onboarding)/account.activate'
+import { Route as AuthenticatedSuperAdminSettingsUsersIndexRouteImport } from './routes/_authenticated/super-admin-settings.users.index'
 import { Route as AuthenticatedSuperAdminSettingsSuperAdminsIndexRouteImport } from './routes/_authenticated/super-admin-settings.super-admins.index'
 import { Route as AuthenticatedSuperAdminSettingsSkillsIndexRouteImport } from './routes/_authenticated/super-admin-settings.skills.index'
 import { Route as AuthenticatedSuperAdminSettingsPlatformConfigIndexRouteImport } from './routes/_authenticated/super-admin-settings.platform-config.index'
@@ -266,6 +267,12 @@ const onboardingAccountActivateRoute =
     path: '/account/activate',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedSuperAdminSettingsUsersIndexRoute =
+  AuthenticatedSuperAdminSettingsUsersIndexRouteImport.update({
+    id: '/super-admin-settings/users/',
+    path: '/super-admin-settings/users/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute =
   AuthenticatedSuperAdminSettingsSuperAdminsIndexRouteImport.update({
     id: '/super-admin-settings/super-admins/',
@@ -381,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/super-admin-settings/platform-config/': typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   '/super-admin-settings/skills/': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/super-admin-settings/super-admins/': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
+  '/super-admin-settings/users/': typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -430,6 +438,7 @@ export interface FileRoutesByTo {
   '/super-admin-settings/platform-config': typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   '/super-admin-settings/skills': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/super-admin-settings/super-admins': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
+  '/super-admin-settings/users': typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -481,6 +490,7 @@ export interface FileRoutesById {
   '/_authenticated/super-admin-settings/platform-config/': typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   '/_authenticated/super-admin-settings/skills/': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/_authenticated/super-admin-settings/super-admins/': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
+  '/_authenticated/super-admin-settings/users/': typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -532,6 +542,7 @@ export interface FileRouteTypes {
     | '/super-admin-settings/platform-config/'
     | '/super-admin-settings/skills/'
     | '/super-admin-settings/super-admins/'
+    | '/super-admin-settings/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -581,6 +592,7 @@ export interface FileRouteTypes {
     | '/super-admin-settings/platform-config'
     | '/super-admin-settings/skills'
     | '/super-admin-settings/super-admins'
+    | '/super-admin-settings/users'
   id:
     | '__root__'
     | '/'
@@ -631,6 +643,7 @@ export interface FileRouteTypes {
     | '/_authenticated/super-admin-settings/platform-config/'
     | '/_authenticated/super-admin-settings/skills/'
     | '/_authenticated/super-admin-settings/super-admins/'
+    | '/_authenticated/super-admin-settings/users/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -908,6 +921,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof onboardingAccountActivateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/super-admin-settings/users/': {
+      id: '/_authenticated/super-admin-settings/users/'
+      path: '/super-admin-settings/users'
+      fullPath: '/super-admin-settings/users/'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsUsersIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/super-admin-settings/super-admins/': {
       id: '/_authenticated/super-admin-settings/super-admins/'
       path: '/super-admin-settings/super-admins'
@@ -1026,6 +1046,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute: typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   AuthenticatedSuperAdminSettingsSkillsIndexRoute: typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute: typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
+  AuthenticatedSuperAdminSettingsUsersIndexRoute: typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -1085,6 +1106,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedSuperAdminSettingsSkillsIndexRoute,
   AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute:
     AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute,
+  AuthenticatedSuperAdminSettingsUsersIndexRoute:
+    AuthenticatedSuperAdminSettingsUsersIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
