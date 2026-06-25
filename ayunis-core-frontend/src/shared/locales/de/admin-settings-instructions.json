@@ -13,5 +13,15 @@
     "error": "Organisationsanweisungen konnten nicht aktualisiert werden.",
     "loadError": "Organisationsanweisungen konnten nicht geladen werden.",
     "retry": "Erneut versuchen"
+  },
+  "internetAccess": {
+    "title": "Internetzugriff",
+    "description": "Legen Sie fest, ob der KI-Assistent in Chats auf das Internet zugreifen darf. Dies gilt für alle Benutzer Ihrer Organisation.",
+    "label": "Internetzugriff deaktivieren",
+    "hint": "Wenn aktiviert, kann der KI-Assistent in keinem Chat mehr die Websuche nutzen oder Inhalte von Webseiten abrufen.",
+    "saved": "Einstellung zum Internetzugriff gespeichert.",
+    "error": "Einstellung zum Internetzugriff konnte nicht aktualisiert werden.",
+    "loadError": "Einstellung zum Internetzugriff konnte nicht geladen werden.",
+    "retry": "Erneut versuchen"
   }
 }

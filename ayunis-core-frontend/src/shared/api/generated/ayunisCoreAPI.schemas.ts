@@ -4038,6 +4038,16 @@ export interface UpsertOrgSystemPromptDto {
   systemPrompt: string;
 }
 
+export interface OrgChatSettingsResponseDto {
+  /** Whether internet access (web search and website content tools) is available to the AI assistant in chats */
+  internetSearchEnabled: boolean;
+}
+
+export interface UpsertOrgChatSettingsDto {
+  /** Whether internet access (web search and website content tools) is available to the AI assistant in chats */
+  internetSearchEnabled: boolean;
+}
+
 export interface RetentionPolicyResponseDto {
   /**
    * Configured retention window in days, or null when retention is disabled (data kept forever).

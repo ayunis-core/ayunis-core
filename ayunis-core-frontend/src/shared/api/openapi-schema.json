@@ -8008,6 +8008,65 @@
         "tags": ["Chat Settings"]
       }
     },
+    "/chat-settings/org-chat-settings": {
+      "get": {
+        "description": "Returns the organization-wide chat settings for the admin's organization. Defaults to internet access enabled when not configured. Admin only.",
+        "operationId": "OrgChatSettingsController_getOrgChatSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The organization-wide chat settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgChatSettingsResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "User is not an organization admin"
+          }
+        },
+        "summary": "Get the organization-wide chat settings",
+        "tags": ["Chat Settings"]
+      },
+      "put": {
+        "description": "Creates or replaces the organization-wide chat settings. When internet access is disabled, web search and website content tools are not offered to the AI assistant in any of the org users conversations. Admin only.",
+        "operationId": "OrgChatSettingsController_upsertOrgChatSettings",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertOrgChatSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully set or updated the organization-wide chat settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgChatSettingsResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "403": {
+            "description": "User is not an organization admin"
+          }
+        },
+        "summary": "Set or update the organization-wide chat settings",
+        "tags": ["Chat Settings"]
+      }
+    },
     "/retention-policies/org": {
       "get": {
         "operationId": "RetentionPoliciesController_get",
@@ -14981,6 +15040,28 @@
           }
         },
         "required": ["systemPrompt"]
+      },
+      "OrgChatSettingsResponseDto": {
+        "type": "object",
+        "properties": {
+          "internetSearchEnabled": {
+            "type": "boolean",
+            "description": "Whether internet access (web search and website content tools) is available to the AI assistant in chats",
+            "example": true
+          }
+        },
+        "required": ["internetSearchEnabled"]
+      },
+      "UpsertOrgChatSettingsDto": {
+        "type": "object",
+        "properties": {
+          "internetSearchEnabled": {
+            "type": "boolean",
+            "description": "Whether internet access (web search and website content tools) is available to the AI assistant in chats",
+            "example": true
+          }
+        },
+        "required": ["internetSearchEnabled"]
       },
       "RetentionPolicyResponseDto": {
         "type": "object",
