@@ -16,6 +16,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
+import { ScrollFadeContainer } from './ScrollFadeContainer';
 
 // Icons
 import {
@@ -97,7 +98,7 @@ export function SourcesList({
   }
 
   return (
-    <div className="flex flex-wrap gap-2 items-center">
+    <ScrollFadeContainer>
       {knowledgeBases.map((kb) => (
         <Badge key={`kb-${kb.id}`} variant="secondary">
           <Brain className="h-3 w-3" />
@@ -179,6 +180,6 @@ export function SourcesList({
 
         return badge;
       })}
-    </div>
+    </ScrollFadeContainer>
   );
 }

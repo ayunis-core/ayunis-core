@@ -25,6 +25,7 @@ import { useFileDrop } from '../hooks/useFileDrop';
 import { PendingImageThumbnail } from './PendingImageThumbnail';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { SourcesList } from './SourcesList';
+import { ScrollFadeContainer } from './ScrollFadeContainer';
 import { showError } from '@/shared/lib/toast';
 import { MicrophoneButton } from './MicrophoneButton';
 import type {
@@ -303,7 +304,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               />
 
               {pendingImages.length > 0 && (
-                <div className="flex flex-wrap gap-2 items-center">
+                <ScrollFadeContainer>
                   {pendingImages.map((image: PendingImage) => (
                     <PendingImageThumbnail
                       key={image.id}
@@ -311,7 +312,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                       onRemove={removeImage}
                     />
                   ))}
-                </div>
+                </ScrollFadeContainer>
               )}
 
               <TextareaAutosize
