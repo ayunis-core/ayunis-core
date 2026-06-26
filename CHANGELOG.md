@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.9.0](https://github.com/ayunis-core/ayunis-core/compare/v2.8.0...v2.9.0) (2026-06-26)
+
+
+### Features
+
+* **admin-settings:** group sidebar links into labeled sections (AYC-000) ([#894](https://github.com/ayunis-core/ayunis-core/issues/894)) ([aa2e5b0](https://github.com/ayunis-core/ayunis-core/commit/aa2e5b09c2c4ce4036f21898ee414bb583bb082a))
+* **admin:** add admin user CSV export AYC-333 ([#888](https://github.com/ayunis-core/ayunis-core/issues/888)) ([1a29c8d](https://github.com/ayunis-core/ayunis-core/commit/1a29c8df33c9f5681de85d4cbb91fb258269e4ac))
+* **chat-settings:** add org internet access toggle (AYC-340) ([#890](https://github.com/ayunis-core/ayunis-core/issues/890)) ([69690c0](https://github.com/ayunis-core/ayunis-core/commit/69690c04ed705a7331a14a25a271f1bf101a3d82))
+
+
+### Bug Fixes
+
+* **chat-input:** keep attachments in a scrollable area (AYC-339) ([#889](https://github.com/ayunis-core/ayunis-core/issues/889)) ([b03fbb8](https://github.com/ayunis-core/ayunis-core/commit/b03fbb8ddcb9757dcc42760abe95e22bd2fc380d))
+* **models:** generated images use prompt-fit aspect ratio + add download (AYC-293) ([#891](https://github.com/ayunis-core/ayunis-core/issues/891)) ([fa8742f](https://github.com/ayunis-core/ayunis-core/commit/fa8742fc141a86d77e509cd6e9969c615e4cefed))
+
 ## [2.8.0](https://github.com/ayunis-core/ayunis-core/compare/v2.7.0...v2.8.0) (2026-06-24)
 
 
