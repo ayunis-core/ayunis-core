@@ -14,7 +14,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import {
   SettingsSidebarWidget,
-  type SidebarMenuItem,
+  type SidebarMenuGroup,
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
 import { useIsLetterheadsEnabled } from '@/features/feature-toggles';
 
@@ -22,72 +22,92 @@ export function AdminSettingsSidebar() {
   const { t } = useTranslation('admin-settings-layout');
   const isLetterheadsEnabled = useIsLetterheadsEnabled();
 
-  const menuItems: SidebarMenuItem[] = [
+  const groups: SidebarMenuGroup[] = [
     {
-      to: '/admin-settings/users',
-      icon: <User />,
-      label: t('layout.users'),
+      labelKey: 'groups.membersAccess',
+      items: [
+        {
+          to: '/admin-settings/users',
+          icon: <User />,
+          label: t('layout.users'),
+        },
+        {
+          to: '/admin-settings/teams',
+          icon: <Users />,
+          label: t('layout.teams'),
+        },
+        {
+          to: '/admin-settings/api-keys',
+          icon: <Key />,
+          label: t('layout.apiKeys'),
+        },
+      ],
     },
     {
-      to: '/admin-settings/teams',
-      icon: <Users />,
-      label: t('layout.teams'),
+      labelKey: 'groups.aiAssistant',
+      items: [
+        {
+          to: '/admin-settings/models',
+          icon: <Brain />,
+          label: t('layout.models'),
+        },
+        {
+          to: '/admin-settings/integrations',
+          icon: <Plug />,
+          label: t('layout.integrations'),
+        },
+        {
+          to: '/admin-settings/instructions',
+          icon: <MessageSquareText />,
+          label: t('layout.instructions'),
+        },
+        ...(isLetterheadsEnabled
+          ? [
+              {
+                to: '/admin-settings/letterheads' as const,
+                icon: <FileText />,
+                label: t('layout.letterheads'),
+              },
+            ]
+          : []),
+      ],
     },
     {
-      to: '/admin-settings/models',
-      icon: <Brain />,
-      label: t('layout.models'),
+      labelKey: 'groups.privacyCompliance',
+      items: [
+        {
+          to: '/admin-settings/security',
+          icon: <Shield />,
+          label: t('layout.security'),
+        },
+        {
+          to: '/admin-settings/anonymization',
+          icon: <ShieldCheck />,
+          label: t('layout.anonymization'),
+        },
+        {
+          to: '/admin-settings/retention',
+          icon: <Trash2 />,
+          label: t('layout.retention'),
+        },
+      ],
     },
     {
-      to: '/admin-settings/integrations',
-      icon: <Plug />,
-      label: t('layout.integrations'),
+      labelKey: 'groups.analytics',
+      items: [
+        {
+          to: '/admin-settings/usage',
+          icon: <BarChart3 />,
+          label: t('layout.usage'),
+        },
+      ],
     },
-    {
-      to: '/admin-settings/security',
-      icon: <Shield />,
-      label: t('layout.security'),
-    },
-    {
-      to: '/admin-settings/anonymization',
-      icon: <ShieldCheck />,
-      label: t('layout.anonymization'),
-    },
-    {
-      to: '/admin-settings/retention',
-      icon: <Trash2 />,
-      label: t('layout.retention'),
-    },
-    {
-      to: '/admin-settings/instructions',
-      icon: <MessageSquareText />,
-      label: t('layout.instructions'),
-    },
-    {
-      to: '/admin-settings/api-keys',
-      icon: <Key />,
-      label: t('layout.apiKeys'),
-    },
-    {
-      to: '/admin-settings/usage',
-      icon: <BarChart3 />,
-      label: t('layout.usage'),
-    },
-    ...(isLetterheadsEnabled
-      ? [
-          {
-            to: '/admin-settings/letterheads' as const,
-            icon: <FileText />,
-            label: t('layout.letterheads'),
-          },
-        ]
-      : []),
   ];
 
   return (
     <SettingsSidebarWidget
       translationNamespace="admin-settings-layout"
-      menuItems={menuItems}
+      groups={groups}
     />
   );
 }

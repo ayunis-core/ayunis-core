@@ -15,5 +15,11 @@
     "instructions": "Chat",
     "letterheads": "Briefpapier",
     "apiKeys": "API-Schlüssel"
+  },
+  "groups": {
+    "membersAccess": "Mitglieder & Zugriff",
+    "aiAssistant": "KI-Assistent",
+    "privacyCompliance": "Datenschutz & Compliance",
+    "analytics": "Auswertung"
   }
 }
