@@ -11,9 +11,11 @@ import {
 import { Label } from '@/shared/ui/shadcn/label';
 import { Textarea } from '@/shared/ui/shadcn/textarea';
 import { Button } from '@/shared/ui/shadcn/button';
+import { Switch } from '@/shared/ui/shadcn/switch';
 import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { useOrgSystemPrompt } from '../api/useOrgSystemPrompt';
+import { useOrgChatSettings } from '../api/useOrgChatSettings';
 
 function InstructionsForm({
   initialValue,
@@ -89,8 +91,33 @@ function InstructionsForm({
   );
 }
 
-export function InstructionsSettingsPage() {
-  const { t: tLayout } = useTranslation('admin-settings-layout');
+function LoadErrorAlert({
+  message,
+  retryLabel,
+  onRetry,
+}: Readonly<{ message: string; retryLabel: string; onRetry: () => void }>) {
+  return (
+    <Alert variant="destructive">
+      <AlertCircle className="h-4 w-4" />
+      <AlertDescription>
+        {message}
+        <Button variant="link" className="ml-2 h-auto p-0" onClick={onRetry}>
+          {retryLabel}
+        </Button>
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+function LoadingSpinner() {
+  return (
+    <div className="flex items-center justify-center py-8">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
+function InstructionsCard() {
   const { t } = useTranslation('admin-settings-instructions');
 
   const {
@@ -104,55 +131,125 @@ export function InstructionsSettingsPage() {
     deleteSystemPrompt,
   } = useOrgSystemPrompt();
 
+  let content;
   if (isError) {
-    return (
-      <SettingsLayout title={tLayout('layout.instructions')}>
-        <Card>
-          <CardContent className="pt-6">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                {t('instructions.loadError')}
-                <Button
-                  variant="link"
-                  className="ml-2 h-auto p-0"
-                  onClick={() => void refetch()}
-                >
-                  {t('instructions.retry')}
-                </Button>
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
-      </SettingsLayout>
+    content = (
+      <LoadErrorAlert
+        message={t('instructions.loadError')}
+        retryLabel={t('instructions.retry')}
+        onRetry={() => void refetch()}
+      />
+    );
+  } else if (isLoading) {
+    content = <LoadingSpinner />;
+  } else {
+    content = (
+      <InstructionsForm
+        key={systemPrompt ?? ''}
+        initialValue={systemPrompt ?? ''}
+        systemPrompt={systemPrompt}
+        isUpserting={isUpserting}
+        isDeleting={isDeleting}
+        onUpsert={upsertSystemPrompt}
+        onDelete={deleteSystemPrompt}
+      />
     );
   }
 
   return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('instructions.title')}</CardTitle>
+        <CardDescription>{t('instructions.description')}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">{content}</CardContent>
+    </Card>
+  );
+}
+
+function InternetAccessToggle({
+  internetSearchEnabled,
+  isUpdating,
+  onChange,
+}: Readonly<{
+  internetSearchEnabled: boolean;
+  isUpdating: boolean;
+  onChange: (internetSearchEnabled: boolean) => void;
+}>) {
+  const { t } = useTranslation('admin-settings-instructions');
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div className="space-y-1">
+        <Label htmlFor="disable-internet-access-switch">
+          {t('internetAccess.label')}
+        </Label>
+        <p className="text-sm text-muted-foreground">
+          {t('internetAccess.hint')}
+        </p>
+      </div>
+      <Switch
+        id="disable-internet-access-switch"
+        checked={!internetSearchEnabled}
+        disabled={isUpdating}
+        onCheckedChange={(checked) => onChange(!checked)}
+      />
+    </div>
+  );
+}
+
+function InternetAccessCard() {
+  const { t } = useTranslation('admin-settings-instructions');
+
+  const {
+    internetSearchEnabled,
+    isLoading,
+    isError,
+    refetch,
+    isUpdating,
+    setInternetSearchEnabled,
+  } = useOrgChatSettings();
+
+  let content;
+  if (isError) {
+    content = (
+      <LoadErrorAlert
+        message={t('internetAccess.loadError')}
+        retryLabel={t('internetAccess.retry')}
+        onRetry={() => void refetch()}
+      />
+    );
+  } else if (isLoading) {
+    content = <LoadingSpinner />;
+  } else {
+    content = (
+      <InternetAccessToggle
+        internetSearchEnabled={internetSearchEnabled}
+        isUpdating={isUpdating}
+        onChange={setInternetSearchEnabled}
+      />
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('internetAccess.title')}</CardTitle>
+        <CardDescription>{t('internetAccess.description')}</CardDescription>
+      </CardHeader>
+      <CardContent>{content}</CardContent>
+    </Card>
+  );
+}
+
+export function InstructionsSettingsPage() {
+  const { t: tLayout } = useTranslation('admin-settings-layout');
+
+  return (
     <SettingsLayout title={tLayout('layout.instructions')}>
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('instructions.title')}</CardTitle>
-          <CardDescription>{t('instructions.description')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <InstructionsForm
-              key={systemPrompt ?? ''}
-              initialValue={systemPrompt ?? ''}
-              systemPrompt={systemPrompt}
-              isUpserting={isUpserting}
-              isDeleting={isDeleting}
-              onUpsert={upsertSystemPrompt}
-              onDelete={deleteSystemPrompt}
-            />
-          )}
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <InstructionsCard />
+        <InternetAccessCard />
+      </div>
     </SettingsLayout>
   );
 }

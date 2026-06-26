@@ -21,22 +21,29 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
 
   /**
    * Build a ToolAssemblyService with mocked dependencies.
-   * Constructor order (13 params):
+   * Constructor order (14 params):
    *  0 configService, 1 assembleToolsUseCase, 2 discoverMcpCapabilitiesUseCase,
    *  3 systemPromptBuilderService, 4 findActiveSkillsUseCase,
    *  5 getUserSystemPromptUseCase, 6 getOrgSystemPromptUseCase,
    *  7 getMcpIntegrationsByIdsUseCase, 8 findActiveAlwaysOnTemplatesUseCase,
    *  9 features, 10 contextService,
-   *  11 getPermittedImageGenerationModelUseCase, 12 artifactToolAssembler
+   *  11 getPermittedImageGenerationModelUseCase, 12 artifactToolAssembler,
+   *  13 getOrgChatSettingsUseCase
    */
   async function buildService(overrides: {
     contextServiceGet?: jest.Mock;
     imageModelExecute?: jest.Mock;
     assembleToolExecute?: jest.Mock;
+    internetSearchIsAvailable?: boolean;
+    orgChatSettingsExecute?: jest.Mock;
   }) {
     const mod = await import('./tool-assembly.service');
 
-    const configService = { get: jest.fn().mockReturnValue(false) }; // internetSearch.isAvailable = false
+    const configService = {
+      get: jest
+        .fn()
+        .mockReturnValue(overrides.internetSearchIsAvailable ?? false),
+    }; // internetSearch.isAvailable
     const assembleToolsUseCase = {
       execute:
         overrides.assembleToolExecute ??
@@ -65,6 +72,11 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     const artifactToolAssembler = {
       assembleDocumentAndDiagramTools: jest.fn().mockResolvedValue([]),
     };
+    const getOrgChatSettingsUseCase = {
+      execute:
+        overrides.orgChatSettingsExecute ??
+        jest.fn().mockResolvedValue({ internetSearchEnabled: true }),
+    };
 
     const service = new (mod.ToolAssemblyService as any)(
       configService,
@@ -80,6 +92,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       contextService,
       getPermittedImageGenerationModelUseCase,
       artifactToolAssembler,
+      getOrgChatSettingsUseCase,
     );
 
     return {
@@ -87,6 +100,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       assembleToolsUseCase,
       getPermittedImageGenerationModelUseCase,
       contextService,
+      getOrgChatSettingsUseCase,
     };
   }
 
@@ -158,5 +172,39 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     expect(
       getPermittedImageGenerationModelUseCase.execute,
     ).not.toHaveBeenCalled();
+  });
+
+  it('should include website content and internet search when internet access is enabled', async () => {
+    const { service } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      internetSearchIsAvailable: true,
+      orgChatSettingsExecute: jest
+        .fn()
+        .mockResolvedValue({ internetSearchEnabled: true }),
+    });
+
+    const thread = createMockThread();
+    const tools = await service.assembleTools(thread, undefined, new Map());
+
+    const toolTypes = tools.map((t: { type: ToolType }) => t.type);
+    expect(toolTypes).toContain(ToolType.WEBSITE_CONTENT);
+    expect(toolTypes).toContain(ToolType.INTERNET_SEARCH);
+  });
+
+  it('should omit website content and internet search when internet access is disabled', async () => {
+    const { service } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      internetSearchIsAvailable: true,
+      orgChatSettingsExecute: jest
+        .fn()
+        .mockResolvedValue({ internetSearchEnabled: false }),
+    });
+
+    const thread = createMockThread();
+    const tools = await service.assembleTools(thread, undefined, new Map());
+
+    const toolTypes = tools.map((t: { type: ToolType }) => t.type);
+    expect(toolTypes).not.toContain(ToolType.WEBSITE_CONTENT);
+    expect(toolTypes).not.toContain(ToolType.INTERNET_SEARCH);
   });
 });
