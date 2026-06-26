@@ -167,7 +167,8 @@
         "loading": "Bild wird geladen…",
         "error": "Generiertes Bild konnte nicht geladen werden",
         "altFallback": "Generiertes Bild",
-        "openPreview": "Bildvorschau öffnen"
+        "openPreview": "Bildvorschau öffnen",
+        "download": "Bild herunterladen"
       }
     },
     "charts": {

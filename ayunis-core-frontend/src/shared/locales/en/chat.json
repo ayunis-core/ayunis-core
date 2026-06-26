@@ -167,7 +167,8 @@
         "loading": "Loading image…",
         "error": "Could not load generated image",
         "altFallback": "Generated image",
-        "openPreview": "Open image preview"
+        "openPreview": "Open image preview",
+        "download": "Download image"
       }
     },
     "charts": {

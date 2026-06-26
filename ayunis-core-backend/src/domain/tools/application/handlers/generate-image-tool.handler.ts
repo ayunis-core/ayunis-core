@@ -75,6 +75,7 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
       new GenerateImageCommand({
         model: permittedModel.model,
         prompt: validatedInput.prompt,
+        size: validatedInput.size,
       }),
     );
 

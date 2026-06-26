@@ -154,7 +154,7 @@ describe('AzureImageGenerationHandler', () => {
       ).rejects.toThrow("Unsupported image quality 'ultra'");
     });
 
-    it('should default to 1024x1024 and auto when not provided', async () => {
+    it('should default to auto size and auto quality when not provided', async () => {
       const fakeB64 = Buffer.from('fake-image-data').toString('base64');
       mockImagesGenerate.mockResolvedValue({
         data: [{ b64_json: fakeB64 }],
@@ -165,9 +165,43 @@ describe('AzureImageGenerationHandler', () => {
 
       expect(mockImagesGenerate).toHaveBeenCalledWith(
         expect.objectContaining({
-          size: '1024x1024',
+          size: 'auto',
           quality: 'auto',
         }),
+      );
+    });
+
+    it.each([
+      ['square', '1024x1024'],
+      ['landscape', '1536x1024'],
+      ['portrait', '1024x1536'],
+      ['auto', 'auto'],
+    ])(
+      'should map semantic size %s to provider size %s',
+      async (semantic, expected) => {
+        const fakeB64 = Buffer.from('fake-image-data').toString('base64');
+        mockImagesGenerate.mockResolvedValue({
+          data: [{ b64_json: fakeB64 }],
+        });
+
+        await handler.generate(createInput({ size: semantic }));
+
+        expect(mockImagesGenerate).toHaveBeenCalledWith(
+          expect.objectContaining({ size: expected }),
+        );
+      },
+    );
+
+    it('should still accept raw provider dimensions', async () => {
+      const fakeB64 = Buffer.from('fake-image-data').toString('base64');
+      mockImagesGenerate.mockResolvedValue({
+        data: [{ b64_json: fakeB64 }],
+      });
+
+      await handler.generate(createInput({ size: '1536x1024' }));
+
+      expect(mockImagesGenerate).toHaveBeenCalledWith(
+        expect.objectContaining({ size: '1536x1024' }),
       );
     });
 

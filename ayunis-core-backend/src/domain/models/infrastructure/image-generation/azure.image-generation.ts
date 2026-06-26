@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { APIError, AzureOpenAI } from 'openai';
+import type { ImagesResponse } from 'openai/resources/images';
 import {
   ImageGenerationHandler,
   ImageGenerationInput,
@@ -11,11 +12,27 @@ import { ImageGenerationFailedError } from '../../application/models.errors';
 const VALID_SIZES = ['1024x1024', '1024x1536', '1536x1024', 'auto'] as const;
 type ImageSize = (typeof VALID_SIZES)[number];
 
+// Semantic aspect-ratio aliases the LLM tool can request, mapped to the
+// dimensions the provider understands. Keeps the model-facing vocabulary
+// stable even if provider-specific dimensions change.
+const SIZE_ALIASES: Record<string, ImageSize> = {
+  auto: 'auto',
+  square: '1024x1024',
+  landscape: '1536x1024',
+  portrait: '1024x1536',
+};
+
 const VALID_QUALITIES = ['low', 'medium', 'high', 'auto'] as const;
 type ImageQuality = (typeof VALID_QUALITIES)[number];
 
-function isValidSize(value: string): value is ImageSize {
-  return (VALID_SIZES as readonly string[]).includes(value);
+function resolveSize(value: string): ImageSize | undefined {
+  if (value in SIZE_ALIASES) {
+    return SIZE_ALIASES[value];
+  }
+  if ((VALID_SIZES as readonly string[]).includes(value)) {
+    return value as ImageSize;
+  }
+  return undefined;
 }
 
 function isValidQuality(value: string): value is ImageQuality {
@@ -44,10 +61,12 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
     size: ImageSize;
     quality: ImageQuality;
   } {
-    const size = input.size ?? '1024x1024';
-    if (!isValidSize(size)) {
+    const size = resolveSize(input.size ?? 'auto');
+    if (!size) {
       throw new ImageGenerationFailedError(
-        `Unsupported image size '${size}'. Supported sizes: ${VALID_SIZES.join(', ')}`,
+        `Unsupported image size '${input.size}'. Supported sizes: ${Object.keys(
+          SIZE_ALIASES,
+        ).join(', ')}, ${VALID_SIZES.join(', ')}`,
       );
     }
 
@@ -79,71 +98,81 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
         quality,
         n: 1,
       });
-
-      const imageData = response.data?.[0];
-      if (!imageData?.b64_json) {
-        throw new ImageGenerationFailedError(
-          'No image data returned from Azure OpenAI',
-        );
-      }
-
-      const imageBuffer = Buffer.from(imageData.b64_json, 'base64');
-
-      const usage = response.usage
-        ? {
-            inputTokens: response.usage.input_tokens,
-            outputTokens: response.usage.output_tokens,
-            totalTokens: response.usage.total_tokens,
-          }
-        : undefined;
-
-      this.logger.log('Image generated successfully', {
-        model: input.model.name,
-        sizeBytes: imageBuffer.length,
-        inputTokens: usage?.inputTokens,
-        outputTokens: usage?.outputTokens,
-        totalTokens: usage?.totalTokens,
-      });
-
-      return new ImageGenerationResult(
-        imageBuffer,
-        'image/png',
-        imageData.revised_prompt,
-        usage,
-      );
+      return this.buildResult(response, input.model.name);
     } catch (error) {
-      if (error instanceof ImageGenerationFailedError) {
-        throw error;
-      }
+      this.handleGenerationError(error, input.model.name);
+    }
+  }
 
-      if (error instanceof APIError) {
-        const errorCode = String(error.code ?? '');
-        this.logger.error('Azure OpenAI API error during image generation', {
-          status: String(error.status ?? ''),
-          code: errorCode,
-          message: error.message,
-          model: input.model.name,
-        });
-
-        if (errorCode === 'content_policy_violation') {
-          throw new ImageGenerationFailedError(
-            'The image could not be generated because the prompt was flagged by the content policy. Please revise your prompt and try again.',
-          );
-        }
-
-        throw new ImageGenerationFailedError(
-          'The image could not be generated due to a service error. Please try again later.',
-        );
-      }
-
-      this.logger.error('Unexpected error during image generation', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        model: input.model.name,
-      });
-
+  private buildResult(
+    response: ImagesResponse,
+    modelName: string,
+  ): ImageGenerationResult {
+    const imageData = response.data?.[0];
+    if (!imageData?.b64_json) {
       throw new ImageGenerationFailedError(
-        'An unexpected error occurred while generating the image. Please try again later.',
+        'No image data returned from Azure OpenAI',
       );
     }
+
+    const imageBuffer = Buffer.from(imageData.b64_json, 'base64');
+
+    const usage = response.usage
+      ? {
+          inputTokens: response.usage.input_tokens,
+          outputTokens: response.usage.output_tokens,
+          totalTokens: response.usage.total_tokens,
+        }
+      : undefined;
+
+    this.logger.log('Image generated successfully', {
+      model: modelName,
+      sizeBytes: imageBuffer.length,
+      inputTokens: usage?.inputTokens,
+      outputTokens: usage?.outputTokens,
+      totalTokens: usage?.totalTokens,
+    });
+
+    return new ImageGenerationResult(
+      imageBuffer,
+      'image/png',
+      imageData.revised_prompt,
+      usage,
+    );
+  }
+
+  private handleGenerationError(error: unknown, modelName: string): never {
+    if (error instanceof ImageGenerationFailedError) {
+      throw error;
+    }
+
+    if (error instanceof APIError) {
+      const errorCode = String(error.code ?? '');
+      this.logger.error('Azure OpenAI API error during image generation', {
+        status: String(error.status ?? ''),
+        code: errorCode,
+        message: error.message,
+        model: modelName,
+      });
+
+      if (errorCode === 'content_policy_violation') {
+        throw new ImageGenerationFailedError(
+          'The image could not be generated because the prompt was flagged by the content policy. Please revise your prompt and try again.',
+        );
+      }
+
+      throw new ImageGenerationFailedError(
+        'The image could not be generated due to a service error. Please try again later.',
+      );
+    }
+
+    this.logger.error('Unexpected error during image generation', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      model: modelName,
+    });
+
+    throw new ImageGenerationFailedError(
+      'An unexpected error occurred while generating the image. Please try again later.',
+    );
   }
 }

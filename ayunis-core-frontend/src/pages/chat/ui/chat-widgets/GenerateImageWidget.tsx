@@ -1,10 +1,29 @@
 import { useState } from 'react';
-import { Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Download, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/shadcn/dialog';
+import { Button } from '@/shared/ui/shadcn/button';
 import { useResolveGeneratedImage } from '../../api/useResolveGeneratedImage';
 import type { ToolUseMessageContent } from '../../model/openapi';
 import ImageGenerationLoader from './ImageGenerationLoader';
+
+async function downloadImage(url: string, fileName: string): Promise<void> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+  } catch {
+    // Cross-origin fetch can be blocked; fall back to opening the full image.
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+}
 
 interface GenerateImageWidgetProps {
   readonly content: ToolUseMessageContent;
@@ -102,6 +121,18 @@ export default function GenerateImageWidget({
             alt={altText}
             className="w-full h-full max-h-[90vh] object-contain rounded-lg"
           />
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="absolute left-3 top-3 gap-2 shadow-md"
+            onClick={() =>
+              void downloadImage(url, 'ayunis-generated-image.png')
+            }
+          >
+            <Download className="size-4" />
+            {t('chat.tools.generate_image.download')}
+          </Button>
         </DialogContent>
       </Dialog>
     </>
