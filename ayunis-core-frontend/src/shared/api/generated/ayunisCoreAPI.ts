@@ -1640,6 +1640,101 @@ export const useSuperAdminUsersControllerCreateUser = <TError = void,
     }
     
 /**
+ * Export all admin users from organizations with a non-cancelled subscription, including subscriptions that start in the future. This endpoint is only accessible to super admins.
+ * @summary Export admin users as CSV
+ */
+export const superAdminUserExportsControllerExportAdminUsers = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<Blob>(
+      {url: `/super-admin/users/export/admins.csv`, method: 'GET',
+        responseType: 'blob', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminUserExportsControllerExportAdminUsersQueryKey = () => {
+    return [
+    `/super-admin/users/export/admins.csv`
+    ] as const;
+    }
+
+    
+export const getSuperAdminUserExportsControllerExportAdminUsersQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUserExportsControllerExportAdminUsersQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>> = ({ signal }) => superAdminUserExportsControllerExportAdminUsers(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUserExportsControllerExportAdminUsersQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>>
+export type SuperAdminUserExportsControllerExportAdminUsersQueryError = void
+
+
+export function useSuperAdminUserExportsControllerExportAdminUsers<TData = Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUserExportsControllerExportAdminUsers<TData = Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUserExportsControllerExportAdminUsers<TData = Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Export admin users as CSV
+ */
+
+export function useSuperAdminUserExportsControllerExportAdminUsers<TData = Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUserExportsControllerExportAdminUsersQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
  * Retrieve all users with super admin status. Only accessible to super admins.
  * @summary List all super admins
  */
