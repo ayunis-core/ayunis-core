@@ -74,7 +74,7 @@ export class UsageSeeder extends OrgSeeder {
   ): Promise<void> {
     const repo = this.repo(UsageRecord);
     const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthStart = getEffectiveMonthStart();
 
     const existing = await repo.count({
       where: { organizationId: orgId, createdAt: MoreThanOrEqual(monthStart) },
@@ -109,7 +109,7 @@ export class UsageSeeder extends OrgSeeder {
     const rows: Record<string, unknown>[] = [];
 
     let index = 0;
-    for (let day = 1; day <= now.getDate(); day += 2) {
+    for (let day = 1; day <= now.getUTCDate(); day += 2) {
       const model = usageModels[index % usageModels.length];
       const inputTokens = 40_000 + ((index * 7919) % 120_000);
       const outputTokens = 20_000 + ((index * 5003) % 80_000);
@@ -125,7 +125,9 @@ export class UsageSeeder extends OrgSeeder {
           outputTokens,
           cost,
           creditsConsumed: cost * creditsPerEuro,
-          createdAt: new Date(now.getFullYear(), now.getMonth(), day, 10, 0, 0),
+          createdAt: new Date(
+            Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), day, 10, 0, 0),
+          ),
         }),
       );
       index += 1;
