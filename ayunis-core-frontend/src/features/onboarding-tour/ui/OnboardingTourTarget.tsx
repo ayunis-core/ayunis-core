@@ -13,12 +13,8 @@ export function OnboardingTourTarget({
   const ref = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    const wrapper = ref.current;
-    if (!wrapper) {
-      return;
-    }
-    const el = wrapper.firstElementChild;
-    if (!(el instanceof HTMLElement)) {
+    const el = ref.current;
+    if (!el) {
       return;
     }
 
