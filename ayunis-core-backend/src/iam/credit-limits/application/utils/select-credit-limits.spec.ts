@@ -1,24 +1,18 @@
-import type { UUID } from 'crypto';
-import { CreditLimit } from '../../domain/credit-limit.entity';
-import { CreditLimitScope } from '../../domain/value-objects/credit-limit-scope.enum';
+import {
+  aTeamCreditLimit,
+  aUserCreditLimit,
+  TEST_TEAM_ID,
+  TEST_USER_ID,
+} from '../testing/credit-limit.fixtures';
 import { selectUserCreditLimits } from './select-user-credit-limits';
 import { selectTeamCreditLimits } from './select-team-credit-limits';
 
 describe('credit limit selectors', () => {
-  const orgId = '11111111-1111-1111-1111-111111111111' as UUID;
-  const userId = '22222222-2222-2222-2222-222222222222' as UUID;
-  const teamId = '33333333-3333-3333-3333-333333333333' as UUID;
+  const userId = TEST_USER_ID;
+  const teamId = TEST_TEAM_ID;
 
-  const userLimit = new CreditLimit({
-    orgId,
-    target: { scope: CreditLimitScope.USER, userId },
-    monthlyCredits: 5000,
-  });
-  const teamLimit = new CreditLimit({
-    orgId,
-    target: { scope: CreditLimitScope.TEAM, teamId },
-    monthlyCredits: 20000,
-  });
+  const userLimit = aUserCreditLimit({ monthlyCredits: 5000 });
+  const teamLimit = aTeamCreditLimit({ monthlyCredits: 20000 });
 
   it('splits a mixed list by scope into flat read shapes', () => {
     const limits = [userLimit, teamLimit];

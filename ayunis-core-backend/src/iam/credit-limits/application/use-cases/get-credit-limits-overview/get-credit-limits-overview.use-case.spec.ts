@@ -1,14 +1,19 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
 import { ListTeamsUseCase } from 'src/iam/teams/application/use-cases/list-teams/list-teams.use-case';
 import { GetMonthlyCreditUsageForUsersUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-users/get-monthly-credit-usage-for-users.use-case';
 import { GetMonthlyCreditUsageForTeamUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.use-case';
 import { CreditLimitRepository } from '../../ports/credit-limit.repository';
-import { CreditLimit } from '../../../domain/credit-limit.entity';
-import { CreditLimitScope } from '../../../domain/value-objects/credit-limit-scope.enum';
+import {
+  aTeamCreditLimit,
+  aUserCreditLimit,
+  createMockCreditLimitRepository,
+  TEST_ORG_ID,
+  TEST_TEAM_ID,
+  TEST_USER_ID,
+} from '../../testing/credit-limit.fixtures';
 import { GetCreditLimitsOverviewUseCase } from './get-credit-limits-overview.use-case';
 
 describe('GetCreditLimitsOverviewUseCase', () => {
@@ -19,20 +24,12 @@ describe('GetCreditLimitsOverviewUseCase', () => {
   let getUsersUsage: { execute: jest.Mock };
   let getTeamUsage: { execute: jest.Mock };
 
-  const orgId = '11111111-1111-1111-1111-111111111111' as UUID;
-  const userId = '22222222-2222-2222-2222-222222222222' as UUID;
-  const teamId = '33333333-3333-3333-3333-333333333333' as UUID;
+  const orgId = TEST_ORG_ID;
+  const userId = TEST_USER_ID;
+  const teamId = TEST_TEAM_ID;
 
   beforeEach(async () => {
-    repository = {
-      save: jest.fn(),
-      findByOrg: jest.fn().mockResolvedValue([]),
-      findByUserId: jest.fn(),
-      findByTeamId: jest.fn(),
-      findByTeamIds: jest.fn(),
-      deleteByUserId: jest.fn(),
-      deleteByTeamId: jest.fn(),
-    };
+    repository = createMockCreditLimitRepository();
     findUsersByIds = { execute: jest.fn().mockResolvedValue([]) };
     listTeams = { execute: jest.fn().mockResolvedValue([]) };
     getUsersUsage = { execute: jest.fn().mockResolvedValue(new Map()) };
@@ -69,16 +66,8 @@ describe('GetCreditLimitsOverviewUseCase', () => {
 
   it('enriches each configured limit with its target name and current consumption', async () => {
     repository.findByOrg.mockResolvedValue([
-      new CreditLimit({
-        orgId,
-        target: { scope: CreditLimitScope.USER, userId },
-        monthlyCredits: 5000,
-      }),
-      new CreditLimit({
-        orgId,
-        target: { scope: CreditLimitScope.TEAM, teamId },
-        monthlyCredits: 20000,
-      }),
+      aUserCreditLimit({ monthlyCredits: 5000 }),
+      aTeamCreditLimit({ monthlyCredits: 20000 }),
     ]);
     findUsersByIds.execute.mockResolvedValue([
       { id: userId, name: 'Jane Doe', email: 'jane.doe@example.com' },
@@ -112,11 +101,7 @@ describe('GetCreditLimitsOverviewUseCase', () => {
 
   it('keeps the row but hides usage when the target user is outside the org', async () => {
     repository.findByOrg.mockResolvedValue([
-      new CreditLimit({
-        orgId,
-        target: { scope: CreditLimitScope.USER, userId },
-        monthlyCredits: 5000,
-      }),
+      aUserCreditLimit({ monthlyCredits: 5000 }),
     ]);
     findUsersByIds.execute.mockResolvedValue([]); // not a member of this org
     getUsersUsage.execute.mockResolvedValue(new Map([[userId, 10]]));
