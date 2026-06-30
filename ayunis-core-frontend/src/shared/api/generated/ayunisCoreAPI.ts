@@ -38,6 +38,7 @@ import type {
   ArtifactResponseDto,
   ArtifactVersionResponseDto,
   ArtifactsControllerExportParams,
+  ChangeSubscriptionRequestDto,
   ChatCompletionRequestDto,
   ConfirmEmailDto,
   CrawlDomainGrantResponseDto,
@@ -3197,6 +3198,73 @@ export const useSuperAdminSubscriptionsControllerCancelSubscription = <TError = 
       > => {
 
       const mutationOptions = getSuperAdminSubscriptionsControllerCancelSubscriptionMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Ends the current subscription (cancelled or deleted, per oldSubscriptionDisposition) and creates a new one with the provided data. This is the only way to change subscription type. Only accessible to super admins.
+ * @summary Change an organization subscription (cancel/delete + recreate)
+ */
+export const superAdminSubscriptionsControllerChangeSubscription = (
+    orgId: string,
+    changeSubscriptionRequestDto: ChangeSubscriptionRequestDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/subscriptions/${orgId}/change`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: changeSubscriptionRequestDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSubscriptionsControllerChangeSubscriptionMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerChangeSubscription>>, TError,{orgId: string;data: ChangeSubscriptionRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerChangeSubscription>>, TError,{orgId: string;data: ChangeSubscriptionRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminSubscriptionsControllerChangeSubscription'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSubscriptionsControllerChangeSubscription>>, {orgId: string;data: ChangeSubscriptionRequestDto}> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminSubscriptionsControllerChangeSubscription(orgId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSubscriptionsControllerChangeSubscriptionMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSubscriptionsControllerChangeSubscription>>>
+    export type SuperAdminSubscriptionsControllerChangeSubscriptionMutationBody = ChangeSubscriptionRequestDto
+    export type SuperAdminSubscriptionsControllerChangeSubscriptionMutationError = void
+
+    /**
+ * @summary Change an organization subscription (cancel/delete + recreate)
+ */
+export const useSuperAdminSubscriptionsControllerChangeSubscription = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerChangeSubscription>>, TError,{orgId: string;data: ChangeSubscriptionRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSubscriptionsControllerChangeSubscription>>,
+        TError,
+        {orgId: string;data: ChangeSubscriptionRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSubscriptionsControllerChangeSubscriptionMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

@@ -16,7 +16,6 @@ import {
   ApiResponse,
   ApiExtraModels,
   getSchemaPath,
-  ApiParam,
   ApiUnauthorizedResponse,
   ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
@@ -28,7 +27,7 @@ import {
 import { GetLatestSubscriptionUseCase } from '../../application/use-cases/get-latest-subscription/get-latest-subscription.use-case';
 import { GetLatestSubscriptionQuery } from '../../application/use-cases/get-latest-subscription/get-latest-subscription.query';
 import { CreateSubscriptionUseCase } from '../../application/use-cases/create-subscription/create-subscription.use-case';
-import { CreateSubscriptionCommand } from '../../application/use-cases/create-subscription/create-subscription.command';
+import { ChangeSubscriptionUseCase } from '../../application/use-cases/change-subscription/change-subscription.use-case';
 import { CancelSubscriptionUseCase } from '../../application/use-cases/cancel-subscription/cancel-subscription.use-case';
 import { CancelSubscriptionCommand } from '../../application/use-cases/cancel-subscription/cancel-subscription.command';
 import { UncancelSubscriptionUseCase } from '../../application/use-cases/uncancel-subscription/uncancel-subscription.use-case';
@@ -38,8 +37,15 @@ import {
   SubscriptionResponseDtoNullable,
 } from './dto/subscription-response.dto';
 import { CreateSubscriptionRequestDto } from './dto/create-subscription-request.dto';
+import { ChangeSubscriptionRequestDto } from './dto/change-subscription-request.dto';
 import { ActiveSubscriptionResponseDto } from './dto/active-subscription-response.dto';
 import { SubscriptionResponseMapper } from './mappers/subscription-response.mapper';
+import { OrgIdParam } from './super-admin-subscriptions.decorators';
+import {
+  toCreateCommand,
+  toChangeCommand,
+  toBillingInfoParams,
+} from './super-admin-subscription.mappers';
 
 import { UpdateSeatsCommand } from '../../application/use-cases/update-seats/update-seats.command';
 import { UpdateSeatsDto } from './dto/update-seats.dto';
@@ -57,6 +63,10 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 import { SubscriptionNotFoundError } from '../../application/subscription.errors';
 import { UpdateStartDateDto } from './dto/update-start-date.dto';
 
+const UNAUTHORIZED_DESCRIPTION =
+  'User not authenticated or not authorized as super admin';
+const INTERNAL_ERROR_DESCRIPTION = 'Internal server error';
+
 @ApiTags('Super Admin Subscriptions')
 @Controller('super-admin/subscriptions')
 @SystemRoles(SystemRole.SUPER_ADMIN)
@@ -64,6 +74,7 @@ import { UpdateStartDateDto } from './dto/update-start-date.dto';
   SubscriptionResponseDto,
   SubscriptionResponseDtoNullable,
   CreateSubscriptionRequestDto,
+  ChangeSubscriptionRequestDto,
   ActiveSubscriptionResponseDto,
   UpdateBillingInfoDto,
   UpdateStartDateDto,
@@ -75,6 +86,7 @@ export class SuperAdminSubscriptionsController {
   constructor(
     private readonly getLatestSubscriptionUseCase: GetLatestSubscriptionUseCase,
     private readonly createSubscriptionUseCase: CreateSubscriptionUseCase,
+    private readonly changeSubscriptionUseCase: ChangeSubscriptionUseCase,
     private readonly cancelSubscriptionUseCase: CancelSubscriptionUseCase,
     private readonly uncancelSubscriptionUseCase: UncancelSubscriptionUseCase,
     private readonly subscriptionResponseMapper: SubscriptionResponseMapper,
@@ -91,12 +103,7 @@ export class SuperAdminSubscriptionsController {
     description:
       'Retrieve subscription details for the specified organization. This endpoint is only accessible to super admins.',
   })
-  @ApiParam({
-    name: 'orgId',
-    description: 'Organization ID to get subscription for',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  @OrgIdParam('Organization ID to get subscription for')
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Successfully retrieved subscription details',
@@ -104,12 +111,8 @@ export class SuperAdminSubscriptionsController {
       $ref: getSchemaPath(SubscriptionResponseDtoNullable),
     },
   })
-  @ApiUnauthorizedResponse({
-    description: 'User not authenticated or not authorized as super admin',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
+  @ApiUnauthorizedResponse({ description: UNAUTHORIZED_DESCRIPTION })
+  @ApiInternalServerErrorResponse({ description: INTERNAL_ERROR_DESCRIPTION })
   async getSubscription(
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
@@ -146,12 +149,7 @@ export class SuperAdminSubscriptionsController {
     description:
       'Create a new subscription for the specified organization. This endpoint is only accessible to super admins.',
   })
-  @ApiParam({
-    name: 'orgId',
-    description: 'Organization ID to create subscription for',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  @OrgIdParam('Organization ID to create subscription for')
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'Successfully created subscription',
@@ -167,12 +165,8 @@ export class SuperAdminSubscriptionsController {
     status: HttpStatus.CONFLICT,
     description: 'Subscription already exists for this organization',
   })
-  @ApiUnauthorizedResponse({
-    description: 'User not authenticated or not authorized as super admin',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
+  @ApiUnauthorizedResponse({ description: UNAUTHORIZED_DESCRIPTION })
+  @ApiInternalServerErrorResponse({ description: INTERNAL_ERROR_DESCRIPTION })
   async createSubscription(
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
@@ -181,28 +175,46 @@ export class SuperAdminSubscriptionsController {
     this.logger.log(
       `Creating subscription for org ${orgId} by super admin ${userId}`,
     );
-
-    const command = new CreateSubscriptionCommand({
-      orgId,
-      requestingUserId: userId,
-      type: createSubscriptionDto.type,
-      noOfSeats: createSubscriptionDto.noOfSeats,
-      monthlyCredits: createSubscriptionDto.monthlyCredits,
-      companyName: createSubscriptionDto.companyName,
-      subText: createSubscriptionDto.subText,
-      street: createSubscriptionDto.street,
-      houseNumber: createSubscriptionDto.houseNumber,
-      postalCode: createSubscriptionDto.postalCode,
-      city: createSubscriptionDto.city,
-      country: createSubscriptionDto.country,
-      vatNumber: createSubscriptionDto.vatNumber,
-      startsAt: createSubscriptionDto.startsAt
-        ? new Date(createSubscriptionDto.startsAt)
-        : undefined,
-    });
-
-    await this.createSubscriptionUseCase.execute(command);
+    await this.createSubscriptionUseCase.execute(
+      toCreateCommand(orgId, userId, createSubscriptionDto),
+    );
     this.logger.log(`Successfully created subscription for org ${orgId}`);
+  }
+
+  @Post(':orgId/change')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Change an organization subscription (cancel/delete + recreate)',
+    description:
+      'Ends the current subscription (cancelled or deleted, per oldSubscriptionDisposition) and creates a new one with the provided data. This is the only way to change subscription type. Only accessible to super admins.',
+  })
+  @OrgIdParam('Organization ID to change the subscription for')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Successfully changed subscription',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid subscription data provided',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'No active subscription found for the organization',
+  })
+  @ApiUnauthorizedResponse({ description: UNAUTHORIZED_DESCRIPTION })
+  @ApiInternalServerErrorResponse({ description: INTERNAL_ERROR_DESCRIPTION })
+  async changeSubscription(
+    @Param('orgId') orgId: UUID,
+    @CurrentUser(UserProperty.ID) userId: UUID,
+    @Body() changeSubscriptionDto: ChangeSubscriptionRequestDto,
+  ): Promise<void> {
+    this.logger.log(
+      `Changing subscription for org ${orgId} by super admin ${userId}`,
+    );
+    await this.changeSubscriptionUseCase.execute(
+      toChangeCommand(orgId, userId, changeSubscriptionDto),
+    );
+    this.logger.log(`Successfully changed subscription for org ${orgId}`);
   }
 
   @Put(':orgId/seats')
@@ -212,12 +224,7 @@ export class SuperAdminSubscriptionsController {
     description:
       'Update the number of seats for the specified organization. This endpoint is only accessible to super admins.',
   })
-  @ApiParam({
-    name: 'orgId',
-    description: 'Organization ID to update seats for',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  @OrgIdParam('Organization ID to update seats for')
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
     description: 'Successfully updated seats',
@@ -230,12 +237,8 @@ export class SuperAdminSubscriptionsController {
     status: HttpStatus.NOT_FOUND,
     description: 'No subscription found for the organization',
   })
-  @ApiUnauthorizedResponse({
-    description: 'User not authenticated or not authorized as super admin',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
+  @ApiUnauthorizedResponse({ description: UNAUTHORIZED_DESCRIPTION })
+  @ApiInternalServerErrorResponse({ description: INTERNAL_ERROR_DESCRIPTION })
   async updateSeats(
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
@@ -256,12 +259,7 @@ export class SuperAdminSubscriptionsController {
   @ApiOperation({
     summary: 'Update monthly credits for an organization (super admin)',
   })
-  @ApiParam({
-    name: 'orgId',
-    description: 'Organization ID to update monthly credits for',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  @OrgIdParam('Organization ID to update monthly credits for')
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
     description: 'Successfully updated monthly credits',
@@ -275,9 +273,7 @@ export class SuperAdminSubscriptionsController {
     status: HttpStatus.NOT_FOUND,
     description: 'No subscription found for the organization',
   })
-  @ApiUnauthorizedResponse({
-    description: 'User not authenticated or not authorized as super admin',
-  })
+  @ApiUnauthorizedResponse({ description: UNAUTHORIZED_DESCRIPTION })
   async updateMonthlyCredits(
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
@@ -302,12 +298,7 @@ export class SuperAdminSubscriptionsController {
     description:
       'Update the billing information for the specified organization. This endpoint is only accessible to super admins.',
   })
-  @ApiParam({
-    name: 'orgId',
-    description: 'Organization ID to update billing info for',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  @OrgIdParam('Organization ID to update billing info for')
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
     description: 'Successfully updated billing information',
@@ -320,12 +311,8 @@ export class SuperAdminSubscriptionsController {
     status: HttpStatus.NOT_FOUND,
     description: 'No subscription found for the organization',
   })
-  @ApiUnauthorizedResponse({
-    description: 'User not authenticated or not authorized as super admin',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
+  @ApiUnauthorizedResponse({ description: UNAUTHORIZED_DESCRIPTION })
+  @ApiInternalServerErrorResponse({ description: INTERNAL_ERROR_DESCRIPTION })
   async updateBillingInfo(
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
@@ -337,15 +324,7 @@ export class SuperAdminSubscriptionsController {
     const command = new UpdateBillingInfoCommand({
       orgId,
       requestingUserId: userId,
-      billingInfo: {
-        companyName: updateBillingInfoDto.companyName,
-        street: updateBillingInfoDto.street,
-        houseNumber: updateBillingInfoDto.houseNumber,
-        postalCode: updateBillingInfoDto.postalCode,
-        city: updateBillingInfoDto.city,
-        country: updateBillingInfoDto.country,
-        vatNumber: updateBillingInfoDto.vatNumber,
-      },
+      billingInfo: toBillingInfoParams(updateBillingInfoDto),
     });
     await this.updateBillingInfoUseCase.execute(command);
     this.logger.log(`Successfully updated billing info for org ${orgId}`);
@@ -358,12 +337,7 @@ export class SuperAdminSubscriptionsController {
     description:
       'Update the start date for the latest subscription of the specified organization. This endpoint is only accessible to super admins.',
   })
-  @ApiParam({
-    name: 'orgId',
-    description: 'Organization ID to update the subscription start date for',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  @OrgIdParam('Organization ID to update the subscription start date for')
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
     description: 'Successfully updated subscription start date',
@@ -376,12 +350,8 @@ export class SuperAdminSubscriptionsController {
     status: HttpStatus.NOT_FOUND,
     description: 'No subscription found for the organization',
   })
-  @ApiUnauthorizedResponse({
-    description: 'User not authenticated or not authorized as super admin',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
+  @ApiUnauthorizedResponse({ description: UNAUTHORIZED_DESCRIPTION })
+  @ApiInternalServerErrorResponse({ description: INTERNAL_ERROR_DESCRIPTION })
   async updateStartDate(
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
@@ -410,12 +380,7 @@ export class SuperAdminSubscriptionsController {
     description:
       'Cancel the subscription for the specified organization. This endpoint is only accessible to super admins.',
   })
-  @ApiParam({
-    name: 'orgId',
-    description: 'Organization ID to cancel subscription for',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  @OrgIdParam('Organization ID to cancel subscription for')
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
     description: 'Successfully cancelled subscription',
@@ -428,12 +393,8 @@ export class SuperAdminSubscriptionsController {
     status: HttpStatus.CONFLICT,
     description: 'Subscription is already cancelled',
   })
-  @ApiUnauthorizedResponse({
-    description: 'User not authenticated or not authorized as super admin',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
+  @ApiUnauthorizedResponse({ description: UNAUTHORIZED_DESCRIPTION })
+  @ApiInternalServerErrorResponse({ description: INTERNAL_ERROR_DESCRIPTION })
   async cancelSubscription(
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
@@ -457,12 +418,7 @@ export class SuperAdminSubscriptionsController {
     description:
       'Uncancel the subscription for the specified organization. This endpoint is only accessible to super admins.',
   })
-  @ApiParam({
-    name: 'orgId',
-    description: 'Organization ID to uncancel subscription for',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  @OrgIdParam('Organization ID to uncancel subscription for')
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
     description: 'Successfully uncancelled subscription',
@@ -475,12 +431,8 @@ export class SuperAdminSubscriptionsController {
     status: HttpStatus.CONFLICT,
     description: 'Subscription is not cancelled',
   })
-  @ApiUnauthorizedResponse({
-    description: 'User not authenticated or not authorized as super admin',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
+  @ApiUnauthorizedResponse({ description: UNAUTHORIZED_DESCRIPTION })
+  @ApiInternalServerErrorResponse({ description: INTERNAL_ERROR_DESCRIPTION })
   async uncancelSubscription(
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,

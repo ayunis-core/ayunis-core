@@ -76,7 +76,11 @@
         "invalid": "Startdatum ist ungültig"
       },
       "invalid": "Ungültige Eingabe"
-    }
+    },
+    "changeSuccess": "Abonnement erfolgreich geändert",
+    "changeErrorSubscriptionNotFound": "Kein aktives Abonnement zum Ändern vorhanden",
+    "changeErrorTooManyUsedSeats": "Zu viele Nutzer sind bereits in dieser Organisation. Wählen Sie mehr Plätze für das neue Abonnement.",
+    "changeErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten"
   },
   "licenseSeats": {
     "title": "Lizenzplätze",
@@ -147,6 +151,18 @@
     "startsAtLabel": "Startdatum",
     "startsAtPlaceholder": "Startet sofort",
     "startsAtDescription": "Leer lassen, damit das Abonnement sofort startet, oder ein zukünftiges Datum wählen."
+  },
+  "changeSubscriptionDialog": {
+    "title": "Abonnement ändern",
+    "description": "Ändern Sie den Abonnement-Typ oder die Daten. Dabei wird das aktuelle Abonnement beendet und ein neues erstellt — der Typ kann nicht direkt geändert werden.",
+    "changeButton": "Abonnement ändern",
+    "continue": "Weiter",
+    "changing": "Wird geändert...",
+    "warningTitle": "Dieses Abonnement ändern?",
+    "warningDescription": "Dabei wird das aktuelle Abonnement beendet und ein neues mit den eingegebenen Daten erstellt. Wählen Sie, wie mit dem aktuellen Abonnement verfahren werden soll. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirmCancel": "Aktuelles kündigen & neues erstellen",
+    "confirmDelete": "Aktuelles löschen & neues erstellen",
+    "back": "Zurück"
   },
   "trialDialog": {
     "title": "Trial erstellen",

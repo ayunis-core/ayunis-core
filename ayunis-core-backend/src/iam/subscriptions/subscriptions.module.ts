@@ -28,6 +28,8 @@ import { GetMonthlyCreditLimitUseCase } from './application/use-cases/get-monthl
 import { IsUsageBasedSubscriptionUseCase } from './application/use-cases/is-usage-based-subscription/is-usage-based-subscription.use-case';
 import { UpdateStartDateUseCase } from './application/use-cases/update-start-date/update-start-date.use-case';
 import { UpdateMonthlyCreditsUseCase } from './application/use-cases/update-monthly-credits/update-monthly-credits.use-case';
+import { ChangeSubscriptionUseCase } from './application/use-cases/change-subscription/change-subscription.use-case';
+import { SubscriptionFactory } from './application/services/subscription-factory.service';
 
 @Module({
   imports: [
@@ -49,10 +51,12 @@ import { UpdateMonthlyCreditsUseCase } from './application/use-cases/update-mont
     SubscriptionMapper,
     SubscriptionResponseMapper,
     SubscriptionBillingInfoMapper,
+    SubscriptionFactory,
     HasActiveSubscriptionUseCase,
     GetActiveSubscriptionUseCase,
     GetLatestSubscriptionUseCase,
     CreateSubscriptionUseCase,
+    ChangeSubscriptionUseCase,
     CancelSubscriptionUseCase,
     UncancelSubscriptionUseCase,
     UpdateSeatsUseCase,

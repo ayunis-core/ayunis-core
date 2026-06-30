@@ -78,7 +78,6 @@ export default function CreateSubscriptionDialog({
   };
 
   const defaultLabel = t('subscriptionDialog.createSubscription');
-  const subscriptionType = form.watch('type');
 
   return (
     <Dialog>
@@ -98,85 +97,7 @@ export default function CreateSubscriptionDialog({
               }}
               className="space-y-6"
             >
-              <BillingInfoFields form={form} t={t} />
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('subscriptionDialog.typeLabel')}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue
-                            placeholder={t(
-                              'subscriptionDialog.typePlaceholder',
-                            )}
-                          />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="SEAT_BASED">
-                          {t('subscriptionDialog.typeSeatBased')}
-                        </SelectItem>
-                        <SelectItem value="USAGE_BASED">
-                          {t('subscriptionDialog.typeUsageBased')}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {subscriptionType === 'SEAT_BASED' && (
-                <FormField
-                  control={form.control}
-                  name="noOfSeats"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('billingInfo.noOfSeatsLabel')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t('billingInfo.noOfSeatsPlaceholder')}
-                          type="number"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                      <FormDescription>
-                        {t('subscriptionDialog.noOfSeatsDescription')}
-                      </FormDescription>
-                    </FormItem>
-                  )}
-                />
-              )}
-              {subscriptionType === 'USAGE_BASED' && (
-                <FormField
-                  control={form.control}
-                  name="monthlyCredits"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {t('subscriptionDialog.monthlyCreditsLabel')}
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t(
-                            'subscriptionDialog.monthlyCreditsPlaceholder',
-                          )}
-                          type="number"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                      <FormDescription>
-                        {t('subscriptionDialog.monthlyCreditsDescription')}
-                      </FormDescription>
-                    </FormItem>
-                  )}
-                />
-              )}
-              <StartDateField form={form} t={t} />
+              <SubscriptionFormFields form={form} t={t} />
               {priceSection}
               <DialogFooter>
                 <DialogClose asChild>
@@ -200,6 +121,98 @@ export default function CreateSubscriptionDialog({
         </ScrollArea>
       </DialogContent>
     </Dialog>
+  );
+}
+
+export function SubscriptionFormFields({
+  form,
+  t,
+}: Readonly<{
+  form: UseFormReturn<CreateSubscriptionFormData>;
+  t: (key: string) => string;
+}>) {
+  const subscriptionType = form.watch('type');
+
+  return (
+    <>
+      <BillingInfoFields form={form} t={t} />
+      <FormField
+        control={form.control}
+        name="type"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('subscriptionDialog.typeLabel')}</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger className="w-full">
+                  <SelectValue
+                    placeholder={t('subscriptionDialog.typePlaceholder')}
+                  />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="SEAT_BASED">
+                  {t('subscriptionDialog.typeSeatBased')}
+                </SelectItem>
+                <SelectItem value="USAGE_BASED">
+                  {t('subscriptionDialog.typeUsageBased')}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      {subscriptionType === 'SEAT_BASED' && (
+        <FormField
+          control={form.control}
+          name="noOfSeats"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('billingInfo.noOfSeatsLabel')}</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder={t('billingInfo.noOfSeatsPlaceholder')}
+                  type="number"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+              <FormDescription>
+                {t('subscriptionDialog.noOfSeatsDescription')}
+              </FormDescription>
+            </FormItem>
+          )}
+        />
+      )}
+      {subscriptionType === 'USAGE_BASED' && (
+        <FormField
+          control={form.control}
+          name="monthlyCredits"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {t('subscriptionDialog.monthlyCreditsLabel')}
+              </FormLabel>
+              <FormControl>
+                <Input
+                  placeholder={t(
+                    'subscriptionDialog.monthlyCreditsPlaceholder',
+                  )}
+                  type="number"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+              <FormDescription>
+                {t('subscriptionDialog.monthlyCreditsDescription')}
+              </FormDescription>
+            </FormItem>
+          )}
+        />
+      )}
+      <StartDateField form={form} t={t} />
+    </>
   );
 }
 
