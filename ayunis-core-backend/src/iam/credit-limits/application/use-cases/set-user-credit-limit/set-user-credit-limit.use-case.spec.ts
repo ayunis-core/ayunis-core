@@ -1,16 +1,20 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
 import { CreditLimitRepository } from '../../ports/credit-limit.repository';
-import { CreditLimit } from '../../../domain/credit-limit.entity';
 import { CreditLimitScope } from '../../../domain/value-objects/credit-limit-scope.enum';
 import {
   CreditLimitTargetNotFoundError,
   InvalidCreditLimitError,
 } from '../../credit-limits.errors';
+import {
+  aUserCreditLimit,
+  createMockCreditLimitRepository,
+  TEST_ORG_ID,
+  TEST_USER_ID,
+} from '../../testing/credit-limit.fixtures';
 import { SetUserCreditLimitUseCase } from './set-user-credit-limit.use-case';
 import { SetUserCreditLimitCommand } from './set-user-credit-limit.command';
 
@@ -20,19 +24,11 @@ describe('SetUserCreditLimitUseCase', () => {
   let context: { get: jest.Mock };
   let findUsersByIds: { execute: jest.Mock };
 
-  const orgId = '11111111-1111-1111-1111-111111111111' as UUID;
-  const targetUserId = '22222222-2222-2222-2222-222222222222' as UUID;
+  const orgId = TEST_ORG_ID;
+  const targetUserId = TEST_USER_ID;
 
   beforeEach(async () => {
-    repository = {
-      save: jest.fn((limit: CreditLimit) => Promise.resolve(limit)),
-      findByOrg: jest.fn(),
-      findByUserId: jest.fn().mockResolvedValue(null),
-      findByTeamId: jest.fn(),
-      findByTeamIds: jest.fn(),
-      deleteByUserId: jest.fn(),
-      deleteByTeamId: jest.fn(),
-    };
+    repository = createMockCreditLimitRepository();
     context = { get: jest.fn().mockReturnValue(orgId) };
     // Default: target is a member of the caller's org.
     findUsersByIds = {
@@ -65,11 +61,7 @@ describe('SetUserCreditLimitUseCase', () => {
   });
 
   it('updates an existing limit in place, preserving its identity', async () => {
-    const existing = new CreditLimit({
-      orgId,
-      target: { scope: CreditLimitScope.USER, userId: targetUserId },
-      monthlyCredits: 1000,
-    });
+    const existing = aUserCreditLimit({ monthlyCredits: 1000 });
     repository.findByUserId.mockResolvedValue(existing);
 
     const result = await useCase.execute(
