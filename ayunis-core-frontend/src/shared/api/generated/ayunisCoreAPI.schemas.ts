@@ -636,6 +636,65 @@ export interface CreateSubscriptionRequestDto {
   startsAt?: string;
 }
 
+/**
+ * Subscription type. Defaults to SEAT_BASED if not specified.
+ */
+export type ChangeSubscriptionRequestDtoType = typeof ChangeSubscriptionRequestDtoType[keyof typeof ChangeSubscriptionRequestDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ChangeSubscriptionRequestDtoType = {
+  SEAT_BASED: 'SEAT_BASED',
+  USAGE_BASED: 'USAGE_BASED',
+} as const;
+
+/**
+ * How to handle the current subscription. CANCEL soft-cancels it (kept in history); DELETE removes it entirely. A new subscription is created with the provided data either way.
+ */
+export type ChangeSubscriptionRequestDtoOldSubscriptionDisposition = typeof ChangeSubscriptionRequestDtoOldSubscriptionDisposition[keyof typeof ChangeSubscriptionRequestDtoOldSubscriptionDisposition];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ChangeSubscriptionRequestDtoOldSubscriptionDisposition = {
+  CANCEL: 'CANCEL',
+  DELETE: 'DELETE',
+} as const;
+
+export interface ChangeSubscriptionRequestDto {
+  /** Company name for the subscription */
+  companyName: string;
+  /** Street for the subscription */
+  street: string;
+  /** House number for the subscription */
+  houseNumber: string;
+  /** Postal code for the subscription */
+  postalCode: string;
+  /** City for the subscription */
+  city: string;
+  /** Country for the subscription */
+  country: string;
+  /** VAT number for the subscription */
+  vatNumber?: string;
+  /** Subscription type. Defaults to SEAT_BASED if not specified. */
+  type?: ChangeSubscriptionRequestDtoType;
+  /**
+   * Number of seats for the subscription (seat-based only)
+   * @minimum 1
+   */
+  noOfSeats?: number;
+  /**
+   * Monthly credit budget (usage-based only)
+   * @minimum 1
+   */
+  monthlyCredits?: number;
+  /** Sub text for the subscription */
+  subText?: string;
+  /** Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately. */
+  startsAt?: string;
+  /** How to handle the current subscription. CANCEL soft-cancels it (kept in history); DELETE removes it entirely. A new subscription is created with the provided data either way. */
+  oldSubscriptionDisposition: ChangeSubscriptionRequestDtoOldSubscriptionDisposition;
+}
+
 export interface UpdateBillingInfoDto {
   /** Company name for the subscription */
   companyName: string;

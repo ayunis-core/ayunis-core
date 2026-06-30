@@ -1,9 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, IsNull, Repository } from 'typeorm';
 import { UUID } from 'crypto';
-import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
+import {
+  ReplaceSubscriptionParams,
+  SubscriptionRepository,
+} from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
+import { OldSubscriptionDisposition } from 'src/iam/subscriptions/domain/value-objects/old-subscription-disposition.enum';
 import {
   SeatBasedSubscriptionRecord,
   SubscriptionRecord,
@@ -81,14 +85,9 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
 
       // Save subscription and billing info in a transaction to guarantee
       // the subscription row exists before the billing info FK references it.
-      await this.dataSource.transaction(async (manager) => {
-        const billingInfo = record.billingInfo;
-        record.billingInfo =
-          undefined as unknown as SubscriptionBillingInfoRecord;
-        await manager.save(SubscriptionRecord, record);
-        await manager.save(SubscriptionBillingInfoRecord, billingInfo);
-        record.billingInfo = billingInfo;
-      });
+      await this.dataSource.transaction((manager) =>
+        this.insertSubscriptionWithBilling(manager, record),
+      );
 
       this.logger.log(`Created subscription with id ${subscription.id}`);
       return this.subscriptionMapper.toDomain(record);
@@ -99,6 +98,55 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
       );
       throw error;
     }
+  }
+
+  async replace(params: ReplaceSubscriptionParams): Promise<Subscription> {
+    const { oldSubscriptionId, disposition, newSubscription } = params;
+    try {
+      const record = this.subscriptionMapper.toRecord(newSubscription);
+
+      // End the old subscription and insert the new one atomically so the org
+      // is never left without a subscription (or with two active ones).
+      await this.dataSource.transaction(async (manager) => {
+        if (disposition === OldSubscriptionDisposition.DELETE) {
+          await manager.delete(SubscriptionRecord, oldSubscriptionId);
+        } else {
+          // Only stamp cancelledAt when not already cancelled, so replacing an
+          // already-cancelled subscription preserves its original cancellation
+          // timestamp (kept for billing/audit history).
+          await manager.update(
+            SubscriptionRecord,
+            { id: oldSubscriptionId, cancelledAt: IsNull() },
+            { cancelledAt: new Date() },
+          );
+        }
+        await this.insertSubscriptionWithBilling(manager, record);
+      });
+
+      this.logger.log(
+        `Replaced subscription ${oldSubscriptionId} (${disposition}) with ${newSubscription.id}`,
+      );
+      return this.subscriptionMapper.toDomain(record);
+    } catch (error) {
+      this.logger.error(
+        `Failed to replace subscription ${oldSubscriptionId}`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  // Persists a subscription record and its billing info, ensuring the
+  // subscription row exists before the billing-info FK references it.
+  private async insertSubscriptionWithBilling(
+    manager: EntityManager,
+    record: SubscriptionRecord,
+  ): Promise<void> {
+    const billingInfo = record.billingInfo;
+    record.billingInfo = undefined as unknown as SubscriptionBillingInfoRecord;
+    await manager.save(SubscriptionRecord, record);
+    await manager.save(SubscriptionBillingInfoRecord, billingInfo);
+    record.billingInfo = billingInfo;
   }
 
   async update(subscription: Subscription): Promise<Subscription> {

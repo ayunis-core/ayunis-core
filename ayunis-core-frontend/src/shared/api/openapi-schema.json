@@ -1494,6 +1494,54 @@
         "tags": ["Super Admin Subscriptions"]
       }
     },
+    "/super-admin/subscriptions/{orgId}/change": {
+      "post": {
+        "description": "Ends the current subscription (cancelled or deleted, per oldSubscriptionDisposition) and creates a new one with the provided data. This is the only way to change subscription type. Only accessible to super admins.",
+        "operationId": "SuperAdminSubscriptionsController_changeSubscription",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to change the subscription for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeSubscriptionRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully changed subscription"
+          },
+          "400": {
+            "description": "Invalid subscription data provided"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "No active subscription found for the organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Change an organization subscription (cancel/delete + recreate)",
+        "tags": ["Super Admin Subscriptions"]
+      }
+    },
     "/super-admin/subscriptions/{orgId}/seats": {
       "put": {
         "description": "Update the number of seats for the specified organization. This endpoint is only accessible to super admins.",
@@ -10159,6 +10207,91 @@
           "postalCode",
           "city",
           "country"
+        ]
+      },
+      "ChangeSubscriptionRequestDto": {
+        "type": "object",
+        "properties": {
+          "companyName": {
+            "type": "string",
+            "description": "Company name for the subscription",
+            "example": "Acme Inc."
+          },
+          "street": {
+            "type": "string",
+            "description": "Street for the subscription",
+            "example": "123 Main St"
+          },
+          "houseNumber": {
+            "type": "string",
+            "description": "House number for the subscription",
+            "example": "123"
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "Postal code for the subscription",
+            "example": "12345"
+          },
+          "city": {
+            "type": "string",
+            "description": "City for the subscription",
+            "example": "New York"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country for the subscription",
+            "example": "United States"
+          },
+          "vatNumber": {
+            "type": "string",
+            "description": "VAT number for the subscription",
+            "example": "1234567890"
+          },
+          "type": {
+            "type": "string",
+            "description": "Subscription type. Defaults to SEAT_BASED if not specified.",
+            "enum": ["SEAT_BASED", "USAGE_BASED"],
+            "example": "SEAT_BASED",
+            "default": "SEAT_BASED"
+          },
+          "noOfSeats": {
+            "type": "number",
+            "description": "Number of seats for the subscription (seat-based only)",
+            "example": 10,
+            "minimum": 1,
+            "default": 1
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Monthly credit budget (usage-based only)",
+            "example": 1000,
+            "minimum": 1
+          },
+          "subText": {
+            "type": "string",
+            "description": "Sub text for the subscription",
+            "example": "Sub text"
+          },
+          "startsAt": {
+            "type": "string",
+            "description": "Start date for the subscription (ISO 8601). If omitted, the subscription starts immediately.",
+            "example": "2026-07-01T00:00:00.000Z"
+          },
+          "oldSubscriptionDisposition": {
+            "type": "string",
+            "description": "How to handle the current subscription. CANCEL soft-cancels it (kept in history); DELETE removes it entirely. A new subscription is created with the provided data either way.",
+            "enum": ["CANCEL", "DELETE"],
+            "example": "CANCEL"
+          }
+        },
+        "required": [
+          "companyName",
+          "street",
+          "houseNumber",
+          "postalCode",
+          "city",
+          "country",
+          "oldSubscriptionDisposition"
         ]
       },
       "UpdateBillingInfoDto": {

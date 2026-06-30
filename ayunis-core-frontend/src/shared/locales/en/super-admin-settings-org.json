@@ -76,7 +76,11 @@
         "invalid": "Start date is invalid"
       },
       "invalid": "Invalid input"
-    }
+    },
+    "changeSuccess": "Subscription changed successfully",
+    "changeErrorSubscriptionNotFound": "No active subscription to change",
+    "changeErrorTooManyUsedSeats": "Too many users are already in this organization. Choose more seats for the new subscription.",
+    "changeErrorUnexpected": "An unexpected error occurred"
   },
   "licenseSeats": {
     "title": "License Seats",
@@ -147,6 +151,18 @@
     "startsAtLabel": "Start Date",
     "startsAtPlaceholder": "Starts immediately",
     "startsAtDescription": "Leave empty for the subscription to start immediately, or pick a future date."
+  },
+  "changeSubscriptionDialog": {
+    "title": "Change Subscription",
+    "description": "Change the subscription type or its data. This ends the current subscription and creates a new one — the type cannot be changed in place.",
+    "changeButton": "Change Subscription",
+    "continue": "Continue",
+    "changing": "Changing...",
+    "warningTitle": "Change this subscription?",
+    "warningDescription": "This ends the current subscription and creates a new one with the data you entered. Choose how to handle the current subscription. This cannot be undone.",
+    "confirmCancel": "Cancel current & create new",
+    "confirmDelete": "Delete current & create new",
+    "back": "Back"
   },
   "trialDialog": {
     "title": "Create Trial",

@@ -1,6 +1,7 @@
+import type { ChangeSubscriptionRequestDtoOldSubscriptionDisposition } from '@/shared/api';
 import {
   getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey,
-  useSuperAdminSubscriptionsControllerCreateSubscription,
+  useSuperAdminSubscriptionsControllerChangeSubscription,
 } from '@/shared/api';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,13 +16,15 @@ import {
   subscriptionFormDefaultValues,
 } from './subscriptionForm';
 
-interface UseSuperAdminSubscriptionCreateProps {
+interface UseSuperAdminSubscriptionChangeProps {
   orgId: string;
+  onSuccess?: () => void;
 }
 
-export default function useSuperAdminSubscriptionCreate({
+export default function useSuperAdminSubscriptionChange({
   orgId,
-}: UseSuperAdminSubscriptionCreateProps) {
+  onSuccess,
+}: UseSuperAdminSubscriptionChangeProps) {
   const { t } = useTranslation('super-admin-settings-org');
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -30,29 +33,28 @@ export default function useSuperAdminSubscriptionCreate({
     defaultValues: subscriptionFormDefaultValues,
   });
 
-  const { mutate: createSubscription } =
-    useSuperAdminSubscriptionsControllerCreateSubscription({
+  const { mutate: changeSubscription, isPending } =
+    useSuperAdminSubscriptionsControllerChangeSubscription({
       mutation: {
         onSuccess: () => {
-          form.reset();
-          showSuccess(t('subscription.createSuccess'));
+          showSuccess(t('subscription.changeSuccess'));
+          onSuccess?.();
         },
         onError: (error) => {
           try {
             const { code } = extractErrorData(error);
             switch (code) {
-              case 'SUBSCRIPTION_ALREADY_EXISTS':
-                showError(t('subscription.createErrorAlreadyExists'));
+              case 'SUBSCRIPTION_NOT_FOUND':
+                showError(t('subscription.changeErrorSubscriptionNotFound'));
                 break;
               case 'TOO_MANY_USED_SEATS':
-                showError(t('subscription.createErrorTooManyUsedSeats'));
+                showError(t('subscription.changeErrorTooManyUsedSeats'));
                 break;
               default:
-                showError(t('subscription.createErrorUnexpected'));
+                showError(t('subscription.changeErrorUnexpected'));
             }
           } catch {
-            // Non-AxiosError (network failure, request cancellation, etc.)
-            showError(t('subscription.createErrorUnexpected'));
+            showError(t('subscription.changeErrorUnexpected'));
           }
         },
         onSettled: () => {
@@ -67,8 +69,11 @@ export default function useSuperAdminSubscriptionCreate({
       },
     });
 
-  const handleSubmit = form.handleSubmit((data) => {
-    createSubscription({
+  const confirmChange = (
+    disposition: ChangeSubscriptionRequestDtoOldSubscriptionDisposition,
+  ) => {
+    const data = form.getValues();
+    changeSubscription({
       orgId,
       data: {
         companyName: data.companyName,
@@ -84,9 +89,10 @@ export default function useSuperAdminSubscriptionCreate({
         monthlyCredits:
           data.type === 'USAGE_BASED' ? data.monthlyCredits : undefined,
         startsAt: data.startsAt,
+        oldSubscriptionDisposition: disposition,
       },
     });
-  });
+  };
 
-  return { form, handleSubmit };
+  return { form, confirmChange, isPending };
 }

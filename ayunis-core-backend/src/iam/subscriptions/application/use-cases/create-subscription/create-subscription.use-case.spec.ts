@@ -10,6 +10,7 @@ import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/ge
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContextService } from 'src/common/context/services/context.service';
+import { SubscriptionFactory } from '../../services/subscription-factory.service';
 import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
@@ -49,6 +50,7 @@ describe('CreateSubscriptionUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateSubscriptionUseCase,
+        SubscriptionFactory,
         {
           provide: SubscriptionRepository,
           useValue: {

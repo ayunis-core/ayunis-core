@@ -8,6 +8,7 @@ import type {
 } from '@/shared/api';
 import { SubscriptionResponseDtoType } from '@/shared/api';
 import { Badge } from '@/shared/ui/shadcn/badge';
+import { Button } from '@/shared/ui/shadcn/button';
 import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
 import { ClockIcon } from 'lucide-react';
 import UsersTable from './UsersTable';
@@ -16,6 +17,7 @@ import LicenseSeatsSection from './LicenseSeatsSection';
 import CreditBudgetSection from './CreditBudgetSection';
 import BillingInfoSection from './BillingInfoSection';
 import SubscriptionCancellationSection from './SubscriptionCancellationSection';
+import ChangeSubscriptionDialog from './ChangeSubscriptionDialog';
 import NoSubscriptionSection from './NoSubscriptionSection';
 import ModelsSection from './ModelsSection';
 import CrawlDomainsSection from './CrawlDomainsSection';
@@ -130,6 +132,16 @@ export default function SuperAdminSettingsOrgPage({
         <TabsContent value="subscriptions" className="mt-4">
           {subscription ? (
             <div className="space-y-4">
+              <div className="flex justify-end">
+                <ChangeSubscriptionDialog
+                  orgId={org.id}
+                  trigger={
+                    <Button variant="outline">
+                      {t('changeSubscriptionDialog.changeButton')}
+                    </Button>
+                  }
+                />
+              </div>
               {new Date(subscription.startsAt) > new Date() && (
                 <Alert>
                   <ClockIcon className="h-4 w-4" />
