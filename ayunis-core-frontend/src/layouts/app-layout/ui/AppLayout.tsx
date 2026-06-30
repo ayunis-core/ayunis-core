@@ -19,7 +19,7 @@ export default function AppLayout({
     <SidebarProvider pathname={location.pathname}>
       {sidebar ?? <AppSidebar />}
       <SidebarInset className="md:peer-data-[variant=inset]:[box-shadow:var(--shadow-sidebar-inset)]">
-        <div className="flex h-screen flex-col">
+        <div className="flex flex-1 flex-col min-h-0">
           <AppAlertBanner />
           <div className="flex flex-1 flex-col min-h-0 p-4 pt-0 relative md:rounded-xl md:overflow-hidden">
             {children}
