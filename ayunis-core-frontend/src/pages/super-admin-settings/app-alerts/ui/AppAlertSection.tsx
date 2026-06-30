@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,14 +34,12 @@ export default function AppAlertSection() {
   const form = useForm<AppAlertFormFields>({
     resolver: zodResolver(createAppAlertSchema(t)),
     defaultValues: { enabled: false, message: '' },
+    values: appAlert
+      ? { enabled: appAlert.enabled, message: appAlert.message }
+      : undefined,
+    resetOptions: { keepDirtyValues: true },
   });
   const { setAppAlert, isPending } = useSetAppAlert(form);
-
-  useEffect(() => {
-    if (appAlert) {
-      form.reset({ enabled: appAlert.enabled, message: appAlert.message });
-    }
-  }, [appAlert, form]);
 
   return (
     <Card>
@@ -62,7 +59,7 @@ export default function AppAlertSection() {
             <Loader2 className="h-4 w-4 animate-spin" />
           </div>
         )}
-        {!isLoading && !isError && (
+        {appAlert && !isError && (
           <Form {...form}>
             <form
               onSubmit={(e) => void form.handleSubmit(setAppAlert)(e)}
