@@ -85,9 +85,14 @@ export default function useSuperAdminSubscriptionChange({
         country: data.country,
         vatNumber: data.vatNumber,
         type: data.type,
-        noOfSeats: data.type === 'SEAT_BASED' ? data.noOfSeats : undefined,
+        // form.getValues() returns raw RHF state; the number inputs hold
+        // strings, so coerce them (the create flow gets these already coerced
+        // from handleSubmit's zod-resolved data, but the change flow reads raw
+        // values because the disposition is picked in a second dialog).
+        noOfSeats:
+          data.type === 'SEAT_BASED' ? Number(data.noOfSeats) : undefined,
         monthlyCredits:
-          data.type === 'USAGE_BASED' ? data.monthlyCredits : undefined,
+          data.type === 'USAGE_BASED' ? Number(data.monthlyCredits) : undefined,
         startsAt: data.startsAt,
         oldSubscriptionDisposition: disposition,
       },
