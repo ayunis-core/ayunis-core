@@ -7611,6 +7611,66 @@
         "tags": ["Super Admin Platform Config"]
       }
     },
+    "/super-admin/platform-config/app-alert": {
+      "put": {
+        "description": "Enable or disable the persistent alert banner shown to all users and set its message. When enabling, a non-empty message is required. Super admin only.",
+        "operationId": "SuperAdminPlatformConfigController_setAppAlert",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetAppAlertRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated the app alert banner"
+          },
+          "400": {
+            "description": "Invalid value provided (message required when enabled, or message too long)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Set the app-wide alert banner",
+        "tags": ["Super Admin Platform Config"]
+      }
+    },
+    "/app-alert": {
+      "get": {
+        "description": "Retrieve the persistent alert banner configuration shown to all users. Returns `enabled: false` with an empty message when no banner has been configured.",
+        "operationId": "AppAlertController_getAppAlert",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the app alert configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppAlertResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get the current app-wide alert banner",
+        "tags": ["App Alert"]
+      }
+    },
     "/runs/send-message": {
       "post": {
         "description": "Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.",
@@ -14608,6 +14668,39 @@
           }
         },
         "required": ["limit", "windowMs"]
+      },
+      "SetAppAlertRequestDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether to show the app-wide alert banner",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "description": "The alert banner text. Required (non-empty) when enabled is true.",
+            "example": "The system is currently experiencing degraded performance.",
+            "maxLength": 1000
+          }
+        },
+        "required": ["enabled", "message"]
+      },
+      "AppAlertResponseDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the app-wide alert banner is currently shown",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "description": "The alert banner text shown to all users",
+            "example": "The system is currently experiencing degraded performance."
+          }
+        },
+        "required": ["enabled", "message"]
       },
       "MessageContentResponseDto": {
         "type": "object",

@@ -2,6 +2,7 @@ import React from 'react';
 import { useRouterState } from '@tanstack/react-router';
 import { SidebarProvider, SidebarInset } from '@/shared/ui/shadcn/sidebar';
 import AppSidebar from '@/widgets/app-sidebar';
+import AppAlertBanner from '@/widgets/app-alert-banner';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -18,8 +19,11 @@ export default function AppLayout({
     <SidebarProvider pathname={location.pathname}>
       {sidebar ?? <AppSidebar />}
       <SidebarInset className="md:peer-data-[variant=inset]:[box-shadow:var(--shadow-sidebar-inset)]">
-        <div className="flex flex-1 flex-col h-screen min-h-0 p-4 pt-0 relative md:rounded-xl md:overflow-hidden">
-          {children}
+        <div className="flex h-screen flex-col">
+          <AppAlertBanner />
+          <div className="flex flex-1 flex-col min-h-0 p-4 pt-0 relative md:rounded-xl md:overflow-hidden">
+            {children}
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>

@@ -35,6 +35,7 @@ import type {
   AddonStatusResponseDto,
   AdminUpdateUserDto,
   ApiKeyResponseDto,
+  AppAlertResponseDto,
   ArtifactResponseDto,
   ArtifactVersionResponseDto,
   ArtifactsControllerExportParams,
@@ -130,6 +131,7 @@ import type {
   RevertArtifactDto,
   RunsControllerSendMessage200,
   RunsControllerSendMessageBody,
+  SetAppAlertRequestDto,
   SetCreditsPerEuroRequestDto,
   SetFairUseLimitRequestDto,
   SetImageFairUseLimitRequestDto,
@@ -15620,6 +15622,165 @@ export const useSuperAdminPlatformConfigControllerSetImageFairUseLimit = <TError
       return useMutation(mutationOptions, queryClient);
     }
     
+/**
+ * Enable or disable the persistent alert banner shown to all users and set its message. When enabling, a non-empty message is required. Super admin only.
+ * @summary Set the app-wide alert banner
+ */
+export const superAdminPlatformConfigControllerSetAppAlert = (
+    setAppAlertRequestDto: SetAppAlertRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/platform-config/app-alert`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setAppAlertRequestDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminPlatformConfigControllerSetAppAlertMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>, TError,{data: SetAppAlertRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>, TError,{data: SetAppAlertRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminPlatformConfigControllerSetAppAlert'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>, {data: SetAppAlertRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminPlatformConfigControllerSetAppAlert(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminPlatformConfigControllerSetAppAlertMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>>
+    export type SuperAdminPlatformConfigControllerSetAppAlertMutationBody = SetAppAlertRequestDto
+    export type SuperAdminPlatformConfigControllerSetAppAlertMutationError = void
+
+    /**
+ * @summary Set the app-wide alert banner
+ */
+export const useSuperAdminPlatformConfigControllerSetAppAlert = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>, TError,{data: SetAppAlertRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminPlatformConfigControllerSetAppAlert>>,
+        TError,
+        {data: SetAppAlertRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminPlatformConfigControllerSetAppAlertMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Retrieve the persistent alert banner configuration shown to all users. Returns `enabled: false` with an empty message when no banner has been configured.
+ * @summary Get the current app-wide alert banner
+ */
+export const appAlertControllerGetAppAlert = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<AppAlertResponseDto>(
+      {url: `/app-alert`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getAppAlertControllerGetAppAlertQueryKey = () => {
+    return [
+    `/app-alert`
+    ] as const;
+    }
+
+    
+export const getAppAlertControllerGetAppAlertQueryOptions = <TData = Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAppAlertControllerGetAppAlertQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>> = ({ signal }) => appAlertControllerGetAppAlert(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AppAlertControllerGetAppAlertQueryResult = NonNullable<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>>
+export type AppAlertControllerGetAppAlertQueryError = void
+
+
+export function useAppAlertControllerGetAppAlert<TData = Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>,
+          TError,
+          Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAppAlertControllerGetAppAlert<TData = Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>,
+          TError,
+          Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAppAlertControllerGetAppAlert<TData = Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the current app-wide alert banner
+ */
+
+export function useAppAlertControllerGetAppAlert<TData = Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appAlertControllerGetAppAlert>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAppAlertControllerGetAppAlertQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
 /**
  * Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.
  * @summary Send a message with optional images and receive streaming response
