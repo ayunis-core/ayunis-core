@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class CreateCreditLimitsTable1782832474705 implements MigrationInterface {
-    name = 'CreateCreditLimitsTable1782832474705'
+export class CreateCreditLimitsTable1782162085753 implements MigrationInterface {
+    name = 'CreateCreditLimitsTable1782162085753'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TYPE "public"."credit_limits_scope_enum" AS ENUM('USER', 'TEAM')`);
@@ -24,3 +24,4 @@ export class CreateCreditLimitsTable1782832474705 implements MigrationInterface 
     }
 
 }
+
