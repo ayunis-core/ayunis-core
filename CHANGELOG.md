@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.10.0](https://github.com/ayunis-core/ayunis-core/compare/v2.9.0...v2.10.0) (2026-06-30)
+
+
+### Features
+
+* **platform-config:** add persistent app-wide alert banner for super admins (AYC-342) ([d120437](https://github.com/ayunis-core/ayunis-core/commit/d1204375381b4ac55291263a1201ea124f08a88e))
+* **platform-config:** add persistent app-wide alert banner for super admins (AYC-342) ([b2923bd](https://github.com/ayunis-core/ayunis-core/commit/b2923bdce71791be3d29ba0bcc0dd2bf8fcb972f))
+* **subscriptions:** super-admin change subscription type via cancel/delete + recreate (AYC-354) ([#902](https://github.com/ayunis-core/ayunis-core/issues/902)) ([ff9e6a4](https://github.com/ayunis-core/ayunis-core/commit/ff9e6a4b0b80e5a2b485202b612a1d817a85ed19))
+* **ui:** refine chat UX with frosted header, brand accents, and layout polish (AYC-000) ([#756](https://github.com/ayunis-core/ayunis-core/issues/756)) ([cefdcb4](https://github.com/ayunis-core/ayunis-core/commit/cefdcb4045808bfd16f9c8f4eeefa1fd4ed9d44c))
+
+
+### Bug Fixes
+
+* **subscriptions:** coerce seat/credit inputs to numbers in change flow (AYC-354) ([#905](https://github.com/ayunis-core/ayunis-core/issues/905)) ([b2c9b42](https://github.com/ayunis-core/ayunis-core/commit/b2c9b42a9b598c68f49076757fdf02917122e607))
+
+
+### Miscellaneous
+
+* **deps-anonymize:** bump fastapi from 0.138.0 to 0.138.1 in /ayunis-core-anonymize ([75af656](https://github.com/ayunis-core/ayunis-core/commit/75af656652c97c5219a868f148f1c094f421801a))
+* **deps-anonymize:** bump fastapi in /ayunis-core-anonymize ([a0f9138](https://github.com/ayunis-core/ayunis-core/commit/a0f913816f8c0d4ff83b16ea199f8baf68fda9a5))
+
 ## [2.9.0](https://github.com/ayunis-core/ayunis-core/compare/v2.8.0...v2.9.0) (2026-06-26)
 
 
