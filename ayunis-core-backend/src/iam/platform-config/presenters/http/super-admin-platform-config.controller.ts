@@ -24,11 +24,14 @@ import { SetFairUseLimitUseCase } from '../../application/use-cases/set-fair-use
 import { SetFairUseLimitCommand } from '../../application/use-cases/set-fair-use-limit/set-fair-use-limit.command';
 import { SetImageFairUseLimitUseCase } from '../../application/use-cases/set-image-fair-use-limit/set-image-fair-use-limit.use-case';
 import { SetImageFairUseLimitCommand } from '../../application/use-cases/set-image-fair-use-limit/set-image-fair-use-limit.command';
+import { SetAppAlertUseCase } from '../../application/use-cases/set-app-alert/set-app-alert.use-case';
+import { SetAppAlertCommand } from '../../application/use-cases/set-app-alert/set-app-alert.command';
 import { CreditsPerEuroResponseDto } from './dto/credits-per-euro-response.dto';
 import { SetCreditsPerEuroRequestDto } from './dto/set-credits-per-euro-request.dto';
 import { FairUseLimitsResponseDto } from './dto/fair-use-limits-response.dto';
 import { SetFairUseLimitRequestDto } from './dto/set-fair-use-limit-request.dto';
 import { SetImageFairUseLimitRequestDto } from './dto/set-image-fair-use-limit-request.dto';
+import { SetAppAlertRequestDto } from './dto/set-app-alert-request.dto';
 
 @ApiTags('Super Admin Platform Config')
 @Controller('super-admin/platform-config')
@@ -42,6 +45,7 @@ export class SuperAdminPlatformConfigController {
     private readonly getFairUseLimitsUseCase: GetFairUseLimitsUseCase,
     private readonly setFairUseLimitUseCase: SetFairUseLimitUseCase,
     private readonly setImageFairUseLimitUseCase: SetImageFairUseLimitUseCase,
+    private readonly setAppAlertUseCase: SetAppAlertUseCase,
   ) {}
 
   @Get('credits-per-euro')
@@ -195,5 +199,37 @@ export class SuperAdminPlatformConfigController {
     });
     await this.setImageFairUseLimitUseCase.execute(command);
     this.logger.log('Successfully updated image fair-use limit');
+  }
+
+  @Put('app-alert')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Set the app-wide alert banner',
+    description:
+      'Enable or disable the persistent alert banner shown to all users and set its message. When enabling, a non-empty message is required. Super admin only.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Successfully updated the app alert banner',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Invalid value provided (message required when enabled, or message too long)',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User not authenticated or not authorized as super admin',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error',
+  })
+  async setAppAlert(@Body() dto: SetAppAlertRequestDto): Promise<void> {
+    this.logger.log(`Setting app alert: enabled=${dto.enabled}`);
+    const command = new SetAppAlertCommand({
+      enabled: dto.enabled,
+      message: dto.message,
+    });
+    await this.setAppAlertUseCase.execute(command);
+    this.logger.log('Successfully updated app alert banner');
   }
 }

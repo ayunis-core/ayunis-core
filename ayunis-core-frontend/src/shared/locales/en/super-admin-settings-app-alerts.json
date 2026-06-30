@@ -1,0 +1,26 @@
+{
+  "title": "App Alerts",
+  "appAlert": {
+    "title": "Alert Banner",
+    "description": "Show a persistent warning banner at the top of every page for all users.",
+    "showAlertLabel": "Show alert",
+    "showAlertDescription": "When enabled, the message below is shown to all users on every page.",
+    "messageLabel": "Alert message",
+    "messagePlaceholder": "e.g. We are currently investigating a service disruption.",
+    "save": "Save",
+    "loadError": "Failed to load the alert banner configuration."
+  },
+  "toast": {
+    "updateSuccess": "Alert banner updated.",
+    "updateError": "Failed to update the alert banner."
+  },
+  "validation": {
+    "message": {
+      "isNotEmpty": "A message is required when the alert is enabled.",
+      "required": "A message is required when the alert is enabled.",
+      "maxLength": "The message must be 1000 characters or fewer.",
+      "invalid": "Invalid message."
+    },
+    "invalid": "Invalid input."
+  }
+}

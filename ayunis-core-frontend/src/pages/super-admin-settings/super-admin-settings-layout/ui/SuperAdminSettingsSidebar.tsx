@@ -6,6 +6,7 @@ import {
   Settings2,
   GraduationCap,
   Users,
+  Megaphone,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -51,6 +52,11 @@ export function SuperAdminSettingsSidebar() {
       to: '/super-admin-settings/platform-config',
       icon: <Settings2 />,
       label: t('layout.platformConfig'),
+    },
+    {
+      to: '/super-admin-settings/app-alerts',
+      icon: <Megaphone />,
+      label: t('layout.appAlerts'),
     },
   ];
 

@@ -8,11 +8,14 @@ import { SetCreditsPerEuroUseCase } from './application/use-cases/set-credits-pe
 import { GetFairUseLimitsUseCase } from './application/use-cases/get-fair-use-limits/get-fair-use-limits.use-case';
 import { SetFairUseLimitUseCase } from './application/use-cases/set-fair-use-limit/set-fair-use-limit.use-case';
 import { SetImageFairUseLimitUseCase } from './application/use-cases/set-image-fair-use-limit/set-image-fair-use-limit.use-case';
+import { GetAppAlertUseCase } from './application/use-cases/get-app-alert/get-app-alert.use-case';
+import { SetAppAlertUseCase } from './application/use-cases/set-app-alert/set-app-alert.use-case';
 import { SuperAdminPlatformConfigController } from './presenters/http/super-admin-platform-config.controller';
+import { AppAlertController } from './presenters/http/app-alert.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PlatformConfigRecord])],
-  controllers: [SuperAdminPlatformConfigController],
+  controllers: [SuperAdminPlatformConfigController, AppAlertController],
   providers: [
     {
       provide: PlatformConfigRepositoryPort,
@@ -23,7 +26,13 @@ import { SuperAdminPlatformConfigController } from './presenters/http/super-admi
     GetFairUseLimitsUseCase,
     SetFairUseLimitUseCase,
     SetImageFairUseLimitUseCase,
+    GetAppAlertUseCase,
+    SetAppAlertUseCase,
   ],
-  exports: [GetCreditsPerEuroUseCase, GetFairUseLimitsUseCase],
+  exports: [
+    GetCreditsPerEuroUseCase,
+    GetFairUseLimitsUseCase,
+    GetAppAlertUseCase,
+  ],
 })
 export class PlatformConfigModule {}

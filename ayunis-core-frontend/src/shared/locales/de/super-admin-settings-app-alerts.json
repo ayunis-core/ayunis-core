@@ -1,0 +1,26 @@
+{
+  "title": "App-Hinweise",
+  "appAlert": {
+    "title": "Hinweisbanner",
+    "description": "Zeigt allen Benutzern ein dauerhaftes Warnbanner am oberen Rand jeder Seite an.",
+    "showAlertLabel": "Hinweis anzeigen",
+    "showAlertDescription": "Wenn aktiviert, wird die untenstehende Nachricht allen Benutzern auf jeder Seite angezeigt.",
+    "messageLabel": "Hinweistext",
+    "messagePlaceholder": "z. B. Wir untersuchen derzeit eine Störung des Dienstes.",
+    "save": "Speichern",
+    "loadError": "Die Konfiguration des Hinweisbanners konnte nicht geladen werden."
+  },
+  "toast": {
+    "updateSuccess": "Hinweisbanner aktualisiert.",
+    "updateError": "Das Hinweisbanner konnte nicht aktualisiert werden."
+  },
+  "validation": {
+    "message": {
+      "isNotEmpty": "Wenn der Hinweis aktiviert ist, muss ein Text angegeben werden.",
+      "required": "Wenn der Hinweis aktiviert ist, muss ein Text angegeben werden.",
+      "maxLength": "Der Text darf höchstens 1000 Zeichen lang sein.",
+      "invalid": "Ungültiger Text."
+    },
+    "invalid": "Ungültige Eingabe."
+  }
+}

@@ -54,6 +54,8 @@ import enArtifacts from './shared/locales/en/artifacts.json';
 import deArtifacts from './shared/locales/de/artifacts.json';
 import enSuperAdminSettingsPlatformConfig from './shared/locales/en/super-admin-settings-platform-config.json';
 import deSuperAdminSettingsPlatformConfig from './shared/locales/de/super-admin-settings-platform-config.json';
+import enSuperAdminSettingsAppAlerts from './shared/locales/en/super-admin-settings-app-alerts.json';
+import deSuperAdminSettingsAppAlerts from './shared/locales/de/super-admin-settings-app-alerts.json';
 import enAdminSettingsSecurity from './shared/locales/en/admin-settings-security.json';
 import deAdminSettingsSecurity from './shared/locales/de/admin-settings-security.json';
 import enAdminSettingsAnonymization from './shared/locales/en/admin-settings-anonymization.json';
@@ -97,6 +99,7 @@ const resources = {
     academy: enAcademy,
     artifacts: enArtifacts,
     'super-admin-settings-platform-config': enSuperAdminSettingsPlatformConfig,
+    'super-admin-settings-app-alerts': enSuperAdminSettingsAppAlerts,
     'admin-settings-security': enAdminSettingsSecurity,
     'admin-settings-anonymization': enAdminSettingsAnonymization,
     'admin-settings-retention': enAdminSettingsRetention,
@@ -132,6 +135,7 @@ const resources = {
     academy: deAcademy,
     artifacts: deArtifacts,
     'super-admin-settings-platform-config': deSuperAdminSettingsPlatformConfig,
+    'super-admin-settings-app-alerts': deSuperAdminSettingsAppAlerts,
     'admin-settings-security': deAdminSettingsSecurity,
     'admin-settings-anonymization': deAdminSettingsAnonymization,
     'admin-settings-retention': deAdminSettingsRetention,

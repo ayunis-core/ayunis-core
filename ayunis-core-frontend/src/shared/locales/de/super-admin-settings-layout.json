@@ -10,6 +10,7 @@
     "skills": "Skill-Vorlagen",
     "academy": "Academy",
     "superAdmins": "Super-Admins",
-    "platformConfig": "Plattform-Konfiguration"
+    "platformConfig": "Plattform-Konfiguration",
+    "appAlerts": "App-Hinweise"
   }
 }

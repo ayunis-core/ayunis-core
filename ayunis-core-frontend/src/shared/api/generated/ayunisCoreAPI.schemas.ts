@@ -3718,6 +3718,23 @@ export interface SetImageFairUseLimitRequestDto {
   windowMs: number;
 }
 
+export interface SetAppAlertRequestDto {
+  /** Whether to show the app-wide alert banner */
+  enabled: boolean;
+  /**
+   * The alert banner text. Required (non-empty) when enabled is true.
+   * @maxLength 1000
+   */
+  message: string;
+}
+
+export interface AppAlertResponseDto {
+  /** Whether the app-wide alert banner is currently shown */
+  enabled: boolean;
+  /** The alert banner text shown to all users */
+  message: string;
+}
+
 /**
  * Type of the message content
  */
