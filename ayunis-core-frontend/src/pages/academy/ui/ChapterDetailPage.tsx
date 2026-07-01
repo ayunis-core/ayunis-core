@@ -40,6 +40,17 @@ export default function ChapterDetailPage({
     });
   };
 
+  const finishChapter = () => {
+    if (chapter.quizEnabled) {
+      void navigate({
+        to: '/academy/$chapterId/quiz',
+        params: { chapterId: chapter.id },
+      });
+      return;
+    }
+    void navigate({ to: '/academy' });
+  };
+
   const header = (
     <ContentAreaHeader
       breadcrumbs={[
@@ -70,10 +81,19 @@ export default function ChapterDetailPage({
               </CardHeader>
               <CardContent>
                 {modules.length === 0 ? (
-                  <EmptyState
-                    title={t('detail.noModules.title')}
-                    description={t('detail.noModules.description')}
-                  />
+                  <div className="space-y-3">
+                    <EmptyState
+                      title={t('detail.noModules.title')}
+                      description={t('detail.noModules.description')}
+                    />
+                    {/* Without modules the quiz has no other entry point, and
+                        an unreachable quiz blocks whole-academy completion. */}
+                    {chapter.quizEnabled && (
+                      <Button onClick={finishChapter}>
+                        {t('detail.startQuiz')}
+                      </Button>
+                    )}
+                  </div>
                 ) : (
                   <Button onClick={() => goToModule(0)}>
                     {t('detail.letsGo')}
@@ -126,8 +146,8 @@ export default function ChapterDetailPage({
             {t('detail.previous')}
           </Button>
           {isLast ? (
-            <Button onClick={() => void navigate({ to: '/academy' })}>
-              {t('detail.finish')}
+            <Button onClick={finishChapter}>
+              {chapter.quizEnabled ? t('detail.startQuiz') : t('detail.finish')}
               <Check className="h-4 w-4" />
             </Button>
           ) : (

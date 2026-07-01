@@ -11,10 +11,48 @@
     "previous": "Previous",
     "next": "Next",
     "finish": "Finish",
+    "startQuiz": "Start quiz",
     "modulesTitle": "Modules",
     "noModules": {
       "title": "No modules yet",
       "description": "This chapter doesn't have any modules yet."
+    }
+  },
+  "quiz": {
+    "title": "Quiz",
+    "questionCounter": "Question {{current}} of {{total}}",
+    "submit": "Submit answers",
+    "answerAll": "Answer all questions to submit",
+    "retry": "Try again",
+    "backToAcademy": "Back to academy",
+    "passed": {
+      "title": "Chapter passed!"
+    },
+    "failed": {
+      "title": "Not quite yet"
+    },
+    "result": {
+      "score": "You scored {{correct}} of {{total}} ({{score}}%)",
+      "required": "You need {{required}} correct to pass."
+    },
+    "completed": {
+      "title": "Academy complete!",
+      "description": "You've passed every chapter. Congratulations!"
+    },
+    "errors": {
+      "loadFailed": "Couldn't load the quiz.",
+      "loadFailedDescription": "Please try again.",
+      "notAvailable": "This quiz isn't available.",
+      "notAvailableDescription": "This chapter has no quiz to take right now.",
+      "invalidSubmission": "Your submission was invalid. Please try again.",
+      "submitFailed": "Couldn't submit your answers. Please try again."
+    }
+  },
+  "progress": {
+    "passed": "Passed",
+    "completed": {
+      "title": "Academy complete!",
+      "description": "You've passed every chapter."
     }
   }
 }
