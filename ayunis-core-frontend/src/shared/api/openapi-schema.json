@@ -8256,7 +8256,7 @@
     },
     "/academy/chapters": {
       "get": {
-        "description": "Retrieve all chapters with nested lessons, ordered by position. Requires the academy add-on to be active for the organization.",
+        "description": "Retrieve all chapters with nested modules, ordered by position. Requires the academy add-on to be active for the organization.",
         "operationId": "AcademyChaptersController_getChapters",
         "parameters": [],
         "responses": {
@@ -8280,13 +8280,13 @@
             "description": "Internal server error"
           }
         },
-        "summary": "Get all academy chapters with their lessons",
+        "summary": "Get all academy chapters with their modules",
         "tags": ["Academy"]
       }
     },
     "/super-admin/academy/chapters": {
       "get": {
-        "description": "Retrieve all chapters with nested lessons, ordered by position. Only accessible to super admins.",
+        "description": "Retrieve all chapters with nested modules, ordered by position. Only accessible to super admins.",
         "operationId": "SuperAdminAcademyChaptersController_getChapters",
         "parameters": [],
         "responses": {
@@ -8310,7 +8310,7 @@
             "description": "Internal server error"
           }
         },
-        "summary": "Get all academy chapters with their lessons",
+        "summary": "Get all academy chapters with their modules",
         "tags": ["Super Admin Academy"]
       },
       "post": {
@@ -8433,7 +8433,7 @@
         "tags": ["Super Admin Academy"]
       },
       "delete": {
-        "description": "Delete a chapter and all of its lessons. Only accessible to super admins.",
+        "description": "Delete a chapter and all of its modules. Only accessible to super admins.",
         "operationId": "SuperAdminAcademyChaptersController_deleteChapter",
         "parameters": [
           {
@@ -8465,10 +8465,10 @@
         "tags": ["Super Admin Academy"]
       }
     },
-    "/super-admin/academy/chapters/{chapterId}/lessons": {
+    "/super-admin/academy/chapters/{chapterId}/course-modules": {
       "post": {
-        "description": "Create a lesson in a chapter, appended after the last position. Only accessible to super admins.",
-        "operationId": "SuperAdminAcademyLessonsController_createLesson",
+        "description": "Create a module in a chapter, appended after the last position. Only accessible to super admins.",
+        "operationId": "SuperAdminAcademyCourseModulesController_createCourseModule",
         "parameters": [
           {
             "name": "chapterId",
@@ -8486,18 +8486,18 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateLessonRequestDto"
+                "$ref": "#/components/schemas/CreateCourseModuleRequestDto"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Successfully created lesson",
+            "description": "Successfully created module",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AcademyLessonResponseDto"
+                  "$ref": "#/components/schemas/CourseModuleResponseDto"
                 }
               }
             }
@@ -8512,14 +8512,14 @@
             "description": "Internal server error"
           }
         },
-        "summary": "Create a new academy lesson",
+        "summary": "Create a new academy module",
         "tags": ["Super Admin Academy"]
       }
     },
-    "/super-admin/academy/chapters/{chapterId}/lessons/order": {
+    "/super-admin/academy/chapters/{chapterId}/course-modules/order": {
       "put": {
-        "description": "Persist a new lesson order within a chapter. The submitted ids must be exactly the ids of all lessons in the chapter. Only accessible to super admins.",
-        "operationId": "SuperAdminAcademyLessonsController_reorderLessons",
+        "description": "Persist a new module order within a chapter. The submitted ids must be exactly the ids of all modules in the chapter. Only accessible to super admins.",
+        "operationId": "SuperAdminAcademyCourseModulesController_reorderCourseModules",
         "parameters": [
           {
             "name": "chapterId",
@@ -8537,17 +8537,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReorderLessonsRequestDto"
+                "$ref": "#/components/schemas/ReorderCourseModulesRequestDto"
               }
             }
           }
         },
         "responses": {
           "204": {
-            "description": "Successfully reordered lessons"
+            "description": "Successfully reordered modules"
           },
           "400": {
-            "description": "Submitted ids do not match the current lessons of the chapter"
+            "description": "Submitted ids do not match the current modules of the chapter"
           },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
@@ -8559,20 +8559,20 @@
             "description": "Internal server error"
           }
         },
-        "summary": "Reorder the lessons of a chapter",
+        "summary": "Reorder the modules of a chapter",
         "tags": ["Super Admin Academy"]
       }
     },
-    "/super-admin/academy/lessons/{id}": {
+    "/super-admin/academy/course-modules/{id}": {
       "put": {
-        "description": "Replace title, description, and Loom link of a lesson. Only accessible to super admins.",
-        "operationId": "SuperAdminAcademyLessonsController_updateLesson",
+        "description": "Replace title, description, and Loom link of a module. Only accessible to super admins.",
+        "operationId": "SuperAdminAcademyCourseModulesController_updateCourseModule",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "Lesson ID",
+            "description": "Module ID",
             "schema": {
               "format": "uuid",
               "type": "string"
@@ -8584,18 +8584,18 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateLessonRequestDto"
+                "$ref": "#/components/schemas/UpdateCourseModuleRequestDto"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Successfully updated lesson",
+            "description": "Successfully updated module",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AcademyLessonResponseDto"
+                  "$ref": "#/components/schemas/CourseModuleResponseDto"
                 }
               }
             }
@@ -8604,24 +8604,24 @@
             "description": "User not authenticated or not authorized as super admin"
           },
           "404": {
-            "description": "Lesson not found"
+            "description": "Module not found"
           },
           "500": {
             "description": "Internal server error"
           }
         },
-        "summary": "Update an academy lesson",
+        "summary": "Update an academy module",
         "tags": ["Super Admin Academy"]
       },
       "delete": {
-        "description": "Delete a lesson. Only accessible to super admins.",
-        "operationId": "SuperAdminAcademyLessonsController_deleteLesson",
+        "description": "Delete a module. Only accessible to super admins.",
+        "operationId": "SuperAdminAcademyCourseModulesController_deleteCourseModule",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "Lesson ID",
+            "description": "Module ID",
             "schema": {
               "format": "uuid",
               "type": "string"
@@ -8630,19 +8630,19 @@
         ],
         "responses": {
           "204": {
-            "description": "Successfully deleted lesson"
+            "description": "Successfully deleted module"
           },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
           },
           "404": {
-            "description": "Lesson not found"
+            "description": "Module not found"
           },
           "500": {
             "description": "Internal server error"
           }
         },
-        "summary": "Delete an academy lesson",
+        "summary": "Delete an academy module",
         "tags": ["Super Admin Academy"]
       }
     },
@@ -15355,49 +15355,49 @@
         },
         "required": ["retentionDays"]
       },
-      "AcademyLessonResponseDto": {
+      "CourseModuleResponseDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid",
-            "description": "The unique identifier of the lesson"
+            "description": "The unique identifier of the module"
           },
           "chapterId": {
             "type": "string",
             "format": "uuid",
-            "description": "The id of the chapter the lesson belongs to"
+            "description": "The id of the chapter the module belongs to"
           },
           "title": {
             "type": "string",
-            "description": "The title of the lesson",
+            "description": "The title of the module",
             "example": "Creating your first chat"
           },
           "description": {
             "type": "string",
             "nullable": true,
-            "description": "An optional description of the lesson",
+            "description": "An optional description of the module",
             "example": "A short walkthrough of the chat interface."
           },
           "loomUrl": {
             "type": "string",
-            "description": "The Loom share or embed link of the lesson video",
+            "description": "The Loom share or embed link of the module video",
             "example": "https://www.loom.com/share/abc123def456"
           },
           "position": {
             "type": "integer",
-            "description": "The position of the lesson within its chapter (0-based)",
+            "description": "The position of the module within its chapter (0-based)",
             "example": 0
           },
           "createdAt": {
             "type": "string",
             "format": "date-time",
-            "description": "The date the lesson was created"
+            "description": "The date the module was created"
           },
           "updatedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "The date the lesson was last updated"
+            "description": "The date the module was last updated"
           }
         },
         "required": [
@@ -15434,11 +15434,11 @@
             "description": "The position of the chapter (0-based)",
             "example": 0
           },
-          "lessons": {
-            "description": "The lessons of the chapter, ordered by position",
+          "courseModules": {
+            "description": "The modules of the chapter, ordered by position",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/AcademyLessonResponseDto"
+              "$ref": "#/components/schemas/CourseModuleResponseDto"
             }
           },
           "createdAt": {
@@ -15457,7 +15457,7 @@
           "title",
           "description",
           "position",
-          "lessons",
+          "courseModules",
           "createdAt",
           "updatedAt"
         ]
@@ -15512,62 +15512,62 @@
         },
         "required": ["title", "description"]
       },
-      "CreateLessonRequestDto": {
+      "CreateCourseModuleRequestDto": {
         "type": "object",
         "properties": {
           "title": {
             "type": "string",
-            "description": "The title of the lesson",
+            "description": "The title of the module",
             "example": "Creating your first chat",
             "maxLength": 255
           },
           "description": {
             "type": "string",
-            "description": "An optional description of the lesson",
+            "description": "An optional description of the module",
             "example": "A short walkthrough of the chat interface.",
             "maxLength": 2000
           },
           "loomUrl": {
             "type": "string",
-            "description": "The Loom share or embed link of the lesson video",
+            "description": "The Loom share or embed link of the module video",
             "example": "https://www.loom.com/share/abc123def456",
             "maxLength": 500
           }
         },
         "required": ["title", "loomUrl"]
       },
-      "ReorderLessonsRequestDto": {
+      "ReorderCourseModulesRequestDto": {
         "type": "object",
         "properties": {
-          "lessonIds": {
+          "courseModuleIds": {
             "type": "array",
-            "description": "All lesson ids of the chapter in their new order. Must contain exactly the ids of all lessons in the chapter.",
+            "description": "All module ids of the chapter in their new order. Must contain exactly the ids of all modules in the chapter.",
             "items": {
               "type": "string",
               "format": "uuid"
             }
           }
         },
-        "required": ["lessonIds"]
+        "required": ["courseModuleIds"]
       },
-      "UpdateLessonRequestDto": {
+      "UpdateCourseModuleRequestDto": {
         "type": "object",
         "properties": {
           "title": {
             "type": "string",
-            "description": "The title of the lesson",
+            "description": "The title of the module",
             "example": "Creating your first chat",
             "maxLength": 255
           },
           "description": {
             "type": "string",
-            "description": "An optional description of the lesson",
+            "description": "An optional description of the module",
             "example": "A short walkthrough of the chat interface.",
             "maxLength": 2000
           },
           "loomUrl": {
             "type": "string",
-            "description": "The Loom share or embed link of the lesson video",
+            "description": "The Loom share or embed link of the module video",
             "example": "https://www.loom.com/share/abc123def456",
             "maxLength": 500
           }

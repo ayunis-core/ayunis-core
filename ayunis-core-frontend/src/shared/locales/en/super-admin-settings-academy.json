@@ -4,10 +4,10 @@
     "empty": "No chapters yet",
     "emptyDescription": "Create your first chapter to start building the academy.",
     "addChapter": "Add Chapter",
-    "addLesson": "Add Lesson",
-    "noLessons": "No lessons in this chapter yet.",
+    "addModule": "Add Module",
+    "noModules": "No modules in this chapter yet.",
     "dragChapter": "Drag to reorder chapter",
-    "dragLesson": "Drag to reorder lesson"
+    "dragModule": "Drag to reorder module"
   },
   "chapterForm": {
     "createTitle": "Create Chapter",
@@ -24,15 +24,15 @@
     "saving": "Saving...",
     "cancel": "Cancel"
   },
-  "lessonForm": {
-    "createTitle": "Create Lesson",
-    "editTitle": "Edit Lesson",
+  "moduleForm": {
+    "createTitle": "Create Module",
+    "editTitle": "Edit Module",
     "title": "Title",
     "titlePlaceholder": "e.g., Creating your first chat",
     "titleRequired": "Title is required",
     "titleTooLong": "Title must be 255 characters or fewer",
     "description": "Description (optional)",
-    "descriptionPlaceholder": "What does this lesson cover?",
+    "descriptionPlaceholder": "What does this module cover?",
     "descriptionTooLong": "Description must be 2,000 characters or fewer",
     "loomUrl": "Loom link",
     "loomUrlPlaceholder": "https://www.loom.com/share/...",
@@ -45,12 +45,12 @@
   },
   "deleteChapter": {
     "title": "Delete Chapter",
-    "description": "Are you sure you want to delete \"{{title}}\" and all of its lessons? This action cannot be undone.",
+    "description": "Are you sure you want to delete \"{{title}}\" and all of its modules? This action cannot be undone.",
     "confirm": "Delete",
     "cancel": "Cancel"
   },
-  "deleteLesson": {
-    "title": "Delete Lesson",
+  "deleteModule": {
+    "title": "Delete Module",
     "description": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
     "confirm": "Delete",
     "cancel": "Cancel"
@@ -63,13 +63,13 @@
     "chapterDeleteSuccess": "Chapter deleted successfully",
     "chapterDeleteError": "Failed to delete chapter",
     "chapterNotFound": "Chapter not found",
-    "lessonCreateSuccess": "Lesson created successfully",
-    "lessonCreateError": "Failed to create lesson",
-    "lessonUpdateSuccess": "Lesson updated successfully",
-    "lessonUpdateError": "Failed to update lesson",
-    "lessonDeleteSuccess": "Lesson deleted successfully",
-    "lessonDeleteError": "Failed to delete lesson",
-    "lessonNotFound": "Lesson not found",
+    "moduleCreateSuccess": "Module created successfully",
+    "moduleCreateError": "Failed to create module",
+    "moduleUpdateSuccess": "Module updated successfully",
+    "moduleUpdateError": "Failed to update module",
+    "moduleDeleteSuccess": "Module deleted successfully",
+    "moduleDeleteError": "Failed to delete module",
+    "moduleNotFound": "Module not found",
     "reorderError": "Failed to save the new order"
   },
   "validation": {
