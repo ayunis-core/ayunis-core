@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { ApiKeysRepository } from '../../../application/ports/api-keys.repository';
 import { ApiKey } from '../../../domain/api-key.entity';
@@ -63,5 +63,30 @@ export class LocalApiKeysRepository extends ApiKeysRepository {
       .set({ revokedAt: () => 'NOW()' })
       .where('id = :id AND revoked_at IS NULL', { id })
       .execute();
+  }
+
+  // A NULL expires_at never satisfies `expires_at < cutoff`, so keys without an
+  // expiry (and revoked-but-not-expired keys) are left untouched by design.
+  async countExpiredBefore(cutoff: Date): Promise<number> {
+    this.logger.log('countExpiredBefore', { cutoff });
+
+    return this.apiKeyRepository.count({
+      where: { expiresAt: LessThan(cutoff) },
+    });
+  }
+
+  async deleteExpiredBefore(cutoff: Date): Promise<number> {
+    this.logger.log('deleteExpiredBefore', { cutoff });
+
+    const result = await this.apiKeyRepository.delete({
+      expiresAt: LessThan(cutoff),
+    });
+
+    const deletedCount = result.affected ?? 0;
+    this.logger.debug('Expired API keys purged', {
+      cutoff,
+      count: deletedCount,
+    });
+    return deletedCount;
   }
 }

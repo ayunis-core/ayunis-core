@@ -35,4 +35,17 @@ export abstract class InvitesRepository {
   abstract accept(id: UUID): Promise<void>;
   abstract delete(id: UUID): Promise<void>;
   abstract deleteAllPendingByOrg(orgId: UUID): Promise<number>;
+  /**
+   * Counts pending (unaccepted) invites whose `expiresAt` is strictly before
+   * `cutoff`. Used by the TTL purge dry-run to report the impact without
+   * deleting anything.
+   */
+  abstract countExpiredBefore(cutoff: Date): Promise<number>;
+  /**
+   * Hard-deletes pending (unaccepted) invites whose `expiresAt` is strictly
+   * before `cutoff`. Accepted invites are never touched — they are retained
+   * for referential integrity (see AYC-299). Returns the number of rows
+   * removed.
+   */
+  abstract deleteExpiredBefore(cutoff: Date): Promise<number>;
 }
