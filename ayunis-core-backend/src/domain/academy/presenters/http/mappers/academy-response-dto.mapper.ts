@@ -48,6 +48,7 @@ export class AcademyResponseDtoMapper {
     dto.description = entity.description;
     dto.position = entity.position;
     dto.quizEnabled = entity.quizEnabled;
+    dto.passThreshold = entity.passThreshold;
     dto.courseModules = entity.courseModules.map((courseModule) =>
       this.courseModuleToDto(courseModule),
     );

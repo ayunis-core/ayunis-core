@@ -15,6 +15,7 @@ export class AcademyMapper {
       description: record.description,
       position: record.position,
       quizEnabled: record.quizEnabled,
+      passThreshold: record.passThreshold,
       courseModules: record.courseModules?.map((courseModule) =>
         this.courseModuleToDomain(courseModule),
       ),
@@ -33,6 +34,7 @@ export class AcademyMapper {
     record.description = domain.description;
     record.position = domain.position;
     record.quizEnabled = domain.quizEnabled;
+    record.passThreshold = domain.passThreshold;
     return record;
   }
 
