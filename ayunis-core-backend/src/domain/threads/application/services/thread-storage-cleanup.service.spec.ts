@@ -57,7 +57,7 @@ describe('ThreadStorageCleanupService', () => {
   const buildImage = (id: UUID, storageKey: string) =>
     new GeneratedImage(
       id,
-      orgId as UUID,
+      orgId,
       userId,
       threadId,
       'image/png',
