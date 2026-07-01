@@ -40,6 +40,17 @@ export default function ChapterDetailPage({
     });
   };
 
+  const finishChapter = () => {
+    if (chapter.quizEnabled) {
+      void navigate({
+        to: '/academy/$chapterId/quiz',
+        params: { chapterId: chapter.id },
+      });
+      return;
+    }
+    void navigate({ to: '/academy' });
+  };
+
   const header = (
     <ContentAreaHeader
       breadcrumbs={[
@@ -126,8 +137,8 @@ export default function ChapterDetailPage({
             {t('detail.previous')}
           </Button>
           {isLast ? (
-            <Button onClick={() => void navigate({ to: '/academy' })}>
-              {t('detail.finish')}
+            <Button onClick={finishChapter}>
+              {chapter.quizEnabled ? t('detail.startQuiz') : t('detail.finish')}
               <Check className="h-4 w-4" />
             </Button>
           ) : (

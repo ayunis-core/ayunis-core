@@ -11,10 +11,48 @@
     "previous": "Zurück",
     "next": "Weiter",
     "finish": "Abschließen",
+    "startQuiz": "Quiz starten",
     "modulesTitle": "Module",
     "noModules": {
       "title": "Noch keine Module",
       "description": "Dieses Kapitel enthält noch keine Module."
+    }
+  },
+  "quiz": {
+    "title": "Quiz",
+    "questionCounter": "Frage {{current}} von {{total}}",
+    "submit": "Antworten absenden",
+    "answerAll": "Beantworte alle Fragen, um abzusenden",
+    "retry": "Erneut versuchen",
+    "backToAcademy": "Zurück zur Academy",
+    "passed": {
+      "title": "Kapitel bestanden!"
+    },
+    "failed": {
+      "title": "Noch nicht ganz"
+    },
+    "result": {
+      "score": "Du hast {{correct}} von {{total}} richtig ({{score}} %)",
+      "required": "Du brauchst {{required}} richtige Antworten zum Bestehen."
+    },
+    "completed": {
+      "title": "Academy abgeschlossen!",
+      "description": "Du hast jedes Kapitel bestanden. Glückwunsch!"
+    },
+    "errors": {
+      "loadFailed": "Das Quiz konnte nicht geladen werden.",
+      "loadFailedDescription": "Bitte versuche es erneut.",
+      "notAvailable": "Dieses Quiz ist nicht verfügbar.",
+      "notAvailableDescription": "Dieses Kapitel hat derzeit kein Quiz.",
+      "invalidSubmission": "Deine Eingabe war ungültig. Bitte versuche es erneut.",
+      "submitFailed": "Deine Antworten konnten nicht gesendet werden. Bitte versuche es erneut."
+    }
+  },
+  "progress": {
+    "passed": "Bestanden",
+    "completed": {
+      "title": "Academy abgeschlossen!",
+      "description": "Du hast jedes Kapitel bestanden."
     }
   }
 }
