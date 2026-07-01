@@ -28,7 +28,18 @@ export class LocalAcademyCompletionRepository implements AcademyCompletionReposi
   async upsert(completion: AcademyCompletion): Promise<AcademyCompletion> {
     this.logger.log('upsert', { userId: completion.userId });
     const record = this.mapper.completionToRecord(completion);
-    const saved = await this.repository.save(record);
-    return this.mapper.completionToDomain(saved);
+
+    // Use atomic upsert with conflict resolution on userId
+    await this.repository.upsert(record, {
+      conflictPaths: ['userId'],
+      skipUpdateIfNoValuesChanged: true,
+    });
+
+    // Fetch the saved record to get the actual id (may be existing or new)
+    const savedRecord = await this.repository.findOneOrFail({
+      where: { userId: completion.userId },
+    });
+
+    return this.mapper.completionToDomain(savedRecord);
   }
 }

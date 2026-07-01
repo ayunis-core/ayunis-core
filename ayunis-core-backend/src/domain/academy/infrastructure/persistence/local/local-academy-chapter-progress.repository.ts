@@ -46,7 +46,18 @@ export class LocalAcademyChapterProgressRepository implements AcademyChapterProg
       chapterId: progress.chapterId,
     });
     const record = this.mapper.chapterProgressToRecord(progress);
-    const saved = await this.repository.save(record);
-    return this.mapper.chapterProgressToDomain(saved);
+
+    // Use atomic upsert with conflict resolution on (userId, chapterId)
+    await this.repository.upsert(record, {
+      conflictPaths: ['userId', 'chapterId'],
+      skipUpdateIfNoValuesChanged: true,
+    });
+
+    // Fetch the saved record to get the actual id (may be existing or new)
+    const savedRecord = await this.repository.findOneOrFail({
+      where: { userId: progress.userId, chapterId: progress.chapterId },
+    });
+
+    return this.mapper.chapterProgressToDomain(savedRecord);
   }
 }
