@@ -9,7 +9,7 @@ import {
 } from 'src/domain/threads/application/ports/threads.repository';
 import { Logger, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { ThreadRecord } from './schema/thread.record';
 import { ThreadMapper } from './mappers/thread.mapper';
 import { UUID } from 'crypto';
@@ -107,6 +107,38 @@ export class LocalThreadsRepository extends ThreadsRepository {
       });
     }
 
+    this.applyFindAllRelations(queryBuilder, options);
+
+    queryBuilder.orderBy('thread.createdAt', 'DESC');
+
+    if (options?.withMessages) {
+      queryBuilder.addOrderBy('messages.createdAt', 'ASC');
+    }
+
+    const limit = pagination?.limit ?? ThreadsConstants.DEFAULT_LIMIT;
+    const offset = pagination?.offset ?? 0;
+
+    const [threadEntities, total] = await queryBuilder
+      .skip(offset)
+      .take(limit)
+      .getManyAndCount();
+
+    const threads = threadEntities.map((entity) =>
+      this.threadMapper.toDomain(entity),
+    );
+
+    return new Paginated<Thread>({
+      data: threads,
+      limit,
+      offset,
+      total,
+    });
+  }
+
+  private applyFindAllRelations(
+    queryBuilder: SelectQueryBuilder<ThreadRecord>,
+    options?: ThreadsFindAllOptions,
+  ): void {
     if (options?.withMessages) {
       queryBuilder.leftJoinAndSelect('thread.messages', 'messages');
     }
@@ -134,31 +166,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
     if (options?.withModel) {
       queryBuilder.leftJoinAndSelect('thread.model', 'model');
     }
-
-    queryBuilder.orderBy('thread.createdAt', 'DESC');
-
-    if (options?.withMessages) {
-      queryBuilder.addOrderBy('messages.createdAt', 'ASC');
-    }
-
-    const limit = pagination?.limit ?? ThreadsConstants.DEFAULT_LIMIT;
-    const offset = pagination?.offset ?? 0;
-
-    const [threadEntities, total] = await queryBuilder
-      .skip(offset)
-      .take(limit)
-      .getManyAndCount();
-
-    const threads = threadEntities.map((entity) =>
-      this.threadMapper.toDomain(entity),
-    );
-
-    return new Paginated<Thread>({
-      data: threads,
-      limit,
-      offset,
-      total,
-    });
   }
 
   async findAllByModel(
@@ -292,6 +299,15 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async delete(id: UUID, userId: UUID): Promise<void> {
     this.logger.log('delete', { id, userId });
     await this.threadRepository.delete({ id, userId });
+  }
+
+  async findAllIdsByUserId(userId: UUID): Promise<UUID[]> {
+    this.logger.log('findAllIdsByUserId', { userId });
+    const rows = await this.threadRepository.find({
+      where: { userId },
+      select: { id: true },
+    });
+    return rows.map((row) => row.id);
   }
 
   async removeSourceAssignmentsByOriginSkill(params: {

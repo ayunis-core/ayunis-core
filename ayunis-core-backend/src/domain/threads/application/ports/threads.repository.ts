@@ -89,6 +89,12 @@ export abstract class ThreadsRepository {
     originSkillId?: UUID;
   }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
+  /**
+   * Returns the ids of every thread owned by a user. Used by user-deletion
+   * cleanup to purge per-thread object-storage assets before the thread rows
+   * are removed by the users FK cascade.
+   */
+  abstract findAllIdsByUserId(userId: UUID): Promise<UUID[]>;
   abstract findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]>;
   /**
    * Returns a page of expired thread references (id + owner) for an org,
