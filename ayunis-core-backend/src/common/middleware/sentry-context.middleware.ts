@@ -2,7 +2,16 @@ import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import * as Sentry from '@sentry/nestjs';
 
-const SENSITIVE_KEYS = ['password', 'token', 'secret', 'apikey', 'api_key'];
+const SENSITIVE_KEYS = [
+  'password',
+  'token',
+  'secret',
+  'apikey',
+  'api_key',
+  'jwt',
+  'authorization',
+  'cookie',
+];
 
 /**
  * Enriches the current Sentry scope with request context so that any
@@ -18,18 +27,18 @@ export class SentryContextMiddleware implements NestMiddleware {
     Sentry.getCurrentScope().setTag('path', req.path);
     Sentry.getCurrentScope().setTag('method', req.method);
 
-    Sentry.getCurrentScope().setExtra('requestBody', sanitizeBody(req.body));
-    Sentry.getCurrentScope().setExtra('requestParams', req.params);
-    Sentry.getCurrentScope().setExtra('requestQuery', req.query);
+    Sentry.getCurrentScope().setExtra('requestBody', sanitize(req.body));
+    Sentry.getCurrentScope().setExtra('requestParams', sanitize(req.params));
+    Sentry.getCurrentScope().setExtra('requestQuery', sanitize(req.query));
 
     next();
   }
 }
 
-function sanitizeBody(body: unknown): unknown {
-  if (!body || typeof body !== 'object') return body;
+function sanitize(value: unknown): unknown {
+  if (!value || typeof value !== 'object') return value;
 
-  const sanitized = { ...body } as Record<string, unknown>;
+  const sanitized = { ...value } as Record<string, unknown>;
 
   for (const key of Object.keys(sanitized)) {
     if (SENSITIVE_KEYS.some((sk) => key.toLowerCase().includes(sk))) {

@@ -37,7 +37,7 @@ export class GetInviteByTokenUseCase {
   ) {}
 
   async execute(query: GetInviteByTokenQuery): Promise<InviteWithOrgDetails> {
-    this.logger.log('execute', { token: query.token });
+    this.logger.log('execute', { hasToken: !!query.token });
 
     // Verify and decode the JWT token
     let payload: InviteJwtPayload;
