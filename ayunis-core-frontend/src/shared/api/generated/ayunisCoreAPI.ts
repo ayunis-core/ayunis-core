@@ -26,6 +26,7 @@ import type {
 
 import type {
   AcademyChapterResponseDto,
+  AcademyProgressResponseDto,
   AcceptInviteDto,
   AcceptInviteResponseDto,
   ActiveSubscriptionResponseDto,
@@ -125,7 +126,9 @@ import type {
   PromoteToSuperAdminDto,
   ProviderUsageChartResponseDto,
   ProviderUsageResponseDto,
+  QuizQuestionForTakingResponseDto,
   QuizQuestionResponseDto,
+  QuizResultResponseDto,
   RegisterDto,
   ReorderChaptersRequestDto,
   ReorderCourseModulesRequestDto,
@@ -151,6 +154,7 @@ import type {
   SkillSourcesControllerAddFileSourceBody,
   SkillTemplateResponseDto,
   StorageControllerUploadFileBody,
+  SubmitQuizRequestDto,
   SubscriptionResponseDto,
   SubscriptionResponseDtoNullable,
   SuccessResponseDto,
@@ -17587,6 +17591,261 @@ export function useAcademyChaptersControllerGetChapters<TData = Awaited<ReturnTy
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAcademyChaptersControllerGetChaptersQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Draw up to 10 random questions from the chapter pool (the whole pool if smaller). Correct answers are never included.
+ * @summary Get a chapter quiz
+ */
+export const academyQuizControllerGetChapterQuiz = (
+    chapterId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<QuizQuestionForTakingResponseDto[]>(
+      {url: `/academy/chapters/${chapterId}/quiz`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getAcademyQuizControllerGetChapterQuizQueryKey = (chapterId?: string,) => {
+    return [
+    `/academy/chapters/${chapterId}/quiz`
+    ] as const;
+    }
+
+    
+export const getAcademyQuizControllerGetChapterQuizQueryOptions = <TData = Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError = void>(chapterId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAcademyQuizControllerGetChapterQuizQueryKey(chapterId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>> = ({ signal }) => academyQuizControllerGetChapterQuiz(chapterId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(chapterId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AcademyQuizControllerGetChapterQuizQueryResult = NonNullable<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>>
+export type AcademyQuizControllerGetChapterQuizQueryError = void
+
+
+export function useAcademyQuizControllerGetChapterQuiz<TData = Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError = void>(
+ chapterId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>,
+          TError,
+          Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyQuizControllerGetChapterQuiz<TData = Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError = void>(
+ chapterId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>,
+          TError,
+          Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyQuizControllerGetChapterQuiz<TData = Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError = void>(
+ chapterId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a chapter quiz
+ */
+
+export function useAcademyQuizControllerGetChapterQuiz<TData = Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError = void>(
+ chapterId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAcademyQuizControllerGetChapterQuizQueryOptions(chapterId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Grade a quiz submission against the chapter pass threshold, record progress and, when the whole academy is passed, stamp completion. Unlimited retries.
+ * @summary Submit a chapter quiz
+ */
+export const academyQuizControllerSubmitChapterQuiz = (
+    chapterId: string,
+    submitQuizRequestDto: SubmitQuizRequestDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<QuizResultResponseDto>(
+      {url: `/academy/chapters/${chapterId}/quiz/submit`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: submitQuizRequestDto, signal
+    },
+      );
+    }
+  
+
+
+export const getAcademyQuizControllerSubmitChapterQuizMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>, TError,{chapterId: string;data: SubmitQuizRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>, TError,{chapterId: string;data: SubmitQuizRequestDto}, TContext> => {
+
+const mutationKey = ['academyQuizControllerSubmitChapterQuiz'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>, {chapterId: string;data: SubmitQuizRequestDto}> = (props) => {
+          const {chapterId,data} = props ?? {};
+
+          return  academyQuizControllerSubmitChapterQuiz(chapterId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcademyQuizControllerSubmitChapterQuizMutationResult = NonNullable<Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>>
+    export type AcademyQuizControllerSubmitChapterQuizMutationBody = SubmitQuizRequestDto
+    export type AcademyQuizControllerSubmitChapterQuizMutationError = void
+
+    /**
+ * @summary Submit a chapter quiz
+ */
+export const useAcademyQuizControllerSubmitChapterQuiz = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>, TError,{chapterId: string;data: SubmitQuizRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>,
+        TError,
+        {chapterId: string;data: SubmitQuizRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAcademyQuizControllerSubmitChapterQuizMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Get the current user per-chapter pass state and the whole-academy completion date.
+ * @summary Get academy progress
+ */
+export const academyQuizControllerGetProgress = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<AcademyProgressResponseDto>(
+      {url: `/academy/progress`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getAcademyQuizControllerGetProgressQueryKey = () => {
+    return [
+    `/academy/progress`
+    ] as const;
+    }
+
+    
+export const getAcademyQuizControllerGetProgressQueryOptions = <TData = Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAcademyQuizControllerGetProgressQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>> = ({ signal }) => academyQuizControllerGetProgress(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AcademyQuizControllerGetProgressQueryResult = NonNullable<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>>
+export type AcademyQuizControllerGetProgressQueryError = void
+
+
+export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyQuizControllerGetProgress>>,
+          TError,
+          Awaited<ReturnType<typeof academyQuizControllerGetProgress>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyQuizControllerGetProgress>>,
+          TError,
+          Awaited<ReturnType<typeof academyQuizControllerGetProgress>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get academy progress
+ */
+
+export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAcademyQuizControllerGetProgressQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
