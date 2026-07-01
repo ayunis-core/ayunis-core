@@ -9,6 +9,15 @@
     --content-scroll-header-gap: 1rem;
   }
 
+  /*
+   * Reserve scrollbar space on both sides so content stays horizontally
+   * symmetric whether or not a scrollbar is present. Without this, the
+   * scrollbar only eats space on the right, shifting full-width content left.
+   */
+  .content-scroll-viewport {
+    scrollbar-gutter: stable both-edges;
+  }
+
   .content-scroll-header {
     @apply absolute inset-x-0 top-0 z-10 overflow-hidden rounded-t-xl border-b border-transparent px-3 py-2;
     @apply bg-background/80 backdrop-blur-md transition-[border-color] duration-200 ease-out;
