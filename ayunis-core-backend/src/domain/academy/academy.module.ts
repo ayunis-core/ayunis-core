@@ -36,6 +36,7 @@ import { SuperAdminAcademyChaptersController } from './presenters/http/super-adm
 import { SuperAdminAcademyCourseModulesController } from './presenters/http/super-admin-academy-course-modules.controller';
 import { SuperAdminAcademyQuizQuestionsController } from './presenters/http/super-admin-academy-quiz-questions.controller';
 import { AcademyChaptersController } from './presenters/http/academy-chapters.controller';
+import { AcademyQuizController } from './presenters/http/academy-quiz.controller';
 import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-response-dto.mapper';
 
 @Module({
@@ -50,6 +51,7 @@ import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-resp
   ],
   controllers: [
     AcademyChaptersController,
+    AcademyQuizController,
     SuperAdminAcademyChaptersController,
     SuperAdminAcademyCourseModulesController,
     SuperAdminAcademyQuizQuestionsController,
