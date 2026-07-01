@@ -76,7 +76,7 @@ export class UsageSeeder extends OrgSeeder {
     const monthStart = getEffectiveMonthStart();
 
     const existing = await repo.count({
-      where: { organizationId: orgId, createdAt: MoreThanOrEqual(monthStart) },
+      where: { userId, createdAt: MoreThanOrEqual(monthStart) },
     });
     if (existing > 0) {
       log('Usage records', `org=${orgId}`, false);
