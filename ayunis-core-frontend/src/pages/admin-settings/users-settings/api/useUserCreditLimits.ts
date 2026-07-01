@@ -16,11 +16,16 @@ export interface CreditLimitInfo {
   creditsUsed: number;
 }
 
-export function useUserCreditLimits(onSetSuccess?: () => void) {
+export function useUserCreditLimits(
+  onSetSuccess?: () => void,
+  enabled: boolean = true,
+) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { t } = useTranslation('admin-settings-credit-limits');
-  const { data, isLoading } = useCreditLimitsControllerGetUserLimits();
+  const { data, isLoading } = useCreditLimitsControllerGetUserLimits({
+    query: { enabled },
+  });
 
   const userLimits = useMemo(
     () =>

@@ -64,7 +64,7 @@ export default function UsersSection({
   const [creditLimitUser, setCreditLimitUser] = useState<User | null>(null);
   const hasCreditBudget = useHasCreditBudget();
   const { userLimits, setUserLimit, removeUserLimit, isSaving } =
-    useUserCreditLimits(() => setCreditLimitUser(null));
+    useUserCreditLimits(() => setCreditLimitUser(null), hasCreditBudget);
 
   const renderCreditLimit = (limit: CreditLimitInfo | undefined) =>
     limit ? (
