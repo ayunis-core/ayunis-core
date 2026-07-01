@@ -10,6 +10,7 @@ import { SharedEntityType } from '../shares/domain/value-objects/shared-entity-t
 import { KnowledgeBaseShareAuthorizationStrategy } from './application/strategies/knowledge-base-share-authorization.strategy';
 import { KnowledgeBaseAccessService } from './application/services/knowledge-base-access.service';
 import { KnowledgeBaseShareDeletedListener } from './application/listeners/share-deleted.listener';
+import { KnowledgeBasesUserDeletionRequestedListener } from './application/listeners/user-deletion-requested.listener';
 import { SkillsModule } from '../skills/skills.module';
 import { ThreadsModule } from '../threads/threads.module';
 
@@ -62,6 +63,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     KnowledgeBaseAccessService,
     // Listeners
     KnowledgeBaseShareDeletedListener,
+    KnowledgeBasesUserDeletionRequestedListener,
     // Strategies
     KnowledgeBaseShareAuthorizationStrategy,
     {

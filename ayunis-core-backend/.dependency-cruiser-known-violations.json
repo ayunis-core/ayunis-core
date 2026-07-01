@@ -118,7 +118,7 @@
   },
   {
     "type": "dependency",
-    "from": "src/domain/threads/application/use-cases/delete-thread/delete-thread.use-case.ts",
+    "from": "src/domain/threads/application/services/thread-storage-cleanup.service.ts",
     "to": "src/domain/messages/application/ports/messages.repository.ts",
     "rule": {
       "severity": "error",

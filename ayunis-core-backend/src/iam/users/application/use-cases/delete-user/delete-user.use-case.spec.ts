@@ -12,6 +12,7 @@ jest.mock('@nestjs-cls/transactional', () => ({
 import { DeleteUserUseCase } from './delete-user.use-case';
 import { DeleteUserCommand } from './delete-user.command';
 import { UserDeletedEvent } from '../../events/user-deleted.event';
+import { UserDeletionRequestedEvent } from '../../events/user-deletion-requested.event';
 import { UsersRepository } from '../../ports/users.repository';
 import type { UUID } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -130,6 +131,51 @@ describe('DeleteUserUseCase', () => {
     );
   });
 
+  it('should emit UserDeletionRequestedEvent before deleting the user row', async () => {
+    const command = new DeleteUserCommand({
+      userId: '123e4567-e89b-12d3-a456-426614174000',
+      orgId: '123e4567-e89b-12d3-a456-426614174000',
+    });
+
+    const mockUser = new User({
+      id: command.userId,
+      email: 'user@example.com',
+      emailVerified: true,
+      passwordHash: 'hash',
+      role: UserRole.ADMIN,
+      orgId: '123e4567-e89b-12d3-a456-426614174000',
+      name: 'Test User',
+      hasAcceptedMarketing: false,
+    });
+
+    jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
+
+    const callOrder: string[] = [];
+    mockEventEmitter.emitAsync.mockImplementation((eventName: string) => {
+      callOrder.push(`event:${eventName}`);
+      return Promise.resolve([]);
+    });
+    jest.spyOn(mockUsersRepository, 'delete').mockImplementation(() => {
+      callOrder.push('delete');
+      return Promise.resolve(undefined);
+    });
+
+    await useCase.execute(command);
+
+    expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+      UserDeletionRequestedEvent.EVENT_NAME,
+      expect.objectContaining({
+        userId: command.userId,
+        orgId: mockUser.orgId,
+      }),
+    );
+    expect(callOrder).toEqual([
+      `event:${UserDeletionRequestedEvent.EVENT_NAME}`,
+      'delete',
+      `event:${UserDeletedEvent.EVENT_NAME}`,
+    ]);
+  });
+
   it('should handle repository errors', async () => {
     const command = new DeleteUserCommand({
       userId: 'user-id' as UUID,
@@ -157,6 +203,11 @@ describe('DeleteUserUseCase', () => {
       command.userId,
     );
     expect(mockUsersRepository.delete).toHaveBeenCalledWith(command.userId);
-    expect(mockEventEmitter.emitAsync).not.toHaveBeenCalled();
+    // The pre-delete cleanup event fires before the (failing) row delete, but
+    // the post-delete UserDeletedEvent must not be emitted on failure.
+    expect(mockEventEmitter.emitAsync).not.toHaveBeenCalledWith(
+      UserDeletedEvent.EVENT_NAME,
+      expect.anything(),
+    );
   });
 });
