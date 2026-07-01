@@ -34,9 +34,18 @@ export function QuizSection({ chapter }: Readonly<QuizSectionProps>) {
   const { deleteQuestion, isDeleting } = useDeleteQuestion();
   const { confirm } = useConfirmation();
   const [threshold, setThreshold] = useState(chapter.passThreshold);
+  const [prevPassThreshold, setPrevPassThreshold] = useState(
+    chapter.passThreshold,
+  );
+  if (prevPassThreshold !== chapter.passThreshold) {
+    setPrevPassThreshold(chapter.passThreshold);
+    setThreshold(chapter.passThreshold);
+  }
 
   function commitThreshold() {
-    const clamped = Math.min(100, Math.max(1, Math.round(threshold)));
+    const clamped = Number.isNaN(threshold)
+      ? chapter.passThreshold
+      : Math.min(100, Math.max(1, Math.round(threshold)));
     if (clamped !== threshold) setThreshold(clamped);
     if (clamped !== chapter.passThreshold) setPassThreshold(chapter, clamped);
   }
