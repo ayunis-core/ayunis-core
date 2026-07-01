@@ -6,6 +6,7 @@ export abstract class AcademyChapterRepository {
   abstract findAllWithQuizContent(): Promise<AcademyChapter[]>;
   abstract findOne(id: UUID): Promise<AcademyChapter | null>;
   abstract findAllIds(): Promise<UUID[]>;
+  abstract findQuizEnabledIds(): Promise<UUID[]>;
   abstract findMaxPosition(): Promise<number | null>;
   abstract create(chapter: AcademyChapter): Promise<AcademyChapter>;
   abstract update(chapter: AcademyChapter): Promise<AcademyChapter>;
