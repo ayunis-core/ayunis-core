@@ -178,7 +178,7 @@ export const minimalFixture = {
       // 1800/2000, the Marketing team pool is the binding constraint for her.
       memberships: {
         Marketing: ['anna@usage.local', 'ben@usage.local'],
-        Engineering: ['carla@usage.local', 'admin@usage.local'],
+        Engineering: ['carla@usage.local'],
         'Project-X': ['anna@usage.local', 'dan@usage.local'],
       },
       teamLimits: {
