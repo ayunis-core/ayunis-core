@@ -20,7 +20,8 @@ export default function ChapterQuizPage({
 }: Readonly<ChapterQuizPageProps>) {
   const { t } = useTranslation('academy');
   const navigate = useNavigate();
-  const { questions, isLoading, isError, refetch } = useChapterQuiz(chapter.id);
+  const { questions, isLoading, isRefetching, isError, refetch } =
+    useChapterQuiz(chapter.id);
   const { submitQuiz, isSubmitting, result, reset } = useSubmitChapterQuiz();
 
   const goToAcademy = () => void navigate({ to: '/academy' });
@@ -46,7 +47,9 @@ export default function ChapterQuizPage({
         contentArea={
           <div className="pb-8">
             {renderQuizBody({
-              isLoading,
+              // A retry re-draws questions; show loading until the new draw
+              // arrives so the previous question set is never displayed.
+              isLoading: isLoading || isRefetching,
               isError,
               questions,
               result,

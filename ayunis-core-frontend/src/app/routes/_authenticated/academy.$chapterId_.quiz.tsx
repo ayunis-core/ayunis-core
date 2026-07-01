@@ -25,8 +25,12 @@ export const Route = createFileRoute(
       queryFn: () => academyChaptersControllerGetChapters(),
     });
     const chapter = chapters.find((c) => c.id === chapterId);
+    // Unknown chapter → back to the academy list.
+    if (!chapter) {
+      throw redirect({ to: '/academy' });
+    }
     // No quiz here → send the learner back to the chapter.
-    if (!chapter?.quizEnabled) {
+    if (!chapter.quizEnabled) {
       throw redirect({
         to: '/academy/$chapterId',
         params: { chapterId },
@@ -39,5 +43,6 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const { chapter } = Route.useLoaderData();
-  return <ChapterQuizPage chapter={chapter} />;
+  // Remount per chapter so quiz result/answer state never leaks across chapters.
+  return <ChapterQuizPage key={chapter.id} chapter={chapter} />;
 }

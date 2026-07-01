@@ -21,6 +21,14 @@ export default function QuizForm({
   const { t } = useTranslation('academy');
   const [answers, setAnswers] = useState<Record<string, number>>({});
 
+  // A retry re-draws questions; clear any prior selections when the set changes.
+  const questionsKey = questions.map((q) => q.id).join(',');
+  const [prevQuestionsKey, setPrevQuestionsKey] = useState(questionsKey);
+  if (questionsKey !== prevQuestionsKey) {
+    setPrevQuestionsKey(questionsKey);
+    setAnswers({});
+  }
+
   const allAnswered = questions.every((q) => Object.hasOwn(answers, q.id));
 
   const handleSubmit = () => {
