@@ -2,8 +2,10 @@ import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
-import { CreditLimitRecord } from 'src/iam/credit-limits/infrastructure/persistence/local/schema/credit-limit.record';
-import { CreditLimitScope } from 'src/iam/credit-limits/domain/value-objects/credit-limit-scope.enum';
+import {
+  UserCreditLimitRecord,
+  TeamCreditLimitRecord,
+} from 'src/iam/credit-limits/infrastructure/persistence/local/schema/credit-limit.record';
 import { OrgSeeder } from './base-seeder';
 import type { SeedState } from '../seed-state';
 import type { OrgFixture } from '../seed-types';
@@ -27,14 +29,12 @@ export class CreditLimitSeeder extends OrgSeeder {
       }
 
       await this.findOrCreate(
-        this.repo(CreditLimitRecord),
-        { orgId, targetUserId: user.id },
+        this.repo(UserCreditLimitRecord),
+        { orgId, userId: user.id },
         () => ({
           id: randomUUID(),
           orgId,
-          scope: CreditLimitScope.USER,
-          targetUserId: user.id,
-          targetTeamId: null,
+          userId: user.id,
           monthlyCredits: member.creditLimit,
         }),
         {
@@ -58,14 +58,12 @@ export class CreditLimitSeeder extends OrgSeeder {
       }
 
       await this.findOrCreate(
-        this.repo(CreditLimitRecord),
-        { orgId, targetTeamId: team.id },
+        this.repo(TeamCreditLimitRecord),
+        { orgId, teamId: team.id },
         () => ({
           id: randomUUID(),
           orgId,
-          scope: CreditLimitScope.TEAM,
-          targetUserId: null,
-          targetTeamId: team.id,
+          teamId: team.id,
           monthlyCredits,
         }),
         { entity: 'Credit limit', name: `team ${teamName}=${monthlyCredits}` },
