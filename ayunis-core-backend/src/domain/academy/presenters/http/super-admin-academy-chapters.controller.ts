@@ -173,6 +173,7 @@ export class SuperAdminAcademyChaptersController {
         title: dto.title,
         description: dto.description,
         quizEnabled: dto.quizEnabled,
+        passThreshold: dto.passThreshold,
       }),
     );
     return this.responseMapper.chapterToDto(chapter);

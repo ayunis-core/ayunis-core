@@ -17,6 +17,9 @@ export class AcademyChapterRecord extends BaseRecord {
   @Column({ nullable: false, type: 'boolean', default: false })
   quizEnabled: boolean;
 
+  @Column({ nullable: false, type: 'int', default: 80 })
+  passThreshold: number;
+
   // Only populated when the relation is explicitly loaded
   @OneToMany(
     () => AcademyCourseModuleRecord,
