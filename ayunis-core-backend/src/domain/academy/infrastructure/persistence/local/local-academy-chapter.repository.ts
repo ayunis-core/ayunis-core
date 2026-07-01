@@ -20,14 +20,14 @@ export class LocalAcademyChapterRepository implements AcademyChapterRepository {
     private readonly mapper: AcademyMapper,
   ) {}
 
-  async findAllWithLessons(): Promise<AcademyChapter[]> {
-    this.logger.log('findAllWithLessons');
+  async findAllWithCourseModules(): Promise<AcademyChapter[]> {
+    this.logger.log('findAllWithCourseModules');
     const records = await this.repository.find({
-      relations: { lessons: true },
+      relations: { courseModules: true },
       order: {
         position: 'ASC',
         createdAt: 'ASC',
-        lessons: { position: 'ASC', createdAt: 'ASC' },
+        courseModules: { position: 'ASC', createdAt: 'ASC' },
       },
     });
     return records.map((record) => this.mapper.chapterToDomain(record));
@@ -37,8 +37,8 @@ export class LocalAcademyChapterRepository implements AcademyChapterRepository {
     this.logger.log('findOne', { id });
     const record = await this.repository.findOne({
       where: { id },
-      relations: { lessons: true },
-      order: { lessons: { position: 'ASC', createdAt: 'ASC' } },
+      relations: { courseModules: true },
+      order: { courseModules: { position: 'ASC', createdAt: 'ASC' } },
     });
     if (!record) return null;
     return this.mapper.chapterToDomain(record);

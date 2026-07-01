@@ -18,23 +18,25 @@ import { toLoomEmbedUrl } from '../lib/toLoomEmbedUrl';
 
 interface ChapterDetailPageProps {
   chapter: AcademyChapterResponseDto;
-  activeLesson?: number;
+  activeModule?: number;
 }
 
 export default function ChapterDetailPage({
   chapter,
-  activeLesson,
+  activeModule,
 }: Readonly<ChapterDetailPageProps>) {
   const { t } = useTranslation('academy');
   const navigate = useNavigate();
 
-  const lessons = [...chapter.lessons].sort((a, b) => a.position - b.position);
+  const modules = [...chapter.courseModules].sort(
+    (a, b) => a.position - b.position,
+  );
 
-  const goToLesson = (index?: number) => {
+  const goToModule = (index?: number) => {
     void navigate({
       to: '/academy/$chapterId',
       params: { chapterId: chapter.id },
-      search: index === undefined ? {} : { lesson: index },
+      search: index === undefined ? {} : { module: index },
     });
   };
 
@@ -47,11 +49,11 @@ export default function ChapterDetailPage({
     />
   );
 
-  // Intro screen: shown when there is no active lesson or the index is out of range.
+  // Intro screen: shown when there is no active module or the index is out of range.
   const showIntro =
-    activeLesson === undefined ||
-    activeLesson < 0 ||
-    activeLesson >= lessons.length;
+    activeModule === undefined ||
+    activeModule < 0 ||
+    activeModule >= modules.length;
 
   if (showIntro) {
     return (
@@ -67,13 +69,13 @@ export default function ChapterDetailPage({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {lessons.length === 0 ? (
+                {modules.length === 0 ? (
                   <EmptyState
-                    title={t('detail.noLessons.title')}
-                    description={t('detail.noLessons.description')}
+                    title={t('detail.noModules.title')}
+                    description={t('detail.noModules.description')}
                   />
                 ) : (
-                  <Button onClick={() => goToLesson(0)}>
+                  <Button onClick={() => goToModule(0)}>
                     {t('detail.letsGo')}
                   </Button>
                 )}
@@ -85,28 +87,28 @@ export default function ChapterDetailPage({
     );
   }
 
-  const currentIndex = activeLesson;
-  const currentLesson = lessons[currentIndex];
+  const currentIndex = activeModule;
+  const currentModule = modules[currentIndex];
   const isFirst = currentIndex === 0;
-  const isLast = currentIndex === lessons.length - 1;
+  const isLast = currentIndex === modules.length - 1;
 
-  const lessonView = (
+  const moduleView = (
     <div className="flex flex-col gap-4 lg:flex-row">
       {/* Main column: video + navigation */}
       <div className="flex-1 space-y-4">
         <div>
-          <h2 className="text-lg font-semibold">{currentLesson.title}</h2>
-          {currentLesson.description && (
+          <h2 className="text-lg font-semibold">{currentModule.title}</h2>
+          {currentModule.description && (
             <p className="mt-1 text-sm text-muted-foreground whitespace-pre-line">
-              {currentLesson.description}
+              {currentModule.description}
             </p>
           )}
         </div>
         <div className="aspect-video w-full overflow-hidden rounded-lg border bg-muted">
           <iframe
-            key={currentLesson.id}
-            src={toLoomEmbedUrl(currentLesson.loomUrl)}
-            title={currentLesson.title}
+            key={currentModule.id}
+            src={toLoomEmbedUrl(currentModule.loomUrl)}
+            title={currentModule.title}
             className="h-full w-full"
             allowFullScreen
             allow="autoplay; fullscreen; picture-in-picture"
@@ -115,7 +117,7 @@ export default function ChapterDetailPage({
         <div className="flex items-center justify-between">
           <Button
             variant="outline"
-            onClick={() => goToLesson(isFirst ? undefined : currentIndex - 1)}
+            onClick={() => goToModule(isFirst ? undefined : currentIndex - 1)}
           >
             <ChevronLeft className="h-4 w-4" />
             {t('detail.previous')}
@@ -126,7 +128,7 @@ export default function ChapterDetailPage({
               <Check className="h-4 w-4" />
             </Button>
           ) : (
-            <Button onClick={() => goToLesson(currentIndex + 1)}>
+            <Button onClick={() => goToModule(currentIndex + 1)}>
               {t('detail.next')}
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -134,23 +136,23 @@ export default function ChapterDetailPage({
         </div>
       </div>
 
-      {/* Side column: lesson title list */}
+      {/* Side column: module title list */}
       <nav className="lg:w-56 lg:flex-shrink-0">
         <p className="mb-2 px-2 text-sm font-medium text-muted-foreground">
-          {t('detail.lessonsTitle')}
+          {t('detail.modulesTitle')}
         </p>
         <ul className="space-y-1">
-          {lessons.map((lesson, index) => (
-            <li key={lesson.id}>
+          {modules.map((module, index) => (
+            <li key={module.id}>
               <Button
                 variant={index === currentIndex ? 'secondary' : 'ghost'}
-                onClick={() => goToLesson(index)}
+                onClick={() => goToModule(index)}
                 className="w-full justify-start gap-2 text-left"
               >
                 <span className="text-muted-foreground tabular-nums">
                   {index + 1}
                 </span>
-                <span className="truncate">{lesson.title}</span>
+                <span className="truncate">{module.title}</span>
               </Button>
             </li>
           ))}
@@ -161,7 +163,7 @@ export default function ChapterDetailPage({
 
   return (
     <AppLayout>
-      <ContentAreaLayout contentHeader={header} contentArea={lessonView} />
+      <ContentAreaLayout contentHeader={header} contentArea={moduleView} />
     </AppLayout>
   );
 }

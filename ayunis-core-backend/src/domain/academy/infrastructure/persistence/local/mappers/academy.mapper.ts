@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { AcademyChapter } from '../../../../domain/academy-chapter.entity';
-import { AcademyLesson } from '../../../../domain/academy-lesson.entity';
+import { AcademyCourseModule } from '../../../../domain/academy-course-module.entity';
 import { AcademyChapterRecord } from '../schema/academy-chapter.record';
-import { AcademyLessonRecord } from '../schema/academy-lesson.record';
+import { AcademyCourseModuleRecord } from '../schema/academy-course-module.record';
 
 @Injectable()
 export class AcademyMapper {
@@ -12,7 +12,9 @@ export class AcademyMapper {
       title: record.title,
       description: record.description,
       position: record.position,
-      lessons: record.lessons?.map((lesson) => this.lessonToDomain(lesson)),
+      courseModules: record.courseModules?.map((courseModule) =>
+        this.courseModuleToDomain(courseModule),
+      ),
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -27,8 +29,8 @@ export class AcademyMapper {
     return record;
   }
 
-  lessonToDomain(record: AcademyLessonRecord): AcademyLesson {
-    return new AcademyLesson({
+  courseModuleToDomain(record: AcademyCourseModuleRecord): AcademyCourseModule {
+    return new AcademyCourseModule({
       id: record.id,
       chapterId: record.chapterId,
       title: record.title,
@@ -40,8 +42,8 @@ export class AcademyMapper {
     });
   }
 
-  lessonToRecord(domain: AcademyLesson): AcademyLessonRecord {
-    const record = new AcademyLessonRecord();
+  courseModuleToRecord(domain: AcademyCourseModule): AcademyCourseModuleRecord {
+    const record = new AcademyCourseModuleRecord();
     record.id = domain.id;
     record.chapterId = domain.chapterId;
     record.title = domain.title;

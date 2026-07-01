@@ -1,6 +1,6 @@
 import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
-import { AcademyLessonRecord } from './academy-lesson.record';
+import { AcademyCourseModuleRecord } from './academy-course-module.record';
 
 @Entity({ name: 'academy_chapters' })
 export class AcademyChapterRecord extends BaseRecord {
@@ -14,6 +14,9 @@ export class AcademyChapterRecord extends BaseRecord {
   position: number;
 
   // Only populated when the relation is explicitly loaded
-  @OneToMany(() => AcademyLessonRecord, (lesson) => lesson.chapter)
-  lessons?: AcademyLessonRecord[];
+  @OneToMany(
+    () => AcademyCourseModuleRecord,
+    (courseModule) => courseModule.chapter,
+  )
+  courseModules?: AcademyCourseModuleRecord[];
 }

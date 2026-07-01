@@ -15,7 +15,7 @@ export class GetAcademyContentUseCase {
   async execute(_query: GetAcademyContentQuery): Promise<AcademyChapter[]> {
     this.logger.log('Getting academy content');
     try {
-      return await this.chapterRepository.findAllWithLessons();
+      return await this.chapterRepository.findAllWithCourseModules();
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Error getting academy content', {

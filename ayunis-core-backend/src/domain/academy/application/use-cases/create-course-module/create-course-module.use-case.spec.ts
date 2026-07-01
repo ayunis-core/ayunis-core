@@ -2,18 +2,18 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { CreateLessonUseCase } from './create-lesson.use-case';
-import { CreateLessonCommand } from './create-lesson.command';
+import { CreateCourseModuleUseCase } from './create-course-module.use-case';
+import { CreateCourseModuleCommand } from './create-course-module.command';
 import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
-import { AcademyLessonRepository } from '../../ports/academy-lesson.repository';
+import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
 import { AcademyChapter } from '../../../domain/academy-chapter.entity';
-import { AcademyLesson } from '../../../domain/academy-lesson.entity';
+import { AcademyCourseModule } from '../../../domain/academy-course-module.entity';
 import { ChapterNotFoundError } from '../../academy.errors';
 
-describe('CreateLessonUseCase', () => {
-  let useCase: CreateLessonUseCase;
+describe('CreateCourseModuleUseCase', () => {
+  let useCase: CreateCourseModuleUseCase;
   let chapterRepository: jest.Mocked<AcademyChapterRepository>;
-  let lessonRepository: jest.Mocked<AcademyLessonRepository>;
+  let courseModuleRepository: jest.Mocked<AcademyCourseModuleRepository>;
 
   const chapter = new AcademyChapter({
     title: 'Getting Started',
@@ -25,22 +25,25 @@ describe('CreateLessonUseCase', () => {
     const mockChapterRepository = {
       findOne: jest.fn(),
     };
-    const mockLessonRepository = {
+    const mockCourseModuleRepository = {
       findMaxPosition: jest.fn(),
       create: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        CreateLessonUseCase,
+        CreateCourseModuleUseCase,
         { provide: AcademyChapterRepository, useValue: mockChapterRepository },
-        { provide: AcademyLessonRepository, useValue: mockLessonRepository },
+        {
+          provide: AcademyCourseModuleRepository,
+          useValue: mockCourseModuleRepository,
+        },
       ],
     }).compile();
 
-    useCase = module.get<CreateLessonUseCase>(CreateLessonUseCase);
+    useCase = module.get<CreateCourseModuleUseCase>(CreateCourseModuleUseCase);
     chapterRepository = module.get(AcademyChapterRepository);
-    lessonRepository = module.get(AcademyLessonRepository);
+    courseModuleRepository = module.get(AcademyCourseModuleRepository);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'error').mockImplementation();
@@ -50,15 +53,15 @@ describe('CreateLessonUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('should create a lesson appended after the last position', async () => {
+  it('should create a module appended after the last position', async () => {
     chapterRepository.findOne.mockResolvedValue(chapter);
-    lessonRepository.findMaxPosition.mockResolvedValue(3);
-    lessonRepository.create.mockImplementation(
-      async (lesson: AcademyLesson) => lesson,
+    courseModuleRepository.findMaxPosition.mockResolvedValue(3);
+    courseModuleRepository.create.mockImplementation(
+      async (courseModule: AcademyCourseModule) => courseModule,
     );
 
     const result = await useCase.execute(
-      new CreateLessonCommand({
+      new CreateCourseModuleCommand({
         chapterId: chapter.id,
         title: 'Creating your first chat',
         loomUrl: 'https://www.loom.com/share/abc123def456',
@@ -68,20 +71,20 @@ describe('CreateLessonUseCase', () => {
     expect(result.position).toBe(4);
     expect(result.chapterId).toBe(chapter.id);
     expect(result.description).toBeNull();
-    expect(lessonRepository.create).toHaveBeenCalledWith(
-      expect.any(AcademyLesson),
+    expect(courseModuleRepository.create).toHaveBeenCalledWith(
+      expect.any(AcademyCourseModule),
     );
   });
 
-  it('should create the first lesson of a chapter at position 0', async () => {
+  it('should create the first module of a chapter at position 0', async () => {
     chapterRepository.findOne.mockResolvedValue(chapter);
-    lessonRepository.findMaxPosition.mockResolvedValue(null);
-    lessonRepository.create.mockImplementation(
-      async (lesson: AcademyLesson) => lesson,
+    courseModuleRepository.findMaxPosition.mockResolvedValue(null);
+    courseModuleRepository.create.mockImplementation(
+      async (courseModule: AcademyCourseModule) => courseModule,
     );
 
     const result = await useCase.execute(
-      new CreateLessonCommand({
+      new CreateCourseModuleCommand({
         chapterId: chapter.id,
         title: 'Welcome to the academy',
         description: 'A short introduction video',
@@ -93,18 +96,18 @@ describe('CreateLessonUseCase', () => {
     expect(result.description).toBe('A short introduction video');
   });
 
-  it('should reject lesson creation for a non-existent chapter', async () => {
+  it('should reject module creation for a non-existent chapter', async () => {
     chapterRepository.findOne.mockResolvedValue(null);
 
     await expect(
       useCase.execute(
-        new CreateLessonCommand({
+        new CreateCourseModuleCommand({
           chapterId: randomUUID(),
-          title: 'Orphan lesson',
+          title: 'Orphan module',
           loomUrl: 'https://www.loom.com/share/abc123def456',
         }),
       ),
     ).rejects.toThrow(ChapterNotFoundError);
-    expect(lessonRepository.create).not.toHaveBeenCalled();
+    expect(courseModuleRepository.create).not.toHaveBeenCalled();
   });
 });

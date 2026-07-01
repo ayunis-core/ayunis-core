@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import type { AcademyLessonResponseDto } from '@/shared/api';
+import type { CourseModuleResponseDto } from '@/shared/api';
 import {
   Dialog,
   DialogContent,
@@ -22,62 +22,62 @@ import { Input } from '@/shared/ui/shadcn/input';
 import { Textarea } from '@/shared/ui/shadcn/textarea';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
-  createLessonFormSchema,
-  type LessonFormValues,
-} from '../model/lessonFormSchema';
-import { useCreateLesson } from '../api/useCreateLesson';
-import { useUpdateLesson } from '../api/useUpdateLesson';
+  createModuleFormSchema,
+  type ModuleFormValues,
+} from '../model/moduleFormSchema';
+import { useCreateModule } from '../api/useCreateModule';
+import { useUpdateModule } from '../api/useUpdateModule';
 
-interface LessonFormDialogProps {
+interface ModuleFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   chapterId: string | null;
-  lesson: AcademyLessonResponseDto | null;
+  module: CourseModuleResponseDto | null;
 }
 
-export function LessonFormDialog({
+export function ModuleFormDialog({
   open,
   onOpenChange,
   chapterId,
-  lesson,
-}: Readonly<LessonFormDialogProps>) {
+  module,
+}: Readonly<ModuleFormDialogProps>) {
   const { t } = useTranslation('super-admin-settings-academy');
-  const isEdit = lesson !== null;
+  const isEdit = module !== null;
 
-  const form = useForm<LessonFormValues>({
-    resolver: zodResolver(createLessonFormSchema(t)),
+  const form = useForm<ModuleFormValues>({
+    resolver: zodResolver(createModuleFormSchema(t)),
     defaultValues: { title: '', description: '', loomUrl: '' },
   });
 
   useEffect(() => {
     if (open) {
       form.reset({
-        title: lesson?.title ?? '',
-        description: lesson?.description ?? '',
-        loomUrl: lesson?.loomUrl ?? '',
+        title: module?.title ?? '',
+        description: module?.description ?? '',
+        loomUrl: module?.loomUrl ?? '',
       });
     }
-  }, [open, lesson, form]);
+  }, [open, module, form]);
 
   function close() {
     onOpenChange(false);
     form.reset();
   }
 
-  const { createLesson, isCreating } = useCreateLesson(form, close);
-  const { updateLesson, isUpdating } = useUpdateLesson(form, close);
+  const { createModule, isCreating } = useCreateModule(form, close);
+  const { updateModule, isUpdating } = useUpdateModule(form, close);
   const isSubmitting = isCreating || isUpdating;
 
-  function onSubmit(data: LessonFormValues) {
+  function onSubmit(data: ModuleFormValues) {
     const payload = {
       title: data.title,
       description: data.description === '' ? undefined : data.description,
       loomUrl: data.loomUrl,
     };
     if (isEdit) {
-      updateLesson(lesson.id, payload);
+      updateModule(module.id, payload);
     } else if (chapterId) {
-      createLesson(chapterId, payload);
+      createModule(chapterId, payload);
     }
   }
 
@@ -86,7 +86,7 @@ export function LessonFormDialog({
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>
-            {isEdit ? t('lessonForm.editTitle') : t('lessonForm.createTitle')}
+            {isEdit ? t('moduleForm.editTitle') : t('moduleForm.createTitle')}
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
@@ -99,11 +99,11 @@ export function LessonFormDialog({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('lessonForm.title')}</FormLabel>
+                  <FormLabel>{t('moduleForm.title')}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder={t('lessonForm.titlePlaceholder')}
+                      placeholder={t('moduleForm.titlePlaceholder')}
                       disabled={isSubmitting}
                     />
                   </FormControl>
@@ -116,11 +116,11 @@ export function LessonFormDialog({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('lessonForm.description')}</FormLabel>
+                  <FormLabel>{t('moduleForm.description')}</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
-                      placeholder={t('lessonForm.descriptionPlaceholder')}
+                      placeholder={t('moduleForm.descriptionPlaceholder')}
                       disabled={isSubmitting}
                       rows={3}
                     />
@@ -134,11 +134,11 @@ export function LessonFormDialog({
               name="loomUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('lessonForm.loomUrl')}</FormLabel>
+                  <FormLabel>{t('moduleForm.loomUrl')}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder={t('lessonForm.loomUrlPlaceholder')}
+                      placeholder={t('moduleForm.loomUrlPlaceholder')}
                       disabled={isSubmitting}
                     />
                   </FormControl>
@@ -153,10 +153,10 @@ export function LessonFormDialog({
                 onClick={close}
                 disabled={isSubmitting}
               >
-                {t('lessonForm.cancel')}
+                {t('moduleForm.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? t('lessonForm.saving') : t('lessonForm.save')}
+                {isSubmitting ? t('moduleForm.saving') : t('moduleForm.save')}
               </Button>
             </DialogFooter>
           </form>
