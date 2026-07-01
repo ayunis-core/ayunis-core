@@ -227,6 +227,7 @@ export default function NewChatPage({
       <div className="w-full flex flex-col gap-4 mt-2">
         <ChatInput
           ref={chatInputRef}
+          initialMessage={initialPrompt}
           modelId={modelId}
           sources={sources}
           knowledgeBases={selectedKnowledgeBases}
