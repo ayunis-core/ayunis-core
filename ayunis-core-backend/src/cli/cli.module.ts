@@ -12,7 +12,7 @@ import { DeleteUserCommand } from 'src/cli/application/commands/users/delete-use
 import { GetUserCommand } from 'src/cli/application/commands/users/get-user.command';
 import { MakeSuperAdminCommand } from 'src/cli/application/commands/users/make-super-admin.command';
 import { RemoveSuperAdminCommand } from 'src/cli/application/commands/users/remove-super-admin.command';
-import { typeormConfig } from 'src/config/typeorm.config';
+import { rootConfigs } from 'src/config/root-configs';
 import dataSource from 'src/db/datasource';
 
 /**
@@ -24,9 +24,13 @@ import dataSource from 'src/db/datasource';
  */
 @Module({
   imports: [
+    // Load the shared root config list, not a hand-picked subset: the CLI's
+    // transitive module graph reads namespaced config (e.g. UsersModule's
+    // JwtModule getOrThrows 'auth.jwt.secret'), so a partial list fails at
+    // bootstrap when any imported module needs an unloaded namespace.
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [typeormConfig],
+      load: rootConfigs,
     }),
     ClsModule.forRoot({
       global: true,

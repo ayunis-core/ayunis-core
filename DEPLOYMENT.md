@@ -76,6 +76,10 @@ These variables MUST be configured before deployment:
 
 #### Authentication
 
+> **Note:** `JWT_SECRET` and `COOKIE_SECRET` have no default fallback. The
+> application performs a boot-time check in every environment and refuses to
+> start until both are configured.
+
 - `JWT_SECRET`: Secure random string for signing JWT tokens
 
   ```bash
@@ -400,7 +404,7 @@ source /opt/ayunis/ayunis-core/ayunis-core-backend/.env
 ### Configuration
 
 | Variable | Default | Description |
-|---|---|---|
+| --- | --- | --- |
 | `BACKUP_DIR` | `/opt/ayunis/backups` | Local backup directory |
 | `BACKUP_RETENTION` | `30` | Days to keep old backups |
 | `BACKUP_REMOTE` | (none) | rsync target for off-site copies |

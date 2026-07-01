@@ -72,10 +72,7 @@ import { ExportAdminUsersUseCase } from './application/use-cases/export-admin-us
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>(
-          'auth.jwt.secret',
-          'dev-secret-change-in-production',
-        ),
+        secret: configService.getOrThrow<string>('auth.jwt.secret'),
         signOptions: {
           expiresIn: configService.get<StringValue>(
             'auth.jwt.emailConfirmationExpiresIn',

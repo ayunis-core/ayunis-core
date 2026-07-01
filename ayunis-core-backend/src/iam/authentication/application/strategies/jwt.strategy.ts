@@ -39,10 +39,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         return token;
       },
       ignoreExpiration: false,
-      secretOrKey: configService.get(
-        'auth.jwt.secret',
-        'dev-secret-change-in-production',
-      ),
+      secretOrKey: configService.getOrThrow<string>('auth.jwt.secret'),
     });
   }
 

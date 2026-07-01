@@ -46,10 +46,7 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>(
-          'auth.jwt.secret',
-          'dev-secret-change-in-production',
-        ),
+        secret: configService.getOrThrow<string>('auth.jwt.secret'),
         signOptions: {
           expiresIn: configService.get<StringValue>(
             'auth.jwt.inviteExpiresIn',
