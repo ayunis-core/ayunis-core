@@ -1,8 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { JwtModule } from '@nestjs/jwt';
-import type { StringValue } from 'ms';
+import { JwtConfigModule } from '../authentication/jwt.module';
 
 // Entities and Infrastructure
 import { InviteRecord } from './infrastructure/persistence/local/schema/invite.record';
@@ -42,19 +41,7 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
   imports: [
     ConfigModule,
     TypeOrmModule.forFeature([InviteRecord]),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.getOrThrow<string>('auth.jwt.secret'),
-        signOptions: {
-          expiresIn: configService.get<StringValue>(
-            'auth.jwt.inviteExpiresIn',
-            '7d',
-          ),
-        },
-      }),
-    }),
+    JwtConfigModule,
     OrgsModule,
     forwardRef(() => SubscriptionsModule),
     forwardRef(() => UsersModule),
