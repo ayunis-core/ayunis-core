@@ -4193,12 +4193,79 @@ export interface AcademyChapterResponseDto {
   position: number;
   /** Whether a quiz is activated for this chapter (shown at chapter end) */
   quizEnabled: boolean;
+  /** Percentage of correct answers required to pass this chapter quiz */
+  passThreshold: number;
   /** The modules of the chapter, ordered by position */
   courseModules: CourseModuleResponseDto[];
   /** The date the chapter was created */
   createdAt: string;
   /** The date the chapter was last updated */
   updatedAt: string;
+}
+
+export interface QuizAnswerOptionForTakingResponseDto {
+  /** The answer option text */
+  text: string;
+}
+
+export interface QuizQuestionForTakingResponseDto {
+  /** The unique identifier of the question */
+  id: string;
+  /** The question prompt */
+  text: string;
+  /** The answer options, without indicating the correct one */
+  options: QuizAnswerOptionForTakingResponseDto[];
+}
+
+export interface SubmitQuizAnswerDto {
+  /** The id of the answered question */
+  questionId: string;
+  /** The 0-based index of the selected answer option */
+  selectedOptionIndex: number;
+}
+
+export interface SubmitQuizRequestDto {
+  /** One answer per drawn question */
+  answers: SubmitQuizAnswerDto[];
+}
+
+export interface QuizResultResponseDto {
+  /** Whether the attempt met the chapter pass threshold */
+  passed: boolean;
+  /** Number of questions answered correctly */
+  correctCount: number;
+  /** Number of questions in the attempt */
+  totalCount: number;
+  /** Number of correct answers required to pass */
+  requiredCount: number;
+  /** Score as a percentage of correct answers */
+  score: number;
+  /** Whether passing this chapter completed the whole academy for the user */
+  academyCompleted: boolean;
+}
+
+export interface ChapterProgressResponseDto {
+  /** The chapter this progress refers to */
+  chapterId: string;
+  /** Whether the learner has passed this chapter quiz */
+  passed: boolean;
+  /** Score of the most recent attempt, as a percentage */
+  lastScore: number;
+  /**
+   * When the chapter was most recently passed, if ever
+   * @nullable
+   */
+  lastPassedAt: string | null;
+}
+
+export interface AcademyProgressResponseDto {
+  /** Per-chapter progress for the current user */
+  chapters: ChapterProgressResponseDto[];
+  /**
+   * When the user last completed the whole academy, or null if never
+   * @nullable
+   */
+  academyCompletedAt: string | null;
 }
 
 export interface QuizAnswerOptionResponseDto {
@@ -4236,6 +4303,8 @@ export interface SuperAdminAcademyChapterResponseDto {
   position: number;
   /** Whether a quiz is activated for this chapter (shown at chapter end) */
   quizEnabled: boolean;
+  /** Percentage of correct answers required to pass this chapter quiz */
+  passThreshold: number;
   /** The modules of the chapter, ordered by position */
   courseModules: CourseModuleResponseDto[];
   /** The date the chapter was created */
@@ -4277,6 +4346,12 @@ export interface UpdateChapterRequestDto {
   description: string;
   /** Whether a quiz is activated for this chapter */
   quizEnabled?: boolean;
+  /**
+   * Percentage of correct answers required to pass this chapter quiz
+   * @minimum 1
+   * @maximum 100
+   */
+  passThreshold?: number;
 }
 
 export interface CreateCourseModuleRequestDto {
