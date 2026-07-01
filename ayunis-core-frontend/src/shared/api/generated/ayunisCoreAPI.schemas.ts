@@ -4191,12 +4191,59 @@ export interface AcademyChapterResponseDto {
   description: string;
   /** The position of the chapter (0-based) */
   position: number;
+  /** Whether a quiz is activated for this chapter (shown at chapter end) */
+  quizEnabled: boolean;
   /** The modules of the chapter, ordered by position */
   courseModules: CourseModuleResponseDto[];
   /** The date the chapter was created */
   createdAt: string;
   /** The date the chapter was last updated */
   updatedAt: string;
+}
+
+export interface QuizAnswerOptionResponseDto {
+  /** The answer option text */
+  text: string;
+  /** Whether this option is the correct answer */
+  isCorrect: boolean;
+}
+
+export interface QuizQuestionResponseDto {
+  /** The unique identifier of the quiz question */
+  id: string;
+  /** The id of the chapter the question belongs to */
+  chapterId: string;
+  /** The question prompt */
+  text: string;
+  /** The answer options with the correct one flagged */
+  options: QuizAnswerOptionResponseDto[];
+  /** The position of the question within its chapter (0-based) */
+  position: number;
+  /** The date the question was created */
+  createdAt: string;
+  /** The date the question was last updated */
+  updatedAt: string;
+}
+
+export interface SuperAdminAcademyChapterResponseDto {
+  /** The unique identifier of the chapter */
+  id: string;
+  /** The title of the chapter */
+  title: string;
+  /** A description of what the chapter covers */
+  description: string;
+  /** The position of the chapter (0-based) */
+  position: number;
+  /** Whether a quiz is activated for this chapter (shown at chapter end) */
+  quizEnabled: boolean;
+  /** The modules of the chapter, ordered by position */
+  courseModules: CourseModuleResponseDto[];
+  /** The date the chapter was created */
+  createdAt: string;
+  /** The date the chapter was last updated */
+  updatedAt: string;
+  /** The quiz question pool of the chapter, ordered by position */
+  quizQuestions: QuizQuestionResponseDto[];
 }
 
 export interface CreateChapterRequestDto {
@@ -4228,6 +4275,8 @@ export interface UpdateChapterRequestDto {
    * @maxLength 2000
    */
   description: string;
+  /** Whether a quiz is activated for this chapter */
+  quizEnabled?: boolean;
 }
 
 export interface CreateCourseModuleRequestDto {
@@ -4269,6 +4318,44 @@ export interface UpdateCourseModuleRequestDto {
    * @maxLength 500
    */
   loomUrl: string;
+}
+
+export interface QuizAnswerOptionRequestDto {
+  /**
+   * The answer option text
+   * @maxLength 500
+   */
+  text: string;
+  /** Whether this option is the correct answer */
+  isCorrect: boolean;
+}
+
+export interface CreateQuizQuestionRequestDto {
+  /**
+   * The question prompt
+   * @maxLength 2000
+   */
+  text: string;
+  /**
+   * The answer options. Between 2 and 6 options with exactly one marked correct.
+   * @minItems 2
+   * @maxItems 6
+   */
+  options: QuizAnswerOptionRequestDto[];
+}
+
+export interface UpdateQuizQuestionRequestDto {
+  /**
+   * The question prompt
+   * @maxLength 2000
+   */
+  text: string;
+  /**
+   * The answer options. Between 2 and 6 options with exactly one marked correct.
+   * @minItems 2
+   * @maxItems 6
+   */
+  options: QuizAnswerOptionRequestDto[];
 }
 
 export interface ChatCompletionRequestDto { [key: string]: unknown }
