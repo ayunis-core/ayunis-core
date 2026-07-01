@@ -43,6 +43,39 @@
     "saving": "Wird gespeichert...",
     "cancel": "Abbrechen"
   },
+  "quiz": {
+    "enableLabel": "Quiz aktiviert",
+    "addQuestion": "Frage hinzufügen",
+    "noQuestions": "Noch keine Quizfragen."
+  },
+  "questionForm": {
+    "createTitle": "Frage erstellen",
+    "editTitle": "Frage bearbeiten",
+    "text": "Frage",
+    "textPlaceholder": "z. B. Was ist ein LLM?",
+    "textRequired": "Frage ist erforderlich",
+    "textTooLong": "Frage darf höchstens 2.000 Zeichen lang sein",
+    "options": "Antwortoptionen",
+    "optionsHint": "Fügen Sie 2–6 Optionen hinzu und wählen Sie die einzige richtige Antwort.",
+    "optionPlaceholder": "Option {{number}}",
+    "optionRequired": "Optionstext ist erforderlich",
+    "optionTooLong": "Option darf höchstens 500 Zeichen lang sein",
+    "tooFewOptions": "Mindestens 2 Optionen sind erforderlich",
+    "tooManyOptions": "Höchstens 6 Optionen sind erlaubt",
+    "correctRequired": "Wählen Sie die richtige Antwort",
+    "markCorrect": "Als richtige Antwort markieren",
+    "addOption": "Option hinzufügen",
+    "removeOption": "Option entfernen",
+    "save": "Speichern",
+    "saving": "Wird gespeichert...",
+    "cancel": "Abbrechen"
+  },
+  "deleteQuestion": {
+    "title": "Frage löschen",
+    "description": "Möchten Sie diese Quizfrage wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirm": "Löschen",
+    "cancel": "Abbrechen"
+  },
   "deleteChapter": {
     "title": "Kapitel löschen",
     "description": "Möchten Sie \"{{title}}\" und alle zugehörigen Module wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
@@ -70,6 +103,15 @@
     "moduleDeleteSuccess": "Modul erfolgreich gelöscht",
     "moduleDeleteError": "Modul konnte nicht gelöscht werden",
     "moduleNotFound": "Modul nicht gefunden",
+    "questionCreateSuccess": "Frage erfolgreich erstellt",
+    "questionCreateError": "Frage konnte nicht erstellt werden",
+    "questionUpdateSuccess": "Frage erfolgreich aktualisiert",
+    "questionUpdateError": "Frage konnte nicht aktualisiert werden",
+    "questionDeleteSuccess": "Frage erfolgreich gelöscht",
+    "questionDeleteError": "Frage konnte nicht gelöscht werden",
+    "questionNotFound": "Frage nicht gefunden",
+    "questionInvalid": "Ungültige Frage: 2–6 Optionen mit genau einer richtigen Antwort erforderlich",
+    "quizToggleError": "Quiz-Einstellung konnte nicht aktualisiert werden",
     "reorderError": "Die neue Reihenfolge konnte nicht gespeichert werden"
   },
   "validation": {

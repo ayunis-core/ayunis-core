@@ -62,6 +62,7 @@ import type {
   CreateOrgRequestDto,
   CreatePermittedModelDto,
   CreatePredefinedIntegrationDto,
+  CreateQuizQuestionRequestDto,
   CreateSkillDto,
   CreateSkillShareDto,
   CreateSkillTemplateDto,
@@ -124,6 +125,7 @@ import type {
   PromoteToSuperAdminDto,
   ProviderUsageChartResponseDto,
   ProviderUsageResponseDto,
+  QuizQuestionResponseDto,
   RegisterDto,
   ReorderChaptersRequestDto,
   ReorderCourseModulesRequestDto,
@@ -152,6 +154,7 @@ import type {
   SubscriptionResponseDto,
   SubscriptionResponseDtoNullable,
   SuccessResponseDto,
+  SuperAdminAcademyChapterResponseDto,
   SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
   SuperAdminCatalogModelsControllerGetCatalogModelById200,
   SuperAdminOrgListResponseDto,
@@ -196,6 +199,7 @@ import type {
   UpdatePasswordDto,
   UpdatePermittedModelDto,
   UpdatePiiWhitelistRequestDto,
+  UpdateQuizQuestionRequestDto,
   UpdateRetentionPolicyRequestDto,
   UpdateSeatsDto,
   UpdateSkillDto,
@@ -17605,7 +17609,7 @@ export const superAdminAcademyChaptersControllerGetChapters = (
 ) => {
       
       
-      return customAxiosInstance<AcademyChapterResponseDto[]>(
+      return customAxiosInstance<SuperAdminAcademyChapterResponseDto[]>(
       {url: `/super-admin/academy/chapters`, method: 'GET', signal
     },
       );
@@ -18207,6 +18211,202 @@ export const useSuperAdminAcademyCourseModulesControllerDeleteCourseModule = <TE
       > => {
 
       const mutationOptions = getSuperAdminAcademyCourseModulesControllerDeleteCourseModuleMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Add a question to a chapter quiz pool, appended after the last position. Only accessible to super admins.
+ * @summary Create a new academy quiz question
+ */
+export const superAdminAcademyQuizQuestionsControllerCreateQuizQuestion = (
+    chapterId: string,
+    createQuizQuestionRequestDto: CreateQuizQuestionRequestDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<QuizQuestionResponseDto>(
+      {url: `/super-admin/academy/chapters/${chapterId}/quiz-questions`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createQuizQuestionRequestDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>, TError,{chapterId: string;data: CreateQuizQuestionRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>, TError,{chapterId: string;data: CreateQuizQuestionRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminAcademyQuizQuestionsControllerCreateQuizQuestion'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>, {chapterId: string;data: CreateQuizQuestionRequestDto}> = (props) => {
+          const {chapterId,data} = props ?? {};
+
+          return  superAdminAcademyQuizQuestionsControllerCreateQuizQuestion(chapterId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>>
+    export type SuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationBody = CreateQuizQuestionRequestDto
+    export type SuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationError = void
+
+    /**
+ * @summary Create a new academy quiz question
+ */
+export const useSuperAdminAcademyQuizQuestionsControllerCreateQuizQuestion = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>, TError,{chapterId: string;data: CreateQuizQuestionRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>,
+        TError,
+        {chapterId: string;data: CreateQuizQuestionRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Replace the prompt and answer options of a quiz question. Only accessible to super admins.
+ * @summary Update an academy quiz question
+ */
+export const superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion = (
+    id: string,
+    updateQuizQuestionRequestDto: UpdateQuizQuestionRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<QuizQuestionResponseDto>(
+      {url: `/super-admin/academy/quiz-questions/${id}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateQuizQuestionRequestDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>, TError,{id: string;data: UpdateQuizQuestionRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>, TError,{id: string;data: UpdateQuizQuestionRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>, {id: string;data: UpdateQuizQuestionRequestDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>>
+    export type SuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationBody = UpdateQuizQuestionRequestDto
+    export type SuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationError = void
+
+    /**
+ * @summary Update an academy quiz question
+ */
+export const useSuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestion = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>, TError,{id: string;data: UpdateQuizQuestionRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>,
+        TError,
+        {id: string;data: UpdateQuizQuestionRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Delete a quiz question. Only accessible to super admins.
+ * @summary Delete an academy quiz question
+ */
+export const superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/academy/quiz-questions/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>>
+    
+    export type SuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationError = void
+
+    /**
+ * @summary Delete an academy quiz question
+ */
+export const useSuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestion = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
