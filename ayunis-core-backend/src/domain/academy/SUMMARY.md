@@ -36,7 +36,7 @@ Super-admin only (`@SystemRoles(SUPER_ADMIN)`), two controllers under
   reorder (`PUT chapters/order`, declared before the `:id` routes).
 - `SuperAdminAcademyCourseModulesController` (`super-admin/academy`) — create
   (`POST chapters/:chapterId/course-modules`), reorder
-  (`PUT chapters/:chapterId/course-modules/order`), update/delete (`courseModules/:id`).
+  (`PUT chapters/:chapterId/course-modules/order`), update/delete (`course-modules/:id`).
 
 ## Layout
 
