@@ -10,6 +10,7 @@ import type { UUID } from 'crypto';
 
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import { getClientIp } from 'src/common/util/ip.util';
+import { buildAccessDeniedAuditContext } from 'src/common/util/access-denied-audit.util';
 import { isIpInCidrs } from '../../domain/cidr.util';
 import { IpAllowlistRepository } from '../ports/ip-allowlist.repository';
 import { IpNotAllowedError } from '../ip-allowlist.errors';
@@ -66,7 +67,8 @@ export class IpAllowlistGuard
 
     if (!clientIp) {
       this.logger.warn(
-        `Could not determine client IP for user ${user.id} in org ${orgId}`,
+        'Access denied: client IP could not be determined',
+        buildAccessDeniedAuditContext(request, user),
       );
       throw new IpNotAllowedError();
     }
@@ -75,6 +77,10 @@ export class IpAllowlistGuard
       return true;
     }
 
+    this.logger.warn(
+      'Access denied: client IP not in allowlist',
+      buildAccessDeniedAuditContext(request, user),
+    );
     throw new IpNotAllowedError();
   }
 

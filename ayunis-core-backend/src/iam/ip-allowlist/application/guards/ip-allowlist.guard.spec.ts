@@ -1,5 +1,6 @@
 /* eslint-disable sonarjs/no-hardcoded-ip -- test fixtures require hardcoded IPs */
 import type { ExecutionContext } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { IpAllowlistGuard } from './ip-allowlist.guard';
 import type { IpAllowlistRepository } from '../ports/ip-allowlist.repository';
@@ -121,6 +122,35 @@ describe('IpAllowlistGuard', () => {
     const g = new IpAllowlistGuard(mockReflector, repository);
 
     await expect(g.canActivate(context)).rejects.toThrow(IpNotAllowedError);
+  });
+
+  it('should log a warning with audit context when the client IP is not in the allowlist', async () => {
+    const warnSpy = jest
+      .spyOn(Logger.prototype, 'warn')
+      .mockImplementation(() => undefined);
+    repository.findByOrgId.mockResolvedValue(
+      new IpAllowlist({ orgId, cidrs: ['10.0.0.0/8'] }),
+    );
+    const { context, reflector: mockReflector } = createMockContext({
+      user: activeUser,
+      ip: '192.168.1.50',
+    });
+    const g = new IpAllowlistGuard(mockReflector, repository);
+
+    await expect(g.canActivate(context)).rejects.toThrow(IpNotAllowedError);
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    const [message, meta] = warnSpy.mock.calls[0];
+    expect(message).toMatch(/allowlist/i);
+    expect(meta).toEqual(
+      expect.objectContaining({
+        userId: activeUser.id,
+        orgId,
+        clientIp: '192.168.1.50',
+      }),
+    );
+
+    warnSpy.mockRestore();
   });
 
   it('should throw IpNotAllowedError when the client IP cannot be determined', async () => {
