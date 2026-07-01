@@ -51,7 +51,12 @@ export class SubmitChapterQuizUseCase {
       const pool = await this.quizQuestionRepository.findAllByChapter(
         command.chapterId,
       );
-      const grade = this.grade(pool, command.answers, chapter.passThreshold);
+      const grade = this.grade(
+        command.chapterId,
+        pool,
+        command.answers,
+        chapter.passThreshold,
+      );
       await this.persistProgress(command, grade);
       const academyCompleted = grade.passed
         ? await this.recomputeCompletion(command.userId)
@@ -78,12 +83,13 @@ export class SubmitChapterQuizUseCase {
   }
 
   private grade(
+    chapterId: UUID,
     pool: AcademyQuizQuestion[],
     answers: QuizAnswerSubmission[],
     thresholdPct: number,
   ): Omit<QuizAttemptResult, 'academyCompleted'> {
     if (pool.length === 0) {
-      throw new QuizNotAvailableError('quiz has no questions');
+      throw new QuizNotAvailableError(chapterId);
     }
     const expectedCount = Math.min(DRAWN_QUESTION_COUNT, pool.length);
     this.assertAnswerShape(answers, expectedCount);
@@ -176,12 +182,13 @@ export class SubmitChapterQuizUseCase {
       quizEnabledIds.every((id) => passedIds.has(id));
     if (!completed) return false;
     const existing = await this.completionRepository.findByUser(userId);
+    // Completion is a stable snapshot: keep the original timestamp and don't
+    // re-stamp it when the user re-passes a quiz while already complete.
+    if (existing) return true;
     await this.completionRepository.upsert(
       new AcademyCompletion({
-        id: existing?.id,
         userId,
         completedAt: new Date(),
-        createdAt: existing?.createdAt,
       }),
     );
     return true;
