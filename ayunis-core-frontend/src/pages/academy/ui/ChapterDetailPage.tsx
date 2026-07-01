@@ -93,9 +93,21 @@ export default function ChapterDetailPage({
   const isLast = currentIndex === modules.length - 1;
 
   const moduleView = (
-    <div className="flex flex-col gap-4 lg:flex-row">
-      {/* Main column: video + navigation */}
-      <div className="flex-1 space-y-4">
+    <div className="space-y-4">
+      {/* Full-width video */}
+      <div className="aspect-video overflow-hidden rounded-lg border bg-muted">
+        <iframe
+          key={currentModule.id}
+          src={toLoomEmbedUrl(currentModule.loomUrl)}
+          title={currentModule.title}
+          className="h-full w-full"
+          allowFullScreen
+          allow="autoplay; fullscreen; picture-in-picture"
+        />
+      </div>
+
+      {/* Constrained text region: title, description, navigation, module list */}
+      <div className="mx-auto max-w-[800px] space-y-4">
         <div>
           <h2 className="text-lg font-semibold">{currentModule.title}</h2>
           {currentModule.description && (
@@ -104,16 +116,7 @@ export default function ChapterDetailPage({
             </p>
           )}
         </div>
-        <div className="aspect-video w-full overflow-hidden rounded-lg border bg-muted">
-          <iframe
-            key={currentModule.id}
-            src={toLoomEmbedUrl(currentModule.loomUrl)}
-            title={currentModule.title}
-            className="h-full w-full"
-            allowFullScreen
-            allow="autoplay; fullscreen; picture-in-picture"
-          />
-        </div>
+
         <div className="flex items-center justify-between">
           <Button
             variant="outline"
@@ -134,36 +137,40 @@ export default function ChapterDetailPage({
             </Button>
           )}
         </div>
-      </div>
 
-      {/* Side column: module title list */}
-      <nav className="lg:w-56 lg:flex-shrink-0">
-        <p className="mb-2 px-2 text-sm font-medium text-muted-foreground">
-          {t('detail.modulesTitle')}
-        </p>
-        <ul className="space-y-1">
-          {modules.map((module, index) => (
-            <li key={module.id}>
-              <Button
-                variant={index === currentIndex ? 'secondary' : 'ghost'}
-                onClick={() => goToModule(index)}
-                className="w-full justify-start gap-2 text-left"
-              >
-                <span className="text-muted-foreground tabular-nums">
-                  {index + 1}
-                </span>
-                <span className="truncate">{module.title}</span>
-              </Button>
-            </li>
-          ))}
-        </ul>
-      </nav>
+        {/* Module title list */}
+        <nav>
+          <p className="mb-2 px-2 text-sm font-medium text-muted-foreground">
+            {t('detail.modulesTitle')}
+          </p>
+          <ul className="space-y-1">
+            {modules.map((module, index) => (
+              <li key={module.id}>
+                <Button
+                  variant={index === currentIndex ? 'secondary' : 'ghost'}
+                  onClick={() => goToModule(index)}
+                  className="w-full justify-start gap-2 text-left"
+                >
+                  <span className="text-muted-foreground tabular-nums">
+                    {index + 1}
+                  </span>
+                  <span className="truncate">{module.title}</span>
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
     </div>
   );
 
   return (
     <AppLayout>
-      <ContentAreaLayout contentHeader={header} contentArea={moduleView} />
+      <ContentAreaLayout
+        contentHeader={header}
+        contentArea={moduleView}
+        fullWidth
+      />
     </AppLayout>
   );
 }
