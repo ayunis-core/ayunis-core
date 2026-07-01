@@ -13,6 +13,7 @@ import { InviteNotFoundError } from 'src/iam/invites/application/invites.errors'
 import { UserDeletedEvent } from '../../events/user-deleted.event';
 import { UserDeletionRequestedEvent } from '../../events/user-deletion-requested.event';
 import type { User } from 'src/iam/users/domain/user.entity';
+import type { UUID } from 'crypto';
 
 @Injectable()
 export class DeleteUserUseCase {
@@ -25,7 +26,6 @@ export class DeleteUserUseCase {
     private readonly deleteInviteByEmailUseCase: DeleteInviteByEmailUseCase,
   ) {}
 
-  @Transactional()
   async execute(command: DeleteUserCommand): Promise<void> {
     this.logger.log('deleteUser', { userId: command.userId });
     const requestingUserId = this.contextService.get('userId');
@@ -53,13 +53,24 @@ export class DeleteUserUseCase {
     }
 
     // Purge dependent data that database cascades cannot reach (MinIO assets,
-    // RAG index entries) while the owning rows still exist. Awaited so it runs
-    // inside the deletion transaction and before the cascading row delete.
+    // RAG index entries) while the owning rows still exist. Kept outside the
+    // deletion transaction so this irreversible storage/index work neither
+    // extends the open DB transaction nor is coupled to its rollback.
     await this.eventEmitter.emitAsync(
       UserDeletionRequestedEvent.EVENT_NAME,
       new UserDeletionRequestedEvent(userToDelete.id, userToDelete.orgId),
     );
 
+    await this.deleteUserRows(command, userToDelete, requestingUserId);
+    this.emitUserDeleted(userToDelete);
+  }
+
+  @Transactional()
+  private async deleteUserRows(
+    command: DeleteUserCommand,
+    userToDelete: User,
+    requestingUserId: UUID,
+  ): Promise<void> {
     await this.usersRepository.delete(command.userId);
     await this.deleteInviteByEmailUseCase
       .execute(
@@ -74,7 +85,6 @@ export class DeleteUserUseCase {
         }
         throw error;
       });
-    this.emitUserDeleted(userToDelete);
   }
 
   private emitUserDeleted(user: User): void {
