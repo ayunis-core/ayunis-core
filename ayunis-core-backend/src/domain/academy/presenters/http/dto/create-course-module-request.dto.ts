@@ -8,9 +8,9 @@ import {
   MaxLength,
 } from 'class-validator';
 
-export class CreateLessonRequestDto {
+export class CreateCourseModuleRequestDto {
   @ApiProperty({
-    description: 'The title of the lesson',
+    description: 'The title of the module',
     example: 'Creating your first chat',
     maxLength: 255,
   })
@@ -20,7 +20,7 @@ export class CreateLessonRequestDto {
   title: string;
 
   @ApiPropertyOptional({
-    description: 'An optional description of the lesson',
+    description: 'An optional description of the module',
     example: 'A short walkthrough of the chat interface.',
     maxLength: 2000,
   })
@@ -30,7 +30,7 @@ export class CreateLessonRequestDto {
   description?: string;
 
   @ApiProperty({
-    description: 'The Loom share or embed link of the lesson video',
+    description: 'The Loom share or embed link of the module video',
     example: 'https://www.loom.com/share/abc123def456',
     maxLength: 500,
   })

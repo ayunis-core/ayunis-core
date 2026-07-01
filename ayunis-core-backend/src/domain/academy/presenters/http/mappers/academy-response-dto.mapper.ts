@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import type { AcademyChapter } from '../../../domain/academy-chapter.entity';
-import type { AcademyLesson } from '../../../domain/academy-lesson.entity';
+import type { AcademyCourseModule } from '../../../domain/academy-course-module.entity';
 import { AcademyChapterResponseDto } from '../dto/academy-chapter-response.dto';
-import { AcademyLessonResponseDto } from '../dto/academy-lesson-response.dto';
+import { CourseModuleResponseDto } from '../dto/course-module-response.dto';
 
 @Injectable()
 export class AcademyResponseDtoMapper {
@@ -12,7 +12,9 @@ export class AcademyResponseDtoMapper {
     dto.title = entity.title;
     dto.description = entity.description;
     dto.position = entity.position;
-    dto.lessons = entity.lessons.map((lesson) => this.lessonToDto(lesson));
+    dto.courseModules = entity.courseModules.map((courseModule) =>
+      this.courseModuleToDto(courseModule),
+    );
     dto.createdAt = entity.createdAt;
     dto.updatedAt = entity.updatedAt;
     return dto;
@@ -22,8 +24,8 @@ export class AcademyResponseDtoMapper {
     return entities.map((entity) => this.chapterToDto(entity));
   }
 
-  lessonToDto(entity: AcademyLesson): AcademyLessonResponseDto {
-    const dto = new AcademyLessonResponseDto();
+  courseModuleToDto(entity: AcademyCourseModule): CourseModuleResponseDto {
+    const dto = new CourseModuleResponseDto();
     dto.id = entity.id;
     dto.chapterId = entity.chapterId;
     dto.title = entity.title;

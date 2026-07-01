@@ -61,9 +61,9 @@ export class SuperAdminAcademyChaptersController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Get all academy chapters with their lessons',
+    summary: 'Get all academy chapters with their modules',
     description:
-      'Retrieve all chapters with nested lessons, ordered by position. Only accessible to super admins.',
+      'Retrieve all chapters with nested modules, ordered by position. Only accessible to super admins.',
   })
   @ApiOkResponse({
     description: 'Successfully retrieved academy chapters',
@@ -181,7 +181,7 @@ export class SuperAdminAcademyChaptersController {
   @ApiOperation({
     summary: 'Delete an academy chapter',
     description:
-      'Delete a chapter and all of its lessons. Only accessible to super admins.',
+      'Delete a chapter and all of its modules. Only accessible to super admins.',
   })
   @ApiParam({ name: 'id', description: 'Chapter ID', format: 'uuid' })
   @ApiResponse({

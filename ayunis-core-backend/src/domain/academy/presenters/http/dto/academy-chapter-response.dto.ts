@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
-import { AcademyLessonResponseDto } from './academy-lesson-response.dto';
+import { CourseModuleResponseDto } from './course-module-response.dto';
 
 export class AcademyChapterResponseDto {
   @ApiProperty({
@@ -32,10 +32,10 @@ export class AcademyChapterResponseDto {
   position: number;
 
   @ApiProperty({
-    type: [AcademyLessonResponseDto],
-    description: 'The lessons of the chapter, ordered by position',
+    type: [CourseModuleResponseDto],
+    description: 'The modules of the chapter, ordered by position',
   })
-  lessons: AcademyLessonResponseDto[];
+  courseModules: CourseModuleResponseDto[];
 
   @ApiProperty({
     type: 'string',

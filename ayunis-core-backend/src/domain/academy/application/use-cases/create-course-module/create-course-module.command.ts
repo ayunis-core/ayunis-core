@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
 
-export class CreateLessonCommand {
+export class CreateCourseModuleCommand {
   public readonly chapterId: UUID;
   public readonly title: string;
   public readonly description?: string | null;

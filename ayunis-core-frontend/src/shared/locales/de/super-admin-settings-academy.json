@@ -4,10 +4,10 @@
     "empty": "Noch keine Kapitel",
     "emptyDescription": "Erstellen Sie Ihr erstes Kapitel, um die Academy aufzubauen.",
     "addChapter": "Kapitel hinzufügen",
-    "addLesson": "Lektion hinzufügen",
-    "noLessons": "Noch keine Lektionen in diesem Kapitel.",
+    "addModule": "Modul hinzufügen",
+    "noModules": "Noch keine Module in diesem Kapitel.",
     "dragChapter": "Kapitel per Drag & Drop sortieren",
-    "dragLesson": "Lektion per Drag & Drop sortieren"
+    "dragModule": "Modul per Drag & Drop sortieren"
   },
   "chapterForm": {
     "createTitle": "Kapitel erstellen",
@@ -24,15 +24,15 @@
     "saving": "Wird gespeichert...",
     "cancel": "Abbrechen"
   },
-  "lessonForm": {
-    "createTitle": "Lektion erstellen",
-    "editTitle": "Lektion bearbeiten",
+  "moduleForm": {
+    "createTitle": "Modul erstellen",
+    "editTitle": "Modul bearbeiten",
     "title": "Titel",
     "titlePlaceholder": "z. B. Ihren ersten Chat erstellen",
     "titleRequired": "Titel ist erforderlich",
     "titleTooLong": "Titel darf höchstens 255 Zeichen lang sein",
     "description": "Beschreibung (optional)",
-    "descriptionPlaceholder": "Worum geht es in dieser Lektion?",
+    "descriptionPlaceholder": "Worum geht es in diesem Modul?",
     "descriptionTooLong": "Beschreibung darf höchstens 2.000 Zeichen lang sein",
     "loomUrl": "Loom-Link",
     "loomUrlPlaceholder": "https://www.loom.com/share/...",
@@ -45,12 +45,12 @@
   },
   "deleteChapter": {
     "title": "Kapitel löschen",
-    "description": "Möchten Sie \"{{title}}\" und alle zugehörigen Lektionen wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "description": "Möchten Sie \"{{title}}\" und alle zugehörigen Module wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
     "confirm": "Löschen",
     "cancel": "Abbrechen"
   },
-  "deleteLesson": {
-    "title": "Lektion löschen",
+  "deleteModule": {
+    "title": "Modul löschen",
     "description": "Möchten Sie \"{{title}}\" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
     "confirm": "Löschen",
     "cancel": "Abbrechen"
@@ -63,13 +63,13 @@
     "chapterDeleteSuccess": "Kapitel erfolgreich gelöscht",
     "chapterDeleteError": "Kapitel konnte nicht gelöscht werden",
     "chapterNotFound": "Kapitel nicht gefunden",
-    "lessonCreateSuccess": "Lektion erfolgreich erstellt",
-    "lessonCreateError": "Lektion konnte nicht erstellt werden",
-    "lessonUpdateSuccess": "Lektion erfolgreich aktualisiert",
-    "lessonUpdateError": "Lektion konnte nicht aktualisiert werden",
-    "lessonDeleteSuccess": "Lektion erfolgreich gelöscht",
-    "lessonDeleteError": "Lektion konnte nicht gelöscht werden",
-    "lessonNotFound": "Lektion nicht gefunden",
+    "moduleCreateSuccess": "Modul erfolgreich erstellt",
+    "moduleCreateError": "Modul konnte nicht erstellt werden",
+    "moduleUpdateSuccess": "Modul erfolgreich aktualisiert",
+    "moduleUpdateError": "Modul konnte nicht aktualisiert werden",
+    "moduleDeleteSuccess": "Modul erfolgreich gelöscht",
+    "moduleDeleteError": "Modul konnte nicht gelöscht werden",
+    "moduleNotFound": "Modul nicht gefunden",
     "reorderError": "Die neue Reihenfolge konnte nicht gespeichert werden"
   },
   "validation": {

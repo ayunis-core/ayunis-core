@@ -3,7 +3,7 @@ import { ApplicationError } from '../../../common/errors/base.error';
 
 export enum AcademyErrorCode {
   CHAPTER_NOT_FOUND = 'CHAPTER_NOT_FOUND',
-  LESSON_NOT_FOUND = 'LESSON_NOT_FOUND',
+  COURSE_MODULE_NOT_FOUND = 'COURSE_MODULE_NOT_FOUND',
   INVALID_REORDER = 'INVALID_REORDER',
   UNEXPECTED_ACADEMY_ERROR = 'UNEXPECTED_ACADEMY_ERROR',
 }
@@ -30,11 +30,11 @@ export class ChapterNotFoundError extends AcademyError {
   }
 }
 
-export class LessonNotFoundError extends AcademyError {
-  constructor(lessonId: string, metadata?: ErrorMetadata) {
+export class CourseModuleNotFoundError extends AcademyError {
+  constructor(courseModuleId: string, metadata?: ErrorMetadata) {
     super(
-      `Academy lesson with ID ${lessonId} not found`,
-      AcademyErrorCode.LESSON_NOT_FOUND,
+      `Academy courseModule with ID ${courseModuleId} not found`,
+      AcademyErrorCode.COURSE_MODULE_NOT_FOUND,
       404,
       metadata,
     );

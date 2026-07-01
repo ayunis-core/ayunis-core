@@ -18,7 +18,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useTranslation } from 'react-i18next';
 import type {
   AcademyChapterResponseDto,
-  AcademyLessonResponseDto,
+  CourseModuleResponseDto,
 } from '@/shared/api';
 import {
   Card,
@@ -29,30 +29,30 @@ import {
 } from '@/shared/ui/shadcn/card';
 import { Button } from '@/shared/ui/shadcn/button';
 import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-react';
-import { LessonItem } from './LessonItem';
-import { useReorderLessons } from '../api/useReorderLessons';
+import { ModuleItem } from './ModuleItem';
+import { useReorderModules } from '../api/useReorderModules';
 import { moveById } from '../lib/sortOrder';
 
 interface ChapterCardProps {
   chapter: AcademyChapterResponseDto;
   onEdit: () => void;
   onDelete: () => void;
-  onAddLesson: () => void;
-  onEditLesson: (lesson: AcademyLessonResponseDto) => void;
-  onDeleteLesson: (lesson: AcademyLessonResponseDto) => void;
+  onAddModule: () => void;
+  onEditModule: (module: CourseModuleResponseDto) => void;
+  onDeleteModule: (module: CourseModuleResponseDto) => void;
   isDeletingChapter: boolean;
-  isDeletingLesson: boolean;
+  isDeletingModule: boolean;
 }
 
 export function ChapterCard({
   chapter,
   onEdit,
   onDelete,
-  onAddLesson,
-  onEditLesson,
-  onDeleteLesson,
+  onAddModule,
+  onEditModule,
+  onDeleteModule,
   isDeletingChapter,
-  isDeletingLesson,
+  isDeletingModule,
 }: Readonly<ChapterCardProps>) {
   const { t } = useTranslation('super-admin-settings-academy');
   const {
@@ -65,16 +65,16 @@ export function ChapterCard({
     isDragging,
   } = useSortable({ id: chapter.id });
 
-  const { reorderLessons, isReordering } = useReorderLessons();
+  const { reorderModules, isReordering } = useReorderModules();
 
   // Optimistic order during drag; re-synced from loader data, except while a
   // reorder is in flight so an unrelated refetch cannot snap back the order.
-  const [orderedLessons, setOrderedLessons] = useState(chapter.lessons);
-  const [prevLessons, setPrevLessons] = useState(chapter.lessons);
-  if (prevLessons !== chapter.lessons) {
-    setPrevLessons(chapter.lessons);
+  const [orderedModules, setOrderedModules] = useState(chapter.courseModules);
+  const [prevModules, setPrevModules] = useState(chapter.courseModules);
+  if (prevModules !== chapter.courseModules) {
+    setPrevModules(chapter.courseModules);
     if (!isReordering) {
-      setOrderedLessons(chapter.lessons);
+      setOrderedModules(chapter.courseModules);
     }
   }
 
@@ -85,15 +85,15 @@ export function ChapterCard({
     }),
   );
 
-  function handleLessonDragEnd(event: DragEndEvent) {
+  function handleModuleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over) return;
-    const next = moveById(orderedLessons, String(active.id), String(over.id));
+    const next = moveById(orderedModules, String(active.id), String(over.id));
     if (!next) return;
-    setOrderedLessons(next);
-    reorderLessons(
+    setOrderedModules(next);
+    reorderModules(
       chapter.id,
-      next.map((lesson) => lesson.id),
+      next.map((module) => module.id),
     );
   }
 
@@ -143,37 +143,37 @@ export function ChapterCard({
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
-          {orderedLessons.length === 0 ? (
+          {orderedModules.length === 0 ? (
             <p className="py-2 text-sm text-muted-foreground">
-              {t('page.noLessons')}
+              {t('page.noModules')}
             </p>
           ) : (
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
-              onDragEnd={handleLessonDragEnd}
+              onDragEnd={handleModuleDragEnd}
             >
               <SortableContext
-                items={orderedLessons.map((lesson) => lesson.id)}
+                items={orderedModules.map((module) => module.id)}
                 strategy={verticalListSortingStrategy}
               >
                 <div className="flex flex-col gap-2">
-                  {orderedLessons.map((lesson) => (
-                    <LessonItem
-                      key={lesson.id}
-                      lesson={lesson}
-                      onEdit={() => onEditLesson(lesson)}
-                      onDelete={() => onDeleteLesson(lesson)}
-                      isDeleting={isDeletingLesson}
+                  {orderedModules.map((module) => (
+                    <ModuleItem
+                      key={module.id}
+                      module={module}
+                      onEdit={() => onEditModule(module)}
+                      onDelete={() => onDeleteModule(module)}
+                      isDeleting={isDeletingModule}
                     />
                   ))}
                 </div>
               </SortableContext>
             </DndContext>
           )}
-          <Button variant="outline" size="sm" onClick={onAddLesson}>
+          <Button variant="outline" size="sm" onClick={onAddModule}>
             <Plus className="h-4 w-4" />
-            {t('page.addLesson')}
+            {t('page.addModule')}
           </Button>
         </CardContent>
       </Card>

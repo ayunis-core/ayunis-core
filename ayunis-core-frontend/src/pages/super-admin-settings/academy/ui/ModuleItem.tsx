@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useTranslation } from 'react-i18next';
-import type { AcademyLessonResponseDto } from '@/shared/api';
+import type { CourseModuleResponseDto } from '@/shared/api';
 import {
   Item,
   ItemActions,
@@ -12,19 +12,19 @@ import {
 import { Button } from '@/shared/ui/shadcn/button';
 import { ExternalLink, GripVertical, Pencil, Trash2 } from 'lucide-react';
 
-interface LessonItemProps {
-  lesson: AcademyLessonResponseDto;
+interface ModuleItemProps {
+  module: CourseModuleResponseDto;
   onEdit: () => void;
   onDelete: () => void;
   isDeleting: boolean;
 }
 
-export function LessonItem({
-  lesson,
+export function ModuleItem({
+  module,
   onEdit,
   onDelete,
   isDeleting,
-}: Readonly<LessonItemProps>) {
+}: Readonly<ModuleItemProps>) {
   const { t } = useTranslation('super-admin-settings-academy');
   const {
     attributes,
@@ -34,7 +34,7 @@ export function LessonItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: lesson.id });
+  } = useSortable({ id: module.id });
 
   return (
     <div
@@ -51,21 +51,21 @@ export function LessonItem({
           variant="ghost"
           size="icon"
           className="cursor-grab touch-none"
-          aria-label={t('page.dragLesson')}
+          aria-label={t('page.dragModule')}
           {...attributes}
           {...listeners}
         >
           <GripVertical className="h-4 w-4 text-muted-foreground" />
         </Button>
         <ItemContent>
-          <ItemTitle>{lesson.title}</ItemTitle>
-          {lesson.description && (
-            <ItemDescription>{lesson.description}</ItemDescription>
+          <ItemTitle>{module.title}</ItemTitle>
+          {module.description && (
+            <ItemDescription>{module.description}</ItemDescription>
           )}
         </ItemContent>
         <ItemActions>
           <Button variant="ghost" size="icon" asChild>
-            <a href={lesson.loomUrl} target="_blank" rel="noopener noreferrer">
+            <a href={module.loomUrl} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="h-4 w-4" />
             </a>
           </Button>

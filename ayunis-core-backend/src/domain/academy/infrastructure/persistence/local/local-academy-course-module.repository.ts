@@ -3,28 +3,28 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 
-import { AcademyLessonRepository } from '../../../application/ports/academy-lesson.repository';
-import { AcademyLesson } from '../../../domain/academy-lesson.entity';
-import { AcademyLessonRecord } from './schema/academy-lesson.record';
+import { AcademyCourseModuleRepository } from '../../../application/ports/academy-course-module.repository';
+import { AcademyCourseModule } from '../../../domain/academy-course-module.entity';
+import { AcademyCourseModuleRecord } from './schema/academy-course-module.record';
 import { AcademyMapper } from './mappers/academy.mapper';
-import { LessonNotFoundError } from '../../../application/academy.errors';
+import { CourseModuleNotFoundError } from '../../../application/academy.errors';
 
 @Injectable()
-export class LocalAcademyLessonRepository implements AcademyLessonRepository {
-  private readonly logger = new Logger(LocalAcademyLessonRepository.name);
+export class LocalAcademyCourseModuleRepository implements AcademyCourseModuleRepository {
+  private readonly logger = new Logger(LocalAcademyCourseModuleRepository.name);
 
   constructor(
-    @InjectRepository(AcademyLessonRecord)
-    private readonly repository: Repository<AcademyLessonRecord>,
+    @InjectRepository(AcademyCourseModuleRecord)
+    private readonly repository: Repository<AcademyCourseModuleRecord>,
     private readonly dataSource: DataSource,
     private readonly mapper: AcademyMapper,
   ) {}
 
-  async findOne(id: UUID): Promise<AcademyLesson | null> {
+  async findOne(id: UUID): Promise<AcademyCourseModule | null> {
     this.logger.log('findOne', { id });
     const record = await this.repository.findOne({ where: { id } });
     if (!record) return null;
-    return this.mapper.lessonToDomain(record);
+    return this.mapper.courseModuleToDomain(record);
   }
 
   async findIdsByChapterId(chapterId: UUID): Promise<UUID[]> {
@@ -41,25 +41,29 @@ export class LocalAcademyLessonRepository implements AcademyLessonRepository {
     return this.repository.maximum('position', { chapterId });
   }
 
-  async create(lesson: AcademyLesson): Promise<AcademyLesson> {
-    this.logger.log('create', { title: lesson.title });
-    const record = this.mapper.lessonToRecord(lesson);
+  async create(
+    courseModule: AcademyCourseModule,
+  ): Promise<AcademyCourseModule> {
+    this.logger.log('create', { title: courseModule.title });
+    const record = this.mapper.courseModuleToRecord(courseModule);
     const saved = await this.repository.save(record);
-    return this.mapper.lessonToDomain(saved);
+    return this.mapper.courseModuleToDomain(saved);
   }
 
-  async update(lesson: AcademyLesson): Promise<AcademyLesson> {
-    this.logger.log('update', { id: lesson.id });
-    const record = this.mapper.lessonToRecord(lesson);
+  async update(
+    courseModule: AcademyCourseModule,
+  ): Promise<AcademyCourseModule> {
+    this.logger.log('update', { id: courseModule.id });
+    const record = this.mapper.courseModuleToRecord(courseModule);
     const saved = await this.repository.save(record);
-    return this.mapper.lessonToDomain(saved);
+    return this.mapper.courseModuleToDomain(saved);
   }
 
   async delete(id: UUID): Promise<void> {
     this.logger.log('delete', { id });
     const result = await this.repository.delete({ id });
     if (result.affected === 0) {
-      throw new LessonNotFoundError(id);
+      throw new CourseModuleNotFoundError(id);
     }
   }
 
@@ -71,7 +75,7 @@ export class LocalAcademyLessonRepository implements AcademyLessonRepository {
     await this.dataSource.transaction(async (manager) => {
       for (const [index, id] of orderedIds.entries()) {
         await manager.update(
-          AcademyLessonRecord,
+          AcademyCourseModuleRecord,
           { id, chapterId },
           { position: index },
         );
