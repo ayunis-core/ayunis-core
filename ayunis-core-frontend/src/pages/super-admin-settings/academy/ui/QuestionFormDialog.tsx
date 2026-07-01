@@ -38,13 +38,15 @@ interface QuestionFormDialogProps {
   question: QuizQuestionResponseDto | null;
 }
 
-const EMPTY_OPTIONS = [{ text: '' }, { text: '' }];
-
 function toFormValues(
   question: QuizQuestionResponseDto | null,
 ): QuestionFormValues {
   if (!question) {
-    return { text: '', options: EMPTY_OPTIONS, correctOptionIndex: 0 };
+    return {
+      text: '',
+      options: [{ text: '' }, { text: '' }],
+      correctOptionIndex: 0,
+    };
   }
   const correctIndex = question.options.findIndex((o) => o.isCorrect);
   return {
