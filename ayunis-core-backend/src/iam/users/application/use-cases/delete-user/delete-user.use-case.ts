@@ -41,10 +41,15 @@ export class DeleteUserUseCase {
       throw new UserNotFoundError(command.userId);
     }
 
-    // Super admins can delete any user, regular admins can only delete users from their org
+    // Super admins can delete any user, regular admins can only delete users
+    // from their own org. The passed command.orgId must match both the
+    // requester's org (from context) and the target user's org to prevent
+    // cross-org deletion.
     const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
     const isOrgAdmin =
-      orgRole === UserRole.ADMIN && requestUserOrgId === userToDelete.orgId;
+      orgRole === UserRole.ADMIN &&
+      requestUserOrgId === command.orgId &&
+      command.orgId === userToDelete.orgId;
     if (!isSuperAdmin && !isOrgAdmin) {
       throw new UserUnauthorizedError(
         'You are not allowed to delete this user',
