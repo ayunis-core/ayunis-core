@@ -21,6 +21,7 @@ import {
   InvalidSeatsError,
   UnexpectedInviteError,
 } from '../../invites.errors';
+import { UserEmailProviderBlacklistedError } from 'src/iam/users/application/users.errors';
 
 describe('CreateInviteUseCase', () => {
   let useCase: CreateInviteUseCase;
@@ -379,6 +380,30 @@ describe('CreateInviteUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         EmailNotAvailableError,
       );
+      expect(invitesRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('should reject invites for private email providers on the blacklist', async () => {
+      // Arrange
+      const command = new CreateInviteCommand({
+        email: 'azv-eutingen@t-online.de',
+        orgId: mockOrgId,
+        role: UserRole.USER,
+        userId: mockUserId,
+      });
+
+      configService.get.mockReturnValueOnce([
+        'gmail',
+        'gmx',
+        'web',
+        't-online',
+      ]); // auth.emailProviderBlacklist
+
+      // Act & Assert
+      await expect(useCase.execute(command)).rejects.toThrow(
+        UserEmailProviderBlacklistedError,
+      );
+      expect(findUserByEmailUseCase.execute).not.toHaveBeenCalled();
       expect(invitesRepository.create).not.toHaveBeenCalled();
     });
 
