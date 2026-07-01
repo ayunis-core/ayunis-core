@@ -11,11 +11,66 @@ export function useStableTarget(target: string): boolean {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const el = document.querySelector(`[data-tour="${target}"]`);
-    const settleMs = el ? Number(el.getAttribute('data-tour-settle')) || 0 : 0;
-    const timer = window.setTimeout(() => setIsReady(true), settleMs);
+    // If the target exists now, wait its settle time then start.
+    const selector = `[data-tour="${target}"]`;
+    const existing = document.querySelector(selector);
 
-    return () => window.clearTimeout(timer);
+    let settleTimerId: number | undefined;
+    let appearFallbackTimerId: number | undefined;
+    let observer: MutationObserver | undefined;
+
+    const startAfterSettle = (el: Element) => {
+      const settleMs = Number(el.getAttribute('data-tour-settle')) || 0;
+      settleTimerId = window.setTimeout(() => setIsReady(true), settleMs);
+    };
+
+    if (existing) {
+      startAfterSettle(existing);
+    } else {
+      // Wait briefly for the target to appear, then honor its settle time.
+      // If it never appears within this window, start anyway and let joyride's
+      // own targetWaitTimeout handle TARGET_NOT_FOUND.
+      const APPEAR_WAIT_MS = 1000;
+
+      observer = new MutationObserver(() => {
+        const el = document.querySelector(selector);
+        if (el) {
+          if (appearFallbackTimerId !== undefined) {
+            window.clearTimeout(appearFallbackTimerId);
+            appearFallbackTimerId = undefined;
+          }
+          startAfterSettle(el);
+          observer?.disconnect();
+          observer = undefined;
+        }
+      });
+
+      observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+      });
+
+      appearFallbackTimerId = window.setTimeout(() => {
+        // Element did not appear in time — proceed so joyride can handle timeout.
+        setIsReady(true);
+        if (observer) {
+          observer.disconnect();
+          observer = undefined;
+        }
+      }, APPEAR_WAIT_MS);
+    }
+
+    return () => {
+      if (settleTimerId !== undefined) {
+        window.clearTimeout(settleTimerId);
+      }
+      if (appearFallbackTimerId !== undefined) {
+        window.clearTimeout(appearFallbackTimerId);
+      }
+      if (observer) {
+        observer.disconnect();
+      }
+    };
   }, [target]);
 
   return isReady;
