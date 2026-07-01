@@ -7,6 +7,7 @@ import {
   Index,
   ManyToOne,
   ManyToMany,
+  JoinColumn,
   JoinTable,
 } from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
@@ -14,12 +15,17 @@ import { PermittedModelRecord } from '../../../../../models/infrastructure/persi
 import { ThreadSourceAssignmentRecord } from './thread-source-assignment.record';
 import { ThreadKnowledgeBaseAssignmentRecord } from './thread-knowledge-base-assignment.record';
 import { McpIntegrationRecord } from '../../../../../mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
+import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
 
 @Entity({ name: 'threads' })
 export class ThreadRecord extends BaseRecord {
   @Column()
   @Index()
   userId: UUID;
+
+  @ManyToOne(() => UserRecord, { onDelete: 'CASCADE', nullable: false })
+  @JoinColumn({ name: 'userId' })
+  user: UserRecord;
 
   @Column({ nullable: true })
   @Index()

@@ -50,9 +50,14 @@ export abstract class SourceRecord extends BaseRecord {
   @Column({ nullable: true })
   knowledgeBaseId: UUID | null;
 
+  // onDelete: 'CASCADE' — deleting a knowledge base removes its sources (and,
+  // via their own cascades, RAG parent/child chunks and embeddings). Keeps org
+  // deletion from leaving orphaned knowledge-base data behind. Sources not tied
+  // to a knowledge base (knowledgeBaseId null, e.g. thread uploads) are
+  // unaffected.
   @ManyToOne(() => KnowledgeBaseRecord, (kb) => kb.sources, {
     nullable: true,
-    onDelete: 'SET NULL',
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'knowledgeBaseId' })
   knowledgeBase: KnowledgeBaseRecord | null;
