@@ -29,7 +29,7 @@ describe('UpdateUserRoleUseCase', () => {
     mockContextService = {
       get: jest.fn((key?: string) =>
         key === 'orgId' ? requesterOrgId : undefined,
-      ) as ContextService['get'],
+      ) as unknown as ContextService['get'],
     };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
