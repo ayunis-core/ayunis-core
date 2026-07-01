@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { ILike, IsNull, type Repository } from 'typeorm';
+import { ILike, IsNull, LessThan, type Repository } from 'typeorm';
 
 import { LocalInvitesRepository } from './local-invites.repository';
 import { InviteRecord } from './schema/invite.record';
@@ -20,11 +20,13 @@ function makeAcceptedInviteRecord(email: string): InviteRecord {
 }
 
 describe('LocalInvitesRepository', () => {
-  let inviteRepo: jest.Mocked<Pick<Repository<InviteRecord>, 'findOne'>>;
+  let inviteRepo: jest.Mocked<
+    Pick<Repository<InviteRecord>, 'findOne' | 'count' | 'delete'>
+  >;
   let repository: LocalInvitesRepository;
 
   beforeEach(() => {
-    inviteRepo = { findOne: jest.fn() };
+    inviteRepo = { findOne: jest.fn(), count: jest.fn(), delete: jest.fn() };
     repository = new LocalInvitesRepository(
       inviteRepo as unknown as Repository<InviteRecord>,
       new InviteMapper(),
@@ -57,6 +59,64 @@ describe('LocalInvitesRepository', () => {
       const result = await repository.findOneByEmail('missing@example.com');
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('deleteExpiredBefore', () => {
+    // The TTL purge must only remove pending invites: accepted invites are
+    // retained for referential integrity (AYC-299). Any purge that dropped the
+    // acceptedAt filter would delete live, accepted invitations.
+    it('deletes only unaccepted invites expiring before the cutoff', async () => {
+      const cutoff = new Date('2026-06-01T00:00:00Z');
+      inviteRepo.delete.mockResolvedValue({ affected: 4, raw: [] });
+
+      const deleted = await repository.deleteExpiredBefore(cutoff);
+
+      expect(deleted).toBe(4);
+      expect(inviteRepo.delete).toHaveBeenCalledWith({
+        expiresAt: LessThan(cutoff),
+        acceptedAt: IsNull(),
+      });
+    });
+
+    it('reports zero when no rows match', async () => {
+      inviteRepo.delete.mockResolvedValue({ affected: 0, raw: [] });
+
+      const deleted = await repository.deleteExpiredBefore(
+        new Date('2026-06-01T00:00:00Z'),
+      );
+
+      expect(deleted).toBe(0);
+    });
+
+    it('treats a missing affected count as zero deletions', async () => {
+      inviteRepo.delete.mockResolvedValue({
+        affected: undefined,
+        raw: [],
+      });
+
+      const deleted = await repository.deleteExpiredBefore(
+        new Date('2026-06-01T00:00:00Z'),
+      );
+
+      expect(deleted).toBe(0);
+    });
+  });
+
+  describe('countExpiredBefore', () => {
+    it('counts only unaccepted invites expiring before the cutoff', async () => {
+      const cutoff = new Date('2026-06-01T00:00:00Z');
+      inviteRepo.count.mockResolvedValue(7);
+
+      const count = await repository.countExpiredBefore(cutoff);
+
+      expect(count).toBe(7);
+      expect(inviteRepo.count).toHaveBeenCalledWith({
+        where: {
+          expiresAt: LessThan(cutoff),
+          acceptedAt: IsNull(),
+        },
+      });
     });
   });
 });

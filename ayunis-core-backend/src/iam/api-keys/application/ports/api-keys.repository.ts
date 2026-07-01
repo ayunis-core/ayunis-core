@@ -7,4 +7,15 @@ export abstract class ApiKeysRepository {
   abstract findByPrefix(prefix: string): Promise<ApiKey | null>;
   abstract create(apiKey: ApiKey): Promise<ApiKey>;
   abstract revoke(id: UUID): Promise<void>;
+  /**
+   * Counts API keys with a non-null `expiresAt` strictly before `cutoff`.
+   * Used by the TTL purge dry-run to report the impact without deleting.
+   */
+  abstract countExpiredBefore(cutoff: Date): Promise<number>;
+  /**
+   * Hard-deletes API keys with a non-null `expiresAt` strictly before
+   * `cutoff`. Keys without an expiry (`expiresAt IS NULL`) are never purged.
+   * Returns the number of rows removed.
+   */
+  abstract deleteExpiredBefore(cutoff: Date): Promise<number>;
 }

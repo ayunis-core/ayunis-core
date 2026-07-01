@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike, IsNull } from 'typeorm';
+import { Repository, ILike, IsNull, LessThan } from 'typeorm';
 import { UUID } from 'crypto';
 import {
   InvitesRepository,
@@ -193,6 +193,33 @@ export class LocalInvitesRepository implements InvitesRepository {
     const deletedCount = result.affected ?? 0;
     this.logger.debug('Pending invites deleted', {
       orgId,
+      count: deletedCount,
+    });
+    return deletedCount;
+  }
+
+  async countExpiredBefore(cutoff: Date): Promise<number> {
+    this.logger.log('countExpiredBefore', { cutoff });
+
+    return this.inviteRepository.count({
+      where: {
+        expiresAt: LessThan(cutoff),
+        acceptedAt: IsNull(),
+      },
+    });
+  }
+
+  async deleteExpiredBefore(cutoff: Date): Promise<number> {
+    this.logger.log('deleteExpiredBefore', { cutoff });
+
+    const result = await this.inviteRepository.delete({
+      expiresAt: LessThan(cutoff),
+      acceptedAt: IsNull(), // Never purge accepted invites (AYC-299)
+    });
+
+    const deletedCount = result.affected ?? 0;
+    this.logger.debug('Expired invites purged', {
+      cutoff,
       count: deletedCount,
     });
     return deletedCount;
