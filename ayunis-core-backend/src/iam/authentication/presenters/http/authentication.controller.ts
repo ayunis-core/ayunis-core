@@ -96,6 +96,7 @@ export class AuthenticationController {
   }
 
   @Public()
+  @RateLimit({ limit: 5, windowMs: 60 * 60 * 1000 }) // 5 registration attempts per hour
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
