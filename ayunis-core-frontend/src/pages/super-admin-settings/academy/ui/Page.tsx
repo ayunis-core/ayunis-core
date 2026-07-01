@@ -16,16 +16,16 @@ import {
 import { useTranslation } from 'react-i18next';
 import type {
   AcademyChapterResponseDto,
-  AcademyLessonResponseDto,
+  CourseModuleResponseDto,
 } from '@/shared/api';
 import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
 import { Button } from '@/shared/ui/shadcn/button';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { ChapterCard } from './ChapterCard';
 import { ChapterFormDialog } from './ChapterFormDialog';
-import { LessonFormDialog } from './LessonFormDialog';
+import { ModuleFormDialog } from './ModuleFormDialog';
 import { useDeleteChapter } from '../api/useDeleteChapter';
-import { useDeleteLesson } from '../api/useDeleteLesson';
+import { useDeleteModule } from '../api/useDeleteModule';
 import { useReorderChapters } from '../api/useReorderChapters';
 import { moveById } from '../lib/sortOrder';
 
@@ -33,9 +33,9 @@ interface AcademyPageProps {
   chapters: AcademyChapterResponseDto[];
 }
 
-interface LessonDialogState {
+interface ModuleDialogState {
   chapterId: string;
-  lesson: AcademyLessonResponseDto | null;
+  module: CourseModuleResponseDto | null;
 }
 
 export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
@@ -43,11 +43,11 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
   const [chapterDialogOpen, setChapterDialogOpen] = useState(false);
   const [editChapter, setEditChapter] =
     useState<AcademyChapterResponseDto | null>(null);
-  const [lessonDialog, setLessonDialog] = useState<LessonDialogState | null>(
+  const [moduleDialog, setModuleDialog] = useState<ModuleDialogState | null>(
     null,
   );
   const { deleteChapter, isDeleting: isDeletingChapter } = useDeleteChapter();
-  const { deleteLesson, isDeleting: isDeletingLesson } = useDeleteLesson();
+  const { deleteModule, isDeleting: isDeletingModule } = useDeleteModule();
   const { reorderChapters, isReordering } = useReorderChapters();
   const { confirm } = useConfirmation();
 
@@ -91,15 +91,15 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
     });
   }
 
-  function handleDeleteLesson(lesson: AcademyLessonResponseDto) {
+  function handleDeleteModule(module: CourseModuleResponseDto) {
     confirm({
-      title: t('deleteLesson.title'),
-      description: t('deleteLesson.description', { title: lesson.title }),
-      confirmText: t('deleteLesson.confirm'),
-      cancelText: t('deleteLesson.cancel'),
+      title: t('deleteModule.title'),
+      description: t('deleteModule.description', { title: module.title }),
+      confirmText: t('deleteModule.confirm'),
+      cancelText: t('deleteModule.cancel'),
       variant: 'destructive',
       onConfirm: () => {
-        deleteLesson(lesson.id);
+        deleteModule(module.id);
       },
     });
   }
@@ -146,15 +146,15 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
                     setChapterDialogOpen(true);
                   }}
                   onDelete={() => handleDeleteChapter(chapter)}
-                  onAddLesson={() =>
-                    setLessonDialog({ chapterId: chapter.id, lesson: null })
+                  onAddModule={() =>
+                    setModuleDialog({ chapterId: chapter.id, module: null })
                   }
-                  onEditLesson={(lesson) =>
-                    setLessonDialog({ chapterId: chapter.id, lesson })
+                  onEditModule={(module) =>
+                    setModuleDialog({ chapterId: chapter.id, module })
                   }
-                  onDeleteLesson={handleDeleteLesson}
+                  onDeleteModule={handleDeleteModule}
                   isDeletingChapter={isDeletingChapter}
-                  isDeletingLesson={isDeletingLesson}
+                  isDeletingModule={isDeletingModule}
                 />
               ))}
             </div>
@@ -170,13 +170,13 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
         }}
         chapter={editChapter}
       />
-      <LessonFormDialog
-        open={lessonDialog !== null}
+      <ModuleFormDialog
+        open={moduleDialog !== null}
         onOpenChange={(open) => {
-          if (!open) setLessonDialog(null);
+          if (!open) setModuleDialog(null);
         }}
-        chapterId={lessonDialog?.chapterId ?? null}
-        lesson={lessonDialog?.lesson ?? null}
+        chapterId={moduleDialog?.chapterId ?? null}
+        module={moduleDialog?.module ?? null}
       />
     </SuperAdminSettingsLayout>
   );

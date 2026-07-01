@@ -11,7 +11,7 @@ import {
 
 const searchSchema = z.object({
   // Any empty/invalid value falls back to undefined → chapter intro screen.
-  lesson: z.number().int().min(0).optional().catch(undefined),
+  module: z.number().int().min(0).optional().catch(undefined),
 });
 
 export const Route = createFileRoute('/_authenticated/academy/$chapterId')({
@@ -39,6 +39,6 @@ export const Route = createFileRoute('/_authenticated/academy/$chapterId')({
 
 function RouteComponent() {
   const { chapter } = Route.useLoaderData();
-  const { lesson } = Route.useSearch();
-  return <ChapterDetailPage chapter={chapter} activeLesson={lesson} />;
+  const { module } = Route.useSearch();
+  return <ChapterDetailPage chapter={chapter} activeModule={module} />;
 }

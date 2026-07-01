@@ -26,7 +26,6 @@ import type {
 
 import type {
   AcademyChapterResponseDto,
-  AcademyLessonResponseDto,
   AcceptInviteDto,
   AcceptInviteResponseDto,
   ActiveSubscriptionResponseDto,
@@ -42,6 +41,7 @@ import type {
   ChangeSubscriptionRequestDto,
   ChatCompletionRequestDto,
   ConfirmEmailDto,
+  CourseModuleResponseDto,
   CrawlDomainGrantResponseDto,
   CreateApiKeyDto,
   CreateApiKeyResponseDto,
@@ -49,6 +49,7 @@ import type {
   CreateBulkInvitesDto,
   CreateBulkInvitesResponseDto,
   CreateChapterRequestDto,
+  CreateCourseModuleRequestDto,
   CreateCustomIntegrationDto,
   CreateEmbeddingModelRequestDto,
   CreateImageGenerationModelRequestDto,
@@ -57,7 +58,6 @@ import type {
   CreateKnowledgeBaseDto,
   CreateKnowledgeBaseShareDto,
   CreateLanguageModelRequestDto,
-  CreateLessonRequestDto,
   CreateLetterheadDto,
   CreateOrgRequestDto,
   CreatePermittedModelDto,
@@ -126,7 +126,7 @@ import type {
   ProviderUsageResponseDto,
   RegisterDto,
   ReorderChaptersRequestDto,
-  ReorderLessonsRequestDto,
+  ReorderCourseModulesRequestDto,
   ResendEmailConfirmationDto,
   ResetPasswordDto,
   RetentionPolicyResponseDto,
@@ -183,12 +183,12 @@ import type {
   UpdateArtifactDto,
   UpdateBillingInfoDto,
   UpdateChapterRequestDto,
+  UpdateCourseModuleRequestDto,
   UpdateEmbeddingModelRequestDto,
   UpdateImageGenerationModelRequestDto,
   UpdateIpAllowlistRequestDto,
   UpdateKnowledgeBaseDto,
   UpdateLanguageModelRequestDto,
-  UpdateLessonRequestDto,
   UpdateLetterheadDto,
   UpdateMcpIntegrationDto,
   UpdateMonthlyCreditsDto,
@@ -17435,8 +17435,8 @@ export const useRetentionPoliciesControllerUpdate = <TError = void,
     }
     
 /**
- * Retrieve all chapters with nested lessons, ordered by position. Requires the academy add-on to be active for the organization.
- * @summary Get all academy chapters with their lessons
+ * Retrieve all chapters with nested modules, ordered by position. Requires the academy add-on to be active for the organization.
+ * @summary Get all academy chapters with their modules
  */
 export const academyChaptersControllerGetChapters = (
     
@@ -17507,7 +17507,7 @@ export function useAcademyChaptersControllerGetChapters<TData = Awaited<ReturnTy
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get all academy chapters with their lessons
+ * @summary Get all academy chapters with their modules
  */
 
 export function useAcademyChaptersControllerGetChapters<TData = Awaited<ReturnType<typeof academyChaptersControllerGetChapters>>, TError = void>(
@@ -17529,8 +17529,8 @@ export function useAcademyChaptersControllerGetChapters<TData = Awaited<ReturnTy
 
 
 /**
- * Retrieve all chapters with nested lessons, ordered by position. Only accessible to super admins.
- * @summary Get all academy chapters with their lessons
+ * Retrieve all chapters with nested modules, ordered by position. Only accessible to super admins.
+ * @summary Get all academy chapters with their modules
  */
 export const superAdminAcademyChaptersControllerGetChapters = (
     
@@ -17601,7 +17601,7 @@ export function useSuperAdminAcademyChaptersControllerGetChapters<TData = Awaite
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get all academy chapters with their lessons
+ * @summary Get all academy chapters with their modules
  */
 
 export function useSuperAdminAcademyChaptersControllerGetChapters<TData = Awaited<ReturnType<typeof superAdminAcademyChaptersControllerGetChapters>>, TError = void>(
@@ -17820,7 +17820,7 @@ export const useSuperAdminAcademyChaptersControllerUpdateChapter = <TError = voi
     }
     
 /**
- * Delete a chapter and all of its lessons. Only accessible to super admins.
+ * Delete a chapter and all of its modules. Only accessible to super admins.
  * @summary Delete an academy chapter
  */
 export const superAdminAcademyChaptersControllerDeleteChapter = (
@@ -17883,31 +17883,31 @@ export const useSuperAdminAcademyChaptersControllerDeleteChapter = <TError = voi
     }
     
 /**
- * Create a lesson in a chapter, appended after the last position. Only accessible to super admins.
- * @summary Create a new academy lesson
+ * Create a module in a chapter, appended after the last position. Only accessible to super admins.
+ * @summary Create a new academy module
  */
-export const superAdminAcademyLessonsControllerCreateLesson = (
+export const superAdminAcademyCourseModulesControllerCreateCourseModule = (
     chapterId: string,
-    createLessonRequestDto: CreateLessonRequestDto,
+    createCourseModuleRequestDto: CreateCourseModuleRequestDto,
  signal?: AbortSignal
 ) => {
       
       
-      return customAxiosInstance<AcademyLessonResponseDto>(
-      {url: `/super-admin/academy/chapters/${chapterId}/lessons`, method: 'POST',
+      return customAxiosInstance<CourseModuleResponseDto>(
+      {url: `/super-admin/academy/chapters/${chapterId}/course-modules`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: createLessonRequestDto, signal
+      data: createCourseModuleRequestDto, signal
     },
       );
     }
   
 
 
-export const getSuperAdminAcademyLessonsControllerCreateLessonMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerCreateLesson>>, TError,{chapterId: string;data: CreateLessonRequestDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerCreateLesson>>, TError,{chapterId: string;data: CreateLessonRequestDto}, TContext> => {
+export const getSuperAdminAcademyCourseModulesControllerCreateCourseModuleMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerCreateCourseModule>>, TError,{chapterId: string;data: CreateCourseModuleRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerCreateCourseModule>>, TError,{chapterId: string;data: CreateCourseModuleRequestDto}, TContext> => {
 
-const mutationKey = ['superAdminAcademyLessonsControllerCreateLesson'];
+const mutationKey = ['superAdminAcademyCourseModulesControllerCreateCourseModule'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -17917,10 +17917,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerCreateLesson>>, {chapterId: string;data: CreateLessonRequestDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerCreateCourseModule>>, {chapterId: string;data: CreateCourseModuleRequestDto}> = (props) => {
           const {chapterId,data} = props ?? {};
 
-          return  superAdminAcademyLessonsControllerCreateLesson(chapterId,data,)
+          return  superAdminAcademyCourseModulesControllerCreateCourseModule(chapterId,data,)
         }
 
         
@@ -17928,52 +17928,52 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SuperAdminAcademyLessonsControllerCreateLessonMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerCreateLesson>>>
-    export type SuperAdminAcademyLessonsControllerCreateLessonMutationBody = CreateLessonRequestDto
-    export type SuperAdminAcademyLessonsControllerCreateLessonMutationError = void
+    export type SuperAdminAcademyCourseModulesControllerCreateCourseModuleMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerCreateCourseModule>>>
+    export type SuperAdminAcademyCourseModulesControllerCreateCourseModuleMutationBody = CreateCourseModuleRequestDto
+    export type SuperAdminAcademyCourseModulesControllerCreateCourseModuleMutationError = void
 
     /**
- * @summary Create a new academy lesson
+ * @summary Create a new academy module
  */
-export const useSuperAdminAcademyLessonsControllerCreateLesson = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerCreateLesson>>, TError,{chapterId: string;data: CreateLessonRequestDto}, TContext>, }
+export const useSuperAdminAcademyCourseModulesControllerCreateCourseModule = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerCreateCourseModule>>, TError,{chapterId: string;data: CreateCourseModuleRequestDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminAcademyLessonsControllerCreateLesson>>,
+        Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerCreateCourseModule>>,
         TError,
-        {chapterId: string;data: CreateLessonRequestDto},
+        {chapterId: string;data: CreateCourseModuleRequestDto},
         TContext
       > => {
 
-      const mutationOptions = getSuperAdminAcademyLessonsControllerCreateLessonMutationOptions(options);
+      const mutationOptions = getSuperAdminAcademyCourseModulesControllerCreateCourseModuleMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
     
 /**
- * Persist a new lesson order within a chapter. The submitted ids must be exactly the ids of all lessons in the chapter. Only accessible to super admins.
- * @summary Reorder the lessons of a chapter
+ * Persist a new module order within a chapter. The submitted ids must be exactly the ids of all modules in the chapter. Only accessible to super admins.
+ * @summary Reorder the modules of a chapter
  */
-export const superAdminAcademyLessonsControllerReorderLessons = (
+export const superAdminAcademyCourseModulesControllerReorderCourseModules = (
     chapterId: string,
-    reorderLessonsRequestDto: ReorderLessonsRequestDto,
+    reorderCourseModulesRequestDto: ReorderCourseModulesRequestDto,
  ) => {
       
       
       return customAxiosInstance<void>(
-      {url: `/super-admin/academy/chapters/${chapterId}/lessons/order`, method: 'PUT',
+      {url: `/super-admin/academy/chapters/${chapterId}/course-modules/order`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
-      data: reorderLessonsRequestDto
+      data: reorderCourseModulesRequestDto
     },
       );
     }
   
 
 
-export const getSuperAdminAcademyLessonsControllerReorderLessonsMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerReorderLessons>>, TError,{chapterId: string;data: ReorderLessonsRequestDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerReorderLessons>>, TError,{chapterId: string;data: ReorderLessonsRequestDto}, TContext> => {
+export const getSuperAdminAcademyCourseModulesControllerReorderCourseModulesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerReorderCourseModules>>, TError,{chapterId: string;data: ReorderCourseModulesRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerReorderCourseModules>>, TError,{chapterId: string;data: ReorderCourseModulesRequestDto}, TContext> => {
 
-const mutationKey = ['superAdminAcademyLessonsControllerReorderLessons'];
+const mutationKey = ['superAdminAcademyCourseModulesControllerReorderCourseModules'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -17983,10 +17983,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerReorderLessons>>, {chapterId: string;data: ReorderLessonsRequestDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerReorderCourseModules>>, {chapterId: string;data: ReorderCourseModulesRequestDto}> = (props) => {
           const {chapterId,data} = props ?? {};
 
-          return  superAdminAcademyLessonsControllerReorderLessons(chapterId,data,)
+          return  superAdminAcademyCourseModulesControllerReorderCourseModules(chapterId,data,)
         }
 
         
@@ -17994,52 +17994,52 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SuperAdminAcademyLessonsControllerReorderLessonsMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerReorderLessons>>>
-    export type SuperAdminAcademyLessonsControllerReorderLessonsMutationBody = ReorderLessonsRequestDto
-    export type SuperAdminAcademyLessonsControllerReorderLessonsMutationError = void
+    export type SuperAdminAcademyCourseModulesControllerReorderCourseModulesMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerReorderCourseModules>>>
+    export type SuperAdminAcademyCourseModulesControllerReorderCourseModulesMutationBody = ReorderCourseModulesRequestDto
+    export type SuperAdminAcademyCourseModulesControllerReorderCourseModulesMutationError = void
 
     /**
- * @summary Reorder the lessons of a chapter
+ * @summary Reorder the modules of a chapter
  */
-export const useSuperAdminAcademyLessonsControllerReorderLessons = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerReorderLessons>>, TError,{chapterId: string;data: ReorderLessonsRequestDto}, TContext>, }
+export const useSuperAdminAcademyCourseModulesControllerReorderCourseModules = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerReorderCourseModules>>, TError,{chapterId: string;data: ReorderCourseModulesRequestDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminAcademyLessonsControllerReorderLessons>>,
+        Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerReorderCourseModules>>,
         TError,
-        {chapterId: string;data: ReorderLessonsRequestDto},
+        {chapterId: string;data: ReorderCourseModulesRequestDto},
         TContext
       > => {
 
-      const mutationOptions = getSuperAdminAcademyLessonsControllerReorderLessonsMutationOptions(options);
+      const mutationOptions = getSuperAdminAcademyCourseModulesControllerReorderCourseModulesMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
     
 /**
- * Replace title, description, and Loom link of a lesson. Only accessible to super admins.
- * @summary Update an academy lesson
+ * Replace title, description, and Loom link of a module. Only accessible to super admins.
+ * @summary Update an academy module
  */
-export const superAdminAcademyLessonsControllerUpdateLesson = (
+export const superAdminAcademyCourseModulesControllerUpdateCourseModule = (
     id: string,
-    updateLessonRequestDto: UpdateLessonRequestDto,
+    updateCourseModuleRequestDto: UpdateCourseModuleRequestDto,
  ) => {
       
       
-      return customAxiosInstance<AcademyLessonResponseDto>(
-      {url: `/super-admin/academy/lessons/${id}`, method: 'PUT',
+      return customAxiosInstance<CourseModuleResponseDto>(
+      {url: `/super-admin/academy/course-modules/${id}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
-      data: updateLessonRequestDto
+      data: updateCourseModuleRequestDto
     },
       );
     }
   
 
 
-export const getSuperAdminAcademyLessonsControllerUpdateLessonMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerUpdateLesson>>, TError,{id: string;data: UpdateLessonRequestDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerUpdateLesson>>, TError,{id: string;data: UpdateLessonRequestDto}, TContext> => {
+export const getSuperAdminAcademyCourseModulesControllerUpdateCourseModuleMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerUpdateCourseModule>>, TError,{id: string;data: UpdateCourseModuleRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerUpdateCourseModule>>, TError,{id: string;data: UpdateCourseModuleRequestDto}, TContext> => {
 
-const mutationKey = ['superAdminAcademyLessonsControllerUpdateLesson'];
+const mutationKey = ['superAdminAcademyCourseModulesControllerUpdateCourseModule'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -18049,10 +18049,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerUpdateLesson>>, {id: string;data: UpdateLessonRequestDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerUpdateCourseModule>>, {id: string;data: UpdateCourseModuleRequestDto}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  superAdminAcademyLessonsControllerUpdateLesson(id,data,)
+          return  superAdminAcademyCourseModulesControllerUpdateCourseModule(id,data,)
         }
 
         
@@ -18060,49 +18060,49 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SuperAdminAcademyLessonsControllerUpdateLessonMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerUpdateLesson>>>
-    export type SuperAdminAcademyLessonsControllerUpdateLessonMutationBody = UpdateLessonRequestDto
-    export type SuperAdminAcademyLessonsControllerUpdateLessonMutationError = void
+    export type SuperAdminAcademyCourseModulesControllerUpdateCourseModuleMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerUpdateCourseModule>>>
+    export type SuperAdminAcademyCourseModulesControllerUpdateCourseModuleMutationBody = UpdateCourseModuleRequestDto
+    export type SuperAdminAcademyCourseModulesControllerUpdateCourseModuleMutationError = void
 
     /**
- * @summary Update an academy lesson
+ * @summary Update an academy module
  */
-export const useSuperAdminAcademyLessonsControllerUpdateLesson = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerUpdateLesson>>, TError,{id: string;data: UpdateLessonRequestDto}, TContext>, }
+export const useSuperAdminAcademyCourseModulesControllerUpdateCourseModule = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerUpdateCourseModule>>, TError,{id: string;data: UpdateCourseModuleRequestDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminAcademyLessonsControllerUpdateLesson>>,
+        Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerUpdateCourseModule>>,
         TError,
-        {id: string;data: UpdateLessonRequestDto},
+        {id: string;data: UpdateCourseModuleRequestDto},
         TContext
       > => {
 
-      const mutationOptions = getSuperAdminAcademyLessonsControllerUpdateLessonMutationOptions(options);
+      const mutationOptions = getSuperAdminAcademyCourseModulesControllerUpdateCourseModuleMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
     
 /**
- * Delete a lesson. Only accessible to super admins.
- * @summary Delete an academy lesson
+ * Delete a module. Only accessible to super admins.
+ * @summary Delete an academy module
  */
-export const superAdminAcademyLessonsControllerDeleteLesson = (
+export const superAdminAcademyCourseModulesControllerDeleteCourseModule = (
     id: string,
  ) => {
       
       
       return customAxiosInstance<void>(
-      {url: `/super-admin/academy/lessons/${id}`, method: 'DELETE'
+      {url: `/super-admin/academy/course-modules/${id}`, method: 'DELETE'
     },
       );
     }
   
 
 
-export const getSuperAdminAcademyLessonsControllerDeleteLessonMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerDeleteLesson>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerDeleteLesson>>, TError,{id: string}, TContext> => {
+export const getSuperAdminAcademyCourseModulesControllerDeleteCourseModuleMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerDeleteCourseModule>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerDeleteCourseModule>>, TError,{id: string}, TContext> => {
 
-const mutationKey = ['superAdminAcademyLessonsControllerDeleteLesson'];
+const mutationKey = ['superAdminAcademyCourseModulesControllerDeleteCourseModule'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -18112,10 +18112,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerDeleteLesson>>, {id: string}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerDeleteCourseModule>>, {id: string}> = (props) => {
           const {id} = props ?? {};
 
-          return  superAdminAcademyLessonsControllerDeleteLesson(id,)
+          return  superAdminAcademyCourseModulesControllerDeleteCourseModule(id,)
         }
 
         
@@ -18123,23 +18123,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SuperAdminAcademyLessonsControllerDeleteLessonMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerDeleteLesson>>>
+    export type SuperAdminAcademyCourseModulesControllerDeleteCourseModuleMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerDeleteCourseModule>>>
     
-    export type SuperAdminAcademyLessonsControllerDeleteLessonMutationError = void
+    export type SuperAdminAcademyCourseModulesControllerDeleteCourseModuleMutationError = void
 
     /**
- * @summary Delete an academy lesson
+ * @summary Delete an academy module
  */
-export const useSuperAdminAcademyLessonsControllerDeleteLesson = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyLessonsControllerDeleteLesson>>, TError,{id: string}, TContext>, }
+export const useSuperAdminAcademyCourseModulesControllerDeleteCourseModule = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerDeleteCourseModule>>, TError,{id: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminAcademyLessonsControllerDeleteLesson>>,
+        Awaited<ReturnType<typeof superAdminAcademyCourseModulesControllerDeleteCourseModule>>,
         TError,
         {id: string},
         TContext
       > => {
 
-      const mutationOptions = getSuperAdminAcademyLessonsControllerDeleteLessonMutationOptions(options);
+      const mutationOptions = getSuperAdminAcademyCourseModulesControllerDeleteCourseModuleMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

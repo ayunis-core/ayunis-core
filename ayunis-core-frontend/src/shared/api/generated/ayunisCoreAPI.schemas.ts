@@ -4199,25 +4199,25 @@ export interface UpdateRetentionPolicyRequestDto {
   retentionDays: UpdateRetentionPolicyRequestDtoRetentionDays;
 }
 
-export interface AcademyLessonResponseDto {
-  /** The unique identifier of the lesson */
+export interface CourseModuleResponseDto {
+  /** The unique identifier of the module */
   id: string;
-  /** The id of the chapter the lesson belongs to */
+  /** The id of the chapter the module belongs to */
   chapterId: string;
-  /** The title of the lesson */
+  /** The title of the module */
   title: string;
   /**
-   * An optional description of the lesson
+   * An optional description of the module
    * @nullable
    */
   description: string | null;
-  /** The Loom share or embed link of the lesson video */
+  /** The Loom share or embed link of the module video */
   loomUrl: string;
-  /** The position of the lesson within its chapter (0-based) */
+  /** The position of the module within its chapter (0-based) */
   position: number;
-  /** The date the lesson was created */
+  /** The date the module was created */
   createdAt: string;
-  /** The date the lesson was last updated */
+  /** The date the module was last updated */
   updatedAt: string;
 }
 
@@ -4230,8 +4230,8 @@ export interface AcademyChapterResponseDto {
   description: string;
   /** The position of the chapter (0-based) */
   position: number;
-  /** The lessons of the chapter, ordered by position */
-  lessons: AcademyLessonResponseDto[];
+  /** The modules of the chapter, ordered by position */
+  courseModules: CourseModuleResponseDto[];
   /** The date the chapter was created */
   createdAt: string;
   /** The date the chapter was last updated */
@@ -4269,42 +4269,42 @@ export interface UpdateChapterRequestDto {
   description: string;
 }
 
-export interface CreateLessonRequestDto {
+export interface CreateCourseModuleRequestDto {
   /**
-   * The title of the lesson
+   * The title of the module
    * @maxLength 255
    */
   title: string;
   /**
-   * An optional description of the lesson
+   * An optional description of the module
    * @maxLength 2000
    */
   description?: string;
   /**
-   * The Loom share or embed link of the lesson video
+   * The Loom share or embed link of the module video
    * @maxLength 500
    */
   loomUrl: string;
 }
 
-export interface ReorderLessonsRequestDto {
-  /** All lesson ids of the chapter in their new order. Must contain exactly the ids of all lessons in the chapter. */
-  lessonIds: string[];
+export interface ReorderCourseModulesRequestDto {
+  /** All module ids of the chapter in their new order. Must contain exactly the ids of all modules in the chapter. */
+  courseModuleIds: string[];
 }
 
-export interface UpdateLessonRequestDto {
+export interface UpdateCourseModuleRequestDto {
   /**
-   * The title of the lesson
+   * The title of the module
    * @maxLength 255
    */
   title: string;
   /**
-   * An optional description of the lesson
+   * An optional description of the module
    * @maxLength 2000
    */
   description?: string;
   /**
-   * The Loom share or embed link of the lesson video
+   * The Loom share or embed link of the module video
    * @maxLength 500
    */
   loomUrl: string;

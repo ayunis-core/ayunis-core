@@ -11,10 +11,10 @@
     "previous": "Previous",
     "next": "Next",
     "finish": "Finish",
-    "lessonsTitle": "Lessons",
-    "noLessons": {
-      "title": "No lessons yet",
-      "description": "This chapter doesn't have any lessons yet."
+    "modulesTitle": "Modules",
+    "noModules": {
+      "title": "No modules yet",
+      "description": "This chapter doesn't have any modules yet."
     }
   }
 }

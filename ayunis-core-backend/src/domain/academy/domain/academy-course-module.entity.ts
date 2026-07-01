@@ -1,7 +1,7 @@
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 
-export class AcademyLesson {
+export class AcademyCourseModule {
   public readonly id: UUID;
   public readonly chapterId: UUID;
   public readonly title: string;
