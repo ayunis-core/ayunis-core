@@ -52,7 +52,7 @@ export function useTeamCreditLimits(onSetSuccess?: () => void) {
       onError: (error) => {
         try {
           const { code } = extractErrorData(error);
-          if (code === 'TARGET_NOT_FOUND') {
+          if (code === 'CREDIT_LIMIT_TARGET_NOT_FOUND') {
             showError(t('creditLimits.set.notFound'));
           } else if (code === 'INVALID_CREDIT_LIMIT') {
             showError(t('creditLimits.set.invalid'));
