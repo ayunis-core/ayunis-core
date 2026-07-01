@@ -68,6 +68,7 @@ import { CreateInviteResponseDto } from './dtos/create-invite-response.dto';
 import { DeleteAllPendingInvitesResponseDto } from './dtos/delete-all-pending-invites-response.dto';
 import { DeleteAllPendingInvitesUseCase } from '../../application/use-cases/delete-all-pending-invites/delete-all-pending-invites.use-case';
 import { DeleteAllPendingInvitesCommand } from '../../application/use-cases/delete-all-pending-invites/delete-all-pending-invites.command';
+import type { Invite } from '../../domain/invite.entity';
 
 @ApiTags('invites')
 @Controller('invites')
@@ -124,43 +125,8 @@ export class InvitesController {
         userId,
       }),
     );
-    // Build invitation link
-    const frontendBaseUrl = this.configService.get<string>(
-      'app.frontend.baseUrl',
-    );
-    const inviteAcceptEndpoint = this.configService.get<string>(
-      'app.frontend.inviteAcceptEndpoint',
-    );
-    const inviteAcceptUrl = `${frontendBaseUrl}${inviteAcceptEndpoint}?token=${token}`;
 
-    // Send invitation email if email configuration is available
-    const hasEmailConfig = this.configService.get<boolean>('emails.hasConfig');
-    if (hasEmailConfig) {
-      this.logger.debug('Sending invitation email', {
-        inviteId: invite.id,
-        email: invite.email,
-      });
-
-      await this.sendInvitationEmailUseCase.execute(
-        new SendInvitationEmailCommand(invite, inviteAcceptUrl),
-      );
-
-      this.logger.debug('Invitation email sent successfully', {
-        inviteId: invite.id,
-        email: invite.email,
-      });
-      return { url: null };
-    } else {
-      // Return the invitation URL to the frontend
-      this.logger.debug(
-        'Email configuration not available, skipping email send',
-        {
-          inviteId: invite.id,
-          email: invite.email,
-        },
-      );
-      return { url: inviteAcceptUrl };
-    }
+    return this.deliverInvite(invite, token);
   }
 
   @Post('bulk')
@@ -279,7 +245,7 @@ export class InvitesController {
   async getInviteByToken(
     @Param('token') token: string,
   ): Promise<InviteDetailResponseDto> {
-    this.logger.log('getInviteByToken', { token });
+    this.logger.log('getInviteByToken', { hasToken: !!token });
 
     const inviteWithOrg = await this.getInviteByTokenUseCase.execute(
       new GetInviteByTokenQuery(token),
@@ -361,6 +327,13 @@ export class InvitesController {
       new ResendExpiredInviteCommand(inviteId),
     );
 
+    return this.deliverInvite(invite, token);
+  }
+
+  private async deliverInvite(
+    invite: Invite,
+    token: string,
+  ): Promise<CreateInviteResponseDto> {
     // Build invitation link
     const frontendBaseUrl = this.configService.get<string>(
       'app.frontend.baseUrl',
@@ -372,28 +345,31 @@ export class InvitesController {
 
     // Send invitation email if email configuration is available
     const hasEmailConfig = this.configService.get<boolean>('emails.hasConfig');
-    if (hasEmailConfig) {
-      this.logger.debug('Sending invitation email for resent invite', {
-        inviteId: invite.id,
-        email: invite.email,
-      });
-
-      await this.sendInvitationEmailUseCase.execute(
-        new SendInvitationEmailCommand(invite, inviteAcceptUrl),
+    if (!hasEmailConfig) {
+      this.logger.debug(
+        'Email configuration not available, skipping email send',
+        {
+          inviteId: invite.id,
+          email: invite.email,
+        },
       );
-
-      this.logger.debug('Invitation email sent successfully', {
-        inviteId: invite.id,
-        email: invite.email,
-      });
-      return { url: null };
-    } else {
-      this.logger.debug('Email configuration not available, returning URL', {
-        inviteId: invite.id,
-        email: invite.email,
-      });
       return { url: inviteAcceptUrl };
     }
+
+    this.logger.debug('Sending invitation email', {
+      inviteId: invite.id,
+      email: invite.email,
+    });
+
+    await this.sendInvitationEmailUseCase.execute(
+      new SendInvitationEmailCommand(invite, inviteAcceptUrl),
+    );
+
+    this.logger.debug('Invitation email sent successfully', {
+      inviteId: invite.id,
+      email: invite.email,
+    });
+    return { url: null };
   }
 
   @Delete('all')
