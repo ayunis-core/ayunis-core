@@ -8297,7 +8297,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AcademyChapterResponseDto"
+                    "$ref": "#/components/schemas/SuperAdminAcademyChapterResponseDto"
                   }
                 }
               }
@@ -8643,6 +8643,146 @@
           }
         },
         "summary": "Delete an academy module",
+        "tags": ["Super Admin Academy"]
+      }
+    },
+    "/super-admin/academy/chapters/{chapterId}/quiz-questions": {
+      "post": {
+        "description": "Add a question to a chapter quiz pool, appended after the last position. Only accessible to super admins.",
+        "operationId": "SuperAdminAcademyQuizQuestionsController_createQuizQuestion",
+        "parameters": [
+          {
+            "name": "chapterId",
+            "required": true,
+            "in": "path",
+            "description": "Chapter ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQuizQuestionRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created quiz question",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuizQuestionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid question (bad option count or no single correct)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Chapter not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a new academy quiz question",
+        "tags": ["Super Admin Academy"]
+      }
+    },
+    "/super-admin/academy/quiz-questions/{id}": {
+      "put": {
+        "description": "Replace the prompt and answer options of a quiz question. Only accessible to super admins.",
+        "operationId": "SuperAdminAcademyQuizQuestionsController_updateQuizQuestion",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Quiz question ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateQuizQuestionRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated quiz question",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuizQuestionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid question (bad option count or no single correct)"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Quiz question not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update an academy quiz question",
+        "tags": ["Super Admin Academy"]
+      },
+      "delete": {
+        "description": "Delete a quiz question. Only accessible to super admins.",
+        "operationId": "SuperAdminAcademyQuizQuestionsController_deleteQuizQuestion",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Quiz question ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted quiz question"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Quiz question not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete an academy quiz question",
         "tags": ["Super Admin Academy"]
       }
     },
@@ -15434,6 +15574,11 @@
             "description": "The position of the chapter (0-based)",
             "example": 0
           },
+          "quizEnabled": {
+            "type": "boolean",
+            "description": "Whether a quiz is activated for this chapter (shown at chapter end)",
+            "example": false
+          },
           "courseModules": {
             "description": "The modules of the chapter, ordered by position",
             "type": "array",
@@ -15457,9 +15602,142 @@
           "title",
           "description",
           "position",
+          "quizEnabled",
           "courseModules",
           "createdAt",
           "updatedAt"
+        ]
+      },
+      "QuizAnswerOptionResponseDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The answer option text",
+            "example": "A large language model"
+          },
+          "isCorrect": {
+            "type": "boolean",
+            "description": "Whether this option is the correct answer",
+            "example": true
+          }
+        },
+        "required": ["text", "isCorrect"]
+      },
+      "QuizQuestionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The unique identifier of the quiz question"
+          },
+          "chapterId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The id of the chapter the question belongs to"
+          },
+          "text": {
+            "type": "string",
+            "description": "The question prompt",
+            "example": "What is an LLM?"
+          },
+          "options": {
+            "description": "The answer options with the correct one flagged",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuizAnswerOptionResponseDto"
+            }
+          },
+          "position": {
+            "type": "integer",
+            "description": "The position of the question within its chapter (0-based)",
+            "example": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the question was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the question was last updated"
+          }
+        },
+        "required": [
+          "id",
+          "chapterId",
+          "text",
+          "options",
+          "position",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "SuperAdminAcademyChapterResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The unique identifier of the chapter"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the chapter",
+            "example": "Getting Started"
+          },
+          "description": {
+            "type": "string",
+            "description": "A description of what the chapter covers",
+            "example": "Learn the basics of working with Ayunis Core."
+          },
+          "position": {
+            "type": "integer",
+            "description": "The position of the chapter (0-based)",
+            "example": 0
+          },
+          "quizEnabled": {
+            "type": "boolean",
+            "description": "Whether a quiz is activated for this chapter (shown at chapter end)",
+            "example": false
+          },
+          "courseModules": {
+            "description": "The modules of the chapter, ordered by position",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourseModuleResponseDto"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the chapter was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the chapter was last updated"
+          },
+          "quizQuestions": {
+            "description": "The quiz question pool of the chapter, ordered by position",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuizQuestionResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "position",
+          "quizEnabled",
+          "courseModules",
+          "createdAt",
+          "updatedAt",
+          "quizQuestions"
         ]
       },
       "CreateChapterRequestDto": {
@@ -15508,6 +15786,11 @@
             "description": "A description of what the chapter covers",
             "example": "Learn the basics of working with Ayunis Core.",
             "maxLength": 2000
+          },
+          "quizEnabled": {
+            "type": "boolean",
+            "description": "Whether a quiz is activated for this chapter",
+            "example": false
           }
         },
         "required": ["title", "description"]
@@ -15573,6 +15856,65 @@
           }
         },
         "required": ["title", "loomUrl"]
+      },
+      "QuizAnswerOptionRequestDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The answer option text",
+            "example": "A large language model",
+            "maxLength": 500
+          },
+          "isCorrect": {
+            "type": "boolean",
+            "description": "Whether this option is the correct answer",
+            "example": true
+          }
+        },
+        "required": ["text", "isCorrect"]
+      },
+      "CreateQuizQuestionRequestDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The question prompt",
+            "example": "What is an LLM?",
+            "maxLength": 2000
+          },
+          "options": {
+            "description": "The answer options. Between 2 and 6 options with exactly one marked correct.",
+            "minItems": 2,
+            "maxItems": 6,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuizAnswerOptionRequestDto"
+            }
+          }
+        },
+        "required": ["text", "options"]
+      },
+      "UpdateQuizQuestionRequestDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The question prompt",
+            "example": "What is an LLM?",
+            "maxLength": 2000
+          },
+          "options": {
+            "description": "The answer options. Between 2 and 6 options with exactly one marked correct.",
+            "minItems": 2,
+            "maxItems": 6,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuizAnswerOptionRequestDto"
+            }
+          }
+        },
+        "required": ["text", "options"]
       },
       "ChatCompletionRequestDto": {
         "type": "object",

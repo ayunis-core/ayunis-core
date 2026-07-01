@@ -17,8 +17,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useTranslation } from 'react-i18next';
 import type {
-  AcademyChapterResponseDto,
   CourseModuleResponseDto,
+  SuperAdminAcademyChapterResponseDto,
 } from '@/shared/api';
 import {
   Card,
@@ -30,11 +30,12 @@ import {
 import { Button } from '@/shared/ui/shadcn/button';
 import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-react';
 import { ModuleItem } from './ModuleItem';
+import { QuizSection } from './QuizSection';
 import { useReorderModules } from '../api/useReorderModules';
 import { moveById } from '../lib/sortOrder';
 
 interface ChapterCardProps {
-  chapter: AcademyChapterResponseDto;
+  chapter: SuperAdminAcademyChapterResponseDto;
   onEdit: () => void;
   onDelete: () => void;
   onAddModule: () => void;
@@ -175,6 +176,7 @@ export function ChapterCard({
             <Plus className="h-4 w-4" />
             {t('page.addModule')}
           </Button>
+          <QuizSection chapter={chapter} />
         </CardContent>
       </Card>
     </div>

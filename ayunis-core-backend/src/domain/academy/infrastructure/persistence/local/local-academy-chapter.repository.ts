@@ -33,6 +33,20 @@ export class LocalAcademyChapterRepository implements AcademyChapterRepository {
     return records.map((record) => this.mapper.chapterToDomain(record));
   }
 
+  async findAllWithQuizContent(): Promise<AcademyChapter[]> {
+    this.logger.log('findAllWithQuizContent');
+    const records = await this.repository.find({
+      relations: { courseModules: true, quizQuestions: true },
+      order: {
+        position: 'ASC',
+        createdAt: 'ASC',
+        courseModules: { position: 'ASC', createdAt: 'ASC' },
+        quizQuestions: { position: 'ASC', createdAt: 'ASC' },
+      },
+    });
+    return records.map((record) => this.mapper.chapterToDomain(record));
+  }
+
   async findOne(id: UUID): Promise<AcademyChapter | null> {
     this.logger.log('findOne', { id });
     const record = await this.repository.findOne({

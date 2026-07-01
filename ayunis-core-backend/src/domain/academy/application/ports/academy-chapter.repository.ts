@@ -3,6 +3,7 @@ import type { AcademyChapter } from '../../domain/academy-chapter.entity';
 
 export abstract class AcademyChapterRepository {
   abstract findAllWithCourseModules(): Promise<AcademyChapter[]>;
+  abstract findAllWithQuizContent(): Promise<AcademyChapter[]>;
   abstract findOne(id: UUID): Promise<AcademyChapter | null>;
   abstract findAllIds(): Promise<UUID[]>;
   abstract findMaxPosition(): Promise<number | null>;
