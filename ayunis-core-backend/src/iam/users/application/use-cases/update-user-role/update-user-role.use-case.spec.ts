@@ -8,12 +8,15 @@ import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
 import type { UUID } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { UserUnexpectedError } from '../../users.errors';
+import { UserUnauthorizedError, UserUnexpectedError } from '../../users.errors';
+import { ContextService } from 'src/common/context/services/context.service';
 
 describe('UpdateUserRoleUseCase', () => {
   let useCase: UpdateUserRoleUseCase;
   let mockUsersRepository: Partial<UsersRepository>;
   let mockEventEmitter: { emitAsync: jest.Mock };
+  let requesterOrgId: UUID | undefined;
+  let mockContextService: Partial<ContextService>;
 
   beforeAll(async () => {
     mockUsersRepository = {
@@ -23,9 +26,15 @@ describe('UpdateUserRoleUseCase', () => {
     mockEventEmitter = {
       emitAsync: jest.fn().mockResolvedValue([]),
     };
+    mockContextService = {
+      get: jest.fn((key?: string) =>
+        key === 'orgId' ? requesterOrgId : undefined,
+      ) as ContextService['get'],
+    };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateUserRoleUseCase,
+        { provide: ContextService, useValue: mockContextService },
         { provide: UsersRepository, useValue: mockUsersRepository },
         { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
@@ -35,6 +44,7 @@ describe('UpdateUserRoleUseCase', () => {
   });
   beforeEach(() => {
     jest.clearAllMocks();
+    requesterOrgId = 'org-id' as UUID;
   });
 
   it('should be defined', () => {
@@ -98,6 +108,48 @@ describe('UpdateUserRoleUseCase', () => {
         user: mockUser,
       }),
     );
+  });
+
+  it('should reject updating a user from a different organization', async () => {
+    requesterOrgId = 'requester-org-id' as UUID;
+    const command = new UpdateUserRoleCommand(
+      'user-id' as UUID,
+      UserRole.ADMIN,
+    );
+    const mockUser = new User({
+      id: 'user-id' as UUID,
+      email: 'test@example.com',
+      emailVerified: false,
+      passwordHash: 'hash',
+      role: UserRole.USER,
+      orgId: 'other-org-id' as UUID,
+      name: 'Test User',
+      hasAcceptedMarketing: false,
+    });
+
+    jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      UserUnauthorizedError,
+    );
+    expect(mockUsersRepository.findOneById).toHaveBeenCalledWith('user-id');
+    expect(mockUsersRepository.update).not.toHaveBeenCalled();
+    expect(mockEventEmitter.emitAsync).not.toHaveBeenCalled();
+  });
+
+  it('should reject when the requester is not authenticated', async () => {
+    requesterOrgId = undefined;
+    const command = new UpdateUserRoleCommand(
+      'user-id' as UUID,
+      UserRole.ADMIN,
+    );
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      UserUnauthorizedError,
+    );
+    expect(mockUsersRepository.findOneById).not.toHaveBeenCalled();
+    expect(mockUsersRepository.update).not.toHaveBeenCalled();
+    expect(mockEventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 
   it('should handle repository errors when finding user', async () => {
