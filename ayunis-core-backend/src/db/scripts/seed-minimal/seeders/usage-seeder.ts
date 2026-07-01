@@ -59,9 +59,13 @@ export class UsageSeeder extends OrgSeeder {
 
     const orgId = ctx.getOrg(org.key).id;
     const adminId = ctx.getAdmin(org.key).id;
-    await this.seedAdminUsage(ctx, orgId, adminId, usageModels);
+      const hasTeamsOrMembers = org.teams.length > 0 || org.members.length > 0;
+      if (!hasTeamsOrMembers) {
+        // Only seed synthetic admin chart usage for orgs without team/member fixtures.
+        await this.seedAdminUsage(ctx, orgId, adminId, usageModels);
+      }
 
-    if (org.teams.length > 0 || org.members.length > 0) {
+      if (hasTeamsOrMembers) {
       await this.seedTeamsAndUsage(ctx, org, orgId);
     }
   }
