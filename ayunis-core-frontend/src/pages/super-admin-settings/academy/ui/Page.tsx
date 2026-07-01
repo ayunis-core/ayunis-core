@@ -15,8 +15,8 @@ import {
 } from '@dnd-kit/sortable';
 import { useTranslation } from 'react-i18next';
 import type {
-  AcademyChapterResponseDto,
   CourseModuleResponseDto,
+  SuperAdminAcademyChapterResponseDto,
 } from '@/shared/api';
 import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
 import { Button } from '@/shared/ui/shadcn/button';
@@ -30,7 +30,7 @@ import { useReorderChapters } from '../api/useReorderChapters';
 import { moveById } from '../lib/sortOrder';
 
 interface AcademyPageProps {
-  chapters: AcademyChapterResponseDto[];
+  chapters: SuperAdminAcademyChapterResponseDto[];
 }
 
 interface ModuleDialogState {
@@ -42,7 +42,7 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
   const { t } = useTranslation('super-admin-settings-academy');
   const [chapterDialogOpen, setChapterDialogOpen] = useState(false);
   const [editChapter, setEditChapter] =
-    useState<AcademyChapterResponseDto | null>(null);
+    useState<SuperAdminAcademyChapterResponseDto | null>(null);
   const [moduleDialog, setModuleDialog] = useState<ModuleDialogState | null>(
     null,
   );
@@ -78,7 +78,7 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
     reorderChapters(next.map((chapter) => chapter.id));
   }
 
-  function handleDeleteChapter(chapter: AcademyChapterResponseDto) {
+  function handleDeleteChapter(chapter: SuperAdminAcademyChapterResponseDto) {
     confirm({
       title: t('deleteChapter.title'),
       description: t('deleteChapter.description', { title: chapter.title }),

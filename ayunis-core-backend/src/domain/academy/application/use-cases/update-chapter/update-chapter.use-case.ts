@@ -28,7 +28,9 @@ export class UpdateChapterUseCase {
         title: command.title,
         description: command.description,
         position: existing.position,
+        quizEnabled: command.quizEnabled ?? existing.quizEnabled,
         courseModules: existing.courseModules,
+        quizQuestions: existing.quizQuestions,
         createdAt: existing.createdAt,
         updatedAt: new Date(),
       });
@@ -38,7 +40,9 @@ export class UpdateChapterUseCase {
         title: persisted.title,
         description: persisted.description,
         position: persisted.position,
+        quizEnabled: persisted.quizEnabled,
         courseModules: existing.courseModules,
+        quizQuestions: existing.quizQuestions,
         createdAt: persisted.createdAt,
         updatedAt: persisted.updatedAt,
       });

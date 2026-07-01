@@ -32,6 +32,14 @@ export class AcademyChapterResponseDto {
   position: number;
 
   @ApiProperty({
+    type: 'boolean',
+    description:
+      'Whether a quiz is activated for this chapter (shown at chapter end)',
+    example: false,
+  })
+  quizEnabled: boolean;
+
+  @ApiProperty({
     type: [CourseModuleResponseDto],
     description: 'The modules of the chapter, ordered by position',
   })

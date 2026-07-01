@@ -43,6 +43,39 @@
     "saving": "Saving...",
     "cancel": "Cancel"
   },
+  "quiz": {
+    "enableLabel": "Quiz enabled",
+    "addQuestion": "Add Question",
+    "noQuestions": "No quiz questions yet."
+  },
+  "questionForm": {
+    "createTitle": "Create Question",
+    "editTitle": "Edit Question",
+    "text": "Question",
+    "textPlaceholder": "e.g., What is an LLM?",
+    "textRequired": "Question is required",
+    "textTooLong": "Question must be 2,000 characters or fewer",
+    "options": "Answer options",
+    "optionsHint": "Add 2–6 options and select the single correct answer.",
+    "optionPlaceholder": "Option {{number}}",
+    "optionRequired": "Option text is required",
+    "optionTooLong": "Option must be 500 characters or fewer",
+    "tooFewOptions": "At least 2 options are required",
+    "tooManyOptions": "At most 6 options are allowed",
+    "correctRequired": "Select the correct answer",
+    "markCorrect": "Mark as correct answer",
+    "addOption": "Add option",
+    "removeOption": "Remove option",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel"
+  },
+  "deleteQuestion": {
+    "title": "Delete Question",
+    "description": "Are you sure you want to delete this quiz question? This action cannot be undone.",
+    "confirm": "Delete",
+    "cancel": "Cancel"
+  },
   "deleteChapter": {
     "title": "Delete Chapter",
     "description": "Are you sure you want to delete \"{{title}}\" and all of its modules? This action cannot be undone.",
@@ -70,6 +103,15 @@
     "moduleDeleteSuccess": "Module deleted successfully",
     "moduleDeleteError": "Failed to delete module",
     "moduleNotFound": "Module not found",
+    "questionCreateSuccess": "Question created successfully",
+    "questionCreateError": "Failed to create question",
+    "questionUpdateSuccess": "Question updated successfully",
+    "questionUpdateError": "Failed to update question",
+    "questionDeleteSuccess": "Question deleted successfully",
+    "questionDeleteError": "Failed to delete question",
+    "questionNotFound": "Question not found",
+    "questionInvalid": "Invalid question: add 2–6 options with exactly one correct answer",
+    "quizToggleError": "Failed to update the quiz setting",
     "reorderError": "Failed to save the new order"
   },
   "validation": {
