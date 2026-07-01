@@ -46,7 +46,9 @@
   "quiz": {
     "enableLabel": "Quiz aktiviert",
     "addQuestion": "Frage hinzufügen",
-    "noQuestions": "Noch keine Quizfragen."
+    "noQuestions": "Noch keine Quizfragen.",
+    "thresholdLabel": "Bestehensschwelle",
+    "thresholdSuffix": "% richtig zum Bestehen"
   },
   "questionForm": {
     "createTitle": "Frage erstellen",

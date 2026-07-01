@@ -44,8 +44,24 @@ export function useSetChapterQuizEnabled() {
     });
   }
 
+  function setPassThreshold(
+    chapter: SuperAdminAcademyChapterResponseDto,
+    passThreshold: number,
+  ) {
+    mutation.mutate({
+      id: chapter.id,
+      data: {
+        title: chapter.title,
+        description: chapter.description,
+        quizEnabled: chapter.quizEnabled,
+        passThreshold,
+      },
+    });
+  }
+
   return {
     setQuizEnabled,
+    setPassThreshold,
     isSettingQuiz: mutation.isPending,
   };
 }

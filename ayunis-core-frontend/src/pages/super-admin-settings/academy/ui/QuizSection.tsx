@@ -14,6 +14,7 @@ import {
 import { Button } from '@/shared/ui/shadcn/button';
 import { Switch } from '@/shared/ui/shadcn/switch';
 import { Label } from '@/shared/ui/shadcn/label';
+import { Input } from '@/shared/ui/shadcn/input';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { QuestionFormDialog } from './QuestionFormDialog';
 import { useDeleteQuestion } from '../api/useDeleteQuestion';
@@ -28,9 +29,17 @@ export function QuizSection({ chapter }: Readonly<QuizSectionProps>) {
   const [dialogQuestion, setDialogQuestion] =
     useState<QuizQuestionResponseDto | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { setQuizEnabled, isSettingQuiz } = useSetChapterQuizEnabled();
+  const { setQuizEnabled, setPassThreshold, isSettingQuiz } =
+    useSetChapterQuizEnabled();
   const { deleteQuestion, isDeleting } = useDeleteQuestion();
   const { confirm } = useConfirmation();
+  const [threshold, setThreshold] = useState(chapter.passThreshold);
+
+  function commitThreshold() {
+    const clamped = Math.min(100, Math.max(1, Math.round(threshold)));
+    if (clamped !== threshold) setThreshold(clamped);
+    if (clamped !== chapter.passThreshold) setPassThreshold(chapter, clamped);
+  }
 
   function openCreate() {
     setDialogQuestion(null);
@@ -72,6 +81,28 @@ export function QuizSection({ chapter }: Readonly<QuizSectionProps>) {
           {t('quiz.addQuestion')}
         </Button>
       </div>
+
+      {chapter.quizEnabled && (
+        <div className="flex items-center gap-2">
+          <Label htmlFor={`quiz-threshold-${chapter.id}`}>
+            {t('quiz.thresholdLabel')}
+          </Label>
+          <Input
+            id={`quiz-threshold-${chapter.id}`}
+            type="number"
+            min={1}
+            max={100}
+            className="w-20"
+            value={threshold}
+            disabled={isSettingQuiz}
+            onChange={(e) => setThreshold(e.target.valueAsNumber)}
+            onBlur={commitThreshold}
+          />
+          <span className="text-sm text-muted-foreground">
+            {t('quiz.thresholdSuffix')}
+          </span>
+        </div>
+      )}
 
       {chapter.quizQuestions.length === 0 ? (
         <p className="py-1 text-sm text-muted-foreground">
