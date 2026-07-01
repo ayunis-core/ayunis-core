@@ -1,5 +1,6 @@
 import React from 'react';
 import { useContentScrollHeader } from '@/features/useContentScrollHeader';
+import { cn } from '@/shared/lib/shadcn/utils';
 
 interface ContentAreaLayoutProps {
   contentHeader?: React.ReactNode;
@@ -35,7 +36,10 @@ export const ContentAreaLayout: React.FC<ContentAreaLayoutProps> = ({
             <div className="content-scroll-header-offset" aria-hidden />
           )}
           <div
-            className={`mx-auto w-full px-2 pb-3 ${fullWidth ? '' : 'max-w-[800px]'}`}
+            className={cn(
+              'mx-auto w-full px-2 pb-3',
+              !fullWidth && 'max-w-[800px]',
+            )}
           >
             {contentArea}
           </div>
