@@ -32,6 +32,24 @@ Cross-module communication uses **exported use cases**, not ports/adapters. When
 
 Before modifying any module, read its `SUMMARY.md`. See [ARCHITECTURE.md](../../ARCHITECTURE.md) for the complete module index.
 
+## ConfigService access — match the `registerAs` namespace
+
+Backend config is loaded via `registerAs('<namespace>', () => ({...}))` factories. **The lookup key must be prefixed with the namespace**, or `ConfigService.get(...)` returns `undefined` and the call site silently uses a missing value (e.g. `apiKey: undefined` → 401 at runtime, not at boot).
+
+For model providers, the namespace is `models`:
+
+```typescript
+// CORRECT ✓
+this.configService.get<string>('models.mistral.apiKey')
+this.configService.get<string>('models.openai.apiKey')
+this.configService.get<string>('models.anthropic.apiKey')
+
+// WRONG ✗ — un-namespaced; returns undefined
+this.configService.get<string>('mistral.apiKey')
+```
+
+Before adding a new provider handler, **grep an existing one** for the exact key path rather than transcribing from the `.env` variable name — the env-var → config-key mapping lives in the `registerAs` factory and the namespace is easy to drop on the floor.
+
 ## User Context
 
 User identity comes from `ContextService`, not method parameters:

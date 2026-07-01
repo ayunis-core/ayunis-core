@@ -1,0 +1,38 @@
+@layer components {
+  .content-area-page-header {
+    @apply sticky top-0 z-10 mb-1.5 w-full shrink-0 bg-background px-3 pt-2;
+  }
+
+  .content-scroll-region {
+    --content-scroll-header-row: 2.25rem;
+    --content-scroll-header-pad-block: 1rem;
+    --content-scroll-header-gap: 1rem;
+  }
+
+  .content-scroll-header {
+    @apply absolute inset-x-0 top-0 z-10 overflow-hidden rounded-t-xl border-b border-transparent px-3 py-2;
+    @apply bg-background/80 backdrop-blur-md transition-[border-color] duration-200 ease-out;
+    @apply supports-[backdrop-filter]:bg-background/65;
+    pointer-events: none;
+    min-height: calc(
+      var(--content-scroll-header-row) + var(--content-scroll-header-pad-block)
+    );
+  }
+
+  .content-scroll-header :is(a, button, input, [role='button'], [tabindex]) {
+    pointer-events: auto;
+  }
+
+  .content-scroll-header[data-scrolled='true'] {
+    @apply border-border/40;
+  }
+
+  .content-scroll-header-offset {
+    @apply shrink-0;
+    height: calc(
+      var(--content-scroll-header-row) +
+        var(--content-scroll-header-pad-block) +
+        var(--content-scroll-header-gap)
+    );
+  }
+}

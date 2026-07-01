@@ -129,6 +129,42 @@ describe('GenerateImageToolHandler', () => {
     expect(command.prompt).toBe('A cat wearing a hat');
   });
 
+  it('should pass the requested size to GenerateImageUseCase', async () => {
+    setupHappyPath();
+
+    await handler.execute({
+      tool: new GenerateImageTool(),
+      input: { prompt: 'A wide flow diagram', size: 'landscape' },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    const command = mockGenerateImage.execute.mock.calls[0][0];
+    expect(command.size).toBe('landscape');
+  });
+
+  it('should leave size undefined when not provided', async () => {
+    setupHappyPath();
+
+    await handler.execute({
+      tool: new GenerateImageTool(),
+      input: { prompt: 'A cat wearing a hat' },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    const command = mockGenerateImage.execute.mock.calls[0][0];
+    expect(command.size).toBeUndefined();
+  });
+
+  it('should reject an invalid size value', async () => {
+    await expect(
+      handler.execute({
+        tool: new GenerateImageTool(),
+        input: { prompt: 'A cat', size: 'panoramic' },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      }),
+    ).rejects.toThrow(ToolExecutionFailedError);
+  });
+
   it('should pass correct params to SaveGeneratedImageUseCase', async () => {
     setupHappyPath();
 

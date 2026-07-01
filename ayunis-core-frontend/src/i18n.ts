@@ -44,6 +44,8 @@ import enSuperAdminSettingsSkills from './shared/locales/en/super-admin-settings
 import deSuperAdminSettingsSkills from './shared/locales/de/super-admin-settings-skills.json';
 import enSuperAdminSettingsSuperAdmins from './shared/locales/en/super-admin-settings-super-admins.json';
 import deSuperAdminSettingsSuperAdmins from './shared/locales/de/super-admin-settings-super-admins.json';
+import enSuperAdminSettingsUsers from './shared/locales/en/super-admin-settings-users.json';
+import deSuperAdminSettingsUsers from './shared/locales/de/super-admin-settings-users.json';
 import enSuperAdminSettingsAcademy from './shared/locales/en/super-admin-settings-academy.json';
 import deSuperAdminSettingsAcademy from './shared/locales/de/super-admin-settings-academy.json';
 import enAcademy from './shared/locales/en/academy.json';
@@ -52,6 +54,8 @@ import enArtifacts from './shared/locales/en/artifacts.json';
 import deArtifacts from './shared/locales/de/artifacts.json';
 import enSuperAdminSettingsPlatformConfig from './shared/locales/en/super-admin-settings-platform-config.json';
 import deSuperAdminSettingsPlatformConfig from './shared/locales/de/super-admin-settings-platform-config.json';
+import enSuperAdminSettingsAppAlerts from './shared/locales/en/super-admin-settings-app-alerts.json';
+import deSuperAdminSettingsAppAlerts from './shared/locales/de/super-admin-settings-app-alerts.json';
 import enAdminSettingsSecurity from './shared/locales/en/admin-settings-security.json';
 import deAdminSettingsSecurity from './shared/locales/de/admin-settings-security.json';
 import enAdminSettingsAnonymization from './shared/locales/en/admin-settings-anonymization.json';
@@ -90,10 +94,12 @@ const resources = {
     'knowledge-bases': enKnowledgeBases,
     'super-admin-settings-skills': enSuperAdminSettingsSkills,
     'super-admin-settings-super-admins': enSuperAdminSettingsSuperAdmins,
+    'super-admin-settings-users': enSuperAdminSettingsUsers,
     'super-admin-settings-academy': enSuperAdminSettingsAcademy,
     academy: enAcademy,
     artifacts: enArtifacts,
     'super-admin-settings-platform-config': enSuperAdminSettingsPlatformConfig,
+    'super-admin-settings-app-alerts': enSuperAdminSettingsAppAlerts,
     'admin-settings-security': enAdminSettingsSecurity,
     'admin-settings-anonymization': enAdminSettingsAnonymization,
     'admin-settings-retention': enAdminSettingsRetention,
@@ -124,10 +130,12 @@ const resources = {
     'knowledge-bases': deKnowledgeBases,
     'super-admin-settings-skills': deSuperAdminSettingsSkills,
     'super-admin-settings-super-admins': deSuperAdminSettingsSuperAdmins,
+    'super-admin-settings-users': deSuperAdminSettingsUsers,
     'super-admin-settings-academy': deSuperAdminSettingsAcademy,
     academy: deAcademy,
     artifacts: deArtifacts,
     'super-admin-settings-platform-config': deSuperAdminSettingsPlatformConfig,
+    'super-admin-settings-app-alerts': deSuperAdminSettingsAppAlerts,
     'admin-settings-security': deAdminSettingsSecurity,
     'admin-settings-anonymization': deAdminSettingsAnonymization,
     'admin-settings-retention': deAdminSettingsRetention,

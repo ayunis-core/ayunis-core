@@ -455,6 +455,7 @@ export default function ChatPage({
           chatHeader={chatHeader}
           chatContent={chatContent}
           chatInput={chatInput}
+          resetKey={thread.id}
           sidePanel={
             openArtifact ? (
               <Suspense fallback={null}>

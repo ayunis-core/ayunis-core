@@ -18,6 +18,7 @@ import { FindActiveSkillsQuery } from 'src/domain/skills/application/use-cases/f
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { GetUserSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-user-system-prompt/get-user-system-prompt.use-case';
 import { GetOrgSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-org-system-prompt/get-org-system-prompt.use-case';
+import { GetOrgChatSettingsUseCase } from 'src/domain/chat-settings/application/use-cases/get-org-chat-settings/get-org-chat-settings.use-case';
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
@@ -38,6 +39,11 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { ArtifactToolAssemblerService } from './artifact-tool-assembler.service';
 
+type McpCapability = Awaited<
+  ReturnType<DiscoverMcpCapabilitiesUseCase['execute']>
+>;
+type McpIntegrationMeta = { name: string; logoUrl: string | null };
+
 @Injectable()
 export class ToolAssemblyService {
   private readonly logger = new Logger(ToolAssemblyService.name);
@@ -57,6 +63,7 @@ export class ToolAssemblyService {
     private readonly contextService: ContextService,
     private readonly getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase,
     private readonly artifactToolAssembler: ArtifactToolAssemblerService,
+    private readonly getOrgChatSettingsUseCase: GetOrgChatSettingsUseCase,
   ) {}
 
   async findActiveSkills(): Promise<Skill[]> {
@@ -69,18 +76,7 @@ export class ToolAssemblyService {
     canUseTools: boolean,
     isAnonymous: boolean,
   ): Promise<{ tools: Tool[]; instructions: string }> {
-    // Fetch always-on skill templates (cached, 60s TTL)
-    let alwaysOnTemplates: SkillTemplate[] = [];
-    try {
-      alwaysOnTemplates = await this.findActiveAlwaysOnTemplatesUseCase.execute(
-        new FindActiveAlwaysOnTemplatesQuery(),
-      );
-    } catch (error) {
-      this.logger.error(
-        'Failed to fetch always-on templates, continuing without them',
-        { error: error instanceof Error ? error.message : 'Unknown error' },
-      );
-    }
+    const alwaysOnTemplates = await this.fetchAlwaysOnTemplates();
 
     const { slugMap, skillEntries } = this.buildSkillSlugs(
       activeSkills,
@@ -96,13 +92,8 @@ export class ToolAssemblyService {
     // them into ready / processing / failed sections.
     const allSources = thread.sourceAssignments?.map((a) => a.source) ?? [];
 
-    // Fetch org-wide and user's custom system prompts (null if not configured)
-    const orgSystemPromptEntity =
-      await this.getOrgSystemPromptUseCase.execute();
-    const orgSystemPrompt = orgSystemPromptEntity?.systemPrompt ?? undefined;
-    const userSystemPromptEntity =
-      await this.getUserSystemPromptUseCase.execute();
-    const userSystemPrompt = userSystemPromptEntity?.systemPrompt ?? undefined;
+    const { orgSystemPrompt, userSystemPrompt } =
+      await this.fetchSystemPrompts();
 
     const instructions = this.systemPromptBuilderService.build({
       tools,
@@ -118,6 +109,42 @@ export class ToolAssemblyService {
     });
 
     return { tools, instructions };
+  }
+
+  /**
+   * Fetch always-on skill templates (cached, 60s TTL). Failures are swallowed
+   * so a templates outage never blocks a run.
+   */
+  private async fetchAlwaysOnTemplates(): Promise<SkillTemplate[]> {
+    try {
+      return await this.findActiveAlwaysOnTemplatesUseCase.execute(
+        new FindActiveAlwaysOnTemplatesQuery(),
+      );
+    } catch (error) {
+      this.logger.error(
+        'Failed to fetch always-on templates, continuing without them',
+        { error: error instanceof Error ? error.message : 'Unknown error' },
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Fetch the org-wide and the user's custom system prompts (undefined when
+   * not configured).
+   */
+  private async fetchSystemPrompts(): Promise<{
+    orgSystemPrompt: string | undefined;
+    userSystemPrompt: string | undefined;
+  }> {
+    const orgSystemPromptEntity =
+      await this.getOrgSystemPromptUseCase.execute();
+    const userSystemPromptEntity =
+      await this.getUserSystemPromptUseCase.execute();
+    return {
+      orgSystemPrompt: orgSystemPromptEntity?.systemPrompt ?? undefined,
+      userSystemPrompt: userSystemPromptEntity?.systemPrompt ?? undefined,
+    };
   }
 
   /**
@@ -181,44 +208,24 @@ export class ToolAssemblyService {
     _activeSkills: Skill[],
     slugMap: Map<string, string>,
   ): Promise<Tool[]> {
-    const skillsEnabled = this.features.skillsEnabled;
     const tools: Tool[] = [];
 
     // Discover and add MCP tools/resources from thread integrations
-    const mcpTools = await this.assembleMcpTools(thread);
-    tools.push(...mcpTools);
+    tools.push(...(await this.assembleMcpTools(thread)));
 
     // Code execution tool is always available
-    const threadSources =
-      thread.sourceAssignments?.map((assignment) => assignment.source) ?? [];
-    const codeExecutionSources = threadSources.filter(
-      (source) => source.type === SourceType.DATA,
-    );
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.CODE_EXECUTION,
-          context: codeExecutionSources,
-        }),
-      ),
-    );
+    tools.push(await this.assembleCodeExecutionTool(thread));
 
     // Always-available tools
-    const alwaysOnTypes = [
-      ToolType.WEBSITE_CONTENT,
-      ToolType.SEND_EMAIL,
-      ToolType.CREATE_CALENDAR_EVENT,
-      ToolType.BAR_CHART,
-      ToolType.LINE_CHART,
-      ToolType.PIE_CHART,
-    ];
-    for (const type of alwaysOnTypes) {
-      tools.push(
-        await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({ type }),
-        ),
-      );
-    }
+    tools.push(
+      ...(await this.assembleSimpleTools([
+        ToolType.SEND_EMAIL,
+        ToolType.CREATE_CALENDAR_EVENT,
+        ToolType.BAR_CHART,
+        ToolType.LINE_CHART,
+        ToolType.PIE_CHART,
+      ])),
+    );
 
     // Artifact-related always-on tools (document create/update/edit/read +
     // diagram create/update). Handles letterhead suffix + artifact context
@@ -229,34 +236,10 @@ export class ToolAssemblyService {
       )),
     );
 
-    if (skillsEnabled) {
-      tools.push(
-        await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({ type: ToolType.CREATE_SKILL }),
-        ),
-      );
-      const userSlugs = [...slugMap.keys()].filter((s) =>
-        s.startsWith(`${USER_PREFIX}__`),
-      );
-      if (userSlugs.length > 0) {
-        tools.push(
-          await this.assembleToolsUseCase.execute(
-            new AssembleToolCommand({
-              type: ToolType.EDIT_SKILL,
-              context: userSlugs,
-            }),
-          ),
-        );
-      }
-    }
+    tools.push(...(await this.assembleSkillManagementTools(slugMap)));
 
-    if (this.configService.get<boolean>('internetSearch.isAvailable')) {
-      tools.push(
-        await this.assembleToolsUseCase.execute(
-          new AssembleToolCommand({ type: ToolType.INTERNET_SEARCH }),
-        ),
-      );
-    }
+    // Internet tools (website content + search) — gated by the org chat setting
+    tools.push(...(await this.assembleInternetTools()));
 
     // Image generation tool — available when org has a permitted image model
     tools.push(
@@ -269,50 +252,132 @@ export class ToolAssemblyService {
       })),
     );
 
-    // Collect text sources from thread
-    const threadTextSources = (thread.sourceAssignments ?? [])
-      .map((assignment) => assignment.source)
-      .filter((source): source is TextSource => source instanceof TextSource);
+    tools.push(...(await this.assembleSourceTools(thread)));
+    tools.push(...(await this.assembleKnowledgeTools(thread)));
+    tools.push(...(await this.assembleActivateSkillTool(slugMap)));
 
-    // Source query/get tools — available when there are text sources
-    if (threadTextSources.length > 0) {
-      for (const type of [ToolType.SOURCE_QUERY, ToolType.SOURCE_GET_TEXT]) {
-        tools.push(
-          await this.assembleToolsUseCase.execute(
-            new AssembleToolCommand({ type, context: threadTextSources }),
-          ),
-        );
-      }
-    }
+    return tools;
+  }
 
-    // Knowledge base tools — available when the thread has knowledge bases
-    const knowledgeBases = thread.getUniqueKnowledgeBases();
-    if (knowledgeBases.length > 0) {
-      for (const type of [
-        ToolType.KNOWLEDGE_QUERY,
-        ToolType.KNOWLEDGE_GET_TEXT,
-      ]) {
-        tools.push(
-          await this.assembleToolsUseCase.execute(
-            new AssembleToolCommand({ type, context: knowledgeBases }),
-          ),
-        );
-      }
-    }
+  private async assembleCodeExecutionTool(thread: Thread): Promise<Tool> {
+    const threadSources =
+      thread.sourceAssignments?.map((assignment) => assignment.source) ?? [];
+    const codeExecutionSources = threadSources.filter(
+      (source) => source.type === SourceType.DATA,
+    );
+    return this.assembleToolsUseCase.execute(
+      new AssembleToolCommand({
+        type: ToolType.CODE_EXECUTION,
+        context: codeExecutionSources,
+      }),
+    );
+  }
 
-    // Activate skill tool is available if there are activatable skills and skills feature is enabled
-    if (skillsEnabled && slugMap.size > 0) {
+  private async assembleSimpleTools(types: ToolType[]): Promise<Tool[]> {
+    return Promise.all(
+      types.map((type) =>
+        this.assembleToolsUseCase.execute(new AssembleToolCommand({ type })),
+      ),
+    );
+  }
+
+  private async assembleSkillManagementTools(
+    slugMap: Map<string, string>,
+  ): Promise<Tool[]> {
+    if (!this.features.skillsEnabled) return [];
+
+    const tools: Tool[] = [
+      await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({ type: ToolType.CREATE_SKILL }),
+      ),
+    ];
+
+    const userSlugs = [...slugMap.keys()].filter((s) =>
+      s.startsWith(`${USER_PREFIX}__`),
+    );
+    if (userSlugs.length > 0) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
-            type: ToolType.ACTIVATE_SKILL,
-            context: slugMap,
+            type: ToolType.EDIT_SKILL,
+            context: userSlugs,
           }),
         ),
       );
     }
-
     return tools;
+  }
+
+  /**
+   * Internet access tools: website content reading and web search. Both are
+   * omitted entirely when the organization has disabled internet access in its
+   * chat settings. Web search additionally requires the provider to be
+   * configured (`internetSearch.isAvailable`).
+   */
+  private async assembleInternetTools(): Promise<Tool[]> {
+    const orgChatSettings = await this.getOrgChatSettingsUseCase.execute();
+    if (!orgChatSettings.internetSearchEnabled) {
+      this.logger.debug('Internet access disabled for org, skipping web tools');
+      return [];
+    }
+
+    const tools: Tool[] = [
+      await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({ type: ToolType.WEBSITE_CONTENT }),
+      ),
+    ];
+
+    if (this.configService.get<boolean>('internetSearch.isAvailable')) {
+      tools.push(
+        await this.assembleToolsUseCase.execute(
+          new AssembleToolCommand({ type: ToolType.INTERNET_SEARCH }),
+        ),
+      );
+    }
+    return tools;
+  }
+
+  private async assembleSourceTools(thread: Thread): Promise<Tool[]> {
+    const threadTextSources = (thread.sourceAssignments ?? [])
+      .map((assignment) => assignment.source)
+      .filter((source): source is TextSource => source instanceof TextSource);
+
+    if (threadTextSources.length === 0) return [];
+
+    return Promise.all(
+      [ToolType.SOURCE_QUERY, ToolType.SOURCE_GET_TEXT].map((type) =>
+        this.assembleToolsUseCase.execute(
+          new AssembleToolCommand({ type, context: threadTextSources }),
+        ),
+      ),
+    );
+  }
+
+  private async assembleKnowledgeTools(thread: Thread): Promise<Tool[]> {
+    const knowledgeBases = thread.getUniqueKnowledgeBases();
+    if (knowledgeBases.length === 0) return [];
+
+    return Promise.all(
+      [ToolType.KNOWLEDGE_QUERY, ToolType.KNOWLEDGE_GET_TEXT].map((type) =>
+        this.assembleToolsUseCase.execute(
+          new AssembleToolCommand({ type, context: knowledgeBases }),
+        ),
+      ),
+    );
+  }
+
+  private async assembleActivateSkillTool(
+    slugMap: Map<string, string>,
+  ): Promise<Tool[]> {
+    if (!this.features.skillsEnabled || slugMap.size === 0) return [];
+    return [
+      await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({
+          type: ToolType.ACTIVATE_SKILL,
+          context: slugMap,
+        }),
+      ),
+    ];
   }
 
   private async assembleMcpTools(thread: Thread): Promise<Tool[]> {
@@ -326,19 +391,7 @@ export class ToolAssemblyService {
     const integrations = await this.getMcpIntegrationsByIdsUseCase.execute(
       new GetMcpIntegrationsByIdsQuery(integrationIdList),
     );
-    const integrationMetaMap = new Map<
-      UUID,
-      { name: string; logoUrl: string | null }
-    >();
-    for (const integration of integrations) {
-      integrationMetaMap.set(integration.id, {
-        name: integration.name,
-        logoUrl:
-          integration instanceof MarketplaceMcpIntegration
-            ? integration.logoUrl
-            : null,
-      });
-    }
+    const integrationMetaMap = this.buildMcpIntegrationMetaMap(integrations);
 
     const mcpResults = await Promise.allSettled(
       integrationIdList.map((integrationId) =>
@@ -348,7 +401,39 @@ export class ToolAssemblyService {
       ),
     );
 
-    const mcpCapabilities = mcpResults
+    const mcpCapabilities = this.collectMcpCapabilities(
+      mcpResults,
+      integrationIdList,
+      integrationMetaMap,
+    );
+
+    return this.mapMcpCapabilitiesToTools(mcpCapabilities, integrationMetaMap);
+  }
+
+  private buildMcpIntegrationMetaMap(
+    integrations: Awaited<
+      ReturnType<GetMcpIntegrationsByIdsUseCase['execute']>
+    >,
+  ): Map<UUID, McpIntegrationMeta> {
+    const integrationMetaMap = new Map<UUID, McpIntegrationMeta>();
+    for (const integration of integrations) {
+      integrationMetaMap.set(integration.id, {
+        name: integration.name,
+        logoUrl:
+          integration instanceof MarketplaceMcpIntegration
+            ? integration.logoUrl
+            : null,
+      });
+    }
+    return integrationMetaMap;
+  }
+
+  private collectMcpCapabilities(
+    mcpResults: PromiseSettledResult<McpCapability>[],
+    integrationIdList: UUID[],
+    integrationMetaMap: Map<UUID, McpIntegrationMeta>,
+  ): McpCapability[] {
+    return mcpResults
       .map((result, index) => {
         if (result.status === 'fulfilled') {
           return result.value;
@@ -367,8 +452,13 @@ export class ToolAssemblyService {
         );
         return null;
       })
-      .filter((cap): cap is NonNullable<typeof cap> => cap !== null);
+      .filter((cap): cap is McpCapability => cap !== null);
+  }
 
+  private mapMcpCapabilitiesToTools(
+    mcpCapabilities: McpCapability[],
+    integrationMetaMap: Map<UUID, McpIntegrationMeta>,
+  ): Tool[] {
     return [
       ...mcpCapabilities.flatMap((capability) =>
         capability.tools.map((tool) => {

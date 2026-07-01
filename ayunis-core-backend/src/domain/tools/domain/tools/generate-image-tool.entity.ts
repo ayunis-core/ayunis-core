@@ -12,6 +12,12 @@ const generateImageToolParameters = {
       description: 'A detailed text description of the image to generate',
       maxLength: 4000,
     },
+    size: {
+      type: 'string' as const,
+      enum: ['auto', 'square', 'landscape', 'portrait'] as const,
+      description:
+        "The aspect ratio of the generated image. Choose the ratio that best fits the content so it is not cropped: 'landscape' for wide content such as flow charts, diagrams, banners or scenery; 'portrait' for tall content such as posters or full-body figures; 'square' for icons, avatars or balanced compositions. Use 'auto' (the default) to let the model pick the best ratio for the prompt.",
+    },
   },
   required: ['prompt'],
   additionalProperties: false,

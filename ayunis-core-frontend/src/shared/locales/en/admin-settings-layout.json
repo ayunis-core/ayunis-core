@@ -12,8 +12,14 @@
     "security": "Security",
     "anonymization": "Anonymization",
     "retention": "Data retention",
-    "instructions": "Instructions",
+    "instructions": "Chat",
     "letterheads": "Letterheads",
     "apiKeys": "API Keys"
+  },
+  "groups": {
+    "membersAccess": "Members & Access",
+    "aiAssistant": "AI Assistant",
+    "privacyCompliance": "Privacy & Compliance",
+    "analytics": "Analytics"
   }
 }

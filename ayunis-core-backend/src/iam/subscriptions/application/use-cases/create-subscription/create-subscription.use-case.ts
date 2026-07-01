@@ -3,29 +3,17 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateSubscriptionCommand } from './create-subscription.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
-import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
-import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
-import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
-import { ConfigService } from '@nestjs/config';
-import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 import {
   SubscriptionAlreadyExistsError,
-  InvalidSubscriptionDataError,
   UnexpectedSubscriptionError,
-  TooManyUsedSeatsError,
 } from '../../subscription.errors';
-import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
 
 import { ApplicationError } from 'src/common/errors/base.error';
-import type { User } from 'src/iam/users/domain/user.entity';
-import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.query';
-import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
-import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
-import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { SubscriptionCreatedEvent } from '../../events/subscription-created.event';
 import { toSubscriptionEventData } from '../../mappers/to-subscription-event-data.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
+import { SubscriptionFactory } from '../../services/subscription-factory.service';
 
 @Injectable()
 export class CreateSubscriptionUseCase {
@@ -33,9 +21,7 @@ export class CreateSubscriptionUseCase {
 
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
-    private readonly configService: ConfigService,
-    private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
-    private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
+    private readonly subscriptionFactory: SubscriptionFactory,
     private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
   ) {}
@@ -50,10 +36,7 @@ export class CreateSubscriptionUseCase {
 
       await this.ensureNoExistingSubscription(command.orgId);
 
-      const subscription =
-        command.type === SubscriptionType.USAGE_BASED
-          ? this.createUsageBasedSubscription(command)
-          : await this.createSeatBasedSubscription(command);
+      const subscription = await this.subscriptionFactory.build(command);
 
       const createdSubscription =
         await this.subscriptionRepository.create(subscription);
@@ -107,119 +90,5 @@ export class CreateSubscriptionUseCase {
       });
       throw new SubscriptionAlreadyExistsError(orgId);
     }
-  }
-
-  private createUsageBasedSubscription(
-    command: CreateSubscriptionCommand,
-  ): UsageBasedSubscription {
-    if (!command.monthlyCredits || command.monthlyCredits <= 0) {
-      throw new InvalidSubscriptionDataError(
-        'Monthly credits must be greater than 0 for usage-based subscriptions',
-      );
-    }
-
-    this.logger.log('Creating usage-based subscription', {
-      orgId: command.orgId,
-      monthlyCredits: command.monthlyCredits,
-    });
-
-    return new UsageBasedSubscription({
-      orgId: command.orgId,
-      monthlyCredits: command.monthlyCredits,
-      startsAt: command.startsAt,
-      billingInfo: this.buildBillingInfo(command),
-    });
-  }
-
-  private async createSeatBasedSubscription(
-    command: CreateSubscriptionCommand,
-  ): Promise<SeatBasedSubscription> {
-    const noOfSeats = command.noOfSeats ?? 1;
-
-    this.logger.log('Creating seat-based subscription', {
-      orgId: command.orgId,
-      noOfSeats,
-    });
-
-    if (noOfSeats <= 0) {
-      throw new InvalidSubscriptionDataError(
-        'Number of seats must be greater than 0',
-      );
-    }
-
-    await this.validateSeatCount(
-      command.orgId,
-      command.requestingUserId,
-      noOfSeats,
-    );
-
-    const pricePerSeat = this.configService.get<number>(
-      'subscriptions.pricePerSeatYearly',
-    );
-    if (!pricePerSeat) {
-      throw new InvalidSubscriptionDataError('Price per seat not configured');
-    }
-
-    const startsAt = command.startsAt ?? new Date();
-    return new SeatBasedSubscription({
-      orgId: command.orgId,
-      noOfSeats,
-      renewalCycle: RenewalCycle.YEARLY,
-      pricePerSeat,
-      renewalCycleAnchor: startsAt,
-      startsAt,
-      billingInfo: this.buildBillingInfo(command),
-    });
-  }
-
-  private async validateSeatCount(
-    orgId: Subscription['orgId'],
-    requestingUserId: User['id'],
-    noOfSeats: number,
-  ): Promise<void> {
-    const [invitesResult, usersResult] = await Promise.all([
-      this.getInvitesByOrgUseCase.execute(
-        new GetInvitesByOrgQuery({
-          orgId,
-          requestingUserId,
-          onlyOpen: true,
-        }),
-      ),
-      this.findUsersByOrgIdUseCase.execute(
-        new FindUsersByOrgIdQuery({
-          orgId,
-          pagination: { limit: 1000, offset: 0 },
-        }),
-      ),
-    ]);
-    const openInvitesCount = invitesResult.total ?? invitesResult.data.length;
-    if (
-      openInvitesCount + (usersResult.total ?? usersResult.data.length) >
-      noOfSeats
-    ) {
-      this.logger.warn('Too many used seats', {
-        orgId,
-        openInvites: openInvitesCount,
-      });
-      throw new TooManyUsedSeatsError({
-        orgId,
-        openInvites: openInvitesCount,
-      });
-    }
-  }
-
-  private buildBillingInfo(
-    command: CreateSubscriptionCommand,
-  ): SubscriptionBillingInfo {
-    return new SubscriptionBillingInfo({
-      companyName: command.companyName,
-      subText: command.subText,
-      street: command.street,
-      houseNumber: command.houseNumber,
-      postalCode: command.postalCode,
-      city: command.city,
-      country: command.country,
-      vatNumber: command.vatNumber,
-    });
   }
 }

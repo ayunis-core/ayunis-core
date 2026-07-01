@@ -71,7 +71,7 @@ export class AgentRecord extends BaseRecord {
 The dev stack must be running (`./dev status`).
 
 ```bash
-npm run migration:generate:dev -- src/db/migrations/DescriptiveMigrationName
+pnpm run migration:generate:dev -- src/db/migrations/DescriptiveMigrationName
 ```
 
 ### 3. Review the Generated Migration
@@ -85,13 +85,13 @@ If the migration contains unexpected drift, the local DB may be out of sync. Rec
 ### 4. Run the Migration
 
 ```bash
-npm run migration:run:dev
+pnpm run migration:run:dev
 ```
 
 ### 5. Verify Zero Drift
 
 ```bash
-npm run migration:generate:dev -- src/db/migrations/VerifyNoDrift
+pnpm run migration:generate:dev -- src/db/migrations/VerifyNoDrift
 ```
 
 This **must** print `No changes in database schema were found`. If it generates a file, entities and migrations are still out of sync — investigate before committing.
@@ -99,8 +99,8 @@ This **must** print `No changes in database schema were found`. If it generates 
 ### 6. Validate
 
 ```bash
-npx tsc --noEmit
-npm run test
+pnpm exec tsc --noEmit
+pnpm run test
 ```
 
 ## Naming Convention

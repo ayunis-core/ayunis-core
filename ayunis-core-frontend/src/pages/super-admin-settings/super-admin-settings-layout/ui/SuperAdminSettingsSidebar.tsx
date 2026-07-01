@@ -5,6 +5,8 @@ import {
   ShieldCheck,
   Settings2,
   GraduationCap,
+  Users,
+  Megaphone,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -20,6 +22,11 @@ export function SuperAdminSettingsSidebar() {
       to: '/super-admin-settings/orgs',
       icon: <Building2 />,
       label: t('layout.orgs'),
+    },
+    {
+      to: '/super-admin-settings/users',
+      icon: <Users />,
+      label: t('layout.users'),
     },
     {
       to: '/super-admin-settings/models-catalog',
@@ -45,6 +52,11 @@ export function SuperAdminSettingsSidebar() {
       to: '/super-admin-settings/platform-config',
       icon: <Settings2 />,
       label: t('layout.platformConfig'),
+    },
+    {
+      to: '/super-admin-settings/app-alerts',
+      icon: <Megaphone />,
+      label: t('layout.appAlerts'),
     },
   ];
 

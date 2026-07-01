@@ -1,0 +1,9 @@
+{
+  "export": {
+    "title": "Admin export",
+    "description": "Download a CSV of all admins from organizations with an active or upcoming subscription.",
+    "button": "Export admins CSV",
+    "loading": "Exporting...",
+    "error": "Admin export failed"
+  }
+}

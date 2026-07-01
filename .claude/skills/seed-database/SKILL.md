@@ -13,8 +13,8 @@ Run from `ayunis-core-backend/`:
 
 | Command | Description |
 |---|---|
-| `npm run seed:minimal:ts` | Upsert fixture data (idempotent — skips existing rows) |
-| `npm run seed:clean:ts` | Truncate all tables first, then seed |
+| `pnpm run seed:minimal:ts` | Upsert fixture data (idempotent — skips existing rows) |
+| `pnpm run seed:clean:ts` | Truncate all tables first, then seed |
 
 The `:ts` variants run from source; the non-`:ts` variants run from `dist/` (requires a build).
 

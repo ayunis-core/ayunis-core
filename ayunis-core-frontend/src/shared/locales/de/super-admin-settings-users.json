@@ -1,0 +1,9 @@
+{
+  "export": {
+    "title": "Admin-Export",
+    "description": "Lade eine CSV-Datei mit allen Admins aus Organisationen mit einem aktiven oder zukünftigen Abonnement herunter.",
+    "button": "Admin-CSV exportieren",
+    "loading": "Exportiert...",
+    "error": "Admin-Export fehlgeschlagen"
+  }
+}

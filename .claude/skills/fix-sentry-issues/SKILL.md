@@ -68,10 +68,10 @@ Before reporting done:
 
 ```bash
 # Backend
-cd ayunis-core-backend && npm run lint && npx tsc --noEmit && npm run test
+cd ayunis-core-backend && pnpm run lint && pnpm exec tsc --noEmit && pnpm run test
 
 # Frontend
-cd ayunis-core-frontend && npm run lint && npx tsc --noEmit
+cd ayunis-core-frontend && pnpm run lint && pnpm exec tsc --noEmit
 ```
 
 If you can reproduce the bug locally (e.g. via curl for backend or the browser for frontend), confirm it no longer fires.

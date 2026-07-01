@@ -1,21 +1,44 @@
-export function parseCSV(csv: string, separator?: string) {
-  separator = separator || (csv.split('\n')[0].includes(';') ? ';' : ',');
-  const rows = csv.split('\n').map((row) => row.replace(/\r/g, ''));
-  const headers = rows[0].split(separator);
-  const data = rows.slice(1).map((row) => row.split(separator));
+import { parse, unparse } from 'papaparse';
+
+export interface ParsedCSV {
+  headers: string[];
+  data: string[][];
+}
+
+/**
+ * Parse a CSV string into headers and data rows.
+ *
+ * Uses a spec-compliant (RFC 4180) parser: quoted fields containing the
+ * delimiter or newlines are kept intact, doubled quotes are unescaped, and
+ * `\r\n`/`\n` line endings are both handled. When `separator` is omitted the
+ * delimiter is auto-detected across the whole file (comma, semicolon, tab,
+ * pipe), not just from the header line.
+ */
+export function parseCSV(csv: string, separator?: string): ParsedCSV {
+  const result = parse<string[]>(csv, {
+    delimiter: separator ?? '',
+    skipEmptyLines: true,
+  });
+  const rows = result.data;
+  if (rows.length === 0) {
+    return { headers: [], data: [] };
+  }
+  const [headers, ...data] = rows;
   return { headers, data };
 }
 
+/**
+ * Serialize headers and rows back into a comma-delimited RFC 4180 CSV string.
+ * Every field is quoted (`quotes: true`) so the output is unambiguous for
+ * downstream parsers and consistent with the admin export format. Inverse of
+ * {@link parseCSV}.
+ */
 export function convertCSVToString(data: {
   headers: string[];
   rows: string[][];
 }): string {
-  const allRows = [data.headers, ...data.rows];
-  return allRows
-    .map((row) =>
-      row
-        .map((cell) => `"${cell.replace(/"/g, '""').replace(/\r/g, '')}"`)
-        .join(','),
-    )
-    .join('\n');
+  return unparse(
+    { fields: data.headers, data: data.rows },
+    { quotes: true, newline: '\n' },
+  );
 }

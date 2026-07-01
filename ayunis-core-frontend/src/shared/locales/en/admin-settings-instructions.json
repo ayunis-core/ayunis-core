@@ -13,5 +13,15 @@
     "error": "Failed to update organization instructions.",
     "loadError": "Failed to load organization instructions.",
     "retry": "Retry"
+  },
+  "internetAccess": {
+    "title": "Internet access",
+    "description": "Control whether the AI assistant can access the internet in chats. This applies to all users in your organization.",
+    "label": "Disable internet access",
+    "hint": "When enabled, the AI assistant can no longer use web search or read the contents of websites in any chat.",
+    "saved": "Internet access setting saved.",
+    "error": "Failed to update internet access setting.",
+    "loadError": "Failed to load internet access setting.",
+    "retry": "Retry"
   }
 }

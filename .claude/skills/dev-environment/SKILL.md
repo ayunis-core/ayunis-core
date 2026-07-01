@@ -73,3 +73,59 @@ If `./dev up` fails, check logs:
 ./dev logs backend
 ./dev logs infra
 ```
+
+### Migration fails with `42P07 duplicate-table` — stale Postgres volume
+
+Slots reuse their Postgres data volume across branches. If a previous branch
+on this slot already ran a migration that creates the same table as the
+current branch's pending migration, `./dev up` fails with:
+
+```text
+error: relation "<table>" already exists (PostgreSQL 42P07)
+```
+
+The volume is stale — it has the table but no record of the migration that
+created it. Resolving it means wiping the slot's Postgres volume so `./dev up`
+replays migrations from scratch.
+
+**Do not run this yourself.** Wiping a volume requires a destructive Docker
+flag (`docker compose down -v`), which is on the Forbidden Actions list in
+`CLAUDE.md` — volumes hold database data that cannot be restored. Instead,
+surface the situation to the user and let them decide. Tell them the slot's
+Postgres volume is stale and that recovering it requires:
+
+```bash
+# Run by the user — destroys the slot's Postgres data
+docker compose -p ayunis-dev-<SLOT> down -v
+./dev up --slot <SLOT>
+```
+
+Slots are per-developer scratch state (not shared), so this is normally safe —
+but it is the user's call, not the agent's.
+
+### `./dev up` silently skips frontend — cross-worktree slot squat
+
+When two worktrees both think they own the same slot (e.g. both ran
+`./dev up --slot 2` at different times), the frontend port can end up held by
+a `vite`/`node` process from worktree A while you `./dev up` in worktree B.
+`./dev up` sees the port is bound, assumes the frontend is already running,
+and **silently skips frontend startup**. The backend comes up fresh against
+your branch's code, but the frontend serves worktree A's old code — confusing
+because `./dev status` looks healthy.
+
+Diagnose:
+
+```bash
+# Which process is on this slot's frontend port? (3021 = slot 2, 3031 = slot 3, ...)
+lsof -nP -iTCP:3021 -sTCP:LISTEN
+
+# Inspect that process's cwd — if it points to a different worktree, that's the squatter
+lsof -p <PID> | grep cwd
+```
+
+Fix: the squatter process must be stopped before `./dev up --slot <SLOT>` will
+start the frontend. **Do not kill it yourself** — killing processes is on the
+Forbidden Actions list in `CLAUDE.md` (a process that looks like a stray `vite`
+may be tied to infrastructure you don't understand). Report the offending PID
+and its worktree cwd to the user and let them stop it. If you want to keep both
+worktrees running, give them different slots instead.

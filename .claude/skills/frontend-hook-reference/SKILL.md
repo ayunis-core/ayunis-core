@@ -269,6 +269,41 @@ return {
 };
 ```
 
+### 6. API calls live in a hook, never inline in a page
+
+Any component that calls the API does so through a hook in the page's `api/` directory — including side-effecting actions like file/CSV/PDF exports and downloads. Pages stay declarative: they consume the hook's return (`{ data, isLoading, ... }` or `{ exportEntities, isExporting }`) and render. Don't inline `fetch`/blob-download/`URL.createObjectURL` logic into a page component.
+
+```typescript
+// WRONG ✗ — export logic inlined in the page component
+export default function UsersPage() {
+  const exportAdmins = async () => {
+    const blob = await someControllerExport();
+    const url = URL.createObjectURL(blob);
+    // ...DOM download dance inside the page...
+  };
+  return <Button onClick={() => void exportAdmins()}>Export</Button>;
+}
+
+// CORRECT ✓ — logic in a hook, page just consumes it
+export default function UsersPage() {
+  const { exportAdmins, isExporting } = useUserExport();
+  return <Button onClick={() => void exportAdmins()} disabled={isExporting}>Export</Button>;
+}
+```
+
+### 7. Always use the generated client from `@/shared/api`
+
+Never hand-write a request path with `axiosInstance.get`/`post`. Import the Orval-generated function (e.g. `entityControllerExport`) from `@/shared/api`. The generated client is the single source of truth for URLs, typing, and the request/response contract — hand-written paths drift silently when the backend changes.
+
+```typescript
+// WRONG ✗ — bypasses Orval, hand-written path + untyped response
+const blob = await axiosInstance.get('/admin/users/export', { responseType: 'blob' });
+
+// CORRECT ✓ — generated, typed function
+import { entityControllerExport } from '@/shared/api';
+const blob = await entityControllerExport();
+```
+
 ## Checklist
 
 When creating or modifying a hook, verify:
@@ -279,3 +314,5 @@ When creating or modifying a hook, verify:
 - [ ] `onSuccess` invalidates relevant query keys
 - [ ] `void` used for fire-and-forget `invalidateQueries`/`router.invalidate()`
 - [ ] User-facing strings go through `useTranslation`, not hardcoded
+- [ ] No API/blob-download logic inlined in a page — it lives in a hook in `api/`
+- [ ] Uses the generated client from `@/shared/api`, not a hand-written `axiosInstance` path

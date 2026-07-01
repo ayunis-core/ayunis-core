@@ -5,10 +5,12 @@
     "returnToMainApp": "Return to main app",
     "settings": "Settings",
     "orgs": "Organizations",
+    "users": "Users",
     "modelsCatalog": "Models Catalog",
     "skills": "Skill Templates",
     "academy": "Academy",
     "superAdmins": "Super Admins",
-    "platformConfig": "Platform Config"
+    "platformConfig": "Platform Config",
+    "appAlerts": "App Alerts"
   }
 }
