@@ -1,6 +1,14 @@
-import { Column, Entity, OneToOne, TableInheritance } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+  TableInheritance,
+} from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { McpIntegrationAuthRecord } from './mcp-integration-auth.record';
+import { OrgRecord } from '../../../../../../iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UUID } from 'crypto';
 
 @Entity('mcp_integrations')
@@ -8,6 +16,10 @@ import { UUID } from 'crypto';
 export abstract class McpIntegrationRecord extends BaseRecord {
   @Column()
   orgId: UUID;
+
+  @ManyToOne(() => OrgRecord, { onDelete: 'CASCADE', nullable: false })
+  @JoinColumn({ name: 'orgId' })
+  org: OrgRecord;
 
   @Column()
   name: string;
