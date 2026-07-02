@@ -107,7 +107,7 @@
     "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^16.5.0",
     "jsdom": "^26.0.0",
-    "knip": "^5.84.1",
+    "knip": "^6.23.0",
     "madge": "^8.0.0",
     "orval": "^7.9.0",
     "prettier": "^3.6.2",
