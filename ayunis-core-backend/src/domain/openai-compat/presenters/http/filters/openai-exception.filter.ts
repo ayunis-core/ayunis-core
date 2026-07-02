@@ -2,13 +2,21 @@ import { ArgumentsHost, Catch, Logger } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import { OpenAIErrorMapper } from '../../../application/mappers/openai-error.mapper';
+import { ApplicationErrorFilter } from 'src/common/filters/application-error.filter';
 
 /**
  * Wraps OpenAI-compat exceptions into the OpenAI error envelope. Registered
  * globally so it can intercept errors raised BEFORE the controller dispatch
  * (e.g. JSON body-parse failures from Nest's body parser) — those skip
- * controller-scoped `@UseFilters` entirely. Errors for any other path are
- * delegated back to Nest's default filter via `super.catch`.
+ * controller-scoped `@UseFilters` entirely.
+ *
+ * Errors for any other path are delegated to `ApplicationErrorFilter`, NOT
+ * `super.catch`: as a `@Catch()` global filter registered after
+ * `ApplicationErrorFilter`, this filter wins the (last-registered-first)
+ * global filter selection for EVERY route, so falling back to `super.catch`
+ * (NestJS's terminal default handler) would strip the `code` field from all
+ * domain error responses app-wide — the frontend switches on `code` to show
+ * specific error messages.
  *
  * Two response paths:
  * - Pre-stream errors (`response.headersSent === false`): write the
@@ -22,7 +30,10 @@ import { OpenAIErrorMapper } from '../../../application/mappers/openai-error.map
 export class OpenAIExceptionFilter extends BaseExceptionFilter {
   private readonly openaiCompatLogger = new Logger(OpenAIExceptionFilter.name);
 
-  constructor(private readonly errorMapper: OpenAIErrorMapper) {
+  constructor(
+    private readonly errorMapper: OpenAIErrorMapper,
+    private readonly applicationErrorFilter: ApplicationErrorFilter,
+  ) {
     super();
   }
 
@@ -31,9 +42,8 @@ export class OpenAIExceptionFilter extends BaseExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     if (!this.isOpenAICompatRequest(request)) {
-      // Not ours — let Nest's default filter (or any other registered
-      // global filter) handle it.
-      super.catch(exception, host);
+      // Not ours — hand over to the app-wide domain error handling.
+      this.applicationErrorFilter.catch(exception, host);
       return;
     }
 

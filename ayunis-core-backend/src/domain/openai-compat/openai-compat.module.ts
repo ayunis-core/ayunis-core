@@ -10,6 +10,7 @@ import { OpenAIResponseMapper } from './application/mappers/openai-response.mapp
 import { OpenAIStreamMapper } from './application/mappers/openai-stream.mapper';
 import { OpenAIErrorMapper } from './application/mappers/openai-error.mapper';
 import { OpenAIExceptionFilter } from './presenters/http/filters/openai-exception.filter';
+import { ApplicationErrorFilter } from 'src/common/filters/application-error.filter';
 
 @Module({
   imports: [
@@ -35,6 +36,13 @@ import { OpenAIExceptionFilter } from './presenters/http/filters/openai-exceptio
     OpenAIResponseMapper,
     OpenAIStreamMapper,
     OpenAIErrorMapper,
+    // Injected into OpenAIExceptionFilter so non-openai-compat errors keep
+    // the app-wide {code, message} response shape. This global @Catch()
+    // filter shadows the ApplicationErrorFilter APP_FILTER registration in
+    // AppModule (NestJS picks the last-registered matching global filter),
+    // so it must delegate explicitly instead of falling back to NestJS
+    // defaults via super.catch.
+    ApplicationErrorFilter,
     OpenAIExceptionFilter,
     // ALSO registered as APP_FILTER (in addition to controller-scoped
     // @UseFilters on ChatCompletionsController) so it can intercept errors
