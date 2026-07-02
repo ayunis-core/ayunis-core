@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.11.1](https://github.com/ayunis-core/ayunis-core/compare/v2.11.0...v2.11.1) (2026-07-02)
+
+
+### Bug Fixes
+
+* **openai-compat:** keep domain error codes on non-openai routes (AYC-366) ([#933](https://github.com/ayunis-core/ayunis-core/issues/933)) ([e408d8e](https://github.com/ayunis-core/ayunis-core/commit/e408d8e08dad32a646e83cb09c10db048f19c15c))
+
+
+### Miscellaneous
+
+* **deps:** bump knip from 5.88.1 to 6.23.0 ([#743](https://github.com/ayunis-core/ayunis-core/issues/743)) ([3c43709](https://github.com/ayunis-core/ayunis-core/commit/3c437093b5816d24d5c56feb0295a408635059f7))
+* **deps:** bump vitest from 3.2.6 to 4.1.9 ([#736](https://github.com/ayunis-core/ayunis-core/issues/736)) ([f02eacb](https://github.com/ayunis-core/ayunis-core/commit/f02eacb389818294348e56ed43c6d6e025ff0130))
+
 ## [2.11.0](https://github.com/ayunis-core/ayunis-core/compare/v2.10.0...v2.11.0) (2026-07-01)
 
 
