@@ -15,6 +15,7 @@ import { ExecuteRunUseCase } from './execute-run.use-case';
 import { ExecuteRunCommand } from './execute-run.command';
 import { RunUserInput } from '../../../domain/run-input.entity';
 import type { CreditBudgetGuardService } from '../../services/credit-budget-guard.service';
+import type { CreditLimitGuardService } from '../../services/credit-limit-guard.service';
 import type { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
 import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
 import type { CollectUsageAsyncService } from '../../services/collect-usage-async.service';
@@ -111,9 +112,14 @@ describe('ExecuteRunUseCase', () => {
       collect: jest.fn(),
     } as unknown as jest.Mocked<CollectUsageAsyncService>;
 
+    const creditLimitGuardService = {
+      ensureWithinLimits: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<CreditLimitGuardService>;
+
     const inferenceUsageGuard = new InferenceUsageGuard(
       checkQuotaUseCase,
       creditBudgetGuardService,
+      creditLimitGuardService,
       collectUsageAsyncService,
     );
 

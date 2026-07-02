@@ -14,6 +14,7 @@ import { MessageCleanupService } from './application/services/message-cleanup.se
 import { StreamingInferenceService } from './application/services/streaming-inference.service';
 import { NonStreamingInferenceService } from './application/services/non-streaming-inference.service';
 import { CreditBudgetGuardService } from './application/services/credit-budget-guard.service';
+import { CreditLimitGuardService } from './application/services/credit-limit-guard.service';
 import { InferenceOrchestratorService } from './application/services/inference-orchestrator.service';
 import { InferenceUsageGuard } from './application/services/inference-usage-guard.service';
 
@@ -25,6 +26,7 @@ import { AnonymizationSettingsModule } from 'src/domain/anonymization-settings/a
 import { ThreadPiiMasksModule } from 'src/domain/thread-pii-masks/thread-pii-masks.module';
 import { UsageModule } from 'src/domain/usage/usage.module';
 import { QuotasModule } from 'src/iam/quotas/quotas.module';
+import { CreditLimitsModule } from 'src/iam/credit-limits/credit-limits.module';
 import { SkillsModule } from 'src/domain/skills/skills.module';
 import { SkillTemplatesModule } from 'src/domain/skill-templates/skill-templates.module';
 import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.module';
@@ -45,6 +47,7 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
     ThreadPiiMasksModule,
     UsageModule,
     QuotasModule,
+    CreditLimitsModule,
     SkillsModule,
     SkillTemplatesModule,
     ChatSettingsModule,
@@ -63,6 +66,7 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
     StreamingInferenceService,
     NonStreamingInferenceService,
     CreditBudgetGuardService,
+    CreditLimitGuardService,
     InferenceOrchestratorService,
     InferenceUsageGuard,
   ],

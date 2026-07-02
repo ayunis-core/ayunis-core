@@ -9,6 +9,7 @@ import { SystemRolesGuard } from './authorization/application/guards/system-role
 import { SubscriptionGuard } from './authorization/application/guards/subscription.guard';
 import { RateLimitGuard } from './authorization/application/guards/rate-limit.guard';
 import { AddonGuard } from './authorization/application/guards/addon.guard';
+import { UsageBasedSubscriptionGuard } from './authorization/application/guards/usage-based-subscription.guard';
 
 type GuardRef = abstract new (...args: never[]) => unknown;
 
@@ -51,6 +52,7 @@ describe('IamModule global guard order', () => {
       SystemRolesGuard,
       AddonGuard,
       SubscriptionGuard,
+      UsageBasedSubscriptionGuard,
       RateLimitGuard,
     ]);
   });
