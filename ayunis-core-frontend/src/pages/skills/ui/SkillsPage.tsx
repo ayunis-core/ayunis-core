@@ -1,6 +1,8 @@
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
+import { TOUR_TARGET } from '@/shared/config/tour-targets';
 import CreateSkillDialog from './CreateSkillDialog';
 import MarketplacePromoCard from './MarketplacePromoCard';
 import SkillCard from './SkillCard';
@@ -32,10 +34,28 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
     .filter((skill) => skill.isShared)
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  // The "pin a skill" tour step anchors on the first active personal skill.
+  // With nothing pinnable (no skills yet, or none active) it falls back to the
+  // create-skill action so the step always has a visible target.
+  const pinTargetSkillId = personalSkills.find((skill) => skill.isActive)?.id;
+  const hasPinnableSkill = pinTargetSkillId !== undefined;
+
+  const createSkillAction = (
+    <OnboardingTourTarget name={TOUR_TARGET.createSkill}>
+      <CreateSkillDialog />
+    </OnboardingTourTarget>
+  );
+
   const headerAction = (
     <div className="flex gap-2">
       <HelpLink path="skills/" />
-      <CreateSkillDialog />
+      {hasPinnableSkill ? (
+        createSkillAction
+      ) : (
+        <OnboardingTourTarget name={TOUR_TARGET.pinSkill}>
+          {createSkillAction}
+        </OnboardingTourTarget>
+      )}
     </div>
   );
 
@@ -88,7 +108,11 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
               ) : (
                 <div className="space-y-3">
                   {personalSkills.map((skill) => (
-                    <SkillCard key={skill.id} skill={skill} />
+                    <SkillCard
+                      key={skill.id}
+                      skill={skill}
+                      pinTourTarget={skill.id === pinTargetSkillId}
+                    />
                   ))}
                 </div>
               )}

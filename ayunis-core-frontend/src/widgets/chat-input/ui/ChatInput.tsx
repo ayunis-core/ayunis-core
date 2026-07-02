@@ -1,6 +1,8 @@
 import { useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
+import { TOUR_TARGET } from '@/shared/config/tour-targets';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useTranslation } from 'react-i18next';
 import type {
@@ -97,6 +99,7 @@ interface ChatInputProps {
   isAnonymousEnforced?: boolean;
   /** Whether the selected model supports vision (image upload) */
   isVisionEnabled?: boolean;
+  initialMessage?: string;
 }
 
 export interface ChatInputRef {
@@ -133,11 +136,12 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       selectedSkillId,
       selectedSkillName,
       onSkillRemove,
+      initialMessage,
     },
     ref,
   ) => {
     const [isFocused, setIsFocused] = useState<boolean>(false);
-    const [message, setMessage] = useState('');
+    const [message, setMessage] = useState(initialMessage ?? '');
     const isSubmitting = submissionState === 'submitting';
     const inFlight = submissionState !== 'idle';
     const { t } = useTranslation('common');
@@ -337,28 +341,38 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               <div className="flex items-center justify-between">
                 {/* Left side */}
                 <div className="flex-shrink-0 flex items-center space-x-2">
-                  <PlusButton
-                    onFileUpload={onFileUpload}
-                    onImageSelect={handleImageSelect}
-                    isFileSourceDisabled={
-                      !isEmbeddingModelEnabled || isSubmitting
-                    }
-                    isImageUploadDisabled={!isVisionEnabled || isSubmitting}
-                    onKnowledgeBaseSelect={onAddKnowledgeBase}
-                    attachedKnowledgeBaseIds={knowledgeBases?.map(
-                      (kb) => kb.id,
-                    )}
-                    onIntegrationSelect={onAddIntegration}
-                    attachedIntegrationIds={mcpIntegrations?.map(
-                      (integration) => integration.id,
-                    )}
-                  />
-                  <AnonymousButton
-                    isAnonymous={isAnonymous}
-                    onAnonymousChange={onAnonymousChange}
-                    isDisabled={isAnonymousChangeDisabled}
-                    isEnforced={isAnonymousEnforced}
-                  />
+                  <OnboardingTourTarget
+                    name={TOUR_TARGET.chatUpload}
+                    settleMs={900}
+                  >
+                    <PlusButton
+                      onFileUpload={onFileUpload}
+                      onImageSelect={handleImageSelect}
+                      isFileSourceDisabled={
+                        !isEmbeddingModelEnabled || isSubmitting
+                      }
+                      isImageUploadDisabled={!isVisionEnabled || isSubmitting}
+                      onKnowledgeBaseSelect={onAddKnowledgeBase}
+                      attachedKnowledgeBaseIds={knowledgeBases?.map(
+                        (kb) => kb.id,
+                      )}
+                      onIntegrationSelect={onAddIntegration}
+                      attachedIntegrationIds={mcpIntegrations?.map(
+                        (integration) => integration.id,
+                      )}
+                    />
+                  </OnboardingTourTarget>
+                  <OnboardingTourTarget
+                    name={TOUR_TARGET.anonymousMode}
+                    settleMs={900}
+                  >
+                    <AnonymousButton
+                      isAnonymous={isAnonymous}
+                      onAnonymousChange={onAnonymousChange}
+                      isDisabled={isAnonymousChangeDisabled}
+                      isEnforced={isAnonymousEnforced}
+                    />
+                  </OnboardingTourTarget>
                   {selectedSkillId && selectedSkillName && onSkillRemove && (
                     <SkillBadge
                       skillName={selectedSkillName}
@@ -372,11 +386,13 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     condition={isModelChangeDisabled ?? false}
                     tooltip={t('chatInput.modelChangeDisabledTooltip')}
                   >
-                    <ModelSelector
-                      isDisabled={isModelChangeDisabled ?? false}
-                      selectedModelId={modelId}
-                      onModelChange={onModelChange}
-                    />
+                    <OnboardingTourTarget name={TOUR_TARGET.modelSelector}>
+                      <ModelSelector
+                        isDisabled={isModelChangeDisabled ?? false}
+                        selectedModelId={modelId}
+                        onModelChange={onModelChange}
+                      />
+                    </OnboardingTourTarget>
                   </TooltipIf>
                   <MicrophoneButton
                     onTranscriptionComplete={(text) => {

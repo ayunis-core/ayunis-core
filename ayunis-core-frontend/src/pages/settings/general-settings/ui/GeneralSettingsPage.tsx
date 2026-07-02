@@ -1,6 +1,8 @@
 import { SettingsLayout } from '../../settings-layout';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
+import { TOUR_TARGET } from '@/shared/config/tour-targets';
 import { ThemeSettingsCard } from './ThemeSettingsCard';
 import { LanguageSettingsCard } from './LanguageSettingsCard';
 
@@ -13,7 +15,9 @@ export default function GeneralSettingsPage() {
       action={<HelpLink path="settings/account/general/" />}
     >
       <div className="space-y-4">
-        <ThemeSettingsCard />
+        <OnboardingTourTarget name={TOUR_TARGET.themeSettings}>
+          <ThemeSettingsCard />
+        </OnboardingTourTarget>
         <LanguageSettingsCard />
       </div>
     </SettingsLayout>

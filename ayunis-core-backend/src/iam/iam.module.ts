@@ -14,6 +14,7 @@ import { AuthorizationModule } from './authorization/authorization.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TrialsModule } from './trials/trials.module';
 import { LegalAcceptancesModule } from './legal-acceptances/legal-acceptances.module';
+import { OnboardingModule } from './onboarding/onboarding.module';
 import { QuotasModule } from './quotas/quotas.module';
 import { TeamsModule } from './teams/teams.module';
 import { PlatformConfigModule } from './platform-config/platform-config.module';
@@ -40,6 +41,7 @@ const IAM_FEATURE_MODULES = [
   SubscriptionsModule,
   TrialsModule,
   LegalAcceptancesModule,
+  OnboardingModule,
   QuotasModule,
   TeamsModule,
   PlatformConfigModule,

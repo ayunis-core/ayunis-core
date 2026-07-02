@@ -30,6 +30,8 @@ const queryIsEmbeddingModelEnabledOptions = () => ({
 
 const searchSchema = z.object({
   modelId: z.string().optional(),
+  prompt: z.string().optional(),
+  attachmentUrl: z.string().optional(),
 });
 
 export const Route = createFileRoute('/_authenticated/chat/')({
@@ -79,10 +81,13 @@ export const Route = createFileRoute('/_authenticated/chat/')({
 
 function RouteComponent() {
   const { selectedModelId, isEmbeddingModelEnabled } = Route.useLoaderData();
+  const { prompt, attachmentUrl } = Route.useSearch();
   return (
     <NewChatPage
       selectedModelId={selectedModelId}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+      initialPrompt={prompt}
+      initialAttachmentUrl={attachmentUrl}
     />
   );
 }

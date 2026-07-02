@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
+import { TOUR_TARGET } from '@/shared/config/tour-targets';
 import { TeamsList } from './TeamsList';
 import TeamsFilters from './TeamsFilters';
 import {
@@ -38,9 +40,11 @@ export function TeamsSettingsPage({ teams }: Readonly<TeamsSettingsPageProps>) {
   const headerActions = (
     <div className="flex gap-2">
       <HelpLink path="settings/admin/teams/" />
-      <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
-        {t('teams.page.add')}
-      </Button>
+      <OnboardingTourTarget name={TOUR_TARGET.createTeam}>
+        <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+          {t('teams.page.add')}
+        </Button>
+      </OnboardingTourTarget>
     </div>
   );
 

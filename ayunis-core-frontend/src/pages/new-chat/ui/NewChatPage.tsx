@@ -1,14 +1,16 @@
 import { Lock } from 'lucide-react';
 import NewChatPageLayout from './NewChatPageLayout';
-import ChatInput from '@/widgets/chat-input';
+import ChatInput, { type ChatInputRef } from '@/widgets/chat-input';
 import {
   useInitiateChat,
   type SourceUploadStatus,
 } from '../api/useInitiateChat';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
+import { TOUR_TARGET } from '@/shared/config/tour-targets';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
 import {
@@ -17,6 +19,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
+import { useFileFromUrl } from '@/shared/hooks/useFileFromUrl';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import type {
   IntegrationSummary,
@@ -33,11 +36,15 @@ import { useRouter } from '@tanstack/react-router';
 interface NewChatPageProps {
   selectedModelId?: string;
   isEmbeddingModelEnabled: boolean;
+  initialPrompt?: string;
+  initialAttachmentUrl?: string;
 }
 
 export default function NewChatPage({
   selectedModelId,
   isEmbeddingModelEnabled,
+  initialPrompt,
+  initialAttachmentUrl,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
   const { initiateChat, cancel, isCreating } = useInitiateChat();
@@ -58,6 +65,15 @@ export default function NewChatPage({
   }, [isSystemPromptError, t]);
   const queryClient = useQueryClient();
   const router = useRouter();
+  const chatInputRef = useRef<ChatInputRef>(null);
+
+  useEffect(() => {
+    if (initialPrompt) {
+      chatInputRef.current?.setMessage(initialPrompt);
+    }
+  }, [initialPrompt]);
+  useFileFromUrl(initialAttachmentUrl, (file) => handleFileUpload([file]));
+
   const [modelId, setModelId] = useState(selectedModelId);
   const [isAnonymous, setIsAnonymous] = useState(false);
   type LocalSource = {
@@ -109,7 +125,7 @@ export default function NewChatPage({
         : SourceResponseDtoType.text,
       file,
     }));
-    setSources([...sources, ...newSources]);
+    setSources((prev) => [...prev, ...newSources]);
   }
 
   function handleRemoveSource(sourceId: string) {
@@ -210,6 +226,7 @@ export default function NewChatPage({
       </div>
       <div className="w-full flex flex-col gap-4 mt-2">
         <ChatInput
+          ref={chatInputRef}
           modelId={modelId}
           sources={sources}
           knowledgeBases={selectedKnowledgeBases}
@@ -246,10 +263,12 @@ export default function NewChatPage({
           selectedSkillName={selectedSkillName}
           onSkillRemove={handleSkillRemove}
         />
-        <PinnedSkills
-          onSkillSelect={handleSkillSelect}
-          selectedSkillId={selectedSkillId}
-        />
+        <OnboardingTourTarget name={TOUR_TARGET.pinnedSkills} settleMs={900}>
+          <PinnedSkills
+            onSkillSelect={handleSkillSelect}
+            selectedSkillId={selectedSkillId}
+          />
+        </OnboardingTourTarget>
         <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
           <Lock className="h-3 w-3" />
           <span>{t('newChat.privacyHint')}</span>

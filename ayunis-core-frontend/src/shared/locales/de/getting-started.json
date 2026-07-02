@@ -1,0 +1,220 @@
+{
+  "page": {
+    "title": "Erste Schritte",
+    "description": "Entdecken Sie, was Ayunis Core für Sie tun kann.",
+    "checkboxHint": "Haken Sie erledigte Schritte selbst ab, um Ihren Fortschritt zu verfolgen.",
+    "hide": "Erste Schritte ausblenden",
+    "hideHint": "Sie finden diese Seite jederzeit unter Einstellungen → Erste Schritte.",
+    "show": "In der Sidebar wieder einblenden"
+  },
+  "progress": {
+    "completed": "{{count}} von {{total}} erledigt"
+  },
+  "saveError": "Dein Fortschritt konnte nicht gespeichert werden. Bitte versuche es erneut.",
+  "spotlightDismiss": "Alles klar",
+  "returnButton": "Zurück zu Erste Schritte",
+  "milestones": {
+    "goodStart": "Guter Start! Weiter so.",
+    "halfWay": "Schon die Hälfte geschafft!",
+    "almostDone": "Fast fertig — nur noch ein paar Schritte!",
+    "complete": "Alles erledigt — Sie sind startklar!"
+  },
+  "categories": {
+    "workspace": {
+      "title": "Arbeitsplatz einrichten",
+      "description": "Konfigurieren Sie Ihren Arbeitsplatz für Ihr Team."
+    },
+    "firstChat": {
+      "title": "Entdecken Sie den Chat",
+      "description": "Lernen Sie die wichtigsten Funktionen kennen."
+    },
+    "skills": {
+      "title": "Fähigkeiten entdecken",
+      "description": "In den Fähigkeiten finden Sie spezialisierte Experten — z. B. einen Daten-Analysten oder einen Dokumenten-Zusammenfasser. Einmal hinzugefügt, stehen sie automatisch im Chat zur Verfügung.",
+      "helpLink": "Mehr über Fähigkeiten erfahren"
+    },
+    "knowledgeManagement": {
+      "title": "Wissensmanagement",
+      "description": "Erstellen Sie Wissenssammlungen mit eigenen Dokumenten und URLs — Ayunis Core nutzt dieses Wissen automatisch für präzisere Antworten."
+    },
+    "advanced": {
+      "title": "Fortgeschrittene Funktionen",
+      "description": "Entdecken Sie weitere Funktionen, die Ihren Arbeitsalltag noch effizienter machen."
+    },
+    "workflows": {
+      "title": "Anwendungsfälle",
+      "description": "Probieren Sie typische Aufgaben aus und sehen Sie, was Ayunis Core für Sie erledigen kann."
+    }
+  },
+  "steps": {
+    "configureModels": {
+      "title": "Modelle prüfen und konfigurieren",
+      "description": "Prüfen Sie, welche Modelle für Ihre Organisation freigeschaltet sind und passen Sie bei Bedarf das Standardmodell an.",
+      "action": "Modelle konfigurieren",
+      "spotlightTitle": "Freigeschaltete Modelle",
+      "spotlightDescription": "Hier sehen Sie die verfügbaren Modelle. Sie können Modelle aktivieren oder deaktivieren und oben das Standardmodell ändern."
+    },
+    "inviteColleagues": {
+      "title": "Kollegen einladen",
+      "description": "Laden Sie weitere Benutzer ein, damit alle von Ayunis Core profitieren können.",
+      "action": "Benutzer einladen",
+      "spotlightTitle": "Benutzer einladen",
+      "spotlightDescription": "Klicken Sie hier, um neue Benutzer per E-Mail einzuladen. Eingeladene Kollegen können sofort loslegen."
+    },
+    "createTeams": {
+      "title": "Teams erstellen",
+      "description": "Organisieren Sie Ihre Kollegen in Teams für bessere Zusammenarbeit.",
+      "action": "Teams verwalten",
+      "spotlightTitle": "Team erstellen",
+      "spotlightDescription": "Klicken Sie hier, um ein neues Team zu erstellen. Teams helfen Ihnen, Kollegen zu organisieren und Berechtigungen gemeinsam zu verwalten."
+    },
+    "sendFirstMessage": {
+      "title": "Starten Sie Ihren ersten Chat",
+      "description": "Schreiben Sie Ihre erste Nachricht und erleben Sie, wie Ayunis Core Sie unterstützt — von Texten über Analysen bis hin zu Übersetzungen.",
+      "prompt": "Hallo Ayunis Core! Wobei kannst du mir in meinem Arbeitsalltag in der Verwaltung helfen? Bitte mit konkreten Beispielen.",
+      "action": "Chat starten",
+      "spotlightTitle": "Senden Sie Ihre erste Nachricht",
+      "spotlightDescription": "Wenn Sie bereit sind, senden Sie Ihre Nachricht, um das Gespräch zu starten."
+    },
+    "uploadDocument": {
+      "title": "Laden Sie ein Dokument hoch",
+      "description": "Laden Sie ein PDF, Word- oder Excel-Dokument hoch und stellen Sie Fragen dazu — Ayunis Core kann zusammenfassen, analysieren und extrahieren.",
+      "action": "Dokument hochladen",
+      "spotlightTitle": "Dokument hochladen",
+      "spotlightDescription": "Klicken Sie hier, um ein Dokument hochzuladen. Ayunis Core kann es zusammenfassen, analysieren oder Fragen dazu beantworten."
+    },
+    "tryVoiceInput": {
+      "title": "Nutzen Sie die Spracheingabe",
+      "description": "Diktieren Sie Ihre Nachricht per Mikrofon statt zu tippen — ideal für schnelle Fragen oder unterwegs.",
+      "action": "Spracheingabe testen",
+      "spotlightTitle": "Spracheingabe",
+      "spotlightDescription": "Klicken Sie auf das Mikrofon, um Ihre Nachricht per Sprache einzugeben. Die Aufnahme wird automatisch in Text umgewandelt."
+    },
+    "anonymousMode": {
+      "title": "Aktivieren Sie den anonymen Modus",
+      "description": "Schützen Sie personenbezogene Daten automatisch — Namen, Adressen und andere sensible Informationen werden vor dem Senden anonymisiert.",
+      "action": "Anonymen Modus ansehen",
+      "spotlightTitle": "Anonymer Modus",
+      "spotlightDescription": "Aktivieren Sie den anonymen Modus, um personenbezogene Daten (PII) automatisch zu erkennen und zu anonymisieren, bevor sie an das Modell gesendet werden."
+    },
+    "whatAreSkills": {
+      "title": "Was sind Fähigkeiten?",
+      "description": "Fähigkeiten sind spezialisierte Experten für bestimmte Aufgaben — z. B. ein Daten-Analyst oder ein Dokumenten-Zusammenfasser. Lassen Sie sich die Details direkt von Ayunis Core erklären oder lesen Sie in der Dokumentation nach.",
+      "prompt": "Erkläre mir bitte, was Fähigkeiten in Ayunis Core sind. Wofür kann ich sie verwenden, welche Beispiele gibt es und wie helfen sie mir im Alltag? Gib mir eine kompakte, verständliche Übersicht.",
+      "action": "Jetzt erklären lassen",
+      "secondaryAction": "Zum Hilfecenter",
+      "spotlightTitle": "Senden Sie Ihre Nachricht",
+      "spotlightDescription": "Wenn Sie bereit sind, senden Sie Ihre Nachricht, um das Gespräch zu starten."
+    },
+    "installSkill": {
+      "title": "Fähigkeit aus dem Marketplace installieren",
+      "description": "Stöbern Sie im Marketplace und installieren Sie fertige Fähigkeiten mit einem Klick.",
+      "action": "Marketplace öffnen"
+    },
+    "createSkill": {
+      "title": "Eigene Fähigkeit erstellen",
+      "description": "Erstellen Sie eine Fähigkeit, die genau auf Ihre Aufgaben zugeschnitten ist.",
+      "action": "Fähigkeit erstellen",
+      "spotlightTitle": "Fähigkeit erstellen",
+      "spotlightDescription": "Klicken Sie hier, um eine neue Fähigkeit zu erstellen. Fähigkeiten sind wiederverwendbare Vorlagen für häufige Aufgaben."
+    },
+    "useSkillInChat": {
+      "title": "Fähigkeit anheften",
+      "description": "Fähigkeiten aktivieren sich automatisch, wenn sie zu Ihrer Frage passen. Sie können sie auch hier anheften, um sie gezielt in einem neuen Chat zu verwenden.",
+      "action": "Fähigkeit anheften",
+      "spotlightTitle": "Fähigkeit anheften",
+      "spotlightDescription": "Klicken Sie auf das Pin-Symbol, um eine Fähigkeit an neue Chats anzuheften."
+    },
+    "activateSkillInChat": {
+      "title": "Angeheftete Fähigkeit im Chat nutzen",
+      "description": "Ihre angehefteten Fähigkeiten erscheinen als Buttons unter dem Chat-Eingabefeld. Klicken Sie auf eine, um sie in diesem Chat gezielt einzusetzen — so wird sie garantiert verwendet.",
+      "action": "Zum Chat",
+      "spotlightTitle": "Angeheftete Fähigkeiten",
+      "spotlightDescription": "Hier sehen Sie Ihre angehefteten Fähigkeiten. Klicken Sie auf eine, um sie gezielt für diesen Chat einzusetzen — so wird sie garantiert verwendet."
+    },
+    "createKnowledgeBase": {
+      "title": "Wissenssammlung erstellen",
+      "description": "Erstellen Sie eine Wissenssammlung, um eigene Dokumente und Webseiten als Wissensquelle für Ayunis Core bereitzustellen.",
+      "action": "Wissenssammlung erstellen",
+      "secondaryAction": "Zum Hilfecenter",
+      "spotlightTitle": "Wissenssammlung erstellen",
+      "spotlightDescription": "Klicken Sie hier, um eine neue Wissenssammlung anzulegen. Sie können anschließend Dokumente und URLs hinzufügen."
+    },
+    "addDocuments": {
+      "title": "Dokumente hinzufügen",
+      "description": "Laden Sie PDFs oder Word-Dokumente hoch oder fügen Sie Web-URLs hinzu. Ayunis Core verarbeitet die Inhalte automatisch und kann darauf basierend Fragen beantworten.",
+      "action": "Zur Wissenssammlung",
+      "spotlightTitle": "Dokumente hochladen",
+      "spotlightDescription": "Laden Sie hier PDFs oder Word-Dokumente hoch oder fügen Sie Web-URLs hinzu. Ayunis Core verarbeitet die Inhalte automatisch und nutzt sie für präzise Antworten."
+    },
+    "useKnowledgeBaseInChat": {
+      "title": "Wissenssammlung im Chat nutzen",
+      "description": "Fügen Sie eine Wissenssammlung über das Plus-Icon zu Ihrem Chat hinzu. Ayunis Core bezieht dann Ihr eigenes Wissen in die Antworten ein.",
+      "action": "Wissenssammlung hinzufügen",
+      "spotlightTitle": "Wissenssammlung hinzufügen",
+      "spotlightDescription": "Über das Plus-Icon können Sie Wissenssammlungen zu Ihrem Chat hinzufügen. Ayunis Core nutzt dann Ihr eigenes Wissen für präzisere Antworten."
+    },
+    "customInstructions": {
+      "title": "Eigene Anweisungen festlegen",
+      "description": "Definieren Sie einen persönlichen System-Prompt, der in jedem Chat automatisch angewendet wird — z. B. Tonalität, Sprache oder Rollenanweisungen.",
+      "action": "Anweisungen konfigurieren",
+      "spotlightTitle": "Eigene Anweisungen",
+      "spotlightDescription": "Hier können Sie einen persönlichen System-Prompt hinterlegen. Er wird automatisch in jedem neuen Chat verwendet."
+    },
+    "generateImage": {
+      "title": "Bild generieren lassen",
+      "description": "Ayunis Core kann Bilder auf Basis Ihrer Beschreibung erstellen — ideal für Präsentationen, Entwürfe oder kreative Ideen. Voraussetzung: Ein Administrator muss ein Bilderzeugungsmodell aktiviert haben.",
+      "prompt": "Erstelle ein modernes, minimalistisches Icon für eine Gemeinde-App. Das Icon soll ein stilisiertes Rathaus zeigen, in Blau- und Weißtönen, flaches Design.",
+      "action": "Ausprobieren"
+    },
+    "switchTheme": {
+      "title": "Dark Mode aktivieren",
+      "description": "Wechseln Sie zwischen hellem und dunklem Design — schont die Augen bei langen Arbeitstagen.",
+      "action": "Design anpassen",
+      "spotlightTitle": "Erscheinungsbild",
+      "spotlightDescription": "Aktivieren Sie hier den Dark Mode. Das dunkle Design schont die Augen, besonders bei längerer Nutzung."
+    },
+    "writeEmail": {
+      "title": "E-Mail verfassen",
+      "description": "Lassen Sie sich z. B. eine Einladung zur Bürgerversammlung formulieren — mit allen wichtigen Informationen zu Ort, Zeit und Themen.",
+      "prompt": "Erstelle mir bitte eine freundliche Einladungs-E-Mail an die Bürgerinnen und Bürger zur nächsten Bürgerversammlung, inklusive Betreff, und bereite sie direkt im E-Mail-Widget vor.\n\nAnlass: Vorstellung der geplanten Innenstadtbelebung und neuer Mobilitätskonzepte. Termin: Donnerstag, der 18. Juni 2026, 18:30–20:30 Uhr im Bürgersaal des Rathauses. Erwähne, dass im Anschluss bei einem kleinen Imbiss Gelegenheit zum Austausch besteht, und bitte um formlose Anmeldung per E-Mail an rathaus@musterstadt.de. Halte den Ton herzlich, einladend und bürgernah. Falls keine konkrete Empfängerliste angegeben ist, lasse das Empfängerfeld leer.",
+      "action": "Ausprobieren"
+    },
+    "createDocument": {
+      "title": "Dokument erstellen",
+      "description": "Lassen Sie sich strukturierte Dokumente wie Pressemitteilungen, Konzepte oder Aushänge erstellen — Ayunis Core öffnet automatisch einen Editor, in dem Sie das Ergebnis direkt weiterbearbeiten können.",
+      "prompt": "Erstelle eine Pressemitteilung über die Eröffnung des neuen Bürgerservice-Centers in unserer Stadt.\n\nEckdaten:\n- Eröffnung: Montag, 1. September 2026, 10:00 Uhr\n- Adresse: Hauptstraße 12, 12345 Musterstadt\n- Neue Angebote: digitale Antragstellung, kürzere Wartezeiten durch Online-Terminvergabe, barrierefreier Zugang, mehrsprachiger Service (Deutsch, Englisch, Türkisch, Arabisch)\n\nStrukturiere die Pressemitteilung mit aussagekräftiger Überschrift, kurzer Einleitung, einem Hauptteil mit drei zentralen Punkten und einem Schlussteil inklusive Pressekontakt (presse@musterstadt.de, 0123/456789). Halte den Ton sachlich, aber positiv und bürgerfreundlich.",
+      "action": "Ausprobieren"
+    },
+    "summarizeDocument": {
+      "title": "Dokument zusammenfassen",
+      "description": "Fassen Sie lange Dokumente wie Sitzungsprotokolle, Bekanntmachungen oder Vorlagen in wenigen Sätzen zusammen — ideal für Aktenprüfung oder Mitteilungen an Kollegen. Die Beispieldatei wird automatisch angehängt.",
+      "prompt": "Anbei findest du das Protokoll unserer letzten Gemeinderatssitzung.\n\nBitte erstelle mir eine kompakte Zusammenfassung mit:\n- den 3–5 wichtigsten Beschlüssen und Themen\n- konkreten Zahlen und Daten, wo relevant\n- den nächsten anstehenden Terminen oder Schritten\n\nHalte die Zusammenfassung sachlich und klar — geeignet als Mitteilung an Kollegen, die nicht dabei waren.",
+      "action": "Ausprobieren"
+    },
+    "analyzeData": {
+      "title": "Daten auswerten & visualisieren",
+      "description": "Erkennen Sie Trends in Tabellen und lassen Sie sich ein passendes Diagramm (Linien-, Kreis- oder Balkendiagramm) erstellen. Die Beispieldatei wird automatisch angehängt.",
+      "prompt": "Anbei findest du eine CSV-Datei mit den Teilnehmerzahlen unseres jährlichen Stadtlaufs von 2019 bis 2026, aufgeschlüsselt nach Streckenlänge.\n\nBitte werte die Daten wie folgt aus:\n- Erstelle ein Liniendiagramm, das die Entwicklung der Teilnehmerzahlen je Strecke über die Jahre zeigt.\n- Berechne das Gesamtwachstum von 2019 bis 2026 und nenne die heute beliebteste Strecke.\n- Fasse in drei kurzen Stichpunkten zusammen, was dir auffällt — auch mit Blick auf den Frauen- und Jugendanteil.",
+      "action": "Ausprobieren"
+    },
+    "createFlowchart": {
+      "title": "Flowchart & Prozessdiagramm erstellen",
+      "description": "Visualisieren Sie Verwaltungsprozesse als Diagramm — für Schulungen, Konzepte oder Dokumentation.",
+      "prompt": "Erstelle ein Flowchart für den folgenden Verwaltungsprozess:\n\nEin Bürger stellt einen Wohngeldantrag online. Die Sachbearbeiterin prüft die Vollständigkeit der Unterlagen. Sind alle Dokumente vorhanden, wird der Antrag inhaltlich geprüft und entweder bewilligt oder abgelehnt — der Bürger wird jeweils schriftlich informiert. Fehlen Unterlagen, erhält der Bürger eine Nachforderung.",
+      "action": "Ausprobieren"
+    },
+    "createCalendarEntry": {
+      "title": "Kalendereintrag erstellen",
+      "description": "Lassen Sie sich aus einer kurzen Beschreibung einen vollständigen Kalendereintrag mit Datum, Uhrzeit, Ort und Agenda erstellen.",
+      "prompt": "Leg mir einen Kalendereintrag an: Dienstbesprechung mit dem Fachbereich Ordnung am nächsten Donnerstag von 14:00 bis 15:30 Uhr im Sitzungssaal 3. Thema ist die Umsetzung der neuen Datenschutzrichtlinie. Erstelle Titel, Ort, Zeitraum, Teilnehmervorschlag und eine kurze Agenda mit drei Tagesordnungspunkten.",
+      "action": "Ausprobieren"
+    },
+    "webResearch": {
+      "title": "Webrecherche durchführen",
+      "description": "Nutzen Sie die Web-Suche, um aktuelle Fördermöglichkeiten, Studien oder Best Practices für Ihre Kommune zu finden.",
+      "prompt": "Welche aktuellen Bundes- und Landesförderprogramme für die Digitalisierung der kommunalen Verwaltung gibt es zurzeit? Liste die wichtigsten mit Fördersumme, Antragsfrist und Voraussetzungen — gerne mit Link zur Antragsstelle.",
+      "action": "Ausprobieren"
+    }
+  }
+}
