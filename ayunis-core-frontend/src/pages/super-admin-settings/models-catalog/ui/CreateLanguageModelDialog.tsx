@@ -1,11 +1,14 @@
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { useCreateLanguageModel } from '../api/useCreateLanguageModel';
 import type { LanguageModelFormData } from '../model/types';
+import { normalizeLanguageModelFormData } from '../lib/normalizeLanguageModelFormData';
 import type { CreateLanguageModelRequestDtoProvider } from '@/shared/api';
 import { LANGUAGE_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
 import { LanguageModelCapabilityFields } from './LanguageModelCapabilityFields';
 import { LanguageModelTierField } from './LanguageModelTierField';
+import { LanguageModelDescriptionField } from './LanguageModelDescriptionField';
 import { ModelPricingFields } from './ModelPricingFields';
 
 interface CreateLanguageModelDialogProps {
@@ -17,6 +20,7 @@ export function CreateLanguageModelDialog({
   open,
   onOpenChange,
 }: Readonly<CreateLanguageModelDialogProps>) {
+  const { t } = useTranslation('super-admin-settings-org');
   const form = useForm<LanguageModelFormData>({
     defaultValues: {
       name: '',
@@ -28,6 +32,7 @@ export function CreateLanguageModelDialog({
       isReasoning: false,
       isArchived: false,
       tier: undefined,
+      description: '',
     },
   });
 
@@ -36,23 +41,29 @@ export function CreateLanguageModelDialog({
     form.reset();
   });
 
+  const handleSubmit = (data: LanguageModelFormData) => {
+    createLanguageModel(normalizeLanguageModelFormData(data));
+  };
+
   return (
     <ModelFormDialog
-      title="Create Language Model"
+      title={t('models.catalog.dialog.createLanguageTitle')}
       open={open}
       onOpenChange={onOpenChange}
       form={form}
-      onSubmit={createLanguageModel}
+      onSubmit={handleSubmit}
       isSubmitting={isCreating}
-      submitLabel="Create"
-      submittingLabel="Creating..."
+      mode="create"
       providers={LANGUAGE_MODEL_PROVIDERS}
-      namePlaceholder="e.g., gpt-4"
-      displayNamePlaceholder="e.g., GPT-4"
+      namePlaceholder={t('models.catalog.dialog.languageNamePlaceholder')}
+      displayNamePlaceholder={t(
+        'models.catalog.dialog.languageDisplayNamePlaceholder',
+      )}
     >
+      <LanguageModelTierField form={form} disabled={isCreating} />
+      <LanguageModelDescriptionField form={form} disabled={isCreating} />
       <LanguageModelCapabilityFields form={form} disabled={isCreating} />
       <ModelPricingFields form={form} disabled={isCreating} />
-      <LanguageModelTierField form={form} disabled={isCreating} />
     </ModelFormDialog>
   );
 }

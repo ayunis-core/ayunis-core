@@ -61,13 +61,13 @@
     "anonymousOnly": "Anonymer Modus",
     "permitted": "Freigeschaltet",
     "tier": {
-      "label": "Stufe",
+      "label": "Leistung",
       "unset": "Nicht festgelegt",
-      "zero": "Unbegrenzt",
-      "low": "Niedrig",
-      "medium": "Mittel",
-      "high": "Hoch",
-      "tooltip": "Leistung & Credit Verbrauch: {{label}}"
+      "userFacingHint": "Wird Nutzern angezeigt als „{{category}}“ mit „{{usage}}“."
+    },
+    "description": {
+      "label": "Beschreibung",
+      "placeholder": "Beschreibung des Modells, wird Nutzern in der Modellauswahl angezeigt"
     },
     "defaultModel": {
       "title": "Standardmodell der Organisation",

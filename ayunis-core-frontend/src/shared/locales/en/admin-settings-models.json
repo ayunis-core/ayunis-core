@@ -61,13 +61,13 @@
     "anonymousOnly": "Anonymous mode",
     "permitted": "Permitted",
     "tier": {
-      "label": "Tier",
+      "label": "Performance",
       "unset": "Unset",
-      "zero": "Unrestricted",
-      "low": "Low",
-      "medium": "Medium",
-      "high": "High",
-      "tooltip": "Performance & Credit Consumption: {{label}}"
+      "userFacingHint": "Shown to users as “{{category}}” with “{{usage}}”."
+    },
+    "description": {
+      "label": "Description",
+      "placeholder": "Description of the model, shown to users in the model selector"
     },
     "defaultModel": {
       "title": "Organization default model",

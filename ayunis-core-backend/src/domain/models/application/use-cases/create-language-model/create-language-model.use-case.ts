@@ -36,6 +36,7 @@ export class CreateLanguageModelUseCase {
         inputTokenCost: command.inputTokenCost,
         outputTokenCost: command.outputTokenCost,
         tier: command.tier,
+        description: command.description,
       });
       await this.modelsRepository.save(model);
       return model;

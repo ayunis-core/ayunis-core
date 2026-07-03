@@ -43,9 +43,17 @@ export default function ModelsCatalogList({
   isArchivedView = false,
 }: Readonly<ModelsCatalogListProps>) {
   const { t } = useTranslation('super-admin-settings-org');
-  const languageModels = models.filter(isLanguageModel);
-  const embeddingModels = models.filter(isEmbeddingModel);
-  const imageGenerationModels = models.filter(isImageGenerationModel);
+  // Stable order: the backend returns rows unordered, so edited models
+  // would otherwise jump to the end of the list
+  const byDisplayName = (
+    a: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
+    b: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
+  ) => a.displayName.localeCompare(b.displayName);
+  const languageModels = models.filter(isLanguageModel).sort(byDisplayName);
+  const embeddingModels = models.filter(isEmbeddingModel).sort(byDisplayName);
+  const imageGenerationModels = models
+    .filter(isImageGenerationModel)
+    .sort(byDisplayName);
 
   const editModel = (
     model: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,

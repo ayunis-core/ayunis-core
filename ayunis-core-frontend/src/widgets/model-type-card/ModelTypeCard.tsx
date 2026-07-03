@@ -43,12 +43,30 @@ interface ModelTierStarsProps {
   readonly tier: ModelWithConfigResponseDtoTier;
 }
 
-function ModelTierStars({ tier }: ModelTierStarsProps) {
-  const { t } = useTranslation('admin-settings-models');
+export function TierStars({ tier }: ModelTierStarsProps) {
   const filled = TIER_FILLED_COUNT[tier];
-  const tierLabel = t('models.tier.tooltip', {
-    label: t(`models.tier.${tier}`),
-  });
+  return (
+    <span className="inline-flex items-center" aria-hidden="true">
+      {[0, 1, 2].map((index) => (
+        <Star
+          key={index}
+          className={cn(
+            'h-3 w-3',
+            index < filled
+              ? 'fill-current text-foreground'
+              : 'fill-none text-muted-foreground',
+          )}
+        />
+      ))}
+    </span>
+  );
+}
+
+export function ModelTierStars({ tier }: ModelTierStarsProps) {
+  const { t } = useTranslation('common');
+  const performance = t(`models.tierPerformance.${tier}`);
+  const usage = t(`models.tierUsage.${tier}`);
+  const tierLabel = `${performance} · ${usage}`;
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -57,17 +75,7 @@ function ModelTierStars({ tier }: ModelTierStarsProps) {
           aria-label={tierLabel}
           tabIndex={0}
         >
-          {[0, 1, 2].map((index) => (
-            <Star
-              key={index}
-              className={cn(
-                'h-3 w-3',
-                index < filled
-                  ? 'fill-current text-foreground'
-                  : 'fill-none text-muted-foreground',
-              )}
-            />
-          ))}
+          <TierStars tier={tier} />
         </span>
       </TooltipTrigger>
       <TooltipContent>{tierLabel}</TooltipContent>

@@ -11,6 +11,8 @@ import { Badge } from '@/shared/ui/shadcn/badge';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { getFlagByProvider } from '@/shared/lib/model-provider-metadata';
+import { ModelTierStars } from '@/widgets/model-type-card';
 
 interface ModelItemProps {
   model: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item;
@@ -28,17 +30,14 @@ export function ModelItem({
   const { t } = useTranslation('super-admin-settings-org');
   const isLanguage = isLanguageModel(model);
   const isEmbedding = isEmbeddingModel(model);
-  const typeLabels = {
-    language: t('models.catalog.languageModelType'),
-    embedding: t('models.catalog.embeddingModelType'),
-    'image-generation': t('models.catalog.imageGenerationModelType'),
-  } as const;
 
   return (
     <Item>
       <ItemContent>
         <ItemTitle>
+          <span aria-hidden="true">{getFlagByProvider(model.provider)} </span>
           {model.displayName}
+          {isLanguage && model.tier && <ModelTierStars tier={model.tier} />}
           {model.isArchived && (
             <Badge variant="secondary" className="ml-2">
               {t('models.catalog.archivedBadge')}
@@ -49,9 +48,8 @@ export function ModelItem({
           <span className="font-medium">{model.name}</span> · {model.provider}
         </ItemDescription>
       </ItemContent>
-      <ItemContent>
-        <div className="flex flex-wrap gap-1.5">
-          <Badge variant="outline">{typeLabels[model.type]}</Badge>
+      <ItemContent className="items-end">
+        <div className="flex flex-wrap justify-end gap-1.5">
           {isLanguage && (
             <>
               {model.canStream && (
@@ -62,6 +60,11 @@ export function ModelItem({
               {model.canUseTools && (
                 <Badge variant="outline">
                   {t('models.catalog.toolsBadge')}
+                </Badge>
+              )}
+              {model.canVision && (
+                <Badge variant="outline">
+                  {t('models.catalog.visionBadge')}
                 </Badge>
               )}
               {model.isReasoning && (

@@ -1,4 +1,5 @@
 import type { UseFormReturn } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import {
   FormControl,
   FormField,
@@ -33,13 +34,14 @@ export function EmbeddingDimensionsField({
   disabled,
   mode,
 }: Readonly<EmbeddingDimensionsFieldProps>) {
+  const { t } = useTranslation('super-admin-settings-org');
   return (
     <FormField
       control={form.control}
       name="dimensions"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Dimensions</FormLabel>
+          <FormLabel>{t('models.catalog.dialog.dimensions')}</FormLabel>
           <Select
             onValueChange={(value) => field.onChange(Number(value))}
             {...(mode === 'edit'
@@ -49,7 +51,9 @@ export function EmbeddingDimensionsField({
           >
             <FormControl>
               <SelectTrigger>
-                <SelectValue placeholder="Select dimensions" />
+                <SelectValue
+                  placeholder={t('models.catalog.dialog.dimensionsPlaceholder')}
+                />
               </SelectTrigger>
             </FormControl>
             <SelectContent>

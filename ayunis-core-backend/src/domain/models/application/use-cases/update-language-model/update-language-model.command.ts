@@ -15,6 +15,7 @@ export class UpdateLanguageModelCommand {
   inputTokenCost?: number;
   outputTokenCost?: number;
   tier?: ModelTier;
+  description?: string;
 
   constructor(params: {
     id: UUID;
@@ -29,6 +30,7 @@ export class UpdateLanguageModelCommand {
     inputTokenCost?: number;
     outputTokenCost?: number;
     tier?: ModelTier;
+    description?: string;
   }) {
     this.id = params.id;
     this.name = params.name;
@@ -42,5 +44,6 @@ export class UpdateLanguageModelCommand {
     this.inputTokenCost = params.inputTokenCost;
     this.outputTokenCost = params.outputTokenCost;
     this.tier = params.tier;
+    this.description = params.description;
   }
 }

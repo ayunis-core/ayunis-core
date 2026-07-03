@@ -28,6 +28,7 @@ export class CatalogModelResponseDtoMapper {
       inputTokenCost: model.inputTokenCost,
       outputTokenCost: model.outputTokenCost,
       tier: model.tier,
+      description: model.description,
     };
   }
 

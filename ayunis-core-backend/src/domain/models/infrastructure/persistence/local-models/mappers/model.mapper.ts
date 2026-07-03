@@ -53,6 +53,7 @@ export class ModelMapper {
         inputTokenCost: record.inputTokenCost,
         outputTokenCost: record.outputTokenCost,
         tier: this.parseTier(record.tier, record.id, record.name),
+        description: record.description ?? undefined,
       });
     }
 
@@ -105,6 +106,7 @@ export class ModelMapper {
       record.inputTokenCost = domain.inputTokenCost;
       record.outputTokenCost = domain.outputTokenCost;
       record.tier = domain.tier ?? null;
+      record.description = domain.description ?? null;
       return record;
     }
 

@@ -39,6 +39,7 @@ export class ModelResponseDtoMapper {
       isDefault: permittedModel.isDefault,
       anonymousOnly: permittedModel.anonymousOnly,
       tier: permittedModel.model.tier,
+      description: permittedModel.model.description,
       // Note: Cost fields (inputTokenCost, outputTokenCost) are intentionally
       // not exposed to users. They are tracked internally for usage analytics only.
     };

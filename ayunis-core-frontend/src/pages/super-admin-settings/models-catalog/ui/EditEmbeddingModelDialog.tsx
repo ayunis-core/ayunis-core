@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useUpdateEmbeddingModel } from '../api/useUpdateEmbeddingModel';
 import type { EmbeddingModelFormData } from '../model/types';
 import type {
@@ -22,6 +23,7 @@ export function EditEmbeddingModelDialog({
   open,
   onOpenChange,
 }: Readonly<EditEmbeddingModelDialogProps>) {
+  const { t } = useTranslation('super-admin-settings-org');
   const { updateEmbeddingModel, isUpdating } = useUpdateEmbeddingModel(() => {
     onOpenChange(false);
   });
@@ -58,17 +60,18 @@ export function EditEmbeddingModelDialog({
 
   return (
     <ModelFormDialog
-      title="Edit Embedding Model"
+      title={t('models.catalog.dialog.editEmbeddingTitle')}
       open={open}
       onOpenChange={onOpenChange}
       form={form}
       onSubmit={handleSubmit}
       isSubmitting={isUpdating}
-      submitLabel="Update"
-      submittingLabel="Updating..."
+      mode="edit"
       providers={EMBEDDING_MODEL_PROVIDERS}
-      namePlaceholder="e.g., text-embedding-3-small"
-      displayNamePlaceholder="e.g., Text Embedding 3 Small"
+      namePlaceholder={t('models.catalog.dialog.embeddingNamePlaceholder')}
+      displayNamePlaceholder={t(
+        'models.catalog.dialog.embeddingDisplayNamePlaceholder',
+      )}
       hasContent={!!model}
     >
       <EmbeddingDimensionsField form={form} disabled={isUpdating} mode="edit" />

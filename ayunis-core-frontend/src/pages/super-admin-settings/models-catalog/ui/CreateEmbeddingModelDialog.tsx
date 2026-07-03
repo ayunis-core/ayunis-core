@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { useCreateEmbeddingModel } from '../api/useCreateEmbeddingModel';
 import type { EmbeddingModelFormData } from '../model/types';
 import type { CreateEmbeddingModelRequestDtoProvider } from '@/shared/api';
@@ -16,6 +17,7 @@ export function CreateEmbeddingModelDialog({
   open,
   onOpenChange,
 }: Readonly<CreateEmbeddingModelDialogProps>) {
+  const { t } = useTranslation('super-admin-settings-org');
   const form = useForm<EmbeddingModelFormData>({
     defaultValues: {
       name: '',
@@ -33,17 +35,18 @@ export function CreateEmbeddingModelDialog({
 
   return (
     <ModelFormDialog
-      title="Create Embedding Model"
+      title={t('models.catalog.dialog.createEmbeddingTitle')}
       open={open}
       onOpenChange={onOpenChange}
       form={form}
       onSubmit={createEmbeddingModel}
       isSubmitting={isCreating}
-      submitLabel="Create"
-      submittingLabel="Creating..."
+      mode="create"
       providers={EMBEDDING_MODEL_PROVIDERS}
-      namePlaceholder="e.g., text-embedding-3-small"
-      displayNamePlaceholder="e.g., Text Embedding 3 Small"
+      namePlaceholder={t('models.catalog.dialog.embeddingNamePlaceholder')}
+      displayNamePlaceholder={t(
+        'models.catalog.dialog.embeddingDisplayNamePlaceholder',
+      )}
     >
       <EmbeddingDimensionsField
         form={form}

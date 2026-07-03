@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { useCreateImageGenerationModel } from '../api/useCreateImageGenerationModel';
 import type { ImageGenerationModelFormData } from '../model/types';
 import { IMAGE_GENERATION_MODEL_PROVIDERS } from '@/features/models';
@@ -14,6 +15,7 @@ export function CreateImageGenerationModelDialog({
   open,
   onOpenChange,
 }: Readonly<CreateImageGenerationModelDialogProps>) {
+  const { t } = useTranslation('super-admin-settings-org');
   const form = useForm<ImageGenerationModelFormData>({
     defaultValues: {
       name: '',
@@ -31,17 +33,20 @@ export function CreateImageGenerationModelDialog({
 
   return (
     <ModelFormDialog
-      title="Create Image Generation Model"
+      title={t('models.catalog.dialog.createImageGenerationTitle')}
       open={open}
       onOpenChange={onOpenChange}
       form={form}
       onSubmit={createImageGenerationModel}
       isSubmitting={isCreating}
-      submitLabel="Create"
-      submittingLabel="Creating..."
+      mode="create"
       providers={IMAGE_GENERATION_MODEL_PROVIDERS}
-      namePlaceholder="e.g., gpt-image-1"
-      displayNamePlaceholder="e.g., GPT Image 1"
+      namePlaceholder={t(
+        'models.catalog.dialog.imageGenerationNamePlaceholder',
+      )}
+      displayNamePlaceholder={t(
+        'models.catalog.dialog.imageGenerationDisplayNamePlaceholder',
+      )}
     >
       <ModelPricingFields form={form} disabled={isCreating} />
     </ModelFormDialog>
