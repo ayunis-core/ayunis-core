@@ -1,4 +1,5 @@
 import type { ExecutionContext } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
@@ -180,7 +181,12 @@ describe('SubscriptionGuard', () => {
       expect(request.subscriptionContext).toBeUndefined();
     });
 
-    it('denies when GetTrial throws TrialNotFoundError', async () => {
+    it('denies gracefully at warn (not error) when the org has no trial', async () => {
+      const errorSpy = jest
+        .spyOn(Logger.prototype, 'error')
+        .mockImplementation();
+      const warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+
       hasActiveSubscriptionUseCase.execute.mockResolvedValue({
         hasActiveSubscription: false,
         subscriptionType: null,
@@ -195,6 +201,40 @@ describe('SubscriptionGuard', () => {
       const result = await makeGuard(reflector).canActivate(context);
 
       expect(result).toBe(false);
+      // A "no trial" denial is a normal authz decision: warn, never error.
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Access denied: no trial found',
+        expect.objectContaining({ orgId }),
+      );
+      expect(errorSpy).not.toHaveBeenCalled();
+
+      errorSpy.mockRestore();
+      warnSpy.mockRestore();
+    });
+
+    it('logs at error and denies when the trial lookup fails unexpectedly', async () => {
+      const errorSpy = jest
+        .spyOn(Logger.prototype, 'error')
+        .mockImplementation();
+
+      hasActiveSubscriptionUseCase.execute.mockResolvedValue({
+        hasActiveSubscription: false,
+        subscriptionType: null,
+      });
+      getTrialUseCase.execute.mockRejectedValue(new Error('db unavailable'));
+
+      const { context, reflector } = createContext({
+        options: {},
+        user: { id: userId, orgId },
+      });
+
+      const result = await makeGuard(reflector).canActivate(context);
+
+      // Only TrialNotFoundError is graceful; a real fault still surfaces at error.
+      expect(result).toBe(false);
+      expect(errorSpy).toHaveBeenCalled();
+
+      errorSpy.mockRestore();
     });
 
     it('grants access on the unfiltered form when any active subscription exists', async () => {
