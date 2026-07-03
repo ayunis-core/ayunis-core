@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.12.0](https://github.com/ayunis-core/ayunis-core/compare/v2.11.0...v2.12.0) (2026-07-03)
+
+
+### Features
+
+* **credit-limits:** add per-user and per-team monthly credit limits (AYC-167) ([#863](https://github.com/ayunis-core/ayunis-core/issues/863)) ([7d1ea4c](https://github.com/ayunis-core/ayunis-core/commit/7d1ea4cb9a5811d1a5ef1f7efc414953b12c4147))
+* **openai-compat:** support /v1/models list and retrieve endpoints (AYC-392) ([#935](https://github.com/ayunis-core/ayunis-core/issues/935)) ([974cc73](https://github.com/ayunis-core/ayunis-core/commit/974cc73a0ccd6aa4cbe69d0b4b9129ec218b45c2))
+
+
+### Bug Fixes
+
+* **openai-compat:** keep domain error codes on non-openai routes (AYC-366) ([#933](https://github.com/ayunis-core/ayunis-core/issues/933)) ([e408d8e](https://github.com/ayunis-core/ayunis-core/commit/e408d8e08dad32a646e83cb09c10db048f19c15c))
+
+
+### Code Refactoring
+
+* **auth:** centralize JwtModule registration (AYC-390) ([#930](https://github.com/ayunis-core/ayunis-core/issues/930)) ([2f95f7a](https://github.com/ayunis-core/ayunis-core/commit/2f95f7ae46edc570f023672d054334294530be01))
+
+
+### Miscellaneous
+
+* **deps:** bump knip from 5.88.1 to 6.23.0 ([#743](https://github.com/ayunis-core/ayunis-core/issues/743)) ([3c43709](https://github.com/ayunis-core/ayunis-core/commit/3c437093b5816d24d5c56feb0295a408635059f7))
+* **deps:** bump vitest from 3.2.6 to 4.1.9 ([#736](https://github.com/ayunis-core/ayunis-core/issues/736)) ([f02eacb](https://github.com/ayunis-core/ayunis-core/commit/f02eacb389818294348e56ed43c6d6e025ff0130))
+* **seed:** add demo seed with users, teams and usage (AYC-167) ([#864](https://github.com/ayunis-core/ayunis-core/issues/864)) ([f60c5f6](https://github.com/ayunis-core/ayunis-core/commit/f60c5f68943b7001024afa4e8204b072981cfe06))
+
 ## [2.11.0](https://github.com/ayunis-core/ayunis-core/compare/v2.10.0...v2.11.0) (2026-07-01)
 
 
