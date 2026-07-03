@@ -42,7 +42,8 @@
     "createApiKey": {
       "success": "API-Schlüssel erstellt",
       "error": "API-Schlüssel konnte nicht erstellt werden",
-      "expirationInPast": "Das Ablaufdatum muss in der Zukunft liegen"
+      "expirationInPast": "Das Ablaufdatum muss in der Zukunft liegen",
+      "subscriptionRequired": "API-Schlüssel erfordern ein nutzungsbasiertes Abonnement. Wenden Sie sich an Ihre Administration, um das Abonnement zu erweitern."
     },
     "revokeApiKey": {
       "title": "API-Schlüssel widerrufen",
