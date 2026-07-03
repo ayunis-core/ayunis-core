@@ -21,6 +21,7 @@ export interface LanguageModelFormData extends ModelPricingFormData {
   isReasoning: boolean;
   isArchived: boolean;
   tier?: CreateLanguageModelRequestDtoTier;
+  description?: string;
 }
 
 export interface EmbeddingModelFormData extends ModelPricingFormData {

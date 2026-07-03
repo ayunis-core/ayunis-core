@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { FieldValues, Path, UseFormReturn } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -45,8 +46,7 @@ interface ModelFormDialogProps<T extends BaseModelFormData> {
   form: UseFormReturn<T>;
   onSubmit: (data: T) => void;
   isSubmitting: boolean;
-  submitLabel: string;
-  submittingLabel: string;
+  mode: 'create' | 'edit';
   providers: readonly ProviderOption[];
   namePlaceholder: string;
   displayNamePlaceholder: string;
@@ -63,14 +63,20 @@ export function ModelFormDialog<T extends BaseModelFormData>({
   form,
   onSubmit,
   isSubmitting,
-  submitLabel,
-  submittingLabel,
+  mode,
   providers,
   namePlaceholder,
   displayNamePlaceholder,
   children,
   hasContent = true,
 }: Readonly<ModelFormDialogProps<T>>) {
+  const { t } = useTranslation('super-admin-settings-org');
+  const submitLabel = t(
+    `models.catalog.dialog.${mode === 'create' ? 'create' : 'update'}`,
+  );
+  const submittingLabel = t(
+    `models.catalog.dialog.${mode === 'create' ? 'creating' : 'updating'}`,
+  );
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen && !isSubmitting) {
       form.reset();
@@ -81,105 +87,116 @@ export function ModelFormDialog<T extends BaseModelFormData>({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {hasContent && (
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[525px]">
+        <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-[525px]">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form
               onSubmit={(e) => void form.handleSubmit(onSubmit)(e)}
-              className="space-y-4"
+              className="flex min-h-0 flex-1 flex-col gap-4"
             >
-              <FormField
-                control={form.control}
-                name={'name' as Path<T>}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={namePlaceholder}
-                        disabled={isSubmitting}
-                        required
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name={'provider' as Path<T>}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Provider</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={isSubmitting}
-                    >
+              {/* Not ScrollArea: Radix needs a fixed viewport height, but this dialog sizes to content */}
+              <div className="-mx-1 min-h-0 flex-1 space-y-4 overflow-y-auto px-1">
+                <FormField
+                  control={form.control}
+                  name={'name' as Path<T>}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('models.catalog.dialog.name')}</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a provider" />
-                        </SelectTrigger>
+                        <Input
+                          {...field}
+                          placeholder={namePlaceholder}
+                          disabled={isSubmitting}
+                          required
+                        />
                       </FormControl>
-                      <SelectContent>
-                        {providers.map((provider) => (
-                          <SelectItem
-                            key={provider.value}
-                            value={provider.value}
-                          >
-                            {provider.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name={'displayName' as Path<T>}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Display Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={displayNamePlaceholder}
+                <FormField
+                  control={form.control}
+                  name={'provider' as Path<T>}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t('models.catalog.dialog.provider')}
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
                         disabled={isSubmitting}
-                        required
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder={t(
+                                'models.catalog.dialog.providerPlaceholder',
+                              )}
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {providers.map((provider) => (
+                            <SelectItem
+                              key={provider.value}
+                              value={provider.value}
+                            >
+                              {provider.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              {children}
+                <FormField
+                  control={form.control}
+                  name={'displayName' as Path<T>}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t('models.catalog.dialog.displayName')}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder={displayNamePlaceholder}
+                          disabled={isSubmitting}
+                          required
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name={'isArchived' as Path<T>}
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        disabled={isSubmitting}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Archived</FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
+                {children}
+
+                <FormField
+                  control={form.control}
+                  name={'isArchived' as Path<T>}
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={isSubmitting}
+                        />
+                      </FormControl>
+                      <FormLabel>
+                        {t('models.catalog.dialog.archived')}
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <DialogFooter>
                 <Button
@@ -188,7 +205,7 @@ export function ModelFormDialog<T extends BaseModelFormData>({
                   onClick={() => handleOpenChange(false)}
                   disabled={isSubmitting}
                 >
-                  Cancel
+                  {t('models.catalog.dialog.cancel')}
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? submittingLabel : submitLabel}

@@ -44,7 +44,10 @@ describe('ModelMapper', () => {
     return record;
   };
 
-  const buildLanguageDomain = (tier?: ModelTier): LanguageModel => {
+  const buildLanguageDomain = (
+    tier?: ModelTier,
+    description?: string,
+  ): LanguageModel => {
     return new LanguageModel({
       id: mockId,
       name: 'gpt-4',
@@ -58,6 +61,7 @@ describe('ModelMapper', () => {
       createdAt: new Date('2025-01-01T00:00:00Z'),
       updatedAt: new Date('2025-01-02T00:00:00Z'),
       tier,
+      description,
     });
   };
 
@@ -161,6 +165,29 @@ describe('ModelMapper', () => {
 
       expect(roundTripped.tier).toBeUndefined();
       expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('preserves a set description through toRecord -> toDomain', () => {
+      const original = buildLanguageDomain(
+        undefined,
+        'Geeignet für komplexe Aufgaben.',
+      );
+
+      const record = mapper.toRecord(original) as LanguageModelRecord;
+      expect(record.description).toBe('Geeignet für komplexe Aufgaben.');
+
+      const roundTripped = mapper.toDomain(record) as LanguageModel;
+      expect(roundTripped.description).toBe('Geeignet für komplexe Aufgaben.');
+    });
+
+    it('maps an unset description to null on the record and undefined on the domain', () => {
+      const original = buildLanguageDomain();
+
+      const record = mapper.toRecord(original) as LanguageModelRecord;
+      expect(record.description).toBeNull();
+
+      const roundTripped = mapper.toDomain(record) as LanguageModel;
+      expect(roundTripped.description).toBeUndefined();
     });
   });
 });

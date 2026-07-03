@@ -88,19 +88,7 @@ export class SuperAdminLanguageCatalogModelsController {
     this.logger.log(
       `Creating language model ${dto.name} by super admin ${userId}`,
     );
-    const command = new CreateLanguageModelCommand({
-      name: dto.name,
-      provider: dto.provider,
-      displayName: dto.displayName,
-      canStream: dto.canStream,
-      canUseTools: dto.canUseTools,
-      isReasoning: dto.isReasoning,
-      canVision: dto.canVision,
-      isArchived: dto.isArchived,
-      inputTokenCost: dto.inputTokenCost,
-      outputTokenCost: dto.outputTokenCost,
-      tier: dto.tier,
-    });
+    const command = new CreateLanguageModelCommand(dto);
     const model = await this.createLanguageModelUseCase.execute(command);
     const responseDto =
       this.catalogModelResponseDtoMapper.toLanguageModelDto(model);
@@ -146,20 +134,7 @@ export class SuperAdminLanguageCatalogModelsController {
     @Body() dto: UpdateLanguageModelRequestDto,
   ): Promise<LanguageModelResponseDto> {
     this.logger.log(`Updating language model ${id} by super admin ${userId}`);
-    const command = new UpdateLanguageModelCommand({
-      id,
-      name: dto.name,
-      provider: dto.provider,
-      displayName: dto.displayName,
-      canStream: dto.canStream,
-      canUseTools: dto.canUseTools,
-      isReasoning: dto.isReasoning,
-      canVision: dto.canVision,
-      isArchived: dto.isArchived,
-      inputTokenCost: dto.inputTokenCost,
-      outputTokenCost: dto.outputTokenCost,
-      tier: dto.tier,
-    });
+    const command = new UpdateLanguageModelCommand({ ...dto, id });
     const model = await this.updateLanguageModelUseCase.execute(command);
     const responseDto =
       this.catalogModelResponseDtoMapper.toLanguageModelDto(model);

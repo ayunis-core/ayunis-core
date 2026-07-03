@@ -1,4 +1,5 @@
 import type { FieldValues, Path, UseFormReturn } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import {
   FormControl,
   FormField,
@@ -19,9 +20,12 @@ interface ModelPricingFieldsProps<
 export function ModelPricingFields<
   T extends FieldValues & ModelPricingFormData,
 >({ form, disabled }: Readonly<ModelPricingFieldsProps<T>>) {
+  const { t } = useTranslation('super-admin-settings-org');
   return (
     <div className="space-y-4 rounded-md border p-4">
-      <h4 className="text-sm font-medium">Pricing (EUR per million tokens)</h4>
+      <h4 className="text-sm font-medium">
+        {t('models.catalog.dialog.pricingTitle')}
+      </h4>
 
       <div className="grid grid-cols-2 gap-4">
         <FormField
@@ -29,13 +33,13 @@ export function ModelPricingFields<
           name={'inputTokenCost' as Path<T>}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Input Cost (€)</FormLabel>
+              <FormLabel>{t('models.catalog.dialog.inputCost')}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   step="any"
                   min="0"
-                  placeholder="e.g., 3"
+                  placeholder={t('models.catalog.dialog.inputCostPlaceholder')}
                   disabled={disabled}
                   value={field.value ?? ''}
                   onChange={(e) => {
@@ -54,13 +58,13 @@ export function ModelPricingFields<
           name={'outputTokenCost' as Path<T>}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Output Cost (€)</FormLabel>
+              <FormLabel>{t('models.catalog.dialog.outputCost')}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   step="any"
                   min="0"
-                  placeholder="e.g., 15"
+                  placeholder={t('models.catalog.dialog.outputCostPlaceholder')}
                   disabled={disabled}
                   value={field.value ?? ''}
                   onChange={(e) => {

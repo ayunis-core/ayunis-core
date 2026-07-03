@@ -56,6 +56,15 @@ export class PermittedLanguageModelResponseDto extends BasePermittedModelRespons
       'Resource-usage tier of the model, used to categorise models for the user (e.g. fast vs. powerful)',
   })
   tier?: ModelTier;
+
+  @ApiProperty({
+    type: 'string',
+    required: false,
+    nullable: true,
+    description:
+      'User-facing description of the model, shown in the model selector info card. Maintained by super admins.',
+  })
+  description?: string;
 }
 
 export class PermittedLanguageModelResponseDtoNullable {

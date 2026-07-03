@@ -95,4 +95,11 @@ export class ModelWithConfigResponseDto {
     example: ModelTier.MEDIUM,
   })
   tier?: ModelTier;
+
+  @ApiPropertyOptional({
+    type: 'string',
+    description:
+      'User-facing description of the model, shown in the model selector info card. Maintained by super admins.',
+  })
+  description?: string;
 }
