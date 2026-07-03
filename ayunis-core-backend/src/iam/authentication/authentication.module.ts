@@ -1,9 +1,9 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule, JwtService } from '@nestjs/jwt';
-import type { StringValue } from 'ms';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
+import { JwtConfigModule } from './jwt.module';
 import { JwtStrategy } from './application/strategies/jwt.strategy';
 import { LocalStrategy } from './application/strategies/local.strategy';
 import { ApiKeyStrategy } from './application/strategies/api-key.strategy';
@@ -37,100 +37,88 @@ export interface AuthenticationConfig {
   provider?: AuthProvider;
 }
 
+const AUTHENTICATION_IMPORTS = [
+  PassportModule,
+  UsersModule,
+  OrgsModule,
+  LegalAcceptancesModule,
+  EmailsModule,
+  EmailTemplatesModule,
+  HashingModule,
+  SubscriptionsModule,
+  TrialsModule,
+  ApiKeysModule,
+  JwtConfigModule,
+  ClsModule.forFeature(),
+];
+
+// The authentication repository is provider-dependent (local vs cloud), so it
+// is built per `register()` call. Everything else is static and hoisted below.
+function createAuthenticationRepositoryProvider(
+  options?: AuthenticationConfig,
+): Provider {
+  return {
+    provide: AUTHENTICATION_REPOSITORY,
+    useFactory: (configService: ConfigService, jwtService: JwtService) => {
+      const provider =
+        options?.provider ??
+        configService.get<AuthProvider>('auth.provider', AuthProvider.LOCAL);
+
+      if (provider === AuthProvider.CLOUD) {
+        // FUTURE: Implement cloud authentication repository
+        throw new Error('Cloud authentication repository not implemented');
+      }
+
+      return new LocalAuthenticationRepository(jwtService, configService);
+    },
+    inject: [ConfigService, JwtService],
+  };
+}
+
+const AUTHENTICATION_PROVIDERS: Provider[] = [
+  // Use Cases
+  LoginUseCase,
+  RefreshTokenUseCase,
+  RegisterUserUseCase,
+  GetCurrentUserUseCase,
+  // Strategies and Guards
+  LocalStrategy,
+  JwtStrategy,
+  ApiKeyStrategy,
+  // JwtAuthGuard is a regular provider; IamModule owns the APP_GUARD
+  // binding so global guard order stays explicit in one place.
+  JwtAuthGuard,
+  {
+    provide: APP_FILTER,
+    useClass: UnauthorizedExceptionFilter,
+  },
+  {
+    provide: APP_INTERCEPTOR,
+    useClass: UserContextInterceptor,
+  },
+  MeResponseDtoMapper,
+];
+
+const AUTHENTICATION_EXPORTS = [
+  LoginUseCase,
+  RefreshTokenUseCase,
+  RegisterUserUseCase,
+  GetCurrentUserUseCase,
+  JwtAuthGuard,
+];
+
 @Module({})
 export class AuthenticationModule {
   static register(options?: AuthenticationConfig): DynamicModule {
     return {
       module: AuthenticationModule,
-      imports: this.buildImports(),
-      providers: this.buildProviders(options),
-      controllers: [AuthenticationController],
-      exports: [
-        LoginUseCase,
-        RefreshTokenUseCase,
-        RegisterUserUseCase,
-        GetCurrentUserUseCase,
-        JwtAuthGuard,
+      imports: AUTHENTICATION_IMPORTS,
+      providers: [
+        createAuthenticationRepositoryProvider(options),
+        ...AUTHENTICATION_PROVIDERS,
       ],
-    };
-  }
-
-  private static buildImports(): NonNullable<DynamicModule['imports']> {
-    return [
-      PassportModule,
-      UsersModule,
-      OrgsModule,
-      LegalAcceptancesModule,
-      EmailsModule,
-      EmailTemplatesModule,
-      HashingModule,
-      SubscriptionsModule,
-      TrialsModule,
-      ApiKeysModule,
-      JwtModule.registerAsync({
-        imports: [ConfigModule],
-        inject: [ConfigService],
-        useFactory: (configService: ConfigService) => ({
-          secret: configService.getOrThrow<string>('auth.jwt.secret'),
-          signOptions: {
-            expiresIn: configService.get<StringValue>(
-              'auth.jwt.expiresIn',
-              '1h',
-            ),
-          },
-        }),
-      }),
-      ClsModule.forFeature(),
-    ];
-  }
-
-  private static buildProviders(
-    options?: AuthenticationConfig,
-  ): NonNullable<DynamicModule['providers']> {
-    return [
-      this.authenticationRepositoryProvider(options),
-      // Use Cases
-      LoginUseCase,
-      RefreshTokenUseCase,
-      RegisterUserUseCase,
-      GetCurrentUserUseCase,
-      // Strategies and Guards
-      LocalStrategy,
-      JwtStrategy,
-      ApiKeyStrategy,
-      // JwtAuthGuard is a regular provider; IamModule owns the APP_GUARD
-      // binding so global guard order stays explicit in one place.
-      JwtAuthGuard,
-      {
-        provide: APP_FILTER,
-        useClass: UnauthorizedExceptionFilter,
-      },
-      {
-        provide: APP_INTERCEPTOR,
-        useClass: UserContextInterceptor,
-      },
-      MeResponseDtoMapper,
-    ];
-  }
-
-  private static authenticationRepositoryProvider(
-    options?: AuthenticationConfig,
-  ): Provider {
-    return {
-      provide: AUTHENTICATION_REPOSITORY,
-      useFactory: (configService: ConfigService, jwtService: JwtService) => {
-        const provider =
-          options?.provider ??
-          configService.get<AuthProvider>('auth.provider', AuthProvider.LOCAL);
-
-        if (provider === AuthProvider.CLOUD) {
-          // FUTURE: Implement cloud authentication repository
-          throw new Error('Cloud authentication repository not implemented');
-        }
-
-        return new LocalAuthenticationRepository(jwtService, configService);
-      },
-      inject: [ConfigService, JwtService],
+      controllers: [AuthenticationController],
+      exports: AUTHENTICATION_EXPORTS,
     };
   }
 }
