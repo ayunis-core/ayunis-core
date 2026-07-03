@@ -4,7 +4,11 @@ import { ModelsModule } from '../models/models.module';
 import { RunsModule } from '../runs/runs.module';
 import { AuthorizationModule } from 'src/iam/authorization/authorization.module';
 import { ChatCompletionsController } from './presenters/http/chat-completions.controller';
+import { ModelsController } from './presenters/http/models.controller';
 import { ExecuteOpenAIChatCompletionUseCase } from './application/use-cases/execute-openai-chat-completion/execute-openai-chat-completion.use-case';
+import { ListOpenAIModelsUseCase } from './application/use-cases/list-openai-models/list-openai-models.use-case';
+import { GetOpenAIModelUseCase } from './application/use-cases/get-openai-model/get-openai-model.use-case';
+import { OpenAIModelMapper } from './application/mappers/openai-model.mapper';
 import { OpenAIRequestMapper } from './application/mappers/openai-request.mapper';
 import { OpenAIResponseMapper } from './application/mappers/openai-response.mapper';
 import { OpenAIStreamMapper } from './application/mappers/openai-stream.mapper';
@@ -29,9 +33,12 @@ import { ApplicationErrorFilter } from 'src/common/filters/application-error.fil
     // resolves it from Passport at request time and needs no import here.
     // `@Public()` is read by JwtAuthGuard via Reflector — also no import needed.
   ],
-  controllers: [ChatCompletionsController],
+  controllers: [ChatCompletionsController, ModelsController],
   providers: [
     ExecuteOpenAIChatCompletionUseCase,
+    ListOpenAIModelsUseCase,
+    GetOpenAIModelUseCase,
+    OpenAIModelMapper,
     OpenAIRequestMapper,
     OpenAIResponseMapper,
     OpenAIStreamMapper,

@@ -4,6 +4,7 @@ import type { ErrorMetadata } from 'src/common/errors/base.error';
 export enum OpenAICompatErrorCode {
   INVALID_REQUEST = 'OPENAI_COMPAT_INVALID_REQUEST',
   MODEL_NOT_FOUND = 'OPENAI_COMPAT_MODEL_NOT_FOUND',
+  UNEXPECTED = 'OPENAI_COMPAT_UNEXPECTED',
 }
 
 export class OpenAIInvalidRequestError extends ApplicationError {
@@ -20,5 +21,13 @@ export class OpenAIModelNotFoundError extends ApplicationError {
       404,
       { modelName },
     );
+  }
+}
+
+export class OpenAIUnexpectedError extends ApplicationError {
+  constructor(error: unknown) {
+    super('Unexpected error occurred', OpenAICompatErrorCode.UNEXPECTED, 500, {
+      error,
+    });
   }
 }

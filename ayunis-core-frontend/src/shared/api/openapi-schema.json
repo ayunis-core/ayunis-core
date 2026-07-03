@@ -8832,6 +8832,39 @@
         "tags": ["ChatCompletions"]
       }
     },
+    "/openai-compat/v1/models": {
+      "get": {
+        "operationId": "ModelsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Models"]
+      }
+    },
+    "/openai-compat/v1/models/{model}": {
+      "get": {
+        "operationId": "ModelsController_retrieve",
+        "parameters": [
+          {
+            "name": "model",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Models"]
+      }
+    },
     "/super-admin/addons/{orgId}": {
       "get": {
         "operationId": "SuperAdminAddonsController_list",
