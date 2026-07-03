@@ -17756,6 +17756,180 @@ const {mutation: mutationOptions} = options ?
       return useMutation(mutationOptions, queryClient);
     }
     
+export const modelsControllerList = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/openai-compat/v1/models`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getModelsControllerListQueryKey = () => {
+    return [
+    `/openai-compat/v1/models`
+    ] as const;
+    }
+
+    
+export const getModelsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelsControllerListQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerList>>> = ({ signal }) => modelsControllerList(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerList>>>
+export type ModelsControllerListQueryError = unknown
+
+
+export function useModelsControllerList<TData = Awaited<ReturnType<typeof modelsControllerList>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerList<TData = Awaited<ReturnType<typeof modelsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerList<TData = Awaited<ReturnType<typeof modelsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useModelsControllerList<TData = Awaited<ReturnType<typeof modelsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelsControllerListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+export const modelsControllerRetrieve = (
+    model: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/openai-compat/v1/models/${model}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getModelsControllerRetrieveQueryKey = (model?: string,) => {
+    return [
+    `/openai-compat/v1/models/${model}`
+    ] as const;
+    }
+
+    
+export const getModelsControllerRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError = unknown>(model: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelsControllerRetrieveQueryKey(model);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerRetrieve>>> = ({ signal }) => modelsControllerRetrieve(model, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(model), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelsControllerRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerRetrieve>>>
+export type ModelsControllerRetrieveQueryError = unknown
+
+
+export function useModelsControllerRetrieve<TData = Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError = unknown>(
+ model: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerRetrieve>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerRetrieve<TData = Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError = unknown>(
+ model: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerRetrieve>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerRetrieve<TData = Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError = unknown>(
+ model: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useModelsControllerRetrieve<TData = Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError = unknown>(
+ model: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelsControllerRetrieveQueryOptions(model,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
 /**
  * @summary List all add-ons with their active state for an organization
  */
