@@ -22,7 +22,10 @@ describe('VerifyMfaCodeUseCase', () => {
   let userTotps: jest.Mocked<
     Pick<
       UserTotpsRepository,
-      'findByUserId' | 'markVerified' | 'registerFailedAttempt' | 'resetFailures'
+      | 'findByUserId'
+      | 'markVerified'
+      | 'registerFailedAttempt'
+      | 'resetFailures'
     >
   >;
   let recoveryCodes: jest.Mocked<
@@ -170,7 +173,10 @@ describe('VerifyMfaCodeUseCase', () => {
     await expect(
       useCase.execute(new VerifyMfaCodeCommand(userId, 'abcde-12345')),
     ).resolves.toBeUndefined();
-    expect(recoveryCodes.consume).toHaveBeenCalledWith(code.id, expect.any(Date));
+    expect(recoveryCodes.consume).toHaveBeenCalledWith(
+      code.id,
+      expect.any(Date),
+    );
     expect(userTotps.resetFailures).toHaveBeenCalledWith(userId);
   });
 

@@ -30,8 +30,10 @@ import { HashingModule } from '../hashing/hashing.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { TrialsModule } from '../trials/trials.module';
 import { ApiKeysModule } from '../api-keys/api-keys.module';
+import { MfaModule } from '../mfa/mfa.module';
 import { ClsModule } from 'nestjs-cls';
 import { UserContextInterceptor } from './application/interceptors/user-context.interceptor';
+import { MfaLoginController } from './presenters/http/mfa-login.controller';
 
 export interface AuthenticationConfig {
   provider?: AuthProvider;
@@ -48,6 +50,7 @@ const AUTHENTICATION_IMPORTS = [
   SubscriptionsModule,
   TrialsModule,
   ApiKeysModule,
+  MfaModule,
   JwtConfigModule,
   ClsModule.forFeature(),
 ];
@@ -117,7 +120,7 @@ export class AuthenticationModule {
         createAuthenticationRepositoryProvider(options),
         ...AUTHENTICATION_PROVIDERS,
       ],
-      controllers: [AuthenticationController],
+      controllers: [AuthenticationController, MfaLoginController],
       exports: AUTHENTICATION_EXPORTS,
     };
   }

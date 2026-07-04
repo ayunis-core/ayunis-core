@@ -27,12 +27,20 @@ import { LoginDto } from './dtos/login.dto';
 import {
   SuccessResponseDto,
   ErrorResponseDto,
+  LoginResponseDto,
   MeResponseDto,
 } from './dtos/auth-response.dto';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { ActiveUser } from '../../domain/active-user.entity';
-import { setCookies, clearCookies } from 'src/common/util/cookie.util';
+import {
+  setCookies,
+  clearCookies,
+  setMfaPendingCookie,
+} from 'src/common/util/cookie.util';
+import { CheckMfaLoginRequirementUseCase } from 'src/iam/mfa/application/use-cases/check-mfa-login-requirement/check-mfa-login-requirement.use-case';
+import { CheckMfaLoginRequirementQuery } from 'src/iam/mfa/application/use-cases/check-mfa-login-requirement/check-mfa-login-requirement.query';
+import { MfaPendingJwtService } from 'src/iam/mfa/application/services/mfa-pending-jwt.service';
 
 // Import use cases
 import { LoginUseCase } from '../../application/use-cases/login/login.use-case';
@@ -55,6 +63,8 @@ export class AuthenticationController {
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
     private readonly registerUserUseCase: RegisterUserUseCase,
     private readonly getCurrentUserUseCase: GetCurrentUserUseCase,
+    private readonly checkMfaLoginRequirementUseCase: CheckMfaLoginRequirementUseCase,
+    private readonly mfaPendingJwtService: MfaPendingJwtService,
     private readonly configService: ConfigService,
     private readonly meResponseDtoMapper: MeResponseDtoMapper,
   ) {}
@@ -75,8 +85,10 @@ export class AuthenticationController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Login successful. Authentication cookies are set.',
-    type: SuccessResponseDto,
+    description:
+      'Credentials accepted. Session cookies are set unless mfaRequired is ' +
+      'true, in which case a short-lived MFA pending cookie is set instead.',
+    type: LoginResponseDto,
   })
   @ApiUnauthorizedResponse({
     description: 'Invalid credentials',
@@ -89,10 +101,43 @@ export class AuthenticationController {
   async login(@Req() req: Request, @Res() res: Response) {
     this.logger.log('login');
     const user = req.user as ActiveUser;
-    const tokens = await this.loginUseCase.execute(new LoginCommand(user));
 
+    const mfaRequirement = await this.checkMfaLoginRequirementUseCase.execute(
+      new CheckMfaLoginRequirementQuery(user.id, user.orgId),
+    );
+
+    if (mfaRequirement !== 'none') {
+      return this.respondMfaPending(res, user, mfaRequirement === 'enroll');
+    }
+
+    const tokens = await this.loginUseCase.execute(new LoginCommand(user));
     setCookies(res, tokens, this.configService, true);
-    return res.json({ success: true });
+    return res.json({
+      success: true,
+      mfaRequired: false,
+      enrollmentRequired: false,
+    } satisfies LoginResponseDto);
+  }
+
+  /**
+   * Withholds session cookies and issues the short-lived MFA pending cookie
+   * instead; the login completes via the /auth/mfa endpoints.
+   */
+  private respondMfaPending(
+    res: Response,
+    user: ActiveUser,
+    enrollmentRequired: boolean,
+  ) {
+    const pendingToken = this.mfaPendingJwtService.generate({
+      userId: user.id,
+      enrollmentRequired,
+    });
+    setMfaPendingCookie(res, pendingToken, this.configService);
+    return res.json({
+      success: true,
+      mfaRequired: true,
+      enrollmentRequired,
+    } satisfies LoginResponseDto);
   }
 
   @Public()

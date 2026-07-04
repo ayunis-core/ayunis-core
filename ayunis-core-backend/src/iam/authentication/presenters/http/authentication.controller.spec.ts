@@ -17,6 +17,8 @@ import { HttpStatus } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { RATE_LIMIT_KEY } from '../../../authorization/application/decorators/rate-limit.decorator';
 import type { RateLimitOptions } from '../../../authorization/application/decorators/rate-limit.decorator';
+import { CheckMfaLoginRequirementUseCase } from 'src/iam/mfa/application/use-cases/check-mfa-login-requirement/check-mfa-login-requirement.use-case';
+import { MfaPendingJwtService } from 'src/iam/mfa/application/services/mfa-pending-jwt.service';
 
 describe('AuthenticationController', () => {
   let controller: AuthenticationController;
@@ -24,6 +26,8 @@ describe('AuthenticationController', () => {
   let mockRefreshTokenUseCase: Partial<RefreshTokenUseCase>;
   let mockRegisterUserUseCase: Partial<RegisterUserUseCase>;
   let mockGetCurrentUserUseCase: Partial<GetCurrentUserUseCase>;
+  let mockCheckMfaLoginRequirementUseCase: { execute: jest.Mock };
+  let mockMfaPendingJwtService: { generate: jest.Mock };
   let mockConfigService: Partial<ConfigService>;
   let mockJwtService: Partial<JwtService>;
 
@@ -40,6 +44,12 @@ describe('AuthenticationController', () => {
     mockGetCurrentUserUseCase = {
       execute: jest.fn(),
     };
+    mockCheckMfaLoginRequirementUseCase = {
+      execute: jest.fn(),
+    };
+    mockMfaPendingJwtService = {
+      generate: jest.fn(),
+    };
     mockConfigService = {
       get: jest.fn(),
     };
@@ -54,6 +64,14 @@ describe('AuthenticationController', () => {
         { provide: RefreshTokenUseCase, useValue: mockRefreshTokenUseCase },
         { provide: RegisterUserUseCase, useValue: mockRegisterUserUseCase },
         { provide: GetCurrentUserUseCase, useValue: mockGetCurrentUserUseCase },
+        {
+          provide: CheckMfaLoginRequirementUseCase,
+          useValue: mockCheckMfaLoginRequirementUseCase,
+        },
+        {
+          provide: MfaPendingJwtService,
+          useValue: mockMfaPendingJwtService,
+        },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: JwtService, useValue: mockJwtService },
         {
@@ -93,6 +111,96 @@ describe('AuthenticationController', () => {
       expect(options).toBeDefined();
       expect(options?.limit).toBe(10);
       expect(options?.windowMs).toBe(15 * 60 * 1000);
+    });
+  });
+
+  describe('login', () => {
+    const activeUser = new ActiveUser({
+      id: 'user-id' as UUID,
+      email: 'test@example.com',
+      emailVerified: true,
+      role: UserRole.USER,
+      systemRole: SystemRole.CUSTOMER,
+      orgId: 'org-id' as UUID,
+      name: 'name',
+    });
+    let mockRequest: Partial<Request>;
+    let mockResponse: Partial<Response>;
+
+    beforeEach(() => {
+      mockRequest = { user: activeUser, cookies: {} } as Partial<Request>;
+      mockResponse = {
+        json: jest.fn().mockReturnThis(),
+        cookie: jest.fn().mockReturnThis(),
+        clearCookie: jest.fn().mockReturnThis(),
+      };
+      jest
+        .spyOn(mockConfigService, 'get')
+        .mockImplementation(
+          (key: string, defaultValue?: unknown) => defaultValue ?? 'value',
+        );
+    });
+
+    it('issues session cookies when no MFA is required', async () => {
+      mockCheckMfaLoginRequirementUseCase.execute.mockResolvedValue('none');
+      const tokens = new AuthTokens('access', 'refresh');
+      jest.spyOn(mockLoginUseCase, 'execute').mockResolvedValue(tokens);
+
+      await controller.login(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'access_token',
+        'access',
+        expect.any(Object),
+      );
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'refresh_token',
+        'refresh',
+        expect.any(Object),
+      );
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: true,
+        mfaRequired: false,
+        enrollmentRequired: false,
+      });
+    });
+
+    it('sets only the MFA pending cookie when the user must verify', async () => {
+      mockCheckMfaLoginRequirementUseCase.execute.mockResolvedValue('verify');
+      mockMfaPendingJwtService.generate.mockReturnValue('pending-token');
+
+      await controller.login(mockRequest as Request, mockResponse as Response);
+
+      expect(mockLoginUseCase.execute).not.toHaveBeenCalled();
+      expect(mockResponse.cookie).toHaveBeenCalledTimes(1);
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'mfa_pending_token',
+        'pending-token',
+        expect.any(Object),
+      );
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: true,
+        mfaRequired: true,
+        enrollmentRequired: false,
+      });
+    });
+
+    it('signals forced enrollment when the org requires MFA', async () => {
+      mockCheckMfaLoginRequirementUseCase.execute.mockResolvedValue('enroll');
+      mockMfaPendingJwtService.generate.mockReturnValue('pending-token');
+
+      await controller.login(mockRequest as Request, mockResponse as Response);
+
+      expect(mockLoginUseCase.execute).not.toHaveBeenCalled();
+      expect(mockMfaPendingJwtService.generate).toHaveBeenCalledWith({
+        userId: activeUser.id,
+        enrollmentRequired: true,
+      });
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: true,
+        mfaRequired: true,
+        enrollmentRequired: true,
+      });
     });
   });
 
