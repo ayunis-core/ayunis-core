@@ -90,4 +90,16 @@ describe('RefreshTokenUseCase', () => {
 
     await expect(useCase.execute(command)).rejects.toThrow(InvalidTokenError);
   });
+
+  it('should reject typed special-purpose tokens with a valid sub (laundering)', async () => {
+    const command = new RefreshTokenCommand('mfa-pending-token');
+
+    jest
+      .spyOn(mockJwtService, 'verify')
+      .mockReturnValue({ sub: 'user-id-123', type: 'mfa_pending' });
+
+    await expect(useCase.execute(command)).rejects.toThrow(InvalidTokenError);
+    expect(mockFindUserByIdUseCase.execute).not.toHaveBeenCalled();
+    expect(mockAuthRepository.generateTokens).not.toHaveBeenCalled();
+  });
 });

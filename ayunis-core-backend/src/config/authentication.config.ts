@@ -47,6 +47,7 @@ function jwtConfig(secret: string) {
     passwordResetExpiresIn: process.env.JWT_PASSWORD_RESET_EXPIRES_IN || '2h',
     initialPasswordExpiresIn:
       process.env.JWT_INITIAL_PASSWORD_EXPIRES_IN || '7d',
+    mfaPendingExpiresIn: process.env.JWT_MFA_PENDING_EXPIRES_IN || '5m',
   };
 }
 
@@ -59,6 +60,7 @@ function cookieConfig(secret: string) {
     sameSite: process.env.COOKIE_SAME_SITE || 'lax',
     accessTokenName: 'access_token',
     refreshTokenName: 'refresh_token',
+    mfaPendingTokenName: 'mfa_pending_token',
   };
 }
 

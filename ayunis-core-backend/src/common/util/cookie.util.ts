@@ -91,6 +91,44 @@ export function clearCookies(
 
   response.clearCookie(accessTokenName, baseOptions);
   response.clearCookie(refreshTokenName, baseOptions);
+  clearMfaPendingCookie(response, configService);
+}
+
+export function setMfaPendingCookie(
+  response: Response,
+  token: string,
+  configService: ConfigService,
+): void {
+  const baseOptions = buildCookieOptions(configService);
+
+  response.cookie(getMfaPendingTokenName(configService), token, {
+    ...baseOptions,
+    maxAge: getMfaPendingTokenMaxAge(configService),
+  });
+}
+
+export function clearMfaPendingCookie(
+  response: Response,
+  configService: ConfigService,
+): void {
+  const baseOptions = buildCookieOptions(configService);
+
+  response.clearCookie(getMfaPendingTokenName(configService), baseOptions);
+}
+
+function getMfaPendingTokenName(configService: ConfigService): string {
+  return configService.get<string>(
+    'auth.cookie.mfaPendingTokenName',
+    'mfa_pending_token',
+  );
+}
+
+function getMfaPendingTokenMaxAge(configService: ConfigService): number {
+  const expiresIn = configService.get<string>(
+    'auth.jwt.mfaPendingExpiresIn',
+    '5m',
+  );
+  return getMillisecondsFromJwtExpiry(expiresIn);
 }
 
 function getAccessTokenMaxAge(configService: ConfigService): number {

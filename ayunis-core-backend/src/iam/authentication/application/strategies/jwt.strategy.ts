@@ -17,6 +17,7 @@ interface JwtPayload {
   systemRole: SystemRole;
   orgId: UUID;
   name: string;
+  type?: string;
 }
 
 @Injectable()
@@ -47,7 +48,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: JwtPayload): ActiveUser {
+  validate(payload: JwtPayload): ActiveUser | null {
+    // Special-purpose tokens (e.g. MFA pending) share the same secret and
+    // carry a `type` claim; they must never authenticate as a session.
+    if (payload.type !== undefined) {
+      this.logger.warn('Rejected typed token presented as access token');
+      return null;
+    }
+
     return new ActiveUser({
       id: payload.sub,
       email: payload.email,
