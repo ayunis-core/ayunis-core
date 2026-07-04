@@ -173,5 +173,20 @@
       "gemini-3-5-flash": "Suitable for short answers and simple tasks.",
       "gemini-2-5-pro": "Suitable for more complex tasks and longer texts."
     }
+  },
+  "mfa": {
+    "enroll": {
+      "scanInstruction": "Scan the QR code with your authenticator app (e.g. Google Authenticator), then enter the 6-digit code to confirm.",
+      "qrAlt": "TOTP QR code",
+      "manualEntry": "Or enter this key manually",
+      "copySecret": "Copy key",
+      "codeLabel": "Confirmation code",
+      "confirm": "Confirm",
+      "confirming": "Confirming…"
+    },
+    "recoveryCodes": {
+      "warning": "Store these recovery codes somewhere safe. Each code works once, and they will not be shown again.",
+      "copyAll": "Copy all codes"
+    }
   }
 }

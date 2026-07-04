@@ -4499,9 +4499,13 @@ export interface LoginDto {
   password: string;
 }
 
-export interface SuccessResponseDto {
-  /** Operation success status */
+export interface LoginResponseDto {
+  /** Whether the credentials were accepted */
   success: boolean;
+  /** True when a second factor is required before a session is issued. Complete the login via /auth/mfa/verify (or /auth/mfa/setup when enrollmentRequired is true). */
+  mfaRequired: boolean;
+  /** True when the org requires two-factor auth and the user must enroll before receiving a session. */
+  enrollmentRequired: boolean;
 }
 
 export interface ErrorResponseDto {
@@ -4522,6 +4526,11 @@ export interface RegisterDto {
   marketingAcceptance: boolean;
   /** Department within the municipality */
   department?: string;
+}
+
+export interface SuccessResponseDto {
+  /** Operation success status */
+  success: boolean;
 }
 
 /**
@@ -4557,6 +4566,27 @@ export interface MeResponseDto {
   systemRole: MeResponseDtoSystemRole;
   /** User name */
   name: string;
+}
+
+export interface MfaCodeRequestDto {
+  /** A 6-digit TOTP code from the authenticator app, or a single-use recovery code (XXXXX-XXXXX). */
+  code: string;
+}
+
+export interface MfaSetupResponseDto {
+  /** Base32 TOTP secret for manual entry in an authenticator app. Shown only during setup and never again. */
+  secret: string;
+  /** otpauth:// URI encoded in the QR code. */
+  otpauthUri: string;
+  /** QR code for the otpauth URI as a PNG data URI. */
+  qrCodeDataUri: string;
+}
+
+export interface MfaLoginConfirmResponseDto {
+  /** Operation success status */
+  success: boolean;
+  /** Single-use recovery codes issued on enrollment. Shown exactly once. */
+  recoveryCodes: string[];
 }
 
 export interface OnboardingResponseDto {
@@ -4645,6 +4675,33 @@ export interface CreateApiKeyResponseDto {
   createdAt: string;
   /** The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later. */
   secret: string;
+}
+
+export interface MfaStatusResponseDto {
+  /** Whether the user has confirmed TOTP two-factor auth. */
+  enabled: boolean;
+  /**
+   * When enrollment was confirmed, null when not enrolled.
+   * @nullable
+   */
+  confirmedAt: string | null;
+  /** Number of unused recovery codes. */
+  recoveryCodesRemaining: number;
+}
+
+export interface RecoveryCodesResponseDto {
+  /** Single-use recovery codes. Shown exactly once — the user must store them before continuing. */
+  recoveryCodes: string[];
+}
+
+export interface OrgMfaRequirementResponseDto {
+  /** Whether two-factor authentication is required for all users of the org. Enforced at each user’s next login. */
+  required: boolean;
+}
+
+export interface UpdateOrgMfaRequirementRequestDto {
+  /** Whether two-factor authentication is required for all users of the org. Takes effect at each user’s next login. */
+  required: boolean;
 }
 
 export type UserControllerGetUsersInOrganizationParams = {

@@ -38,7 +38,19 @@ export function useLogin({ redirect }: { redirect?: string }) {
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
+          if (data.mfaRequired) {
+            // No session yet — only the short-lived MFA pending cookie is
+            // set. The two-factor page completes the login.
+            void navigate({
+              to: '/two-factor',
+              search: {
+                redirect,
+                enroll: data.enrollmentRequired || undefined,
+              },
+            });
+            return;
+          }
           // With cookie-based auth, the backend automatically sets HTTP-only cookies
           void navigate({ to: redirect || '/chat' });
         },

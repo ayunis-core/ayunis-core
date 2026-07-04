@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedInstallRouteImport } from './routes/_authenticated/install'
+import { Route as onboardingTwoFactorRouteImport } from './routes/(onboarding)/two-factor'
 import { Route as onboardingRegisterRouteImport } from './routes/(onboarding)/register'
 import { Route as onboardingLoginRouteImport } from './routes/(onboarding)/login'
 import { Route as onboardingIpBlockedRouteImport } from './routes/(onboarding)/ip-blocked'
@@ -75,6 +76,11 @@ const AuthenticatedInstallRoute = AuthenticatedInstallRouteImport.update({
   id: '/install',
   path: '/install',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const onboardingTwoFactorRoute = onboardingTwoFactorRouteImport.update({
+  id: '/(onboarding)/two-factor',
+  path: '/two-factor',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const onboardingRegisterRoute = onboardingRegisterRouteImport.update({
   id: '/(onboarding)/register',
@@ -369,6 +375,7 @@ export interface FileRoutesByFullPath {
   '/ip-blocked': typeof onboardingIpBlockedRoute
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
+  '/two-factor': typeof onboardingTwoFactorRoute
   '/install': typeof AuthenticatedInstallRoute
   '/account/activate': typeof onboardingAccountActivateRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
@@ -422,6 +429,7 @@ export interface FileRoutesByTo {
   '/ip-blocked': typeof onboardingIpBlockedRoute
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
+  '/two-factor': typeof onboardingTwoFactorRoute
   '/install': typeof AuthenticatedInstallRoute
   '/account/activate': typeof onboardingAccountActivateRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
@@ -477,6 +485,7 @@ export interface FileRoutesById {
   '/(onboarding)/ip-blocked': typeof onboardingIpBlockedRoute
   '/(onboarding)/login': typeof onboardingLoginRoute
   '/(onboarding)/register': typeof onboardingRegisterRoute
+  '/(onboarding)/two-factor': typeof onboardingTwoFactorRoute
   '/_authenticated/install': typeof AuthenticatedInstallRoute
   '/(onboarding)/account/activate': typeof onboardingAccountActivateRoute
   '/(onboarding)/password/forgot': typeof onboardingPasswordForgotRoute
@@ -532,6 +541,7 @@ export interface FileRouteTypes {
     | '/ip-blocked'
     | '/login'
     | '/register'
+    | '/two-factor'
     | '/install'
     | '/account/activate'
     | '/password/forgot'
@@ -585,6 +595,7 @@ export interface FileRouteTypes {
     | '/ip-blocked'
     | '/login'
     | '/register'
+    | '/two-factor'
     | '/install'
     | '/account/activate'
     | '/password/forgot'
@@ -639,6 +650,7 @@ export interface FileRouteTypes {
     | '/(onboarding)/ip-blocked'
     | '/(onboarding)/login'
     | '/(onboarding)/register'
+    | '/(onboarding)/two-factor'
     | '/_authenticated/install'
     | '/(onboarding)/account/activate'
     | '/(onboarding)/password/forgot'
@@ -694,6 +706,7 @@ export interface RootRouteChildren {
   onboardingIpBlockedRoute: typeof onboardingIpBlockedRoute
   onboardingLoginRoute: typeof onboardingLoginRoute
   onboardingRegisterRoute: typeof onboardingRegisterRoute
+  onboardingTwoFactorRoute: typeof onboardingTwoFactorRoute
   onboardingAccountActivateRoute: typeof onboardingAccountActivateRoute
   onboardingPasswordForgotRoute: typeof onboardingPasswordForgotRoute
   onboardingPasswordResetRoute: typeof onboardingPasswordResetRoute
@@ -721,6 +734,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/install'
       preLoaderRoute: typeof AuthenticatedInstallRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/(onboarding)/two-factor': {
+      id: '/(onboarding)/two-factor'
+      path: '/two-factor'
+      fullPath: '/two-factor'
+      preLoaderRoute: typeof onboardingTwoFactorRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/(onboarding)/register': {
       id: '/(onboarding)/register'
@@ -1191,6 +1211,7 @@ const rootRouteChildren: RootRouteChildren = {
   onboardingIpBlockedRoute: onboardingIpBlockedRoute,
   onboardingLoginRoute: onboardingLoginRoute,
   onboardingRegisterRoute: onboardingRegisterRoute,
+  onboardingTwoFactorRoute: onboardingTwoFactorRoute,
   onboardingAccountActivateRoute: onboardingAccountActivateRoute,
   onboardingPasswordForgotRoute: onboardingPasswordForgotRoute,
   onboardingPasswordResetRoute: onboardingPasswordResetRoute,
