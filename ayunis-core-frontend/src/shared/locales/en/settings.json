@@ -55,6 +55,31 @@
       "invalidPassword": "Password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number.",
       "incorrectCurrentPassword": "Current password is incorrect",
       "currentPasswordRequired": "Current password is required"
+    },
+    "mfa": {
+      "title": "Two-factor authentication",
+      "enabledBadge": "Enabled",
+      "enabledDescription": "Your account is protected with an authenticator app. {{count}} recovery codes remaining.",
+      "disabledDescription": "Add a second login step with an authenticator app to protect your account.",
+      "enableButton": "Enable",
+      "disableButton": "Disable",
+      "enableDialogTitle": "Set up two-factor authentication",
+      "enableDialogDescription": "Scan the QR code and confirm with a code from your authenticator app.",
+      "recoveryCodesDescription": "Save your recovery codes before closing this dialog.",
+      "done": "Done",
+      "disableDialogTitle": "Disable two-factor authentication",
+      "disableDialogDescription": "Enter a code from your authenticator app (or a recovery code) to confirm.",
+      "codePlaceholder": "123456 or XXXXX-XXXXX",
+      "disableConfirm": "Disable two-factor authentication",
+      "disabling": "Disabling…",
+      "disabledSuccessfully": "Two-factor authentication disabled.",
+      "error": {
+        "invalidCode": "That code is not valid. Please try again.",
+        "locked": "Too many failed attempts. Please wait 15 minutes.",
+        "requiredByOrg": "Your organization requires two-factor authentication — it cannot be disabled.",
+        "unexpected": "Something went wrong. Please try again.",
+        "statusFailed": "Could not load the two-factor status. Please reload the page."
+      }
     }
   },
   "general": {

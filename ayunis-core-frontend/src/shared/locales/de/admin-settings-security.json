@@ -22,5 +22,13 @@
     "noRestrictions": "Derzeit sind keine IP-Einschränkungen konfiguriert. Alle IP-Adressen sind erlaubt.",
     "loadError": "Fehler beim Laden der IP-Zulassungslisten-Einstellungen.",
     "retry": "Erneut versuchen"
+  },
+  "mfaRequirement": {
+    "title": "Zwei-Faktor-Authentifizierung",
+    "description": "Verpflichten Sie alle Nutzer Ihrer Organisation, ihr Konto mit einer Authenticator-App zu schützen.",
+    "toggleLabel": "Zwei-Faktor-Authentifizierung verpflichtend",
+    "toggleHint": "Gilt ab der nächsten Anmeldung. Nutzer ohne Zwei-Faktor-Authentifizierung werden aufgefordert, sie einzurichten, bevor sie fortfahren können.",
+    "saved": "Zwei-Faktor-Anforderung aktualisiert.",
+    "error": "Die Zwei-Faktor-Anforderung konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut."
   }
 }

@@ -27,10 +27,14 @@ import {
   Mail,
   Coins,
   Ban,
+  ShieldOff,
 } from 'lucide-react';
+import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import { useUserRoleUpdate } from '../api/useUserRoleUpdate';
 import { useUserDelete } from '../api/useUserDelete';
 import { useTriggerPasswordReset } from '../api/useTriggerPasswordReset';
+import { useResetUserMfa } from '../api/useResetUserMfa';
+import { useMe } from '@/widgets/app-sidebar/api/useMe';
 import EditUserDialog from './EditUserDialog';
 import { useState, type ReactNode } from 'react';
 import type { User } from '../model/openapi';
@@ -63,6 +67,7 @@ export default function UsersSection({
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [creditLimitUser, setCreditLimitUser] = useState<User | null>(null);
   const hasCreditBudget = useHasCreditBudget();
+  const { user: currentUser } = useMe();
   const { userLimits, setUserLimit, removeUserLimit, isSaving } =
     useUserCreditLimits(() => setCreditLimitUser(null));
 
@@ -87,6 +92,9 @@ export default function UsersSection({
     useTriggerPasswordReset({
       onSuccessCallback: () => setLoadingUserId(null),
     });
+  const { resetUserMfa, isLoading: isResettingMfa } = useResetUserMfa({
+    onSuccessCallback: () => setLoadingUserId(null),
+  });
   const { confirm } = useConfirmation();
 
   const handleRoleToggle = (user: User) => {
@@ -143,10 +151,26 @@ export default function UsersSection({
     });
   };
 
+  const handleResetMfa = (user: UserResponseDto) => {
+    confirm({
+      title: t('resetMfa.confirmTitle'),
+      description: t('resetMfa.confirmDescription', {
+        name: user.name,
+      }),
+      confirmText: t('resetMfa.confirmText'),
+      cancelText: t('confirmations.cancelText'),
+      variant: 'destructive',
+      onConfirm: () => {
+        setLoadingUserId(user.id);
+        resetUserMfa(user.id);
+      },
+    });
+  };
+
   const isUserLoading = (userId: string) => {
     return (
       loadingUserId === userId &&
-      (isUpdatingRole || isDeletingUser || isTriggeringReset)
+      (isUpdatingRole || isDeletingUser || isTriggeringReset || isResettingMfa)
     );
   };
 
@@ -225,6 +249,21 @@ export default function UsersSection({
                         <Mail />
                         {t('users.sendPasswordReset')}
                       </DropdownMenuItem>
+                      <TooltipIf
+                        condition={user.email === currentUser?.email}
+                        tooltip={t('resetMfa.selfTooltip')}
+                      >
+                        <DropdownMenuItem
+                          onClick={() => handleResetMfa(user)}
+                          disabled={
+                            isUserLoading(user.id) ||
+                            user.email === currentUser?.email
+                          }
+                        >
+                          <ShieldOff />
+                          {t('resetMfa.menuItem')}
+                        </DropdownMenuItem>
+                      </TooltipIf>
                       {hasCreditBudget && (
                         <DropdownMenuItem
                           onClick={() => setCreditLimitUser(user)}

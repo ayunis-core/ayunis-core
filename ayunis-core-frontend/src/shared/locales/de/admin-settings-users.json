@@ -186,5 +186,15 @@
     "tooManyRows": "Zu viele Zeilen. Maximum ist 500.",
     "emailAlreadyInvited": "E-Mail hat bereits eine ausstehende Einladung",
     "emailAlreadyUser": "E-Mail ist bereits ein Benutzer in dieser Organisation"
+  },
+  "resetMfa": {
+    "menuItem": "Zwei-Faktor-Authentifizierung zurücksetzen",
+    "selfTooltip": "Sie können Ihre eigene Zwei-Faktor-Authentifizierung nicht zurücksetzen – verwalten Sie sie in Ihren Kontoeinstellungen.",
+    "errorSelf": "Sie können Ihre eigene Zwei-Faktor-Authentifizierung nicht zurücksetzen.",
+    "confirmTitle": "Zwei-Faktor-Authentifizierung zurücksetzen?",
+    "confirmDescription": "{{name}} kann sich danach nur mit dem Passwort anmelden und muss die Zwei-Faktor-Authentifizierung neu einrichten. Verwenden Sie dies, wenn ein Nutzer den Zugriff auf Authenticator-App und Wiederherstellungscodes verloren hat.",
+    "confirmText": "Zurücksetzen",
+    "success": "Zwei-Faktor-Authentifizierung wurde zurückgesetzt.",
+    "error": "Zwei-Faktor-Authentifizierung konnte nicht zurückgesetzt werden."
   }
 }
