@@ -14,6 +14,8 @@ import { HasActiveSubscriptionQuery } from 'src/iam/subscriptions/application/us
 import { GetTrialUseCase } from 'src/iam/trials/application/use-cases/get-trial/get-trial.use-case';
 import { GetTrialQuery } from 'src/iam/trials/application/use-cases/get-trial/get-trial.query';
 import { TrialNotFoundError } from 'src/iam/trials/application/trial.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
+import { SubscriptionRequiredError } from '../authorization.errors';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import {
   REQUIRE_SUBSCRIPTION_KEY,
@@ -116,8 +118,20 @@ export class SubscriptionGuard implements CanActivate {
         return true;
       }
 
-      return await this.evaluateTrialAccess(principal, request);
+      const grantedByTrial = await this.evaluateTrialAccess(principal, request);
+      if (grantedByTrial) {
+        return true;
+      }
+
+      throw new SubscriptionRequiredError(options.type);
     } catch (error) {
+      // Denials (SubscriptionRequiredError) and other domain errors are normal
+      // outcomes: let them surface so ApplicationErrorFilter renders a coded
+      // 403. Only truly unexpected failures fall through to the error log.
+      if (error instanceof ApplicationError) {
+        throw error;
+      }
+
       this.logger.error('Error checking subscription/trial', {
         error: error instanceof Error ? error.message : 'Unknown error',
         orgId: principal.orgId,

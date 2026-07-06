@@ -14,6 +14,7 @@ import { REQUIRE_SUBSCRIPTION_KEY } from '../decorators/subscription.decorator';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import { TrialNotFoundError } from 'src/iam/trials/application/trial.errors';
 import { Trial } from 'src/iam/trials/domain/trial.entity';
+import { SubscriptionRequiredError } from '../authorization.errors';
 
 interface ContextOverrides {
   options?: unknown;
@@ -161,7 +162,7 @@ describe('SubscriptionGuard', () => {
       });
     });
 
-    it('denies when subscription does not match the filter AND trial is exhausted', async () => {
+    it('throws a usage-based SubscriptionRequiredError when the filter is unmet AND trial is exhausted', async () => {
       hasActiveSubscriptionUseCase.execute.mockResolvedValue({
         hasActiveSubscription: false,
         subscriptionType: null,
@@ -175,13 +176,39 @@ describe('SubscriptionGuard', () => {
         user: { id: userId, orgId },
       });
 
-      const result = await makeGuard(reflector).canActivate(context);
-
-      expect(result).toBe(false);
+      await expect(
+        makeGuard(reflector).canActivate(context),
+      ).rejects.toMatchObject({
+        code: 'SUBSCRIPTION_REQUIRED',
+        statusCode: 403,
+        message: expect.stringContaining('usage-based'),
+      });
       expect(request.subscriptionContext).toBeUndefined();
     });
 
-    it('denies gracefully at warn (not error) when the org has no trial', async () => {
+    it('throws an active-subscription SubscriptionRequiredError for an untyped gate', async () => {
+      hasActiveSubscriptionUseCase.execute.mockResolvedValue({
+        hasActiveSubscription: false,
+        subscriptionType: null,
+      });
+      getTrialUseCase.execute.mockResolvedValue(
+        new Trial({ orgId, messagesSent: 10, maxMessages: 10 }),
+      );
+
+      const { context, reflector } = createContext({
+        options: {},
+        user: { id: userId, orgId },
+      });
+
+      await expect(
+        makeGuard(reflector).canActivate(context),
+      ).rejects.toMatchObject({
+        code: 'SUBSCRIPTION_REQUIRED',
+        message: 'This feature requires an active subscription.',
+      });
+    });
+
+    it('denies at warn (not error) with SubscriptionRequiredError when the org has no trial', async () => {
       const errorSpy = jest
         .spyOn(Logger.prototype, 'error')
         .mockImplementation();
@@ -198,9 +225,9 @@ describe('SubscriptionGuard', () => {
         user: { id: userId, orgId },
       });
 
-      const result = await makeGuard(reflector).canActivate(context);
-
-      expect(result).toBe(false);
+      await expect(
+        makeGuard(reflector).canActivate(context),
+      ).rejects.toBeInstanceOf(SubscriptionRequiredError);
       // A "no trial" denial is a normal authz decision: warn, never error.
       expect(warnSpy).toHaveBeenCalledWith(
         'Access denied: no trial found',
@@ -295,7 +322,7 @@ describe('SubscriptionGuard', () => {
       expect(request.subscriptionContext?.hasRemainingTrialMessages).toBe(true);
     });
 
-    it('denies when seat-only and trial-exhausted under a usage-based filter', async () => {
+    it('denies (throws SubscriptionRequiredError) when seat-only and trial-exhausted under a usage-based filter', async () => {
       hasActiveSubscriptionUseCase.execute.mockResolvedValue({
         hasActiveSubscription: false,
         subscriptionType: null,
@@ -309,9 +336,9 @@ describe('SubscriptionGuard', () => {
         user: { apiKeyId, orgId },
       });
 
-      const result = await makeGuard(reflector).canActivate(context);
-
-      expect(result).toBe(false);
+      await expect(
+        makeGuard(reflector).canActivate(context),
+      ).rejects.toBeInstanceOf(SubscriptionRequiredError);
     });
   });
 });
