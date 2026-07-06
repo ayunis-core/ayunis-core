@@ -27,7 +27,11 @@
     "forceConsistentCasingInFileNames": true,
     "paths": {
       "src/*": ["./src/*"],
-      "@modelcontextprotocol/sdk/client/*": ["./node_modules/@modelcontextprotocol/sdk/dist/cjs/client/*"]
+      "@modelcontextprotocol/sdk/client/*": ["./node_modules/@modelcontextprotocol/sdk/dist/cjs/client/*"],
+      // @mistralai/mistralai v2 is ESM-only with an exports map that node10
+      // moduleResolution cannot read; map subpaths to the esm build (runtime
+      // uses Node 26 require(esm)).
+      "@mistralai/mistralai/*": ["./node_modules/@mistralai/mistralai/esm/*"]
     }
   }
 }
