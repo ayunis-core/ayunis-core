@@ -1,9 +1,17 @@
 import { registerAs } from '@nestjs/config';
 
+// Evaluated lazily inside the registerAs factory so env vars are read after
+// ConfigModule has loaded .env files.
+const mistralConfig = () => ({
+  apiKey: process.env.MISTRAL_API_KEY,
+  // Default must be a model with the audio_transcription capability —
+  // voxtral-small only supports audio chat, not /v1/audio/transcriptions.
+  transcriptionModel:
+    process.env.MISTRAL_TRANSCRIPTION_MODEL ?? 'voxtral-mini-latest',
+});
+
 export const modelsConfig = registerAs('models', () => ({
-  mistral: {
-    apiKey: process.env.MISTRAL_API_KEY,
-  },
+  mistral: mistralConfig(),
   openai: {
     apiKey: process.env.OPENAI_API_KEY,
   },

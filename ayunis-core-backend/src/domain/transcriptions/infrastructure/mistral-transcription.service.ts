@@ -13,6 +13,7 @@ import retryWithBackoff from 'src/common/util/retryWithBackoff';
 export class MistralTranscriptionService extends TranscriptionPort {
   private readonly logger = new Logger(MistralTranscriptionService.name);
   private readonly client: Mistral;
+  private readonly model: string;
 
   constructor(private readonly configService: ConfigService) {
     super();
@@ -20,6 +21,10 @@ export class MistralTranscriptionService extends TranscriptionPort {
       apiKey: this.configService.get('models.mistral.apiKey'),
       timeoutMs: 30_000,
     });
+    this.model = this.configService.get<string>(
+      'models.mistral.transcriptionModel',
+      'voxtral-mini-latest',
+    );
   }
 
   async transcribe(
@@ -41,37 +46,7 @@ export class MistralTranscriptionService extends TranscriptionPort {
         type: mimeType,
       });
 
-      const transcriptionRequest = {
-        file: audioFile,
-        model: 'voxtral-mini-latest',
-        ...(language && { language }),
-      };
-
-      this.logger.log('Sending transcription request to Mistral', {
-        model: 'voxtral-mini-latest',
-        language,
-      });
-
-      const response = await retryWithBackoff({
-        fn: () =>
-          this.client.audio.transcriptions.complete(transcriptionRequest),
-        maxRetries: 3,
-        delay: 2000,
-        retryIfError: (error: Error) => {
-          const isTransient =
-            error instanceof SDKError && error.statusCode >= 500;
-          if (isTransient) {
-            this.logger.warn(
-              'Retrying Mistral transcription after transient error',
-              {
-                statusCode: error.statusCode,
-                message: error.message,
-              },
-            );
-          }
-          return isTransient;
-        },
-      });
+      const response = await this.requestTranscription(audioFile, language);
 
       const transcriptedText = response.text.trim() || '';
 
@@ -102,26 +77,50 @@ export class MistralTranscriptionService extends TranscriptionPort {
     }
   }
 
+  private requestTranscription(audioFile: File, language?: string) {
+    const transcriptionRequest = {
+      file: audioFile,
+      model: this.model,
+      ...(language && { language }),
+    };
+
+    this.logger.log('Sending transcription request to Mistral', {
+      model: this.model,
+      language,
+    });
+
+    return retryWithBackoff({
+      fn: () => this.client.audio.transcriptions.complete(transcriptionRequest),
+      maxRetries: 3,
+      delay: 2000,
+      retryIfError: (error: Error) => this.shouldRetry(error),
+    });
+  }
+
+  private shouldRetry(error: Error): boolean {
+    const isTransient = error instanceof SDKError && error.statusCode >= 500;
+    if (isTransient) {
+      this.logger.warn('Retrying Mistral transcription after transient error', {
+        statusCode: error.statusCode,
+        message: error.message,
+      });
+    }
+    return isTransient;
+  }
+
   private isServiceUnavailableError(error: unknown): boolean {
     // Check for common service unavailable indicators
     if (error instanceof SDKError && error.statusCode >= 500) {
       return true;
     }
-    const err = error as
-      | {
-          message?: string;
-          name?: string;
-        }
-      | undefined;
-    if (err?.name === 'RequestTimeoutError' || err?.name === 'TimeoutError') {
+    const err = error as { message?: string; name?: string } | undefined;
+    const timeoutNames = ['RequestTimeoutError', 'TimeoutError'];
+    if (err?.name !== undefined && timeoutNames.includes(err.name)) {
       return true;
     }
-    if (
-      err?.message?.includes('service unavailable') ||
-      err?.message?.includes('timeout')
-    ) {
-      return true;
-    }
-    return false;
+    const message = err?.message ?? '';
+    return (
+      message.includes('service unavailable') || message.includes('timeout')
+    );
   }
 }
