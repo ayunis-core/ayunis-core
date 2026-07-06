@@ -54,9 +54,9 @@ export class RetrieveUrlUseCase {
         // buffers the body. Content-type interpretation is an application
         // concern, so the policy stays here rather than in the adapter.
         assertContentType: (contentType, finalUrl) =>
-          this.assertContentTypeAcceptable(contentType, finalUrl),
+          this.assertContentTypeAcceptable(contentType, finalUrl, command.url),
       });
-      return await this.parseByContentType(raw);
+      return await this.parseByContentType(raw, command.url);
     } catch (error) {
       return this.mapError(error, command.url);
     }
@@ -69,8 +69,9 @@ export class RetrieveUrlUseCase {
    */
   private async parseByContentType(
     raw: RawUrlResponse,
+    requestedUrl: string,
   ): Promise<UrlRetrieverResult> {
-    if (this.isPdf(raw.contentType, raw.finalUrl)) {
+    if (this.isPdf(raw.contentType, raw.finalUrl, requestedUrl)) {
       return this.parsePdf(raw);
     }
 
@@ -128,21 +129,33 @@ export class RetrieveUrlUseCase {
 
   /**
    * A response is treated as a PDF when the server says so, or when the server
-   * sends a generic/absent content type but the URL ends in `.pdf` (some hosts
-   * serve PDFs as application/octet-stream or with no content type at all).
+   * sends a generic/absent content type but a candidate URL ends in `.pdf`
+   * (some hosts serve PDFs as application/octet-stream or with no content type
+   * at all). Both the originally-requested URL and the post-redirect final URL
+   * are candidates: a `.pdf` link often redirects to a signed CDN URL whose
+   * path no longer carries the extension.
    */
-  private isPdf(contentType: string, url: string): boolean {
+  private isPdf(contentType: string, ...urls: string[]): boolean {
     if (contentType.includes(PDF_MIME_TYPE)) {
       return true;
     }
     const isGenericType =
       contentType === '' || contentType.includes('application/octet-stream');
-    return isGenericType && this.hasPdfExtension(url);
+    return isGenericType && urls.some((url) => this.hasPdfExtension(url));
   }
 
   private hasPdfExtension(url: string): boolean {
     try {
-      return new URL(url).pathname.toLowerCase().endsWith('.pdf');
+      const pathname = new URL(url).pathname;
+      // Decode percent-encoding so `/report%2Epdf` is recognized. Falls back to
+      // the raw pathname if the encoding is malformed.
+      let decoded = pathname;
+      try {
+        decoded = decodeURIComponent(pathname);
+      } catch {
+        // Malformed percent-encoding — check the raw pathname instead.
+      }
+      return decoded.toLowerCase().endsWith('.pdf');
     } catch {
       return false;
     }
@@ -207,11 +220,15 @@ export class RetrieveUrlUseCase {
    * the dispatch in {@link parseByContentType}, which stays as defense-in-depth
    * for the actual parse.
    */
-  private assertContentTypeAcceptable(contentType: string, url: string): void {
-    if (this.isPdf(contentType, url)) {
+  private assertContentTypeAcceptable(
+    contentType: string,
+    finalUrl: string,
+    requestedUrl: string,
+  ): void {
+    if (this.isPdf(contentType, finalUrl, requestedUrl)) {
       return;
     }
-    this.assertSupportedContentType(contentType, url);
+    this.assertSupportedContentType(contentType, finalUrl);
   }
 
   private assertSupportedContentType(contentType: string, url: string): void {

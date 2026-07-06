@@ -257,6 +257,68 @@ describe('RetrieveUrlUseCase', () => {
     expect(mockRetrieveFileContent.execute).toHaveBeenCalledTimes(1);
   });
 
+  it('treats an octet-stream response as a PDF when the requested .pdf URL redirected to an extension-less CDN URL', async () => {
+    // A `.pdf` link often 302s to a signed CDN URL whose path drops the
+    // extension while still serving octet-stream bytes. Detection must fall
+    // back to the originally-requested URL, not only the post-redirect one.
+    const command = new RetrieveUrlCommand(
+      'https://acme.test/files/report.pdf',
+      ORG_ID,
+    );
+    mockHandler.fetch.mockResolvedValue(
+      rawResponse({
+        contentType: 'application/octet-stream',
+        finalUrl: 'https://cdn.acme.test/signed?token=abc123',
+        body: Buffer.from('%PDF-1.7 binary'),
+      }),
+    );
+    mockRetrieveFileContent.execute.mockResolvedValue(
+      new FileRetrieverResult([new FileRetrieverPage('Report', 1)]),
+    );
+
+    await useCase.execute(command);
+
+    expect(mockRetrieveFileContent.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('accepts an octet-stream header when the requested URL is a .pdf even if the final URL is not', async () => {
+    const command = new RetrieveUrlCommand(
+      'https://acme.test/files/report.pdf',
+      ORG_ID,
+    );
+
+    await useCase.execute(command);
+
+    const input = mockHandler.fetch.mock.calls[0][0];
+    expect(() =>
+      input.assertContentType(
+        'application/octet-stream',
+        'https://cdn.acme.test/signed?token=abc123',
+      ),
+    ).not.toThrow();
+  });
+
+  it('treats an octet-stream URL whose percent-encoded path decodes to .pdf as a PDF', async () => {
+    const command = new RetrieveUrlCommand(
+      'https://acme.test/files/report%2Epdf',
+      ORG_ID,
+    );
+    mockHandler.fetch.mockResolvedValue(
+      rawResponse({
+        contentType: 'application/octet-stream',
+        finalUrl: 'https://acme.test/files/report%2Epdf',
+        body: Buffer.from('%PDF-1.4 binary'),
+      }),
+    );
+    mockRetrieveFileContent.execute.mockResolvedValue(
+      new FileRetrieverResult([new FileRetrieverPage('Report', 1)]),
+    );
+
+    await useCase.execute(command);
+
+    expect(mockRetrieveFileContent.execute).toHaveBeenCalledTimes(1);
+  });
+
   it('rejects a genuinely unsupported content type', async () => {
     const command = new RetrieveUrlCommand(
       'https://acme.test/logo.png',
