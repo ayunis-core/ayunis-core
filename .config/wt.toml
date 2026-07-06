@@ -13,11 +13,8 @@ done
 '''
 
 [post-start]
-install-node = '''
-(cd ayunis-core-backend && npm ci) &
-pid1=$!
-(cd ayunis-core-frontend && npm ci) &
-pid2=$!
-wait $pid1 && wait $pid2
-'''
+# Single root install: this is a pnpm workspace (workspace:* deps), so `npm ci`
+# fails with EUNSUPPORTEDPROTOCOL. One `pnpm install` links every workspace
+# (backend, frontend, and packages/*) and honors onlyBuiltDependencies.
+install-node = "pnpm install --frozen-lockfile"
 # install-python = "cd ayunis-core-anonymize && uv sync"  # uncomment if you work on anonymize
