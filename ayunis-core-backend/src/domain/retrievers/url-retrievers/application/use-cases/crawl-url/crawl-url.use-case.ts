@@ -121,9 +121,11 @@ export class CrawlUrlUseCase {
         new RetrieveUrlCommand(url, orgId),
       );
     } catch (error) {
-      this.logger.warn(`Skipping page during crawl: ${url}`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      const reason = error instanceof Error ? error.message : 'Unknown error';
+      // NestJS Logger.warn treats a second string arg as the context label, so
+      // fold the reason into the message to keep it visible when a crawl drops
+      // pages.
+      this.logger.warn(`Skipping page during crawl: ${url} — ${reason}`);
       return null;
     }
   }

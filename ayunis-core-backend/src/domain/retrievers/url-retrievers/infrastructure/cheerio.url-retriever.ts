@@ -19,6 +19,10 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const MAX_REDIRECTS = 5;
+// Upper bound for a caller-supplied `options.timeout`, so a request-controlled
+// value can never disable the abort timer that bounds the whole fetch.
+const MAX_TIMEOUT_MS = 60_000;
+const ALLOWED_PROTOCOLS = new Set(['http:', 'https:']);
 // Hard cap on how many bytes we buffer from a fetched URL. Pointing the crawler
 // at a very large PDF (or any oversized payload) would otherwise buffer the whole
 // response in memory and risk an OOM across shared infrastructure (AYC-266).
@@ -49,8 +53,7 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
   private async fetchRaw(input: UrlRetrieverInput): Promise<RawUrlResponse> {
     this.logger.debug(`Retrieving URL: ${input.url} with Cheerio handler`);
 
-    const timeout =
-      (input.options?.timeout as number | undefined) ?? this.defaultTimeout;
+    const timeout = this.resolveTimeout(input);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -59,14 +62,19 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
         input,
         controller.signal,
       );
-      clearTimeout(timeoutId);
-
-      this.assertHttpOk(response, finalUrl);
 
       const contentType =
         response.headers.get('content-type')?.toLowerCase() ?? '';
-      // Reject unsupported types from headers alone, before buffering the body.
-      input.assertContentType?.(contentType, finalUrl);
+      // Reject bad status / unsupported type from headers alone, before
+      // buffering the body (cancelling the body stream on rejection).
+      await this.assertResponseAcceptable(
+        response,
+        finalUrl,
+        contentType,
+        input,
+      );
+      // The timer stays armed through the body read — it is the longest phase,
+      // so a slow-loris body must be bounded by the same timeout as the headers.
       // The size cap is enforced while streaming (readBodyWithCap), not from the
       // Content-Length header — proxies and buggy servers overstate it, which
       // would otherwise reject valid small payloads. Streaming still guarantees
@@ -75,14 +83,60 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
 
       return { contentType, finalUrl, body };
     } catch (error) {
-      clearTimeout(timeoutId);
-
       if (error instanceof Error && error.name === 'AbortError') {
         throw new UrlRetrieverTimeoutError(input.url, timeout, {
           originalError: error.message,
         });
       }
       throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  /**
+   * Resolve the effective request timeout: a caller-supplied `options.timeout`
+   * is honored only when it is a positive finite number, and is clamped to
+   * {@link MAX_TIMEOUT_MS} so it can never disable the abort timer.
+   */
+  private resolveTimeout(input: UrlRetrieverInput): number {
+    const requested = input.options?.timeout;
+    if (
+      typeof requested === 'number' &&
+      Number.isFinite(requested) &&
+      requested > 0
+    ) {
+      return Math.min(requested, MAX_TIMEOUT_MS);
+    }
+    return this.defaultTimeout;
+  }
+
+  /**
+   * Assert the response is a 2xx of an acceptable content type. On rejection the
+   * body stream is cancelled so the underlying socket is released rather than
+   * left dangling out of undici's connection pool.
+   */
+  private async assertResponseAcceptable(
+    response: Response,
+    finalUrl: string,
+    contentType: string,
+    input: UrlRetrieverInput,
+  ): Promise<void> {
+    try {
+      this.assertHttpOk(response, finalUrl);
+      input.assertContentType?.(contentType, finalUrl);
+    } catch (error) {
+      await this.discardBody(response);
+      throw error;
+    }
+  }
+
+  /** Best-effort release of an unconsumed response body. */
+  private async discardBody(response: Response): Promise<void> {
+    try {
+      await response.body?.cancel();
+    } catch {
+      // Nothing actionable — the socket is reclaimed on GC if cancel fails.
     }
   }
 
@@ -110,8 +164,19 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
       }
 
       const nextUrl = new URL(location, currentUrl).href;
+      // Only follow http(s) redirects — a Location pointing at file:/data:/etc.
+      // must not be dereferenced.
+      if (!ALLOWED_PROTOCOLS.has(new URL(nextUrl).protocol)) {
+        await this.discardBody(response);
+        throw new UrlRetrieverRetrievalError(
+          'Redirect to an unsupported URL scheme was blocked',
+          { url: nextUrl },
+        );
+      }
       // Re-assert the gate before following; throwing rejects the redirect.
       await input.onRedirect?.(nextUrl);
+      // Release the redirect response's body before issuing the next hop.
+      await this.discardBody(response);
       currentUrl = nextUrl;
     }
 
@@ -148,17 +213,21 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     const reader = response.body.getReader();
     const chunks: Buffer[] = [];
     let total = 0;
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      total += value.byteLength;
-      if (total > this.maxDownloadBytes) {
-        await reader.cancel();
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        // Throws before buffering the oversized chunk; the finally cancels.
         this.assertSizeWithinCap(total, url);
+        chunks.push(Buffer.from(value));
       }
-      chunks.push(Buffer.from(value));
+      return Buffer.concat(chunks);
+    } finally {
+      // Release the lock / socket on every exit: size-cap throw, abort/timeout,
+      // a mid-stream network error, or normal completion.
+      await reader.cancel().catch(() => undefined);
     }
-    return Buffer.concat(chunks);
   }
 
   private assertSizeWithinCap(size: number, url: string): void {
@@ -220,17 +289,19 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
   }
 
   private handleTopLevelError(error: unknown, url: string): never {
+    // Preserve domain errors (UrlRetrieverError) AND gate denials
+    // (CrawlDomainAccessDeniedError, 404) — both extend ApplicationError and
+    // must keep their own status rather than being rewritten to a 422. These
+    // are expected outcomes (404/408/413/422), so they are NOT logged at error
+    // level here — doing so would flood Sentry on every crawl.
+    if (error instanceof ApplicationError) {
+      throw error;
+    }
+
     this.logger.error(
       `HTTP URL retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       error instanceof Error ? error.stack : 'Unknown error',
     );
-
-    // Preserve domain errors (UrlRetrieverError) AND gate denials
-    // (CrawlDomainAccessDeniedError, 404) — both extend ApplicationError and
-    // must keep their own status rather than being rewritten to a 422.
-    if (error instanceof ApplicationError) {
-      throw error;
-    }
 
     throw new UrlRetrieverRetrievalError('Failed to retrieve URL with HTTP', {
       url,

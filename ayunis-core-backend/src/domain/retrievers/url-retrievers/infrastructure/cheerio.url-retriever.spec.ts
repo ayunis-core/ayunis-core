@@ -5,6 +5,8 @@ import {
   UrlRetrieverTooManyRedirectsError,
   UrlRetrieverContentTooLargeError,
   UrlRetrieverUnsupportedContentTypeError,
+  UrlRetrieverHttpError,
+  UrlRetrieverTimeoutError,
 } from '../application/url-retriever.errors';
 import { CrawlDomainAccessDeniedError } from 'src/domain/crawl-domain-grants/application/crawl-domain-grants.errors';
 
@@ -81,6 +83,16 @@ function makeHandlerWithCap(
   const config = {
     get: (key: string) =>
       key === 'url.maxDownloadBytes' ? maxDownloadBytes : 5000,
+  } as unknown as ConfigService;
+  const handler = new CheerioUrlRetrieverHandler(config);
+  jest.spyOn(handler['logger'], 'error').mockImplementation(() => undefined);
+  return handler;
+}
+
+function makeHandlerWithTimeout(timeoutMs: number): CheerioUrlRetrieverHandler {
+  const config = {
+    get: (key: string) =>
+      key === 'url.timeout' ? timeoutMs : 25 * 1024 * 1024,
   } as unknown as ConfigService;
   const handler = new CheerioUrlRetrieverHandler(config);
   jest.spyOn(handler['logger'], 'error').mockImplementation(() => undefined);
@@ -252,6 +264,89 @@ describe('CheerioUrlRetrieverHandler.fetch', () => {
 
     expect(raw.body.toString('utf8')).toBe('hello world');
     expect(raw.contentType).toContain('text/html');
+  });
+
+  it('bounds the body-read phase with the request timeout (slow-loris body)', async () => {
+    // Headers arrive instantly but the body never streams. The abort timer must
+    // stay armed through the body read and surface as a timeout — on the old
+    // code (timer cleared before reading) this hung until the jest timeout.
+    const slow = makeHandlerWithTimeout(20);
+    jest.spyOn(slow['logger'], 'error').mockImplementation(() => undefined);
+    fetchSpy.mockImplementationOnce(
+      (_url: string, opts: { signal: AbortSignal }) => {
+        const body = new ReadableStream<Uint8Array>({
+          start(controller) {
+            opts.signal.addEventListener('abort', () => {
+              const err = new Error('aborted');
+              err.name = 'AbortError';
+              controller.error(err);
+            });
+          },
+        });
+        return Promise.resolve({
+          status: 200,
+          ok: true,
+          statusText: 'STATUS',
+          headers: {
+            get: (name: string) =>
+              name.toLowerCase() === 'content-type' ? 'text/html' : null,
+          },
+          body,
+          arrayBuffer: async () => new ArrayBuffer(0),
+        } as unknown as Response);
+      },
+    );
+
+    await expect(
+      slow.fetch({ url: 'https://slow.example.com' }),
+    ).rejects.toBeInstanceOf(UrlRetrieverTimeoutError);
+  });
+
+  it('cancels the response body when the content type is rejected (no socket leak)', async () => {
+    const response = streamedResponse({
+      headers: { 'content-type': 'image/png' },
+      body: 'PNGDATA',
+    });
+    const cancelSpy = jest.spyOn(response.body as ReadableStream, 'cancel');
+    fetchSpy.mockResolvedValueOnce(response);
+    const assertContentType = jest.fn(() => {
+      throw new UrlRetrieverUnsupportedContentTypeError(
+        'https://acme.test/logo.png',
+        'image/png',
+      );
+    });
+
+    await expect(
+      handler.fetch({ url: 'https://acme.test/logo.png', assertContentType }),
+    ).rejects.toBeInstanceOf(UrlRetrieverUnsupportedContentTypeError);
+    expect(cancelSpy).toHaveBeenCalled();
+  });
+
+  it('cancels the response body on a non-2xx status (no socket leak)', async () => {
+    const response = streamedResponse({
+      status: 500,
+      headers: { 'content-type': 'text/html' },
+      body: 'server error',
+    });
+    const cancelSpy = jest.spyOn(response.body as ReadableStream, 'cancel');
+    fetchSpy.mockResolvedValueOnce(response);
+
+    await expect(
+      handler.fetch({ url: 'https://acme.test/boom' }),
+    ).rejects.toBeInstanceOf(UrlRetrieverHttpError);
+    expect(cancelSpy).toHaveBeenCalled();
+  });
+
+  it('blocks a redirect to a non-http(s) scheme without contacting it', async () => {
+    fetchSpy.mockResolvedValueOnce(redirect('file:///etc/passwd'));
+    const onRedirect = jest.fn().mockResolvedValue(undefined);
+
+    await expect(
+      handler.fetch({ url: 'https://start.example.com', onRedirect }),
+    ).rejects.toBeInstanceOf(UrlRetrieverRetrievalError);
+    // The gate is never consulted and the target is never fetched.
+    expect(onRedirect).not.toHaveBeenCalled();
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -91,7 +91,9 @@ export class RetrieveUrlUseCase {
    * is unknown. Charset declared only in an HTML `<meta>` tag is not handled.
    */
   private decodeBody(raw: RawUrlResponse): string {
-    const charset = /charset=["']?([^;"']+)/.exec(raw.contentType)?.[1]?.trim();
+    const charset = /charset\s*=\s*["']?([^;"']+)/
+      .exec(raw.contentType)?.[1]
+      ?.trim();
     if (charset && charset !== 'utf-8' && charset !== 'utf8') {
       try {
         return new TextDecoder(charset).decode(raw.body);
@@ -136,11 +138,17 @@ export class RetrieveUrlUseCase {
    * path no longer carries the extension.
    */
   private isPdf(contentType: string, ...urls: string[]): boolean {
-    if (contentType.includes(PDF_MIME_TYPE)) {
+    // `application/x-pdf` is a legacy alias some servers still send.
+    if (
+      contentType.includes(PDF_MIME_TYPE) ||
+      contentType.includes('application/x-pdf')
+    ) {
       return true;
     }
     const isGenericType =
-      contentType === '' || contentType.includes('application/octet-stream');
+      contentType === '' ||
+      contentType.includes('application/octet-stream') ||
+      contentType.includes('binary/octet-stream');
     return isGenericType && urls.some((url) => this.hasPdfExtension(url));
   }
 

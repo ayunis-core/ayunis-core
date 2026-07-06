@@ -319,6 +319,60 @@ describe('RetrieveUrlUseCase', () => {
     expect(mockRetrieveFileContent.execute).toHaveBeenCalledTimes(1);
   });
 
+  it('delegates an application/x-pdf response (legacy alias) to the file pipeline', async () => {
+    const command = new RetrieveUrlCommand(
+      'https://acme.test/legacy.pdf',
+      ORG_ID,
+    );
+    mockHandler.fetch.mockResolvedValue(
+      rawResponse({
+        contentType: 'application/x-pdf',
+        finalUrl: 'https://acme.test/legacy.pdf',
+        body: Buffer.from('%PDF-1.5 binary'),
+      }),
+    );
+    mockRetrieveFileContent.execute.mockResolvedValue(
+      new FileRetrieverResult([new FileRetrieverPage('Legacy', 1)]),
+    );
+
+    await useCase.execute(command);
+
+    expect(mockRetrieveFileContent.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('treats a binary/octet-stream .pdf URL as a PDF', async () => {
+    const command = new RetrieveUrlCommand('https://acme.test/doc.pdf', ORG_ID);
+    mockHandler.fetch.mockResolvedValue(
+      rawResponse({
+        contentType: 'binary/octet-stream',
+        finalUrl: 'https://acme.test/doc.pdf',
+        body: Buffer.from('%PDF-1.4 binary'),
+      }),
+    );
+    mockRetrieveFileContent.execute.mockResolvedValue(
+      new FileRetrieverResult([new FileRetrieverPage('Doc', 1)]),
+    );
+
+    await useCase.execute(command);
+
+    expect(mockRetrieveFileContent.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('decodes text when the charset has spaces around the equals sign', async () => {
+    const command = new RetrieveUrlCommand('https://acme.test/de.txt', ORG_ID);
+    mockHandler.fetch.mockResolvedValue(
+      rawResponse({
+        contentType: 'text/plain; charset = iso-8859-1',
+        finalUrl: 'https://acme.test/de.txt',
+        body: Buffer.from('Grüße aus Köln', 'latin1'),
+      }),
+    );
+
+    const result = await useCase.execute(command);
+
+    expect(result.content).toBe('Grüße aus Köln');
+  });
+
   it('rejects a genuinely unsupported content type', async () => {
     const command = new RetrieveUrlCommand(
       'https://acme.test/logo.png',
