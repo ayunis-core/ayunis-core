@@ -67,7 +67,10 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
         response.headers.get('content-type')?.toLowerCase() ?? '';
       // Reject unsupported types from headers alone, before buffering the body.
       input.assertContentType?.(contentType, finalUrl);
-      this.assertContentLengthWithinCap(response, finalUrl);
+      // The size cap is enforced while streaming (readBodyWithCap), not from the
+      // Content-Length header — proxies and buggy servers overstate it, which
+      // would otherwise reject valid small payloads. Streaming still guarantees
+      // the whole response is never buffered: it aborts once the cap is hit.
       const body = await this.readBodyWithCap(response, finalUrl);
 
       return { contentType, finalUrl, body };
@@ -119,20 +122,6 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     if (!response.ok) {
       throw new UrlRetrieverHttpError(url, response.status, {
         statusText: response.statusText,
-      });
-    }
-  }
-
-  /**
-   * Reject an oversized payload from the `Content-Length` header before reading
-   * a single byte. The header can be absent or wrong, so this is only a fast
-   * pre-check — {@link readBodyWithCap} enforces the real limit while streaming.
-   */
-  private assertContentLengthWithinCap(response: Response, url: string): void {
-    const declared = Number(response.headers.get('content-length'));
-    if (Number.isFinite(declared) && declared > this.maxDownloadBytes) {
-      throw new UrlRetrieverContentTooLargeError(url, this.maxDownloadBytes, {
-        declaredBytes: declared,
       });
     }
   }

@@ -204,19 +204,25 @@ describe('CheerioUrlRetrieverHandler.fetch', () => {
     expect(readerSpy).not.toHaveBeenCalled();
   });
 
-  it('rejects via the Content-Length header before reading the body', async () => {
+  it('does not reject on an overstated Content-Length when the streamed body stays within the cap', async () => {
+    // Proxies and buggy servers routinely overstate Content-Length. The real
+    // limit is enforced while streaming, so a small body must still succeed
+    // even when the header claims it exceeds the cap.
     const capped = makeHandlerWithCap(100);
-    const response = streamedResponse({
-      headers: { 'content-type': 'application/pdf', 'content-length': '9999' },
-      body: 'tiny',
-    });
-    const readerSpy = jest.spyOn(response.body as ReadableStream, 'getReader');
-    fetchSpy.mockResolvedValueOnce(response);
+    fetchSpy.mockResolvedValueOnce(
+      streamedResponse({
+        headers: {
+          'content-type': 'application/pdf',
+          'content-length': '9999',
+        },
+        body: 'tiny',
+      }),
+    );
 
-    await expect(
-      capped.fetch({ url: 'https://acme.test/big.pdf' }),
-    ).rejects.toBeInstanceOf(UrlRetrieverContentTooLargeError);
-    expect(readerSpy).not.toHaveBeenCalled();
+    const raw = await capped.fetch({ url: 'https://acme.test/big.pdf' });
+
+    expect(raw.body.toString('utf8')).toBe('tiny');
+    expect(raw.contentType).toContain('application/pdf');
   });
 
   it('aborts and throws when the streamed body exceeds the cap', async () => {
