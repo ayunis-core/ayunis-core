@@ -4163,6 +4163,14 @@ export interface UpsertOrgChatSettingsDto {
   internetSearchEnabled: boolean;
 }
 
+export interface SynthesizeSpeechDto {
+  /**
+   * The text to synthesize into speech
+   * @maxLength 5000
+   */
+  input: string;
+}
+
 export interface RetentionPolicyResponseDto {
   /**
    * Configured retention window in days, or null when retention is disabled (data kept forever).

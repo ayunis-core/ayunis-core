@@ -8367,6 +8367,52 @@
         "tags": ["Chat Settings"]
       }
     },
+    "/speech": {
+      "post": {
+        "description": "Convert text to spoken audio using the configured text-to-speech model. Returns the generated audio as an MP3 stream.",
+        "operationId": "SpeechController_synthesize",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SynthesizeSpeechDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The synthesized speech audio",
+            "content": {
+              "audio/mpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or too long input text"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Speech synthesis failed"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Synthesize speech from text",
+        "tags": ["speech"]
+      }
+    },
     "/retention-policies/org": {
       "get": {
         "operationId": "RetentionPoliciesController_get",
@@ -15613,6 +15659,18 @@
           }
         },
         "required": ["internetSearchEnabled"]
+      },
+      "SynthesizeSpeechDto": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "string",
+            "description": "The text to synthesize into speech",
+            "example": "Ihr Antrag wurde genehmigt.",
+            "maxLength": 5000
+          }
+        },
+        "required": ["input"]
       },
       "RetentionPolicyResponseDto": {
         "type": "object",
