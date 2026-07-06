@@ -7,6 +7,7 @@ import brandIconDark from '@/shared/assets/brand/brand-icon-round-dark.svg';
 import { AgentRunTimeline } from '@/pages/chat/ui/agent-run-timeline';
 import type { AgentRunUnit } from '@/pages/chat/ui/agent-run-timeline';
 import CopyAssistantTextButton from './CopyAssistantTextButton';
+import ReadAssistantTextButton from './ReadAssistantTextButton';
 
 interface AssistantRunBlockProps {
   unit: AgentRunUnit;
@@ -52,7 +53,12 @@ export default function AssistantRunBlock({
             onOpenArtifact={onOpenArtifact}
           />
         </div>
-        {hasFinalText && <CopyAssistantTextButton contentRef={contentRef} />}
+        {hasFinalText && (
+          <div className="flex items-center gap-1">
+            <CopyAssistantTextButton contentRef={contentRef} />
+            <ReadAssistantTextButton contentRef={contentRef} />
+          </div>
+        )}
       </div>
     </div>
   );

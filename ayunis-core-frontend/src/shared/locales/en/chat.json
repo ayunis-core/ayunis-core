@@ -37,6 +37,10 @@
     "errorRemoveAgent": "Agent could not be removed",
     "skillInstructions": "Skill instructions",
     "copyToClipboard": "Copy to clipboard",
+    "readOutLoud": "Read out loud",
+    "stopReading": "Stop reading",
+    "errorReadOutLoud": "Could not generate audio. Please try again.",
+    "errorReadOutLoudUnavailable": "The speech service is currently unavailable. Please try again later.",
     "timeline": {
       "working": "Working…",
       "thoughtProcess": "Thought process",

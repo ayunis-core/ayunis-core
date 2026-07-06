@@ -37,6 +37,10 @@
     "errorRemoveAgent": "Agent konnte nicht entfernt werden",
     "skillInstructions": "Fähigkeits-Anweisungen",
     "copyToClipboard": "In die Zwischenablage kopieren",
+    "readOutLoud": "Vorlesen",
+    "stopReading": "Vorlesen stoppen",
+    "errorReadOutLoud": "Audio konnte nicht erzeugt werden. Bitte erneut versuchen.",
+    "errorReadOutLoudUnavailable": "Der Sprachdienst ist derzeit nicht verfügbar. Bitte später erneut versuchen.",
     "timeline": {
       "working": "Arbeite…",
       "thoughtProcess": "Gedankengang",
