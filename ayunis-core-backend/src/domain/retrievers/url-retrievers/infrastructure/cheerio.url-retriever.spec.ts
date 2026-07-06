@@ -173,6 +173,24 @@ describe('CheerioUrlRetrieverHandler.fetch', () => {
     ).rejects.toBeInstanceOf(CrawlDomainAccessDeniedError);
   });
 
+  it('cancels the redirect response body when the gate denies the hop (no socket leak)', async () => {
+    const redirectResp = streamedResponse({
+      status: 302,
+      headers: { location: 'https://restricted.example.org' },
+      body: 'redirect page',
+    });
+    const cancelSpy = jest.spyOn(redirectResp.body as ReadableStream, 'cancel');
+    fetchSpy.mockResolvedValueOnce(redirectResp);
+    const onRedirect = jest
+      .fn()
+      .mockRejectedValue(new CrawlDomainAccessDeniedError());
+
+    await expect(
+      handler.fetch({ url: 'https://start.example.com', onRedirect }),
+    ).rejects.toBeInstanceOf(CrawlDomainAccessDeniedError);
+    expect(cancelSpy).toHaveBeenCalled();
+  });
+
   it('throws TooManyRedirects when the redirect chain exceeds the cap', async () => {
     fetchSpy.mockResolvedValue(redirect('https://loop.example.com/next'));
     const onRedirect = jest.fn().mockResolvedValue(undefined);

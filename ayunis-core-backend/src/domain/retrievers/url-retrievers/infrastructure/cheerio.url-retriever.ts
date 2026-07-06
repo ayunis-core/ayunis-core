@@ -163,21 +163,22 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
         return { response, finalUrl: currentUrl };
       }
 
-      const nextUrl = new URL(location, currentUrl).href;
+      const next = new URL(location, currentUrl);
+      // The redirect response body is never needed once Location is read.
+      // Release it up front so no throw below (scheme check or a gate denial in
+      // onRedirect) can leave the socket dangling out of the connection pool.
+      await this.discardBody(response);
       // Only follow http(s) redirects — a Location pointing at file:/data:/etc.
       // must not be dereferenced.
-      if (!ALLOWED_PROTOCOLS.has(new URL(nextUrl).protocol)) {
-        await this.discardBody(response);
+      if (!ALLOWED_PROTOCOLS.has(next.protocol)) {
         throw new UrlRetrieverRetrievalError(
           'Redirect to an unsupported URL scheme was blocked',
-          { url: nextUrl },
+          { url: next.href },
         );
       }
       // Re-assert the gate before following; throwing rejects the redirect.
-      await input.onRedirect?.(nextUrl);
-      // Release the redirect response's body before issuing the next hop.
-      await this.discardBody(response);
-      currentUrl = nextUrl;
+      await input.onRedirect?.(next.href);
+      currentUrl = next.href;
     }
 
     throw new UrlRetrieverTooManyRedirectsError(input.url, MAX_REDIRECTS);
