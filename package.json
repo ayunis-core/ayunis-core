@@ -6,9 +6,9 @@
   },
   "devDependencies": {
     "husky": "^9.1.7",
-    "knip": "^6.23.0",
+    "knip": "^6.24.0",
     "madge": "^8.0.0",
-    "markdownlint-cli2": "^0.22.1"
+    "markdownlint-cli2": "^0.23.0"
   },
   "pnpm": {
     "overrides": {
