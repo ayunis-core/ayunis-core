@@ -1,0 +1,189 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1360 760" width="1360" height="760" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-end">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arrowLoop" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-end">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <style>
+    .title{font-size:26px;font-weight:700;fill:#0f172a}
+    .sub{font-size:13.5px;fill:#475569}
+    .band{font-size:13px;font-weight:700;fill:#334155}
+    .boxt{font-size:13px;font-weight:600;fill:#0f172a}
+    .step{font-size:10px;fill:#7c2d12}
+    .stepn{font-size:10.5px;font-weight:700;fill:#b45309}
+    .chip{font-size:10.5px;font-weight:600;fill:#065f46}
+    .lbl{font-size:10.5px;fill:#475569}
+    .leg{font-size:11px;fill:#334155}
+    .foot{font-size:11.5px;fill:#475569}
+  </style>
+
+  <!-- background -->
+  <rect x="0" y="0" width="1360" height="760" fill="#ffffff"/>
+
+  <!-- title -->
+  <text x="40" y="42" class="title">Ayunis Core — Architecture &amp; Run Workflow</text>
+  <text x="40" y="66" class="sub">Multi-tenant AI gateway · React SPA · NestJS hexagonal backend · request → run orchestration → LLM provider → streamed response</text>
+
+  <!-- legend -->
+  <g transform="translate(1000,20)">
+    <rect x="0" y="0" width="340" height="70" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+    <rect x="12" y="12" width="14" height="12" rx="3" fill="#eff6ff" stroke="#3b82f6"/><text x="32" y="22" class="leg">Client</text>
+    <rect x="92" y="12" width="14" height="12" rx="3" fill="#fff7ed" stroke="#f59e0b"/><text x="112" y="22" class="leg">Run orchestrator</text>
+    <rect x="232" y="12" width="14" height="12" rx="3" fill="#ecfdf5" stroke="#10b981"/><text x="252" y="22" class="leg">Domain module</text>
+    <rect x="12" y="42" width="14" height="12" rx="3" fill="#faf5ff" stroke="#a855f7"/><text x="32" y="52" class="leg">External service / data</text>
+    <line x1="192" y1="48" x2="224" y2="48" stroke="#475569" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/><text x="230" y="52" class="leg">stream / async</text>
+  </g>
+
+  <!-- client -->
+  <rect x="470" y="92" width="420" height="52" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="680" y="117" text-anchor="middle" class="boxt" fill="#1e3a8a">Browser — React SPA</text>
+  <text x="680" y="134" text-anchor="middle" class="lbl">Feature-Sliced Design (pages → widgets → features → shared)</text>
+
+  <!-- client <-> api arrows -->
+  <line x1="660" y1="144" x2="660" y2="196" stroke="#475569" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="652" y="172" text-anchor="end" class="lbl">HTTPS request</text>
+  <line x1="700" y1="196" x2="700" y2="144" stroke="#475569" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+  <text x="708" y="172" class="lbl">SSE token stream</text>
+
+  <!-- backend container -->
+  <rect x="40" y="196" width="960" height="520" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="60" y="222" class="band">ayunis-core-backend — NestJS · Hexagonal (Presenters → Application → Domain → Infrastructure)</text>
+
+  <!-- presenters -->
+  <rect x="64" y="236" width="912" height="46" rx="8" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="520" y="258" text-anchor="middle" class="boxt">Presenters — HTTP controllers</text>
+  <text x="520" y="273" text-anchor="middle" class="lbl">JWT auth guards (@Public bypass) · role/authorization guards · org &amp; tenant context (nestjs-cls)</text>
+
+  <!-- run pipeline band -->
+  <rect x="64" y="300" width="912" height="188" rx="10" fill="#fff7ed" stroke="#f59e0b" stroke-width="1.6"/>
+  <text x="80" y="322" class="band" fill="#b45309">Application · runs — ExecuteRunUseCase  (orchestrates one AI turn)</text>
+
+  <!-- 7 step cards : width 116, x = 70 + i*130 ; centers 128 258 388 518 648 778 908 -->
+  <g>
+    <rect x="70" y="336" width="116" height="104" rx="8" fill="#ffffff" stroke="#fbbf24"/>
+    <text x="128" y="356" text-anchor="middle" class="stepn">1 · Resolve</text>
+    <text x="128" y="380" text-anchor="middle" class="step">thread ·</text>
+    <text x="128" y="395" text-anchor="middle" class="step">agent ·</text>
+    <text x="128" y="410" text-anchor="middle" class="step">model</text>
+
+    <rect x="200" y="336" width="116" height="104" rx="8" fill="#ffffff" stroke="#fbbf24"/>
+    <text x="258" y="356" text-anchor="middle" class="stepn">2 · Gate</text>
+    <text x="258" y="380" text-anchor="middle" class="step">fair-use quota</text>
+    <text x="258" y="395" text-anchor="middle" class="step">+ credit</text>
+    <text x="258" y="410" text-anchor="middle" class="step">budget</text>
+
+    <rect x="330" y="336" width="116" height="104" rx="8" fill="#ffffff" stroke="#fbbf24"/>
+    <text x="388" y="356" text-anchor="middle" class="stepn">3 · Assemble</text>
+    <text x="388" y="380" text-anchor="middle" class="step">tools + skills</text>
+    <text x="388" y="395" text-anchor="middle" class="step">+ system</text>
+    <text x="388" y="410" text-anchor="middle" class="step">prompt</text>
+
+    <rect x="460" y="336" width="116" height="104" rx="8" fill="#ffffff" stroke="#fbbf24"/>
+    <text x="518" y="356" text-anchor="middle" class="stepn">4 · Anonymize</text>
+    <text x="518" y="380" text-anchor="middle" class="step">if anonymous</text>
+    <text x="518" y="395" text-anchor="middle" class="step">mask PII</text>
+    <text x="518" y="410" text-anchor="middle" class="step">→ Presidio</text>
+
+    <rect x="590" y="336" width="116" height="104" rx="8" fill="#ffffff" stroke="#fbbf24"/>
+    <text x="648" y="356" text-anchor="middle" class="stepn">5 · Inference</text>
+    <text x="648" y="380" text-anchor="middle" class="step">→ provider</text>
+    <text x="648" y="395" text-anchor="middle" class="step">stream</text>
+    <text x="648" y="410" text-anchor="middle" class="step">chunks</text>
+
+    <rect x="720" y="336" width="116" height="104" rx="8" fill="#ffffff" stroke="#fbbf24"/>
+    <text x="778" y="356" text-anchor="middle" class="stepn">6 · Tool calls</text>
+    <text x="778" y="380" text-anchor="middle" class="step">execute +</text>
+    <text x="778" y="395" text-anchor="middle" class="step">collect,</text>
+    <text x="778" y="410" text-anchor="middle" class="step">feed back</text>
+
+    <rect x="850" y="336" width="116" height="104" rx="8" fill="#ffffff" stroke="#fbbf24"/>
+    <text x="908" y="356" text-anchor="middle" class="stepn">7 · Persist</text>
+    <text x="908" y="380" text-anchor="middle" class="step">assistant msg</text>
+    <text x="908" y="395" text-anchor="middle" class="step">· record</text>
+    <text x="908" y="410" text-anchor="middle" class="step">usage</text>
+  </g>
+
+  <!-- step-to-step arrows (gaps at x 186->200, 316->330, ...) -->
+  <line x1="186" y1="388" x2="200" y2="388" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrowLoop)"/>
+  <line x1="316" y1="388" x2="330" y2="388" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrowLoop)"/>
+  <line x1="446" y1="388" x2="460" y2="388" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrowLoop)"/>
+  <line x1="576" y1="388" x2="590" y2="388" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrowLoop)"/>
+  <line x1="706" y1="388" x2="720" y2="388" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrowLoop)"/>
+  <line x1="836" y1="388" x2="850" y2="388" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrowLoop)"/>
+
+  <!-- agentic loop back arc: step 6 (c908) -> step 5 (c778) -->
+  <path d="M908,440 C908,468 778,468 778,442" fill="none" stroke="#d97706" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrowLoop)"/>
+  <text x="843" y="484" text-anchor="middle" class="stepn" fill="#d97706">⟲ agentic loop (tool use → re-infer)</text>
+
+  <!-- api entry arrow into pipeline -->
+  <line x1="680" y1="282" x2="680" y2="300" stroke="#475569" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+  <!-- domain modules cluster -->
+  <text x="64" y="516" class="band">Domain modules the run reads / writes</text>
+  <g>
+    <rect x="64" y="524" width="120" height="30" rx="15" fill="#ecfdf5" stroke="#10b981"/><text x="124" y="543" text-anchor="middle" class="chip">threads</text>
+    <rect x="192" y="524" width="120" height="30" rx="15" fill="#ecfdf5" stroke="#10b981"/><text x="252" y="543" text-anchor="middle" class="chip">messages</text>
+    <rect x="320" y="524" width="120" height="30" rx="15" fill="#ecfdf5" stroke="#10b981"/><text x="380" y="543" text-anchor="middle" class="chip">models</text>
+    <rect x="448" y="524" width="120" height="30" rx="15" fill="#ecfdf5" stroke="#10b981"/><text x="508" y="543" text-anchor="middle" class="chip">tools</text>
+    <rect x="576" y="524" width="130" height="30" rx="15" fill="#ecfdf5" stroke="#10b981"/><text x="641" y="543" text-anchor="middle" class="chip">rag / sources</text>
+    <rect x="714" y="524" width="120" height="30" rx="15" fill="#ecfdf5" stroke="#10b981"/><text x="774" y="543" text-anchor="middle" class="chip">skills</text>
+    <rect x="842" y="524" width="134" height="30" rx="15" fill="#ecfdf5" stroke="#10b981"/><text x="909" y="543" text-anchor="middle" class="chip">mcp</text>
+
+    <rect x="64" y="560" width="120" height="30" rx="15" fill="#ecfdf5" stroke="#10b981"/><text x="124" y="579" text-anchor="middle" class="chip">usage</text>
+    <rect x="192" y="560" width="140" height="30" rx="15" fill="#ecfdf5" stroke="#10b981"/><text x="262" y="579" text-anchor="middle" class="chip">subscriptions</text>
+    <rect x="340" y="560" width="130" height="30" rx="15" fill="#ecfdf5" stroke="#10b981"/><text x="405" y="579" text-anchor="middle" class="chip">credit-limits</text>
+    <rect x="478" y="560" width="110" height="30" rx="15" fill="#ecfdf5" stroke="#10b981"/><text x="533" y="579" text-anchor="middle" class="chip">quotas</text>
+    <rect x="596" y="560" width="160" height="30" rx="15" fill="#ecfdf5" stroke="#10b981"/><text x="676" y="579" text-anchor="middle" class="chip">thread-pii-masks</text>
+    <rect x="764" y="560" width="212" height="30" rx="15" fill="#ecfdf5" stroke="#10b981"/><text x="870" y="579" text-anchor="middle" class="chip">chat-settings · artifacts</text>
+  </g>
+
+  <!-- infrastructure strip -->
+  <rect x="64" y="600" width="912" height="44" rx="8" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="520" y="620" text-anchor="middle" class="boxt">Infrastructure — adapters behind ports</text>
+  <text x="520" y="635" text-anchor="middle" class="lbl">TypeORM repositories · provider SDKs (packages/inference, provider-*) · HTTP clients (Presidio, code-execution)</text>
+
+  <!-- external column -->
+  <rect x="1024" y="236" width="312" height="96" rx="10" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="1180" y="260" text-anchor="middle" class="boxt" fill="#6b21a8">LLM providers</text>
+  <text x="1180" y="280" text-anchor="middle" class="lbl">Anthropic · OpenAI · Mistral · Gemini</text>
+  <text x="1180" y="296" text-anchor="middle" class="lbl">Bedrock · Ollama</text>
+  <text x="1180" y="318" text-anchor="middle" class="lbl">(unified via packages/inference)</text>
+
+  <rect x="1024" y="348" width="312" height="58" rx="10" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="1180" y="372" text-anchor="middle" class="boxt" fill="#6b21a8">ayunis-core-anonymize</text>
+  <text x="1180" y="390" text-anchor="middle" class="lbl">PII detection — Presidio + GLiNER (spaCy)</text>
+
+  <rect x="1024" y="422" width="312" height="52" rx="10" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="1180" y="444" text-anchor="middle" class="boxt" fill="#6b21a8">ayunis-core-code-execution</text>
+  <text x="1180" y="461" text-anchor="middle" class="lbl">sandboxed tool runtime</text>
+
+  <rect x="1024" y="490" width="312" height="154" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="1180" y="514" text-anchor="middle" class="boxt">Data &amp; infra</text>
+  <text x="1180" y="536" text-anchor="middle" class="lbl">Postgres (TypeORM + pgvector)</text>
+  <text x="1180" y="556" text-anchor="middle" class="lbl">Redis — BullMQ queues</text>
+  <text x="1180" y="576" text-anchor="middle" class="lbl">MinIO — object storage</text>
+  <text x="1180" y="596" text-anchor="middle" class="lbl">Gotenberg — document render</text>
+  <text x="1180" y="624" text-anchor="middle" class="lbl">web (URL retriever / crawl)</text>
+
+  <!-- workflow arrows: originate right of the pipeline (x>=980), no card crossing -->
+  <!-- step 5 inference (+ dashed stream back) -->
+  <line x1="982" y1="360" x2="1024" y2="300" stroke="#475569" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="984" y="344" class="lbl">infer (5)</text>
+  <line x1="1024" y1="316" x2="984" y2="374" stroke="#475569" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+  <!-- step 4 detect PII -->
+  <line x1="982" y1="404" x2="1024" y2="380" stroke="#475569" stroke-width="1.4" stroke-dasharray="2 3" marker-end="url(#arrow)"/>
+  <text x="984" y="398" class="lbl">detect PII (4)</text>
+  <!-- step 6 tool exec -->
+  <line x1="982" y1="452" x2="1024" y2="448" stroke="#475569" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <text x="984" y="446" class="lbl">tool exec (6)</text>
+  <!-- step 7 persist / infra -> data -->
+  <line x1="982" y1="622" x2="1024" y2="560" stroke="#475569" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="986" y="600" class="lbl">persist (7)</text>
+
+  <!-- footer -->
+  <text x="40" y="738" class="foot">A run is an agentic loop: the model streams a response, may call tools (loop back to step 5), and ends with a persisted assistant message. Anonymous threads — or admin-flagged anonymous-only models — route text through Presidio first, so the LLM only ever sees {{pii:*}} tokens.</text>
+</svg>
