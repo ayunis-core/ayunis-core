@@ -36,6 +36,14 @@ src/
 
 Layers only depend on layers to their right. Never import upward.
 
+## Shared shadcn UI — Never Modify
+
+**Never edit the shared shadcn components in `src/shared/ui/shadcn/` yourself.** These are managed via the shadcn registry (`components.json`) and are shared design-system primitives. Editing them by hand causes drift from the registry and breaks every consumer.
+
+- To add or update a shadcn component, use the shadcn CLI (`pnpm dlx shadcn@latest add <component>`) — do not hand-write or hand-patch files under `src/shared/ui/shadcn/`.
+- If a component's behavior or styling needs to change for a feature, **wrap or compose it** in your own component (in the relevant `ui/` directory or `src/shared/ui/` outside `shadcn/`) rather than modifying the primitive.
+- If you believe a shared shadcn primitive genuinely must change, **stop and ask the user** — do not make the change on your own.
+
 ### Page module internals
 
 Each page module can have these subdirectories:
@@ -73,3 +81,4 @@ For hooks that back a form (create/update dialogs), load the **frontend-form-pat
 - [ ] Page renders without console errors
 - [ ] No `any` types introduced
 - [ ] Import rules respected (no upward imports)
+- [ ] No hand-edits to `src/shared/ui/shadcn/`
