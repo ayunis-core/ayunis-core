@@ -312,6 +312,28 @@ describe('CrawlUrlUseCase', () => {
     ]);
   });
 
+  it('redacts URL query tokens and raw error text from skip logs', async () => {
+    const retriever = fakeRetriever({
+      'https://acme.test/': {
+        links: ['https://acme.test/doc?token=SECRET123'],
+      },
+      // The linked doc is absent -> retriever rejects -> the page is skipped.
+    });
+    const useCase = await buildUseCase(retriever);
+    const warnSpy = jest
+      .spyOn(useCase['logger'], 'warn')
+      .mockImplementation(() => undefined);
+
+    await useCase.execute(new CrawlUrlCommand('https://acme.test/', ORG_ID, 1));
+
+    const logged = warnSpy.mock.calls.map((call) => String(call[0])).join('\n');
+    expect(logged).toContain('Skipping page during crawl');
+    expect(logged).toContain('https://acme.test/doc'); // redacted path retained
+    expect(logged).not.toContain('SECRET123'); // signed token dropped
+    expect(logged).not.toContain('token=');
+    expect(logged).toContain('PROVIDER_NOT_AVAILABLE'); // stable code, not raw msg
+  });
+
   it('propagates the error when the root page fails to fetch', async () => {
     const useCase = await buildUseCase(fakeRetriever({}));
 

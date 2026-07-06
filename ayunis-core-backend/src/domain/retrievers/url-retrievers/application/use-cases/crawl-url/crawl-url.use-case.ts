@@ -9,6 +9,7 @@ import {
 } from '../../../domain/url-crawl-result.entity';
 import { UrlCrawlConstants } from '../../../domain/url-crawl.constants';
 import { CrawlUrlCommand } from './crawl-url.command';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 /**
  * Crawls a root URL breadth-first, following same-site links up to a bounded
@@ -121,13 +122,35 @@ export class CrawlUrlUseCase {
         new RetrieveUrlCommand(url, orgId),
       );
     } catch (error) {
-      const reason = error instanceof Error ? error.message : 'Unknown error';
-      // NestJS Logger.warn treats a second string arg as the context label, so
-      // fold the reason into the message to keep it visible when a crawl drops
-      // pages.
-      this.logger.warn(`Skipping page during crawl: ${url} — ${reason}`);
+      // Both the URL and a downstream error message can carry signed query
+      // tokens; log a redacted URL and a stable error code only, never the raw
+      // URL query or error text, so secrets never reach centralized logs/Sentry.
+      this.logger.warn(
+        `Skipping page during crawl: ${this.redactUrl(url)} (${this.describeError(error)})`,
+      );
       return null;
     }
+  }
+
+  /** Origin + path only — drops the query/fragment where signed tokens live. */
+  private redactUrl(url: string): string {
+    try {
+      const parsed = new URL(url);
+      return `${parsed.origin}${parsed.pathname}`;
+    } catch {
+      return '[unparseable url]';
+    }
+  }
+
+  /**
+   * A non-sensitive label for a skipped-page failure: a domain error's stable
+   * code, otherwise the error's class name. The raw message is intentionally
+   * never logged — it can embed a full URL with signed query tokens.
+   */
+  private describeError(error: unknown): string {
+    if (error instanceof ApplicationError) return error.code;
+    if (error instanceof Error) return error.name;
+    return 'Unknown error';
   }
 
   /**
