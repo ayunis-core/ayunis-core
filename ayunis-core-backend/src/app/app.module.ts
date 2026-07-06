@@ -61,6 +61,7 @@ import { metricsConfig } from '../config/metrics.config';
 import { redisConfig, type RedisConfig } from '../config/redis.config';
 import { gotenbergConfig } from '../config/gotenberg.config';
 import { retentionConfig } from '../config/retention.config';
+import { urlConfig } from '../config/url.config';
 import { BullModule } from '@nestjs/bullmq';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 import { IsRegistrationDisabledUseCase } from './application/use-cases/is-registration-disabled/is-registration-disabled.use-case';
@@ -97,6 +98,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
         redisConfig,
         gotenbergConfig,
         retentionConfig,
+        urlConfig,
       ],
     }),
     ClsModule.forRoot({

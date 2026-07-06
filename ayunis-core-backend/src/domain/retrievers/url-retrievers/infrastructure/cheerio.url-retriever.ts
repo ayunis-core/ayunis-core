@@ -139,20 +139,24 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
 
   /**
    * Stream the response body, aborting as soon as the accumulated size exceeds
-   * the cap so a huge response never gets fully buffered into memory. Falls back
-   * to `arrayBuffer()` when the runtime exposes no readable stream.
+   * the cap so a huge response never gets fully buffered into memory.
+   *
+   * When `response.body` is `null` (no payload) the response is buffered via
+   * `arrayBuffer()` — this is safe because a body-less response cannot cause
+   * unbounded memory growth. When a body stream is present we always read via
+   * `getReader()` to enforce the cap incrementally.
    */
   private async readBodyWithCap(
     response: Response,
     url: string,
   ): Promise<Buffer> {
-    const reader = response.body?.getReader();
-    if (!reader) {
-      const body = Buffer.from(await response.arrayBuffer());
-      this.assertSizeWithinCap(body.byteLength, url);
-      return body;
+    if (!response.body) {
+      const buf = Buffer.from(await response.arrayBuffer());
+      this.assertSizeWithinCap(buf.byteLength, url);
+      return buf;
     }
 
+    const reader = response.body.getReader();
     const chunks: Buffer[] = [];
     let total = 0;
     for (;;) {
