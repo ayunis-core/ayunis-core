@@ -19,6 +19,7 @@ import { DeleteInviteByEmailUseCase } from 'src/iam/invites/application/use-case
 import { ContextService } from 'src/common/context/services/context.service';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { UserUnauthorizedError } from '../../users.errors';
 
 describe('DeleteUserUseCase', () => {
   let useCase: DeleteUserUseCase;
@@ -128,6 +129,32 @@ describe('DeleteUserUseCase', () => {
         email: mockUser.email,
       }),
     );
+  });
+
+  it('should reject deleting a user from a different organization', async () => {
+    const command = new DeleteUserCommand({
+      userId: '223e4567-e89b-12d3-a456-426614174001',
+      orgId: '123e4567-e89b-12d3-a456-426614174000',
+    });
+
+    const mockUser = new User({
+      id: command.userId,
+      email: 'user@example.com',
+      emailVerified: true,
+      passwordHash: 'hash',
+      role: UserRole.USER,
+      orgId: '999e4567-e89b-12d3-a456-426614174999',
+      name: 'Test User',
+      hasAcceptedMarketing: false,
+    });
+
+    jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      UserUnauthorizedError,
+    );
+    expect(mockUsersRepository.delete).not.toHaveBeenCalled();
+    expect(mockEventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 
   it('should handle repository errors', async () => {

@@ -3,8 +3,13 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UsersRepository } from '../../ports/users.repository';
 import { UpdateUserRoleCommand } from './update-user-role.command';
 import { User } from '../../../domain/user.entity';
-import { UserNotFoundError, UserUnexpectedError } from '../../users.errors';
+import {
+  UserNotFoundError,
+  UserUnauthorizedError,
+  UserUnexpectedError,
+} from '../../users.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { ContextService } from 'src/common/context/services/context.service';
 import { UserUpdatedEvent } from '../../events/user-updated.event';
 
 @Injectable()
@@ -12,6 +17,7 @@ export class UpdateUserRoleUseCase {
   private readonly logger = new Logger(UpdateUserRoleUseCase.name);
 
   constructor(
+    private readonly contextService: ContextService,
     private readonly usersRepository: UsersRepository,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -22,11 +28,24 @@ export class UpdateUserRoleUseCase {
       newRole: command.newRole,
     });
 
+    const requesterOrgId = this.contextService.get('orgId');
+    if (!requesterOrgId) {
+      throw new UserUnauthorizedError('User not authenticated');
+    }
+
     try {
       // Find the user
       const user = await this.usersRepository.findOneById(command.userId);
       if (!user) {
         throw new UserNotFoundError(command.userId);
+      }
+
+      // Prevent cross-org role changes: the target user must belong to the
+      // requesting admin's organization.
+      if (user.orgId !== requesterOrgId) {
+        throw new UserUnauthorizedError(
+          'You are not allowed to update this user',
+        );
       }
 
       // Update the role

@@ -33,35 +33,15 @@ import { LetterheadsModule } from '../domain/letterheads/letterheads.module';
 import { OpenAICompatModule } from '../domain/openai-compat/openai-compat.module';
 import { IamModule } from '../iam/iam.module';
 
-import { modelsConfig } from '../config/models.config';
-import {
-  AuthProvider,
-  authenticationConfig,
-} from '../config/authentication.config';
-import { typeormConfig } from '../config/typeorm.config';
-import { embeddingsConfig } from '../config/embeddings.config';
-import storageConfig from '../config/storage.config';
-import { webConfig } from '../config/web.config';
-import { appConfig } from '../config/app.config';
-import { legalConfig } from '../config/legal.config';
-import { subscriptionsConfig } from '../config/subscriptions.config';
-import { emailsConfig } from '../config/emails.config';
+import { AuthProvider } from '../config/authentication.config';
+import { rootConfigs } from '../config/root-configs';
 import { CookieParserMiddleware } from '../common/middleware/cookie-parser.middleware';
 import dataSource from '../db/datasource';
 import { SecurityHeadersMiddleware } from '../common/middleware/security-headers.middleware';
 import { SentryContextMiddleware } from '../common/middleware/sentry-context.middleware';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-import internetSearchConfig from 'src/config/internet-search.config';
-import { mcpConfig } from '../config/mcp.config';
-import { marketplaceConfig } from '../config/marketplace.config';
-import toolsConfig from '../config/tools.config';
-import { featuresConfig } from '../config/features.config';
-import { metricsConfig } from '../config/metrics.config';
-import { redisConfig, type RedisConfig } from '../config/redis.config';
-import { gotenbergConfig } from '../config/gotenberg.config';
-import { retentionConfig } from '../config/retention.config';
-import { urlConfig } from '../config/url.config';
+import type { RedisConfig } from '../config/redis.config';
 import { BullModule } from '@nestjs/bullmq';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 import { IsRegistrationDisabledUseCase } from './application/use-cases/is-registration-disabled/is-registration-disabled.use-case';
@@ -78,28 +58,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [
-        modelsConfig,
-        authenticationConfig,
-        typeormConfig,
-        embeddingsConfig,
-        storageConfig,
-        webConfig,
-        appConfig,
-        legalConfig,
-        subscriptionsConfig,
-        emailsConfig,
-        internetSearchConfig,
-        mcpConfig,
-        marketplaceConfig,
-        toolsConfig,
-        featuresConfig,
-        metricsConfig,
-        redisConfig,
-        gotenbergConfig,
-        retentionConfig,
-        urlConfig,
-      ],
+      load: rootConfigs,
     }),
     ClsModule.forRoot({
       global: true,

@@ -42,12 +42,12 @@
     "eslint-plugin-sonarjs": "^4.0.2",
     "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^16.0.0",
-    "knip": "^5.84.1",
+    "knip": "^6.23.0",
     "madge": "^8.0.0",
     "prettier": "^3.8.1",
     "tsup": "^8.3.5",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.60.0",
-    "vitest": "^3.2.6"
+    "vitest": "^4.1.9"
   }
 }

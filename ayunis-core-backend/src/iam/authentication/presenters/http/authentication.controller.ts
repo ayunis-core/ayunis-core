@@ -96,6 +96,7 @@ export class AuthenticationController {
   }
 
   @Public()
+  @RateLimit({ limit: 5, windowMs: 60 * 60 * 1000 }) // 5 registration attempts per hour
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -163,7 +164,7 @@ export class AuthenticationController {
     type: ErrorResponseDto,
   })
   async refresh(@Req() req: Request, @Res() res: Response) {
-    this.logger.log('refresh', { req });
+    this.logger.log('refresh');
     const refreshTokenName = this.configService.get<string>(
       'auth.cookie.refreshTokenName',
     );
@@ -232,16 +233,9 @@ export class AuthenticationController {
     const refreshToken = cookies[refreshTokenName];
 
     // First, try to get user info from access token
-    if (accessToken) {
-      try {
-        const user = await this.getCurrentUserUseCase.execute(
-          new GetCurrentUserCommand(accessToken),
-        );
-        return res.json(this.meResponseDtoMapper.toDto(user));
-      } catch (error) {
-        this.logger.debug('Access token verification failed', error);
-        // Continue to refresh token logic
-      }
+    const currentUser = await this.tryGetUserFromAccessToken(accessToken);
+    if (currentUser) {
+      return res.json(this.meResponseDtoMapper.toDto(currentUser));
     }
 
     // If access token is invalid/missing, try refresh token
@@ -252,6 +246,29 @@ export class AuthenticationController {
       });
     }
 
+    return this.refreshAndRespondWithUser(res, refreshToken);
+  }
+
+  private async tryGetUserFromAccessToken(
+    accessToken: string | undefined,
+  ): Promise<ActiveUser | null> {
+    if (!accessToken) {
+      return null;
+    }
+    try {
+      return await this.getCurrentUserUseCase.execute(
+        new GetCurrentUserCommand(accessToken),
+      );
+    } catch (error) {
+      this.logger.debug('Access token verification failed', error);
+      return null;
+    }
+  }
+
+  private async refreshAndRespondWithUser(
+    res: Response,
+    refreshToken: string,
+  ): Promise<Response> {
     try {
       // Try to refresh tokens - this will validate the refresh token
       const tokens = await this.refreshTokenUseCase.execute(

@@ -133,6 +133,7 @@ import type {
   RunsControllerSendMessage200,
   RunsControllerSendMessageBody,
   SetAppAlertRequestDto,
+  SetCreditLimitDto,
   SetCreditsPerEuroRequestDto,
   SetFairUseLimitRequestDto,
   SetImageFairUseLimitRequestDto,
@@ -166,6 +167,8 @@ import type {
   SuperAdminUsageDataControllerGetUserUsageParams,
   SuperAdminUserResponseDto,
   SuperAdminUsersControllerGetUsersByOrgIdParams,
+  TeamCreditLimitItemDto,
+  TeamCreditLimitResponseDto,
   TeamMemberResponseDto,
   TeamResponseDto,
   TeamsControllerListTeamMembersParams,
@@ -213,6 +216,8 @@ import type {
   UsageStatsResponseDto,
   UserConfigResponseDto,
   UserControllerGetUsersInOrganizationParams,
+  UserCreditLimitItemDto,
+  UserCreditLimitResponseDto,
   UserPasswordResetControllerValidateResetToken200,
   UserPasswordResetControllerValidateResetTokenParams,
   UserResponseDto,
@@ -16162,6 +16167,446 @@ export const useSuperAdminTrialsControllerUpdateTrial = <TError = void,
     }
     
 /**
+ * @summary List configured user credit limits with current consumption
+ */
+export const creditLimitsControllerGetUserLimits = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<UserCreditLimitItemDto[]>(
+      {url: `/credit-limits/users`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getCreditLimitsControllerGetUserLimitsQueryKey = () => {
+    return [
+    `/credit-limits/users`
+    ] as const;
+    }
+
+    
+export const getCreditLimitsControllerGetUserLimitsQueryOptions = <TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCreditLimitsControllerGetUserLimitsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>> = ({ signal }) => creditLimitsControllerGetUserLimits(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CreditLimitsControllerGetUserLimitsQueryResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>>
+export type CreditLimitsControllerGetUserLimitsQueryError = unknown
+
+
+export function useCreditLimitsControllerGetUserLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>,
+          TError,
+          Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreditLimitsControllerGetUserLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>,
+          TError,
+          Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreditLimitsControllerGetUserLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List configured user credit limits with current consumption
+ */
+
+export function useCreditLimitsControllerGetUserLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetUserLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCreditLimitsControllerGetUserLimitsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary List configured team credit limits with current consumption
+ */
+export const creditLimitsControllerGetTeamLimits = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<TeamCreditLimitItemDto[]>(
+      {url: `/credit-limits/teams`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getCreditLimitsControllerGetTeamLimitsQueryKey = () => {
+    return [
+    `/credit-limits/teams`
+    ] as const;
+    }
+
+    
+export const getCreditLimitsControllerGetTeamLimitsQueryOptions = <TData = Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCreditLimitsControllerGetTeamLimitsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>> = ({ signal }) => creditLimitsControllerGetTeamLimits(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CreditLimitsControllerGetTeamLimitsQueryResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>>
+export type CreditLimitsControllerGetTeamLimitsQueryError = unknown
+
+
+export function useCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>,
+          TError,
+          Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>,
+          TError,
+          Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List configured team credit limits with current consumption
+ */
+
+export function useCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetTeamLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCreditLimitsControllerGetTeamLimitsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Set a monthly credit limit for a user
+ */
+export const creditLimitsControllerSetUserLimit = (
+    userId: string,
+    setCreditLimitDto: SetCreditLimitDto,
+ ) => {
+      
+      
+      return customAxiosInstance<UserCreditLimitResponseDto>(
+      {url: `/credit-limits/users/${userId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setCreditLimitDto
+    },
+      );
+    }
+  
+
+
+export const getCreditLimitsControllerSetUserLimitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>, TError,{userId: string;data: SetCreditLimitDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>, TError,{userId: string;data: SetCreditLimitDto}, TContext> => {
+
+const mutationKey = ['creditLimitsControllerSetUserLimit'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>, {userId: string;data: SetCreditLimitDto}> = (props) => {
+          const {userId,data} = props ?? {};
+
+          return  creditLimitsControllerSetUserLimit(userId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreditLimitsControllerSetUserLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>>
+    export type CreditLimitsControllerSetUserLimitMutationBody = SetCreditLimitDto
+    export type CreditLimitsControllerSetUserLimitMutationError = unknown
+
+    /**
+ * @summary Set a monthly credit limit for a user
+ */
+export const useCreditLimitsControllerSetUserLimit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>, TError,{userId: string;data: SetCreditLimitDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creditLimitsControllerSetUserLimit>>,
+        TError,
+        {userId: string;data: SetCreditLimitDto},
+        TContext
+      > => {
+
+      const mutationOptions = getCreditLimitsControllerSetUserLimitMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Remove a user credit limit (back to unlimited)
+ */
+export const creditLimitsControllerRemoveUserLimit = (
+    userId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/credit-limits/users/${userId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getCreditLimitsControllerRemoveUserLimitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>, TError,{userId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>, TError,{userId: string}, TContext> => {
+
+const mutationKey = ['creditLimitsControllerRemoveUserLimit'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>, {userId: string}> = (props) => {
+          const {userId} = props ?? {};
+
+          return  creditLimitsControllerRemoveUserLimit(userId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreditLimitsControllerRemoveUserLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>>
+    
+    export type CreditLimitsControllerRemoveUserLimitMutationError = unknown
+
+    /**
+ * @summary Remove a user credit limit (back to unlimited)
+ */
+export const useCreditLimitsControllerRemoveUserLimit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>, TError,{userId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creditLimitsControllerRemoveUserLimit>>,
+        TError,
+        {userId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getCreditLimitsControllerRemoveUserLimitMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Set a monthly credit limit for a team
+ */
+export const creditLimitsControllerSetTeamLimit = (
+    teamId: string,
+    setCreditLimitDto: SetCreditLimitDto,
+ ) => {
+      
+      
+      return customAxiosInstance<TeamCreditLimitResponseDto>(
+      {url: `/credit-limits/teams/${teamId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setCreditLimitDto
+    },
+      );
+    }
+  
+
+
+export const getCreditLimitsControllerSetTeamLimitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>, TError,{teamId: string;data: SetCreditLimitDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>, TError,{teamId: string;data: SetCreditLimitDto}, TContext> => {
+
+const mutationKey = ['creditLimitsControllerSetTeamLimit'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>, {teamId: string;data: SetCreditLimitDto}> = (props) => {
+          const {teamId,data} = props ?? {};
+
+          return  creditLimitsControllerSetTeamLimit(teamId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreditLimitsControllerSetTeamLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>>
+    export type CreditLimitsControllerSetTeamLimitMutationBody = SetCreditLimitDto
+    export type CreditLimitsControllerSetTeamLimitMutationError = unknown
+
+    /**
+ * @summary Set a monthly credit limit for a team
+ */
+export const useCreditLimitsControllerSetTeamLimit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>, TError,{teamId: string;data: SetCreditLimitDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creditLimitsControllerSetTeamLimit>>,
+        TError,
+        {teamId: string;data: SetCreditLimitDto},
+        TContext
+      > => {
+
+      const mutationOptions = getCreditLimitsControllerSetTeamLimitMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Remove a team credit limit (back to unlimited)
+ */
+export const creditLimitsControllerRemoveTeamLimit = (
+    teamId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/credit-limits/teams/${teamId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getCreditLimitsControllerRemoveTeamLimitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>, TError,{teamId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>, TError,{teamId: string}, TContext> => {
+
+const mutationKey = ['creditLimitsControllerRemoveTeamLimit'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>, {teamId: string}> = (props) => {
+          const {teamId} = props ?? {};
+
+          return  creditLimitsControllerRemoveTeamLimit(teamId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreditLimitsControllerRemoveTeamLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>>
+    
+    export type CreditLimitsControllerRemoveTeamLimitMutationError = unknown
+
+    /**
+ * @summary Remove a team credit limit (back to unlimited)
+ */
+export const useCreditLimitsControllerRemoveTeamLimit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>, TError,{teamId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creditLimitsControllerRemoveTeamLimit>>,
+        TError,
+        {teamId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getCreditLimitsControllerRemoveTeamLimitMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * Returns the custom system prompt for the authenticated user, or null if not set.
  * @summary Get the user system prompt
  */
@@ -17756,6 +18201,180 @@ const {mutation: mutationOptions} = options ?
       return useMutation(mutationOptions, queryClient);
     }
     
+export const modelsControllerList = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/openai-compat/v1/models`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getModelsControllerListQueryKey = () => {
+    return [
+    `/openai-compat/v1/models`
+    ] as const;
+    }
+
+    
+export const getModelsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelsControllerListQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerList>>> = ({ signal }) => modelsControllerList(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerList>>>
+export type ModelsControllerListQueryError = unknown
+
+
+export function useModelsControllerList<TData = Awaited<ReturnType<typeof modelsControllerList>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerList<TData = Awaited<ReturnType<typeof modelsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerList<TData = Awaited<ReturnType<typeof modelsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useModelsControllerList<TData = Awaited<ReturnType<typeof modelsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelsControllerListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+export const modelsControllerRetrieve = (
+    model: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/openai-compat/v1/models/${model}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getModelsControllerRetrieveQueryKey = (model?: string,) => {
+    return [
+    `/openai-compat/v1/models/${model}`
+    ] as const;
+    }
+
+    
+export const getModelsControllerRetrieveQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError = unknown>(model: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelsControllerRetrieveQueryKey(model);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerRetrieve>>> = ({ signal }) => modelsControllerRetrieve(model, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(model), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelsControllerRetrieveQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerRetrieve>>>
+export type ModelsControllerRetrieveQueryError = unknown
+
+
+export function useModelsControllerRetrieve<TData = Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError = unknown>(
+ model: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerRetrieve>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerRetrieve<TData = Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError = unknown>(
+ model: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerRetrieve>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerRetrieve>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerRetrieve<TData = Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError = unknown>(
+ model: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useModelsControllerRetrieve<TData = Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError = unknown>(
+ model: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerRetrieve>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelsControllerRetrieveQueryOptions(model,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
 /**
  * @summary List all add-ons with their active state for an organization
  */

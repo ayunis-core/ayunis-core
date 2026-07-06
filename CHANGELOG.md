@@ -1,5 +1,49 @@
 # Changelog
 
+## [2.12.0](https://github.com/ayunis-core/ayunis-core/compare/v2.11.0...v2.12.0) (2026-07-03)
+
+
+### Features
+
+* **credit-limits:** add per-user and per-team monthly credit limits (AYC-167) ([#863](https://github.com/ayunis-core/ayunis-core/issues/863)) ([7d1ea4c](https://github.com/ayunis-core/ayunis-core/commit/7d1ea4cb9a5811d1a5ef1f7efc414953b12c4147))
+* **openai-compat:** support /v1/models list and retrieve endpoints (AYC-392) ([#935](https://github.com/ayunis-core/ayunis-core/issues/935)) ([974cc73](https://github.com/ayunis-core/ayunis-core/commit/974cc73a0ccd6aa4cbe69d0b4b9129ec218b45c2))
+
+
+### Bug Fixes
+
+* **openai-compat:** keep domain error codes on non-openai routes (AYC-366) ([#933](https://github.com/ayunis-core/ayunis-core/issues/933)) ([e408d8e](https://github.com/ayunis-core/ayunis-core/commit/e408d8e08dad32a646e83cb09c10db048f19c15c))
+
+
+### Code Refactoring
+
+* **auth:** centralize JwtModule registration (AYC-390) ([#930](https://github.com/ayunis-core/ayunis-core/issues/930)) ([2f95f7a](https://github.com/ayunis-core/ayunis-core/commit/2f95f7ae46edc570f023672d054334294530be01))
+
+
+### Miscellaneous
+
+* **deps:** bump knip from 5.88.1 to 6.23.0 ([#743](https://github.com/ayunis-core/ayunis-core/issues/743)) ([3c43709](https://github.com/ayunis-core/ayunis-core/commit/3c437093b5816d24d5c56feb0295a408635059f7))
+* **deps:** bump vitest from 3.2.6 to 4.1.9 ([#736](https://github.com/ayunis-core/ayunis-core/issues/736)) ([f02eacb](https://github.com/ayunis-core/ayunis-core/commit/f02eacb389818294348e56ed43c6d6e025ff0130))
+* **seed:** add demo seed with users, teams and usage (AYC-167) ([#864](https://github.com/ayunis-core/ayunis-core/issues/864)) ([f60c5f6](https://github.com/ayunis-core/ayunis-core/commit/f60c5f68943b7001024afa4e8204b072981cfe06))
+
+## [2.11.0](https://github.com/ayunis-core/ayunis-core/compare/v2.10.0...v2.11.0) (2026-07-01)
+
+
+### Features
+
+* **auth:** add rate limiting to register endpoint (AYC-376) ([#915](https://github.com/ayunis-core/ayunis-core/issues/915)) ([938c6d6](https://github.com/ayunis-core/ayunis-core/commit/938c6d62c836094ca1a62716837cf598711095d3))
+* **iam:** log 403 denials for role and ip allowlist (AYC-369) ([#916](https://github.com/ayunis-core/ayunis-core/issues/916)) ([21067d9](https://github.com/ayunis-core/ayunis-core/commit/21067d945f3e4bec24b210fb892fb00eba74b8c3))
+
+
+### Bug Fixes
+
+* **app-alert:** vertically align icon with text in alert banner (AYC-362) ([#908](https://github.com/ayunis-core/ayunis-core/issues/908)) ([52477cc](https://github.com/ayunis-core/ayunis-core/commit/52477ccc249d1c25301cb68f1cc1985fdddffcc5))
+* **auth:** remove insecure JWT and cookie secret fallbacks (AYC-386) ([#919](https://github.com/ayunis-core/ayunis-core/issues/919)) ([d367e2a](https://github.com/ayunis-core/ayunis-core/commit/d367e2acd9a3a0e00df331107813f530ee2df61a))
+* **iam:** remove sensitive data from logs (AYC-371) ([#917](https://github.com/ayunis-core/ayunis-core/issues/917)) ([f30d02d](https://github.com/ayunis-core/ayunis-core/commit/f30d02d523095748f8ae8bff259a165ca570d5d5))
+* **invites:** clarify private email restriction in invite error (AYC-366) ([#913](https://github.com/ayunis-core/ayunis-core/issues/913)) ([48d54f5](https://github.com/ayunis-core/ayunis-core/commit/48d54f542611fea0b5f175e5601acbb21ebe1ed8))
+* **layout:** prevent new-chat backdrop from clipping below viewport (AYC-000) ([#906](https://github.com/ayunis-core/ayunis-core/issues/906)) ([bfdda70](https://github.com/ayunis-core/ayunis-core/commit/bfdda709959473c5cb1de0900f7e8130e97e2719))
+* **sources:** use papaparse for RFC-4180 compliant CSV parsing (AYC-365) ([#912](https://github.com/ayunis-core/ayunis-core/issues/912)) ([839dd5d](https://github.com/ayunis-core/ayunis-core/commit/839dd5db38ae1a6b8ac4797e71118449f1929401))
+* **users:** check orgId when updating user roles (AYC-378) ([#918](https://github.com/ayunis-core/ayunis-core/issues/918)) ([806dd55](https://github.com/ayunis-core/ayunis-core/commit/806dd55bea74fcfb02fc7529ff5b43a61aa1d274))
+
 ## [2.10.0](https://github.com/ayunis-core/ayunis-core/compare/v2.9.0...v2.10.0) (2026-06-30)
 
 

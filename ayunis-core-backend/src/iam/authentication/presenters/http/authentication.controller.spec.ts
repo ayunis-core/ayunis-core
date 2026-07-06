@@ -15,6 +15,8 @@ import { ActiveUser } from '../../domain/active-user.entity';
 import { AuthTokens } from '../../domain/auth-tokens.entity';
 import { HttpStatus } from '@nestjs/common';
 import type { UUID } from 'crypto';
+import { RATE_LIMIT_KEY } from '../../../authorization/application/decorators/rate-limit.decorator';
+import type { RateLimitOptions } from '../../../authorization/application/decorators/rate-limit.decorator';
 
 describe('AuthenticationController', () => {
   let controller: AuthenticationController;
@@ -69,6 +71,29 @@ describe('AuthenticationController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  describe('rate limiting', () => {
+    it('should rate limit the register endpoint to prevent automated account creation abuse', () => {
+      const options = Reflect.getMetadata(
+        RATE_LIMIT_KEY,
+        controller.register,
+      ) as RateLimitOptions | undefined;
+
+      expect(options).toBeDefined();
+      expect(options?.limit).toBe(5);
+      expect(options?.windowMs).toBe(60 * 60 * 1000);
+    });
+
+    it('should rate limit the login endpoint to prevent credential brute-force', () => {
+      const options = Reflect.getMetadata(RATE_LIMIT_KEY, controller.login) as
+        | RateLimitOptions
+        | undefined;
+
+      expect(options).toBeDefined();
+      expect(options?.limit).toBe(10);
+      expect(options?.windowMs).toBe(15 * 60 * 1000);
+    });
   });
 
   describe('me', () => {

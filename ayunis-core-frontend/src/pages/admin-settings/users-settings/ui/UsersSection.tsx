@@ -19,7 +19,15 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/dropdown-menu';
 import { Button } from '@/shared/ui/shadcn/button';
-import { MoreHorizontal, Edit, Trash2, UserCheck, Mail } from 'lucide-react';
+import {
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  UserCheck,
+  Mail,
+  Coins,
+  Ban,
+} from 'lucide-react';
 import { useUserRoleUpdate } from '../api/useUserRoleUpdate';
 import { useUserDelete } from '../api/useUserDelete';
 import { useTriggerPasswordReset } from '../api/useTriggerPasswordReset';
@@ -29,6 +37,12 @@ import type { User } from '../model/openapi';
 import type { UserResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
+import { SetUserCreditLimitDialog } from './SetUserCreditLimitDialog';
+import {
+  useUserCreditLimits,
+  type CreditLimitInfo,
+} from '../api/useUserCreditLimits';
+import { useHasCreditBudget } from '@/features/credit-limits';
 
 interface UsersSectionProps {
   users: User[];
@@ -44,8 +58,25 @@ export default function UsersSection({
   paginationSlot,
 }: Readonly<UsersSectionProps>) {
   const { t } = useTranslation('admin-settings-users');
+  const { t: tCredit } = useTranslation('admin-settings-credit-limits');
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [creditLimitUser, setCreditLimitUser] = useState<User | null>(null);
+  const hasCreditBudget = useHasCreditBudget();
+  const { userLimits, setUserLimit, removeUserLimit, isSaving } =
+    useUserCreditLimits(() => setCreditLimitUser(null));
+
+  const renderCreditLimit = (limit: CreditLimitInfo | undefined) =>
+    limit ? (
+      tCredit('creditLimits.column.value', {
+        used: Math.round(limit.creditsUsed).toLocaleString(),
+        limit: Math.round(limit.monthlyCredits).toLocaleString(),
+      })
+    ) : (
+      <span className="text-muted-foreground">
+        {tCredit('creditLimits.column.none')}
+      </span>
+    );
   const { updateUserRole, isLoading: isUpdatingRole } = useUserRoleUpdate({
     onSuccessCallback: () => setLoadingUserId(null),
   });
@@ -137,6 +168,9 @@ export default function UsersSection({
               <TableHead>{t('users.name')}</TableHead>
               <TableHead>{t('users.email')}</TableHead>
               <TableHead>{t('users.role')}</TableHead>
+              {hasCreditBudget && (
+                <TableHead>{tCredit('creditLimits.column.header')}</TableHead>
+              )}
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -148,6 +182,11 @@ export default function UsersSection({
                 <TableCell>
                   {user.role === 'admin' ? t('users.admin') : t('users.user')}
                 </TableCell>
+                {hasCreditBudget && (
+                  <TableCell>
+                    {renderCreditLimit(userLimits.get(user.id))}
+                  </TableCell>
+                )}
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -186,6 +225,25 @@ export default function UsersSection({
                         <Mail />
                         {t('users.sendPasswordReset')}
                       </DropdownMenuItem>
+                      {hasCreditBudget && (
+                        <DropdownMenuItem
+                          onClick={() => setCreditLimitUser(user)}
+                        >
+                          <Coins />
+                          {userLimits.has(user.id)
+                            ? tCredit('creditLimits.menu.edit')
+                            : tCredit('creditLimits.menu.set')}
+                        </DropdownMenuItem>
+                      )}
+                      {hasCreditBudget && userLimits.has(user.id) && (
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onClick={() => removeUserLimit(user.id)}
+                        >
+                          <Ban />
+                          {tCredit('creditLimits.menu.remove')}
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         variant="destructive"
                         onClick={() => handleDeleteUser(user)}
@@ -204,6 +262,20 @@ export default function UsersSection({
         {paginationSlot}
       </CardContent>
       <EditUserDialog user={editingUser} onClose={() => setEditingUser(null)} />
+      {creditLimitUser && (
+        <SetUserCreditLimitDialog
+          open
+          onOpenChange={(open) => !open && setCreditLimitUser(null)}
+          targetName={creditLimitUser.name}
+          initialMonthlyCredits={
+            userLimits.get(creditLimitUser.id)?.monthlyCredits
+          }
+          onSubmit={(monthlyCredits) =>
+            setUserLimit(creditLimitUser.id, monthlyCredits)
+          }
+          isSaving={isSaving}
+        />
+      )}
     </Card>
   );
 }

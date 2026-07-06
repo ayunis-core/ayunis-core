@@ -3,14 +3,12 @@ import { UsersRepository } from './application/ports/users.repository';
 import { AdminUsersExportRepository } from './application/ports/admin-users-export.repository';
 import { LocalUsersRepository } from './infrastructure/repositories/local/local-users.repository';
 import { LocalAdminUsersExportRepository } from './infrastructure/repositories/local/local-admin-users-export.repository';
-import { ConfigService, ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserRecord } from './infrastructure/repositories/local/schema/user.record';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { HashingModule } from '../hashing/hashing.module';
-import { JwtModule } from '@nestjs/jwt';
-import type { StringValue } from 'ms';
+import { JwtConfigModule } from '../authentication/jwt.module';
 import { EmailsModule } from 'src/common/emails/emails.module';
 import { EmailTemplatesModule } from 'src/common/email-templates/email-templates.module';
 
@@ -68,22 +66,7 @@ import { ExportAdminUsersUseCase } from './application/use-cases/export-admin-us
     HashingModule,
     EmailsModule,
     EmailTemplatesModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>(
-          'auth.jwt.secret',
-          'dev-secret-change-in-production',
-        ),
-        signOptions: {
-          expiresIn: configService.get<StringValue>(
-            'auth.jwt.emailConfirmationExpiresIn',
-            '24h',
-          ),
-        },
-      }),
-    }),
+    JwtConfigModule,
   ],
   controllers: [
     UserController,

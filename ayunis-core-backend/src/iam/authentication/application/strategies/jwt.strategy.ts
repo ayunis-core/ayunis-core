@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
@@ -7,6 +7,7 @@ import { Request } from 'express';
 import { UUID } from 'crypto';
 import { UserRole } from '../../../users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { JWT_SECRET } from '../tokens/jwt-secret.token';
 
 interface JwtPayload {
   sub: UUID;
@@ -22,7 +23,10 @@ interface JwtPayload {
 export class JwtStrategy extends PassportStrategy(Strategy) {
   private readonly logger = new Logger(JwtStrategy.name);
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    @Inject(JWT_SECRET) secret: string,
+  ) {
     super({
       jwtFromRequest: (req: Request) => {
         const cookieName = configService.get<string>(
@@ -39,10 +43,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         return token;
       },
       ignoreExpiration: false,
-      secretOrKey: configService.get(
-        'auth.jwt.secret',
-        'dev-secret-change-in-production',
-      ),
+      secretOrKey: secret,
     });
   }
 
