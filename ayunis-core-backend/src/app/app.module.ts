@@ -21,6 +21,7 @@ import { McpModule } from '../domain/mcp/mcp.module';
 import { MarketplaceModule } from '../domain/marketplace/marketplace.module';
 import { UsageModule } from '../domain/usage/usage.module';
 import { TranscriptionsModule } from '../domain/transcriptions/transcriptions.module';
+import { SpeechModule } from '../domain/speech/speech.module';
 import { ChatSettingsModule } from '../domain/chat-settings/chat-settings.module';
 import { AnonymizationSettingsModule } from '../domain/anonymization-settings/anonymization-settings.module';
 import { RetentionPoliciesModule } from '../domain/retention-policies/retention-policies.module';
@@ -128,6 +129,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     MarketplaceModule,
     UsageModule,
     TranscriptionsModule,
+    SpeechModule,
     ChatSettingsModule,
     AnonymizationSettingsModule,
     RetentionPoliciesModule,

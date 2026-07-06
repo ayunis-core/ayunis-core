@@ -8,6 +8,10 @@ const mistralConfig = () => ({
   // voxtral-small only supports audio chat, not /v1/audio/transcriptions.
   transcriptionModel:
     process.env.MISTRAL_TRANSCRIPTION_MODEL ?? 'voxtral-mini-latest',
+  ttsModel: process.env.MISTRAL_TTS_MODEL ?? 'voxtral-mini-tts-latest',
+  // Mistral requires a voice on every speech request; presets are listed
+  // at GET /v1/audio/voices (English and French only as of 2026-07)
+  ttsVoice: process.env.MISTRAL_TTS_VOICE ?? 'en_paul_neutral',
 });
 
 export const modelsConfig = registerAs('models', () => ({
