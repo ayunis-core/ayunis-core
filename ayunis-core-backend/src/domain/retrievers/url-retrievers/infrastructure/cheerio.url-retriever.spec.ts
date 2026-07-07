@@ -73,7 +73,7 @@ function streamedResponse({
 }
 
 function makeHandler(): CheerioUrlRetrieverHandler {
-  const config = { get: () => 5000 } as unknown as ConfigService;
+  const config = { getOrThrow: () => 5000 } as unknown as ConfigService;
   return new CheerioUrlRetrieverHandler(config);
 }
 
@@ -81,7 +81,7 @@ function makeHandlerWithCap(
   maxDownloadBytes: number,
 ): CheerioUrlRetrieverHandler {
   const config = {
-    get: (key: string) =>
+    getOrThrow: (key: string) =>
       key === 'url.maxDownloadBytes' ? maxDownloadBytes : 5000,
   } as unknown as ConfigService;
   const handler = new CheerioUrlRetrieverHandler(config);
@@ -91,7 +91,7 @@ function makeHandlerWithCap(
 
 function makeHandlerWithTimeout(timeoutMs: number): CheerioUrlRetrieverHandler {
   const config = {
-    get: (key: string) =>
+    getOrThrow: (key: string) =>
       key === 'url.timeout' ? timeoutMs : 25 * 1024 * 1024,
   } as unknown as ConfigService;
   const handler = new CheerioUrlRetrieverHandler(config);

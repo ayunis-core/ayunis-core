@@ -23,10 +23,6 @@ const MAX_REDIRECTS = 5;
 // value can never disable the abort timer that bounds the whole fetch.
 const MAX_TIMEOUT_MS = 60_000;
 const ALLOWED_PROTOCOLS = new Set(['http:', 'https:']);
-// Hard cap on how many bytes we buffer from a fetched URL. Pointing the crawler
-// at a very large PDF (or any oversized payload) would otherwise buffer the whole
-// response in memory and risk an OOM across shared infrastructure (AYC-266).
-const DEFAULT_MAX_DOWNLOAD_BYTES = 25 * 1024 * 1024; // 25 MB
 
 @Injectable()
 export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
@@ -34,12 +30,15 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
   private readonly defaultTimeout: number;
   private readonly maxDownloadBytes: number;
 
+  // `url.timeout` and `url.maxDownloadBytes` always resolve — the `url` config
+  // factory applies its own defaults (5s / 25 MB) — so read them with
+  // getOrThrow rather than duplicating those defaults as dead fallbacks here.
   constructor(private readonly configService: ConfigService) {
     super();
-    this.defaultTimeout = this.configService.get<number>('url.timeout') ?? 5000;
-    this.maxDownloadBytes =
-      this.configService.get<number>('url.maxDownloadBytes') ??
-      DEFAULT_MAX_DOWNLOAD_BYTES;
+    this.defaultTimeout = this.configService.getOrThrow<number>('url.timeout');
+    this.maxDownloadBytes = this.configService.getOrThrow<number>(
+      'url.maxDownloadBytes',
+    );
   }
 
   async fetch(input: UrlRetrieverInput): Promise<RawUrlResponse> {
