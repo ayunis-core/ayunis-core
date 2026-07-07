@@ -78,7 +78,7 @@
     "ajv-formats": "^3.0.1",
     "axios": "^1.18.1",
     "bcrypt": "^5.1.1",
-    "bullmq": "^5.79.2",
+    "bullmq": "^5.79.3",
     "cheerio": "^1.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
@@ -155,7 +155,7 @@
     "globals": "^16.0.0",
     "jest": "^30.3.0",
     "jszip": "^3.10.1",
-    "knip": "^6.24.0",
+    "knip": "^6.25.0",
     "madge": "^8.0.0",
     "orval": "^7.3.0",
     "prettier": "^3.9.4",
@@ -163,7 +163,7 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.62.1"
+    "typescript-eslint": "^8.63.0"
   },
   "jest": {
     "moduleFileExtensions": [
