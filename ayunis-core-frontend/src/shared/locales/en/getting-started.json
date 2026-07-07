@@ -4,7 +4,7 @@
     "description": "Discover what Ayunis Core can do for you.",
     "checkboxHint": "Check off completed steps to track your progress.",
     "hide": "Hide getting started",
-    "hideHint": "You can find this page anytime under Settings → Getting Started.",
+    "hideHint": "You can find this page anytime under Account Settings → Getting Started.",
     "show": "Show again in sidebar"
   },
   "progress": {

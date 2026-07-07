@@ -9,6 +9,13 @@
     "marketplace": "Marketplace",
     "academy": "Academy",
     "gettingStarted": "Getting Started",
+    "hideGettingStarted": "Hide getting started",
+    "hideGettingStartedConfirm": {
+      "title": "Hide getting started?",
+      "description": "You can always access this page under Account Settings → Getting Started.",
+      "confirmText": "Hide",
+      "cancelText": "Cancel"
+    },
     "accountSettings": "Account Settings",
     "adminSettings": "Admin Settings",
     "superAdminSettings": "Super Admin Settings",

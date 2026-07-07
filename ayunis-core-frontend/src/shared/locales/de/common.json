@@ -9,6 +9,13 @@
     "marketplace": "Marketplace",
     "academy": "Academy",
     "gettingStarted": "Erste Schritte",
+    "hideGettingStarted": "Erste Schritte ausblenden",
+    "hideGettingStartedConfirm": {
+      "title": "Erste Schritte ausblenden?",
+      "description": "Sie können diese Seite jederzeit unter Konto-Einstellungen → Erste Schritte aufrufen.",
+      "confirmText": "Ausblenden",
+      "cancelText": "Abbrechen"
+    },
     "accountSettings": "Konto-Einstellungen",
     "adminSettings": "Admin-Einstellungen",
     "superAdminSettings": "Super Admin-Einstellungen",
