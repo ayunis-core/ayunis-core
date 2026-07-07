@@ -1,5 +1,6 @@
 import { TemplateRendererPort } from '../../application/ports/template-renderer.port';
 import {
+  BudgetWarningTemplate,
   EmailConfirmationTemplate,
   EmailTemplate,
   InvitationTemplate,
@@ -23,6 +24,10 @@ import {
   setInitialPasswordHtml,
   setInitialPasswordText,
 } from './templates/set-initial-password.template';
+import {
+  budgetWarningHtml,
+  budgetWarningText,
+} from './templates/budget-warning.template';
 import { RenderedEmailContent } from '../../domain/rendered-email-content.entity';
 
 @Injectable()
@@ -50,6 +55,12 @@ export class MjmlHandler implements TemplateRendererPort {
       return new RenderedEmailContent({
         html: setInitialPasswordHtml(template.content).html,
         text: setInitialPasswordText(template.content),
+      });
+    }
+    if (template instanceof BudgetWarningTemplate) {
+      return new RenderedEmailContent({
+        html: budgetWarningHtml(template.content).html,
+        text: budgetWarningText(template.content),
       });
     }
     throw new Error(`Template type ${template.templateType} not supported`);

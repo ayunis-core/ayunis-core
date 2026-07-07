@@ -50,6 +50,24 @@ export interface SetInitialPasswordTemplateContent {
   bannerUrl: string;
 }
 
+export type BudgetWarningScope = 'org' | 'user' | 'team';
+
+export interface BudgetWarningTemplateContent {
+  recipientName: string | null;
+  recipientEmail: string;
+  scope: BudgetWarningScope;
+  targetName: string;
+  threshold: string;
+  percentUsed: string;
+  creditsUsed: string;
+  monthlyCredits: string;
+  productName: string;
+  currentYear: string;
+  logoUrl: string;
+  teamUrl: string;
+  settingsUrl: string;
+}
+
 export class EmailConfirmationTemplate extends EmailTemplate {
   constructor(public readonly content: EmailConfirmationTemplateContent) {
     super(EmailTemplateType.EMAIL_CONFIRMATION, {
@@ -97,6 +115,24 @@ export class SetInitialPasswordTemplate extends EmailTemplate {
       userName: content.userName,
       productName: content.productName,
       currentYear: content.currentYear,
+    });
+  }
+}
+
+export class BudgetWarningTemplate extends EmailTemplate {
+  constructor(public readonly content: BudgetWarningTemplateContent) {
+    super(EmailTemplateType.BUDGET_WARNING, {
+      recipientName: content.recipientName,
+      recipientEmail: content.recipientEmail,
+      scope: content.scope,
+      targetName: content.targetName,
+      threshold: content.threshold,
+      percentUsed: content.percentUsed,
+      creditsUsed: content.creditsUsed,
+      monthlyCredits: content.monthlyCredits,
+      productName: content.productName,
+      currentYear: content.currentYear,
+      settingsUrl: content.settingsUrl,
     });
   }
 }
