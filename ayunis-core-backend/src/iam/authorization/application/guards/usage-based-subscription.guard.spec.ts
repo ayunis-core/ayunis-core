@@ -5,6 +5,7 @@ import type { IsUsageBasedSubscriptionUseCase } from 'src/iam/subscriptions/appl
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import { REQUIRE_USAGE_BASED_SUBSCRIPTION_KEY } from '../decorators/usage-based-subscription.decorator';
 import { UsageBasedSubscriptionGuard } from './usage-based-subscription.guard';
+import { SubscriptionRequiredError } from '../authorization.errors';
 
 describe('UsageBasedSubscriptionGuard', () => {
   const orgId = '11111111-1111-1111-1111-111111111111' as UUID;
@@ -44,11 +45,18 @@ describe('UsageBasedSubscriptionGuard', () => {
     await expect(guard.canActivate(contextFor({ orgId }))).resolves.toBe(true);
   });
 
-  it('denies when required and the org is not usage-based', async () => {
+  it('throws a usage-based SubscriptionRequiredError when required and the org is not usage-based', async () => {
     reflectorValues[REQUIRE_USAGE_BASED_SUBSCRIPTION_KEY] = true;
     isUsageBased.execute.mockResolvedValue(false);
 
-    await expect(guard.canActivate(contextFor({ orgId }))).resolves.toBe(false);
+    const promise = guard.canActivate(contextFor({ orgId }));
+
+    await expect(promise).rejects.toBeInstanceOf(SubscriptionRequiredError);
+    await expect(promise).rejects.toMatchObject({
+      code: 'SUBSCRIPTION_REQUIRED',
+      statusCode: 403,
+      message: expect.stringContaining('usage-based'),
+    });
   });
 
   it('denies when required but there is no principal', async () => {

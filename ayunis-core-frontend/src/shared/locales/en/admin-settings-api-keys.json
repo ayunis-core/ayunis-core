@@ -42,7 +42,8 @@
     "createApiKey": {
       "success": "API key created",
       "error": "Failed to create API key",
-      "expirationInPast": "Expiration date must be in the future"
+      "expirationInPast": "Expiration date must be in the future",
+      "subscriptionRequired": "API keys require a usage-based subscription. Contact your administrator to upgrade."
     },
     "revokeApiKey": {
       "title": "Revoke API key",

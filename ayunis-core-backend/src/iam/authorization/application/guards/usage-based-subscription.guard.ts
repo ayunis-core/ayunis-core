@@ -8,12 +8,15 @@ import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import type { UUID } from 'crypto';
 
+import { ApplicationError } from 'src/common/errors/base.error';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import type { ApiKeyPrincipal } from 'src/iam/authentication/application/strategies/api-key.strategy';
 import { IsUsageBasedSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/is-usage-based-subscription/is-usage-based-subscription.query';
 import { IsUsageBasedSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/is-usage-based-subscription/is-usage-based-subscription.use-case';
+import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 
+import { SubscriptionRequiredError } from '../authorization.errors';
 import { REQUIRE_USAGE_BASED_SUBSCRIPTION_KEY } from '../decorators/usage-based-subscription.decorator';
 
 type RequestPrincipal = ActiveUser | ApiKeyPrincipal;
@@ -90,10 +93,15 @@ export class UsageBasedSubscriptionGuard implements CanActivate {
         this.logger.warn(
           `Access denied: org ${orgId} has no active usage-based subscription`,
         );
+        throw new SubscriptionRequiredError(SubscriptionType.USAGE_BASED);
       }
 
       return isUsageBased;
     } catch (error) {
+      if (error instanceof ApplicationError) {
+        throw error;
+      }
+
       this.logger.error(
         `Failed to check usage-based subscription for org ${orgId}`,
         error instanceof Error ? error.stack : undefined,

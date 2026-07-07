@@ -1,4 +1,5 @@
 import type { ExecutionContext } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
@@ -13,6 +14,7 @@ import { REQUIRE_SUBSCRIPTION_KEY } from '../decorators/subscription.decorator';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import { TrialNotFoundError } from 'src/iam/trials/application/trial.errors';
 import { Trial } from 'src/iam/trials/domain/trial.entity';
+import { SubscriptionRequiredError } from '../authorization.errors';
 
 interface ContextOverrides {
   options?: unknown;
@@ -160,7 +162,7 @@ describe('SubscriptionGuard', () => {
       });
     });
 
-    it('denies when subscription does not match the filter AND trial is exhausted', async () => {
+    it('throws a usage-based SubscriptionRequiredError when the filter is unmet AND trial is exhausted', async () => {
       hasActiveSubscriptionUseCase.execute.mockResolvedValue({
         hasActiveSubscription: false,
         subscriptionType: null,
@@ -174,13 +176,44 @@ describe('SubscriptionGuard', () => {
         user: { id: userId, orgId },
       });
 
-      const result = await makeGuard(reflector).canActivate(context);
-
-      expect(result).toBe(false);
+      await expect(
+        makeGuard(reflector).canActivate(context),
+      ).rejects.toMatchObject({
+        code: 'SUBSCRIPTION_REQUIRED',
+        statusCode: 403,
+        message: expect.stringContaining('usage-based'),
+      });
       expect(request.subscriptionContext).toBeUndefined();
     });
 
-    it('denies when GetTrial throws TrialNotFoundError', async () => {
+    it('throws an active-subscription SubscriptionRequiredError for an untyped gate', async () => {
+      hasActiveSubscriptionUseCase.execute.mockResolvedValue({
+        hasActiveSubscription: false,
+        subscriptionType: null,
+      });
+      getTrialUseCase.execute.mockResolvedValue(
+        new Trial({ orgId, messagesSent: 10, maxMessages: 10 }),
+      );
+
+      const { context, reflector } = createContext({
+        options: {},
+        user: { id: userId, orgId },
+      });
+
+      await expect(
+        makeGuard(reflector).canActivate(context),
+      ).rejects.toMatchObject({
+        code: 'SUBSCRIPTION_REQUIRED',
+        message: 'This feature requires an active subscription.',
+      });
+    });
+
+    it('denies at warn (not error) with SubscriptionRequiredError when the org has no trial', async () => {
+      const errorSpy = jest
+        .spyOn(Logger.prototype, 'error')
+        .mockImplementation();
+      const warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+
       hasActiveSubscriptionUseCase.execute.mockResolvedValue({
         hasActiveSubscription: false,
         subscriptionType: null,
@@ -192,9 +225,43 @@ describe('SubscriptionGuard', () => {
         user: { id: userId, orgId },
       });
 
+      await expect(
+        makeGuard(reflector).canActivate(context),
+      ).rejects.toBeInstanceOf(SubscriptionRequiredError);
+      // A "no trial" denial is a normal authz decision: warn, never error.
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Access denied: no trial found',
+        expect.objectContaining({ orgId }),
+      );
+      expect(errorSpy).not.toHaveBeenCalled();
+
+      errorSpy.mockRestore();
+      warnSpy.mockRestore();
+    });
+
+    it('logs at error and denies when the trial lookup fails unexpectedly', async () => {
+      const errorSpy = jest
+        .spyOn(Logger.prototype, 'error')
+        .mockImplementation();
+
+      hasActiveSubscriptionUseCase.execute.mockResolvedValue({
+        hasActiveSubscription: false,
+        subscriptionType: null,
+      });
+      getTrialUseCase.execute.mockRejectedValue(new Error('db unavailable'));
+
+      const { context, reflector } = createContext({
+        options: {},
+        user: { id: userId, orgId },
+      });
+
       const result = await makeGuard(reflector).canActivate(context);
 
+      // Only TrialNotFoundError is graceful; a real fault still surfaces at error.
       expect(result).toBe(false);
+      expect(errorSpy).toHaveBeenCalled();
+
+      errorSpy.mockRestore();
     });
 
     it('grants access on the unfiltered form when any active subscription exists', async () => {
@@ -255,7 +322,7 @@ describe('SubscriptionGuard', () => {
       expect(request.subscriptionContext?.hasRemainingTrialMessages).toBe(true);
     });
 
-    it('denies when seat-only and trial-exhausted under a usage-based filter', async () => {
+    it('denies (throws SubscriptionRequiredError) when seat-only and trial-exhausted under a usage-based filter', async () => {
       hasActiveSubscriptionUseCase.execute.mockResolvedValue({
         hasActiveSubscription: false,
         subscriptionType: null,
@@ -269,9 +336,9 @@ describe('SubscriptionGuard', () => {
         user: { apiKeyId, orgId },
       });
 
-      const result = await makeGuard(reflector).canActivate(context);
-
-      expect(result).toBe(false);
+      await expect(
+        makeGuard(reflector).canActivate(context),
+      ).rejects.toBeInstanceOf(SubscriptionRequiredError);
     });
   });
 });

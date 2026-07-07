@@ -13,6 +13,9 @@ import { HasActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/
 import { HasActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.query';
 import { GetTrialUseCase } from 'src/iam/trials/application/use-cases/get-trial/get-trial.use-case';
 import { GetTrialQuery } from 'src/iam/trials/application/use-cases/get-trial/get-trial.query';
+import { TrialNotFoundError } from 'src/iam/trials/application/trial.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
+import { SubscriptionRequiredError } from '../authorization.errors';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import {
   REQUIRE_SUBSCRIPTION_KEY,
@@ -34,6 +37,8 @@ interface GuardPrincipal {
   userId?: UUID;
   apiKeyId?: UUID;
 }
+
+type Trial = Awaited<ReturnType<GetTrialUseCase['execute']>>;
 
 @Injectable()
 export class SubscriptionGuard implements CanActivate {
@@ -85,6 +90,14 @@ export class SubscriptionGuard implements CanActivate {
       requiredType: options.type,
     });
 
+    return this.evaluateSubscriptionAccess(principal, options, request);
+  }
+
+  private async evaluateSubscriptionAccess(
+    principal: GuardPrincipal,
+    options: RequireSubscriptionOptions,
+    request: RequestWithSubscriptionContext,
+  ): Promise<boolean> {
     try {
       const { hasActiveSubscription } =
         await this.hasActiveSubscriptionUseCase.execute(
@@ -105,56 +118,81 @@ export class SubscriptionGuard implements CanActivate {
         return true;
       }
 
-      this.logger.debug('No matching subscription, checking trial capacity', {
-        orgId: principal.orgId,
-      });
-
-      const trial = await this.getTrialUseCase.execute(
-        new GetTrialQuery(principal.orgId),
-      );
-
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive guard for runtime safety
-      if (!trial) {
-        this.logger.warn('Access denied: no trial found', {
-          orgId: principal.orgId,
-        });
-
-        return false;
-      }
-
-      const hasRemainingMessages = trial.messagesSent < trial.maxMessages;
-      const remainingMessages = trial.maxMessages - trial.messagesSent;
-
-      if (hasRemainingMessages) {
-        this.logger.debug('Access granted: trial has remaining messages', {
-          orgId: principal.orgId,
-          messagesSent: trial.messagesSent,
-          maxMessages: trial.maxMessages,
-          remainingMessages,
-        });
-
-        request.subscriptionContext = {
-          hasActiveSubscription: false,
-          hasRemainingTrialMessages: true,
-        };
-
+      const grantedByTrial = await this.evaluateTrialAccess(principal, request);
+      if (grantedByTrial) {
         return true;
       }
 
-      this.logger.warn('Access denied: trial exhausted', {
-        orgId: principal.orgId,
-        messagesSent: trial.messagesSent,
-        maxMessages: trial.maxMessages,
-      });
-
-      return false;
+      throw new SubscriptionRequiredError(options.type);
     } catch (error) {
+      // Denials (SubscriptionRequiredError) and other domain errors are normal
+      // outcomes: let them surface so ApplicationErrorFilter renders a coded
+      // 403. Only truly unexpected failures fall through to the error log.
+      if (error instanceof ApplicationError) {
+        throw error;
+      }
+
       this.logger.error('Error checking subscription/trial', {
         error: error instanceof Error ? error.message : 'Unknown error',
         orgId: principal.orgId,
       });
 
       return false;
+    }
+  }
+
+  private async evaluateTrialAccess(
+    principal: GuardPrincipal,
+    request: RequestWithSubscriptionContext,
+  ): Promise<boolean> {
+    this.logger.debug('No matching subscription, checking trial capacity', {
+      orgId: principal.orgId,
+    });
+
+    const trial = await this.getTrialOrNull(principal.orgId);
+
+    if (!trial) {
+      this.logger.warn('Access denied: no trial found', {
+        orgId: principal.orgId,
+      });
+
+      return false;
+    }
+
+    if (trial.messagesSent < trial.maxMessages) {
+      this.logger.debug('Access granted: trial has remaining messages', {
+        orgId: principal.orgId,
+        messagesSent: trial.messagesSent,
+        maxMessages: trial.maxMessages,
+        remainingMessages: trial.maxMessages - trial.messagesSent,
+      });
+
+      request.subscriptionContext = {
+        hasActiveSubscription: false,
+        hasRemainingTrialMessages: true,
+      };
+
+      return true;
+    }
+
+    this.logger.warn('Access denied: trial exhausted', {
+      orgId: principal.orgId,
+      messagesSent: trial.messagesSent,
+      maxMessages: trial.maxMessages,
+    });
+
+    return false;
+  }
+
+  private async getTrialOrNull(orgId: UUID): Promise<Trial | null> {
+    try {
+      return await this.getTrialUseCase.execute(new GetTrialQuery(orgId));
+    } catch (error) {
+      if (error instanceof TrialNotFoundError) {
+        return null;
+      }
+
+      throw error;
     }
   }
 
