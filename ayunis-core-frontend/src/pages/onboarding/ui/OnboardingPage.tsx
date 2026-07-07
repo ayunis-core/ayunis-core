@@ -4,14 +4,12 @@ import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayou
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import OnboardingContent from './OnboardingContent';
-import OnboardingPageBg from './OnboardingPageBg';
 
 export default function OnboardingPage() {
   const { t } = useTranslation('getting-started');
 
   return (
     <AppLayout>
-      <OnboardingPageBg />
       <ContentAreaLayout
         contentHeader={
           <ContentAreaHeader

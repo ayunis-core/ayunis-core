@@ -73,7 +73,7 @@ export default function OnboardingContent() {
 
   if (isOnboardingLoading) {
     return (
-      <div className="relative z-10 max-w-2xl mx-auto py-8 space-y-6">
+      <div className="max-w-2xl mx-auto py-8 space-y-6">
         <div className="text-center space-y-3">
           <div className="flex items-center justify-center">
             <img
@@ -98,7 +98,7 @@ export default function OnboardingContent() {
   }
 
   return (
-    <div className="relative z-10 max-w-2xl mx-auto py-8 space-y-6">
+    <div className="max-w-2xl mx-auto py-8 space-y-6">
       <div className="text-center space-y-3">
         <div className="flex items-center justify-center">
           <img
