@@ -33,6 +33,8 @@ export function useCreateApiKey(
             setValidationErrors(form, errors, t, 'apiKeys.validation');
           } else if (code === 'API_KEY_EXPIRATION_IN_PAST') {
             showError(t('apiKeys.createApiKey.expirationInPast'));
+          } else if (code === 'SUBSCRIPTION_REQUIRED') {
+            showError(t('apiKeys.createApiKey.subscriptionRequired'));
           } else {
             showError(t('apiKeys.createApiKey.error'));
           }

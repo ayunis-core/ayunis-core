@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   RequestTimeoutException,
   UnprocessableEntityException,
+  PayloadTooLargeException,
 } from '@nestjs/common';
 
 /**
@@ -18,6 +19,7 @@ export enum UrlRetrieverErrorCode {
   PARSING_ERROR = 'PARSING_ERROR',
   UNSUPPORTED_CONTENT_TYPE = 'UNSUPPORTED_CONTENT_TYPE',
   TOO_MANY_REDIRECTS = 'TOO_MANY_REDIRECTS',
+  CONTENT_TOO_LARGE = 'CONTENT_TOO_LARGE',
 }
 
 /**
@@ -46,6 +48,12 @@ export abstract class UrlRetrieverError extends ApplicationError {
         });
       case 408:
         return new RequestTimeoutException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      case 413:
+        return new PayloadTooLargeException({
           code: this.code,
           message: this.message,
           ...(this.metadata && { metadata: this.metadata }),
@@ -130,6 +138,18 @@ export class UrlRetrieverUnsupportedContentTypeError extends UrlRetrieverError {
       metadata,
     );
     this.name = 'UrlRetrieverUnsupportedContentTypeError';
+  }
+}
+
+export class UrlRetrieverContentTooLargeError extends UrlRetrieverError {
+  constructor(url: string, maxBytes: number, metadata?: ErrorMetadata) {
+    super(
+      `Content from '${url}' exceeds the maximum allowed size of ${maxBytes} bytes`,
+      UrlRetrieverErrorCode.CONTENT_TOO_LARGE,
+      413,
+      metadata,
+    );
+    this.name = 'UrlRetrieverContentTooLargeError';
   }
 }
 

@@ -17,6 +17,7 @@ import { metricsConfig } from './metrics.config';
 import { redisConfig } from './redis.config';
 import { gotenbergConfig } from './gotenberg.config';
 import { retentionConfig } from './retention.config';
+import { urlConfig } from './url.config';
 
 /**
  * Config factories for every Nest entrypoint's ConfigModule.forRoot.
@@ -48,4 +49,5 @@ export const rootConfigs = [
   redisConfig,
   gotenbergConfig,
   retentionConfig,
+  urlConfig,
 ];
