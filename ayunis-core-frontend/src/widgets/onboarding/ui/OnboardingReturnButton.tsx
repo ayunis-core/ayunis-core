@@ -2,8 +2,8 @@ import { useNavigate, useLocation } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/shared/ui/shadcn/button';
-import { useOnboardingTour } from '@/features/onboarding-tour';
-import { useOnboarding } from '@/features/onboarding-progress';
+import { useOnboardingTour } from '../model/onboardingTourContext';
+import { useOnboarding } from '../api/useOnboarding';
 
 const ONBOARDING_PATH = '/getting-started';
 

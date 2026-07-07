@@ -10,8 +10,7 @@ import { useVoiceRecording } from '../hooks/useVoiceRecording';
 import { useTranscribe } from '../api/useTranscribe';
 import { showError } from '@/shared/lib/toast';
 import { cn } from '@/shared/lib/shadcn/utils';
-import { TOUR_TARGET } from '@/shared/config/tour-targets';
-import { OnboardingTourTarget } from '@/features/onboarding-tour';
+import { TOUR_TARGET, OnboardingTourTarget } from '@/widgets/onboarding';
 
 interface MicrophoneButtonProps {
   onTranscriptionComplete: (text: string) => void;

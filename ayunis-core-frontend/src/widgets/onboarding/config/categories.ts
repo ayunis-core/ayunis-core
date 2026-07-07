@@ -1,4 +1,4 @@
-import { TOUR_TARGET, type TourTargetName } from '@/shared/config/tour-targets';
+import { TOUR_TARGET, type TourTargetName } from './tour-targets';
 
 export const ACTION_TYPE = {
   prompt: 'prompt',

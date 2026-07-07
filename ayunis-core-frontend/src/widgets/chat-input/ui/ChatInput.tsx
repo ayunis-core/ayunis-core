@@ -1,8 +1,7 @@
 import { useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
-import { OnboardingTourTarget } from '@/features/onboarding-tour';
-import { TOUR_TARGET } from '@/shared/config/tour-targets';
+import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useTranslation } from 'react-i18next';
 import type {

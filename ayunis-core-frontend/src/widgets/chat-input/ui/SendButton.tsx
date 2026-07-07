@@ -6,8 +6,7 @@ import {
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
 import { useTranslation } from 'react-i18next';
-import { TOUR_TARGET } from '@/shared/config/tour-targets';
-import { OnboardingTourTarget } from '@/features/onboarding-tour';
+import { TOUR_TARGET, OnboardingTourTarget } from '@/widgets/onboarding';
 
 interface SendButtonProps {
   inFlight: boolean;
