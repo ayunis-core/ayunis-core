@@ -1,8 +1,7 @@
 import { SettingsLayout } from '../../settings-layout';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { OnboardingTourTarget } from '@/features/onboarding-tour';
-import { TOUR_TARGET } from '@/shared/config/tour-targets';
+import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import { ThemeSettingsCard } from './ThemeSettingsCard';
 import { LanguageSettingsCard } from './LanguageSettingsCard';
 

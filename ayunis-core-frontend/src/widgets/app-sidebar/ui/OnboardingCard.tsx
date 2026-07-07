@@ -4,10 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Progress } from '@/shared/ui/shadcn/progress';
 import { useMe } from '../api/useMe';
 import { MeResponseDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import {
-  useOnboarding,
-  useOnboardingProgress,
-} from '@/features/onboarding-progress';
+import { useOnboarding, useOnboardingProgress } from '@/widgets/onboarding';
 
 export function OnboardingCard() {
   const { t } = useTranslation('common');

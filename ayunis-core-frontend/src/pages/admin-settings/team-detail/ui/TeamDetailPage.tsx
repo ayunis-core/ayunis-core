@@ -3,8 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Users } from 'lucide-react';
 import { Badge } from '@/shared/ui/shadcn/badge';
 import { Button } from '@/shared/ui/shadcn/button';
-import { OnboardingTourTarget } from '@/features/onboarding-tour';
-import { TOUR_TARGET } from '@/shared/config/tour-targets';
+import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import {
   Card,
   CardContent,

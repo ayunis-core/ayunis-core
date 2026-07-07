@@ -1,4 +1,4 @@
-import type { OnboardingCategory } from '@/features/onboarding-progress';
+import type { OnboardingCategory } from '@/widgets/onboarding';
 import { useTranslation } from 'react-i18next';
 import { ExternalLink } from 'lucide-react';
 import {

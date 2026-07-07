@@ -4,8 +4,10 @@ import {
   redirect,
   isRedirect,
 } from '@tanstack/react-router';
-import { OnboardingReturnButton } from '@/widgets/onboarding-return-button';
-import { OnboardingTourProvider } from '@/features/onboarding-tour';
+import {
+  OnboardingReturnButton,
+  OnboardingTourProvider,
+} from '@/widgets/onboarding';
 import {
   authenticationControllerMe,
   getAuthenticationControllerMeQueryKey,

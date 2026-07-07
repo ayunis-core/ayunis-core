@@ -1,4 +1,4 @@
-import type { TourTargetName } from '@/shared/config/tour-targets';
+import type { TourTargetName } from '../config/tour-targets';
 import type { ReactNode } from 'react';
 
 interface OnboardingTourTargetProps {

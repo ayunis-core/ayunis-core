@@ -23,8 +23,7 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
-import { OnboardingTourTarget } from '@/features/onboarding-tour';
-import { TOUR_TARGET } from '@/shared/config/tour-targets';
+import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 
 interface SkillCardProps {
   skill: Skill;

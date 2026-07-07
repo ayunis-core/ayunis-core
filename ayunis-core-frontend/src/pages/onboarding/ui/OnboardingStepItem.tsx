@@ -11,13 +11,14 @@ import { Button } from '@/shared/ui/shadcn/button';
 import { Checkbox } from '@/shared/ui/shadcn/checkbox';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { getHelpCenterUrl } from '@/shared/lib/help-center';
-import { useOnboardingTour } from '@/features/onboarding-tour';
-import { TOUR_TARGET, type TourTargetName } from '@/shared/config/tour-targets';
 import {
+  useOnboardingTour,
+  TOUR_TARGET,
+  type TourTargetName,
   ACTION_TYPE,
   SECONDARY_ACTION_TYPE,
   type OnboardingStep,
-} from '@/features/onboarding-progress';
+} from '@/widgets/onboarding';
 import {
   useKnowledgeBasesControllerFindAll,
   useSkillsControllerFindAll,

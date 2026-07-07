@@ -8,10 +8,7 @@ import { Skeleton } from '@/shared/ui/shadcn/skeleton';
 import { useMe } from '@/widgets/app-sidebar/api/useMe';
 import { MeResponseDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
-import {
-  useOnboarding,
-  useOnboardingProgress,
-} from '@/features/onboarding-progress';
+import { useOnboarding, useOnboardingProgress } from '@/widgets/onboarding';
 import { useUpdateOnboarding } from '../api/useUpdateOnboarding';
 import brandIconDark from '@/shared/assets/brand/brand-icon-round-dark.svg';
 import OnboardingCategoryCard from './OnboardingCategoryCard';
