@@ -90,7 +90,11 @@ export class InvitesController {
   ) {}
 
   @Post()
-  @RateLimit({ limit: 10, windowMs: 15 * 60 * 1000 }) // 10 invites per 15 minutes
+  // Admins onboarding a whole organization can legitimately create many
+  // invitations back-to-back. The previous limit of 10 per 15 minutes blocked
+  // that flow (AYC-409). Keep an upper bound to deter abuse while allowing
+  // realistic bulk onboarding.
+  @RateLimit({ limit: 100, windowMs: 15 * 60 * 1000 }) // 100 invites per 15 minutes
   @ApiOperation({
     summary: 'Create a new invite',
     description:

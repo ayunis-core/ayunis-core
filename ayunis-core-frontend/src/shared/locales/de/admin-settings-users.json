@@ -90,7 +90,8 @@
     "error": "Fehler beim Erstellen der Einladung. Bitte versuchen Sie es erneut.",
     "emailNotAvailable": "Einladung nicht möglich.",
     "userAlreadyExists": "Diese E-Mail-Adresse ist bereits als Benutzer in Ihrer Organisation registriert.",
-    "emailProviderBlacklisted": "Private E-Mail-Adressen (z. B. Gmail, GMX, Web.de, t-online) sind aus Sicherheitsgründen nicht erlaubt. Bitte verwenden Sie eine geschäftliche E-Mail-Adresse."
+    "emailProviderBlacklisted": "Private E-Mail-Adressen (z. B. Gmail, GMX, Web.de, t-online) sind aus Sicherheitsgründen nicht erlaubt. Bitte verwenden Sie eine geschäftliche E-Mail-Adresse.",
+    "rateLimitExceeded": "Sie haben in kurzer Zeit viele Einladungen erstellt. Bitte warten Sie einige Minuten, bevor Sie weitere erstellen."
   },
   "inviteResend": {
     "success": "Einladung erfolgreich erneut gesendet!",
