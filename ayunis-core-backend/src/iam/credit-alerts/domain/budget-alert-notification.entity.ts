@@ -1,42 +1,76 @@
 import { randomUUID, type UUID } from 'crypto';
-import type { BudgetAlertScope } from './value-objects/budget-alert-scope.enum';
+import { BudgetAlertScope } from './value-objects/budget-alert-scope.enum';
 
-/**
- * Idempotency marker recording that org admins were notified about a budget
- * threshold crossing. One row per (org, scope, target, period, threshold);
- * its presence means "already notified", so the daily job never re-sends the
- * same warning within a billing period.
- *
- * `targetId` is the org id for ORG scope and the user/team id otherwise, so it
- * is always set (never null) and can back a single unique index.
- */
-export class BudgetAlertNotification {
-  id: UUID;
+export interface BudgetAlertNotificationParams {
+  id?: UUID;
   orgId: UUID;
-  scope: BudgetAlertScope;
-  targetId: UUID;
   threshold: number;
   periodStart: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
-  constructor(params: {
-    id?: UUID;
-    orgId: UUID;
-    scope: BudgetAlertScope;
-    targetId: UUID;
-    threshold: number;
-    periodStart: Date;
-    createdAt?: Date;
-    updatedAt?: Date;
-  }) {
+export abstract class BudgetAlertNotification {
+  readonly id: UUID;
+  readonly orgId: UUID;
+  readonly threshold: number;
+  readonly periodStart: Date;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+
+  constructor(params: BudgetAlertNotificationParams) {
     this.id = params.id ?? randomUUID();
     this.orgId = params.orgId;
-    this.scope = params.scope;
-    this.targetId = params.targetId;
     this.threshold = params.threshold;
     this.periodStart = params.periodStart;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
+  }
+
+  abstract get scope(): BudgetAlertScope;
+  abstract get targetId(): UUID;
+}
+
+export class OrgBudgetAlertNotification extends BudgetAlertNotification {
+  get scope(): BudgetAlertScope {
+    return BudgetAlertScope.ORG;
+  }
+
+  get targetId(): UUID {
+    return this.orgId;
+  }
+}
+
+export class UserBudgetAlertNotification extends BudgetAlertNotification {
+  readonly userId: UUID;
+
+  constructor(params: BudgetAlertNotificationParams & { userId: UUID }) {
+    super(params);
+    this.userId = params.userId;
+  }
+
+  get scope(): BudgetAlertScope {
+    return BudgetAlertScope.USER;
+  }
+
+  get targetId(): UUID {
+    return this.userId;
+  }
+}
+
+export class TeamBudgetAlertNotification extends BudgetAlertNotification {
+  readonly teamId: UUID;
+
+  constructor(params: BudgetAlertNotificationParams & { teamId: UUID }) {
+    super(params);
+    this.teamId = params.teamId;
+  }
+
+  get scope(): BudgetAlertScope {
+    return BudgetAlertScope.TEAM;
+  }
+
+  get targetId(): UUID {
+    return this.teamId;
   }
 }

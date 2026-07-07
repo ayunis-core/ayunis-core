@@ -1,8 +1,6 @@
 import mjml2html from 'mjml';
-import type {
-  BudgetWarningScope,
-  BudgetWarningTemplateContent,
-} from '../../../domain/email-template.entity';
+import type { BudgetWarningTemplateContent } from '../../../domain/email-template.entity';
+import { BudgetWarningScope } from '../../../domain/value-objects/budget-warning-scope.enum';
 import {
   cta,
   divider,
@@ -14,13 +12,22 @@ import {
   teamSignoff,
 } from './_layout';
 
+// Display names are user input; collapse whitespace so a crafted name cannot
+// inject its own lines into the plain-text email.
+function inlineName(value: string): string {
+  return value.split(/\s+/).filter(Boolean).join(' ');
+}
+
+// Genitive phrases — the body embeds them as "mindestens X% ${phrase} sind aufgebraucht".
 function scopePhrasePlain(
   scope: BudgetWarningScope,
   targetName: string,
 ): string {
-  if (scope === 'user') return `das monatliche Budget von ${targetName}`;
-  if (scope === 'team') return `das monatliche Budget des Teams ${targetName}`;
-  return 'Ihr Organisationsbudget';
+  if (scope === BudgetWarningScope.USER)
+    return `des monatlichen Budgets von ${targetName}`;
+  if (scope === BudgetWarningScope.TEAM)
+    return `des monatlichen Budgets des Teams ${targetName}`;
+  return 'Ihres Organisationsbudgets';
 }
 
 function scopePhraseHtml(
@@ -28,25 +35,28 @@ function scopePhraseHtml(
   targetName: string,
 ): string {
   const safe = escapeText(targetName);
-  if (scope === 'user')
-    return `das monatliche Budget von <strong>${safe}</strong>`;
-  if (scope === 'team')
-    return `das monatliche Budget des Teams <strong>${safe}</strong>`;
-  return 'Ihr <strong>Organisationsbudget</strong>';
+  if (scope === BudgetWarningScope.USER)
+    return `des monatlichen Budgets von <strong>${safe}</strong>`;
+  if (scope === BudgetWarningScope.TEAM)
+    return `des monatlichen Budgets des Teams <strong>${safe}</strong>`;
+  return 'Ihres <strong>Organisationsbudgets</strong>';
 }
 
 export function budgetWarningText(
   template: BudgetWarningTemplateContent,
 ): string {
   const greeting = template.recipientName
-    ? `Hallo ${template.recipientName},`
+    ? `Hallo ${inlineName(template.recipientName)},`
     : 'Hallo,';
-  const phrase = scopePhrasePlain(template.scope, template.targetName);
+  const phrase = scopePhrasePlain(
+    template.scope,
+    inlineName(template.targetName),
+  );
   return `${template.productName} – Budgetwarnung
 
 ${greeting}
 
-mehr als ${template.threshold}% von ${phrase} sind aufgebraucht. Aktuell wurden ${template.percentUsed}% (${template.creditsUsed} von ${template.monthlyCredits} Credits) in diesem Monat verbraucht.
+mindestens ${template.threshold}% ${phrase} sind aufgebraucht. Aktuell wurden ${template.percentUsed}% (${template.creditsUsed} von ${template.monthlyCredits} Credits) in diesem Monat verbraucht.
 
 Sobald das Budget vollständig aufgebraucht ist, können keine weiteren Anfragen mehr ausgeführt werden. Budgets verwalten: ${template.settingsUrl}
 
@@ -67,7 +77,7 @@ export function budgetWarningHtml(template: BudgetWarningTemplateContent) {
     h1('Budgetwarnung'),
     p(greeting),
     p(
-      `mehr als <strong>${template.threshold}%</strong> von ${phrase} sind aufgebraucht. Aktuell wurden <strong>${template.percentUsed}%</strong> (${template.creditsUsed} von ${template.monthlyCredits} Credits) in diesem Monat verbraucht.`,
+      `mindestens <strong>${template.threshold}%</strong> ${phrase} sind aufgebraucht. Aktuell wurden <strong>${template.percentUsed}%</strong> (${template.creditsUsed} von ${template.monthlyCredits} Credits) in diesem Monat verbraucht.`,
     ),
     cta('Budgets verwalten', template.settingsUrl),
     fineprint(
@@ -82,7 +92,7 @@ export function budgetWarningHtml(template: BudgetWarningTemplateContent) {
   return mjml2html(
     renderLayout({
       title: `Budgetwarnung · ${template.productName}`,
-      preheader: `Mehr als ${template.threshold}% des Budgets sind aufgebraucht.`,
+      preheader: `Mindestens ${template.threshold}% des Budgets sind aufgebraucht.`,
       logoUrl: template.logoUrl,
       bodyMjml: body,
       footerEmail: template.recipientEmail,

@@ -22,3 +22,14 @@ export class BudgetWarningEmailSendingFailedError extends CreditAlertError {
     super(message, CreditAlertErrorCode.EMAIL_SENDING_FAILED, 500, metadata);
   }
 }
+
+export class UnexpectedCreditAlertError extends CreditAlertError {
+  constructor(error?: unknown) {
+    super(
+      'Unexpected credit alert error occurred',
+      CreditAlertErrorCode.UNEXPECTED_ERROR,
+      500,
+      error instanceof Error ? { error: error.message } : undefined,
+    );
+  }
+}

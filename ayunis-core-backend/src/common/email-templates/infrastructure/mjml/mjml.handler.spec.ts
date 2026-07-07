@@ -3,6 +3,7 @@ import {
   BudgetWarningTemplate,
   type BudgetWarningTemplateContent,
 } from '../../domain/email-template.entity';
+import { BudgetWarningScope } from '../../domain/value-objects/budget-warning-scope.enum';
 
 describe('MjmlHandler — budget warning', () => {
   const handler = new MjmlHandler();
@@ -10,7 +11,7 @@ describe('MjmlHandler — budget warning', () => {
   const baseContent: BudgetWarningTemplateContent = {
     recipientName: 'Andrea Admin',
     recipientEmail: 'andrea@stadt-musterhausen.de',
-    scope: 'org',
+    scope: BudgetWarningScope.ORG,
     targetName: 'Stadt Musterhausen',
     threshold: '80',
     percentUsed: '83',
@@ -31,8 +32,11 @@ describe('MjmlHandler — budget warning', () => {
     expect(rendered.html).toContain('Budgetwarnung');
     expect(rendered.html).toContain('80%');
     expect(rendered.html).toContain('83%');
-    expect(rendered.html).toContain('Organisationsbudget');
+    expect(rendered.html).toContain('Organisationsbudgets');
     expect(rendered.html).toContain(baseContent.settingsUrl);
+    expect(rendered.text).toContain(
+      'mindestens 80% Ihres Organisationsbudgets',
+    );
     expect(rendered.text).toContain('8.300 von 10.000 Credits');
     expect(rendered.text).toContain(baseContent.settingsUrl);
   });
@@ -41,31 +45,49 @@ describe('MjmlHandler — budget warning', () => {
     const rendered = handler.renderTemplate(
       new BudgetWarningTemplate({
         ...baseContent,
-        scope: 'user',
+        scope: BudgetWarningScope.USER,
         targetName: 'Jane Doe',
         threshold: '50',
         percentUsed: '55',
       }),
     );
 
-    expect(rendered.html).toContain('Budget von <strong>Jane Doe</strong>');
-    expect(rendered.text).toContain('das monatliche Budget von Jane Doe');
+    expect(rendered.html).toContain('Budgets von <strong>Jane Doe</strong>');
+    expect(rendered.text).toContain(
+      'mindestens 50% des monatlichen Budgets von Jane Doe',
+    );
   });
 
   it('names the affected team for the team scope', () => {
     const rendered = handler.renderTemplate(
       new BudgetWarningTemplate({
         ...baseContent,
-        scope: 'team',
+        scope: BudgetWarningScope.TEAM,
         targetName: 'Marketing',
       }),
     );
 
     expect(rendered.html).toContain(
-      'Budget des Teams <strong>Marketing</strong>',
+      'Budgets des Teams <strong>Marketing</strong>',
     );
     expect(rendered.text).toContain(
-      'das monatliche Budget des Teams Marketing',
+      'mindestens 80% des monatlichen Budgets des Teams Marketing',
+    );
+  });
+
+  it('keeps user-controlled names on a single line in the plain-text variant', () => {
+    const rendered = handler.renderTemplate(
+      new BudgetWarningTemplate({
+        ...baseContent,
+        scope: BudgetWarningScope.USER,
+        recipientName: 'Andrea\r\nAdmin',
+        targetName: 'Jane\n\nBitte hier klicken: http://evil.example',
+      }),
+    );
+
+    expect(rendered.text).toContain('Hallo Andrea Admin,');
+    expect(rendered.text).toContain(
+      'Budgets von Jane Bitte hier klicken: http://evil.example sind aufgebraucht',
     );
   });
 });

@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import { BudgetAlertScope } from '../domain/value-objects/budget-alert-scope.enum';
+import { BudgetAlertScope } from '../../domain/value-objects/budget-alert-scope.enum';
 import {
   collectCrossings,
   notificationKey,

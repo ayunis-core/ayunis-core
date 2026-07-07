@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { SendEmailUseCase } from 'src/common/emails/application/use-cases/send-email/send-email.use-case';
 import { RenderTemplateUseCase } from 'src/common/email-templates/application/use-cases/render-template/render-template.use-case';
 import { BudgetWarningTemplate } from 'src/common/email-templates/domain/email-template.entity';
+import { BudgetWarningScope } from 'src/common/email-templates/domain/value-objects/budget-warning-scope.enum';
 import { SendBudgetWarningEmailUseCase } from './send-budget-warning-email.use-case';
 import { SendBudgetWarningEmailCommand } from './send-budget-warning-email.command';
 import { BudgetWarningEmailSendingFailedError } from '../../credit-alerts.errors';
@@ -43,7 +44,7 @@ describe('SendBudgetWarningEmailUseCase', () => {
   const command = new SendBudgetWarningEmailCommand({
     recipientName: 'Andrea Admin',
     recipientEmail: 'andrea@stadt-musterhausen.de',
-    scope: 'user',
+    scope: BudgetWarningScope.USER,
     targetName: 'Jane Doe',
     threshold: 80,
     percentUsed: 82.6,

@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
-import { BUDGET_ALERT_THRESHOLDS } from './credit-alerts.constants';
-import type { BudgetAlertScope } from '../domain/value-objects/budget-alert-scope.enum';
+import type { BudgetAlertScope } from '../../domain/value-objects/budget-alert-scope.enum';
+
+const WARNING_THRESHOLDS = [50, 80] as const;
 
 export interface BudgetTarget {
   scope: BudgetAlertScope;
@@ -13,9 +14,7 @@ export interface BudgetTarget {
 export interface BudgetCrossing {
   target: BudgetTarget;
   percentUsed: number;
-  /** Highest newly-crossed threshold — the one an email is sent for. */
   emailThreshold: number;
-  /** All newly-crossed thresholds — recorded so none re-fire this period. */
   recordThresholds: number[];
 }
 
@@ -54,7 +53,7 @@ function evaluateTarget(
     return null;
   }
   const percentUsed = (target.creditsUsed / target.monthlyCredits) * 100;
-  const recordThresholds = BUDGET_ALERT_THRESHOLDS.filter(
+  const recordThresholds = WARNING_THRESHOLDS.filter(
     (threshold) =>
       percentUsed >= threshold &&
       !sentKeys.has(notificationKey(target.scope, target.targetId, threshold)),
