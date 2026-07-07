@@ -32,7 +32,6 @@ function hasUserEditableFields(
   integration: McpIntegrationResponseDto,
 ): boolean {
   const schema = integration.configSchema as
-    | { userFields?: MarketplaceIntegrationConfigFieldDto[] }
-    | undefined;
+    { userFields?: MarketplaceIntegrationConfigFieldDto[] } | undefined;
   return (schema?.userFields ?? []).some(isUserEditableField);
 }

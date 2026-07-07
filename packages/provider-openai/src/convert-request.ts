@@ -118,13 +118,11 @@ const convertAssistant = (
     .filter((c): c is Extract<MessageContent, { type: 'tool_use' }> => {
       return c.type === 'tool_use';
     })
-    .map(
-      (c): ChatCompletionMessageToolCall => ({
-        id: c.id,
-        type: 'function',
-        function: { name: c.name, arguments: JSON.stringify(c.input) },
-      }),
-    );
+    .map((c): ChatCompletionMessageToolCall => ({
+      id: c.id,
+      type: 'function',
+      function: { name: c.name, arguments: JSON.stringify(c.input) },
+    }));
   const text = joinText(content);
   const message: ChatCompletionAssistantMessageParam = {
     role: 'assistant',

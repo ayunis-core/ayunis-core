@@ -73,8 +73,7 @@ const finishFacet = (reason: GeminiFinishReason | undefined): ProviderChunk => {
 
 const usageFacet = (
   usage:
-    | { promptTokenCount?: number; candidatesTokenCount?: number }
-    | undefined,
+    { promptTokenCount?: number; candidatesTokenCount?: number } | undefined,
 ): ProviderChunk =>
   usage
     ? {

@@ -111,13 +111,11 @@ const convertAssistant = (
     .filter((c): c is Extract<MessageContent, { type: 'tool_use' }> => {
       return c.type === 'tool_use';
     })
-    .map(
-      (c): ToolCall => ({
-        id: c.id,
-        type: 'function',
-        function: { name: c.name, arguments: JSON.stringify(c.input) },
-      }),
-    );
+    .map((c): ToolCall => ({
+      id: c.id,
+      type: 'function',
+      function: { name: c.name, arguments: JSON.stringify(c.input) },
+    }));
   const text = joinText(content);
   const message: Messages & { role: 'assistant' } = {
     role: 'assistant',

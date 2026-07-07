@@ -14,14 +14,12 @@ const config = {
   features: {
     devtools: import.meta.env.MODE !== 'production',
     announcableOrgId: import.meta.env.VITE_ANNOUNCABLE_ORG_ID as
-      | string
-      | undefined,
+      string | undefined,
   },
   analytics: {
     gtmContainerId: import.meta.env.VITE_GTM_CONTAINER_ID as string | undefined,
     usercentricsSettingsId: import.meta.env.VITE_USERCENTRICS_SETTINGS_ID as
-      | string
-      | undefined,
+      string | undefined,
   },
 } as const;
 
