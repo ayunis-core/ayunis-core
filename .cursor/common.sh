@@ -13,9 +13,10 @@ export PGPORT=5432
 export MINIO_DATA="${MINIO_DATA:-/data/minio}"
 
 # Postgres server binaries (initdb, pg_ctl, pg_isready, …) live in a versioned
-# dir. The Dockerfile puts it on PATH via `ENV PATH=…`, but Cursor's runtime
-# shell doesn't inherit that ENV, and `runuser` resets PATH for the target
-# user anyway — so resolve the dir explicitly here and prepend it to PATH.
+# dir that isn't on the default PATH. A Dockerfile `ENV PATH=…` can't help here:
+# Cursor's runtime shell doesn't inherit the image ENV, and `runuser` resets
+# PATH for the target user anyway — so resolve the dir explicitly here and
+# prepend it to PATH.
 PG_BIN=""
 for _d in $(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V); do
   [ -x "$_d/initdb" ] && PG_BIN="$_d"

@@ -29,8 +29,11 @@ RUN install -d /usr/share/postgresql-common/pgdg \
       postgresql-16 postgresql-16-pgvector \
  && rm -rf /var/lib/apt/lists/*
 
-# Put the Postgres 16 binaries (initdb, pg_ctl, psql, pg_isready, …) on PATH.
-ENV PATH="/usr/lib/postgresql/16/bin:${PATH}"
+# NOTE: we intentionally do NOT expose the Postgres 16 server binaries
+# (initdb, pg_ctl, pg_isready, …) via `ENV PATH` here. Cursor's runtime shell
+# does not inherit the image ENV, and `runuser` resets PATH for the postgres
+# user — so an ENV PATH would never reach install.sh/start.sh. common.sh
+# resolves /usr/lib/postgresql/*/bin explicitly instead.
 
 # --- MinIO server binary ---------------------------------------------------
 # NOTE: amd64 assumed (Cursor cloud). For arm64, swap linux-amd64 -> linux-arm64.

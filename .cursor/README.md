@@ -41,7 +41,15 @@ no app-level toggle to disable them — omission just means they aren't running.
 | `environment.json` | `build` (Dockerfile) + `install` + `start` + `terminals` (backend `:3000`, frontend `:3001`). |
 | `install.sh` | One-time, snapshot-cached: `pnpm install`, `build:deps`, init Postgres, write `.env`, migrate, seed. Idempotent. |
 | `start.sh` | Per-boot: launch Postgres/Redis/MinIO, ensure migrate+seed. Self-heals if the snapshot didn't persist state. |
-| `common.sh` | Shared shell helpers sourced by both scripts. |
+| `common.sh` | Shared shell helpers sourced by both scripts. Resolves the Postgres 16 server binaries onto `PATH` explicitly (see note below). |
+
+> **Note — Dockerfile `ENV` is not inherited at runtime.** Cursor's runtime
+> shell does **not** inherit the image's `ENV` (including `PATH`), and `runuser`
+> additionally resets `PATH` for the target user. So the setup scripts must not
+> rely on a Dockerfile `ENV PATH` to expose tools — `common.sh` resolves the
+> Postgres server-binary dir (`/usr/lib/postgresql/*/bin`) itself and forwards
+> `PATH` through `runuser`. Don't re-add `ENV PATH=…` to the Dockerfile expecting
+> it to reach `install.sh`/`start.sh`.
 
 ## Secrets (set in the Cursor dashboard → Settings → Secrets)
 
