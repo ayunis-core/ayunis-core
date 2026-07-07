@@ -81,8 +81,7 @@ function getUserFields(
   integration: McpIntegrationResponseDto,
 ): MarketplaceIntegrationConfigFieldDto[] {
   const schema = integration.configSchema as
-    | { userFields?: MarketplaceIntegrationConfigFieldDto[] }
-    | undefined;
+    { userFields?: MarketplaceIntegrationConfigFieldDto[] } | undefined;
   // System-fixed fields carry a marketplace value and must not be shown in the
   // form — the user cannot meaningfully provide them.
   return (schema?.userFields ?? []).filter(isUserEditableField);

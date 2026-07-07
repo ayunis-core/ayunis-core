@@ -25,5 +25,4 @@ export interface ImageMessageContentResponseDto {
 }
 
 export type UserMessageContent =
-  | TextMessageContentResponseDto
-  | ImageMessageContentResponseDto;
+  TextMessageContentResponseDto | ImageMessageContentResponseDto;

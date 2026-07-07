@@ -6,8 +6,7 @@
 export const PII_TOKEN_REGEX = /\{\{pii:[A-Z][A-Z0-9_]*_\d+\}\}/g;
 
 export type PiiTextPart =
-  | { kind: 'text'; text: string }
-  | { kind: 'token'; token: string };
+  { kind: 'text'; text: string } | { kind: 'token'; token: string };
 
 /** Splits text into plain-text parts and `{{pii:...}}` token parts. */
 export function splitPiiTokens(text: string): PiiTextPart[] {
