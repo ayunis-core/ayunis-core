@@ -18,6 +18,7 @@ export abstract class UsersRepository {
   abstract findOneByEmail(email: string): Promise<User | null>;
   abstract findManyByEmails(emails: string[]): Promise<User[]>;
   abstract findManyBySystemRole(role: SystemRole): Promise<User[]>;
+  abstract findAdminsByOrgId(orgId: UUID): Promise<User[]>;
   abstract findManyByOrgId(
     orgId: UUID,
     pagination: UsersPagination,

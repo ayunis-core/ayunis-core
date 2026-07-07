@@ -6,6 +6,7 @@ import {
 } from 'src/iam/users/application/ports/users.repository';
 import { User } from 'src/iam/users/domain/user.entity';
 import type { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UUID } from 'crypto';
 import { Repository, ILike, In } from 'typeorm';
 import { UserRecord } from './schema/user.record';
@@ -97,6 +98,15 @@ export class LocalUsersRepository extends UsersRepository {
       order: { createdAt: 'DESC' },
     });
 
+    return userRecords.map((record) => UserMapper.toDomain(record));
+  }
+
+  async findAdminsByOrgId(orgId: UUID): Promise<User[]> {
+    this.logger.log('findAdminsByOrgId', { orgId });
+    const userRecords = await this.userRepository.find({
+      where: { orgId, role: UserRole.ADMIN },
+      order: { createdAt: 'DESC' },
+    });
     return userRecords.map((record) => UserMapper.toDomain(record));
   }
 
