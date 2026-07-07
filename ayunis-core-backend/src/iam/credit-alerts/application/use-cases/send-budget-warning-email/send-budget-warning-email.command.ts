@@ -1,4 +1,4 @@
-import type { BudgetWarningScope } from 'src/common/email-templates/domain/email-template.entity';
+import type { BudgetWarningScope } from 'src/common/email-templates/domain/value-objects/budget-warning-scope.enum';
 
 export class SendBudgetWarningEmailCommand {
   public readonly recipientName: string | null;

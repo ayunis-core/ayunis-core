@@ -7,10 +7,10 @@ import { RenderTemplateCommand } from 'src/common/email-templates/application/us
 import { SendEmailUseCase } from 'src/common/emails/application/use-cases/send-email/send-email.use-case';
 import { SendEmailCommand } from 'src/common/emails/application/use-cases/send-email/send-email.command';
 import { SendBudgetWarningEmailCommand } from './send-budget-warning-email.command';
-import { CREDIT_LIMITS_SETTINGS_PATH } from '../../credit-alerts.constants';
 import { BudgetWarningEmailSendingFailedError } from '../../credit-alerts.errors';
 
 const numberFormat = new Intl.NumberFormat('de-DE');
+const CREDIT_LIMITS_SETTINGS_PATH = '/admin-settings/usage';
 
 @Injectable()
 export class SendBudgetWarningEmailUseCase {
@@ -43,11 +43,9 @@ export class SendBudgetWarningEmailUseCase {
       }
       this.logger.error('Failed to send budget warning email', {
         error: error instanceof Error ? error.message : 'Unknown error',
-        recipient: command.recipientEmail,
       });
       throw new BudgetWarningEmailSendingFailedError(
         error instanceof Error ? error.message : 'Unknown error',
-        { recipient: command.recipientEmail },
       );
     }
   }

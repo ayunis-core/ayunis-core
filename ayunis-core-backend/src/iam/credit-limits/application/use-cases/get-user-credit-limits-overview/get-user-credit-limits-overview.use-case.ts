@@ -13,6 +13,7 @@ import { CreditLimitRepository } from '../../ports/credit-limit.repository';
 import type { UserCreditLimit } from '../../../domain/user-credit-limit.entity';
 import { selectUserCreditLimits } from '../../utils/select-user-credit-limits';
 import { UnexpectedCreditLimitError } from '../../credit-limits.errors';
+import { GetUserCreditLimitsOverviewQuery } from './get-user-credit-limits-overview.query';
 
 @Injectable()
 export class GetUserCreditLimitsOverviewUseCase {
@@ -25,7 +26,9 @@ export class GetUserCreditLimitsOverviewUseCase {
     private readonly getMonthlyCreditUsageForUsersUseCase: GetMonthlyCreditUsageForUsersUseCase,
   ) {}
 
-  async execute(): Promise<UserCreditLimitOverviewItem[]> {
+  async execute(
+    query: GetUserCreditLimitsOverviewQuery = new GetUserCreditLimitsOverviewQuery(),
+  ): Promise<UserCreditLimitOverviewItem[]> {
     const orgId = this.contextService.get('orgId');
     if (!orgId) {
       throw new UnauthorizedAccessError();
@@ -35,7 +38,7 @@ export class GetUserCreditLimitsOverviewUseCase {
 
     try {
       const limits = await this.creditLimitRepository.findUserLimits(orgId);
-      return await this.enrich(orgId, limits);
+      return await this.enrich(orgId, limits, query.since);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Failed to list user credit limits', {
@@ -48,6 +51,7 @@ export class GetUserCreditLimitsOverviewUseCase {
   private async enrich(
     orgId: UUID,
     limits: UserCreditLimit[],
+    since?: Date,
   ): Promise<UserCreditLimitOverviewItem[]> {
     const userLimits = selectUserCreditLimits(limits);
     if (userLimits.length === 0) {
@@ -58,7 +62,7 @@ export class GetUserCreditLimitsOverviewUseCase {
     const [users, creditsUsedByUser] = await Promise.all([
       this.findUsersByIdsUseCase.execute(new FindUsersByIdsQuery(userIds)),
       this.getMonthlyCreditUsageForUsersUseCase.execute(
-        new GetMonthlyCreditUsageForUsersQuery(orgId, userIds),
+        new GetMonthlyCreditUsageForUsersQuery(orgId, userIds, since),
       ),
     ]);
 

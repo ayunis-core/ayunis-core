@@ -1,4 +1,5 @@
 import { EmailTemplateType } from './value-objects/email-template-type.enum';
+import type { BudgetWarningScope } from './value-objects/budget-warning-scope.enum';
 
 export abstract class EmailTemplate {
   constructor(
@@ -49,8 +50,6 @@ export interface SetInitialPasswordTemplateContent {
   teamUrl: string;
   bannerUrl: string;
 }
-
-export type BudgetWarningScope = 'org' | 'user' | 'team';
 
 export interface BudgetWarningTemplateContent {
   recipientName: string | null;

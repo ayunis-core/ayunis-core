@@ -13,6 +13,7 @@ import {
   TEST_USER_ID,
 } from '../../testing/credit-limit.fixtures';
 import { GetUserCreditLimitsOverviewUseCase } from './get-user-credit-limits-overview.use-case';
+import { GetUserCreditLimitsOverviewQuery } from './get-user-credit-limits-overview.query';
 
 describe('GetUserCreditLimitsOverviewUseCase', () => {
   let useCase: GetUserCreditLimitsOverviewUseCase;
@@ -23,6 +24,7 @@ describe('GetUserCreditLimitsOverviewUseCase', () => {
 
   const orgId = TEST_ORG_ID;
   const userId = TEST_USER_ID;
+  const since = new Date('2026-07-10T00:00:00.000Z');
 
   const userLimit = aUserCreditLimit();
 
@@ -69,6 +71,14 @@ describe('GetUserCreditLimitsOverviewUseCase', () => {
       },
     ]);
     expect(repository.findUserLimits).toHaveBeenCalledWith(orgId);
+  });
+
+  it('forwards an explicit usage start to the consumption query', async () => {
+    await useCase.execute(new GetUserCreditLimitsOverviewQuery(since));
+
+    expect(getUsage.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ since }),
+    );
   });
 
   it('returns an empty list without enriching when no user limits exist', async () => {

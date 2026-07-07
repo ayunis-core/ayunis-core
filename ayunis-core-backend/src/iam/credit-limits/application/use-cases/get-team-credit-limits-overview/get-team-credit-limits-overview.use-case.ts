@@ -11,6 +11,7 @@ import { CreditLimitRepository } from '../../ports/credit-limit.repository';
 import type { TeamCreditLimit } from '../../../domain/team-credit-limit.entity';
 import { selectTeamCreditLimits } from '../../utils/select-team-credit-limits';
 import { UnexpectedCreditLimitError } from '../../credit-limits.errors';
+import { GetTeamCreditLimitsOverviewQuery } from './get-team-credit-limits-overview.query';
 
 @Injectable()
 export class GetTeamCreditLimitsOverviewUseCase {
@@ -23,7 +24,9 @@ export class GetTeamCreditLimitsOverviewUseCase {
     private readonly getMonthlyCreditUsageForTeamUseCase: GetMonthlyCreditUsageForTeamUseCase,
   ) {}
 
-  async execute(): Promise<TeamCreditLimitOverviewItem[]> {
+  async execute(
+    query: GetTeamCreditLimitsOverviewQuery = new GetTeamCreditLimitsOverviewQuery(),
+  ): Promise<TeamCreditLimitOverviewItem[]> {
     const orgId = this.contextService.get('orgId');
     if (!orgId) {
       throw new UnauthorizedAccessError();
@@ -33,7 +36,7 @@ export class GetTeamCreditLimitsOverviewUseCase {
 
     try {
       const limits = await this.creditLimitRepository.findTeamLimits(orgId);
-      return await this.enrich(orgId, limits);
+      return await this.enrich(orgId, limits, query.since);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Failed to list team credit limits', {
@@ -46,6 +49,7 @@ export class GetTeamCreditLimitsOverviewUseCase {
   private async enrich(
     orgId: UUID,
     limits: TeamCreditLimit[],
+    since?: Date,
   ): Promise<TeamCreditLimitOverviewItem[]> {
     const teamLimits = selectTeamCreditLimits(limits);
     if (teamLimits.length === 0) {
@@ -66,7 +70,7 @@ export class GetTeamCreditLimitsOverviewUseCase {
         }
         const { creditsUsed } =
           await this.getMonthlyCreditUsageForTeamUseCase.execute(
-            new GetMonthlyCreditUsageForTeamQuery(orgId, teamId),
+            new GetMonthlyCreditUsageForTeamQuery(orgId, teamId, since),
           );
         return { teamId, name, monthlyCredits, creditsUsed };
       }),
