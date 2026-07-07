@@ -8,6 +8,7 @@ import { Skeleton } from '@/shared/ui/shadcn/skeleton';
 import { useMe } from '@/widgets/app-sidebar/api/useMe';
 import { MeResponseDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
+import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useOnboarding, useOnboardingProgress } from '@/widgets/onboarding';
 import { useUpdateOnboarding } from '../api/useUpdateOnboarding';
 import brandIconDark from '@/shared/assets/brand/brand-icon-round-dark.svg';
@@ -26,7 +27,9 @@ function getMilestoneMessage(
 
 export default function OnboardingContent() {
   const { t } = useTranslation('getting-started');
+  const { t: tCommon } = useTranslation('common');
   const navigate = useNavigate();
+  const { confirm } = useConfirmation();
   const { user } = useMe();
   const isAdmin = user?.role === MeResponseDtoRole.admin;
   const {
@@ -61,12 +64,21 @@ export default function OnboardingContent() {
   );
 
   const handleToggleHidden = () => {
-    const nextHidden = !hidden;
-    updateOnboarding({ completedStepIds, hidden: nextHidden });
-
-    if (nextHidden) {
-      void navigate({ to: '/chat' });
+    if (hidden) {
+      updateOnboarding({ completedStepIds, hidden: false });
+      return;
     }
+
+    confirm({
+      title: tCommon('sidebar.hideGettingStartedConfirm.title'),
+      description: tCommon('sidebar.hideGettingStartedConfirm.description'),
+      confirmText: tCommon('sidebar.hideGettingStartedConfirm.confirmText'),
+      cancelText: tCommon('sidebar.hideGettingStartedConfirm.cancelText'),
+      onConfirm: () => {
+        updateOnboarding({ completedStepIds, hidden: true });
+        void navigate({ to: '/chat' });
+      },
+    });
   };
 
   const isAllComplete = overallProgress >= 100;
