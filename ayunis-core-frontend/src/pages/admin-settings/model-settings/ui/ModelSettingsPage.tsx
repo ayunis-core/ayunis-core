@@ -6,6 +6,8 @@ import ModelTypeCard from './ModelTypeCard';
 import { OrgDefaultModelCard } from './OrgDefaultModelCard';
 import SettingsLayout from '../../admin-settings-layout';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
+import { TOUR_TARGET } from '@/shared/config/tour-targets';
 import { Trans, useTranslation } from 'react-i18next';
 import {
   useLanguageModels,
@@ -87,7 +89,9 @@ export default function ModelSettingsPage() {
         {hasModels ? (
           <>
             {!hasLanguageError && (
-              <ModelTypeCard type="language" models={languageModels} />
+              <OnboardingTourTarget name={TOUR_TARGET.configureModelsLanguage}>
+                <ModelTypeCard type="language" models={languageModels} />
+              </OnboardingTourTarget>
             )}
             {!hasEmbeddingError && (
               <ModelTypeCard type="embedding" models={embeddingModels} />

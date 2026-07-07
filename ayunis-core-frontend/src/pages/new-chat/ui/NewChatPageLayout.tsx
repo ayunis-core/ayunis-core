@@ -16,6 +16,9 @@ export default function NewChatPageLayout({
         <NewChatBackdrop />
         <div className="content-area-page-header">{header}</div>
         <div className="absolute inset-0 z-[1] flex items-center justify-center px-4">
+          {/* Entrance animation: 200ms delay + 700ms = 900ms. Tour targets inside
+              (e.g. sendMessage, pinnedSkills) mirror this via settleMs so the
+              spotlight measures them only after they settle. */}
           <div className="w-full max-w-[800px] flex flex-col gap-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-700 fill-mode-both [animation-delay:200ms]">
             {children}
           </div>

@@ -1,6 +1,8 @@
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
+import { TOUR_TARGET } from '@/shared/config/tour-targets';
 import CreateKnowledgeBaseDialog from './CreateKnowledgeBaseDialog';
 import KnowledgeBaseCard from './KnowledgeBaseCard';
 import KnowledgeBasesEmptyState from './KnowledgeBasesEmptyState';
@@ -36,7 +38,9 @@ export default function KnowledgeBasesPage({
   const headerAction = (
     <div className="flex gap-2">
       <HelpLink path="knowledge-collections/" />
-      <CreateKnowledgeBaseDialog />
+      <OnboardingTourTarget name={TOUR_TARGET.createKnowledgeBase}>
+        <CreateKnowledgeBaseDialog />
+      </OnboardingTourTarget>
     </div>
   );
 

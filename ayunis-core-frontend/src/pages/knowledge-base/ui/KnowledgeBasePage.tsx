@@ -7,6 +7,8 @@ import type {
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import { SharesTab } from '@/widgets/shares-tab';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
+import { TOUR_TARGET } from '@/shared/config/tour-targets';
 import {
   Tabs,
   TabsList,
@@ -85,10 +87,12 @@ export function KnowledgeBasePage({
         knowledgeBase={knowledgeBase}
         disabled={isReadOnly}
       />
-      <KnowledgeBaseDocumentsCard
-        knowledgeBaseId={knowledgeBase.id}
-        disabled={isReadOnly}
-      />
+      <OnboardingTourTarget name={TOUR_TARGET.addDocuments}>
+        <KnowledgeBaseDocumentsCard
+          knowledgeBaseId={knowledgeBase.id}
+          disabled={isReadOnly}
+        />
+      </OnboardingTourTarget>
     </div>
   );
 

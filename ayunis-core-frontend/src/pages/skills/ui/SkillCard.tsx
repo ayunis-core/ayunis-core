@@ -23,12 +23,19 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
+import { OnboardingTourTarget } from '@/features/onboarding-tour';
+import { TOUR_TARGET } from '@/shared/config/tour-targets';
 
 interface SkillCardProps {
   skill: Skill;
+  /** Anchor the "pin a skill" onboarding tour spotlight on this card's pin button. */
+  pinTourTarget?: boolean;
 }
 
-export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
+export default function SkillCard({
+  skill,
+  pinTourTarget = false,
+}: Readonly<SkillCardProps>) {
   const { t } = useTranslation('skills');
   const deleteSkill = useDeleteSkill();
   const toggleActive = useToggleSkillActive();
@@ -60,6 +67,30 @@ export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
   function handleNavigateToDetail() {
     void router.navigate({ to: '/skills/$id', params: { id: skill.id } });
   }
+
+  const pinButton = skill.isActive ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleTogglePinned();
+          }}
+          disabled={togglePinned.isPending}
+          aria-label={
+            skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')
+          }
+        >
+          <Pin className={`h-4 w-4 ${skill.isPinned ? 'fill-current' : ''}`} />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        {skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')}
+      </TooltipContent>
+    </Tooltip>
+  ) : null;
 
   return (
     <Item
@@ -95,31 +126,14 @@ export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
             onClick={(e) => e.stopPropagation()}
           />
         </div>
-        {skill.isActive && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleTogglePinned();
-                }}
-                disabled={togglePinned.isPending}
-                aria-label={
-                  skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')
-                }
-              >
-                <Pin
-                  className={`h-4 w-4 ${skill.isPinned ? 'fill-current' : ''}`}
-                />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')}
-            </TooltipContent>
-          </Tooltip>
-        )}
+        {pinButton &&
+          (pinTourTarget ? (
+            <OnboardingTourTarget name={TOUR_TARGET.pinSkill}>
+              {pinButton}
+            </OnboardingTourTarget>
+          ) : (
+            pinButton
+          ))}
         {!skill.isShared && (
           <Tooltip>
             <TooltipTrigger asChild>
