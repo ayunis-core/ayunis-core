@@ -35,6 +35,9 @@ export function useInviteCreate(
             case 'USER_EMAIL_PROVIDER_BLACKLISTED':
               showError(t('inviteCreate.emailProviderBlacklisted'));
               break;
+            case 'RATE_LIMIT_EXCEEDED':
+              showError(t('inviteCreate.rateLimitExceeded'));
+              break;
             default:
               showError(t('inviteCreate.error'));
           }

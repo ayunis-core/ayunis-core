@@ -89,7 +89,8 @@
     "error": "Failed to create invite. Please try again.",
     "emailNotAvailable": "Invite not possible.",
     "userAlreadyExists": "This email address is already registered as a user in your organization.",
-    "emailProviderBlacklisted": "Private email addresses (e.g. Gmail, GMX, Web.de, t-online) are not allowed for security reasons. Please use a work email address."
+    "emailProviderBlacklisted": "Private email addresses (e.g. Gmail, GMX, Web.de, t-online) are not allowed for security reasons. Please use a work email address.",
+    "rateLimitExceeded": "You've created a lot of invitations in a short time. Please wait a few minutes before creating more."
   },
   "inviteResend": {
     "success": "Invite resent successfully!",
