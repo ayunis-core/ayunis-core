@@ -12,12 +12,27 @@ export PGHOST=localhost
 export PGPORT=5432
 export MINIO_DATA="${MINIO_DATA:-/data/minio}"
 
+# Postgres server binaries (initdb, pg_ctl, pg_isready, …) live in a versioned
+# dir. The Dockerfile puts it on PATH via `ENV PATH=…`, but Cursor's runtime
+# shell doesn't inherit that ENV, and `runuser` resets PATH for the target
+# user anyway — so resolve the dir explicitly here and prepend it to PATH.
+PG_BIN=""
+for _d in $(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V); do
+  [ -x "$_d/initdb" ] && PG_BIN="$_d"
+done
+if [ -n "$PG_BIN" ]; then
+  export PATH="$PG_BIN:$PATH"
+fi
+export PG_BIN
+
 # Postgres refuses to run as root, so when we're root we drive it as the
 # `postgres` system user (created by the postgresql-16 package). Otherwise we
-# run everything as the current (non-root) user.
+# run everything as the current (non-root) user. In the root case we forward
+# PATH through `runuser` (which otherwise resets it) so the postgres user can
+# still resolve the server binaries.
 if [ "$(id -u)" = "0" ]; then
   PG_RUN_USER=postgres
-  run_pg() { runuser -u "$PG_RUN_USER" -- "$@"; }
+  run_pg() { runuser -u "$PG_RUN_USER" -- env "PATH=$PATH" "$@"; }
 else
   PG_RUN_USER="$(id -un)"
   run_pg() { "$@"; }
@@ -42,8 +57,12 @@ pg_running() { run_pg pg_ctl -D "$PGDATA" status >/dev/null 2>&1; }
 pg_start() {
   pg_running && return 0
   echo "==> Starting Postgres"
+  # Point the Unix socket dir at $PGDATA: Debian's compiled default
+  # (/var/run/postgresql) lives on tmpfs and can be absent on a fresh boot,
+  # which makes the server fail to start. Clients connect over TCP
+  # (-h localhost), so the socket location is irrelevant to them.
   run_pg pg_ctl -D "$PGDATA" -w -l "$PGDATA/server.log" \
-    -o "-c listen_addresses=localhost -p $PGPORT" start
+    -o "-c listen_addresses=localhost -p $PGPORT -c unix_socket_directories=$PGDATA" start
 }
 
 pg_stop() {
