@@ -10,6 +10,7 @@
   "progress": {
     "completed": "{{count}} von {{total}} erledigt"
   },
+  "lockedTooltip": "Schließen Sie zuerst „{{step}}“ ab, um diesen Schritt freizuschalten.",
   "saveError": "Dein Fortschritt konnte nicht gespeichert werden. Bitte versuche es erneut.",
   "spotlightDismiss": "Alles klar",
   "returnButton": "Zurück zu Erste Schritte",

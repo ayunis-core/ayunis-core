@@ -10,6 +10,7 @@
   "progress": {
     "completed": "{{count}} of {{total}} completed"
   },
+  "lockedTooltip": "Complete “{{step}}” first to unlock this step.",
   "saveError": "Could not save your progress. Please try again.",
   "spotlightDismiss": "Got it",
   "returnButton": "Back to Getting Started",

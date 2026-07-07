@@ -81,22 +81,36 @@ export default function OnboardingCategoryCard({
               </div>
             )}
             <div className="divide-y divide-border/50">
-              {category.steps.map((step, index) => (
-                <OnboardingStepItem
-                  key={step.id}
-                  step={step}
-                  completed={completedSteps.has(step.id)}
-                  locked={
-                    !completedSteps.has(step.id) &&
-                    !!step.dependsOn &&
-                    !completedSteps.has(step.dependsOn)
-                  }
-                  defaultExpanded={
-                    defaultExpanded && index === firstIncompleteStepIndex
-                  }
-                  onComplete={onCompleteStep}
-                />
-              ))}
+              {category.steps.map((step, index) => {
+                const prerequisite = step.dependsOn
+                  ? category.steps.find((s) => s.id === step.dependsOn)
+                  : undefined;
+                return (
+                  <OnboardingStepItem
+                    key={step.id}
+                    step={step}
+                    completed={completedSteps.has(step.id)}
+                    locked={
+                      !completedSteps.has(step.id) &&
+                      !!step.dependsOn &&
+                      !completedSteps.has(step.dependsOn)
+                    }
+                    lockedTooltip={
+                      prerequisite
+                        ? t('lockedTooltip', {
+                            step: t(
+                              `steps.${prerequisite.translationKey}.title`,
+                            ),
+                          })
+                        : undefined
+                    }
+                    defaultExpanded={
+                      defaultExpanded && index === firstIncompleteStepIndex
+                    }
+                    onComplete={onCompleteStep}
+                  />
+                );
+              })}
             </div>
           </AccordionContent>
         </AccordionItem>

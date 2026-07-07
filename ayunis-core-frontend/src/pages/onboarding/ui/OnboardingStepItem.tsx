@@ -9,6 +9,7 @@ import {
 } from '@/shared/ui/shadcn/accordion';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Checkbox } from '@/shared/ui/shadcn/checkbox';
+import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { getHelpCenterUrl } from '@/shared/lib/help-center';
 import {
@@ -28,6 +29,7 @@ interface OnboardingStepItemProps {
   step: OnboardingStep;
   completed: boolean;
   locked: boolean;
+  lockedTooltip?: string;
   defaultExpanded?: boolean;
   onComplete: (stepId: string) => void;
 }
@@ -36,6 +38,7 @@ export default function OnboardingStepItem({
   step,
   completed,
   locked,
+  lockedTooltip,
   defaultExpanded = false,
   onComplete,
 }: Readonly<OnboardingStepItemProps>) {
@@ -170,72 +173,77 @@ export default function OnboardingStepItem({
   };
 
   return (
-    <Accordion
-      type="single"
-      collapsible
-      defaultValue={defaultExpanded && !locked ? step.id : undefined}
+    <TooltipIf
+      condition={locked && !!lockedTooltip}
+      tooltip={lockedTooltip ?? ''}
     >
-      <AccordionItem
-        value={step.id}
-        disabled={locked}
-        className={cn('border-b-0', (completed || locked) && 'opacity-60')}
+      <Accordion
+        type="single"
+        collapsible
+        defaultValue={defaultExpanded && !locked ? step.id : undefined}
       >
-        <div className="flex items-center gap-3 py-2.5 [&>h3]:flex-1 [&>h3]:min-w-0">
-          {locked ? (
-            <div className="flex items-center justify-center size-5 shrink-0">
-              <Lock className="size-3.5 text-muted-foreground" />
-            </div>
-          ) : (
-            <Checkbox
-              checked={completed}
-              onCheckedChange={() => onComplete(step.id)}
-              aria-label={completed ? 'Completed' : 'Mark as complete'}
-            />
-          )}
-
-          <AccordionTrigger
-            className={cn(
-              'py-0 items-center hover:no-underline [&>svg]:size-3.5',
-              locked && 'disabled:opacity-100 [&>svg]:hidden',
+        <AccordionItem
+          value={step.id}
+          disabled={locked}
+          className={cn('border-b-0', (completed || locked) && 'opacity-60')}
+        >
+          <div className="flex items-center gap-3 py-2.5 [&>h3]:flex-1 [&>h3]:min-w-0">
+            {locked ? (
+              <div className="flex items-center justify-center size-5 shrink-0">
+                <Lock className="size-3.5 text-muted-foreground" />
+              </div>
+            ) : (
+              <Checkbox
+                checked={completed}
+                onCheckedChange={() => onComplete(step.id)}
+                aria-label={completed ? 'Completed' : 'Mark as complete'}
+              />
             )}
-          >
-            <span
+
+            <AccordionTrigger
               className={cn(
-                'text-sm font-medium',
-                completed && 'line-through text-muted-foreground',
-                locked && 'text-muted-foreground',
+                'py-0 items-center hover:no-underline [&>svg]:size-3.5',
+                locked && 'disabled:opacity-100 [&>svg]:hidden',
               )}
             >
-              {t(`steps.${step.translationKey}.title`)}
-            </span>
-          </AccordionTrigger>
-        </div>
+              <span
+                className={cn(
+                  'text-sm font-medium',
+                  completed && 'line-through text-muted-foreground',
+                  locked && 'text-muted-foreground',
+                )}
+              >
+                {t(`steps.${step.translationKey}.title`)}
+              </span>
+            </AccordionTrigger>
+          </div>
 
-        <AccordionContent className="ml-7 space-y-2 pb-2.5 pt-0">
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {t(`steps.${step.translationKey}.description`)}
-          </p>
-          {(step.action ?? step.secondaryAction) && (
-            <div className="flex items-center gap-2">
-              {step.action && (
-                <Button size="sm" onClick={handleAction} disabled={completed}>
-                  {t(`steps.${step.translationKey}.action`)}
-                  <ArrowRight className="size-3" />
-                </Button>
-              )}
-              {step.secondaryAction && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleSecondaryAction}
-                >
-                  {t(`steps.${step.translationKey}.secondaryAction`)}
-                </Button>
-              )}
-            </div>
-          )}
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
+          <AccordionContent className="ml-7 space-y-2 pb-2.5 pt-0">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {t(`steps.${step.translationKey}.description`)}
+            </p>
+            {(step.action ?? step.secondaryAction) && (
+              <div className="flex items-center gap-2">
+                {step.action && (
+                  <Button size="sm" onClick={handleAction} disabled={completed}>
+                    {t(`steps.${step.translationKey}.action`)}
+                    <ArrowRight className="size-3" />
+                  </Button>
+                )}
+                {step.secondaryAction && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleSecondaryAction}
+                  >
+                    {t(`steps.${step.translationKey}.secondaryAction`)}
+                  </Button>
+                )}
+              </div>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </TooltipIf>
   );
 }
