@@ -23,6 +23,23 @@ describe('convertTool', () => {
       },
     });
   });
+
+  it('converts draft-04 exclusive bounds Mistral would reject', () => {
+    const tool: ToolSchema = {
+      name: 'paginate',
+      description: 'Paginate',
+      parameters: {
+        type: 'object',
+        properties: {
+          page: { type: 'integer', minimum: 0, exclusiveMinimum: true },
+        },
+      },
+    };
+    expect(convertTool(tool).function.parameters).toEqual({
+      type: 'object',
+      properties: { page: { type: 'integer', exclusiveMinimum: 0 } },
+    });
+  });
 });
 
 describe('convertToolChoice', () => {
