@@ -65,4 +65,50 @@ describe('normalizeSchemaForOpenAI', () => {
       }),
     ).toEqual({ type: 'array', items: { type: 'string' } });
   });
+
+  it('collapses tuple-form items into a single anyOf schema', () => {
+    expect(
+      normalizeSchemaForOpenAI({
+        type: 'array',
+        items: [{ type: 'string', format: 'uri' }, { type: 'number' }],
+      }),
+    ).toEqual({
+      type: 'array',
+      items: { anyOf: [{ type: 'string' }, { type: 'number' }] },
+    });
+  });
+
+  it('converts draft-04 boolean exclusive bounds to their numeric form', () => {
+    expect(
+      normalizeSchemaForOpenAI({
+        type: 'object',
+        properties: {
+          page: { type: 'integer', minimum: 0, exclusiveMinimum: true },
+          size: { type: 'integer', maximum: 10, exclusiveMaximum: true },
+        },
+      }),
+    ).toEqual({
+      type: 'object',
+      additionalProperties: false,
+      required: ['page', 'size'],
+      properties: {
+        page: { type: 'integer', exclusiveMinimum: 0 },
+        size: { type: 'integer', exclusiveMaximum: 10 },
+      },
+    });
+  });
+
+  it('drops boolean exclusive bounds without a numeric counterpart', () => {
+    expect(
+      normalizeSchemaForOpenAI({
+        type: 'object',
+        properties: { n: { type: 'number', exclusiveMinimum: false } },
+      }),
+    ).toEqual({
+      type: 'object',
+      additionalProperties: false,
+      required: ['n'],
+      properties: { n: { type: 'number' } },
+    });
+  });
 });
