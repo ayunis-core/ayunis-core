@@ -22,6 +22,7 @@ import { getTeamsControllerGetTeamQueryKey } from '@/shared/api/generated/ayunis
 import { useTeamPermittedModels } from '../api/useTeamPermittedModels';
 import { useCreateTeamPermittedModel } from '../api/useCreateTeamPermittedModel';
 import { useDeleteTeamPermittedModel } from '../api/useDeleteTeamPermittedModel';
+import { useUpdateTeamPermittedModel } from '../api/useUpdateTeamPermittedModel';
 import { useToggleModelOverride } from '../api/useToggleModelOverride';
 import { TeamDefaultModelCard } from './TeamDefaultModelCard';
 
@@ -56,6 +57,7 @@ export function TeamModelsTab({
     useCreateTeamPermittedModel(teamId);
   const { deleteTeamPermittedModel, isDeleting } =
     useDeleteTeamPermittedModel(teamId);
+  const { updateTeamPermittedModel } = useUpdateTeamPermittedModel(teamId);
 
   const permittedModelIds = new Set(teamPermittedModels.map((m) => m.modelId));
   const permittedModelByModelId = new Map(
@@ -84,7 +86,9 @@ export function TeamModelsTab({
     deletePermittedModel: (permittedModelId: string) => {
       deleteTeamPermittedModel(permittedModelId);
     },
-    updatePermittedModel: undefined,
+    updatePermittedModel: (params) => {
+      updateTeamPermittedModel(params);
+    },
     isEnabling: isCreating,
     isDisabling: isDeleting,
   };

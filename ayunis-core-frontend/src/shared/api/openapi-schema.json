@@ -2328,6 +2328,55 @@
       }
     },
     "/teams/{teamId}/permitted-models/{id}": {
+      "patch": {
+        "description": "Updates a team-scoped permitted model, e.g. toggling whether it enforces anonymous mode for members of the team.",
+        "operationId": "TeamPermittedModelsController_updateTeamPermittedModel",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePermittedModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated team permitted model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Permitted model not found"
+          }
+        },
+        "summary": "Update a team's permitted model",
+        "tags": ["team-permitted-models"]
+      },
       "delete": {
         "operationId": "TeamPermittedModelsController_deleteTeamPermittedModel",
         "parameters": [
