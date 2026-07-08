@@ -191,7 +191,8 @@
       "!**/*.module.ts",
       "!**/*.record.ts",
       "!**/index.ts",
-      "!**/cli/**"
+      "!**/cli/**",
+      "!**/testing/**"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
