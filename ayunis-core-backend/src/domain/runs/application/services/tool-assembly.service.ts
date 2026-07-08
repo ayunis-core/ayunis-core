@@ -1,15 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService, ConfigType } from '@nestjs/config';
-import { UUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
 import { AssembleToolCommand } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.command';
-import { DiscoverMcpCapabilitiesUseCase } from 'src/domain/mcp/application/use-cases/discover-mcp-capabilities/discover-mcp-capabilities.use-case';
-import { DiscoverMcpCapabilitiesQuery } from 'src/domain/mcp/application/use-cases/discover-mcp-capabilities/discover-mcp-capabilities.query';
-import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
-import { McpIntegrationResource } from 'src/domain/tools/domain/tools/mcp-integration-resource.entity';
 import { SourceType } from 'src/domain/sources/domain/source-type.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { SystemPromptBuilderService } from './system-prompt-builder.service';
@@ -19,9 +14,6 @@ import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { GetUserSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-user-system-prompt/get-user-system-prompt.use-case';
 import { GetOrgSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-org-system-prompt/get-org-system-prompt.use-case';
 import { GetOrgChatSettingsUseCase } from 'src/domain/chat-settings/application/use-cases/get-org-chat-settings/get-org-chat-settings.use-case';
-import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
-import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
-import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import { FindActiveAlwaysOnTemplatesUseCase } from 'src/domain/skill-templates/application/use-cases/find-active-always-on-templates/find-active-always-on-templates.use-case';
 import { FindActiveAlwaysOnTemplatesQuery } from 'src/domain/skill-templates/application/use-cases/find-active-always-on-templates/find-active-always-on-templates.query';
 import { featuresConfig } from 'src/config/features.config';
@@ -38,11 +30,7 @@ import { assembleImageGenerationTools } from './image-generation-tool-assembly.h
 import { ContextService } from 'src/common/context/services/context.service';
 import { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { ArtifactToolAssemblerService } from './artifact-tool-assembler.service';
-
-type McpCapability = Awaited<
-  ReturnType<DiscoverMcpCapabilitiesUseCase['execute']>
->;
-type McpIntegrationMeta = { name: string; logoUrl: string | null };
+import { McpToolAssemblerService } from './mcp-tool-assembler.service';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -51,12 +39,11 @@ export class ToolAssemblyService {
   constructor(
     private readonly configService: ConfigService,
     private readonly assembleToolsUseCase: AssembleToolUseCase,
-    private readonly discoverMcpCapabilitiesUseCase: DiscoverMcpCapabilitiesUseCase,
+    private readonly mcpToolAssembler: McpToolAssemblerService,
     private readonly systemPromptBuilderService: SystemPromptBuilderService,
     private readonly findActiveSkillsUseCase: FindActiveSkillsUseCase,
     private readonly getUserSystemPromptUseCase: GetUserSystemPromptUseCase,
     private readonly getOrgSystemPromptUseCase: GetOrgSystemPromptUseCase,
-    private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
     private readonly findActiveAlwaysOnTemplatesUseCase: FindActiveAlwaysOnTemplatesUseCase,
     @Inject(featuresConfig.KEY)
     private readonly features: ConfigType<typeof featuresConfig>,
@@ -210,9 +197,6 @@ export class ToolAssemblyService {
   ): Promise<Tool[]> {
     const tools: Tool[] = [];
 
-    // Discover and add MCP tools/resources from thread integrations
-    tools.push(...(await this.assembleMcpTools(thread)));
-
     // Code execution tool is always available
     tools.push(await this.assembleCodeExecutionTool(thread));
 
@@ -255,6 +239,13 @@ export class ToolAssemblyService {
     tools.push(...(await this.assembleSourceTools(thread)));
     tools.push(...(await this.assembleKnowledgeTools(thread)));
     tools.push(...(await this.assembleActivateSkillTool(slugMap)));
+
+    // MCP tools/resources go last: their (sanitized) names are third-party
+    // and must not shadow a built-in tool of the same name.
+    const reservedNames = new Set(tools.map((tool) => tool.name));
+    tools.push(
+      ...(await this.mcpToolAssembler.assemble(thread, reservedNames)),
+    );
 
     return tools;
   }
@@ -376,106 +367,6 @@ export class ToolAssemblyService {
           type: ToolType.ACTIVATE_SKILL,
           context: slugMap,
         }),
-      ),
-    ];
-  }
-
-  private async assembleMcpTools(thread: Thread): Promise<Tool[]> {
-    const mcpIntegrationIds = new Set<UUID>();
-    thread.mcpIntegrationIds.forEach((id) => mcpIntegrationIds.add(id));
-
-    if (mcpIntegrationIds.size === 0) return [];
-
-    const integrationIdList = [...mcpIntegrationIds];
-
-    const integrations = await this.getMcpIntegrationsByIdsUseCase.execute(
-      new GetMcpIntegrationsByIdsQuery(integrationIdList),
-    );
-    const integrationMetaMap = this.buildMcpIntegrationMetaMap(integrations);
-
-    const mcpResults = await Promise.allSettled(
-      integrationIdList.map((integrationId) =>
-        this.discoverMcpCapabilitiesUseCase.execute(
-          new DiscoverMcpCapabilitiesQuery(integrationId),
-        ),
-      ),
-    );
-
-    const mcpCapabilities = this.collectMcpCapabilities(
-      mcpResults,
-      integrationIdList,
-      integrationMetaMap,
-    );
-
-    return this.mapMcpCapabilitiesToTools(mcpCapabilities, integrationMetaMap);
-  }
-
-  private buildMcpIntegrationMetaMap(
-    integrations: Awaited<
-      ReturnType<GetMcpIntegrationsByIdsUseCase['execute']>
-    >,
-  ): Map<UUID, McpIntegrationMeta> {
-    const integrationMetaMap = new Map<UUID, McpIntegrationMeta>();
-    for (const integration of integrations) {
-      integrationMetaMap.set(integration.id, {
-        name: integration.name,
-        logoUrl:
-          integration instanceof MarketplaceMcpIntegration
-            ? integration.logoUrl
-            : null,
-      });
-    }
-    return integrationMetaMap;
-  }
-
-  private collectMcpCapabilities(
-    mcpResults: PromiseSettledResult<McpCapability>[],
-    integrationIdList: UUID[],
-    integrationMetaMap: Map<UUID, McpIntegrationMeta>,
-  ): McpCapability[] {
-    return mcpResults
-      .map((result, index) => {
-        if (result.status === 'fulfilled') {
-          return result.value;
-        }
-        const failedId = integrationIdList[index];
-        const meta = integrationMetaMap.get(failedId);
-        this.logger.warn(
-          `MCP integration '${meta?.name ?? failedId}' unavailable, skipping`,
-          {
-            integrationId: failedId,
-            error:
-              result.reason instanceof Error
-                ? result.reason.message
-                : 'Unknown error',
-          },
-        );
-        return null;
-      })
-      .filter((cap): cap is McpCapability => cap !== null);
-  }
-
-  private mapMcpCapabilitiesToTools(
-    mcpCapabilities: McpCapability[],
-    integrationMetaMap: Map<UUID, McpIntegrationMeta>,
-  ): Tool[] {
-    return [
-      ...mcpCapabilities.flatMap((capability) =>
-        capability.tools.map((tool) => {
-          const meta = integrationMetaMap.get(tool.integrationId);
-          return new McpIntegrationTool(
-            tool,
-            capability.returnsPii,
-            meta?.name ?? 'Unknown',
-            meta?.logoUrl ?? null,
-          );
-        }),
-      ),
-      ...mcpCapabilities.flatMap((capability) =>
-        capability.resources.map(
-          (resource) =>
-            new McpIntegrationResource(resource, capability.returnsPii),
-        ),
       ),
     ];
   }
