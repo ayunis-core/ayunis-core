@@ -47,6 +47,7 @@ export class StreamInferenceUseCase {
       toolCount: input.tools.length,
       toolChoice: input.toolChoice,
       errorName: error instanceof Error ? error.name : 'Unknown',
+      errorMessage: error instanceof Error ? error.message : String(error),
       status,
     });
     return new InferenceFailedError('Provider inference failed', { status });

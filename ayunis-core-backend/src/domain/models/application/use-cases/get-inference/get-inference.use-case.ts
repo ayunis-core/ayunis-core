@@ -66,6 +66,7 @@ export class GetInferenceUseCase {
       toolCount: command.tools.length,
       toolChoice: command.toolChoice,
       errorName: error instanceof Error ? error.name : 'Unknown',
+      errorMessage: error instanceof Error ? error.message : String(error),
       status,
     });
     throw new InferenceFailedError('Provider inference failed', { status });
