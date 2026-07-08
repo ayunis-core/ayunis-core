@@ -202,6 +202,12 @@ export class HtmlDocumentExportService
     const { continuationPageMargins: cont, firstPageMargins: first } =
       letterhead;
 
+    // `preferCSSPageSize: true` makes Puppeteer ignore the `format: 'A4'`
+    // option, so the page size must be declared here. Without an explicit
+    // `size`, Chromium falls back to its locale-dependent default (US Letter
+    // in production), which is 18mm shorter than A4. That mismatch causes the
+    // A4 letterhead background to be scaled to fit, distorting the design and
+    // throwing off the configured margins.
     return `
   body {
     margin: 0;
@@ -211,9 +217,11 @@ export class HtmlDocumentExportService
     margin-top: 0;
   }
   @page {
+    size: A4;
     margin: ${cont.top}mm ${cont.right}mm ${cont.bottom}mm ${cont.left}mm;
   }
   @page :first {
+    size: A4;
     margin: ${first.top}mm ${first.right}mm ${first.bottom}mm ${first.left}mm;
   }`;
   }
