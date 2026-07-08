@@ -21,6 +21,20 @@ describe('convertTool', () => {
       input_schema: { type: 'object', properties: {} },
     });
   });
+
+  it('normalizes MCP-style schemas that Anthropic would reject', () => {
+    expect(
+      convertTool({
+        name: 'search',
+        description: 'Searches',
+        parameters: { properties: { q: { type: 'string' } } },
+      }),
+    ).toEqual({
+      name: 'search',
+      description: 'Searches',
+      input_schema: { type: 'object', properties: { q: { type: 'string' } } },
+    });
+  });
 });
 
 describe('convertToolChoice', () => {

@@ -11,6 +11,18 @@ export type {
   ToolUseContent,
 } from './message';
 export type { JsonSchema, ToolSchema } from './tool-schema';
+export {
+  CombinatorFlattener,
+  SchemaWalker,
+  convertDraft04ExclusiveBoundsNode,
+  isRecord,
+} from './tool-normalizer';
+export type {
+  JsonObject,
+  JsonValue,
+  MutableSchema,
+  VisitNode,
+} from './tool-normalizer';
 export type {
   FinishReason,
   ModelProvider,
