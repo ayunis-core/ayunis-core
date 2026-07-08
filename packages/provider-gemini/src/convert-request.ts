@@ -15,10 +15,12 @@ import type {
   ToolSchema,
 } from '@ayunis/inference';
 
+import { normalizeSchemaForGemini } from './normalize-schema';
+
 export const convertTool = (tool: ToolSchema): FunctionDeclaration => ({
   name: tool.name,
   description: tool.description,
-  parameters: tool.parameters,
+  parameters: normalizeSchemaForGemini(tool.parameters),
 });
 
 export const convertToolChoice = (
