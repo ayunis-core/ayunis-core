@@ -12,6 +12,59 @@ type AnthropicToolChoice =
   | Anthropic.Messages.ToolChoiceAny
   | Anthropic.Messages.ToolChoiceTool;
 
+const EPHEMERAL_CACHE = { type: 'ephemeral' } as const;
+
+/**
+ * Converts instructions to the Anthropic system param, marking them as a
+ * prompt-cache breakpoint. Because Anthropic renders tools → system →
+ * messages, this one breakpoint caches the tool definitions and the system
+ * prompt together. Empty instructions pass through — a marker on an empty
+ * block would be a pointless cache entry.
+ */
+export const convertSystem = (
+  instructions: string,
+): string | Anthropic.TextBlockParam[] =>
+  instructions
+    ? [{ type: 'text', text: instructions, cache_control: EPHEMERAL_CACHE }]
+    : instructions;
+
+/** Block types that accept cache_control (thinking blocks do not). */
+const CACHEABLE_BLOCK_TYPES = new Set([
+  'text',
+  'image',
+  'tool_use',
+  'tool_result',
+  'document',
+]);
+
+/**
+ * Marks the last cacheable content block of the last message as a
+ * prompt-cache breakpoint, so each request reuses the cache entry the
+ * previous turn (or agent-loop iteration) wrote. The marker moves with the
+ * conversation tail; earlier entries stay valid as read points.
+ */
+export const markCacheBreakpoint = (
+  messages: Anthropic.MessageParam[],
+): Anthropic.MessageParam[] => {
+  const lastMessage = messages.at(-1);
+  if (!lastMessage) {
+    return messages;
+  }
+  const blocks = asBlocks(lastMessage.content);
+  const lastCacheable = blocks.findLast((block) =>
+    CACHEABLE_BLOCK_TYPES.has(block.type),
+  );
+  if (!lastCacheable) {
+    return messages;
+  }
+  const markedContent = blocks.map((block) =>
+    block === lastCacheable
+      ? { ...block, cache_control: EPHEMERAL_CACHE }
+      : block,
+  );
+  return [...messages.slice(0, -1), { ...lastMessage, content: markedContent }];
+};
+
 export const convertTool = (tool: ToolSchema): Anthropic.Tool => ({
   name: tool.name,
   description: tool.description,
