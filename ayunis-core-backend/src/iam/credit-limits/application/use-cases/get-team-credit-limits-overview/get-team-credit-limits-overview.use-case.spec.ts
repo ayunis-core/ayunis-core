@@ -1,12 +1,16 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ListTeamsUseCase } from 'src/iam/teams/application/use-cases/list-teams/list-teams.use-case';
 import { GetMonthlyCreditUsageForTeamUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.use-case';
 import { CreditLimitRepository } from '../../ports/credit-limit.repository';
-import { TeamCreditLimit } from '../../../domain/team-credit-limit.entity';
+import {
+  aTeamCreditLimit,
+  createMockCreditLimitRepository,
+  TEST_ORG_ID,
+  TEST_TEAM_ID,
+} from '../../testing/credit-limit.fixtures';
 import { GetTeamCreditLimitsOverviewUseCase } from './get-team-credit-limits-overview.use-case';
 
 describe('GetTeamCreditLimitsOverviewUseCase', () => {
@@ -16,27 +20,14 @@ describe('GetTeamCreditLimitsOverviewUseCase', () => {
   let listTeams: { execute: jest.Mock };
   let getUsage: { execute: jest.Mock };
 
-  const orgId = '11111111-1111-1111-1111-111111111111' as UUID;
-  const teamId = '33333333-3333-3333-3333-333333333333' as UUID;
+  const orgId = TEST_ORG_ID;
+  const teamId = TEST_TEAM_ID;
 
-  const teamLimit = new TeamCreditLimit({
-    orgId,
-    teamId,
-    monthlyCredits: 20000,
-  });
+  const teamLimit = aTeamCreditLimit();
 
   beforeEach(async () => {
-    repository = {
-      save: jest.fn(),
-      findUserLimits: jest.fn(),
-      findTeamLimits: jest.fn().mockResolvedValue([teamLimit]),
-      findByUserId: jest.fn(),
-      findByTeamId: jest.fn(),
-      findByTeamIds: jest.fn(),
-      deleteByUserId: jest.fn(),
-      deleteByTeamId: jest.fn(),
-      deleteByOrg: jest.fn(),
-    };
+    repository = createMockCreditLimitRepository();
+    repository.findTeamLimits.mockResolvedValue([teamLimit]);
     context = { get: jest.fn().mockReturnValue(orgId) };
     listTeams = {
       execute: jest

@@ -1,6 +1,5 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
@@ -8,6 +7,12 @@ import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import { CreditLimitRepository } from '../../ports/credit-limit.repository';
 import { TeamCreditLimit } from '../../../domain/team-credit-limit.entity';
 import { InvalidCreditLimitError } from '../../credit-limits.errors';
+import {
+  aTeamCreditLimit,
+  createMockCreditLimitRepository,
+  TEST_ORG_ID,
+  TEST_TEAM_ID,
+} from '../../testing/credit-limit.fixtures';
 import { SetTeamCreditLimitUseCase } from './set-team-credit-limit.use-case';
 import { SetTeamCreditLimitCommand } from './set-team-credit-limit.command';
 
@@ -17,21 +22,11 @@ describe('SetTeamCreditLimitUseCase', () => {
   let context: { get: jest.Mock };
   let getTeam: { execute: jest.Mock };
 
-  const orgId = '11111111-1111-1111-1111-111111111111' as UUID;
-  const teamId = '33333333-3333-3333-3333-333333333333' as UUID;
+  const orgId = TEST_ORG_ID;
+  const teamId = TEST_TEAM_ID;
 
   beforeEach(async () => {
-    repository = {
-      save: jest.fn().mockImplementation((limit) => Promise.resolve(limit)),
-      findUserLimits: jest.fn(),
-      findTeamLimits: jest.fn(),
-      findByUserId: jest.fn(),
-      findByTeamId: jest.fn().mockResolvedValue(null),
-      findByTeamIds: jest.fn(),
-      deleteByUserId: jest.fn(),
-      deleteByTeamId: jest.fn(),
-      deleteByOrg: jest.fn(),
-    };
+    repository = createMockCreditLimitRepository();
     context = { get: jest.fn().mockReturnValue(orgId) };
     // Default: target team belongs to the caller's org (GetTeam resolves).
     getTeam = { execute: jest.fn().mockResolvedValue({ id: teamId }) };
@@ -60,11 +55,7 @@ describe('SetTeamCreditLimitUseCase', () => {
   });
 
   it('updates an existing team limit in place, preserving its identity', async () => {
-    const existing = new TeamCreditLimit({
-      orgId,
-      teamId,
-      monthlyCredits: 5000,
-    });
+    const existing = aTeamCreditLimit({ monthlyCredits: 5000 });
     repository.findByTeamId.mockResolvedValue(existing);
 
     const result = await useCase.execute(

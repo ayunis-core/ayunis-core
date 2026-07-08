@@ -6,7 +6,12 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
 import { GetMonthlyCreditUsageForUsersUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-users/get-monthly-credit-usage-for-users.use-case';
 import { CreditLimitRepository } from '../../ports/credit-limit.repository';
-import { UserCreditLimit } from '../../../domain/user-credit-limit.entity';
+import {
+  aUserCreditLimit,
+  createMockCreditLimitRepository,
+  TEST_ORG_ID,
+  TEST_USER_ID,
+} from '../../testing/credit-limit.fixtures';
 import { GetUserCreditLimitsOverviewUseCase } from './get-user-credit-limits-overview.use-case';
 
 describe('GetUserCreditLimitsOverviewUseCase', () => {
@@ -16,27 +21,14 @@ describe('GetUserCreditLimitsOverviewUseCase', () => {
   let findUsersByIds: { execute: jest.Mock };
   let getUsage: { execute: jest.Mock };
 
-  const orgId = '11111111-1111-1111-1111-111111111111' as UUID;
-  const userId = '22222222-2222-2222-2222-222222222222' as UUID;
+  const orgId = TEST_ORG_ID;
+  const userId = TEST_USER_ID;
 
-  const userLimit = new UserCreditLimit({
-    orgId,
-    userId,
-    monthlyCredits: 5000,
-  });
+  const userLimit = aUserCreditLimit();
 
   beforeEach(async () => {
-    repository = {
-      save: jest.fn(),
-      findUserLimits: jest.fn().mockResolvedValue([userLimit]),
-      findTeamLimits: jest.fn(),
-      findByUserId: jest.fn(),
-      findByTeamId: jest.fn(),
-      findByTeamIds: jest.fn(),
-      deleteByUserId: jest.fn(),
-      deleteByTeamId: jest.fn(),
-      deleteByOrg: jest.fn(),
-    };
+    repository = createMockCreditLimitRepository();
+    repository.findUserLimits.mockResolvedValue([userLimit]);
     context = { get: jest.fn().mockReturnValue(orgId) };
     findUsersByIds = {
       execute: jest

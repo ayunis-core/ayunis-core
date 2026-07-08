@@ -4,8 +4,14 @@ import type { UUID } from 'crypto';
 import { FindTeamsByUserIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-user-id/find-teams-by-user-id.use-case';
 import { Team } from 'src/iam/teams/domain/team.entity';
 import { CreditLimitRepository } from '../../ports/credit-limit.repository';
-import { UserCreditLimit } from '../../../domain/user-credit-limit.entity';
-import { TeamCreditLimit } from '../../../domain/team-credit-limit.entity';
+import {
+  aTeamCreditLimit,
+  aUserCreditLimit,
+  createMockCreditLimitRepository,
+  TEST_ORG_ID,
+  TEST_TEAM_ID,
+  TEST_USER_ID,
+} from '../../testing/credit-limit.fixtures';
 import { ResolveCreditLimitsForUserUseCase } from './resolve-credit-limits-for-user.use-case';
 import { ResolveCreditLimitsForUserQuery } from './resolve-credit-limits-for-user.query';
 
@@ -14,26 +20,16 @@ describe('ResolveCreditLimitsForUserUseCase', () => {
   let repository: jest.Mocked<CreditLimitRepository>;
   let findTeams: { execute: jest.Mock };
 
-  const orgId = '11111111-1111-1111-1111-111111111111' as UUID;
-  const userId = '22222222-2222-2222-2222-222222222222' as UUID;
-  const teamAId = '33333333-3333-3333-3333-333333333333' as UUID;
+  const orgId = TEST_ORG_ID;
+  const userId = TEST_USER_ID;
+  const teamAId = TEST_TEAM_ID;
   const teamBId = '44444444-4444-4444-4444-444444444444' as UUID;
 
   const team = (id: UUID): Team =>
     new Team({ id, name: `team-${id}`, orgId, modelOverrideEnabled: false });
 
   beforeEach(async () => {
-    repository = {
-      save: jest.fn(),
-      findUserLimits: jest.fn(),
-      findTeamLimits: jest.fn(),
-      findByUserId: jest.fn().mockResolvedValue(null),
-      findByTeamId: jest.fn(),
-      findByTeamIds: jest.fn().mockResolvedValue([]),
-      deleteByUserId: jest.fn(),
-      deleteByTeamId: jest.fn(),
-      deleteByOrg: jest.fn(),
-    };
+    repository = createMockCreditLimitRepository();
     findTeams = { execute: jest.fn().mockResolvedValue([]) };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -56,21 +52,11 @@ describe('ResolveCreditLimitsForUserUseCase', () => {
   });
 
   it('returns the personal limit and only the limited teams the user belongs to', async () => {
-    repository.findByUserId.mockResolvedValue(
-      new UserCreditLimit({
-        orgId,
-        userId,
-        monthlyCredits: 5000,
-      }),
-    );
+    repository.findByUserId.mockResolvedValue(aUserCreditLimit());
     findTeams.execute.mockResolvedValue([team(teamAId), team(teamBId)]);
     // Only team A has a configured limit.
     repository.findByTeamIds.mockResolvedValue([
-      new TeamCreditLimit({
-        orgId,
-        teamId: teamAId,
-        monthlyCredits: 20000,
-      }),
+      aTeamCreditLimit({ teamId: teamAId }),
     ]);
 
     const result = await useCase.execute(
