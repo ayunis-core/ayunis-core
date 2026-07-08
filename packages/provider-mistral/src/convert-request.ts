@@ -14,12 +14,14 @@ import type {
   ToolSchema,
 } from '@ayunis/inference';
 
+import { normalizeSchemaForMistral } from './normalize-schema';
+
 export const convertTool = (tool: ToolSchema): Tool => ({
   type: 'function',
   function: {
     name: tool.name,
     description: tool.description,
-    parameters: tool.parameters,
+    parameters: normalizeSchemaForMistral(tool.parameters),
   },
 });
 
