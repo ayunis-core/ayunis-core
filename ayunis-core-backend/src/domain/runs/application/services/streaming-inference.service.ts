@@ -23,11 +23,10 @@ import { safeJsonParse } from 'src/common/util/unicode-sanitizer';
 import { ContextService } from 'src/common/context/services/context.service';
 import { InferenceCompletedEvent } from '../events/inference-completed.event';
 import { extractInferenceErrorInfo } from '../helpers/extract-inference-error-info.helper';
+import { observableToBufferedAsyncIterable } from '../helpers/buffered-stream.helper';
 
 type AssistantContentBlock =
-  | TextMessageContent
-  | ToolUseMessageContent
-  | ThinkingMessageContent;
+  TextMessageContent | ToolUseMessageContent | ThinkingMessageContent;
 
 interface AccumulatedToolCall {
   id: string | null;
@@ -44,6 +43,15 @@ interface AccumulatedState {
   thinkingSignature: string | null;
   toolCalls: Map<number, AccumulatedToolCall>;
 }
+
+const initialAccumulatedState = (): AccumulatedState => ({
+  text: '',
+  thinking: '',
+  textProviderMetadata: null,
+  thinkingId: null,
+  thinkingSignature: null,
+  toolCalls: new Map(),
+});
 
 /**
  * Executes streaming inference, accumulates response chunks, yields partial
@@ -69,87 +77,39 @@ export class StreamingInferenceService {
     threadId: UUID;
     orgId: UUID;
   }): AsyncGenerator<AssistantMessage, void, unknown> {
-    const { model, messages, tools, instructions, threadId, orgId } = params;
+    const { model, tools, threadId, orgId } = params;
 
-    const streamInput = new StreamInferenceInput({
-      model,
-      messages,
-      systemPrompt: instructions ?? '',
-      tools,
-      toolChoice: ModelToolChoice.AUTO,
-      orgId,
-    });
-
-    const stream$ = this.streamInferenceUseCase.execute(streamInput);
-
-    const assistantMessage = new AssistantMessage({
-      threadId,
-      content: [],
-    });
-
-    const state: AccumulatedState = {
-      text: '',
-      thinking: '',
-      textProviderMetadata: null,
-      thinkingId: null,
-      thinkingSignature: null,
-      toolCalls: new Map(),
-    };
-
+    const stream$ = this.startStream(params);
+    const assistantMessage = new AssistantMessage({ threadId, content: [] });
+    const state = initialAccumulatedState();
     let streamCompletedSuccessfully = false;
     const allChunks: StreamInferenceResponseChunk[] = [];
     const startTime = Date.now();
 
-    const asyncIterable = this.buildAsyncIterable(stream$, allChunks, () => {
-      streamCompletedSuccessfully = true;
-    });
+    const asyncIterable = observableToBufferedAsyncIterable(
+      stream$,
+      allChunks,
+      () => {
+        streamCompletedSuccessfully = true;
+      },
+    );
 
     let inferenceError: unknown;
     try {
-      for await (const message of this.processStreamingChunks(
+      yield* this.processStreamingChunks(
         asyncIterable,
         assistantMessage,
         state,
         tools,
-      )) {
-        yield message;
-      }
+      );
     } catch (error) {
       inferenceError = error;
       throw error;
     } finally {
-      const userId = this.contextService.get('userId');
-      const contextOrgId = this.contextService.get('orgId');
-      this.eventEmitter
-        .emitAsync(
-          InferenceCompletedEvent.EVENT_NAME,
-          new InferenceCompletedEvent(
-            userId ?? ('unknown' as UUID),
-            contextOrgId ?? orgId,
-            model.name,
-            model.provider,
-            true,
-            Date.now() - startTime,
-            inferenceError
-              ? extractInferenceErrorInfo(inferenceError)
-              : undefined,
-          ),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit InferenceCompletedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-          });
-        });
+      this.emitInferenceCompleted(model, orgId, startTime, inferenceError);
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- mutated in callback, TS can't track
       if (streamCompletedSuccessfully && allChunks.length > 0) {
-        const usage = this.extractUsageFromChunks(allChunks);
-        if (usage) {
-          this.inferenceUsageGuard.collectUsage(
-            model,
-            usage,
-            assistantMessage.id,
-          );
-        }
+        this.collectStreamUsage(model, allChunks, assistantMessage.id);
       }
 
       await this.saveAccumulatedMessage(
@@ -162,59 +122,64 @@ export class StreamingInferenceService {
     }
   }
 
-  private buildAsyncIterable(
-    stream$: ReturnType<StreamInferenceUseCase['execute']>,
-    allChunks: StreamInferenceResponseChunk[],
-    onComplete: () => void,
-  ): AsyncIterable<StreamInferenceResponseChunk> {
-    return {
-      [Symbol.asyncIterator]() {
-        let completed = false;
-        let error: Error | null = null;
-        let consumedIndex = 0;
+  private startStream(params: {
+    model: LanguageModel;
+    messages: Message[];
+    tools: Tool[];
+    instructions?: string;
+    orgId: UUID;
+  }): ReturnType<StreamInferenceUseCase['execute']> {
+    return this.streamInferenceUseCase.execute(
+      new StreamInferenceInput({
+        model: params.model,
+        messages: params.messages,
+        systemPrompt: params.instructions ?? '',
+        tools: params.tools,
+        toolChoice: ModelToolChoice.AUTO,
+        orgId: params.orgId,
+      }),
+    );
+  }
 
-        const subscription = stream$.subscribe({
-          next: (chunk) => {
-            allChunks.push(chunk);
-          },
-          error: (err) => {
-            error = err as Error;
-            completed = true;
-          },
-          complete: () => {
-            completed = true;
-          },
+  private collectStreamUsage(
+    model: LanguageModel,
+    chunks: StreamInferenceResponseChunk[],
+    messageId: UUID,
+  ): void {
+    const usage = this.extractUsageFromChunks(chunks);
+    if (usage) {
+      this.inferenceUsageGuard.collectUsage(model, usage, messageId);
+    }
+  }
+
+  private emitInferenceCompleted(
+    model: LanguageModel,
+    orgId: UUID,
+    startTime: number,
+    inferenceError: unknown,
+  ): void {
+    const userId = this.contextService.get('userId');
+    const contextOrgId = this.contextService.get('orgId');
+    this.eventEmitter
+      .emitAsync(
+        InferenceCompletedEvent.EVENT_NAME,
+        new InferenceCompletedEvent(
+          userId ?? ('unknown' as UUID),
+          contextOrgId ?? orgId,
+          model.name,
+          model.provider,
+          true,
+          Date.now() - startTime,
+          inferenceError
+            ? extractInferenceErrorInfo(inferenceError)
+            : undefined,
+        ),
+      )
+      .catch((err: unknown) => {
+        this.logger.error('Failed to emit InferenceCompletedEvent', {
+          error: err instanceof Error ? err.message : 'Unknown error',
         });
-
-        return {
-          async next() {
-            while (consumedIndex >= allChunks.length && !completed) {
-              await new Promise((resolve) => setTimeout(resolve, 10));
-            }
-
-            if (error) {
-              subscription.unsubscribe();
-              throw error;
-            }
-
-            if (consumedIndex < allChunks.length) {
-              const chunk = allChunks[consumedIndex++];
-              return { value: chunk, done: false } as IteratorResult<
-                StreamInferenceResponseChunk,
-                void
-              >;
-            } else {
-              subscription.unsubscribe();
-              onComplete();
-              return {
-                done: true,
-                value: undefined,
-              } as IteratorReturnResult<void>;
-            }
-          },
-        };
-      },
-    } as AsyncIterable<StreamInferenceResponseChunk>;
+      });
   }
 
   private async *processStreamingChunks(
@@ -222,7 +187,7 @@ export class StreamingInferenceService {
     assistantMessage: AssistantMessage,
     state: AccumulatedState,
     tools: Tool[],
-  ): AsyncGenerator<AssistantMessage, void, void> {
+  ): AsyncGenerator<AssistantMessage, void, unknown> {
     for await (const chunk of asyncIterable) {
       const shouldUpdate = this.accumulateChunk(chunk, state);
 
@@ -451,25 +416,53 @@ export class StreamingInferenceService {
   extractUsageFromChunks(
     chunks: StreamInferenceResponseChunk[],
   ): { inputTokens: number; outputTokens: number } | undefined {
-    // Providers report cumulative usage on every chunk (Gemini repeats
-    // promptTokenCount on each chunk; candidatesTokenCount only appears on the
-    // final one). Summing across chunks would over-count, so take last-wins per
-    // field, matching the non-streaming accumulator (response-accumulator.ts).
-    let inputTokens: number | undefined;
-    let outputTokens: number | undefined;
+    const usage = this.lastWinsUsage(chunks);
+    if (usage.inputTokens === undefined && usage.outputTokens === undefined) {
+      return undefined;
+    }
+    const cacheRead = usage.cacheReadInputTokens ?? 0;
+    const cacheWrite = usage.cacheWriteInputTokens ?? 0;
+    if (cacheRead || cacheWrite) {
+      this.logger.debug('Prompt cache activity', {
+        uncachedInputTokens: usage.inputTokens ?? 0,
+        cacheReadInputTokens: cacheRead,
+        cacheWriteInputTokens: cacheWrite,
+      });
+    }
+    // Cached prompt tokens are billed as ordinary input: the provider's
+    // inputTokens excludes tokens covered by the prompt cache, so without
+    // this the billed input collapses to the uncached remainder (~3 tokens).
+    return {
+      inputTokens: (usage.inputTokens ?? 0) + cacheRead + cacheWrite,
+      outputTokens: usage.outputTokens ?? 0,
+    };
+  }
 
+  /**
+   * Providers report cumulative usage on every chunk (Gemini repeats
+   * promptTokenCount on each chunk; candidatesTokenCount only appears on the
+   * final one). Summing across chunks would over-count, so take last-wins per
+   * field, matching the non-streaming accumulator (response-accumulator.ts).
+   */
+  private lastWinsUsage(
+    chunks: StreamInferenceResponseChunk[],
+  ): NonNullable<StreamInferenceResponseChunk['usage']> {
+    const result: NonNullable<StreamInferenceResponseChunk['usage']> = {};
     for (const chunk of chunks) {
       if (!chunk.usage) continue;
       if (chunk.usage.inputTokens !== undefined) {
-        inputTokens = chunk.usage.inputTokens;
+        result.inputTokens = chunk.usage.inputTokens;
       }
       if (chunk.usage.outputTokens !== undefined) {
-        outputTokens = chunk.usage.outputTokens;
+        result.outputTokens = chunk.usage.outputTokens;
+      }
+      if (chunk.usage.cacheReadInputTokens !== undefined) {
+        result.cacheReadInputTokens = chunk.usage.cacheReadInputTokens;
+      }
+      if (chunk.usage.cacheWriteInputTokens !== undefined) {
+        result.cacheWriteInputTokens = chunk.usage.cacheWriteInputTokens;
       }
     }
-
-    return inputTokens === undefined && outputTokens === undefined
-      ? undefined
-      : { inputTokens: inputTokens ?? 0, outputTokens: outputTokens ?? 0 };
+    return result;
   }
 }

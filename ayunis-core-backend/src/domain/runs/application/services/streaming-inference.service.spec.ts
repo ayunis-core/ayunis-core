@@ -15,6 +15,8 @@ describe('StreamingInferenceService.extractUsageFromChunks', () => {
   const chunkWithUsage = (usage: {
     inputTokens?: number;
     outputTokens?: number;
+    cacheReadInputTokens?: number;
+    cacheWriteInputTokens?: number;
   }): StreamInferenceResponseChunk =>
     new StreamInferenceResponseChunk({
       thinkingDelta: null,
@@ -52,5 +54,32 @@ describe('StreamingInferenceService.extractUsageFromChunks', () => {
       chunkWithUsage({ inputTokens: 100, outputTokens: 30 }),
     ]);
     expect(usage).toEqual({ inputTokens: 100, outputTokens: 30 });
+  });
+
+  it('bills cached prompt tokens as input tokens', () => {
+    // Anthropic's input_tokens excludes tokens served by or written to the
+    // prompt cache. Option A billing: customers pay for the full prompt as
+    // if uncached, so cache read/write tokens count as input.
+    const usage = service.extractUsageFromChunks([
+      chunkWithUsage({
+        inputTokens: 3,
+        cacheWriteInputTokens: 9677,
+        cacheReadInputTokens: 0,
+      }),
+      chunkWithUsage({ outputTokens: 42 }),
+    ]);
+    expect(usage).toEqual({ inputTokens: 9680, outputTokens: 42 });
+  });
+
+  it('bills cache reads and writes together with uncached input', () => {
+    const usage = service.extractUsageFromChunks([
+      chunkWithUsage({
+        inputTokens: 10,
+        cacheWriteInputTokens: 200,
+        cacheReadInputTokens: 3000,
+        outputTokens: 5,
+      }),
+    ]);
+    expect(usage).toEqual({ inputTokens: 3210, outputTokens: 5 });
   });
 });

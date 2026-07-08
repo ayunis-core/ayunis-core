@@ -65,6 +65,10 @@ export class StreamInferenceResponseChunk {
   public readonly usage?: {
     inputTokens?: number;
     outputTokens?: number;
+    /** Prompt tokens served from the provider's prompt cache. */
+    cacheReadInputTokens?: number;
+    /** Prompt tokens written to the provider's prompt cache. */
+    cacheWriteInputTokens?: number;
   };
 
   constructor(params: {
@@ -78,6 +82,8 @@ export class StreamInferenceResponseChunk {
     usage?: {
       inputTokens?: number;
       outputTokens?: number;
+      cacheReadInputTokens?: number;
+      cacheWriteInputTokens?: number;
     };
   }) {
     this.thinkingDelta = params.thinkingDelta;
