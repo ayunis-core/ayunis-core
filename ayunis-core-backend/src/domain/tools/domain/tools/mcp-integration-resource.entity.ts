@@ -4,6 +4,7 @@ import { ToolType } from '../value-objects/tool-type.enum';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import type { UUID } from 'crypto';
 import type { McpResource } from 'src/domain/mcp/domain/mcp-resource.entity';
+import { sanitizeMcpToolName } from './mcp-tool-name.util';
 
 const mcpResourceToolParameters = {
   type: 'object' as const,
@@ -16,7 +17,10 @@ const mcpResourceToolParameters = {
 type McpResourceToolParameters = FromSchema<typeof mcpResourceToolParameters>;
 
 function getDescription(mcpResource: McpResource): string {
-  return `Retrieve this resource from the MCP integration: ${mcpResource.name}.\nDescription: ${mcpResource.description ?? ''}\nURI: ${mcpResource.uri}\nArguments: ${mcpResource.arguments?.map((arg) => `${arg.name}: ${arg.description}`).join(', ')}`;
+  const argumentList = mcpResource.arguments
+    ?.map((arg) => `${arg.name}: ${arg.description}`)
+    .join(', ');
+  return `Retrieve this resource from the MCP integration: ${mcpResource.name}.\nDescription: ${mcpResource.description ?? ''}\nURI: ${mcpResource.uri}\nArguments: ${argumentList}`;
 }
 
 /**
@@ -30,7 +34,7 @@ export class McpIntegrationResource extends Tool {
 
   constructor(mcpResource: McpResource, returnsPii: boolean) {
     super({
-      name: mcpResource.name,
+      name: sanitizeMcpToolName(mcpResource.name),
       description: getDescription(mcpResource),
       parameters: mcpResourceToolParameters,
       type: ToolType.MCP_RESOURCE,

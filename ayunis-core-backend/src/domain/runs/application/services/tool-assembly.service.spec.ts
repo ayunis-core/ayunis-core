@@ -21,14 +21,14 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
 
   /**
    * Build a ToolAssemblyService with mocked dependencies.
-   * Constructor order (14 params):
-   *  0 configService, 1 assembleToolsUseCase, 2 discoverMcpCapabilitiesUseCase,
+   * Constructor order (13 params):
+   *  0 configService, 1 assembleToolsUseCase, 2 mcpToolAssembler,
    *  3 systemPromptBuilderService, 4 findActiveSkillsUseCase,
    *  5 getUserSystemPromptUseCase, 6 getOrgSystemPromptUseCase,
-   *  7 getMcpIntegrationsByIdsUseCase, 8 findActiveAlwaysOnTemplatesUseCase,
-   *  9 features, 10 contextService,
-   *  11 getPermittedImageGenerationModelUseCase, 12 artifactToolAssembler,
-   *  13 getOrgChatSettingsUseCase
+   *  7 findActiveAlwaysOnTemplatesUseCase,
+   *  8 features, 9 contextService,
+   *  10 getPermittedImageGenerationModelUseCase, 11 artifactToolAssembler,
+   *  12 getOrgChatSettingsUseCase
    */
   async function buildService(overrides: {
     contextServiceGet?: jest.Mock;
@@ -36,6 +36,8 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     assembleToolExecute?: jest.Mock;
     internetSearchIsAvailable?: boolean;
     orgChatSettingsExecute?: jest.Mock;
+    discoverMcpExecute?: jest.Mock;
+    mcpIntegrationsExecute?: jest.Mock;
   }) {
     const mod = await import('./tool-assembly.service');
 
@@ -53,13 +55,16 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
             Promise.resolve(createMockTool(cmd.type)),
           ),
     };
-    const discoverMcpCapabilitiesUseCase = { execute: jest.fn() };
+    const discoverMcpCapabilitiesUseCase = {
+      execute: overrides.discoverMcpExecute ?? jest.fn(),
+    };
     const systemPromptBuilderService = null;
     const findActiveSkillsUseCase = null;
     const getUserSystemPromptUseCase = null;
     const getOrgSystemPromptUseCase = null;
     const getMcpIntegrationsByIdsUseCase = {
-      execute: jest.fn().mockResolvedValue([]),
+      execute:
+        overrides.mcpIntegrationsExecute ?? jest.fn().mockResolvedValue([]),
     };
     const findActiveAlwaysOnTemplatesUseCase = null;
     const features = { skillsEnabled: false };
@@ -78,15 +83,20 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
         jest.fn().mockResolvedValue({ internetSearchEnabled: true }),
     };
 
+    const mcpMod = await import('./mcp-tool-assembler.service');
+    const mcpToolAssembler = new (mcpMod.McpToolAssemblerService as any)(
+      discoverMcpCapabilitiesUseCase,
+      getMcpIntegrationsByIdsUseCase,
+    );
+
     const service = new (mod.ToolAssemblyService as any)(
       configService,
       assembleToolsUseCase,
-      discoverMcpCapabilitiesUseCase,
+      mcpToolAssembler,
       systemPromptBuilderService,
       findActiveSkillsUseCase,
       getUserSystemPromptUseCase,
       getOrgSystemPromptUseCase,
-      getMcpIntegrationsByIdsUseCase,
       findActiveAlwaysOnTemplatesUseCase,
       features,
       contextService,
@@ -103,6 +113,82 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       getOrgChatSettingsUseCase,
     };
   }
+
+  it('drops MCP tools whose sanitized name collides with a built-in tool', async () => {
+    const integrationId = randomUUID();
+    const { service } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      imageModelExecute: jest.fn().mockResolvedValue({}),
+      // 'code.execution' sanitizes to 'code_execution' — the built-in's name
+      discoverMcpExecute: jest.fn().mockResolvedValue({
+        tools: [
+          {
+            name: 'code.execution',
+            description: 'third-party tool',
+            inputSchema: { type: 'object', properties: {} },
+            integrationId,
+          },
+        ],
+        resources: [],
+        prompts: [],
+        returnsPii: false,
+      }),
+      mcpIntegrationsExecute: jest
+        .fn()
+        .mockResolvedValue([{ id: integrationId, name: 'Nasty Integration' }]),
+    });
+
+    const thread = new Thread({
+      userId: randomUUID(),
+      messages: [],
+      mcpIntegrationIds: [integrationId],
+      sourceAssignments: [],
+    });
+    const tools = await service.assembleTools(thread, [], new Map());
+
+    const collisions = tools.filter(
+      (t: { name: string }) => t.name === 'code_execution',
+    );
+    expect(collisions).toHaveLength(1);
+    expect(collisions[0].type).toBe(ToolType.CODE_EXECUTION);
+  });
+
+  it('keeps only the first MCP tool when two share a sanitized name', async () => {
+    const integrationId = randomUUID();
+    const duplicateTool = (description: string) => ({
+      name: 'notion.search',
+      description,
+      inputSchema: { type: 'object', properties: {} },
+      integrationId,
+    });
+    const { service } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      imageModelExecute: jest.fn().mockResolvedValue({}),
+      discoverMcpExecute: jest.fn().mockResolvedValue({
+        tools: [duplicateTool('first'), duplicateTool('second')],
+        resources: [],
+        prompts: [],
+        returnsPii: false,
+      }),
+      mcpIntegrationsExecute: jest
+        .fn()
+        .mockResolvedValue([{ id: integrationId, name: 'Integration' }]),
+    });
+
+    const thread = new Thread({
+      userId: randomUUID(),
+      messages: [],
+      mcpIntegrationIds: [integrationId],
+      sourceAssignments: [],
+    });
+    const tools = await service.assembleTools(thread, [], new Map());
+
+    const matches = tools.filter(
+      (t: { name: string }) => t.name === 'notion_search',
+    );
+    expect(matches).toHaveLength(1);
+    expect(matches[0].description).toBe('first');
+  });
 
   it('should include generate_image tool when org has a permitted image model', async () => {
     const { service } = await buildService({
