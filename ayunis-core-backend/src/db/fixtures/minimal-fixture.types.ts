@@ -6,6 +6,7 @@ import type { EmbeddingDimensions } from 'src/domain/models/domain/value-objects
 
 export type ModelKey =
   | 'languageModel'
+  | 'anthropicLanguageModel'
   | 'azureLanguageModel'
   | 'openaiLanguageModel'
   | 'mistralLanguageModel'
@@ -100,6 +101,7 @@ export interface PermittedModelFixture {
 
 export interface SeedFixture {
   languageModel: LanguageModelFixture;
+  anthropicLanguageModel: LanguageModelFixture;
   azureLanguageModel: LanguageModelFixture;
   openaiLanguageModel: LanguageModelFixture;
   mistralLanguageModel: LanguageModelFixture;
