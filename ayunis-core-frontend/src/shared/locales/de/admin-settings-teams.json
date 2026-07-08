@@ -106,7 +106,8 @@
       "disableSuccess": "Modell für Team deaktiviert",
       "disableError": "Modell konnte nicht für Team deaktiviert werden",
       "disableModelNotFound": "Modell nicht gefunden",
-      "disableModelInvalid": "Dieses Modell kann nicht für das Team deaktiviert werden"
+      "disableModelInvalid": "Dieses Modell kann nicht für das Team deaktiviert werden",
+      "updateError": "Modelleinstellung konnte nicht aktualisiert werden"
     },
     "removeMember": {
       "confirmTitle": "Mitglied entfernen",

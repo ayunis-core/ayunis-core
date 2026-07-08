@@ -5179,6 +5179,73 @@ export const useTeamPermittedModelsControllerCreateTeamPermittedModel = <TError 
     }
     
 /**
+ * Updates a team-scoped permitted model, e.g. toggling whether it enforces anonymous mode for members of the team.
+ * @summary Update a team's permitted model
+ */
+export const teamPermittedModelsControllerUpdateTeamPermittedModel = (
+    teamId: string,
+    id: string,
+    updatePermittedModelDto: UpdatePermittedModelDto,
+ ) => {
+      
+      
+      return customAxiosInstance<PermittedLanguageModelResponseDto>(
+      {url: `/teams/${teamId}/permitted-models/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updatePermittedModelDto
+    },
+      );
+    }
+  
+
+
+export const getTeamPermittedModelsControllerUpdateTeamPermittedModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerUpdateTeamPermittedModel>>, TError,{teamId: string;id: string;data: UpdatePermittedModelDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerUpdateTeamPermittedModel>>, TError,{teamId: string;id: string;data: UpdatePermittedModelDto}, TContext> => {
+
+const mutationKey = ['teamPermittedModelsControllerUpdateTeamPermittedModel'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof teamPermittedModelsControllerUpdateTeamPermittedModel>>, {teamId: string;id: string;data: UpdatePermittedModelDto}> = (props) => {
+          const {teamId,id,data} = props ?? {};
+
+          return  teamPermittedModelsControllerUpdateTeamPermittedModel(teamId,id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TeamPermittedModelsControllerUpdateTeamPermittedModelMutationResult = NonNullable<Awaited<ReturnType<typeof teamPermittedModelsControllerUpdateTeamPermittedModel>>>
+    export type TeamPermittedModelsControllerUpdateTeamPermittedModelMutationBody = UpdatePermittedModelDto
+    export type TeamPermittedModelsControllerUpdateTeamPermittedModelMutationError = void
+
+    /**
+ * @summary Update a team's permitted model
+ */
+export const useTeamPermittedModelsControllerUpdateTeamPermittedModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerUpdateTeamPermittedModel>>, TError,{teamId: string;id: string;data: UpdatePermittedModelDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof teamPermittedModelsControllerUpdateTeamPermittedModel>>,
+        TError,
+        {teamId: string;id: string;data: UpdatePermittedModelDto},
+        TContext
+      > => {
+
+      const mutationOptions = getTeamPermittedModelsControllerUpdateTeamPermittedModelMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * @summary Remove a permitted model from a team
  */
 export const teamPermittedModelsControllerDeleteTeamPermittedModel = (

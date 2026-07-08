@@ -4,6 +4,7 @@ import {
   Post,
   Delete,
   Put,
+  Patch,
   Body,
   Param,
   ParseUUIDPipe,
@@ -31,9 +32,12 @@ import { CreateTeamPermittedModelUseCase } from '../../application/use-cases/cre
 import { CreateTeamPermittedModelCommand } from '../../application/use-cases/create-team-permitted-model/create-team-permitted-model.command';
 import { DeleteTeamPermittedModelUseCase } from '../../application/use-cases/delete-team-permitted-model/delete-team-permitted-model.use-case';
 import { DeleteTeamPermittedModelCommand } from '../../application/use-cases/delete-team-permitted-model/delete-team-permitted-model.command';
+import { UpdateTeamPermittedModelUseCase } from '../../application/use-cases/update-team-permitted-model/update-team-permitted-model.use-case';
+import { UpdateTeamPermittedModelCommand } from '../../application/use-cases/update-team-permitted-model/update-team-permitted-model.command';
 import { SetTeamDefaultModelUseCase } from '../../application/use-cases/set-team-default-model/set-team-default-model.use-case';
 import { SetTeamDefaultModelCommand } from '../../application/use-cases/set-team-default-model/set-team-default-model.command';
 import { CreateTeamPermittedModelDto } from './dto/create-team-permitted-model.dto';
+import { UpdatePermittedModelDto } from './dto/update-permitted-model.dto';
 import { SetTeamDefaultModelDto } from './dto/set-team-default-model.dto';
 import { PermittedLanguageModelResponseDto } from './dto/permitted-language-model-response.dto';
 import { PermittedLanguageModel } from '../../domain/permitted-model.entity';
@@ -44,6 +48,7 @@ import { ModelResponseDtoMapper } from './mappers/model-response-dto.mapper';
 @Roles(UserRole.ADMIN)
 @ApiExtraModels(
   CreateTeamPermittedModelDto,
+  UpdatePermittedModelDto,
   SetTeamDefaultModelDto,
   PermittedLanguageModelResponseDto,
 )
@@ -54,6 +59,7 @@ export class TeamPermittedModelsController {
     private readonly getTeamPermittedModelsUseCase: GetTeamPermittedModelsUseCase,
     private readonly createTeamPermittedModelUseCase: CreateTeamPermittedModelUseCase,
     private readonly deleteTeamPermittedModelUseCase: DeleteTeamPermittedModelUseCase,
+    private readonly updateTeamPermittedModelUseCase: UpdateTeamPermittedModelUseCase,
     private readonly setTeamDefaultModelUseCase: SetTeamDefaultModelUseCase,
     private readonly modelResponseDtoMapper: ModelResponseDtoMapper,
   ) {}
@@ -126,6 +132,40 @@ export class TeamPermittedModelsController {
       );
     }
     return this.modelResponseDtoMapper.toLanguageModelDto(created);
+  }
+
+  @Patch(':id')
+  @ApiOperation({
+    summary: "Update a team's permitted model",
+    description:
+      'Updates a team-scoped permitted model, e.g. toggling whether it ' +
+      'enforces anonymous mode for members of the team.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully updated team permitted model',
+    schema: { $ref: getSchemaPath(PermittedLanguageModelResponseDto) },
+  })
+  @ApiResponse({ status: 404, description: 'Permitted model not found' })
+  async updateTeamPermittedModel(
+    @Param('teamId', ParseUUIDPipe) teamId: UUID,
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Body() dto: UpdatePermittedModelDto,
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  ): Promise<PermittedLanguageModelResponseDto> {
+    this.logger.log('updateTeamPermittedModel', {
+      teamId,
+      permittedModelId: id,
+      anonymousOnly: dto.anonymousOnly,
+    });
+    const command = new UpdateTeamPermittedModelCommand(
+      id,
+      orgId,
+      teamId,
+      dto.anonymousOnly,
+    );
+    const updated = await this.updateTeamPermittedModelUseCase.execute(command);
+    return this.modelResponseDtoMapper.toLanguageModelDto(updated);
   }
 
   @Delete(':id')
