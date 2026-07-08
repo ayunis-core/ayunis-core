@@ -7,6 +7,8 @@ import type {
   ToolSchema,
 } from '@ayunis/inference';
 
+import { normalizeSchemaForAnthropic } from './normalize-schema';
+
 type AnthropicToolChoice =
   | Anthropic.Messages.ToolChoiceAuto
   | Anthropic.Messages.ToolChoiceAny
@@ -15,7 +17,7 @@ type AnthropicToolChoice =
 export const convertTool = (tool: ToolSchema): Anthropic.Tool => ({
   name: tool.name,
   description: tool.description,
-  input_schema: tool.parameters as Anthropic.Messages.Tool.InputSchema,
+  input_schema: normalizeSchemaForAnthropic(tool.parameters),
 });
 
 export const convertToolChoice = (
