@@ -48,6 +48,7 @@ export class SchemaWalker {
     } else if (isRecord(value)) {
       walked = this.walkNode(value);
     }
+
     return walked;
   }
 
