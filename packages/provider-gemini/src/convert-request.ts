@@ -13,16 +13,23 @@ import type {
   ProviderMetadata,
   ToolChoice,
   ToolSchema,
+  ToolNameCodec,
 } from '@ayunis/inference';
 
-export const convertTool = (tool: ToolSchema): FunctionDeclaration => ({
-  name: tool.name,
+import { normalizeSchemaForGemini } from './normalize-schema';
+
+export const convertTool = (
+  tool: ToolSchema,
+  codec: ToolNameCodec,
+): FunctionDeclaration => ({
+  name: codec.encode(tool.name),
   description: tool.description,
-  parameters: tool.parameters,
+  parameters: normalizeSchemaForGemini(tool.parameters),
 });
 
 export const convertToolChoice = (
   toolChoice: ToolChoice,
+  codec: ToolNameCodec,
 ): FunctionCallingConfig => {
   if (toolChoice === 'auto') {
     return { mode: FunctionCallingConfigMode.AUTO };
@@ -32,7 +39,7 @@ export const convertToolChoice = (
   }
   return {
     mode: FunctionCallingConfigMode.ANY,
-    allowedFunctionNames: [toolChoice.tool],
+    allowedFunctionNames: [codec.encode(toolChoice.tool)],
   };
 };
 
@@ -46,19 +53,24 @@ export const buildConfig = (input: {
   instructions: string;
   tools: readonly ToolSchema[];
   toolChoice?: ToolChoice;
+  codec: ToolNameCodec;
 }): GenerateContentConfig => {
-  const { instructions, tools, toolChoice } = input;
+  const { instructions, tools, toolChoice, codec } = input;
   const hasTools = tools.length > 0;
   return {
     systemInstruction: instructions
       ? { role: 'user', parts: [{ text: instructions }] }
       : undefined,
     tools: hasTools
-      ? [{ functionDeclarations: tools.map(convertTool) }]
+      ? [
+          {
+            functionDeclarations: tools.map((tool) => convertTool(tool, codec)),
+          },
+        ]
       : undefined,
     toolConfig:
       hasTools && toolChoice !== undefined
-        ? { functionCallingConfig: convertToolChoice(toolChoice) }
+        ? { functionCallingConfig: convertToolChoice(toolChoice, codec) }
         : undefined,
   };
 };
@@ -70,10 +82,13 @@ export const buildConfig = (input: {
  * `functionResponse` part. Messages that produce no parts are dropped — Gemini
  * rejects empty content.
  */
-export const convertMessages = (messages: readonly Message[]): Content[] => {
+export const convertMessages = (
+  messages: readonly Message[],
+  codec: ToolNameCodec,
+): Content[] => {
   const contents: Content[] = [];
   for (const message of messages) {
-    const content = convertMessage(message);
+    const content = convertMessage(message, codec);
     if (content && (content.parts?.length ?? 0) > 0) {
       contents.push(content);
     }
@@ -81,12 +96,18 @@ export const convertMessages = (messages: readonly Message[]): Content[] => {
   return contents;
 };
 
-const convertMessage = (message: Message): Content | null => {
+const convertMessage = (
+  message: Message,
+  codec: ToolNameCodec,
+): Content | null => {
   switch (message.role) {
     case 'assistant':
-      return { role: 'model', parts: convertAssistant(message.content) };
+      return { role: 'model', parts: convertAssistant(message.content, codec) };
     case 'tool_result':
-      return { role: 'user', parts: convertToolResults(message.content) };
+      return {
+        role: 'user',
+        parts: convertToolResults(message.content, codec),
+      };
     case 'system':
       return { role: 'user', parts: convertSystem(message.content) };
     case 'user':
@@ -108,7 +129,10 @@ const convertUser = (content: readonly MessageContent[]): Part[] => {
   return parts;
 };
 
-const convertAssistant = (content: readonly MessageContent[]): Part[] => {
+const convertAssistant = (
+  content: readonly MessageContent[],
+  codec: ToolNameCodec,
+): Part[] => {
   const parts: Part[] = [];
   for (const c of content) {
     if (c.type === 'text') {
@@ -116,7 +140,13 @@ const convertAssistant = (content: readonly MessageContent[]): Part[] => {
     } else if (c.type === 'tool_use') {
       parts.push(
         withSignature(
-          { functionCall: { id: c.id, name: c.name, args: c.input } },
+          {
+            functionCall: {
+              id: c.id,
+              name: codec.encode(c.name),
+              args: c.input,
+            },
+          },
           c.providerMetadata,
         ),
       );
@@ -125,7 +155,10 @@ const convertAssistant = (content: readonly MessageContent[]): Part[] => {
   return parts;
 };
 
-const convertToolResults = (content: readonly MessageContent[]): Part[] =>
+const convertToolResults = (
+  content: readonly MessageContent[],
+  codec: ToolNameCodec,
+): Part[] =>
   content
     .filter((c): c is Extract<MessageContent, { type: 'tool_result' }> => {
       return c.type === 'tool_result';
@@ -133,7 +166,7 @@ const convertToolResults = (content: readonly MessageContent[]): Part[] =>
     .map((c) => ({
       functionResponse: {
         id: c.toolCallId,
-        name: c.toolName,
+        name: codec.encode(c.toolName),
         response: { result: c.result },
       },
     }));

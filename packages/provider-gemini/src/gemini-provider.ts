@@ -6,6 +6,7 @@ import type {
   ProviderChunk,
   ProviderRequest,
 } from '@ayunis/inference';
+import { ToolNameCodec } from '@ayunis/inference';
 
 import { convertChunk } from './convert-chunk';
 import { buildConfig, convertMessages } from './convert-request';
@@ -46,9 +47,10 @@ async function* streamChat(
   maxRetries: number,
   request: ProviderRequest,
 ): AsyncIterable<ProviderChunk> {
-  const stream = await openStream(client, model, maxRetries, request);
+  const codec = new ToolNameCodec(request.tools);
+  const stream = await openStream(client, model, maxRetries, request, codec);
   for await (const chunk of stream) {
-    const converted = convertChunk(chunk);
+    const converted = convertChunk(chunk, codec);
     if (converted) {
       yield converted;
     }
@@ -65,17 +67,19 @@ const openStream = (
   model: string,
   maxRetries: number,
   request: ProviderRequest,
+  codec: ToolNameCodec,
 ): Promise<AsyncGenerator<GenerateContentResponse>> =>
   withRetry(
     () =>
       client.models.generateContentStream({
         model,
-        contents: convertMessages(request.messages),
+        contents: convertMessages(request.messages, codec),
         config: {
           ...buildConfig({
             instructions: request.instructions,
             tools: request.tools,
             toolChoice: request.toolChoice,
+            codec,
           }),
           ...(request.signal ? { abortSignal: request.signal } : {}),
         },

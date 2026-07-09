@@ -1,13 +1,25 @@
 import type { Message, ToolSchema } from '@ayunis/inference';
+import { ToolNameCodec } from '@ayunis/inference';
 import { FunctionCallingConfigMode } from '@google/genai';
 import { describe, expect, it } from 'vitest';
 
 import {
-  buildConfig,
-  convertMessages,
-  convertTool,
-  convertToolChoice,
+  buildConfig as buildConfigFn,
+  convertMessages as convertMessagesFn,
+  convertTool as convertToolFn,
+  convertToolChoice as convertToolChoiceFn,
 } from './convert-request';
+
+// Passthrough map — name translation is covered by its own tests below.
+const passthrough = new ToolNameCodec([]);
+const convertMessages = (messages: Message[]) =>
+  convertMessagesFn(messages, passthrough);
+const convertTool = (tool: ToolSchema) => convertToolFn(tool, passthrough);
+const convertToolChoice = (choice: Parameters<typeof convertToolChoiceFn>[0]) =>
+  convertToolChoiceFn(choice, passthrough);
+const buildConfig = (
+  input: Omit<Parameters<typeof buildConfigFn>[0], 'codec'>,
+) => buildConfigFn({ ...input, codec: passthrough });
 
 describe('convertTool', () => {
   it('maps a tool schema to a Gemini function declaration', () => {
@@ -221,5 +233,60 @@ describe('convertMessages', () => {
       { role: 'assistant', content: [{ type: 'thinking', thinking: 'hmm' }] },
     ];
     expect(convertMessages(messages)).toEqual([]);
+  });
+});
+
+describe('wire-name encoding', () => {
+  const codec = new ToolNameCodec([
+    { name: 'notion.search', description: 'd', parameters: {} },
+  ]);
+
+  it('declares tools under their wire names', () => {
+    expect(
+      convertToolFn(
+        { name: 'notion.search', description: 'd', parameters: {} },
+        codec,
+      ).name,
+    ).toBe('notion_search');
+  });
+
+  it('translates functionCall and functionResponse names in history', () => {
+    const messages: Message[] = [
+      {
+        role: 'assistant',
+        content: [
+          { type: 'tool_use', id: 'fc_1', name: 'notion.search', input: {} },
+        ],
+      },
+      {
+        role: 'tool_result',
+        content: [
+          {
+            type: 'tool_result',
+            toolCallId: 'fc_1',
+            toolName: 'notion.search',
+            result: 'ok',
+          },
+        ],
+      },
+    ];
+    const [assistant, toolResult] = convertMessagesFn(messages, codec);
+    expect(assistant.parts?.[0]).toEqual({
+      functionCall: { id: 'fc_1', name: 'notion_search', args: {} },
+    });
+    expect(toolResult.parts?.[0]).toEqual({
+      functionResponse: {
+        id: 'fc_1',
+        name: 'notion_search',
+        response: { result: 'ok' },
+      },
+    });
+  });
+
+  it('translates allowedFunctionNames for a specific tool choice', () => {
+    expect(convertToolChoiceFn({ tool: 'notion.search' }, codec)).toEqual({
+      mode: FunctionCallingConfigMode.ANY,
+      allowedFunctionNames: ['notion_search'],
+    });
   });
 });
