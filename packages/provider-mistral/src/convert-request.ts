@@ -12,14 +12,17 @@ import type {
   MessageContent,
   ToolChoice,
   ToolSchema,
+  ToolNameCodec,
 } from '@ayunis/inference';
 
-export const convertTool = (tool: ToolSchema): Tool => ({
+import { normalizeSchemaForMistral } from './normalize-schema';
+
+export const convertTool = (tool: ToolSchema, codec: ToolNameCodec): Tool => ({
   type: 'function',
   function: {
-    name: tool.name,
+    name: codec.encode(tool.name),
     description: tool.description,
-    parameters: tool.parameters,
+    parameters: normalizeSchemaForMistral(tool.parameters),
   },
 });
 
@@ -28,6 +31,7 @@ export const convertTool = (tool: ToolSchema): Tool => ({
 /* eslint-disable sonarjs/function-return-type */
 export const convertToolChoice = (
   toolChoice: ToolChoice,
+  codec: ToolNameCodec,
 ): MistralToolChoice | ToolChoiceEnum => {
   if (toolChoice === 'auto') {
     return 'auto';
@@ -35,7 +39,10 @@ export const convertToolChoice = (
   if (toolChoice === 'required') {
     return 'required';
   }
-  return { type: 'function', function: { name: toolChoice.tool } };
+  return {
+    type: 'function',
+    function: { name: codec.encode(toolChoice.tool) },
+  };
 };
 /* eslint-enable sonarjs/function-return-type */
 
@@ -49,6 +56,7 @@ export const convertToolChoice = (
 export const convertMessages = (
   instructions: string,
   messages: readonly Message[],
+  codec: ToolNameCodec,
 ): Messages[] => {
   const converted: Messages[] = [];
   if (instructions) {
@@ -56,7 +64,7 @@ export const convertMessages = (
   }
   for (const message of messages) {
     if (message.role === 'assistant') {
-      const assistant = convertAssistant(message.content);
+      const assistant = convertAssistant(message.content, codec);
       // Skip assistant turns with neither text nor tool calls (e.g. a
       // thinking-only turn, since thinking is dropped) — an assistant message
       // with no content and no tool calls carries nothing.
@@ -106,6 +114,7 @@ const convertUser = (
 
 const convertAssistant = (
   content: readonly MessageContent[],
+  codec: ToolNameCodec,
 ): Messages & { role: 'assistant' } => {
   const toolCalls = content
     .filter((c): c is Extract<MessageContent, { type: 'tool_use' }> => {
@@ -114,7 +123,10 @@ const convertAssistant = (
     .map((c): ToolCall => ({
       id: c.id,
       type: 'function',
-      function: { name: c.name, arguments: JSON.stringify(c.input) },
+      function: {
+        name: codec.encode(c.name),
+        arguments: JSON.stringify(c.input),
+      },
     }));
   const text = joinText(content);
   const message: Messages & { role: 'assistant' } = {

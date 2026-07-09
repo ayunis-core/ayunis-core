@@ -1,11 +1,20 @@
 import type { Message, ToolSchema } from '@ayunis/inference';
+import { ToolNameCodec } from '@ayunis/inference';
 import { describe, expect, it } from 'vitest';
 
 import {
-  convertMessages,
-  convertTool,
-  convertToolChoice,
+  convertMessages as convertMessagesFn,
+  convertTool as convertToolFn,
+  convertToolChoice as convertToolChoiceFn,
 } from './convert-request';
+
+// Passthrough map — name translation is covered by its own tests below.
+const passthrough = new ToolNameCodec([]);
+const convertMessages = (instructions: string, messages: Message[]) =>
+  convertMessagesFn(instructions, messages, passthrough);
+const convertTool = (tool: ToolSchema) => convertToolFn(tool, passthrough);
+const convertToolChoice = (choice: Parameters<typeof convertToolChoiceFn>[0]) =>
+  convertToolChoiceFn(choice, passthrough);
 
 describe('convertTool', () => {
   it('wraps a tool schema as a Mistral function tool', () => {
@@ -21,6 +30,23 @@ describe('convertTool', () => {
         description: 'Search the web',
         parameters: { type: 'object', properties: {} },
       },
+    });
+  });
+
+  it('converts draft-04 exclusive bounds Mistral would reject', () => {
+    const tool: ToolSchema = {
+      name: 'paginate',
+      description: 'Paginate',
+      parameters: {
+        type: 'object',
+        properties: {
+          page: { type: 'integer', minimum: 0, exclusiveMinimum: true },
+        },
+      },
+    };
+    expect(convertTool(tool).function.parameters).toEqual({
+      type: 'object',
+      properties: { page: { type: 'integer', exclusiveMinimum: 0 } },
     });
   });
 });
@@ -152,5 +178,43 @@ describe('convertMessages', () => {
     expect(convertMessages('', messages)).toEqual([
       { role: 'system', content: 'Context' },
     ]);
+  });
+});
+
+describe('wire-name encoding', () => {
+  const codec = new ToolNameCodec([
+    { name: 'notion.search', description: 'd', parameters: {} },
+  ]);
+
+  it('declares tools under their wire names', () => {
+    expect(
+      convertToolFn(
+        { name: 'notion.search', description: 'd', parameters: {} },
+        codec,
+      ).function.name,
+    ).toBe('notion_search');
+  });
+
+  it('translates tool_call names in assistant history', () => {
+    const messages: Message[] = [
+      {
+        role: 'assistant',
+        content: [
+          { type: 'tool_use', id: 'call_1', name: 'notion.search', input: {} },
+        ],
+      },
+    ];
+    const [assistant] = convertMessagesFn('', messages, codec);
+    expect(assistant).toMatchObject({
+      role: 'assistant',
+      toolCalls: [{ id: 'call_1', function: { name: 'notion_search' } }],
+    });
+  });
+
+  it('translates a specific tool choice', () => {
+    expect(convertToolChoiceFn({ tool: 'notion.search' }, codec)).toEqual({
+      type: 'function',
+      function: { name: 'notion_search' },
+    });
   });
 });
