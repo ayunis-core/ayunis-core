@@ -417,14 +417,20 @@ export class StreamingInferenceService {
     chunks: StreamInferenceResponseChunk[],
   ): { inputTokens: number; outputTokens: number } | undefined {
     const usage = this.lastWinsUsage(chunks);
-    if (usage.inputTokens === undefined && usage.outputTokens === undefined) {
-      return undefined;
-    }
+    const uncachedInputTokens = usage.inputTokens ?? 0;
     const cacheRead = usage.cacheReadInputTokens ?? 0;
     const cacheWrite = usage.cacheWriteInputTokens ?? 0;
-    if (cacheRead || cacheWrite) {
+    const hasCache = cacheRead > 0 || cacheWrite > 0;
+    if (
+      usage.inputTokens === undefined &&
+      usage.outputTokens === undefined &&
+      !hasCache
+    ) {
+      return undefined;
+    }
+    if (hasCache) {
       this.logger.debug('Prompt cache activity', {
-        uncachedInputTokens: usage.inputTokens ?? 0,
+        uncachedInputTokens,
         cacheReadInputTokens: cacheRead,
         cacheWriteInputTokens: cacheWrite,
       });
@@ -433,7 +439,7 @@ export class StreamingInferenceService {
     // inputTokens excludes tokens covered by the prompt cache, so without
     // this the billed input collapses to the uncached remainder (~3 tokens).
     return {
-      inputTokens: (usage.inputTokens ?? 0) + cacheRead + cacheWrite,
+      inputTokens: uncachedInputTokens + cacheRead + cacheWrite,
       outputTokens: usage.outputTokens ?? 0,
     };
   }

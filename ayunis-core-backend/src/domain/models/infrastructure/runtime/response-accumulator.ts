@@ -150,14 +150,18 @@ class StreamResponseAccumulator {
 
   private buildMeta(): ResponseMeta {
     const { outputTokens } = this;
+    const cacheReadInputTokens = this.cacheReadInputTokens ?? 0;
+    const cacheWriteInputTokens = this.cacheWriteInputTokens ?? 0;
     // Cached prompt tokens are billed as ordinary input: the provider's
     // inputTokens excludes tokens covered by the prompt cache (Anthropic,
-    // Bedrock), so the full prompt is the sum of all three fields.
+    // Bedrock), so the full prompt is the sum of all three fields. Cache
+    // activity can be reported without an uncached remainder, so treat a
+    // missing inputTokens as zero whenever any input field is present.
     const inputTokens =
-      this.inputTokens !== undefined
-        ? this.inputTokens +
-          (this.cacheReadInputTokens ?? 0) +
-          (this.cacheWriteInputTokens ?? 0)
+      this.inputTokens !== undefined ||
+      cacheReadInputTokens ||
+      cacheWriteInputTokens
+        ? (this.inputTokens ?? 0) + cacheReadInputTokens + cacheWriteInputTokens
         : undefined;
     const totalTokens =
       inputTokens !== undefined && outputTokens !== undefined
