@@ -74,6 +74,10 @@ One hook per operation, encapsulating mutation logic. Use `showSuccess`/`showErr
 
 For hooks that back a form (create/update dialogs), load the **frontend-form-pattern** skill — it covers form types, structure, and the full end-to-end validation pattern including backend DTO validation, field-level error display, and i18n.
 
+## Verifying in the Browser
+
+Use your harness's browser tooling to check the page renders and the console is clean. A render failure shows the React dev-server error overlay — the element `#webpack-dev-server-client-overlay` must not exist. The frontend URL depends on the dev slot (see `dev-environment`); seeded login credentials are in `seed-database`.
+
 ## Completion Checklist
 
 - [ ] `pnpm run build` succeeds

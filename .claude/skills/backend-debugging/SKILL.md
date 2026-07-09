@@ -5,6 +5,21 @@ description: Debug backend runtime errors (500s, crashes, unexpected behavior). 
 
 # Backend Debugging
 
+## Step 0 — If it's a regression, check git history first
+
+When the user reports "it worked before X" / "broke after the refactoring" / "used to work" — **read the git history of the affected code path before proposing any fix.** A defensive try/catch or null check is the wrong opening move on a regression; the bug is almost always something a recent commit dropped (a `break`, a `return`, a `case` arm, a relation in a query).
+
+```bash
+# Find the commits that touched the failing handler/file:
+git log --oneline -20 -- <path/to/handler.ts>
+
+# Diff against the last-known-good state:
+git show <commit>:<path/to/handler.ts>
+git log -p -5 -- <path/to/handler.ts>
+```
+
+The fix is then "restore what was lost," not "patch around the symptom." Only after you have the diff against the working version should you consider defensive code.
+
 ## Step 1 — Read the logs
 
 Before reading code, guessing, or querying the database, **check the backend logs**:

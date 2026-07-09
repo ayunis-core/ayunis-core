@@ -159,6 +159,31 @@ git status                         # confirm working tree is clean
 
 If `gt restack` produced no visible output, that often means the stack was already restacked or you're not on a stacked branch. Re-check `gt log short` before reporting success.
 
+### Untracked branch — `gt track` before any other `gt` op
+
+Any `gt` command against a branch Graphite doesn't know about aborts with:
+
+```text
+ERROR: Cannot perform this operation on untracked branch <name>.
+You can track it by specifying its parent with gt track.
+```
+
+This is the default state for branches created **outside Graphite** — most commonly:
+
+- `cursor/*` branches pushed by Cursor Cloud Agents
+- Feature branches fetched from teammates or CI that Graphite has never seen locally
+- Old branches carried over from a plain `git checkout` that predates Graphite
+
+**Recovery — do not surface the raw error to the user. Run this first, then retry the original command:**
+
+```bash
+gt track --parent main   # or the correct parent, e.g. gt track --parent <base-branch>
+```
+
+Almost always the parent is `main`. Only pick a different parent when the branch was clearly stacked on top of another feature branch (rare for `cursor/*` — those come off `main`).
+
+If `gt restack` still reports merge conflicts after tracking, the branch has genuinely diverged from `main` — resolve the conflicts, don't work around them by force-submitting.
+
 ### Restack before submit
 
 `gt modify` automatically restacks descendants **only when those descendants are checked out in the same worktree**. If `gt submit --stack` aborts with `WARNING: You must restack before submitting this stack. ERROR: Aborting non-interactive submit.`, run `gt restack` first, then re-run the submit:

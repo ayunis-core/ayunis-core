@@ -55,7 +55,7 @@ linear issue update <ID> --state "In Progress"
 Do the work. This is deliberately open-ended — the ticket may ask for a code change, a migration, a document, a fix, research, a chore, etc.
 
 - Follow the ticket's instructions and referenced patterns
-- Use the right skills/tools for the job (e.g. `ayunis-core-backend`, `typeorm-migrations`, `browser-verify`, `code-review`, etc.)
+- Use the right skills/tools for the job (e.g. `ayunis-core-backend`, `typeorm-migrations`, `code-review`, etc.)
 - Run validation (tests, build, lint, manual check) when applicable
 - If execution surfaces a blocker, a wrong premise, or a decision that needs Daniel, stop and surface it — don't plow through
 
