@@ -20,6 +20,13 @@ import {
 const SPOTLIGHT_BORDER_COLOR = 'var(--brand)';
 const SPOTLIGHT_STROKE_WIDTH = 4;
 const SPOTLIGHT_PADDING = 0;
+const FROSTED_HEADER_SCROLL_OFFSET = 72;
+
+function measureScrollOffset(): number {
+  const banner = document.querySelector('[data-app-alert-banner]');
+  const bannerHeight = banner?.getBoundingClientRect().height ?? 0;
+  return FROSTED_HEADER_SCROLL_OFFSET + bannerHeight;
+}
 
 function readSpotlightRadius(target: string): number {
   const el = document.querySelector(`[data-tour="${target}"]`);
@@ -67,6 +74,7 @@ export default function TourRenderer({
   onEnd,
 }: Readonly<{ request: TourRequest; onEnd: () => void }>) {
   const [spotlightRadius, setSpotlightRadius] = useState(SPOTLIGHT_PADDING);
+  const [scrollOffset, setScrollOffset] = useState(measureScrollOffset);
   const isTargetReady = useStableTarget(request.target);
 
   // Dismiss the tour when the user clicks the highlighted target. react-joyride
@@ -122,6 +130,7 @@ export default function TourRenderer({
       targetWaitTimeout: 3000,
       zIndex: 10000,
       closeButtonAction: 'skip',
+      scrollOffset,
     },
     styles: {
       spotlight: {
@@ -134,6 +143,7 @@ export default function TourRenderer({
     onEvent: (data: EventData) => {
       if (data.type === EVENTS.STEP_BEFORE) {
         setSpotlightRadius(readSpotlightRadius(request.target));
+        setScrollOffset(measureScrollOffset());
       }
       if (
         data.type === EVENTS.TOUR_END ||

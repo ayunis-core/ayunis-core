@@ -16,6 +16,7 @@ export default function AppAlertBanner() {
   return (
     <div
       role="alert"
+      data-app-alert-banner
       className="relative grid w-full shrink-0 grid-cols-[calc(var(--spacing)*4)_1fr] items-center gap-x-3 rounded-none border border-x-0 border-t-0 bg-warning/10 px-4 py-2 text-sm text-warning backdrop-blur-md md:rounded-t-xl"
     >
       <TriangleAlert className="size-4" />
