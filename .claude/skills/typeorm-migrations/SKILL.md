@@ -36,7 +36,7 @@ integrationId: string;
 ### All constraints must use decorators
 
 | DB concept | Decorator |
-|---|---|
+| --- | --- |
 | Foreign key | `@ManyToOne` / `@OneToOne` + `@JoinColumn` |
 | Unique constraint (full) | `@Unique([...])` on class |
 | Unique constraint (partial) | `@Index([...], { unique: true, where: '...' })` on class |
@@ -80,7 +80,7 @@ pnpm run migration:generate:dev -- src/db/migrations/DescriptiveMigrationName
 - `up()` and `down()` are symmetric
 - No hand-written constraint or index names
 
-If the migration contains unexpected drift, the local DB may be out of sync. Recreate it (`DROP DATABASE` + `CREATE DATABASE`), run all migrations, then regenerate.
+If the migration contains unexpected drift, the local DB is out of sync. **Rebuild it — do not hand-author a migration to reconcile.** See "Fixing Migration Drift" below.
 
 ### 4. Run the Migration
 
@@ -108,18 +108,62 @@ pnpm run test
 PascalCase describing the change:
 
 | Change | Migration Name |
-|---|---|
+| --- | --- |
 | Add a column | `AddMarketplaceSlugToAgents` |
 | Create a table | `CreateTeamSharesTable` |
 | Add an index | `AddIndexOnThreadCreatedAt` |
 | Remove a column | `RemoveUserShareScope` |
 | Add a constraint | `CascadeDeleteSharesOnScopeDelete` |
 
+## Fixing Migration Drift
+
+"Drift" here means: entities on the branch, the migration files, and the local Postgres schema no longer agree. Typical triggers:
+
+- Switching between branches whose migration sets diverge (slot's Postgres volume was written by branch A, you're now on branch B).
+- `pnpm run migration:generate:dev` produces surprise changes (removes/renames on things you never touched, or resurrects columns).
+- Backend refuses to start with errors like `error: relation "<table>" already exists` (PG code `42P07`) or `column "..." of relation "..." does not exist`.
+
+**Rule: rebuild the database from scratch. Do not hand-author a reconciliation migration.** Hand-written reconciliation migrations poison the migration history for every teammate and every future deploy — they are worse than the drift they were meant to fix.
+
+### The rebuild
+
+Shut the stack down and spin the DB up on an empty volume, then let migrations replay from zero:
+
+```bash
+# 1. Shut the stack down completely (from any worktree)
+./dev down
+
+# 2. Wipe the slot's Postgres volume so ./dev up starts from an empty DB.
+#    Without -v the volume survives and the drift returns immediately.
+docker compose -p ayunis-dev-<SLOT> down -v
+
+# 3. Bring the stack back up — ./dev up replays every migration from scratch
+./dev up --slot <SLOT>
+
+# 4. Optional: reseed fixtures (see seed-database skill)
+cd ayunis-core-backend && pnpm run seed:minimal:ts
+```
+
+`<SLOT>` is the slot number this worktree uses — the same one you passed to `./dev up`. See the `dev-environment` skill for slot conventions.
+
+### After the rebuild
+
+Verify zero drift before making further changes:
+
+```bash
+cd ayunis-core-backend
+pnpm run migration:generate:dev -- src/db/migrations/VerifyNoDrift
+# Must print: "No changes in database schema were found"
+```
+
+If a `VerifyNoDrift` file *is* produced, entities and migrations are genuinely out of sync — that's a legitimate migration to *generate* (via TypeORM), not to hand-write. Investigate which entity changed and, if the fix belongs in an earlier migration, edit *that* migration's entity source, not the reconciliation file.
+
 ## Anti-Patterns
 
 | Don't | Why | Instead |
-|---|---|---|
+| --- | --- | --- |
 | Write migration SQL by hand | Drift between entities and schema | Modify the entity, then auto-generate |
+| Hand-author a migration to reconcile drift | Poisons migration history for teammates and deploys | Rebuild the DB (`./dev down` + wipe volume + `./dev up`) |
 | Edit a generated migration | Constraint names will mismatch | Fix the entity and regenerate |
 | Hand-write FK/index/constraint names | Perpetual drift on future generates | Let TypeORM name everything |
 | Use `@Column` for a FK without `@ManyToOne` | No FK in the database, no referential integrity | Add `@ManyToOne` + `@JoinColumn` |

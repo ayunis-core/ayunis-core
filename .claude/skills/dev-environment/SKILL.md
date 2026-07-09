@@ -103,29 +103,65 @@ docker compose -p ayunis-dev-<SLOT> down -v
 Slots are per-developer scratch state (not shared), so this is normally safe —
 but it is the user's call, not the agent's.
 
-### `./dev up` silently skips frontend — cross-worktree slot squat
+### Cross-worktree slot squat — frontend OR backend
 
 When two worktrees both think they own the same slot (e.g. both ran
-`./dev up --slot 2` at different times), the frontend port can end up held by
-a `vite`/`node` process from worktree A while you `./dev up` in worktree B.
-`./dev up` sees the port is bound, assumes the frontend is already running,
-and **silently skips frontend startup**. The backend comes up fresh against
-your branch's code, but the frontend serves worktree A's old code — confusing
-because `./dev status` looks healthy.
+`./dev up --slot 2` at different times), one of the slot's ports can end up held
+by a process from worktree A while you `./dev up` in worktree B. Two flavors:
 
-Diagnose:
+**Frontend squat** — `vite`/`node` from worktree A holds `3021`/`3031`/...
+`./dev up` sees the port bound, **silently skips frontend startup**, and the
+backend comes up fresh against your branch's code while the frontend serves
+worktree A's old code. `./dev status` looks healthy.
+
+**Backend squat** — `nest`/`node` from worktree A holds `3020`/`3030`/`3040`/...
+The `./dev up` in worktree B either skips backend startup or fails a health
+check. More insidiously, any tool that hits the backend port from worktree B
+(e.g. `pnpm run openapi:update`, which fetches `http://localhost:<port>/api/docs-json`)
+will silently pull from worktree A's server — regenerating a **stale OpenAPI
+client that's missing endpoints you just added in worktree B**.
+
+Diagnose (same recipe, use the port relevant to the symptom):
 
 ```bash
-# Which process is on this slot's frontend port? (3021 = slot 2, 3031 = slot 3, ...)
-lsof -nP -iTCP:3021 -sTCP:LISTEN
+# Frontend port: 3021 = slot 2, 3031 = slot 3, 3041 = slot 4
+# Backend port:  3020 = slot 2, 3030 = slot 3, 3040 = slot 4
+lsof -nP -iTCP:3040 -sTCP:LISTEN
 
 # Inspect that process's cwd — if it points to a different worktree, that's the squatter
 lsof -p <PID> | grep cwd
 ```
 
-Fix: the squatter process must be stopped before `./dev up --slot <SLOT>` will
-start the frontend. **Do not kill it yourself** — killing processes is on the
-Forbidden Actions list in `CLAUDE.md` (a process that looks like a stray `vite`
-may be tied to infrastructure you don't understand). Report the offending PID
-and its worktree cwd to the user and let them stop it. If you want to keep both
-worktrees running, give them different slots instead.
+Before regenerating any code from a running dev server (OpenAPI schema, GraphQL
+codegen, etc.), verify the process serving the port is rooted in the current
+worktree — not another slot's stale backend.
+
+Fix: the squatter must be stopped before `./dev up --slot <SLOT>` succeeds
+and before any codegen-from-running-server is trustworthy. **Do not kill it
+yourself** — killing processes is on the Forbidden Actions list in `CLAUDE.md`.
+Report the offending PID and its worktree cwd to the user and let them stop
+it. If you want to keep both worktrees running, give them different slots
+instead.
+
+### Orphaned processes from a trashed worktree
+
+When a git worktree is removed via `git worktree remove` — or moved to
+`.git/wt/trash/…` — while its `./dev` stack is still running, the native
+`nest`/`vite`/`esbuild` children **survive the worktree deletion** and keep
+holding the slot's ports. Next `./dev up --slot <SLOT>` from any worktree fails
+because those ports are still bound.
+
+The distinguishing signal from a live cross-worktree squat is the cwd: an
+orphaned process's `lsof -p <PID> | grep cwd` resolves to a path under
+`.git/wt/trash/…` (or is deleted entirely and shows up as `cwd (deleted)`),
+not a real live worktree.
+
+Prevent: **always `./dev down` in a worktree before trashing/removing it.**
+The `worktree` skill's cleanup section names this too — respect it.
+
+Recover: because the parent worktree is already gone, there's no ambiguity
+about whether the process is still owned — it isn't. Report the orphan PIDs
+plus the trashed cwd to the user and ask permission to `kill <PID>` them. Once
+approved, `./dev up --slot <SLOT>` from your current worktree comes up clean.
+`docker compose down` alone does **not** clean these up — they're native
+processes, not containers.
