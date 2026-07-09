@@ -1,16 +1,17 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { GetUserDefaultModelQuery } from './get-user-default-model.query';
 import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
 import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
 import { ModelError } from '../../models.errors';
 
 @Injectable()
-export class GetUserDefaultModelUseCase {
-  private readonly logger = new Logger(GetUserDefaultModelUseCase.name);
-
+export class GetUserDefaultModelUseCase extends BaseUseCase {
   constructor(
     private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(
     query: GetUserDefaultModelQuery,

@@ -1,7 +1,8 @@
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { GetPermittedLanguageModelsQuery } from './get-permitted-language-models.query';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { UnexpectedModelError } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -9,13 +10,13 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
-export class GetPermittedLanguageModelsUseCase {
-  private readonly logger = new Logger(GetPermittedLanguageModelsUseCase.name);
-
+export class GetPermittedLanguageModelsUseCase extends BaseUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly contextService: ContextService,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(
     query: GetPermittedLanguageModelsQuery,

@@ -1,14 +1,15 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { Model } from 'src/domain/models/domain/model.entity';
 import { ModelsRepository } from '../../ports/models.repository';
 import { GetModelQuery } from './get-model.query';
 import { ModelNotFoundByNameAndProviderError } from '../../models.errors';
 
 @Injectable()
-export class GetModelUseCase {
-  private readonly logger = new Logger(GetModelUseCase.name);
-
-  constructor(private readonly modelsRepository: ModelsRepository) {}
+export class GetModelUseCase extends BaseUseCase {
+  constructor(private readonly modelsRepository: ModelsRepository) {
+    super();
+  }
 
   async execute(query: GetModelQuery): Promise<Model> {
     this.logger.log('execute', query);

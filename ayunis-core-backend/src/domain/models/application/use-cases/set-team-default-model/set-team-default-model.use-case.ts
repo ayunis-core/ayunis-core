@@ -1,19 +1,20 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { SetTeamDefaultModelCommand } from './set-team-default-model.command';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedModelError } from '../../models.errors';
 import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 
 @Injectable()
-export class SetTeamDefaultModelUseCase {
-  private readonly logger = new Logger(SetTeamDefaultModelUseCase.name);
-
+export class SetTeamDefaultModelUseCase extends BaseUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly validator: TeamPermittedModelValidator,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(
     command: SetTeamDefaultModelCommand,

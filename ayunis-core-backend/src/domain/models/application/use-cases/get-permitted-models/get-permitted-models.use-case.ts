@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { GetPermittedModelsQuery } from './get-permitted-models.query';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
@@ -7,13 +8,13 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
-export class GetPermittedModelsUseCase {
-  private readonly logger = new Logger(GetPermittedModelsUseCase.name);
-
+export class GetPermittedModelsUseCase extends BaseUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly contextService: ContextService,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(query: GetPermittedModelsQuery): Promise<PermittedModel[]> {
     this.logger.debug('Getting permitted models', {

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { ModelsRepository } from '../../ports/models.repository';
 import { DeleteModelCommand } from './delete-model.command';
 import {
@@ -12,15 +13,15 @@ import { DeletePermittedModelCommand } from '../delete-permitted-model/delete-pe
 import { FindAllOrgIdsUseCase } from 'src/iam/orgs/application/use-cases/find-all-org-ids/find-all-org-ids.use-case';
 
 @Injectable()
-export class DeleteModelUseCase {
-  private readonly logger = new Logger(DeleteModelUseCase.name);
-
+export class DeleteModelUseCase extends BaseUseCase {
   constructor(
     private readonly modelsRepository: ModelsRepository,
     private readonly findAllOrgIdsUseCase: FindAllOrgIdsUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
     private readonly deletePermittedModelUseCase: DeletePermittedModelUseCase,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(command: DeleteModelCommand): Promise<void> {
     this.logger.log('execute', {

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { UpdateTeamPermittedModelCommand } from './update-team-permitted-model.command';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
@@ -9,15 +9,16 @@ import {
 } from '../../models.errors';
 import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 
 @Injectable()
-export class UpdateTeamPermittedModelUseCase {
-  private readonly logger = new Logger(UpdateTeamPermittedModelUseCase.name);
-
+export class UpdateTeamPermittedModelUseCase extends BaseUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly validator: TeamPermittedModelValidator,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(
     command: UpdateTeamPermittedModelCommand,

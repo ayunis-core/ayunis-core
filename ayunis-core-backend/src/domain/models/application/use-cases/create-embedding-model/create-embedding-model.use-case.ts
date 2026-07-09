@@ -7,13 +7,14 @@ import {
   UnexpectedModelError,
 } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 
 @Injectable()
-export class CreateEmbeddingModelUseCase {
-  private readonly logger = new Logger(CreateEmbeddingModelUseCase.name);
-
-  constructor(private readonly modelsRepository: ModelsRepository) {}
+export class CreateEmbeddingModelUseCase extends BaseUseCase {
+  constructor(private readonly modelsRepository: ModelsRepository) {
+    super();
+  }
 
   async execute(command: CreateEmbeddingModelCommand): Promise<EmbeddingModel> {
     this.logger.log('Creating embedding model', {

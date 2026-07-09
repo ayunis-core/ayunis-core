@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { ConfigService } from '@nestjs/config';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -11,15 +12,15 @@ import { ModelProviderInfoRegistry } from '../../registry/model-provider-info.re
 import { GetConfiguredModelsByTypeQuery } from './get-configured-models-by-type.query';
 
 @Injectable()
-export class GetConfiguredModelsByTypeUseCase {
-  private readonly logger = new Logger(GetConfiguredModelsByTypeUseCase.name);
-
+export class GetConfiguredModelsByTypeUseCase extends BaseUseCase {
   constructor(
     private readonly modelsRepository: ModelsRepository,
     private readonly contextService: ContextService,
     private readonly configService: ConfigService,
     private readonly modelProviderInfoRegistry: ModelProviderInfoRegistry,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(query: GetConfiguredModelsByTypeQuery): Promise<Model[]> {
     const orgRole = this.contextService.get('role');
