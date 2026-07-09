@@ -14,10 +14,22 @@ export const convertChunk = (
       return convertContentBlockDelta(event);
     case 'content_block_start':
       return convertContentBlockStart(event);
-    case 'message_start':
+    case 'message_start': {
+      // input_tokens excludes tokens covered by the prompt cache; the cache
+      // fields carry the rest of the prompt so hosts can account for it.
+      const usage = event.message.usage;
       return {
-        usage: { inputTokens: event.message.usage.input_tokens },
+        usage: {
+          inputTokens: usage.input_tokens,
+          ...(typeof usage.cache_read_input_tokens === 'number'
+            ? { cacheReadInputTokens: usage.cache_read_input_tokens }
+            : {}),
+          ...(typeof usage.cache_creation_input_tokens === 'number'
+            ? { cacheWriteInputTokens: usage.cache_creation_input_tokens }
+            : {}),
+        },
       };
+    }
     case 'message_delta':
       return {
         finishReason: mapStopReason(event.delta.stop_reason),

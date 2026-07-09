@@ -6,8 +6,17 @@ export type ToolChoice = 'auto' | 'required' | { tool: string };
 export type FinishReason = 'stop' | 'length' | 'tool_calls' | null;
 
 export interface Usage {
+  /**
+   * Input tokens processed at the full rate. For providers with prompt
+   * caching (Anthropic, Bedrock) this EXCLUDES tokens covered by the cache —
+   * see the cache fields below for the remainder of the prompt.
+   */
   inputTokens?: number;
   outputTokens?: number;
+  /** Prompt tokens served from the provider's prompt cache. */
+  cacheReadInputTokens?: number;
+  /** Prompt tokens written to the provider's prompt cache. */
+  cacheWriteInputTokens?: number;
 }
 
 export interface ToolCallDelta {

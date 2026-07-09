@@ -102,6 +102,29 @@ describe('accumulateResponse', () => {
     });
   });
 
+  it('bills cached prompt tokens as input tokens in response meta', async () => {
+    // Anthropic's input_tokens excludes prompt-cache reads/writes; billing
+    // counts the full prompt as input (Option A).
+    const response = await accumulateResponse(
+      stream([
+        { textDelta: 'x' },
+        {
+          usage: {
+            inputTokens: 3,
+            cacheWriteInputTokens: 90,
+            cacheReadInputTokens: 900,
+            outputTokens: 7,
+          },
+        },
+      ]),
+    );
+    expect(response.meta).toEqual({
+      inputTokens: 993,
+      outputTokens: 7,
+      totalTokens: 1000,
+    });
+  });
+
   it('takes last-wins usage when providers emit cumulative usage per chunk', async () => {
     const response = await accumulateResponse(
       stream([

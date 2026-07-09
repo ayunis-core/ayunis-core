@@ -19,9 +19,7 @@ interface ToolCallAccumulator {
 }
 
 type ResponseContent =
-  | TextMessageContent
-  | ToolUseMessageContent
-  | ThinkingMessageContent;
+  TextMessageContent | ToolUseMessageContent | ThinkingMessageContent;
 
 interface ResponseMeta {
   inputTokens?: number;
@@ -50,6 +48,8 @@ class StreamResponseAccumulator {
   private readonly toolCalls = new Map<number, ToolCallAccumulator>();
   private inputTokens?: number;
   private outputTokens?: number;
+  private cacheReadInputTokens?: number;
+  private cacheWriteInputTokens?: number;
   private finishReason: FinishReason = null;
 
   async consume(
@@ -103,6 +103,10 @@ class StreamResponseAccumulator {
     if (usage.inputTokens !== undefined) this.inputTokens = usage.inputTokens;
     if (usage.outputTokens !== undefined)
       this.outputTokens = usage.outputTokens;
+    if (usage.cacheReadInputTokens !== undefined)
+      this.cacheReadInputTokens = usage.cacheReadInputTokens;
+    if (usage.cacheWriteInputTokens !== undefined)
+      this.cacheWriteInputTokens = usage.cacheWriteInputTokens;
   }
 
   private build(): InferenceResponse {
@@ -145,7 +149,20 @@ class StreamResponseAccumulator {
   }
 
   private buildMeta(): ResponseMeta {
-    const { inputTokens, outputTokens } = this;
+    const { outputTokens } = this;
+    const cacheReadInputTokens = this.cacheReadInputTokens ?? 0;
+    const cacheWriteInputTokens = this.cacheWriteInputTokens ?? 0;
+    // Cached prompt tokens are billed as ordinary input: the provider's
+    // inputTokens excludes tokens covered by the prompt cache (Anthropic,
+    // Bedrock), so the full prompt is the sum of all three fields. Cache
+    // activity can be reported without an uncached remainder, so treat a
+    // missing inputTokens as zero whenever any input field is present.
+    const inputTokens =
+      this.inputTokens !== undefined ||
+      cacheReadInputTokens ||
+      cacheWriteInputTokens
+        ? (this.inputTokens ?? 0) + cacheReadInputTokens + cacheWriteInputTokens
+        : undefined;
     const totalTokens =
       inputTokens !== undefined && outputTokens !== undefined
         ? inputTokens + outputTokens

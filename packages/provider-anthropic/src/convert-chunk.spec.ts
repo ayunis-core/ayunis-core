@@ -18,6 +18,29 @@ describe('convertChunk', () => {
     ).toEqual({ usage: { inputTokens: 123 } });
   });
 
+  it('passes prompt-cache token counts through message_start usage', () => {
+    expect(
+      convertChunk(
+        event({
+          type: 'message_start',
+          message: {
+            usage: {
+              input_tokens: 3,
+              cache_creation_input_tokens: 9677,
+              cache_read_input_tokens: 0,
+            },
+          },
+        }),
+      ),
+    ).toEqual({
+      usage: {
+        inputTokens: 3,
+        cacheWriteInputTokens: 9677,
+        cacheReadInputTokens: 0,
+      },
+    });
+  });
+
   it('converts text deltas', () => {
     expect(
       convertChunk(
