@@ -8,11 +8,12 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import {
   DuplicateTeamPermittedModelError,
   ModelNotFoundError,
-  NotALanguageModelError,
+  ModelNotRestrictableForTeamError,
   UnexpectedModelError,
 } from '../../models.errors';
 import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 
 @Injectable()
 export class CreateTeamPermittedModelUseCase {
@@ -46,8 +47,14 @@ export class CreateTeamPermittedModelUseCase {
         throw new ModelNotFoundError(command.modelId);
       }
 
-      if (!(model instanceof LanguageModel)) {
-        throw new NotALanguageModelError(command.modelId);
+      // Only language and image-generation models are restrictable per team.
+      // Embedding models are intentionally excluded so document processing
+      // stays available to every team.
+      if (
+        !(model instanceof LanguageModel) &&
+        !(model instanceof ImageGenerationModel)
+      ) {
+        throw new ModelNotRestrictableForTeamError(command.modelId);
       }
 
       const permittedModel = new PermittedModel({

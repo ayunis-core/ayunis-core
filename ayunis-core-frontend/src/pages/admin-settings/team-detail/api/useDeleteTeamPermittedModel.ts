@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   useTeamPermittedModelsControllerDeleteTeamPermittedModel,
   getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey,
+  getTeamPermittedModelsControllerListTeamImageGenerationModelsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
@@ -31,6 +32,12 @@ export function useDeleteTeamPermittedModel(teamId: string) {
         void queryClient.invalidateQueries({
           queryKey:
             getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey(
+              teamId,
+            ),
+        });
+        void queryClient.invalidateQueries({
+          queryKey:
+            getTeamPermittedModelsControllerListTeamImageGenerationModelsQueryKey(
               teamId,
             ),
         });

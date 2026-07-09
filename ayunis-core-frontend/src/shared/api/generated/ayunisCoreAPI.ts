@@ -125,6 +125,7 @@ import type {
   PaginatedInvitesListResponseDto,
   PaginatedTeamMembersResponseDto,
   PaginatedUsersListResponseDto,
+  PermittedImageGenerationModelResponseDto,
   PermittedLanguageModelResponseDto,
   PermittedLanguageModelResponseDtoNullable,
   PiiWhitelistResponseDto,
@@ -186,6 +187,7 @@ import type {
   TeamCreditLimitItemDto,
   TeamCreditLimitResponseDto,
   TeamMemberResponseDto,
+  TeamPermittedModelsControllerCreateTeamPermittedModel201,
   TeamResponseDto,
   TeamsControllerListTeamMembersParams,
   ThreadSourcesControllerAddFileSource201Item,
@@ -5139,7 +5141,7 @@ export const teamPermittedModelsControllerCreateTeamPermittedModel = (
 ) => {
       
       
-      return customAxiosInstance<PermittedLanguageModelResponseDto>(
+      return customAxiosInstance<TeamPermittedModelsControllerCreateTeamPermittedModel201>(
       {url: `/teams/${teamId}/permitted-models`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createTeamPermittedModelDto, signal
@@ -5195,6 +5197,99 @@ export const useTeamPermittedModelsControllerCreateTeamPermittedModel = <TError 
       return useMutation(mutationOptions, queryClient);
     }
     
+/**
+ * @summary List a team's permitted image-generation models
+ */
+export const teamPermittedModelsControllerListTeamImageGenerationModels = (
+    teamId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<PermittedImageGenerationModelResponseDto[]>(
+      {url: `/teams/${teamId}/permitted-models/image-generation`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getTeamPermittedModelsControllerListTeamImageGenerationModelsQueryKey = (teamId?: string,) => {
+    return [
+    `/teams/${teamId}/permitted-models/image-generation`
+    ] as const;
+    }
+
+    
+export const getTeamPermittedModelsControllerListTeamImageGenerationModelsQueryOptions = <TData = Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>, TError = void>(teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTeamPermittedModelsControllerListTeamImageGenerationModelsQueryKey(teamId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>> = ({ signal }) => teamPermittedModelsControllerListTeamImageGenerationModels(teamId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(teamId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TeamPermittedModelsControllerListTeamImageGenerationModelsQueryResult = NonNullable<Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>>
+export type TeamPermittedModelsControllerListTeamImageGenerationModelsQueryError = void
+
+
+export function useTeamPermittedModelsControllerListTeamImageGenerationModels<TData = Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>, TError = void>(
+ teamId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>,
+          TError,
+          Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTeamPermittedModelsControllerListTeamImageGenerationModels<TData = Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>, TError = void>(
+ teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>,
+          TError,
+          Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTeamPermittedModelsControllerListTeamImageGenerationModels<TData = Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>, TError = void>(
+ teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List a team's permitted image-generation models
+ */
+
+export function useTeamPermittedModelsControllerListTeamImageGenerationModels<TData = Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>, TError = void>(
+ teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamPermittedModelsControllerListTeamImageGenerationModels>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTeamPermittedModelsControllerListTeamImageGenerationModelsQueryOptions(teamId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
 /**
  * Updates a team-scoped permitted model, e.g. toggling whether it enforces anonymous mode for members of the team.
  * @summary Update a team's permitted model

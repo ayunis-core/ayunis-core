@@ -10,7 +10,7 @@ import {
   PermittedLanguageModel,
   PermittedModel,
 } from 'src/domain/models/domain/permitted-model.entity';
-import type { FindOptionsWhere } from 'typeorm';
+import type { EntityManager, FindOptionsWhere } from 'typeorm';
 import { Repository } from 'typeorm';
 import { PermittedModelRecord } from './schema/permitted-model.record';
 import { UUID } from 'crypto';
@@ -19,15 +19,12 @@ import { ModelProvider } from 'src/domain/models/domain/value-objects/model-prov
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 import { LanguageModelRecord } from '../local-models/schema/model.record';
-import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
-import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import {
-  MultipleEmbeddingModelsNotAllowedError,
-  MultipleImageGenerationModelsNotAllowedError,
   NotALanguageModelError,
   PermittedModelNotFoundError,
 } from 'src/domain/models/application/models.errors';
 import { PermittedModelQueryService } from './permitted-model-query.service';
+import { assertSingleModelPerOrg } from './single-permitted-model-per-org.guard';
 
 @Injectable()
 export class LocalPermittedModelsRepository extends PermittedModelsRepository {
@@ -202,6 +199,13 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     return this.queryService.findManyLanguageByTeam(teamId, orgId);
   }
 
+  async findManyImageGenerationByTeam(
+    teamId: UUID,
+    orgId: UUID,
+  ): Promise<PermittedImageGenerationModel[]> {
+    return this.queryService.findManyImageGenerationByTeam(teamId, orgId);
+  }
+
   async findByTeamAndModelId(
     teamId: UUID,
     modelId: UUID,
@@ -223,50 +227,10 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   }
 
   async create(permittedModel: PermittedModel): Promise<PermittedModel> {
-    // Enforce single permitted embedding model per org at repository layer
-    if (permittedModel.model instanceof EmbeddingModel) {
-      const existingEmbedding = await this.findOneEmbedding(
-        permittedModel.orgId,
-      );
-      if (existingEmbedding) {
-        this.logger.error(
-          'Attempt to create a second permitted embedding model for org',
-          {
-            orgId: permittedModel.orgId,
-            existingPermittedEmbeddingModelId: existingEmbedding.id,
-            newModelId: permittedModel.model.id,
-          },
-        );
-        throw new MultipleEmbeddingModelsNotAllowedError({
-          orgId: permittedModel.orgId,
-          existingPermittedEmbeddingModelId: existingEmbedding.id,
-          newModelId: permittedModel.model.id,
-        });
-      }
-    }
-
-    if (permittedModel.model instanceof ImageGenerationModel) {
-      const existingImageGenerationModels =
-        await this.queryService.findManyImageGeneration(permittedModel.orgId);
-      if (existingImageGenerationModels.length > 0) {
-        const existingImageGenerationModel = existingImageGenerationModels[0];
-        this.logger.error(
-          'Attempt to create a second permitted image-generation model for org',
-          {
-            orgId: permittedModel.orgId,
-            existingPermittedImageGenerationModelId:
-              existingImageGenerationModel.id,
-            newModelId: permittedModel.model.id,
-          },
-        );
-        throw new MultipleImageGenerationModelsNotAllowedError({
-          orgId: permittedModel.orgId,
-          existingPermittedImageGenerationModelId:
-            existingImageGenerationModel.id,
-          newModelId: permittedModel.model.id,
-        });
-      }
-    }
+    await assertSingleModelPerOrg(
+      { queryService: this.queryService, logger: this.logger },
+      permittedModel,
+    );
 
     const permittedModelEntity =
       this.permittedModelMapper.toRecord(permittedModel);
@@ -339,48 +303,53 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     }
 
     // Start a transaction to ensure consistency
-    return await this.permittedModelRepository.manager.transaction(
-      async (manager) => {
-        await manager.update(PermittedModelRecord, unsetWhere, {
-          isDefault: false,
-        });
-
-        const updateResult = await manager.update(
-          PermittedModelRecord,
-          setWhere,
-          { isDefault: true },
-        );
-
-        if (updateResult.affected === 0) {
-          throw new Error(
-            `Permitted model with id ${params.id} and orgId ${params.orgId} not found`,
-          );
-        }
-
-        const updatedModel = await manager.findOne(PermittedModelRecord, {
-          where: { id: params.id, orgId: params.orgId },
-          relations: ['model'],
-        });
-
-        if (!updatedModel) {
-          throw new Error(
-            `Failed to retrieve updated permitted model with id ${params.id}`,
-          );
-        }
-
-        this.logger.debug('Model set as default', {
-          id: params.id,
-          orgId: params.orgId,
-          teamId: params.teamId,
-          modelName: updatedModel.model.name,
-          modelProvider: updatedModel.model.provider,
-        });
-
-        return this.permittedModelMapper.toDomain(
-          updatedModel,
-        ) as PermittedLanguageModel;
-      },
+    return await this.permittedModelRepository.manager.transaction((manager) =>
+      this.applyDefaultInTransaction(manager, params, unsetWhere, setWhere),
     );
+  }
+
+  private async applyDefaultInTransaction(
+    manager: EntityManager,
+    params: { id: UUID; orgId: UUID; teamId?: UUID },
+    unsetWhere: FindOptionsWhere<PermittedModelRecord>,
+    setWhere: FindOptionsWhere<PermittedModelRecord>,
+  ): Promise<PermittedLanguageModel> {
+    await manager.update(PermittedModelRecord, unsetWhere, {
+      isDefault: false,
+    });
+
+    const updateResult = await manager.update(PermittedModelRecord, setWhere, {
+      isDefault: true,
+    });
+
+    if (updateResult.affected === 0) {
+      throw new Error(
+        `Permitted model with id ${params.id} and orgId ${params.orgId} not found`,
+      );
+    }
+
+    const updatedModel = await manager.findOne(PermittedModelRecord, {
+      where: { id: params.id, orgId: params.orgId },
+      relations: ['model'],
+    });
+
+    if (!updatedModel) {
+      throw new Error(
+        `Failed to retrieve updated permitted model with id ${params.id}`,
+      );
+    }
+
+    this.logger.debug('Model set as default', {
+      id: params.id,
+      orgId: params.orgId,
+      teamId: params.teamId,
+      modelName: updatedModel.model.name,
+      modelProvider: updatedModel.model.provider,
+    });
+
+    return this.permittedModelMapper.toDomain(
+      updatedModel,
+    ) as PermittedLanguageModel;
   }
 
   async update(permittedModel: PermittedModel): Promise<PermittedModel> {

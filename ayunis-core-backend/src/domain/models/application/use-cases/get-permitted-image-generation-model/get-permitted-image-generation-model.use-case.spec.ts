@@ -20,15 +20,19 @@ import {
 import { GetPermittedImageGenerationModelQuery } from './get-permitted-image-generation-model.query';
 import { GetPermittedImageGenerationModelUseCase } from './get-permitted-image-generation-model.use-case';
 import { ModelPolicyService } from '../../services/model-policy.service';
+import { FindTeamsByUserIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-user-id/find-teams-by-user-id.use-case';
+import { Team } from 'src/iam/teams/domain/team.entity';
 
 describe('GetPermittedImageGenerationModelUseCase', () => {
   const orgId = randomUUID();
   const otherOrgId = randomUUID();
+  const userId = randomUUID();
 
   let useCase: GetPermittedImageGenerationModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let contextService: jest.Mocked<ContextService>;
   let modelPolicy: ModelPolicyService;
+  let findTeamsByUserIdUseCase: jest.Mocked<FindTeamsByUserIdUseCase>;
 
   const buildImagePermittedModel = (
     provider: ModelProvider = ModelProvider.AZURE,
@@ -46,6 +50,7 @@ describe('GetPermittedImageGenerationModelUseCase', () => {
   beforeEach(async () => {
     permittedModelsRepository = {
       findOneImageGeneration: jest.fn(),
+      findManyImageGenerationByTeam: jest.fn(),
     } as unknown as jest.Mocked<PermittedModelsRepository>;
 
     contextService = {
@@ -56,6 +61,10 @@ describe('GetPermittedImageGenerationModelUseCase', () => {
       }),
     } as unknown as jest.Mocked<ContextService>;
 
+    findTeamsByUserIdUseCase = {
+      execute: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<FindTeamsByUserIdUseCase>;
+
     const module = await Test.createTestingModule({
       providers: [
         GetPermittedImageGenerationModelUseCase,
@@ -65,6 +74,10 @@ describe('GetPermittedImageGenerationModelUseCase', () => {
           useValue: permittedModelsRepository,
         },
         { provide: ContextService, useValue: contextService },
+        {
+          provide: FindTeamsByUserIdUseCase,
+          useValue: findTeamsByUserIdUseCase,
+        },
       ],
     }).compile();
 
@@ -180,5 +193,79 @@ describe('GetPermittedImageGenerationModelUseCase', () => {
     await expect(
       useCase.execute(new GetPermittedImageGenerationModelQuery({ orgId })),
     ).rejects.toThrow(UnexpectedModelError);
+  });
+
+  describe('team-scoped resolution', () => {
+    const setUser = (): void => {
+      (contextService.get as jest.Mock).mockImplementation((key?: string) => {
+        if (key === 'orgId') return orgId;
+        if (key === 'systemRole') return SystemRole.CUSTOMER;
+        if (key === 'userId') return userId;
+        return undefined;
+      });
+    };
+
+    it('falls back to the org model when the user has no override teams', async () => {
+      setUser();
+      findTeamsByUserIdUseCase.execute.mockResolvedValue([
+        new Team({ name: 'no-override', orgId, modelOverrideEnabled: false }),
+      ]);
+      const orgModel = buildImagePermittedModel();
+      permittedModelsRepository.findOneImageGeneration.mockResolvedValue(
+        orgModel,
+      );
+
+      const result = await useCase.execute(
+        new GetPermittedImageGenerationModelQuery({ orgId }),
+      );
+
+      expect(result).toBe(orgModel);
+      expect(
+        permittedModelsRepository.findManyImageGenerationByTeam,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('returns the team-assigned model when an override team has it', async () => {
+      setUser();
+      const overrideTeam = new Team({
+        name: 'override',
+        orgId,
+        modelOverrideEnabled: true,
+      });
+      findTeamsByUserIdUseCase.execute.mockResolvedValue([overrideTeam]);
+      const teamModel = buildImagePermittedModel();
+      permittedModelsRepository.findManyImageGenerationByTeam.mockResolvedValue(
+        [teamModel],
+      );
+
+      const result = await useCase.execute(
+        new GetPermittedImageGenerationModelQuery({ orgId }),
+      );
+
+      expect(result).toBe(teamModel);
+      expect(
+        permittedModelsRepository.findManyImageGenerationByTeam,
+      ).toHaveBeenCalledWith(overrideTeam.id, orgId);
+      expect(
+        permittedModelsRepository.findOneImageGeneration,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('throws not-found when an override team has no image model assigned', async () => {
+      setUser();
+      findTeamsByUserIdUseCase.execute.mockResolvedValue([
+        new Team({ name: 'override', orgId, modelOverrideEnabled: true }),
+      ]);
+      permittedModelsRepository.findManyImageGenerationByTeam.mockResolvedValue(
+        [],
+      );
+
+      await expect(
+        useCase.execute(new GetPermittedImageGenerationModelQuery({ orgId })),
+      ).rejects.toThrow(PermittedImageGenerationModelNotFoundForOrgError);
+      expect(
+        permittedModelsRepository.findOneImageGeneration,
+      ).not.toHaveBeenCalled();
+    });
   });
 });

@@ -149,6 +149,40 @@ describe('LocalPermittedModelsRepository', () => {
     expect(permittedModelRepository.save).not.toHaveBeenCalled();
   });
 
+  it('allows assigning the image-generation model to a team even when an org-scoped one exists', async () => {
+    const teamId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
+    const permittedModel = new PermittedModel({
+      id: newPermittedModelId,
+      model: createImageModel(),
+      orgId,
+      scope: PermittedModelScope.TEAM,
+      scopeId: teamId,
+    });
+    const savedRecord = new PermittedModelRecord();
+    savedRecord.id = newPermittedModelId;
+    savedRecord.orgId = orgId;
+    savedRecord.modelId = catalogModelId;
+    savedRecord.model = createImageRecord();
+    savedRecord.scope = PermittedModelScope.TEAM;
+    savedRecord.scopeId = teamId;
+    savedRecord.isDefault = false;
+    savedRecord.anonymousOnly = false;
+
+    permittedModelMapper.toRecord.mockReturnValue(savedRecord);
+    permittedModelRepository.save.mockResolvedValue(savedRecord);
+    permittedModelRepository.findOneOrFail.mockResolvedValue(savedRecord);
+    permittedModelMapper.toDomain.mockReturnValue(
+      createPermittedImageModel({ permittedModelId: newPermittedModelId }),
+    );
+
+    const result = await repository.create(permittedModel);
+
+    // The single-per-org guard must not run for team-scoped grants.
+    expect(permittedModelRepository.find).not.toHaveBeenCalled();
+    expect(permittedModelRepository.save).toHaveBeenCalledWith(savedRecord);
+    expect(result).toBeInstanceOf(PermittedImageGenerationModel);
+  });
+
   it('allows creating a replacement when the old image-generation catalog model is archived', async () => {
     const permittedModel = new PermittedModel({
       id: newPermittedModelId,

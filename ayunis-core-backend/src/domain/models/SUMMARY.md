@@ -14,7 +14,7 @@ The models module is the central registry for AI model configuration. The abstra
 - **SuperAdminLanguageCatalogModelsController** (`presenters/http/super-admin-language-catalog-models.controller.ts`): Super admin endpoints for creating and updating language models in the catalog.
 - **SuperAdminEmbeddingCatalogModelsController** (`presenters/http/super-admin-embedding-catalog-models.controller.ts`): Super admin endpoints for creating and updating embedding models in the catalog.
 - **SuperAdminImageGenerationCatalogModelsController** (`presenters/http/super-admin-image-generation-catalog-models.controller.ts`): Super admin endpoints for creating and updating image-generation models in the catalog.
-- **TeamPermittedModelsController** (`presenters/http/team-permitted-models.controller.ts`): Admin endpoints for managing team-scoped permitted models — listing, creating, deleting, and setting team defaults. All operations go through use-case layer with team ownership and org-scoping validation.
+- **TeamPermittedModelsController** (`presenters/http/team-permitted-models.controller.ts`): Admin endpoints for managing team-scoped permitted models — listing (language via `GET /`, image-generation via `GET /image-generation`), creating, deleting, and setting team defaults. Language and image-generation models are team-restrictable; embedding models are intentionally excluded so document processing stays available to every team. All operations go through use-case layer with team ownership and org-scoping validation.
 
 ## Application Services
 
@@ -42,14 +42,15 @@ The models module is the central registry for AI model configuration. The abstra
 - **GetPermittedLanguageModelsUseCase** (`application/use-cases/get-permitted-language-models`): Retrieves permitted language models for an org.
 - **GetPermittedLanguageModelUseCase** (`application/use-cases/get-permitted-language-model`): Retrieves the single permitted language model by model ID.
 - **GetPermittedEmbeddingModelUseCase** (`application/use-cases/get-permitted-embedding-model`): Retrieves the single permitted embedding model for an org.
-- **GetPermittedImageGenerationModelUseCase** (`application/use-cases/get-permitted-image-generation-model`): Retrieves the single permitted image-generation model for an org.
+- **GetPermittedImageGenerationModelUseCase** (`application/use-cases/get-permitted-image-generation-model`): Resolves the image-generation model effectively available to the current user. Image generation is team-restrictable: when the user belongs to one or more teams with model overrides enabled, image generation is only available if the org's image-generation model has been assigned to one of those override teams; users in no override team fall back to the org-level permitted model (mirrors `GetEffectiveLanguageModelsUseCase`).
 - **GetConfiguredModelsByTypeUseCase** (`application/use-cases/get-configured-models-by-type`): Retrieves all catalog models of a given type, used for populating model selection dropdowns.
 - **GetAllModelsUseCase** (`application/use-cases/get-all-models`): Retrieves all models from the catalog.
 - **GetModelUseCase** (`application/use-cases/get-model`): Retrieves a single model by slug.
 - **GetModelByIdUseCase** (`application/use-cases/get-model-by-id`): Retrieves a single model by ID.
 - **GetModelProviderInfoUseCase** (`application/use-cases/get-model-provider-info`): Retrieves provider metadata for a model.
 - **GetEffectiveLanguageModelsUseCase** (`application/use-cases/get-effective-language-models`): Computes the effective set of language models for a user, combining org and team scopes.
-- **GetTeamPermittedModelsUseCase** (`application/use-cases/get-team-permitted-models`): Retrieves team-scoped permitted models.
+- **GetTeamPermittedModelsUseCase** (`application/use-cases/get-team-permitted-models`): Retrieves team-scoped permitted language models.
+- **GetTeamPermittedImageGenerationModelsUseCase** (`application/use-cases/get-team-permitted-image-generation-models`): Retrieves team-scoped permitted image-generation models.
 - **CreateTeamPermittedModelUseCase** (`application/use-cases/create-team-permitted-model`): Creates a team-scoped permitted model entry.
 - **DeleteTeamPermittedModelUseCase** (`application/use-cases/delete-team-permitted-model`): Removes a team-scoped permitted model entry.
 - **SetTeamDefaultModelUseCase** (`application/use-cases/set-team-default-model`): Sets the default model for a team.

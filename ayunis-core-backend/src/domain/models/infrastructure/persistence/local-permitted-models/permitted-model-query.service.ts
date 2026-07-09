@@ -144,6 +144,28 @@ export class PermittedModelQueryService {
       ) as PermittedLanguageModel[];
   }
 
+  async findManyImageGenerationByTeam(
+    teamId: UUID,
+    orgId: UUID,
+  ): Promise<PermittedImageGenerationModel[]> {
+    const permittedModels = await this.permittedModelRepository.find(
+      this.buildActiveScopedQuery({
+        orgId,
+        scope: PermittedModelScope.TEAM,
+        scopeId: teamId,
+        modelType: ModelType.IMAGE_GENERATION,
+      }),
+    );
+    return permittedModels
+      .filter(
+        (permittedModel) =>
+          permittedModel.model instanceof ImageGenerationModelRecord,
+      )
+      .map((permittedModel) =>
+        this.permittedModelMapper.toDomain(permittedModel),
+      );
+  }
+
   private buildActiveScopedQuery(params: {
     orgId: UUID;
     scope: PermittedModelScope;

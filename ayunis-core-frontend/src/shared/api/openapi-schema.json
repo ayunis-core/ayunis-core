@@ -2308,7 +2308,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PermittedImageGenerationModelResponseDto"
+                    }
+                  ]
                 }
               }
             }
@@ -2324,6 +2331,41 @@
           }
         },
         "summary": "Add a permitted model to a team",
+        "tags": ["team-permitted-models"]
+      }
+    },
+    "/teams/{teamId}/permitted-models/image-generation": {
+      "get": {
+        "operationId": "TeamPermittedModelsController_listTeamImageGenerationModels",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved team's permitted image-generation models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PermittedImageGenerationModelResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Team not found"
+          }
+        },
+        "summary": "List a team's permitted image-generation models",
         "tags": ["team-permitted-models"]
       }
     },
