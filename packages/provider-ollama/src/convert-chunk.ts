@@ -6,6 +6,7 @@ import type {
   FinishReason,
   ProviderChunk,
   ToolCallDelta,
+  ToolNameCodec,
 } from '@ayunis/inference';
 
 /**
@@ -15,7 +16,10 @@ import type {
  * are split host-side). Usage and finish reason arrive on the final (`done`)
  * chunk.
  */
-export const convertChunk = (chunk: ChatResponse): ProviderChunk | null => {
+export const convertChunk = (
+  chunk: ChatResponse,
+  codec: ToolNameCodec,
+): ProviderChunk | null => {
   const message = chunk.message;
   const result: ProviderChunk = {};
   let carriesSomething = false;
@@ -28,7 +32,7 @@ export const convertChunk = (chunk: ChatResponse): ProviderChunk | null => {
     result.textDelta = message.content;
     carriesSomething = true;
   }
-  const toolCallDeltas = extractToolCallDeltas(message.tool_calls);
+  const toolCallDeltas = extractToolCallDeltas(message.tool_calls, codec);
   if (toolCallDeltas.length > 0) {
     result.toolCallDeltas = toolCallDeltas;
     carriesSomething = true;
@@ -47,13 +51,20 @@ export const convertChunk = (chunk: ChatResponse): ProviderChunk | null => {
 
 const extractToolCallDeltas = (
   toolCalls: OllamaToolCall[] | undefined,
+  codec: ToolNameCodec,
 ): ToolCallDelta[] =>
-  toolCalls?.map((toolCall, index) => ({
-    index,
-    id: randomUUID(),
-    name: toolCall.function.name,
-    argumentsDelta: JSON.stringify(toolCall.function.arguments),
-  })) ?? [];
+  toolCalls?.map((toolCall, index) => {
+    const wireName = toolCall.function.name;
+    const name = codec.decode(wireName);
+    return {
+      index,
+      id: randomUUID(),
+      name,
+      argumentsDelta: JSON.stringify(toolCall.function.arguments),
+      // Record what the model actually saw when names were translated.
+      ...(name !== wireName ? { providerMetadata: { wireName } } : {}),
+    };
+  }) ?? [];
 
 // Ollama reports `done_reason` as a free-form string; `done` already signals
 // completion, so an unrecognized reason falls back to a plain stop.

@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { ChatResponse, Message } from 'ollama';
 
-import { convertChunk } from './convert-chunk';
+import { ToolNameCodec } from '@ayunis/inference';
+
+import { convertChunk as convert } from './convert-chunk';
+
+// Passthrough map — name translation is covered by its own tests below.
+const convertChunk = (c: ChatResponse) => convert(c, new ToolNameCodec([]));
 
 const chunk = (
   message: Partial<Message>,
@@ -80,5 +85,27 @@ describe('convertChunk', () => {
 
   it('returns null for an empty, non-final chunk', () => {
     expect(convertChunk(chunk({}))).toBeNull();
+  });
+});
+
+describe('convertChunk wire-name decoding', () => {
+  it('maps a wire tool name back to the original and records the wire name', () => {
+    const codec = new ToolNameCodec([
+      { name: 'notion.search', description: 'd', parameters: {} },
+    ]);
+    const result = convert(
+      chunk({
+        tool_calls: [
+          { function: { name: 'notion_search', arguments: { q: 'x' } } },
+        ],
+      }),
+      codec,
+    );
+    const delta = result?.toolCallDeltas?.[0];
+    expect(delta).toMatchObject({
+      name: 'notion.search',
+      argumentsDelta: '{"q":"x"}',
+      providerMetadata: { wireName: 'notion_search' },
+    });
   });
 });
