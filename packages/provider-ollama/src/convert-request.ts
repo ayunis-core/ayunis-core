@@ -4,7 +4,12 @@ import type {
   ToolCall as OllamaToolCall,
 } from 'ollama';
 
-import type { Message, MessageContent, ToolSchema } from '@ayunis/inference';
+import type {
+  Message,
+  MessageContent,
+  ToolSchema,
+  ToolNameCodec,
+} from '@ayunis/inference';
 
 /**
  * Ollama tool functions accept a `strict` flag the SDK's `Tool` type does not
@@ -12,9 +17,12 @@ import type { Message, MessageContent, ToolSchema } from '@ayunis/inference';
  */
 type OllamaToolFunction = OllamaTool['function'] & { strict?: boolean };
 
-export const convertTool = (tool: ToolSchema): OllamaTool => {
+export const convertTool = (
+  tool: ToolSchema,
+  codec: ToolNameCodec,
+): OllamaTool => {
   const fn: OllamaToolFunction = {
-    name: tool.name,
+    name: codec.encode(tool.name),
     description: tool.description,
     parameters: tool.parameters,
     strict: true,
@@ -32,6 +40,7 @@ export const convertTool = (tool: ToolSchema): OllamaTool => {
 export const convertMessages = (
   instructions: string,
   messages: readonly Message[],
+  codec: ToolNameCodec,
 ): OllamaMessage[] => {
   const converted: OllamaMessage[] = [];
   if (instructions) {
@@ -39,7 +48,7 @@ export const convertMessages = (
   }
   for (const message of messages) {
     if (message.role === 'assistant') {
-      converted.push(convertAssistant(message.content));
+      converted.push(convertAssistant(message.content, codec));
     } else if (message.role === 'tool_result') {
       converted.push(...convertToolResults(message.content));
     } else if (message.role === 'system') {
@@ -82,6 +91,7 @@ const convertUser = (
 
 const convertAssistant = (
   content: readonly MessageContent[],
+  codec: ToolNameCodec,
 ): OllamaMessage & { role: 'assistant' } => {
   let text: string | undefined;
   let thinking: string | undefined;
@@ -92,7 +102,9 @@ const convertAssistant = (
     } else if (c.type === 'thinking') {
       thinking = c.thinking;
     } else if (c.type === 'tool_use') {
-      toolCalls.push({ function: { name: c.name, arguments: c.input } });
+      toolCalls.push({
+        function: { name: codec.encode(c.name), arguments: c.input },
+      });
     }
   }
   return {

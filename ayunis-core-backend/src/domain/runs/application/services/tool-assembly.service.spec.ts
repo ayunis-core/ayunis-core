@@ -114,7 +114,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     };
   }
 
-  it('drops MCP tools whose sanitized name collides with a built-in tool', async () => {
+  it('keeps MCP tools whose name only collides with a built-in after wire translation', async () => {
     const integrationId = randomUUID();
     const { service } = await buildService({
       contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
@@ -146,11 +146,16 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     });
     const tools = await service.assembleTools(thread, [], new Map());
 
-    const collisions = tools.filter(
+    // Backend names are canonical: the built-in and the MCP tool coexist —
+    // wire-level collision handling is the providers' job.
+    const builtIn = tools.filter(
       (t: { name: string }) => t.name === 'code_execution',
     );
-    expect(collisions).toHaveLength(1);
-    expect(collisions[0].type).toBe(ToolType.CODE_EXECUTION);
+    expect(builtIn).toHaveLength(1);
+    expect(builtIn[0].type).toBe(ToolType.CODE_EXECUTION);
+    expect(
+      tools.some((t: { name: string }) => t.name === 'code.execution'),
+    ).toBe(true);
   });
 
   it('keeps only the first MCP tool when two share a sanitized name', async () => {
@@ -184,7 +189,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     const tools = await service.assembleTools(thread, [], new Map());
 
     const matches = tools.filter(
-      (t: { name: string }) => t.name === 'notion_search',
+      (t: { name: string }) => t.name === 'notion.search',
     );
     expect(matches).toHaveLength(1);
     expect(matches[0].description).toBe('first');

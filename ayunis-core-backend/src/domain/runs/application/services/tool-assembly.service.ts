@@ -152,20 +152,16 @@ export class ToolAssemblyService {
       description: string;
     };
     const allInputs: SkillInput[] = [
-      ...activeSkills.map(
-        (s): SkillInput => ({
-          name: s.name,
-          prefix: USER_PREFIX,
-          description: s.shortDescription,
-        }),
-      ),
-      ...alwaysOnTemplates.map(
-        (t): SkillInput => ({
-          name: t.name,
-          prefix: SYSTEM_PREFIX,
-          description: t.shortDescription,
-        }),
-      ),
+      ...activeSkills.map((s): SkillInput => ({
+        name: s.name,
+        prefix: USER_PREFIX,
+        description: s.shortDescription,
+      })),
+      ...alwaysOnTemplates.map((t): SkillInput => ({
+        name: t.name,
+        prefix: SYSTEM_PREFIX,
+        description: t.shortDescription,
+      })),
     ];
 
     for (const input of allInputs) {
@@ -240,8 +236,8 @@ export class ToolAssemblyService {
     tools.push(...(await this.assembleKnowledgeTools(thread)));
     tools.push(...(await this.assembleActivateSkillTool(slugMap)));
 
-    // MCP tools/resources go last: their (sanitized) names are third-party
-    // and must not shadow a built-in tool of the same name.
+    // MCP tools/resources go last: their names are third-party and must not
+    // shadow a built-in tool of the same name.
     const reservedNames = new Set(tools.map((tool) => tool.name));
     tools.push(
       ...(await this.mcpToolAssembler.assemble(thread, reservedNames)),

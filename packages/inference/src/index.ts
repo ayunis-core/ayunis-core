@@ -14,6 +14,7 @@ export type { JsonSchema, ToolSchema } from './tool-schema';
 export {
   CombinatorFlattener,
   SchemaWalker,
+  ToolNameCodec,
   convertDraft04ExclusiveBoundsNode,
   isRecord,
 } from './tool-normalizer';

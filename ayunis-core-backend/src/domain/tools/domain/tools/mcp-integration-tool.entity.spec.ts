@@ -13,20 +13,9 @@ describe('McpIntegrationTool', () => {
     return new McpIntegrationTool(mcpTool, false, 'Integration', null);
   }
 
-  it('sanitizes the model-facing name to the provider-accepted pattern', () => {
+  it('keeps the original MCP tool name — providers translate on the wire', () => {
     const tool = createTool('Project README.fetch');
-    expect(tool.name).toBe('Project_README_fetch');
-  });
-
-  it('preserves the original MCP tool name for server calls', () => {
-    const tool = createTool('Project README.fetch');
-    expect(tool.mcpToolName).toBe('Project README.fetch');
-  });
-
-  it('keeps valid names identical on both sides', () => {
-    const tool = createTool('search_documents');
-    expect(tool.name).toBe('search_documents');
-    expect(tool.mcpToolName).toBe('search_documents');
+    expect(tool.name).toBe('Project README.fetch');
   });
 
   describe('validateParams', () => {

@@ -7,6 +7,7 @@ import type {
   ProviderChunk,
   ProviderRequest,
 } from '@ayunis/inference';
+import { ToolNameCodec } from '@ayunis/inference';
 
 import { convertChunk } from './convert-chunk';
 import {
@@ -70,13 +71,14 @@ async function* streamChat(
   model: string,
   request: ProviderRequest,
 ): AsyncIterable<ProviderChunk> {
-  const params = buildParams(model, request);
+  const codec = new ToolNameCodec(request.tools);
+  const params = buildParams(model, request, codec);
   const stream = await client.chat.stream(
     params,
     request.signal ? { signal: request.signal } : undefined,
   );
   for await (const event of stream) {
-    const converted = convertChunk(event);
+    const converted = convertChunk(event, codec);
     if (converted) {
       yield converted;
     }
@@ -86,14 +88,17 @@ async function* streamChat(
 const buildParams = (
   model: string,
   request: ProviderRequest,
+  codec: ToolNameCodec,
 ): ChatCompletionStreamRequest => {
   const hasTools = request.tools.length > 0;
   return {
     model,
-    messages: convertMessages(request.instructions, request.messages),
-    ...(hasTools ? { tools: request.tools.map(convertTool) } : {}),
+    messages: convertMessages(request.instructions, request.messages, codec),
+    ...(hasTools
+      ? { tools: request.tools.map((tool) => convertTool(tool, codec)) }
+      : {}),
     ...(hasTools && request.toolChoice !== undefined
-      ? { toolChoice: convertToolChoice(request.toolChoice) }
+      ? { toolChoice: convertToolChoice(request.toolChoice, codec) }
       : {}),
     stream: true,
   };

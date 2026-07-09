@@ -1,6 +1,10 @@
 import type Anthropic from '@anthropic-ai/sdk';
 
-import type { FinishReason, ProviderChunk } from '@ayunis/inference';
+import type {
+  FinishReason,
+  ProviderChunk,
+  ToolNameCodec,
+} from '@ayunis/inference';
 
 /**
  * Converts one Anthropic stream event to a provider-agnostic chunk.
@@ -8,12 +12,13 @@ import type { FinishReason, ProviderChunk } from '@ayunis/inference';
  */
 export const convertChunk = (
   event: Anthropic.Messages.MessageStreamEvent,
+  codec: ToolNameCodec,
 ): ProviderChunk | null => {
   switch (event.type) {
     case 'content_block_delta':
       return convertContentBlockDelta(event);
     case 'content_block_start':
-      return convertContentBlockStart(event);
+      return convertContentBlockStart(event, codec);
     case 'message_start':
       return {
         usage: { inputTokens: event.message.usage.input_tokens },
@@ -52,16 +57,21 @@ const convertContentBlockDelta = (
 
 const convertContentBlockStart = (
   event: Anthropic.Messages.ContentBlockStartEvent,
+  codec: ToolNameCodec,
 ): ProviderChunk | null => {
   if (event.content_block.type !== 'tool_use') {
     return null;
   }
+  const wireName = event.content_block.name;
+  const name = codec.decode(wireName);
   return {
     toolCallDeltas: [
       {
         index: event.index,
         id: event.content_block.id,
-        name: event.content_block.name,
+        name,
+        // Record what the model actually saw when names were translated.
+        ...(name !== wireName ? { providerMetadata: { wireName } } : {}),
       },
     ],
   };

@@ -4,7 +4,6 @@ import { ToolType } from '../value-objects/tool-type.enum';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import type { UUID } from 'crypto';
 import type { McpResource } from 'src/domain/mcp/domain/mcp-resource.entity';
-import { sanitizeMcpToolName } from './mcp-tool-name.util';
 
 const mcpResourceToolParameters = {
   type: 'object' as const,
@@ -34,7 +33,7 @@ export class McpIntegrationResource extends Tool {
 
   constructor(mcpResource: McpResource, returnsPii: boolean) {
     super({
-      name: sanitizeMcpToolName(mcpResource.name),
+      name: mcpResource.name,
       description: getDescription(mcpResource),
       parameters: mcpResourceToolParameters,
       type: ToolType.MCP_RESOURCE,

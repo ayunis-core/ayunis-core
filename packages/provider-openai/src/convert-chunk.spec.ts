@@ -1,10 +1,16 @@
 import type { ChatCompletionChunk } from 'openai/resources/chat/completions';
 import { describe, expect, it } from 'vitest';
 
-import { convertChunk } from './convert-chunk';
+import { ToolNameCodec } from '@ayunis/inference';
+
+import { convertChunk as convert } from './convert-chunk';
 
 const chunk = (value: unknown): ChatCompletionChunk =>
   value as ChatCompletionChunk;
+
+// Passthrough map — name translation is covered by its own tests below.
+const convertChunk = (c: ChatCompletionChunk) =>
+  convert(c, new ToolNameCodec([]));
 
 describe('convertChunk', () => {
   it('converts a text content delta', () => {
@@ -94,5 +100,36 @@ describe('convertChunk', () => {
     expect(
       convertChunk(chunk({ choices: [{ index: 0, delta: {} }] })),
     ).toBeNull();
+  });
+});
+
+describe('convertChunk wire-name decoding', () => {
+  it('maps a wire tool name back to the original and records the wire name', () => {
+    const codec = new ToolNameCodec([
+      { name: 'notion.search', description: 'd', parameters: {} },
+    ]);
+    const result = convert(
+      chunk({
+        choices: [
+          {
+            delta: {
+              tool_calls: [
+                { index: 0, id: 'call_1', function: { name: 'notion_search' } },
+              ],
+            },
+          },
+        ],
+      }),
+      codec,
+    );
+    expect(result?.toolCallDeltas).toEqual([
+      {
+        index: 0,
+        id: 'call_1',
+        name: 'notion.search',
+        argumentsDelta: null,
+        providerMetadata: { wireName: 'notion_search' },
+      },
+    ]);
   });
 });

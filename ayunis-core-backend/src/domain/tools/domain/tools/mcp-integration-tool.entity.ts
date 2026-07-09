@@ -3,7 +3,6 @@ import { Tool } from '../tool.entity';
 import { ToolType } from '../value-objects/tool-type.enum';
 import type { UUID } from 'crypto';
 import type { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
-import { sanitizeMcpToolName } from './mcp-tool-name.util';
 
 /**
  * Ephemeral tool entity representing an MCP tool.
@@ -12,8 +11,6 @@ import { sanitizeMcpToolName } from './mcp-tool-name.util';
  */
 export class McpIntegrationTool extends Tool {
   public readonly integrationId: UUID;
-  /** Original MCP server tool name — `name` is sanitized for LLM providers. */
-  public readonly mcpToolName: string;
   public readonly integrationName: string;
   public readonly integrationLogoUrl: string | null;
   private readonly _returnsPii: boolean;
@@ -25,13 +22,12 @@ export class McpIntegrationTool extends Tool {
     integrationLogoUrl: string | null,
   ) {
     super({
-      name: sanitizeMcpToolName(mcpTool.name),
+      name: mcpTool.name,
       description: mcpTool.description ?? '',
       parameters: mcpTool.inputSchema,
       type: ToolType.MCP_TOOL,
     });
     this.integrationId = mcpTool.integrationId;
-    this.mcpToolName = mcpTool.name;
     this.integrationName = integrationName;
     this.integrationLogoUrl = integrationLogoUrl;
     this._returnsPii = returnsPii;
