@@ -20,13 +20,16 @@ function readPackageVersion(): string | undefined {
   }
 }
 
-if (sentryDsn) {
+// Never report from local development, even when a SENTRY_DSN is present in
+// the local .env — dev noise (e.g. crons failing against stopped local
+// services) pollutes the shared project and buries production signals.
+if (sentryDsn && environment !== 'development') {
   Sentry.init({
     dsn: sentryDsn,
     environment,
     release,
     enableLogs: true,
-    // Performance Monitoring - sample 100% in dev, 10% in prod
+    // Performance Monitoring - sample 100% on staging, 10% in prod
     tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
     beforeSend(event, hint) {
       const error = hint.originalException;
@@ -47,6 +50,8 @@ if (sentryDsn) {
   });
 
   console.warn(`✅ Sentry initialized for environment: ${environment}`);
+} else if (sentryDsn) {
+  console.warn('⚠️  Sentry disabled in development - SENTRY_DSN ignored');
 } else {
   console.warn('⚠️  SENTRY_DSN not configured - error tracking disabled');
 }
