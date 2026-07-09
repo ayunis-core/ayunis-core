@@ -14,6 +14,13 @@ import {
   convertToolChoice,
 } from './convert-request';
 
+// Bounds each connection attempt — the SDK aborts if the response hasn't
+// started, and clears the timer once streaming begins, so long healthy
+// streams are unaffected. Well below the SDK's 10-minute default so a
+// stalled connection surfaces as a retryable error instead of hanging the
+// caller. Hosts can override via `timeoutMs`.
+export const DEFAULT_TIMEOUT_MS = 120_000;
+
 export interface OpenAIProviderOptions {
   apiKey: string;
   /** OpenAI model id, e.g. 'gpt-4.1'. */
@@ -21,6 +28,8 @@ export interface OpenAIProviderOptions {
   baseUrl?: string;
   /** SDK-level retry count for transient failures. Default: 2. */
   maxRetries?: number;
+  /** Per-attempt timeout in ms until the response starts. Default: 120s. */
+  timeoutMs?: number;
 }
 
 export interface AzureProviderOptions {
@@ -33,6 +42,8 @@ export interface AzureProviderOptions {
   model: string;
   /** SDK-level retry count for transient failures. Default: 2. */
   maxRetries?: number;
+  /** Per-attempt timeout in ms until the response starts. Default: 120s. */
+  timeoutMs?: number;
 }
 
 /**
@@ -43,6 +54,7 @@ export interface AzureProviderOptions {
 export const openai = (options: OpenAIProviderOptions): ModelProvider => {
   const client = new OpenAI({
     apiKey: options.apiKey,
+    timeout: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     ...(options.baseUrl ? { baseURL: options.baseUrl } : {}),
     ...(options.maxRetries !== undefined
       ? { maxRetries: options.maxRetries }
@@ -61,6 +73,7 @@ export const azure = (options: AzureProviderOptions): ModelProvider => {
     apiKey: options.apiKey,
     endpoint: options.endpoint,
     apiVersion: options.apiVersion,
+    timeout: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     ...(options.maxRetries !== undefined
       ? { maxRetries: options.maxRetries }
       : {}),

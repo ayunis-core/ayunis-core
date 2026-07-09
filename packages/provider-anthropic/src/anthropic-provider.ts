@@ -22,6 +22,13 @@ import {
 // warrants it. Hosts needing longer outputs can pass `maxTokens` explicitly.
 export const DEFAULT_MAX_TOKENS = 16_384;
 
+// Bounds each connection attempt — the SDK aborts if the response hasn't
+// started, and clears the timer once streaming begins, so long healthy
+// streams are unaffected. Well below the SDK's 10-minute default so a
+// stalled connection surfaces as a retryable error instead of hanging the
+// caller. Hosts can override via `timeoutMs`.
+export const DEFAULT_TIMEOUT_MS = 120_000;
+
 /**
  * Any client that speaks the Anthropic Messages streaming API — the Anthropic
  * SDK and the Bedrock SDK both satisfy this, so they share the stream core.
@@ -38,6 +45,8 @@ export interface AnthropicProviderOptions {
   baseUrl?: string;
   /** SDK-level retry count for transient failures. Default: 2. */
   maxRetries?: number;
+  /** Per-attempt timeout in ms until the response starts. Default: 120s. */
+  timeoutMs?: number;
 }
 
 /**
@@ -48,6 +57,7 @@ export interface AnthropicProviderOptions {
 export const anthropic = (options: AnthropicProviderOptions): ModelProvider => {
   const client = new Anthropic({
     apiKey: options.apiKey,
+    timeout: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     ...(options.baseUrl ? { baseURL: options.baseUrl } : {}),
     ...(options.maxRetries !== undefined
       ? { maxRetries: options.maxRetries }
