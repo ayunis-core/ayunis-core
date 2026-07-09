@@ -16,7 +16,10 @@ const mcpResourceToolParameters = {
 type McpResourceToolParameters = FromSchema<typeof mcpResourceToolParameters>;
 
 function getDescription(mcpResource: McpResource): string {
-  return `Retrieve this resource from the MCP integration: ${mcpResource.name}.\nDescription: ${mcpResource.description ?? ''}\nURI: ${mcpResource.uri}\nArguments: ${mcpResource.arguments?.map((arg) => `${arg.name}: ${arg.description}`).join(', ')}`;
+  const argumentList = mcpResource.arguments
+    ?.map((arg) => `${arg.name}: ${arg.description}`)
+    .join(', ');
+  return `Retrieve this resource from the MCP integration: ${mcpResource.name}.\nDescription: ${mcpResource.description ?? ''}\nURI: ${mcpResource.uri}\nArguments: ${argumentList}`;
 }
 
 /**
