@@ -5,7 +5,10 @@ import type {
   MessageContent,
   ToolChoice,
   ToolSchema,
+  ToolNameCodec,
 } from '@ayunis/inference';
+
+import { normalizeSchemaForAnthropic } from './normalize-schema';
 
 type AnthropicToolChoice =
   | Anthropic.Messages.ToolChoiceAuto
@@ -65,14 +68,18 @@ export const markCacheBreakpoint = (
   return [...messages.slice(0, -1), { ...lastMessage, content: markedContent }];
 };
 
-export const convertTool = (tool: ToolSchema): Anthropic.Tool => ({
-  name: tool.name,
+export const convertTool = (
+  tool: ToolSchema,
+  codec: ToolNameCodec,
+): Anthropic.Tool => ({
+  name: codec.encode(tool.name),
   description: tool.description,
-  input_schema: tool.parameters as Anthropic.Messages.Tool.InputSchema,
+  input_schema: normalizeSchemaForAnthropic(tool.parameters),
 });
 
 export const convertToolChoice = (
   toolChoice: ToolChoice,
+  codec: ToolNameCodec,
 ): AnthropicToolChoice => {
   if (toolChoice === 'auto') {
     return { type: 'auto' };
@@ -80,7 +87,7 @@ export const convertToolChoice = (
   if (toolChoice === 'required') {
     return { type: 'any' };
   }
-  return { type: 'tool', name: toolChoice.tool };
+  return { type: 'tool', name: codec.encode(toolChoice.tool) };
 };
 
 /**
@@ -90,10 +97,11 @@ export const convertToolChoice = (
  */
 export const convertMessages = (
   messages: readonly Message[],
+  codec: ToolNameCodec,
 ): Anthropic.MessageParam[] => {
   const converted: Anthropic.MessageParam[] = [];
   for (const message of messages) {
-    const next = convertMessage(message);
+    const next = convertMessage(message, codec);
     // A message can convert to nothing (e.g. an assistant turn whose only
     // content was unsigned thinking) — Anthropic rejects empty content.
     if (asBlocks(next.content).length === 0) {
@@ -122,12 +130,15 @@ const asBlocks = (
 ): Anthropic.ContentBlockParam[] =>
   typeof content === 'string' ? [{ type: 'text', text: content }] : content;
 
-const convertMessage = (message: Message): Anthropic.MessageParam => {
+const convertMessage = (
+  message: Message,
+  codec: ToolNameCodec,
+): Anthropic.MessageParam => {
   if (message.role === 'assistant') {
     return {
       role: 'assistant',
       content: message.content
-        .map(convertAssistantContent)
+        .map((content) => convertAssistantContent(content, codec))
         .filter((block): block is NonNullable<typeof block> => block !== null),
     };
   }
@@ -136,6 +147,7 @@ const convertMessage = (message: Message): Anthropic.MessageParam => {
 
 const convertAssistantContent = (
   content: MessageContent,
+  codec: ToolNameCodec,
 ): Anthropic.ContentBlockParam | null => {
   switch (content.type) {
     case 'thinking':
@@ -154,7 +166,7 @@ const convertAssistantContent = (
       return {
         type: 'tool_use',
         id: content.id,
-        name: content.name,
+        name: codec.encode(content.name),
         input: content.input,
       };
     case 'tool_result':
