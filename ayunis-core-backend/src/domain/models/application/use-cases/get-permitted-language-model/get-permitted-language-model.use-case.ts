@@ -6,18 +6,20 @@ import {
   ModelNotFoundByIdError,
   UnexpectedModelError,
 } from '../../models.errors';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
-export class GetPermittedLanguageModelUseCase {
-  private readonly logger = new Logger(GetPermittedLanguageModelUseCase.name);
+export class GetPermittedLanguageModelUseCase extends BaseUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly contextService: ContextService,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(
     query: GetPermittedLanguageModelQuery,

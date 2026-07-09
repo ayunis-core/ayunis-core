@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import {
@@ -10,13 +11,13 @@ import { ModelPolicyService } from '../../services/model-policy.service';
 import { UpdateImageGenerationModelCommand } from './update-image-generation-model.command';
 
 @Injectable()
-export class UpdateImageGenerationModelUseCase {
-  private readonly logger = new Logger(UpdateImageGenerationModelUseCase.name);
-
+export class UpdateImageGenerationModelUseCase extends BaseUseCase {
   constructor(
     private readonly modelsRepository: ModelsRepository,
     private readonly modelPolicy: ModelPolicyService,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(
     command: UpdateImageGenerationModelCommand,

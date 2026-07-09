@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -13,14 +14,14 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 import type { EffectiveLanguageModelsResult } from './effective-language-models-result';
 
 @Injectable()
-export class GetEffectiveLanguageModelsUseCase {
-  private readonly logger = new Logger(GetEffectiveLanguageModelsUseCase.name);
-
+export class GetEffectiveLanguageModelsUseCase extends BaseUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly findTeamsByUserIdUseCase: FindTeamsByUserIdUseCase,
     private readonly contextService: ContextService,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(
     query: GetEffectiveLanguageModelsQuery,

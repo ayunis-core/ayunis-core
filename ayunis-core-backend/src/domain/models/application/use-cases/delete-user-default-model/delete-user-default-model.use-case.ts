@@ -1,15 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { DeleteUserDefaultModelCommand } from './delete-user-default-model.command';
 import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
 import { ModelError } from '../../models.errors';
 
 @Injectable()
-export class DeleteUserDefaultModelUseCase {
-  private readonly logger = new Logger(DeleteUserDefaultModelUseCase.name);
-
+export class DeleteUserDefaultModelUseCase extends BaseUseCase {
   constructor(
     private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(command: DeleteUserDefaultModelCommand): Promise<void> {
     this.logger.log('execute', {

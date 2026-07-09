@@ -1,4 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import type { UUID } from 'crypto';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { SetUserDefaultLanguageModelCommand } from './set-user-default-language-model.command';
 import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
@@ -8,14 +10,14 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
-export class SetUserDefaultLanguageModelUseCase {
-  private readonly logger = new Logger(SetUserDefaultLanguageModelUseCase.name);
-
+export class SetUserDefaultLanguageModelUseCase extends BaseUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
     private readonly contextService: ContextService,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(
     command: SetUserDefaultLanguageModelCommand,
@@ -27,47 +29,16 @@ export class SetUserDefaultLanguageModelUseCase {
     });
 
     try {
-      // First, verify that the permitted model exists and belongs to the organization
-      const userId = this.contextService.get('userId');
-      if (userId !== command.userId) {
-        throw new UnauthorizedAccessError();
-      }
-      const permittedModel =
-        await this.permittedModelsRepository.findOneLanguage({
-          id: command.permittedModelId,
-        });
+      this.ensureAuthorized(command.userId);
+      const permittedModel = await this.findPermittedLanguageModel(command);
+      const action = await this.getDefaultAction(command.userId);
 
-      if (!permittedModel) {
-        this.logger.error('Permitted model not found', {
-          permittedModelId: command.permittedModelId,
-          orgId: command.orgId,
-        });
-        throw new PermittedModelNotFoundError(command.permittedModelId);
-      }
-
-      // Check if there's already a user default model
-      const existingUserDefault =
-        await this.userDefaultModelsRepository.findByUserId(command.userId);
-
-      const action = existingUserDefault ? 'updating' : 'setting';
-      this.logger.debug(`Permitted model found, ${action} user default`, {
-        modelName: permittedModel.model.name,
-        modelProvider: permittedModel.model.provider,
-        existingDefaultId: existingUserDefault?.id,
-      });
-
-      // Set the model as the user's default (handles both create and update)
-      const userDefaultModel =
-        await this.userDefaultModelsRepository.setAsDefault(
-          permittedModel,
-          command.userId,
-        );
-
-      this.logger.debug(`User default model ${action} successfully`, {
-        userId: command.userId,
-        modelId: userDefaultModel.id,
-        action,
-      });
+      this.logBeforeSet(permittedModel, action);
+      const userDefaultModel = await this.setUserDefault(
+        command,
+        permittedModel,
+      );
+      this.logAfterSet(command.userId, userDefaultModel.id, action);
 
       return userDefaultModel;
     } catch (error) {
@@ -82,5 +53,71 @@ export class SetUserDefaultLanguageModelUseCase {
       });
       throw error;
     }
+  }
+
+  private ensureAuthorized(userId: string): void {
+    if (this.contextService.get('userId') !== userId) {
+      throw new UnauthorizedAccessError();
+    }
+  }
+
+  private async findPermittedLanguageModel(
+    command: SetUserDefaultLanguageModelCommand,
+  ): Promise<PermittedLanguageModel> {
+    const permittedModel = await this.permittedModelsRepository.findOneLanguage(
+      {
+        id: command.permittedModelId,
+      },
+    );
+    if (permittedModel) {
+      return permittedModel;
+    }
+
+    this.logger.error('Permitted model not found', {
+      permittedModelId: command.permittedModelId,
+      orgId: command.orgId,
+    });
+    throw new PermittedModelNotFoundError(command.permittedModelId);
+  }
+
+  private async getDefaultAction(
+    userId: UUID,
+  ): Promise<'setting' | 'updating'> {
+    const existingUserDefault =
+      await this.userDefaultModelsRepository.findByUserId(userId);
+
+    return existingUserDefault ? 'updating' : 'setting';
+  }
+
+  private logBeforeSet(
+    permittedModel: PermittedLanguageModel,
+    action: 'setting' | 'updating',
+  ): void {
+    this.logger.debug(`Permitted model found, ${action} user default`, {
+      modelName: permittedModel.model.name,
+      modelProvider: permittedModel.model.provider,
+    });
+  }
+
+  private async setUserDefault(
+    command: SetUserDefaultLanguageModelCommand,
+    permittedModel: PermittedLanguageModel,
+  ): Promise<PermittedLanguageModel> {
+    return await this.userDefaultModelsRepository.setAsDefault(
+      permittedModel,
+      command.userId,
+    );
+  }
+
+  private logAfterSet(
+    userId: string,
+    modelId: string,
+    action: 'setting' | 'updating',
+  ): void {
+    this.logger.debug(`User default model ${action} successfully`, {
+      userId,
+      modelId,
+      action,
+    });
   }
 }

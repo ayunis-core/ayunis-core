@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -13,16 +14,14 @@ import { ModelPolicyService } from '../../services/model-policy.service';
 import { GetPermittedImageGenerationModelQuery } from './get-permitted-image-generation-model.query';
 
 @Injectable()
-export class GetPermittedImageGenerationModelUseCase {
-  private readonly logger = new Logger(
-    GetPermittedImageGenerationModelUseCase.name,
-  );
-
+export class GetPermittedImageGenerationModelUseCase extends BaseUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly contextService: ContextService,
     private readonly modelPolicy: ModelPolicyService,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(
     query: GetPermittedImageGenerationModelQuery,

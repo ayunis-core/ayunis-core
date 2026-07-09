@@ -6,18 +6,19 @@ import {
   UnexpectedModelError,
 } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { ClearDefaultsByCatalogModelIdUseCase } from '../clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
 import { ClearDefaultsByCatalogModelIdCommand } from '../clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.command';
 
 @Injectable()
-export class UpdateLanguageModelUseCase {
-  private readonly logger = new Logger(UpdateLanguageModelUseCase.name);
-
+export class UpdateLanguageModelUseCase extends BaseUseCase {
   constructor(
     private readonly modelsRepository: ModelsRepository,
     private readonly clearDefaultsUseCase: ClearDefaultsByCatalogModelIdUseCase,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(command: UpdateLanguageModelCommand): Promise<LanguageModel> {
     try {

@@ -1,5 +1,6 @@
 import { Observable, catchError, throwError } from 'rxjs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { StreamInferenceHandlerRegistry } from '../../registry/stream-inference-handler.registry';
 import {
   StreamInferenceHandler,
@@ -12,11 +13,12 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { extractUpstreamStatus } from '../../helpers/extract-upstream-status.helper';
 
 @Injectable()
-export class StreamInferenceUseCase {
-  private readonly logger = new Logger(StreamInferenceUseCase.name);
+export class StreamInferenceUseCase extends BaseUseCase {
   constructor(
     private readonly streamInferenceRegistry: StreamInferenceHandlerRegistry,
-  ) {}
+  ) {
+    super();
+  }
 
   execute(
     input: StreamInferenceInput,

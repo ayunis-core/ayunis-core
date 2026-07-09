@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { GetInferenceCommand } from './get-inference.command';
 import { InferenceHandlerRegistry } from '../../registry/inference-handler.registry';
 import {
@@ -11,13 +12,13 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { extractUpstreamStatus } from '../../helpers/extract-upstream-status.helper';
 
 @Injectable()
-export class GetInferenceUseCase {
-  private readonly logger = new Logger(GetInferenceUseCase.name);
-
+export class GetInferenceUseCase extends BaseUseCase {
   constructor(
     private readonly inferenceHandlerRegistry: InferenceHandlerRegistry,
     private readonly contextService: ContextService,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(command: GetInferenceCommand): Promise<InferenceResponse> {
     this.logger.log('triggerInference', {

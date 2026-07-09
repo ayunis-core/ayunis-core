@@ -6,19 +6,20 @@ import {
   UnexpectedModelError,
 } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
-export class GetPermittedEmbeddingModelUseCase {
-  private readonly logger = new Logger(GetPermittedEmbeddingModelUseCase.name);
-
+export class GetPermittedEmbeddingModelUseCase extends BaseUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly contextService: ContextService,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(
     query: GetPermittedEmbeddingModelQuery,

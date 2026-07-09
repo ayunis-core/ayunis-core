@@ -1,18 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { DeleteTeamPermittedModelCommand } from './delete-team-permitted-model.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedModelError } from '../../models.errors';
 import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 
 @Injectable()
-export class DeleteTeamPermittedModelUseCase {
-  private readonly logger = new Logger(DeleteTeamPermittedModelUseCase.name);
-
+export class DeleteTeamPermittedModelUseCase extends BaseUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly validator: TeamPermittedModelValidator,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(command: DeleteTeamPermittedModelCommand): Promise<void> {
     this.logger.log('execute', {

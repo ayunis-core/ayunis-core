@@ -1,16 +1,17 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { GetOrgDefaultModelQuery } from './get-org-default-model.query';
 import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { ModelError } from '../../models.errors';
 
 @Injectable()
-export class GetOrgDefaultModelUseCase {
-  private readonly logger = new Logger(GetOrgDefaultModelUseCase.name);
-
+export class GetOrgDefaultModelUseCase extends BaseUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(
     query: GetOrgDefaultModelQuery,
@@ -39,7 +40,7 @@ export class GetOrgDefaultModelUseCase {
         });
       }
 
-      return orgDefaultModel || null;
+      return orgDefaultModel ?? null;
     } catch (error) {
       if (error instanceof ModelError) {
         throw error;

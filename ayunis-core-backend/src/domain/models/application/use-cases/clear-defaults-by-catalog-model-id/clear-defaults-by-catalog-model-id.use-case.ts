@@ -1,18 +1,17 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { ClearDefaultsByCatalogModelIdCommand } from './clear-defaults-by-catalog-model-id.command';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
 
 @Injectable()
-export class ClearDefaultsByCatalogModelIdUseCase {
-  private readonly logger = new Logger(
-    ClearDefaultsByCatalogModelIdUseCase.name,
-  );
-
+export class ClearDefaultsByCatalogModelIdUseCase extends BaseUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(command: ClearDefaultsByCatalogModelIdCommand): Promise<void> {
     this.logger.log('Clearing defaults for archived catalog model', {

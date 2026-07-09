@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import type { UUID } from 'crypto';
 import { GetDefaultModelQuery } from './get-default-model.query';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
@@ -9,14 +10,14 @@ import { GetEffectiveLanguageModelsQuery } from '../get-effective-language-model
 import { DefaultModelNotFoundError, ModelError } from '../../models.errors';
 
 @Injectable()
-export class GetDefaultModelUseCase {
-  private readonly logger = new Logger(GetDefaultModelUseCase.name);
-
+export class GetDefaultModelUseCase extends BaseUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
     private readonly getEffectiveLanguageModelsUseCase: GetEffectiveLanguageModelsUseCase,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(query: GetDefaultModelQuery): Promise<PermittedLanguageModel> {
     this.logger.log('execute', { query });
@@ -33,65 +34,13 @@ export class GetDefaultModelUseCase {
         effectiveModelIds.has(model.model.id) &&
         !query.blacklistedModelIds?.includes(model.model.id);
 
-      // Step 1: User default
-      if (query.userId) {
-        const userDefault = await this.userDefaultModelsRepository.findByUserId(
-          query.userId,
-        );
-
-        if (userDefault && isInEffectiveSet(userDefault)) {
-          this.logger.debug('Using user default model', {
-            userId: query.userId,
-            modelId: userDefault.id,
-          });
-          return userDefault;
-        }
-      }
-
-      // Step 2: Team defaults (from override teams)
-      if (query.userId && overrideTeamIds.length > 0) {
-        const teamDefault = await this.resolveTeamDefault(
-          overrideTeamIds,
-          query.orgId,
-          effectiveModelIds,
-          query.blacklistedModelIds,
-        );
-        if (teamDefault) {
-          this.logger.debug('Using team default model', {
-            modelId: teamDefault.id,
-          });
-          return teamDefault;
-        }
-      }
-
-      // Step 3: Org default
-      const orgDefault =
-        await this.permittedModelsRepository.findOrgDefaultLanguage(
-          query.orgId,
-        );
-      if (orgDefault && isInEffectiveSet(orgDefault)) {
-        this.logger.debug('Using org default model', {
-          orgId: query.orgId,
-          modelId: orgDefault.id,
-        });
-        return orgDefault;
-      }
-
-      // Step 4: First available from effective set, alphabetically
-      const sorted = [...effectiveModels].sort((a, b) =>
-        a.model.name.localeCompare(b.model.name),
+      return await this.resolveDefaultModel(
+        query,
+        overrideTeamIds,
+        effectiveModels,
+        effectiveModelIds,
+        isInEffectiveSet,
       );
-
-      for (const model of sorted) {
-        if (!query.blacklistedModelIds?.includes(model.model.id)) {
-          this.logger.debug('Using first available model alphabetically', {
-            modelId: model.id,
-          });
-          return model;
-        }
-      }
-
-      throw new DefaultModelNotFoundError(query.orgId);
     } catch (error) {
       if (error instanceof ModelError) {
         throw error;
@@ -103,6 +52,119 @@ export class GetDefaultModelUseCase {
       });
       throw error;
     }
+  }
+
+  private async resolveDefaultModel(
+    query: GetDefaultModelQuery,
+    overrideTeamIds: UUID[],
+    effectiveModels: PermittedLanguageModel[],
+    effectiveModelIds: Set<UUID>,
+    isInEffectiveSet: (model: PermittedLanguageModel) => boolean,
+  ): Promise<PermittedLanguageModel> {
+    const userDefault = await this.findUserDefault(query, isInEffectiveSet);
+    if (userDefault) {
+      return userDefault;
+    }
+
+    const teamDefault = await this.findTeamDefault(
+      query,
+      overrideTeamIds,
+      effectiveModelIds,
+    );
+    if (teamDefault) {
+      return teamDefault;
+    }
+
+    const orgDefault = await this.findOrgDefault(query.orgId, isInEffectiveSet);
+    if (orgDefault) {
+      return orgDefault;
+    }
+
+    return this.findFirstAvailableModel(query, effectiveModels);
+  }
+
+  private async findUserDefault(
+    query: GetDefaultModelQuery,
+    isInEffectiveSet: (model: PermittedLanguageModel) => boolean,
+  ): Promise<PermittedLanguageModel | null> {
+    if (!query.userId) {
+      return null;
+    }
+
+    const userDefault = await this.userDefaultModelsRepository.findByUserId(
+      query.userId,
+    );
+    if (!userDefault || !isInEffectiveSet(userDefault)) {
+      return null;
+    }
+
+    this.logger.debug('Using user default model', {
+      userId: query.userId,
+      modelId: userDefault.id,
+    });
+    return userDefault;
+  }
+
+  private async findTeamDefault(
+    query: GetDefaultModelQuery,
+    overrideTeamIds: UUID[],
+    effectiveModelIds: Set<UUID>,
+  ): Promise<PermittedLanguageModel | null> {
+    if (!query.userId || overrideTeamIds.length === 0) {
+      return null;
+    }
+
+    const teamDefault = await this.resolveTeamDefault(
+      overrideTeamIds,
+      query.orgId,
+      effectiveModelIds,
+      query.blacklistedModelIds,
+    );
+    if (!teamDefault) {
+      return null;
+    }
+
+    this.logger.debug('Using team default model', {
+      modelId: teamDefault.id,
+    });
+    return teamDefault;
+  }
+
+  private async findOrgDefault(
+    orgId: UUID,
+    isInEffectiveSet: (model: PermittedLanguageModel) => boolean,
+  ): Promise<PermittedLanguageModel | null> {
+    const orgDefault =
+      await this.permittedModelsRepository.findOrgDefaultLanguage(orgId);
+    if (!orgDefault || !isInEffectiveSet(orgDefault)) {
+      return null;
+    }
+
+    this.logger.debug('Using org default model', {
+      orgId,
+      modelId: orgDefault.id,
+    });
+    return orgDefault;
+  }
+
+  private findFirstAvailableModel(
+    query: GetDefaultModelQuery,
+    effectiveModels: PermittedLanguageModel[],
+  ): PermittedLanguageModel {
+    const model = [...effectiveModels]
+      .sort((a, b) => a.model.name.localeCompare(b.model.name))
+      .find(
+        (candidate) => !query.blacklistedModelIds?.includes(candidate.model.id),
+      );
+
+    if (!model) {
+      throw new DefaultModelNotFoundError(query.orgId);
+    }
+
+    this.logger.debug('Using first available model alphabetically', {
+      modelId: model.id,
+    });
+    return model;
   }
 
   private async resolveTeamDefault(

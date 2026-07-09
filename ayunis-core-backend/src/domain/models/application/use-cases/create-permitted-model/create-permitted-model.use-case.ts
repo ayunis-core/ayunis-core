@@ -2,7 +2,8 @@ import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity'
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { ModelsRepository } from '../../ports/models.repository';
 import { CreatePermittedModelCommand } from './create-permitted-model.command';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BaseUseCase } from 'src/common/use-case/base-use-case';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -12,14 +13,15 @@ import { ModelNotFoundError, UnexpectedModelError } from '../../models.errors';
 import { ModelPolicyService } from '../../services/model-policy.service';
 
 @Injectable()
-export class CreatePermittedModelUseCase {
-  private readonly logger = new Logger(CreatePermittedModelUseCase.name);
+export class CreatePermittedModelUseCase extends BaseUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly modelsRepository: ModelsRepository,
     private readonly contextService: ContextService,
     private readonly modelPolicy: ModelPolicyService,
-  ) {}
+  ) {
+    super();
+  }
 
   async execute(command: CreatePermittedModelCommand): Promise<PermittedModel> {
     this.logger.log('execute', {
