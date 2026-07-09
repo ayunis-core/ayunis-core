@@ -61,6 +61,9 @@ export class SystemPromptBuilderService {
     return sections.filter(Boolean).join('\n\n').trim();
   }
 
+  // Date only, no time of day: the preamble sits at the top of the system
+  // prompt, and prompt caching is a byte-exact prefix match — a timestamp
+  // here would invalidate the provider cache on every request.
   private buildPreamble(currentTime: Date): string {
     return `You are an AI assistant powered by Ayunis Core, an open-source AI gateway platform designed for public administrations.
 
@@ -69,7 +72,7 @@ Ayunis Core is an AI platform that enables intelligent conversations, customizab
 </application_details>
 
 <context>
-Current time: ${currentTime.toISOString()}
+Current date: ${currentTime.toISOString().slice(0, 10)}
 </context>`;
   }
 

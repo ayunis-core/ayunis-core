@@ -10,8 +10,10 @@ import type {
 import { convertChunk } from './convert-chunk';
 import {
   convertMessages,
+  convertSystem,
   convertTool,
   convertToolChoice,
+  markCacheBreakpoint,
 } from './convert-request';
 
 // Kept well below model maximums on purpose: Bedrock reserves
@@ -98,8 +100,11 @@ const buildParams = (
   request: ProviderRequest,
 ): MessageCreateParamsStreaming => ({
   model,
-  system: request.instructions,
-  messages: convertMessages(request.messages),
+  // Two prompt-cache breakpoints: the system block (which also covers the
+  // tool definitions rendered before it) and the conversation tail, so each
+  // turn and agent-loop iteration reuses the previous request's cache.
+  system: convertSystem(request.instructions),
+  messages: markCacheBreakpoint(convertMessages(request.messages)),
   tools: request.tools.map(convertTool),
   // Anthropic rejects tool_choice when no tools are supplied, so only send it
   // alongside a non-empty tools array.

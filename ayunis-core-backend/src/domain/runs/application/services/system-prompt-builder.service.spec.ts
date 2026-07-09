@@ -15,6 +15,32 @@ describe('SystemPromptBuilderService', () => {
     service = new SystemPromptBuilderService();
   });
 
+  describe('context preamble', () => {
+    it('includes the date without time of day, keeping the prompt cache prefix stable', () => {
+      const prompt = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:23:45.678Z'),
+      });
+
+      expect(prompt).toContain('Current date: 2026-01-15');
+      expect(prompt).not.toContain('10:23');
+      expect(prompt).not.toContain('Current time:');
+    });
+
+    it('produces byte-identical prompts for different times on the same day', () => {
+      const morning = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T08:00:00.000Z'),
+      });
+      const evening = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T19:59:59.999Z'),
+      });
+
+      expect(morning).toBe(evening);
+    });
+  });
+
   describe('anonymization section', () => {
     it('includes the anonymized_data section when isAnonymous is true', () => {
       const prompt = service.build({

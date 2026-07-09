@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   convertMessages,
+  convertSystem,
   convertTool,
   convertToolChoice,
+  markCacheBreakpoint,
 } from './convert-request';
 
 describe('convertTool', () => {
@@ -216,5 +218,90 @@ describe('convertMessages', () => {
 
   it('returns an empty array for an empty history', () => {
     expect(convertMessages([])).toEqual([]);
+  });
+});
+
+describe('convertSystem', () => {
+  it('wraps non-empty instructions in a cached text block', () => {
+    expect(convertSystem('You are helpful.')).toEqual([
+      {
+        type: 'text',
+        text: 'You are helpful.',
+        cache_control: { type: 'ephemeral' },
+      },
+    ]);
+  });
+
+  it('returns empty instructions unchanged — nothing to cache', () => {
+    expect(convertSystem('')).toBe('');
+  });
+});
+
+describe('markCacheBreakpoint', () => {
+  it('marks the last content block of the last message', () => {
+    const marked = markCacheBreakpoint([
+      { role: 'user', content: [{ type: 'text', text: 'first' }] },
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'a' },
+          { type: 'text', text: 'b' },
+        ],
+      },
+    ]);
+    expect(marked).toEqual([
+      { role: 'user', content: [{ type: 'text', text: 'first' }] },
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'a' },
+          { type: 'text', text: 'b', cache_control: { type: 'ephemeral' } },
+        ],
+      },
+    ]);
+  });
+
+  it('skips thinking blocks — they cannot carry cache_control', () => {
+    const marked = markCacheBreakpoint([
+      {
+        role: 'assistant',
+        content: [
+          { type: 'text', text: 'answer' },
+          { type: 'thinking', thinking: 'hmm', signature: 'sig' },
+        ],
+      },
+    ]);
+    expect(marked).toEqual([
+      {
+        role: 'assistant',
+        content: [
+          {
+            type: 'text',
+            text: 'answer',
+            cache_control: { type: 'ephemeral' },
+          },
+          { type: 'thinking', thinking: 'hmm', signature: 'sig' },
+        ],
+      },
+    ]);
+  });
+
+  it('leaves messages unmarked when no block can carry cache_control', () => {
+    const marked = markCacheBreakpoint([
+      {
+        role: 'assistant',
+        content: [{ type: 'thinking', thinking: 'hmm', signature: 'sig' }],
+      },
+    ]);
+    expect(marked).toEqual([
+      {
+        role: 'assistant',
+        content: [{ type: 'thinking', thinking: 'hmm', signature: 'sig' }],
+      },
+    ]);
+  });
+
+  it('returns an empty message list unchanged', () => {
+    expect(markCacheBreakpoint([])).toEqual([]);
   });
 });
