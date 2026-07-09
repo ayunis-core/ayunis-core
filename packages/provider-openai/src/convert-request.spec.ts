@@ -1,11 +1,21 @@
 import type { Message } from '@ayunis/inference';
+import { ToolNameCodec } from '@ayunis/inference';
 import { describe, expect, it } from 'vitest';
 
 import {
-  convertMessages,
-  convertTool,
-  convertToolChoice,
+  convertMessages as convertMessagesFn,
+  convertTool as convertToolFn,
+  convertToolChoice as convertToolChoiceFn,
 } from './convert-request';
+
+// Passthrough map — name translation is covered by its own tests below.
+const passthrough = new ToolNameCodec([]);
+const convertMessages = (instructions: string, messages: Message[]) =>
+  convertMessagesFn(instructions, messages, passthrough);
+const convertTool = (tool: Parameters<typeof convertToolFn>[0]) =>
+  convertToolFn(tool, passthrough);
+const convertToolChoice = (choice: Parameters<typeof convertToolChoiceFn>[0]) =>
+  convertToolChoiceFn(choice, passthrough);
 
 describe('convertTool', () => {
   it('maps the schema to a strict OpenAI function tool', () => {
@@ -279,5 +289,49 @@ describe('convertMessages', () => {
     expect(convertMessages('', messages)).toEqual([
       { role: 'assistant', content: 'Answer' },
     ]);
+  });
+});
+
+describe('wire-name encoding', () => {
+  const codec = new ToolNameCodec([
+    { name: 'notion.search', description: 'd', parameters: {} },
+  ]);
+
+  it('declares tools under their wire names', () => {
+    expect(
+      convertToolFn(
+        {
+          name: 'notion.search',
+          description: 'd',
+          parameters: { type: 'object' },
+        },
+        codec,
+      ).function.name,
+    ).toBe('notion_search');
+  });
+
+  it('translates tool_call names in assistant history', () => {
+    const messages: Message[] = [
+      {
+        role: 'assistant',
+        content: [
+          { type: 'tool_use', id: 'call_1', name: 'notion.search', input: {} },
+        ],
+      },
+    ];
+    const converted = convertMessagesFn('', messages, codec);
+    expect(converted[0]).toMatchObject({
+      role: 'assistant',
+      tool_calls: [
+        { id: 'call_1', function: { name: 'notion_search', arguments: '{}' } },
+      ],
+    });
+  });
+
+  it('translates a specific tool choice', () => {
+    expect(convertToolChoiceFn({ tool: 'notion.search' }, codec)).toEqual({
+      type: 'function',
+      function: { name: 'notion_search' },
+    });
   });
 });

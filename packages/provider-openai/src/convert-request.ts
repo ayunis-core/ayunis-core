@@ -13,14 +13,18 @@ import type {
   MessageContent,
   ToolChoice,
   ToolSchema,
+  ToolNameCodec,
 } from '@ayunis/inference';
 
 import { normalizeSchemaForOpenAI } from './normalize-schema';
 
-export const convertTool = (tool: ToolSchema): ChatCompletionTool => ({
+export const convertTool = (
+  tool: ToolSchema,
+  codec: ToolNameCodec,
+): ChatCompletionTool => ({
   type: 'function',
   function: {
-    name: tool.name,
+    name: codec.encode(tool.name),
     description: tool.description,
     // OpenAI requires strict-mode-compatible schemas (unsupported `format`
     // values stripped, all properties required, additionalProperties false);
@@ -35,6 +39,7 @@ export const convertTool = (tool: ToolSchema): ChatCompletionTool => ({
 /* eslint-disable sonarjs/function-return-type */
 export const convertToolChoice = (
   toolChoice: ToolChoice,
+  codec: ToolNameCodec,
 ): ChatCompletionToolChoiceOption => {
   if (toolChoice === 'auto') {
     return 'auto';
@@ -42,7 +47,10 @@ export const convertToolChoice = (
   if (toolChoice === 'required') {
     return 'required';
   }
-  return { type: 'function', function: { name: toolChoice.tool } };
+  return {
+    type: 'function',
+    function: { name: codec.encode(toolChoice.tool) },
+  };
 };
 /* eslint-enable sonarjs/function-return-type */
 
@@ -56,6 +64,7 @@ export const convertToolChoice = (
 export const convertMessages = (
   instructions: string,
   messages: readonly Message[],
+  codec: ToolNameCodec,
 ): ChatCompletionMessageParam[] => {
   const converted: ChatCompletionMessageParam[] = [];
   if (instructions) {
@@ -63,7 +72,7 @@ export const convertMessages = (
   }
   for (const message of messages) {
     if (message.role === 'assistant') {
-      const assistant = convertAssistant(message.content);
+      const assistant = convertAssistant(message.content, codec);
       // Skip assistant turns with neither text nor tool calls (e.g. a
       // thinking-only turn, since thinking is dropped) — Chat Completions
       // rejects an assistant message with null content and no tool_calls.
@@ -113,6 +122,7 @@ const convertUser = (
 
 const convertAssistant = (
   content: readonly MessageContent[],
+  codec: ToolNameCodec,
 ): ChatCompletionAssistantMessageParam => {
   const toolCalls = content
     .filter((c): c is Extract<MessageContent, { type: 'tool_use' }> => {
@@ -121,7 +131,10 @@ const convertAssistant = (
     .map((c): ChatCompletionMessageToolCall => ({
       id: c.id,
       type: 'function',
-      function: { name: c.name, arguments: JSON.stringify(c.input) },
+      function: {
+        name: codec.encode(c.name),
+        arguments: JSON.stringify(c.input),
+      },
     }));
   const text = joinText(content);
   const message: ChatCompletionAssistantMessageParam = {
