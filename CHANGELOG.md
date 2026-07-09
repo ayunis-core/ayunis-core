@@ -1,5 +1,71 @@
 # Changelog
 
+## [2.13.0](https://github.com/ayunis-core/ayunis-core/compare/v2.12.0...v2.13.0) (2026-07-09)
+
+
+### Features
+
+* **getting-started:** onboarding page + react-joyride tour (AYC-000) ([#853](https://github.com/ayunis-core/ayunis-core/issues/853)) ([9d99c26](https://github.com/ayunis-core/ayunis-core/commit/9d99c2600b519f19d48cc83a02904662944efd8d))
+* **models:** assign anonymous mode per team model override (AYC-2) ([#979](https://github.com/ayunis-core/ayunis-core/issues/979)) ([b940419](https://github.com/ayunis-core/ayunis-core/commit/b9404190450d4ebc37ccb13af5bfcf0a47b0b5a3))
+* **onboarding:** allow dismissing getting-started from sidebar with confirmation (AYC-000) ([#969](https://github.com/ayunis-core/ayunis-core/issues/969)) ([112da42](https://github.com/ayunis-core/ayunis-core/commit/112da424b5ffdc3c5a67047a5ef51e89fe8fde76))
+* **onboarding:** explain locked steps with a prerequisite tooltip (AYC-000) ([#970](https://github.com/ayunis-core/ayunis-core/issues/970)) ([14e16f6](https://github.com/ayunis-core/ayunis-core/commit/14e16f697cba48cde1fac5be553e5d616278184e))
+* **rag:** parse PDF links via web fetch and crawling (AYC-266) ([def2a5c](https://github.com/ayunis-core/ayunis-core/commit/def2a5c6fe8625f1a593dbaf701ce53f5f0a516c))
+
+
+### Bug Fixes
+
+* **app-alert:** round top corners and frost banner background (AYC-362) ([#951](https://github.com/ayunis-core/ayunis-core/issues/951)) ([d5d48de](https://github.com/ayunis-core/ayunis-core/commit/d5d48deb64d9b0f19c2358cb0d644a0df02fb628))
+* **authorization:** stop logging no-trial denials as errors in SubscriptionGuard (AYC-153) ([#936](https://github.com/ayunis-core/ayunis-core/issues/936)) ([9c9aa90](https://github.com/ayunis-core/ayunis-core/commit/9c9aa909e09df9f9626e72e5be711b626c591772))
+* **chat:** tell users to contact admin when credit limit reached (AYC-402) ([#957](https://github.com/ayunis-core/ayunis-core/issues/957)) ([e831c60](https://github.com/ayunis-core/ayunis-core/commit/e831c603f58007d185859119c0665f164f639521))
+* **deploy:** pin runtime to node:24.16.0-alpine to bisect connection stalls (AYC-423) ([#1001](https://github.com/ayunis-core/ayunis-core/issues/1001)) ([6ce1063](https://github.com/ayunis-core/ayunis-core/commit/6ce10635000595a00c155effe98cbeb0eebc2008))
+* **invites:** raise invite creation rate limit for org onboarding (AYC-409) ([#966](https://github.com/ayunis-core/ayunis-core/issues/966)) ([a2cb3a7](https://github.com/ayunis-core/ayunis-core/commit/a2cb3a72a32b04f938f3ea4a47447fe2208ee930))
+* **models:** default bedrock region to eu-central-1, lower default max_tokens to 16384 (AYC-000) ([#980](https://github.com/ayunis-core/ayunis-core/issues/980)) ([26f847d](https://github.com/ayunis-core/ayunis-core/commit/26f847de905eae2cd6f140b278ff274485667053))
+* **url-retriever:** detect PDFs via requested URL and decode encoded paths (AYC-266) ([2976bb9](https://github.com/ayunis-core/ayunis-core/commit/2976bb924d2618717ce60c2c0ca5b002d1d2237d))
+* **url-retriever:** drop Content-Length preflight, cap while streaming (AYC-266) ([46c7994](https://github.com/ayunis-core/ayunis-core/commit/46c7994769f578b82adad86f3f1ec5e5ad0752c0))
+* **url-retriever:** enforce size cap before buffering and register url config namespace (AYC-266) ([95e0173](https://github.com/ayunis-core/ayunis-core/commit/95e01734853e86c18d8acca3b7b8dccebf948572))
+* **url-retriever:** harden fetch path against DoS and edge cases (AYC-266) ([d2a9e2a](https://github.com/ayunis-core/ayunis-core/commit/d2a9e2a39cb6f210581a7a9241aeb0c1d8de54a2))
+* **url-retriever:** redact URL secrets from crawl skip logs (AYC-266) ([50f6d14](https://github.com/ayunis-core/ayunis-core/commit/50f6d143ad6ab35b9e998479c7a8ee938a36ee15))
+* **url-retriever:** release redirect body when the gate denies a hop (AYC-266) ([7db2e47](https://github.com/ayunis-core/ayunis-core/commit/7db2e4750b038b0b624b5c81bb24ad16268de70b))
+* **usage:** bill prompt-cache tokens as input tokens (AYC-000) ([#983](https://github.com/ayunis-core/ayunis-core/issues/983)) ([aa13051](https://github.com/ayunis-core/ayunis-core/commit/aa130515dc79dedb653e1de0ee4f3277304c6343))
+
+
+### Performance Improvements
+
+* **models:** enable anthropic prompt caching for direct api and bedrock (AYC-000) ([#981](https://github.com/ayunis-core/ayunis-core/issues/981)) ([0843b6a](https://github.com/ayunis-core/ayunis-core/commit/0843b6a3e06e1e6ffd9c7456e6f93317fbca6a18))
+
+
+### Code Refactoring
+
+* **onboarding:** consolidate tour and progress into a single onboarding widget (AYC-000) ([#967](https://github.com/ayunis-core/ayunis-core/issues/967)) ([46f9e8b](https://github.com/ayunis-core/ayunis-core/commit/46f9e8bb03a0c595d992ae2436773645a80d96c5))
+* **onboarding:** make getting-started a regular page without animated background (AYC-000) ([#968](https://github.com/ayunis-core/ayunis-core/issues/968)) ([756a709](https://github.com/ayunis-core/ayunis-core/commit/756a709a38365b5ec0fec818de41df2239e5e704))
+* **url-retriever:** read fetch limits from config, drop dead fallbacks (AYC-266) ([d99d44d](https://github.com/ayunis-core/ayunis-core/commit/d99d44d04cb907f2da7e9d8573e1cde9b108f202))
+
+
+### Documentation
+
+* **config:** document url namespace in config SUMMARY (AYC-266) ([7994336](https://github.com/ayunis-core/ayunis-core/commit/7994336788bd65ee9c5842b2152bafae1abf611e))
+* **frontend-skill:** forbid hand-editing shared shadcn UI (AYC-000) ([#954](https://github.com/ayunis-core/ayunis-core/issues/954)) ([390134b](https://github.com/ayunis-core/ayunis-core/commit/390134b1e38d413fc65c4c75dd8a83081cffe08f))
+* **skills:** drop browser-verify skill and sync skill updates (AYC-000) ([#986](https://github.com/ayunis-core/ayunis-core/issues/986)) ([3f58398](https://github.com/ayunis-core/ayunis-core/commit/3f5839813493cef4b00dd7460bdd24a0f23e8c7c))
+
+
+### Tests
+
+* **credit-limits:** extract shared spec fixtures and mock factory (AYC-167) ([bd5adfe](https://github.com/ayunis-core/ayunis-core/commit/bd5adfe1acad2bc53805d15940afbac98b53131e))
+* **credit-limits:** extract shared spec fixtures and mock factory (AYC-167) ([#903](https://github.com/ayunis-core/ayunis-core/issues/903)) ([22cb488](https://github.com/ayunis-core/ayunis-core/commit/22cb488a59224c8e95f1852f01b438111396100d))
+
+
+### Miscellaneous
+
+* **deps-anonymize:** bump fastapi from 0.138.1 to 0.139.0 in /ayunis-core-anonymize ([b6ea082](https://github.com/ayunis-core/ayunis-core/commit/b6ea0829c6acad24642146a4b0f439be0c1b463c))
+* **deps-anonymize:** bump fastapi in /ayunis-core-anonymize ([4a03865](https://github.com/ayunis-core/ayunis-core/commit/4a038651ed51d39cdd4e678be76454930dc12411))
+* **deps:** bump eslint from 9.39.4 to 10.6.0 ([767f276](https://github.com/ayunis-core/ayunis-core/commit/767f276b54f3cb4659d437bf6001e1054863be22))
+* **deps:** bump eslint from 9.39.4 to 10.6.0 ([081a4bf](https://github.com/ayunis-core/ayunis-core/commit/081a4bf0b0c293b22ba06c2e8147b237d1bbc092))
+* **deps:** bump the root-dependencies group with 67 updates ([849f960](https://github.com/ayunis-core/ayunis-core/commit/849f960fe4859e99588ca598ac32626a92e2279d))
+* **deps:** bump the root-dependencies group with 67 updates ([d505067](https://github.com/ayunis-core/ayunis-core/commit/d50506767299799ba823e3732b7d1da0e0f02abc))
+* **deps:** reformat for prettier 3.9 to fix lint (AYC-000) ([6db935a](https://github.com/ayunis-core/ayunis-core/commit/6db935a3c4cb648cf5909688658ffd9539f8f458))
+* **provider-ollama:** stop tracking generated dist files (AYC-000) ([#985](https://github.com/ayunis-core/ayunis-core/issues/985)) ([43cf3e3](https://github.com/ayunis-core/ayunis-core/commit/43cf3e3767a922c857180dab8928e6a351ae2563))
+* **tooling:** use pnpm in worktree setup hooks (AYC-000) ([#952](https://github.com/ayunis-core/ayunis-core/issues/952)) ([2a92d63](https://github.com/ayunis-core/ayunis-core/commit/2a92d634cfcac94a00295311f73b11e730a87656))
+
 ## [2.12.0](https://github.com/ayunis-core/ayunis-core/compare/v2.11.0...v2.12.0) (2026-07-03)
 
 
