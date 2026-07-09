@@ -39,7 +39,7 @@ describe('resolveAwsRegion', () => {
     ).toBe('ap-south-1');
   });
 
-  it('uses us-east-1 when nothing is set', () => {
-    expect(resolveAwsRegion(undefined, {})).toBe('us-east-1');
+  it('uses eu-central-1 when nothing is set', () => {
+    expect(resolveAwsRegion(undefined, {})).toBe('eu-central-1');
   });
 });

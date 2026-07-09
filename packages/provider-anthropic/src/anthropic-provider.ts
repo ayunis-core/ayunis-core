@@ -14,7 +14,11 @@ import {
   convertToolChoice,
 } from './convert-request';
 
-export const DEFAULT_MAX_TOKENS = 64_000;
+// Kept well below model maximums on purpose: Bedrock reserves
+// input_tokens + max_tokens against the account's TPM quota when admitting a
+// request, so an oversized budget triggers throttling long before real usage
+// warrants it. Hosts needing longer outputs can pass `maxTokens` explicitly.
+export const DEFAULT_MAX_TOKENS = 16_384;
 
 /**
  * Any client that speaks the Anthropic Messages streaming API — the Anthropic

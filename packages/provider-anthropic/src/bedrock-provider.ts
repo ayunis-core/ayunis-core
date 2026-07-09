@@ -7,12 +7,12 @@ import {
   DEFAULT_MAX_TOKENS,
 } from './anthropic-provider';
 
-const DEFAULT_AWS_REGION = 'us-east-1';
+const DEFAULT_AWS_REGION = 'eu-central-1';
 
 export interface BedrockProviderOptions {
   /** Bedrock model id, e.g. 'anthropic.claude-sonnet-4-20250514-v1:0'. */
   model: string;
-  /** AWS region. Default: 'us-east-1'. */
+  /** AWS region. Default: 'eu-central-1'. */
   awsRegion?: string;
   /** Static AWS access key. Omit both keys to use the AWS credential chain. */
   awsAccessKey?: string;
@@ -42,7 +42,7 @@ export const bedrock = (options: BedrockProviderOptions): ModelProvider => {
 /**
  * Resolves the AWS region: an explicit option wins, then the standard AWS
  * region env vars, then the default — so a deployment configured purely via
- * the environment isn't silently pinned to us-east-1.
+ * the environment isn't silently pinned to eu-central-1.
  */
 export const resolveAwsRegion = (
   region: string | undefined,
