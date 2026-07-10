@@ -1,8 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { AcademyChapter } from '../../../../domain/academy-chapter.entity';
+import { AcademyChapterProgress } from '../../../../domain/academy-chapter-progress.entity';
+import { AcademyCompletion } from '../../../../domain/academy-completion.entity';
 import { AcademyCourseModule } from '../../../../domain/academy-course-module.entity';
 import { AcademyQuizQuestion } from '../../../../domain/academy-quiz-question.entity';
 import { AcademyChapterRecord } from '../schema/academy-chapter.record';
+import { AcademyChapterProgressRecord } from '../schema/academy-chapter-progress.record';
+import { AcademyCompletionRecord } from '../schema/academy-completion.record';
 import { AcademyCourseModuleRecord } from '../schema/academy-course-module.record';
 import { AcademyQuizQuestionRecord } from '../schema/academy-quiz-question.record';
 
@@ -81,6 +85,52 @@ export class AcademyMapper {
     record.text = domain.text;
     record.options = domain.options;
     record.position = domain.position;
+    return record;
+  }
+
+  chapterProgressToDomain(
+    record: AcademyChapterProgressRecord,
+  ): AcademyChapterProgress {
+    return new AcademyChapterProgress({
+      id: record.id,
+      userId: record.userId,
+      chapterId: record.chapterId,
+      passedAt: record.passedAt,
+      lastScore: record.lastScore,
+      lastAttemptAt: record.lastAttemptAt,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    });
+  }
+
+  chapterProgressToRecord(
+    domain: AcademyChapterProgress,
+  ): AcademyChapterProgressRecord {
+    const record = new AcademyChapterProgressRecord();
+    record.id = domain.id;
+    record.userId = domain.userId;
+    record.chapterId = domain.chapterId;
+    record.passedAt = domain.passedAt;
+    record.lastScore = domain.lastScore;
+    record.lastAttemptAt = domain.lastAttemptAt;
+    return record;
+  }
+
+  completionToDomain(record: AcademyCompletionRecord): AcademyCompletion {
+    return new AcademyCompletion({
+      id: record.id,
+      userId: record.userId,
+      completedAt: record.completedAt,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    });
+  }
+
+  completionToRecord(domain: AcademyCompletion): AcademyCompletionRecord {
+    const record = new AcademyCompletionRecord();
+    record.id = domain.id;
+    record.userId = domain.userId;
+    record.completedAt = domain.completedAt;
     return record;
   }
 }

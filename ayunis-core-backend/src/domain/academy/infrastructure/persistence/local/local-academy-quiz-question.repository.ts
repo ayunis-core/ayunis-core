@@ -26,6 +26,15 @@ export class LocalAcademyQuizQuestionRepository implements AcademyQuizQuestionRe
     return this.mapper.quizQuestionToDomain(record);
   }
 
+  async findAllByChapter(chapterId: UUID): Promise<AcademyQuizQuestion[]> {
+    this.logger.log('findAllByChapter', { chapterId });
+    const records = await this.repository.find({
+      where: { chapterId },
+      order: { position: 'ASC', createdAt: 'ASC' },
+    });
+    return records.map((record) => this.mapper.quizQuestionToDomain(record));
+  }
+
   async findMaxPosition(chapterId: UUID): Promise<number | null> {
     this.logger.log('findMaxPosition', { chapterId });
     return this.repository.maximum('position', { chapterId });

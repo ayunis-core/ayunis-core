@@ -1,13 +1,19 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AcademyChapterRecord } from './infrastructure/persistence/local/schema/academy-chapter.record';
+import { AcademyChapterProgressRecord } from './infrastructure/persistence/local/schema/academy-chapter-progress.record';
+import { AcademyCompletionRecord } from './infrastructure/persistence/local/schema/academy-completion.record';
 import { AcademyCourseModuleRecord } from './infrastructure/persistence/local/schema/academy-course-module.record';
 import { AcademyQuizQuestionRecord } from './infrastructure/persistence/local/schema/academy-quiz-question.record';
 import { AcademyMapper } from './infrastructure/persistence/local/mappers/academy.mapper';
 import { LocalAcademyChapterRepository } from './infrastructure/persistence/local/local-academy-chapter.repository';
+import { LocalAcademyChapterProgressRepository } from './infrastructure/persistence/local/local-academy-chapter-progress.repository';
+import { LocalAcademyCompletionRepository } from './infrastructure/persistence/local/local-academy-completion.repository';
 import { LocalAcademyCourseModuleRepository } from './infrastructure/persistence/local/local-academy-course-module.repository';
 import { LocalAcademyQuizQuestionRepository } from './infrastructure/persistence/local/local-academy-quiz-question.repository';
 import { AcademyChapterRepository } from './application/ports/academy-chapter.repository';
+import { AcademyChapterProgressRepository } from './application/ports/academy-chapter-progress.repository';
+import { AcademyCompletionRepository } from './application/ports/academy-completion.repository';
 import { AcademyCourseModuleRepository } from './application/ports/academy-course-module.repository';
 import { AcademyQuizQuestionRepository } from './application/ports/academy-quiz-question.repository';
 import { GetAcademyContentUseCase } from './application/use-cases/get-academy-content/get-academy-content.use-case';
@@ -35,6 +41,8 @@ import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-resp
       AcademyChapterRecord,
       AcademyCourseModuleRecord,
       AcademyQuizQuestionRecord,
+      AcademyChapterProgressRecord,
+      AcademyCompletionRecord,
     ]),
   ],
   controllers: [
@@ -49,6 +57,8 @@ import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-resp
     LocalAcademyChapterRepository,
     LocalAcademyCourseModuleRepository,
     LocalAcademyQuizQuestionRepository,
+    LocalAcademyChapterProgressRepository,
+    LocalAcademyCompletionRepository,
     {
       provide: AcademyChapterRepository,
       useExisting: LocalAcademyChapterRepository,
@@ -60,6 +70,14 @@ import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-resp
     {
       provide: AcademyQuizQuestionRepository,
       useExisting: LocalAcademyQuizQuestionRepository,
+    },
+    {
+      provide: AcademyChapterProgressRepository,
+      useExisting: LocalAcademyChapterProgressRepository,
+    },
+    {
+      provide: AcademyCompletionRepository,
+      useExisting: LocalAcademyCompletionRepository,
     },
     GetAcademyContentUseCase,
     GetAcademyManagementContentUseCase,
