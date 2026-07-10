@@ -46,7 +46,9 @@
   "quiz": {
     "enableLabel": "Quiz enabled",
     "addQuestion": "Add Question",
-    "noQuestions": "No quiz questions yet."
+    "noQuestions": "No quiz questions yet.",
+    "thresholdLabel": "Pass threshold",
+    "thresholdSuffix": "% correct to pass"
   },
   "questionForm": {
     "createTitle": "Create Question",
