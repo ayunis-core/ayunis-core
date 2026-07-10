@@ -6,6 +6,7 @@ import type {
   ProviderChunk,
   ProviderRequest,
 } from '@ayunis/inference';
+import { ToolNameCodec } from '@ayunis/inference';
 
 import { convertChunk } from './convert-chunk';
 import { convertMessages, convertTool } from './convert-request';
@@ -50,7 +51,8 @@ async function* streamChat(
   options: OllamaProviderOptions,
   request: ProviderRequest,
 ): AsyncIterable<ProviderChunk> {
-  const params = buildParams(options, request);
+  const codec = new ToolNameCodec(request.tools);
+  const params = buildParams(options, request, codec);
   const iterator = await retry(
     () => client.chat(params),
     options.maxRetries ?? 0,
@@ -65,7 +67,7 @@ async function* streamChat(
     }
   }
   for await (const chunk of iterator) {
-    const converted = convertChunk(chunk);
+    const converted = convertChunk(chunk, codec);
     if (converted) {
       yield converted;
     }
@@ -78,11 +80,12 @@ async function* streamChat(
 const buildParams = (
   options: OllamaProviderOptions,
   request: ProviderRequest,
+  codec: ToolNameCodec,
 ): ChatRequest & { stream: true } => {
-  const tools = request.tools.map(convertTool);
+  const tools = request.tools.map((tool) => convertTool(tool, codec));
   return {
     model: options.model,
-    messages: convertMessages(request.instructions, request.messages),
+    messages: convertMessages(request.instructions, request.messages, codec),
     tools: tools.length > 0 ? tools : undefined,
     stream: true,
     options: { num_ctx: options.numCtx ?? DEFAULT_NUM_CTX },

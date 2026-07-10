@@ -1,8 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
 import type { Message, ToolSchema } from '@ayunis/inference';
+import { ToolNameCodec } from '@ayunis/inference';
 
-import { convertMessages, convertTool } from './convert-request';
+import {
+  convertMessages as convertMessagesFn,
+  convertTool as convertToolFn,
+} from './convert-request';
+
+// Passthrough map — name translation is covered by its own tests below.
+const passthrough = new ToolNameCodec([]);
+const convertMessages = (instructions: string, messages: Message[]) =>
+  convertMessagesFn(instructions, messages, passthrough);
+const convertTool = (tool: ToolSchema) => convertToolFn(tool, passthrough);
 
 describe('convertTool', () => {
   it('maps a tool schema to an Ollama function tool with strict mode', () => {
@@ -101,5 +111,35 @@ describe('convertMessages', () => {
   it('drops user turns with neither text nor images', () => {
     const result = convertMessages('', [{ role: 'user', content: [] }]);
     expect(result).toHaveLength(0);
+  });
+});
+
+describe('wire-name encoding', () => {
+  const codec = new ToolNameCodec([
+    { name: 'notion.search', description: 'd', parameters: {} },
+  ]);
+
+  it('declares tools under their wire names', () => {
+    expect(
+      convertToolFn(
+        { name: 'notion.search', description: 'd', parameters: {} },
+        codec,
+      ).function.name,
+    ).toBe('notion_search');
+  });
+
+  it('translates tool_call names in assistant history', () => {
+    const messages: Message[] = [
+      {
+        role: 'assistant',
+        content: [
+          { type: 'tool_use', id: 'c1', name: 'notion.search', input: {} },
+        ],
+      },
+    ];
+    const [assistant] = convertMessagesFn('', messages, codec);
+    expect(assistant.tool_calls).toEqual([
+      { function: { name: 'notion_search', arguments: {} } },
+    ]);
   });
 });
