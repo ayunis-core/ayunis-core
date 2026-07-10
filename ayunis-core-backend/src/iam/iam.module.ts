@@ -22,6 +22,7 @@ import { PlatformConfigModule } from './platform-config/platform-config.module';
 import { AddonsModule } from './addons/addons.module';
 import { IpAllowlistModule } from './ip-allowlist/ip-allowlist.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
+import { MfaModule } from './mfa/mfa.module';
 import { JwtAuthGuard } from './authentication/application/guards/jwt-auth.guard';
 import { IpAllowlistGuard } from './ip-allowlist/application/guards/ip-allowlist.guard';
 import { EmailConfirmGuard } from './authorization/application/guards/email-confirm.guard';
@@ -51,6 +52,7 @@ const IAM_FEATURE_MODULES = [
   IpAllowlistModule,
   ApiKeysModule,
   AddonsModule,
+  MfaModule,
 ];
 
 // Global guard execution order is declared HERE — explicitly, in array
