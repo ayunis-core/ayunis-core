@@ -185,5 +185,15 @@
     "tooManyRows": "Too many rows. Maximum is 500.",
     "emailAlreadyInvited": "Email already has a pending invite",
     "emailAlreadyUser": "Email is already a user in this organization"
+  },
+  "resetMfa": {
+    "menuItem": "Reset two-factor authentication",
+    "selfTooltip": "You cannot reset your own two-factor authentication — manage it in your account settings.",
+    "errorSelf": "You cannot reset your own two-factor authentication.",
+    "confirmTitle": "Reset two-factor authentication?",
+    "confirmDescription": "{{name}} will be able to sign in with just their password and must set up two-factor authentication again. Use this when a user has lost access to their authenticator app and recovery codes.",
+    "confirmText": "Reset",
+    "success": "Two-factor authentication has been reset.",
+    "error": "Could not reset two-factor authentication."
   }
 }

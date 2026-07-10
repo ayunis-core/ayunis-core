@@ -10,6 +10,7 @@ import { Button } from '@/shared/ui/shadcn/button';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import PasswordSettingsPage from './PasswordSettingsPage';
+import { TwoFactorCard } from './TwoFactorCard';
 
 export default function AccountSettingsPage({
   user,
@@ -26,6 +27,7 @@ export default function AccountSettingsPage({
       <div className="space-y-4">
         <ProfileInformationCard user={user} />
         <PasswordSettingsPage />
+        <TwoFactorCard />
         {/* Account Actions */}
         <Card>
           <CardHeader>

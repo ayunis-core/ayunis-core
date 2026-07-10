@@ -22,5 +22,13 @@
     "noRestrictions": "No IP restrictions are currently configured. All IP addresses are allowed.",
     "loadError": "Failed to load IP allow list settings.",
     "retry": "Retry"
+  },
+  "mfaRequirement": {
+    "title": "Two-factor authentication",
+    "description": "Require every user in your organization to protect their account with an authenticator app.",
+    "toggleLabel": "Require two-factor authentication",
+    "toggleHint": "Applies at each user's next login. Users without two-factor authentication will be asked to set it up before they can continue.",
+    "saved": "Two-factor requirement updated.",
+    "error": "Could not update the two-factor requirement. Please try again."
   }
 }

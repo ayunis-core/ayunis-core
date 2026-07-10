@@ -21,6 +21,7 @@ import {
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import { isValidCidrOrIp } from '../lib/validate-cidr';
+import { MfaRequirementCard } from './MfaRequirementCard';
 import { RemoveRestrictionsDialog } from './RemoveRestrictionsDialog';
 import { AlertCircle, Info, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
@@ -245,6 +246,10 @@ export function SecuritySettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="mt-4">
+        <MfaRequirementCard />
+      </div>
 
       <RemoveRestrictionsDialog
         open={removeDialogOpen}
