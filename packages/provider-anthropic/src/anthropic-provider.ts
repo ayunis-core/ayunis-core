@@ -6,6 +6,7 @@ import type {
   ProviderChunk,
   ProviderRequest,
 } from '@ayunis/inference';
+import { ToolNameCodec } from '@ayunis/inference';
 
 import { convertChunk } from './convert-chunk';
 import {
@@ -81,13 +82,14 @@ async function* streamMessages(
   maxTokens: number,
   request: ProviderRequest,
 ): AsyncIterable<ProviderChunk> {
-  const params = buildParams(model, maxTokens, request);
+  const codec = new ToolNameCodec(request.tools);
+  const params = buildParams(model, maxTokens, request, codec);
   const stream = await client.messages.create(
     params,
     request.signal ? { signal: request.signal } : undefined,
   );
   for await (const event of stream) {
-    const chunk = convertChunk(event);
+    const chunk = convertChunk(event, codec);
     if (chunk) {
       yield chunk;
     }
@@ -98,18 +100,19 @@ const buildParams = (
   model: string,
   maxTokens: number,
   request: ProviderRequest,
+  codec: ToolNameCodec,
 ): MessageCreateParamsStreaming => ({
   model,
   // Two prompt-cache breakpoints: the system block (which also covers the
   // tool definitions rendered before it) and the conversation tail, so each
   // turn and agent-loop iteration reuses the previous request's cache.
   system: convertSystem(request.instructions),
-  messages: markCacheBreakpoint(convertMessages(request.messages)),
-  tools: request.tools.map(convertTool),
+  messages: markCacheBreakpoint(convertMessages(request.messages, codec)),
+  tools: request.tools.map((tool) => convertTool(tool, codec)),
   // Anthropic rejects tool_choice when no tools are supplied, so only send it
   // alongside a non-empty tools array.
   ...(request.tools.length > 0 && request.toolChoice !== undefined
-    ? { tool_choice: convertToolChoice(request.toolChoice) }
+    ? { tool_choice: convertToolChoice(request.toolChoice, codec) }
     : {}),
   max_tokens: maxTokens,
   stream: true,

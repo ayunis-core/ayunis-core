@@ -1,10 +1,16 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { describe, expect, it } from 'vitest';
 
-import { convertChunk } from './convert-chunk';
+import { ToolNameCodec } from '@ayunis/inference';
+
+import { convertChunk as convert } from './convert-chunk';
 
 const event = (value: unknown): Anthropic.Messages.MessageStreamEvent =>
   value as Anthropic.Messages.MessageStreamEvent;
+
+// Passthrough map — name translation is covered by its own tests below.
+const convertChunk = (e: Anthropic.Messages.MessageStreamEvent) =>
+  convert(e, new ToolNameCodec([]));
 
 describe('convertChunk', () => {
   it('converts message_start to input usage', () => {
@@ -133,5 +139,36 @@ describe('convertChunk', () => {
     expect(
       convertChunk(event({ type: 'content_block_stop', index: 0 })),
     ).toBeNull();
+  });
+});
+
+describe('convertChunk wire-name decoding', () => {
+  it('maps a wire tool name back to the original and records the wire name', () => {
+    const codec = new ToolNameCodec([
+      { name: 'notion.search', description: 'd', parameters: {} },
+    ]);
+    expect(
+      convert(
+        event({
+          type: 'content_block_start',
+          index: 0,
+          content_block: {
+            type: 'tool_use',
+            id: 'toolu_1',
+            name: 'notion_search',
+          },
+        }),
+        codec,
+      ),
+    ).toEqual({
+      toolCallDeltas: [
+        {
+          index: 0,
+          id: 'toolu_1',
+          name: 'notion.search',
+          providerMetadata: { wireName: 'notion_search' },
+        },
+      ],
+    });
   });
 });
