@@ -34,6 +34,8 @@ import { ListTeamMembersUseCase } from '../../application/use-cases/list-team-me
 import { ListTeamMembersQuery } from '../../application/use-cases/list-team-members/list-team-members.query';
 import { AddTeamMemberUseCase } from '../../application/use-cases/add-team-member/add-team-member.use-case';
 import { AddTeamMemberCommand } from '../../application/use-cases/add-team-member/add-team-member.command';
+import { BulkAddTeamMembersUseCase } from '../../application/use-cases/bulk-add-team-members/bulk-add-team-members.use-case';
+import { BulkAddTeamMembersCommand } from '../../application/use-cases/bulk-add-team-members/bulk-add-team-members.command';
 import { RemoveTeamMemberUseCase } from '../../application/use-cases/remove-team-member/remove-team-member.use-case';
 import { RemoveTeamMemberCommand } from '../../application/use-cases/remove-team-member/remove-team-member.command';
 import { CreateTeamDto } from './dtos/create-team.dto';
@@ -44,6 +46,7 @@ import {
   PaginatedTeamMembersResponseDto,
 } from './dtos/team-member-response.dto';
 import { AddTeamMemberDto } from './dtos/add-team-member.dto';
+import { BulkAddTeamMembersDto } from './dtos/bulk-add-team-members.dto';
 import { ListTeamMembersQueryDto } from './dtos/list-team-members-query.dto';
 import { TeamDtoMapper } from './mappers/team-dto.mapper';
 import { TeamMemberDtoMapper } from './mappers/team-member-dto.mapper';
@@ -73,6 +76,7 @@ export class TeamsController {
     private readonly getTeamUseCase: GetTeamUseCase,
     private readonly listTeamMembersUseCase: ListTeamMembersUseCase,
     private readonly addTeamMemberUseCase: AddTeamMemberUseCase,
+    private readonly bulkAddTeamMembersUseCase: BulkAddTeamMembersUseCase,
     private readonly removeTeamMemberUseCase: RemoveTeamMemberUseCase,
     private readonly teamDtoMapper: TeamDtoMapper,
     private readonly teamMemberDtoMapper: TeamMemberDtoMapper,
@@ -251,10 +255,6 @@ export class TeamsController {
     status: 409,
     description: 'Team with this name already exists in the organization',
   })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
   async updateTeam(
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() updateTeamDto: UpdateTeamDto,
@@ -333,10 +333,6 @@ export class TeamsController {
     status: 404,
     description: 'Team not found',
   })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
   async listTeamMembers(
     @Param('id', ParseUUIDPipe) id: UUID,
     @Query() queryDto: ListTeamMembersQueryDto,
@@ -395,10 +391,6 @@ export class TeamsController {
     status: 409,
     description: 'User is already a member of the team',
   })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
   async addTeamMember(
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() addTeamMemberDto: AddTeamMemberDto,
@@ -415,6 +407,42 @@ export class TeamsController {
       `Successfully added user ${addTeamMemberDto.userId} to team: ${id}`,
     );
     return this.teamMemberDtoMapper.toDto(teamMember);
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Post(':id/members/bulk')
+  @ApiOperation({
+    summary: 'Add multiple users to a team at once',
+    description:
+      'Adds every listed user. Users already in the team, not found, or not ' +
+      'in the org are skipped; the response holds only the members added.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Users successfully added to team',
+    schema: {
+      type: 'array',
+      items: { $ref: getSchemaPath(TeamMemberResponseDto) },
+    },
+  })
+  async bulkAddTeamMembers(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Body() bulkAddTeamMembersDto: BulkAddTeamMembersDto,
+  ): Promise<TeamMemberResponseDto[]> {
+    this.logger.log(
+      `Adding ${bulkAddTeamMembersDto.userIds.length} users to team: ${id}`,
+    );
+
+    const command = new BulkAddTeamMembersCommand({
+      teamId: id,
+      userIds: bulkAddTeamMembersDto.userIds,
+    });
+    const teamMembers = await this.bulkAddTeamMembersUseCase.execute(command);
+
+    this.logger.log(
+      `Successfully added ${teamMembers.length} users to team: ${id}`,
+    );
+    return this.teamMemberDtoMapper.toDtoList(teamMembers);
   }
 
   @Roles(UserRole.ADMIN)

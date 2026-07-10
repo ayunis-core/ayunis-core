@@ -3455,9 +3455,6 @@
           },
           "409": {
             "description": "Team with this name already exists in the organization"
-          },
-          "500": {
-            "description": "Internal server error"
           }
         },
         "summary": "Update a team in the current organization",
@@ -3550,9 +3547,6 @@
           },
           "404": {
             "description": "Team not found"
-          },
-          "500": {
-            "description": "Internal server error"
           }
         },
         "summary": "List members of a team",
@@ -3605,12 +3599,52 @@
           },
           "409": {
             "description": "User is already a member of the team"
-          },
-          "500": {
-            "description": "Internal server error"
           }
         },
         "summary": "Add a user to a team",
+        "tags": ["teams"]
+      }
+    },
+    "/teams/{id}/members/bulk": {
+      "post": {
+        "description": "Adds every listed user. Users already in the team, not found, or not in the org are skipped; the response holds only the members added.",
+        "operationId": "TeamsController_bulkAddTeamMembers",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkAddTeamMembersDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Users successfully added to team",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamMemberResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Add multiple users to a team at once",
         "tags": ["teams"]
       }
     },
@@ -12463,6 +12497,23 @@
             "default": 0
           }
         }
+      },
+      "BulkAddTeamMembersDto": {
+        "type": "object",
+        "properties": {
+          "userIds": {
+            "description": "The user IDs to add to the team",
+            "example": [
+              "550e8400-e29b-41d4-a716-446655440001",
+              "550e8400-e29b-41d4-a716-446655440002"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["userIds"]
       },
       "UploadFileResponseDto": {
         "type": "object",

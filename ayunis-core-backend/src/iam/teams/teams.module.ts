@@ -17,6 +17,7 @@ import { ListMyTeamsUseCase } from './application/use-cases/list-my-teams/list-m
 import { GetTeamUseCase } from './application/use-cases/get-team/get-team.use-case';
 import { ListTeamMembersUseCase } from './application/use-cases/list-team-members/list-team-members.use-case';
 import { AddTeamMemberUseCase } from './application/use-cases/add-team-member/add-team-member.use-case';
+import { BulkAddTeamMembersUseCase } from './application/use-cases/bulk-add-team-members/bulk-add-team-members.use-case';
 import { RemoveTeamMemberUseCase } from './application/use-cases/remove-team-member/remove-team-member.use-case';
 import { CheckUserTeamMembershipUseCase } from './application/use-cases/check-user-team-membership/check-user-team-membership.use-case';
 import { FindAllUserIdsByTeamIdUseCase } from './application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.use-case';
@@ -55,6 +56,7 @@ import { UsersModule } from '../users/users.module';
     GetTeamUseCase,
     ListTeamMembersUseCase,
     AddTeamMemberUseCase,
+    BulkAddTeamMembersUseCase,
     RemoveTeamMemberUseCase,
     CheckUserTeamMembershipUseCase,
     FindAllUserIdsByTeamIdUseCase,
