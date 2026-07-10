@@ -3,14 +3,14 @@ import {
   ConflictException,
   ForbiddenException,
   GatewayTimeoutException,
+  HttpException,
+  HttpStatus,
   InternalServerErrorException,
   NotFoundException,
   NotImplementedException,
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
-
-export type ErrorCode = string;
 
 export interface ErrorMetadata {
   [key: string]: unknown;
@@ -23,7 +23,7 @@ export abstract class ApplicationError extends Error {
   /**
    * Error code - used for identifying the error type
    */
-  readonly code: ErrorCode;
+  readonly code: string;
 
   /**
    * HTTP status code that should be returned to the client
@@ -37,7 +37,7 @@ export abstract class ApplicationError extends Error {
 
   constructor(
     message: string,
-    code: ErrorCode,
+    code: string,
     statusCode: number = 500,
     metadata?: ErrorMetadata,
   ) {
@@ -48,9 +48,7 @@ export abstract class ApplicationError extends Error {
     this.metadata = metadata;
 
     // Maintain proper stack trace for where the error was thrown (V8 engines)
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, this.constructor);
-    }
+    Error.captureStackTrace(this, this.constructor);
   }
 
   /**
@@ -63,25 +61,25 @@ export abstract class ApplicationError extends Error {
       ...(this.metadata && { metadata: this.metadata }),
     };
 
-    switch (this.statusCode) {
-      case 401:
-        return new UnauthorizedException(body);
-      case 403:
-        return new ForbiddenException(body);
-      case 404:
-        return new NotFoundException(body);
-      case 409:
-        return new ConflictException(body);
-      case 500:
-        return new InternalServerErrorException(body);
-      case 501:
-        return new NotImplementedException(body);
-      case 503:
-        return new ServiceUnavailableException(body);
-      case 504:
-        return new GatewayTimeoutException(body);
-      default:
-        return new BadRequestException(body);
-    }
+    const factory = EXCEPTION_FACTORIES[this.statusCode];
+    return factory ? factory(body) : new BadRequestException(body);
   }
 }
+
+// The value type includes undefined because not every status code has a
+// dedicated factory — lookups for unmapped codes fall back to 400.
+const EXCEPTION_FACTORIES: Record<
+  number,
+  ((body: object) => HttpException) | undefined
+> = {
+  401: (body) => new UnauthorizedException(body),
+  403: (body) => new ForbiddenException(body),
+  404: (body) => new NotFoundException(body),
+  409: (body) => new ConflictException(body),
+  // Nest ships no TooManyRequestsException; use the generic base.
+  429: (body) => new HttpException(body, HttpStatus.TOO_MANY_REQUESTS),
+  500: (body) => new InternalServerErrorException(body),
+  501: (body) => new NotImplementedException(body),
+  503: (body) => new ServiceUnavailableException(body),
+  504: (body) => new GatewayTimeoutException(body),
+};

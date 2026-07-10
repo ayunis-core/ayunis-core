@@ -102,7 +102,10 @@ export class VerifyMfaCodeUseCase {
       const matches = await this.compareHashUseCase.execute(
         new CompareHashCommand(normalized, candidate.codeHash),
       );
-      if (matches && (await this.recoveryCodesRepository.consume(candidate.id, now))) {
+      if (
+        matches &&
+        (await this.recoveryCodesRepository.consume(candidate.id, now))
+      ) {
         await this.userTotpsRepository.resetFailures(userId);
         return true;
       }
