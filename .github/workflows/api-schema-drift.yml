@@ -84,6 +84,7 @@ jobs:
           DISABLE_REGISTRATION=false
           DISABLE_EMAIL_CONFIRMATION=true
           MCP_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+          MFA_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
           OPENAI_API_KEY=sk-test-dummy-key-for-ci
           ANTHROPIC_API_KEY=sk-ant-test-dummy-key-for-ci
           MISTRAL_API_KEY=test-dummy-key-for-ci
