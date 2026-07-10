@@ -9318,11 +9318,11 @@
         },
         "responses": {
           "200": {
-            "description": "Login successful. Authentication cookies are set.",
+            "description": "Credentials accepted. Session cookies are set unless mfaRequired is true, in which case a short-lived MFA pending cookie is set instead.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponseDto"
+                  "$ref": "#/components/schemas/LoginResponseDto"
                 }
               }
             }
@@ -9509,6 +9509,89 @@
           }
         },
         "summary": "User logout",
+        "tags": ["Authentication"]
+      }
+    },
+    "/auth/mfa/verify": {
+      "post": {
+        "description": "Requires the MFA pending cookie set by a successful password login.",
+        "operationId": "MfaLoginController_verify",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaCodeRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Complete login with a TOTP or recovery code",
+        "tags": ["Authentication"]
+      }
+    },
+    "/auth/mfa/setup": {
+      "post": {
+        "description": "Only available when the pending token has enrollmentRequired (the org mandates MFA and the user is not enrolled).",
+        "operationId": "MfaLoginController_setup",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaSetupResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Start forced TOTP enrollment during login",
+        "tags": ["Authentication"]
+      }
+    },
+    "/auth/mfa/setup/confirm": {
+      "post": {
+        "description": "Activates two-factor auth, returns the recovery codes and issues the session cookies.",
+        "operationId": "MfaLoginController_confirmSetup",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaCodeRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaLoginConfirmResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Confirm forced enrollment and complete the login",
         "tags": ["Authentication"]
       }
     },
@@ -9735,6 +9818,174 @@
         },
         "summary": "Revoke an API key",
         "tags": ["api-keys"]
+      }
+    },
+    "/mfa/status": {
+      "get": {
+        "operationId": "MfaController_getStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaStatusResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the current user’s two-factor auth status",
+        "tags": ["mfa"]
+      }
+    },
+    "/mfa/setup": {
+      "post": {
+        "description": "Generates a secret and QR code. Enrollment is pending until confirmed with a valid code.",
+        "operationId": "MfaController_setup",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaSetupResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Start TOTP enrollment",
+        "tags": ["mfa"]
+      }
+    },
+    "/mfa/setup/confirm": {
+      "post": {
+        "description": "Activates two-factor auth and returns the recovery codes.",
+        "operationId": "MfaController_confirm",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaCodeRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryCodesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Confirm TOTP enrollment with a code",
+        "tags": ["mfa"]
+      }
+    },
+    "/mfa/disable": {
+      "post": {
+        "operationId": "MfaController_disable",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaCodeRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Two-factor auth disabled"
+          },
+          "409": {
+            "description": "MFA is required by the org"
+          }
+        },
+        "summary": "Disable two-factor auth (requires a valid code)",
+        "tags": ["mfa"]
+      }
+    },
+    "/mfa/org": {
+      "get": {
+        "operationId": "MfaController_getOrgRequirement",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgMfaRequirementResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the org’s MFA requirement (admin)",
+        "tags": ["mfa"]
+      },
+      "put": {
+        "operationId": "MfaController_updateOrgRequirement",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrgMfaRequirementRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgMfaRequirementResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set the org’s MFA requirement (admin)",
+        "tags": ["mfa"]
+      }
+    },
+    "/mfa/users/{userId}": {
+      "delete": {
+        "operationId": "MfaController_resetUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Two-factor auth reset"
+          }
+        },
+        "summary": "Reset a user’s two-factor auth (admin, lockout recovery)",
+        "tags": ["mfa"]
       }
     }
   },
@@ -16655,16 +16906,26 @@
         },
         "required": ["email", "password"]
       },
-      "SuccessResponseDto": {
+      "LoginResponseDto": {
         "type": "object",
         "properties": {
           "success": {
             "type": "boolean",
-            "description": "Operation success status",
+            "description": "Whether the credentials were accepted",
             "example": true
+          },
+          "mfaRequired": {
+            "type": "boolean",
+            "description": "True when a second factor is required before a session is issued. Complete the login via /auth/mfa/verify (or /auth/mfa/setup when enrollmentRequired is true).",
+            "example": false
+          },
+          "enrollmentRequired": {
+            "type": "boolean",
+            "description": "True when the org requires two-factor auth and the user must enroll before receiving a session.",
+            "example": false
           }
         },
-        "required": ["success"]
+        "required": ["success", "mfaRequired", "enrollmentRequired"]
       },
       "ErrorResponseDto": {
         "type": "object",
@@ -16719,6 +16980,17 @@
           "marketingAcceptance"
         ]
       },
+      "SuccessResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Operation success status",
+            "example": true
+          }
+        },
+        "required": ["success"]
+      },
       "MeResponseDto": {
         "type": "object",
         "properties": {
@@ -16746,6 +17018,53 @@
           }
         },
         "required": ["email", "role", "systemRole", "name"]
+      },
+      "MfaCodeRequestDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "A 6-digit TOTP code from the authenticator app, or a single-use recovery code (XXXXX-XXXXX).",
+            "example": "123456"
+          }
+        },
+        "required": ["code"]
+      },
+      "MfaSetupResponseDto": {
+        "type": "object",
+        "properties": {
+          "secret": {
+            "type": "string",
+            "description": "Base32 TOTP secret for manual entry in an authenticator app. Shown only during setup and never again."
+          },
+          "otpauthUri": {
+            "type": "string",
+            "description": "otpauth:// URI encoded in the QR code."
+          },
+          "qrCodeDataUri": {
+            "type": "string",
+            "description": "QR code for the otpauth URI as a PNG data URI."
+          }
+        },
+        "required": ["secret", "otpauthUri", "qrCodeDataUri"]
+      },
+      "MfaLoginConfirmResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Operation success status",
+            "example": true
+          },
+          "recoveryCodes": {
+            "description": "Single-use recovery codes issued on enrollment. Shown exactly once.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["success", "recoveryCodes"]
       },
       "OnboardingResponseDto": {
         "type": "object",
@@ -16950,6 +17269,64 @@
           "createdAt",
           "secret"
         ]
+      },
+      "MfaStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the user has confirmed TOTP two-factor auth.",
+            "example": true
+          },
+          "confirmedAt": {
+            "type": "string",
+            "description": "When enrollment was confirmed, null when not enrolled.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "recoveryCodesRemaining": {
+            "type": "number",
+            "description": "Number of unused recovery codes.",
+            "example": 10
+          }
+        },
+        "required": ["enabled", "confirmedAt", "recoveryCodesRemaining"]
+      },
+      "RecoveryCodesResponseDto": {
+        "type": "object",
+        "properties": {
+          "recoveryCodes": {
+            "description": "Single-use recovery codes. Shown exactly once — the user must store them before continuing.",
+            "example": ["A1B2C-D3E4F", "G5H6J-K7M8N"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["recoveryCodes"]
+      },
+      "OrgMfaRequirementResponseDto": {
+        "type": "object",
+        "properties": {
+          "required": {
+            "type": "boolean",
+            "description": "Whether two-factor authentication is required for all users of the org. Enforced at each user’s next login.",
+            "example": false
+          }
+        },
+        "required": ["required"]
+      },
+      "UpdateOrgMfaRequirementRequestDto": {
+        "type": "object",
+        "properties": {
+          "required": {
+            "type": "boolean",
+            "description": "Whether two-factor authentication is required for all users of the org. Takes effect at each user’s next login.",
+            "example": true
+          }
+        },
+        "required": ["required"]
       }
     }
   }

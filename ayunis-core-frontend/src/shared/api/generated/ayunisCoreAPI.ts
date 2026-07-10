@@ -103,17 +103,23 @@ import type {
   LanguageModelResponseDto,
   LetterheadResponseDto,
   LoginDto,
+  LoginResponseDto,
   MarketplaceConfigResponseDto,
   MarketplaceIntegrationResponseDto,
   MarketplaceSkillResponseDto,
   McpIntegrationResponseDto,
   MeResponseDto,
+  MfaCodeRequestDto,
+  MfaLoginConfirmResponseDto,
+  MfaSetupResponseDto,
+  MfaStatusResponseDto,
   ModelDistributionResponseDto,
   ModelProviderInfoResponseDto,
   ModelWithConfigResponseDto,
   ModelsControllerUpdatePermittedModel200,
   OnboardingResponseDto,
   OrgChatSettingsResponseDto,
+  OrgMfaRequirementResponseDto,
   OrgSystemPromptResponseDto,
   PaginatedInvitesListResponseDto,
   PaginatedTeamMembersResponseDto,
@@ -129,6 +135,7 @@ import type {
   QuizQuestionForTakingResponseDto,
   QuizQuestionResponseDto,
   QuizResultResponseDto,
+  RecoveryCodesResponseDto,
   RegisterDto,
   ReorderChaptersRequestDto,
   ReorderCourseModulesRequestDto,
@@ -200,6 +207,7 @@ import type {
   UpdateMcpIntegrationDto,
   UpdateMonthlyCreditsDto,
   UpdateOnboardingDto,
+  UpdateOrgMfaRequirementRequestDto,
   UpdatePasswordDto,
   UpdatePermittedModelDto,
   UpdatePiiWhitelistRequestDto,
@@ -19226,7 +19234,7 @@ export const authenticationControllerLogin = (
 ) => {
       
       
-      return customAxiosInstance<SuccessResponseDto>(
+      return customAxiosInstance<LoginResponseDto>(
       {url: `/auth/login`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: loginDto, signal
@@ -19566,6 +19574,202 @@ export const useAuthenticationControllerLogout = <TError = unknown,
       > => {
 
       const mutationOptions = getAuthenticationControllerLogoutMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Requires the MFA pending cookie set by a successful password login.
+ * @summary Complete login with a TOTP or recovery code
+ */
+export const mfaLoginControllerVerify = (
+    mfaCodeRequestDto: MfaCodeRequestDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SuccessResponseDto>(
+      {url: `/auth/mfa/verify`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: mfaCodeRequestDto, signal
+    },
+      );
+    }
+  
+
+
+export const getMfaLoginControllerVerifyMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mfaLoginControllerVerify>>, TError,{data: MfaCodeRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mfaLoginControllerVerify>>, TError,{data: MfaCodeRequestDto}, TContext> => {
+
+const mutationKey = ['mfaLoginControllerVerify'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mfaLoginControllerVerify>>, {data: MfaCodeRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  mfaLoginControllerVerify(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MfaLoginControllerVerifyMutationResult = NonNullable<Awaited<ReturnType<typeof mfaLoginControllerVerify>>>
+    export type MfaLoginControllerVerifyMutationBody = MfaCodeRequestDto
+    export type MfaLoginControllerVerifyMutationError = unknown
+
+    /**
+ * @summary Complete login with a TOTP or recovery code
+ */
+export const useMfaLoginControllerVerify = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mfaLoginControllerVerify>>, TError,{data: MfaCodeRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mfaLoginControllerVerify>>,
+        TError,
+        {data: MfaCodeRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getMfaLoginControllerVerifyMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Only available when the pending token has enrollmentRequired (the org mandates MFA and the user is not enrolled).
+ * @summary Start forced TOTP enrollment during login
+ */
+export const mfaLoginControllerSetup = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<MfaSetupResponseDto>(
+      {url: `/auth/mfa/setup`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getMfaLoginControllerSetupMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mfaLoginControllerSetup>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mfaLoginControllerSetup>>, TError,void, TContext> => {
+
+const mutationKey = ['mfaLoginControllerSetup'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mfaLoginControllerSetup>>, void> = () => {
+          
+
+          return  mfaLoginControllerSetup()
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MfaLoginControllerSetupMutationResult = NonNullable<Awaited<ReturnType<typeof mfaLoginControllerSetup>>>
+    
+    export type MfaLoginControllerSetupMutationError = unknown
+
+    /**
+ * @summary Start forced TOTP enrollment during login
+ */
+export const useMfaLoginControllerSetup = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mfaLoginControllerSetup>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mfaLoginControllerSetup>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getMfaLoginControllerSetupMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Activates two-factor auth, returns the recovery codes and issues the session cookies.
+ * @summary Confirm forced enrollment and complete the login
+ */
+export const mfaLoginControllerConfirmSetup = (
+    mfaCodeRequestDto: MfaCodeRequestDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<MfaLoginConfirmResponseDto>(
+      {url: `/auth/mfa/setup/confirm`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: mfaCodeRequestDto, signal
+    },
+      );
+    }
+  
+
+
+export const getMfaLoginControllerConfirmSetupMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mfaLoginControllerConfirmSetup>>, TError,{data: MfaCodeRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mfaLoginControllerConfirmSetup>>, TError,{data: MfaCodeRequestDto}, TContext> => {
+
+const mutationKey = ['mfaLoginControllerConfirmSetup'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mfaLoginControllerConfirmSetup>>, {data: MfaCodeRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  mfaLoginControllerConfirmSetup(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MfaLoginControllerConfirmSetupMutationResult = NonNullable<Awaited<ReturnType<typeof mfaLoginControllerConfirmSetup>>>
+    export type MfaLoginControllerConfirmSetupMutationBody = MfaCodeRequestDto
+    export type MfaLoginControllerConfirmSetupMutationError = unknown
+
+    /**
+ * @summary Confirm forced enrollment and complete the login
+ */
+export const useMfaLoginControllerConfirmSetup = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mfaLoginControllerConfirmSetup>>, TError,{data: MfaCodeRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mfaLoginControllerConfirmSetup>>,
+        TError,
+        {data: MfaCodeRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getMfaLoginControllerConfirmSetupMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -20164,6 +20368,513 @@ export const useApiKeysControllerRevokeApiKey = <TError = void,
       > => {
 
       const mutationOptions = getApiKeysControllerRevokeApiKeyMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Get the current user’s two-factor auth status
+ */
+export const mfaControllerGetStatus = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<MfaStatusResponseDto>(
+      {url: `/mfa/status`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getMfaControllerGetStatusQueryKey = () => {
+    return [
+    `/mfa/status`
+    ] as const;
+    }
+
+    
+export const getMfaControllerGetStatusQueryOptions = <TData = Awaited<ReturnType<typeof mfaControllerGetStatus>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mfaControllerGetStatus>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMfaControllerGetStatusQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mfaControllerGetStatus>>> = ({ signal }) => mfaControllerGetStatus(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mfaControllerGetStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MfaControllerGetStatusQueryResult = NonNullable<Awaited<ReturnType<typeof mfaControllerGetStatus>>>
+export type MfaControllerGetStatusQueryError = unknown
+
+
+export function useMfaControllerGetStatus<TData = Awaited<ReturnType<typeof mfaControllerGetStatus>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mfaControllerGetStatus>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mfaControllerGetStatus>>,
+          TError,
+          Awaited<ReturnType<typeof mfaControllerGetStatus>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMfaControllerGetStatus<TData = Awaited<ReturnType<typeof mfaControllerGetStatus>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mfaControllerGetStatus>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mfaControllerGetStatus>>,
+          TError,
+          Awaited<ReturnType<typeof mfaControllerGetStatus>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMfaControllerGetStatus<TData = Awaited<ReturnType<typeof mfaControllerGetStatus>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mfaControllerGetStatus>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the current user’s two-factor auth status
+ */
+
+export function useMfaControllerGetStatus<TData = Awaited<ReturnType<typeof mfaControllerGetStatus>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mfaControllerGetStatus>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMfaControllerGetStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * Generates a secret and QR code. Enrollment is pending until confirmed with a valid code.
+ * @summary Start TOTP enrollment
+ */
+export const mfaControllerSetup = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<MfaSetupResponseDto>(
+      {url: `/mfa/setup`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getMfaControllerSetupMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mfaControllerSetup>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mfaControllerSetup>>, TError,void, TContext> => {
+
+const mutationKey = ['mfaControllerSetup'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mfaControllerSetup>>, void> = () => {
+          
+
+          return  mfaControllerSetup()
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MfaControllerSetupMutationResult = NonNullable<Awaited<ReturnType<typeof mfaControllerSetup>>>
+    
+    export type MfaControllerSetupMutationError = unknown
+
+    /**
+ * @summary Start TOTP enrollment
+ */
+export const useMfaControllerSetup = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mfaControllerSetup>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mfaControllerSetup>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getMfaControllerSetupMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Activates two-factor auth and returns the recovery codes.
+ * @summary Confirm TOTP enrollment with a code
+ */
+export const mfaControllerConfirm = (
+    mfaCodeRequestDto: MfaCodeRequestDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<RecoveryCodesResponseDto>(
+      {url: `/mfa/setup/confirm`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: mfaCodeRequestDto, signal
+    },
+      );
+    }
+  
+
+
+export const getMfaControllerConfirmMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mfaControllerConfirm>>, TError,{data: MfaCodeRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mfaControllerConfirm>>, TError,{data: MfaCodeRequestDto}, TContext> => {
+
+const mutationKey = ['mfaControllerConfirm'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mfaControllerConfirm>>, {data: MfaCodeRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  mfaControllerConfirm(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MfaControllerConfirmMutationResult = NonNullable<Awaited<ReturnType<typeof mfaControllerConfirm>>>
+    export type MfaControllerConfirmMutationBody = MfaCodeRequestDto
+    export type MfaControllerConfirmMutationError = unknown
+
+    /**
+ * @summary Confirm TOTP enrollment with a code
+ */
+export const useMfaControllerConfirm = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mfaControllerConfirm>>, TError,{data: MfaCodeRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mfaControllerConfirm>>,
+        TError,
+        {data: MfaCodeRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getMfaControllerConfirmMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Disable two-factor auth (requires a valid code)
+ */
+export const mfaControllerDisable = (
+    mfaCodeRequestDto: MfaCodeRequestDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/mfa/disable`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: mfaCodeRequestDto, signal
+    },
+      );
+    }
+  
+
+
+export const getMfaControllerDisableMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mfaControllerDisable>>, TError,{data: MfaCodeRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mfaControllerDisable>>, TError,{data: MfaCodeRequestDto}, TContext> => {
+
+const mutationKey = ['mfaControllerDisable'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mfaControllerDisable>>, {data: MfaCodeRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  mfaControllerDisable(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MfaControllerDisableMutationResult = NonNullable<Awaited<ReturnType<typeof mfaControllerDisable>>>
+    export type MfaControllerDisableMutationBody = MfaCodeRequestDto
+    export type MfaControllerDisableMutationError = void
+
+    /**
+ * @summary Disable two-factor auth (requires a valid code)
+ */
+export const useMfaControllerDisable = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mfaControllerDisable>>, TError,{data: MfaCodeRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mfaControllerDisable>>,
+        TError,
+        {data: MfaCodeRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getMfaControllerDisableMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Get the org’s MFA requirement (admin)
+ */
+export const mfaControllerGetOrgRequirement = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<OrgMfaRequirementResponseDto>(
+      {url: `/mfa/org`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getMfaControllerGetOrgRequirementQueryKey = () => {
+    return [
+    `/mfa/org`
+    ] as const;
+    }
+
+    
+export const getMfaControllerGetOrgRequirementQueryOptions = <TData = Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMfaControllerGetOrgRequirementQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>> = ({ signal }) => mfaControllerGetOrgRequirement(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MfaControllerGetOrgRequirementQueryResult = NonNullable<Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>>
+export type MfaControllerGetOrgRequirementQueryError = unknown
+
+
+export function useMfaControllerGetOrgRequirement<TData = Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>,
+          TError,
+          Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMfaControllerGetOrgRequirement<TData = Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>,
+          TError,
+          Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMfaControllerGetOrgRequirement<TData = Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the org’s MFA requirement (admin)
+ */
+
+export function useMfaControllerGetOrgRequirement<TData = Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mfaControllerGetOrgRequirement>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMfaControllerGetOrgRequirementQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Set the org’s MFA requirement (admin)
+ */
+export const mfaControllerUpdateOrgRequirement = (
+    updateOrgMfaRequirementRequestDto: UpdateOrgMfaRequirementRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<OrgMfaRequirementResponseDto>(
+      {url: `/mfa/org`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateOrgMfaRequirementRequestDto
+    },
+      );
+    }
+  
+
+
+export const getMfaControllerUpdateOrgRequirementMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mfaControllerUpdateOrgRequirement>>, TError,{data: UpdateOrgMfaRequirementRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mfaControllerUpdateOrgRequirement>>, TError,{data: UpdateOrgMfaRequirementRequestDto}, TContext> => {
+
+const mutationKey = ['mfaControllerUpdateOrgRequirement'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mfaControllerUpdateOrgRequirement>>, {data: UpdateOrgMfaRequirementRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  mfaControllerUpdateOrgRequirement(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MfaControllerUpdateOrgRequirementMutationResult = NonNullable<Awaited<ReturnType<typeof mfaControllerUpdateOrgRequirement>>>
+    export type MfaControllerUpdateOrgRequirementMutationBody = UpdateOrgMfaRequirementRequestDto
+    export type MfaControllerUpdateOrgRequirementMutationError = unknown
+
+    /**
+ * @summary Set the org’s MFA requirement (admin)
+ */
+export const useMfaControllerUpdateOrgRequirement = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mfaControllerUpdateOrgRequirement>>, TError,{data: UpdateOrgMfaRequirementRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mfaControllerUpdateOrgRequirement>>,
+        TError,
+        {data: UpdateOrgMfaRequirementRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getMfaControllerUpdateOrgRequirementMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Reset a user’s two-factor auth (admin, lockout recovery)
+ */
+export const mfaControllerResetUser = (
+    userId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/mfa/users/${userId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getMfaControllerResetUserMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mfaControllerResetUser>>, TError,{userId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mfaControllerResetUser>>, TError,{userId: string}, TContext> => {
+
+const mutationKey = ['mfaControllerResetUser'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mfaControllerResetUser>>, {userId: string}> = (props) => {
+          const {userId} = props ?? {};
+
+          return  mfaControllerResetUser(userId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MfaControllerResetUserMutationResult = NonNullable<Awaited<ReturnType<typeof mfaControllerResetUser>>>
+    
+    export type MfaControllerResetUserMutationError = unknown
+
+    /**
+ * @summary Reset a user’s two-factor auth (admin, lockout recovery)
+ */
+export const useMfaControllerResetUser = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mfaControllerResetUser>>, TError,{userId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mfaControllerResetUser>>,
+        TError,
+        {userId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getMfaControllerResetUserMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
