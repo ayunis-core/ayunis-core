@@ -1686,6 +1686,11 @@ export interface ListTeamMembersQueryDto {
   offset?: number;
 }
 
+export interface BulkAddTeamMembersDto {
+  /** The user IDs to add to the team */
+  userIds: string[];
+}
+
 export interface UploadFileResponseDto {
   /** Name of the uploaded object */
   objectName: string;

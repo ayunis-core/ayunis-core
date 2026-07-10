@@ -39,6 +39,7 @@ import type {
   ArtifactResponseDto,
   ArtifactVersionResponseDto,
   ArtifactsControllerExportParams,
+  BulkAddTeamMembersDto,
   ChangeSubscriptionRequestDto,
   ChatCompletionRequestDto,
   ConfirmEmailDto,
@@ -7292,6 +7293,73 @@ export const useTeamsControllerAddTeamMember = <TError = void,
       > => {
 
       const mutationOptions = getTeamsControllerAddTeamMemberMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Adds every listed user. Users already in the team, not found, or not in the org are skipped; the response holds only the members added.
+ * @summary Add multiple users to a team at once
+ */
+export const teamsControllerBulkAddTeamMembers = (
+    id: string,
+    bulkAddTeamMembersDto: BulkAddTeamMembersDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<TeamMemberResponseDto[]>(
+      {url: `/teams/${id}/members/bulk`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: bulkAddTeamMembersDto, signal
+    },
+      );
+    }
+  
+
+
+export const getTeamsControllerBulkAddTeamMembersMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamsControllerBulkAddTeamMembers>>, TError,{id: string;data: BulkAddTeamMembersDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof teamsControllerBulkAddTeamMembers>>, TError,{id: string;data: BulkAddTeamMembersDto}, TContext> => {
+
+const mutationKey = ['teamsControllerBulkAddTeamMembers'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof teamsControllerBulkAddTeamMembers>>, {id: string;data: BulkAddTeamMembersDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  teamsControllerBulkAddTeamMembers(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TeamsControllerBulkAddTeamMembersMutationResult = NonNullable<Awaited<ReturnType<typeof teamsControllerBulkAddTeamMembers>>>
+    export type TeamsControllerBulkAddTeamMembersMutationBody = BulkAddTeamMembersDto
+    export type TeamsControllerBulkAddTeamMembersMutationError = unknown
+
+    /**
+ * @summary Add multiple users to a team at once
+ */
+export const useTeamsControllerBulkAddTeamMembers = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamsControllerBulkAddTeamMembers>>, TError,{id: string;data: BulkAddTeamMembersDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof teamsControllerBulkAddTeamMembers>>,
+        TError,
+        {id: string;data: BulkAddTeamMembersDto},
+        TContext
+      > => {
+
+      const mutationOptions = getTeamsControllerBulkAddTeamMembersMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -11,17 +11,18 @@ import {
 import { Button } from '@/shared/ui/shadcn/button';
 import {
   Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
   ComboboxContent,
   ComboboxEmpty,
-  ComboboxInput,
   ComboboxItem,
   ComboboxList,
-  ComboboxTrigger,
   ComboboxValue,
 } from '@/shared/ui/shadcn/combobox';
 import { useTeamsControllerListTeamMembers } from '@/shared/api/generated/ayunisCoreAPI';
 import { useUserControllerGetUsersInOrganization } from '@/shared/api/generated/ayunisCoreAPI';
-import { useAddTeamMember } from '../api/useAddTeamMember';
+import { useAddTeamMembers } from '../api/useAddTeamMembers';
 
 interface UserOption {
   value: string;
@@ -40,11 +41,11 @@ export function AddTeamMemberDialog({
   onOpenChange,
 }: Readonly<AddTeamMemberDialogProps>) {
   const { t } = useTranslation('admin-settings-teams');
-  const [selectedUser, setSelectedUser] = useState<UserOption | null>(null);
+  const [selectedUsers, setSelectedUsers] = useState<UserOption[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { addTeamMember, isAdding } = useAddTeamMember(teamId, () => {
-    setSelectedUser(null);
+  const { addTeamMembers, isAdding } = useAddTeamMembers(teamId, () => {
+    setSelectedUsers([]);
     onOpenChange(false);
   });
 
@@ -75,8 +76,8 @@ export function AddTeamMemberDialog({
 
   const handleSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    if (selectedUser) {
-      addTeamMember(selectedUser.value);
+    if (selectedUsers.length > 0) {
+      addTeamMembers(selectedUsers.map((u) => u.value));
     }
   };
 
@@ -93,27 +94,32 @@ export function AddTeamMemberDialog({
           <div className="py-4">
             <Combobox
               items={availableUsers}
-              value={selectedUser}
-              onValueChange={setSelectedUser}
+              multiple
+              value={selectedUsers}
+              onValueChange={setSelectedUsers}
               isItemEqualToValue={(a, b) => a.value === b.value}
             >
-              <ComboboxTrigger
-                render={
-                  <Button
-                    variant="outline"
-                    className="w-full justify-between font-normal"
-                  >
-                    <ComboboxValue
-                      placeholder={t('teamDetail.addMember.selectUser')}
-                    />
-                  </Button>
-                }
-              />
+              <ComboboxChips>
+                <ComboboxValue>
+                  {(users: UserOption[]) => (
+                    <Fragment>
+                      {users.map((user) => (
+                        <ComboboxChip key={user.value} aria-label={user.label}>
+                          {user.label}
+                        </ComboboxChip>
+                      ))}
+                      <ComboboxChipsInput
+                        placeholder={
+                          users.length > 0
+                            ? ''
+                            : t('teamDetail.addMember.searchPlaceholder')
+                        }
+                      />
+                    </Fragment>
+                  )}
+                </ComboboxValue>
+              </ComboboxChips>
               <ComboboxContent container={containerRef}>
-                <ComboboxInput
-                  showTrigger={false}
-                  placeholder={t('teamDetail.addMember.searchPlaceholder')}
-                />
                 <ComboboxEmpty>
                   {t('teamDetail.addMember.noUsersFound')}
                 </ComboboxEmpty>
@@ -135,7 +141,10 @@ export function AddTeamMemberDialog({
             >
               {t('teamDetail.addMember.cancel')}
             </Button>
-            <Button type="submit" disabled={!selectedUser || isAdding}>
+            <Button
+              type="submit"
+              disabled={selectedUsers.length === 0 || isAdding}
+            >
               {isAdding
                 ? t('teamDetail.addMember.adding')
                 : t('teamDetail.addMember.add')}
