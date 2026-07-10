@@ -102,6 +102,36 @@ These variables MUST be configured before deployment:
 - `POSTGRES_PASSWORD`: Secure database password
 - `POSTGRES_DB`: Database name
 
+#### Object Storage (MinIO)
+
+> **Note:** MinIO credentials have no default fallback. The old insecure
+> defaults (`minio` / `minio123`) have been removed. In production the
+> application performs a boot-time check and refuses to start until credentials
+> are configured.
+
+- `MINIO_ROOT_USER`: MinIO access key / root user (also used to initialize the
+  bundled MinIO container). Use a unique, non-default value.
+- `MINIO_ROOT_PASSWORD`: MinIO secret key / root password. Generate with:
+
+  ```bash
+  openssl rand -hex 24
+  ```
+
+  Optionally override the app-side credentials independently of the container
+  root user with `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY`.
+
+#### Redis (Queues)
+
+> **Note:** Redis must run with authentication in production. The application
+> refuses to start without `REDIS_PASSWORD`, and the bundled Redis container is
+> launched with `--requirepass "$REDIS_PASSWORD"`.
+
+- `REDIS_PASSWORD`: Password for the Redis instance. Generate with:
+
+  ```bash
+  openssl rand -hex 32
+  ```
+
 #### MCP Integration (Required)
 
 - `MCP_ENCRYPTION_KEY`: 64-character hex string for encrypting credentials
@@ -131,7 +161,10 @@ At least one must be configured:
 - `DISABLE_REGISTRATION`: Set to `true` to disable new user registration
 - `SMTP_*`: Email configuration (see README.md)
 - `BRAVE_SEARCH_*`: Web search functionality
-- `MINIO_*`: File storage configuration
+- `MINIO_ENDPOINT` / `MINIO_PORT` / `MINIO_USE_SSL` / `MINIO_BUCKET`: MinIO
+  connection settings (credentials themselves are required — see above)
+- `REDIS_HOST` / `REDIS_PORT`: Redis connection settings (the password itself is
+  required — see above)
 
 ### Validation Checklist
 
@@ -140,6 +173,8 @@ Before starting the application:
 - [ ] `JWT_SECRET` is a secure random string
 - [ ] `COOKIE_SECRET` is a secure random string
 - [ ] `MCP_ENCRYPTION_KEY` is set and is 64 hex characters
+- [ ] `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` are set to strong, non-default values
+- [ ] `REDIS_PASSWORD` is set to a secure random string
 - [ ] `POSTGRES_*` variables point to valid database
 - [ ] `FRONTEND_BASEURL` is set correctly
 - [ ] At least one LLM provider is configured

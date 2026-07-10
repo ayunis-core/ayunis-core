@@ -29,8 +29,9 @@ services:
       - '${MINIO_HOST_PORT:-9000}:9000'
       - '${MINIO_CONSOLE_HOST_PORT:-9001}:9001'
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio123}
+      # No insecure default — the ./dev script generates and exports these.
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER (the ./dev script generates it automatically)}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD (the ./dev script generates it automatically)}
     volumes:
       - minio-data:/data
     command: server /data --console-address ":9001"
@@ -123,9 +124,22 @@ services:
     restart: unless-stopped
     ports:
       - '${REDIS_HOST_PORT:-6379}:6379'
-    command: redis-server --maxmemory 128mb --maxmemory-policy noeviction
+    environment:
+      # No insecure default — the ./dev script generates and exports this.
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD (the ./dev script generates it automatically)}
+    # $$ escapes the variable so the container shell expands it at runtime.
+    command:
+      [
+        'sh',
+        '-c',
+        'exec redis-server --requirepass "$$REDIS_PASSWORD" --maxmemory 128mb --maxmemory-policy noeviction',
+      ]
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test:
+        [
+          'CMD-SHELL',
+          'redis-cli --no-auth-warning -a "$$REDIS_PASSWORD" ping | grep -q PONG',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5

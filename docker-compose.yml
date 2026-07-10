@@ -244,11 +244,25 @@ services:
     image: redis:7-alpine
     container_name: ayunis-redis-prod
     restart: unless-stopped
-    command: redis-server --maxmemory 128mb --maxmemory-policy noeviction
+    env_file:
+      - ./ayunis-core-backend/.env
+    # Require authentication. REDIS_PASSWORD is read from the .env file above;
+    # $$ escapes the variable so it is expanded by the container shell (using
+    # the container's env) rather than by docker compose at parse time.
+    command:
+      [
+        "sh",
+        "-c",
+        'exec redis-server --requirepass "$${REDIS_PASSWORD:?REDIS_PASSWORD must be set}" --maxmemory 128mb --maxmemory-policy noeviction',
+      ]
     networks:
       - ayunis-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+        [
+          "CMD-SHELL",
+          'redis-cli --no-auth-warning -a "$${REDIS_PASSWORD}" ping | grep -q PONG',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5

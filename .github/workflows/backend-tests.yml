@@ -83,8 +83,8 @@ jobs:
           docker run -d \
             --name minio \
             -p 9000:9000 \
-            -e MINIO_ROOT_USER=minio \
-            -e MINIO_ROOT_PASSWORD=minio123 \
+            -e MINIO_ROOT_USER=ayunis-ci \
+            -e MINIO_ROOT_PASSWORD=ayunis-ci-minio-secret \
             quay.io/minio/minio:latest server /data
           # Wait for MinIO to be ready
           timeout 30 bash -c 'until curl -f http://localhost:9000/minio/health/live; do sleep 2; done'
@@ -133,8 +133,8 @@ jobs:
           MINIO_ENDPOINT=localhost
           MINIO_PORT=9000
           MINIO_USE_SSL=false
-          MINIO_ROOT_USER=minio
-          MINIO_ROOT_PASSWORD=minio123
+          MINIO_ROOT_USER=ayunis-ci
+          MINIO_ROOT_PASSWORD=ayunis-ci-minio-secret
           MINIO_BUCKET=ayunis-test-uploads
 
           # Admin

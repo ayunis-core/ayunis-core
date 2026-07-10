@@ -100,6 +100,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
           connection: {
             host: redis.host,
             port: redis.port,
+            password: redis.password,
             // Note: maxRetriesPerRequest is intentionally omitted — BullMQ
             // forces it to null internally because it uses blocking Redis
             // commands (BRPOPLPUSH/BLMOVE) that must wait indefinitely.
