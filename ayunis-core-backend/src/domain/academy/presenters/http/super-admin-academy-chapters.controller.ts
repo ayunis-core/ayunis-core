@@ -25,8 +25,8 @@ import {
 import type { UUID } from 'crypto';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { GetAcademyContentUseCase } from '../../application/use-cases/get-academy-content/get-academy-content.use-case';
-import { GetAcademyContentQuery } from '../../application/use-cases/get-academy-content/get-academy-content.query';
+import { GetAcademyManagementContentUseCase } from '../../application/use-cases/get-academy-management-content/get-academy-management-content.use-case';
+import { GetAcademyManagementContentQuery } from '../../application/use-cases/get-academy-management-content/get-academy-management-content.query';
 import { CreateChapterUseCase } from '../../application/use-cases/create-chapter/create-chapter.use-case';
 import { CreateChapterCommand } from '../../application/use-cases/create-chapter/create-chapter.command';
 import { UpdateChapterUseCase } from '../../application/use-cases/update-chapter/update-chapter.use-case';
@@ -39,6 +39,7 @@ import { CreateChapterRequestDto } from './dto/create-chapter-request.dto';
 import { UpdateChapterRequestDto } from './dto/update-chapter-request.dto';
 import { ReorderChaptersRequestDto } from './dto/reorder-chapters-request.dto';
 import { AcademyChapterResponseDto } from './dto/academy-chapter-response.dto';
+import { SuperAdminAcademyChapterResponseDto } from './dto/super-admin-academy-chapter-response.dto';
 import { AcademyResponseDtoMapper } from './mappers/academy-response-dto.mapper';
 
 @ApiTags('Super Admin Academy')
@@ -50,7 +51,7 @@ export class SuperAdminAcademyChaptersController {
   );
 
   constructor(
-    private readonly getAcademyContentUseCase: GetAcademyContentUseCase,
+    private readonly getAcademyManagementContentUseCase: GetAcademyManagementContentUseCase,
     private readonly createChapterUseCase: CreateChapterUseCase,
     private readonly updateChapterUseCase: UpdateChapterUseCase,
     private readonly deleteChapterUseCase: DeleteChapterUseCase,
@@ -67,18 +68,18 @@ export class SuperAdminAcademyChaptersController {
   })
   @ApiOkResponse({
     description: 'Successfully retrieved academy chapters',
-    type: [AcademyChapterResponseDto],
+    type: [SuperAdminAcademyChapterResponseDto],
   })
   @ApiUnauthorizedResponse({
     description: 'User not authenticated or not authorized as super admin',
   })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
-  async getChapters(): Promise<AcademyChapterResponseDto[]> {
+  async getChapters(): Promise<SuperAdminAcademyChapterResponseDto[]> {
     this.logger.log('Getting academy chapters');
-    const chapters = await this.getAcademyContentUseCase.execute(
-      new GetAcademyContentQuery(),
+    const chapters = await this.getAcademyManagementContentUseCase.execute(
+      new GetAcademyManagementContentQuery(),
     );
-    return this.responseMapper.chapterToDtoArray(chapters);
+    return this.responseMapper.chapterToSuperAdminDtoArray(chapters);
   }
 
   @Post()
@@ -171,6 +172,7 @@ export class SuperAdminAcademyChaptersController {
         chapterId: id,
         title: dto.title,
         description: dto.description,
+        quizEnabled: dto.quizEnabled,
       }),
     );
     return this.responseMapper.chapterToDto(chapter);
