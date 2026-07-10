@@ -1,8 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Model } from 'src/domain/models/domain/model.entity';
 import { ModelsRepository } from '../../ports/models.repository';
 import { GetModelQuery } from './get-model.query';
-import { ModelNotFoundByNameAndProviderError } from '../../models.errors';
+import {
+  ModelNotFoundByNameAndProviderError,
+  UnexpectedModelError,
+} from '../../models.errors';
 
 @Injectable()
 export class GetModelUseCase {
@@ -10,11 +14,11 @@ export class GetModelUseCase {
 
   constructor(private readonly modelsRepository: ModelsRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(query: GetModelQuery): Promise<Model> {
     this.logger.log('execute', query);
 
     const model = await this.modelsRepository.findOne(query);
-
     if (!model) {
       throw new ModelNotFoundByNameAndProviderError(query.name, query.provider);
     }

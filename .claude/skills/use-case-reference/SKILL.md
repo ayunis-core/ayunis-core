@@ -7,14 +7,13 @@ description: "Reference implementation for backend use cases — error handling,
 
 This skill defines the canonical use case structure. Every use case MUST follow this pattern.
 
-The structural rules (try/catch shape, error wrapping, single `execute()` method, repository injection via interface) are non-negotiable. Things that **vary by project** — exact import paths, auth context handling, domain model style — are marked with `// ...` placeholders and inline comments.
+The structural rules (error-boundary decorator, error wrapping, single `execute()` method, repository injection via interface) are non-negotiable. Things that **vary by project** — exact import paths, auth context handling, domain model style — are marked with `// ...` placeholders and inline comments.
 
 ## Structure
 
 ```typescript
 import { Injectable, Logger } from '@nestjs/common';
-// ApplicationError base class — exact import path varies by project
-import { ApplicationError } from '...';
+import { HandleUnexpectedErrors } from 'src/common/use-case/handle-unexpected-errors.decorator';
 // Module-specific errors
 import { EntityNotFoundError, UnexpectedEntityError } from '../../entity.errors';
 // Repository class — the type doubles as the DI token (no @Inject() needed)
@@ -34,53 +33,46 @@ export class DoSomethingUseCase {
     // ... other dependencies (other use cases, infra services, etc.)
   ) {}
 
+  // Error handling — REQUIRED on every execute(), see Rule 1
+  @HandleUnexpectedErrors(UnexpectedEntityError)
   async execute(command: DoSomethingCommand): Promise<Entity> {
     this.logger.log('Doing something', { entityId: command.entityId });
 
-    try {
-      // 1. Auth context — handling varies by project, see Rule 5 below
+    // 1. Auth context — handling varies by project, see Rule 5 below
 
-      // 2. Precondition checks (existence, permissions, business rules)
-      // (multi-tenant projects typically pass userId here for tenant isolation)
-      const entity = await this.entityRepository.findOne(command.entityId);
-      if (!entity) {
-        throw new EntityNotFoundError(command.entityId);
-      }
-
-      // 3. Business logic — mutate, orchestrate, call other use cases / repos
-      //    (style varies: rich domain methods like entity.updateName(...), or
-      //    anemic record updates — follow your project's convention)
-
-      // 4. Persist and return
-      return await this.entityRepository.save(entity);
-
-    } catch (error) {
-      // 5. Error handling — REQUIRED in every use case
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error doing something', { error: error as Error });
-      throw new UnexpectedEntityError(error);
+    // 2. Precondition checks (existence, permissions, business rules)
+    // (multi-tenant projects typically pass userId here for tenant isolation)
+    const entity = await this.entityRepository.findOne(command.entityId);
+    if (!entity) {
+      throw new EntityNotFoundError(command.entityId);
     }
+
+    // 3. Business logic — mutate, orchestrate, call other use cases / repos
+    //    (style varies: rich domain methods like entity.updateName(...), or
+    //    anemic record updates — follow your project's convention)
+
+    // 4. Persist and return
+    return await this.entityRepository.save(entity);
   }
 }
 ```
 
 ## Rules
 
-### 1. Every `execute()` method MUST be wrapped in try/catch
-
-The catch block follows this exact pattern:
+### 1. Every `execute()` method MUST be decorated with `@HandleUnexpectedErrors`
 
 ```typescript
-catch (error) {
-  if (error instanceof ApplicationError) throw error;
-  this.logger.error('<descriptive context>', { error: error as Error });
-  throw new UnexpectedModuleError(error);
-}
+@HandleUnexpectedErrors(UnexpectedEntityError)
+async execute(command: DoSomethingCommand): Promise<Entity> {
 ```
 
-- **Re-throw `ApplicationError`** subclasses as-is — these are domain errors with proper status codes
-- **Log unexpected errors** with context (what operation failed)
-- **Wrap in a module-specific `Unexpected*Error`** — never let raw errors escape
+The decorator (from `src/common/use-case/handle-unexpected-errors.decorator.ts`) is the use case's error boundary:
+
+- **Re-throws `ApplicationError`** subclasses as-is — these are domain errors with proper status codes
+- **Logs unexpected errors** under the use-case class name — no extra context needed, the class name already describes the operation
+- **Wraps unexpected errors in the module-specific `Unexpected*Error`** — never let raw errors escape
+
+Do NOT hand-write try/catch error boundaries in `execute()`. A try/catch inside the business logic is fine only when the use case genuinely handles a failure (fallback, retry) rather than translating it.
 
 ### 2. Never throw HTTP exceptions from use cases
 
@@ -176,26 +168,25 @@ export class UnexpectedEntityError extends EntityError {
 }
 ```
 
-Every module MUST have an `Unexpected*Error` class for the catch block.
+Every module MUST have an `Unexpected*Error` class for the `@HandleUnexpectedErrors` decorator.
 
-### 8. Logger — use the class name, log entry and errors
+### 8. Logger — use the class name, log entry
 
 ```typescript
 private readonly logger = new Logger(MyUseCase.name);
 
 // At the start of execute():
 this.logger.log('Descriptive action', { relevantId: command.id });
-
-// In catch block:
-this.logger.error('Error descriptive action', { error: error as Error });
 ```
+
+Unexpected-error logging is handled by the `@HandleUnexpectedErrors` decorator — do not add your own error logging for the boundary.
 
 ## Checklist
 
 When creating or modifying a use case, verify:
 
-- [ ] `execute()` body is wrapped in try/catch
-- [ ] Catch block re-throws `ApplicationError`, logs and wraps everything else
+- [ ] `execute()` is decorated with `@HandleUnexpectedErrors(Unexpected*Error)`
+- [ ] No hand-written try/catch error boundary in `execute()`
 - [ ] No HTTP exceptions (`NotFoundException`, `UnauthorizedException`, etc.)
 - [ ] Auth context handled per the project's convention (Rule 5)
 - [ ] Preconditions checked before mutations (entity exists, permissions valid)
