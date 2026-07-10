@@ -19,6 +19,19 @@ export const minimalFixture = {
     outputTokenCost: 15,
   },
 
+  anthropicLanguageModel: {
+    name: 'claude-sonnet-4-5',
+    displayName: 'Claude Sonnet 4.5 (Anthropic)',
+    provider: ModelProvider.ANTHROPIC,
+    canStream: true,
+    isReasoning: false,
+    isArchived: false,
+    canUseTools: true,
+    canVision: true,
+    inputTokenCost: 3,
+    outputTokenCost: 15,
+  },
+
   azureLanguageModel: {
     name: 'gpt-5.4',
     displayName: 'GPT-5.4 (Azure)',
@@ -197,6 +210,11 @@ export const minimalFixture = {
       anonymousOnly: false,
     },
     {
+      modelKey: 'anthropicLanguageModel',
+      isDefault: false,
+      anonymousOnly: false,
+    },
+    {
       modelKey: 'azureLanguageModel',
       isDefault: false,
       anonymousOnly: false,
@@ -233,6 +251,7 @@ export const minimalFixture = {
 
 export const LANGUAGE_MODEL_KEYS = [
   'languageModel',
+  'anthropicLanguageModel',
   'azureLanguageModel',
   'openaiLanguageModel',
   'mistralLanguageModel',
