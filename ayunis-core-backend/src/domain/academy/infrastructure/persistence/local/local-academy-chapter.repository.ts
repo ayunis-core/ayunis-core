@@ -64,6 +64,15 @@ export class LocalAcademyChapterRepository implements AcademyChapterRepository {
     return records.map((record) => record.id);
   }
 
+  async findQuizEnabledIds(): Promise<UUID[]> {
+    this.logger.log('findQuizEnabledIds');
+    const records = await this.repository.find({
+      where: { quizEnabled: true },
+      select: { id: true },
+    });
+    return records.map((record) => record.id);
+  }
+
   async findMaxPosition(): Promise<number | null> {
     this.logger.log('findMaxPosition');
     return this.repository.maximum('position');
