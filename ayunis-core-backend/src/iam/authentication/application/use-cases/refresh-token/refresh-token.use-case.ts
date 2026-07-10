@@ -23,11 +23,17 @@ export class RefreshTokenUseCase {
   async execute(command: RefreshTokenCommand): Promise<AuthTokens> {
     this.logger.log('refreshToken');
     try {
-      const payload = this.jwtService.verify<{ sub: string }>(
+      const payload = this.jwtService.verify<{ sub: string; type?: string }>(
         command.refreshToken,
       );
 
       if (!payload.sub) {
+        throw new InvalidTokenError('Invalid token payload');
+      }
+
+      // Special-purpose tokens (e.g. MFA pending) share the same secret and
+      // carry a `type` claim; they must never be exchangeable for a session.
+      if (payload.type !== undefined) {
         throw new InvalidTokenError('Invalid token payload');
       }
 
