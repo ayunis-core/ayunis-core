@@ -8497,6 +8497,122 @@
         "tags": ["Academy"]
       }
     },
+    "/academy/chapters/{chapterId}/quiz": {
+      "get": {
+        "description": "Draw up to 10 random questions from the chapter pool (the whole pool if smaller). Correct answers are never included.",
+        "operationId": "AcademyQuizController_getChapterQuiz",
+        "parameters": [
+          {
+            "name": "chapterId",
+            "required": true,
+            "in": "path",
+            "description": "Chapter ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QuizQuestionForTakingResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or academy add-on not active"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get a chapter quiz",
+        "tags": ["Academy"]
+      }
+    },
+    "/academy/chapters/{chapterId}/quiz/submit": {
+      "post": {
+        "description": "Grade a quiz submission against the chapter pass threshold, record progress and, when the whole academy is passed, stamp completion. Unlimited retries.",
+        "operationId": "AcademyQuizController_submitChapterQuiz",
+        "parameters": [
+          {
+            "name": "chapterId",
+            "required": true,
+            "in": "path",
+            "description": "Chapter ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitQuizRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuizResultResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or academy add-on not active"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Submit a chapter quiz",
+        "tags": ["Academy"]
+      }
+    },
+    "/academy/progress": {
+      "get": {
+        "description": "Get the current user per-chapter pass state and the whole-academy completion date.",
+        "operationId": "AcademyQuizController_getProgress",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademyProgressResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or academy add-on not active"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get academy progress",
+        "tags": ["Academy"]
+      }
+    },
     "/super-admin/academy/chapters": {
       "get": {
         "description": "Retrieve all chapters with nested modules, ordered by position. Only accessible to super admins.",
@@ -15991,6 +16107,11 @@
             "description": "Whether a quiz is activated for this chapter (shown at chapter end)",
             "example": false
           },
+          "passThreshold": {
+            "type": "integer",
+            "description": "Percentage of correct answers required to pass this chapter quiz",
+            "example": 80
+          },
           "courseModules": {
             "description": "The modules of the chapter, ordered by position",
             "type": "array",
@@ -16015,10 +16136,160 @@
           "description",
           "position",
           "quizEnabled",
+          "passThreshold",
           "courseModules",
           "createdAt",
           "updatedAt"
         ]
+      },
+      "QuizAnswerOptionForTakingResponseDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The answer option text",
+            "example": "A large language model"
+          }
+        },
+        "required": ["text"]
+      },
+      "QuizQuestionForTakingResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The unique identifier of the question"
+          },
+          "text": {
+            "type": "string",
+            "description": "The question prompt",
+            "example": "What is an LLM?"
+          },
+          "options": {
+            "description": "The answer options, without indicating the correct one",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuizAnswerOptionForTakingResponseDto"
+            }
+          }
+        },
+        "required": ["id", "text", "options"]
+      },
+      "SubmitQuizAnswerDto": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The id of the answered question"
+          },
+          "selectedOptionIndex": {
+            "type": "integer",
+            "description": "The 0-based index of the selected answer option",
+            "example": 0
+          }
+        },
+        "required": ["questionId", "selectedOptionIndex"]
+      },
+      "SubmitQuizRequestDto": {
+        "type": "object",
+        "properties": {
+          "answers": {
+            "description": "One answer per drawn question",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubmitQuizAnswerDto"
+            }
+          }
+        },
+        "required": ["answers"]
+      },
+      "QuizResultResponseDto": {
+        "type": "object",
+        "properties": {
+          "passed": {
+            "type": "boolean",
+            "description": "Whether the attempt met the chapter pass threshold"
+          },
+          "correctCount": {
+            "type": "integer",
+            "description": "Number of questions answered correctly",
+            "example": 8
+          },
+          "totalCount": {
+            "type": "integer",
+            "description": "Number of questions in the attempt",
+            "example": 10
+          },
+          "requiredCount": {
+            "type": "integer",
+            "description": "Number of correct answers required to pass",
+            "example": 8
+          },
+          "score": {
+            "type": "integer",
+            "description": "Score as a percentage of correct answers",
+            "example": 80
+          },
+          "academyCompleted": {
+            "type": "boolean",
+            "description": "Whether passing this chapter completed the whole academy for the user"
+          }
+        },
+        "required": [
+          "passed",
+          "correctCount",
+          "totalCount",
+          "requiredCount",
+          "score",
+          "academyCompleted"
+        ]
+      },
+      "ChapterProgressResponseDto": {
+        "type": "object",
+        "properties": {
+          "chapterId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The chapter this progress refers to"
+          },
+          "passed": {
+            "type": "boolean",
+            "description": "Whether the learner has passed this chapter quiz"
+          },
+          "lastScore": {
+            "type": "integer",
+            "description": "Score of the most recent attempt, as a percentage",
+            "example": 80
+          },
+          "lastPassedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "When the chapter was most recently passed, if ever"
+          }
+        },
+        "required": ["chapterId", "passed", "lastScore", "lastPassedAt"]
+      },
+      "AcademyProgressResponseDto": {
+        "type": "object",
+        "properties": {
+          "chapters": {
+            "description": "Per-chapter progress for the current user",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChapterProgressResponseDto"
+            }
+          },
+          "academyCompletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "When the user last completed the whole academy, or null if never"
+          }
+        },
+        "required": ["chapters", "academyCompletedAt"]
       },
       "QuizAnswerOptionResponseDto": {
         "type": "object",
@@ -16115,6 +16386,11 @@
             "description": "Whether a quiz is activated for this chapter (shown at chapter end)",
             "example": false
           },
+          "passThreshold": {
+            "type": "integer",
+            "description": "Percentage of correct answers required to pass this chapter quiz",
+            "example": 80
+          },
           "courseModules": {
             "description": "The modules of the chapter, ordered by position",
             "type": "array",
@@ -16146,6 +16422,7 @@
           "description",
           "position",
           "quizEnabled",
+          "passThreshold",
           "courseModules",
           "createdAt",
           "updatedAt",
@@ -16203,6 +16480,13 @@
             "type": "boolean",
             "description": "Whether a quiz is activated for this chapter",
             "example": false
+          },
+          "passThreshold": {
+            "type": "number",
+            "description": "Percentage of correct answers required to pass this chapter quiz",
+            "example": 80,
+            "minimum": 1,
+            "maximum": 100
           }
         },
         "required": ["title", "description"]
