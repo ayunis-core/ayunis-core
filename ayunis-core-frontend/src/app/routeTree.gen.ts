@@ -60,6 +60,7 @@ import { Route as AuthenticatedAdminSettingsLetterheadsIndexRouteImport } from '
 import { Route as AuthenticatedSuperAdminSettingsOrgsIdRouteImport } from './routes/_authenticated/super-admin-settings.orgs.$id'
 import { Route as AuthenticatedAdminSettingsTeamsIdRouteImport } from './routes/_authenticated/admin-settings.teams.$id'
 import { Route as AuthenticatedAdminSettingsLetterheadsIdRouteImport } from './routes/_authenticated/admin-settings.letterheads.$id'
+import { Route as AuthenticatedAcademyChapterIdQuizRouteImport } from './routes/_authenticated/academy.$chapterId_.quiz'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -353,6 +354,12 @@ const AuthenticatedAdminSettingsLetterheadsIdRoute =
     path: '/admin-settings/letterheads/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAcademyChapterIdQuizRoute =
+  AuthenticatedAcademyChapterIdQuizRouteImport.update({
+    id: '/academy/$chapterId_/quiz',
+    path: '/academy/$chapterId/quiz',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -392,6 +399,7 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/skills/': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
+  '/academy/$chapterId/quiz': typeof AuthenticatedAcademyChapterIdQuizRoute
   '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
@@ -444,6 +452,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/skills': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsIndexRoute
+  '/academy/$chapterId/quiz': typeof AuthenticatedAcademyChapterIdQuizRoute
   '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
@@ -498,6 +507,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/skills/': typeof AuthenticatedSkillsIndexRoute
   '/_authenticated/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
+  '/_authenticated/academy/$chapterId_/quiz': typeof AuthenticatedAcademyChapterIdQuizRoute
   '/_authenticated/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/_authenticated/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/_authenticated/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
@@ -552,6 +562,7 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/skills/'
     | '/super-admin-settings/'
+    | '/academy/$chapterId/quiz'
     | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
@@ -604,6 +615,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/skills'
     | '/super-admin-settings'
+    | '/academy/$chapterId/quiz'
     | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
@@ -657,6 +669,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/'
     | '/_authenticated/skills/'
     | '/_authenticated/super-admin-settings/'
+    | '/_authenticated/academy/$chapterId_/quiz'
     | '/_authenticated/admin-settings/letterheads/$id'
     | '/_authenticated/admin-settings/teams/$id'
     | '/_authenticated/super-admin-settings/orgs/$id'
@@ -1045,6 +1058,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsLetterheadsIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/academy/$chapterId_/quiz': {
+      id: '/_authenticated/academy/$chapterId_/quiz'
+      path: '/academy/$chapterId/quiz'
+      fullPath: '/academy/$chapterId/quiz'
+      preLoaderRoute: typeof AuthenticatedAcademyChapterIdQuizRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -1076,6 +1096,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedSkillsIndexRoute: typeof AuthenticatedSkillsIndexRoute
   AuthenticatedSuperAdminSettingsIndexRoute: typeof AuthenticatedSuperAdminSettingsIndexRoute
+  AuthenticatedAcademyChapterIdQuizRoute: typeof AuthenticatedAcademyChapterIdQuizRoute
   AuthenticatedAdminSettingsLetterheadsIdRoute: typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   AuthenticatedAdminSettingsTeamsIdRoute: typeof AuthenticatedAdminSettingsTeamsIdRoute
   AuthenticatedSuperAdminSettingsOrgsIdRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
@@ -1127,6 +1148,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSkillsIndexRoute: AuthenticatedSkillsIndexRoute,
   AuthenticatedSuperAdminSettingsIndexRoute:
     AuthenticatedSuperAdminSettingsIndexRoute,
+  AuthenticatedAcademyChapterIdQuizRoute:
+    AuthenticatedAcademyChapterIdQuizRoute,
   AuthenticatedAdminSettingsLetterheadsIdRoute:
     AuthenticatedAdminSettingsLetterheadsIdRoute,
   AuthenticatedAdminSettingsTeamsIdRoute:
