@@ -7,16 +7,16 @@ import {
 } from '@/shared/ui/shadcn/tooltip';
 import { useTranslation } from 'react-i18next';
 import { TOUR_TARGET, OnboardingTourTarget } from '@/widgets/onboarding';
+import { cn } from '@/shared/lib/shadcn/utils';
 
 interface SendButtonProps {
+  /** True while a submit is in flight (submitting or streaming). Replaces
+   *  the send icon with a stop icon wired to {@link onCancel}. */
   inFlight: boolean;
   canSend: boolean;
   onSend: () => void;
   onCancel: () => void;
 }
-
-const brandIconButtonClasses =
-  'rounded-full border border-transparent bg-brand text-brand-foreground hover:bg-brand/90';
 
 export function SendButton({
   inFlight,
@@ -33,7 +33,9 @@ export function SendButton({
           <div>
             <Button
               size="icon"
-              className={brandIconButtonClasses}
+              className={cn(
+                'chat-input-send-button chat-input-send-button--stop rounded-full',
+              )}
               onClick={onCancel}
               aria-label={t('chatInput.cancelTooltip')}
             >
@@ -53,7 +55,12 @@ export function SendButton({
           <OnboardingTourTarget name={TOUR_TARGET.sendMessage} settleMs={900}>
             <Button
               disabled={!canSend}
-              className={brandIconButtonClasses}
+              className={cn(
+                'chat-input-send-button rounded-full',
+                canSend
+                  ? 'chat-input-send-button--ready'
+                  : 'chat-input-send-button--disabled',
+              )}
               size="icon"
               data-testid="send"
               onClick={onSend}

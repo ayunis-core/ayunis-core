@@ -26,8 +26,9 @@ import { useFileDrop } from '../hooks/useFileDrop';
 import { PendingImageThumbnail } from './PendingImageThumbnail';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { SourcesList } from './SourcesList';
-import { ScrollFadeContainer } from './ScrollFadeContainer';
+import { ChatInputExpandable } from './ChatInputExpandable';
 import { showError } from '@/shared/lib/toast';
+import './chat-input-glow.css';
 import { MicrophoneButton } from './MicrophoneButton';
 import type {
   IntegrationSummary,
@@ -142,7 +143,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const [isFocused, setIsFocused] = useState<boolean>(false);
     const [message, setMessage] = useState(initialMessage ?? '');
     const isSubmitting = submissionState === 'submitting';
+    const isStreaming = submissionState === 'streaming';
     const inFlight = submissionState !== 'idle';
+    const showProcessingGlow = inFlight;
     const { t } = useTranslation('common');
     const containerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -253,6 +256,12 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       !inFlight &&
       !isSendDisabled;
 
+    const hasAttachmentChips =
+      sources.length > 0 ||
+      (knowledgeBases?.length ?? 0) > 0 ||
+      (mcpIntegrations?.length ?? 0) > 0;
+    const hasPendingImages = pendingImages.length > 0;
+
     function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
       // Ensure emojis are preserved when pasting
       // Get the pasted text from clipboard
@@ -288,136 +297,164 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         className="w-full space-y-2"
         data-testid="chat-input"
       >
-        <Card
+        <div
           className={cn(
-            'py-4',
-            isDragging && 'border-2 border-dashed border-primary bg-primary/5',
+            'chat-input-shell',
+            showProcessingGlow && 'chat-input-shell--active',
           )}
+          aria-busy={showProcessingGlow}
+          data-processing={showProcessingGlow ? 'true' : undefined}
         >
-          <CardContent className="px-4">
-            <div className="flex flex-col gap-4">
-              <SourcesList
-                sources={sources}
-                knowledgeBases={knowledgeBases}
-                mcpIntegrations={mcpIntegrations}
-                onRemove={onRemoveSource}
-                onRemoveKnowledgeBase={onRemoveKnowledgeBase}
-                onRemoveIntegration={onRemoveIntegration}
-                onDownload={onDownloadSource}
-              />
-
-              {pendingImages.length > 0 && (
-                <ScrollFadeContainer>
-                  {pendingImages.map((image: PendingImage) => (
-                    <PendingImageThumbnail
-                      key={image.id}
-                      image={image}
-                      onRemove={removeImage}
-                    />
-                  ))}
-                </ScrollFadeContainer>
-              )}
-
-              <TextareaAutosize
-                ref={textareaRef}
-                maxRows={10}
-                value={message}
-                autoFocus
-                readOnly={isSubmitting}
-                onChange={(e) => setMessage(e.target.value)}
-                onPaste={handlePaste}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                placeholder={t('chatInput.placeholder')}
-                aria-label={t('chatInput.placeholder')}
-                className={cn(
-                  'border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0',
-                  isSubmitting && 'opacity-60 cursor-not-allowed',
-                )}
-                data-testid="input"
-              />
-
-              <div className="flex items-center justify-between">
-                {/* Left side */}
-                <div className="flex-shrink-0 flex items-center space-x-2">
-                  <OnboardingTourTarget
-                    name={TOUR_TARGET.chatUpload}
-                    settleMs={900}
-                  >
-                    <PlusButton
-                      onFileUpload={onFileUpload}
-                      onImageSelect={handleImageSelect}
-                      isFileSourceDisabled={
-                        !isEmbeddingModelEnabled || isSubmitting
-                      }
-                      isImageUploadDisabled={!isVisionEnabled || isSubmitting}
-                      onKnowledgeBaseSelect={onAddKnowledgeBase}
-                      attachedKnowledgeBaseIds={knowledgeBases?.map(
-                        (kb) => kb.id,
-                      )}
-                      onIntegrationSelect={onAddIntegration}
-                      attachedIntegrationIds={mcpIntegrations?.map(
-                        (integration) => integration.id,
-                      )}
-                    />
-                  </OnboardingTourTarget>
-                  <OnboardingTourTarget
-                    name={TOUR_TARGET.anonymousMode}
-                    settleMs={900}
-                  >
-                    <AnonymousButton
-                      isAnonymous={isAnonymous}
-                      onAnonymousChange={onAnonymousChange}
-                      isDisabled={isAnonymousChangeDisabled}
-                      isEnforced={isAnonymousEnforced}
-                    />
-                  </OnboardingTourTarget>
-                  {selectedSkillId && selectedSkillName && onSkillRemove && (
-                    <SkillBadge
-                      skillName={selectedSkillName}
-                      onRemove={() => onSkillRemove()}
-                    />
-                  )}
-                </div>
-
-                <div className="flex-shrink-0 flex space-x-2">
-                  <TooltipIf
-                    condition={isModelChangeDisabled ?? false}
-                    tooltip={t('chatInput.modelChangeDisabledTooltip')}
-                  >
-                    <OnboardingTourTarget name={TOUR_TARGET.modelSelector}>
-                      <ModelSelector
-                        isDisabled={isModelChangeDisabled ?? false}
-                        selectedModelId={modelId}
-                        onModelChange={onModelChange}
-                      />
-                    </OnboardingTourTarget>
-                  </TooltipIf>
-                  <MicrophoneButton
-                    onTranscriptionComplete={(text) => {
-                      setMessage((prev) => (prev ? `${prev} ${text}` : text));
-                      // Focus textarea and place cursor at end after transcription
-                      setTimeout(() => {
-                        const textarea = textareaRef.current;
-                        if (textarea) {
-                          textarea.focus();
-                          const length = textarea.value.length;
-                          textarea.setSelectionRange(length, length);
-                        }
-                      }, 0);
-                    }}
-                  />
-                  <SendButton
-                    inFlight={inFlight}
-                    canSend={!!canSend}
-                    onSend={handleSend}
-                    onCancel={onCancel}
-                  />
-                </div>
+          {showProcessingGlow && (
+            <div className="chat-input-shell__glow" aria-hidden="true">
+              <div className="chat-input-shell__glow-spinner">
+                <div className="chat-input-shell__glow-arc" />
+                <div className="chat-input-shell__glow-bloom" />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          )}
+          <Card
+            className={cn(
+              'chat-input-shell__card py-4',
+              isDragging &&
+                'border-2 border-dashed border-primary bg-primary/5',
+              showProcessingGlow && !isDragging && 'bg-card',
+            )}
+          >
+            <CardContent className="px-4">
+              <div className="chat-input-body flex flex-col gap-4">
+                {hasAttachmentChips && (
+                  <ChatInputExpandable show>
+                    <SourcesList
+                      sources={sources}
+                      knowledgeBases={knowledgeBases}
+                      mcpIntegrations={mcpIntegrations}
+                      onRemove={onRemoveSource}
+                      onRemoveKnowledgeBase={onRemoveKnowledgeBase}
+                      onRemoveIntegration={onRemoveIntegration}
+                      onDownload={onDownloadSource}
+                    />
+                  </ChatInputExpandable>
+                )}
+
+                {hasPendingImages && (
+                  <ChatInputExpandable show>
+                    <div className="flex flex-wrap gap-2 items-center pt-0">
+                      {pendingImages.map((image: PendingImage) => (
+                        <PendingImageThumbnail
+                          key={image.id}
+                          image={image}
+                          onRemove={removeImage}
+                        />
+                      ))}
+                    </div>
+                  </ChatInputExpandable>
+                )}
+
+                <TextareaAutosize
+                  ref={textareaRef}
+                  minRows={1}
+                  maxRows={10}
+                  value={message}
+                  autoFocus
+                  readOnly={isSubmitting}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onPaste={handlePaste}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  placeholder={t('chatInput.placeholder')}
+                  aria-label={t('chatInput.placeholder')}
+                  className={cn(
+                    'chat-input-shell__textarea border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0',
+                    showProcessingGlow && 'opacity-90',
+                    isSubmitting && 'cursor-not-allowed',
+                    isStreaming && 'cursor-text',
+                  )}
+                  data-testid="input"
+                />
+
+                <div className="flex items-center justify-between">
+                  {/* Left side */}
+                  <div className="flex-shrink-0 flex items-center space-x-2">
+                    <OnboardingTourTarget
+                      name={TOUR_TARGET.chatUpload}
+                      settleMs={900}
+                    >
+                      <PlusButton
+                        onFileUpload={onFileUpload}
+                        onImageSelect={handleImageSelect}
+                        isFileSourceDisabled={
+                          !isEmbeddingModelEnabled || isSubmitting
+                        }
+                        isImageUploadDisabled={!isVisionEnabled || isSubmitting}
+                        onKnowledgeBaseSelect={onAddKnowledgeBase}
+                        attachedKnowledgeBaseIds={knowledgeBases?.map(
+                          (kb) => kb.id,
+                        )}
+                        onIntegrationSelect={onAddIntegration}
+                        attachedIntegrationIds={mcpIntegrations?.map(
+                          (integration) => integration.id,
+                        )}
+                      />
+                    </OnboardingTourTarget>
+                    <OnboardingTourTarget
+                      name={TOUR_TARGET.anonymousMode}
+                      settleMs={900}
+                    >
+                      <AnonymousButton
+                        isAnonymous={isAnonymous}
+                        onAnonymousChange={onAnonymousChange}
+                        isDisabled={isAnonymousChangeDisabled}
+                        isEnforced={isAnonymousEnforced}
+                      />
+                    </OnboardingTourTarget>
+                    {selectedSkillId && selectedSkillName && onSkillRemove && (
+                      <SkillBadge
+                        skillName={selectedSkillName}
+                        onRemove={() => onSkillRemove()}
+                      />
+                    )}
+                  </div>
+
+                  <div className="flex-shrink-0 flex space-x-2">
+                    <TooltipIf
+                      condition={isModelChangeDisabled ?? false}
+                      tooltip={t('chatInput.modelChangeDisabledTooltip')}
+                    >
+                      <OnboardingTourTarget name={TOUR_TARGET.modelSelector}>
+                        <ModelSelector
+                          isDisabled={isModelChangeDisabled ?? false}
+                          selectedModelId={modelId}
+                          onModelChange={onModelChange}
+                        />
+                      </OnboardingTourTarget>
+                    </TooltipIf>
+                    <MicrophoneButton
+                      onTranscriptionComplete={(text) => {
+                        setMessage((prev) => (prev ? `${prev} ${text}` : text));
+                        // Focus textarea and place cursor at end after transcription
+                        setTimeout(() => {
+                          const textarea = textareaRef.current;
+                          if (textarea) {
+                            textarea.focus();
+                            const length = textarea.value.length;
+                            textarea.setSelectionRange(length, length);
+                          }
+                        }, 0);
+                      }}
+                    />
+                    <SendButton
+                      inFlight={inFlight}
+                      canSend={!!canSend}
+                      onSend={handleSend}
+                      onCancel={onCancel}
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   },

@@ -25,6 +25,14 @@ import type { SourceResponseDtoType } from '@/shared/api';
 const PROCESSING_POLL_INTERVAL_MS = 500;
 const PROCESSING_TIMEOUT_MS = 180_000;
 const UPLOAD_TIMEOUT_MS = 60_000;
+/** Compose slide duration (matches --new-chat-settle-duration in CSS) */
+const NEW_CHAT_SETTLE_MS = 1450;
+/** Disclaimer soft fade after slide (matches --new-chat-disclaimer-fade-duration) */
+const NEW_CHAT_DISCLAIMER_FADE_MS = 900;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 interface PendingSource {
   id: string;
@@ -86,11 +94,34 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
   const queryClient = useQueryClient();
   const createThreadMutation = useThreadsControllerCreate();
   const [isAttachingResources, setIsAttachingResources] = useState(false);
+  const [isSettlingLayout, setIsSettlingLayout] = useState(false);
+  const settleStartedAtRef = useRef<number | null>(null);
 
   // Cancellation flag is a ref because we want `cancel()` to flip it
   // synchronously and have any in-flight pipeline observe it on the next
   // checkpoint, without dragging it through the dependency graph.
   const cancelledRef = useRef(false);
+
+  function beginSettleAnimation(): void {
+    settleStartedAtRef.current = Date.now();
+    setIsSettlingLayout(true);
+  }
+
+  function endSettleAnimation(): void {
+    settleStartedAtRef.current = null;
+    setIsSettlingLayout(false);
+  }
+
+  async function waitForSettleAnimation(): Promise<void> {
+    const startedAt = settleStartedAtRef.current;
+    if (startedAt === null) return;
+    const elapsed = Date.now() - startedAt;
+    const totalMs = NEW_CHAT_SETTLE_MS + NEW_CHAT_DISCLAIMER_FADE_MS + 80;
+    const remaining = totalMs - elapsed;
+    if (remaining > 0) {
+      await sleep(remaining);
+    }
+  }
 
   async function uploadOneSource(
     threadId: string,
@@ -186,6 +217,7 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
     onSourceStatus,
   }: InitiateChatParams): Promise<void> {
     cancelledRef.current = false;
+    beginSettleAnimation();
     const isCancelled = () => cancelledRef.current;
 
     let thread;
@@ -200,16 +232,20 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
     } catch (error) {
       console.error('Failed to create thread:', error);
       showError(t('chat.errorSendMessage'));
+      endSettleAnimation();
       return;
     }
-    if (isCancelled()) return;
+    if (isCancelled()) {
+      endSettleAnimation();
+      return;
+    }
 
     if (
       sources.length === 0 &&
       knowledgeBases.length === 0 &&
       mcpIntegrations.length === 0
     ) {
-      finalizeAndNavigate(thread.id, message);
+      await finalizeAndNavigate(thread.id, message);
       return;
     }
 
@@ -217,14 +253,21 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
     try {
       if (sources.length > 0) {
         const ok = await uploadAllSources(thread.id, sources, onSourceStatus);
-        if (!ok || isCancelled()) return;
+        if (!ok || isCancelled()) {
+          endSettleAnimation();
+          return;
+        }
 
         try {
           await waitForSourcesProcessed(thread.id, isCancelled);
         } catch (error) {
-          if (error instanceof CancelledError) return;
+          if (error instanceof CancelledError) {
+            endSettleAnimation();
+            return;
+          }
           console.error('Source processing failed or timed out:', error);
           showError(tCommon('sources.fileSourceTimeoutError'));
+          endSettleAnimation();
           return;
         }
       }
@@ -234,22 +277,45 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
         knowledgeBases,
         isCancelled,
       );
-      if (!kbOk || isCancelled()) return;
+      if (!kbOk || isCancelled()) {
+        endSettleAnimation();
+        return;
+      }
 
       const integrationsOk = await attachIntegrations(
         thread.id,
         mcpIntegrations,
         isCancelled,
       );
-      if (!integrationsOk || isCancelled()) return;
+      if (!integrationsOk || isCancelled()) {
+        endSettleAnimation();
+        return;
+      }
 
-      finalizeAndNavigate(thread.id, message);
+      await finalizeAndNavigate(thread.id, message);
     } finally {
       setIsAttachingResources(false);
     }
   }
 
-  function finalizeAndNavigate(threadId: string, message: string) {
+  async function finalizeAndNavigate(
+    threadId: string,
+    message: string,
+  ): Promise<void> {
+    if (cancelledRef.current) {
+      endSettleAnimation();
+      return;
+    }
+
+    await waitForSettleAnimation();
+
+    // Cancel may fire while the settle animation is running.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ref toggled from cancel()
+    if (cancelledRef.current) {
+      endSettleAnimation();
+      return;
+    }
+
     void queryClient.invalidateQueries({
       queryKey: getThreadsControllerFindAllQueryKey(),
     });
@@ -258,18 +324,25 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
     });
     setPendingMessage(message);
     options?.onSuccess?.();
+
+    // Keep settling state until unmount — avoids snapping back to --idle transform.
+    // No view transition: positions are aligned manually; morph caused the end snap.
     void navigate({ to: '/chats/$threadId', params: { threadId } });
   }
 
   function cancel() {
     cancelledRef.current = true;
     setIsAttachingResources(false);
+    endSettleAnimation();
   }
 
   return {
     initiateChat,
     cancel,
-    isCreating: createThreadMutation.isPending || isAttachingResources,
+    isCreating:
+      isSettlingLayout ||
+      createThreadMutation.isPending ||
+      isAttachingResources,
     error: createThreadMutation.error,
   };
 };

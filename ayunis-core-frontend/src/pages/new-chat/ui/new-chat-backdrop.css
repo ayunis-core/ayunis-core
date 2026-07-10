@@ -1,5 +1,7 @@
 .new-chat-backdrop {
   --new-chat-backdrop-scale: 0.58;
+  --new-chat-backdrop-exit-duration: 1.3s;
+  --new-chat-backdrop-exit-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   --backdrop-blob-color: var(--brand);
 
@@ -37,6 +39,12 @@
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  opacity: 1;
+  transition:
+    opacity var(--new-chat-backdrop-exit-duration)
+      var(--new-chat-backdrop-exit-ease),
+    transform var(--new-chat-backdrop-exit-duration)
+      var(--new-chat-backdrop-exit-ease);
   animation: newChatBackdropAppear 1.8s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
   background: linear-gradient(
     180deg,
@@ -50,6 +58,18 @@
       68%,
     color-mix(in oklab, var(--brand) 13%, var(--background)) 100%
   );
+}
+
+/* animation: none lets the exit transition win over the appear animation
+   even when the user sends before the entrance has finished */
+.new-chat-backdrop--exiting .new-chat-backdrop__canvas {
+  animation: none;
+  opacity: 0;
+  transform: translate3d(0, 18%, 0);
+}
+
+.new-chat-backdrop--exiting .new-chat-backdrop__blob {
+  animation-play-state: paused !important;
 }
 
 @keyframes newChatBackdropAppear {
@@ -175,6 +195,12 @@
 @media (prefers-reduced-motion: reduce) {
   .new-chat-backdrop__canvas {
     animation: none;
+    transition: none;
+  }
+
+  .new-chat-backdrop--exiting .new-chat-backdrop__canvas {
+    opacity: 0;
+    transform: none;
   }
 
   .new-chat-backdrop__blob {

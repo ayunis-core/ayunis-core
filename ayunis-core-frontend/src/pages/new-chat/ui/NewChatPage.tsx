@@ -1,11 +1,12 @@
 import { Lock } from 'lucide-react';
-import NewChatPageLayout from './NewChatPageLayout';
+import NewChatPageLayout, { type NewChatMistPhase } from './NewChatPageLayout';
 import ChatInput, { type ChatInputRef } from '@/widgets/chat-input';
+import { cn } from '@/shared/lib/shadcn/utils';
 import {
   useInitiateChat,
   type SourceUploadStatus,
 } from '../api/useInitiateChat';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
@@ -110,6 +111,11 @@ export default function NewChatPage({
   >([]);
   const [selectedSkillId, setSelectedSkillId] = useState<string>();
   const [selectedSkillName, setSelectedSkillName] = useState<string>();
+  const [mistPhase, setMistPhase] = useState<NewChatMistPhase>('idle');
+
+  const handleMistExitComplete = useCallback(() => {
+    setMistPhase('hidden');
+  }, []);
   const selectedModel = models.find((m) => m.id === modelId);
 
   const isAnonymousEnforced = selectedModel?.anonymousOnly ?? false;
@@ -166,6 +172,8 @@ export default function NewChatPage({
       return;
     }
 
+    setMistPhase((current) => (current === 'idle' ? 'exiting' : current));
+
     setPendingImages(imageFiles && imageFiles.length > 0 ? imageFiles : []);
     setPendingSkillId(skillId);
 
@@ -213,66 +221,103 @@ export default function NewChatPage({
 
   return (
     <NewChatPageLayout
+      isSettling={isCreating}
+      mistPhase={mistPhase}
+      onMistExitComplete={handleMistExitComplete}
       header={
         <ContentAreaHeader
           breadcrumbs={[{ label: t('newChat.newChat') }]}
           action={<HelpLink path="" />}
         />
       }
-    >
-      <div className="text-center">
-        <h1 className="text-2xl font-bold">{greeting}</h1>
-      </div>
-      <div className="w-full flex flex-col gap-4 mt-2">
-        <ChatInput
-          ref={chatInputRef}
-          modelId={modelId}
-          sources={sources}
-          knowledgeBases={selectedKnowledgeBases}
-          mcpIntegrations={selectedIntegrations}
-          submissionState={isCreating ? 'submitting' : 'idle'}
-          onModelChange={handleModelChange}
-          onSend={handleSend}
-          onCancel={handleCancel}
-          onFileUpload={handleFileUpload}
-          onRemoveSource={handleRemoveSource}
-          onDownloadSource={() => null}
-          onAddKnowledgeBase={(kb) => {
-            setSelectedKnowledgeBases((prev) => [...prev, kb]);
-          }}
-          onRemoveKnowledgeBase={(kbId) => {
-            setSelectedKnowledgeBases((prev) =>
-              prev.filter((kb) => kb.id !== kbId),
-            );
-          }}
-          onAddIntegration={(integration) => {
-            setSelectedIntegrations((prev) => [...prev, integration]);
-          }}
-          onRemoveIntegration={(integrationId) => {
-            setSelectedIntegrations((prev) =>
-              prev.filter((integration) => integration.id !== integrationId),
-            );
-          }}
-          isEmbeddingModelEnabled={isEmbeddingModelEnabled}
-          isAnonymous={isAnonymous}
-          onAnonymousChange={setIsAnonymous}
-          isAnonymousEnforced={isAnonymousEnforced}
-          isVisionEnabled={isVisionEnabled}
-          selectedSkillId={selectedSkillId}
-          selectedSkillName={selectedSkillName}
-          onSkillRemove={handleSkillRemove}
-        />
-        <OnboardingTourTarget name={TOUR_TARGET.pinnedSkills} settleMs={900}>
-          <PinnedSkills
-            onSkillSelect={handleSkillSelect}
-            selectedSkillId={selectedSkillId}
-          />
-        </OnboardingTourTarget>
-        <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
-          <Lock className="h-3 w-3" />
-          <span>{t('newChat.privacyHint')}</span>
-        </div>
-      </div>
-    </NewChatPageLayout>
+      compose={
+        <>
+          <h1
+            className={cn(
+              'new-chat-greeting text-center text-2xl font-bold',
+              isCreating && 'new-chat-greeting--exit',
+            )}
+            aria-hidden={isCreating}
+          >
+            {greeting}
+          </h1>
+
+          <div className="new-chat-input-stack relative w-full">
+            <p
+              className={cn(
+                'new-chat-disclaimer absolute bottom-full left-0 right-0 mb-2 text-center text-xs text-muted-foreground',
+                isCreating && 'new-chat-disclaimer--visible',
+              )}
+              aria-hidden={!isCreating}
+            >
+              {t('chat.inputDisclaimer')}
+            </p>
+
+            <ChatInput
+              ref={chatInputRef}
+              modelId={modelId}
+              sources={sources}
+              knowledgeBases={selectedKnowledgeBases}
+              mcpIntegrations={selectedIntegrations}
+              submissionState={isCreating ? 'submitting' : 'idle'}
+              onModelChange={handleModelChange}
+              onSend={handleSend}
+              onCancel={handleCancel}
+              onFileUpload={handleFileUpload}
+              onRemoveSource={handleRemoveSource}
+              onDownloadSource={() => null}
+              onAddKnowledgeBase={(kb) => {
+                setSelectedKnowledgeBases((prev) => [...prev, kb]);
+              }}
+              onRemoveKnowledgeBase={(kbId) => {
+                setSelectedKnowledgeBases((prev) =>
+                  prev.filter((kb) => kb.id !== kbId),
+                );
+              }}
+              onAddIntegration={(integration) => {
+                setSelectedIntegrations((prev) => [...prev, integration]);
+              }}
+              onRemoveIntegration={(integrationId) => {
+                setSelectedIntegrations((prev) =>
+                  prev.filter(
+                    (integration) => integration.id !== integrationId,
+                  ),
+                );
+              }}
+              isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+              isAnonymous={isAnonymous}
+              onAnonymousChange={setIsAnonymous}
+              isAnonymousEnforced={isAnonymousEnforced}
+              isVisionEnabled={isVisionEnabled}
+              selectedSkillId={selectedSkillId}
+              selectedSkillName={selectedSkillName}
+              onSkillRemove={handleSkillRemove}
+            />
+          </div>
+
+          <div
+            className={cn(
+              'new-chat-dock-extras mt-4 flex flex-col gap-4 overflow-hidden',
+              isCreating && 'new-chat-dock-extras--collapsed',
+            )}
+            aria-hidden={isCreating}
+          >
+            <OnboardingTourTarget
+              name={TOUR_TARGET.pinnedSkills}
+              settleMs={900}
+            >
+              <PinnedSkills
+                onSkillSelect={handleSkillSelect}
+                selectedSkillId={selectedSkillId}
+              />
+            </OnboardingTourTarget>
+            <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
+              <Lock className="h-3 w-3 shrink-0" />
+              <span>{t('newChat.privacyHint')}</span>
+            </div>
+          </div>
+        </>
+      }
+    />
   );
 }

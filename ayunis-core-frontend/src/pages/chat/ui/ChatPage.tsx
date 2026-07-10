@@ -1,10 +1,8 @@
 import { useState, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
-import ChatMessage from '@/pages/chat/ui/ChatMessage';
-import AssistantRunBlock from '@/pages/chat/ui/AssistantRunBlock';
-import LoadingAssistantBlock from '@/pages/chat/ui/LoadingAssistantBlock';
+import { ChatThreadContent } from '@/pages/chat/ui/ChatThreadContent';
 import { groupMessagesIntoRuns } from '@/pages/chat/ui/agent-run-timeline';
-import ChatInput from '@/widgets/chat-input';
+import ChatInput, { getChatInputSubmissionState } from '@/widgets/chat-input';
 import { useMessageSend } from '../api/useMessageSend';
 import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
@@ -373,44 +371,26 @@ export default function ChatPage({
       groupMessagesIntoRuns(sortedMessages, {
         isStreaming,
         toolResultsByToolId,
+        hasPendingUserTurn: pendingSubmission !== null,
       }),
-    [sortedMessages, isStreaming, toolResultsByToolId],
+    [sortedMessages, isStreaming, toolResultsByToolId, pendingSubmission],
   );
 
   const lastUnitKind =
     renderUnits.length > 0
       ? renderUnits[renderUnits.length - 1].kind
       : undefined;
-  const showPendingUserBubble = pendingSubmission !== null;
   const showLoadingPlaceholder =
     pendingSubmission !== null || (isStreaming && lastUnitKind === 'user');
 
   const chatContent = (
-    <div className="p-4 pb-8">
-      {renderUnits.map((unit, i) => {
-        if (unit.kind === 'user') {
-          return <ChatMessage key={unit.key} message={unit.message} />;
-        }
-        const previousUnit = i > 0 ? renderUnits[i - 1] : undefined;
-        const hideAvatar = previousUnit?.kind === 'agent-run';
-        return (
-          <AssistantRunBlock
-            key={unit.key}
-            unit={unit}
-            hideAvatar={hideAvatar}
-            threadId={thread.id}
-            onOpenArtifact={handleOpenArtifact}
-          />
-        );
-      })}
-      {showPendingUserBubble && (
-        <ChatMessage
-          key="pending-user"
-          message={makePendingUserMessage(pendingSubmission)}
-        />
-      )}
-      {showLoadingPlaceholder && <LoadingAssistantBlock />}
-    </div>
+    <ChatThreadContent
+      renderUnits={renderUnits}
+      threadId={thread.id}
+      pendingSubmission={pendingSubmission}
+      showLoadingPlaceholder={showLoadingPlaceholder}
+      onOpenArtifact={handleOpenArtifact}
+    />
   );
 
   // Controls are always disabled — thread already has messages
@@ -430,7 +410,10 @@ export default function ChatPage({
         knowledgeBases={thread.knowledgeBases}
         mcpIntegrations={thread.mcpIntegrations}
         isAnonymous={thread.isAnonymous}
-        submissionState={isStreaming ? 'streaming' : 'idle'}
+        submissionState={getChatInputSubmissionState(
+          isStreaming,
+          pendingSubmission,
+        )}
         isSendDisabled={isSendDisabled}
         onModelChange={() => {}}
         onFileUpload={handleFileUpload}
@@ -488,13 +471,4 @@ export default function ChatPage({
       />
     </AppLayout>
   );
-}
-
-function makePendingUserMessage(text: string): Message {
-  return {
-    id: 'pending-user-message',
-    role: 'user',
-    content: [{ type: 'text', text }],
-    createdAt: new Date().toISOString(),
-  } as unknown as Message;
 }

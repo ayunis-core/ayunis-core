@@ -211,6 +211,21 @@ describe('groupMessagesIntoRuns', () => {
     ]);
   });
 
+  it('does not mark a prior agent-run as streaming while a new user turn is pending', () => {
+    const messages = [
+      userMessage('first'),
+      assistantMessage([{ type: 'text', text: 'reply' }]),
+    ];
+    const units = groupMessagesIntoRuns(messages, {
+      isStreaming: true,
+      toolResultsByToolId: {},
+      hasPendingUserTurn: true,
+    });
+    const run = units[1];
+    if (run.kind !== 'agent-run') throw new Error('expected agent-run');
+    expect(run.isStreaming).toBe(false);
+  });
+
   it('marks only the last agent-run as streaming when isStreaming is true', () => {
     const messages = [
       userMessage('first'),
