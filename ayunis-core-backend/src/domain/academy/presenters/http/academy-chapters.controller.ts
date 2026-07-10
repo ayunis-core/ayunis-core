@@ -27,9 +27,9 @@ export class AcademyChaptersController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Get all academy chapters with their lessons',
+    summary: 'Get all academy chapters with their modules',
     description:
-      'Retrieve all chapters with nested lessons, ordered by position. Requires the academy add-on to be active for the organization.',
+      'Retrieve all chapters with nested modules, ordered by position. Requires the academy add-on to be active for the organization.',
   })
   @ApiOkResponse({
     description: 'Successfully retrieved academy chapters',

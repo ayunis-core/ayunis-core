@@ -2,10 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
 import { ArrayNotEmpty, ArrayUnique, IsArray, IsUUID } from 'class-validator';
 
-export class ReorderLessonsRequestDto {
+export class ReorderCourseModulesRequestDto {
   @ApiProperty({
     description:
-      'All lesson ids of the chapter in their new order. Must contain exactly the ids of all lessons in the chapter.',
+      'All module ids of the chapter in their new order. Must contain exactly the ids of all modules in the chapter.',
     type: 'array',
     items: { type: 'string', format: 'uuid' },
   })
@@ -13,5 +13,5 @@ export class ReorderLessonsRequestDto {
   @ArrayNotEmpty()
   @ArrayUnique()
   @IsUUID(undefined, { each: true })
-  lessonIds: UUID[];
+  courseModuleIds: UUID[];
 }

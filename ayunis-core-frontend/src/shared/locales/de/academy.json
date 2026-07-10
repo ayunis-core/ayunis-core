@@ -11,10 +11,10 @@
     "previous": "Zurück",
     "next": "Weiter",
     "finish": "Abschließen",
-    "lessonsTitle": "Lektionen",
-    "noLessons": {
-      "title": "Noch keine Lektionen",
-      "description": "Dieses Kapitel enthält noch keine Lektionen."
+    "modulesTitle": "Module",
+    "noModules": {
+      "title": "Noch keine Module",
+      "description": "Dieses Kapitel enthält noch keine Module."
     }
   }
 }

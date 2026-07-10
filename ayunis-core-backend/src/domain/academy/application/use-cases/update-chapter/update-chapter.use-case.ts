@@ -28,7 +28,7 @@ export class UpdateChapterUseCase {
         title: command.title,
         description: command.description,
         position: existing.position,
-        lessons: existing.lessons,
+        courseModules: existing.courseModules,
         createdAt: existing.createdAt,
         updatedAt: new Date(),
       });
@@ -38,7 +38,7 @@ export class UpdateChapterUseCase {
         title: persisted.title,
         description: persisted.description,
         position: persisted.position,
-        lessons: existing.lessons,
+        courseModules: existing.courseModules,
         createdAt: persisted.createdAt,
         updatedAt: persisted.updatedAt,
       });
