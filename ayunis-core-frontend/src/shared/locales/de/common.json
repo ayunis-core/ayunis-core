@@ -99,7 +99,8 @@
   },
   "pinnedSkills": {
     "empty": "Keine angehefteten Fähigkeiten",
-    "activateTooltip": "Fähigkeit aktivieren"
+    "activateTooltip": "Fähigkeit aktivieren",
+    "pinHint": "Fähigkeiten für schnellen Zugriff anheften"
   },
   "common": {
     "loading": "Laden...",
