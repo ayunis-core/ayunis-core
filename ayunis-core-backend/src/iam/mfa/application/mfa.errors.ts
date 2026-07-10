@@ -10,6 +10,7 @@ export enum MfaErrorCode {
   MFA_PENDING_TOKEN_INVALID = 'MFA_PENDING_TOKEN_INVALID',
   MFA_ENROLLMENT_NOT_ALLOWED = 'MFA_ENROLLMENT_NOT_ALLOWED',
   MFA_SELF_RESET_NOT_ALLOWED = 'MFA_SELF_RESET_NOT_ALLOWED',
+  UNEXPECTED_MFA_ERROR = 'UNEXPECTED_MFA_ERROR',
 }
 
 export class InvalidMfaCodeError extends ApplicationError {
@@ -100,6 +101,17 @@ export class MfaSelfResetNotAllowedError extends ApplicationError {
       MfaErrorCode.MFA_SELF_RESET_NOT_ALLOWED,
       403,
       metadata,
+    );
+  }
+}
+
+export class UnexpectedMfaError extends ApplicationError {
+  constructor(error: unknown, metadata?: ErrorMetadata) {
+    super(
+      'An unexpected error occurred',
+      MfaErrorCode.UNEXPECTED_MFA_ERROR,
+      500,
+      { error: error instanceof Error ? error.message : String(error), ...metadata },
     );
   }
 }

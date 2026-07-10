@@ -71,19 +71,21 @@ export class LocalUserTotpsRepository extends UserTotpsRepository {
         lockedUntil: null,
       })
       .where('"userId" = :userId', { userId })
-      .andWhere(
-        '("lastUsedCounter" IS NULL OR "lastUsedCounter" < :counter)',
-        { counter },
-      )
+      .andWhere('("lastUsedCounter" IS NULL OR "lastUsedCounter" < :counter)', {
+        counter,
+      })
       .execute();
 
     return result.affected === 1;
   }
 
   async resetFailures(userId: UUID): Promise<void> {
-    await this.repository.update({ userId }, {
-      failedAttempts: 0,
-      lockedUntil: null,
-    });
+    await this.repository.update(
+      { userId },
+      {
+        failedAttempts: 0,
+        lockedUntil: null,
+      },
+    );
   }
 }
