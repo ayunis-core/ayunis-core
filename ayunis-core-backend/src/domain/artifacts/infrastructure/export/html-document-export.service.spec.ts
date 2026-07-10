@@ -242,7 +242,16 @@ describe('HtmlDocumentExportService', () => {
         expect(htmlArg).toContain('55mm');
         expect(htmlArg).toContain('15mm');
         expect(htmlArg).toContain(
-          '@page {\n    margin: 20mm 15mm 20mm 15mm;\n  }',
+          '@page {\n    size: A4;\n    margin: 20mm 15mm 20mm 15mm;\n  }',
+        );
+      });
+
+      it('should declare an explicit A4 page size so preferCSSPageSize keeps A4', async () => {
+        await service.exportToPdf('<p>Hello</p>', letterheadConfig);
+
+        const htmlArg = mockPage.setContent.mock.calls[0][0] as string;
+        expect(htmlArg).toContain(
+          '@page :first {\n    size: A4;\n    margin: 55mm 15mm 20mm 15mm;\n  }',
         );
       });
 
