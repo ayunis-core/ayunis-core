@@ -31,6 +31,19 @@ export function PinnedSkills({
     return null;
   }
 
+  const skillsHelpPath =
+    'skills/name-and-description/#f%C3%A4higkeiten-anheften--manuelle-aktivierung';
+
+  // Without any pinned skills, a lone (?) icon reads like a UI bug. Show an
+  // explanatory link that teases the "pin skills" capability instead.
+  if (pinnedSkills.length === 0) {
+    return (
+      <div className="flex justify-center items-center">
+        <HelpLink path={skillsHelpPath} label={t('pinnedSkills.pinHint')} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex justify-center items-center gap-2 flex-wrap">
       {pinnedSkills.map((skill) => (
@@ -48,10 +61,7 @@ export function PinnedSkills({
           <TooltipContent>{t('pinnedSkills.activateTooltip')}</TooltipContent>
         </Tooltip>
       ))}
-      <HelpLink
-        path="skills/name-and-description/#f%C3%A4higkeiten-anheften--manuelle-aktivierung"
-        variant="icon"
-      />
+      <HelpLink path={skillsHelpPath} variant="icon" />
     </div>
   );
 }

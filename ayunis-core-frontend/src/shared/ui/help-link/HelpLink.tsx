@@ -12,12 +12,18 @@ interface HelpLinkProps {
   readonly path: string;
   /** Use "icon" for card-level links (icon-only with tooltip) */
   readonly variant?: 'default' | 'icon';
+  /** Override the default "Help" label (used for both text and tooltip) */
+  readonly label?: string;
 }
 
-export function HelpLink({ path, variant = 'default' }: HelpLinkProps) {
+export function HelpLink({
+  path,
+  variant = 'default',
+  label: labelOverride,
+}: HelpLinkProps) {
   const { t } = useTranslation('common');
   const url = getHelpCenterUrl(path);
-  const label = t('common.helpLink');
+  const label = labelOverride ?? t('common.helpLink');
 
   if (variant === 'icon') {
     return (
