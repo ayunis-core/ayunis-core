@@ -6,6 +6,7 @@ import type {
   ProviderChunk,
   ProviderMetadata,
   ToolCallDelta,
+  ToolNameCodec,
 } from '@ayunis/inference';
 
 interface CollectedParts {
@@ -23,9 +24,10 @@ interface CollectedParts {
  */
 export const convertChunk = (
   chunk: GenerateContentResponse,
+  codec: ToolNameCodec,
 ): ProviderChunk | null => {
   const candidate = chunk.candidates?.[0];
-  const collected = collectParts(candidate?.content?.parts ?? []);
+  const collected = collectParts(candidate?.content?.parts ?? [], codec);
 
   const result: ProviderChunk = {
     ...textFacet(collected),
@@ -37,7 +39,10 @@ export const convertChunk = (
   return Object.keys(result).length > 0 ? result : null;
 };
 
-const collectParts = (parts: readonly Part[]): CollectedParts => {
+const collectParts = (
+  parts: readonly Part[],
+  codec: ToolNameCodec,
+): CollectedParts => {
   let text = '';
   let textSignature: string | undefined;
   const toolCallDeltas: ToolCallDelta[] = [];
@@ -47,7 +52,7 @@ const collectParts = (parts: readonly Part[]): CollectedParts => {
       textSignature ??= part.thoughtSignature;
     }
     if (part.functionCall) {
-      toolCallDeltas.push(toToolCallDelta(part, index));
+      toolCallDeltas.push(toToolCallDelta(part, index, codec));
     }
   });
   return { text, textSignature, toolCallDeltas };
@@ -84,16 +89,26 @@ const usageFacet = (
       }
     : {};
 
-const toToolCallDelta = (part: Part, index: number): ToolCallDelta => {
+const toToolCallDelta = (
+  part: Part,
+  index: number,
+  codec: ToolNameCodec,
+): ToolCallDelta => {
   const fc = part.functionCall ?? {};
+  const wireName = fc.name ?? null;
+  const name = wireName === null ? null : codec.decode(wireName);
   const delta: ToolCallDelta = {
     index,
-    id: fc.id ?? fc.name ?? null,
-    name: fc.name ?? null,
+    id: fc.id ?? wireName ?? null,
+    name,
     argumentsDelta: stringifyArgs(fc.args),
   };
-  const metadata = toProviderMetadata(part.thoughtSignature);
-  if (metadata) {
+  // Merge the thought signature with the wire name the model actually saw.
+  const metadata = {
+    ...toProviderMetadata(part.thoughtSignature),
+    ...(name !== null && name !== wireName ? { wireName } : {}),
+  };
+  if (Object.keys(metadata).length > 0) {
     delta.providerMetadata = metadata;
   }
   return delta;
