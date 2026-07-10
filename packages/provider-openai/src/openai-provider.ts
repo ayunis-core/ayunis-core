@@ -6,6 +6,7 @@ import type {
   ProviderChunk,
   ProviderRequest,
 } from '@ayunis/inference';
+import { ToolNameCodec } from '@ayunis/inference';
 
 import { convertChunk } from './convert-chunk';
 import {
@@ -82,7 +83,8 @@ async function* streamChat(
   model: string,
   request: ProviderRequest,
 ): AsyncIterable<ProviderChunk> {
-  const params = buildParams(model, request);
+  const codec = new ToolNameCodec(request.tools);
+  const params = buildParams(model, request, codec);
   const stream = await client.chat.completions.create(
     params,
     request.signal ? { signal: request.signal } : undefined,
@@ -101,7 +103,7 @@ async function* streamChat(
     // convertChunk maps unrecognized finish reasons to `null`, so keying off
     // the mapped value would miss a genuine finish and never break.
     if (chunk.choices.at(0)?.finish_reason) sawFinishReason = true;
-    const converted = convertChunk(chunk);
+    const converted = convertChunk(chunk, codec);
     if (!converted) continue;
     yield converted;
     if (sawFinishReason && converted.usage) break;
@@ -111,14 +113,17 @@ async function* streamChat(
 const buildParams = (
   model: string,
   request: ProviderRequest,
+  codec: ToolNameCodec,
 ): ChatCompletionCreateParamsStreaming => {
   const hasTools = request.tools.length > 0;
   return {
     model,
-    messages: convertMessages(request.instructions, request.messages),
-    ...(hasTools ? { tools: request.tools.map(convertTool) } : {}),
+    messages: convertMessages(request.instructions, request.messages, codec),
+    ...(hasTools
+      ? { tools: request.tools.map((tool) => convertTool(tool, codec)) }
+      : {}),
     ...(hasTools && request.toolChoice !== undefined
-      ? { tool_choice: convertToolChoice(request.toolChoice) }
+      ? { tool_choice: convertToolChoice(request.toolChoice, codec) }
       : {}),
     stream: true,
     stream_options: { include_usage: true },
