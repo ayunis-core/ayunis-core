@@ -145,6 +145,11 @@ updates:
     labels:
       - "dependencies"
       - "docker"
+    ignore:
+      # node:26 caused severe request slowness (connection stalls); runtime is
+      # pinned to 24.16.0-alpine. Do not remove without re-validating — see AYC-423.
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
     groups:
       docker-images:
         patterns:
