@@ -1,5 +1,56 @@
 # Changelog
 
+## [2.14.0](https://github.com/ayunis-core/ayunis-core/compare/v2.13.0...v2.14.0) (2026-07-13)
+
+
+### Features
+
+* **academy:** add learner quiz-taking flow (AYC-245) ([#927](https://github.com/ayunis-core/ayunis-core/issues/927)) ([e3941e6](https://github.com/ayunis-core/ayunis-core/commit/e3941e67debe1debd1aad58a0ce388da6eecca33))
+* **academy:** add per-chapter quiz question pool (AYC-244) ([#911](https://github.com/ayunis-core/ayunis-core/issues/911)) ([1f26c53](https://github.com/ayunis-core/ayunis-core/commit/1f26c5351af1a8947f85d9a096f2f59bb04f1243))
+* **academy:** let super admins set the quiz pass threshold (AYC-245) ([#928](https://github.com/ayunis-core/ayunis-core/issues/928)) ([648dce8](https://github.com/ayunis-core/ayunis-core/commit/648dce8f6437d8a27373bb4a36b43b467359b509))
+* **academy:** make module video full width (AYC-327) ([#910](https://github.com/ayunis-core/ayunis-core/issues/910)) ([60a1c23](https://github.com/ayunis-core/ayunis-core/commit/60a1c237bf84dcd2cb8315999850711f9a4faf54))
+* **academy:** rename lessons to modules across the stack (AYC-328) ([#909](https://github.com/ayunis-core/ayunis-core/issues/909)) ([6a17386](https://github.com/ayunis-core/ayunis-core/commit/6a173868baed993a7ad9ccc7595078bb33fcad19))
+* **mfa:** add account settings 2fa card and admin org toggle with user reset (AYC-62) ([#943](https://github.com/ayunis-core/ayunis-core/issues/943)) ([2f81d23](https://github.com/ayunis-core/ayunis-core/commit/2f81d23bb27b17d24c02bfbff1e30e3c8b457cf6))
+* **teams:** add multiple members to a team at once (AYC-287) ([#1007](https://github.com/ayunis-core/ayunis-core/issues/1007)) ([d44a450](https://github.com/ayunis-core/ayunis-core/commit/d44a4504ce7747a8c4bdb9d10a82c7104876b54e))
+* **ui:** port new-chat settle and loading orb animations from redesign (AYC-94) ([#1005](https://github.com/ayunis-core/ayunis-core/issues/1005)) ([b5a8d88](https://github.com/ayunis-core/ayunis-core/commit/b5a8d8885214cfbdee0f357695bf80dec38baf3f))
+
+
+### Bug Fixes
+
+* **artifacts:** pin letterhead PDF page size to A4 (AYC-411) ([#982](https://github.com/ayunis-core/ayunis-core/issues/982)) ([db8db4f](https://github.com/ayunis-core/ayunis-core/commit/db8db4f14db31b362a54004f215d8cfb27dcd146))
+* **chat:** stop chat input mount flicker and inline loading orb at text start (AYC-94) ([#1022](https://github.com/ayunis-core/ayunis-core/issues/1022)) ([aac3a4b](https://github.com/ayunis-core/ayunis-core/commit/aac3a4bcf165aa801ff5ba8ce43ceab67909d033))
+* **inference:** convert draft-04 bounds and wire names for mistral (AYC-412) ([#997](https://github.com/ayunis-core/ayunis-core/issues/997)) ([e5f42bf](https://github.com/ayunis-core/ayunis-core/commit/e5f42bf48686bbae148bd5d6b260a8775f38f045))
+* **inference:** normalize tool schemas and wire names for anthropic (AYC-412) ([#995](https://github.com/ayunis-core/ayunis-core/issues/995)) ([e7f5e78](https://github.com/ayunis-core/ayunis-core/commit/e7f5e78fbdac84f3f094c17543dd93f1badb7dd2))
+* **inference:** normalize tool schemas and wire names for openai (AYC-412) ([#996](https://github.com/ayunis-core/ayunis-core/issues/996)) ([7faf410](https://github.com/ayunis-core/ayunis-core/commit/7faf410feb577b851f65adc6827ea1d889598492))
+* **inference:** normalize tool schemas to gemini subset and wire names (AYC-412) ([#998](https://github.com/ayunis-core/ayunis-core/issues/998)) ([cb4764d](https://github.com/ayunis-core/ayunis-core/commit/cb4764dff25dbf444f71df9dae909da1b40ba27c))
+* **inference:** translate tool wire names for ollama (AYC-412) ([#999](https://github.com/ayunis-core/ayunis-core/issues/999)) ([56f5c5f](https://github.com/ayunis-core/ayunis-core/commit/56f5c5f0b8c0c3fdd879972d2fd03e012d68a048))
+* **mcp:** tolerate uncompilable schemas and duplicate tool names (AYC-412) ([#994](https://github.com/ayunis-core/ayunis-core/issues/994)) ([11329dd](https://github.com/ayunis-core/ayunis-core/commit/11329dd9ef1d3b882983d2027c77761fe4d92edc))
+* **new-chat:** show explanatory help link when no skills are pinned (AYC-429) ([#1006](https://github.com/ayunis-core/ayunis-core/issues/1006)) ([c47f09c](https://github.com/ayunis-core/ayunis-core/commit/c47f09c37eccd8e32b5a9a91b70a7eb4fcb09b81))
+* **onboarding:** keep first-step spotlight clear of frosted header and alert banner (AYC-417) ([#987](https://github.com/ayunis-core/ayunis-core/issues/987)) ([25e3326](https://github.com/ayunis-core/ayunis-core/commit/25e3326caed2f31f4b35a354b0d53d86fbb3c22e))
+* **orgs:** cascade-delete conversation, KB and MCP data on org deletion (AYC-383) ([#921](https://github.com/ayunis-core/ayunis-core/issues/921)) ([9cd62ab](https://github.com/ayunis-core/ayunis-core/commit/9cd62abd7be799312e001473d4f03267434588f2))
+* **security:** eliminate insecure default credentials for MinIO and Redis (AYC-388) ([#984](https://github.com/ayunis-core/ayunis-core/issues/984)) ([6d1e6bd](https://github.com/ayunis-core/ayunis-core/commit/6d1e6bd62f8407298b307d79f6aba84b7c6785e4))
+* **sentry:** skip backend sentry init in development (AYC-000) ([#1002](https://github.com/ayunis-core/ayunis-core/issues/1002)) ([57a4a2d](https://github.com/ayunis-core/ayunis-core/commit/57a4a2d378b9924516ac5a92b33b2e932ff8fe48))
+* **teams:** fix add-member dialog rendering and bulk-add error handling (AYC-438) ([#1021](https://github.com/ayunis-core/ayunis-core/issues/1021)) ([fe6ad50](https://github.com/ayunis-core/ayunis-core/commit/fe6ad5082f62f1aa6d70ff85a119adf3b4158705))
+
+
+### Code Refactoring
+
+* **models:** document PromiseUseCase in common summary (AYC-000) ([#1009](https://github.com/ayunis-core/ayunis-core/issues/1009)) ([ef72852](https://github.com/ayunis-core/ayunis-core/commit/ef728526c355e6fb24225f0b57ea98416c60702d))
+
+
+### Miscellaneous
+
+* **deps-backend:** bump @types/mjml-core from 4.15.2 to 5.0.0 in /ayunis-core-backend ([bbeeec5](https://github.com/ayunis-core/ayunis-core/commit/bbeeec5f69de8a7ef3d60ed84102209da0d5a14a))
+* **deps-backend:** bump @types/mjml-core in /ayunis-core-backend ([35d10d5](https://github.com/ayunis-core/ayunis-core/commit/35d10d554a9f732e3a27e8385ff921a89b0e7f5b))
+* **deps:** bump jsdom from 26.1.0 to 29.1.1 ([7961e2d](https://github.com/ayunis-core/ayunis-core/commit/7961e2d5ccf936c4167048ec2ab28da8d71b29e4))
+* **deps:** bump jsdom from 26.1.0 to 29.1.1 ([2a680f0](https://github.com/ayunis-core/ayunis-core/commit/2a680f0594db2e0cac910ec0fad1385e421057a8))
+* **seed:** add direct anthropic language model to minimal fixture (AYC-412) ([#1000](https://github.com/ayunis-core/ayunis-core/issues/1000)) ([3105ea6](https://github.com/ayunis-core/ayunis-core/commit/3105ea65b88b87a306e0e095f671b264bd36babd))
+
+
+### CI/CD
+
+* **mfa:** add mfa encryption key to schema drift workflow env (AYC-62) ([#1008](https://github.com/ayunis-core/ayunis-core/issues/1008)) ([bf04da2](https://github.com/ayunis-core/ayunis-core/commit/bf04da24b3f54ff6fbb4663ef90f60a40cb7f1c2))
+
 ## [2.13.0](https://github.com/ayunis-core/ayunis-core/compare/v2.12.0...v2.13.0) (2026-07-09)
 
 
