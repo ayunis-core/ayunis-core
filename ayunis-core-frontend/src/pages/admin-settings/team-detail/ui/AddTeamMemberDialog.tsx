@@ -121,14 +121,6 @@ export function AddTeamMemberDialog({
                   )}
                 </ComboboxValue>
               </ComboboxChips>
-              {/*
-                anchor: match the popup width to the chips input (else it renders
-                  ~28px wider and overflows the dialog, clipping option labels).
-                container: portal the popup into the input wrapper (not the
-                  DialogContent grid) so opening it adds no grid gap that would
-                  push the vertically-centered dialog upward, while staying inside
-                  the dialog so clicking an option doesn't dismiss it.
-              */}
               <ComboboxContent anchor={anchorRef} container={containerRef}>
                 <ComboboxEmpty>
                   {t('teamDetail.addMember.noUsersFound')}
