@@ -19,6 +19,7 @@ import {
   ComboboxItem,
   ComboboxList,
   ComboboxValue,
+  useComboboxAnchor,
 } from '@/shared/ui/shadcn/combobox';
 import { useTeamsControllerListTeamMembers } from '@/shared/api/generated/ayunisCoreAPI';
 import { useUserControllerGetUsersInOrganization } from '@/shared/api/generated/ayunisCoreAPI';
@@ -43,6 +44,7 @@ export function AddTeamMemberDialog({
   const { t } = useTranslation('admin-settings-teams');
   const [selectedUsers, setSelectedUsers] = useState<UserOption[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const anchorRef = useComboboxAnchor();
 
   const { addTeamMembers, isAdding } = useAddTeamMembers(teamId, () => {
     setSelectedUsers([]);
@@ -83,7 +85,7 @@ export function AddTeamMemberDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent ref={containerRef}>
+      <DialogContent>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{t('teamDetail.addMember.title')}</DialogTitle>
@@ -91,7 +93,7 @@ export function AddTeamMemberDialog({
               {t('teamDetail.addMember.description')}
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
+          <div className="py-4" ref={containerRef}>
             <Combobox
               items={availableUsers}
               multiple
@@ -99,7 +101,7 @@ export function AddTeamMemberDialog({
               onValueChange={setSelectedUsers}
               isItemEqualToValue={(a, b) => a.value === b.value}
             >
-              <ComboboxChips>
+              <ComboboxChips ref={anchorRef}>
                 <ComboboxValue>
                   {(users: UserOption[]) => (
                     <Fragment>
@@ -119,7 +121,7 @@ export function AddTeamMemberDialog({
                   )}
                 </ComboboxValue>
               </ComboboxChips>
-              <ComboboxContent container={containerRef}>
+              <ComboboxContent anchor={anchorRef} container={containerRef}>
                 <ComboboxEmpty>
                   {t('teamDetail.addMember.noUsersFound')}
                 </ComboboxEmpty>

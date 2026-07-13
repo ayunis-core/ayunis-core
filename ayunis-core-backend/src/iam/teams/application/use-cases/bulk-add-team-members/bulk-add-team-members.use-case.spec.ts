@@ -93,4 +93,15 @@ describe('BulkAddTeamMembersUseCase', () => {
       ),
     ).rejects.toBeInstanceOf(UnauthorizedAccessError);
   });
+
+  it('re-throws unexpected (non-ApplicationError) faults raw, without wrapping (no metadata leak)', async () => {
+    const fault = new Error('database is on fire');
+    mockAddTeamMemberUseCase.execute.mockRejectedValueOnce(fault);
+
+    await expect(
+      useCase.execute(
+        new BulkAddTeamMembersCommand({ teamId, userIds: [userA] }),
+      ),
+    ).rejects.toBe(fault);
+  });
 });
