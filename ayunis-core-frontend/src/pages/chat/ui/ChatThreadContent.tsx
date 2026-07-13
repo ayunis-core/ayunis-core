@@ -28,12 +28,12 @@ export function ChatThreadContent({
           return <ChatMessage key={unit.key} message={unit.message} />;
         }
         const previousUnit = i > 0 ? renderUnits[i - 1] : undefined;
-        const hideAvatar = previousUnit?.kind === 'agent-run';
+        const isGroupedWithPrevious = previousUnit?.kind === 'agent-run';
         return (
           <AssistantRunBlock
             key={unit.key}
             unit={unit}
-            hideAvatar={hideAvatar}
+            isGroupedWithPrevious={isGroupedWithPrevious}
             threadId={threadId}
             onOpenArtifact={onOpenArtifact}
           />

@@ -1,20 +1,20 @@
 import { useRef } from 'react';
 import { cn } from '@/shared/lib/shadcn/utils';
-import { AyunisProgressOrb } from '@/widgets/ayunis-progress-orb';
 import { AgentRunTimeline } from '@/pages/chat/ui/agent-run-timeline';
 import type { AgentRunUnit } from '@/pages/chat/ui/agent-run-timeline';
 import CopyAssistantTextButton from './CopyAssistantTextButton';
 
 interface AssistantRunBlockProps {
   unit: AgentRunUnit;
-  hideAvatar: boolean;
+  /** Tightens the top spacing when the previous unit is also an agent run. */
+  isGroupedWithPrevious: boolean;
   threadId?: string;
   onOpenArtifact?: (artifactId: string) => void;
 }
 
 export default function AssistantRunBlock({
   unit,
-  hideAvatar,
+  isGroupedWithPrevious,
   threadId,
   onOpenArtifact,
 }: Readonly<AssistantRunBlockProps>) {
@@ -23,11 +23,11 @@ export default function AssistantRunBlock({
 
   return (
     <div
-      className={cn('flex flex-col items-start gap-2', !hideAvatar && 'mt-4')}
-    >
-      {!hideAvatar && (
-        <AyunisProgressOrb isActive={unit.isStreaming} aria-label="Ayunis" />
+      className={cn(
+        'flex flex-col items-start gap-2',
+        !isGroupedWithPrevious && 'mt-4',
       )}
+    >
       <div className="max-w-2xl min-w-0 space-y-1 w-full">
         <div
           ref={contentRef}

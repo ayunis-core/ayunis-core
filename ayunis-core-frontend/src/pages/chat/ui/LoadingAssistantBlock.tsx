@@ -1,9 +1,14 @@
-import { AyunisProgressOrb } from '@/widgets/ayunis-progress-orb';
+import ResponseStartOrb from '@/pages/chat/ui/ResponseStartOrb';
 
+/**
+ * Placeholder shown before the first assistant message event arrives.
+ * Mirrors AssistantRunBlock's outer spacing so the orb sits exactly where
+ * the response's first text line will render.
+ */
 export default function LoadingAssistantBlock() {
   return (
-    <div className="flex flex-col items-start gap-2 mt-4">
-      <AyunisProgressOrb isActive aria-label="Ayunis arbeitet" />
+    <div className="mt-4">
+      <ResponseStartOrb />
     </div>
   );
 }
