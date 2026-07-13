@@ -1,13 +1,5 @@
-import {
-  createFileRoute,
-  Outlet,
-  redirect,
-  isRedirect,
-} from '@tanstack/react-router';
-import {
-  OnboardingReturnButton,
-  OnboardingTourProvider,
-} from '@/widgets/onboarding';
+import { createFileRoute, redirect, isRedirect } from '@tanstack/react-router';
+import AuthenticatedLayout from '@/layouts/authenticated-layout';
 import {
   authenticationControllerMe,
   getAuthenticationControllerMeQueryKey,
@@ -24,15 +16,6 @@ const meQueryOptions = () =>
     queryKey: getAuthenticationControllerMeQueryKey(),
     queryFn: () => authenticationControllerMe(),
   });
-
-function AuthenticatedLayout() {
-  return (
-    <OnboardingTourProvider>
-      <Outlet />
-      <OnboardingReturnButton />
-    </OnboardingTourProvider>
-  );
-}
 
 export const Route = createFileRoute('/_authenticated')({
   component: AuthenticatedLayout,
@@ -65,11 +48,9 @@ export const Route = createFileRoute('/_authenticated')({
           },
         });
       } catch (e) {
-        // If it's a redirect (from EMAIL_NOT_VERIFIED or default case), re-throw it
         if (isRedirect(e)) {
           throw e;
         }
-        // If extractErrorData threw (non-AxiosError), redirect to login anyway
         throw redirect({
           to: '/login',
           search: {
