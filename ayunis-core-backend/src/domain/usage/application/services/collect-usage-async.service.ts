@@ -40,25 +40,19 @@ export class CollectUsageAsyncService {
     const apiKeyId = this.contextService.get('apiKeyId');
     const orgId = this.contextService.get('orgId');
 
-    this.eventEmitter
-      .emitAsync(
-        TokensConsumedEvent.EVENT_NAME,
-        new TokensConsumedEvent(
-          userId,
-          apiKeyId,
-          orgId ?? ('unknown' as UUID),
-          model.name,
-          model.provider,
-          inputTokens,
-          outputTokens,
-        ),
-      )
-      .catch((err: unknown) => {
-        this.logger.error('Failed to emit TokensConsumedEvent', {
-          error: err instanceof Error ? err.message : 'Unknown error',
-        });
-      });
+    const event = new TokensConsumedEvent(
+      userId,
+      apiKeyId,
+      orgId,
+      model.name,
+      model.provider,
+      inputTokens,
+      outputTokens,
+    );
 
+    // Emitted only after the usage row is persisted, so listeners can read
+    // their own writes (BudgetAlertsListener re-queries consumption); a
+    // failed persist emits nothing — there is no recorded usage to react to.
     this.collectUsageUseCase
       .execute(
         new CollectUsageCommand({
@@ -68,10 +62,21 @@ export class CollectUsageAsyncService {
           requestId: messageId,
         }),
       )
+      .then(() => this.emitTokensConsumed(event))
       .catch((error) => {
         this.logger.debug('Usage collection failed', {
           error: error as Error,
         });
       });
+  }
+
+  private async emitTokensConsumed(event: TokensConsumedEvent): Promise<void> {
+    try {
+      await this.eventEmitter.emitAsync(TokensConsumedEvent.EVENT_NAME, event);
+    } catch (err) {
+      this.logger.error('Failed to emit TokensConsumedEvent', {
+        error: err instanceof Error ? err.message : 'Unknown error',
+      });
+    }
   }
 }

@@ -62,7 +62,7 @@ ayunis-core/
 | [addons](ayunis-core-backend/src/iam/addons/SUMMARY.md) | Add-ons | Per-org add-on activation managed by super admins |
 | [quotas](ayunis-core-backend/src/iam/quotas/SUMMARY.md) | Limits | Usage quota enforcement |
 | [credit-limits](ayunis-core-backend/src/iam/credit-limits/SUMMARY.md) | Limits | Per-user and per-team monthly credit allowances |
-| [credit-alerts](ayunis-core-backend/src/iam/credit-alerts/SUMMARY.md) | Alerts | Budget-warning emails when credit budgets cross usage thresholds |
+| [budget-alerts](ayunis-core-backend/src/iam/budget-alerts/SUMMARY.md) | Alerts | Budget-warning and budget-exhausted emails when credit budgets cross usage thresholds |
 | [teams](ayunis-core-backend/src/iam/teams/SUMMARY.md) | Groups | Team-based access control |
 | [invites](ayunis-core-backend/src/iam/invites/SUMMARY.md) | Onboarding | User invitation flows |
 | [trials](ayunis-core-backend/src/iam/trials/SUMMARY.md) | Trial Access | Free trial management |

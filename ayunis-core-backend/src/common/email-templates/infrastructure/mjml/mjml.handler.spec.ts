@@ -14,9 +14,6 @@ describe('MjmlHandler — budget warning', () => {
     scope: BudgetWarningScope.ORG,
     targetName: 'Stadt Musterhausen',
     threshold: '80',
-    percentUsed: '83',
-    creditsUsed: '8.300',
-    monthlyCredits: '10.000',
     productName: 'Ayunis Core',
     currentYear: '2026',
     logoUrl: 'https://assets.example/logo.png',
@@ -24,20 +21,21 @@ describe('MjmlHandler — budget warning', () => {
     settingsUrl: 'https://app.example/settings/credit-limits',
   };
 
-  it('renders the org-scope warning with threshold, usage and settings link', () => {
+  it('renders the org-scope warning with threshold and settings link', () => {
     const rendered = handler.renderTemplate(
       new BudgetWarningTemplate(baseContent),
     );
 
     expect(rendered.html).toContain('Budgetwarnung');
     expect(rendered.html).toContain('80%');
-    expect(rendered.html).toContain('83%');
     expect(rendered.html).toContain('Organisationsbudgets');
+    expect(rendered.html).toContain(
+      'Dies ist eine automatische Benachrichtigung.',
+    );
     expect(rendered.html).toContain(baseContent.settingsUrl);
     expect(rendered.text).toContain(
       'mindestens 80% Ihres Organisationsbudgets',
     );
-    expect(rendered.text).toContain('8.300 von 10.000 Credits');
     expect(rendered.text).toContain(baseContent.settingsUrl);
   });
 
@@ -48,7 +46,6 @@ describe('MjmlHandler — budget warning', () => {
         scope: BudgetWarningScope.USER,
         targetName: 'Jane Doe',
         threshold: '50',
-        percentUsed: '55',
       }),
     );
 

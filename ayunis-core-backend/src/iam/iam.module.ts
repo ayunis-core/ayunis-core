@@ -18,7 +18,7 @@ import { OnboardingModule } from './onboarding/onboarding.module';
 import { QuotasModule } from './quotas/quotas.module';
 import { TeamsModule } from './teams/teams.module';
 import { CreditLimitsModule } from './credit-limits/credit-limits.module';
-import { CreditAlertsModule } from './credit-alerts/credit-alerts.module';
+import { BudgetAlertsModule } from './budget-alerts/budget-alerts.module';
 import { PlatformConfigModule } from './platform-config/platform-config.module';
 import { AddonsModule } from './addons/addons.module';
 import { IpAllowlistModule } from './ip-allowlist/ip-allowlist.module';
@@ -49,7 +49,7 @@ const IAM_FEATURE_MODULES = [
   QuotasModule,
   TeamsModule,
   CreditLimitsModule,
-  CreditAlertsModule,
+  BudgetAlertsModule,
   PlatformConfigModule,
   IpAllowlistModule,
   ApiKeysModule,

@@ -20,6 +20,7 @@ export interface LayoutOptions {
   currentYear: string;
   privacyUrl?: string;
   termsUrl?: string;
+  automatedNotice?: boolean;
 }
 
 interface RenderBodyOptions {
@@ -34,6 +35,7 @@ interface FooterSectionOptions {
   currentYear: string;
   privacyUrl: string;
   termsUrl: string;
+  automatedNotice: boolean;
 }
 
 export function renderLayout(options: LayoutOptions): string {
@@ -48,6 +50,7 @@ export function renderLayout(options: LayoutOptions): string {
     currentYear,
     privacyUrl = 'https://www.ayunis.com/datenschutz-core',
     termsUrl = 'https://www.ayunis.com/agb-software-%c3%bcberlassung',
+    automatedNotice = false,
   } = options;
 
   return `
@@ -62,6 +65,7 @@ export function renderLayout(options: LayoutOptions): string {
       currentYear,
       privacyUrl,
       termsUrl,
+      automatedNotice,
     }),
   })}
 </mjml>`;
@@ -122,11 +126,17 @@ function renderBannerSection(
 }
 
 function renderFooterSection(options: FooterSectionOptions): string {
+  const noticeLine = options.automatedNotice
+    ? `<mj-text align="center" color="${COLOR.muted}" font-size="13px" padding-bottom="6px">
+          Dies ist eine automatische Benachrichtigung.
+        </mj-text>`
+    : '';
   return `<mj-section padding="24px 32px 40px 32px">
       <mj-column>
         <mj-text align="center" color="${COLOR.muted}" font-size="13px" padding-bottom="6px">
           Diese E-Mail wurde an <strong>${escapeText(options.footerEmail)}</strong> gesendet.
         </mj-text>
+        ${noticeLine}
         <mj-text align="center" color="${COLOR.muted}" font-size="13px" padding-bottom="14px">
           Fragen? Schreiben Sie uns an <a href="mailto:help@ayunis.com">help@ayunis.com</a>
         </mj-text>
