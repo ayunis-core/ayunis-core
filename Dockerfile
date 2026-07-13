@@ -4,7 +4,7 @@
 # Pinned back to node 24 to bisect the production outbound-connection stalls
 # that started with the node 26 bump (AYC-423). Revert to 26 once exonerated
 # or once the stall mechanism is identified and mitigated.
-FROM node:24.16.0-alpine AS build
+FROM node:26.5.0-alpine AS build
 
 # pnpm via corepack (version pinned by root package.json "packageManager").
 # Installed explicitly (node:26-alpine dropped the bundled corepack; harmless
@@ -57,7 +57,7 @@ RUN pnpm --filter core-backend run build
 RUN pnpm --filter=core-backend --prod --legacy deploy /prod/backend
 
 # ---- Stage 2: Production runtime ----
-FROM node:24.16.0-alpine AS production
+FROM node:26.5.0-alpine AS production
 
 # Chromium for Puppeteer PDF export
 RUN apk add --no-cache chromium
