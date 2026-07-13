@@ -36,10 +36,6 @@ export class BulkAddTeamMembersUseCase {
             ),
           );
         } catch (error) {
-          // Only genuine per-user validation problems skip that user and let the
-          // rest proceed. Everything else — a missing/foreign team, an auth
-          // failure, an unexpected fault — must fail the whole request, not be
-          // silently swallowed into a 201 with a partial list.
           if (
             error instanceof UserAlreadyTeamMemberError ||
             error instanceof UserNotInSameOrgError ||
@@ -64,12 +60,6 @@ export class BulkAddTeamMembersUseCase {
 
       return added;
     } catch (error) {
-      // Re-throw domain errors as-is (they carry safe, client-facing codes).
-      // Unexpected faults are logged and reported to Sentry by the global
-      // filter, then re-thrown raw so Nest returns a generic 500 — never wrap
-      // them in an ApplicationError, whose metadata would serialize the raw
-      // error into the HTTP response and leak internals. Matches
-      // AddTeamMemberUseCase.
       if (error instanceof ApplicationError) {
         throw error;
       }
