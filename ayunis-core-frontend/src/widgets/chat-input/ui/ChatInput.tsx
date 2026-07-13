@@ -1,4 +1,10 @@
-import { useState, forwardRef, useImperativeHandle, useRef } from 'react';
+import {
+  useState,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+} from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
@@ -149,6 +155,27 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const { t } = useTranslation('common');
     const containerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // TextareaAutosize corrects its height during mount; the height transition
+    // must not be active yet or that correction animates as a visible shrink
+    // (flickers on every navigation because ChatPage keys the input by thread).
+    // Double rAF: the class may only land after the corrected height has been
+    // painted once — a plain effect flushes into the same style recalc and the
+    // browser still animates from the pre-correction height.
+    const [isHeightAnimationEnabled, setIsHeightAnimationEnabled] =
+      useState(false);
+    useEffect(() => {
+      let secondFrame = 0;
+      const firstFrame = requestAnimationFrame(() => {
+        secondFrame = requestAnimationFrame(() =>
+          setIsHeightAnimationEnabled(true),
+        );
+      });
+      return () => {
+        cancelAnimationFrame(firstFrame);
+        cancelAnimationFrame(secondFrame);
+      };
+    }, []);
 
     const { pendingImages, addImages, removeImage, clearImages } =
       usePendingImages();
@@ -366,6 +393,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                   aria-label={t('chatInput.placeholder')}
                   className={cn(
                     'chat-input-shell__textarea border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0',
+                    isHeightAnimationEnabled &&
+                      'chat-input-shell__textarea--animate',
                     showProcessingGlow && 'opacity-90',
                     isSubmitting && 'cursor-not-allowed',
                     isStreaming && 'cursor-text',

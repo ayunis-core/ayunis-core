@@ -9,6 +9,7 @@ import {
   CollapsibleTrigger,
 } from '@/shared/ui/shadcn/collapsible';
 import type { AgentRunUnit } from '../model/types';
+import ResponseStartOrb from '@/pages/chat/ui/ResponseStartOrb';
 import AgentRunTimelineRow from './AgentRunTimelineRow';
 import { renderRichToolCard } from '../lib/render-rich-tool-card';
 
@@ -96,12 +97,14 @@ export default function AgentRunTimeline({
         return node ? <div key={card.key}>{node}</div> : null;
       })}
 
-      {unit.finalText.length > 0 && (
+      {unit.finalText.length > 0 ? (
         <div data-copyable="true" className="space-y-2">
           {unit.finalText.map((text, i) => (
             <Markdown key={`final-text-${i}`}>{text.text}</Markdown>
           ))}
         </div>
+      ) : (
+        unit.isStreaming && <ResponseStartOrb />
       )}
     </div>
   );

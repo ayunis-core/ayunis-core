@@ -11,7 +11,11 @@
   --new-chat-disclaimer-fade-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.chat-input-shell__textarea {
+/* Height transition is opt-in via the --animate modifier: TextareaAutosize
+   renders at the browser default height and corrects it during mount, so a
+   transition present at mount animates that correction — the input visibly
+   shrinks on every navigation. The modifier is added one frame after mount. */
+.chat-input-shell__textarea--animate {
   transition: height var(--chat-input-duration) var(--chat-input-ease);
 }
 
@@ -100,7 +104,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .chat-input-shell__textarea,
+  .chat-input-shell__textarea--animate,
   .chat-input-shell__card .chat-input-body,
   .chat-input-expandable,
   .new-chat-compose,
