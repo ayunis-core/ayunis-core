@@ -2,7 +2,7 @@ import type { UUID } from 'crypto';
 import type { User } from 'src/iam/users/domain/user.entity';
 import type { UserCreditLimitOverviewItem } from './user-credit-limit.view';
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { FindUsersByIdsUseCase } from 'src/iam/users/application/use-cases/find-users-by-ids/find-users-by-ids.use-case';
@@ -26,6 +26,7 @@ export class GetUserCreditLimitsOverviewUseCase {
     private readonly getMonthlyCreditUsageForUsersUseCase: GetMonthlyCreditUsageForUsersUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedCreditLimitError)
   async execute(
     query: GetUserCreditLimitsOverviewQuery = new GetUserCreditLimitsOverviewQuery(),
   ): Promise<UserCreditLimitOverviewItem[]> {
@@ -36,16 +37,8 @@ export class GetUserCreditLimitsOverviewUseCase {
 
     this.logger.log('Listing user credit limits', { orgId });
 
-    try {
-      const limits = await this.creditLimitRepository.findUserLimits(orgId);
-      return await this.enrich(orgId, limits, query.since);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to list user credit limits', {
-        error: error as Error,
-      });
-      throw new UnexpectedCreditLimitError(error);
-    }
+    const limits = await this.creditLimitRepository.findUserLimits(orgId);
+    return this.enrich(orgId, limits, query.since);
   }
 
   private async enrich(

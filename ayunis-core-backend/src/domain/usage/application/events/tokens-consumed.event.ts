@@ -6,7 +6,7 @@ export class TokensConsumedEvent {
   constructor(
     public readonly userId: UUID | undefined,
     public readonly apiKeyId: UUID | undefined,
-    public readonly orgId: UUID,
+    public readonly orgId: UUID | undefined,
     public readonly model: string,
     public readonly provider: string,
     public readonly inputTokens: number,

@@ -57,9 +57,6 @@ export interface BudgetWarningTemplateContent {
   scope: BudgetWarningScope;
   targetName: string;
   threshold: string;
-  percentUsed: string;
-  creditsUsed: string;
-  monthlyCredits: string;
   productName: string;
   currentYear: string;
   logoUrl: string;
@@ -126,9 +123,6 @@ export class BudgetWarningTemplate extends EmailTemplate {
       scope: content.scope,
       targetName: content.targetName,
       threshold: content.threshold,
-      percentUsed: content.percentUsed,
-      creditsUsed: content.creditsUsed,
-      monthlyCredits: content.monthlyCredits,
       productName: content.productName,
       currentYear: content.currentYear,
       settingsUrl: content.settingsUrl,
