@@ -43,11 +43,6 @@ import { UpdatePermittedModelDto } from './dto/update-permitted-model.dto';
 import { SetTeamDefaultModelDto } from './dto/set-team-default-model.dto';
 import { PermittedLanguageModelResponseDto } from './dto/permitted-language-model-response.dto';
 import { PermittedImageGenerationModelResponseDto } from './dto/permitted-image-generation-model-response.dto';
-import {
-  PermittedImageGenerationModel,
-  PermittedLanguageModel,
-  PermittedModel,
-} from '../../domain/permitted-model.entity';
 import { ModelResponseDtoMapper } from './mappers/model-response-dto.mapper';
 
 @ApiTags('team-permitted-models')
@@ -171,23 +166,7 @@ export class TeamPermittedModelsController {
       dto.anonymousOnly,
     );
     const created = await this.createTeamPermittedModelUseCase.execute(command);
-    return this.toTeamPermittedModelDto(created);
-  }
-
-  private toTeamPermittedModelDto(
-    created: PermittedModel,
-  ):
-    | PermittedLanguageModelResponseDto
-    | PermittedImageGenerationModelResponseDto {
-    if (created instanceof PermittedImageGenerationModel) {
-      return this.modelResponseDtoMapper.toImageGenerationModelDto(created);
-    }
-    if (created instanceof PermittedLanguageModel) {
-      return this.modelResponseDtoMapper.toLanguageModelDto(created);
-    }
-    throw new Error(
-      `Unexpected permitted model type: ${created.constructor.name}`,
-    );
+    return this.modelResponseDtoMapper.toTeamPermittedModelDto(created);
   }
 
   @Patch(':id')

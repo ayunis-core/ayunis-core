@@ -63,6 +63,23 @@ function buildModelsForCard(
     });
 }
 
+/**
+ * Destructive alert shown when a model list fails to load, so a transient API
+ * error is never mistaken for "no models configured".
+ */
+function ModelLoadError() {
+  const { t: tModels } = useTranslation('admin-settings-models');
+  return (
+    <Alert variant="destructive">
+      <TriangleAlert className="h-4 w-4" />
+      <AlertTitle>{tModels('models.loadErrorTitle')}</AlertTitle>
+      <AlertDescription>
+        {tModels('models.loadErrorDescription')}
+      </AlertDescription>
+    </Alert>
+  );
+}
+
 export function TeamModelsTab({
   teamId,
   teamName,
@@ -75,7 +92,6 @@ export function TeamModelsTab({
   const effectiveOverrideEnabled =
     cachedTeam?.modelOverrideEnabled ?? modelOverrideEnabled;
   const { t } = useTranslation('admin-settings-teams');
-  const { t: tModels } = useTranslation('admin-settings-models');
   const { toggleModelOverride, isToggling } = useToggleModelOverride(
     teamId,
     teamName,
@@ -84,9 +100,12 @@ export function TeamModelsTab({
     useLanguageModels();
   const { models: imageGenerationModels, isError: hasImageGenerationError } =
     useImageGenerationModels();
-  const { models: teamPermittedModels, isLoading: isLoadingTeamModels } =
-    useTeamPermittedModels(teamId);
-  const { models: teamPermittedImageModels } =
+  const {
+    models: teamPermittedModels,
+    isLoading: isLoadingTeamModels,
+    isError: hasTeamLanguageError,
+  } = useTeamPermittedModels(teamId);
+  const { models: teamPermittedImageModels, isError: hasTeamImageError } =
     useTeamPermittedImageGenerationModels(teamId);
   const { createTeamPermittedModel, isCreating } =
     useCreateTeamPermittedModel(teamId);
@@ -169,14 +188,8 @@ export function TeamModelsTab({
             models={languageModelsForCard}
             isLoading={isLoadingTeamModels}
           />
-          {hasLanguageError ? (
-            <Alert variant="destructive">
-              <TriangleAlert className="h-4 w-4" />
-              <AlertTitle>{tModels('models.loadErrorTitle')}</AlertTitle>
-              <AlertDescription>
-                {tModels('models.loadErrorDescription')}
-              </AlertDescription>
-            </Alert>
+          {hasLanguageError || hasTeamLanguageError ? (
+            <ModelLoadError />
           ) : (
             <ModelTypeCard
               type="language"
@@ -184,12 +197,18 @@ export function TeamModelsTab({
               actions={languageActions}
             />
           )}
-          {!hasImageGenerationError && imageModelsForCard.length > 0 && (
-            <ModelTypeCard
-              type="image-generation"
-              models={imageModelsForCard}
-              actions={imageActions}
-            />
+          {/* Surface a load failure like language models do; only stay hidden
+              when the list genuinely has no image-generation models. */}
+          {hasImageGenerationError || hasTeamImageError ? (
+            <ModelLoadError />
+          ) : (
+            imageModelsForCard.length > 0 && (
+              <ModelTypeCard
+                type="image-generation"
+                models={imageModelsForCard}
+                actions={imageActions}
+              />
+            )
           )}
         </>
       ) : (

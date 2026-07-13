@@ -9,7 +9,7 @@ import {
 } from 'src/domain/models/application/models.errors';
 import type { PermittedModelQueryService } from './permitted-model-query.service';
 
-interface GuardDeps {
+interface AssertionDeps {
   queryService: PermittedModelQueryService;
   logger: Logger;
 }
@@ -23,7 +23,7 @@ interface GuardDeps {
  *   team+model at the application layer, so they are intentionally exempt.
  */
 export async function assertSingleModelPerOrg(
-  deps: GuardDeps,
+  deps: AssertionDeps,
   permittedModel: PermittedModel,
 ): Promise<void> {
   await assertSingleEmbedding(deps, permittedModel);
@@ -31,7 +31,7 @@ export async function assertSingleModelPerOrg(
 }
 
 async function assertSingleEmbedding(
-  { queryService, logger }: GuardDeps,
+  { queryService, logger }: AssertionDeps,
   permittedModel: PermittedModel,
 ): Promise<void> {
   if (!(permittedModel.model instanceof EmbeddingModel)) return;
@@ -50,7 +50,7 @@ async function assertSingleEmbedding(
 }
 
 async function assertSingleImageGeneration(
-  { queryService, logger }: GuardDeps,
+  { queryService, logger }: AssertionDeps,
   permittedModel: PermittedModel,
 ): Promise<void> {
   if (

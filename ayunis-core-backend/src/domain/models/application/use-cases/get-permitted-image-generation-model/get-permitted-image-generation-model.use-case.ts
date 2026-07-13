@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
@@ -35,6 +35,7 @@ export class GetPermittedImageGenerationModelUseCase {
     private readonly findTeamsByUserIdUseCase: FindTeamsByUserIdUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(
     query: GetPermittedImageGenerationModelQuery,
   ): Promise<PermittedImageGenerationModel> {
@@ -42,23 +43,16 @@ export class GetPermittedImageGenerationModelUseCase {
       orgId: query.orgId,
     });
 
-    try {
-      this.validateOrgAccess(query.orgId);
+    this.validateOrgAccess(query.orgId);
 
-      const userId = this.contextService.get('userId');
-      const model = await this.resolveEffectiveModel(query.orgId, userId);
-      if (!model || !(model instanceof PermittedImageGenerationModel)) {
-        throw new PermittedImageGenerationModelNotFoundForOrgError(query.orgId);
-      }
-
-      this.modelPolicy.assertSupported(model.model);
-      return model;
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      throw new UnexpectedModelError(error as Error);
+    const userId = this.contextService.get('userId');
+    const model = await this.resolveEffectiveModel(query.orgId, userId);
+    if (!model || !(model instanceof PermittedImageGenerationModel)) {
+      throw new PermittedImageGenerationModelNotFoundForOrgError(query.orgId);
     }
+
+    this.modelPolicy.assertSupported(model.model);
+    return model;
   }
 
   private validateOrgAccess(queryOrgId: UUID): void {

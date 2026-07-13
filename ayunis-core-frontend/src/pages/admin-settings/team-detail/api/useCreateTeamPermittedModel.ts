@@ -24,7 +24,10 @@ export function useCreateTeamPermittedModel(teamId: string) {
           showError(t('teamDetail.models.enableAlreadyEnabled'));
         } else if (errorCode === 'MODEL_NOT_FOUND') {
           showError(t('teamDetail.models.enableModelNotFound'));
-        } else if (errorCode === 'MODEL_INVALID') {
+        } else if (
+          errorCode === 'MODEL_INVALID' ||
+          errorCode === 'MODEL_NOT_RESTRICTABLE_FOR_TEAM'
+        ) {
           showError(t('teamDetail.models.enableModelInvalid'));
         } else {
           showError(t('teamDetail.models.enableError'));
