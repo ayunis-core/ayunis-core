@@ -98,8 +98,6 @@ describe('BulkAddTeamMembersUseCase', () => {
     const fault = new Error('database is on fire');
     mockAddTeamMemberUseCase.execute.mockRejectedValueOnce(fault);
 
-    // Raw errors propagate unchanged so the global filter yields a generic 500
-    // instead of an ApplicationError whose metadata leaks internals.
     await expect(
       useCase.execute(
         new BulkAddTeamMembersCommand({ teamId, userIds: [userA] }),
