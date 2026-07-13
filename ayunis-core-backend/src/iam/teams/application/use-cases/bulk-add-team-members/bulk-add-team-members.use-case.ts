@@ -25,8 +25,6 @@ export class BulkAddTeamMembersUseCase {
     });
 
     try {
-      // ponytail: sequential single-adds so all per-user validation is reused.
-      // Fine for an admin one-off bulk op; batch the repo insert if latency matters.
       const added: TeamMember[] = [];
       for (const userId of uniqueUserIds) {
         try {
