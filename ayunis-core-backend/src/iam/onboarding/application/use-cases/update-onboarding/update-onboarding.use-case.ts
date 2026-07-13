@@ -1,10 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { UUID } from 'crypto';
 import { OnboardingRepository } from '../../ports/onboarding.repository';
 import { UpdateOnboardingCommand } from './update-onboarding.command';
 import { Onboarding } from 'src/iam/onboarding/domain/onboarding.entity';
 import { OnboardingUnexpectedError } from '../../onboarding.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 
 @Injectable()
 export class UpdateOnboardingUseCase {
@@ -12,6 +11,7 @@ export class UpdateOnboardingUseCase {
 
   constructor(private readonly onboardingRepository: OnboardingRepository) {}
 
+  @HandleUnexpectedErrors(OnboardingUnexpectedError)
   async execute(command: UpdateOnboardingCommand): Promise<Onboarding> {
     this.logger.log('updateOnboarding', {
       userId: command.userId,
@@ -19,28 +19,12 @@ export class UpdateOnboardingUseCase {
       hidden: command.hidden,
     });
 
-    try {
-      const onboarding = await this.findOrCreateForUser(command.userId);
+    const onboarding = new Onboarding({
+      userId: command.userId,
+      completedStepIds: command.completedStepIds,
+      hidden: command.hidden,
+    });
 
-      onboarding.completedStepIds = command.completedStepIds;
-      onboarding.hidden = command.hidden;
-
-      return await this.onboardingRepository.save(onboarding);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Failed to update onboarding', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: command.userId,
-      });
-      throw new OnboardingUnexpectedError(error as Error);
-    }
-  }
-
-  private async findOrCreateForUser(userId: UUID): Promise<Onboarding> {
-    const existing = await this.onboardingRepository.findByUserId(userId);
-
-    return existing ?? new Onboarding({ userId });
+    return await this.onboardingRepository.saveProgress(onboarding);
   }
 }

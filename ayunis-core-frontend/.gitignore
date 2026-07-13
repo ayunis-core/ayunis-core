@@ -10,3 +10,6 @@ src/lib/api/generated/
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+
+# TanStack Router generated cache
+.tanstack/

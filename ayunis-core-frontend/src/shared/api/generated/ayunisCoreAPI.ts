@@ -20366,7 +20366,7 @@ export const useMfaLoginControllerConfirmSetup = <TError = unknown,
     }
     
 /**
- * Get the current user's onboarding progress: the IDs of completed steps and whether the checklist is hidden.
+ * Get the current user's onboarding progress and welcome-video status.
  * @summary Get onboarding progress
  */
 export const onboardingControllerGetOnboarding = (
@@ -20520,6 +20520,70 @@ export const useOnboardingControllerUpdateOnboarding = <TError = void,
       > => {
 
       const mutationOptions = getOnboardingControllerUpdateOnboardingMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * Record when the current user first dismisses the welcome video.
+ * @summary Mark the welcome video as seen
+ */
+export const onboardingControllerMarkWelcomeVideoSeen = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<OnboardingResponseDto>(
+      {url: `/onboarding/welcome-video-seen`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getOnboardingControllerMarkWelcomeVideoSeenMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof onboardingControllerMarkWelcomeVideoSeen>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof onboardingControllerMarkWelcomeVideoSeen>>, TError,void, TContext> => {
+
+const mutationKey = ['onboardingControllerMarkWelcomeVideoSeen'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof onboardingControllerMarkWelcomeVideoSeen>>, void> = () => {
+          
+
+          return  onboardingControllerMarkWelcomeVideoSeen()
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OnboardingControllerMarkWelcomeVideoSeenMutationResult = NonNullable<Awaited<ReturnType<typeof onboardingControllerMarkWelcomeVideoSeen>>>
+    
+    export type OnboardingControllerMarkWelcomeVideoSeenMutationError = void
+
+    /**
+ * @summary Mark the welcome video as seen
+ */
+export const useOnboardingControllerMarkWelcomeVideoSeen = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof onboardingControllerMarkWelcomeVideoSeen>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof onboardingControllerMarkWelcomeVideoSeen>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getOnboardingControllerMarkWelcomeVideoSeenMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

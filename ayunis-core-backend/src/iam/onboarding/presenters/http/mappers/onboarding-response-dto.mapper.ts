@@ -8,6 +8,7 @@ export class OnboardingResponseDtoMapper {
     return {
       completedStepIds: onboarding.completedStepIds,
       hidden: onboarding.hidden,
+      welcomeVideoSeenAt: onboarding.welcomeVideoSeenAt,
     };
   }
 }

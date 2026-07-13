@@ -16,4 +16,7 @@ export class OnboardingRecord extends BaseRecord {
 
   @Column({ default: false })
   hidden: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  welcomeVideoSeenAt: Date | null;
 }

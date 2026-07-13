@@ -8,6 +8,7 @@ import { GetOnboardingUseCase } from './application/use-cases/get-onboarding/get
 import { UpdateOnboardingUseCase } from './application/use-cases/update-onboarding/update-onboarding.use-case';
 import { OnboardingController } from './presenters/http/onboarding.controller';
 import { OnboardingResponseDtoMapper } from './presenters/http/mappers/onboarding-response-dto.mapper';
+import { MarkWelcomeVideoSeenUseCase } from './application/use-cases/mark-welcome-video-seen/mark-welcome-video-seen.use-case';
 
 @Module({
   imports: [TypeOrmModule.forFeature([OnboardingRecord])],
@@ -20,8 +21,13 @@ import { OnboardingResponseDtoMapper } from './presenters/http/mappers/onboardin
     OnboardingMapper,
     GetOnboardingUseCase,
     UpdateOnboardingUseCase,
+    MarkWelcomeVideoSeenUseCase,
     OnboardingResponseDtoMapper,
   ],
-  exports: [GetOnboardingUseCase, UpdateOnboardingUseCase],
+  exports: [
+    GetOnboardingUseCase,
+    UpdateOnboardingUseCase,
+    MarkWelcomeVideoSeenUseCase,
+  ],
 })
 export class OnboardingModule {}

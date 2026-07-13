@@ -9815,7 +9815,7 @@
     },
     "/onboarding": {
       "get": {
-        "description": "Get the current user's onboarding progress: the IDs of completed steps and whether the checklist is hidden.",
+        "description": "Get the current user's onboarding progress and welcome-video status.",
         "operationId": "OnboardingController_getOnboarding",
         "parameters": [],
         "responses": {
@@ -9876,6 +9876,33 @@
           }
         },
         "summary": "Update onboarding progress",
+        "tags": ["Onboarding"]
+      }
+    },
+    "/onboarding/welcome-video-seen": {
+      "post": {
+        "description": "Record when the current user first dismisses the welcome video.",
+        "operationId": "OnboardingController_markWelcomeVideoSeen",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Welcome video successfully marked as seen",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "500": {
+            "description": "Internal server error occurred while updating onboarding"
+          }
+        },
+        "summary": "Mark the welcome video as seen",
         "tags": ["Onboarding"]
       }
     },
@@ -17700,9 +17727,16 @@
             "type": "boolean",
             "description": "Whether the user has hidden the onboarding checklist",
             "example": false
+          },
+          "welcomeVideoSeenAt": {
+            "type": "string",
+            "description": "When the user first dismissed the welcome video",
+            "example": "2026-08-05T12:00:00.000Z",
+            "format": "date-time",
+            "nullable": true
           }
         },
-        "required": ["completedStepIds", "hidden"]
+        "required": ["completedStepIds", "hidden", "welcomeVideoSeenAt"]
       },
       "UpdateOnboardingDto": {
         "type": "object",

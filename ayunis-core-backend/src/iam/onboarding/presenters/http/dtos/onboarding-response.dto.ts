@@ -13,4 +13,13 @@ export class OnboardingResponseDto {
     example: false,
   })
   hidden: boolean;
+
+  @ApiProperty({
+    description: 'When the user first dismissed the welcome video',
+    example: '2026-08-05T12:00:00.000Z',
+    type: String,
+    format: 'date-time',
+    nullable: true,
+  })
+  welcomeVideoSeenAt: Date | null;
 }

@@ -6,6 +6,7 @@ export class Onboarding {
   userId: UUID;
   completedStepIds: string[];
   hidden: boolean;
+  welcomeVideoSeenAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 
@@ -14,6 +15,7 @@ export class Onboarding {
     userId: UUID;
     completedStepIds?: string[];
     hidden?: boolean;
+    welcomeVideoSeenAt?: Date | null;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -21,6 +23,7 @@ export class Onboarding {
     this.userId = params.userId;
     this.completedStepIds = params.completedStepIds ?? [];
     this.hidden = params.hidden ?? false;
+    this.welcomeVideoSeenAt = params.welcomeVideoSeenAt ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

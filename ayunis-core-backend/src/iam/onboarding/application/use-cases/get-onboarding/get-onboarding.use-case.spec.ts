@@ -13,7 +13,6 @@ describe('GetOnboardingUseCase', () => {
   beforeAll(async () => {
     mockOnboardingRepository = {
       findByUserId: jest.fn(),
-      save: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -59,6 +58,6 @@ describe('GetOnboardingUseCase', () => {
     expect(result.userId).toBe('new-user-id');
     expect(result.completedStepIds).toEqual([]);
     expect(result.hidden).toBe(false);
-    expect(mockOnboardingRepository.save).not.toHaveBeenCalled();
+    expect(result.welcomeVideoSeenAt).toBeNull();
   });
 });
