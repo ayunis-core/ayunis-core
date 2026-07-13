@@ -108,7 +108,7 @@
     "eslint-plugin-sonarjs": "^3.0.2",
     "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^16.5.0",
-    "jsdom": "^26.0.0",
+    "jsdom": "^29.1.1",
     "knip": "^6.24.0",
     "madge": "^8.0.0",
     "orval": "^7.9.0",
