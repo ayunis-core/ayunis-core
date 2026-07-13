@@ -137,7 +137,7 @@
     "@types/jest": "^30.0.0",
     "@types/minio": "^7.1.0",
     "@types/mjml": "^4.7.4",
-    "@types/mjml-core": "^4.15.2",
+    "@types/mjml-core": "^5.0.0",
     "@types/ms": "^2.1.0",
     "@types/multer": "^2.2.0",
     "@types/node": "^24.12.2",
