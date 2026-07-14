@@ -4,6 +4,7 @@ import type { SkillTemplateRepository } from '../../ports/skill-template.reposit
 import type { SkillTemplate } from '../../../domain/skill-template.entity';
 import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
 import { DistributionMode } from '../../../domain/distribution-mode.enum';
+import { UnexpectedSkillTemplateError } from '../../skill-templates.errors';
 import { randomUUID } from 'crypto';
 
 describe('FindActiveAlwaysOnTemplatesUseCase', () => {
@@ -65,6 +66,6 @@ describe('FindActiveAlwaysOnTemplatesUseCase', () => {
 
     await expect(
       useCase.execute(new FindActiveAlwaysOnTemplatesQuery()),
-    ).rejects.toThrow('Unexpected error occurred');
+    ).rejects.toThrow(UnexpectedSkillTemplateError);
   });
 });

@@ -33,7 +33,9 @@ export class ListPredefinedMcpIntegrationConfigsUseCase {
       this.logger.error('Unexpected error listing predefined configs', {
         error: error as Error,
       });
-      throw new UnexpectedMcpError('Unexpected error occurred');
+      throw new UnexpectedMcpError(
+        error instanceof Error ? error : new Error(String(error)),
+      );
     }
   }
 }

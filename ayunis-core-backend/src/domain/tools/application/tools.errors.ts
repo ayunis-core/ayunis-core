@@ -9,6 +9,7 @@ export enum ToolErrorCode {
   EXECUTION_FAILED = 'EXECUTION_FAILED',
   INVALID_INPUT = 'INVALID_INPUT',
   NOT_FOUND = 'NOT_FOUND',
+  UNEXPECTED_TOOL_ERROR = 'UNEXPECTED_TOOL_ERROR',
 }
 
 export class ToolError extends ApplicationError {
@@ -91,6 +92,17 @@ export class ToolExecutionFailedError extends ToolError {
     });
     this.name = 'ToolExecutionFailedError';
     this.exposeToLLM = params.exposeToLLM;
+  }
+}
+
+export class UnexpectedToolError extends ToolError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super({
+      message: error.message,
+      code: ToolErrorCode.UNEXPECTED_TOOL_ERROR,
+      metadata: { ...metadata, error },
+    });
+    this.name = 'UnexpectedToolError';
   }
 }
 

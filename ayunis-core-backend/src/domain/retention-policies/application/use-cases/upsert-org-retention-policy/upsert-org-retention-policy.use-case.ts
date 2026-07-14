@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { RetentionPoliciesRepository } from '../../ports/retention-policies.repository';
 import {
   InvalidRetentionPeriodError,
@@ -15,6 +15,7 @@ export class UpsertOrgRetentionPolicyUseCase {
 
   constructor(private readonly repository: RetentionPoliciesRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedRetentionPolicyError)
   async execute(
     command: UpsertOrgRetentionPolicyCommand,
   ): Promise<OrgRetentionPolicy> {
@@ -29,28 +30,14 @@ export class UpsertOrgRetentionPolicyUseCase {
       });
     }
 
-    try {
-      const existing = await this.repository.findByOrgId(command.orgId);
-      const policy = new OrgRetentionPolicy({
-        id: existing?.id,
-        orgId: command.orgId,
-        retentionDays: command.retentionDays,
-        createdAt: existing?.createdAt,
-        updatedAt: new Date(),
-      });
-      return await this.repository.upsert(policy);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-
-      this.logger.error('Failed to upsert retention policy', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-      });
-
-      throw new UnexpectedRetentionPolicyError('upsert', {
-        orgId: command.orgId,
-        ...(error instanceof Error && { originalError: error.message }),
-      });
-    }
+    const existing = await this.repository.findByOrgId(command.orgId);
+    const policy = new OrgRetentionPolicy({
+      id: existing?.id,
+      orgId: command.orgId,
+      retentionDays: command.retentionDays,
+      createdAt: existing?.createdAt,
+      updatedAt: new Date(),
+    });
+    return await this.repository.upsert(policy);
   }
 }

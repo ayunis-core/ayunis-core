@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
   OpenAIModelNotFoundError,
   OpenAIUnexpectedError,
@@ -17,27 +17,20 @@ export class GetOpenAIModelUseCase {
     private readonly listOpenAIModelsUseCase: ListOpenAIModelsUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(OpenAIUnexpectedError)
   async execute(query: GetOpenAIModelQuery): Promise<OpenAIModelObject> {
     this.logger.log('Getting OpenAI-compatible model', {
       orgId: query.orgId,
       modelName: query.modelName,
     });
 
-    try {
-      const list = await this.listOpenAIModelsUseCase.execute(
-        new ListOpenAIModelsQuery(query.orgId),
-      );
-      const match = list.data.find((model) => model.id === query.modelName);
-      if (!match) {
-        throw new OpenAIModelNotFoundError(query.modelName);
-      }
-      return match;
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error getting OpenAI-compatible model', {
-        error: error as Error,
-      });
-      throw new OpenAIUnexpectedError(error);
+    const list = await this.listOpenAIModelsUseCase.execute(
+      new ListOpenAIModelsQuery(query.orgId),
+    );
+    const match = list.data.find((model) => model.id === query.modelName);
+    if (!match) {
+      throw new OpenAIModelNotFoundError(query.modelName);
     }
+    return match;
   }
 }

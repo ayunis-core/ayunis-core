@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { GetProviderUsageQuery } from './get-provider-usage.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import { ProviderUsage } from '../../../domain/provider-usage.entity';
@@ -7,7 +8,6 @@ import {
   calculateProviderPercentages,
 } from '../../usage.utils';
 import { UnexpectedUsageError } from '../../usage.errors';
-import { ApplicationError } from '../../../../../common/errors/base.error';
 
 @Injectable()
 export class GetProviderUsageUseCase {
@@ -15,6 +15,7 @@ export class GetProviderUsageUseCase {
 
   constructor(private readonly usageRepository: UsageRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedUsageError)
   async execute(query: GetProviderUsageQuery): Promise<ProviderUsage[]> {
     validateOptionalDateRange(query.startDate, query.endDate);
 
@@ -24,15 +25,7 @@ export class GetProviderUsageUseCase {
       endDate: query.endDate?.toISOString(),
     });
 
-    try {
-      const providerUsage = await this.usageRepository.getProviderUsage(query);
-      return calculateProviderPercentages(providerUsage);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to get provider usage', error);
-      throw new UnexpectedUsageError(error as Error, {
-        organizationId: query.organizationId,
-      });
-    }
+    const providerUsage = await this.usageRepository.getProviderUsage(query);
+    return calculateProviderPercentages(providerUsage);
   }
 }

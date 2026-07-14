@@ -8,6 +8,7 @@ export enum EmbeddingsErrorCode {
   PROCESSING_FAILED = 'PROCESSING_FAILED',
   INVALID_INPUT = 'INVALID_INPUT',
   NO_EMBEDDINGS_RETURNED = 'NO_EMBEDDINGS_RETURNED',
+  UNEXPECTED_EMBEDDINGS_ERROR = 'UNEXPECTED_EMBEDDINGS_ERROR',
 }
 
 export class EmbeddingsError extends ApplicationError {
@@ -50,6 +51,16 @@ export class EmbeddingsProcessingError extends EmbeddingsError {
   constructor(message: string, metadata?: ErrorMetadata) {
     super(message, EmbeddingsErrorCode.PROCESSING_FAILED, 500, metadata);
     this.name = 'EmbeddingsProcessingError';
+  }
+}
+
+export class UnexpectedEmbeddingsError extends EmbeddingsError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, EmbeddingsErrorCode.UNEXPECTED_EMBEDDINGS_ERROR, 500, {
+      ...metadata,
+      error,
+    });
+    this.name = 'UnexpectedEmbeddingsError';
   }
 }
 

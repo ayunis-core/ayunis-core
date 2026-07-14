@@ -1,11 +1,11 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { UUID } from 'crypto';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegration } from '../../../domain/mcp-integration.entity';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedMcpError } from '../../mcp.errors';
 
 /**
@@ -40,44 +40,29 @@ export class ListAvailableMcpIntegrationsUseCase {
    * @throws UnauthorizedException if user is not authenticated
    * @throws UnexpectedMcpError if an unexpected error occurs
    */
+  @HandleUnexpectedErrors(UnexpectedMcpError)
   async execute(): Promise<AvailableMcpIntegration[]> {
     this.logger.log('listAvailableMcpIntegrations');
 
-    try {
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
-
-      const integrations = await this.repository.findAll(orgId, {
-        enabled: true,
-      });
-
-      const userId = this.contextService.get('userId');
-      const userConfigValues = await this.loadUserConfigValues(
-        integrations,
-        userId,
-      );
-
-      return integrations.map((integration) => ({
-        integration,
-        userAuthorized: this.resolveUserAuthorized(
-          integration,
-          userConfigValues,
-        ),
-      }));
-    } catch (error) {
-      if (
-        error instanceof ApplicationError ||
-        error instanceof UnauthorizedException
-      ) {
-        throw error;
-      }
-      this.logger.error('Unexpected error listing available integrations', {
-        error: error as Error,
-      });
-      throw new UnexpectedMcpError('Unexpected error occurred');
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedException('User not authenticated');
     }
+
+    const integrations = await this.repository.findAll(orgId, {
+      enabled: true,
+    });
+
+    const userId = this.contextService.get('userId');
+    const userConfigValues = await this.loadUserConfigValues(
+      integrations,
+      userId,
+    );
+
+    return integrations.map((integration) => ({
+      integration,
+      userAuthorized: this.resolveUserAuthorized(integration, userConfigValues),
+    }));
   }
 
   /**

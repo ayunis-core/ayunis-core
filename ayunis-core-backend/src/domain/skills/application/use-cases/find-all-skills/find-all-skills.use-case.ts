@@ -1,5 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import type { UUID } from 'crypto';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedSkillError } from '../../skills.errors';
 import { SkillRepository } from '../../ports/skill.repository';
 import { FindAllSkillsQuery } from './find-all-skills.query';
 import { Skill } from '../../../domain/skill.entity';
@@ -40,6 +42,7 @@ export class FindAllSkillsUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSkillError)
   async execute(query: FindAllSkillsQuery): Promise<FindAllSkillsResult> {
     this.logger.log('Finding all skills', query);
 

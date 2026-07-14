@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
   AnonymizationPort,
   AnonymizationResult,
 } from '../../ports/anonymization.port';
+import { UnexpectedAnonymizationError } from '../../anonymization.errors';
 import { AnonymizeTextCommand } from './anonymize-text.command';
 import { filterWhitelistedDetections } from '../../../domain/whitelist-filter';
 import { applyReplacements } from '../../../domain/apply-replacements';
@@ -16,6 +18,7 @@ export class AnonymizeTextUseCase {
 
   constructor(private readonly anonymizationPort: AnonymizationPort) {}
 
+  @HandleUnexpectedErrors(UnexpectedAnonymizationError)
   async execute(command: AnonymizeTextCommand): Promise<AnonymizationResult> {
     this.logger.log('Executing anonymize text', {
       textLength: command.text.length,

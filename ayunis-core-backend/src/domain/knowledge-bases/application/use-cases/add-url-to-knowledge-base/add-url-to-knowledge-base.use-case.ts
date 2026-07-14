@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import type { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { StartUrlCrawlUseCase } from 'src/domain/sources/application/use-cases/start-url-crawl/start-url-crawl.use-case';
 import { StartUrlCrawlCommand } from 'src/domain/sources/application/use-cases/start-url-crawl/start-url-crawl.command';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
 import {
   KnowledgeBaseNotFoundError,
@@ -24,6 +24,7 @@ export class AddUrlToKnowledgeBaseUseCase {
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   async execute(command: AddUrlToKnowledgeBaseCommand): Promise<TextSource> {
     this.logger.log('Adding URL to knowledge base (async)', {
       knowledgeBaseId: command.knowledgeBaseId,
@@ -31,53 +32,40 @@ export class AddUrlToKnowledgeBaseUseCase {
       maxDepth: command.maxDepth,
     });
 
-    try {
-      // 1. Validate KB exists and belongs to user, enforce source limit
-      await this.txHost.withTransaction(async () => {
-        const knowledgeBase = await this.knowledgeBaseRepository.findById(
-          command.knowledgeBaseId,
-        );
-        if (knowledgeBase?.userId !== command.userId) {
-          throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
-        }
-
-        const sourceCount =
-          await this.knowledgeBaseRepository.countSourcesByKnowledgeBaseId(
-            command.knowledgeBaseId,
-          );
-        if (sourceCount >= KnowledgeBasesConstants.MAX_SOURCES) {
-          throw new KnowledgeBaseSourceLimitExceededError(
-            KnowledgeBasesConstants.MAX_SOURCES,
-          );
-        }
-      });
-
-      // 2. Start async crawl (creates PROCESSING source, enqueues job)
-      const source = await this.startUrlCrawlUseCase.execute(
-        new StartUrlCrawlCommand({
-          url: command.url,
-          maxDepth: command.maxDepth,
-        }),
-      );
-
-      // 3. Assign source to KB
-      await this.knowledgeBaseRepository.assignSourceToKnowledgeBase(
-        source.id,
+    // 1. Validate KB exists and belongs to user, enforce source limit
+    await this.txHost.withTransaction(async () => {
+      const knowledgeBase = await this.knowledgeBaseRepository.findById(
         command.knowledgeBaseId,
       );
-
-      return source;
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
+      if (knowledgeBase?.userId !== command.userId) {
+        throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
       }
-      this.logger.error('Error adding URL to knowledge base', {
-        error: error as Error,
-      });
-      throw new UnexpectedKnowledgeBaseError(
-        'Error adding URL to knowledge base',
-        { error: error as Error },
-      );
-    }
+
+      const sourceCount =
+        await this.knowledgeBaseRepository.countSourcesByKnowledgeBaseId(
+          command.knowledgeBaseId,
+        );
+      if (sourceCount >= KnowledgeBasesConstants.MAX_SOURCES) {
+        throw new KnowledgeBaseSourceLimitExceededError(
+          KnowledgeBasesConstants.MAX_SOURCES,
+        );
+      }
+    });
+
+    // 2. Start async crawl (creates PROCESSING source, enqueues job)
+    const source = await this.startUrlCrawlUseCase.execute(
+      new StartUrlCrawlCommand({
+        url: command.url,
+        maxDepth: command.maxDepth,
+      }),
+    );
+
+    // 3. Assign source to KB
+    await this.knowledgeBaseRepository.assignSourceToKnowledgeBase(
+      source.id,
+      command.knowledgeBaseId,
+    );
+
+    return source;
   }
 }

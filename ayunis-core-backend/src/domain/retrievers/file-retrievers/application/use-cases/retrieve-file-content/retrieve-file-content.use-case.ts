@@ -23,7 +23,7 @@ import {
   MIME_TYPES,
 } from 'src/common/util/file-type';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { DocumentConverterPort } from '../../ports/document-converter.port';
 import retrievalConfig from 'src/config/retrieval.config';
 import { TranscribeUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.use-case';
@@ -42,6 +42,7 @@ export class RetrieveFileContentUseCase {
     private readonly config: ConfigType<typeof retrievalConfig>,
   ) {}
 
+  @HandleUnexpectedErrors(FileRetrieverUnexpectedError)
   async execute(
     command: RetrieveFileContentCommand,
   ): Promise<FileRetrieverResult> {
@@ -50,48 +51,38 @@ export class RetrieveFileContentUseCase {
     if (!orgId) {
       throw new UnauthorizedException('User not authenticated');
     }
-    try {
-      const fileType = detectFileType(command.fileType, command.fileName);
+    const fileType = detectFileType(command.fileType, command.fileName);
 
-      if (fileType === 'txt') {
-        // TXT/MD: Read directly as UTF-8, no external service needed
-        const text = command.fileData.toString('utf8').replace(/^\uFEFF/, '');
-        return new FileRetrieverResult([new FileRetrieverPage(text, 1)]);
-      }
-
-      if (fileType === 'pdf') {
-        return await this.processPdf(
-          command.fileData,
-          command.fileName,
-          command.fileType,
-        );
-      }
-
-      if (fileType === 'docx' || fileType === 'pptx') {
-        return await this.processOfficeDocument(
-          command.fileData,
-          command.fileName,
-        );
-      }
-
-      if (isAudioFile(fileType)) {
-        return await this.processAudio(
-          command.fileData,
-          command.fileName,
-          command.fileType,
-        );
-      }
-
-      throw new InvalidFileTypeError(fileType);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Unexpected error while retrieving file content', {
-        error: error as Error,
-      });
-      throw new FileRetrieverUnexpectedError(error as Error);
+    if (fileType === 'txt') {
+      // TXT/MD: Read directly as UTF-8, no external service needed
+      const text = command.fileData.toString('utf8').replace(/^\uFEFF/, '');
+      return new FileRetrieverResult([new FileRetrieverPage(text, 1)]);
     }
+
+    if (fileType === 'pdf') {
+      return await this.processPdf(
+        command.fileData,
+        command.fileName,
+        command.fileType,
+      );
+    }
+
+    if (fileType === 'docx' || fileType === 'pptx') {
+      return await this.processOfficeDocument(
+        command.fileData,
+        command.fileName,
+      );
+    }
+
+    if (isAudioFile(fileType)) {
+      return await this.processAudio(
+        command.fileData,
+        command.fileName,
+        command.fileType,
+      );
+    }
+
+    throw new InvalidFileTypeError(fileType);
   }
 
   /**

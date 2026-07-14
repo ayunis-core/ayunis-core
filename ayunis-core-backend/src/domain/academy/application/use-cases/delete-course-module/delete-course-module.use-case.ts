@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
 import { UnexpectedAcademyError } from '../../academy.errors';
 import { DeleteCourseModuleCommand } from './delete-course-module.command';
@@ -12,18 +12,11 @@ export class DeleteCourseModuleUseCase {
     private readonly courseModuleRepository: AcademyCourseModuleRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedAcademyError)
   async execute(command: DeleteCourseModuleCommand): Promise<void> {
     this.logger.log('Deleting academy module', {
       courseModuleId: command.courseModuleId,
     });
-    try {
-      await this.courseModuleRepository.delete(command.courseModuleId);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error deleting academy module', {
-        error: error as Error,
-      });
-      throw new UnexpectedAcademyError(error);
-    }
+    await this.courseModuleRepository.delete(command.courseModuleId);
   }
 }

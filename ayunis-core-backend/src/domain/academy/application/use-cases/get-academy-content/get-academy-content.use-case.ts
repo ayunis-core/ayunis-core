@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
 import { AcademyChapter } from '../../../domain/academy-chapter.entity';
 import { UnexpectedAcademyError } from '../../academy.errors';
@@ -11,17 +11,10 @@ export class GetAcademyContentUseCase {
 
   constructor(private readonly chapterRepository: AcademyChapterRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedAcademyError)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async execute(_query: GetAcademyContentQuery): Promise<AcademyChapter[]> {
     this.logger.log('Getting academy content');
-    try {
-      return await this.chapterRepository.findAllWithCourseModules();
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error getting academy content', {
-        error: error as Error,
-      });
-      throw new UnexpectedAcademyError(error);
-    }
+    return this.chapterRepository.findAllWithCourseModules();
   }
 }

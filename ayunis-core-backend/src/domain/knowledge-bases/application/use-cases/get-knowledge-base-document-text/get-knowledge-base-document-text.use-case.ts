@@ -1,9 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
 import { GetKnowledgeBaseDocumentTextQuery } from './get-knowledge-base-document-text.query';
 import {
   KnowledgeBaseNotFoundError,
   DocumentNotInKnowledgeBaseError,
+  UnexpectedKnowledgeBaseError,
 } from '../../knowledge-bases.errors';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import { KnowledgeBaseAccessService } from '../../services/knowledge-base-access.service';
@@ -19,6 +21,7 @@ export class GetKnowledgeBaseDocumentTextUseCase {
     private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   async execute(query: GetKnowledgeBaseDocumentTextQuery): Promise<Source> {
     this.logger.debug('Getting document text from knowledge base', {
       knowledgeBaseId: query.knowledgeBaseId,

@@ -25,7 +25,6 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
   let mcpClientService: jest.Mocked<McpClientService>;
   let contextService: jest.Mocked<ContextService>;
   let loggerLogSpy: jest.SpyInstance;
-  let loggerWarnSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
 
   const mockOrgId = randomUUID();
@@ -113,7 +112,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
     contextService = module.get(ContextService);
 
     loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    loggerWarnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
     loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
@@ -232,10 +231,6 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       ).rejects.toThrow(McpIntegrationNotFoundError);
 
       expect(mcpClientService.listTools).not.toHaveBeenCalled();
-      expect(loggerWarnSpy).toHaveBeenCalledWith(
-        'discoverMcpCapabilitiesFailed',
-        expect.objectContaining({ id: mockIntegrationId }),
-      );
     });
 
     it('throws McpIntegrationAccessDeniedError for different organization', async () => {
@@ -287,11 +282,8 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       ).rejects.toThrow(UnexpectedMcpError);
 
       expect(loggerErrorSpy).toHaveBeenCalledWith(
-        'discoverMcpCapabilitiesUnexpectedError',
-        expect.objectContaining({
-          id: mockIntegrationId,
-          error: 'Connection timeout',
-        }),
+        'Unexpected use-case error',
+        expect.any(String),
       );
     });
   });

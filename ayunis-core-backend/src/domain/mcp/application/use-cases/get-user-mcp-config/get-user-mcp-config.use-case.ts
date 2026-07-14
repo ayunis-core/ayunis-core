@@ -1,4 +1,5 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { GetUserMcpConfigQuery } from './get-user-mcp-config.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
@@ -7,6 +8,7 @@ import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpNotMarketplaceIntegrationError,
+  UnexpectedMcpError,
 } from '../../mcp.errors';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
 import { McpIntegration } from '../../../domain/mcp-integration.entity';
@@ -28,6 +30,7 @@ export class GetUserMcpConfigUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMcpError)
   async execute(query: GetUserMcpConfigQuery): Promise<UserMcpConfigResult> {
     this.logger.log('execute', { integrationId: query.integrationId });
 
@@ -79,7 +82,7 @@ export class GetUserMcpConfigUseCase {
   private getSecretKeys(integration: McpIntegration): Set<string> {
     if (integration instanceof MarketplaceMcpIntegration) {
       return new Set(
-        (integration.configSchema.userFields ?? [])
+        integration.configSchema.userFields
           .filter((f) => f.type === 'secret')
           .map((f) => f.key),
       );

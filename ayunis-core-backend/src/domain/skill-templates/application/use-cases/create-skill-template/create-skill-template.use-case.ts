@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
 import { CreateSkillTemplateCommand } from './create-skill-template.command';
 import { SkillTemplate } from '../../../domain/skill-template.entity';
@@ -9,8 +10,6 @@ import {
   DuplicateSkillTemplateNameError,
   UnexpectedSkillTemplateError,
 } from '../../skill-templates.errors';
-import { InvalidSkillTemplateNameError } from '../../../domain/skill-template.entity';
-import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class CreateSkillTemplateUseCase {
@@ -20,43 +19,33 @@ export class CreateSkillTemplateUseCase {
     private readonly skillTemplateRepository: SkillTemplateRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSkillTemplateError)
   async execute(command: CreateSkillTemplateCommand): Promise<SkillTemplate> {
     this.logger.log('Creating skill template', { name: command.name });
-    try {
-      const existing = await this.skillTemplateRepository.findByName(
-        command.name,
-      );
-      if (existing) {
-        throw new DuplicateSkillTemplateNameError(command.name);
-      }
 
-      const baseParams = {
-        name: command.name,
-        shortDescription: command.shortDescription,
-        instructions: command.instructions,
-        isActive: command.isActive,
-      };
-
-      const skillTemplate: SkillTemplate =
-        command.distributionMode === DistributionMode.ALWAYS_ON
-          ? new AlwaysOnSkillTemplate(baseParams)
-          : new PreCreatedCopySkillTemplate({
-              ...baseParams,
-              defaultActive: command.defaultActive,
-              defaultPinned: command.defaultPinned,
-            });
-
-      return await this.skillTemplateRepository.create(skillTemplate);
-    } catch (error) {
-      if (
-        error instanceof ApplicationError ||
-        error instanceof InvalidSkillTemplateNameError
-      )
-        throw error;
-      this.logger.error('Error creating skill template', {
-        error: error as Error,
-      });
-      throw new UnexpectedSkillTemplateError(error);
+    const existing = await this.skillTemplateRepository.findByName(
+      command.name,
+    );
+    if (existing) {
+      throw new DuplicateSkillTemplateNameError(command.name);
     }
+
+    const baseParams = {
+      name: command.name,
+      shortDescription: command.shortDescription,
+      instructions: command.instructions,
+      isActive: command.isActive,
+    };
+
+    const skillTemplate: SkillTemplate =
+      command.distributionMode === DistributionMode.ALWAYS_ON
+        ? new AlwaysOnSkillTemplate(baseParams)
+        : new PreCreatedCopySkillTemplate({
+            ...baseParams,
+            defaultActive: command.defaultActive,
+            defaultPinned: command.defaultPinned,
+          });
+
+    return await this.skillTemplateRepository.create(skillTemplate);
   }
 }

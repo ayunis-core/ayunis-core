@@ -161,8 +161,8 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
       // Act & Assert
       await expect(useCase.execute()).rejects.toThrow(UnexpectedMcpError);
       expect(loggerErrorSpy).toHaveBeenCalledWith(
-        'Unexpected error listing integrations',
-        { error: unexpectedError },
+        'Unexpected use-case error',
+        expect.any(String),
       );
     });
 

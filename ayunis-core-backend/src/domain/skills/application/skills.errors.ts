@@ -249,12 +249,10 @@ export class SkillNameResolutionError extends SkillError {
 }
 
 export class UnexpectedSkillError extends SkillError {
-  constructor(error: unknown) {
-    super(
-      'Unexpected error occurred',
-      SkillErrorCode.UNEXPECTED_SKILL_ERROR,
-      500,
-      { error },
-    );
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, SkillErrorCode.UNEXPECTED_SKILL_ERROR, 500, {
+      ...metadata,
+      error,
+    });
   }
 }

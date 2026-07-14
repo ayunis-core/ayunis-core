@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AnonymizationWhitelistRepository } from '../../ports/anonymization-whitelist.repository';
 import {
   DuplicateCategoryError,
@@ -20,6 +20,7 @@ export class UpdatePiiWhitelistUseCase {
 
   constructor(private readonly repository: AnonymizationWhitelistRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedAnonymizationSettingsError)
   async execute(
     command: UpdatePiiWhitelistCommand,
   ): Promise<AnonymizationWhitelistEntry[]> {
@@ -28,25 +29,11 @@ export class UpdatePiiWhitelistUseCase {
       entryCount: command.entries.length,
     });
 
-    try {
-      this.validateEntries(command.entries);
-      const entities = command.entries.map((entry) =>
-        this.toEntity(command.orgId, entry),
-      );
-      return await this.repository.replaceForOrg(command.orgId, entities);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-
-      this.logger.error('Failed to update PII whitelist', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-      });
-
-      throw new UnexpectedAnonymizationSettingsError('update', {
-        orgId: command.orgId,
-        ...(error instanceof Error && { originalError: error.message }),
-      });
-    }
+    this.validateEntries(command.entries);
+    const entities = command.entries.map((entry) =>
+      this.toEntity(command.orgId, entry),
+    );
+    return this.repository.replaceForOrg(command.orgId, entities);
   }
 
   private validateEntries(entries: UpdatePiiWhitelistEntryInput[]): void {

@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { GetUserUsageQuery } from './get-user-usage.query';
 import {
   UsageRepository,
@@ -10,7 +11,6 @@ import {
 } from '../../usage.errors';
 import { validateOptionalDateRange } from '../../usage.utils';
 import { UsageConstants } from '../../../domain/value-objects/usage.constants';
-import { ApplicationError } from '../../../../../common/errors/base.error';
 
 @Injectable()
 export class GetUserUsageUseCase {
@@ -18,18 +18,15 @@ export class GetUserUsageUseCase {
 
   constructor(private readonly usageRepository: UsageRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedUsageError)
   async execute(query: GetUserUsageQuery): Promise<UserUsageResult> {
     this.validateQuery(query);
 
-    try {
-      return await this.usageRepository.getUserUsage(query);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to get user usage', error);
-      throw new UnexpectedUsageError(error as Error, {
-        organizationId: query.organizationId,
-      });
-    }
+    this.logger.log('Getting user usage', {
+      organizationId: query.organizationId,
+    });
+
+    return await this.usageRepository.getUserUsage(query);
   }
 
   private validateQuery(query: GetUserUsageQuery): void {

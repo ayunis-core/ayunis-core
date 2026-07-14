@@ -1,5 +1,6 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { UUID } from 'crypto';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ValidateMcpIntegrationCommand } from './validate-mcp-integration.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpClientService } from '../../services/mcp-client.service';
@@ -9,7 +10,6 @@ import {
   McpIntegrationAccessDeniedError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { McpIntegration } from '../../../domain/mcp-integration.entity';
 
 /**
@@ -33,6 +33,7 @@ export class ValidateMcpIntegrationUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMcpError)
   async execute(
     command: ValidateMcpIntegrationCommand,
   ): Promise<ValidationResult> {
@@ -40,78 +41,69 @@ export class ValidateMcpIntegrationUseCase {
       id: command.integrationId,
     });
 
-    try {
-      const orgId = this.getOrgIdOrThrow();
-      const integration = await this.getIntegrationOrThrow(
-        command.integrationId,
-      );
+    const orgId = this.getOrgIdOrThrow();
+    const integration = await this.getIntegrationOrThrow(command.integrationId);
 
-      this.ensureOrgAccess(integration, orgId);
+    this.ensureOrgAccess(integration, orgId);
 
-      // Validation is an org-level connectivity check. We deliberately do not
-      // pass a userId so it neither merges per-user credentials nor trips the
-      // per-user authorization guard — those are enforced at runtime per user.
-      const capabilityResult = await this.collectCapabilities(
-        integration,
-        command.integrationId,
-      );
+    // Validation is an org-level connectivity check. We deliberately do not
+    // pass a userId so it neither merges per-user credentials nor trips the
+    // per-user authorization guard — those are enforced at runtime per user.
+    const capabilityResult = await this.collectCapabilities(
+      integration,
+      command.integrationId,
+    );
 
-      if (capabilityResult.kind === 'failure') {
-        return {
-          isValid: false,
-          errorMessage: capabilityResult.error,
-        };
-      }
+    if (capabilityResult.kind === 'failure') {
+      return {
+        isValid: false,
+        errorMessage: capabilityResult.error,
+      };
+    }
 
-      const { tools, resources, resourceTemplates, prompts } = capabilityResult;
-      const toolCount = tools.length;
-      const resourceCount = resources.length + resourceTemplates.length;
-      const promptCount = prompts.length;
-      const totalCapabilities = toolCount + resourceCount + promptCount;
+    const { tools, resources, resourceTemplates, prompts } = capabilityResult;
 
-      if (totalCapabilities === 0) {
-        const errorMessage = 'No capabilities found on MCP server';
+    return this.buildValidationResult(command.integrationId, {
+      toolCount: tools.length,
+      resourceCount: resources.length + resourceTemplates.length,
+      promptCount: prompts.length,
+    });
+  }
 
-        this.logger.warn('validationFailed', {
-          id: command.integrationId,
-          error: errorMessage,
-        });
+  private buildValidationResult(
+    integrationId: UUID,
+    counts: { toolCount: number; resourceCount: number; promptCount: number },
+  ): ValidationResult {
+    const { toolCount, resourceCount, promptCount } = counts;
+    const totalCapabilities = toolCount + resourceCount + promptCount;
 
-        return {
-          isValid: false,
-          errorMessage,
-        };
-      }
+    if (totalCapabilities === 0) {
+      const errorMessage = 'No capabilities found on MCP server';
 
-      this.logger.log('validationSucceeded', {
-        id: command.integrationId,
-        toolCount,
-        resourceCount,
-        promptCount,
+      this.logger.warn('validationFailed', {
+        id: integrationId,
+        error: errorMessage,
       });
 
       return {
-        isValid: true,
-        toolCount,
-        resourceCount,
-        promptCount,
+        isValid: false,
+        errorMessage,
       };
-    } catch (error) {
-      if (
-        error instanceof ApplicationError ||
-        error instanceof UnauthorizedException
-      ) {
-        throw error;
-      }
-
-      this.logger.error('unexpectedError', {
-        id: command.integrationId,
-        error: error as Error,
-      });
-      throw new UnexpectedMcpError(
-        'Unexpected error occurred during validation',
-      );
     }
+
+    this.logger.log('validationSucceeded', {
+      id: integrationId,
+      toolCount,
+      resourceCount,
+      promptCount,
+    });
+
+    return {
+      isValid: true,
+      toolCount,
+      resourceCount,
+      promptCount,
+    };
   }
 
   private getOrgIdOrThrow(): UUID {
@@ -173,32 +165,15 @@ export class ValidateMcpIntegrationUseCase {
     const [toolsResult, resourcesResult, templatesResult, promptsResult] =
       await Promise.allSettled(requests);
 
-    let criticalFailure: PromiseRejectedResult | undefined;
-
-    for (const result of [
+    const criticalFailure = this.findCriticalFailure([
       toolsResult,
       resourcesResult,
       templatesResult,
       promptsResult,
-    ]) {
-      if (this.isCriticalFailure(result)) {
-        criticalFailure = result;
-        break;
-      }
-    }
+    ]);
 
     if (criticalFailure) {
-      const errorMessage = this.extractErrorMessage(criticalFailure.reason);
-
-      this.logger.warn('validationFailed', {
-        id: integrationId,
-        error: errorMessage,
-      });
-
-      return {
-        kind: 'failure',
-        error: errorMessage,
-      };
+      return this.buildCapabilityFailure(integrationId, criticalFailure.reason);
     }
 
     return {
@@ -208,6 +183,31 @@ export class ValidateMcpIntegrationUseCase {
       resourceTemplates: this.extractArray(templatesResult),
       prompts: this.extractArray(promptsResult),
     };
+  }
+
+  private buildCapabilityFailure(
+    integrationId: UUID,
+    reason: unknown,
+  ): { kind: 'failure'; error: string } {
+    const errorMessage = this.extractErrorMessage(reason);
+
+    this.logger.warn('validationFailed', {
+      id: integrationId,
+      error: errorMessage,
+    });
+
+    return {
+      kind: 'failure',
+      error: errorMessage,
+    };
+  }
+
+  private findCriticalFailure(
+    results: PromiseSettledResult<unknown[]>[],
+  ): PromiseRejectedResult | undefined {
+    return results.find((result): result is PromiseRejectedResult =>
+      this.isCriticalFailure(result),
+    );
   }
 
   private isCriticalFailure(

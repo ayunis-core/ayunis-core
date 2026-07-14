@@ -31,6 +31,9 @@ export class IndexNotFoundError extends IndexError {
 
 export class UnexpectedIndexError extends IndexError {
   constructor(error: Error, metadata?: ErrorMetadata) {
-    super(error.message, IndexErrorCode.UNEXPECTED_INDEX_ERROR, 500, metadata);
+    super(error.message, IndexErrorCode.UNEXPECTED_INDEX_ERROR, 500, {
+      ...metadata,
+      error,
+    });
   }
 }

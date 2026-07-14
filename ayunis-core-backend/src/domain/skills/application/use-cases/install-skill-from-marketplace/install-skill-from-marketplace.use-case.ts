@@ -1,10 +1,14 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Skill } from '../../../domain/skill.entity';
 import { InstallSkillFromMarketplaceCommand } from './install-skill-from-marketplace.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { MarketplaceInstallFailedError } from '../../skills.errors';
+import {
+  MarketplaceInstallFailedError,
+  UnexpectedSkillError,
+} from '../../skills.errors';
 import { MarketplaceSkillInstallationService } from '../../services/marketplace-skill-installation.service';
 import { MarketplaceSkillInstalledEvent } from '../../events/marketplace-skill-installed.event';
 
@@ -18,6 +22,7 @@ export class InstallSkillFromMarketplaceUseCase {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSkillError)
   async execute(command: InstallSkillFromMarketplaceCommand): Promise<Skill> {
     this.logger.log('execute', { identifier: command.identifier });
 

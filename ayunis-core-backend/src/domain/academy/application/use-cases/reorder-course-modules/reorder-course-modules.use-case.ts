@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
 import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
 import {
@@ -18,30 +18,23 @@ export class ReorderCourseModulesUseCase {
     private readonly courseModuleRepository: AcademyCourseModuleRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedAcademyError)
   async execute(command: ReorderCourseModulesCommand): Promise<void> {
     this.logger.log('Reordering academy modules', {
       chapterId: command.chapterId,
       count: command.courseModuleIds.length,
     });
-    try {
-      const chapter = await this.chapterRepository.findOne(command.chapterId);
-      if (!chapter) {
-        throw new ChapterNotFoundError(command.chapterId);
-      }
-      const currentIds = await this.courseModuleRepository.findIdsByChapterId(
-        command.chapterId,
-      );
-      assertSameIdSet(currentIds, command.courseModuleIds);
-      await this.courseModuleRepository.updatePositions(
-        command.chapterId,
-        command.courseModuleIds,
-      );
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error reordering academy modules', {
-        error: error as Error,
-      });
-      throw new UnexpectedAcademyError(error);
+    const chapter = await this.chapterRepository.findOne(command.chapterId);
+    if (!chapter) {
+      throw new ChapterNotFoundError(command.chapterId);
     }
+    const currentIds = await this.courseModuleRepository.findIdsByChapterId(
+      command.chapterId,
+    );
+    assertSameIdSet(currentIds, command.courseModuleIds);
+    await this.courseModuleRepository.updatePositions(
+      command.chapterId,
+      command.courseModuleIds,
+    );
   }
 }

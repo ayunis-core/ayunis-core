@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { randomUUID } from 'crypto';
 import { Observable, finalize, map } from 'rxjs';
 import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
@@ -15,7 +16,10 @@ import {
   OpenAIStreamMapper,
   OpenAIStreamSession,
 } from '../../mappers/openai-stream.mapper';
-import { OpenAIModelNotFoundError } from '../../openai-compat.errors';
+import {
+  OpenAIModelNotFoundError,
+  OpenAIUnexpectedError,
+} from '../../openai-compat.errors';
 import { ExecuteOpenAIChatCompletionCommand } from './execute-openai-chat-completion.command';
 import type { ChatCompletionResponse } from '../../types/openai-response.types';
 import type { ChatCompletionChunk } from '../../types/openai-chunk.types';
@@ -44,6 +48,7 @@ export class ExecuteOpenAIChatCompletionUseCase {
     private readonly streamMapper: OpenAIStreamMapper,
   ) {}
 
+  @HandleUnexpectedErrors(OpenAIUnexpectedError)
   async executeNonStreaming(
     command: ExecuteOpenAIChatCompletionCommand,
   ): Promise<ChatCompletionResponse> {
@@ -86,6 +91,7 @@ export class ExecuteOpenAIChatCompletionUseCase {
     });
   }
 
+  @HandleUnexpectedErrors(OpenAIUnexpectedError)
   async executeStreaming(
     command: ExecuteOpenAIChatCompletionCommand,
   ): Promise<Observable<ChatCompletionChunk>> {

@@ -222,11 +222,10 @@ describe('RetrieveMcpResourceUseCase', () => {
         ),
       ).rejects.toThrow(UnexpectedMcpError);
 
-      expect(loggerErrorSpy).toHaveBeenCalledWith('retrieveMcpResourceFailed', {
-        integrationId: mockIntegrationId,
-        resourceUri: mockResourceUri,
-        error: 'Network failure',
-      });
+      expect(loggerErrorSpy).toHaveBeenCalledWith(
+        'Unexpected use-case error',
+        expect.any(String),
+      );
     });
   });
 });

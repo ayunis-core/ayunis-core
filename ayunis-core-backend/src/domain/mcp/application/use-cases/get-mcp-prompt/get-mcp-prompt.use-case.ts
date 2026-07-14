@@ -1,4 +1,5 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { GetMcpPromptQuery } from './get-mcp-prompt.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpClientService } from '../../services/mcp-client.service';
@@ -9,7 +10,6 @@ import {
   McpIntegrationDisabledError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 
 export interface PromptMessage {
   role: string;
@@ -41,69 +41,57 @@ export class GetMcpPromptUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMcpError)
   async execute(query: GetMcpPromptQuery): Promise<PromptResult> {
     this.logger.log('getMcpPrompt', {
       id: query.integrationId,
       prompt: query.promptName,
     });
 
-    try {
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
-
-      const integration = await this.repository.findById(query.integrationId);
-      if (!integration) {
-        throw new McpIntegrationNotFoundError(query.integrationId);
-      }
-
-      if (integration.orgId !== orgId) {
-        throw new McpIntegrationAccessDeniedError(query.integrationId);
-      }
-
-      if (!integration.enabled) {
-        throw new McpIntegrationDisabledError(query.integrationId);
-      }
-
-      // Retrieve prompt from MCP server
-      const userId = this.contextService.get('userId');
-      const promptResponse = await this.mcpClientService.getPrompt(
-        integration,
-        query.promptName,
-        query.args || {},
-        userId,
-      );
-
-      this.logger.log('promptRetrieved', {
-        id: query.integrationId,
-        prompt: query.promptName,
-        messageCount: promptResponse.messages.length,
-      });
-
-      // Map to PromptResult
-      const response = promptResponse as McpPromptResponse;
-      return {
-        messages: response.messages.map((msg) => ({
-          role: msg.role,
-          content:
-            typeof msg.content === 'string'
-              ? msg.content
-              : (msg.content.text ?? JSON.stringify(msg.content)),
-        })),
-        description: response.description,
-      };
-    } catch (error) {
-      if (
-        error instanceof ApplicationError ||
-        error instanceof UnauthorizedException
-      ) {
-        throw error;
-      }
-      this.logger.error('Unexpected error getting prompt', {
-        error: error as Error,
-      });
-      throw new UnexpectedMcpError('Unexpected error occurred');
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedException('User not authenticated');
     }
+
+    const integration = await this.repository.findById(query.integrationId);
+    if (!integration) {
+      throw new McpIntegrationNotFoundError(query.integrationId);
+    }
+
+    if (integration.orgId !== orgId) {
+      throw new McpIntegrationAccessDeniedError(query.integrationId);
+    }
+
+    if (!integration.enabled) {
+      throw new McpIntegrationDisabledError(query.integrationId);
+    }
+
+    // Retrieve prompt from MCP server
+    const userId = this.contextService.get('userId');
+    const promptResponse = await this.mcpClientService.getPrompt(
+      integration,
+      query.promptName,
+      query.args ?? {},
+      userId,
+    );
+
+    this.logger.log('promptRetrieved', {
+      id: query.integrationId,
+      prompt: query.promptName,
+      messageCount: promptResponse.messages.length,
+    });
+
+    // Map to PromptResult
+    const response = promptResponse as McpPromptResponse;
+    return {
+      messages: response.messages.map((msg) => ({
+        role: msg.role,
+        content:
+          typeof msg.content === 'string'
+            ? msg.content
+            : (msg.content.text ?? JSON.stringify(msg.content)),
+      })),
+      description: response.description,
+    };
   }
 }

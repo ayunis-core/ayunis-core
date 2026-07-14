@@ -1,9 +1,14 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
 import { DeleteObjectCommand } from './delete-object.command';
 import storageConfig from '../../../../../config/storage.config';
-import { DeleteFailedError, ObjectNotFoundError } from '../../storage.errors';
+import {
+  DeleteFailedError,
+  ObjectNotFoundError,
+  UnexpectedStorageError,
+} from '../../storage.errors';
 import { StorageUrl } from '../../../domain/storage-url.entity';
 
 @Injectable()
@@ -16,6 +21,7 @@ export class DeleteObjectUseCase {
     private readonly config: ConfigType<typeof storageConfig>,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedStorageError)
   async execute(command: DeleteObjectCommand): Promise<void> {
     this.logger.debug(`Deleting object: ${command.objectName}`, {
       bucket: command.bucket,

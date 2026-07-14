@@ -3,6 +3,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 export enum AnonymizationErrorCode {
   ANONYMIZATION_FAILED = 'ANONYMIZATION_FAILED',
+  UNEXPECTED_ANONYMIZATION_ERROR = 'UNEXPECTED_ANONYMIZATION_ERROR',
 }
 
 export abstract class AnonymizationError extends ApplicationError {
@@ -23,6 +24,20 @@ export class AnonymizationFailedError extends AnonymizationError {
       AnonymizationErrorCode.ANONYMIZATION_FAILED,
       500,
       metadata,
+    );
+  }
+}
+
+export class UnexpectedAnonymizationError extends AnonymizationError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(
+      error.message,
+      AnonymizationErrorCode.UNEXPECTED_ANONYMIZATION_ERROR,
+      500,
+      {
+        ...metadata,
+        error,
+      },
     );
   }
 }

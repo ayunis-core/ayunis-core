@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { GetModelDistributionQuery } from './get-model-distribution.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import { ModelDistribution } from '../../../domain/model-distribution.entity';
@@ -10,7 +11,6 @@ import {
   validateOptionalDateRange,
   processModelDistribution,
 } from '../../usage.utils';
-import { ApplicationError } from '../../../../../common/errors/base.error';
 
 @Injectable()
 export class GetModelDistributionUseCase {
@@ -18,6 +18,7 @@ export class GetModelDistributionUseCase {
 
   constructor(private readonly usageRepository: UsageRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedUsageError)
   async execute(
     query: GetModelDistributionQuery,
   ): Promise<ModelDistribution[]> {
@@ -35,25 +36,14 @@ export class GetModelDistributionUseCase {
       endDate: query.endDate?.toISOString(),
     });
 
-    try {
-      const modelDistribution = await this.usageRepository.getModelDistribution(
-        {
-          organizationId: query.organizationId,
-          startDate: query.startDate,
-          endDate: query.endDate,
-          maxModels: query.maxModels,
-          modelId: query.modelId,
-        },
-      );
+    const modelDistribution = await this.usageRepository.getModelDistribution({
+      organizationId: query.organizationId,
+      startDate: query.startDate,
+      endDate: query.endDate,
+      maxModels: query.maxModels,
+      modelId: query.modelId,
+    });
 
-      return processModelDistribution(modelDistribution, query.maxModels);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to get model distribution', error);
-      throw new UnexpectedUsageError(error as Error, {
-        organizationId: query.organizationId,
-        maxModels: query.maxModels,
-      });
-    }
+    return processModelDistribution(modelDistribution, query.maxModels);
   }
 }

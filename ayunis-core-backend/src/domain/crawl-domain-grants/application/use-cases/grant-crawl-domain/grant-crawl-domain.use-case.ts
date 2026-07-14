@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { CrawlDomainGrant } from '../../../domain/crawl-domain-grant.entity';
 import { normalizeHost } from '../../../domain/crawl-domain.util';
 import { InvalidCrawlDomainError } from '../../../domain/crawl-domain.errors';
@@ -19,36 +19,26 @@ export class GrantCrawlDomainUseCase {
     private readonly crawlDomainGrantRepository: CrawlDomainGrantRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedCrawlDomainGrantError)
   async execute(command: GrantCrawlDomainCommand): Promise<CrawlDomainGrant> {
     this.logger.log('Granting crawl domain', {
       orgId: command.orgId,
       domain: command.domain,
     });
 
-    try {
-      const domain = this.normalize(command.domain);
+    const domain = this.normalize(command.domain);
 
-      const existing =
-        await this.crawlDomainGrantRepository.findByDomain(domain);
-      if (existing) {
-        if (existing.orgId === command.orgId) {
-          // Already granted to this org — idempotent.
-          return existing;
-        }
-        throw new CrawlDomainAlreadyAssignedError({ domain });
+    const existing = await this.crawlDomainGrantRepository.findByDomain(domain);
+    if (existing) {
+      if (existing.orgId === command.orgId) {
+        // Already granted to this org — idempotent.
+        return existing;
       }
-
-      const grant = new CrawlDomainGrant({ orgId: command.orgId, domain });
-      return await this.crawlDomainGrantRepository.create(grant);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error granting crawl domain', {
-        error: error as Error,
-      });
-      throw new UnexpectedCrawlDomainGrantError('grant', {
-        error: error as Error,
-      });
+      throw new CrawlDomainAlreadyAssignedError({ domain });
     }
+
+    const grant = new CrawlDomainGrant({ orgId: command.orgId, domain });
+    return await this.crawlDomainGrantRepository.create(grant);
   }
 
   private normalize(input: string): string {

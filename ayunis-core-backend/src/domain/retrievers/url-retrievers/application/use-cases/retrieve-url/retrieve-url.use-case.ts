@@ -6,11 +6,13 @@ import {
   UrlRetrieverHandler,
 } from '../../ports/url-retriever.handler';
 import {
+  UnexpectedUrlRetrieverError,
   UrlRetrieverProviderNotAvailableError,
   UrlRetrieverUnsupportedContentTypeError,
   UrlRetrieverParsingError,
 } from '../../url-retriever.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AssertCrawlDomainAccessUseCase } from 'src/domain/crawl-domain-grants/application/use-cases/assert-crawl-domain-access/assert-crawl-domain-access.use-case';
 import { AssertCrawlDomainAccessCommand } from 'src/domain/crawl-domain-grants/application/use-cases/assert-crawl-domain-access/assert-crawl-domain-access.command';
 import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
@@ -28,6 +30,7 @@ export class RetrieveUrlUseCase {
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedUrlRetrieverError)
   async execute(command: RetrieveUrlCommand): Promise<UrlRetrieverResult> {
     this.logger.debug(`Retrieving URL: ${command.url}`);
 

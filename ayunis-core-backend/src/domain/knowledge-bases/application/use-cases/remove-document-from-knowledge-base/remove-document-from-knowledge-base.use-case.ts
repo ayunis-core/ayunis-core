@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
 import {
   KnowledgeBaseNotFoundError,
@@ -23,6 +23,7 @@ export class RemoveDocumentFromKnowledgeBaseUseCase {
   ) {}
 
   @Transactional()
+  @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   async execute(
     command: RemoveDocumentFromKnowledgeBaseCommand,
   ): Promise<void> {
@@ -31,40 +32,27 @@ export class RemoveDocumentFromKnowledgeBaseUseCase {
       documentId: command.documentId,
     });
 
-    try {
-      const knowledgeBase = await this.knowledgeBaseRepository.findById(
+    const knowledgeBase = await this.knowledgeBaseRepository.findById(
+      command.knowledgeBaseId,
+    );
+    if (knowledgeBase?.userId !== command.userId) {
+      throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
+    }
+
+    const source =
+      await this.knowledgeBaseRepository.findSourceByIdAndKnowledgeBaseId(
+        command.documentId,
         command.knowledgeBaseId,
       );
-      if (knowledgeBase?.userId !== command.userId) {
-        throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
-      }
-
-      const source =
-        await this.knowledgeBaseRepository.findSourceByIdAndKnowledgeBaseId(
-          command.documentId,
-          command.knowledgeBaseId,
-        );
-      if (!source) {
-        throw new DocumentNotInKnowledgeBaseError(
-          command.documentId,
-          command.knowledgeBaseId,
-        );
-      }
-
-      await this.deleteSourceUseCase.execute(
-        new DeleteSourceCommand(command.documentId),
-      );
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error removing document from knowledge base', {
-        error: error as Error,
-      });
-      throw new UnexpectedKnowledgeBaseError(
-        'Error removing document from knowledge base',
-        { error: error as Error },
+    if (!source) {
+      throw new DocumentNotInKnowledgeBaseError(
+        command.documentId,
+        command.knowledgeBaseId,
       );
     }
+
+    await this.deleteSourceUseCase.execute(
+      new DeleteSourceCommand(command.documentId),
+    );
   }
 }
