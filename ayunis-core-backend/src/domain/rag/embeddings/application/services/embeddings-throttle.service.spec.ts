@@ -7,8 +7,7 @@ import { EmbeddingPriority } from '../../domain/embedding-priority.enum';
 
 /**
  * Records the priority each task was enqueued with and runs it immediately.
- * Lets us assert the throttle's mapping/contract without loading the ESM-only
- * p-queue (which the repo's CommonJS jest config cannot import). Real
+ * Lets us assert the throttle's mapping/contract deterministically. Real
  * priority-ordering fairness is p-queue's responsibility, exercised end-to-end
  * on the dev stack.
  */
@@ -27,9 +26,9 @@ class FakeQueue implements PriorityQueue {
 class TestableThrottle extends EmbeddingsThrottleService {
   public readonly queue = new FakeQueue();
   public createQueueCalls = 0;
-  protected createQueue(): Promise<PriorityQueue> {
+  protected createQueue(): PriorityQueue {
     this.createQueueCalls++;
-    return Promise.resolve(this.queue);
+    return this.queue;
   }
 }
 

@@ -22,10 +22,10 @@
     "deps:check": "dependency-cruiser src --config .dependency-cruiser.cjs --ignore-known",
     "deps:check:strict": "dependency-cruiser src --config .dependency-cruiser.cjs",
     "deps:graph": "dependency-cruiser src --config .dependency-cruiser.cjs --output-type dot | dot -T svg > dependency-graph.svg",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:cov": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "test:debug": "node --experimental-vm-modules --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "typeorm": "typeorm-ts-node-commonjs",
     "db:prod": "docker-compose exec api npx typeorm-ts-node-commonjs",
     "migration:generate:dev": "typeorm-ts-node-commonjs migration:generate -d src/db/datasource.ts",
@@ -165,8 +165,8 @@
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.7.3",
-    "typescript-eslint": "^8.62.1"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.64.0"
   },
   "jest": {
     "moduleFileExtensions": [

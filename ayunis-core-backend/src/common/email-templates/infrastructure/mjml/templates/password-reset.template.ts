@@ -1,4 +1,5 @@
 import mjml2html from 'mjml';
+import type { MJMLParseResults } from 'mjml-core';
 import type { PasswordResetTemplateContent } from '../../../domain/email-template.entity';
 import {
   cta,
@@ -34,7 +35,9 @@ Bei Fragen: help@ayunis.com
 `;
 }
 
-export function passwordResetHtml(template: PasswordResetTemplateContent) {
+export function passwordResetHtml(
+  template: PasswordResetTemplateContent,
+): MJMLParseResults {
   const greeting = template.userName
     ? `Hallo ${escapeText(template.userName)},`
     : 'Hallo,';

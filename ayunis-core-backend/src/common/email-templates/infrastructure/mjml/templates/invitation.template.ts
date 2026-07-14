@@ -1,4 +1,5 @@
 import mjml2html from 'mjml';
+import type { MJMLParseResults } from 'mjml-core';
 import type { InvitationTemplateContent } from '../../../domain/email-template.entity';
 import {
   cta,
@@ -41,7 +42,9 @@ Bei Fragen: help@ayunis.com
 `;
 }
 
-export function invitationHtml(template: InvitationTemplateContent) {
+export function invitationHtml(
+  template: InvitationTemplateContent,
+): MJMLParseResults {
   const companyName = escapeText(template.invitingCompanyName);
   const inviterLine = template.adminName
     ? `<strong>${escapeText(template.adminName)}</strong> hat Sie zu <strong>${companyName}</strong> eingeladen.`

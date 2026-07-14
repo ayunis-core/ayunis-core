@@ -3,12 +3,10 @@
     "require": ["tsconfig-paths/register"]
   },
   "compilerOptions": {
-    "module": "commonjs",
-    "moduleResolution": "node",
-    // Silences TS5107/TS5101 (node10 moduleResolution + baseUrl), deprecated
-    // for removal in TS 7.0 but required while emitting CommonJS. "5.0" is the
-    // value TS 5.9 accepts ("6.0" is not yet valid).
-    "ignoreDeprecations": "5.0",
+    // No "type" in package.json, so nodenext emits CommonJS while using
+    // Node's real resolution rules (node10 was removed in TypeScript 6/7).
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "declaration": true,
     "removeComments": true,
@@ -17,6 +15,9 @@
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",
     "sourceMap": true,
+    // TypeScript 6 no longer infers rootDir from source files; "." keeps
+    // the existing dist/src emit layout and is required by ts-jest.
+    "rootDir": ".",
     "outDir": "./dist",
     "incremental": true,
     "skipLibCheck": true,
@@ -25,6 +26,9 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
+    // TypeScript 6 defaults "types" to [] instead of auto-loading every
+    // @types package; these provide ambient globals (process, jest, Express.Multer).
+    "types": ["node", "jest", "multer"],
     "paths": {
       "src/*": ["./src/*"],
       "@modelcontextprotocol/sdk/client/*": ["./node_modules/@modelcontextprotocol/sdk/dist/cjs/client/*"]
