@@ -2,23 +2,23 @@
 # Add top-level paths here explicitly when ownership should be enforced.
 
 # Repository automation and release management.
-/.github/ @devbydaniel
-/Dockerfile @devbydaniel
-/docker-compose.yml @devbydaniel
+/.github/ @devbydaniel @sirolad @pavellnk
+/Dockerfile @devbydaniel @sirolad @pavellnk
+/docker-compose.yml @devbydaniel @sirolad @pavellnk
 
 # AI assistant configuration and instructions.
-/.cursor/ @devbydaniel
-/.codex/ @devbydaniel
-/.claude/ @devbydaniel
+/.cursor/ @devbydaniel @sirolad @pavellnk
+/.codex/ @devbydaniel @sirolad @pavellnk
+/.claude/ @devbydaniel @sirolad @pavellnk
 
 # Ayunis Core applications.
-/ayunis-core-backend/ @devbydaniel
-/ayunis-core-frontend/ @devbydaniel
-/ayunis-core-anonymize/ @devbydaniel
-/ayunis-core-code-execution/ @devbydaniel
+/ayunis-core-backend/ @devbydaniel @sirolad @pavellnk
+/ayunis-core-frontend/ @devbydaniel @sirolad @pavellnk
+/ayunis-core-anonymize/ @devbydaniel @sirolad @pavellnk
+/ayunis-core-code-execution/ @devbydaniel @sirolad @pavellnk
 
 # Workspace packages.
-/packages/ @devbydaniel
+/packages/ @devbydaniel @sirolad @pavellnk
 
 # Dependabot-managed files - no auto-review.
 /package.json
