@@ -1,3 +1,4 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
 import { Trial } from 'src/iam/trials/domain/trial.entity';
 import { TrialRepository } from '../../ports/trial.repository';
@@ -7,7 +8,6 @@ import {
   TrialAlreadyExistsError,
   UnexpectedTrialError,
 } from '../../trial.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class CreateTrialUseCase {
@@ -15,72 +15,55 @@ export class CreateTrialUseCase {
 
   constructor(private readonly trialRepository: TrialRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedTrialError)
   async execute(command: CreateTrialCommand): Promise<Trial> {
     this.logger.log('Creating trial for organization', {
       orgId: command.orgId,
       maxMessages: command.maxMessages,
     });
 
-    try {
-      this.logger.debug('Checking if trial already exists');
-      const existingTrial = await this.trialRepository.findByOrgId(
-        command.orgId,
-      );
+    this.logger.debug('Checking if trial already exists');
+    const existingTrial = await this.trialRepository.findByOrgId(command.orgId);
 
-      if (existingTrial) {
-        this.logger.warn('Trial already exists for organization', {
-          orgId: command.orgId,
-          existingTrialId: existingTrial.id,
-        });
-
-        throw new TrialAlreadyExistsError(command.orgId, {
-          existingTrialId: existingTrial.id,
-        });
-      }
-
-      this.logger.debug('Creating trial entity');
-      const trial = new Trial({
+    if (existingTrial) {
+      this.logger.warn('Trial already exists for organization', {
         orgId: command.orgId,
-        maxMessages: command.maxMessages,
-        messagesSent: 0,
+        existingTrialId: existingTrial.id,
       });
 
-      this.logger.debug('Saving trial to repository');
-      const createdTrial = await this.trialRepository.create(trial);
-
-      if (!createdTrial) {
-        this.logger.error('Failed to create trial in repository', {
-          orgId: command.orgId,
-        });
-
-        throw new TrialCreationFailedError(
-          command.orgId,
-          'Repository operation failed',
-        );
-      }
-
-      this.logger.log('Trial created successfully', {
-        trialId: createdTrial.id,
-        orgId: createdTrial.orgId,
-        maxMessages: createdTrial.maxMessages,
-        messagesSent: createdTrial.messagesSent,
+      throw new TrialAlreadyExistsError(command.orgId, {
+        existingTrialId: existingTrial.id,
       });
+    }
 
-      return createdTrial;
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
+    this.logger.debug('Creating trial entity');
+    const trial = new Trial({
+      orgId: command.orgId,
+      maxMessages: command.maxMessages,
+      messagesSent: 0,
+    });
 
-      this.logger.error('Trial creation failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+    this.logger.debug('Saving trial to repository');
+    const createdTrial = await this.trialRepository.create(trial);
+
+    if (!createdTrial) {
+      this.logger.error('Failed to create trial in repository', {
         orgId: command.orgId,
-        maxMessages: command.maxMessages,
       });
 
-      throw new UnexpectedTrialError(
+      throw new TrialCreationFailedError(
         command.orgId,
-        'Unexpected error during trial creation',
-        { ...(error instanceof Error && { originalError: error.message }) },
+        'Repository operation failed',
       );
     }
+
+    this.logger.log('Trial created successfully', {
+      trialId: createdTrial.id,
+      orgId: createdTrial.orgId,
+      maxMessages: createdTrial.maxMessages,
+      messagesSent: createdTrial.messagesSent,
+    });
+
+    return createdTrial;
   }
 }

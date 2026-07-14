@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedTeamError } from 'src/iam/teams/application/teams.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { TeamMembersRepository } from '../../ports/team-members.repository';
@@ -13,6 +15,7 @@ export class FindAllUserIdsByTeamIdUseCase {
 
   constructor(private readonly teamMembersRepository: TeamMembersRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedTeamError)
   async execute(query: FindAllUserIdsByTeamIdQuery): Promise<UUID[]> {
     this.logger.log('execute', { teamId: query.teamId });
 

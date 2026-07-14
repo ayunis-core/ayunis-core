@@ -1,3 +1,4 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
 import { CreateAdminUserUseCase } from '../../../../users/application/use-cases/create-admin-user/create-admin-user.use-case';
 import { CreateAdminUserCommand } from '../../../../users/application/use-cases/create-admin-user/create-admin-user.command';
@@ -12,7 +13,6 @@ import {
   RegistrationDisabledError,
   UnexpectedAuthenticationError,
 } from '../../authentication.errors';
-import { ApplicationError } from '../../../../../common/errors/base.error';
 import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.use-case';
 import {
   CreatePrivacyPolicyAcceptanceCommand,
@@ -43,112 +43,107 @@ export class RegisterUserUseCase {
     private readonly configService: ConfigService,
   ) {}
 
+  // Registration coordinates validation, persistence, and session setup.
+  // eslint-disable-next-line max-lines-per-function
   @Transactional()
+  @HandleUnexpectedErrors(UnexpectedAuthenticationError)
   async execute(command: RegisterUserCommand): Promise<ActiveUser> {
     this.logger.log('register', {
       email: command.email,
       orgName: command.orgName,
     });
 
-    try {
-      const disableRegistration = this.configService.get<boolean>(
-        'app.disableRegistration',
+    const disableRegistration = this.configService.get<boolean>(
+      'app.disableRegistration',
+    );
+    if (disableRegistration) {
+      throw new RegistrationDisabledError();
+    }
+
+    const existingUser = await this.findUserByEmailUseCase.execute(
+      new FindUserByEmailQuery(command.email),
+    );
+    if (existingUser) {
+      throw new UserAlreadyExistsError(existingUser.id);
+    }
+
+    const isValidPassword = await this.isValidPasswordUseCase.execute(
+      new IsValidPasswordQuery(command.password),
+    );
+    if (!isValidPassword) {
+      this.logger.warn('Invalid password during registration', {
+        email: command.email,
+      });
+      throw new InvalidPasswordError(
+        'Password does not meet security requirements',
       );
-      if (disableRegistration) {
-        throw new RegistrationDisabledError();
-      }
+    }
 
-      const existingUser = await this.findUserByEmailUseCase.execute(
-        new FindUserByEmailQuery(command.email),
-      );
-      if (existingUser) {
-        throw new UserAlreadyExistsError(existingUser.id);
-      }
+    this.logger.debug('Creating organization');
+    const org = await this.createOrgUseCase.execute(
+      new CreateOrgCommand(command.orgName),
+    );
 
-      const isValidPassword = await this.isValidPasswordUseCase.execute(
-        new IsValidPasswordQuery(command.password),
-      );
-      if (!isValidPassword) {
-        this.logger.warn('Invalid password during registration', {
-          email: command.email,
-        });
-        throw new InvalidPasswordError(
-          'Password does not meet security requirements',
-        );
-      }
+    this.logger.debug('Creating trial for organization', { orgId: org.id });
+    const trialMaxMessages = this.configService.get<number>(
+      'subscriptions.trialMaxMessages',
+    )!;
+    await this.createTrialUseCase.execute(
+      new CreateTrialCommand(org.id, trialMaxMessages),
+    );
 
-      this.logger.debug('Creating organization');
-      const org = await this.createOrgUseCase.execute(
-        new CreateOrgCommand(command.orgName),
-      );
+    // Only send confirmation email if email config is available
+    const shouldConfirmEmail =
+      this.configService.get<boolean>('emails.hasConfig');
 
-      this.logger.debug('Creating trial for organization', { orgId: org.id });
-      const trialMaxMessages = this.configService.get<number>(
-        'subscriptions.trialMaxMessages',
-      )!;
-      await this.createTrialUseCase.execute(
-        new CreateTrialCommand(org.id, trialMaxMessages),
-      );
+    this.logger.debug('Creating admin user', { orgId: org.id });
+    const user = await this.createAdminUserUseCase.execute(
+      new CreateAdminUserCommand({
+        email: command.email,
+        password: command.password,
+        orgId: org.id,
+        name: command.userName,
+        emailVerified: shouldConfirmEmail ? false : true,
+        hasAcceptedMarketing: command.hasAcceptedMarketing,
+        department: command.department,
+      }),
+    );
 
-      // Only send confirmation email if email config is available
-      const shouldConfirmEmail =
-        this.configService.get<boolean>('emails.hasConfig');
-
-      this.logger.debug('Creating admin user', { orgId: org.id });
-      const user = await this.createAdminUserUseCase.execute(
-        new CreateAdminUserCommand({
-          email: command.email,
-          password: command.password,
-          orgId: org.id,
-          name: command.userName,
-          emailVerified: shouldConfirmEmail ? false : true,
-          hasAcceptedMarketing: command.hasAcceptedMarketing,
-          department: command.department,
-        }),
-      );
-
-      this.logger.debug('Creating legal acceptance', {
+    this.logger.debug('Creating legal acceptance', {
+      userId: user.id,
+      orgId: org.id,
+    });
+    await this.createLegalAcceptanceUseCase.execute(
+      new CreateTosAcceptanceCommand({
         userId: user.id,
         orgId: org.id,
-      });
-      await this.createLegalAcceptanceUseCase.execute(
-        new CreateTosAcceptanceCommand({
-          userId: user.id,
-          orgId: org.id,
-        }),
-      );
-      await this.createLegalAcceptanceUseCase.execute(
-        new CreatePrivacyPolicyAcceptanceCommand({
-          userId: user.id,
-          orgId: org.id,
-        }),
-      );
-
-      if (shouldConfirmEmail) {
-        await this.sendConfirmationEmailUseCase.execute(
-          new SendConfirmationEmailCommand(user),
-        );
-      }
-
-      this.logger.debug('Registration successful, logging in user', {
+      }),
+    );
+    await this.createLegalAcceptanceUseCase.execute(
+      new CreatePrivacyPolicyAcceptanceCommand({
         userId: user.id,
-      });
+        orgId: org.id,
+      }),
+    );
 
-      return new ActiveUser({
-        id: user.id,
-        email: user.email,
-        emailVerified: user.emailVerified,
-        role: user.role,
-        systemRole: user.systemRole,
-        orgId: user.orgId,
-        name: user.name,
-      });
-    } catch (error: unknown) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Unexpected authentication error', { error });
-      throw new UnexpectedAuthenticationError(error);
+    if (shouldConfirmEmail) {
+      await this.sendConfirmationEmailUseCase.execute(
+        new SendConfirmationEmailCommand(user),
+      );
     }
+
+    this.logger.debug('Registration successful, logging in user', {
+      userId: user.id,
+    });
+
+    return new ActiveUser({
+      id: user.id,
+      email: user.email,
+      emailVerified: user.emailVerified,
+      role: user.role,
+      systemRole: user.systemRole,
+      orgId: user.orgId,
+      name: user.name,
+    });
   }
 }

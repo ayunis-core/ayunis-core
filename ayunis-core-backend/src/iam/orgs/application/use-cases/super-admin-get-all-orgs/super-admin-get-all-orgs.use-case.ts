@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedOrgError } from 'src/iam/orgs/application/orgs.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import { OrgsRepository } from '../../ports/orgs.repository';
@@ -16,6 +18,7 @@ export class SuperAdminGetAllOrgsUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedOrgError)
   async execute(query: SuperAdminGetAllOrgsQuery): Promise<Paginated<Org>> {
     this.logger.log('superAdminGetAllOrgs', {
       limit: query.limit,

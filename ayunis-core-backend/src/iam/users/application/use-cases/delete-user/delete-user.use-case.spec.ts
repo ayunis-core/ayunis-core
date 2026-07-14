@@ -19,7 +19,7 @@ import { DeleteInviteByEmailUseCase } from 'src/iam/invites/application/use-case
 import { ContextService } from 'src/common/context/services/context.service';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { UserUnauthorizedError } from '../../users.errors';
+import { UserUnexpectedError, UserUnauthorizedError } from '../../users.errors';
 
 describe('DeleteUserUseCase', () => {
   let useCase: DeleteUserUseCase;
@@ -179,7 +179,7 @@ describe('DeleteUserUseCase', () => {
     jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
     jest.spyOn(mockUsersRepository, 'delete').mockRejectedValue(error);
 
-    await expect(useCase.execute(command)).rejects.toThrow('Repository error');
+    await expect(useCase.execute(command)).rejects.toThrow(UserUnexpectedError);
     expect(mockUsersRepository.findOneById).toHaveBeenCalledWith(
       command.userId,
     );

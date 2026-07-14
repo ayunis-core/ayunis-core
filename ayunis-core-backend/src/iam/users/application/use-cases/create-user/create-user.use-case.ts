@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UsersRepository } from '../../ports/users.repository';
@@ -26,6 +28,9 @@ export class CreateUserUseCase {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  // User creation coordinates validation, hashing, persistence, and events.
+  // eslint-disable-next-line max-lines-per-function
+  @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: CreateUserCommand): Promise<User> {
     this.logger.log('createUser', {
       email: command.email,

@@ -1,3 +1,4 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { InvitesRepository } from '../../ports/invites.repository';
@@ -17,7 +18,6 @@ import {
   UserAlreadyExistsError,
 } from '../../invites.errors';
 import { SendInvitationEmailUseCase } from '../send-invitation-email/send-invitation-email.use-case';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
 import { UserEmailProviderBlacklistedError } from 'src/iam/users/application/users.errors';
@@ -43,52 +43,44 @@ export class CreateInviteUseCase {
     private readonly configService: ConfigService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedInviteError)
   async execute(command: CreateInviteCommand): Promise<CreateInviteResult> {
     this.logger.log('execute', {
       email: command.email,
       orgId: command.orgId,
       userId: command.userId,
     });
-    try {
-      this.validateEmailProvider(command.email);
-      await this.ensureEmailAvailable(command.email, command.orgId);
-      await this.ensureCloudSeatsAvailable(command.orgId, command.userId);
 
-      const validDuration = this.configService.get<string>(
-        'auth.jwt.inviteExpiresIn',
-        '7d',
-      );
+    this.validateEmailProvider(command.email);
+    await this.ensureEmailAvailable(command.email, command.orgId);
+    await this.ensureCloudSeatsAvailable(command.orgId, command.userId);
 
-      const invite = new Invite({
-        email: command.email,
-        orgId: command.orgId,
-        role: command.role,
-        inviterId: command.userId,
-        expiresAt: getInviteExpiresAt(validDuration),
-      });
-      this.logger.debug('Invite to be created', { invite });
+    const validDuration = this.configService.get<string>(
+      'auth.jwt.inviteExpiresIn',
+      '7d',
+    );
 
-      await this.invitesRepository.create(invite);
+    const invite = new Invite({
+      email: command.email,
+      orgId: command.orgId,
+      role: command.role,
+      inviterId: command.userId,
+      expiresAt: getInviteExpiresAt(validDuration),
+    });
+    this.logger.debug('Invite to be created', { invite });
 
-      const inviteToken = this.inviteJwtService.generateInviteToken({
-        inviteId: invite.id,
-      });
+    await this.invitesRepository.create(invite);
 
-      this.logger.debug('Invite created successfully', {
-        inviteId: invite.id,
-        email: invite.email,
-      });
+    const inviteToken = this.inviteJwtService.generateInviteToken({
+      inviteId: invite.id,
+    });
 
-      return { token: inviteToken, invite };
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error creating invite', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw new UnexpectedInviteError(error as Error);
-    }
+    this.logger.debug('Invite created successfully', {
+      inviteId: invite.id,
+      email: invite.email,
+    });
+
+    return { token: inviteToken, invite };
   }
 
   private validateEmailProvider(email: string): void {

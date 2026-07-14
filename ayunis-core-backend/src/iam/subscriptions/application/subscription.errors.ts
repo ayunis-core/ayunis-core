@@ -212,12 +212,17 @@ export class InvalidSubscriptionDataError extends SubscriptionError {
  * Error thrown when an unexpected error occurs
  */
 export class UnexpectedSubscriptionError extends SubscriptionError {
-  constructor(reason?: string, metadata?: ErrorMetadata) {
+  constructor(error: Error, metadata?: ErrorMetadata);
+  constructor(reason?: string, metadata?: ErrorMetadata);
+  constructor(errorOrReason?: Error | string, metadata?: ErrorMetadata) {
+    const isError = errorOrReason instanceof Error;
     super(
-      `Unexpected error: ${reason ? `: ${reason}` : ''}`,
+      isError
+        ? `Unexpected error: ${errorOrReason.message}`
+        : `Unexpected error: ${errorOrReason ? `: ${errorOrReason}` : ''}`,
       SubscriptionErrorCode.UNEXPECTED_ERROR,
       500,
-      metadata,
+      { ...(isError && { error: errorOrReason }), ...metadata },
     );
   }
 }

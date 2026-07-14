@@ -37,12 +37,22 @@ export class InvalidCidrApplicationError extends ApplicationError {
 }
 
 export class UnexpectedIpAllowlistError extends ApplicationError {
-  constructor(operation: string, metadata?: ErrorMetadata) {
+  constructor(error: Error, metadata?: ErrorMetadata);
+  constructor(operation: string, metadata?: ErrorMetadata);
+  constructor(errorOrOperation: Error | string, metadata?: ErrorMetadata) {
+    const isError = errorOrOperation instanceof Error;
     super(
-      `Unexpected IP allowlist error during ${operation}`,
+      isError
+        ? `Unexpected IP allowlist error: ${errorOrOperation.message}`
+        : `Unexpected IP allowlist error during ${errorOrOperation}`,
       IpAllowlistErrorCode.UNEXPECTED_ERROR,
       500,
-      { operation, ...metadata },
+      {
+        ...(isError
+          ? { error: errorOrOperation }
+          : { operation: errorOrOperation }),
+        ...metadata,
+      },
     );
   }
 }

@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from '../../ports/users.repository';
 import { ValidateUserQuery } from './validate-user.query';
@@ -20,6 +22,7 @@ export class ValidateUserUseCase {
     private readonly compareHashUseCase: CompareHashUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(query: ValidateUserQuery): Promise<User> {
     this.logger.log('validateUser', { email: query.email });
 

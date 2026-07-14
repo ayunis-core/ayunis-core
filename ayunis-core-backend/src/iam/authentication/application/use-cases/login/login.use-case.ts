@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedAuthenticationError } from 'src/iam/authentication/application/authentication.errors';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { AuthenticationRepository } from '../../ports/authentication.repository';
 import { AUTHENTICATION_REPOSITORY } from '../../tokens/authentication-repository.token';
@@ -13,6 +15,7 @@ export class LoginUseCase {
     private readonly authRepository: AuthenticationRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedAuthenticationError)
   async execute(command: LoginCommand): Promise<AuthTokens> {
     this.logger.log('login', {
       userId: command.user.id,

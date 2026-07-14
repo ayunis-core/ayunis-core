@@ -1,5 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { UserTotpsRepository } from '../../ports/user-totps.repository';
 import { OrgMfaRequirementsRepository } from '../../ports/org-mfa-requirements.repository';
 import { UnexpectedMfaError } from '../../mfa.errors';
@@ -23,27 +23,20 @@ export class CheckMfaLoginRequirementUseCase {
     private readonly orgMfaRequirementsRepository: OrgMfaRequirementsRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMfaError)
   async execute(
     query: CheckMfaLoginRequirementQuery,
   ): Promise<MfaLoginRequirement> {
     this.logger.log('checkMfaLoginRequirement', { userId: query.userId });
 
-    try {
-      const totp = await this.userTotpsRepository.findByUserId(query.userId);
-      if (totp?.isConfirmed()) {
-        return 'verify';
-      }
-
-      const requirement = await this.orgMfaRequirementsRepository.findByOrgId(
-        query.orgId,
-      );
-      return requirement?.required ? 'enroll' : 'none';
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error checking MFA login requirement', {
-        error: error as Error,
-      });
-      throw new UnexpectedMfaError(error);
+    const totp = await this.userTotpsRepository.findByUserId(query.userId);
+    if (totp?.isConfirmed()) {
+      return 'verify';
     }
+
+    const requirement = await this.orgMfaRequirementsRepository.findByOrgId(
+      query.orgId,
+    );
+    return requirement?.required ? 'enroll' : 'none';
   }
 }

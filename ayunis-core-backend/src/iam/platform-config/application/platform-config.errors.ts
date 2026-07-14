@@ -1,9 +1,22 @@
+import type { ErrorMetadata } from '../../../common/errors/base.error';
 import { ApplicationError } from '../../../common/errors/base.error';
 import type { PlatformConfigKey } from '../domain/platform-config-keys.enum';
 
 export enum PlatformConfigErrorCode {
   CONFIG_NOT_FOUND = 'PLATFORM_CONFIG_NOT_FOUND',
   INVALID_VALUE = 'PLATFORM_CONFIG_INVALID_VALUE',
+  UNEXPECTED_ERROR = 'PLATFORM_CONFIG_UNEXPECTED_ERROR',
+}
+
+export class UnexpectedPlatformConfigError extends ApplicationError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(
+      'An unexpected platform config error occurred',
+      PlatformConfigErrorCode.UNEXPECTED_ERROR,
+      500,
+      { ...metadata, error },
+    );
+  }
 }
 
 export class PlatformConfigNotFoundError extends ApplicationError {

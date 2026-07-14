@@ -1,6 +1,6 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UsersRepository } from '../../ports/users.repository';
 import { AdminUpdateUserCommand } from './admin-update-user.command';
@@ -27,6 +27,7 @@ export class AdminUpdateUserUseCase {
     private readonly sendConfirmationEmailUseCase: SendConfirmationEmailUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: AdminUpdateUserCommand): Promise<User> {
     this.logger.log('adminUpdateUser', {
       userId: command.userId,
@@ -37,30 +38,19 @@ export class AdminUpdateUserUseCase {
     this.assertHasFieldsToUpdate(command);
     const requesterOrgId = this.readRequesterOrgId();
 
-    try {
-      const targetUser = await this.loadTargetUser(
-        command.userId,
-        requesterOrgId,
-      );
+    const targetUser = await this.loadTargetUser(
+      command.userId,
+      requesterOrgId,
+    );
 
-      const emailChanged = await this.applyChanges(targetUser, command);
+    const emailChanged = await this.applyChanges(targetUser, command);
 
-      const updatedUser = await this.usersRepository.update(targetUser);
-      this.emitUserUpdated(updatedUser);
-      if (emailChanged) {
-        await this.sendConfirmationEmail(updatedUser);
-      }
-      return updatedUser;
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Failed to update user', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: command.userId,
-      });
-      throw new UserUnexpectedError(error as Error);
+    const updatedUser = await this.usersRepository.update(targetUser);
+    this.emitUserUpdated(updatedUser);
+    if (emailChanged) {
+      await this.sendConfirmationEmail(updatedUser);
     }
+    return updatedUser;
   }
 
   private assertHasFieldsToUpdate(command: AdminUpdateUserCommand): void {

@@ -1,5 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
 import { IpAllowlistCachePort } from '../../ports/ip-allowlist-cache.port';
 import {
@@ -24,54 +24,41 @@ export class UpdateIpAllowlistUseCase {
     private readonly ipAllowlistCache: IpAllowlistCachePort,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedIpAllowlistError)
   async execute(command: UpdateIpAllowlistCommand): Promise<IpAllowlist> {
     this.logger.debug('Updating IP allowlist', {
       orgId: command.orgId,
       cidrCount: command.cidrs.length,
     });
 
+    // Validate CIDRs before lockout check so malformed input
+    // produces InvalidCidrError, not AdminLockoutError.
+    const existing = await this.repository.findByOrgId(command.orgId);
+    let entity: IpAllowlist;
     try {
-      // Validate CIDRs before lockout check so malformed input
-      // produces InvalidCidrError, not AdminLockoutError.
-      const existing = await this.repository.findByOrgId(command.orgId);
-      let entity: IpAllowlist;
-      try {
-        entity = new IpAllowlist({
-          id: existing?.id,
-          orgId: command.orgId,
-          cidrs: command.cidrs,
-          createdAt: existing?.createdAt,
-        });
-      } catch (error) {
-        if (
-          error instanceof InvalidCidrError ||
-          error instanceof EmptyCidrsError
-        ) {
-          throw new InvalidCidrApplicationError(error.message);
-        }
-        throw error;
-      }
-
-      if (!isIpInCidrs(command.clientIp, command.cidrs)) {
-        throw new AdminLockoutError({ clientIp: command.clientIp });
-      }
-
-      const result = await this.repository.upsert(entity);
-      this.ipAllowlistCache.invalidateCache(command.orgId);
-
-      return result;
+      entity = new IpAllowlist({
+        id: existing?.id,
+        orgId: command.orgId,
+        cidrs: command.cidrs,
+        createdAt: existing?.createdAt,
+      });
     } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-
-      this.logger.error('Failed to update IP allowlist', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-      });
-
-      throw new UnexpectedIpAllowlistError('update', {
-        orgId: command.orgId,
-        ...(error instanceof Error && { originalError: error.message }),
-      });
+      if (
+        error instanceof InvalidCidrError ||
+        error instanceof EmptyCidrsError
+      ) {
+        throw new InvalidCidrApplicationError(error.message);
+      }
+      throw error;
     }
+
+    if (!isIpInCidrs(command.clientIp, command.cidrs)) {
+      throw new AdminLockoutError({ clientIp: command.clientIp });
+    }
+
+    const result = await this.repository.upsert(entity);
+    this.ipAllowlistCache.invalidateCache(command.orgId);
+
+    return result;
   }
 }

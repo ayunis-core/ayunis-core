@@ -1,3 +1,4 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
 import { GetLatestSubscriptionQuery } from './get-latest-subscription.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
@@ -8,7 +9,6 @@ import {
   SubscriptionNotFoundError,
   UnexpectedSubscriptionError,
 } from '../../subscription.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
 import { computeAvailableSeats } from '../../util/compute-available-seats';
@@ -25,6 +25,7 @@ export class GetLatestSubscriptionUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSubscriptionError)
   async execute(query: GetLatestSubscriptionQuery): Promise<{
     subscription: Subscription;
     availableSeats: number | null;
@@ -35,39 +36,29 @@ export class GetLatestSubscriptionUseCase {
       requestingUserId: query.requestingUserId,
     });
 
-    try {
-      validateSubscriptionAccess(
-        this.contextService,
-        query.requestingUserId,
-        query.orgId,
-      );
+    validateSubscriptionAccess(
+      this.contextService,
+      query.requestingUserId,
+      query.orgId,
+    );
 
-      const subscription = await this.subscriptionRepository.findLatestByOrgId(
-        query.orgId,
-      );
+    const subscription = await this.subscriptionRepository.findLatestByOrgId(
+      query.orgId,
+    );
 
-      if (!subscription) {
-        throw new SubscriptionNotFoundError(query.orgId);
-      }
-
-      const availableSeats = await computeAvailableSeats(
-        subscription,
-        query.orgId,
-        query.requestingUserId,
-        this.getInvitesByOrgUseCase,
-        this.findUsersByOrgIdUseCase,
-      );
-      const nextRenewalDate = getNextRenewalDate(subscription);
-
-      return { subscription, availableSeats, nextRenewalDate };
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error getting latest subscription', {
-        error: error as Error,
-      });
-      throw new UnexpectedSubscriptionError(
-        'Failed to get latest subscription',
-      );
+    if (!subscription) {
+      throw new SubscriptionNotFoundError(query.orgId);
     }
+
+    const availableSeats = await computeAvailableSeats(
+      subscription,
+      query.orgId,
+      query.requestingUserId,
+      this.getInvitesByOrgUseCase,
+      this.findUsersByOrgIdUseCase,
+    );
+    const nextRenewalDate = getNextRenewalDate(subscription);
+
+    return { subscription, availableSeats, nextRenewalDate };
   }
 }

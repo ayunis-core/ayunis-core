@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedPlatformConfigError } from 'src/iam/platform-config/application/platform-config.errors';
 import { Injectable } from '@nestjs/common';
 import { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
 import { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
@@ -10,6 +12,7 @@ export class SetImageFairUseLimitUseCase {
     private readonly configRepository: PlatformConfigRepositoryPort,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedPlatformConfigError)
   async execute(command: SetImageFairUseLimitCommand): Promise<void> {
     if (!Number.isInteger(command.limit) || command.limit <= 0) {
       throw new PlatformConfigInvalidValueError(

@@ -1,3 +1,4 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InvitesRepository } from '../../ports/invites.repository';
@@ -59,6 +60,7 @@ export class CreateBulkInvitesUseCase {
     private readonly configService: ConfigService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedInviteError)
   async execute(
     command: CreateBulkInvitesCommand,
   ): Promise<CreateBulkInvitesResult> {
@@ -68,46 +70,38 @@ export class CreateBulkInvitesUseCase {
       userId: command.userId,
     });
 
-    try {
-      // Phase 1: Validation
-      const validationErrors = await this.validateAllInvites(command);
+    // Phase 1: Validation
+    const validationErrors = await this.validateAllInvites(command);
 
-      if (validationErrors.length > 0) {
-        throw new BulkInviteValidationFailedError(validationErrors);
-      }
-
-      // Phase 2: Check and update seats if needed (for cloud deployments)
-      await this.handleSeatsForBulkInvites(command);
-
-      // Phase 3: Process all invites
-      const results = await this.processInvites(command);
-
-      const successCount = results.filter((r) => r.success).length;
-      const failureCount = results.filter((r) => !r.success).length;
-
-      this.logger.log('Bulk invites completed', {
-        totalCount: command.invites.length,
-        successCount,
-        failureCount,
-      });
-
-      return {
-        totalCount: command.invites.length,
-        successCount,
-        failureCount,
-        results,
-      };
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error creating bulk invites', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw new UnexpectedInviteError(error as Error);
+    if (validationErrors.length > 0) {
+      throw new BulkInviteValidationFailedError(validationErrors);
     }
+
+    // Phase 2: Check and update seats if needed (for cloud deployments)
+    await this.handleSeatsForBulkInvites(command);
+
+    // Phase 3: Process all invites
+    const results = await this.processInvites(command);
+
+    const successCount = results.filter((r) => r.success).length;
+    const failureCount = results.filter((r) => !r.success).length;
+
+    this.logger.log('Bulk invites completed', {
+      totalCount: command.invites.length,
+      successCount,
+      failureCount,
+    });
+
+    return {
+      totalCount: command.invites.length,
+      successCount,
+      failureCount,
+      results,
+    };
   }
 
+  // Validation intentionally keeps the complete bulk result classification together.
+  // eslint-disable-next-line max-lines-per-function
   private async validateAllInvites(
     command: CreateBulkInvitesCommand,
   ): Promise<ValidationError[]> {
@@ -211,6 +205,8 @@ export class CreateBulkInvitesUseCase {
     return errors;
   }
 
+  // Seat handling applies several subscription and quota rules as one transaction.
+  // eslint-disable-next-line max-lines-per-function
   private async handleSeatsForBulkInvites(
     command: CreateBulkInvitesCommand,
   ): Promise<void> {
@@ -278,6 +274,8 @@ export class CreateBulkInvitesUseCase {
     }
   }
 
+  // Processing preserves per-invite isolation and result reporting.
+  // eslint-disable-next-line max-lines-per-function, complexity
   private async processInvites(
     command: CreateBulkInvitesCommand,
   ): Promise<BulkInviteResult[]> {

@@ -1,9 +1,9 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
 import { GetMonthlyCreditLimitQuery } from './get-monthly-credit-limit.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { isActive } from '../../util/is-active';
 import { isUsageBased } from '../../../domain/subscription-type-guards';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedSubscriptionError } from '../../subscription.errors';
 
 /**
@@ -18,34 +18,25 @@ export class GetMonthlyCreditLimitUseCase {
     private readonly subscriptionRepository: SubscriptionRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSubscriptionError)
   async execute(
     query: GetMonthlyCreditLimitQuery,
   ): Promise<{ monthlyCredits: number | null; startsAt: Date | null }> {
-    try {
-      const subscriptions = await this.subscriptionRepository.findByOrgId(
-        query.orgId,
-      );
-      const usageSubscription = subscriptions
-        .filter(isActive)
-        .find(isUsageBased);
+    const subscriptions = await this.subscriptionRepository.findByOrgId(
+      query.orgId,
+    );
+    const usageSubscription = subscriptions.filter(isActive).find(isUsageBased);
 
-      if (!usageSubscription) {
-        this.logger.debug('No active usage-based subscription found', {
-          orgId: query.orgId,
-        });
-        return { monthlyCredits: null, startsAt: null };
-      }
-
-      return {
-        monthlyCredits: usageSubscription.monthlyCredits,
-        startsAt: usageSubscription.startsAt,
-      };
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to get monthly credit limit', error);
-      throw new UnexpectedSubscriptionError((error as Error).message, {
+    if (!usageSubscription) {
+      this.logger.debug('No active usage-based subscription found', {
         orgId: query.orgId,
       });
+      return { monthlyCredits: null, startsAt: null };
     }
+
+    return {
+      monthlyCredits: usageSubscription.monthlyCredits,
+      startsAt: usageSubscription.startsAt,
+    };
   }
 }

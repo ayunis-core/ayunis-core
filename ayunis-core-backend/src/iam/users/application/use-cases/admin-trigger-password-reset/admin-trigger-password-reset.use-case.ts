@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { AdminTriggerPasswordResetCommand } from './admin-trigger-password-reset.command';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -16,6 +18,7 @@ export class AdminTriggerPasswordResetUseCase {
     private readonly triggerPasswordResetUseCase: TriggerPasswordResetUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: AdminTriggerPasswordResetCommand): Promise<void> {
     this.logger.log('adminTriggerPasswordReset', { userId: command.userId });
 

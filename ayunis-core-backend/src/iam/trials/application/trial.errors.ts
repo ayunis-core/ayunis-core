@@ -124,15 +124,38 @@ export class TrialUpdateFailedError extends TrialError {
  * Error thrown when an unexpected error occurs during trial operations
  */
 export class UnexpectedTrialError extends TrialError {
-  constructor(orgId: UUID, reason?: string, metadata?: ErrorMetadata) {
+  constructor(error: Error, metadata?: ErrorMetadata);
+  constructor(orgId: UUID, reason?: string, metadata?: ErrorMetadata);
+  // The overload preserves the legacy org/reason API while accepting Error causes.
+  // eslint-disable-next-line complexity
+  constructor(
+    errorOrOrgId: Error | UUID,
+    reasonOrMetadata?: string | ErrorMetadata,
+    metadata?: ErrorMetadata,
+  ) {
+    const isError = errorOrOrgId instanceof Error;
+    const orgId = isError ? undefined : errorOrOrgId;
+    const reason = isError
+      ? undefined
+      : typeof reasonOrMetadata === 'string'
+        ? reasonOrMetadata
+        : undefined;
+    const errorMetadata = isError
+      ? reasonOrMetadata && typeof reasonOrMetadata !== 'string'
+        ? reasonOrMetadata
+        : metadata
+      : metadata;
     super(
-      `Unexpected trial error for organization '${orgId}'${reason ? `: ${reason}` : ''}`,
+      isError
+        ? `Unexpected trial error: ${errorOrOrgId.message}`
+        : `Unexpected trial error for organization '${orgId}'${reason ? `: ${reason}` : ''}`,
       TrialErrorCode.UNEXPECTED_ERROR,
       500,
       {
-        orgId,
-        reason,
-        ...metadata,
+        ...(orgId && { orgId }),
+        ...(reason && { reason }),
+        ...(isError && { error: errorOrOrgId }),
+        ...errorMetadata,
       },
     );
   }

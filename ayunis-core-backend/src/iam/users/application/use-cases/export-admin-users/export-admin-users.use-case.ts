@@ -1,10 +1,11 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
 import { convertCSVToString } from 'src/common/util/csv';
 import {
   AdminUserExportRow,
   AdminUsersExportRepository,
 } from '../../ports/admin-users-export.repository';
-import { UserError, UserUnexpectedError } from '../../users.errors';
+import { UserUnexpectedError } from '../../users.errors';
 
 @Injectable()
 export class ExportAdminUsersUseCase {
@@ -14,36 +15,27 @@ export class ExportAdminUsersUseCase {
     private readonly adminUsersExportRepository: AdminUsersExportRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(): Promise<string> {
     this.logger.log('Exporting admin users for subscribed organizations');
 
-    try {
-      const rows =
-        await this.adminUsersExportRepository.findSubscribedOrgAdmins();
+    const rows =
+      await this.adminUsersExportRepository.findSubscribedOrgAdmins();
 
-      return convertCSVToString({
-        headers: [
-          'Eindeutige ID',
-          'Vorname',
-          'Nachname',
-          'E-Mail',
-          'Rolle',
-          'Organisation',
-          'Teams',
-          'Abonnement',
-          'Abonnement Startdatum',
-        ],
-        rows: rows.map((row) => this.toCsvRow(row)),
-      });
-    } catch (error) {
-      if (error instanceof UserError) {
-        throw error;
-      }
-      this.logger.error('Error exporting admin users', {
-        error: error as Error,
-      });
-      throw new UserUnexpectedError(error as Error);
-    }
+    return convertCSVToString({
+      headers: [
+        'Eindeutige ID',
+        'Vorname',
+        'Nachname',
+        'E-Mail',
+        'Rolle',
+        'Organisation',
+        'Teams',
+        'Abonnement',
+        'Abonnement Startdatum',
+      ],
+      rows: rows.map((row) => this.toCsvRow(row)),
+    });
   }
 
   private toCsvRow(row: AdminUserExportRow): string[] {

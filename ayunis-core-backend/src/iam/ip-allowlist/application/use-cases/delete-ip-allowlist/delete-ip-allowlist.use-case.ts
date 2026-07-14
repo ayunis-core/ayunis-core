@@ -1,5 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
 import { IpAllowlistCachePort } from '../../ports/ip-allowlist-cache.port';
 import { UnexpectedIpAllowlistError } from '../../ip-allowlist.errors';
@@ -14,24 +14,11 @@ export class DeleteIpAllowlistUseCase {
     private readonly ipAllowlistCache: IpAllowlistCachePort,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedIpAllowlistError)
   async execute(command: DeleteIpAllowlistCommand): Promise<void> {
     this.logger.debug('Deleting IP allowlist', { orgId: command.orgId });
 
-    try {
-      await this.repository.deleteByOrgId(command.orgId);
-      this.ipAllowlistCache.invalidateCache(command.orgId);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-
-      this.logger.error('Failed to delete IP allowlist', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-      });
-
-      throw new UnexpectedIpAllowlistError('delete', {
-        orgId: command.orgId,
-        ...(error instanceof Error && { originalError: error.message }),
-      });
-    }
+    await this.repository.deleteByOrgId(command.orgId);
+    this.ipAllowlistCache.invalidateCache(command.orgId);
   }
 }

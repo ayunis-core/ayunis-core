@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedQuotaError } from 'src/iam/quotas/application/quotas.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { UsageQuotaRepositoryPort } from '../../ports/usage-quota.repository.port';
 import { QuotaLimitResolverService } from '../../services/quota-limit-resolver.service';
@@ -16,6 +18,9 @@ export class CheckQuotaUseCase {
     private readonly isUsageBasedSubscriptionUseCase: IsUsageBasedSubscriptionUseCase,
   ) {}
 
+  // Quota checking intentionally performs all policy checks before returning.
+  // eslint-disable-next-line max-lines-per-function
+  @HandleUnexpectedErrors(UnexpectedQuotaError)
   async execute(query: CheckQuotaQuery): Promise<void> {
     // Fair-use is the protection of last resort for flat-fee plans.
     // Usage-based orgs already self-limit via their purchased credit budget

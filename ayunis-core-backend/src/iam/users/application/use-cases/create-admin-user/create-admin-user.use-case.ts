@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { CreateAdminUserCommand } from './create-admin-user.command';
 import { User } from '../../../domain/user.entity';
@@ -11,6 +13,7 @@ export class CreateAdminUserUseCase {
 
   constructor(private readonly createUserUseCase: CreateUserUseCase) {}
 
+  @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: CreateAdminUserCommand): Promise<User> {
     this.logger.log('createAdmin', {
       email: command.email,

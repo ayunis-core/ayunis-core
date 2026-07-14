@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedOrgError } from 'src/iam/orgs/application/orgs.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { UpdateOrgCommand } from './update-org.command';
@@ -10,6 +12,7 @@ export class UpdateOrgUseCase {
 
   constructor(private readonly orgsRepository: OrgsRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedOrgError)
   async execute(command: UpdateOrgCommand): Promise<Org> {
     this.logger.log('update', { id: command.org.id, name: command.org.name });
 

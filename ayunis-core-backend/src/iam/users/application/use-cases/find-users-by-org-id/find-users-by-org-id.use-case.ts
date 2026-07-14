@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from '../../ports/users.repository';
 import { FindUsersByOrgIdQuery } from './find-users-by-org-id.query';
@@ -17,6 +19,7 @@ export class FindUsersByOrgIdUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(query: FindUsersByOrgIdQuery): Promise<Paginated<User>> {
     this.logger.log('findManyByOrgId', {
       orgId: query.orgId,
@@ -26,9 +29,9 @@ export class FindUsersByOrgIdUseCase {
     });
     const systemRole = this.contextService.get('systemRole');
     const orgRole = this.contextService.get('role');
-    if (
-      !(systemRole === SystemRole.SUPER_ADMIN || orgRole === UserRole.ADMIN)
-    ) {
+    if (!(
+      systemRole === SystemRole.SUPER_ADMIN || orgRole === UserRole.ADMIN
+    )) {
       throw new UnauthorizedAccessError({ orgId: query.orgId });
     }
     return this.usersRepository.findManyByOrgId(

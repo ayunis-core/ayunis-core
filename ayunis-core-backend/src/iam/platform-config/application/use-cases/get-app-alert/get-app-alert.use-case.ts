@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedPlatformConfigError } from 'src/iam/platform-config/application/platform-config.errors';
 import { Injectable } from '@nestjs/common';
 import { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
 import { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
@@ -9,6 +11,7 @@ export class GetAppAlertUseCase {
     private readonly configRepository: PlatformConfigRepositoryPort,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedPlatformConfigError)
   async execute(): Promise<AppAlert> {
     const [enabledConfig, messageConfig] = await Promise.all([
       this.configRepository.get(PlatformConfigKey.APP_ALERT_ENABLED),

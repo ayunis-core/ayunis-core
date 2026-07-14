@@ -1,5 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { CreditLimitRepository } from '../../ports/credit-limit.repository';
@@ -24,6 +24,7 @@ export class SetUserCreditLimitUseCase {
     private readonly findUsersByIdsUseCase: FindUsersByIdsUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedCreditLimitError)
   async execute(command: SetUserCreditLimitCommand): Promise<UserCreditLimit> {
     const orgId = this.contextService.get('orgId');
     if (!orgId) {
@@ -42,36 +43,28 @@ export class SetUserCreditLimitUseCase {
       monthlyCredits: command.monthlyCredits,
     });
 
-    try {
-      const members = await this.findUsersByIdsUseCase.execute(
-        new FindUsersByIdsQuery([command.userId]),
-      );
-      if (members.length === 0) {
-        throw new CreditLimitTargetNotFoundError({
-          userId: command.userId,
-        });
-      }
-
-      const existing = await this.creditLimitRepository.findByUserId(
-        orgId,
-        command.userId,
-      );
-
-      const limit = new UserCreditLimit({
-        id: existing?.id,
-        orgId,
+    const members = await this.findUsersByIdsUseCase.execute(
+      new FindUsersByIdsQuery([command.userId]),
+    );
+    if (members.length === 0) {
+      throw new CreditLimitTargetNotFoundError({
         userId: command.userId,
-        monthlyCredits: command.monthlyCredits,
-        createdAt: existing?.createdAt,
       });
-
-      return await this.creditLimitRepository.save(limit);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to set user credit limit', {
-        error: error as Error,
-      });
-      throw new UnexpectedCreditLimitError(error);
     }
+
+    const existing = await this.creditLimitRepository.findByUserId(
+      orgId,
+      command.userId,
+    );
+
+    const limit = new UserCreditLimit({
+      id: existing?.id,
+      orgId,
+      userId: command.userId,
+      monthlyCredits: command.monthlyCredits,
+      createdAt: existing?.createdAt,
+    });
+
+    return await this.creditLimitRepository.save(limit);
   }
 }
