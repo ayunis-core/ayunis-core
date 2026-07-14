@@ -9,9 +9,6 @@ export interface RetentionConfig {
   dryRun: boolean;
 }
 
-export const retentionConfig = registerAs(
-  'retention',
-  (): RetentionConfig => ({
-    dryRun: process.env.RETENTION_DRY_RUN === 'true',
-  }),
-);
+export const retentionConfig = registerAs('retention', (): RetentionConfig => ({
+  dryRun: process.env.RETENTION_DRY_RUN === 'true',
+}));

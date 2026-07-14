@@ -24,8 +24,7 @@ export interface UsageBasedWebhookPayload extends SubscriptionWebhookPayloadBase
 }
 
 export type SubscriptionWebhookPayload =
-  | SeatBasedWebhookPayload
-  | UsageBasedWebhookPayload;
+  SeatBasedWebhookPayload | UsageBasedWebhookPayload;
 
 export interface BillingInfoPayload {
   companyName: string;

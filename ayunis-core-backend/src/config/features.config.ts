@@ -18,20 +18,17 @@ const parseBooleanWithDefault = (
   return value.trim() === 'true';
 };
 
-export const featuresConfig = registerAs(
-  'features',
-  (): FeaturesConfig => ({
-    knowledgeBasesEnabled: parseBooleanWithDefault(
-      process.env.FEATURE_KNOWLEDGE_BASES_ENABLED,
-      true,
-    ),
-    letterheadsEnabled: parseBooleanWithDefault(
-      process.env.FEATURE_LETTERHEADS_ENABLED,
-      false,
-    ),
-    skillsEnabled: parseBooleanWithDefault(
-      process.env.FEATURE_SKILLS_ENABLED,
-      false,
-    ),
-  }),
-);
+export const featuresConfig = registerAs('features', (): FeaturesConfig => ({
+  knowledgeBasesEnabled: parseBooleanWithDefault(
+    process.env.FEATURE_KNOWLEDGE_BASES_ENABLED,
+    true,
+  ),
+  letterheadsEnabled: parseBooleanWithDefault(
+    process.env.FEATURE_LETTERHEADS_ENABLED,
+    false,
+  ),
+  skillsEnabled: parseBooleanWithDefault(
+    process.env.FEATURE_SKILLS_ENABLED,
+    false,
+  ),
+}));

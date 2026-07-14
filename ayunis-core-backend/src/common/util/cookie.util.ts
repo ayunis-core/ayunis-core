@@ -25,9 +25,7 @@ function buildCookieOptions(configService: ConfigService): CookieOptions {
     httpOnly: configService.get<boolean>('auth.cookie.httpOnly', true),
     secure: configService.get<boolean>('auth.cookie.secure', false),
     sameSite: configService.get<string>('auth.cookie.sameSite', 'lax') as
-      | 'none'
-      | 'lax'
-      | 'strict',
+      'none' | 'lax' | 'strict',
     path: '/',
   };
 

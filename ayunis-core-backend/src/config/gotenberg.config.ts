@@ -4,9 +4,6 @@ export interface GotenbergConfig {
   url: string;
 }
 
-export const gotenbergConfig = registerAs(
-  'gotenberg',
-  (): GotenbergConfig => ({
-    url: process.env.GOTENBERG_URL || 'http://localhost:3000',
-  }),
-);
+export const gotenbergConfig = registerAs('gotenberg', (): GotenbergConfig => ({
+  url: process.env.GOTENBERG_URL || 'http://localhost:3000',
+}));

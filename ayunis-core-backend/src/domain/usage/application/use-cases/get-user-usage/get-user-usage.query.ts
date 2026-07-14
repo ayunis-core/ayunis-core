@@ -6,10 +6,7 @@ import { PaginatedQuery } from 'src/common/pagination';
 import { UsageConstants } from '../../../domain/value-objects/usage.constants';
 
 export type UserUsageSortBy =
-  | 'credits'
-  | 'requests'
-  | 'lastActivity'
-  | 'userName';
+  'credits' | 'requests' | 'lastActivity' | 'userName';
 export type SortOrder = 'asc' | 'desc';
 
 export class GetUserUsageQuery extends PaginatedQuery {

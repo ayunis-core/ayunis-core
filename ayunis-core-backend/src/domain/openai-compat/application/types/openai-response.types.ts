@@ -17,11 +17,7 @@ export interface ChatCompletionResponseMessage {
 }
 
 export type ChatCompletionFinishReason =
-  | 'stop'
-  | 'length'
-  | 'tool_calls'
-  | 'content_filter'
-  | null;
+  'stop' | 'length' | 'tool_calls' | 'content_filter' | null;
 
 export interface ChatCompletionResponseChoice {
   index: number;

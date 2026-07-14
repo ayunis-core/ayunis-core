@@ -5,10 +5,7 @@ export interface MetricsConfig {
   password: string | undefined;
 }
 
-export const metricsConfig = registerAs(
-  'metrics',
-  (): MetricsConfig => ({
-    user: process.env.AYUNIS_METRICS_USER,
-    password: process.env.AYUNIS_METRICS_PASSWORD,
-  }),
-);
+export const metricsConfig = registerAs('metrics', (): MetricsConfig => ({
+  user: process.env.AYUNIS_METRICS_USER,
+  password: process.env.AYUNIS_METRICS_PASSWORD,
+}));
